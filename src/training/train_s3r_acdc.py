@@ -66,6 +66,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--input_mode", choices=["2d", "25d"], default=None)
     parser.add_argument("--in_channels", type=int, default=None)
     parser.add_argument("--base_channels", type=int, default=None)
+    parser.add_argument("--num_classes", type=int, default=None)
     parser.add_argument("--num_bands", type=int, default=None)
     parser.add_argument("--use_s3r_state", action="store_true", default=None)
     parser.add_argument("--return_logs", action="store_true", default=None)
@@ -165,6 +166,7 @@ def apply_config_defaults(cfg: dict[str, Any]) -> dict[str, Any]:
     cfg.setdefault("model", "s3r_mini")
     cfg.setdefault("run_name", "s3r_mini_acdc")
     cfg.setdefault("seed", 42)
+    cfg.setdefault("dataset", "acdc")
     cfg.setdefault("data_root", "preprocessed_data/ACDC")
     cfg.setdefault("output_root", "weights")
     cfg.setdefault("input_mode", "2d")
@@ -178,10 +180,12 @@ def apply_config_defaults(cfg: dict[str, Any]) -> dict[str, Any]:
     cfg.setdefault("weight_decay", 1e-4)
     cfg.setdefault("base_channels", 32)
     cfg.setdefault("num_classes", 4)
+    cfg.setdefault("class_names", CLASS_NAMES[: int(cfg["num_classes"])])
     cfg.setdefault("num_bands", 4)
     cfg.setdefault("grad_clip", 3.0)
     cfg.setdefault("device", "cuda")
     cfg.setdefault("split_manifest", "splits/acdc_patient_split_seed42.json")
+    cfg.setdefault("split_mode", "manifest")
     cfg.setdefault("variant", "default")
     cfg.setdefault("use_tqdm", True)
 
@@ -284,6 +288,18 @@ def apply_config_defaults(cfg: dict[str, Any]) -> dict[str, Any]:
     return cfg
 
 
+def get_class_names(cfg: dict[str, Any]) -> list[str]:
+    """Return configured class names and validate they match num_classes."""
+    num_classes = int(cfg["num_classes"])
+    names = cfg.get("class_names")
+    if names is None:
+        return CLASS_NAMES[:num_classes]
+    out = [str(name) for name in names]
+    if len(out) != num_classes:
+        raise ValueError(f"class_names must contain {num_classes} entries, got {len(out)}")
+    return out
+
+
 def apply_variant_and_cli(cfg: dict[str, Any], args: argparse.Namespace) -> dict[str, Any]:
     cfg = apply_config_defaults(cfg)
     requested_variant = args.variant
@@ -307,6 +323,7 @@ def apply_variant_and_cli(cfg: dict[str, Any], args: argparse.Namespace) -> dict
         "input_mode",
         "in_channels",
         "base_channels",
+        "num_classes",
         "num_bands",
         "data_root",
         "output_root",
@@ -437,30 +454,61 @@ def _resolve_teacher_amp_dtype(name: str, device: torch.device) -> torch.dtype:
 
 
 def make_loaders(cfg: dict[str, Any]) -> tuple[DataLoader, DataLoader, dict[str, Any]]:
-    train_cases, val_cases, split_manifest = load_or_create_split(
-        cfg["data_root"],
-        seed=int(cfg["seed"]),
-        train_fraction=0.8,
-        split_manifest=cfg.get("split_manifest", "splits/acdc_patient_split_seed42.json"),
-    )
-    train_ds = ACDCSSRSliceDataset(
-        cfg["data_root"],
-        case_ids=train_cases,
-        input_mode=cfg["input_mode"],
-        image_size=int(cfg["image_size"]),
-        foreground_only=bool(cfg["foreground_only"]),
-        max_slices=cfg.get("max_slices"),
-        seed=int(cfg["seed"]),
-    )
-    val_ds = ACDCSSRSliceDataset(
-        cfg["data_root"],
-        case_ids=val_cases,
-        input_mode=cfg["input_mode"],
-        image_size=int(cfg["image_size"]),
-        foreground_only=bool(cfg["foreground_only"]),
-        max_slices=cfg.get("max_slices"),
-        seed=int(cfg["seed"]) + 1,
-    )
+    if str(cfg.get("split_mode", "manifest")).lower() == "folders":
+        data_root = Path(cfg["data_root"])
+        train_root = data_root / str(cfg.get("train_split", "training"))
+        val_root = data_root / str(cfg.get("val_split", "validation"))
+        train_ds = ACDCSSRSliceDataset(
+            train_root,
+            input_mode=cfg["input_mode"],
+            image_size=int(cfg["image_size"]),
+            foreground_only=bool(cfg["foreground_only"]),
+            max_slices=cfg.get("max_slices"),
+            seed=int(cfg["seed"]),
+        )
+        val_ds = ACDCSSRSliceDataset(
+            val_root,
+            input_mode=cfg["input_mode"],
+            image_size=int(cfg["image_size"]),
+            foreground_only=bool(cfg["foreground_only"]),
+            max_slices=cfg.get("max_slices"),
+            seed=int(cfg["seed"]) + 1,
+        )
+        train_cases = list(train_ds.case_ids)
+        val_cases = list(val_ds.case_ids)
+        split_manifest = {
+            "dataset": cfg.get("dataset", "unknown"),
+            "split_type": "folder",
+            "train_root": str(train_root),
+            "val_root": str(val_root),
+            "train_cases": train_cases,
+            "val_cases": val_cases,
+        }
+    else:
+        train_cases, val_cases, split_manifest = load_or_create_split(
+            cfg["data_root"],
+            seed=int(cfg["seed"]),
+            train_fraction=0.8,
+            split_manifest=cfg.get("split_manifest", "splits/acdc_patient_split_seed42.json"),
+        )
+        train_ds = ACDCSSRSliceDataset(
+            cfg["data_root"],
+            case_ids=train_cases,
+            input_mode=cfg["input_mode"],
+            image_size=int(cfg["image_size"]),
+            foreground_only=bool(cfg["foreground_only"]),
+            max_slices=cfg.get("max_slices"),
+            seed=int(cfg["seed"]),
+        )
+        val_ds = ACDCSSRSliceDataset(
+            cfg["data_root"],
+            case_ids=val_cases,
+            input_mode=cfg["input_mode"],
+            image_size=int(cfg["image_size"]),
+            foreground_only=bool(cfg["foreground_only"]),
+            max_slices=cfg.get("max_slices"),
+            seed=int(cfg["seed"]) + 1,
+        )
 
     generator = torch.Generator()
     generator.manual_seed(int(cfg["seed"]))
@@ -1062,7 +1110,12 @@ def format_class_metric_table(metrics: dict[str, float], class_names: list[str] 
     return "\n".join(lines)
 
 
-def print_epoch_report(epoch: int, train_metrics: dict[str, float], val_metrics: dict[str, float]) -> None:
+def print_epoch_report(
+    epoch: int,
+    train_metrics: dict[str, float],
+    val_metrics: dict[str, float],
+    class_names: list[str] | None = None,
+) -> None:
     print(
         f"epoch {epoch:03d} "
         f"train_loss={train_metrics.get('loss', math.nan):.4f} "
@@ -1091,7 +1144,7 @@ def print_epoch_report(epoch: int, train_metrics: dict[str, float], val_metrics:
             f"W_ignore={train_metrics.get('W_ignore_mean', math.nan):.4f} "
             f"gate_H={train_metrics.get('gate_entropy_mean', math.nan):.4f}"
         )
-    print(format_class_metric_table(val_metrics))
+    print(format_class_metric_table(val_metrics, (class_names or CLASS_NAMES)[1:]))
 
 
 def init_wandb(cfg: dict[str, Any], run_dir: Path) -> Any:
@@ -1187,6 +1240,7 @@ def run_epoch(
     training = optimizer is not None
     model.train(training)
     num_classes = int(cfg["num_classes"])
+    class_names = get_class_names(cfg)
     totals: dict[str, float] = {}
     total_samples = 0
     tp = torch.zeros(num_classes, device=device)
@@ -1296,9 +1350,16 @@ def run_epoch(
                 ssr_rows.extend(flatten_ssr_logs(epoch, split, detailed_logs))
 
     metrics = {key: value / max(total_samples, 1) for key, value in totals.items()}
-    append_classification_metrics(metrics, tp, fp, fn, CLASS_NAMES[:num_classes])
+    append_classification_metrics(metrics, tp, fp, fn, class_names)
     for key, vals in surface_values.items():
         metrics[key] = nanmean_or_nan(vals)
+    if num_classes == 2 and len(class_names) == 2:
+        lower = class_names[1].lower()
+        for metric_name in ("hd95", "assd", "boundary_f1", "surface_dice"):
+            source = f"{metric_name}_rv"
+            target = f"{metric_name}_{lower}"
+            if source in metrics and target not in metrics:
+                metrics[target] = metrics[source]
     return metrics, ssr_rows, detailed_logs
 
 
@@ -1604,6 +1665,7 @@ def is_cuda_oom(exc: RuntimeError) -> bool:
 
 def train_once(cfg: dict[str, Any]) -> dict[str, Any]:
     seed_everything(int(cfg["seed"]))
+    class_names = get_class_names(cfg)
     device = resolve_device(str(cfg["device"]))
     if device.type == "cpu" and int(cfg.get("num_workers", 0)) > 0:
         print("CPU run detected; using num_workers=0 to avoid local DataLoader worker shared-memory failures.")
@@ -1698,7 +1760,7 @@ def train_once(cfg: dict[str, Any]) -> dict[str, Any]:
             "val_boundary_f1_fg": val_metrics.get("boundary_f1_fg", math.nan),
             "val_surface_dice_fg": val_metrics.get("surface_dice_fg", math.nan),
         }
-        for name in CLASS_NAMES[: int(cfg["num_classes"])]:
+        for name in class_names:
             lower = name.lower()
             for metric_name in ("dice", "precision", "recall"):
                 row[f"train_{metric_name}_{name}"] = train_metrics.get(f"{metric_name}_{name}", math.nan)
@@ -1722,7 +1784,7 @@ def train_once(cfg: dict[str, Any]) -> dict[str, Any]:
         write_csv(run_dir / "ssr_logs.csv", ssr_rows, ["epoch", "split", "block", "metric", "band", "value"])
         write_csv(run_dir / "s3r_block_logs.csv", ssr_rows, ["epoch", "split", "block", "metric", "band", "value"])
 
-        print_epoch_report(epoch, train_metrics, val_metrics)
+        print_epoch_report(epoch, train_metrics, val_metrics, class_names)
         log_wandb_metrics(
             wandb_run,
             epoch,

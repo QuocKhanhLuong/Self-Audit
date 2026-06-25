@@ -1,0 +1,31 @@
+run_name: s3r_mnm_binary_smoke
+dataset: mnm
+data_root: preprocessed_data/mnm_binary
+split_mode: folders
+train_split: training
+val_split: validation
+save_dir: weights/smoke_s3r_mnm_binary
+
+model: s3r_mini
+input_mode: 2d
+in_channels: 1
+image_size: 224
+num_classes: 2
+class_names: ["BG", "FG"]
+epochs: 2
+batch_size: 4
+num_workers: 2
+max_slices: 64
+foreground_only: true
+device: cuda
+seed: 42
+use_tqdm: true
+
+wandb:
+  enabled: false
+
+metrics:
+  compute_hd95: false
+  compute_assd: false
+  compute_boundary_f1: false
+  compute_surface_dice: false

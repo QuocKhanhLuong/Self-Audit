@@ -1,0 +1,34 @@
+run_name: s3r_mnm_binary_100ep
+dataset: mnm
+data_root: preprocessed_data/mnm_binary
+split_mode: folders
+train_split: training
+val_split: validation
+save_dir: weights/s3r_mnm_binary_100ep
+
+model: s3r_mini
+input_mode: 25d
+in_channels: 5
+image_size: 224
+num_classes: 2
+class_names: ["BG", "FG"]
+epochs: 100
+batch_size: 4
+num_workers: 4
+foreground_only: true
+device: cuda
+seed: 42
+use_tqdm: true
+return_logs: true
+
+wandb:
+  enabled: false
+  project: s3r-mnm
+  run_name: s3r_mnm_binary_100ep
+
+metrics:
+  compute_hd95: true
+  compute_assd: true
+  compute_boundary_f1: true
+  compute_surface_dice: true
+  full_every_n_epochs: 5
