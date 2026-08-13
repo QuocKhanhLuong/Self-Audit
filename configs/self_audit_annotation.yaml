@@ -1,0 +1,29 @@
+# Locked Self-Audit baseline, Phase A.
+phase: annotation
+dataset: acdc
+data_root: preprocessed_data/ACDC
+split_manifest: splits/acdc_patient_split_seed42.json
+train_split: train
+val_split: val
+test_split: test
+image_size: 256
+num_classes: 4
+batch_size: 4
+epochs: 100
+num_workers: 2
+seed: 42
+device: cuda
+augment: true
+lr: 0.0003
+encoder_lr: 0.00003
+weight_decay: 0.0001
+intermediate_weight: 1.0
+grad_clip: 3.0
+output: weights/self_audit/phase_a_annotation.pt
+model:
+  encoder_name: convnext_tiny
+  pretrained_encoder: true
+  shared_channels: 96
+  num_classes: 4
+  window_k: 8
+  max_turns: 3

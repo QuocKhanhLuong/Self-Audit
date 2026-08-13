@@ -1,0 +1,20 @@
+# Locked Self-Audit baseline, Phase B.
+phase: auditor
+dataset: acdc
+data_root: preprocessed_data/ACDC
+image_size: 256
+num_classes: 4
+batch_size: 4
+epochs: 20
+num_workers: 2
+seed: 42
+device: cuda
+auditor_lr: 0.0003
+output: weights/self_audit/phase_b_auditor.pt
+model:
+  encoder_name: convnext_tiny
+  pretrained_encoder: false
+  shared_channels: 96
+  num_classes: 4
+  window_k: 8
+  max_turns: 3

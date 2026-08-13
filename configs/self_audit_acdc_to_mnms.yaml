@@ -1,0 +1,30 @@
+# Domain-shift protocol: train only on ACDC, evaluate on external M&Ms.
+protocol: acdc_to_mnms_domain_shift
+train:
+  dataset: acdc
+  split: train
+  data_root: preprocessed_data/ACDC
+validation:
+  dataset: acdc
+  split: val
+  data_root: preprocessed_data/ACDC
+test:
+  dataset: mnms
+  data_root: data/MnMs
+  split: test
+  raw_to_acdc:
+    0: 0
+    1: 3
+    2: 2
+    3: 1
+image_size: 256
+num_classes: 4
+model:
+  encoder_name: convnext_tiny
+  pretrained_encoder: true
+  shared_channels: 96
+  window_k: 8
+  max_turns: 3
+audit:
+  tau_accept: 0.0
+  t_max: 3

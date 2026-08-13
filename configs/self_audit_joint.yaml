@@ -1,0 +1,23 @@
+# Locked Self-Audit baseline, Phase C.
+phase: joint_low_lr
+dataset: acdc
+data_root: preprocessed_data/ACDC
+image_size: 256
+num_classes: 4
+batch_size: 2
+epochs: 10
+num_workers: 2
+seed: 42
+device: cuda
+joint_lr: 0.00001
+joint_encoder_lr: 0.000001
+weight_decay: 0.0001
+output: weights/self_audit/phase_c_joint.pt
+model:
+  encoder_name: convnext_tiny
+  pretrained_encoder: false
+  shared_channels: 96
+  num_classes: 4
+  window_k: 8
+  max_turns: 3
+  tau_accept: 0.0
