@@ -15,7 +15,13 @@ import numpy as np
 
 def _numpy(value: Any) -> np.ndarray:
     if hasattr(value, "detach"):
-        value = value.detach().cpu().numpy()
+        value = value.detach().cpu()
+        # NumPy has no bfloat16 dtype.  CPU AMP validation can legitimately
+        # produce bfloat16 Auditor logits, so normalize floating tensors at
+        # this boundary without changing integer label semantics.
+        if getattr(value, "is_floating_point", lambda: False)():
+            value = value.float()
+        value = value.numpy()
     return np.asarray(value)
 
 
@@ -170,8 +176,14 @@ def annotation_metrics(
     target: Any,
     num_classes: int = 4,
     spacing: Iterable[float] | None = None,
+    spacing_known: bool | None = None,
 ) -> dict[str, Any]:
-    """Compute the minimum volume-reporting metric set."""
+    """Compute reporting metrics with explicit physical-vs-pixel semantics.
+
+    When physical spacing is unavailable, HD95/ASSD are reported in pixel
+    units and the result includes ``metric_space='pixel'``.  Physical metrics
+    require both spacing values and ``spacing_known=True``.
+    """
 
     pred = _labels(prediction)
     true = _labels(target)
@@ -179,6 +191,11 @@ def annotation_metrics(
     precision, recall = per_class_precision_recall(pred, true, num_classes=num_classes)
     hd95: dict[int, float] = {}
     assd: dict[int, float] = {}
+    if spacing_known is None:
+        spacing_known = spacing is not None
+    if spacing_known and spacing is None:
+        raise ValueError("spacing_known=True requires physical spacing metadata")
+    metric_space = "physical" if spacing_known else "pixel"
     if spacing is None:
         spacing = (1.0,) * pred.ndim
     for cls in range(1, int(num_classes)):
@@ -189,6 +206,9 @@ def annotation_metrics(
         "assd": _finite_mean(assd.values()),
         "precision": float(np.mean(list(precision.values()))) if precision else 0.0,
         "recall": float(np.mean(list(recall.values()))) if recall else 0.0,
+        "spacing_known": bool(spacing_known),
+        "metric_space": metric_space,
+        "physical_metrics_available": bool(spacing_known),
         "per_class": {
             "dice": dice,
             "hd95": hd95,
@@ -254,6 +274,15 @@ def transition_audit_metrics(
     local_target = _labels(target_local)
     delta_q = _numpy(predicted_delta_q).reshape(-1)
     delta_dice = _numpy(actual_delta_dice).reshape(-1)
+    if delta_q.size == 0:
+        return {
+            "improve_regress_accuracy": float("nan"),
+            "auroc": float("nan"),
+            "auprc": float("nan"),
+            "correlation_delta_q_delta_dice": float("nan"),
+            "local_fix_f1": float("nan"),
+            "local_regress_f1": float("nan"),
+        }
     predicted_sign = delta_q > 0.0
     actual_sign = delta_dice > 0.0
     return {
@@ -273,6 +302,15 @@ def acceptance_metrics(accepted: Any, actual_delta_dice: Any, turns: Any | None 
     delta = _numpy(actual_delta_dice).reshape(-1).astype(np.float64)
     if accepted_array.shape != delta.shape:
         raise ValueError("accepted and actual_delta_dice must have the same number of transitions")
+    if accepted_array.size == 0:
+        result = {
+            "harmful_acceptance_rate": 0.0,
+            "beneficial_rejection_rate": 0.0,
+            "net_dice_gain_after_auditing": 0.0,
+        }
+        if turns is not None:
+            result["mean_refinement_turns"] = 0.0
+        return result
     accepted_count = max(int(accepted_array.sum()), 1)
     rejected_count = max(int((~accepted_array).sum()), 1)
     harmful = accepted_array & (delta <= 0.0)

@@ -74,6 +74,15 @@ def _find_pair_dirs(root: Path) -> list[tuple[Path, Path]]:
     return pairs
 
 
+def _supported_volume_file(path: Path) -> bool:
+    name = path.name.lower()
+    return name.endswith((".npy", ".npz", ".nii", ".nii.gz"))
+
+
+def _volume_key(path: Path) -> str:
+    return _strip_archive_suffix(path)
+
+
 def discover_mnms_records(data_root: str | Path, split: str | None = None) -> list[VolumeRecord]:
     root = Path(data_root)
     if not root.exists():
@@ -91,8 +100,16 @@ def discover_mnms_records(data_root: str | Path, split: str | None = None) -> li
     seen: set[str] = set()
     for candidate in roots:
         for image_dir, mask_dir in _find_pair_dirs(candidate):
-            image_files = {p.stem: p for p in image_dir.iterdir() if p.is_file() and p.suffix.lower() in {".npy", ".npz", ".nii", ".gz"}}
-            mask_files = {p.stem: p for p in mask_dir.iterdir() if p.is_file() and p.suffix.lower() in {".npy", ".npz", ".nii", ".gz"}}
+            image_files = {
+                _volume_key(p): p
+                for p in image_dir.iterdir()
+                if p.is_file() and _supported_volume_file(p)
+            }
+            mask_files = {
+                _volume_key(p): p
+                for p in mask_dir.iterdir()
+                if p.is_file() and _supported_volume_file(p)
+            }
             for image_key, image_path in sorted(image_files.items()):
                 candidates = [image_key, f"{image_key}_gt", f"{image_key}_label", f"{image_key}_seg"]
                 mask_path = next((mask_files[key] for key in candidates if key in mask_files), None)
@@ -142,6 +159,8 @@ class MNMSDataset(VolumeSliceDataset):
         augment: bool = False,
         transform: object | None = None,
         foreground_only: bool = False,
+        depth_axis: int | None = None,
+        expected_slices: int | None = None,
         **kwargs: object,
     ) -> None:
         all_records = list(records) if records is not None else discover_mnms_records(data_root, split=split)
@@ -161,7 +180,13 @@ class MNMSDataset(VolumeSliceDataset):
             augment=augment,
             transform=transform,
             foreground_only=foreground_only,
-            **{key: value for key, value in kwargs.items() if key in {"lower_percentile", "upper_percentile", "max_cache"}},
+            depth_axis=depth_axis,
+            expected_slices=expected_slices,
+            **{
+                key: value
+                for key, value in kwargs.items()
+                if key in {"lower_percentile", "upper_percentile", "max_cache"}
+            },
         )
 
     def _load(self, record_index: int):

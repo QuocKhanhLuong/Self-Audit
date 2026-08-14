@@ -126,59 +126,140 @@ class SelfAuditNet(nn.Module):
         halted_turns: list[int] = []
         transition_previous: list[Tensor] = []
         transition_candidates: list[Tensor] = []
-        active = torch.ones(images.shape[0], dtype=torch.bool, device=images.device)
+        batch_size = int(images.shape[0])
+        active = torch.ones(batch_size, dtype=torch.bool, device=images.device)
+        accepted_count = torch.zeros(batch_size, dtype=torch.long, device=images.device)
+        halt_turn = torch.full((batch_size,), -1, dtype=torch.long, device=images.device)
+        num_attempted_turns = torch.zeros(batch_size, dtype=torch.long, device=images.device)
+        transition_active_masks: list[Tensor] = []
+        transition_state_masks: list[Tensor] = []
         if mode != "initial_only":
             for turn in range(cap):
                 if not bool(active.any()):
                     break
+
+                # Run the recurrent expert and Auditor only for rows that are
+                # still active.  This keeps a halted row from receiving a new
+                # candidate or audit evidence in a mixed batch.
+                attempted = active.clone()
+                active_indices = attempted.nonzero(as_tuple=False).flatten()
+                transition_active_masks.append(attempted)
+                num_attempted_turns = num_attempted_turns + attempted.to(torch.long)
+
+                shared_active = shared.index_select(0, active_indices)
+                state_active = state.index_select(0, active_indices)
+                previous_audit_active = (
+                    None
+                    if previous_audit is None
+                    else previous_audit.index_select(0, active_indices)
+                )
                 expert_output = self.annotation_expert(
-                    shared,
-                    state,
-                    previous_audit_evidence=previous_audit,
+                    shared_active,
+                    state_active,
+                    previous_audit_evidence=previous_audit_active,
                     turn_index=turn,
                     iteration_index=turn,
                     return_metadata=False,
                 )
-                candidate = expert_output.candidate_logits
+                candidate_active = expert_output.candidate_logits
+                candidate_active_full = self._scatter_rows(state, active_indices, candidate_active)
+                candidate = torch.where(
+                    attempted.view(-1, 1, 1, 1),
+                    candidate_active_full,
+                    state,
+                )
                 transition_previous.append(state)
                 transition_candidates.append(candidate)
-                previous_probs = state.detach().softmax(dim=1)
-                candidate_probs = candidate.detach().softmax(dim=1)
-                entropy_previous = -(previous_probs.clamp_min(1e-8) * previous_probs.clamp_min(1e-8).log()).sum(dim=1, keepdim=True)
-                entropy_candidate = -(candidate_probs.clamp_min(1e-8) * candidate_probs.clamp_min(1e-8).log()).sum(dim=1, keepdim=True)
+                previous_probs = state_active.detach().softmax(dim=1)
+                candidate_probs = candidate_active.detach().softmax(dim=1)
+                entropy_previous = -(
+                    previous_probs.clamp_min(1e-8)
+                    * previous_probs.clamp_min(1e-8).log()
+                ).sum(dim=1, keepdim=True)
+                entropy_candidate = -(
+                    candidate_probs.clamp_min(1e-8)
+                    * candidate_probs.clamp_min(1e-8).log()
+                ).sum(dim=1, keepdim=True)
                 audit_output = self.auditor(
-                    shared.detach(),
+                    shared_active.detach(),
                     previous_probs.detach(),
                     candidate_probs.detach(),
                     (candidate_probs - previous_probs).detach(),
                     entropy_previous=entropy_previous.detach(),
                     entropy_candidate=entropy_candidate.detach(),
                 )
-                delta_q = audit_output.delta_q.detach().reshape(-1)
+                local_logits_active = self._audit_tensor(audit_output, "local_logits")
+                delta_q_active = self._audit_tensor(audit_output, "delta_q")
+                delta_q = delta_q_active.detach().reshape(-1)
                 if mode == "always_accept_refinement":
-                    accepted = active.clone()
+                    accepted_active = torch.ones_like(delta_q, dtype=torch.bool)
                 elif mode == "oracle_accept":
-                    accepted = active & self._candidate_improves(state, candidate, oracle_target)
+                    oracle_target_active = oracle_target.index_select(0, active_indices)
+                    accepted_active = self._candidate_improves(
+                        state_active,
+                        candidate_active,
+                        oracle_target_active,
+                    )
                 else:
-                    accepted = active & (delta_q > float(tau_accept))
+                    accepted_active = delta_q > float(tau_accept)
+                accepted = self._scatter_mask(active, active_indices, accepted_active)
+
+                # The state update and the recurrent audit evidence are both
+                # row-masked.  A rejected row keeps its previous state and no
+                # local evidence is fed back into a later active row.
                 state = torch.where(accepted[:, None, None, None], candidate, state)
-                local_evidence = audit_output.local_logits.detach().softmax(dim=1)
-                previous_audit = torch.where(accepted[:, None, None, None], local_evidence, torch.zeros_like(local_evidence))
+                local_logits = self._scatter_rows_from_values(
+                    batch_size,
+                    active_indices,
+                    local_logits_active,
+                )
+                local_evidence = local_logits.detach().softmax(dim=1)
+                previous_audit = torch.where(
+                    accepted[:, None, None, None],
+                    local_evidence,
+                    torch.zeros_like(local_evidence),
+                )
+                delta_q_full = self._scatter_rows_from_values(
+                    batch_size,
+                    active_indices,
+                    audit_output.delta_q,
+                )
                 candidates.append(candidate)
                 audits.append({
-                    "local_logits": audit_output.local_logits,
-                    "delta_q": audit_output.delta_q,
+                    "local_logits": local_logits,
+                    "delta_q": delta_q_full,
                     "accepted": accepted,
+                    "active_mask": attempted,
+                    "audit_mask": attempted,
+                    "state_mask": accepted,
                 })
+                transition_state_masks.append(accepted)
+                accepted_count = accepted_count + accepted.to(torch.long)
+                rejected = attempted & ~accepted
+                halt_now = rejected & (halt_turn < 0)
+                halt_turn = torch.where(
+                    halt_now,
+                    torch.full_like(halt_turn, int(turn)),
+                    halt_turn,
+                )
                 if bool(accepted.any()):
                     accepted_turns.append(turn)
-                rejected = active & ~accepted
                 if bool(rejected.any()):
                     halted_turns.append(turn)
                 if mode == "self_audit" or mode == "oracle_accept":
-                    active = active & accepted
+                    active = accepted
                 # always_accept intentionally runs to the hard cap; the cap is
                 # a safety limit, never a requirement for the self-audit path.
+        transition_active_tensor = self._stack_masks(
+            transition_active_masks,
+            batch_size=batch_size,
+            device=images.device,
+        )
+        transition_state_tensor = self._stack_masks(
+            transition_state_masks,
+            batch_size=batch_size,
+            device=images.device,
+        )
         return {
             "logits": state,
             "initial_logits": initial,
@@ -192,9 +273,69 @@ class SelfAuditNet(nn.Module):
             "audits": audits,
             "accepted_turns": accepted_turns,
             "halted_turns": halted_turns,
+            "accepted_count": accepted_count,
+            "halt_turn": halt_turn,
+            "num_attempted_turns": num_attempted_turns,
+            "active_mask": active,
+            "final_active": active,
+            # Per-turn lists retain the explicit [B] alignment contract.
+            "active_masks": transition_active_masks,
+            "transition_active_masks": transition_active_masks,
+            "audit_masks": transition_active_masks,
+            "transition_audit_masks": transition_active_masks,
+            "state_masks": transition_state_masks,
+            "transition_state_masks": transition_state_masks,
+            # Stacked forms are convenience views for callers that want a
+            # [T,B] tensor without changing the per-turn public contract.
+            "active_mask_tensor": transition_active_tensor,
+            "transition_active_mask_tensor": transition_active_tensor,
+            "state_mask_tensor": transition_state_tensor,
+            "transition_state_mask_tensor": transition_state_tensor,
             "shared_features": shared,
             "features": encoded["features"],
         }
+
+    @staticmethod
+    def _scatter_rows(reference: Tensor, indices: Tensor, values: Tensor) -> Tensor:
+        """Scatter active-row values into a full batch while retaining autograd."""
+
+        return SelfAuditNet._scatter_rows_from_values(reference.shape[0], indices, values)
+
+    @staticmethod
+    def _scatter_rows_from_values(batch_size: int, indices: Tensor, values: Tensor) -> Tensor:
+        if values.ndim == 0 or values.shape[0] != indices.numel():
+            raise ValueError(
+                "Cannot scatter active rows: "
+                f"values shape={tuple(values.shape)}, indices={indices.numel()}"
+            )
+        full = values.new_zeros((int(batch_size), *values.shape[1:]))
+        return full.index_copy(0, indices, values)
+
+    @staticmethod
+    def _scatter_mask(reference: Tensor, indices: Tensor, values: Tensor) -> Tensor:
+        if values.ndim != 1 or values.shape[0] != indices.numel():
+            raise ValueError(
+                "Cannot scatter active mask: "
+                f"values shape={tuple(values.shape)}, indices={indices.numel()}"
+            )
+        full = torch.zeros_like(reference, dtype=torch.bool)
+        return full.index_copy(0, indices, values.to(dtype=torch.bool))
+
+    @staticmethod
+    def _stack_masks(masks: list[Tensor], *, batch_size: int, device: torch.device) -> Tensor:
+        if not masks:
+            return torch.empty((0, int(batch_size)), dtype=torch.bool, device=device)
+        return torch.stack(masks, dim=0)
+
+    @staticmethod
+    def _audit_tensor(output: Any, name: str) -> Tensor:
+        if isinstance(output, dict):
+            value = output.get(name)
+        else:
+            value = getattr(output, name, None)
+        if not torch.is_tensor(value):
+            raise TypeError(f"Auditor output must contain tensor {name!r}")
+        return value
 
     def _candidate_improves(self, previous: Tensor, candidate: Tensor, target: Tensor) -> Tensor:
         previous_labels = previous.detach().argmax(dim=1)

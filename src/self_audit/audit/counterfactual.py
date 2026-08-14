@@ -449,7 +449,7 @@ class CounterfactualGenerator:
 
     def _hard_neutral_single(self, previous: Tensor, ground_truth: Tensor, operation: str | None) -> _SingleEdit:
         best: tuple[float, _SingleEdit, Tensor] | None = None
-        for _ in range(self.neutral_max_retries):
+        for retry_index in range(self.neutral_max_retries):
             positive = self._positive_single(previous, ground_truth)
             if not positive.valid:
                 continue
@@ -475,6 +475,7 @@ class CounterfactualGenerator:
                     "actual_delta_dice": float(delta.detach()),
                     "epsilon_neutral": self.epsilon_neutral,
                     "neutral_satisfied": bool(abs(float(delta.detach())) < self.epsilon_neutral),
+                    "retry_count": retry_index + 1,
                     "regression_operation": negative.operation,
                 },
             )
@@ -484,7 +485,11 @@ class CounterfactualGenerator:
             if distance < self.epsilon_neutral:
                 return result
         if best is None:
-            return _invalid_edit(previous, "local_repair_plus_regression", metadata={"neutral_satisfied": False})
+            return _invalid_edit(
+                previous,
+                "local_repair_plus_regression",
+                metadata={"neutral_satisfied": False, "retry_count": self.neutral_max_retries},
+            )
         return best[1]
 
     def _pack(

@@ -19,6 +19,7 @@ test:
     2: 2
     3: 1
 image_size: 256
+depth_axis: 2  # checked-in preprocessed ACDC convention is [H,W,Z]
 num_classes: 4
 model:
   encoder_name: convnext_tiny

@@ -34,6 +34,8 @@ the same sample dictionary:
     "slice_idx": int,
     "num_slices": int,
     "spacing": tuple[float, ...],  # physical spacing, or explicit unit fallback
+    "spacing_known": bool,         # false means metrics are pixel-space only
+    "spacing_units": "mm" | "pixel",
 }
 ```
 
@@ -184,10 +186,12 @@ dilation, boundary displacement, hole insertion, false island, component
 deletion, and semantic class swap. Each sample exposes `valid`, `edit_mask`,
 strengths, source/target classes, and measured GT-derived DeltaDice metadata.
 Hard/neutral samples combine spatially separate local repair and regression
-edits, retry within the configured `epsilon_neutral`, and report the closest
-actual DeltaDice when the tolerance cannot be met. On-policy expert transitions
-are also supported. Candidates stay finite, non-negative, and normalized in
-soft probability space.
+edits, retry within the configured `epsilon_neutral`, and report
+`neutral_satisfied`, `retry_count`, and the closest actual DeltaDice when the
+tolerance cannot be met. Requested operation names are never used as training
+labels: Phase B/C targets are always measured from the GT-derived transition.
+On-policy expert transitions are also supported. Candidates stay finite,
+non-negative, and normalized in soft probability space.
 
 `self_audit.audit.gate.ThresholdGate` applies the non-differentiable global
 decision:
@@ -214,15 +218,18 @@ v1.
   freezes annotation parameters and trains the auditor on every adjacent
   on-policy transition `A0→A1`, `A1→A2`, ..., `A_(T-1)→A_T`, plus one
   synthetic transition around every `A_t`. The total audit loss is averaged
-  across the explicit transition list.
+  across the explicit transition list. Every inference turn carries a
+  batch-aligned `transition_active_masks[t]`, so halted rows are excluded from
+  later audit losses and cannot contaminate mixed-batch training.
 - `configs/self_audit_joint.yaml` / `training/finetune_joint.py`: Phase C
   uses low learning rates and the complete threshold-controlled flow. The
   annotation loss updates encoder/FPN/heads/expert through retained final
   annotation behavior; `lambda_audit` scales a separate local-plus-global
   audit loss whose `H`, `A_previous`, and `A_candidate` inputs are detached.
-  Therefore audit gradients update only Auditor parameters. The accept/reject
-  gate remains non-differentiable and `tau_accept`/`t_max` live under `audit`,
-  not in the model constructor.
+  Therefore audit gradients update only Auditor parameters. Per-sample
+  `accepted_count`, `halt_turn`, `num_attempted_turns`, and `final_active` are
+  exposed for evaluation. The accept/reject gate remains non-differentiable and
+  `tau_accept`/`t_max` live under `audit`, not in the model constructor.
 - `configs/self_audit_acdc_to_mnms.yaml`: ACDC-only training and M&Ms external
   domain-shift evaluation; it does not merge datasets.
 
@@ -241,8 +248,28 @@ The command prints unique raw labels, the configured mapping, and mapped
 labels. Unknown labels remain errors.
 
 Pretrained encoder parameters are placed in a lower-LR optimizer group than
-new heads. The current training entrypoints expect real data and fail clearly
-when it is absent.
+new heads. Phase A/B/C entrypoints now include validation loops, `last.pt` and
+metric-selected `best.pt` checkpoints, strict compatible resume loading,
+warmup-cosine AdamW scheduling, safe CPU/CUDA AMP, gradient accumulation and
+non-finite loss/gradient guards. DataLoader worker-only options are passed only
+when workers are enabled. `stage_weights` defaults to `[0.5, 0.7, 0.8, 1.0]`
+for `[A0,A1,A2,A3]`; a matching YAML list is honored, otherwise the documented
+prefix plus `1.0` for additional states is used.
+
+`scripts/cache_validation_transitions.py` and
+`scripts/calibrate_threshold.py` provide validation-only DeltaQ/DeltaDice
+caching and threshold sweeps. Calibration reports final Dice, net gain,
+harmful acceptance, beneficial rejection, mean attempted/accepted turns, and
+acceptance rate without using test data. The required preflight command is:
+
+```bash
+python scripts/self_audit_preflight.py --config configs/self_audit_annotation.yaml
+```
+
+It validates the runtime, split integrity, one real DataLoader batch, model,
+loss/backward, finite gradients, and checkpoint-directory writability without
+starting training. `--max_steps` and `--max_val_batches` are available on the
+Phase A/B/C entrypoints for bounded real-data smoke runs.
 
 ### Evaluation
 
@@ -259,75 +286,81 @@ self_audit
 when a caller supplies GT; `infer_patient_volume` rejects it so GT cannot enter
 the deployable inference path. `evaluation.metrics` reports Dice, HD95, ASSD,
 precision, recall, per-class values, and dependency-free transition AUROC,
-AUPRC, correlation, FIX F1, and REGRESS F1 helpers.
+AUPRC, correlation, FIX F1, and REGRESS F1 helpers. NIfTI input is
+canonicalized before deliberate `[Z,H,W]` conversion; preprocessed NPY uses the
+configured `depth_axis` (the checked-in ACDC convention is `[H,W,Z]`, hence
+`depth_axis: 2`). Unknown
+spacing is marked `spacing_known=false` and HD95/ASSD are labeled pixel-space;
+physical metrics require real spacing metadata.
 
 ## Patch verification record (2026-08-14)
 
 The previous S3R/distillation/teacher implementation was removed in the
-baseline commit history. This patch did not restore or rewrite that legacy
-tree; it remains recoverable with Git history and is not a dependency of the
-active Self-Audit implementation.
+baseline commit history. This hardening patch did not restore or rewrite that
+legacy tree; it remains recoverable with Git history and is not a dependency of
+the active Self-Audit implementation.
 
-Verified in the available Anaconda environment with PyTorch 2.6.0 and pytest
-7.4.4:
+Verified with PyTorch 2.6.0 and pytest 7.4.4 in the available Anaconda
+environment:
 
 ```text
 /Users/alvinluong/opt/anaconda3/bin/python -m pytest -q tests/test_self_audit_*.py
-33 passed
-```
-
-The literal command requested from the default `python` resolved to the
-miniforge environment and failed before collection with
-`No module named pytest`; the same glob was then run successfully with the
-alternate interpreter shown above.
-
-The complete repository suite also passed:
-
-```text
+53 passed
 /Users/alvinluong/opt/anaconda3/bin/python -m pytest -q
-36 passed
+56 passed
+/Users/alvinluong/opt/anaconda3/bin/python -m py_compile $(find src scripts tests -name "*.py")
+passed
 ```
 
-The suite includes baseline YAML construction, adjacent transition extraction,
-all concrete counterfactual operations, sampled positive repair strength and
-validity, hard-neutral actual DeltaDice reporting, probability normalization,
-Phase-C gradient separation, dynamic-window audit conditioning, and threshold
-halt behavior. Source compilation also passed:
+The default `python` on this machine is a separate Miniforge environment
+without pytest, so the literal pytest command fails before collection with
+`No module named pytest`; the alternate interpreter above is the verified test
+environment. The focused suite covers all four baseline YAML constructors,
+adjacent transitions, mixed-batch active masks, all concrete counterfactual
+operations, sampled positive repair strength, hard-neutral metadata and actual
+DeltaDice, normalization, checkpoint compatibility, gradient separation on a
+real SelfAuditNet, dynamic-window conditioning, and threshold halting.
+
+The real ACDC preflight passed without downloading pretrained weights:
 
 ```text
-/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m py_compile $(rg --files src scripts tests -g '*.py')
+python=3.12.7 pytorch=2.6.0 cuda_available=False timm_available=True
+split_integrity=ok batch_image_shape=(1,3,256,256) batch_mask_shape=(1,256,256)
+finite_gradients=True checkpoint_dir_writable=weights/self_audit
+PREFLIGHT_OK
 ```
 
-The repository's default Python 3.12 environment has an incomplete PyTorch
-installation and no pytest; the alternate environment above was used for the
-actual test runs. No real-data metric is inferred from unit tests.
+The validated split report is `train: 160 cases / 80 patients / 1526 slices`,
+`val: 40 cases / 20 patients / 376 slices`, with no patient overlap. The
+checked-in manifest has no separate test split, so `test_available=false` is
+reported instead of inventing one.
 
-The synthetic end-to-end smoke passed with random `[2,3,64,64]` input through
-real `SelfAuditNet` inference and Phase-C backward:
+Bounded real ACDC training smoke results were also verified: Phase A completed
+two optimizer steps on CPU at `64x64` with two validation batches; Phase B and
+Phase C each completed one optimizer step at `32x32` with one validation batch.
+All three printed finite losses, validation metrics, and checkpoint paths.
+No long training job was launched.
 
-```text
-finite_inference=true
-candidate_transitions=1
-accepted_turns=[]
-halted_turns=[0]
-phase_c_transitions=1
-finite_gradients=true
-```
-
-The real preprocessed ACDC path exists and its loader smoke passed for
-`patient001_ED`, volume shape `(10,224,224)`, first/middle/last slices
-`0/5/9`, resized image `[3,256,256]`, mask `[256,256]`, labels `[0]` on the
-first slice and `[0,1,2,3]` on the middle/last slices. NPY data had no physical
-spacing metadata, so explicit unit spacing `(1.0,1.0,1.0)` was reported.
-M&Ms data was not present at `data/MnMs`; no M&Ms real-data smoke was claimed.
+The ACDC loader smoke covers one patient/volume and first/middle/last slices:
+`patient001_ED`, volume `(10,224,224)`, slices `0/5/9`, resized image
+`[3,256,256]`, mask `[256,256]`, with labels `[0]` on the first slice and
+`[0,1,2,3]` on the middle/last slices. The checked-in NPY data has no physical
+spacing metadata, so `spacing_known=false`, explicit unit spacing is used only
+for pixel-space metrics, and no physical HD95/ASSD result is claimed. M&Ms is
+not present at `data/MnMs`; no real M&Ms smoke was claimed.
 
 ## Tests and verification
 
 Synthetic tests cover boundary construction, both dataset contracts and M&Ms
 mapping, patient isolation, encoder/FPN shapes, dynamic coordinate bounds and
 backward, residual updates and shared depth, auditor detachment, transition
-targets, counterfactual validity, threshold early halt, and volume
-reconstruction. Real-dataset integration tests are intentionally not faked.
+targets, counterfactual validity, threshold early halt, volume reconstruction,
+per-sample mode bookkeeping, checkpoint/resume helpers, numerical edge cases,
+and AMP-compatible metrics. Real-dataset integration tests are intentionally
+not faked.
+
+`.github/workflows/self-audit-ci.yml` runs the focused Self-Audit tests and
+source compilation on CPU with no dataset or pretrained-weight download.
 
 Recommended commands in the repository environment are:
 
@@ -344,21 +377,19 @@ pytest. A source compilation check is still available:
 python -m py_compile $(rg --files src scripts tests -g '*.py')
 ```
 
-## Remaining TODOs before real ACDC training
+## Remaining engineering blockers before real ACDC training
 
-1. Use a complete training environment for the declared Python 3.10 stack and
-   confirm the real ConvNeXt-Tiny ImageNet checkpoint is available; the
-   verified unit-test environment intentionally used `pretrained_encoder=false`
-   to avoid network access.
-2. Run the real ACDC one-patient/volume/slice smoke and confirm patient-level
-   train/val/test manifests. The repository currently has preprocessed ACDC
-   files, but the checked-in manifest still requires validation for the
-   intended release and a labeled ACDC test split is required for three-way
-   reporting.
-3. Run preprocessing/data integration checks on real NIfTI orientation and
-   spacing metadata, then confirm patient counts and no overlap.
-4. Run Phase A before Phase B/Phase C and calibrate `tau_accept` on validation
-   transitions. Report harmful acceptance, beneficial rejection, net Dice,
-   and mean accepted turns.
-5. M&Ms evaluation remains blocked until the external M&Ms root is present and
-   its raw label order is verified with `inspect_mnms_mask.py`.
+1. The default shell Python is incomplete; use a complete environment (the
+   verified Anaconda interpreter or the CI environment) and make the real
+   ConvNeXt-Tiny ImageNet weights available before production Phase A.
+2. Run the full-resolution GPU job only after choosing a safe batch size from
+   `scripts/self_audit_memory_smoke.py`; no long training has been started.
+3. The checked-in ACDC manifest is train/validation-only at the volume level;
+   keep test reporting separate until a labeled test manifest is supplied.
+4. Preprocessed NPY spacing is explicitly unknown, so publishable physical
+   HD95/ASSD remains blocked until real spacing metadata is available.
+5. M&Ms remains external-domain evaluation only and is blocked until
+   `data/MnMs` exists and one raw mask is verified with
+   `scripts/inspect_mnms_mask.py`.
+
+The research architecture and its prohibitions remain unchanged.

@@ -9,6 +9,8 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
+from ..data.common import to_depth_first
+
 
 COMPARISON_MODES = (
     "initial_only",
@@ -33,6 +35,10 @@ class VolumeInferenceResult:
     accepted_turns: list[int]
     halted_turns: list[int]
     details: list[dict[str, Any]]
+    accepted_count: torch.Tensor | None = None
+    halt_turn: torch.Tensor | None = None
+    num_attempted_turns: torch.Tensor | None = None
+    final_active: torch.Tensor | None = None
 
 
 def canonicalize_depth_first(volume: Any, depth_axis: int | None = None) -> np.ndarray:
@@ -41,12 +47,7 @@ def canonicalize_depth_first(volume: Any, depth_axis: int | None = None) -> np.n
     array = np.asarray(volume)
     if array.ndim != 3:
         raise ValueError(f"Expected a 3-D volume, got shape {array.shape}")
-    if depth_axis is None:
-        candidates = [axis for axis, size in enumerate(array.shape) if size <= 64]
-        depth_axis = candidates[0] if len(candidates) == 1 else int(np.argmin(array.shape))
-    if depth_axis not in (0, 1, 2):
-        raise ValueError(f"depth_axis must be 0, 1, or 2, got {depth_axis}")
-    return np.moveaxis(array, depth_axis, 0).astype(np.float32, copy=False)
+    return to_depth_first(array, depth_axis=depth_axis).astype(np.float32, copy=False)
 
 
 def normalize_volume(volume: np.ndarray, lower: float = 0.5, upper: float = 99.5) -> np.ndarray:
@@ -80,7 +81,12 @@ def build_25d_batch(volume_zhw: np.ndarray, image_size: int = 256) -> torch.Tens
     return batch
 
 
-def reconstruct_volume(predictions: Any, num_slices: int | None = None) -> torch.Tensor:
+def reconstruct_volume(
+    predictions: Any,
+    num_slices: int | None = None,
+    *,
+    slice_indices: Any | None = None,
+) -> torch.Tensor:
     """Reconstruct ``[Z,H,W]`` labels from 2-D predictions.
 
     ``predictions`` may be a list of ``[H,W]`` labels, ``[Z,H,W]`` labels, or
@@ -100,6 +106,14 @@ def reconstruct_volume(predictions: Any, num_slices: int | None = None) -> torch
         tensor = tensor.argmax(dim=1)
     if tensor.ndim != 3:
         raise ValueError(f"Expected [Z,H,W] or [Z,C,H,W], got {tuple(tensor.shape)}")
+    if slice_indices is not None:
+        indices = [int(value) for value in (slice_indices.tolist() if torch.is_tensor(slice_indices) else slice_indices)]
+        if len(indices) != tensor.shape[0]:
+            raise ValueError(f"Expected one slice index per prediction, got {len(indices)} for {tensor.shape[0]} predictions")
+        if sorted(indices) != list(range(tensor.shape[0])):
+            raise ValueError(f"Slice indices must be a unique complete range, got {indices}")
+        order = torch.as_tensor(np.argsort(np.asarray(indices)), dtype=torch.long, device=tensor.device)
+        tensor = tensor.index_select(0, order)
     if num_slices is not None and int(num_slices) != tensor.shape[0]:
         raise ValueError(f"Expected {num_slices} slices, got {tensor.shape[0]}")
     return tensor.long()
@@ -174,6 +188,10 @@ def infer_patient_volume(
     predictions: list[torch.Tensor] = []
     initial_predictions: list[torch.Tensor] = []
     details: list[dict[str, Any]] = []
+    accepted_counts: list[torch.Tensor] = []
+    halt_turns: list[torch.Tensor] = []
+    attempted_counts: list[torch.Tensor] = []
+    final_active_values: list[torch.Tensor] = []
     try:
         for start in range(0, inputs.shape[0], max(int(batch_size), 1)):
             batch = inputs[start : start + max(int(batch_size), 1)].to(target_device)
@@ -181,6 +199,15 @@ def infer_patient_volume(
             predictions.append(logits.argmax(dim=1).cpu())
             initial_predictions.append(initial_logits.argmax(dim=1).cpu())
             details.append(detail)
+            if isinstance(detail, dict):
+                for values, destination in (
+                    (detail.get("accepted_count"), accepted_counts),
+                    (detail.get("halt_turn"), halt_turns),
+                    (detail.get("num_attempted_turns"), attempted_counts),
+                    (detail.get("final_active", detail.get("active_mask")), final_active_values),
+                ):
+                    if torch.is_tensor(values):
+                        destination.append(values.detach().cpu())
     finally:
         if model_was_training:
             model.train()
@@ -193,7 +220,17 @@ def infer_patient_volume(
         accepted.extend(int(v) for v in values)
         values = item.get("halted_turns", []) if isinstance(item, dict) else []
         halted.extend(int(v) for v in values)
-    return VolumeInferenceResult(prediction, initial_prediction, accepted, halted, details)
+    return VolumeInferenceResult(
+        prediction,
+        initial_prediction,
+        accepted,
+        halted,
+        details,
+        torch.cat(accepted_counts) if accepted_counts else None,
+        torch.cat(halt_turns) if halt_turns else None,
+        torch.cat(attempted_counts) if attempted_counts else None,
+        torch.cat(final_active_values) if final_active_values else None,
+    )
 
 
 def evaluate_comparison_modes(

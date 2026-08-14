@@ -84,9 +84,19 @@ def _metadata_spacing(root: Path) -> dict[str, tuple[float, ...]]:
     for case_id, info in (payload.get("volume_info", {}) or {}).items():
         if not isinstance(info, dict):
             continue
-        spacing = info.get("effective_spacing") or info.get("orig_spacing")
-        if isinstance(spacing, (list, tuple)) and len(spacing) >= 3:
-            values[str(case_id)] = tuple(float(value) for value in spacing[:3])
+        effective_spacing = info.get("effective_spacing")
+        original_spacing = info.get("orig_spacing")
+        # The checked-in preprocessing script stores resized NPY volumes as
+        # [H,W,Z].  Its effective spacing is already [Z,Y,X], while the raw
+        # NIfTI header's original spacing is [X,Y,Z] and needs reordering.
+        if isinstance(effective_spacing, (list, tuple)) and len(effective_spacing) >= 3:
+            values[str(case_id)] = tuple(float(value) for value in effective_spacing[:3])
+        elif isinstance(original_spacing, (list, tuple)) and len(original_spacing) >= 3:
+            values[str(case_id)] = (
+                float(original_spacing[2]),
+                float(original_spacing[0]),
+                float(original_spacing[1]),
+            )
     return values
 
 
@@ -148,7 +158,7 @@ def resolve_acdc_records(
     records: Sequence[VolumeRecord],
     *,
     split: str | None,
-    split_manifest: str | Path | None = "splits/acdc_patient_split_seed42.json",
+    split_manifest: str | Path | None = None,
     seed: int = 42,
 ) -> list[VolumeRecord]:
     if split is None:
@@ -158,20 +168,26 @@ def resolve_acdc_records(
     if explicit:
         return explicit
     manifest_path = Path(split_manifest) if split_manifest is not None else None
-    if manifest_path is not None and manifest_path.exists():
+    if manifest_path is not None:
+        if not manifest_path.exists():
+            raise FileNotFoundError(f"Configured ACDC split manifest does not exist: {manifest_path}")
         manifest = read_split_manifest(manifest_path)
         if normalized not in manifest:
             raise ValueError(f"ACDC split manifest has no {normalized!r} split: {manifest_path}")
+        discovered = {record.case_id for record in records}
+        manifest_cases = set().union(*(set(values) for values in manifest.values()))
+        missing = sorted(manifest_cases - discovered)
+        extra = sorted(discovered - manifest_cases)
+        if missing or extra:
+            raise ValueError(
+                "Configured ACDC split manifest does not match discovered cases: "
+                f"missing={missing[:5]}, extra={extra[:5]}"
+            )
         wanted = set(manifest[normalized])
         selected = [record for record in records if record.case_id in wanted]
         if not selected:
-            # A checked-in manifest may belong to the repository's real data
-            # root while a caller is running a synthetic or alternate root.
-            # Do not fabricate membership from it; fall through to a fresh
-            # deterministic patient split for the discovered records.
-            pass
-        else:
-            return selected
+            raise ValueError(f"Configured ACDC manifest selected zero {normalized!r} cases")
+        return selected
     split_ids = patient_level_split([record.case_id for record in records], seed=seed)
     if normalized not in split_ids:
         raise ValueError(f"Unknown ACDC split {split!r}")
@@ -192,12 +208,14 @@ class ACDCDataset(VolumeSliceDataset):
         split: str | None = None,
         case_ids: Iterable[str] | None = None,
         records: Sequence[VolumeRecord] | None = None,
-        split_manifest: str | Path | None = "splits/acdc_patient_split_seed42.json",
+        split_manifest: str | Path | None = None,
         seed: int = 42,
         image_size: int = 256,
         augment: bool = False,
         transform: object | None = None,
         foreground_only: bool = False,
+        depth_axis: int | None = None,
+        expected_slices: int | None = None,
         **kwargs: object,
     ) -> None:
         all_records = list(records) if records is not None else discover_acdc_records(data_root)
@@ -216,7 +234,13 @@ class ACDCDataset(VolumeSliceDataset):
             augment=augment,
             transform=transform,
             foreground_only=foreground_only,
-            **{key: value for key, value in kwargs.items() if key in {"lower_percentile", "upper_percentile", "max_cache"}},
+            depth_axis=depth_axis,
+            expected_slices=expected_slices,
+            **{
+                key: value
+                for key, value in kwargs.items()
+                if key in {"lower_percentile", "upper_percentile", "max_cache"}
+            },
         )
 
         # Keep an explicit identity mapping even though ACDC already uses the

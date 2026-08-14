@@ -9,16 +9,35 @@ from torch import Tensor
 import torch.nn.functional as F
 
 
-def signed_ranking_loss(predicted_delta_q: Tensor, actual_delta_dice: Tensor, margin: float = 0.05) -> Tensor:
+def signed_ranking_loss(
+    predicted_delta_q: Tensor,
+    actual_delta_dice: Tensor,
+    margin: float = 0.05,
+    neutral_margin: float = 0.0,
+) -> Tensor:
     predicted = predicted_delta_q.reshape(-1)
     actual = actual_delta_dice.reshape(-1).detach()
-    positive = predicted[actual > 0]
-    negative = predicted[actual < 0]
+    neutral = actual.abs() < float(neutral_margin)
+    ranking_actual = actual[~neutral]
+    ranking_predicted = predicted[~neutral]
+    positive = ranking_predicted[ranking_actual > 0]
+    negative = ranking_predicted[ranking_actual < 0]
     if positive.numel() and negative.numel():
         pairwise = F.relu(float(margin) - positive[:, None] + negative[None, :]).mean()
-        regression = F.smooth_l1_loss(predicted, actual)
-        return pairwise + 0.25 * regression
-    return F.smooth_l1_loss(predicted, actual)
+        regression = F.smooth_l1_loss(ranking_predicted, ranking_actual)
+        ranking_term = pairwise + 0.25 * regression
+    elif ranking_predicted.numel():
+        ranking_term = F.smooth_l1_loss(ranking_predicted, ranking_actual)
+    else:
+        ranking_term = predicted.new_zeros(())
+    if neutral.any():
+        # Near-zero GT changes are calibration examples, not noisy ordering
+        # pairs.  Pull their predicted quality toward the neutral point.
+        neutral_term = F.smooth_l1_loss(predicted[neutral], torch.zeros_like(predicted[neutral]))
+        if ranking_predicted.numel():
+            return ranking_term + neutral_term
+        return neutral_term
+    return ranking_term
 
 
 def _get(output: Any, *names: str) -> Tensor:
@@ -52,14 +71,27 @@ def audit_loss(
     local_weight: float = 1.0,
     global_weight: float = 1.0,
     margin: float = 0.05,
+    neutral_margin: float = 0.0,
+    local_class_weights: Tensor | None = None,
 ) -> tuple[Tensor, dict[str, Tensor]]:
     """Compute auditor loss without propagating into annotation inputs."""
 
     local_logits = _get(output, "local_logits", "local")
     delta_q = _get(output, "delta_q", "global_delta_q", "delta_quality")
     local_target, delta_dice = _targets(targets)
-    local_term = F.cross_entropy(local_logits, local_target.long())
-    global_term = signed_ranking_loss(delta_q, delta_dice, margin=margin)
+    if local_class_weights is not None:
+        local_class_weights = local_class_weights.to(device=local_logits.device, dtype=local_logits.dtype)
+        if local_class_weights.numel() != local_logits.shape[1]:
+            raise ValueError(
+                f"local_class_weights must have {local_logits.shape[1]} values, got {local_class_weights.numel()}"
+            )
+    local_term = F.cross_entropy(local_logits, local_target.long(), weight=local_class_weights)
+    global_term = signed_ranking_loss(
+        delta_q,
+        delta_dice,
+        margin=margin,
+        neutral_margin=neutral_margin,
+    )
     total = float(local_weight) * local_term + float(global_weight) * global_term
     return total, {"local": local_term.detach(), "global": global_term.detach(), "loss": total.detach()}
 

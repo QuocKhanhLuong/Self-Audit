@@ -12,6 +12,7 @@ from src.self_audit.audit.counterfactual import CounterfactualGenerator
 from src.self_audit.models.auditor import CounterfactualAuditor
 from src.self_audit.models.annotation_expert import AnnotationExpert
 from src.self_audit.models.dynamic_window import DynamicWindowAttention
+from src.self_audit.models.self_audit_net import SelfAuditNet
 from src.self_audit.training._utils import (
     adjacent_annotation_pairs,
     build_model_from_config,
@@ -205,6 +206,7 @@ def test_hard_neutral_reports_actual_delta_and_neutral_status() -> None:
         actual = float(sample.actual_delta_dice[0])
         metadata = sample.metadata["per_sample"][0]
         assert actual == pytest.approx(float(metadata["actual_delta_dice"]), abs=1e-6)
+        assert 1 <= int(metadata["retry_count"]) <= generator.neutral_max_retries
         if metadata["neutral_satisfied"]:
             found_neutral = True
             assert abs(actual) < generator.epsilon_neutral
@@ -255,6 +257,50 @@ def test_phase_c_audit_gradients_are_auditor_only() -> None:
     annotation_only = compute_joint_losses(model, batch, lambda_audit=0.0, t_max=1)[0]
     annotation_only.backward()
     assert torch.allclose(annotation_with_audit, model.annotation.weight.grad, atol=1e-6, rtol=1e-5)
+
+
+def test_phase_c_separate_loss_terms_have_separate_gradient_paths() -> None:
+    torch.manual_seed(31)
+    model = _ToyJointModel()
+    batch = {"image": torch.randn(2, 3, 16, 16), "mask": torch.randint(0, 4, (2, 16, 16))}
+    _, details = compute_joint_losses(model, batch, t_max=1)
+    details["audit_loss_tensor"].backward()
+    assert model.annotation.weight.grad is None
+    assert any(parameter.grad is not None and bool(parameter.grad.abs().sum() > 0) for parameter in model.auditor.parameters())
+
+    model.zero_grad(set_to_none=True)
+    _, details = compute_joint_losses(model, batch, t_max=1)
+    details["annotation_loss_tensor"].backward()
+    assert model.annotation.weight.grad is not None
+    assert not any(parameter.grad is not None and bool(parameter.grad.abs().sum() > 0) for parameter in model.auditor.parameters())
+
+
+def test_actual_self_audit_net_keeps_phase_c_gradient_paths_separate() -> None:
+    torch.manual_seed(41)
+    model = SelfAuditNet(pretrained_encoder=False, shared_channels=16, window_k=8, max_turns=1)
+    batch = {"image": torch.randn(1, 3, 32, 32), "mask": torch.randint(0, 4, (1, 32, 32))}
+
+    _, annotation_details = compute_joint_losses(model, batch, tau_accept=-float("inf"), t_max=1)
+    annotation_details["annotation_loss_tensor"].backward()
+    assert any(parameter.grad is not None and bool(parameter.grad.abs().sum() > 0) for parameter in model.encoder.parameters())
+    assert any(parameter.grad is not None and bool(parameter.grad.abs().sum() > 0) for parameter in model.fpn.parameters())
+    assert any(parameter.grad is not None and bool(parameter.grad.abs().sum() > 0) for parameter in model.initial_head.parameters())
+    assert any(parameter.grad is not None and bool(parameter.grad.abs().sum() > 0) for parameter in model.annotation_expert.parameters())
+    assert any(
+        parameter.grad is not None and bool(parameter.grad.abs().sum() > 0)
+        for parameter in model.annotation_expert.refinement_block.generator.parameters()
+    )
+
+    model.zero_grad(set_to_none=True)
+    _, audit_details = compute_joint_losses(model, batch, tau_accept=-float("inf"), t_max=1)
+    audit_details["audit_loss_tensor"].backward()
+    assert any(parameter.grad is not None and bool(parameter.grad.abs().sum() > 0) for parameter in model.auditor.parameters())
+    annotation_modules = (model.encoder, model.fpn, model.initial_head, model.annotation_expert)
+    assert not any(
+        parameter.grad is not None and bool(parameter.grad.abs().sum() > 0)
+        for module in annotation_modules
+        for parameter in module.parameters()
+    )
 
 
 def test_dynamic_window_responds_to_audit_conditioning_and_backpropagates() -> None:

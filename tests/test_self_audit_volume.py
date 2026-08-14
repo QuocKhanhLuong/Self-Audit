@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 import torch
 
 from src.self_audit.evaluation.metrics import annotation_metrics
@@ -12,6 +13,12 @@ def test_volume_reconstruction_from_2d_predictions() -> None:
     volume = reconstruct_volume(predictions, num_slices=2)
     assert volume.shape == (2, 4, 5)
     assert volume[1].unique().tolist() == [1]
+
+
+def test_volume_reconstruction_rejects_duplicate_or_missing_slice_indices() -> None:
+    predictions = [torch.zeros(2, 2), torch.ones(2, 2)]
+    with pytest.raises(ValueError, match="unique complete range"):
+        reconstruct_volume(predictions, num_slices=2, slice_indices=[0, 0])
 
 
 def test_volume_25d_batch_keeps_depth_and_boundary_contract() -> None:

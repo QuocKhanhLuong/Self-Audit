@@ -124,6 +124,23 @@ def to_depth_first(
     return np.moveaxis(array, axis, 0)
 
 
+def reorder_spacing(
+    spacing: Sequence[float] | None,
+    depth_axis: int,
+) -> tuple[float, ...] | None:
+    """Reorder source-axis spacing to match a ``[Z,H,W]`` array."""
+
+    if spacing is None:
+        return None
+    values = tuple(float(value) for value in spacing)
+    if len(values) < 3:
+        return None
+    axis = int(depth_axis)
+    if axis not in (0, 1, 2):
+        raise ValueError(f"depth_axis must be 0, 1, or 2, got {depth_axis}")
+    return (values[axis],) + tuple(values[index] for index in range(3) if index != axis)
+
+
 def percentile_clip_and_zscore(
     volume: np.ndarray,
     lower_percentile: float = 0.5,
@@ -260,11 +277,11 @@ def read_split_manifest(path: str | Path) -> dict[str, list[str]]:
         for alias in aliases:
             direct = payload.get(f"{alias}_cases") or payload.get(f"{alias}_volumes")
             if direct:
-                values = [Path(str(item)).stem for item in direct]
+                values = [_strip_known_suffixes(Path(str(item)).name) for item in direct]
                 break
             nested = payload.get("splits", {}).get(alias, {}) if isinstance(payload.get("splits"), dict) else {}
             if isinstance(nested, dict) and (nested.get("cases") or nested.get("volumes")):
-                values = [Path(str(item)).stem for item in (nested.get("cases") or nested.get("volumes"))]
+                values = [_strip_known_suffixes(Path(str(item)).name) for item in (nested.get("cases") or nested.get("volumes"))]
                 break
         if values:
             result[split] = sorted(set(values))
@@ -288,6 +305,8 @@ class VolumeSliceDataset(Dataset):
         lower_percentile: float = 0.5,
         upper_percentile: float = 99.5,
         max_cache: int = 4,
+        depth_axis: int | None = None,
+        expected_slices: int | None = None,
     ) -> None:
         if not records:
             raise ValueError("Dataset has no volume records")
@@ -299,20 +318,24 @@ class VolumeSliceDataset(Dataset):
         self.lower_percentile = float(lower_percentile)
         self.upper_percentile = float(upper_percentile)
         self.max_cache = max(int(max_cache), 1)
+        self.depth_axis = depth_axis
+        self.expected_slices = expected_slices
         self._cache: OrderedDict[int, tuple[np.ndarray, np.ndarray, tuple[float, ...] | None]] = OrderedDict()
         self.index_map: list[tuple[int, int]] = []
         for record_index, record in enumerate(self.records):
             volume, volume_spacing = load_array(record.image_path)
             mask, mask_spacing = load_array(record.mask_path)
-            volume = to_depth_first(volume)
-            mask = to_depth_first(mask, expected_slices=volume.shape[0])
+            axis = self.depth_axis if self.depth_axis is not None else (2 if record.source_format == "nifti" else None)
+            source_volume_axis = axis if axis is not None else infer_depth_axis(volume.shape, expected_slices=self.expected_slices)
+            volume = to_depth_first(volume, expected_slices=self.expected_slices, depth_axis=axis)
+            mask = to_depth_first(mask, expected_slices=volume.shape[0], depth_axis=axis)
             if volume.shape != mask.shape:
                 raise ValueError(f"Image/mask shape mismatch for {record.case_id}: {volume.shape} vs {mask.shape}")
             for slice_index in range(volume.shape[0]):
                 if self.foreground_only and not np.any(mask[slice_index] > 0):
                     continue
                 self.index_map.append((record_index, slice_index))
-            spacing = record.spacing or volume_spacing or mask_spacing
+            spacing = record.spacing or reorder_spacing(volume_spacing, source_volume_axis) or reorder_spacing(mask_spacing, source_volume_axis)
             self.records[record_index] = VolumeRecord(
                 **{**record.__dict__, "spacing": spacing}
             )
@@ -329,12 +352,14 @@ class VolumeSliceDataset(Dataset):
         record = self.records[record_index]
         volume, volume_spacing = load_array(record.image_path)
         mask, mask_spacing = load_array(record.mask_path)
-        volume = to_depth_first(volume)
-        mask = to_depth_first(mask, expected_slices=volume.shape[0])
+        axis = self.depth_axis if self.depth_axis is not None else (2 if record.source_format == "nifti" else None)
+        source_volume_axis = axis if axis is not None else infer_depth_axis(volume.shape, expected_slices=self.expected_slices)
+        volume = to_depth_first(volume, expected_slices=self.expected_slices, depth_axis=axis)
+        mask = to_depth_first(mask, expected_slices=volume.shape[0], depth_axis=axis)
         if volume.shape != mask.shape:
             raise ValueError(f"Image/mask shape mismatch for {record.case_id}: {volume.shape} vs {mask.shape}")
         volume = percentile_clip_and_zscore(volume, self.lower_percentile, self.upper_percentile)
-        spacing = record.spacing or volume_spacing or mask_spacing
+        spacing = record.spacing or reorder_spacing(volume_spacing, source_volume_axis) or reorder_spacing(mask_spacing, source_volume_axis)
         value = (volume, mask.astype(np.int64, copy=False), spacing)
         self._cache[record_index] = value
         if len(self._cache) > max(int(self._cache_size), 1):
@@ -362,6 +387,8 @@ class VolumeSliceDataset(Dataset):
             # PyTorch's default DataLoader while remaining explicit that no
             # physical spacing was available in an NPY-only layout.
             "spacing": spacing if spacing is not None else (1.0, 1.0, 1.0),
+            "spacing_known": bool(spacing is not None),
+            "spacing_units": "mm" if spacing is not None else "pixel",
         }
         if self.transform is not None:
             sample = self.transform(sample)

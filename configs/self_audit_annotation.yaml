@@ -7,17 +7,25 @@ train_split: train
 val_split: val
 test_split: test
 image_size: 256
+depth_axis: 2  # checked-in preprocessed ACDC convention is [H,W,Z]
 num_classes: 4
 batch_size: 4
 epochs: 100
 num_workers: 2
+pin_memory: true
+persistent_workers: true
+prefetch_factor: 2
+amp: true
+warmup_epochs: 5
+gradient_accumulation_steps: 1
+deterministic: false
 seed: 42
 device: cuda
 augment: true
 lr: 0.0003
 encoder_lr: 0.00003
 weight_decay: 0.0001
-intermediate_weight: 1.0
+stage_weights: [0.5, 0.7, 0.8, 1.0]
 grad_clip: 3.0
 output: weights/self_audit/phase_a_annotation.pt
 model:

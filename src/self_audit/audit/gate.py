@@ -53,18 +53,44 @@ class ThresholdGate:
         active = torch.ones(state.shape[0], device=state.device, dtype=torch.bool)
         accepted_turns: list[int] = []
         halted_turns: list[int] = []
+        accepted_count = torch.zeros(state.shape[0], device=state.device, dtype=torch.long)
+        halt_turn = torch.full((state.shape[0],), -1, device=state.device, dtype=torch.long)
+        num_attempted_turns = torch.zeros(state.shape[0], device=state.device, dtype=torch.long)
+        transition_active_masks: list[Tensor] = []
+        transition_previous: list[Tensor] = []
+        transition_candidates: list[Tensor] = []
         for turn in range(self.t_max):
             if not bool(active.any()):
                 break
+            active_at_start = active.clone()
             candidate, delta_q = transition(state, turn)
+            transition_active_masks.append(active_at_start)
+            transition_previous.append(state)
+            transition_candidates.append(candidate)
+            num_attempted_turns += active_at_start.to(dtype=torch.long)
             decision = self.decide(state, candidate, delta_q, active=active)
             state = decision.state
+            accepted_count += decision.accepted.to(dtype=torch.long)
             if bool(decision.accepted.any()):
                 accepted_turns.append(turn)
             if bool(decision.halted.any()):
                 halted_turns.append(turn)
+                newly_halted = decision.halted & (halt_turn < 0)
+                halt_turn[newly_halted] = turn
             active = active & decision.accepted
-        return {"state": state, "accepted_turns": accepted_turns, "halted_turns": halted_turns, "active": active}
+        return {
+            "state": state,
+            "accepted_turns": accepted_turns,
+            "halted_turns": halted_turns,
+            "active": active,
+            "final_active": active,
+            "accepted_count": accepted_count,
+            "halt_turn": halt_turn,
+            "num_attempted_turns": num_attempted_turns,
+            "transition_active_masks": transition_active_masks,
+            "transition_previous": transition_previous,
+            "transition_candidates": transition_candidates,
+        }
 
 
 accept_candidate = accept_reject

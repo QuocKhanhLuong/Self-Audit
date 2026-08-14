@@ -13,6 +13,9 @@ from .common import (
     patient_id_from_case_id,
     patient_level_split,
     percentile_clip_and_zscore,
+    infer_depth_axis,
+    reorder_spacing,
+    to_depth_first,
     validate_patient_split,
 )
 from .mnms import (
@@ -47,6 +50,9 @@ __all__ = [
     "patient_id_from_case_id",
     "patient_level_split",
     "percentile_clip_and_zscore",
+    "infer_depth_axis",
+    "reorder_spacing",
+    "to_depth_first",
     "normalize_volume",
     "validate_patient_split",
 ]
