@@ -10,6 +10,9 @@ num_workers: 2
 seed: 42
 device: cuda
 auditor_lr: 0.0003
+counterfactual:
+  epsilon_neutral: 0.02
+  neutral_max_retries: 8
 output: weights/self_audit/phase_b_auditor.pt
 model:
   encoder_name: convnext_tiny

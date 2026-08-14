@@ -12,6 +12,7 @@ test:
   dataset: mnms
   data_root: data/MnMs
   split: test
+  # Assumes raw label order: Background, LV, MYO, RV. Verify per release.
   raw_to_acdc:
     0: 0
     1: 3

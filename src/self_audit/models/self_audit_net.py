@@ -82,6 +82,10 @@ class SelfAuditNet(nn.Module):
             "A0_logits": initial,
             "logits": state,
             "A_t": state,
+            # ``states`` remains refinement-only for compatibility.  The
+            # explicit trace is the source of truth for adjacent transitions.
+            "state_trace": [initial] + states,
+            "all_states": [initial] + states,
             "states": states,
             "refinement_logits": states,
             "expert_outputs": expert_outputs,
@@ -120,6 +124,8 @@ class SelfAuditNet(nn.Module):
         candidates: list[Tensor] = []
         accepted_turns: list[int] = []
         halted_turns: list[int] = []
+        transition_previous: list[Tensor] = []
+        transition_candidates: list[Tensor] = []
         active = torch.ones(images.shape[0], dtype=torch.bool, device=images.device)
         if mode != "initial_only":
             for turn in range(cap):
@@ -134,6 +140,8 @@ class SelfAuditNet(nn.Module):
                     return_metadata=False,
                 )
                 candidate = expert_output.candidate_logits
+                transition_previous.append(state)
+                transition_candidates.append(candidate)
                 previous_probs = state.detach().softmax(dim=1)
                 candidate_probs = candidate.detach().softmax(dim=1)
                 entropy_previous = -(previous_probs.clamp_min(1e-8) * previous_probs.clamp_min(1e-8).log()).sum(dim=1, keepdim=True)
@@ -179,6 +187,8 @@ class SelfAuditNet(nn.Module):
             "A_t": state,
             "states": candidates,
             "candidates": candidates,
+            "transition_previous": transition_previous,
+            "transition_candidates": transition_candidates,
             "audits": audits,
             "accepted_turns": accepted_turns,
             "halted_turns": halted_turns,

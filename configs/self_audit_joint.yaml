@@ -12,6 +12,10 @@ device: cuda
 joint_lr: 0.00001
 joint_encoder_lr: 0.000001
 weight_decay: 0.0001
+lambda_audit: 1.0
+audit:
+  tau_accept: 0.0
+  t_max: 3
 output: weights/self_audit/phase_c_joint.pt
 model:
   encoder_name: convnext_tiny
@@ -20,4 +24,3 @@ model:
   num_classes: 4
   window_k: 8
   max_turns: 3
-  tau_accept: 0.0

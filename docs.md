@@ -177,10 +177,17 @@ it is not an absolute-confidence loss.
 `self_audit.audit.counterfactual.CounterfactualGenerator` starts from real
 model probabilities. Its default sampling mix is 40% positive local repair,
 40% controlled negative perturbation, and 20% hard/neutral mixed transition.
-Positive repairs move 30–60% toward GT in a local error region. Negative
-operations include erosion, dilation, boundary displacement, hole insertion,
-false island, component deletion, and class swap. On-policy expert transitions
-are also supported. Candidates stay in soft probability space.
+Positive repairs sample a strength uniformly in 30–60% and move only a
+connected partial error region toward GT; `A_positive` is never replaced by
+GT. Negative operations have separate localized implementations for erosion,
+dilation, boundary displacement, hole insertion, false island, component
+deletion, and semantic class swap. Each sample exposes `valid`, `edit_mask`,
+strengths, source/target classes, and measured GT-derived DeltaDice metadata.
+Hard/neutral samples combine spatially separate local repair and regression
+edits, retry within the configured `epsilon_neutral`, and report the closest
+actual DeltaDice when the tolerance cannot be met. On-policy expert transitions
+are also supported. Candidates stay finite, non-negative, and normalized in
+soft probability space.
 
 `self_audit.audit.gate.ThresholdGate` applies the non-differentiable global
 decision:
@@ -204,13 +211,34 @@ v1.
   Phase A trains encoder, FPN, initial head, and shared expert with Dice+CE on
   the initial and intermediate soft states. It does not run audit decisions.
 - `configs/self_audit_auditor.yaml` / `training/train_auditor.py`: Phase B
-  freezes annotation parameters and trains the auditor on synthetic and
-  on-policy transitions.
+  freezes annotation parameters and trains the auditor on every adjacent
+  on-policy transition `A0→A1`, `A1→A2`, ..., `A_(T-1)→A_T`, plus one
+  synthetic transition around every `A_t`. The total audit loss is averaged
+  across the explicit transition list.
 - `configs/self_audit_joint.yaml` / `training/finetune_joint.py`: Phase C
-  uses low learning rates and the complete threshold-controlled flow while
-  preserving detached audit inputs and a non-differentiable gate.
+  uses low learning rates and the complete threshold-controlled flow. The
+  annotation loss updates encoder/FPN/heads/expert through retained final
+  annotation behavior; `lambda_audit` scales a separate local-plus-global
+  audit loss whose `H`, `A_previous`, and `A_candidate` inputs are detached.
+  Therefore audit gradients update only Auditor parameters. The accept/reject
+  gate remains non-differentiable and `tau_accept`/`t_max` live under `audit`,
+  not in the model constructor.
 - `configs/self_audit_acdc_to_mnms.yaml`: ACDC-only training and M&Ms external
   domain-shift evaluation; it does not merge datasets.
+
+`training._utils.build_model_from_config()` validates the supported model
+keys explicitly. `image_size`, batch size, epochs, and data roots remain
+data/training settings and are never forwarded to `SelfAuditNet`; unknown
+model keys fail loudly instead of being silently ignored. The M&Ms default
+mapping `{0: 0, 1: 3, 2: 2, 3: 1}` assumes raw order Background, LV, MYO, RV.
+Before evaluating a release, inspect one real mask with:
+
+```bash
+python scripts/inspect_mnms_mask.py --mask /path/to/mnms-mask.nii.gz
+```
+
+The command prints unique raw labels, the configured mapping, and mapped
+labels. Unknown labels remain errors.
 
 Pretrained encoder parameters are placed in a lower-LR optimizer group than
 new heads. The current training entrypoints expect real data and fail clearly
@@ -232,6 +260,66 @@ when a caller supplies GT; `infer_patient_volume` rejects it so GT cannot enter
 the deployable inference path. `evaluation.metrics` reports Dice, HD95, ASSD,
 precision, recall, per-class values, and dependency-free transition AUROC,
 AUPRC, correlation, FIX F1, and REGRESS F1 helpers.
+
+## Patch verification record (2026-08-14)
+
+The previous S3R/distillation/teacher implementation was removed in the
+baseline commit history. This patch did not restore or rewrite that legacy
+tree; it remains recoverable with Git history and is not a dependency of the
+active Self-Audit implementation.
+
+Verified in the available Anaconda environment with PyTorch 2.6.0 and pytest
+7.4.4:
+
+```text
+/Users/alvinluong/opt/anaconda3/bin/python -m pytest -q tests/test_self_audit_*.py
+33 passed
+```
+
+The literal command requested from the default `python` resolved to the
+miniforge environment and failed before collection with
+`No module named pytest`; the same glob was then run successfully with the
+alternate interpreter shown above.
+
+The complete repository suite also passed:
+
+```text
+/Users/alvinluong/opt/anaconda3/bin/python -m pytest -q
+36 passed
+```
+
+The suite includes baseline YAML construction, adjacent transition extraction,
+all concrete counterfactual operations, sampled positive repair strength and
+validity, hard-neutral actual DeltaDice reporting, probability normalization,
+Phase-C gradient separation, dynamic-window audit conditioning, and threshold
+halt behavior. Source compilation also passed:
+
+```text
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m py_compile $(rg --files src scripts tests -g '*.py')
+```
+
+The repository's default Python 3.12 environment has an incomplete PyTorch
+installation and no pytest; the alternate environment above was used for the
+actual test runs. No real-data metric is inferred from unit tests.
+
+The synthetic end-to-end smoke passed with random `[2,3,64,64]` input through
+real `SelfAuditNet` inference and Phase-C backward:
+
+```text
+finite_inference=true
+candidate_transitions=1
+accepted_turns=[]
+halted_turns=[0]
+phase_c_transitions=1
+finite_gradients=true
+```
+
+The real preprocessed ACDC path exists and its loader smoke passed for
+`patient001_ED`, volume shape `(10,224,224)`, first/middle/last slices
+`0/5/9`, resized image `[3,256,256]`, mask `[256,256]`, labels `[0]` on the
+first slice and `[0,1,2,3]` on the middle/last slices. NPY data had no physical
+spacing metadata, so explicit unit spacing `(1.0,1.0,1.0)` was reported.
+M&Ms data was not present at `data/MnMs`; no M&Ms real-data smoke was claimed.
 
 ## Tests and verification
 
@@ -258,15 +346,19 @@ python -m py_compile $(rg --files src scripts tests -g '*.py')
 
 ## Remaining TODOs before real ACDC training
 
-1. Install/activate the repository's declared Python 3.10 environment with a
-   working PyTorch, timm, nibabel, SciPy, and pytest stack.
-2. Verify the available preprocessed ACDC volumes against the intended raw
-   release and verify/generate the train/val/test manifest. The checked-in
-   manifest contains train/val; a labeled ACDC test split is still required
-   for the requested three-way reporting.
+1. Use a complete training environment for the declared Python 3.10 stack and
+   confirm the real ConvNeXt-Tiny ImageNet checkpoint is available; the
+   verified unit-test environment intentionally used `pretrained_encoder=false`
+   to avoid network access.
+2. Run the real ACDC one-patient/volume/slice smoke and confirm patient-level
+   train/val/test manifests. The repository currently has preprocessed ACDC
+   files, but the checked-in manifest still requires validation for the
+   intended release and a labeled ACDC test split is required for three-way
+   reporting.
 3. Run preprocessing/data integration checks on real NIfTI orientation and
    spacing metadata, then confirm patient counts and no overlap.
-4. Download/cache ConvNeXt-Tiny ImageNet weights through timm and run Phase A
-   before Phase B/Phase C.
-5. Calibrate `tau_accept` on validation transitions and report the required
-   harmful-acceptance, beneficial-rejection, net-Dice, and mean-turn analyses.
+4. Run Phase A before Phase B/Phase C and calibrate `tau_accept` on validation
+   transitions. Report harmful acceptance, beneficial rejection, net Dice,
+   and mean accepted turns.
+5. M&Ms evaluation remains blocked until the external M&Ms root is present and
+   its raw label order is verified with `inspect_mnms_mask.py`.
