@@ -14,9 +14,16 @@ import json
 import os
 import random
 import re
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
+
+ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "src"
+for path in (ROOT, SRC):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
 
 
 PATIENT_RE = re.compile(r"^(patient\d+)_")
@@ -32,8 +39,16 @@ def patient_id_from_volume(volume_name: str) -> str:
 
 
 def discover_volumes(data_dir: str | Path) -> list[str]:
-    volumes_dir = Path(data_dir) / "volumes"
-    return sorted(p.name for p in volumes_dir.glob("*.npy"))
+    try:
+        from self_audit.data.acdc import discover_acdc_records
+
+        records = discover_acdc_records(data_dir)
+        return [f"{r.case_id}.npy" for r in records]
+    except Exception:
+        volumes_dir = Path(data_dir) / "volumes"
+        if volumes_dir.is_dir():
+            return sorted(p.name for p in volumes_dir.glob("*.npy"))
+        return sorted(p.name for p in Path(data_dir).rglob("*.npy") if "mask" not in p.parts and "labels" not in p.parts)
 
 
 def group_by_patient(volume_files: Iterable[str]) -> dict[str, list[str]]:
