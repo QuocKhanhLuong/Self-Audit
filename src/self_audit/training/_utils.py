@@ -956,6 +956,25 @@ class WandbLogger:
         except Exception as exc:
             print(f"[wandb] warning: failed to log metrics ({exc})")
 
+    def log_images(self, images: Mapping[str, Any], step: int | None = None) -> None:
+        if not self.enabled or self._run is None:
+            return
+        try:
+            import wandb
+            payload: dict[str, Any] = {}
+            for key, val in images.items():
+                if isinstance(val, (str, Path)) and Path(val).is_file():
+                    payload[key] = wandb.Image(str(val))
+                elif hasattr(val, "savefig"):
+                    payload[key] = wandb.Image(val)
+            if payload:
+                if step is not None:
+                    wandb.log(payload, step=int(step))
+                else:
+                    wandb.log(payload)
+        except Exception as exc:
+            print(f"[wandb] warning: failed to log images ({exc})")
+
     def finish(self) -> None:
         if self.enabled and self._run is not None:
             try:

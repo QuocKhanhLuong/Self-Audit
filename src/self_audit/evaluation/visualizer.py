@@ -387,8 +387,8 @@ def plot_phase_c_audit_trace(
         axes[i, 2].set_xlabel(f"A0 Dice: {mean_init:.3f}", fontsize=10)
 
         # Col 3: Intermediate candidate if available, else difference
-        if transition_candidates and len(transition_candidates) > 0:
-            cand = _to_numpy_2d(transition_candidates[0][i]).astype(np.int64)
+        if transition_candidates is not None and i < len(transition_candidates):
+            cand = _to_numpy_2d(transition_candidates[i]).astype(np.int64)
             axes[i, 3].imshow(render_overlay(img, cand))
             axes[i, 3].set_xlabel("Candidate Turn 1", fontsize=10)
         else:

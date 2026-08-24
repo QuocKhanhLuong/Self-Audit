@@ -70,7 +70,7 @@ def main() -> None:
     model = build_model_from_config(config, device)
     ckpt_path = Path(args.checkpoint)
     if ckpt_path.is_file():
-        load_checkpoint(ckpt_path, model, map_location=device, strict=False)
+        load_checkpoint(ckpt_path, model=model, map_location=device, strict=False)
         print(f"[Visualizer] Loaded checkpoint: {ckpt_path}")
     else:
         print(f"[Visualizer Warning] Checkpoint not found at {ckpt_path}. Using initialized weights.")
@@ -136,14 +136,14 @@ def main() -> None:
                 sample_msks.append(batch["mask"][idx].cpu())
                 sample_inits.append(init_log[idx].argmax(dim=0).cpu())
                 sample_finals.append(fin_log[idx].argmax(dim=0).cpu())
+                if cands and len(cands) > 0 and idx < cands[0].shape[0]:
+                    sample_candidates.append(cands[0][idx].argmax(dim=0).cpu())
                 cids = batch.get("case_id", [f"Case_{len(sample_imgs)}"])
                 sample_cids.append(cids[idx] if isinstance(cids, list) else f"Case_{len(sample_imgs)}")
-                if halts is not None and torch.is_tensor(halts):
+                if halts is not None and torch.is_tensor(halts) and idx < len(halts):
                     sample_halts.append(int(halts[idx].cpu()))
                 if len(sample_imgs) >= args.num_samples:
                     break
-            if cands:
-                sample_candidates.append([c.argmax(dim=1).cpu() for c in cands])
             if len(sample_imgs) >= args.num_samples:
                 break
 
@@ -157,7 +157,7 @@ def main() -> None:
         sample_msks[:args.num_samples],
         sample_inits[:args.num_samples],
         sample_finals[:args.num_samples],
-        transition_candidates=sample_candidates[0] if sample_candidates else None,
+        transition_candidates=sample_candidates[:args.num_samples] if sample_candidates else None,
         halted_turns=sample_halts[:args.num_samples] if sample_halts else None,
         tau_accept=float(args.tau_accept),
         case_ids=sample_cids[:args.num_samples],
