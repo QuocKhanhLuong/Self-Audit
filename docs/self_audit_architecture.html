@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Self-Audit research architecture</title>
+  <style>
+    :root {
+      --paper: #f5f5f5;
+      --paper-2: #ececec;
+      --ink: #2d3142;
+      --muted: #4f5d75;
+      --soft: #7a8399;
+      --rule: rgba(45, 49, 66, 0.14);
+      --rule-solid: #bfc0c0;
+      --accent: #eb6c36;
+      --accent-tint: rgba(235, 108, 54, 0.08);
+      --blue: #2e5aa8;
+      --blue-tint: rgba(46, 90, 168, 0.06);
+      --white: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+    html { background: var(--paper); }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: 'Geist', Arial, sans-serif;
+    }
+    main {
+      width: min(100%, 2400px);
+      margin: 0 auto;
+      padding: 36px 36px 28px;
+    }
+    header { margin: 0 0 20px; }
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--soft);
+      font: 600 12px/1 'Geist Mono', monospace;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      max-width: 1800px;
+      font: 400 34px/1.05 'Instrument Serif', Georgia, serif;
+      letter-spacing: -.01em;
+    }
+    .subtitle {
+      max-width: 1800px;
+      margin: 10px 0 0;
+      color: var(--muted);
+      font: 400 14px/1.45 'Geist', Arial, sans-serif;
+    }
+    figure { margin: 0; }
+    .canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: var(--paper);
+    }
+    figcaption {
+      max-width: 2200px;
+      margin: 16px 0 0;
+      color: var(--muted);
+      font: 400 13px/1.5 'Geist', Arial, sans-serif;
+    }
+    .source-note {
+      margin: 12px 0 0;
+      color: var(--soft);
+      font: 400 11px/1.4 'Geist Mono', monospace;
+    }
+    @media (max-width: 1080px) {
+      main { padding: 24px 16px; }
+      h1 { font-size: 28px; }
+      .subtitle { font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">Self-Audit / CVPR–MICCAI research architecture</p>
+    <h1>Self-Audit: Counterfactual Recurrent Annotation with Audit-Guided Dynamic Support</h1>
+    <p class="subtitle">A 2.5D cardiac MRI observation is refined only when a transition-level Auditor predicts that the proposed annotation update is useful. Local audit evidence then reshapes the next turn’s dynamic support geometry.</p>
+  </header>
+
+  <figure>
+    <svg class="canvas" viewBox="0 0 2400 1540" role="img" aria-labelledby="self-audit-architecture-title self-audit-architecture-desc">
+      <title id="self-audit-architecture-title">Self-Audit counterfactual recurrent annotation architecture</title>
+      <desc id="self-audit-architecture-desc">A paper-style architecture figure showing 2.5D cardiac MRI encoded by ConvNeXt-Tiny and a lightweight FPN, refined by a shared audit-guided dynamic-window Annotation Expert, evaluated by a transition Auditor, accepted or rejected by a threshold gate, and supervised during training by ground-truth counterfactual transitions.</desc>
+
+      <defs>
+        <marker id="self-audit-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+          <polygon points="0 0, 10 4, 0 8" fill="#4f5d75"/>
+        </marker>
+        <marker id="self-audit-arrow-accent" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+          <polygon points="0 0, 10 4, 0 8" fill="#eb6c36"/>
+        </marker>
+        <marker id="self-audit-arrow-blue" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+          <polygon points="0 0, 10 4, 0 8" fill="#2e5aa8"/>
+        </marker>
+        <marker id="self-audit-arrow-soft" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+          <polygon points="0 0, 10 4, 0 8" fill="#7a8399"/>
+        </marker>
+        <pattern id="self-audit-grid" width="16" height="16" patternUnits="userSpaceOnUse">
+          <path d="M 16 0 L 0 0 0 16" fill="none" stroke="rgba(45,49,66,.06)" stroke-width="1"/>
+        </pattern>
+      </defs>
+
+      <!-- Paper -->
+      <rect x="0" y="0" width="2400" height="1540" fill="#f5f5f5"/>
+
+      <!-- Major regions -->
+      <rect x="32" y="104" width="844" height="456" rx="8" fill="rgba(45,49,66,.018)" stroke="rgba(45,49,66,.12)" stroke-width="1"/>
+      <rect x="916" y="104" width="320" height="456" rx="8" fill="rgba(45,49,66,.018)" stroke="rgba(45,49,66,.12)" stroke-width="1"/>
+      <rect x="1260" y="84" width="1108" height="832" rx="8" fill="rgba(45,49,66,.024)" stroke="rgba(45,49,66,.16)" stroke-width="1.2"/>
+      <rect x="32" y="956" width="2336" height="492" rx="8" fill="rgba(235,108,54,.018)" stroke="rgba(235,108,54,.42)" stroke-width="1" stroke-dasharray="6,5"/>
+
+      <!-- Region labels -->
+      <rect x="48" y="108" width="208" height="20" rx="4" fill="#f5f5f5"/>
+      <text x="52" y="123" class="zone-label">SHARED OBSERVATION + ENCODER</text>
+      <rect x="932" y="108" width="172" height="20" rx="4" fill="#f5f5f5"/>
+      <text x="936" y="123" class="zone-label">INITIAL ANNOTATION</text>
+      <rect x="1276" y="88" width="276" height="20" rx="4" fill="#f5f5f5"/>
+      <text x="1280" y="103" class="zone-label">INFERENCE · ADAPTIVE SELF-AUDIT</text>
+      <rect x="48" y="960" width="268" height="20" rx="4" fill="#f5f5f5"/>
+      <text x="52" y="975" class="zone-label accent-label">TRAINING ONLY · GT SUPERVISION</text>
+
+      <!-- Dataset / contract note -->
+      <text x="32" y="36" class="eyebrow-svg">ACDC primary development</text>
+      <text x="32" y="60" class="tiny-svg">M&amp;Ms = external domain-shift evaluation · Train ACDC → Test M&amp;Ms · no dataset merge</text>
+      <text x="2368" y="60" class="tiny-svg" text-anchor="end">slice-level transition audit · 2D prediction · stacked 3D output</text>
+
+      <!-- ========================================================= -->
+      <!-- INFERENCE CONNECTORS: drawn before boxes -->
+      <!-- ========================================================= -->
+
+      <!-- Input → encoder → FPN → shared features -->
+      <path d="M 320 310 H 352" class="flow" marker-end="url(#self-audit-arrow)"/>
+      <path d="M 636 310 H 668" class="flow" marker-end="url(#self-audit-arrow)"/>
+      <path d="M 876 310 H 912" class="flow" marker-end="url(#self-audit-arrow)"/>
+
+      <!-- Shared features → initial head -->
+      <path d="M 1056 264 V 304" class="flow" marker-end="url(#self-audit-arrow)"/>
+      <path d="M 1056 490 V 512" class="flow" marker-end="url(#self-audit-arrow)"/>
+
+      <!-- Shared features → recurrent expert, routed above the state box -->
+      <path d="M 1200 220 H 1244 Q 1252 220 1252 212 V 144 Q 1252 136 1260 136 H 1600 Q 1608 136 1608 144 V 156" class="flow" marker-end="url(#self-audit-arrow)"/>
+
+      <!-- A0 → current state, with a separate left-edge attach point -->
+      <path d="M 1168 548 H 1268 Q 1276 548 1276 540 V 268 Q 1276 260 1284 260 H 1292" class="flow" marker-end="url(#self-audit-arrow)"/>
+
+      <!-- Current state → shared Annotation Expert -->
+      <path d="M 1436 228 H 1464" class="flow" marker-end="url(#self-audit-arrow)"/>
+
+      <!-- Expert → candidate → Auditor: primary path -->
+      <path d="M 1944 384 H 1984" class="flow-strong" marker-end="url(#self-audit-arrow-accent)"/>
+      <path d="M 2128 376 H 2160" class="flow-strong" marker-end="url(#self-audit-arrow-accent)"/>
+
+      <!-- Auditor global score → threshold decision; fan the two bottom ports -->
+      <path d="M 2228 528 V 536 Q 2228 544 2236 544 H 2244 V 548" class="flow" marker-end="url(#self-audit-arrow)"/>
+
+      <!-- Accept branch → next turn -->
+      <path d="M 2244 732 V 744 H 1810 Q 1802 744 1802 752" class="flow" marker-end="url(#self-audit-arrow)"/>
+
+      <!-- Local audit evidence → next-turn state, routed outside the decision -->
+      <path d="M 2260 528 H 2352 Q 2360 528 2360 536 V 832 Q 2360 840 2352 840 H 1960 Q 1952 840 1952 832 V 800" class="feedback" marker-end="url(#self-audit-arrow-blue)"/>
+
+      <!-- Accepted state → expert reuse / feedback -->
+      <path d="M 1680 780 H 1452 Q 1444 780 1444 772 V 724 Q 1444 716 1452 716 H 1500" class="feedback" marker-end="url(#self-audit-arrow-blue)"/>
+
+      <!-- Reject / hard-cap → final center-slice state -->
+      <path d="M 2332 640 H 2352 Q 2360 640 2360 648 V 788" class="flow" marker-end="url(#self-audit-arrow)"/>
+      <path d="M 2280 828 V 868 H 1652 Q 1644 868 1644 872" class="flow" marker-end="url(#self-audit-arrow)"/>
+
+      <!-- Final slice → stacked 3D volume -->
+      <path d="M 1780 904 H 1816" class="flow" marker-end="url(#self-audit-arrow)"/>
+      <path d="M 1968 904 H 2012" class="flow" marker-end="url(#self-audit-arrow)"/>
+
+      <!-- ========================================================= -->
+      <!-- TRAINING-ONLY CONNECTORS: dashed and visually subordinate -->
+      <!-- ========================================================= -->
+
+      <!-- GT / real state inputs -->
+      <path d="M 232 1052 H 260" class="train-flow" marker-end="url(#self-audit-arrow-soft)"/>
+      <path d="M 152 1016 V 988 H 600 Q 608 988 608 996 V 1008" class="train-flow" marker-end="url(#self-audit-arrow-soft)"/>
+      <path d="M 460 1052 H 520" class="train-flow" marker-end="url(#self-audit-arrow-soft)"/>
+      <path d="M 152 1088 V 1148" class="train-flow" marker-end="url(#self-audit-arrow-soft)"/>
+
+      <!-- Generator → measured transition targets -->
+      <path d="M 1080 1168 H 1116" class="train-flow" marker-end="url(#self-audit-arrow-soft)"/>
+      <path d="M 1080 1264 H 1116" class="train-flow" marker-end="url(#self-audit-arrow-soft)"/>
+
+      <!-- Training phases → their checkpoints -->
+      <path d="M 1876 1092 H 1892" class="train-flow" marker-end="url(#self-audit-arrow-soft)"/>
+      <path d="M 2088 1092 H 2104" class="train-flow" marker-end="url(#self-audit-arrow-soft)"/>
+
+      <!-- ========================================================= -->
+      <!-- INFERENCE NODES -->
+      <!-- ========================================================= -->
+
+      <!-- 2.5D input -->
+      <g class="node input-node">
+        <rect x="60" y="180" width="260" height="260" rx="6" class="node-paper"/>
+        <rect x="60" y="180" width="260" height="260" rx="6" class="node-input"/>
+        <rect x="72" y="192" width="52" height="20" rx="4" class="tag-soft"/>
+        <text x="98" y="207" class="tag-text">INPUT</text>
+        <text x="190" y="210" class="node-title">2.5D cardiac MRI</text>
+        <text x="190" y="232" class="mono-center">X_z ∈ R^{3×H×W}</text>
+
+        <text x="106" y="250" class="tiny-svg" text-anchor="middle">[z−1]</text>
+        <text x="180" y="250" class="tiny-svg center-label" text-anchor="middle">[z]</text>
+        <text x="254" y="250" class="tiny-svg" text-anchor="middle">[z+1]</text>
+        <rect x="78" y="260" width="56" height="72" rx="4" class="slice-tile"/>
+        <rect x="152" y="260" width="56" height="72" rx="4" class="slice-tile center-slice"/>
+        <rect x="226" y="260" width="56" height="72" rx="4" class="slice-tile"/>
+        <ellipse cx="106" cy="296" rx="18" ry="25" class="mri-shape"/>
+        <ellipse cx="106" cy="296" rx="7" ry="12" class="mri-hole"/>
+        <ellipse cx="180" cy="296" rx="18" ry="25" class="mri-shape center-shape"/>
+        <ellipse cx="180" cy="296" rx="7" ry="12" class="mri-hole"/>
+        <ellipse cx="254" cy="296" rx="18" ry="25" class="mri-shape"/>
+        <ellipse cx="254" cy="296" rx="7" ry="12" class="mri-hole"/>
+        <rect x="156" y="340" width="48" height="16" rx="3" class="mini-accent"/>
+        <text x="180" y="352" class="mini-accent-text" text-anchor="middle">TARGET</text>
+        <text x="190" y="382" class="body-center">center slice z = prediction unit</text>
+        <text x="190" y="402" class="body-center">neighbors = anatomical context</text>
+        <text x="190" y="424" class="mono-center">input batch [B,3,H,W]</text>
+      </g>
+
+      <!-- ConvNeXt encoder -->
+      <g class="node">
+        <rect x="352" y="180" width="284" height="260" rx="6" class="node-paper"/>
+        <rect x="352" y="180" width="284" height="260" rx="6" class="node-box"/>
+        <rect x="364" y="192" width="68" height="20" rx="4" class="tag-muted"/>
+        <text x="398" y="207" class="tag-text">ENCODER</text>
+        <text x="494" y="210" class="node-title">ConvNeXt-Tiny</text>
+        <text x="494" y="232" class="mono-center">ImageNet pretrained</text>
+        <text x="494" y="254" class="body-center">multi-scale feature extraction</text>
+
+        <rect x="376" y="270" width="52" height="16" rx="3" fill="rgba(79,93,117,.08)"/>
+        <rect x="436" y="270" width="152" height="16" rx="3" fill="rgba(79,93,117,.08)"/>
+        <text x="402" y="282" class="mono-left">F₁</text>
+        <text x="604" y="282" class="mono-right">1/4</text>
+        <rect x="376" y="302" width="52" height="16" rx="3" fill="rgba(79,93,117,.08)"/>
+        <rect x="436" y="302" width="120" height="16" rx="3" fill="rgba(79,93,117,.08)"/>
+        <text x="402" y="314" class="mono-left">F₂</text>
+        <text x="604" y="314" class="mono-right">1/8</text>
+        <rect x="376" y="334" width="52" height="16" rx="3" fill="rgba(79,93,117,.08)"/>
+        <rect x="436" y="334" width="88" height="16" rx="3" fill="rgba(79,93,117,.08)"/>
+        <text x="402" y="346" class="mono-left">F₃</text>
+        <text x="604" y="346" class="mono-right">1/16</text>
+        <rect x="376" y="366" width="52" height="16" rx="3" fill="rgba(79,93,117,.08)"/>
+        <rect x="436" y="366" width="56" height="16" rx="3" fill="rgba(79,93,117,.08)"/>
+        <text x="402" y="378" class="mono-left">F₄</text>
+        <text x="604" y="378" class="mono-right">1/32</text>
+        <text x="494" y="414" class="mono-center">[B,3,H,W] → {F₁,F₂,F₃,F₄}</text>
+      </g>
+
+      <!-- Lightweight FPN -->
+      <g class="node">
+        <rect x="668" y="180" width="208" height="260" rx="6" class="node-paper"/>
+        <rect x="668" y="180" width="208" height="260" rx="6" class="node-box"/>
+        <rect x="680" y="192" width="44" height="20" rx="4" class="tag-muted"/>
+        <text x="702" y="207" class="tag-text">FPN</text>
+        <text x="772" y="210" class="node-title">Lightweight FPN</text>
+        <text x="772" y="236" class="body-center">1×1 lateral projections</text>
+        <text x="772" y="256" class="body-center">top-down multi-scale fusion</text>
+        <path d="M 712 294 H 832" class="internal-line"/>
+        <path d="M 712 326 H 812" class="internal-line"/>
+        <path d="M 712 358 H 792" class="internal-line"/>
+        <path d="M 712 390 H 772" class="internal-line"/>
+        <path d="M 820 294 V 390" class="internal-line" marker-end="url(#self-audit-arrow-soft)"/>
+        <text x="772" y="418" class="mono-center">H_shared → [B,96,H/4,W/4]</text>
+      </g>
+
+      <!-- Shared feature state -->
+      <g class="node">
+        <rect x="912" y="176" width="288" height="88" rx="6" class="node-paper"/>
+        <rect x="912" y="176" width="288" height="88" rx="6" class="node-state"/>
+        <text x="1056" y="206" class="node-title">Shared feature map H_shared</text>
+        <text x="1056" y="230" class="mono-center">[B,96,H/4,W/4]</text>
+        <text x="1056" y="250" class="body-center">shared by head, expert and Auditor</text>
+      </g>
+
+      <!-- Initial annotation head -->
+      <g class="node">
+        <rect x="920" y="304" width="288" height="186" rx="6" class="node-paper"/>
+        <rect x="920" y="304" width="288" height="186" rx="6" class="node-box"/>
+        <rect x="932" y="316" width="68" height="20" rx="4" class="tag-muted"/>
+        <text x="966" y="331" class="tag-text">HEAD</text>
+        <text x="1064" y="334" class="node-title">Initial annotation</text>
+        <text x="952" y="366" class="mono-left">3×3 Conv</text>
+        <text x="1064" y="366" class="tiny-svg">→</text>
+        <text x="1080" y="366" class="mono-left">Norm + Act</text>
+        <text x="952" y="394" class="mono-left">1×1 Conv</text>
+        <text x="1064" y="394" class="tiny-svg">→</text>
+        <text x="1080" y="394" class="mono-left">Upsample</text>
+        <line x1="952" y1="422" x2="1176" y2="422" class="internal-line"/>
+        <text x="1064" y="448" class="mono-center">A⁰ logits [B,4,H,W]</text>
+        <text x="1064" y="470" class="body-center">soft state · no argmax in the loop</text>
+      </g>
+
+      <!-- Initial soft state -->
+      <g class="node">
+        <rect x="944" y="512" width="224" height="72" rx="6" class="node-paper"/>
+        <rect x="944" y="512" width="224" height="72" rx="6" class="node-state"/>
+        <text x="1056" y="538" class="node-title">Initial state A⁰</text>
+        <text x="1056" y="560" class="mono-center">P⁰ = softmax(A⁰)</text>
+        <text x="1056" y="578" class="tiny-svg">0 BG · 1 RV · 2 MYO · 3 LV</text>
+      </g>
+
+      <!-- Current recurrent state -->
+      <g class="node">
+        <rect x="1292" y="176" width="144" height="100" rx="6" class="node-paper"/>
+        <rect x="1292" y="176" width="144" height="100" rx="6" class="node-state"/>
+        <text x="1364" y="202" class="tag-text">STATE</text>
+        <text x="1364" y="228" class="node-title">Aᵗ</text>
+        <text x="1364" y="248" class="mono-center">soft logits</text>
+        <text x="1364" y="268" class="mono-center">+ Cᵗ⁻¹</text>
+      </g>
+
+      <!-- Shared Annotation Expert with Dynamic Window inset -->
+      <g class="node focal-expert">
+        <rect x="1464" y="156" width="480" height="560" rx="8" class="node-paper"/>
+        <rect x="1464" y="156" width="480" height="560" rx="8" class="node-expert"/>
+        <rect x="1480" y="172" width="112" height="20" rx="4" class="tag-accent"/>
+        <text x="1536" y="187" class="tag-text accent-text">EXPERT</text>
+        <text x="1712" y="186" class="node-title">Shared Annotation Expert Eθ</text>
+        <text x="1712" y="208" class="mono-center">same weights reused across turns</text>
+        <text x="1712" y="232" class="body-center">context = [H_shared | Pᵗ | entropy(Pᵗ) | Cᵗ⁻¹ | turn | iteration]</text>
+
+        <rect x="1480" y="260" width="448" height="284" rx="6" class="dynamic-box"/>
+        <text x="1500" y="284" class="nested-title">AUDIT-GUIDED DYNAMIC WINDOW ATTENTION</text>
+        <text x="1500" y="308" class="tiny-svg">query x = H_x + Pᵗ(x) + entropyᵗ(x)</text>
+        <text x="1500" y="320" class="tiny-svg">+ Cᵗ⁻¹(x) + e_turn + e_iter</text>
+
+        <rect x="1496" y="328" width="204" height="96" rx="4" class="nested-node"/>
+        <text x="1598" y="350" class="nested-node-title">Dynamic Window Generator</text>
+        <text x="1598" y="372" class="mono-center">Δc_x · r_x,r_y · φ_x</text>
+        <text x="1598" y="392" class="mono-center">bounded Δp_x,k</text>
+        <text x="1598" y="412" class="tiny-svg">learned support geometry</text>
+
+        <rect x="1720" y="328" width="92" height="96" rx="4" class="nested-node"/>
+        <circle cx="1766" cy="376" r="30" fill="none" stroke="#2e5aa8" stroke-width="1"/>
+        <circle cx="1766" cy="376" r="4" fill="#2e5aa8"/>
+        <circle cx="1766" cy="346" r="3" fill="#2e5aa8"/>
+        <circle cx="1787" cy="355" r="3" fill="#2e5aa8"/>
+        <circle cx="1796" cy="376" r="3" fill="#2e5aa8"/>
+        <circle cx="1787" cy="397" r="3" fill="#2e5aa8"/>
+        <circle cx="1766" cy="406" r="3" fill="#2e5aa8"/>
+        <circle cx="1745" cy="397" r="3" fill="#2e5aa8"/>
+        <circle cx="1736" cy="376" r="3" fill="#2e5aa8"/>
+        <circle cx="1745" cy="355" r="3" fill="#2e5aa8"/>
+        <text x="1766" y="416" class="tiny-svg" text-anchor="middle">K = 8</text>
+
+        <rect x="1832" y="328" width="80" height="96" rx="4" class="nested-node"/>
+        <text x="1872" y="352" class="nested-node-title" text-anchor="middle">Transform</text>
+        <text x="1872" y="374" class="mono-center">R(φ) diag(r)</text>
+        <text x="1872" y="394" class="mono-center">+ Δp_k</text>
+        <text x="1872" y="412" class="tiny-svg" text-anchor="middle">clamp [-1,1]</text>
+
+        <text x="1704" y="456" class="mono-center">p_x,k = x + Δc_x + R(φ_x)diag(r_x,r_y)u_k + Δp_x,k</text>
+        <rect x="1496" y="472" width="416" height="52" rx="4" fill="url(#self-audit-grid)" stroke="rgba(46,90,168,.28)" stroke-width="1"/>
+        <text x="1508" y="494" class="tiny-svg">K samples</text>
+        <text x="1680" y="494" class="tiny-svg" text-anchor="middle">grid_sample(H)</text>
+        <text x="1904" y="494" class="tiny-svg" text-anchor="end">MHA → evidence</text>
+        <text x="1508" y="514" class="tiny-svg">structured support + bounded residual adaptation</text>
+
+        <rect x="1496" y="568" width="184" height="58" rx="4" class="update-node"/>
+        <text x="1588" y="590" class="nested-node-title">Residual Correction</text>
+        <text x="1588" y="614" class="mono-center">ΔAᵗ</text>
+        <rect x="1716" y="568" width="184" height="58" rx="4" class="update-node"/>
+        <text x="1808" y="590" class="nested-node-title">Update Gate</text>
+        <text x="1808" y="614" class="mono-center">gᵗ = sigmoid(·)</text>
+        <text x="1698" y="656" class="formula">Ãᵗ⁺¹ = Aᵗ + gᵗ ⊙ ΔAᵗ</text>
+        <text x="1698" y="682" class="body-center">turn-conditioned depth inside one turn:</text>
+        <text x="1698" y="702" class="mono-center">L_t = min(t + 1, 3) · T1:1 iter · T2:2 · T3:3</text>
+      </g>
+
+      <!-- Candidate annotation -->
+      <g class="node focal-candidate">
+        <rect x="1984" y="304" width="144" height="144" rx="6" class="node-paper"/>
+        <rect x="1984" y="304" width="144" height="144" rx="6" class="node-candidate"/>
+        <text x="2056" y="330" class="tag-text accent-text" text-anchor="middle">PROPOSAL</text>
+        <text x="2056" y="358" class="node-title">Candidate</text>
+        <text x="2056" y="382" class="mono-center">Ãᵗ⁺¹</text>
+        <text x="2056" y="404" class="mono-center">soft logits</text>
+        <text x="2056" y="426" class="tiny-svg">transition input to Auditor</text>
+      </g>
+
+      <!-- Counterfactual Auditor -->
+      <g class="node focal-auditor">
+        <rect x="2160" y="200" width="176" height="328" rx="8" class="node-paper"/>
+        <rect x="2160" y="200" width="176" height="328" rx="8" class="node-auditor"/>
+        <rect x="2172" y="212" width="72" height="20" rx="4" class="tag-accent"/>
+        <text x="2208" y="227" class="tag-text accent-text">AUDIT</text>
+        <text x="2248" y="254" class="node-title">Counterfactual</text>
+        <text x="2248" y="274" class="node-title">Transition Auditor</text>
+        <text x="2248" y="298" class="mono-center">Aᵗ → Ãᵗ⁺¹</text>
+        <text x="2248" y="320" class="tiny-svg" text-anchor="middle">stopgrad(H) · P_prev</text>
+        <text x="2248" y="336" class="tiny-svg" text-anchor="middle">P_cand · ΔP · entropy</text>
+        <text x="2248" y="352" class="tiny-svg" text-anchor="middle">prev / cand</text>
+        <text x="2248" y="368" class="micro-svg" text-anchor="middle">1×1 projection + 3 residual blocks</text>
+
+        <rect x="2176" y="384" width="144" height="72" rx="4" class="audit-local"/>
+        <text x="2248" y="404" class="nested-node-title">LOCAL HEAD</text>
+        <text x="2248" y="424" class="mono-center">Cᵗ [B,3,H,W]</text>
+        <text x="2248" y="444" class="micro-svg" text-anchor="middle">FIX · UNCHANGED · REGRESS</text>
+        <rect x="2176" y="468" width="144" height="52" rx="4" class="audit-global"/>
+        <text x="2248" y="488" class="nested-node-title">GLOBAL HEAD</text>
+        <text x="2248" y="508" class="micro-svg" text-anchor="middle">ΔQᵗ = predicted quality</text>
+      </g>
+
+      <!-- Threshold gate -->
+      <g class="decision-node">
+        <polygon points="2244,548 2332,640 2244,732 2156,640" fill="#f5f5f5" stroke="#eb6c36" stroke-width="1.2"/>
+        <text x="2244" y="628" class="decision-title" text-anchor="middle">ΔQᵗ &gt; τ_accept?</text>
+        <text x="2244" y="650" class="mono-center" text-anchor="middle">τ = 0 baseline</text>
+        <text x="2244" y="672" class="tiny-svg" text-anchor="middle">non-differentiable gate</text>
+      </g>
+
+      <!-- Next turn state -->
+      <g class="node">
+        <rect x="1680" y="752" width="260" height="76" rx="6" class="node-paper"/>
+        <rect x="1680" y="752" width="260" height="76" rx="6" class="node-next"/>
+        <text x="1810" y="778" class="tag-text" text-anchor="middle">ACCEPT → NEXT TURN</text>
+        <text x="1810" y="800" class="node-title">state ← candidate</text>
+        <text x="1810" y="820" class="tiny-svg" text-anchor="middle">Cᵗ + turn/iteration → next Dynamic Window</text>
+      </g>
+
+      <!-- Halt -->
+      <g class="node">
+        <rect x="2200" y="752" width="160" height="76" rx="6" class="node-paper"/>
+        <rect x="2200" y="752" width="160" height="76" rx="6" class="node-halt"/>
+        <text x="2280" y="778" class="tag-text" text-anchor="middle">REJECT / CAP</text>
+        <text x="2280" y="802" class="node-title">HALT</text>
+        <text x="2280" y="820" class="tiny-svg" text-anchor="middle">reject or t = T_max = 3</text>
+      </g>
+
+      <!-- Output contract -->
+      <g class="node">
+        <rect x="1520" y="872" width="260" height="64" rx="6" class="node-paper"/>
+        <rect x="1520" y="872" width="260" height="64" rx="6" class="node-output"/>
+        <text x="1650" y="898" class="node-title">Final 2D annotation</text>
+        <text x="1650" y="920" class="mono-center">retained soft state → center slice</text>
+
+        <rect x="1816" y="872" width="152" height="64" rx="6" class="node-paper"/>
+        <rect x="1816" y="872" width="152" height="64" rx="6" class="node-output"/>
+        <text x="1892" y="898" class="node-title">Stack slices</text>
+        <text x="1892" y="920" class="mono-center">z = 0 … Z−1</text>
+
+        <rect x="2012" y="872" width="300" height="64" rx="6" class="node-paper"/>
+        <rect x="2012" y="872" width="300" height="64" rx="6" class="node-output-final"/>
+        <text x="2162" y="898" class="node-title">Final 3D cardiac annotation volume</text>
+        <text x="2162" y="920" class="mono-center">[Z,H,W] · evaluation unit</text>
+      </g>
+
+      <!-- Explanatory callouts inside the inference zone -->
+      <rect x="1300" y="312" width="128" height="48" rx="4" fill="#f5f5f5" stroke="rgba(79,93,117,.26)" stroke-width="1"/>
+      <text x="1364" y="332" class="tiny-svg" text-anchor="middle">Aᵗ + Cᵗ⁻¹</text>
+      <text x="1364" y="350" class="tiny-svg" text-anchor="middle">not hard masks</text>
+      <rect x="1980" y="700" width="156" height="24" rx="4" fill="#f5f5f5"/>
+      <text x="2058" y="716" class="branch-label" text-anchor="middle">YES · useful update</text>
+      <rect x="2320" y="664" width="56" height="24" rx="4" fill="#f5f5f5"/>
+      <text x="2348" y="680" class="branch-label" text-anchor="middle">NO</text>
+
+      <!-- ========================================================= -->
+      <!-- TRAINING-ONLY NODES -->
+      <!-- ========================================================= -->
+
+      <!-- GT and real trajectory state -->
+      <g class="node training-node">
+        <rect x="72" y="1016" width="160" height="72" rx="6" class="node-paper"/>
+        <rect x="72" y="1016" width="160" height="72" rx="6" class="node-training"/>
+        <text x="152" y="1042" class="tag-text" text-anchor="middle">GT</text>
+        <text x="152" y="1068" class="node-title">Ground Truth Y</text>
+        <text x="152" y="1084" class="tiny-svg" text-anchor="middle">center-slice labels</text>
+
+        <rect x="260" y="1016" width="200" height="72" rx="6" class="node-paper"/>
+        <rect x="260" y="1016" width="200" height="72" rx="6" class="node-training"/>
+        <text x="360" y="1042" class="tag-text" text-anchor="middle">ON-POLICY</text>
+        <text x="360" y="1066" class="node-title">Real state Aᵗ</text>
+        <text x="360" y="1084" class="tiny-svg" text-anchor="middle">Aᵗ → Aᵗ⁺¹ adjacent pairs</text>
+      </g>
+
+      <!-- Phase A supervision -->
+      <g class="node training-node">
+        <rect x="72" y="1148" width="416" height="216" rx="6" class="node-paper"/>
+        <rect x="72" y="1148" width="416" height="216" rx="6" class="node-training"/>
+        <text x="88" y="1176" class="tag-text">PHASE A</text>
+        <text x="280" y="1176" class="node-title">Annotation pretraining</text>
+        <text x="280" y="1200" class="mono-center">A⁰ · A¹ · A² · A³ → Dice + Cross Entropy</text>
+        <text x="96" y="1232" class="mono-left">stage weights</text>
+        <rect x="96" y="1244" width="64" height="28" rx="4" class="stage-chip"/>
+        <rect x="172" y="1244" width="64" height="28" rx="4" class="stage-chip"/>
+        <rect x="248" y="1244" width="64" height="28" rx="4" class="stage-chip"/>
+        <rect x="324" y="1244" width="64" height="28" rx="4" class="stage-chip-accent"/>
+        <text x="128" y="1262" class="mono-center">A⁰ : 0.5</text>
+        <text x="204" y="1262" class="mono-center">A¹ : 0.7</text>
+        <text x="280" y="1262" class="mono-center">A² : 0.8</text>
+        <text x="356" y="1262" class="mono-center">A³ : 1.0</text>
+        <text x="280" y="1300" class="body-center">train encoder · FPN · initial head · Expert · Dynamic Window</text>
+        <text x="280" y="1324" class="tiny-svg" text-anchor="middle">Auditor inactive</text>
+        <text x="280" y="1346" class="tiny-svg" text-anchor="middle">fallback weights are deterministic when max_turns changes</text>
+      </g>
+
+      <!-- Counterfactual generator -->
+      <g class="node training-node">
+        <rect x="520" y="1008" width="560" height="344" rx="8" class="node-paper"/>
+        <rect x="520" y="1008" width="560" height="344" rx="8" class="node-generator"/>
+        <rect x="536" y="1024" width="112" height="20" rx="4" class="tag-muted"/>
+        <text x="592" y="1039" class="tag-text">PHASE B DATA</text>
+        <text x="800" y="1038" class="node-title">Counterfactual Generator</text>
+        <text x="800" y="1060" class="mono-center">real P_previous + GT Y → localized soft candidate</text>
+        <text x="1048" y="1038" class="tiny-svg" text-anchor="end">mix 40 / 40 / 20</text>
+
+        <rect x="536" y="1080" width="164" height="136" rx="4" class="cf-positive"/>
+        <text x="618" y="1102" class="nested-node-title">POSITIVE</text>
+        <text x="618" y="1126" class="mono-center">local connected</text>
+        <text x="618" y="1146" class="mono-center">error repair</text>
+        <text x="618" y="1172" class="tiny-svg" text-anchor="middle">30–60% toward GT</text>
+        <text x="618" y="1194" class="tiny-svg" text-anchor="middle">partial region only</text>
+
+        <rect x="716" y="1080" width="224" height="136" rx="4" class="cf-negative"/>
+        <text x="828" y="1102" class="nested-node-title">NEGATIVE · localized</text>
+        <text x="728" y="1126" class="tiny-svg">erosion · dilation · boundary displacement</text>
+        <text x="728" y="1146" class="tiny-svg">hole insertion · false island</text>
+        <text x="728" y="1166" class="tiny-svg">component deletion · local class swap</text>
+        <text x="828" y="1194" class="tiny-svg" text-anchor="middle">soft probability transfer / warp</text>
+
+        <rect x="956" y="1080" width="108" height="136" rx="4" class="cf-hard"/>
+        <text x="1010" y="1102" class="nested-node-title" text-anchor="middle">HARD</text>
+        <text x="1010" y="1124" class="mono-center">repair +</text>
+        <text x="1010" y="1142" class="mono-center">separate</text>
+        <text x="1010" y="1160" class="mono-center">regression</text>
+        <text x="1010" y="1186" class="tiny-svg" text-anchor="middle">≈ small ΔDice</text>
+        <text x="1010" y="1202" class="tiny-svg" text-anchor="middle">bounded retries</text>
+
+        <rect x="536" y="1240" width="528" height="88" rx="4" class="cf-note"/>
+        <text x="800" y="1262" class="nested-node-title" text-anchor="middle">Training semantics</text>
+        <text x="800" y="1284" class="body-center">GT determines measured transition quality;</text>
+        <text x="800" y="1304" class="body-center">requested corruption type is NOT the training label.</text>
+        <text x="800" y="1320" class="tiny-svg" text-anchor="middle">finite · non-negative · normalized probabilities + edit metadata</text>
+      </g>
+
+      <!-- GT-derived targets and audit losses -->
+      <g class="node training-node">
+        <rect x="1116" y="1008" width="516" height="344" rx="8" class="node-paper"/>
+        <rect x="1116" y="1008" width="516" height="344" rx="8" class="node-targets"/>
+        <rect x="1132" y="1024" width="136" height="20" rx="4" class="tag-muted"/>
+        <text x="1200" y="1039" class="tag-text">TARGETS + LOSS</text>
+        <text x="1396" y="1038" class="node-title">Transition targets + audit loss</text>
+        <text x="1374" y="1060" class="mono-center">requested kind ≠ measured label</text>
+        <text x="1140" y="1092" class="mono-left">Local target</text>
+        <text x="1140" y="1114" class="body-left">previous wrong + candidate correct → FIX</text>
+        <text x="1140" y="1134" class="body-left">previous correct + candidate wrong → REGRESS</text>
+        <text x="1140" y="1154" class="body-left">otherwise → UNCHANGED</text>
+        <line x1="1140" y1="1172" x2="1608" y2="1172" class="internal-line"/>
+        <text x="1140" y="1198" class="mono-left">Global target</text>
+        <text x="1140" y="1220" class="mono-left">ΔD = Dice(P_cand,Y) − Dice(P_prev,Y)</text>
+        <text x="1140" y="1252" class="mono-left">L_rank = softplus(−sign(ΔD) · ΔQ)</text>
+        <text x="1140" y="1276" class="mono-left">|ΔD| &lt; 0.005 → encourage ΔQ ≈ 0</text>
+        <line x1="1140" y1="1296" x2="1608" y2="1296" class="internal-line"/>
+        <text x="1140" y="1320" class="mono-left">Stopgrad audit contract</text>
+        <text x="1140" y="1340" class="tiny-svg">H_audit = stopgrad(H) · A_prev, A_cand = stopgrad(·)</text>
+      </g>
+
+      <!-- Training phases strip -->
+      <g class="node training-node">
+        <rect x="1664" y="1008" width="668" height="344" rx="8" class="node-paper"/>
+        <rect x="1664" y="1008" width="668" height="344" rx="8" class="node-phases"/>
+        <text x="1680" y="1038" class="node-title">Training phases</text>
+        <text x="2316" y="1038" class="tiny-svg" text-anchor="end">same inference contract at Phase C</text>
+
+        <rect x="1680" y="1060" width="196" height="240" rx="4" class="phase-card"/>
+        <text x="1778" y="1086" class="tag-text" text-anchor="middle">A · PRETRAIN</text>
+        <text x="1778" y="1114" class="node-title" text-anchor="middle">Annotation</text>
+        <text x="1778" y="1134" class="node-title" text-anchor="middle">supervision</text>
+        <text x="1778" y="1174" class="tiny-svg" text-anchor="middle">Dice + CE on</text>
+        <text x="1778" y="1192" class="tiny-svg" text-anchor="middle">A⁰…A³</text>
+        <text x="1778" y="1234" class="tiny-svg" text-anchor="middle">Auditor inactive</text>
+        <text x="1778" y="1268" class="mono-center">update annotation path</text>
+
+        <rect x="1892" y="1060" width="196" height="240" rx="4" class="phase-card"/>
+        <text x="1990" y="1086" class="tag-text" text-anchor="middle">B · AUDITOR</text>
+        <text x="1990" y="1114" class="node-title" text-anchor="middle">Freeze annotation</text>
+        <text x="1990" y="1134" class="node-title" text-anchor="middle">network</text>
+        <text x="1990" y="1174" class="tiny-svg" text-anchor="middle">synthetic + adjacent</text>
+        <text x="1990" y="1192" class="tiny-svg" text-anchor="middle">on-policy transitions</text>
+        <text x="1990" y="1234" class="tiny-svg" text-anchor="middle">train local + global heads</text>
+        <text x="1990" y="1268" class="mono-center">audit loss only</text>
+
+        <rect x="2104" y="1060" width="212" height="240" rx="4" class="phase-card phase-card-final"/>
+        <text x="2210" y="1086" class="tag-text accent-text" text-anchor="middle">C · JOINT LOW-LR</text>
+        <text x="2210" y="1114" class="node-title" text-anchor="middle">Joint fine-tuning</text>
+        <text x="2210" y="1154" class="tiny-svg" text-anchor="middle">L_total = L_annotation</text>
+        <text x="2210" y="1172" class="tiny-svg" text-anchor="middle">+ λ_audit L_audit</text>
+        <text x="2210" y="1210" class="tiny-svg" text-anchor="middle">annotation loss → annotation path</text>
+        <text x="2210" y="1230" class="tiny-svg" text-anchor="middle">audit loss → Auditor only</text>
+        <text x="2210" y="1268" class="mono-center">no STE · no GT at inference</text>
+      </g>
+
+      <!-- Small explanatory labels in training zone -->
+      <text x="520" y="1388" class="tiny-svg">Dashed arrows = GT supervision only; removed from deployable inference.</text>
+      <text x="520" y="1412" class="tiny-svg">Phase B/C use adjacent transitions; inactive mixed-batch rows contribute zero audit loss.</text>
+
+      <!-- Legend -->
+      <line x1="32" y1="1472" x2="2368" y2="1472" class="legend-rule"/>
+      <text x="32" y="1500" class="legend-title">LEGEND</text>
+      <line x1="136" y1="1496" x2="200" y2="1496" class="legend-solid" marker-end="url(#self-audit-arrow)"/>
+      <text x="216" y="1500" class="legend-text">inference / forward computation</text>
+      <line x1="500" y1="1496" x2="564" y2="1496" class="legend-dashed" marker-end="url(#self-audit-arrow-soft)"/>
+      <text x="580" y="1500" class="legend-text">training-only GT supervision</text>
+      <line x1="876" y1="1496" x2="940" y2="1496" class="legend-feedback" marker-end="url(#self-audit-arrow-blue)"/>
+      <text x="956" y="1500" class="legend-text">recurrent state / local audit feedback</text>
+      <rect x="1328" y="1484" width="28" height="24" rx="4" class="legend-dynamic"/>
+      <text x="1372" y="1500" class="legend-text">Dynamic Window technical inset</text>
+      <rect x="1704" y="1484" width="28" height="24" rx="4" class="legend-audit"/>
+      <text x="1748" y="1500" class="legend-text">transition Auditor + threshold gate</text>
+      <text x="2368" y="1500" class="legend-text" text-anchor="end">K = 8 · τ_accept = 0 · T_max = 3 hard cap</text>
+
+      <style>
+        .eyebrow-svg { fill: #7a8399; font: 600 12px 'Geist Mono', monospace; letter-spacing: .18em; }
+        .zone-label { fill: #7a8399; font: 600 12px 'Geist Mono', monospace; letter-spacing: .14em; }
+        .accent-label, .accent-text { fill: #eb6c36; }
+        .tiny-svg { fill: #7a8399; font: 400 12px 'Geist Mono', monospace; }
+        .micro-svg { fill: #7a8399; font: 400 8px 'Geist Mono', monospace; }
+        .body-center { fill: #4f5d75; font: 400 12px 'Geist', Arial, sans-serif; text-anchor: middle; }
+        .body-left { fill: #4f5d75; font: 400 12px 'Geist', Arial, sans-serif; }
+        .mono-center { fill: #4f5d75; font: 400 12px 'Geist Mono', monospace; text-anchor: middle; }
+        .mono-left { fill: #4f5d75; font: 400 12px 'Geist Mono', monospace; }
+        .mono-right { fill: #4f5d75; font: 400 12px 'Geist Mono', monospace; text-anchor: end; }
+        .node-title { fill: #2d3142; font: 600 16px 'Geist', Arial, sans-serif; text-anchor: middle; }
+        .tag-text { fill: #4f5d75; font: 600 12px 'Geist Mono', monospace; text-anchor: middle; letter-spacing: .06em; }
+        .node-paper { fill: #f5f5f5; stroke: none; }
+        .node-box { fill: #ffffff; stroke: #2d3142; stroke-width: 1; }
+        .node-input { fill: rgba(79,93,117,.06); stroke: #7a8399; stroke-width: 1; }
+        .node-state { fill: rgba(45,49,66,.05); stroke: #4f5d75; stroke-width: 1; }
+        .node-expert { fill: rgba(46,90,168,.035); stroke: #2e5aa8; stroke-width: 1.2; }
+        .node-candidate { fill: rgba(235,108,54,.08); stroke: #eb6c36; stroke-width: 1.2; }
+        .node-auditor { fill: rgba(235,108,54,.08); stroke: #eb6c36; stroke-width: 1.2; }
+        .node-next { fill: rgba(46,90,168,.06); stroke: #2e5aa8; stroke-width: 1; }
+        .node-halt { fill: rgba(45,49,66,.04); stroke: #4f5d75; stroke-width: 1; }
+        .node-output { fill: rgba(45,49,66,.04); stroke: #4f5d75; stroke-width: 1; }
+        .node-output-final { fill: rgba(46,90,168,.06); stroke: #2e5aa8; stroke-width: 1.2; }
+        .tag-soft, .tag-muted { fill: rgba(79,93,117,.08); stroke: rgba(79,93,117,.32); stroke-width: 1; }
+        .tag-accent { fill: rgba(235,108,54,.12); stroke: rgba(235,108,54,.72); stroke-width: 1; }
+        .slice-tile { fill: #ffffff; stroke: rgba(79,93,117,.32); stroke-width: 1; }
+        .center-slice { stroke: #eb6c36; stroke-width: 1.2; }
+        .mri-shape { fill: rgba(79,93,117,.16); stroke: #4f5d75; stroke-width: 1; }
+        .center-shape { fill: rgba(235,108,54,.13); stroke: #eb6c36; }
+        .mri-hole { fill: #f5f5f5; stroke: rgba(79,93,117,.48); stroke-width: 1; }
+        .mini-accent { fill: rgba(235,108,54,.12); stroke: #eb6c36; stroke-width: 1; }
+        .mini-accent-text { fill: #eb6c36; font: 600 8px 'Geist Mono', monospace; letter-spacing: .08em; }
+        .dynamic-box { fill: rgba(46,90,168,.055); stroke: rgba(46,90,168,.48); stroke-width: 1; }
+        .nested-title { fill: #2e5aa8; font: 600 12px 'Geist Mono', monospace; letter-spacing: .08em; }
+        .nested-node { fill: #ffffff; stroke: rgba(46,90,168,.36); stroke-width: 1; }
+        .nested-node-title { fill: #2d3142; font: 600 12px 'Geist', Arial, sans-serif; text-anchor: middle; }
+        .update-node { fill: #ffffff; stroke: rgba(46,90,168,.48); stroke-width: 1; }
+        .formula { fill: #2d3142; font: 600 16px 'Geist Mono', monospace; text-anchor: middle; }
+        .audit-local { fill: rgba(235,108,54,.08); stroke: rgba(235,108,54,.48); stroke-width: 1; }
+        .audit-global { fill: rgba(235,108,54,.06); stroke: rgba(235,108,54,.48); stroke-width: 1; }
+        .decision-title { fill: #2d3142; font: 600 16px 'Geist', Arial, sans-serif; }
+        .branch-label { fill: #4f5d75; font: 600 12px 'Geist Mono', monospace; letter-spacing: .04em; }
+        .flow { fill: none; stroke: #4f5d75; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
+        .flow-strong { fill: none; stroke: #eb6c36; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+        .feedback { fill: none; stroke: #2e5aa8; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
+        .train-flow { fill: none; stroke: #7a8399; stroke-width: 1; stroke-dasharray: 6,5; stroke-linecap: round; stroke-linejoin: round; }
+        .internal-line { stroke: rgba(79,93,117,.38); stroke-width: 1; fill: none; }
+        .cf-positive { fill: rgba(46,90,168,.06); stroke: rgba(46,90,168,.42); stroke-width: 1; }
+        .cf-negative { fill: rgba(79,93,117,.05); stroke: rgba(79,93,117,.42); stroke-width: 1; }
+        .cf-hard { fill: rgba(235,108,54,.06); stroke: rgba(235,108,54,.48); stroke-width: 1; }
+        .cf-note { fill: rgba(235,108,54,.04); stroke: rgba(235,108,54,.42); stroke-width: 1; }
+        .node-training { fill: rgba(255,255,255,.82); stroke: rgba(235,108,54,.55); stroke-width: 1; }
+        .node-generator { fill: rgba(255,255,255,.82); stroke: rgba(79,93,117,.52); stroke-width: 1.2; }
+        .node-targets { fill: rgba(255,255,255,.82); stroke: rgba(79,93,117,.52); stroke-width: 1.2; }
+        .node-phases { fill: rgba(255,255,255,.82); stroke: rgba(79,93,117,.52); stroke-width: 1.2; }
+        .stage-chip { fill: rgba(79,93,117,.06); stroke: rgba(79,93,117,.28); stroke-width: 1; }
+        .stage-chip-accent { fill: rgba(235,108,54,.10); stroke: rgba(235,108,54,.62); stroke-width: 1; }
+        .phase-card { fill: rgba(45,49,66,.035); stroke: rgba(79,93,117,.28); stroke-width: 1; }
+        .phase-card-final { fill: rgba(235,108,54,.06); stroke: rgba(235,108,54,.46); }
+        .legend-rule { stroke: rgba(45,49,66,.14); stroke-width: 1; }
+        .legend-title { fill: #7a8399; font: 600 12px 'Geist Mono', monospace; letter-spacing: .16em; }
+        .legend-text { fill: #4f5d75; font: 400 12px 'Geist Mono', monospace; }
+        .legend-solid, .legend-dashed, .legend-feedback { fill: none; stroke-width: 1.2; }
+        .legend-solid { stroke: #4f5d75; }
+        .legend-dashed { stroke: #7a8399; stroke-dasharray: 6,5; }
+        .legend-feedback { stroke: #2e5aa8; }
+        .legend-dynamic { fill: rgba(46,90,168,.08); stroke: #2e5aa8; stroke-width: 1; }
+        .legend-audit { fill: rgba(235,108,54,.10); stroke: #eb6c36; stroke-width: 1; }
+      </style>
+    </svg>
+    <figcaption>
+      <strong>Figure.</strong> Overview of Self-Audit. A 2.5D cardiac MRI observation is encoded by a shared ConvNeXt–FPN backbone to obtain an initial annotation. A shared recurrent Annotation Expert proposes gated residual corrections using turn-conditioned dynamic support attention. A Counterfactual Auditor evaluates each previous-to-candidate transition through a predicted global quality change and a local FIX/UNCHANGED/REGRESS map. Beneficial corrections are accepted and local audit evidence reshapes the support geometry of the next refinement turn; non-beneficial corrections terminate refinement. Ground truth is used only for annotation and counterfactual supervision during training and is absent from deployable inference.
+    </figcaption>
+    <p class="source-note">Implementation-aligned with <code>src/self_audit/models/self_audit_net.py</code>, <code>annotation_expert.py</code>, <code>dynamic_window.py</code>, <code>auditor.py</code>, <code>audit/counterfactual.py</code>, and <code>docs.md</code>.</p>
+  </figure>
+</main>
+</body>
+</html>
