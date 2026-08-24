@@ -404,6 +404,40 @@ def main() -> None:
             )
             if args.max_steps is not None:
                 break
+
+        if args.visualize:
+            try:
+                from self_audit.evaluation.visualizer import plot_phase_a_samples, save_figure
+                model.eval()
+                sample_images, sample_masks, sample_inits, sample_finals, sample_cids = [], [], [], [], []
+                with torch.no_grad():
+                    for v_batch in val_loader:
+                        v_batch = move_batch(v_batch, device)
+                        out = model.forward_annotation(v_batch["image"]) if hasattr(model, "forward_annotation") else model(v_batch["image"])
+                        init_log = out.get("initial_logits", out.get("a0_logits", out.get("logits")))
+                        fin_log = out.get("logits")
+                        sample_images.extend([img.cpu() for img in v_batch["image"]])
+                        sample_masks.extend([m.cpu() for m in v_batch["mask"]])
+                        sample_inits.extend([l.argmax(dim=0).cpu() for l in init_log])
+                        sample_finals.extend([l.argmax(dim=0).cpu() for l in fin_log])
+                        sample_cids.extend(v_batch.get("case_id", [f"Case_{len(sample_cids)+1}"]))
+                        if len(sample_images) >= max(int(args.vis_samples), 1):
+                            break
+                if sample_images:
+                    fig = plot_phase_a_samples(
+                        sample_images[:args.vis_samples],
+                        sample_masks[:args.vis_samples],
+                        sample_inits[:args.vis_samples],
+                        sample_finals[:args.vis_samples],
+                        case_ids=sample_cids[:args.vis_samples],
+                        title=f"Phase A Validation Samples (Epoch {epoch+1})",
+                    )
+                    vis_path = Path(args.vis_dir) / "phase_a_val_samples.png"
+                    saved_img = save_figure(fig, vis_path)
+                    wandb_logger.log_images({"val/phase_a_samples": saved_img}, step=epoch + 1)
+                    print(f"visualizations_saved={saved_img}")
+            except Exception as vis_err:
+                print(f"[Visualizer Warning] Failed to export Phase A visualization: {vis_err}")
     finally:
         wandb_logger.finish()
     print(f"saved_last={output_dir / 'last.pt'} saved_best={output_dir / 'best.pt'} saved_target={output_target}")

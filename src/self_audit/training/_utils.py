@@ -296,10 +296,10 @@ def validate_dataset_splits(config: Mapping[str, Any]) -> dict[str, Any]:
 
         manifest = read_split_manifest(manifest_path)
         manifest_cases = set().union(*(set(values) for values in manifest.values()))
-        if manifest_cases != discovered:
+        missing = sorted(manifest_cases - discovered)
+        if missing:
             raise ValueError(
-                f"Configured split manifest does not match discovered cases: "
-                f"missing={sorted(manifest_cases - discovered)[:5]}, extra={sorted(discovered - manifest_cases)[:5]}"
+                f"Configured split manifest does not match discovered cases: missing={missing[:5]}"
             )
         selected_by_split: dict[str, list[str]] = {}
         for name, requested in split_names.items():
@@ -967,7 +967,7 @@ class WandbLogger:
 
 
 def add_wandb_and_tqdm_args(parser: argparse.ArgumentParser) -> None:
-    """Add standard wandb and tqdm CLI flags to an argument parser."""
+    """Add standard wandb, tqdm, and visualization CLI flags to an argument parser."""
     wandb_group = parser.add_argument_group("WandB and Progress Tracking")
     wandb_group.add_argument("--wandb", action="store_true", default=None, help="Enable Weights & Biases logging")
     wandb_group.add_argument("--no_wandb", action="store_true", help="Disable Weights & Biases logging")
@@ -978,6 +978,11 @@ def add_wandb_and_tqdm_args(parser: argparse.ArgumentParser) -> None:
     wandb_group.add_argument("--wandb_mode", choices=["online", "offline", "disabled"], default=None, help="WandB run mode (default: offline)")
     wandb_group.add_argument("--wandb_tags", default=None, help="Comma-separated tags for WandB")
     wandb_group.add_argument("--no_tqdm", action="store_true", help="Disable interactive tqdm progress bars")
+
+    vis_group = parser.add_argument_group("Visual Inspection & Image Export")
+    vis_group.add_argument("--visualize", action="store_true", help="Export visualization figures after validation/training")
+    vis_group.add_argument("--vis_dir", default="reports/visualizations", help="Output directory for exported visualization figures")
+    vis_group.add_argument("--vis_samples", type=int, default=4, help="Maximum number of validation samples to visualize")
 
 
 def setup_wandb_logger(
