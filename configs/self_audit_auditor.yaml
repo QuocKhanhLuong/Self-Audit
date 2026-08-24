@@ -16,6 +16,7 @@ pin_memory: true
 persistent_workers: true
 prefetch_factor: 2
 amp: true
+amp_dtype: bfloat16
 warmup_epochs: 5
 gradient_accumulation_steps: 1
 deterministic: false
