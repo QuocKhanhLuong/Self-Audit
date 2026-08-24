@@ -903,13 +903,13 @@ def main() -> None:
                             sample_msks.append(v_batch["mask"][idx].cpu())
                             sample_inits.append(init_log[idx].argmax(dim=0).cpu())
                             sample_finals.append(fin_log[idx].argmax(dim=0).cpu())
+                            if cands and len(cands) > 0 and idx < cands[0].shape[0]:
+                                sample_candidates.append(cands[0][idx].argmax(dim=0).cpu())
                             sample_cids.append(v_batch.get("case_id", [f"Case_{len(sample_imgs)}"])[idx] if isinstance(v_batch.get("case_id"), list) else f"Case_{len(sample_imgs)}")
-                            if halts is not None and torch.is_tensor(halts):
+                            if halts is not None and torch.is_tensor(halts) and idx < len(halts):
                                 sample_halts.append(int(halts[idx].cpu()))
                             if len(sample_imgs) >= max(int(args.vis_samples), 1):
                                 break
-                        if cands:
-                            sample_candidates.append([c.argmax(dim=1).cpu() for c in cands])
                         if len(sample_imgs) >= max(int(args.vis_samples), 1):
                             break
                 if sample_imgs:
@@ -918,7 +918,7 @@ def main() -> None:
                         sample_msks[:args.vis_samples],
                         sample_inits[:args.vis_samples],
                         sample_finals[:args.vis_samples],
-                        transition_candidates=sample_candidates[0] if sample_candidates else None,
+                        transition_candidates=sample_candidates[:args.vis_samples] if sample_candidates else None,
                         halted_turns=sample_halts[:args.vis_samples] if sample_halts else None,
                         tau_accept=float(tau_accept),
                         case_ids=sample_cids[:args.vis_samples],
