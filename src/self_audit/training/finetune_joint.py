@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import argparse
-import sys
 from collections.abc import Iterable, Mapping
 from pathlib import Path
+import sys
 from typing import Any
 
 import torch
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 ROOT = Path(__file__).resolve().parents[3]
 SRC = ROOT / "src"
@@ -22,6 +23,7 @@ from self_audit.evaluation.metrics import acceptance_metrics, transition_audit_m
 from self_audit.losses.annotation import annotation_loss
 from self_audit.losses.audit import audit_loss
 from self_audit.training._utils import (
+    add_wandb_and_tqdm_args,
     autocast_context,
     build_data_loader,
     build_grad_scaler,
@@ -40,6 +42,7 @@ from self_audit.training._utils import (
     resolve_device,
     save_checkpoint,
     seed_everything,
+    setup_wandb_logger,
     validate_accumulation_steps,
     validate_dataset_splits,
 )
@@ -292,6 +295,9 @@ def validate_phase_c(
     tau_accept: float = 0.0,
     t_max: int = 3,
     max_batches: int | None = None,
+    epoch: int = 0,
+    total_epochs: int = 1,
+    disable_tqdm: bool = False,
 ) -> dict[str, Any]:
     """Validate Phase C behavior with GT used only after deployable inference.
 
@@ -313,8 +319,14 @@ def validate_phase_c(
     audit_delta_predictions: list[torch.Tensor] = []
     audit_delta_targets: list[torch.Tensor] = []
 
+    pbar = tqdm(
+        loader,
+        desc=f"Epoch {epoch + 1:03d}/{total_epochs:03d} [Val C]",
+        disable=disable_tqdm,
+        leave=False,
+    )
     try:
-        for batch_index, raw_batch in enumerate(loader):
+        for batch_index, raw_batch in enumerate(pbar):
             if max_batches is not None and batch_index >= int(max_batches):
                 break
             batch = move_batch(raw_batch, device)
@@ -376,7 +388,7 @@ def validate_phase_c(
                     candidate_selected,
                     target_selected,
                 )
-                accepted_values.append(_select_batch_rows(accepted_mask, active_mask))
+                accepted_values.append(_select_batch_rows(accepted_mask.detach(), active_mask))
                 actual_deltas.append(targets.delta_dice.reshape(-1).detach())
 
                 selected_audit = select_audit_output(audit_output, active_mask)
@@ -400,6 +412,10 @@ def validate_phase_c(
                 if torch.is_tensor(accepted_value)
                 else accepted_fallback
             )
+            if initial_scores and final_scores:
+                cur_init = float(torch.cat(initial_scores).mean())
+                cur_final = float(torch.cat(final_scores).mean())
+                pbar.set_postfix({"init_dice": f"{cur_init:.4f}", "final_dice": f"{cur_final:.4f}"})
     finally:
         model.train(was_training)
 
@@ -473,6 +489,7 @@ def collect_validation_transition_cache(
     device: torch.device,
     *,
     t_max: int = 3,
+    disable_tqdm: bool = False,
 ) -> dict[str, torch.Tensor]:
     """Cache full validation transitions for threshold calibration.
 
@@ -486,7 +503,8 @@ def collect_validation_transition_cache(
     quality_values: list[torch.Tensor] = []
     actual_values: list[torch.Tensor] = []
     active_values: list[torch.Tensor] = []
-    for raw_batch in loader:
+    pbar = tqdm(loader, desc="Caching transitions", disable=disable_tqdm, leave=False)
+    for raw_batch in pbar:
         batch = move_batch(raw_batch, device)
         output = model.infer(
             batch["image"],
@@ -577,7 +595,9 @@ def finetune_joint_epoch(
     gradient_accumulation_steps: int = 1,
     grad_clip: float | None = 3.0,
     epoch: int = 0,
+    total_epochs: int = 1,
     max_steps: int | None = None,
+    disable_tqdm: bool = False,
 ) -> dict[str, float]:
     model.train()
     accumulation_steps = validate_accumulation_steps(gradient_accumulation_steps)
@@ -593,7 +613,13 @@ def finetune_joint_epoch(
     optimizer_steps = 0
     pending = 0
     optimizer.zero_grad(set_to_none=True)
-    for batch_index, raw_batch in enumerate(loader):
+    pbar = tqdm(
+        loader,
+        desc=f"Epoch {epoch + 1:03d}/{total_epochs:03d} [Train C]",
+        disable=disable_tqdm,
+        leave=False,
+    )
+    for batch_index, raw_batch in enumerate(pbar):
         if max_steps is not None and optimizer_steps >= int(max_steps):
             break
         batch = move_batch(raw_batch, device)
@@ -638,6 +664,13 @@ def finetune_joint_epoch(
                 raise FloatingPointError(f"Non-finite Phase-C gradients at epoch={epoch} step={batch_index}")
             pending = 0
             optimizer_steps += 1
+        pbar.set_postfix({
+            "loss": f"{float(loss.detach()):.4f}",
+            "annot": f"{float(details['annotation_loss']):.4f}",
+            "audit": f"{float(details['audit_loss']):.4f}",
+            "trans": f"{int(details['transition_count'])}",
+            "lr": f"{float(optimizer.param_groups[0]['lr']):.2e}",
+        })
     if pending:
         step_ok, _ = finalize_optimizer_step(
             model,
@@ -667,6 +700,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--config", default="configs/self_audit_joint.yaml")
     parser.add_argument("--checkpoint", default=None)
     parser.add_argument("--data_root", default=None)
+    parser.add_argument("--split_manifest", default=None, help="Override split manifest JSON path")
     parser.add_argument("--num_workers", type=int, default=None)
     parser.add_argument("--image_size", type=int, default=None)
     parser.add_argument("--epochs", type=int, default=None)
@@ -674,9 +708,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--lambda_audit", type=float, default=None)
     parser.add_argument("--tau_accept", type=float, default=None)
     parser.add_argument("--t_max", type=int, default=None)
+    parser.add_argument("--output", default=None)
     parser.add_argument("--resume", default=None)
     parser.add_argument("--max_steps", type=int, default=None)
     parser.add_argument("--max_val_batches", type=int, default=None)
+    add_wandb_and_tqdm_args(parser)
     return parser.parse_args()
 
 
@@ -685,6 +721,8 @@ def main() -> None:
     config = load_config(args.config)
     if args.data_root is not None:
         config["data_root"] = args.data_root
+    if args.split_manifest is not None:
+        config["split_manifest"] = args.split_manifest
     if args.num_workers is not None:
         config["num_workers"] = args.num_workers
     if args.image_size is not None:
@@ -714,6 +752,7 @@ def main() -> None:
     scheduler = build_training_scheduler(optimizer, scheduler_config, num_batches=len(loader), epochs=epochs)
     amp_enabled, amp_dtype = resolve_amp(config, device)
     scaler = build_grad_scaler(enabled=amp_enabled, device=device, dtype=amp_dtype)
+    wandb_logger = setup_wandb_logger(args, config, phase="joint")
     start_epoch = 0
     best_metric = float("-inf")
     if args.resume:
@@ -735,53 +774,49 @@ def main() -> None:
     lambda_audit = float(args.lambda_audit if args.lambda_audit is not None else config.get("lambda_audit", 1.0))
     tau_accept = float(args.tau_accept if args.tau_accept is not None else audit_config.get("tau_accept", 0.0))
     t_max = int(args.t_max if args.t_max is not None else audit_config.get("t_max", config.get("model", {}).get("max_turns", 3)))
-    output_dir = Path(config.get("output", "weights/self_audit/phase_c_joint.pt")).parent
+    output_target = Path(config.get("output", "weights/self_audit/phase_c_joint.pt"))
+    output_dir = output_target.parent
     output_dir.mkdir(parents=True, exist_ok=True)
-    for epoch in range(start_epoch, epochs):
-        stats = finetune_joint_epoch(
-            model,
-            loader,
-            optimizer,
-            device,
-            tau_accept=tau_accept,
-            t_max=t_max,
-            lambda_audit=lambda_audit,
-            neutral_margin=float(audit_config.get("neutral_margin", 0.005)),
-            local_weighting=audit_config.get("local_class_weighting", True) != "none",
-            scheduler=scheduler,
-            scaler=scaler,
-            amp_enabled=amp_enabled,
-            amp_dtype=amp_dtype,
-            gradient_accumulation_steps=accumulation_steps,
-            grad_clip=config.get("grad_clip", 3.0),
-            epoch=epoch,
-            max_steps=args.max_steps,
-        )
-        validation = validate_phase_c(
-            model,
-            val_loader,
-            device,
-            tau_accept=tau_accept,
-            t_max=t_max,
-            max_batches=args.max_val_batches,
-        )
-        metric = float(validation["final_foreground_macro_dice"])
-        is_best = is_finite(metric) and metric > best_metric
-        if is_best:
-            best_metric = metric
-        save_checkpoint(
-            output_dir / "last.pt",
-            model,
-            optimizer=optimizer,
-            scheduler=scheduler,
-            scaler=scaler,
-            epoch=epoch + 1,
-            config=config,
-            extra={"best_metric": best_metric, "phase": "joint"},
-        )
-        if is_best:
+    try:
+        for epoch in range(start_epoch, epochs):
+            stats = finetune_joint_epoch(
+                model,
+                loader,
+                optimizer,
+                device,
+                tau_accept=tau_accept,
+                t_max=t_max,
+                lambda_audit=lambda_audit,
+                neutral_margin=float(audit_config.get("neutral_margin", 0.005)),
+                local_weighting=audit_config.get("local_class_weighting", True) != "none",
+                scheduler=scheduler,
+                scaler=scaler,
+                amp_enabled=amp_enabled,
+                amp_dtype=amp_dtype,
+                gradient_accumulation_steps=accumulation_steps,
+                grad_clip=config.get("grad_clip", 3.0),
+                epoch=epoch,
+                total_epochs=epochs,
+                max_steps=args.max_steps,
+                disable_tqdm=args.no_tqdm,
+            )
+            validation = validate_phase_c(
+                model,
+                val_loader,
+                device,
+                tau_accept=tau_accept,
+                t_max=t_max,
+                max_batches=args.max_val_batches,
+                epoch=epoch,
+                total_epochs=epochs,
+                disable_tqdm=args.no_tqdm,
+            )
+            metric = float(validation["final_foreground_macro_dice"])
+            is_best = is_finite(metric) and metric > best_metric
+            if is_best:
+                best_metric = metric
             save_checkpoint(
-                output_dir / "best.pt",
+                output_dir / "last.pt",
                 model,
                 optimizer=optimizer,
                 scheduler=scheduler,
@@ -790,25 +825,67 @@ def main() -> None:
                 config=config,
                 extra={"best_metric": best_metric, "phase": "joint"},
             )
-        print(
-            f"epoch={epoch + 1:03d} lr={stats['lr']:.3e} loss={stats['loss']:.5f} "
-            f"annotation={stats['annotation_loss']:.5f} audit={stats['audit_loss']:.5f} "
-            f"initial_dice={validation['initial_foreground_macro_dice']:.4f} "
-            f"final_dice={validation['final_foreground_macro_dice']:.4f} "
-            f"net_gain={validation['net_dice_gain']:.4f} "
-            f"harmful_acceptance={validation['harmful_acceptance_rate']:.4f} "
-            f"beneficial_rejection={validation['beneficial_rejection_rate']:.4f} "
-            f"mean_attempted={validation['mean_attempted_turns']:.3f} "
-            f"mean_accepted={validation['mean_accepted_turns']:.3f} "
-            f"audit_AUROC={validation['audit_auroc']:.4f} "
-            f"audit_FIX_F1={validation['audit_local_fix_f1']:.4f} "
-            f"audit_REGRESS_F1={validation['audit_local_regress_f1']:.4f} "
-            f"audit_corr={validation['audit_correlation_delta_q_delta_dice']:.4f} "
-            f"tau={tau_accept:.4f}"
-        )
-        if args.max_steps is not None:
-            break
-    print(f"saved_last={output_dir / 'last.pt'} saved_best={output_dir / 'best.pt'}")
+            if is_best:
+                save_checkpoint(
+                    output_dir / "best.pt",
+                    model,
+                    optimizer=optimizer,
+                    scheduler=scheduler,
+                    scaler=scaler,
+                    epoch=epoch + 1,
+                    config=config,
+                    extra={"best_metric": best_metric, "phase": "joint"},
+                )
+                save_checkpoint(
+                    output_target,
+                    model,
+                    optimizer=optimizer,
+                    scheduler=scheduler,
+                    scaler=scaler,
+                    epoch=epoch + 1,
+                    config=config,
+                    extra={"best_metric": best_metric, "phase": "joint"},
+                )
+            log_payload = {
+                "epoch": epoch + 1,
+                "train/loss": stats["loss"],
+                "train/annotation_loss": stats["annotation_loss"],
+                "train/audit_loss": stats["audit_loss"],
+                "train/lr": stats["lr"],
+                "val/initial_dice": validation["initial_foreground_macro_dice"],
+                "val/final_dice": validation["final_foreground_macro_dice"],
+                "val/net_gain": validation["net_gain"],
+                "val/harmful_acceptance_rate": validation["harmful_acceptance_rate"],
+                "val/beneficial_rejection_rate": validation["beneficial_rejection_rate"],
+                "val/mean_attempted_turns": validation["mean_attempted_turns"],
+                "val/mean_accepted_turns": validation["mean_accepted_turns"],
+                "val/audit_auroc": validation["audit_auroc"],
+                "val/audit_fix_f1": validation["audit_local_fix_f1"],
+                "val/audit_regress_f1": validation["audit_local_regress_f1"],
+                "best_final_macro_dice": best_metric,
+            }
+            wandb_logger.log(log_payload, step=epoch + 1)
+            print(
+                f"epoch={epoch + 1:03d} lr={stats['lr']:.3e} loss={stats['loss']:.5f} "
+                f"annotation={stats['annotation_loss']:.5f} audit={stats['audit_loss']:.5f} "
+                f"initial_dice={validation['initial_foreground_macro_dice']:.4f} "
+                f"final_dice={validation['final_foreground_macro_dice']:.4f} "
+                f"net_gain={validation['net_gain']:.4f} "
+                f"harmful_acceptance={validation['harmful_acceptance_rate']:.4f} "
+                f"beneficial_rejection={validation['beneficial_rejection_rate']:.4f} "
+                f"mean_attempted={validation['mean_attempted_turns']:.3f} "
+                f"mean_accepted={validation['mean_accepted_turns']:.3f} "
+                f"audit_AUROC={validation['audit_auroc']:.4f} "
+                f"audit_FIX_F1={validation['audit_local_fix_f1']:.4f} "
+                f"audit_REGRESS_F1={validation['audit_local_regress_f1']:.4f} "
+                f"audit_corr={validation['audit_correlation_delta_q_delta_dice']:.4f} "
+                f"tau={tau_accept:.4f}"
+            )
+            if args.max_steps is not None:
+                break
+    finally:
+        wandb_logger.finish()
+    print(f"saved_last={output_dir / 'last.pt'} saved_best={output_dir / 'best.pt'} saved_target={output_target}")
 
 
 if __name__ == "__main__":  # pragma: no cover

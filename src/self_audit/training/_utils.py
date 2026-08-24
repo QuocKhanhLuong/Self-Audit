@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import contextlib
 import math
 import os
@@ -753,8 +754,11 @@ def save_checkpoint(
         with tempfile.NamedTemporaryFile(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent, delete=False) as handle:
             temporary = Path(handle.name)
         torch.save(payload, temporary)
-        with open(temporary, "rb") as handle:
-            os.fsync(handle.fileno())
+        with open(temporary, "r+b") as handle:
+            try:
+                os.fsync(handle.fileno())
+            except OSError:
+                pass
         os.replace(temporary, path)
     finally:
         if temporary is not None and temporary.exists():
@@ -874,3 +878,151 @@ def move_batch(batch: dict[str, Any], device: torch.device) -> dict[str, Any]:
         key: value.to(device, non_blocking=True) if torch.is_tensor(value) else value
         for key, value in batch.items()
     }
+
+
+class WandbLogger:
+    """Wrapper around Weights & Biases with safe local offline mode and graceful fallback."""
+
+    def __init__(
+        self,
+        enabled: bool = False,
+        project: str | None = None,
+        entity: str | None = None,
+        run_name: str | None = None,
+        group: str | None = None,
+        tags: Iterable[str] | None = None,
+        config: Mapping[str, Any] | None = None,
+        mode: str | None = None,
+        dir: str | Path | None = None,
+    ) -> None:
+        self.enabled = bool(enabled)
+        self.project = project or "self-audit"
+        self.entity = entity
+        self.run_name = run_name
+        self.group = group
+        self.tags = list(tags) if tags is not None else None
+        self.config = dict(config) if config is not None else {}
+        self.mode = mode or "offline"
+        self.dir = str(dir) if dir is not None else None
+        self._run = None
+
+        if self.enabled:
+            self._initialize()
+
+    def _initialize(self) -> None:
+        try:
+            import wandb
+            self._run = wandb.init(
+                project=self.project,
+                entity=self.entity,
+                name=self.run_name,
+                group=self.group,
+                tags=self.tags,
+                config=self.config,
+                mode=self.mode,
+                dir=self.dir,
+            )
+            name_str = getattr(self._run, "name", self.run_name)
+            print(f"[wandb] initialized: project={self.project} run={name_str} mode={self.mode}")
+        except ImportError:
+            print("[wandb] wandb is not installed. Disabling wandb logging. (Install with `pip install wandb`)")
+            self.enabled = False
+            self._run = None
+        except Exception as exc:
+            print(f"[wandb] failed to initialize wandb ({exc}). Proceeding with wandb disabled.")
+            self.enabled = False
+            self._run = None
+
+    def log(self, metrics: Mapping[str, Any], step: int | None = None) -> None:
+        if not self.enabled or self._run is None:
+            return
+        try:
+            import wandb
+            clean_metrics: dict[str, Any] = {}
+            for key, val in metrics.items():
+                if torch.is_tensor(val):
+                    val = val.detach().cpu().item() if val.numel() == 1 else val.detach().cpu().tolist()
+                elif isinstance(val, (np.floating, np.integer)):
+                    val = float(val) if isinstance(val, np.floating) else int(val)
+                if isinstance(val, (int, float)) and not math.isnan(val) and not math.isinf(val):
+                    clean_metrics[key] = val
+                elif isinstance(val, (int, float, str, bool)):
+                    clean_metrics[key] = val
+            if clean_metrics:
+                if step is not None:
+                    wandb.log(clean_metrics, step=int(step))
+                else:
+                    wandb.log(clean_metrics)
+        except Exception as exc:
+            print(f"[wandb] warning: failed to log metrics ({exc})")
+
+    def finish(self) -> None:
+        if self.enabled and self._run is not None:
+            try:
+                import wandb
+                wandb.finish()
+            except Exception:
+                pass
+            self._run = None
+
+
+def add_wandb_and_tqdm_args(parser: argparse.ArgumentParser) -> None:
+    """Add standard wandb and tqdm CLI flags to an argument parser."""
+    wandb_group = parser.add_argument_group("WandB and Progress Tracking")
+    wandb_group.add_argument("--wandb", action="store_true", default=None, help="Enable Weights & Biases logging")
+    wandb_group.add_argument("--no_wandb", action="store_true", help="Disable Weights & Biases logging")
+    wandb_group.add_argument("--wandb_project", default=None, help="WandB project name")
+    wandb_group.add_argument("--wandb_entity", default=None, help="WandB entity/user/team")
+    wandb_group.add_argument("--wandb_run_name", default=None, help="WandB run name")
+    wandb_group.add_argument("--wandb_group", default=None, help="WandB group name")
+    wandb_group.add_argument("--wandb_mode", choices=["online", "offline", "disabled"], default=None, help="WandB run mode (default: offline)")
+    wandb_group.add_argument("--wandb_tags", default=None, help="Comma-separated tags for WandB")
+    wandb_group.add_argument("--no_tqdm", action="store_true", help="Disable interactive tqdm progress bars")
+
+
+def setup_wandb_logger(
+    args: Any,
+    config: Mapping[str, Any],
+    *,
+    phase: str,
+    default_project: str = "self-audit",
+) -> WandbLogger:
+    """Helper to initialize WandbLogger from argparse args and YAML config."""
+    wandb_cfg = config.get("wandb", {})
+    if not isinstance(wandb_cfg, Mapping):
+        wandb_cfg = {}
+
+    cli_wandb = getattr(args, "wandb", None)
+    cli_no_wandb = getattr(args, "no_wandb", False)
+    if cli_no_wandb:
+        enabled = False
+    elif cli_wandb is not None and cli_wandb:
+        enabled = True
+    else:
+        enabled = bool(wandb_cfg.get("enabled", False))
+
+    project = getattr(args, "wandb_project", None) or wandb_cfg.get("project") or default_project
+    entity = getattr(args, "wandb_entity", None) or wandb_cfg.get("entity")
+    run_name = getattr(args, "wandb_run_name", None) or wandb_cfg.get("run_name")
+    group = getattr(args, "wandb_group", None) or wandb_cfg.get("group") or f"phase_{phase}"
+    mode = getattr(args, "wandb_mode", None) or wandb_cfg.get("mode") or "offline"
+
+    raw_tags = getattr(args, "wandb_tags", None) or wandb_cfg.get("tags")
+    if isinstance(raw_tags, str):
+        tags = [t.strip() for t in raw_tags.split(",") if t.strip()]
+    elif isinstance(raw_tags, Iterable):
+        tags = [str(t) for t in raw_tags]
+    else:
+        tags = [f"phase_{phase}", str(config.get("dataset", "acdc"))]
+
+    return WandbLogger(
+        enabled=enabled,
+        project=project,
+        entity=entity,
+        run_name=run_name,
+        group=group,
+        tags=tags,
+        config=config,
+        mode=mode,
+    )
+

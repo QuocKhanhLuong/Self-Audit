@@ -16,9 +16,12 @@ for path in (ROOT, SRC):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
+from tqdm import tqdm
+
 from self_audit.evaluation.metrics import per_class_dice
 from self_audit.losses.annotation import annotation_loss
 from self_audit.training._utils import (
+    add_wandb_and_tqdm_args,
     autocast_context,
     build_data_loader,
     build_grad_scaler,
@@ -38,6 +41,7 @@ from self_audit.training._utils import (
     resolve_device,
     save_checkpoint,
     seed_everything,
+    setup_wandb_logger,
     validate_accumulation_steps,
     validate_dataset_splits,
 )
@@ -121,7 +125,9 @@ def train_annotation_epoch(
     amp_dtype: torch.dtype = torch.float16,
     gradient_accumulation_steps: int = 1,
     epoch: int = 0,
+    total_epochs: int = 1,
     max_steps: int | None = None,
+    disable_tqdm: bool = False,
 ) -> dict[str, float]:
     model.train()
     accumulation_steps = validate_accumulation_steps(gradient_accumulation_steps)
@@ -135,7 +141,13 @@ def train_annotation_epoch(
     pending = 0
     optimizer_steps = 0
     batches = 0
-    for batch_index, raw_batch in enumerate(loader):
+    pbar = tqdm(
+        loader,
+        desc=f"Epoch {epoch + 1:03d}/{total_epochs:03d} [Train A]",
+        disable=disable_tqdm,
+        leave=False,
+    )
+    for batch_index, raw_batch in enumerate(pbar):
         if max_steps is not None and optimizer_steps >= int(max_steps):
             break
         batch = move_batch(raw_batch, device)
@@ -167,6 +179,11 @@ def train_annotation_epoch(
                 raise FloatingPointError(f"Non-finite Phase-A gradients at epoch={epoch} step={batch_index} components={parts}")
             optimizer_steps += 1
             pending = 0
+        pbar.set_postfix({
+            "loss": f"{float(loss.detach()):.4f}",
+            "avg_loss": f"{running / max(count, 1):.4f}",
+            "lr": f"{float(optimizer.param_groups[0]['lr']):.2e}",
+        })
     if pending:
         step_ok, _ = finalize_optimizer_step(
             model,
@@ -196,12 +213,21 @@ def validate_annotation_epoch(
     *,
     stage_weights: Iterable[float] | None = None,
     max_batches: int | None = None,
+    epoch: int = 0,
+    total_epochs: int = 1,
+    disable_tqdm: bool = False,
 ) -> dict[str, float]:
     model.eval()
     total_loss = 0.0
     count = 0
     dice_sums: dict[int, float] = {}
-    for batch_index, raw_batch in enumerate(loader):
+    pbar = tqdm(
+        loader,
+        desc=f"Epoch {epoch + 1:03d}/{total_epochs:03d} [Val A]",
+        disable=disable_tqdm,
+        leave=False,
+    )
+    for batch_index, raw_batch in enumerate(pbar):
         if max_batches is not None and batch_index >= int(max_batches):
             break
         batch = move_batch(raw_batch, device)
@@ -218,6 +244,8 @@ def validate_annotation_epoch(
         count += batch_size
         for cls, value in scores.items():
             dice_sums[cls] = dice_sums.get(cls, 0.0) + float(value) * batch_size
+        current_macro = sum(dice_sums.values()) / max(count * max(len(dice_sums), 1), 1)
+        pbar.set_postfix({"val_loss": f"{total_loss / max(count, 1):.4f}", "macro_dice": f"{current_macro:.4f}"})
     result = {"val_loss": total_loss / max(count, 1)}
     for cls, value in sorted(dice_sums.items()):
         result[f"val_dice_class_{cls}"] = value / max(count, 1)
@@ -229,6 +257,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Self-Audit Phase A annotation training")
     parser.add_argument("--config", default="configs/self_audit_annotation.yaml")
     parser.add_argument("--data_root", default=None)
+    parser.add_argument("--split_manifest", default=None, help="Override split manifest JSON path")
     parser.add_argument("--epochs", type=int, default=None)
     parser.add_argument("--batch_size", type=int, default=None)
     parser.add_argument("--num_workers", type=int, default=None)
@@ -239,6 +268,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max_steps", type=int, default=None)
     parser.add_argument("--no_pretrained", action="store_true", help="Disable external ConvNeXt weights for a local smoke run")
     parser.add_argument("--max_val_batches", type=int, default=None, help="Limit validation batches for a short smoke")
+    add_wandb_and_tqdm_args(parser)
     return parser.parse_args()
 
 
@@ -247,6 +277,8 @@ def main() -> None:
     config = load_config(args.config)
     if args.data_root is not None:
         config["data_root"] = args.data_root
+    if args.split_manifest is not None:
+        config["split_manifest"] = args.split_manifest
     if args.image_size is not None:
         config["image_size"] = args.image_size
     if args.no_pretrained:
@@ -276,6 +308,7 @@ def main() -> None:
     scheduler = build_training_scheduler(optimizer, scheduler_config, num_batches=len(train_loader), epochs=epochs)
     amp_enabled, amp_dtype = resolve_amp(config, device)
     scaler = build_grad_scaler(enabled=amp_enabled, device=device, dtype=amp_dtype)
+    wandb_logger = setup_wandb_logger(args, config, phase="annotation")
     start_epoch = 0
     best_metric = float("-inf")
     if args.resume:
@@ -284,65 +317,96 @@ def main() -> None:
         best_metric = float(payload.get("best_metric", float("-inf")))
         print(f"resumed={args.resume} epoch={start_epoch} best_metric={best_metric:.5f}")
     stage_weights = config.get("stage_weights")
-    output_dir = Path(args.output or config.get("output", "weights/self_audit/phase_a_annotation.pt")).parent
+    output_target = Path(args.output or config.get("output", "weights/self_audit/phase_a_annotation.pt"))
+    output_dir = output_target.parent
     output_dir.mkdir(parents=True, exist_ok=True)
-    for epoch in range(start_epoch, epochs):
-        stats = train_annotation_epoch(
-            model,
-            train_loader,
-            optimizer,
-            device,
-            grad_clip=config.get("grad_clip", 3.0),
-            stage_weights=stage_weights,
-            scheduler=scheduler,
-            scaler=scaler,
-            amp_enabled=amp_enabled,
-            amp_dtype=amp_dtype,
-            gradient_accumulation_steps=accumulation_steps,
-            epoch=epoch,
-            max_steps=args.max_steps,
-        )
-        validation = validate_annotation_epoch(
-            model,
-            val_loader,
-            device,
-            stage_weights=stage_weights,
-            max_batches=args.max_val_batches,
-        )
-        metric = float(validation["val_macro_foreground_dice"])
-        save_checkpoint(
-            output_dir / "last.pt",
-            model,
-            optimizer=optimizer,
-            scheduler=scheduler,
-            scaler=scaler,
-            epoch=epoch + 1,
-            config=config,
-            extra={"best_metric": max(best_metric, metric), "phase": "annotation"},
-        )
-        if metric > best_metric:
-            best_metric = metric
+    try:
+        for epoch in range(start_epoch, epochs):
+            stats = train_annotation_epoch(
+                model,
+                train_loader,
+                optimizer,
+                device,
+                grad_clip=config.get("grad_clip", 3.0),
+                stage_weights=stage_weights,
+                scheduler=scheduler,
+                scaler=scaler,
+                amp_enabled=amp_enabled,
+                amp_dtype=amp_dtype,
+                gradient_accumulation_steps=accumulation_steps,
+                epoch=epoch,
+                total_epochs=epochs,
+                max_steps=args.max_steps,
+                disable_tqdm=args.no_tqdm,
+            )
+            validation = validate_annotation_epoch(
+                model,
+                val_loader,
+                device,
+                stage_weights=stage_weights,
+                max_batches=args.max_val_batches,
+                epoch=epoch,
+                total_epochs=epochs,
+                disable_tqdm=args.no_tqdm,
+            )
+            metric = float(validation["val_macro_foreground_dice"])
             save_checkpoint(
-                output_dir / "best.pt",
+                output_dir / "last.pt",
                 model,
                 optimizer=optimizer,
                 scheduler=scheduler,
                 scaler=scaler,
                 epoch=epoch + 1,
                 config=config,
-                extra={"best_metric": best_metric, "phase": "annotation"},
+                extra={"best_metric": max(best_metric, metric), "phase": "annotation"},
             )
-        print(
-            f"epoch={epoch + 1:03d} lr={stats['lr']:.3e} train_loss={stats['loss']:.5f} "
-            f"val_loss={validation['val_loss']:.5f} "
-            f"val_dice_RV={validation.get('val_dice_class_1', float('nan')):.4f} "
-            f"val_dice_MYO={validation.get('val_dice_class_2', float('nan')):.4f} "
-            f"val_dice_LV={validation.get('val_dice_class_3', float('nan')):.4f} "
-            f"macro={metric:.4f}"
-        )
-        if args.max_steps is not None:
-            break
-    print(f"saved_last={output_dir / 'last.pt'} saved_best={output_dir / 'best.pt'}")
+            if metric > best_metric:
+                best_metric = metric
+                save_checkpoint(
+                    output_dir / "best.pt",
+                    model,
+                    optimizer=optimizer,
+                    scheduler=scheduler,
+                    scaler=scaler,
+                    epoch=epoch + 1,
+                    config=config,
+                    extra={"best_metric": best_metric, "phase": "annotation"},
+                )
+                save_checkpoint(
+                    output_target,
+                    model,
+                    optimizer=optimizer,
+                    scheduler=scheduler,
+                    scaler=scaler,
+                    epoch=epoch + 1,
+                    config=config,
+                    extra={"best_metric": best_metric, "phase": "annotation"},
+                )
+            log_payload = {
+                "epoch": epoch + 1,
+                "train/loss": stats["loss"],
+                "train/lr": stats["lr"],
+                "val/loss": validation["val_loss"],
+                "val/macro_foreground_dice": metric,
+                "val/dice_RV": validation.get("val_dice_class_1", float("nan")),
+                "val/dice_MYO": validation.get("val_dice_class_2", float("nan")),
+                "val/dice_LV": validation.get("val_dice_class_3", float("nan")),
+                "best_macro_dice": best_metric,
+            }
+            wandb_logger.log(log_payload, step=epoch + 1)
+            print(
+                f"epoch={epoch + 1:03d} lr={stats['lr']:.3e} train_loss={stats['loss']:.5f} "
+                f"val_loss={validation['val_loss']:.5f} "
+                f"val_dice_RV={validation.get('val_dice_class_1', float('nan')):.4f} "
+                f"val_dice_MYO={validation.get('val_dice_class_2', float('nan')):.4f} "
+                f"val_dice_LV={validation.get('val_dice_class_3', float('nan')):.4f} "
+                f"macro={metric:.4f}"
+            )
+            if args.max_steps is not None:
+                break
+    finally:
+        wandb_logger.finish()
+    print(f"saved_last={output_dir / 'last.pt'} saved_best={output_dir / 'best.pt'} saved_target={output_target}")
 
 
 if __name__ == "__main__":  # pragma: no cover

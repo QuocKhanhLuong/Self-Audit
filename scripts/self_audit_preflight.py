@@ -68,6 +68,8 @@ def _check_split_integrity(config: dict[str, object]) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", required=True)
+    parser.add_argument("--data_root", default=None, help="Override dataset root directory")
+    parser.add_argument("--split_manifest", default=None, help="Override split manifest JSON path")
     parser.add_argument("--device", default=None)
     parser.add_argument("--allow_pretrained", action="store_true", help="Permit external ConvNeXt weight loading")
     parser.add_argument("--batch_size", type=int, default=1)
@@ -84,6 +86,10 @@ def main() -> int:
 
     try:
         config = load_config(args.config)
+        if args.data_root is not None:
+            config["data_root"] = args.data_root
+        if args.split_manifest is not None:
+            config["split_manifest"] = args.split_manifest
         seed_everything(int(config.get("seed", 42)), deterministic=bool(config.get("deterministic", False)))
         data_root = Path(str(config.get("data_root", "preprocessed_data/ACDC")))
         if not data_root.exists():
