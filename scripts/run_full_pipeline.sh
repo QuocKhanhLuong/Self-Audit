@@ -130,12 +130,17 @@ while [[ $# -gt 0 ]]; do
     --wandb_project) WANDB_PROJECT="$2"; shift 2 ;;
     --wandb_entity) WANDB_ENTITY="$2"; shift 2 ;;
     --no_tqdm) NO_TQDM=true; shift ;;
+    --visualize) VISUALIZE=true; shift ;;
+    --vis_samples) VIS_SAMPLES="$2"; shift 2 ;;
     --output_dir) OUTPUT_DIR="$2"; shift 2 ;;
     --report_dir) REPORT_DIR="$2"; shift 2 ;;
     -h|--help) show_help ;;
     *) echo "Unknown option: $1"; exit 1 ;;
   esac
 done
+
+VISUALIZE=${VISUALIZE:-false}
+VIS_SAMPLES=${VIS_SAMPLES:-4}
 
 # Normalize start phase to uppercase
 START_PHASE=$(echo "$START_PHASE" | tr '[:lower:]' '[:upper:]')
@@ -166,6 +171,9 @@ if [[ "$WANDB_ENABLED" == "true" ]]; then
   if [[ -n "$WANDB_ENTITY" ]]; then COMMON_ARGS+=(--wandb_entity "$WANDB_ENTITY"); fi
 fi
 if [[ "$NO_TQDM" == "true" ]]; then COMMON_ARGS+=(--no_tqdm); fi
+if [[ "$VISUALIZE" == "true" ]]; then
+  COMMON_ARGS+=(--visualize --vis_dir "$REPORT_DIR/visualizations" --vis_samples "$VIS_SAMPLES")
+fi
 
 # ------------------------------------------------------------------------------
 # Phase 0: Preflight Sanity Check
@@ -313,6 +321,21 @@ if [[ "$START_PHASE" == "A" || "$START_PHASE" == "B" || "$START_PHASE" == "C" ||
   echo ">>> [Phase 5/5] Calibration Complete. Result saved: $CALIBRATION_JSON"
 fi
 
+# ------------------------------------------------------------------------------
+# Phase 6: Visual Report Generation (Optional)
+# ------------------------------------------------------------------------------
+if [[ "$VISUALIZE" == "true" && -f "$OUTPUT_DIR/phase_c_joint.pt" ]]; then
+  echo ""
+  echo ">>> [Phase 6/6] Generating Visual Inspection Reports..."
+  python scripts/visualize_predictions.py \
+    --checkpoint "$OUTPUT_DIR/phase_c_joint.pt" \
+    --config "$CONFIG_C" \
+    --num_samples "$VIS_SAMPLES" \
+    --output_dir "$REPORT_DIR/visualizations" \
+    --device "$DEVICE"
+  echo ">>> [Phase 6/6] Visual Inspection Images saved to: $REPORT_DIR/visualizations"
+fi
+
 echo ""
 echo "=============================================================================="
 echo "                 Self-Audit Pipeline Execution Complete!"
@@ -322,4 +345,7 @@ echo " Phase B Checkpoint:  $CHECKPOINT_B"
 echo " Phase C Checkpoint:  $CHECKPOINT_C"
 echo " Transitions Cache:   $TRANSITIONS_CACHE"
 echo " Calibration Report:  $CALIBRATION_JSON"
+if [[ "$VISUALIZE" == "true" ]]; then
+  echo " Visualizations:      $REPORT_DIR/visualizations"
+fi
 echo "=============================================================================="

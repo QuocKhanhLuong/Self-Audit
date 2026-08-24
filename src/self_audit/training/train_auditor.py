@@ -571,6 +571,66 @@ def main() -> None:
             )
             if args.max_steps is not None:
                 break
+
+        if args.visualize:
+            try:
+                from self_audit.evaluation.visualizer import plot_phase_b_transitions, save_figure
+                model.eval()
+                sample_imgs, sample_msks, sample_prevs, sample_cands = [], [], [], []
+                sample_loc_preds, sample_loc_tgts, sample_dqs, sample_dds, sample_cids = [], [], [], [], []
+                with torch.no_grad():
+                    for v_batch in val_loader:
+                        v_batch = move_batch(v_batch, device)
+                        out = model.forward_annotation(v_batch["image"]) if hasattr(model, "forward_annotation") else model(v_batch["image"])
+                        feats = _feature_for_audit(model, v_batch["image"]).detach()
+                        transitions = build_auditor_transitions(out, v_batch["mask"], generator)
+                        for trans in transitions:
+                            v_mask = trans["valid_mask"].to(device=device, dtype=torch.bool)
+                            if not bool(v_mask.any()):
+                                continue
+                            prev = trans["previous"][v_mask]
+                            cand = trans["candidate"][v_mask]
+                            tgt = v_batch["mask"][v_mask]
+                            targets = build_transition_targets(prev, cand, tgt)
+                            aud_out = model.auditor(
+                                feats[v_mask], prev, cand, cand - prev,
+                                entropy_previous=_entropy(prev), entropy_candidate=_entropy(cand),
+                            )
+                            for idx in range(prev.shape[0]):
+                                sample_imgs.append(v_batch["image"][v_mask][idx].cpu())
+                                sample_msks.append(tgt[idx].cpu())
+                                sample_prevs.append(prev[idx].argmax(dim=0).cpu())
+                                sample_cands.append(cand[idx].argmax(dim=0).cpu())
+                                sample_loc_preds.append(aud_out.local_logits[idx].argmax(dim=0).cpu())
+                                sample_loc_tgts.append(targets.local[idx].cpu())
+                                sample_dqs.append(float(aud_out.delta_q[idx].detach().cpu()))
+                                sample_dds.append(float(targets.delta_dice[idx].detach().cpu()))
+                                sample_cids.append(f"Transition_{len(sample_imgs)}")
+                                if len(sample_imgs) >= max(int(args.vis_samples), 1):
+                                    break
+                            if len(sample_imgs) >= max(int(args.vis_samples), 1):
+                                break
+                        if len(sample_imgs) >= max(int(args.vis_samples), 1):
+                            break
+                if sample_imgs:
+                    fig = plot_phase_b_transitions(
+                        sample_imgs[:args.vis_samples],
+                        sample_msks[:args.vis_samples],
+                        sample_prevs[:args.vis_samples],
+                        sample_cands[:args.vis_samples],
+                        sample_loc_preds[:args.vis_samples],
+                        sample_loc_tgts[:args.vis_samples],
+                        delta_qs=sample_dqs[:args.vis_samples],
+                        delta_dices=sample_dds[:args.vis_samples],
+                        case_ids=sample_cids[:args.vis_samples],
+                        title=f"Phase B Auditor Verification (Epoch {epoch+1})",
+                    )
+                    vis_path = Path(args.vis_dir) / "phase_b_val_transitions.png"
+                    saved_img = save_figure(fig, vis_path)
+                    wandb_logger.log_images({"val/phase_b_transitions": saved_img}, step=epoch + 1)
+                    print(f"visualizations_saved={saved_img}")
+            except Exception as vis_err:
+                print(f"[Visualizer Warning] Failed to export Phase B visualization: {vis_err}")
     finally:
         wandb_logger.finish()
     print(f"saved_last={output_dir / 'last.pt'} saved_best={output_dir / 'best.pt'} saved_target={output_target}")

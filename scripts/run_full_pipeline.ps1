@@ -28,6 +28,8 @@ param (
     [Nullable[int]]$EpochsA,
     [Nullable[int]]$EpochsB,
     [Nullable[int]]$EpochsC,
+    [switch]$Visualize,
+    [Nullable[int]]$VisSamples = 4,
     [switch]$Wandb,
     [switch]$NoWandb,
     [string]$WandbMode = "offline",
@@ -75,6 +77,10 @@ if ($Wandb.IsPresent -and -not $NoWandb.IsPresent) {
     if ($WandbEntity) { $commonArgs += @("--wandb_entity", $WandbEntity) }
 }
 if ($NoTqdm.IsPresent) { $commonArgs += "--no_tqdm" }
+if ($Visualize.IsPresent) {
+    $visDir = Join-Path $ReportDir "visualizations"
+    $commonArgs += @("--visualize", "--vis_dir", $visDir, "--vis_samples", "$VisSamples")
+}
 
 function Invoke-PythonStep {
     param([string[]]$Arguments, [string]$StepName)
@@ -184,6 +190,15 @@ if ($StartPhase -eq "A" -or $StartPhase -eq "B" -or $StartPhase -eq "C" -or $Sta
     Write-Host ">>> [Phase 5/5] Calibration Complete. Result saved: $calibrationJson" -ForegroundColor Green
 }
 
+# Phase 6: Visual Report Generation
+if ($Visualize.IsPresent -and (Test-Path (Join-Path $OutputDir "phase_c_joint.pt"))) {
+    $visDir = Join-Path $ReportDir "visualizations"
+    Write-Host "`n>>> [Phase 6/6] Generating Visual Inspection Reports..." -ForegroundColor Yellow
+    $visArgs = @("scripts/visualize_predictions.py", "--checkpoint", (Join-Path $OutputDir "phase_c_joint.pt"), "--config", $ConfigC, "--num_samples", "$VisSamples", "--output_dir", $visDir, "--device", $Device)
+    Invoke-PythonStep -Arguments $visArgs -StepName "Phase 6 Visual Inspection"
+    Write-Host ">>> [Phase 6/6] Visual Inspection Images saved: $visDir" -ForegroundColor Green
+}
+
 Write-Host "`n==============================================================================" -ForegroundColor Cyan
 Write-Host "                 Self-Audit Pipeline Execution Complete!" -ForegroundColor Cyan
 Write-Host "==============================================================================" -ForegroundColor Cyan
@@ -192,4 +207,7 @@ Write-Host " Phase B Checkpoint:  $checkpointB"
 Write-Host " Phase C Checkpoint:  $checkpointC"
 Write-Host " Transitions Cache:   $transitionsCache"
 Write-Host " Calibration Report:  $calibrationJson"
+if ($Visualize.IsPresent) {
+    Write-Host " Visualizations:      $(Join-Path $ReportDir 'visualizations')"
+}
 Write-Host "==============================================================================" -ForegroundColor Cyan

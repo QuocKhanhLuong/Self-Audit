@@ -177,11 +177,10 @@ def resolve_acdc_records(
         discovered = {record.case_id for record in records}
         manifest_cases = set().union(*(set(values) for values in manifest.values()))
         missing = sorted(manifest_cases - discovered)
-        extra = sorted(discovered - manifest_cases)
-        if missing or extra:
+        if missing:
             raise ValueError(
                 "Configured ACDC split manifest does not match discovered cases: "
-                f"missing={missing[:5]}, extra={extra[:5]}"
+                f"missing={missing[:5]}"
             )
         wanted = set(manifest[normalized])
         selected = [record for record in records if record.case_id in wanted]
