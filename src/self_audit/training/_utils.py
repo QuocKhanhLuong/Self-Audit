@@ -208,6 +208,65 @@ def build_model_from_config(config: dict[str, Any], device: torch.device) -> nn.
     return model.to(device)
 
 
+def get_model_parameter_summary(model: nn.Module) -> dict[str, Any]:
+    """Calculate total, trainable, and per-module parameter counts."""
+    total = sum(p.numel() for p in model.parameters())
+    trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    frozen = total - trainable
+
+    modules = [
+        ("Encoder (ConvNeXt)", getattr(model, "encoder", None)),
+        ("FPN (Feature Pyramid)", getattr(model, "fpn", None)),
+        ("Initial Head (A0)", getattr(model, "initial_head", None)),
+        ("Annotation Expert (DW-Attn)", getattr(model, "annotation_expert", None)),
+        ("Transition Auditor", getattr(model, "auditor", None)),
+    ]
+
+    breakdown = []
+    for name, module in modules:
+        if module is not None:
+            m_total = sum(p.numel() for p in module.parameters())
+            m_trainable = sum(p.numel() for p in module.parameters() if p.requires_grad)
+            breakdown.append({
+                "name": name,
+                "total": m_total,
+                "trainable": m_trainable,
+                "frozen": m_total - m_trainable,
+                "is_trainable": m_trainable > 0,
+            })
+
+    return {
+        "total_parameters": total,
+        "trainable_parameters": trainable,
+        "frozen_parameters": frozen,
+        "breakdown": breakdown,
+    }
+
+
+def print_model_parameter_summary(model: nn.Module, *, title: str = "Model Parameter Summary") -> None:
+    """Print a clean, structured table of parameter counts."""
+    summary = get_model_parameter_summary(model)
+    total = summary["total_parameters"]
+    trainable = summary["trainable_parameters"]
+    frozen = summary["frozen_parameters"]
+
+    print("=" * 78)
+    print(f" {title:^76}")
+    print("=" * 78)
+    print(f" {'Component':<32} {'Total Params':<16} {'Trainable':<16} {'Status':<12}")
+    print("-" * 78)
+    for item in summary["breakdown"]:
+        status = "Trainable" if item["is_trainable"] else "Frozen"
+        print(f" {item['name']:<32} {item['total']:>12,d}    {item['trainable']:>12,d}    {status:<12}")
+    print("-" * 78)
+    print(f" Total Parameters:     {total:>12,d} ({total / 1e6:.2f}M)")
+    trainable_pct = (trainable / total * 100.0) if total > 0 else 0.0
+    frozen_pct = (frozen / total * 100.0) if total > 0 else 0.0
+    print(f" Trainable Parameters: {trainable:>12,d} ({trainable / 1e6:.2f}M - {trainable_pct:.1f}%)")
+    print(f" Frozen Parameters:    {frozen:>12,d} ({frozen / 1e6:.2f}M - {frozen_pct:.1f}%)")
+    print("=" * 78)
+
+
 def build_patient_dataset(
     config: dict[str, Any],
     *,

@@ -38,6 +38,7 @@ from self_audit.training._utils import (
     load_checkpoint,
     load_config,
     move_batch,
+    print_model_parameter_summary,
     resolve_amp,
     resolve_device,
     save_checkpoint,
@@ -768,6 +769,7 @@ def main() -> None:
         best_metric = float(payload.get("best_metric", float("-inf")))
     else:
         load_checkpoint(args.checkpoint, model=model, map_location=device)
+    print_model_parameter_summary(model, title="Phase C: Joint Model Parameters (All Unfrozen)")
     audit_config = config.get("audit", {})
     if not isinstance(audit_config, dict):
         raise ValueError("audit config must be a mapping")

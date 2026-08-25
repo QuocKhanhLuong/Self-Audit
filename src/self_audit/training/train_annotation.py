@@ -37,6 +37,7 @@ from self_audit.training._utils import (
     load_checkpoint,
     load_config,
     move_batch,
+    print_model_parameter_summary,
     resolve_amp,
     resolve_device,
     save_checkpoint,
@@ -301,6 +302,7 @@ def main() -> None:
         encoder_lr=float(config.get("encoder_lr", 3e-5)),
         weight_decay=float(config.get("weight_decay", 1e-4)),
     )
+    print_model_parameter_summary(model, title="Phase A: Annotation Model Parameters")
     epochs = int(args.epochs or config.get("epochs", 100))
     accumulation_steps = validate_accumulation_steps(config.get("gradient_accumulation_steps", 1))
     scheduler_config = dict(config)

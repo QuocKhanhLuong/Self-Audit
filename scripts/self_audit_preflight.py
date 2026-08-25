@@ -106,6 +106,11 @@ def main() -> int:
         device = resolve_device(args.device or config.get("device"))
         model = build_model_from_config(model_config, device)
         print(f"model_device={device}")
+        try:
+            from self_audit.training._utils import print_model_parameter_summary
+            print_model_parameter_summary(model, title="Preflight Model Parameter Summary")
+        except Exception:
+            pass
         dataset = build_patient_dataset(
             config,
             split=str(config.get("train_split", config.get("split", "train"))),

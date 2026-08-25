@@ -38,6 +38,7 @@ from self_audit.training._utils import (
     load_checkpoint,
     load_config,
     move_batch,
+    print_model_parameter_summary,
     resolve_amp,
     resolve_device,
     save_checkpoint,
@@ -483,6 +484,7 @@ def main() -> None:
     else:
         raise ValueError("Phase B requires --annotation_checkpoint or --resume")
     freeze_annotation_network(model)
+    print_model_parameter_summary(model, title="Phase B: Auditor Parameters (Annotation Frozen)")
     train_dataset = build_patient_dataset(config, split=str(config.get("train_split", "train")), train=False)
     val_dataset = build_patient_dataset(config, split=str(config.get("val_split", "val")), train=False)
     train_loader = build_data_loader(train_dataset, config, device=device, train=True, batch_size=args.batch_size)
