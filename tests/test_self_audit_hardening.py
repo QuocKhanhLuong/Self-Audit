@@ -87,10 +87,41 @@ def test_checked_in_acdc_npy_convention_is_explicit() -> None:
 
 
 def test_metrics_use_consistent_both_empty_dice_convention() -> None:
+    """A class absent from both prediction and target is excluded, not scored 1.0.
+
+    This test previously pinned the pre-remediation convention
+    (``empty_score=1.0``).  That convention inflated every macro: on ACDC,
+    apical and basal slices routinely contain no RV or MYO at all, so a class
+    that is empty in both prediction and target was contributing a perfect
+    score while carrying no information about segmentation quality.  The
+    default is now ``empty_policy="exclude"`` (nan, dropped from the macro).
+    The original intent of the test -- that the convention is *consistent* --
+    is preserved by also checking the legacy opt-in still works.
+    """
+
     prediction = np.zeros((8, 8), dtype=np.int64)
     target = np.zeros((8, 8), dtype=np.int64)
+
     result = annotation_metrics(prediction, target, num_classes=4)
-    assert result["per_class"]["dice"] == {1: 1.0, 2: 1.0, 3: 1.0}
+    assert all(np.isnan(value) for value in result["per_class"]["dice"].values())
+    # Every foreground class excluded => the macro is nan, not 1.0 and not 0.0.
+    assert np.isnan(result["dice"])
+
+    legacy = annotation_metrics(prediction, target, num_classes=4, empty_policy="legacy_one")
+    assert legacy["per_class"]["dice"] == {1: 1.0, 2: 1.0, 3: 1.0}
+    assert legacy["dice"] == pytest.approx(1.0)
+
+
+def test_class_present_in_target_but_missing_from_prediction_is_never_excluded() -> None:
+    """Exclusion applies only when BOTH sides are empty; a total miss scores 0.0."""
+
+    prediction = np.zeros((8, 8), dtype=np.int64)
+    target = np.zeros((8, 8), dtype=np.int64)
+    target[2:5, 2:5] = 1  # class 1 present in GT, absent from the prediction
+
+    for policy in ("exclude", "legacy_one"):
+        result = annotation_metrics(prediction, target, num_classes=4, empty_policy=policy)
+        assert result["per_class"]["dice"][1] == pytest.approx(0.0)
 
 
 def test_transition_metrics_accept_cpu_bfloat16_outputs() -> None:

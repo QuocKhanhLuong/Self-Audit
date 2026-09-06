@@ -1,8 +1,19 @@
-"""Phase A: supervised annotation training without the audit decision loop."""
+"""Phase A: supervised annotation training without the audit decision loop.
+
+**Metric space.**  Every Dice reported by this module is
+:data:`~self_audit.audit.semantics.METRIC_SPACE_SLICE_PROXY` -- 2-D per-slice
+foreground macro Dice on the resized network grid, averaged over slices.  It
+is a *training and monitoring proxy*, not a paper metric: quotable numbers are
+per-volume and live in :mod:`self_audit.evaluation.volume_inference`.  Phase A
+and Phase C now compute this proxy through the same helper
+(:func:`~self_audit.evaluation.metrics.slice_proxy_dice`), so their headline
+numbers are directly comparable and neither is batch-size dependent.
+"""
 
 from __future__ import annotations
 
 import argparse
+import math
 import sys
 from pathlib import Path
 from typing import Any, Iterable
@@ -18,7 +29,11 @@ for path in (ROOT, SRC):
 
 from tqdm import tqdm
 
-from self_audit.evaluation.metrics import per_class_dice
+from self_audit.audit.semantics import (
+    METRIC_SPACE_SLICE_PROXY,
+    resolve_empty_policy,
+)
+from self_audit.evaluation.metrics import per_class_dice, slice_proxy_dice
 from self_audit.losses.annotation import annotation_loss
 from self_audit.training._utils import (
     add_wandb_and_tqdm_args,
@@ -206,6 +221,36 @@ def train_annotation_epoch(
     }
 
 
+def _accumulate_finite(
+    sums: dict[Any, float],
+    counts: dict[Any, int],
+    key: Any,
+    value: float,
+) -> bool:
+    """Add ``value`` to ``sums[key]`` only when it is finite; return whether it was.
+
+    The canonical empty-class policy is ``"exclude"``, so a per-class Dice may
+    legitimately be ``nan``: that class was empty in *both* prediction and
+    target on that slice and therefore carries no information.  A plain running
+    sum lets a single such slice poison an entire epoch's ``val_dice_class_*``
+    and ``val_macro_foreground_dice``, so every key keeps its own count of the
+    contributions that were actually finite and the mean divides by that count.
+    A key with zero finite contributions must report ``nan`` -- never ``0.0``.
+    """
+
+    sums.setdefault(key, 0.0)
+    counts.setdefault(key, 0)
+    if not math.isfinite(float(value)):
+        return False
+    sums[key] += float(value)
+    counts[key] += 1
+    return True
+
+
+def _finite_mean(total: float, count: int) -> float:
+    return float(total) / float(count) if count else float("nan")
+
+
 @torch.no_grad()
 def validate_annotation_epoch(
     model: torch.nn.Module,
@@ -217,11 +262,41 @@ def validate_annotation_epoch(
     epoch: int = 0,
     total_epochs: int = 1,
     disable_tqdm: bool = False,
-) -> dict[str, float]:
+    empty_policy: str | None = None,
+) -> dict[str, Any]:
+    """Validate Phase A and report the shared slice-proxy Dice.
+
+    **Metric space:** :data:`~self_audit.audit.semantics.METRIC_SPACE_SLICE_PROXY`.
+    This is a training/monitoring proxy on the resized network grid, *not* a
+    paper metric.
+
+    ``val_macro_foreground_dice`` is the mean over validation slices of
+    :func:`~self_audit.evaluation.metrics.slice_proxy_dice` -- the *same*
+    helper Phase C uses -- so the two phases' headline numbers are comparable
+    and neither depends on how the slices were split into batches.  The
+    previous implementation called ``per_class_dice`` on a whole ``[B,H,W]``
+    block, which pools confusion counts over the batch (a micro-average) and
+    therefore produced a different number for the same predictions at a
+    different ``batch_size``.
+
+    ``val_dice_class_{c}`` is the mean over the slices where class ``c`` was
+    *not* excluded.  Because different classes are excluded on different
+    slices, the macro is deliberately **not** the mean of the per-class means:
+    the macro averages per-slice macros, which is the quantity Phase C
+    reports.  A class excluded on every validation slice reports ``nan``.
+    Each class also carries ``val_dice_class_{c}_slice_count`` so a caller can
+    see how much support a value has.
+    """
+
+    policy = resolve_empty_policy(empty_policy)
     model.eval()
     total_loss = 0.0
     count = 0
     dice_sums: dict[int, float] = {}
+    dice_counts: dict[int, int] = {}
+    macro_sums: dict[str, float] = {}
+    macro_counts: dict[str, int] = {}
+    excluded_slices = 0
     pbar = tqdm(
         loader,
         desc=f"Epoch {epoch + 1:03d}/{total_epochs:03d} [Val A]",
@@ -239,18 +314,49 @@ def validate_annotation_epoch(
         final_logits = output.get("logits") if isinstance(output, dict) else output
         if not torch.is_tensor(final_logits):
             final_logits = extract_initial_logits(output)
-        scores = per_class_dice(final_logits.argmax(dim=1), batch["mask"], num_classes=int(final_logits.shape[1]))
+        num_classes = int(final_logits.shape[1])
+        target = batch["mask"]
+        # One shared helper for the headline macro (identical to Phase C) ...
+        per_slice_macro = slice_proxy_dice(
+            final_logits,
+            target,
+            num_classes=num_classes,
+            empty_policy=policy,
+        )
+        # ... and a per-sample per-class pass for the class breakdown, which
+        # slice_proxy_dice does not expose.  Both go through per_class_dice,
+        # so the two are consistent by construction.
+        labels = final_logits.argmax(dim=1)
+        for index in range(int(labels.shape[0])):
+            per_class = per_class_dice(
+                labels[index],
+                target[index],
+                num_classes=num_classes,
+                include_background=False,
+                empty_policy=policy,
+            )
+            for cls, value in per_class.items():
+                _accumulate_finite(dice_sums, dice_counts, cls, float(value))
+            if not _accumulate_finite(macro_sums, macro_counts, "macro", float(per_slice_macro[index])):
+                excluded_slices += 1
         batch_size = int(batch["image"].shape[0])
         total_loss += float(loss.detach()) * batch_size
         count += batch_size
-        for cls, value in scores.items():
-            dice_sums[cls] = dice_sums.get(cls, 0.0) + float(value) * batch_size
-        current_macro = sum(dice_sums.values()) / max(count * max(len(dice_sums), 1), 1)
+        current_macro = _finite_mean(macro_sums.get("macro", 0.0), macro_counts.get("macro", 0))
         pbar.set_postfix({"val_loss": f"{total_loss / max(count, 1):.4f}", "macro_dice": f"{current_macro:.4f}"})
-    result = {"val_loss": total_loss / max(count, 1)}
-    for cls, value in sorted(dice_sums.items()):
-        result[f"val_dice_class_{cls}"] = value / max(count, 1)
-    result["val_macro_foreground_dice"] = sum(dice_sums.values()) / max(count * max(len(dice_sums), 1), 1)
+    result: dict[str, Any] = {
+        "val_loss": total_loss / max(count, 1),
+        "val_metric_space": METRIC_SPACE_SLICE_PROXY,
+        "val_empty_class_policy": policy,
+        "val_slice_count": float(count),
+        "val_excluded_empty_slice_count": float(excluded_slices),
+    }
+    for cls in sorted(dice_sums):
+        result[f"val_dice_class_{cls}"] = _finite_mean(dice_sums[cls], dice_counts.get(cls, 0))
+        result[f"val_dice_class_{cls}_slice_count"] = float(dice_counts.get(cls, 0))
+    result["val_macro_foreground_dice"] = _finite_mean(
+        macro_sums.get("macro", 0.0), macro_counts.get("macro", 0)
+    )
     return result
 
 

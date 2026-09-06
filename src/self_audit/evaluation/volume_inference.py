@@ -1,15 +1,94 @@
-"""Stack slice-level Self-Audit predictions back into patient volumes."""
+"""Stack slice-level Self-Audit predictions back into patient volumes.
+
+Metric spaces
+-------------
+Every number produced here is stamped with exactly one of the three canonical
+metric spaces defined in :mod:`self_audit.audit.semantics`.  They are *not*
+interchangeable and a caller must never have to infer which one it holds:
+
+``METRIC_SPACE_SLICE_PROXY`` (``"slice_proxy"``)
+    2-D per-slice Dice on the network grid.  A training/monitoring proxy.  It
+    is not produced by this module; it is named here only so the contrast is
+    explicit.
+
+``METRIC_SPACE_VOLUME_RESIZED`` (``"volume_resized"``)
+    3-D per-patient Dice computed on the resized network grid (256x256
+    in-plane).  This is what :func:`evaluate_comparison_modes` returns.  The
+    ground truth is nearest-resized *down* to the network grid before scoring,
+    so the number describes the model on the preprocessed grid and nothing
+    else.
+
+``METRIC_SPACE_VOLUME_NATIVE`` (``"volume_native"``)
+    3-D per-patient Dice after inverse-mapping the prediction back to the
+    original acquisition grid.  Produced only by
+    :func:`evaluate_volume_native`.
+
+Why ``volume_native`` is not derivable from ``preprocessed_data/``
+------------------------------------------------------------------
+``scripts/preprocess_acdc.py`` records ``orig_shape``, ``orig_spacing``,
+``effective_spacing`` and ``num_slices`` per case, so the native *geometry
+metadata* exists.  The native *ground truth* does not.  The stored mask was
+destructively resized to 256x256 with ``order=0`` nearest neighbour
+(``preprocess_acdc.py:80``); the discarded detail cannot be recovered.
+Inverse-resizing a prediction back to ``orig_shape`` and comparing it against
+an inverse-resized copy of that same downsampled mask measures the resampler,
+not the model.
+
+Therefore a truthful ``volume_native`` number requires **real native ground
+truth supplied by the caller from the raw ACDC NIfTI files**.
+:func:`evaluate_volume_native` raises rather than accept a missing native GT,
+so it is not possible to publish a resized number under a native label.
+"""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any, Literal, Mapping, Sequence
 
 import numpy as np
 import torch
 import torch.nn.functional as F
 
+from ..audit.semantics import (
+    METRIC_SPACE_SLICE_PROXY,
+    METRIC_SPACE_VOLUME_NATIVE,
+    METRIC_SPACE_VOLUME_RESIZED,
+    classify_delta,
+    empty_class_score,
+    macro_mean,
+    resolve_empty_policy,
+    resolve_neutral_margin,
+)
 from ..data.common import to_depth_first
+
+
+#: Foreground class ids used across ACDC reporting.
+DEFAULT_CLASS_NAMES: dict[int, str] = {1: "RV", 2: "MYO", 3: "LV"}
+
+__all__ = [
+    "ACDC_PHASES",
+    "COMPARISON_MODES",
+    "DEFAULT_CLASS_NAMES",
+    "METRIC_SPACE_SLICE_PROXY",
+    "METRIC_SPACE_VOLUME_NATIVE",
+    "METRIC_SPACE_VOLUME_RESIZED",
+    "UNKNOWN_PHASE",
+    "ComparisonMode",
+    "VolumeInferenceResult",
+    "build_25d_batch",
+    "canonicalize_depth_first",
+    "compare_initial_and_audited",
+    "dice_block",
+    "evaluate_comparison_modes",
+    "evaluate_volume_native",
+    "infer_patient_volume",
+    "normalize_volume",
+    "per_class_dice_with_policy",
+    "reconstruct_volume",
+    "resolve_class_names",
+    "split_cases_by_phase",
+    "to_native_geometry",
+]
 
 
 COMPARISON_MODES = (
@@ -117,6 +196,265 @@ def reconstruct_volume(
     if num_slices is not None and int(num_slices) != tensor.shape[0]:
         raise ValueError(f"Expected {num_slices} slices, got {tensor.shape[0]}")
     return tensor.long()
+
+
+# ---------------------------------------------------------------------------
+# Class naming, empty-class-aware Dice, and native geometry
+# ---------------------------------------------------------------------------
+
+
+def resolve_class_names(
+    class_names: Mapping[int, str] | None = None,
+    num_classes: int = 4,
+) -> dict[int, str]:
+    """Return ``{class_id: name}`` for the foreground classes.
+
+    Defaults to the ACDC convention ``{1: "RV", 2: "MYO", 3: "LV"}``.  Any
+    foreground class without an explicit name falls back to ``"class_<id>"``
+    rather than being dropped, so a macro over ``num_classes`` is never
+    silently narrowed by an incomplete name map.
+    """
+
+    provided = {int(key): str(value) for key, value in (class_names or DEFAULT_CLASS_NAMES).items()}
+    return {
+        cls: provided.get(cls, f"class_{cls}")
+        for cls in range(1, int(num_classes))
+    }
+
+
+def per_class_dice_with_policy(
+    prediction: Any,
+    target: Any,
+    *,
+    num_classes: int = 4,
+    empty_policy: str | None = None,
+) -> dict[int, float]:
+    """Per-class Dice with the shared empty-class policy applied.
+
+    Exact semantics, per :mod:`self_audit.audit.semantics`: a class that is
+    empty in **both** prediction and target takes
+    :func:`~self_audit.audit.semantics.empty_class_score` (``nan`` under the
+    default ``"exclude"`` policy, meaning "drop from the macro").  A class
+    present in exactly one of them has a non-zero denominator and therefore
+    scores ``0.0`` by the ordinary Dice formula; it is **never** excluded.
+    """
+
+    empty_score = empty_class_score(empty_policy)
+    pred = _label_array(prediction)
+    true = _label_array(target)
+    if pred.shape != true.shape:
+        raise ValueError(f"Prediction/target shape mismatch: {pred.shape} vs {true.shape}")
+    scores: dict[int, float] = {}
+    for cls in range(1, int(num_classes)):
+        p = pred == cls
+        t = true == cls
+        denom = int(p.sum()) + int(t.sum())
+        scores[cls] = float(empty_score) if denom == 0 else float(2.0 * int((p & t).sum()) / denom)
+    return scores
+
+
+def _label_array(value: Any) -> np.ndarray:
+    array = value.detach().cpu().numpy() if torch.is_tensor(value) else np.asarray(value)
+    if array.ndim == 4:
+        array = array.argmax(axis=1)
+    return array.astype(np.int64, copy=False)
+
+
+def dice_block(
+    prediction: Any,
+    target: Any,
+    *,
+    metric_space: str,
+    num_classes: int = 4,
+    class_names: Mapping[int, str] | None = None,
+    empty_policy: str | None = None,
+    geometry: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Assemble one self-describing Dice block stamped with its metric space."""
+
+    policy = resolve_empty_policy(empty_policy)
+    names = resolve_class_names(class_names, num_classes=num_classes)
+    per_class = per_class_dice_with_policy(
+        prediction, target, num_classes=num_classes, empty_policy=policy
+    )
+    excluded = sorted(cls for cls, value in per_class.items() if not np.isfinite(value))
+    return {
+        "metric_space": str(metric_space),
+        "num_classes": int(num_classes),
+        "empty_policy": policy,
+        "per_class_dice": {int(cls): float(value) for cls, value in per_class.items()},
+        "per_class_dice_named": {
+            names[cls]: float(value) for cls, value in per_class.items()
+        },
+        "excluded_classes": [int(cls) for cls in excluded],
+        "excluded_classes_named": [names[cls] for cls in excluded],
+        "macro_dice": macro_mean(list(per_class.values())),
+        "class_names": {int(cls): name for cls, name in names.items()},
+        "geometry": dict(geometry) if geometry is not None else None,
+    }
+
+
+def _normalize_geometry(geometry: Mapping[str, Any] | None) -> dict[str, Any] | None:
+    """Pass declared native-geometry metadata through, verbatim and unused.
+
+    Only the three keys written by ``scripts/preprocess_acdc.py`` are carried.
+    Nothing here is computed, inferred, or defaulted: geometry the caller did
+    not supply stays absent.
+    """
+
+    if geometry is None:
+        return None
+    if not isinstance(geometry, Mapping):
+        raise TypeError(f"geometry must be a mapping of declared metadata, got {type(geometry)!r}")
+    declared: dict[str, Any] = {}
+    for key in ("orig_shape", "orig_spacing", "effective_spacing", "num_slices"):
+        if key in geometry and geometry[key] is not None:
+            value = geometry[key]
+            declared[key] = (
+                list(value) if isinstance(value, (list, tuple, np.ndarray)) else value
+            )
+    declared["source"] = "declared_metadata"
+    return declared
+
+
+def _nearest_indices(in_size: int, out_size: int) -> np.ndarray:
+    """Half-pixel-centred nearest-neighbour index map, matching ``skimage.resize(order=0)``."""
+
+    if in_size <= 0 or out_size <= 0:
+        raise ValueError(f"Sizes must be positive, got in={in_size} out={out_size}")
+    centres = (np.arange(out_size, dtype=np.float64) + 0.5) * (in_size / out_size) - 0.5
+    return np.clip(np.rint(centres).astype(np.int64), 0, in_size - 1)
+
+
+def to_native_geometry(
+    prediction_zhw: Any,
+    orig_shape: Sequence[int],
+    *,
+    order: int = 0,
+    shape_order: str = "hwz",
+) -> np.ndarray:
+    """Inverse-resize an integer label volume to the original in-plane grid.
+
+    ``prediction_zhw`` is ``[Z,H,W]`` on the network grid (typically
+    ``[Z,256,256]``).  The result is ``[Z, orig_H, orig_W]``: the through-plane
+    axis is never resampled and slice order is preserved exactly.
+
+    Only ``order=0`` (nearest neighbour) is permitted.  Interpolating across
+    label values would invent labels that the model never predicted, so any
+    other order raises.  The output label set is asserted to be a subset of the
+    input label set.
+
+    ``orig_shape`` may be 2 values ``(H, W)`` or 3 values.  With 3 values the
+    default ``shape_order="hwz"`` matches what ``scripts/preprocess_acdc.py``
+    writes into ``metadata.json`` (``img_data.shape`` is ``[H,W,Z]``); pass
+    ``shape_order="zhw"`` for a depth-first triple.  The depth entry must equal
+    the prediction's ``Z`` -- a mismatch raises instead of being transposed
+    into silence.
+    """
+
+    if int(order) != 0:
+        raise ValueError(
+            f"to_native_geometry only supports order=0 (nearest neighbour); got order={order!r}. "
+            "Interpolating a label map across class ids fabricates labels."
+        )
+    labels = _label_array(prediction_zhw)
+    if labels.ndim != 3:
+        raise ValueError(f"Expected a [Z,H,W] label volume, got shape {labels.shape}")
+    depth = int(labels.shape[0])
+
+    values = [int(v) for v in orig_shape]
+    if len(values) == 2:
+        out_h, out_w = values
+    elif len(values) == 3:
+        key = str(shape_order).lower()
+        if key == "hwz":
+            out_h, out_w, declared_depth = values
+        elif key == "zhw":
+            declared_depth, out_h, out_w = values
+        else:
+            raise ValueError(f"shape_order must be 'hwz' or 'zhw', got {shape_order!r}")
+        if declared_depth != depth:
+            raise ValueError(
+                f"orig_shape {values} under shape_order={key!r} declares depth {declared_depth}, "
+                f"but the prediction has {depth} slices. preprocess_acdc.py writes orig_shape as "
+                "[H,W,Z]; pass shape_order='zhw' if yours is depth-first. Refusing to guess."
+            )
+    else:
+        raise ValueError(f"orig_shape must have 2 or 3 entries, got {values}")
+    if out_h <= 0 or out_w <= 0:
+        raise ValueError(f"orig_shape must be positive, got (H={out_h}, W={out_w})")
+
+    rows = _nearest_indices(int(labels.shape[1]), out_h)
+    cols = _nearest_indices(int(labels.shape[2]), out_w)
+    native = labels[:, rows, :][:, :, cols]
+
+    source_labels = set(np.unique(labels).tolist())
+    output_labels = set(np.unique(native).tolist())
+    if not output_labels.issubset(source_labels):
+        raise AssertionError(
+            f"to_native_geometry introduced new label values {sorted(output_labels - source_labels)}; "
+            f"input labels were {sorted(source_labels)}"
+        )
+    assert native.shape == (depth, out_h, out_w)
+    return native.astype(labels.dtype, copy=False)
+
+
+def _resolve_physical_spacing(spacing: Any, ndim: int) -> tuple[float, ...] | None:
+    """Return a validated ``(z, y, x)`` spacing, or ``None`` when unavailable.
+
+    There is no default.  A caller without real physical spacing gets ``None``
+    and the surface metrics are omitted entirely rather than reported in
+    fabricated millimetres.
+    """
+
+    if spacing is None:
+        return None
+    values = tuple(float(v) for v in spacing)
+    if len(values) != int(ndim):
+        raise ValueError(f"spacing must have {ndim} values in (z, y, x) order, got {values}")
+    if not all(np.isfinite(v) and v > 0.0 for v in values):
+        raise ValueError(f"spacing must be finite and positive, got {values}")
+    return values
+
+
+def _surface_distances(mask: np.ndarray, spacing: tuple[float, ...]) -> np.ndarray | None:
+    """Distance field to the surface of ``mask``; ``None`` when ``mask`` is empty."""
+
+    from scipy import ndimage
+
+    mask = np.asarray(mask, dtype=bool)
+    if not mask.any():
+        return None
+    eroded = ndimage.binary_erosion(mask, border_value=0)
+    surface = mask & ~eroded
+    if not surface.any():
+        surface = mask
+    return ndimage.distance_transform_edt(~surface, sampling=spacing)
+
+
+def _hd95_assd(
+    pred: np.ndarray, true: np.ndarray, spacing: tuple[float, ...]
+) -> tuple[float, float]:
+    """``(HD95, ASSD)`` in physical units for one binary class."""
+
+    if not pred.any() and not true.any():
+        return float("nan"), float("nan")
+    if not pred.any() or not true.any():
+        return float("inf"), float("inf")
+    from scipy import ndimage
+
+    pred_field = _surface_distances(pred, spacing)
+    true_field = _surface_distances(true, spacing)
+    pred_surface = pred & ~ndimage.binary_erosion(pred, border_value=0)
+    true_surface = true & ~ndimage.binary_erosion(true, border_value=0)
+    if not pred_surface.any():
+        pred_surface = pred
+    if not true_surface.any():
+        true_surface = true
+    p_to_t = true_field[pred_surface]
+    t_to_p = pred_field[true_surface]
+    both = np.concatenate([p_to_t, t_to_p])
+    return float(np.percentile(both, 95)), float(both.mean())
 
 
 def _extract_logits(output: Any, initial: bool = False) -> torch.Tensor:
@@ -245,11 +583,37 @@ def evaluate_comparison_modes(
     device: str | torch.device | None = None,
     batch_size: int = 8,
     metrics_fn: Any | None = None,
+    empty_policy: str | None = None,
+    neutral_margin: float | None = None,
+    num_classes: int = 4,
+    class_names: Mapping[int, str] | None = None,
+    geometry: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Evaluate all requested comparison modes, including GT-only oracle analysis.
 
     The oracle path is intentionally isolated here: it is an analysis helper
     and never part of ``infer_patient_volume`` or deployable model inference.
+
+    **Metric space.** Everything returned here is
+    ``METRIC_SPACE_VOLUME_RESIZED``.  The ground truth is nearest-resized down
+    to the ``image_size`` network grid before scoring (see the ``F.interpolate``
+    call below), so these numbers describe the model on the preprocessed grid.
+    They are *not* native-geometry Dice; for that see
+    :func:`evaluate_volume_native`, which requires raw-NIfTI ground truth.
+
+    ``geometry`` is optional **declared metadata only** (``orig_shape``,
+    ``orig_spacing``, ``effective_spacing``, ``num_slices`` as recorded by
+    ``scripts/preprocess_acdc.py``).  It is carried through verbatim into every
+    metric block and nothing is computed from it at this level.  Geometry that
+    is not supplied is not invented.
+
+    Return shape: ``{mode: {...}}`` for each of the four comparison modes, plus
+    one non-mode key ``"evaluation_meta"``.  Iterate :data:`COMPARISON_MODES`
+    rather than ``results.keys()``.
+
+    Per-mode keys ``"inference"`` and ``"metrics"`` are unchanged from before
+    this revision; ``"metric_space"``, ``"volume_dice"`` and
+    ``"macro_dice_delta_vs_initial"`` are new.
     """
 
     from .metrics import annotation_metrics
@@ -280,8 +644,8 @@ def evaluate_comparison_modes(
             mode="nearest",
         ).squeeze(1).long()
     inputs = build_25d_batch(prepared, image_size=image_size)
-    oracle_predictions: list[Tensor] = []
-    oracle_initial: list[Tensor] = []
+    oracle_predictions: list[torch.Tensor] = []
+    oracle_initial: list[torch.Tensor] = []
     oracle_details: list[dict[str, Any]] = []
     target_device = torch.device(device) if device is not None else next(model.parameters()).device
     was_training = model.training
@@ -314,10 +678,163 @@ def evaluate_comparison_modes(
         oracle_details,
     )
     resized_ground_truth = target_tensor.numpy()
-    for mode in ("initial_only", "always_accept_refinement", "self_audit"):
-        results[mode]["metrics"] = metric_function(results[mode]["inference"].prediction, resized_ground_truth)
-    results["oracle_accept"] = {"inference": oracle_result, "metrics": metric_function(oracle_result.prediction, resized_ground_truth)}
+    results["oracle_accept"] = {"inference": oracle_result}
+
+    policy = resolve_empty_policy(empty_policy)
+    margin = resolve_neutral_margin(neutral_margin)
+    declared_geometry = _normalize_geometry(geometry)
+    names = resolve_class_names(class_names, num_classes=num_classes)
+
+    for mode in COMPARISON_MODES:
+        prediction = results[mode]["inference"].prediction
+        results[mode]["metrics"] = metric_function(prediction, resized_ground_truth)
+        results[mode]["metric_space"] = METRIC_SPACE_VOLUME_RESIZED
+        results[mode]["volume_dice"] = dice_block(
+            prediction,
+            resized_ground_truth,
+            metric_space=METRIC_SPACE_VOLUME_RESIZED,
+            num_classes=num_classes,
+            class_names=names,
+            empty_policy=policy,
+            geometry=declared_geometry,
+        )
+
+    baseline = results["initial_only"]["volume_dice"]["macro_dice"]
+    for mode in COMPARISON_MODES:
+        delta = float(results[mode]["volume_dice"]["macro_dice"] - baseline)
+        results[mode]["macro_dice_delta_vs_initial"] = delta
+        results[mode]["transition_class"] = (
+            int(classify_delta(delta, margin)) if np.isfinite(delta) else None
+        )
+
+    results["evaluation_meta"] = {
+        "metric_space": METRIC_SPACE_VOLUME_RESIZED,
+        "grid": [int(v) for v in tuple(target_tensor.shape)],
+        "image_size": int(image_size),
+        "empty_policy": policy,
+        "neutral_margin": margin,
+        "num_classes": int(num_classes),
+        "class_names": {int(cls): name for cls, name in names.items()},
+        "geometry": declared_geometry,
+        "modes": list(COMPARISON_MODES),
+        "ground_truth_source": "preprocessed_resized",
+        "native_dice_available": False,
+        "native_dice_note": (
+            "volume_native Dice is not derivable from preprocessed_data/: the stored mask was "
+            "destructively nearest-resized to the network grid. Use evaluate_volume_native with "
+            "raw-NIfTI ground truth."
+        ),
+    }
     return results
+
+
+def evaluate_volume_native(
+    prediction_zhw: Any,
+    native_ground_truth_zhw: Any = None,
+    *,
+    orig_shape: Sequence[int] | None = None,
+    spacing: Sequence[float] | None = None,
+    empty_policy: str | None = None,
+    num_classes: int = 4,
+    class_names: Mapping[int, str] | None = None,
+    shape_order: str = "hwz",
+) -> dict[str, Any]:
+    """Per-class and macro Dice at **native acquisition geometry**.
+
+    ``native_ground_truth_zhw`` must be the real native label volume read from
+    the raw ACDC NIfTI files.  It is mandatory: passing ``None`` raises
+    :class:`ValueError`.  The 256x256 mask in ``preprocessed_data/`` is *not* a
+    substitute -- it was destructively downsampled, so inverse-resizing it back
+    up would score the resampler rather than the model.
+
+    ``prediction_zhw`` is the network-grid ``[Z,H,W]`` prediction.  When
+    ``orig_shape`` is supplied the prediction is inverse-resized with
+    :func:`to_native_geometry` (nearest neighbour only); otherwise it must
+    already match the native ground-truth shape.
+
+    ``spacing`` is an optional real physical ``(z, y, x)`` voxel size in mm.
+    HD95/ASSD keys appear **only** when it is supplied.  There is no 1.0 mm
+    default: without real spacing the surface metrics are omitted, not guessed.
+    """
+
+    if native_ground_truth_zhw is None:
+        raise ValueError(
+            "evaluate_volume_native requires real native ground truth (raw ACDC NIfTI labels at "
+            "the original acquisition geometry). The 256x256 mask in preprocessed_data/ is NOT a "
+            "substitute: it was destructively nearest-resized by scripts/preprocess_acdc.py, so "
+            "inverse-resizing it measures the resampler, not the model. Refusing to return a "
+            f"metric_space={METRIC_SPACE_VOLUME_NATIVE!r} number without it."
+        )
+
+    target = _label_array(native_ground_truth_zhw)
+    if target.ndim != 3:
+        raise ValueError(f"native ground truth must be [Z,H,W], got shape {target.shape}")
+
+    prediction = _label_array(prediction_zhw)
+    if orig_shape is not None:
+        prediction = to_native_geometry(prediction, orig_shape, order=0, shape_order=shape_order)
+    elif prediction.shape != target.shape:
+        prediction = to_native_geometry(
+            prediction, (int(target.shape[1]), int(target.shape[2])), order=0
+        )
+    if prediction.shape != target.shape:
+        raise ValueError(
+            f"Native prediction/ground-truth shape mismatch: {prediction.shape} vs {target.shape}"
+        )
+
+    policy = resolve_empty_policy(empty_policy)
+    names = resolve_class_names(class_names, num_classes=num_classes)
+    block = dice_block(
+        prediction,
+        target,
+        metric_space=METRIC_SPACE_VOLUME_NATIVE,
+        num_classes=num_classes,
+        class_names=names,
+        empty_policy=policy,
+        geometry={"orig_shape": list(orig_shape)} if orig_shape is not None else None,
+    )
+    block["native_shape"] = [int(v) for v in target.shape]
+    block["ground_truth_source"] = "caller_supplied_native"
+
+    physical = _resolve_physical_spacing(spacing, target.ndim)
+    if physical is None:
+        block["spacing_known"] = False
+    else:
+        block["spacing_known"] = True
+        block["spacing"] = list(physical)
+        hd95: dict[int, float] = {}
+        assd: dict[int, float] = {}
+        for cls in range(1, int(num_classes)):
+            hd95[cls], assd[cls] = _hd95_assd(prediction == cls, target == cls, physical)
+        block["per_class_hd95_mm"] = {int(c): float(v) for c, v in hd95.items()}
+        block["per_class_assd_mm"] = {int(c): float(v) for c, v in assd.items()}
+        block["per_class_hd95_mm_named"] = {names[c]: float(v) for c, v in hd95.items()}
+        block["hd95_mm"] = macro_mean(list(hd95.values()))
+        block["assd_mm"] = macro_mean(list(assd.values()))
+    return block
+
+
+#: Phase suffixes recognised in an ACDC case id (``patientXXX_ED`` / ``_ES``).
+ACDC_PHASES = ("ED", "ES")
+UNKNOWN_PHASE = "unknown"
+
+
+def split_cases_by_phase(case_ids: Any) -> dict[str, list[str]]:
+    """Group ACDC case ids into ``{"ED": [...], "ES": [...], "unknown": [...]}``.
+
+    The phase is read from the case-id suffix written by
+    ``scripts/preprocess_acdc.py`` (``patientXXX_ED`` / ``patientXXX_ES``).  A
+    case whose suffix is not recognised goes to ``"unknown"``; the phase is
+    never guessed from anything else.  All three keys are always present so a
+    caller can report ED and ES separately without a KeyError.
+    """
+
+    groups: dict[str, list[str]] = {"ED": [], "ES": [], UNKNOWN_PHASE: []}
+    for case_id in case_ids:
+        name = str(case_id)
+        suffix = name.rsplit("_", 1)[-1].upper() if "_" in name else ""
+        groups[suffix if suffix in ACDC_PHASES else UNKNOWN_PHASE].append(name)
+    return groups
 
 
 def compare_initial_and_audited(

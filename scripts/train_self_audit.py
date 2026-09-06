@@ -28,7 +28,13 @@ from self_audit.evaluation.audit_decomposition import (
     evaluate_annotation_headroom,
     evaluate_audit_decomposition,
 )
-from self_audit.evaluation.threshold import select_threshold, sweep_thresholds
+from self_audit.audit.semantics import METRIC_SPACE_SLICE_PROXY
+from self_audit.evaluation.threshold import (
+    load_calibration,
+    save_calibration,
+    select_threshold,
+    sweep_thresholds,
+)
 from self_audit.training._utils import (
     WandbLogger,
     build_adamw_optimizer,
@@ -85,6 +91,22 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--tau_accept", type=float, default=None)
     parser.add_argument("--t_max", type=int, default=None)
     parser.add_argument("--skip_calibration", action="store_true")
+    parser.add_argument(
+        "--calibration",
+        default=None,
+        help=(
+            "Path of the calibration artifact (default <report_dir>/calibration.json). "
+            "Written after calibration; also read at startup when --use_calibrated_tau is set."
+        ),
+    )
+    parser.add_argument(
+        "--use_calibrated_tau",
+        action="store_true",
+        help=(
+            "Make the calibrated tau the headline tau. Opt-in only: without it the "
+            "calibrated number is still reported, side by side, but never becomes the default."
+        ),
+    )
     parser.add_argument("--threshold_min", type=float, default=-0.02)
     parser.add_argument("--threshold_max", type=float, default=0.02)
     parser.add_argument("--threshold_steps", type=int, default=81)
@@ -178,6 +200,104 @@ def _log(logger: WandbLogger, phase: str, epoch: int, metrics: dict[str, Any]) -
     payload = {"pipeline/phase": phase, "pipeline/epoch": int(epoch)}
     payload.update(metrics)
     logger.log(payload)
+
+
+#: Plain-words statement of why the calibrated number is not evidence.  It is
+#: written verbatim into the pipeline report JSON so the caveat travels with
+#: the number instead of living only in a document nobody opens.
+SELECTION_BIAS_CAVEAT = (
+    "tau_accept was chosen by argmax over the threshold grid on the same validation "
+    "split on which the calibrated self_audit_dice below is reported. Selecting and "
+    "reporting on one split makes every 'tau_calibrated' number an optimistically "
+    "biased diagnostic, not held-out evidence: it contains the selection bias of the "
+    "grid search. This project has no independent test split, so no unbiased estimate "
+    "of the calibrated threshold's benefit exists. The 'tau_uncalibrated' block is the "
+    "one free of this bias, and it is what should be quoted."
+)
+
+#: Documented precedence for the tau Phase C trains and validates at.
+TAU_PRECEDENCE = (
+    "--tau_accept > (--use_calibrated_tau and an existing --calibration artifact) > "
+    "config_c['audit']['tau_accept'] > 0.0"
+)
+
+
+def _resolve_tau_accept(
+    args: argparse.Namespace,
+    audit_cfg: dict[str, Any],
+    calibration_path: Path,
+) -> tuple[float, str]:
+    """Resolve the tau Phase C runs at, and say where it came from.
+
+    Precedence is :data:`TAU_PRECEDENCE`.  A calibrated tau is **never** picked
+    up silently: an artifact on disk is only consulted when the caller passed
+    ``--use_calibrated_tau``.
+    """
+
+    if args.tau_accept is not None:
+        return float(args.tau_accept), "cli:--tau_accept"
+    if bool(args.use_calibrated_tau) and calibration_path.exists():
+        payload = load_calibration(calibration_path)
+        return float(payload["tau_accept"]), f"calibration_artifact:{calibration_path}"
+    if "tau_accept" in audit_cfg:
+        return float(audit_cfg["tau_accept"]), "config_c.audit.tau_accept"
+    return 0.0, "default:0.0"
+
+
+def _diagnostic_at_tau(
+    model: torch.nn.Module,
+    loader: torch.utils.data.DataLoader,
+    device: torch.device,
+    *,
+    tau_accept: float,
+    tau_source: str,
+    t_max: int,
+    neutral_margin: float,
+    max_batches: int | None,
+    disable_tqdm: bool,
+) -> dict[str, Any]:
+    """Run the full Phase-C diagnostic at one tau and return a flat summary.
+
+    Every number is metric space
+    :data:`~self_audit.audit.semantics.METRIC_SPACE_SLICE_PROXY` -- a 2-D
+    per-slice training proxy, not a paper metric.
+    """
+
+    validation = validate_phase_c(
+        model,
+        loader,
+        device,
+        tau_accept=float(tau_accept),
+        t_max=int(t_max),
+        max_batches=max_batches,
+        disable_tqdm=disable_tqdm,
+    )
+    decomposition = evaluate_audit_decomposition(
+        model,
+        loader,
+        device,
+        tau_accept=float(tau_accept),
+        t_max=int(t_max),
+        neutral_margin=float(neutral_margin),
+        max_batches=max_batches,
+        disable_tqdm=disable_tqdm,
+    )
+    nan = float("nan")
+    return {
+        "tau_accept": float(tau_accept),
+        "tau_source": str(tau_source),
+        "metric_space": METRIC_SPACE_SLICE_PROXY,
+        "initial_dice": float(decomposition.get("modes/initial_dice", nan)),
+        "always_accept_dice": float(decomposition.get("modes/always_accept_dice", nan)),
+        "self_audit_dice": float(decomposition.get("modes/self_audit_dice", nan)),
+        "oracle_dice": float(decomposition.get("modes/oracle_dice", nan)),
+        "audit_rescue_vs_always": float(decomposition.get("modes/audit_rescue_vs_always", nan)),
+        "oracle_headroom": float(decomposition.get("modes/oracle_headroom", nan)),
+        "harmful_acceptance_rate": float(validation.get("harmful_acceptance_rate", nan)),
+        "beneficial_rejection_rate": float(validation.get("beneficial_rejection_rate", nan)),
+        "validation": validation,
+        "decomposition": decomposition,
+    }
 
 
 def _scheduler_and_amp(
@@ -468,9 +588,9 @@ def main() -> None:
         encoder_lr=float(config_c.get("joint_encoder_lr", 1e-6)),
     )
     audit_cfg = dict(config_c.get("audit", {}))
-    tau_accept = float(
-        args.tau_accept if args.tau_accept is not None else audit_cfg.get("tau_accept", 0.0)
-    )
+    calibration_path = Path(args.calibration) if args.calibration else report_dir / "calibration.json"
+    tau_accept, tau_source = _resolve_tau_accept(args, audit_cfg, calibration_path)
+    print(f"tau_accept={tau_accept:+.6f} source={tau_source} precedence={TAU_PRECEDENCE}")
     t_max = int(
         args.t_max
         if args.t_max is not None
@@ -567,6 +687,20 @@ def main() -> None:
         if args.max_steps is not None:
             break
 
+    headline_tau = tau_accept
+    headline_tau_source = tau_source
+    report["tau"] = {
+        "precedence": TAU_PRECEDENCE,
+        "phase_c_tau_accept": float(tau_accept),
+        "phase_c_tau_source": tau_source,
+        "calibration_artifact": str(calibration_path),
+        "use_calibrated_tau": bool(args.use_calibrated_tau),
+        "calibrated_tau_accept": None,
+        "headline_tau_accept": float(headline_tau),
+        "headline_tau_source": headline_tau_source,
+        "selection_bias_caveat": SELECTION_BIAS_CAVEAT,
+    }
+
     if not args.skip_calibration:
         print("\n=== CALIBRATION: validation transitions only ===")
         cache = collect_validation_transition_cache(
@@ -581,21 +715,104 @@ def main() -> None:
             float(args.threshold_max),
             int(args.threshold_steps),
         )
-        rows = sweep_thresholds(cache, thresholds)
+        rows = sweep_thresholds(cache, thresholds, neutral_margin=neutral_margin_c)
         best_threshold = select_threshold(rows)
+        calibrated_tau = float(best_threshold["tau_accept"])
+        checkpoint_for_calibration = output_dir / "phase_c_best.pt"
+        if not checkpoint_for_calibration.exists():
+            checkpoint_for_calibration = output_dir / "phase_c_last.pt"
+        calibration_payload = save_calibration(
+            calibration_path,
+            tau_accept=calibrated_tau,
+            neutral_margin=neutral_margin_c,
+            source_split=str(config_c.get("val_split", "val")),
+            checkpoint_path=checkpoint_for_calibration,
+            t_max=t_max,
+            threshold_grid=thresholds,
+            selected_row=best_threshold,
+            metric_space=METRIC_SPACE_SLICE_PROXY,
+            extra={
+                "pipeline": "scripts/train_self_audit.py",
+                "empty_class_policy": cache.get("empty_class_policy"),
+                "excluded_empty_slice_count": cache.get("excluded_empty_slice_count"),
+                "phase_c_tau_accept": float(tau_accept),
+                "phase_c_tau_source": tau_source,
+            },
+        )
+        # Round-trip: the tau the final evaluation runs at is read back off
+        # disk, never carried in a live variable, so the artifact is proved to
+        # be the thing that is actually consumed.
+        reloaded = load_calibration(calibration_path)
+        loaded_tau = float(reloaded["tau_accept"])
+        if loaded_tau.hex() != calibrated_tau.hex():
+            raise ValueError(
+                "Calibration round-trip mismatch: selected "
+                f"{calibrated_tau.hex()} but loaded {loaded_tau.hex()} from {calibration_path}"
+            )
         report["calibration"] = {
             "best": best_threshold,
             "threshold_min": float(args.threshold_min),
             "threshold_max": float(args.threshold_max),
             "threshold_steps": int(args.threshold_steps),
+            "artifact_path": str(calibration_path),
+            "artifact": calibration_payload,
+            "round_trip_tau_hex": loaded_tau.hex(),
         }
         torch.save(cache, report_dir / "validation_transitions.pt")
-        _save_report(report_dir / "calibration.json", report["calibration"])
         print(
-            f"tau={best_threshold['tau_accept']:+.5f} "
+            f"tau={calibrated_tau:+.5f} "
             f"final={best_threshold['final_macro_dice']:.4f} "
             f"net_gain={best_threshold['net_dice_gain']:+.5f}"
         )
+
+        print("\n=== FINAL DIAGNOSTIC: both taus, same split, same checkpoint ===")
+        uncalibrated = _diagnostic_at_tau(
+            model,
+            val_c,
+            device,
+            tau_accept=tau_accept,
+            tau_source=tau_source,
+            t_max=t_max,
+            neutral_margin=neutral_margin_c,
+            max_batches=args.max_val_batches,
+            disable_tqdm=args.no_tqdm,
+        )
+        calibrated = _diagnostic_at_tau(
+            model,
+            val_c,
+            device,
+            tau_accept=loaded_tau,
+            tau_source=f"calibration_artifact:{calibration_path}",
+            t_max=t_max,
+            neutral_margin=neutral_margin_c,
+            max_batches=args.max_val_batches,
+            disable_tqdm=args.no_tqdm,
+        )
+        if bool(args.use_calibrated_tau):
+            headline_tau = loaded_tau
+            headline_tau_source = f"calibration_artifact:{calibration_path}"
+        report["tau"]["calibrated_tau_accept"] = loaded_tau
+        report["tau"]["headline_tau_accept"] = float(headline_tau)
+        report["tau"]["headline_tau_source"] = headline_tau_source
+        report["final_diagnostic"] = {
+            "metric_space": METRIC_SPACE_SLICE_PROXY,
+            "source_split": str(config_c.get("val_split", "val")),
+            "tau_uncalibrated": uncalibrated,
+            "tau_calibrated": calibrated,
+            "headline_tau_accept": float(headline_tau),
+            "headline_tau_source": headline_tau_source,
+            "selection_bias_caveat": SELECTION_BIAS_CAVEAT,
+        }
+        print(
+            f"self_audit_dice @ tau={uncalibrated['tau_accept']:+.5f} (uncalibrated, "
+            f"source={uncalibrated['tau_source']}) = {uncalibrated['self_audit_dice']:.4f}"
+        )
+        print(
+            f"self_audit_dice @ tau={calibrated['tau_accept']:+.5f} (calibrated on this same "
+            f"split -> optimistically biased) = {calibrated['self_audit_dice']:.4f}"
+        )
+        print(f"headline_tau={headline_tau:+.6f} source={headline_tau_source}")
+        print(f"selection_bias_caveat: {SELECTION_BIAS_CAVEAT}")
 
     _save_report(report_dir / "pipeline_report.json", report)
     logger.finish()

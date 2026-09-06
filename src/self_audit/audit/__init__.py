@@ -2,6 +2,22 @@
 
 from .counterfactual import CounterfactualGenerator, CounterfactualSample, generate_counterfactual
 from .gate import GateDecision, ThresholdGate, accept_reject, threshold_accept
+from .semantics import (
+    BENEFICIAL,
+    DEFAULT_EMPTY_CLASS_POLICY,
+    DEFAULT_NEUTRAL_MARGIN,
+    HARMFUL,
+    NEUTRAL,
+    beneficial_mask,
+    check_generation_tolerance,
+    classify_delta,
+    empty_class_score,
+    harmful_mask,
+    macro_mean,
+    neutral_mask,
+    resolve_empty_policy,
+    resolve_neutral_margin,
+)
 from .targets import (
     FIX,
     REGRESS,
@@ -15,9 +31,14 @@ from .targets import (
 )
 
 __all__ = [
+    "BENEFICIAL",
     "CounterfactualGenerator",
     "CounterfactualSample",
+    "DEFAULT_EMPTY_CLASS_POLICY",
+    "DEFAULT_NEUTRAL_MARGIN",
     "FIX",
+    "HARMFUL",
+    "NEUTRAL",
     "REGRESS",
     "UNCHANGED",
     "LOCAL_AUDIT_NAMES",
@@ -25,10 +46,19 @@ __all__ = [
     "ThresholdGate",
     "TransitionTargets",
     "accept_reject",
+    "beneficial_mask",
     "build_local_audit_targets",
     "build_transition_targets",
+    "check_generation_tolerance",
+    "classify_delta",
     "delta_dice_target",
+    "empty_class_score",
     "generate_counterfactual",
+    "harmful_mask",
+    "macro_mean",
+    "neutral_mask",
+    "resolve_empty_policy",
+    "resolve_neutral_margin",
     "local_audit_targets",
     "threshold_accept",
 ]
