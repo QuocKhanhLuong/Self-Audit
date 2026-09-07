@@ -1,0 +1,113 @@
+_wandb:
+    value:
+        cli_version: 0.19.11
+        m: []
+        python_version: 3.10.20
+        t:
+            "1":
+                - 1
+                - 41
+                - 49
+                - 55
+                - 63
+            "2":
+                - 1
+                - 41
+                - 49
+                - 55
+                - 63
+            "3":
+                - 2
+                - 15
+                - 16
+                - 23
+                - 55
+                - 61
+            "4": 3.10.20
+            "5": 0.19.11
+            "8":
+                - 2
+                - 5
+            "12": 0.19.11
+            "13": linux-x86_64
+amp:
+    value: true
+amp_dtype:
+    value: bfloat16
+augment:
+    value: true
+batch_size:
+    value: 4
+data_root:
+    value: preprocessed_data/ACDC
+dataset:
+    value: acdc
+depth_axis:
+    value: 2
+deterministic:
+    value: false
+device:
+    value: cuda
+encoder_lr:
+    value: 3e-05
+epochs:
+    value: 100
+grad_clip:
+    value: 3
+gradient_accumulation_steps:
+    value: 1
+image_size:
+    value: 256
+lr:
+    value: 0.0003
+model:
+    value:
+        encoder_name: convnext_tiny
+        max_turns: 3
+        num_classes: 4
+        pretrained_encoder: true
+        shared_channels: 96
+        window_k: 8
+num_classes:
+    value: 4
+num_workers:
+    value: 2
+output:
+    value: weights/self_audit/phase_a_annotation.pt
+persistent_workers:
+    value: true
+phase:
+    value: annotation
+pin_memory:
+    value: true
+prefetch_factor:
+    value: 2
+seed:
+    value: 42
+split_manifest:
+    value: splits/acdc_patient_split_seed42.json
+stage_weights:
+    value:
+        - 0.5
+        - 0.7
+        - 0.8
+        - 1
+test_split:
+    value: test
+train_split:
+    value: train
+val_split:
+    value: val
+wandb:
+    value:
+        enabled: false
+        mode: offline
+        project: self-audit
+        tags:
+            - phase_a
+            - annotation
+            - acdc
+warmup_epochs:
+    value: 5
+weight_decay:
+    value: 0.0001

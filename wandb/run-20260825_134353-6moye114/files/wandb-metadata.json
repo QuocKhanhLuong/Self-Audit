@@ -1,0 +1,62 @@
+{
+  "os": "Linux-5.15.0-139-generic-x86_64-with-glibc2.31",
+  "python": "CPython 3.10.20",
+  "startedAt": "2026-08-25T06:43:53.459773Z",
+  "args": [
+    "--config",
+    "configs/self_audit_joint.yaml",
+    "--checkpoint",
+    "weights/self_audit/phase_b_auditor.pt",
+    "--output",
+    "weights/self_audit/phase_c_joint.pt",
+    "--device",
+    "cuda",
+    "--wandb",
+    "--wandb_mode",
+    "online",
+    "--wandb_project",
+    "self-audit",
+    "--visualize",
+    "--vis_dir",
+    "reports/visualizations",
+    "--vis_samples",
+    "4"
+  ],
+  "program": "/home/linhdang/workspace/quockhanh_workspace/SpecMamba/src/self_audit/training/finetune_joint.py",
+  "codePath": "src/self_audit/training/finetune_joint.py",
+  "git": {
+    "remote": "https://github.com/QuocKhanhLuong/SpecMamba.git",
+    "commit": "f631477e5fee97655895c16b3461e84960088a49"
+  },
+  "email": "hng220055@gmail.com",
+  "root": "/home/linhdang/workspace/quockhanh_workspace/SpecMamba",
+  "host": "linhdang-System-Product-Name",
+  "executable": "/home/aidev/miniconda/envs/specmamba/bin/python",
+  "codePathLocal": "src/self_audit/training/finetune_joint.py",
+  "cpu_count": 14,
+  "cpu_count_logical": 20,
+  "gpu": "NVIDIA GeForce RTX 4070",
+  "gpu_count": 1,
+  "disk": {
+    "/": {
+      "total": "489593511936",
+      "used": "455273828352"
+    }
+  },
+  "memory": {
+    "total": "67152056320"
+  },
+  "cpu": {
+    "count": 14,
+    "countLogical": 20
+  },
+  "gpu_nvidia": [
+    {
+      "name": "NVIDIA GeForce RTX 4070",
+      "memoryTotal": "12878610432",
+      "cudaCores": 5888,
+      "architecture": "Ada"
+    }
+  ],
+  "cudaVersion": "12.3"
+}
