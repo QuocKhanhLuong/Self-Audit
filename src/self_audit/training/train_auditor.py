@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import sys
 import time
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -19,6 +20,7 @@ for path in (ROOT, SRC):
         sys.path.insert(0, str(path))
 
 from self_audit.audit.counterfactual import CounterfactualGenerator
+from self_audit.audit.semantics import check_generation_tolerance, resolve_neutral_margin
 from self_audit.audit.targets import build_transition_targets
 from self_audit.evaluation.metrics import transition_audit_metrics
 from self_audit.losses.audit import audit_loss
@@ -85,46 +87,90 @@ def _state_probabilities(state: torch.Tensor) -> torch.Tensor:
     return state.softmax(dim=1)
 
 
+#: Coarse provenance buckets a transition can belong to.  ``"on_policy"`` pairs
+#: are adjacent states the annotation network actually produced; ``"synthetic"``
+#: pairs are constructed by the counterfactual generator from ground truth and
+#: therefore cannot occur at inference time.
+ON_POLICY = "on_policy"
+SYNTHETIC = "synthetic"
+PROVENANCE_KINDS = (ON_POLICY, SYNTHETIC)
+
+
+def provenance_kind(transition: Mapping[str, Any]) -> str:
+    """Return the coarse ``"on_policy"`` / ``"synthetic"`` bucket of a transition.
+
+    Prefers the explicit ``provenance_kind`` field.  Transitions built by older
+    code (or by hand in a test) only carry the fine-grained ``provenance``
+    string, so fall back to parsing its prefix rather than failing.
+    """
+
+    kind = transition.get("provenance_kind")
+    if kind is not None:
+        name = str(kind)
+        if name not in PROVENANCE_KINDS:
+            raise ValueError(f"provenance_kind must be one of {PROVENANCE_KINDS}, got {kind!r}")
+        return name
+    provenance = str(transition.get("provenance", ""))
+    return ON_POLICY if provenance == ON_POLICY else SYNTHETIC
+
+
 def build_auditor_transitions(
     output: Any,
     ground_truth: torch.Tensor,
     generator: CounterfactualGenerator,
+    *,
+    include_on_policy: bool = True,
+    include_synthetic: bool = True,
 ) -> list[dict[str, Any]]:
-    """Build adjacent on-policy pairs plus one synthetic pair around every A_t."""
+    """Build adjacent on-policy pairs plus one synthetic pair around every A_t.
+
+    The defaults reproduce the historical list exactly -- same order, same
+    content -- so training behaviour is unchanged.  ``include_on_policy`` /
+    ``include_synthetic`` exist so evaluation can build a provenance-restricted
+    population without re-deriving the trajectory by hand.
+
+    Every transition carries the fine-grained ``provenance`` string it always
+    had plus a coarse ``provenance_kind`` in ``{"on_policy", "synthetic"}`` so
+    callers do not have to string-parse.
+    """
 
     trajectory = extract_annotation_trajectory(output)
     transitions: list[dict[str, Any]] = []
-    for turn, (previous_state, candidate_state) in enumerate(zip(trajectory[:-1], trajectory[1:])):
-        transitions.append(
-            {
-                "previous": _state_probabilities(previous_state).detach(),
-                "candidate": _state_probabilities(candidate_state).detach(),
-                "turn_index": turn,
-                "provenance": "on_policy",
-                "valid_mask": torch.ones(previous_state.shape[0], dtype=torch.bool, device=previous_state.device),
-            }
-        )
-    for turn, state in enumerate(trajectory):
-        synthetic = generator.generate(_state_probabilities(state).detach(), ground_truth, kind=None)
-        valid_mask = synthetic.valid_mask
-        if valid_mask is None:
-            valid_mask = torch.full(
-                (synthetic.previous_probs.shape[0],),
-                synthetic.valid,
-                dtype=torch.bool,
-                device=synthetic.previous_probs.device,
-            )
-        if bool(valid_mask.any()):
+    if include_on_policy:
+        for turn, (previous_state, candidate_state) in enumerate(zip(trajectory[:-1], trajectory[1:])):
             transitions.append(
                 {
-                    "previous": synthetic.previous_probs,
-                    "candidate": synthetic.candidate_probs,
+                    "previous": _state_probabilities(previous_state).detach(),
+                    "candidate": _state_probabilities(candidate_state).detach(),
                     "turn_index": turn,
-                    "provenance": f"synthetic:{synthetic.kind}:{synthetic.operation}",
-                    "valid_mask": valid_mask,
-                    "sample": synthetic,
+                    "provenance": "on_policy",
+                    "provenance_kind": ON_POLICY,
+                    "valid_mask": torch.ones(previous_state.shape[0], dtype=torch.bool, device=previous_state.device),
                 }
             )
+    if include_synthetic:
+        for turn, state in enumerate(trajectory):
+            synthetic = generator.generate(_state_probabilities(state).detach(), ground_truth, kind=None)
+            valid_mask = synthetic.valid_mask
+            if valid_mask is None:
+                valid_mask = torch.full(
+                    (synthetic.previous_probs.shape[0],),
+                    synthetic.valid,
+                    dtype=torch.bool,
+                    device=synthetic.previous_probs.device,
+                )
+            if bool(valid_mask.any()):
+                transitions.append(
+                    {
+                        "previous": synthetic.previous_probs,
+                        "candidate": synthetic.candidate_probs,
+                        "turn_index": turn,
+                        "provenance": f"synthetic:{synthetic.kind}:{synthetic.operation}",
+                        "provenance_kind": SYNTHETIC,
+                        "valid_mask": valid_mask,
+                        "sample": synthetic,
+                    }
+                )
     return transitions
 
 
@@ -170,13 +216,18 @@ def _auditor_batch(
         transitions = build_auditor_transitions(output, batch["mask"], generator)
     timings["counterfactual_ms"] = (time.perf_counter() - start) * 1000.0
     losses: list[torch.Tensor] = []
-    local_predictions: list[torch.Tensor] = []
-    local_targets: list[torch.Tensor] = []
-    delta_predictions: list[torch.Tensor] = []
-    delta_targets: list[torch.Tensor] = []
+    # Collected predictions/targets are bucketed by provenance so validation can
+    # report on-policy and synthetic quality separately.  The "combined" bucket
+    # is appended in loop order, so it is bit-identical to the single flat list
+    # this function used to return.
+    buckets: dict[str, list[list[torch.Tensor]]] = {
+        name: [[], [], [], []] for name in (*PROVENANCE_KINDS, "combined")
+    }
+    group_counts: dict[str, int] = {name: 0 for name in PROVENANCE_KINDS}
     local_counts = torch.zeros(3, dtype=torch.long, device=batch["mask"].device)
     start = time.perf_counter()
     for transition in transitions:
+        kind = provenance_kind(transition)
         valid_mask = transition["valid_mask"].to(device=batch["image"].device, dtype=torch.bool)
         if not bool(valid_mask.any()):
             continue
@@ -205,26 +256,39 @@ def _auditor_batch(
             local_class_weights=weights,
         )
         losses.append(loss)
+        group_counts[kind] += 1
         local_counts += torch.bincount(targets.local.reshape(-1), minlength=3).to(local_counts.device)
         if collect:
-            local_predictions.append(audit_output.local_logits.detach())
-            local_targets.append(targets.local.detach())
-            delta_predictions.append(audit_output.delta_q.detach().reshape(-1))
-            delta_targets.append(targets.delta_dice.detach().reshape(-1))
+            row = (
+                audit_output.local_logits.detach(),
+                targets.local.detach(),
+                audit_output.delta_q.detach().reshape(-1),
+                targets.delta_dice.detach().reshape(-1),
+            )
+            for name in (kind, "combined"):
+                for slot, value in zip(buckets[name], row):
+                    slot.append(value)
     timings["auditor_ms"] = (time.perf_counter() - start) * 1000.0
     if not losses:
-        return None, {"transitions": 0, "timings": timings, "local_counts": local_counts, "transition_data": None}
+        return None, {
+            "transitions": 0,
+            "transitions_by_provenance": {name: 0 for name in PROVENANCE_KINDS},
+            "timings": timings,
+            "local_counts": local_counts,
+            "transition_data": None,
+        }
+    # Uniform mean over transition groups -- unchanged, synthetic still carries
+    # its historical share of the TRAINING loss.  Only reporting is partitioned.
     loss = torch.stack(losses).mean()
     data = {
         "transitions": len(losses),
+        "transitions_by_provenance": dict(group_counts),
         "timings": timings,
         "local_counts": local_counts,
-        "transition_data": (
-            torch.cat(local_predictions) if local_predictions else None,
-            torch.cat(local_targets) if local_targets else None,
-            torch.cat(delta_predictions) if delta_predictions else None,
-            torch.cat(delta_targets) if delta_targets else None,
-        ),
+        "transition_data": {
+            name: tuple(torch.cat(slot) if slot else None for slot in slots)
+            for name, slots in buckets.items()
+        },
     }
     return loss, data
 
@@ -355,6 +419,75 @@ def train_auditor_epoch(
     return result
 
 
+#: Keys every transition-metric namespace is guaranteed to carry, so a caller
+#: reading ``audit/on_policy/auroc`` never has to guard for a missing key when a
+#: provenance bucket happens to be empty.
+TRANSITION_METRIC_KEYS = (
+    "improve_regress_accuracy",
+    "auroc",
+    "auprc",
+    "correlation_delta_q_delta_dice",
+    "local_fix_f1",
+    "local_regress_f1",
+)
+
+
+def _empty_transition_metrics() -> dict[str, float]:
+    return {key: float("nan") for key in TRANSITION_METRIC_KEYS}
+
+
+def _transition_metrics_for(
+    parts: list[tuple[Any, Any, Any, Any]],
+    *,
+    neutral_margin: float | None,
+) -> tuple[dict[str, float], int]:
+    """Concatenate one provenance bucket and score it.
+
+    ``transition_audit_metrics`` is gaining a ``neutral_margin`` keyword in a
+    parallel change (AGY-1).  Call it defensively until that lands: try the
+    keyword, and fall back to the historical positional call if the signature
+    does not accept it yet.
+    """
+
+    usable = [item for item in parts if item is not None and item[2] is not None]
+    if not usable:
+        return _empty_transition_metrics(), 0
+    local_pred = torch.cat([item[0] for item in usable])
+    local_target = torch.cat([item[1] for item in usable])
+    delta_pred = torch.cat([item[2] for item in usable])
+    delta_target = torch.cat([item[3] for item in usable])
+    metrics = transition_audit_metrics(
+        local_pred, local_target, delta_pred, delta_target, neutral_margin=neutral_margin
+    )
+    result = _empty_transition_metrics()
+    result.update({str(key): value for key, value in metrics.items()})
+    return result, int(delta_pred.numel())
+
+
+def resolve_primary_metric(on_policy_metrics: Mapping[str, Any]) -> tuple[float, str]:
+    """Select the checkpoint metric from the ON-POLICY namespace only.
+
+    Fallback chain, applied in this order and recorded verbatim in
+    ``primary_metric_source``:
+
+    1. ``on_policy_auroc``
+    2. ``on_policy_improve_regress_accuracy``
+    3. ``nan`` with source ``"undefined"``
+
+    It deliberately never falls back to the combined or synthetic value: those
+    are 57.1% generator-synthesized transitions that cannot occur at inference,
+    so selecting on them optimizes a task the deployed model never faces.
+    """
+
+    auroc = float(on_policy_metrics.get("auroc", float("nan")))
+    if is_finite(auroc):
+        return auroc, "on_policy_auroc"
+    accuracy = float(on_policy_metrics.get("improve_regress_accuracy", float("nan")))
+    if is_finite(accuracy):
+        return accuracy, "on_policy_improve_regress_accuracy"
+    return float("nan"), "undefined"
+
+
 @torch.no_grad()
 def validate_auditor_epoch(
     model: torch.nn.Module,
@@ -372,10 +505,29 @@ def validate_auditor_epoch(
     total_epochs: int = 1,
     disable_tqdm: bool = False,
 ) -> dict[str, Any]:
+    """Score the validation loader, partitioned by transition provenance.
+
+    Three namespaces are emitted -- ``audit/on_policy/*``, ``audit/synthetic/*``
+    and ``audit/combined/*`` -- each carrying ``auroc``, ``auprc``,
+    ``improve_regress_accuracy``, ``correlation_delta_q_delta_dice``,
+    ``local_fix_f1``, ``local_regress_f1`` and ``transition_count``.
+
+    The flat legacy keys (``auroc``, ``auprc``, ...) still carry the COMBINED
+    value so existing callers and W&B history keep working, but ``primary_metric``
+    -- the value that selects ``best.pt`` -- is now derived from the ON-POLICY
+    namespace alone.  Combined is a 4-synthetic / 3-on-policy mixture whose
+    synthetic half is generated from ground truth and cannot occur at inference,
+    so selecting on it optimizes a task the deployed model never faces.
+    """
+
     model.eval()
     generator = generator or CounterfactualGenerator()
     losses: list[float] = []
-    transition_parts: list[tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]] = []
+    namespaces = (*PROVENANCE_KINDS, "combined")
+    transition_parts: dict[str, list[tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]]] = {
+        name: [] for name in namespaces
+    }
+    group_counts: dict[str, int] = {name: 0 for name in namespaces}
     count = 0
     timings = {"annotation_forward_ms": 0.0, "counterfactual_ms": 0.0, "auditor_ms": 0.0}
     local_counts = torch.zeros(3, dtype=torch.long)
@@ -407,37 +559,45 @@ def validate_auditor_epoch(
         local_counts += details["local_counts"].cpu()
         for key, value in details["timings"].items():
             timings[key] += float(value)
-        if details["transition_data"] is not None:
-            transition_parts.append(details["transition_data"])
+        for name, item in (details["transition_data"] or {}).items():
+            if name in transition_parts:
+                transition_parts[name].append(item)
+        for name, value in details.get("transitions_by_provenance", {}).items():
+            if name in group_counts:
+                group_counts[name] += int(value)
+                group_counts["combined"] += int(value)
         pbar.set_postfix({"loss": f"{float(loss.detach()):.4f}", "trans": f"{count}"})
-    if transition_parts:
-        local_pred = torch.cat([item[0] for item in transition_parts])
-        local_target = torch.cat([item[1] for item in transition_parts])
-        delta_pred = torch.cat([item[2] for item in transition_parts])
-        delta_target = torch.cat([item[3] for item in transition_parts])
-        metrics = transition_audit_metrics(local_pred, local_target, delta_pred, delta_target)
-    else:
-        metrics = {
-            "improve_regress_accuracy": float("nan"),
-            "auroc": float("nan"),
-            "auprc": float("nan"),
-            "correlation_delta_q_delta_dice": float("nan"),
-            "local_fix_f1": float("nan"),
-            "local_regress_f1": float("nan"),
-        }
-    auroc = float(metrics["auroc"])
-    primary = auroc if is_finite(auroc) else float(metrics["improve_regress_accuracy"])
+    namespace_metrics: dict[str, dict[str, float]] = {}
+    namespaced: dict[str, float] = {}
+    for name in namespaces:
+        scores, rows = _transition_metrics_for(transition_parts[name], neutral_margin=neutral_margin)
+        scores["transition_count"] = float(rows)
+        if name in group_counts:
+            scores["transition_group_count"] = float(group_counts[name])
+        namespace_metrics[name] = scores
+        for key, value in scores.items():
+            namespaced[f"audit/{name}/{key}"] = value
+    # Legacy flat keys keep emitting the COMBINED value so existing callers and
+    # W&B history are unbroken -- but they no longer drive checkpoint selection.
+    metrics = {
+        key: value
+        for key, value in namespace_metrics["combined"].items()
+        if key not in ("transition_count", "transition_group_count")
+    }
+    primary, primary_source = resolve_primary_metric(namespace_metrics[ON_POLICY])
     return {
         "audit_loss": sum(losses) / max(len(losses), 1),
         "loss": sum(losses) / max(len(losses), 1),
         "transitions": float(count),
         "primary_metric": primary,
+        "primary_metric_source": primary_source,
         "local_fix_count": float(local_counts[0]),
         "local_unchanged_count": float(local_counts[1]),
         "local_regress_count": float(local_counts[2]),
         "annotation_forward_ms": timings["annotation_forward_ms"] / max(len(losses), 1),
         "counterfactual_ms": timings["counterfactual_ms"] / max(len(losses), 1),
         "auditor_ms": timings["auditor_ms"] / max(len(losses), 1),
+        **namespaced,
         **metrics,
     }
 
@@ -502,8 +662,13 @@ def main() -> None:
     cf_config = config.get("counterfactual", {})
     if not isinstance(cf_config, dict):
         raise ValueError("counterfactual config must be a mapping")
+    epsilon_neutral = float(cf_config.get("epsilon_neutral", 0.02))
+    neutral_margin = resolve_neutral_margin(cf_config.get("neutral_margin", 0.005))
+    # Surfaces the epsilon_neutral (generation search tolerance) vs neutral_margin
+    # (decision margin) conflict at runtime.  Neither number is changed here.
+    check_generation_tolerance(epsilon_neutral, neutral_margin, context="Phase-B CounterfactualGenerator")
     generator = CounterfactualGenerator(
-        epsilon_neutral=float(cf_config.get("epsilon_neutral", 0.02)),
+        epsilon_neutral=epsilon_neutral,
         neutral_max_retries=int(cf_config.get("neutral_max_retries", 8)),
         num_classes=int(config.get("num_classes", 4)),
     )
@@ -522,13 +687,13 @@ def main() -> None:
                 model, train_loader, optimizer, device, generator=generator, scheduler=scheduler,
                 scaler=scaler, amp_enabled=amp_enabled, amp_dtype=amp_dtype,
                 gradient_accumulation_steps=accumulation_steps, epoch=epoch, total_epochs=epochs, max_steps=args.max_steps,
-                neutral_margin=float(cf_config.get("neutral_margin", 0.005)),
+                neutral_margin=neutral_margin,
                 local_weighting=cf_config.get("local_class_weighting", True) != "none",
                 disable_tqdm=args.no_tqdm,
             )
             validation = validate_auditor_epoch(
                 model, val_loader, device, generator=generator,
-                neutral_margin=float(cf_config.get("neutral_margin", 0.005)),
+                neutral_margin=neutral_margin,
                 local_weighting=cf_config.get("local_class_weighting", True) != "none",
                 amp_enabled=amp_enabled,
                 amp_dtype=amp_dtype,
@@ -553,14 +718,22 @@ def main() -> None:
                 "train/lr": train_stats["lr"],
                 "train/transitions": train_stats["transitions"],
                 "val/audit_loss": validation["audit_loss"],
+                # Legacy flat keys are the COMBINED (on-policy + synthetic)
+                # mixture, kept so existing W&B history stays continuous.  They
+                # no longer select checkpoints.
                 "val/auroc": validation["auroc"],
                 "val/auprc": validation["auprc"],
                 "val/local_fix_f1": validation["local_fix_f1"],
                 "val/local_regress_f1": validation["local_regress_f1"],
                 "val/correlation_delta_q": validation["correlation_delta_q_delta_dice"],
                 "val/improve_regress_accuracy": validation["improve_regress_accuracy"],
+                "val/primary_metric": validation["primary_metric"],
+                "val/primary_metric_source": validation["primary_metric_source"],
                 "best_primary_metric": best_metric,
             }
+            log_payload.update(
+                {f"val/{key}": value for key, value in validation.items() if key.startswith("audit/")}
+            )
             wandb_logger.log(log_payload, step=epoch + 1)
             print(
                 f"epoch={epoch + 1:03d} lr={train_stats['lr']:.3e} loss={train_stats['loss']:.5f} "
@@ -570,6 +743,30 @@ def main() -> None:
                 f"global_acc={validation['improve_regress_accuracy']:.4f} "
                 f"transitions={train_stats['transitions']:.0f} cf_ms={train_stats['counterfactual_ms']:.1f} "
                 f"local_counts={int(validation['local_fix_count'])}/{int(validation['local_unchanged_count'])}/{int(validation['local_regress_count'])}"
+            )
+            print(
+                f"  [on_policy] auroc={validation['audit/on_policy/auroc']:.4f} "
+                f"auprc={validation['audit/on_policy/auprc']:.4f} "
+                f"acc={validation['audit/on_policy/improve_regress_accuracy']:.4f} "
+                f"corr={validation['audit/on_policy/correlation_delta_q_delta_dice']:.4f} "
+                f"fix_f1={validation['audit/on_policy/local_fix_f1']:.4f} "
+                f"regress_f1={validation['audit/on_policy/local_regress_f1']:.4f} "
+                f"n={int(validation['audit/on_policy/transition_count'])}"
+            )
+            print(
+                f"  [synthetic] auroc={validation['audit/synthetic/auroc']:.4f} "
+                f"auprc={validation['audit/synthetic/auprc']:.4f} "
+                f"acc={validation['audit/synthetic/improve_regress_accuracy']:.4f} "
+                f"corr={validation['audit/synthetic/correlation_delta_q_delta_dice']:.4f} "
+                f"fix_f1={validation['audit/synthetic/local_fix_f1']:.4f} "
+                f"regress_f1={validation['audit/synthetic/local_regress_f1']:.4f} "
+                f"n={int(validation['audit/synthetic/transition_count'])}"
+            )
+            print(
+                f"  [combined] auroc={validation['audit/combined/auroc']:.4f} "
+                f"n={int(validation['audit/combined/transition_count'])} | "
+                f"primary_metric={validation['primary_metric']:.4f} "
+                f"source={validation['primary_metric_source']} best={best_metric:.4f}"
             )
             if args.max_steps is not None:
                 break

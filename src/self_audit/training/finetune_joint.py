@@ -1,4 +1,18 @@
-"""Phase C: threshold-controlled joint fine-tuning with separated gradients."""
+"""Phase C: threshold-controlled joint fine-tuning with separated gradients.
+
+**Metric space.**  Every Dice this module *reports* is
+:data:`~self_audit.audit.semantics.METRIC_SPACE_SLICE_PROXY` -- 2-D per-slice
+foreground macro Dice on the resized network grid, averaged over slices.  It
+is a training/monitoring proxy, **not** a paper metric; quotable per-volume
+numbers live in :mod:`self_audit.evaluation.volume_inference`.  Phase A now
+computes the identical quantity through the identical helper
+(:func:`~self_audit.evaluation.metrics.slice_proxy_dice`), so the two phases'
+headline numbers are comparable.
+
+The transition *targets* that drive the audit loss keep using
+:func:`~self_audit.audit.targets.multiclass_dice` unchanged, so training is
+bit-identical to before this module's reporting was realigned.
+"""
 
 from __future__ import annotations
 
@@ -18,8 +32,13 @@ for path in (ROOT, SRC):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
+from self_audit.audit.semantics import METRIC_SPACE_SLICE_PROXY, resolve_empty_policy
 from self_audit.audit.targets import build_transition_targets, multiclass_dice
-from self_audit.evaluation.metrics import acceptance_metrics, transition_audit_metrics
+from self_audit.evaluation.metrics import (
+    acceptance_metrics,
+    slice_proxy_dice,
+    transition_audit_metrics,
+)
 from self_audit.losses.annotation import annotation_loss
 from self_audit.losses.audit import audit_loss
 from self_audit.training._utils import (
@@ -283,8 +302,51 @@ def _audit_output_tensor(output: Any, *names: str) -> torch.Tensor | None:
     return None
 
 
-def _foreground_dice_per_sample(logits: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-    return multiclass_dice(logits, target, num_classes=int(logits.shape[1]))
+def _foreground_dice_per_sample(
+    logits: torch.Tensor,
+    target: torch.Tensor,
+    *,
+    num_classes: int | None = None,
+    empty_policy: str | None = None,
+) -> torch.Tensor:
+    """Return per-sample foreground macro Dice in metric space ``"slice_proxy"``.
+
+    Routed through :func:`~self_audit.evaluation.metrics.slice_proxy_dice`, the
+    single shared proxy Phase A also calls, so the two phases can no longer
+    disagree about the same predictions.
+
+    **Behaviour change (loud):** this used to call
+    :func:`~self_audit.audit.targets.multiclass_dice`, which scores a class
+    that is empty in *both* prediction and target as ``1.0``.  Under the
+    canonical ``"exclude"`` policy such a class is excluded instead, so a
+    slice with no foreground anywhere now yields ``nan`` rather than ``1.0``.
+    Reported Phase-C Dice will therefore *drop* on datasets with empty slices;
+    that drop is the removal of an inflation, not a regression.  Callers must
+    aggregate nan-aware (``torch.nanmean``).
+
+    The audit **loss targets** are untouched: ``build_transition_targets``
+    still uses ``multiclass_dice``, so training remains bit-identical.
+    """
+
+    classes = int(logits.shape[1]) if num_classes is None else int(num_classes)
+    scores = slice_proxy_dice(
+        logits,
+        target,
+        num_classes=classes,
+        empty_policy=resolve_empty_policy(empty_policy),
+    )
+    return torch.as_tensor(scores, dtype=torch.float32, device=logits.device)
+
+
+def _nanmean(values: torch.Tensor) -> float:
+    """nan-aware mean; ``nan`` when nothing finite was contributed."""
+
+    if values.numel() == 0:
+        return float("nan")
+    finite = torch.isfinite(values)
+    if not bool(finite.any()):
+        return float("nan")
+    return float(values[finite].float().mean())
 
 
 @torch.no_grad()
@@ -414,17 +476,26 @@ def validate_phase_c(
                 else accepted_fallback
             )
             if initial_scores and final_scores:
-                cur_init = float(torch.cat(initial_scores).mean())
-                cur_final = float(torch.cat(final_scores).mean())
+                cur_init = _nanmean(torch.cat(initial_scores))
+                cur_final = _nanmean(torch.cat(final_scores))
                 pbar.set_postfix({"init_dice": f"{cur_init:.4f}", "final_dice": f"{cur_final:.4f}"})
     finally:
         model.train(was_training)
 
+    scored_slices = 0
+    excluded_slices = 0
     if initial_scores:
-        initial_mean = float(torch.cat(initial_scores).mean())
-        final_mean = float(torch.cat(final_scores).mean())
+        all_initial = torch.cat(initial_scores)
+        all_final = torch.cat(final_scores)
+        # nan-aware: under the "exclude" empty-class policy a slice with no
+        # foreground in either prediction or target scores nan, and a plain
+        # mean would poison the whole epoch.
+        initial_mean = _nanmean(all_initial)
+        final_mean = _nanmean(all_final)
         mean_attempted = float(torch.cat(attempted_counts).float().mean())
         mean_accepted = float(torch.cat(accepted_counts).float().mean())
+        scored_slices = int(torch.isfinite(all_initial).sum())
+        excluded_slices = int(all_initial.numel()) - scored_slices
     else:
         initial_mean = float("nan")
         final_mean = float("nan")
@@ -461,6 +532,9 @@ def validate_phase_c(
         }
 
     result: dict[str, Any] = {
+        "metric_space": METRIC_SPACE_SLICE_PROXY,
+        "scored_slice_count": float(scored_slices),
+        "excluded_empty_slice_count": float(excluded_slices),
         "initial_foreground_macro_dice": initial_mean,
         "final_foreground_macro_dice": final_mean,
         "net_dice_gain": final_mean - initial_mean,
@@ -491,12 +565,24 @@ def collect_validation_transition_cache(
     *,
     t_max: int = 3,
     disable_tqdm: bool = False,
-) -> dict[str, torch.Tensor]:
+    empty_policy: str | None = None,
+) -> dict[str, Any]:
     """Cache full validation transitions for threshold calibration.
 
     ``always_accept_refinement`` is used only to expose the full candidate
     trajectory.  The saved cache contains GT-derived deltas for calibration;
     it is never consumed by deployable inference.
+
+    ``initial_dice`` is metric space
+    :data:`~self_audit.audit.semantics.METRIC_SPACE_SLICE_PROXY`.  Slices whose
+    initial Dice is ``nan`` under the ``"exclude"`` empty-class policy (no
+    foreground in either prediction or target, so the slice carries no
+    annotation signal) are **dropped from the cache along with their
+    transitions**, and the count is reported as
+    ``excluded_empty_slice_count``.  Keeping them would make
+    ``evaluate_threshold``'s ``final_macro_dice`` ``nan`` for every grid point
+    -- it aggregates with a plain ``mean`` -- which would make
+    ``select_threshold`` return an arbitrary row.
     """
 
     model.eval()
@@ -504,6 +590,8 @@ def collect_validation_transition_cache(
     quality_values: list[torch.Tensor] = []
     actual_values: list[torch.Tensor] = []
     active_values: list[torch.Tensor] = []
+    excluded_slices = 0
+    policy = resolve_empty_policy(empty_policy)
     pbar = tqdm(loader, desc="Caching transitions", disable=disable_tqdm, leave=False)
     for raw_batch in pbar:
         batch = move_batch(raw_batch, device)
@@ -516,7 +604,12 @@ def collect_validation_transition_cache(
         initial = output.get("initial_logits")
         if not torch.is_tensor(initial):
             initial = extract_initial_logits(output)
-        initial_values.append(_foreground_dice_per_sample(initial, batch["mask"]).detach().cpu())
+        batch_initial = _foreground_dice_per_sample(
+            initial, batch["mask"], empty_policy=policy
+        ).detach().cpu()
+        keep = torch.isfinite(batch_initial)
+        excluded_slices += int((~keep).sum())
+        initial_values.append(batch_initial[keep])
         batch_quality: list[torch.Tensor] = []
         batch_actual: list[torch.Tensor] = []
         batch_active: list[torch.Tensor] = []
@@ -538,20 +631,32 @@ def collect_validation_transition_cache(
             batch_actual.append(targets.delta_dice.detach().reshape(-1).cpu())
             batch_active.append(active_mask.detach().cpu())
         if batch_quality:
-            quality_values.append(torch.stack(batch_quality, dim=1))
-            actual_values.append(torch.stack(batch_actual, dim=1))
-            active_values.append(torch.stack(batch_active, dim=1))
+            quality_values.append(torch.stack(batch_quality, dim=1)[keep])
+            actual_values.append(torch.stack(batch_actual, dim=1)[keep])
+            active_values.append(torch.stack(batch_active, dim=1)[keep])
     if not initial_values:
         raise ValueError("Cannot cache threshold transitions from an empty validation loader")
+    provenance = {
+        "metric_space": METRIC_SPACE_SLICE_PROXY,
+        "empty_class_policy": policy,
+        "excluded_empty_slice_count": int(excluded_slices),
+    }
     if not quality_values:
         size = int(torch.cat(initial_values).shape[0])
         empty = torch.empty((size, 0), dtype=torch.float32)
-        return {"initial_dice": torch.cat(initial_values), "delta_q": empty, "actual_delta_dice": empty, "active_mask": empty.bool()}
+        return {
+            "initial_dice": torch.cat(initial_values),
+            "delta_q": empty,
+            "actual_delta_dice": empty,
+            "active_mask": empty.bool(),
+            **provenance,
+        }
     return {
         "initial_dice": torch.cat(initial_values),
         "delta_q": torch.cat(quality_values),
         "actual_delta_dice": torch.cat(actual_values),
         "active_mask": torch.cat(active_values),
+        **provenance,
     }
 
 
