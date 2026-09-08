@@ -24,15 +24,21 @@ from torch import Tensor
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from self_audit.audit.semantics import (
+from ..audit.semantics import (
+    AUDIT_TARGET_LEGACY_ONE_V1,
     BENEFICIAL,
     HARMFUL,
     NEUTRAL,
     classify_delta,
     resolve_neutral_margin,
 )
-from self_audit.audit.targets import multiclass_dice
-from self_audit.training._utils import move_batch
+from ..audit.targets import multiclass_dice
+from ..training._utils import move_batch
+from .contracts import (
+    AUDIT_TARGET_LEGACY_ONE_V1_CONTRACT,
+    MetricContract,
+    resolve_metric_contract,
+)
 
 
 def _tensor_from(output: Mapping[str, Any], *names: str) -> Tensor | None:
@@ -405,6 +411,7 @@ def stage_transition_metrics(
             "audit/attribution_residual": abs(
                 candidate_gain + audit_gate_value - realized_gain
             ),
+            "audit/metric_contract": AUDIT_TARGET_LEGACY_ONE_V1,
         }
     )
     return result

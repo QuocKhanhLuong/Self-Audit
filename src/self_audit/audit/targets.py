@@ -1,4 +1,14 @@
-"""GT-only training targets for transition auditing."""
+"""GT-only training targets for transition auditing.
+
+This module implements the training-target contract:
+    AUDIT_TARGET_LEGACY_ONE_V1 ("audit_target_legacy_one_v1", version 1)
+which defines 2-D slice-proxy Dice where both-empty foreground classes score 1.0
+(empty_class_policy="legacy_one").
+
+INVARIANT: The training objective values, loss computation, and transition target
+semantics defined here must remain unchanged. This objective is protected by golden
+fixtures and must not be mixed with evaluation contracts.
+"""
 
 from __future__ import annotations
 
@@ -8,6 +18,11 @@ import torch
 from torch import Tensor
 import torch.nn.functional as F
 
+from .semantics import AUDIT_TARGET_LEGACY_ONE_V1
+
+#: The metric contract implemented by this training target module.
+CONTRACT_NAME: str = AUDIT_TARGET_LEGACY_ONE_V1
+CONTRACT_VERSION: int = 1
 
 FIX = 0
 UNCHANGED = 1

@@ -23,10 +23,14 @@ from src.self_audit.training._utils import (
 def test_threshold_calibration_simulates_per_sample_halting() -> None:
     rows = sweep_thresholds(
         {
+            "cache_schema_version": 1,
             "initial_dice": torch.tensor([0.50, 0.50]),
             "delta_q": torch.tensor([[0.10, -0.10], [0.10, -0.10]]),
             "actual_delta_dice": torch.tensor([[0.10, -0.20], [0.05, 0.02]]),
+            "q_previous": torch.tensor([[0.50, 0.60], [0.50, 0.55]]),
+            "q_candidate": torch.tensor([[0.60, 0.40], [0.55, 0.57]]),
             "active_mask": torch.ones(2, 2, dtype=torch.bool),
+            "metric_contract": "foreground_dice_exclude_v1",
         },
         [0.0, 0.2],
     )
@@ -35,6 +39,21 @@ def test_threshold_calibration_simulates_per_sample_halting() -> None:
     assert best["final_macro_dice"] == pytest.approx(0.575)
     assert best["mean_attempted_turns"] == pytest.approx(2.0)
     assert best["harmful_acceptance_rate"] == pytest.approx(0.0)
+
+
+def test_threshold_calibration_rejects_metadata_only_delta_cache() -> None:
+    from src.self_audit.evaluation.contracts import ContractMismatchError
+
+    metadata_only_cache = {
+        "cache_schema_version": 1,
+        "initial_dice": torch.tensor([0.50, 0.50]),
+        "delta_q": torch.tensor([[0.10, -0.10], [0.10, -0.10]]),
+        "actual_delta_dice": torch.tensor([[0.10, -0.20], [0.05, 0.02]]),
+        "active_mask": torch.ones(2, 2, dtype=torch.bool),
+        "metric_contract": "foreground_dice_exclude_v1",
+    }
+    with pytest.raises(ContractMismatchError, match="Strict cache requires both 'q_previous' and 'q_candidate'"):
+        sweep_thresholds(metadata_only_cache, [0.0, 0.2], strict_contract=True)
 
 
 def test_threshold_calibration_rejects_nonfinite_cached_values() -> None:

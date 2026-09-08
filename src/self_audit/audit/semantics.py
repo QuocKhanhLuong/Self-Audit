@@ -182,12 +182,30 @@ METRIC_SPACES = (
     METRIC_SPACE_VOLUME_NATIVE,
 )
 
+# --------------------------------------------------------------------------
+# Metric contracts
+# --------------------------------------------------------------------------
+
+#: Training target contract: both-empty foreground classes score 1.0.
+AUDIT_TARGET_LEGACY_ONE_V1 = "audit_target_legacy_one_v1"
+
+#: Evaluation contract: both-empty foreground classes are excluded (NaN).
+FOREGROUND_DICE_EXCLUDE_V1 = "foreground_dice_exclude_v1"
+
+CONTRACT_NAMES = (
+    AUDIT_TARGET_LEGACY_ONE_V1,
+    FOREGROUND_DICE_EXCLUDE_V1,
+)
+
 
 __all__ = [
+    "AUDIT_TARGET_LEGACY_ONE_V1",
     "BENEFICIAL",
+    "CONTRACT_NAMES",
     "DEFAULT_EMPTY_CLASS_POLICY",
     "DEFAULT_NEUTRAL_MARGIN",
     "EmptyClassPolicy",
+    "FOREGROUND_DICE_EXCLUDE_V1",
     "HARMFUL",
     "LEGACY_EMPTY_CLASS_POLICY",
     "METRIC_SPACES",

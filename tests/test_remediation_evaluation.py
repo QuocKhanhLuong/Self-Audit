@@ -177,8 +177,98 @@ def test_calibration_loader_rejects_a_bumped_schema_and_unknown_keys(tmp_path: P
 def test_diagnostic_cli_consumes_the_saved_tau_under_the_documented_precedence(
     tmp_path: Path,
 ) -> None:
+    from torch.utils.data import DataLoader, Dataset
+    from self_audit.data.common import VolumeRecord
+    from self_audit.evaluation.calibration_lineage import CalibrationLineageError, build_expected_lineage
+    from self_audit.models.self_audit_net import SelfAuditNet
+    from self_audit.training._utils import bind_evaluation_checkpoint, save_checkpoint
+
     cli = _load_audit_checkpoint_module()
-    path = _write_calibration(tmp_path)
+
+    ckpt_path = tmp_path / "tiny_ckpt.pt"
+    tiny_cfg = {
+        "num_classes": 4,
+        "shared_channels": 16,
+        "window_k": 4,
+        "max_turns": 2,
+        "encoder_name": "convnext_tiny",
+        "encoder_allow_fallback": True,
+    }
+    torch.manual_seed(42)
+    model = SelfAuditNet(
+        pretrained_encoder=False,
+        encoder_allow_fallback=True,
+        shared_channels=16,
+        window_k=4,
+        max_turns=2,
+    ).eval()
+    save_checkpoint(ckpt_path, model, epoch=1, config={"model": tiny_cfg})
+    binding = bind_evaluation_checkpoint(
+        model,
+        [("checkpoint", ckpt_path)],
+        map_location="cpu",
+        config={"model": tiny_cfg},
+    )
+
+    class _RecordDataset(Dataset):
+        def __init__(self, patients: tuple[str, ...]) -> None:
+            self.records = [
+                VolumeRecord(
+                    case_id=f"{p}_ED",
+                    patient_id=p,
+                    image_path=Path(f"/fixture/{p}_image.npy"),
+                    mask_path=Path(f"/fixture/{p}_mask.npy"),
+                    split="val",
+                )
+                for p in patients
+            ]
+            self.image_size = 32
+            self.depth_axis = 2
+            self.foreground_only = False
+            self.augment = False
+            self.lower_percentile = 0.5
+            self.upper_percentile = 99.5
+            self.transform = None
+
+        def __len__(self) -> int:
+            return len(self.records)
+
+        def __getitem__(self, index: int) -> dict[str, Any]:
+            r = self.records[index]
+            return {
+                "image": torch.randn(3, 32, 32),
+                "mask": torch.randint(0, 4, (32, 32)),
+                "case_id": r.case_id,
+                "patient_id": r.patient_id,
+            }
+
+    loader = DataLoader(_RecordDataset(("patient001", "patient002")), batch_size=2, shuffle=False)
+    expected_lineage = build_expected_lineage(
+        binding=binding,
+        loader=loader,
+        split_name="val",
+        metric_contract="foreground_dice_exclude_v1",
+        metric_space=METRIC_SPACE_SLICE_PROXY,
+        neutral_margin=0.005,
+        t_max=3,
+    )
+
+    path = _write_calibration(
+        tmp_path,
+        checkpoint_path=ckpt_path,
+        metric_contract="foreground_dice_exclude_v1",
+        lineage=expected_lineage,
+    )
+
+    # Missing expected_lineage when calibration_path is supplied fails closed
+    with pytest.raises(CalibrationLineageError, match="supplied without a runtime-derived expected lineage"):
+        cli.resolve_tau_accept(
+            cli_tau=None,
+            calibration_path=str(path),
+            config_audit={"tau_accept": 0.0},
+            neutral_margin=0.005,
+            expected_lineage=None,
+        )
 
     # calibration > config
     resolution = cli.resolve_tau_accept(
@@ -186,6 +276,7 @@ def test_diagnostic_cli_consumes_the_saved_tau_under_the_documented_precedence(
         calibration_path=str(path),
         config_audit={"tau_accept": 0.0},
         neutral_margin=0.005,
+        expected_lineage=expected_lineage,
     )
     assert resolution["tau_accept"].hex() == (0.0123456789).hex()
     assert resolution["tau_accept_source"] == cli.TAU_SOURCE_CALIBRATION
@@ -210,7 +301,11 @@ def test_diagnostic_cli_consumes_the_saved_tau_under_the_documented_precedence(
     # A margin mismatch between artifact and evaluation is a hard error.
     with pytest.raises(ValueError):
         cli.resolve_tau_accept(
-            cli_tau=None, calibration_path=str(path), config_audit={}, neutral_margin=0.02
+            cli_tau=None,
+            calibration_path=str(path),
+            config_audit={},
+            neutral_margin=0.02,
+            expected_lineage=expected_lineage,
         )
 
 

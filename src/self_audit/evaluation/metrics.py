@@ -317,16 +317,18 @@ def surface_metrics(
     true = _numpy(target).astype(bool)
     if pred.shape != true.shape:
         raise ValueError(f"Prediction/target shape mismatch: {pred.shape} vs {true.shape}")
-    if not pred.any() and not true.any():
-        return float(empty_score), float(empty_score)
-    if not pred.any() or not true.any():
-        return float("inf"), float("inf")
     scale = np.ones(pred.ndim, dtype=np.float64)
     if spacing is not None:
         values = tuple(float(x) for x in spacing)
         if len(values) != pred.ndim:
             raise ValueError(f"spacing must have {pred.ndim} values, got {values}")
+        if not all(np.isfinite(x) and x > 0.0 for x in values):
+            raise ValueError(f"spacing must be positive and finite, got {values}")
         scale[:] = values
+    if not pred.any() and not true.any():
+        return float(empty_score), float(empty_score)
+    if not pred.any() or not true.any():
+        return float("inf"), float("inf")
     p_surface = np.argwhere(_surface(pred)).astype(np.float64) * scale
     t_surface = np.argwhere(_surface(true)).astype(np.float64) * scale
     p_to_t = _pairwise_min_distances(p_surface, t_surface)
@@ -380,10 +382,17 @@ def annotation_metrics(
     if spacing_known and spacing is None:
         raise ValueError("spacing_known=True requires physical spacing metadata")
     distance_space = "physical" if spacing_known else "pixel"
-    if spacing is None:
-        spacing = (1.0,) * pred.ndim
+    if spacing_known:
+        values = tuple(float(x) for x in spacing)  # type: ignore[arg-type]
+        if len(values) != pred.ndim:
+            raise ValueError(f"spacing must have {pred.ndim} values, got {values}")
+        if not all(np.isfinite(x) and x > 0.0 for x in values):
+            raise ValueError(f"physical spacing must be positive and finite, got {values}")
+        metric_spacing: tuple[float, ...] | None = values
+    else:
+        metric_spacing = (1.0,) * pred.ndim
     for cls in range(1, int(num_classes)):
-        hd95[cls], assd[cls] = surface_metrics(pred == cls, true == cls, spacing=spacing)
+        hd95[cls], assd[cls] = surface_metrics(pred == cls, true == cls, spacing=metric_spacing)
     return {
         "dice": macro_mean(list(dice.values())),
         "hd95": _finite_mean(hd95.values()),

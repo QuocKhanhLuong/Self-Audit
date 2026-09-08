@@ -15,15 +15,17 @@ for path in (ROOT, SRC):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
+from self_audit.provenance import build_lineage
 from self_audit.training._utils import (
+    bind_evaluation_checkpoint,
     build_data_loader,
     build_model_from_config,
     build_patient_dataset,
-    load_checkpoint,
     load_config,
     resolve_device,
     seed_everything,
     validate_dataset_splits,
+    verify_bound_state,
 )
 from self_audit.training.finetune_joint import collect_validation_transition_cache
 
@@ -38,6 +40,11 @@ def main() -> None:
     parser.add_argument("--image_size", type=int, default=None, help="Override image spatial size")
     parser.add_argument("--device", default=None)
     parser.add_argument("--batch_size", type=int, default=None)
+    parser.add_argument(
+        "--metric_contract",
+        default="foreground_dice_exclude_v1",
+        help="Metric contract name for state and transition scoring (default: foreground_dice_exclude_v1)",
+    )
     parser.add_argument("--no_tqdm", action="store_true", help="Disable tqdm progress bar")
     args = parser.parse_args()
     config = load_config(args.config)
@@ -52,15 +59,52 @@ def main() -> None:
     stats = validate_dataset_splits(config)
     print(f"split_stats={stats}")
     model = build_model_from_config(config, device)
-    load_checkpoint(args.checkpoint, model=model, map_location=device)
+    # Evaluation-only bind: strict state load, resolved-config check, no
+    # optimizer/scheduler/RNG restore, and a digest that ties the cache below
+    # to the weights that produced it.
+    binding = bind_evaluation_checkpoint(
+        model,
+        [("checkpoint", args.checkpoint)],
+        map_location=device,
+        config=config,
+    )
+    print(
+        f"bound checkpoint={binding.path} state_digest={binding.state_digest} "
+        f"producer_git_sha={binding.producer.get('producer_git_sha')}"
+    )
     dataset = build_patient_dataset(config, split=str(config.get("val_split", "val")), train=False)
     loader = build_data_loader(dataset, config, device=device, train=False, batch_size=args.batch_size)
     audit_config = config.get("audit", {})
     t_max = int(audit_config.get("t_max", config.get("model", {}).get("max_turns", 3))) if isinstance(audit_config, dict) else 3
-    cache = collect_validation_transition_cache(model, loader, device, t_max=t_max, disable_tqdm=args.no_tqdm)
+    verify_bound_state(model, binding, boundary="validation_transition_cache")
+    cache = collect_validation_transition_cache(
+        model,
+        loader,
+        device,
+        t_max=t_max,
+        disable_tqdm=args.no_tqdm,
+        metric_contract=args.metric_contract,
+    )
+    # The cache is authoritative for metric semantics: metric_space,
+    # neutral_margin, contract version and empty-class policy are read out of
+    # the measurement itself, and a CLI argument that contradicts it is
+    # rejected rather than stamped over it.
+    cache["lineage"] = build_lineage(
+        binding=binding.as_dict(),
+        loader=loader,
+        split_name=str(config.get("val_split", "val")),
+        cache=cache,
+        metric_contract=args.metric_contract,
+        t_max=t_max,
+        batch_size=getattr(loader, "batch_size", None),
+        observed_samples=int(cache["initial_dice"].shape[0]),
+    )
+    # Last check before anything is persisted: the weights that produced these
+    # rows must still be the weights the lineage names.
+    verify_bound_state(model, binding, boundary="pre_write_validation_transition_cache")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     torch.save(cache, args.output)
-    print(f"cached_samples={cache['initial_dice'].shape[0]} cached_turns={cache['delta_q'].shape[1]} saved={args.output}")
+    print(f"cached_samples={cache['initial_dice'].shape[0]} cached_turns={cache['delta_q'].shape[1]} contract={cache.get('metric_contract')} saved={args.output}")
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -49,6 +49,27 @@ handed to inference is asserted equal to the artifact's saved value, and the
 artifact's ``neutral_margin`` must agree with the margin being evaluated with
 (a disagreement is a hard error, not a warning).
 
+Calibration lineage
+-------------------
+Whenever ``--calibration`` is supplied the artifact's lineage is verified
+against an expectation built from the objects this run actually constructed --
+the bound checkpoint, the live model, the constructed validation dataset and
+the protocol's metric semantics -- *before* any tau is used and before any
+calibrated number is emitted.  The expectation is never read out of the
+artifact, so an artifact cannot be its own witness.  ``--tau_accept`` does not
+skip this: an override changes which number is reported, not whether a
+consulted artifact has to be valid.  An artifact without a lineage block is
+refused; ``self_audit.evaluation.calibration_lineage.inspect_legacy_calibration``
+reads it as explicitly unverified instead.
+
+The cohort the threshold was calibrated on and the cohort this run evaluates
+are separate roles.  ``--cohort_role calibration`` (the default) requires them
+to be the same cohort.  ``--cohort_role independent_evaluation`` requires the
+protocol to name the permitted membership with
+``--authorized_cohort_signature``, and that cohort must be patient-disjoint
+from the calibration cohort.  There is no mode that accepts an unnamed
+replacement cohort.
+
 NaN handling
 ------------
 ``nan`` is a legitimate, meaningful value here (for example
@@ -99,6 +120,16 @@ from self_audit.evaluation.audit_decomposition import (
     evaluate_annotation_headroom,
     evaluate_audit_decomposition,
 )
+from self_audit.evaluation.calibration_lineage import (
+    CALIBRATION_LINEAGE_SCHEMA_VERSION,
+    COHORT_ROLES,
+    COHORT_ROLE_CALIBRATION,
+    COHORT_ROLE_INDEPENDENT_EVALUATION,
+    CalibrationLineageError,
+    CohortPolicy,
+    build_expected_lineage,
+    verify_calibration_lineage,
+)
 from self_audit.evaluation.threshold import CALIBRATION_SCHEMA_VERSION, load_calibration
 from self_audit.evaluation.volume_inference import (
     COMPARISON_MODES,
@@ -107,14 +138,15 @@ from self_audit.evaluation.volume_inference import (
     split_cases_by_phase,
 )
 from self_audit.training._utils import (
+    bind_evaluation_checkpoint,
     build_data_loader,
     build_model_from_config,
     build_patient_dataset,
-    load_checkpoint,
     load_config,
     move_batch,
     resolve_device,
     validate_dataset_splits,
+    verify_bound_state,
 )
 
 
@@ -236,6 +268,8 @@ def resolve_tau_accept(
     config_audit: Mapping[str, Any],
     neutral_margin: float,
     allow_tau_override: bool = False,
+    expected_lineage: Mapping[str, Any] | None = None,
+    cohort_policy: CohortPolicy | None = None,
 ) -> dict[str, Any]:
     """Resolve ``tau_accept`` under the documented precedence.
 
@@ -250,10 +284,31 @@ def resolve_tau_accept(
     ``allow_tau_override`` is set: silently ignoring a calibrated threshold
     while stamping ``calibration_path`` into the report would misrepresent
     which threshold produced the numbers.
+
+    ``expected_lineage`` is the runtime-derived expectation from
+    :func:`build_expected_lineage` and is **required** whenever
+    ``calibration_path`` is given.  This function fails closed: it does not
+    return a usable tau alongside an unverified artifact, because a caller that
+    forgot to verify would otherwise get a number that looks calibrated.  The
+    artifact's lineage is checked against the runtime before the resolved tau
+    leaves here.  ``allow_tau_override`` does not reach that check -- an
+    override decides which number is reported, never whether a consulted
+    artifact is valid.  To read an artifact without verifying it, use
+    :func:`self_audit.evaluation.calibration_lineage.inspect_legacy_calibration`,
+    which never yields a usable threshold.
     """
 
     calibration: dict[str, Any] | None = None
+    verification: dict[str, Any] | None = None
     if calibration_path is not None:
+        if expected_lineage is None:
+            raise CalibrationLineageError(
+                f"Calibration artifact {calibration_path} was supplied without a runtime-derived "
+                "expected lineage. Resolving a threshold from an artifact that has not been "
+                "checked against this run's checkpoint, model, preprocessing and cohort is "
+                "refused. Build one with build_expected_lineage(), or read the artifact with "
+                "inspect_legacy_calibration(), which is explicitly unverified."
+            )
         calibration = load_calibration(calibration_path)
         artifact_margin = float(calibration["neutral_margin"])
         if artifact_margin != neutral_margin:
@@ -263,6 +318,12 @@ def resolve_tau_accept(
                 "A threshold calibrated under a different decision margin does not transfer; "
                 "re-run calibration at the evaluation margin or evaluate at the calibrated one."
             )
+        verification = verify_calibration_lineage(
+            calibration,
+            expected_lineage,
+            cohort_policy=cohort_policy,
+            artifact_name=f"Calibration artifact {calibration_path}",
+        )
 
     if cli_tau is not None:
         tau = float(cli_tau)
@@ -299,9 +360,32 @@ def resolve_tau_accept(
         "calibration_metric_space": None if calibration is None else calibration.get("metric_space"),
         "calibration_validity": None if calibration is None else calibration.get("validity"),
         "expected_calibration_schema_version": int(CALIBRATION_SCHEMA_VERSION),
+        "expected_calibration_lineage_schema_version": int(CALIBRATION_LINEAGE_SCHEMA_VERSION),
+        "lineage_verified": None if calibration is None else True,
+        "lineage_verification": verification,
         "precedence": "--tau_accept > --calibration > config audit.tau_accept > 0.0",
     }
     return resolution
+
+
+def assert_calibration_lineage_verified(resolution: Mapping[str, Any]) -> None:
+    """Refuse to emit a calibrated result that was never checked against this run.
+
+    This is the emission-side gate.  It fires whenever an artifact was
+    consulted at all -- including under ``--tau_accept`` override, where the
+    artifact still appears in the report and would otherwise lend it
+    unearned authority.
+    """
+
+    if resolution.get("calibration_path") is None:
+        return
+    if resolution.get("lineage_verified") is True:
+        return
+    raise CalibrationLineageError(
+        f"Calibration artifact {resolution.get('calibration_path')} was consulted but its "
+        "lineage was never verified against this run's checkpoint, model, preprocessing and "
+        "cohort. Refusing to emit a calibrated result."
+    )
 
 
 def assert_calibrated_tau_used(resolution: Mapping[str, Any], tau_used: float) -> None:
@@ -947,6 +1031,9 @@ def build_report(
     """Run every diagnostic and assemble the single versioned JSON payload."""
 
     tau_accept = float(resolution["tau_accept"])
+    # Nothing is measured until the consulted artifact has been proved to
+    # describe this run.
+    assert_calibration_lineage_verified(resolution)
     assert_calibrated_tau_used(resolution, tau_accept)
 
     annotation = evaluate_annotation_headroom(
@@ -1025,6 +1112,7 @@ def build_report(
         "metric_space": str(metric_space),
         "num_classes": int(num_classes),
         "threshold_resolution": dict(resolution),
+        "calibration_lineage_verification": resolution.get("lineage_verification"),
         "metric_space_notes": {
             "slice_level": METRIC_SPACE_SLICE_PROXY,
             "volume_level": METRIC_SPACE_VOLUME_RESIZED,
@@ -1095,13 +1183,18 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         epilog=(
             "tau_accept precedence (highest first):\n"
             "  1. --tau_accept <float>      explicit command-line value\n"
-            "  2. --calibration <path>      schema-v1 artifact, read with load_calibration()\n"
+            "  2. --calibration <path>      schema-v2 artifact, read with load_calibration()\n"
             "  3. config audit.tau_accept   from the YAML config\n"
             "  4. 0.0                       documented fallback\n"
             "The resolved value and its source are echoed into the JSON as tau_accept and\n"
             "tau_accept_source. With --calibration, the artifact's neutral_margin must match\n"
             "the evaluation margin (hard error otherwise), and a contradicting --tau_accept is\n"
             "rejected unless --allow_tau_override is given.\n\n"
+            "A consulted --calibration artifact always has its lineage verified against this\n"
+            "run's bound checkpoint, live model, preprocessing recipe, metric semantics and\n"
+            "cohort before any tau is used or any calibrated number is emitted.\n"
+            "--allow_tau_override does not skip that check. An artifact with no lineage block\n"
+            "is refused.\n\n"
             "Every report is stamped evidence_class=\"diagnostic_only\": no independent test\n"
             "set exists for this project."
         ),
@@ -1122,12 +1215,44 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--calibration",
         default=None,
-        help="Path to a schema-v1 calibration artifact written by save_calibration().",
+        help="Path to a schema-v2 calibration artifact written by save_calibration().",
     )
     parser.add_argument(
         "--allow_tau_override",
         action="store_true",
         help="Permit --tau_accept to contradict a supplied --calibration artifact.",
+    )
+    parser.add_argument(
+        "--metric_contract",
+        default="foreground_dice_exclude_v1",
+        help=(
+            "Metric contract this evaluation runs under; part of the expected calibration "
+            "lineage (default: foreground_dice_exclude_v1)."
+        ),
+    )
+    parser.add_argument(
+        "--cohort_role",
+        default=COHORT_ROLE_CALIBRATION,
+        choices=list(COHORT_ROLES),
+        help=(
+            "Role the evaluated cohort plays. 'calibration' requires it to be the cohort the "
+            "threshold was calibrated on. 'independent_evaluation' requires "
+            "--authorized_cohort_signature and a patient-disjoint cohort."
+        ),
+    )
+    parser.add_argument(
+        "--authorized_cohort_signature",
+        default=None,
+        help=(
+            "Membership signature the evaluation protocol authorises for "
+            "--cohort_role independent_evaluation. Required for that role; an unnamed "
+            "replacement cohort is refused."
+        ),
+    )
+    parser.add_argument(
+        "--authorized_cohort_split",
+        default=None,
+        help="Optional split name the protocol authorises alongside --authorized_cohort_signature.",
     )
     parser.add_argument("--t_max", type=int, default=None)
     parser.add_argument("--neutral_margin", type=float, default=None)
@@ -1173,6 +1298,12 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
 def main(argv: Sequence[str] | None = None) -> dict[str, Any]:
     args = _parse_args(argv)
+    if str(args.metric_contract) != "foreground_dice_exclude_v1":
+        raise SystemExit(
+            f"Unsupported --metric_contract {args.metric_contract!r}; "
+            "audit_checkpoint computes foreground_dice_exclude_v1 slice proxy metrics. "
+            "Legacy audit-target contracts are rejected."
+        )
     if args.metric_space == METRIC_SPACE_VOLUME_NATIVE:
         raise SystemExit(
             "--metric_space volume_native is not available: the preprocessed mask was "
@@ -1194,7 +1325,17 @@ def main(argv: Sequence[str] | None = None) -> dict[str, Any]:
     validate_dataset_splits(config)
     device = resolve_device(args.device or config.get("device"))
     model = build_model_from_config(config, device)
-    load_checkpoint(args.checkpoint, model=model, map_location=device)
+    # Bind rather than merely load: the binding carries the file hash, the
+    # digest of the weights that are actually live after the load, the
+    # producing revision and the resolved model identity.  Those are the
+    # objects the expected calibration lineage is derived from -- never the
+    # artifact.
+    binding = bind_evaluation_checkpoint(
+        model,
+        [("checkpoint", args.checkpoint)],
+        map_location=device,
+        config=config,
+    )
     model.eval()
 
     split = str(config.get("val_split", "val"))
@@ -1217,14 +1358,41 @@ def main(argv: Sequence[str] | None = None) -> dict[str, Any]:
         if args.t_max is not None
         else audit_cfg.get("t_max", config.get("model", {}).get("max_turns", 3))
     )
+
+    # The expectation the calibration artifact is checked against is assembled
+    # from what this process built: the bound weights, the constructed
+    # validation dataset/loader, and the protocol's own metric semantics.  It
+    # is built unconditionally so it cannot be shaped by what the artifact
+    # happens to contain.
+    cohort_policy = CohortPolicy(
+        role=str(args.cohort_role),
+        authorized_membership_signature=args.authorized_cohort_signature,
+        authorized_split_name=args.authorized_cohort_split,
+    )
+    expected_lineage = build_expected_lineage(
+        binding=binding,
+        loader=val_loader,
+        split_name=split,
+        metric_contract=str(args.metric_contract),
+        metric_space=str(args.metric_space),
+        neutral_margin=neutral_margin,
+        t_max=t_max,
+        max_batches=args.max_val_batches,
+        batch_size=getattr(val_loader, "batch_size", None),
+    )
     resolution = resolve_tau_accept(
         cli_tau=args.tau_accept,
         calibration_path=args.calibration,
         config_audit=audit_cfg,
         neutral_margin=neutral_margin,
         allow_tau_override=bool(args.allow_tau_override),
+        expected_lineage=expected_lineage,
+        cohort_policy=cohort_policy,
     )
     tau_accept = float(resolution["tau_accept"])
+    # The weights that were bound must still be the weights about to be
+    # measured; a mutation between binding and use fails here.
+    verify_bound_state(model, binding, boundary="audit_checkpoint_evaluation")
 
     volume_block: dict[str, Any] | None = None
     if not args.skip_volume:
@@ -1265,6 +1433,9 @@ def main(argv: Sequence[str] | None = None) -> dict[str, Any]:
         volume=volume_block,
         disable_tqdm=bool(args.no_tqdm),
     )
+    payload["checkpoint_binding"] = binding.as_dict()
+    payload["expected_calibration_lineage"] = expected_lineage
+    payload["cohort_policy"] = cohort_policy.as_dict()
 
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -1295,6 +1466,17 @@ def _print_summary(payload: Mapping[str, Any], output: Path) -> None:
         f"tau={_fmt(payload['tau_accept'], '.5f')} src={payload['tau_accept_source']} "
         f"eps={_fmt(payload['neutral_margin'], '.5f')}"
     )
+    verification = payload.get("calibration_lineage_verification")
+    resolution = payload.get("threshold_resolution", {})
+    if resolution.get("calibration_path") is None:
+        print("calibration_lineage: no artifact consulted")
+    else:
+        cohort = (verification or {}).get("cohort", {})
+        print(
+            f"calibration_lineage: verified={(verification or {}).get('verified')} "
+            f"role={cohort.get('role')} disjoint={cohort.get('patients_disjoint')} "
+            f"producer_git_sha={(verification or {}).get('checkpoint_producing_git_sha')}"
+        )
     print(
         f"A0={_fmt(annotation.get('phase_a/a0_dice'))} "
         f"refine_gain={_fmt(annotation.get('phase_a/total_refinement_gain'), '+.5f')} "

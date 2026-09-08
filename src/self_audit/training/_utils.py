@@ -18,6 +18,16 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
 
+from ..provenance import (
+    CheckpointBinding,
+    checkpoint_producer,
+    producer_provenance_record,
+    resolve_model_identity,
+    state_digest,
+    verify_model_config,
+)
+from ..provenance import file_sha256 as _provenance_file_sha256
+
 
 # Keep the model constructor boundary explicit.  Training and data settings
 # live beside ``model`` in the YAML files and must not accidentally become
@@ -273,7 +283,10 @@ def build_patient_dataset(
     split: str,
     train: bool,
 ) -> torch.utils.data.Dataset:
-    from self_audit.data.acdc import ACDCDataset
+    try:
+        from self_audit.data.acdc import ACDCDataset
+    except ImportError:
+        from src.self_audit.data.acdc import ACDCDataset
 
     data_root = config.get("data_root", "preprocessed_data/ACDC")
     kwargs: dict[str, Any] = {
@@ -332,79 +345,79 @@ def validate_dataset_splits(config: Mapping[str, Any]) -> dict[str, Any]:
         raise ValueError(f"Unsupported dataset {dataset_name!r}")
     if dataset_name != "acdc":
         return {"dataset": dataset_name, "validated": False, "reason": "external dataset"}
-    from self_audit.data.acdc import discover_acdc_records, resolve_acdc_records
-    from self_audit.data.common import (
-        load_array,
-        patient_id_from_case_id,
-        patient_level_split,
-        to_depth_first,
-        validate_patient_split,
-    )
+    try:
+        from self_audit.data.acdc import discover_acdc_records, resolve_effective_acdc_splits
+        from self_audit.data.common import load_array, to_depth_first
+    except ImportError:
+        from src.self_audit.data.acdc import discover_acdc_records, resolve_effective_acdc_splits
+        from src.self_audit.data.common import load_array, to_depth_first
 
     data_root = config.get("data_root", "preprocessed_data/ACDC")
     records = discover_acdc_records(data_root)
-    discovered = {record.case_id for record in records}
     manifest_value = config.get("split_manifest")
-    split_names = {
-        "train": str(config.get("train_split", "train")),
-        "val": str(config.get("val_split", "val")),
-    }
-    if manifest_value is not None:
-        manifest_path = Path(str(manifest_value))
-        from self_audit.data.common import read_split_manifest
+    seed = int(config.get("seed", 42))
 
-        manifest = read_split_manifest(manifest_path)
-        manifest_cases = set().union(*(set(values) for values in manifest.values()))
-        missing = sorted(manifest_cases - discovered)
-        if missing:
-            raise ValueError(
-                f"Configured split manifest does not match discovered cases: missing={missing[:5]}"
-            )
-        selected_by_split: dict[str, list[str]] = {}
-        for name, requested in split_names.items():
-            normalized = {"training": "train", "validation": "val", "testing": "test"}.get(requested.lower(), requested.lower())
-            if normalized not in manifest:
-                raise ValueError(f"Configured split manifest has no {normalized!r} split: {manifest_path}")
-            selected_by_split[name] = list(manifest[normalized])
-        requested_test = str(config.get("test_split", "test"))
-        normalized_test = {"training": "train", "validation": "val", "testing": "test"}.get(requested_test.lower(), requested_test.lower())
-        if normalized_test in manifest:
-            selected_by_split["test"] = list(manifest[normalized_test])
-    else:
-        fallback = patient_level_split(sorted(discovered), seed=int(config.get("seed", 42)))
-        selected_by_split = {
-            name: fallback[{"train": "train", "val": "val"}[name]]
-            for name in split_names
-        }
-        selected_by_split["test"] = fallback["test"]
-    validate_patient_split(selected_by_split)
-    record_by_case = {record.case_id: record for record in records}
+    effective = resolve_effective_acdc_splits(
+        records,
+        split_manifest=manifest_value,
+        seed=seed,
+        train_split=str(config.get("train_split", "train")),
+        val_split=str(config.get("val_split", "val")),
+        test_split=str(config.get("test_split", "test")),
+    )
+
     configured_depth_axis = validate_depth_axis(config.get("depth_axis"))
     slice_counts: dict[str, int] = {}
-    for name, case_ids in selected_by_split.items():
+    for name, split_records in effective.splits.items():
         total_slices = 0
-        for case_id in case_ids:
-            record = record_by_case.get(case_id)
-            if record is None:
-                raise ValueError(f"Split references undiscovered ACDC case {case_id!r}")
+        for record in split_records:
             volume, _ = load_array(record.image_path)
             axis = configured_depth_axis
             if axis is None and record.source_format == "nifti":
                 axis = 2
             total_slices += int(to_depth_first(volume, depth_axis=axis).shape[0])
         slice_counts[name] = total_slices
+
     patient_counts = {
-        name: len({patient_id_from_case_id(case_id) for case_id in case_ids})
-        for name, case_ids in selected_by_split.items()
+        name: len({record.patient_id for record in split_records})
+        for name, split_records in effective.splits.items()
     }
+    case_counts = {
+        name: len(split_records)
+        for name, split_records in effective.splits.items()
+    }
+    effective_identities = {
+        name: [record.case_id for record in split_records]
+        for name, split_records in effective.splits.items()
+    }
+    effective_descriptors = {
+        name: [
+            {
+                "case_id": record.case_id,
+                "patient_id": record.patient_id,
+                "image_path": str(record.image_path),
+                "mask_path": str(record.mask_path),
+                "split": record.split,
+                "source_format": record.source_format,
+            }
+            for record in split_records
+        ]
+        for name, split_records in effective.splits.items()
+    }
+
     return {
         "dataset": dataset_name,
         "validated": True,
-        "cases": {name: len(case_ids) for name, case_ids in selected_by_split.items()},
+        "strategy": effective.strategy,
+        "split_signature": effective.signature,
+        "cases": case_counts,
         "patients": patient_counts,
         "slices": slice_counts,
-        "test_available": "test" in selected_by_split,
+        "test_available": "test" in effective.splits,
         "records": len(records),
+        "effective_identities": effective_identities,
+        "effective_records": effective_descriptors,
+        "content_hash_duplicate_detection": {"executed": False, "status": "deferred"},
     }
 
 
@@ -782,13 +795,21 @@ def save_checkpoint(
         raise ValueError("checkpoint config must be a mapping")
     if extra is not None and not isinstance(extra, Mapping):
         raise ValueError("checkpoint extra must be a mapping")
+    model_state = _cpu_state_dict(model.state_dict())
+    # The producing revision and the digest of the bytes actually written are
+    # stamped here, at save time.  Nothing downstream can reconstruct them
+    # later without guessing, and a guess is exactly what W3 forbids.
+    provenance = producer_provenance_record()
+    provenance["state_digest"] = state_digest(model_state)
+    provenance["model_identity"] = resolve_model_identity(model)
     payload: dict[str, Any] = {
         "format_version": CHECKPOINT_FORMAT_VERSION,
-        "model": _cpu_state_dict(model.state_dict()),
+        "model": model_state,
         "epoch": epoch,
         "global_step": global_step,
         "optimizer_step": optimizer_step,
         "rng_state": _rng_state(),
+        "provenance": provenance,
     }
     if optimizer is not None:
         payload["optimizer"] = optimizer.state_dict()
@@ -918,6 +939,187 @@ def load_checkpoint(
             torch.cuda.set_rng_state_all([value.cpu() for value in rng["cuda"]])
     normalized["model"] = model_state
     return normalized
+
+
+def _select_checkpoint_candidate(candidates: Iterable[tuple[str, Any]]) -> tuple[int, str, Path, list[str]]:
+    """Pick the first existing ``(role, path)`` pair, or refuse.
+
+    Falling back to a later candidate is a *declared* choice reported through
+    the index, never a silent substitution, and no candidate at all is an
+    error rather than an evaluation of whatever weights happened to be live.
+    """
+
+    considered: list[str] = []
+    selected: tuple[int, str, Path] | None = None
+    for index, (role, raw_path) in enumerate(candidates):
+        path = Path(raw_path)
+        considered.append(f"{role}:{path}")
+        if selected is None and path.is_file():
+            selected = (index, str(role), path)
+    if selected is None:
+        raise FileNotFoundError(
+            "No evaluation checkpoint available; considered: " + ", ".join(considered)
+        )
+    index, role, path = selected
+    return index, role, path, considered
+
+
+def _checkpoint_binding_from_payload(
+    model: nn.Module,
+    payload: Mapping[str, Any],
+    *,
+    path: Path,
+    role: str,
+    config: Mapping[str, Any] | None,
+    fallback_used: bool,
+    considered: list[str],
+    restored: tuple[str, ...],
+) -> CheckpointBinding:
+    """Describe the binding between a checkpoint payload and the live model.
+
+    The live digest must equal the digest of the state read off disk; that
+    equality, not the file hash, is what proves the measured weights are the
+    selected weights.  A payload whose recorded digest disagrees with its own
+    tensors is refused as tampered.
+    """
+
+    identity = verify_model_config(model, config)
+    file_digest = state_digest(payload["model"])
+    live_digest = state_digest(model)
+    if live_digest != file_digest:
+        raise ValueError(
+            f"Checkpoint {path} did not bind: live model state digest {live_digest} "
+            f"differs from checkpoint state digest {file_digest}"
+        )
+    producer = checkpoint_producer(payload)
+    recorded = producer.get("producer_state_digest")
+    if recorded is not None and str(recorded) != file_digest:
+        raise ValueError(
+            f"Checkpoint {path} carries state digest {recorded} but its stored tensors "
+            f"digest to {file_digest}; refusing to bind a tampered checkpoint"
+        )
+    return CheckpointBinding(
+        path=path,
+        role=role,
+        checkpoint_sha256=_provenance_file_sha256(path),
+        state_digest=live_digest,
+        file_state_digest=file_digest,
+        producer=producer,
+        model_identity=identity,
+        epoch=_checkpoint_counter(payload, "epoch"),
+        global_step=_checkpoint_counter(payload, "global_step"),
+        fallback_used=fallback_used,
+        considered=tuple(considered),
+        restored=restored,
+    )
+
+
+def bind_evaluation_checkpoint(
+    model: nn.Module,
+    candidates: Iterable[tuple[str, Any]],
+    *,
+    map_location: str | torch.device | None = "cpu",
+    config: Mapping[str, Any] | None = None,
+    strict: bool = True,
+) -> CheckpointBinding:
+    """Load the first available candidate and bind the evaluated state to it.
+
+    ``candidates`` is an ordered sequence of ``(role, path)`` pairs, typically
+    ``[("best", .../phase_c_best.pt), ("last", .../phase_c_last.pt)]``.  The
+    first existing file wins; using the later one is a *declared* fallback
+    (``fallback_used``), not a silent substitution.  With no candidate present
+    the caller gets ``FileNotFoundError`` rather than an evaluation of whatever
+    weights happened to be live.
+
+    This is an evaluation-only load: the optimizer, scheduler, scaler and RNG
+    state in the checkpoint are deliberately **not** restored, so binding a
+    checkpoint cannot perturb the process's random stream.
+
+    After loading, the digest of the live model is compared with the digest of
+    the state read off disk.  They must be equal -- that equality, not the file
+    hash, is what proves the measured weights are the selected weights.
+    """
+
+    index, role, path, considered = _select_checkpoint_candidate(candidates)
+    payload = load_checkpoint(
+        path,
+        model=model,
+        map_location=map_location,
+        strict=strict,
+        restore_rng=False,
+    )
+    return _checkpoint_binding_from_payload(
+        model,
+        payload,
+        path=path,
+        role=role,
+        config=config,
+        fallback_used=index > 0,
+        considered=considered,
+        restored=("model",),
+    )
+
+
+def bind_existing_evaluation_state(
+    model: nn.Module,
+    candidates: Iterable[tuple[str, Any]],
+    *,
+    map_location: str | torch.device | None = "cpu",
+    config: Mapping[str, Any] | None = None,
+) -> CheckpointBinding:
+    """Bind the checkpoint the live model *already is*, loading nothing.
+
+    Used where a checkpoint's identity is needed but overwriting the live
+    weights would change what the process is doing -- notably before Phase C
+    starts, where loading a checkpoint would discard the Phase A/B weights the
+    single-process pipeline is carrying.  The live state must already equal the
+    checkpoint's; if it does not, that is an error the operator has to resolve,
+    not something to paper over by loading.
+
+    ``restored`` is empty: no tensor, optimizer, scheduler or RNG state is
+    touched.
+    """
+
+    index, role, path, considered = _select_checkpoint_candidate(candidates)
+    payload = load_checkpoint(path, map_location=map_location, restore_rng=False)
+    live_digest = state_digest(model)
+    file_digest = state_digest(payload["model"])
+    if live_digest != file_digest:
+        raise ValueError(
+            f"Live model state does not match checkpoint {path}: live digest {live_digest} "
+            f"differs from checkpoint digest {file_digest}. Resume from that checkpoint, or "
+            "drop the option that requires the run to already be at those weights; this "
+            "function will not overwrite the live weights to force a match."
+        )
+    return _checkpoint_binding_from_payload(
+        model,
+        payload,
+        path=path,
+        role=role,
+        config=config,
+        fallback_used=index > 0,
+        considered=considered,
+        restored=(),
+    )
+
+
+def verify_bound_state(model: nn.Module, binding: CheckpointBinding, *, boundary: str) -> str:
+    """Re-check at a consumer boundary that the bound state is still live.
+
+    Called before the cache collector, before calibration and before each
+    diagnostic.  Any mutation of the module between binding and use -- a stray
+    optimizer step, a reload, a dtype cast -- changes the digest and fails
+    here instead of silently producing a measurement of something else.
+    """
+
+    observed = state_digest(model)
+    if observed != binding.state_digest:
+        raise ValueError(
+            f"Model state changed after checkpoint binding at boundary {boundary!r}: "
+            f"expected digest {binding.state_digest}, observed {observed} "
+            f"(bound checkpoint: {binding.path})"
+        )
+    return observed
 
 
 def checkpoint_progress(payload: Mapping[str, Any]) -> tuple[int, int, int]:
@@ -1108,4 +1310,3 @@ def setup_wandb_logger(
         config=config,
         mode=mode,
     )
-

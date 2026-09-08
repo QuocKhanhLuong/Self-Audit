@@ -18,10 +18,12 @@ from __future__ import annotations
 
 import argparse
 from collections.abc import Iterable, Mapping
+import math
 from pathlib import Path
 import sys
 from typing import Any
 
+import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -32,8 +34,23 @@ for path in (ROOT, SRC):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from self_audit.audit.semantics import METRIC_SPACE_SLICE_PROXY, resolve_empty_policy
+from self_audit.audit.semantics import (
+    AUDIT_TARGET_LEGACY_ONE_V1,
+    FOREGROUND_DICE_EXCLUDE_V1,
+    METRIC_SPACE_SLICE_PROXY,
+    resolve_empty_policy,
+)
 from self_audit.audit.targets import build_transition_targets, multiclass_dice
+from self_audit.evaluation.contracts import (
+    ContractMismatchError,
+    FOREGROUND_DICE_EXCLUDE_V1_CONTRACT,
+    MetricContract,
+    compute_dice_from_stats,
+    compute_sufficient_statistics,
+    resolve_metric_contract,
+    score_state,
+)
+from self_audit.evaluation.threshold import CACHE_SCHEMA_VERSION
 from self_audit.evaluation.metrics import (
     acceptance_metrics,
     slice_proxy_dice,
@@ -566,6 +583,7 @@ def collect_validation_transition_cache(
     t_max: int = 3,
     disable_tqdm: bool = False,
     empty_policy: str | None = None,
+    metric_contract: MetricContract | str | None = None,
 ) -> dict[str, Any]:
     """Cache full validation transitions for threshold calibration.
 
@@ -573,25 +591,58 @@ def collect_validation_transition_cache(
     trajectory.  The saved cache contains GT-derived deltas for calibration;
     it is never consumed by deployable inference.
 
-    ``initial_dice`` is metric space
-    :data:`~self_audit.audit.semantics.METRIC_SPACE_SLICE_PROXY`.  Slices whose
-    initial Dice is ``nan`` under the ``"exclude"`` empty-class policy (no
-    foreground in either prediction or target, so the slice carries no
-    annotation signal) are **dropped from the cache along with their
-    transitions**, and the count is reported as
-    ``excluded_empty_slice_count``.  Keeping them would make
-    ``evaluate_threshold``'s ``final_macro_dice`` ``nan`` for every grid point
-    -- it aggregates with a plain ``mean`` -- which would make
-    ``select_threshold`` return an arbitrary row.
+    Metric contract:
+    Transitions are evaluated under the specified ``metric_contract``
+    (defaults to ``foreground_dice_exclude_v1``). ``q_previous`` and ``q_candidate``
+    are recorded alongside ``actual_delta_dice`` under the same metric contract.
+    Historical training targets (``multiclass_dice`` with ``legacy_one``) are
+    recorded in ``legacy_actual_delta_dice``.
+
+    Blank trajectory preservation:
+    Blank A0 slices are NEVER dropped: all trajectories are preserved so that
+    threshold replay can monitor blank slices and detect blank-to-hallucination
+    regressions. Sufficient statistics (``tp_initial``, ``fp_initial``, ``fn_initial``,
+    ``tp_candidate``, ``fp_candidate``, ``fn_candidate``) are recorded per sample
+    and per transition for exact volumetric recomputation.
     """
 
     model.eval()
+    if metric_contract is not None:
+        contract = resolve_metric_contract(metric_contract)
+    elif empty_policy is not None:
+        policy = resolve_empty_policy(empty_policy)
+        contract = MetricContract(
+            name=f"foreground_dice_{policy}_v1",
+            empty_policy=policy,
+        )
+    else:
+        contract = FOREGROUND_DICE_EXCLUDE_V1_CONTRACT
+
+    if contract.metric_space != METRIC_SPACE_SLICE_PROXY:
+        raise ContractMismatchError(
+            f"collect_validation_transition_cache operates on 2-D slice proxies and rejects "
+            f"volume contract {contract.name!r} with metric_space={contract.metric_space!r}. "
+            f"Per-slice Q values must never be labeled volume scores."
+        )
+
     initial_values: list[torch.Tensor] = []
+    tp_initial_values: list[torch.Tensor] = []
+    fp_initial_values: list[torch.Tensor] = []
+    fn_initial_values: list[torch.Tensor] = []
+
     quality_values: list[torch.Tensor] = []
     actual_values: list[torch.Tensor] = []
+    legacy_actual_values: list[torch.Tensor] = []
     active_values: list[torch.Tensor] = []
-    excluded_slices = 0
-    policy = resolve_empty_policy(empty_policy)
+    q_prev_values: list[torch.Tensor] = []
+    q_cand_values: list[torch.Tensor] = []
+    tp_cand_values: list[torch.Tensor] = []
+    fp_cand_values: list[torch.Tensor] = []
+    fn_cand_values: list[torch.Tensor] = []
+    all_case_ids: list[str] = []
+
+    num_classes = max(contract.classes) + 1
+
     pbar = tqdm(loader, desc="Caching transitions", disable=disable_tqdm, leave=False)
     for raw_batch in pbar:
         batch = move_batch(raw_batch, device)
@@ -604,15 +655,56 @@ def collect_validation_transition_cache(
         initial = output.get("initial_logits")
         if not torch.is_tensor(initial):
             initial = extract_initial_logits(output)
-        batch_initial = _foreground_dice_per_sample(
-            initial, batch["mask"], empty_policy=policy
-        ).detach().cpu()
-        keep = torch.isfinite(batch_initial)
-        excluded_slices += int((~keep).sum())
-        initial_values.append(batch_initial[keep])
+
+        b_size = int(batch["image"].shape[0])
+        init_preds = initial.argmax(dim=1).detach().cpu().numpy()
+        gt_masks = batch["mask"].detach().cpu().numpy()
+
+        batch_cids: list[str] | None = None
+        for key in ("case_id", "subject_id", "volume_id"):
+            if key in batch:
+                raw_c = batch[key]
+                batch_cids = [str(c.item()) if torch.is_tensor(c) else str(c) for c in raw_c]
+                break
+        if batch_cids is not None:
+            all_case_ids.extend(batch_cids)
+
+        batch_init_scores: list[float] = []
+        batch_tp_init: list[list[int]] = []
+        batch_fp_init: list[list[int]] = []
+        batch_fn_init: list[list[int]] = []
+        for i in range(b_size):
+            stats = compute_sufficient_statistics(
+                init_preds[i], gt_masks[i], classes=contract.classes
+            )
+            _, macro = compute_dice_from_stats(stats, contract)
+            batch_init_scores.append(macro)
+            tp_row = [0] * num_classes
+            fp_row = [0] * num_classes
+            fn_row = [0] * num_classes
+            for c in contract.classes:
+                tp_row[c] = stats.tp.get(c, 0)
+                fp_row[c] = stats.fp.get(c, 0)
+                fn_row[c] = stats.fn.get(c, 0)
+            batch_tp_init.append(tp_row)
+            batch_fp_init.append(fp_row)
+            batch_fn_init.append(fn_row)
+
+        initial_values.append(torch.as_tensor(batch_init_scores, dtype=torch.float32))
+        tp_initial_values.append(torch.as_tensor(batch_tp_init, dtype=torch.int64))
+        fp_initial_values.append(torch.as_tensor(batch_fp_init, dtype=torch.int64))
+        fn_initial_values.append(torch.as_tensor(batch_fn_init, dtype=torch.int64))
+
         batch_quality: list[torch.Tensor] = []
         batch_actual: list[torch.Tensor] = []
+        batch_legacy_actual: list[torch.Tensor] = []
         batch_active: list[torch.Tensor] = []
+        batch_q_prev: list[torch.Tensor] = []
+        batch_q_cand: list[torch.Tensor] = []
+        batch_tp_cand: list[torch.Tensor] = []
+        batch_fp_cand: list[torch.Tensor] = []
+        batch_fn_cand: list[torch.Tensor] = []
+
         for index, (previous, candidate, audit_output) in enumerate(
             zip(output.get("transition_previous", []), output.get("transition_candidates", []), output.get("audits", []))
         ):
@@ -620,44 +712,126 @@ def collect_validation_transition_cache(
                 output,
                 audit_output,
                 index,
-                batch_size=int(batch["image"].shape[0]),
+                batch_size=b_size,
                 device=device,
             )
             delta_q = _audit_output_tensor(audit_output, "delta_q", "global_delta_q", "delta_quality")
             if delta_q is None:
                 raise ValueError("Auditor output lacks delta_q for threshold cache")
-            targets = build_transition_targets(previous.detach(), candidate.detach(), batch["mask"])
-            batch_quality.append(delta_q.detach().reshape(-1).cpu())
-            batch_actual.append(targets.delta_dice.detach().reshape(-1).cpu())
+
+            prev_labels = previous.detach().argmax(dim=1).cpu().numpy()
+            cand_labels = candidate.detach().argmax(dim=1).cpu().numpy()
+
+            legacy_targets = build_transition_targets(previous.detach(), candidate.detach(), batch["mask"])
+            batch_legacy_actual.append(legacy_targets.delta_dice.detach().cpu().float().reshape(-1))
+
+            turn_deltas: list[float] = []
+            turn_q_prev: list[float] = []
+            turn_q_cand: list[float] = []
+            turn_tp_cand: list[list[int]] = []
+            turn_fp_cand: list[list[int]] = []
+            turn_fn_cand: list[list[int]] = []
+
+            for i in range(b_size):
+                prev_stats = compute_sufficient_statistics(
+                    prev_labels[i], gt_masks[i], classes=contract.classes
+                )
+                cand_stats = compute_sufficient_statistics(
+                    cand_labels[i], gt_masks[i], classes=contract.classes
+                )
+                _, q_p = compute_dice_from_stats(prev_stats, contract)
+                _, q_c = compute_dice_from_stats(cand_stats, contract)
+                d = float(q_c - q_p) if np.isfinite(q_c) and np.isfinite(q_p) else float("nan")
+
+                turn_q_prev.append(q_p)
+                turn_q_cand.append(q_c)
+                turn_deltas.append(d)
+
+                tp_row = [0] * num_classes
+                fp_row = [0] * num_classes
+                fn_row = [0] * num_classes
+                for c in contract.classes:
+                    tp_row[c] = cand_stats.tp.get(c, 0)
+                    fp_row[c] = cand_stats.fp.get(c, 0)
+                    fn_row[c] = cand_stats.fn.get(c, 0)
+                turn_tp_cand.append(tp_row)
+                turn_fp_cand.append(fp_row)
+                turn_fn_cand.append(fn_row)
+
+            batch_quality.append(delta_q.detach().reshape(-1).cpu().float())
+            batch_actual.append(torch.as_tensor(turn_deltas, dtype=torch.float32))
             batch_active.append(active_mask.detach().cpu())
+            batch_q_prev.append(torch.as_tensor(turn_q_prev, dtype=torch.float32))
+            batch_q_cand.append(torch.as_tensor(turn_q_cand, dtype=torch.float32))
+            batch_tp_cand.append(torch.as_tensor(turn_tp_cand, dtype=torch.int64))
+            batch_fp_cand.append(torch.as_tensor(turn_fp_cand, dtype=torch.int64))
+            batch_fn_cand.append(torch.as_tensor(turn_fn_cand, dtype=torch.int64))
+
         if batch_quality:
-            quality_values.append(torch.stack(batch_quality, dim=1)[keep])
-            actual_values.append(torch.stack(batch_actual, dim=1)[keep])
-            active_values.append(torch.stack(batch_active, dim=1)[keep])
+            quality_values.append(torch.stack(batch_quality, dim=1))
+            actual_values.append(torch.stack(batch_actual, dim=1))
+            legacy_actual_values.append(torch.stack(batch_legacy_actual, dim=1))
+            active_values.append(torch.stack(batch_active, dim=1))
+            q_prev_values.append(torch.stack(batch_q_prev, dim=1))
+            q_cand_values.append(torch.stack(batch_q_cand, dim=1))
+            tp_cand_values.append(torch.stack(batch_tp_cand, dim=1))
+            fp_cand_values.append(torch.stack(batch_fp_cand, dim=1))
+            fn_cand_values.append(torch.stack(batch_fn_cand, dim=1))
+
     if not initial_values:
         raise ValueError("Cannot cache threshold transitions from an empty validation loader")
+
     provenance = {
-        "metric_space": METRIC_SPACE_SLICE_PROXY,
-        "empty_class_policy": policy,
-        "excluded_empty_slice_count": int(excluded_slices),
+        "cache_schema_version": CACHE_SCHEMA_VERSION,
+        "metric_space": contract.metric_space,
+        "empty_class_policy": contract.empty_policy,
+        "metric_contract": contract.name,
+        "metric_contract_version": contract.version,
+        "neutral_margin": contract.neutral_margin,
+        "excluded_empty_slice_count": 0,
     }
+
+    size = int(torch.cat(initial_values).shape[0])
     if not quality_values:
-        size = int(torch.cat(initial_values).shape[0])
         empty = torch.empty((size, 0), dtype=torch.float32)
-        return {
+        empty_stats = torch.empty((size, 0, num_classes), dtype=torch.int64)
+        result = {
             "initial_dice": torch.cat(initial_values),
             "delta_q": empty,
             "actual_delta_dice": empty,
+            "legacy_actual_delta_dice": empty,
             "active_mask": empty.bool(),
+            "q_previous": empty,
+            "q_candidate": empty,
+            "tp_initial": torch.cat(tp_initial_values),
+            "fp_initial": torch.cat(fp_initial_values),
+            "fn_initial": torch.cat(fn_initial_values),
+            "tp_candidate": empty_stats,
+            "fp_candidate": empty_stats,
+            "fn_candidate": empty_stats,
             **provenance,
         }
-    return {
-        "initial_dice": torch.cat(initial_values),
-        "delta_q": torch.cat(quality_values),
-        "actual_delta_dice": torch.cat(actual_values),
-        "active_mask": torch.cat(active_values),
-        **provenance,
-    }
+    else:
+        result = {
+            "initial_dice": torch.cat(initial_values),
+            "delta_q": torch.cat(quality_values),
+            "actual_delta_dice": torch.cat(actual_values),
+            "legacy_actual_delta_dice": torch.cat(legacy_actual_values),
+            "active_mask": torch.cat(active_values),
+            "q_previous": torch.cat(q_prev_values),
+            "q_candidate": torch.cat(q_cand_values),
+            "tp_initial": torch.cat(tp_initial_values),
+            "fp_initial": torch.cat(fp_initial_values),
+            "fn_initial": torch.cat(fn_initial_values),
+            "tp_candidate": torch.cat(tp_cand_values),
+            "fp_candidate": torch.cat(fp_cand_values),
+            "fn_candidate": torch.cat(fn_cand_values),
+            **provenance,
+        }
+
+    if all_case_ids and len(all_case_ids) == size:
+        result["case_ids"] = all_case_ids
+    return result
 
 
 def joint_step(
