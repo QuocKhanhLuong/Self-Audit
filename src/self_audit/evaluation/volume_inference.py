@@ -738,6 +738,9 @@ def evaluate_volume_native(
     num_classes: int = 4,
     class_names: Mapping[int, str] | None = None,
     shape_order: str = "hwz",
+    affine: Any | None = None,
+    target_affine: Any | None = None,
+    strict_physical: bool = False,
 ) -> dict[str, Any]:
     """Per-class and macro Dice at **native acquisition geometry**.
 
@@ -753,8 +756,12 @@ def evaluate_volume_native(
     already match the native ground-truth shape.
 
     ``spacing`` is an optional real physical ``(z, y, x)`` voxel size in mm.
-    HD95/ASSD keys appear **only** when it is supplied.  There is no 1.0 mm
-    default: without real spacing the surface metrics are omitted, not guessed.
+    In unverified paths without verified continuous 3D coordinate transform
+    provenance, native-mm surface distance metrics (HD95/ASSD) are suppressed
+    to prevent false physical millimeter claims from discrete inverse-resizing.
+    ``strict_physical=True`` enforces fail-closed validation and raises
+    ``ValueError`` (DEFERRED pending raw NIfTI transform chain).
+    Malformed, single-sided, or spacing-inconsistent affines are rejected.
     """
 
     if native_ground_truth_zhw is None:
@@ -782,6 +789,59 @@ def evaluate_volume_native(
             f"Native prediction/ground-truth shape mismatch: {prediction.shape} vs {target.shape}"
         )
 
+    # Validate physical spacing if provided
+    physical = _resolve_physical_spacing(spacing, target.ndim) if spacing is not None else None
+
+    # Geometry and affine validation — fail closed against attempted bypasses
+    if affine is not None or target_affine is not None:
+        if affine is None:
+            raise ValueError(
+                "Single target_affine supplied without paired affine; cannot establish transform alignment."
+            )
+        if target_affine is None:
+            raise ValueError(
+                "Single affine supplied without paired target_affine; cannot establish transform alignment."
+            )
+
+        aff_arr = np.asarray(affine, dtype=np.float64)
+        tgt_aff_arr = np.asarray(target_affine, dtype=np.float64)
+
+        if aff_arr.shape != (4, 4):
+            raise ValueError(f"affine must be a 4x4 matrix, got shape {aff_arr.shape}")
+        if tgt_aff_arr.shape != (4, 4):
+            raise ValueError(f"target_affine must be a 4x4 matrix, got shape {tgt_aff_arr.shape}")
+        if not np.all(np.isfinite(aff_arr)) or not np.all(np.isfinite(tgt_aff_arr)):
+            raise ValueError("affine matrices must contain only finite numbers")
+
+        if not np.allclose(aff_arr, tgt_aff_arr, atol=1e-3):
+            raise ValueError(
+                "Image/prediction affine does not match target ground-truth affine in native evaluation."
+            )
+
+        # Non-axis-aligned / sheared grids
+        spatial_block = aff_arr[:3, :3]
+        diag_block = np.diag(np.diag(spatial_block))
+        if not np.allclose(spatial_block, diag_block, atol=1e-3):
+            raise ValueError(
+                "Non-axis-aligned or sheared physical grids are not supported by spacing-only "
+                "distance transforms; native evaluation rejected/deferred."
+            )
+
+        # Spacing-affine consistency check
+        if physical is not None:
+            col_norms = np.linalg.norm(spatial_block, axis=0)
+            if not np.allclose(sorted(physical), sorted(col_norms), atol=1e-2):
+                raise ValueError(
+                    f"Supplied spacing {physical} is inconsistent with affine voxel dimensions {tuple(col_norms)}"
+                )
+
+    if strict_physical:
+        raise ValueError(
+            "strict_physical evaluation is DEFERRED pending real transform/grid provenance "
+            "(NIfTI transform chain / continuous 3D coordinate resampling); "
+            "cannot emit verified native-mm metrics from discrete inverse-resize."
+        )
+
     policy = resolve_empty_policy(empty_policy)
     names = resolve_class_names(class_names, num_classes=num_classes)
     block = dice_block(
@@ -795,22 +855,35 @@ def evaluate_volume_native(
     )
     block["native_shape"] = [int(v) for v in target.shape]
     block["ground_truth_source"] = "caller_supplied_native"
+    block["native_reconstruction_verification"] = "DEFERRED"
+    block["native_mm_available"] = False
+    block["native_mm_note"] = (
+        "Native-mm surface metrics (HD95, ASSD) are suppressed because native physical "
+        "alignment has not been verified from raw transform provenance. Discrete in-plane "
+        "inverse resize on labels cannot establish physical millimeter precision."
+    )
+    block["spacing_known"] = False
+    if physical is not None:
+        block["declared_spacing"] = list(physical)
 
-    physical = _resolve_physical_spacing(spacing, target.ndim)
-    if physical is None:
-        block["spacing_known"] = False
-    else:
-        block["spacing_known"] = True
-        block["spacing"] = list(physical)
-        hd95: dict[int, float] = {}
-        assd: dict[int, float] = {}
-        for cls in range(1, int(num_classes)):
-            hd95[cls], assd[cls] = _hd95_assd(prediction == cls, target == cls, physical)
-        block["per_class_hd95_mm"] = {int(c): float(v) for c, v in hd95.items()}
-        block["per_class_assd_mm"] = {int(c): float(v) for c, v in assd.items()}
-        block["per_class_hd95_mm_named"] = {names[c]: float(v) for c, v in hd95.items()}
-        block["hd95_mm"] = macro_mean(list(hd95.values()))
-        block["assd_mm"] = macro_mean(list(assd.values()))
+    block["geometry_verification"] = {
+        "status": "DEFERRED",
+        "checked": {
+            "shape_compatible": bool(prediction.shape == target.shape),
+            "spacing_provided": bool(physical is not None),
+            "affine_provided": bool(affine is not None and target_affine is not None),
+            "affine_matched": bool(
+                affine is not None
+                and target_affine is not None
+                and np.allclose(np.asarray(affine), np.asarray(target_affine), atol=1e-3)
+            ),
+        },
+        "verified_evidence": False,
+        "limitations": [
+            "In-plane nearest-neighbor resize used without continuous coordinate resampling",
+            "Physical/native alignment verification DEFERRED pending raw acquisition NIfTI header provenance",
+        ],
+    }
     return block
 
 

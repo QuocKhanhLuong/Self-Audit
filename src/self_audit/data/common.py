@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from collections import OrderedDict
@@ -18,6 +19,16 @@ from torch.utils.data import Dataset
 CLASS_NAMES = ("Background", "RV", "MYO", "LV")
 NUM_CLASSES = 4
 PATIENT_RE = re.compile(r"^(patient[^_\-]+)", re.IGNORECASE)
+CANONICAL_SPLITS = ("train", "val", "test")
+SUPPORTED_SPLIT_ALIASES: dict[str, str] = {
+    "train": "train",
+    "training": "train",
+    "val": "val",
+    "validation": "val",
+    "valid": "val",
+    "test": "test",
+    "testing": "test",
+}
 SPLIT_ALIASES = {
     "train": ("train", "training"),
     "training": ("training", "train"),
@@ -26,6 +37,40 @@ SPLIT_ALIASES = {
     "test": ("test", "testing"),
     "testing": ("testing", "test"),
 }
+
+
+def canonicalize_split_alias(alias: str | None) -> str | None:
+    """Map a split alias to canonical name ('train', 'val', 'test') or raise ValueError."""
+    if alias is None:
+        return None
+    clean = str(alias).strip().lower()
+    if not clean:
+        return ""
+    if clean in SUPPORTED_SPLIT_ALIASES:
+        return SUPPORTED_SPLIT_ALIASES[clean]
+    raise ValueError(
+        f"Unsupported or ambiguous split alias: {alias!r}. "
+        f"Supported aliases: {sorted(SUPPORTED_SPLIT_ALIASES.keys())}"
+    )
+
+
+def compute_split_signature(splits: Mapping[str, Sequence[VolumeRecord | str]]) -> str:
+    """Deterministic SHA-256 signature for split record memberships.
+
+    Independent of discovery order, dictionary insertion order, or record file ordering.
+    """
+    parts: list[str] = []
+    for split_name in sorted(splits.keys()):
+        case_ids: list[str] = []
+        for item in splits[split_name]:
+            if isinstance(item, VolumeRecord):
+                case_ids.append(item.case_id)
+            elif isinstance(item, str):
+                case_ids.append(item)
+            else:
+                case_ids.append(getattr(item, "case_id", str(item)))
+        parts.append(f"{split_name}=" + ",".join(sorted(case_ids)))
+    return hashlib.sha256(";".join(parts).encode("utf-8")).hexdigest()
 
 
 @dataclass(frozen=True)
@@ -265,28 +310,165 @@ def patient_level_split(
     return result
 
 
+SUMMARY_METADATA_KEYS = frozenset({
+    "n_patients",
+    "num_patients",
+    "n_volumes",
+    "num_volumes",
+    "dataset",
+    "schema_version",
+    "split_type",
+    "split_level",
+    "patient_id_rule",
+    "seed",
+    "train_ratio",
+    "train_fraction",
+    "val_ratio",
+    "val_fraction",
+    "test_ratio",
+    "test_fraction",
+    "source_data_dir",
+    "created_at",
+    "metadata",
+    "provenance",
+    "train_patients",
+    "val_patients",
+    "test_patients",
+    "training_patients",
+    "validation_patients",
+    "testing_patients",
+})
+
+
 def read_split_manifest(path: str | Path) -> dict[str, list[str]]:
     path = Path(path)
     if not path.exists():
         raise FileNotFoundError(f"Split manifest does not exist: {path}")
     with open(path, encoding="utf-8") as handle:
-        payload = json.load(handle)
+        try:
+            payload = json.load(handle)
+        except Exception as exc:
+            raise ValueError(f"Failed to parse JSON split manifest at {path}: {exc}") from exc
+    if not isinstance(payload, Mapping):
+        raise ValueError(f"Split manifest must be a JSON object/mapping, got {type(payload).__name__}")
+
+    # Validate that any explicit split-like key belongs to supported split aliases
+    for key in payload:
+        if key.lower() in SUMMARY_METADATA_KEYS:
+            continue
+        if key.lower() in SUPPORTED_SPLIT_ALIASES:
+            continue
+        if key.lower() == "splits":
+            continue
+        recognized_suffix = False
+        for suffix in ("_cases", "_volumes", "_patients", "_split", "_splits"):
+            if key.lower().endswith(suffix):
+                recognized_suffix = True
+                prefix = key[: -len(suffix)]
+                if prefix.lower() not in SUPPORTED_SPLIT_ALIASES:
+                    raise ValueError(f"Manifest contains unrecognized split key: {key!r}")
+                break
+        if not recognized_suffix and isinstance(payload[key], (list, tuple, dict)):
+            raise ValueError(f"Manifest contains unrecognized split key: {key!r}")
+    if isinstance(payload.get("splits"), dict):
+        for split_key in payload["splits"]:
+            if str(split_key).lower() not in SUPPORTED_SPLIT_ALIASES:
+                raise ValueError(f"Manifest contains unrecognized nested split: {split_key!r}")
+
     result: dict[str, list[str]] = {}
-    for split, aliases in (("train", ("train", "training")), ("val", ("val", "validation")), ("test", ("test", "testing"))):
-        values: list[str] = []
+    for split, aliases in (
+        ("train", ("train", "training")),
+        ("val", ("val", "validation", "valid")),
+        ("test", ("test", "testing")),
+    ):
+        found_representations: dict[str, list[str]] = {}
         for alias in aliases:
-            direct = payload.get(f"{alias}_cases") or payload.get(f"{alias}_volumes")
-            if direct:
-                values = [_strip_known_suffixes(Path(str(item)).name) for item in direct]
-                break
+            # Check direct top-level case/volume keys
+            for suffix in ("_cases", "_volumes"):
+                direct_key = f"{alias}{suffix}"
+                direct_val = payload.get(direct_key)
+                if direct_val is not None and isinstance(direct_val, (list, tuple)):
+                    seen_rep: set[str] = set()
+                    parsed_rep: list[str] = []
+                    for item in direct_val:
+                        cid = _strip_known_suffixes(Path(str(item)).name)
+                        if cid in seen_rep:
+                            raise ValueError(f"Duplicate case {cid!r} in manifest split {split!r} ({direct_key})")
+                        seen_rep.add(cid)
+                        parsed_rep.append(cid)
+                    found_representations[direct_key] = parsed_rep
+
+            # Check direct alias key (e.g. payload["train"])
+            direct_split = payload.get(alias)
+            if isinstance(direct_split, (list, tuple)):
+                seen_rep = set()
+                parsed_rep = []
+                for item in direct_split:
+                    cid = _strip_known_suffixes(Path(str(item)).name)
+                    if cid in seen_rep:
+                        raise ValueError(f"Duplicate case {cid!r} in manifest split {split!r} ({alias})")
+                    seen_rep.add(cid)
+                    parsed_rep.append(cid)
+                found_representations[alias] = parsed_rep
+
+            # Check nested splits structure
             nested = payload.get("splits", {}).get(alias, {}) if isinstance(payload.get("splits"), dict) else {}
-            if isinstance(nested, dict) and (nested.get("cases") or nested.get("volumes")):
-                values = [_strip_known_suffixes(Path(str(item)).name) for item in (nested.get("cases") or nested.get("volumes"))]
-                break
-        if values:
-            result[split] = sorted(set(values))
+            if isinstance(nested, dict):
+                for suffix in ("cases", "volumes"):
+                    n_val = nested.get(suffix)
+                    if n_val is not None and isinstance(n_val, (list, tuple)):
+                        rep_key = f"splits.{alias}.{suffix}"
+                        seen_rep = set()
+                        parsed_rep = []
+                        for item in n_val:
+                            cid = _strip_known_suffixes(Path(str(item)).name)
+                            if cid in seen_rep:
+                                raise ValueError(f"Duplicate case {cid!r} in manifest split {split!r} ({rep_key})")
+                            seen_rep.add(cid)
+                            parsed_rep.append(cid)
+                        found_representations[rep_key] = parsed_rep
+            elif isinstance(nested, (list, tuple)):
+                rep_key = f"splits.{alias}"
+                seen_rep = set()
+                parsed_rep = []
+                for item in nested:
+                    cid = _strip_known_suffixes(Path(str(item)).name)
+                    if cid in seen_rep:
+                        raise ValueError(f"Duplicate case {cid!r} in manifest split {split!r} ({rep_key})")
+                    seen_rep.add(cid)
+                    parsed_rep.append(cid)
+                found_representations[rep_key] = parsed_rep
+
+        if found_representations:
+            # Validate every representation: accept redundant identical sets, reject conflicts
+            rep_items = list(found_representations.items())
+            first_key, first_list = rep_items[0]
+            first_set = set(first_list)
+            for other_key, other_list in rep_items[1:]:
+                if set(other_list) != first_set:
+                    diff = sorted(first_set ^ set(other_list))
+                    raise ValueError(
+                        f"Conflicting memberships for split {split!r} in manifest: "
+                        f"{first_key} has {len(first_list)} cases but {other_key} has {len(other_list)} cases "
+                        f"(differing cases={diff[:5]})"
+                    )
+            result[split] = first_list
+
     if not result:
         raise ValueError(f"Split manifest contains no recognized case lists: {path}")
+
+    # Check for duplicate cases across splits
+    seen_across_splits: dict[str, str] = {}
+    for split_name, cases in result.items():
+        for cid in cases:
+            if cid in seen_across_splits:
+                prev_split = seen_across_splits[cid]
+                raise ValueError(
+                    f"Duplicate case {cid!r} appears in multiple splits in manifest: "
+                    f"{prev_split!r} and {split_name!r}"
+                )
+            seen_across_splits[cid] = split_name
+
     validate_patient_split(result)
     return result
 
@@ -375,7 +557,24 @@ class VolumeSliceDataset(Dataset):
         volume, mask, spacing = self._load(record_index)
         image = torch.from_numpy(np.ascontiguousarray(build_25d_triplet(volume, slice_index))).float()
         target = torch.from_numpy(np.array(mask[slice_index], copy=True, order="C")).long()
+        orig_h, orig_w = int(image.shape[-2]), int(image.shape[-1])
+        source_shape = (int(volume.shape[0]), orig_h, orig_w)
         image, target = resize_sample(image, target, self.image_size)
+        net_h, net_w = int(image.shape[-2]), int(image.shape[-1])
+        network_shape = (int(volume.shape[0]), net_h, net_w)
+        if spacing is not None:
+            sz, sh, sw = float(spacing[0]), float(spacing[1]), float(spacing[2])
+            eff_sh = sh * (float(orig_h) / float(net_h))
+            eff_sw = sw * (float(orig_w) / float(net_w))
+            effective_spacing = (float(sz), float(eff_sh), float(eff_sw))
+            source_spacing = (float(sz), float(sh), float(sw))
+            spacing_known = True
+            spacing_units = "mm"
+        else:
+            effective_spacing = (1.0, 1.0, 1.0)
+            source_spacing = (1.0, 1.0, 1.0)
+            spacing_known = False
+            spacing_units = "pixel"
         sample: Sample = {
             "image": image,
             "mask": target,
@@ -386,9 +585,15 @@ class VolumeSliceDataset(Dataset):
             # Default-unit spacing keeps the shared dictionary collatable by
             # PyTorch's default DataLoader while remaining explicit that no
             # physical spacing was available in an NPY-only layout.
-            "spacing": spacing if spacing is not None else (1.0, 1.0, 1.0),
-            "spacing_known": bool(spacing is not None),
-            "spacing_units": "mm" if spacing is not None else "pixel",
+            "spacing": effective_spacing,
+            "effective_spacing": effective_spacing,
+            "source_spacing": source_spacing,
+            "source_shape": source_shape,
+            "network_shape": network_shape,
+            "spacing_known": spacing_known,
+            "spacing_units": spacing_units,
+            "source_axis_order": "ZHW",
+            "network_axis_order": "ZHW",
         }
         if self.transform is not None:
             sample = self.transform(sample)
