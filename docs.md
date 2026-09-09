@@ -221,6 +221,10 @@ v1.
   across the explicit transition list. Every inference turn carries a
   batch-aligned `transition_active_masks[t]`, so halted rows are excluded from
   later audit losses and cannot contaminate mixed-batch training.
+  Validation reduces each transition to a CPU 3×3 local confusion matrix plus
+  scalar DeltaQ/DeltaDice vectors immediately; it does not retain dense local
+  logits for epoch-end concatenation, so validation memory stays bounded by the
+  current batch.
 - `configs/self_audit_joint.yaml` / `training/finetune_joint.py`: Phase C
   uses low learning rates and the complete threshold-controlled flow. The
   annotation loss updates encoder/FPN/heads/expert through retained final
@@ -292,6 +296,39 @@ configured `depth_axis` (the checked-in ACDC convention is `[H,W,Z]`, hence
 `depth_axis: 2`). Unknown
 spacing is marked `spacing_known=false` and HD95/ASSD are labeled pixel-space;
 physical metrics require real spacing metadata.
+
+### ACDC-only → M&Ms external test
+
+The domain-shift protocol keeps all training and threshold selection on ACDC.
+After Phase C has produced a frozen checkpoint, run the M&Ms `testing` split as
+a separate evaluation-only job:
+
+```bash
+python scripts/train_self_audit.py \
+  --config_a configs/self_audit_annotation.yaml \
+  --config_b configs/self_audit_auditor.yaml \
+  --config_c configs/self_audit_joint.yaml \
+  --output_dir weights/self_audit_full
+
+python scripts/evaluate_external_mnms.py \
+  --config configs/self_audit_acdc_to_mnms.yaml \
+  --checkpoint weights/self_audit_full/phase_c_best.pt \
+  --data-root preprocessed_data/mnm \
+  --split testing \
+  --tau-accept 0.0 \
+  --device cuda \
+  --output reports/external_mnms.json
+```
+
+The evaluator records the discovered case/patient counts, cohort signature,
+explicit mapping `{0: 0, 1: 3, 2: 2, 3: 1}`, and `metric_space:
+volume_resized`. Stored M&Ms arrays are already resized, so native Dice is
+unavailable. Case IDs such as `<patient>_tXX` are grouped by patient; ED/ES is
+reported as unavailable because no authoritative phase metadata was present.
+M&Ms results cannot affect training, checkpoint selection, or `tau_accept`.
+All dataset files remain outside Git (`data/ACDC`, `preprocessed_data/ACDC`,
+and `preprocessed_data/mnm`); the `mnm_binary` derivative is incompatible with
+the four-class contract.
 
 ## Patch verification record (2026-08-14)
 
@@ -388,8 +425,10 @@ python -m py_compile $(rg --files src scripts tests -g '*.py')
    keep test reporting separate until a labeled test manifest is supplied.
 4. Preprocessed NPY spacing is explicitly unknown, so publishable physical
    HD95/ASSD remains blocked until real spacing metadata is available.
-5. M&Ms remains external-domain evaluation only and is blocked until
-   `data/MnMs` exists and one raw mask is verified with
-   `scripts/inspect_mnms_mask.py`.
+5. M&Ms remains external-domain evaluation only. On the deployment server the
+   four-class preprocessed cohort is expected at `preprocessed_data/mnm`; pass
+   that path with `--data-root` and run `scripts/inspect_mnms_mask.py` only when
+   validating a new release's raw label mapping. The `mnm_binary` derivative is
+   not compatible with this checkpoint.
 
 The research architecture and its prohibitions remain unchanged.

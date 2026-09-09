@@ -20,7 +20,7 @@ from src.self_audit.training._utils import (
     load_config,
 )
 from src.self_audit.training.finetune_joint import compute_joint_losses
-from src.self_audit.training.train_auditor import build_auditor_transitions, train_auditor_epoch
+from src.self_audit.training.train_auditor import _auditor_batch, build_auditor_transitions, train_auditor_epoch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -59,6 +59,16 @@ def test_model_builds_from_each_baseline_yaml_without_data_kwargs(config_name: s
 def test_model_builder_rejects_image_size_inside_model_config() -> None:
     with pytest.raises(ValueError, match="image_size"):
         build_model_from_config({"image_size": 64, "model": {"image_size": 64}}, torch.device("cpu"))
+
+
+def test_acdc_to_mnms_protocol_declares_external_test_contract() -> None:
+    config = load_config(ROOT / "configs" / "self_audit_acdc_to_mnms.yaml")
+    external = config["external_test"]
+    assert external["dataset"] == "mnms"
+    assert external["split"] == "testing"
+    assert external["raw_to_acdc"] == {0: 0, 1: 3, 2: 2, 3: 1}
+    assert config["num_classes"] == 4
+    assert config["audit"]["tau_accept"] == 0.0
 
 
 def test_annotation_trajectory_and_phase_b_pairs_are_adjacent() -> None:
@@ -125,6 +135,31 @@ def test_phase_b_auditor_receives_every_adjacent_on_policy_transition() -> None:
         previous, candidate = model.auditor.seen[index]
         assert torch.allclose(previous, expected[index].softmax(dim=1))
         assert torch.allclose(candidate, expected[index + 1].softmax(dim=1))
+
+
+def test_phase_b_validation_collects_cpu_reduced_summaries_not_dense_logits() -> None:
+    model = _ToyPhaseBModel()
+    images = torch.randn(1, 3, 16, 16)
+    ground_truth = torch.zeros(1, 16, 16, dtype=torch.long)
+    generator = CounterfactualGenerator(positive_fraction=1.0, negative_fraction=0.0, hard_neutral_fraction=0.0)
+    loss, details = _auditor_batch(
+        model,
+        {"image": images, "mask": ground_truth},
+        generator,
+        collect=True,
+    )
+    assert loss is not None
+    assert "transition_data" not in details
+    summaries = details["transition_summaries"]
+    assert summaries is not None
+    assert summaries["on_policy"]
+    for confusion, delta_pred, delta_target in summaries["on_policy"]:
+        assert confusion.shape == (3, 3)
+        assert confusion.device.type == "cpu"
+        assert delta_pred.device.type == "cpu"
+        assert delta_target.device.type == "cpu"
+        assert confusion.ndim == 2
+        assert delta_pred.ndim == delta_target.ndim == 1
 
 
 def test_positive_counterfactual_is_local_partial_and_samples_strength() -> None:

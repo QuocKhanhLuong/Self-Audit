@@ -1,32 +1,36 @@
-# Domain-shift protocol: train only on ACDC, evaluate on external M&Ms.
+# Protocol-level declaration: train A→B→C on ACDC, then run one frozen
+# external evaluation on the M&Ms testing cohort.
 protocol: acdc_to_mnms_domain_shift
-train:
+
+source_training:
   dataset: acdc
-  split: train
-  data_root: preprocessed_data/ACDC
-validation:
-  dataset: acdc
-  split: val
-  data_root: preprocessed_data/ACDC
-test:
+  phases: [annotation, auditor, joint]
+
+external_test:
   dataset: mnms
-  data_root: data/MnMs
-  split: test
-  # Assumes raw label order: Background, LV, MYO, RV. Verify per release.
+  split: testing
+  data_root: preprocessed_data/mnm
   raw_to_acdc:
     0: 0
     1: 3
     2: 2
     3: 1
+
 image_size: 256
-depth_axis: 2  # checked-in preprocessed ACDC convention is [H,W,Z]
 num_classes: 4
+depth_axis: 2  # preprocessed M&Ms convention is [H,W,Z]
+
 model:
   encoder_name: convnext_tiny
-  pretrained_encoder: true
+  # The checkpoint supplies every parameter; external evaluation must not
+  # fetch ImageNet weights or depend on network access.
+  pretrained_encoder: false
   shared_channels: 96
+  num_classes: 4
   window_k: 8
   max_turns: 3
+
 audit:
   tau_accept: 0.0
   t_max: 3
+  neutral_margin: 0.005

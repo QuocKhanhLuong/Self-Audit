@@ -30,6 +30,8 @@ from .metrics import (
     surface_metrics,
     transition_audit_metrics,
 )
+from .transition_accumulator import TransitionMetricAccumulator
+from .cohort import evaluate_volume_cohort
 from .contracts import (
     AUDIT_TARGET_LEGACY_ONE_V1_CONTRACT,
     ContractMismatchError,
@@ -169,6 +171,8 @@ __all__ = [
     "sweep_thresholds",
     "to_native_geometry",
     "transition_audit_metrics",
+    "TransitionMetricAccumulator",
+    "evaluate_volume_cohort",
     "validate_and_normalize_transition_cache",
     "validate_contract",
     "validate_contract_compatibility",

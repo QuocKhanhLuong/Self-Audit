@@ -16,6 +16,7 @@ from src.self_audit.data import (
 )
 from src.self_audit.data.acdc import discover_acdc_records
 from src.self_audit.data.mnms import discover_mnms_records
+from src.self_audit.training._utils import build_patient_dataset, validate_dataset_splits
 
 
 def _write_pair(root: Path, case_id: str, raw_mask: bool = False) -> None:
@@ -92,6 +93,31 @@ def test_mnms_mapping_is_explicit_and_shared_contract(tmp_path: Path) -> None:
     assert dataset.raw_to_acdc == {0: 0, 1: 3, 2: 2, 3: 1}
     with pytest.raises(ValueError, match="background"):
         MNMSClassMapping({1: 1, 2: 2, 3: 3})
+
+
+def test_mnms_factory_and_external_validator_use_testing_only(tmp_path: Path) -> None:
+    split_root = tmp_path / "testing"
+    _write_pair(split_root, "A100_t01", raw_mask=True)
+    config = {
+        "dataset": "mnms",
+        "data_root": str(tmp_path),
+        "test_split": "testing",
+        "depth_axis": 2,
+        "image_size": 8,
+        "raw_to_acdc": {0: 0, 1: 3, 2: 2, 3: 1},
+        "num_classes": 4,
+    }
+    stats = validate_dataset_splits(config)
+    assert stats["validated"] is True
+    assert stats["dataset"] == "mnms"
+    assert stats["cases"]["test"] == 1
+    assert stats["patients"]["test"] == 1
+    assert set(stats["label_values"]["test"]) == {0, 1, 3}
+
+    dataset = build_patient_dataset(config, split="testing", train=False)
+    assert dataset.__class__.__name__ == MNMSDataset.__name__
+    assert dataset.records[0].case_id == "A100_t01"
+    assert set(int(value) for value in np.unique(dataset[0]["mask"].numpy())) <= {0, 1, 2, 3}
 
 
 def test_patient_split_rejects_cross_split_patient_leakage() -> None:

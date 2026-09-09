@@ -39,6 +39,31 @@ The ACDC-only → M&Ms domain-shift configuration is
 `configs/self_audit_acdc_to_mnms.yaml`. M&Ms is not merged into first-baseline
 training data.
 
+Run the complete A→B→C training with the three ACDC configs, then evaluate the
+frozen Phase-C checkpoint on the server's external M&Ms testing split:
+
+```bash
+python scripts/train_self_audit.py \
+  --config_a configs/self_audit_annotation.yaml \
+  --config_b configs/self_audit_auditor.yaml \
+  --config_c configs/self_audit_joint.yaml \
+  --output_dir weights/self_audit_full
+
+python scripts/evaluate_external_mnms.py \
+  --config configs/self_audit_acdc_to_mnms.yaml \
+  --checkpoint weights/self_audit_full/phase_c_best.pt \
+  --data-root preprocessed_data/mnm \
+  --split testing \
+  --tau-accept 0.0 \
+  --device cuda \
+  --output reports/external_mnms.json
+```
+
+`data/ACDC`, `preprocessed_data/ACDC`, and `preprocessed_data/mnm` are local
+dataset paths ignored by Git. Do not use `preprocessed_data/mnm_binary` with
+the four-class checkpoint. The external command never trains, calibrates, or
+selects a threshold from M&Ms.
+
 ## Verification
 
 ```bash
