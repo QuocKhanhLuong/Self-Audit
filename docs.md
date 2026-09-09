@@ -209,33 +209,26 @@ inference; the self-audit path can stop after zero or one accepted turns and is
 not required to execute three turns. Pixel-wise selective blending is not in
 v1.
 
-### Training phases and configurations
+### Training curriculum and configurations
 
-- `configs/self_audit_annotation.yaml` / `training/train_annotation.py`:
-  Phase A trains encoder, FPN, initial head, and shared expert with Dice+CE on
-  the initial and intermediate soft states. It does not run audit decisions.
-- `configs/self_audit_auditor.yaml` / `training/train_auditor.py`: Phase B
-  freezes annotation parameters and trains the auditor on every adjacent
-  on-policy transition `A0→A1`, `A1→A2`, ..., `A_(T-1)→A_T`, plus one
-  synthetic transition around every `A_t`. The total audit loss is averaged
-  across the explicit transition list. Every inference turn carries a
-  batch-aligned `transition_active_masks[t]`, so halted rows are excluded from
-  later audit losses and cannot contaminate mixed-batch training.
-  Validation reduces each transition to a CPU 3×3 local confusion matrix plus
-  scalar DeltaQ/DeltaDice vectors immediately; it does not retain dense local
-  logits for epoch-end concatenation, so validation memory stays bounded by the
-  current batch.
-- `configs/self_audit_joint.yaml` / `training/finetune_joint.py`: Phase C
-  uses low learning rates and the complete threshold-controlled flow. The
-  annotation loss updates encoder/FPN/heads/expert through retained final
-  annotation behavior; `lambda_audit` scales a separate local-plus-global
-  audit loss whose `H`, `A_previous`, and `A_candidate` inputs are detached.
-  Therefore audit gradients update only Auditor parameters. Per-sample
-  `accepted_count`, `halt_turn`, `num_attempted_turns`, and `final_active` are
-  exposed for evaluation. The accept/reject gate remains non-differentiable and
-  `tau_accept`/`t_max` live under `audit`, not in the model constructor.
-- `configs/self_audit_acdc_to_mnms.yaml`: ACDC-only training and M&Ms external
-  domain-shift evaluation; it does not merge datasets.
+The authoritative canonical training interface is the **Unified Pipeline** driven by `configs/self_audit_full.yaml` and executed via `scripts/train_self_audit.py`:
+
+```bash
+python scripts/train_self_audit.py --config configs/self_audit_full.yaml
+```
+
+Training runs as a contiguous 130-epoch curriculum across a single optimization loop:
+- **Interval 0 (Epochs 0-99) — `annotation_bootstrap`**:
+  Trains encoder, FPN, initial head, and shared expert with Dice+CE on initial and intermediate soft states (`weighted_a0_a3`). Auditor is frozen (`auditor_lr = 0.0`), `rollout = "propagate_no_audit"`, data augmentation enabled.
+- **Interval 1 (Epochs 100-119) — `auditor_training`**:
+  Freezes annotation parameters (`encoder_lr = 0.0`, `annotation_lr = 0.0`) and trains the dynamic-window auditor on counterfactual transitions (`counterfactual_audit`). Optimizer is reset at the epoch 100 boundary with fresh AdamW instance. Validation reduces each transition to a CPU local confusion matrix plus scalar DeltaQ/DeltaDice vectors immediately; memory stays bounded by the current batch.
+- **Interval 2 (Epochs 120-129) — `joint_self_audit`**:
+  Fine-tunes all components (`trainable = "all"`) with differentiated learning rates under active threshold-controlled rollouts (`rollout = "threshold_gate"`). Optimizer is reset at the epoch 120 boundary. Model selection for `best.pt` occurs strictly during this gated interval `[120, 130)`.
+- `configs/self_audit_acdc_to_mnms.yaml`: ACDC-only training and M&Ms external domain-shift evaluation; it does not merge datasets.
+- `configs/self_audit_full_mnms.yaml`: Native M&Ms supervision curriculum.
+
+> [!NOTE]
+> Historical separate phase configurations (`configs/self_audit_annotation.yaml`, `configs/self_audit_auditor.yaml`, `configs/self_audit_joint.yaml`) and legacy multi-stage runners (`scripts/train_self_audit_legacy.py` / `scripts/run_full_pipeline_legacy.sh`) are isolated for historical reproduction in [`docs/legacy_reproduction.md`](docs/legacy_reproduction.md).
 
 `training._utils.build_model_from_config()` validates the supported model
 keys explicitly. `image_size`, batch size, epochs, and data roots remain
@@ -300,19 +293,16 @@ physical metrics require real spacing metadata.
 ### ACDC-only → M&Ms external test
 
 The domain-shift protocol keeps all training and threshold selection on ACDC.
-After Phase C has produced a frozen checkpoint, run the M&Ms `testing` split as
+After canonical unified training has produced a frozen `best.pt` checkpoint, run the M&Ms `testing` split as
 a separate evaluation-only job:
 
 ```bash
 python scripts/train_self_audit.py \
-  --config_a configs/self_audit_annotation.yaml \
-  --config_b configs/self_audit_auditor.yaml \
-  --config_c configs/self_audit_joint.yaml \
-  --output_dir weights/self_audit_full
+  --config configs/self_audit_full.yaml
 
 python scripts/evaluate_external_mnms.py \
   --config configs/self_audit_acdc_to_mnms.yaml \
-  --checkpoint weights/self_audit_full/phase_c_best.pt \
+  --checkpoint weights/self_audit_full/best.pt \
   --data-root preprocessed_data/mnm \
   --split testing \
   --tau-accept 0.0 \

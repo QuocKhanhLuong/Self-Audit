@@ -283,27 +283,47 @@ def build_patient_dataset(
     split: str,
     train: bool,
 ) -> torch.utils.data.Dataset:
-    dataset_name = str(config.get("dataset", "acdc")).strip().lower()
+    raw_ds = config.get("dataset", "acdc")
+    if isinstance(raw_ds, Mapping):
+        dataset_name = str(raw_ds.get("name", "acdc")).strip().lower()
+        if "data_root" not in config and "data_root" in raw_ds:
+            config = dict(config)
+            config["data_root"] = raw_ds["data_root"]
+    else:
+        dataset_name = str(raw_ds).strip().lower()
     if dataset_name not in {"acdc", "mnms"}:
         raise ValueError(f"Unsupported dataset {dataset_name!r}")
+    preprocessing = config.get("preprocessing", {})
+    if not isinstance(preprocessing, Mapping):
+        raise ValueError("preprocessing must be a mapping")
+    preprocessing_kwargs = {
+        "lower_percentile": preprocessing.get("clipping_min", 0.5),
+        "upper_percentile": preprocessing.get("clipping_max", 99.5),
+        "foreground_only": preprocessing.get("foreground_only", False),
+    }
     if dataset_name == "mnms":
         try:
-            from self_audit.data.mnms import DEFAULT_MNMS_TO_ACDC, MNMSClassMapping, MNMSDataset
+            from self_audit.data.mnms import DEFAULT_MNMS_TO_ACDC, MNMSClassMapping, MNMSDataset, is_mnms_binary_path
         except ImportError:
-            from src.self_audit.data.mnms import DEFAULT_MNMS_TO_ACDC, MNMSClassMapping, MNMSDataset
+            from src.self_audit.data.mnms import DEFAULT_MNMS_TO_ACDC, MNMSClassMapping, MNMSDataset, is_mnms_binary_path
 
+        data_root = config.get("data_root", "preprocessed_data/mnm")
+        if is_mnms_binary_path(data_root):
+            raise ValueError(f"M&Ms binary derivative dataset is incompatible with four-class contract: {data_root}")
         num_classes = int(config.get("num_classes", config.get("model", {}).get("num_classes", 4)))
         if num_classes != 4:
             raise ValueError(f"M&Ms external evaluation requires the four-class contract (num_classes=4), got {num_classes}")
-        raw_mapping = config.get("raw_to_acdc", DEFAULT_MNMS_TO_ACDC)
+        raw_mapping = config.get("raw_to_acdc", config.get("class_mapping", DEFAULT_MNMS_TO_ACDC))
         if not isinstance(raw_mapping, Mapping):
             raise ValueError("raw_to_acdc must be a mapping from raw M&Ms labels to ACDC labels")
+        mapping = MNMSClassMapping(raw_mapping)
         kwargs: dict[str, Any] = {
-            "data_root": config.get("data_root", "preprocessed_data/mnm"),
+            **preprocessing_kwargs,
+            "data_root": data_root,
             "split": split,
             "image_size": validate_image_size(config.get("image_size")),
             "augment": bool(train and config.get("augment", False)),
-            "class_mapping": MNMSClassMapping({int(key): int(value) for key, value in raw_mapping.items()}),
+            "class_mapping": mapping,
         }
         for key in ("depth_axis", "expected_slices", "max_cache"):
             if key in config:
@@ -317,6 +337,7 @@ def build_patient_dataset(
 
     data_root = config.get("data_root", "preprocessed_data/ACDC")
     kwargs: dict[str, Any] = {
+        **preprocessing_kwargs,
         "data_root": data_root,
         "split": split,
         "image_size": validate_image_size(config.get("image_size")),
@@ -367,25 +388,170 @@ def validate_dataset_splits(config: Mapping[str, Any]) -> dict[str, Any]:
 
     if not isinstance(config, Mapping):
         raise ValueError("training config must be a mapping")
-    dataset_name = str(config.get("dataset", "acdc")).lower()
+    raw_ds = config.get("dataset", "acdc")
+    if isinstance(raw_ds, Mapping):
+        dataset_name = str(raw_ds.get("name", "acdc")).lower()
+        if "data_root" not in config and "data_root" in raw_ds:
+            config = dict(config)
+            config["data_root"] = raw_ds["data_root"]
+    else:
+        dataset_name = str(raw_ds).lower()
     if dataset_name not in {"acdc", "mnms"}:
         raise ValueError(f"Unsupported dataset {dataset_name!r}")
     if dataset_name == "mnms":
         try:
-            from self_audit.data.common import compute_split_signature, load_array, to_depth_first
-            from self_audit.data.mnms import DEFAULT_MNMS_TO_ACDC, MNMSClassMapping, discover_mnms_records
+            from self_audit.data.common import (
+                compute_split_signature,
+                load_array,
+                to_depth_first,
+                validate_patient_split,
+            )
+            from self_audit.data.mnms import (
+                DEFAULT_MNMS_TO_ACDC,
+                MNMSClassMapping,
+                discover_mnms_records,
+                is_mnms_binary_path,
+            )
         except ImportError:
-            from src.self_audit.data.common import compute_split_signature, load_array, to_depth_first
-            from src.self_audit.data.mnms import DEFAULT_MNMS_TO_ACDC, MNMSClassMapping, discover_mnms_records
+            from src.self_audit.data.common import (
+                compute_split_signature,
+                load_array,
+                to_depth_first,
+                validate_patient_split,
+            )
+            from src.self_audit.data.mnms import (
+                DEFAULT_MNMS_TO_ACDC,
+                MNMSClassMapping,
+                discover_mnms_records,
+                is_mnms_binary_path,
+            )
+
+        data_root = config.get("data_root", "preprocessed_data/mnm")
+        if is_mnms_binary_path(data_root):
+            raise ValueError(
+                f"M&Ms binary derivative dataset is incompatible with four-class contract: {data_root}"
+            )
 
         num_classes = int(config.get("num_classes", config.get("model", {}).get("num_classes", 4)))
         if num_classes != 4:
-            raise ValueError(f"M&Ms external evaluation requires the four-class contract (num_classes=4), got {num_classes}")
-        raw_mapping = config.get("raw_to_acdc", DEFAULT_MNMS_TO_ACDC)
+            raise ValueError(
+                f"M&Ms external evaluation requires the four-class contract (num_classes=4), got {num_classes}"
+            )
+
+        raw_mapping = config.get("raw_to_acdc", config.get("class_mapping", DEFAULT_MNMS_TO_ACDC))
         if not isinstance(raw_mapping, Mapping):
             raise ValueError("raw_to_acdc must be a mapping from raw M&Ms labels to ACDC labels")
-        mapping = MNMSClassMapping({int(key): int(value) for key, value in raw_mapping.items()})
-        data_root = config.get("data_root", "preprocessed_data/mnm")
+        mapping = MNMSClassMapping(raw_mapping)
+        depth_axis = validate_depth_axis(config.get("depth_axis"))
+
+        has_native_splits = "train_split" in config or "val_split" in config
+        if has_native_splits:
+            train_split = str(config.get("train_split", "train"))
+            val_split = str(config.get("val_split", "val"))
+            test_split = str(config.get("test_split", "test")) if config.get("test_split") is not None else None
+
+            splits_to_check: list[tuple[str, str]] = [("train", train_split), ("val", val_split)]
+            if test_split is not None:
+                aliases = {"test": ("test", "testing"), "testing": ("test", "testing")}.get(test_split.lower(), (test_split,))
+                test_exists = any((Path(data_root) / a).exists() for a in aliases)
+                if test_exists:
+                    splits_to_check.append(("test", test_split))
+
+            records_by_split: dict[str, list[VolumeRecord]] = {}
+            case_counts: dict[str, int] = {}
+            patient_counts: dict[str, int] = {}
+            slice_counts: dict[str, int] = {}
+            effective_identities: dict[str, list[str]] = {}
+            effective_records: dict[str, list[dict[str, Any]]] = {}
+            label_values: dict[str, list[int]] = {}
+            mapped_label_values: dict[str, list[int]] = {}
+            total_cohort_records = 0
+
+            for canonical_split, requested_split in splits_to_check:
+                records = discover_mnms_records(data_root, split=requested_split)
+                if not records:
+                    raise ValueError(f"M&Ms split {requested_split!r} ({canonical_split}) contains zero records")
+                records_by_split[canonical_split] = records
+                total_cohort_records += len(records)
+                total_slices = 0
+                labels_seen: set[int] = set()
+                mapped_labels_seen: set[int] = set()
+                descriptors: list[dict[str, Any]] = []
+
+                for record in records:
+                    volume, _ = load_array(record.image_path)
+                    raw_mask, _ = load_array(record.mask_path)
+                    volume_zhw = to_depth_first(volume, depth_axis=depth_axis)
+                    mask_zhw = to_depth_first(raw_mask, depth_axis=depth_axis)
+                    if volume_zhw.shape != mask_zhw.shape:
+                        raise ValueError(
+                            f"M&Ms volume/mask shape mismatch for {record.case_id}: "
+                            f"{volume_zhw.shape} vs {mask_zhw.shape}"
+                        )
+                    if not np.isfinite(mask_zhw).all() or not np.equal(mask_zhw, np.floor(mask_zhw)).all():
+                        raise ValueError(f"M&Ms mask labels for {record.case_id} must be finite integers")
+                    labels_seen.update(int(value) for value in np.unique(mask_zhw))
+                    mapped_mask = mapping.apply(mask_zhw)
+                    mapped_labels_seen.update(int(value) for value in np.unique(mapped_mask))
+                    total_slices += int(volume_zhw.shape[0])
+                    descriptors.append({
+                        "case_id": record.case_id,
+                        "patient_id": record.patient_id,
+                        "image_path": str(record.image_path),
+                        "mask_path": str(record.mask_path),
+                        "split": canonical_split,
+                        "source_format": record.source_format,
+                    })
+
+                case_counts[canonical_split] = len(records)
+                patient_counts[canonical_split] = len({record.patient_id for record in records})
+                slice_counts[canonical_split] = total_slices
+                effective_identities[canonical_split] = [r.case_id for r in records]
+                effective_records[canonical_split] = descriptors
+                label_values[canonical_split] = sorted(labels_seen)
+                mapped_label_values[canonical_split] = sorted(mapped_labels_seen)
+
+            # Enforce patient disjointness across splits
+            validate_patient_split({s: [r.case_id for r in recs] for s, recs in records_by_split.items()})
+
+            # Enforce no overlapping patient prefixes across splits
+            split_keys = list(records_by_split.keys())
+            for i in range(len(split_keys)):
+                for j in range(i + 1, len(split_keys)):
+                    s1, s2 = split_keys[i], split_keys[j]
+                    pts1 = {r.patient_id for r in records_by_split[s1]}
+                    pts2 = {r.patient_id for r in records_by_split[s2]}
+                    for p1 in pts1:
+                        for p2 in pts2:
+                            if p1 == p2 or p1.startswith(p2) or p2.startswith(p1):
+                                raise ValueError(
+                                    f"Patient prefix overlap detected between {s1!r} and {s2!r}: {p1!r} vs {p2!r}"
+                                )
+
+            signature = compute_split_signature(records_by_split)
+            return {
+                "dataset": dataset_name,
+                "validated": True,
+                "strategy": "directory_splits",
+                "splits": list(records_by_split.keys()),
+                "split_signature": signature,
+                "membership_signature": signature,
+                "cases": case_counts,
+                "case_counts": case_counts,
+                "patients": patient_counts,
+                "patient_counts": patient_counts,
+                "slices": slice_counts,
+                "slice_counts": slice_counts,
+                "label_values": label_values,
+                "mapped_label_values": mapped_label_values,
+                "test_available": "test" in records_by_split,
+                "records": total_cohort_records,
+                "effective_identities": effective_identities,
+                "effective_records": effective_records,
+                "raw_to_acdc": dict(mapping.raw_to_acdc),
+                "content_hash_duplicate_detection": {"executed": False, "status": "deferred"},
+            }
+
         requested_split = str(config.get("test_split", config.get("split", "testing")))
         records = discover_mnms_records(data_root, split=requested_split)
         depth_axis = validate_depth_axis(config.get("depth_axis"))
@@ -403,6 +569,8 @@ def validate_dataset_splits(config: Mapping[str, Any]) -> dict[str, Any]:
                     f"M&Ms volume/mask shape mismatch for {record.case_id}: "
                     f"{volume_zhw.shape} vs {mask_zhw.shape}"
                 )
+            if not np.isfinite(mask_zhw).all() or not np.equal(mask_zhw, np.floor(mask_zhw)).all():
+                raise ValueError(f"M&Ms mask labels for {record.case_id} must be finite integers")
             labels_seen.update(int(value) for value in np.unique(mask_zhw))
             mapped_mask = mapping.apply(mask_zhw)
             mapped_labels_seen.update(int(value) for value in np.unique(mapped_mask))
@@ -872,10 +1040,85 @@ def _cpu_state_dict(state: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def _rng_state() -> dict[str, Any]:
-    state: dict[str, Any] = {"torch": torch.get_rng_state()}
+    """Capture Python, NumPy, and PyTorch RNG states in a portable weights_only format."""
+    np_state = np.random.get_state()
+    # Convert numpy ndarray keys to torch tensor for safe weights_only serialization
+    # (avoids numpy._core.multiarray._reconstruct UnpicklingError under weights_only=True)
+    np_keys = torch.from_numpy(np_state[1].copy())
+    portable_numpy = (
+        str(np_state[0]),
+        np_keys,
+        int(np_state[2]),
+        int(np_state[3]),
+        float(np_state[4]),
+    )
+    state: dict[str, Any] = {
+        "python": random.getstate(),
+        "numpy": portable_numpy,
+        "torch": torch.get_rng_state(),
+    }
     if torch.cuda.is_available():
         state["cuda"] = [value.clone() for value in torch.cuda.get_rng_state_all()]
     return state
+
+
+def _restore_rng_state(state: Mapping[str, Any]) -> None:
+    """Restore Python, NumPy, and PyTorch RNG states with backward historical compatibility."""
+    if not isinstance(state, Mapping):
+        raise TypeError(f"rng_state must be a mapping, got {type(state).__name__}")
+    if "python" in state:
+        py_state = state["python"]
+        if py_state is None:
+            raise ValueError("Malformed 'python' RNG state: value cannot be None")
+        random.setstate(py_state)
+    if "numpy" in state:
+        raw_np = state["numpy"]
+        if raw_np is None:
+            raise ValueError("Malformed 'numpy' RNG state: value cannot be None")
+        if isinstance(raw_np, (tuple, list)) and len(raw_np) == 5:
+            algo, keys, pos, has_gauss, cached_gaussian = raw_np
+            if torch.is_tensor(keys):
+                keys_np = keys.cpu().numpy()
+            elif isinstance(keys, (list, tuple)):
+                keys_np = np.array(keys, dtype=np.uint32)
+            elif isinstance(keys, np.ndarray):
+                keys_np = keys
+            else:
+                keys_np = np.array(keys, dtype=np.uint32)
+            np.random.set_state((str(algo), keys_np, int(pos), int(has_gauss), float(cached_gaussian)))
+        elif isinstance(raw_np, Mapping):
+            algo = str(raw_np.get("algorithm", "MT19937"))
+            keys = raw_np.get("keys")
+            if keys is None:
+                raise ValueError("NumPy RNG state mapping missing 'keys'")
+            if torch.is_tensor(keys):
+                keys_np = keys.cpu().numpy()
+            elif isinstance(keys, (list, tuple)):
+                keys_np = np.array(keys, dtype=np.uint32)
+            elif isinstance(keys, np.ndarray):
+                keys_np = keys
+            else:
+                keys_np = np.array(keys, dtype=np.uint32)
+            pos = int(raw_np.get("pos", 0))
+            has_gauss = int(raw_np.get("has_gauss", 0))
+            cached_gaussian = float(raw_np.get("cached_gaussian", 0.0))
+            np.random.set_state((algo, keys_np, pos, has_gauss, cached_gaussian))
+        else:
+            np.random.set_state(raw_np)
+    if "torch" in state:
+        torch_state = state["torch"]
+        if torch_state is None:
+            raise ValueError("Malformed 'torch' RNG state: value cannot be None")
+        if torch.is_tensor(torch_state):
+            torch.set_rng_state(torch_state.cpu())
+        else:
+            torch.set_rng_state(torch_state)
+    if "cuda" in state and torch.cuda.is_available():
+        cuda_states = state["cuda"]
+        if cuda_states is not None:
+            if not isinstance(cuda_states, (list, tuple)):
+                raise TypeError(f"cuda RNG state must be a list or tuple of tensors, got {type(cuda_states).__name__}")
+            torch.cuda.set_rng_state_all([s.cpu() if torch.is_tensor(s) else s for s in cuda_states])
 
 
 def save_checkpoint(
@@ -1038,11 +1281,7 @@ def load_checkpoint(
     if scaler is not None and "scaler" in normalized:
         scaler.load_state_dict(normalized["scaler"])
     if restore_rng and isinstance(normalized.get("rng_state"), Mapping):
-        rng = normalized["rng_state"]
-        if torch.is_tensor(rng.get("torch")):
-            torch.set_rng_state(rng["torch"].cpu())
-        if torch.cuda.is_available() and isinstance(rng.get("cuda"), (list, tuple)):
-            torch.cuda.set_rng_state_all([value.cpu() for value in rng["cuda"]])
+        _restore_rng_state(normalized["rng_state"])
     normalized["model"] = model_state
     return normalized
 

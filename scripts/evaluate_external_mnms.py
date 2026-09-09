@@ -75,30 +75,140 @@ def _normalize_external_config(
     if not isinstance(config, Mapping):
         raise ValueError("external protocol config must be a mapping")
     result = deepcopy(dict(config))
+    if "dataset" in config and str(config["dataset"]).lower() != "mnms":
+        raise ValueError(f"External evaluation only supports dataset='mnms', got {config['dataset']!r}")
     external = result.get("external_test", {})
     if not isinstance(external, Mapping):
         raise ValueError("external_test config must be a mapping")
+    if "dataset" in external and str(external.get("dataset", "mnms")).lower() != "mnms":
+        raise ValueError(f"external_test.dataset must be 'mnms', got {external['dataset']!r}")
     result.update({str(key): deepcopy(value) for key, value in external.items()})
     result["dataset"] = "mnms"
     resolved_split = str(split or external.get("split", "testing"))
+    if resolved_split not in {"test", "testing"}:
+        raise ValueError(f"Independent external evaluation requires the M&Ms test/testing split, got {resolved_split!r}")
     result["split"] = resolved_split
     result["test_split"] = resolved_split
-    result["data_root"] = str(data_root or external.get("data_root", "preprocessed_data/mnm"))
+    data_root_str = str(data_root or external.get("data_root", "preprocessed_data/mnm"))
+    from self_audit.data.mnms import MNMSClassMapping, is_mnms_binary_path
+    if is_mnms_binary_path(data_root_str):
+        raise ValueError(f"M&Ms binary derivative path is not supported for external evaluation: {data_root_str}")
+    result["data_root"] = data_root_str
     mapping = result.get("raw_to_acdc", DEFAULT_MAPPING)
     if not isinstance(mapping, Mapping):
         raise ValueError("external_test.raw_to_acdc must be a mapping")
-    result["raw_to_acdc"] = {int(key): int(value) for key, value in mapping.items()}
+    class_map = MNMSClassMapping(mapping)
+    result["raw_to_acdc"] = dict(class_map.raw_to_acdc)
+    result["class_mapping"] = dict(class_map.raw_to_acdc)
     result["num_classes"] = int(result.get("num_classes", result.get("model", {}).get("num_classes", 4)))
+    if result["num_classes"] != 4:
+        raise ValueError(f"External M&Ms evaluation requires num_classes=4, got {result['num_classes']}")
     return result
 
 
-def _stored_grid(dataset: Any, *, depth_axis: int | None) -> list[int] | None:
+def _stored_grid(dataset: Any, *, depth_axis: int | None) -> tuple[list[int] | None, bool]:
     records = list(getattr(dataset, "records", []))
     if not records:
-        return None
-    first, _ = load_array(records[0].image_path)
-    normalized = to_depth_first(first, depth_axis=depth_axis)
-    return [int(normalized.shape[-2]), int(normalized.shape[-1])]
+        return None, False
+    grids: set[tuple[int, int]] = set()
+    for record in records:
+        first, _ = load_array(record.image_path)
+        normalized = to_depth_first(first, depth_axis=depth_axis)
+        grids.add((int(normalized.shape[-2]), int(normalized.shape[-1])))
+    if len(grids) == 1:
+        h, w = grids.pop()
+        return [h, w], True
+    return None, False
+
+
+def _inspect_checkpoint_dataset(checkpoint_path: Path | str) -> tuple[str, str]:
+    """Inspect checkpoint metadata for training dataset identity.
+
+    Returns (training_dataset, evidence_class).
+    Collects all declared source identities, requires exact normalized 'acdc',
+    and rejects incompatible or contradictory claims.
+    Historical checkpoints with missing metadata return ("unknown", "uncertified_historical_checkpoint").
+    ACDC-trained checkpoints return ("acdc", EVIDENCE_CLASS).
+    """
+    ckpt_path = Path(checkpoint_path)
+    if not ckpt_path.is_file():
+        raise FileNotFoundError(f"Checkpoint does not exist: {ckpt_path}")
+    try:
+        payload = torch.load(ckpt_path, map_location="cpu", weights_only=True)
+    except Exception as exc:
+        raise ValueError(f"Unable to read checkpoint {ckpt_path}: {exc}") from exc
+
+    if not isinstance(payload, Mapping):
+        raise ValueError(f"Checkpoint must contain a mapping, got {type(payload).__name__}")
+
+    declared_identities: set[str] = set()
+
+    def _record_candidate(val: Any) -> None:
+        if val is not None and not isinstance(val, (Mapping, list, tuple, set)):
+            s = str(val).strip().lower()
+            if s:
+                declared_identities.add(s)
+
+    # 1. Top-level keys
+    for k in ("training_dataset", "dataset", "dataset_name"):
+        if k in payload:
+            _record_candidate(payload[k])
+
+    # 2. Config mapping
+    cfg = payload.get("config")
+    if isinstance(cfg, Mapping):
+        for k in ("training_dataset", "dataset_name"):
+            if k in cfg:
+                _record_candidate(cfg[k])
+        ds_cfg = cfg.get("dataset")
+        if isinstance(ds_cfg, Mapping):
+            for k in ("name", "dataset_name", "dataset"):
+                if k in ds_cfg:
+                    _record_candidate(ds_cfg[k])
+        elif ds_cfg is not None:
+            _record_candidate(ds_cfg)
+
+    # 3. Cohort descriptor mapping
+    cohort = payload.get("cohort_descriptor")
+    if isinstance(cohort, Mapping):
+        for k in ("dataset", "dataset_name", "name"):
+            if k in cohort:
+                _record_candidate(cohort[k])
+
+    # 4. Extra mapping (if present)
+    extra = payload.get("extra")
+    if isinstance(extra, Mapping):
+        for k in ("training_dataset", "dataset", "dataset_name"):
+            if k in extra:
+                _record_candidate(extra[k])
+        extra_cohort = extra.get("cohort_descriptor")
+        if isinstance(extra_cohort, Mapping):
+            for k in ("dataset", "dataset_name", "name"):
+                if k in extra_cohort:
+                    _record_candidate(extra_cohort[k])
+
+    if not declared_identities:
+        return "unknown", "uncertified_historical_checkpoint"
+
+    if len(declared_identities) > 1:
+        raise ValueError(
+            f"Contradictory training dataset identities in checkpoint {checkpoint_path}: "
+            f"{sorted(declared_identities)}"
+        )
+
+    declared = next(iter(declared_identities))
+    if declared != "acdc":
+        if "mnm" in declared:
+            raise ValueError(
+                f"Checkpoint {checkpoint_path} was trained on {declared!r}; "
+                "cannot evaluate M&Ms-trained model as independent external evidence."
+            )
+        raise ValueError(
+            f"Incompatible checkpoint training dataset {declared!r} in {checkpoint_path}; "
+            "external M&Ms evaluation requires an ACDC-trained model."
+        )
+
+    return "acdc", EVIDENCE_CLASS
 
 
 def run_external_evaluation(
@@ -113,6 +223,7 @@ def run_external_evaluation(
 ) -> dict[str, Any]:
     """Run frozen M&Ms evaluation and optionally write its JSON report."""
 
+    training_dataset, evidence_class = _inspect_checkpoint_dataset(checkpoint)
     raw_config = load_config(config) if isinstance(config, (str, Path)) else dict(config)
     flat = _normalize_external_config(raw_config, data_root=data_root, split=split)
     resolved_split = str(flat["split"])
@@ -175,12 +286,13 @@ def run_external_evaluation(
     case_count = int(validation.get("case_counts", validation.get("cases", {})).get("test", len(records)))
     patient_count = int(validation.get("patient_counts", validation.get("patients", {})).get("test", len({r.patient_id for r in records})))
     binding_dict = binding.as_dict() if hasattr(binding, "as_dict") else dict(binding)
+    grid, is_uniform = _stored_grid(dataset, depth_axis=flat.get("depth_axis"))
     payload: dict[str, Any] = {
         "external_schema_version": EXTERNAL_SCHEMA_VERSION,
         "schema_version": EXTERNAL_SCHEMA_VERSION,
-        "evidence_class": EVIDENCE_CLASS,
+        "evidence_class": evidence_class,
         "protocol": str(raw_config.get("protocol", "acdc_to_mnms_domain_shift")),
-        "training_dataset": "acdc",
+        "training_dataset": training_dataset,
         "dataset": "mnms",
         "split": resolved_split,
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -189,7 +301,8 @@ def run_external_evaluation(
         "cohort_signature": validation.get("membership_signature", validation.get("split_signature")),
         "cohort_validation": validation,
         "label_mapping": dict(validation.get("raw_to_acdc", flat["raw_to_acdc"])),
-        "stored_grid": _stored_grid(dataset, depth_axis=flat.get("depth_axis")),
+        "stored_grid": grid,
+        "stored_grid_uniform": is_uniform,
         "network_input_grid": [image_size, image_size],
         "metric_space": "volume_resized",
         "native_dice_available": False,

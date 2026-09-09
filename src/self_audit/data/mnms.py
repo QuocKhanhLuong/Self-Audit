@@ -31,7 +31,47 @@ class MNMSClassMapping:
     source_name: str = "M&Ms explicit LV/MYO/RV mapping"
 
     def __post_init__(self) -> None:
-        mapping = {int(key): int(value) for key, value in self.raw_to_acdc.items()}
+        if not isinstance(self.raw_to_acdc, Mapping):
+            raise TypeError(f"raw_to_acdc must be a mapping, got {type(self.raw_to_acdc).__name__}")
+        mapping: dict[int, int] = {}
+        for raw_key, raw_value in self.raw_to_acdc.items():
+            if isinstance(raw_key, bool) or isinstance(raw_value, bool):
+                raise TypeError("M&Ms class mapping keys and values cannot be booleans")
+            if isinstance(raw_key, (float, np.floating)):
+                if not np.isfinite(raw_key) or not float(raw_key).is_integer():
+                    raise ValueError(f"M&Ms class mapping key cannot be fractional: {raw_key}")
+                int_key = int(raw_key)
+            elif isinstance(raw_key, (int, np.integer)):
+                int_key = int(raw_key)
+            elif isinstance(raw_key, str):
+                try:
+                    f = float(raw_key)
+                    if not np.isfinite(f) or not f.is_integer():
+                        raise ValueError(f"M&Ms class mapping key cannot be fractional: {raw_key}")
+                    int_key = int(raw_key)
+                except ValueError as exc:
+                    raise ValueError(f"M&Ms class mapping key must be an integer: {raw_key}") from exc
+            else:
+                raise TypeError(f"M&Ms class mapping key must be an integer, got {type(raw_key).__name__}")
+
+            if isinstance(raw_value, (float, np.floating)):
+                if not np.isfinite(raw_value) or not float(raw_value).is_integer():
+                    raise ValueError(f"M&Ms class mapping value cannot be fractional: {raw_value}")
+                int_val = int(raw_value)
+            elif isinstance(raw_value, (int, np.integer)):
+                int_val = int(raw_value)
+            elif isinstance(raw_value, str):
+                try:
+                    f = float(raw_value)
+                    if not np.isfinite(f) or not f.is_integer():
+                        raise ValueError(f"M&Ms class mapping value cannot be fractional: {raw_value}")
+                    int_val = int(raw_value)
+                except ValueError as exc:
+                    raise ValueError(f"M&Ms class mapping value must be an integer: {raw_value}") from exc
+            else:
+                raise TypeError(f"M&Ms class mapping value must be an integer, got {type(raw_value).__name__}")
+
+            mapping[int_key] = int_val
         expected = set(range(NUM_CLASSES))
         if 0 not in mapping or mapping[0] != 0:
             raise ValueError("M&Ms class mapping must explicitly map raw background 0 to ACDC background 0")
@@ -49,6 +89,8 @@ class MNMSClassMapping:
 
     def apply(self, labels: np.ndarray) -> np.ndarray:
         labels = np.asarray(labels)
+        if not np.isfinite(labels).all() or not np.equal(labels, np.floor(labels)).all():
+            raise ValueError("M&Ms mask labels must be finite integers")
         unique = set(int(value) for value in np.unique(labels))
         unknown = sorted(unique - set(self.raw_to_acdc))
         if unknown:
@@ -91,8 +133,24 @@ def _volume_key(path: Path) -> str:
     return _strip_archive_suffix(path)
 
 
+def is_mnms_binary_path(path: str | Path) -> bool:
+    """Check if a path references the known mnm_binary component.
+
+    Targets the specific 'mnm_binary' component rather than arbitrary parent
+    directories containing the substring 'binary' (e.g. '/tmp/binary_test/mnm' is benign).
+    """
+    for part in Path(path).parts:
+        if part.lower() in {"mnm_binary", "mnms_binary"}:
+            return True
+    return False
+
+
 def discover_mnms_records(data_root: str | Path, split: str | None = None) -> list[VolumeRecord]:
     root = Path(data_root)
+    if is_mnms_binary_path(root):
+        raise ValueError(
+            f"M&Ms binary derivative dataset is incompatible with four-class contract: {root}"
+        )
     if not root.exists():
         raise FileNotFoundError(
             f"M&Ms data root does not exist: {root}. Provide the external dataset explicitly; "
@@ -100,7 +158,14 @@ def discover_mnms_records(data_root: str | Path, split: str | None = None) -> li
         )
     roots = [root]
     if split is not None:
-        aliases = {"train": ("train", "training"), "val": ("val", "validation"), "test": ("test", "testing")}.get(str(split).lower(), (str(split),))
+        aliases = {
+            "train": ("train", "training"),
+            "training": ("train", "training"),
+            "val": ("val", "validation"),
+            "validation": ("val", "validation"),
+            "test": ("test", "testing"),
+            "testing": ("test", "testing"),
+        }.get(str(split).lower(), (str(split),))
         roots = [root / alias for alias in aliases if (root / alias).exists()]
         if not roots:
             raise FileNotFoundError(f"M&Ms split directory {split!r} not found under {root}")
@@ -171,6 +236,11 @@ class MNMSDataset(VolumeSliceDataset):
         expected_slices: int | None = None,
         **kwargs: object,
     ) -> None:
+        root_path = Path(data_root)
+        if is_mnms_binary_path(root_path):
+            raise ValueError(
+                f"M&Ms binary derivative dataset is incompatible with four-class contract: {root_path}"
+            )
         all_records = list(records) if records is not None else discover_mnms_records(data_root, split=split)
         wanted = set(str(value) for value in case_ids) if case_ids is not None else None
         if wanted is not None:

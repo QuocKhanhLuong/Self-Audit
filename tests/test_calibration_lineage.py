@@ -936,7 +936,7 @@ def test_runner_calibration_branch_lineage_names_best_not_last(tmp_path: Path) -
     weights -- and records which channel currently carries it.
     """
 
-    from scripts.train_self_audit import run_post_training_calibration
+    from scripts.train_self_audit_legacy import run_post_training_calibration
 
     output_dir = tmp_path / "weights"
     report_dir = tmp_path / "reports"

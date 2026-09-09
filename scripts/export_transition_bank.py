@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 import sys
+from typing import Any, Mapping
 
 import torch
 
@@ -41,6 +42,11 @@ from self_audit.evaluation.transition_bank import (
     generate_on_policy_proposals,
     generate_synthetic_proposals,
     generation_provenance_record,
+)
+from self_audit.training.unified_config import (
+    ResolvedExecutionConfig,
+    UnifiedConfig,
+    resolve_downstream_config,
 )
 from self_audit.training._utils import (
     bind_evaluation_checkpoint,
@@ -81,86 +87,76 @@ def _identity(batch: dict, key: str) -> list:
     return column
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", default="configs/self_audit_joint.yaml")
-    parser.add_argument("--checkpoint", required=True)
-    parser.add_argument("--output", required=True, type=Path)
-    parser.add_argument("--data_root", default=None)
-    parser.add_argument("--split_manifest", default=None)
-    parser.add_argument("--split", default=None, help="Split name (default: config val_split)")
-    parser.add_argument("--image_size", type=int, default=None)
-    parser.add_argument("--device", default=None)
-    parser.add_argument("--batch_size", type=int, default=None)
-    parser.add_argument("--tau_accept", type=float, default=0.0)
-    parser.add_argument("--t_max", type=int, default=None)
-    parser.add_argument(
-        "--rollout_policy",
-        default=ROLLOUT_SELF_AUDIT,
-        choices=[ROLLOUT_SELF_AUDIT, ROLLOUT_ALWAYS_ACCEPT],
-        help=(
-            "self_audit is the deployable trajectory; always_accept_refinement is an "
-            "analysis-only prefix rollout and is tagged as such in every row"
-        ),
-    )
-    parser.add_argument(
-        "--include_synthetic",
-        action="store_true",
-        help="Also emit counterfactual rows. These consume training GT and are tagged "
-        "gt_used_in_generation=True; they are never a GT-free deployment claim.",
-    )
-    parser.add_argument("--synthetic_kind", default="negative", choices=["positive", "negative", "hard_neutral"])
-    parser.add_argument("--synthetic_operation", default=None)
-    parser.add_argument("--max_batches", type=int, default=None)
-    parser.add_argument("--metric_contract", default="foreground_dice_exclude_v1")
-    args = parser.parse_args()
+def export_transition_bank(
+    config_source: str | Path | Mapping[str, Any] | UnifiedConfig,
+    checkpoint: str | Path,
+    output: str | Path,
+    *,
+    data_root: str | None = None,
+    split_manifest: str | None = None,
+    split: str | None = None,
+    image_size: int | None = None,
+    device: str | torch.device | None = None,
+    batch_size: int | None = None,
+    tau_accept: float | None = None,
+    t_max: int | None = None,
+    rollout_policy: str = ROLLOUT_SELF_AUDIT,
+    include_synthetic: bool = False,
+    synthetic_kind: str = "negative",
+    synthetic_operation: str | None = None,
+    max_batches: int | None = None,
+    metric_contract: str | None = None,
+) -> dict[str, Any]:
+    """Export frozen Proposal-1 transition bank using resolved configuration."""
+    overrides: dict[str, Any] = {}
+    if data_root is not None:
+        overrides["data_root"] = data_root
+    if split_manifest is not None:
+        overrides["split_manifest"] = split_manifest
+    if image_size is not None:
+        overrides["image_size"] = image_size
+    if device is not None:
+        overrides["device"] = str(device)
+    if batch_size is not None:
+        overrides["batch_size"] = batch_size
 
-    config = load_config(args.config)
-    if args.data_root is not None:
-        config["data_root"] = args.data_root
-    if args.split_manifest is not None:
-        config["split_manifest"] = args.split_manifest
-    if args.image_size is not None:
-        config["image_size"] = args.image_size
-    split_name = str(args.split or config.get("val_split", "val"))
-
-    device = resolve_device(args.device or config.get("device"))
-    seed_everything(int(config.get("seed", 42)), deterministic=bool(config.get("deterministic", False)))
-    stats = validate_dataset_splits(config)
+    resolved = resolve_downstream_config(config_source, overrides=overrides)
+    split_name = str(split or resolved.val_split)
+    target_device = resolve_device(str(device) if device is not None else str(resolved.device))
+    seed_everything(resolved.seed, deterministic=resolved.deterministic)
+    stats = resolved.validate_splits()
     print(f"split_stats={stats}")
 
-    model = build_model_from_config(config, device)
+    model = resolved.build_model(target_device)
     binding = bind_evaluation_checkpoint(
         model,
-        [("checkpoint", args.checkpoint)],
-        map_location=device,
-        config=config,
+        [("checkpoint", checkpoint)],
+        map_location=target_device,
+        config=resolved.to_legacy_dict(),
     )
     print(
         f"bound checkpoint={binding.path} state_digest={binding.state_digest} "
         f"producer_git_sha={binding.producer.get('producer_git_sha')}"
     )
 
-    dataset = build_patient_dataset(config, split=split_name, train=False)
-    loader = build_data_loader(dataset, config, device=device, train=False, batch_size=args.batch_size)
-    audit_config = config.get("audit", {})
-    default_t_max = int(config.get("model", {}).get("max_turns", 3))
-    t_max = int(args.t_max) if args.t_max is not None else int(
-        audit_config.get("t_max", default_t_max) if isinstance(audit_config, dict) else default_t_max
-    )
+    dataset = resolved.build_dataset(split=split_name, train=False)
+    loader = resolved.build_dataloader(dataset, train=False, batch_size=batch_size)
+    effective_t_max = int(t_max) if t_max is not None else resolved.rollout_max_turns
+    effective_tau = float(tau_accept) if tau_accept is not None else resolved.rollout_tau
+    effective_contract = str(metric_contract or resolved.metric_contract)
 
     verify_bound_state(model, binding, boundary="transition_bank_export")
-    evaluator = TransitionEvaluator(contract=args.metric_contract)
+    evaluator = TransitionEvaluator(contract=effective_contract)
 
     rows: list[dict] = []
-    sources = [SOURCE_ON_POLICY if args.rollout_policy == ROLLOUT_SELF_AUDIT else SOURCE_ALWAYS_ACCEPT_PREFIX]
-    if args.include_synthetic:
+    sources = [SOURCE_ON_POLICY if rollout_policy == ROLLOUT_SELF_AUDIT else SOURCE_ALWAYS_ACCEPT_PREFIX]
+    if include_synthetic:
         sources.append(SOURCE_SYNTHETIC)
     observed = 0
     for batch_index, raw_batch in enumerate(loader):
-        if args.max_batches is not None and batch_index >= int(args.max_batches):
+        if max_batches is not None and batch_index >= int(max_batches):
             break
-        batch = move_batch(raw_batch, device)
+        batch = move_batch(raw_batch, target_device)
         images = batch["image"]
         # The mask is deliberately held back from generation and used only by
         # the evaluator below.
@@ -174,11 +170,11 @@ def main() -> None:
             patient_ids=patients,
             case_ids=cases,
             slice_indices=slices,
-            tau_accept=float(args.tau_accept),
-            t_max=t_max,
-            rollout_policy=args.rollout_policy,
+            tau_accept=effective_tau,
+            t_max=effective_t_max,
+            rollout_policy=rollout_policy,
         )
-        if args.include_synthetic:
+        if include_synthetic:
             proposals = proposals + generate_synthetic_proposals(
                 model,
                 images,
@@ -186,9 +182,9 @@ def main() -> None:
                 patient_ids=patients,
                 case_ids=cases,
                 slice_indices=slices,
-                kind=args.synthetic_kind,
-                operation=args.synthetic_operation,
-                tau_accept=float(args.tau_accept),
+                kind=synthetic_kind,
+                operation=synthetic_operation,
+                tau_accept=effective_tau,
                 draw_index=batch_index,
             )
         targets = {}
@@ -220,31 +216,93 @@ def main() -> None:
             binding=binding.as_dict(),
             loader=loader,
             split_name=split_name,
-            rollout_policy=args.rollout_policy,
-            gt_used_in_generation=bool(args.include_synthetic),
-            max_batches=args.max_batches,
+            rollout_policy=rollout_policy,
+            gt_used_in_generation=bool(include_synthetic),
+            max_batches=max_batches,
             batch_size=getattr(loader, "batch_size", None),
             observed_samples=observed,
         ),
         evaluation=evaluation_provenance_record(
-            contract=args.metric_contract,
+            contract=effective_contract,
             reference_source=f"{split_name}_split_reference_masks",
         ),
         protocol={
-            "tau_accept": float(args.tau_accept),
-            "t_max": int(t_max),
+            "tau_accept": effective_tau,
+            "t_max": int(effective_t_max),
             "sources": sources,
-            "rollout_policy": args.rollout_policy,
-            "include_synthetic": bool(args.include_synthetic),
-            "max_batches": args.max_batches,
+            "rollout_policy": rollout_policy,
+            "include_synthetic": bool(include_synthetic),
+            "max_batches": max_batches,
             "note": (
                 "always_accept_refinement rows are an analysis prefix rollout, not the "
                 "deployable self-audit trajectory"
             ),
         },
     )
-    dump_bank(bank, args.output)
-    print(f"bank_summary={bank_summary(bank)} saved={args.output}")
+    output_path = Path(output)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    dump_bank(bank, output_path)
+    print(f"bank_summary={bank_summary(bank)} saved={output_path}")
+    return bank
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--config",
+        default="configs/self_audit_full.yaml",
+        help="Path to unified or historical config YAML (default: configs/self_audit_full.yaml)",
+    )
+    parser.add_argument("--checkpoint", required=True)
+    parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--data_root", default=None)
+    parser.add_argument("--split_manifest", default=None)
+    parser.add_argument("--split", default=None, help="Split name (default: config val_split)")
+    parser.add_argument("--image_size", type=int, default=None)
+    parser.add_argument("--device", default=None)
+    parser.add_argument("--batch_size", type=int, default=None)
+    parser.add_argument("--tau_accept", type=float, default=None)
+    parser.add_argument("--t_max", type=int, default=None)
+    parser.add_argument(
+        "--rollout_policy",
+        default=ROLLOUT_SELF_AUDIT,
+        choices=[ROLLOUT_SELF_AUDIT, ROLLOUT_ALWAYS_ACCEPT],
+        help=(
+            "self_audit is the deployable trajectory; always_accept_refinement is an "
+            "analysis-only prefix rollout and is tagged as such in every row"
+        ),
+    )
+    parser.add_argument(
+        "--include_synthetic",
+        action="store_true",
+        help="Also emit counterfactual rows. These consume training GT and are tagged "
+        "gt_used_in_generation=True; they are never a GT-free deployment claim.",
+    )
+    parser.add_argument("--synthetic_kind", default="negative", choices=["positive", "negative", "hard_neutral"])
+    parser.add_argument("--synthetic_operation", default=None)
+    parser.add_argument("--max_batches", type=int, default=None)
+    parser.add_argument("--metric_contract", default="foreground_dice_exclude_v1")
+    args = parser.parse_args()
+
+    export_transition_bank(
+        config_source=args.config,
+        checkpoint=args.checkpoint,
+        output=args.output,
+        data_root=args.data_root,
+        split_manifest=args.split_manifest,
+        split=args.split,
+        image_size=args.image_size,
+        device=args.device,
+        batch_size=args.batch_size,
+        tau_accept=args.tau_accept,
+        t_max=args.t_max,
+        rollout_policy=args.rollout_policy,
+        include_synthetic=args.include_synthetic,
+        synthetic_kind=args.synthetic_kind,
+        synthetic_operation=args.synthetic_operation,
+        max_batches=args.max_batches,
+        metric_contract=args.metric_contract,
+    )
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -138,6 +138,7 @@ from self_audit.evaluation.volume_inference import (
     resolve_class_names,
     split_cases_by_phase,
 )
+from self_audit.training.unified_config import resolve_downstream_config
 from self_audit.training._utils import (
     bind_evaluation_checkpoint,
     build_data_loader,
@@ -1056,7 +1057,11 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         ),
     )
     parser.add_argument("--checkpoint", required=True)
-    parser.add_argument("--config", default="configs/self_audit_joint.yaml")
+    parser.add_argument(
+        "--config",
+        default="configs/self_audit_full.yaml",
+        help="Path to unified or historical config YAML (default: configs/self_audit_full.yaml)",
+    )
     parser.add_argument("--data_root", default=None)
     parser.add_argument("--split_manifest", default=None)
     parser.add_argument("--device", default=None)
@@ -1168,19 +1173,19 @@ def main(argv: Sequence[str] | None = None) -> dict[str, Any]:
             "NIfTI labels to evaluate_volume_native instead."
         )
 
-    config = load_config(args.config)
-    if args.data_root is not None:
-        config["data_root"] = args.data_root
-    if args.split_manifest is not None:
-        config["split_manifest"] = args.split_manifest
-    if args.num_workers is not None:
-        config["num_workers"] = args.num_workers
-    if args.batch_size is not None:
-        config["batch_size"] = args.batch_size
-
-    validate_dataset_splits(config)
-    device = resolve_device(args.device or config.get("device"))
-    model = build_model_from_config(config, device)
+    resolved = resolve_downstream_config(
+        args.config,
+        overrides={
+            "data_root": args.data_root,
+            "split_manifest": args.split_manifest,
+            "num_workers": args.num_workers,
+            "batch_size": args.batch_size,
+            "device": args.device,
+        },
+    )
+    resolved.validate_splits()
+    device = resolve_device(args.device or str(resolved.device))
+    model = resolved.build_model(device)
     # Bind rather than merely load: the binding carries the file hash, the
     # digest of the weights that are actually live after the load, the
     # producing revision and the resolved model identity.  Those are the
@@ -1190,29 +1195,31 @@ def main(argv: Sequence[str] | None = None) -> dict[str, Any]:
         model,
         [("checkpoint", args.checkpoint)],
         map_location=device,
-        config=config,
+        config=resolved.to_legacy_dict(),
     )
     model.eval()
 
-    split = str(config.get("val_split", "val"))
-    val_dataset = build_patient_dataset(config, split=split, train=False)
-    val_loader = build_data_loader(
+    split = str(resolved.val_split)
+    val_dataset = resolved.build_dataset(split=split, train=False)
+    val_loader = resolved.build_dataloader(
         val_dataset,
-        config,
-        device=device,
         train=False,
         batch_size=args.batch_size,
     )
 
-    audit_cfg = dict(config.get("audit", {}) or {})
+    legacy_config = resolved.to_legacy_dict()
+    audit_cfg = dict(legacy_config.get("audit", {}) or {})
+    if "tau_accept" not in audit_cfg and "tau_accept" in legacy_config:
+        audit_cfg["tau_accept"] = legacy_config["tau_accept"]
+
     neutral_margin = resolve_neutral_margin(
-        args.neutral_margin if args.neutral_margin is not None else audit_cfg.get("neutral_margin")
+        args.neutral_margin if args.neutral_margin is not None else resolved.neutral_margin
     )
     empty_policy = resolve_empty_policy(args.empty_policy)
     t_max = int(
         args.t_max
         if args.t_max is not None
-        else audit_cfg.get("t_max", config.get("model", {}).get("max_turns", 3))
+        else resolved.rollout_max_turns
     )
 
     # The expectation the calibration artifact is checked against is assembled
@@ -1260,12 +1267,12 @@ def main(argv: Sequence[str] | None = None) -> dict[str, Any]:
             t_max=t_max,
             neutral_margin=neutral_margin,
             empty_policy=empty_policy,
-            image_size=int(config.get("image_size", 256)),
-            num_classes=int(config.get("num_classes", 4)),
+            image_size=int(legacy_config.get("image_size", 256)),
+            num_classes=int(legacy_config.get("num_classes", 4)),
             batch_size=int(args.volume_batch_size),
             max_volumes=args.max_volumes,
             geometry_by_case=load_volume_geometry(
-                config.get("data_root", "preprocessed_data/ACDC"), split=split
+                legacy_config.get("data_root", "preprocessed_data/ACDC"), split=split
             ),
         )
 
@@ -1285,7 +1292,7 @@ def main(argv: Sequence[str] | None = None) -> dict[str, Any]:
         firewall_batches=int(args.firewall_batches),
         probe_batches=args.probe_batches if args.probe_batches is not None else args.max_val_batches,
         evidence_trajectory=str(args.evidence_trajectory),
-        num_classes=int(config.get("num_classes", 4)),
+        num_classes=int(legacy_config.get("num_classes", 4)),
         volume=volume_block,
         disable_tqdm=bool(args.no_tqdm),
     )

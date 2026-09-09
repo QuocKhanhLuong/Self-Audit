@@ -78,7 +78,7 @@ def test_mnms_missing_pair_fails_closed(tmp_path: Path) -> None:
 
 def test_external_command_contract_is_documented() -> None:
     readme = (Path(__file__).resolve().parents[1] / "README.md").read_text(encoding="utf-8")
-    assert "phase_c_best.pt" in readme
+    assert "best.pt" in readme or "phase_c_best.pt" in readme
     assert "--split testing" in readme
     assert "--tau-accept" in readme
     assert "preprocessed_data/mnm" in readme

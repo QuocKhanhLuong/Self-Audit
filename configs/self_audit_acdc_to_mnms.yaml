@@ -1,10 +1,10 @@
-# Protocol-level declaration: train A→B→C on ACDC, then run one frozen
+# Protocol-level declaration: train unified Self-Audit curriculum on ACDC, then run one frozen
 # external evaluation on the M&Ms testing cohort.
 protocol: acdc_to_mnms_domain_shift
 
 source_training:
+  config: configs/self_audit_full.yaml
   dataset: acdc
-  phases: [annotation, auditor, joint]
 
 external_test:
   dataset: mnms

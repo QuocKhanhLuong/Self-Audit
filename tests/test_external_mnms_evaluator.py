@@ -22,6 +22,7 @@ def _write_mnms_fixture(root: Path) -> None:
 
 def test_external_evaluator_report_is_fixed_tau_and_independent(tmp_path, monkeypatch) -> None:
     _write_mnms_fixture(tmp_path)
+    torch.save({"training_dataset": "acdc", "model": {}}, tmp_path / "checkpoint.pt")
     import scripts.evaluate_external_mnms as evaluator
 
     class FakeModel(nn.Module):

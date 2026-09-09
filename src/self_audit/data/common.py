@@ -542,6 +542,8 @@ class VolumeSliceDataset(Dataset):
             raise ValueError(f"Image/mask shape mismatch for {record.case_id}: {volume.shape} vs {mask.shape}")
         volume = percentile_clip_and_zscore(volume, self.lower_percentile, self.upper_percentile)
         spacing = record.spacing or reorder_spacing(volume_spacing, source_volume_axis) or reorder_spacing(mask_spacing, source_volume_axis)
+        if not np.isfinite(mask).all() or not np.equal(mask, np.floor(mask)).all():
+            raise ValueError(f"Mask labels for {record.case_id} must be finite integers")
         value = (volume, mask.astype(np.int64, copy=False), spacing)
         self._cache[record_index] = value
         if len(self._cache) > max(int(self._cache_size), 1):

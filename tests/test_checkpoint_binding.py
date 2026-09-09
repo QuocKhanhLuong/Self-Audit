@@ -19,7 +19,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset, Subset
 
-from scripts.train_self_audit import (
+from scripts.train_self_audit_legacy import (
     bind_post_training_checkpoint,
     run_post_training_calibration,
 )
@@ -401,7 +401,7 @@ def test_lineage_keeps_producer_and_evaluation_revisions_apart(tmp_path: Path) -
 def test_runner_post_training_branch_binds_best_at_every_consumer(tmp_path: Path, monkeypatch) -> None:
     """The collector, the calibration sweep and both diagnostics see best."""
 
-    import scripts.train_self_audit as runner
+    import scripts.train_self_audit_legacy as runner
 
     output_dir = tmp_path / "weights"
     report_dir = tmp_path / "reports"
@@ -887,6 +887,7 @@ def _stub_cache_cli(monkeypatch, model: SelfAuditNet, loader: DataLoader):
     """Point the real CLI at a tiny in-memory model/loader, nothing else stubbed."""
 
     import scripts.cache_validation_transitions as cli
+    from src.self_audit.training.unified_config import ResolvedExecutionConfig
 
     config = {
         "model": dict(TINY_MODEL_CONFIG),
@@ -894,11 +895,22 @@ def _stub_cache_cli(monkeypatch, model: SelfAuditNet, loader: DataLoader):
         "audit": {"t_max": 2},
         "seed": 7,
     }
-    monkeypatch.setattr(cli, "load_config", lambda path: dict(config))
-    monkeypatch.setattr(cli, "validate_dataset_splits", lambda cfg: {"validated": True})
-    monkeypatch.setattr(cli, "build_model_from_config", lambda cfg, device: model)
-    monkeypatch.setattr(cli, "build_patient_dataset", lambda cfg, split, train: loader.dataset)
-    monkeypatch.setattr(cli, "build_data_loader", lambda ds, cfg, **kwargs: loader)
+
+    class _StubResolvedConfig(ResolvedExecutionConfig):
+        def build_model(self, device: torch.device | None = None) -> torch.nn.Module:
+            return model
+
+        def build_dataset(self, split: str | None = None, train: bool = False) -> Dataset:
+            return loader.dataset
+
+        def build_dataloader(self, dataset, train: bool = False, batch_size: int | None = None) -> DataLoader:
+            return loader
+
+        def validate_splits(self) -> dict[str, Any]:
+            return {"validated": True}
+
+    stub_resolved = _StubResolvedConfig(unified_config=None, flat_config=dict(config), is_unified=False)
+    monkeypatch.setattr(cli, "resolve_downstream_config", lambda *args, **kwargs: stub_resolved)
     return cli
 
 
@@ -1083,7 +1095,7 @@ def _tau_args(**overrides: Any) -> argparse.Namespace:
 
 
 def _resolve_with(model: SelfAuditNet, loader: DataLoader, tmp_path: Path, artifact: Path, **overrides: Any):
-    import scripts.train_self_audit as runner
+    import scripts.train_self_audit_legacy as runner
 
     cache = _real_cache(model, loader)
     return runner._resolve_tau_accept(
