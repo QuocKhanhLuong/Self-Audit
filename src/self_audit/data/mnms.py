@@ -32,11 +32,19 @@ class MNMSClassMapping:
 
     def __post_init__(self) -> None:
         mapping = {int(key): int(value) for key, value in self.raw_to_acdc.items()}
+        expected = set(range(NUM_CLASSES))
         if 0 not in mapping or mapping[0] != 0:
             raise ValueError("M&Ms class mapping must explicitly map raw background 0 to ACDC background 0")
+        if set(mapping) != expected:
+            raise ValueError(
+                "M&Ms class mapping must explicitly map raw classes 0..3; "
+                f"got raw keys {sorted(mapping)}"
+            )
         values = set(mapping.values())
-        if not values.issubset(set(range(NUM_CLASSES))):
-            raise ValueError(f"M&Ms mapping targets must be in 0..{NUM_CLASSES - 1}, got {values}")
+        if values != expected:
+            raise ValueError(
+                f"M&Ms mapping must be a one-to-one four-class mapping to 0..{NUM_CLASSES - 1}, got {values}"
+            )
         object.__setattr__(self, "raw_to_acdc", mapping)
 
     def apply(self, labels: np.ndarray) -> np.ndarray:

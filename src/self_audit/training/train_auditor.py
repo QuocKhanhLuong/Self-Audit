@@ -22,7 +22,7 @@ for path in (ROOT, SRC):
 from self_audit.audit.counterfactual import CounterfactualGenerator
 from self_audit.audit.semantics import check_generation_tolerance, resolve_neutral_margin
 from self_audit.audit.targets import build_transition_targets
-from self_audit.evaluation.metrics import transition_audit_metrics
+from self_audit.evaluation.transition_accumulator import TransitionMetricAccumulator
 from self_audit.losses.audit import audit_loss
 from self_audit.training._utils import (
     add_wandb_and_tqdm_args,
@@ -216,12 +216,10 @@ def _auditor_batch(
         transitions = build_auditor_transitions(output, batch["mask"], generator)
     timings["counterfactual_ms"] = (time.perf_counter() - start) * 1000.0
     losses: list[torch.Tensor] = []
-    # Collected predictions/targets are bucketed by provenance so validation can
-    # report on-policy and synthetic quality separately.  The "combined" bucket
-    # is appended in loop order, so it is bit-identical to the single flat list
-    # this function used to return.
-    buckets: dict[str, list[list[torch.Tensor]]] = {
-        name: [[], [], [], []] for name in (*PROVENANCE_KINDS, "combined")
+    # Validation keeps only CPU-reduced summaries.  Retaining local logits for
+    # the whole epoch was the Phase-B validation OOM source.
+    transition_summaries: dict[str, list[tuple[torch.Tensor, torch.Tensor, torch.Tensor]]] = {
+        name: [] for name in PROVENANCE_KINDS
     }
     group_counts: dict[str, int] = {name: 0 for name in PROVENANCE_KINDS}
     local_counts = torch.zeros(3, dtype=torch.long, device=batch["mask"].device)
@@ -259,15 +257,17 @@ def _auditor_batch(
         group_counts[kind] += 1
         local_counts += torch.bincount(targets.local.reshape(-1), minlength=3).to(local_counts.device)
         if collect:
-            row = (
-                audit_output.local_logits.detach(),
-                targets.local.detach(),
-                audit_output.delta_q.detach().reshape(-1),
-                targets.delta_dice.detach().reshape(-1),
-            )
-            for name in (kind, "combined"):
-                for slot, value in zip(buckets[name], row):
-                    slot.append(value)
+            local_prediction = audit_output.local_logits.detach().argmax(dim=1).reshape(-1).long()
+            local_target = targets.local.detach().reshape(-1).long()
+            if local_prediction.numel() != local_target.numel():
+                raise ValueError("auditor local prediction/target pixel counts do not match")
+            encoded = local_target * 3 + local_prediction
+            local_confusion = torch.bincount(encoded, minlength=9).reshape(3, 3).cpu()
+            delta_prediction = audit_output.delta_q.detach().reshape(-1).cpu()
+            delta_target = targets.delta_dice.detach().reshape(-1).cpu()
+            if delta_prediction.numel() != delta_target.numel():
+                raise ValueError("auditor delta prediction/target counts do not match")
+            transition_summaries[kind].append((local_confusion, delta_prediction, delta_target))
     timings["auditor_ms"] = (time.perf_counter() - start) * 1000.0
     if not losses:
         return None, {
@@ -275,7 +275,7 @@ def _auditor_batch(
             "transitions_by_provenance": {name: 0 for name in PROVENANCE_KINDS},
             "timings": timings,
             "local_counts": local_counts,
-            "transition_data": None,
+            "transition_summaries": None,
         }
     # Uniform mean over transition groups -- unchanged, synthetic still carries
     # its historical share of the TRAINING loss.  Only reporting is partitioned.
@@ -285,10 +285,7 @@ def _auditor_batch(
         "transitions_by_provenance": dict(group_counts),
         "timings": timings,
         "local_counts": local_counts,
-        "transition_data": {
-            name: tuple(torch.cat(slot) if slot else None for slot in slots)
-            for name, slots in buckets.items()
-        },
+        "transition_summaries": transition_summaries if collect else None,
     }
     return loss, data
 
@@ -419,51 +416,6 @@ def train_auditor_epoch(
     return result
 
 
-#: Keys every transition-metric namespace is guaranteed to carry, so a caller
-#: reading ``audit/on_policy/auroc`` never has to guard for a missing key when a
-#: provenance bucket happens to be empty.
-TRANSITION_METRIC_KEYS = (
-    "improve_regress_accuracy",
-    "auroc",
-    "auprc",
-    "correlation_delta_q_delta_dice",
-    "local_fix_f1",
-    "local_regress_f1",
-)
-
-
-def _empty_transition_metrics() -> dict[str, float]:
-    return {key: float("nan") for key in TRANSITION_METRIC_KEYS}
-
-
-def _transition_metrics_for(
-    parts: list[tuple[Any, Any, Any, Any]],
-    *,
-    neutral_margin: float | None,
-) -> tuple[dict[str, float], int]:
-    """Concatenate one provenance bucket and score it.
-
-    ``transition_audit_metrics`` is gaining a ``neutral_margin`` keyword in a
-    parallel change (AGY-1).  Call it defensively until that lands: try the
-    keyword, and fall back to the historical positional call if the signature
-    does not accept it yet.
-    """
-
-    usable = [item for item in parts if item is not None and item[2] is not None]
-    if not usable:
-        return _empty_transition_metrics(), 0
-    local_pred = torch.cat([item[0] for item in usable])
-    local_target = torch.cat([item[1] for item in usable])
-    delta_pred = torch.cat([item[2] for item in usable])
-    delta_target = torch.cat([item[3] for item in usable])
-    metrics = transition_audit_metrics(
-        local_pred, local_target, delta_pred, delta_target, neutral_margin=neutral_margin
-    )
-    result = _empty_transition_metrics()
-    result.update({str(key): value for key, value in metrics.items()})
-    return result, int(delta_pred.numel())
-
-
 def resolve_primary_metric(on_policy_metrics: Mapping[str, Any]) -> tuple[float, str]:
     """Select the checkpoint metric from the ON-POLICY namespace only.
 
@@ -524,9 +476,7 @@ def validate_auditor_epoch(
     generator = generator or CounterfactualGenerator()
     losses: list[float] = []
     namespaces = (*PROVENANCE_KINDS, "combined")
-    transition_parts: dict[str, list[tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]]] = {
-        name: [] for name in namespaces
-    }
+    accumulators = {name: TransitionMetricAccumulator() for name in PROVENANCE_KINDS}
     group_counts: dict[str, int] = {name: 0 for name in namespaces}
     count = 0
     timings = {"annotation_forward_ms": 0.0, "counterfactual_ms": 0.0, "auditor_ms": 0.0}
@@ -559,18 +509,25 @@ def validate_auditor_epoch(
         local_counts += details["local_counts"].cpu()
         for key, value in details["timings"].items():
             timings[key] += float(value)
-        for name, item in (details["transition_data"] or {}).items():
-            if name in transition_parts:
-                transition_parts[name].append(item)
+        for name, summaries in (details.get("transition_summaries") or {}).items():
+            if name not in PROVENANCE_KINDS:
+                continue
+            for local_confusion, delta_prediction, delta_target in summaries:
+                accumulators[name].update(local_confusion, delta_prediction, delta_target)
         for name, value in details.get("transitions_by_provenance", {}).items():
             if name in group_counts:
                 group_counts[name] += int(value)
                 group_counts["combined"] += int(value)
         pbar.set_postfix({"loss": f"{float(loss.detach()):.4f}", "trans": f"{count}"})
+    combined_accumulator = TransitionMetricAccumulator()
+    for name in PROVENANCE_KINDS:
+        combined_accumulator.merge(accumulators[name])
     namespace_metrics: dict[str, dict[str, float]] = {}
     namespaced: dict[str, float] = {}
     for name in namespaces:
-        scores, rows = _transition_metrics_for(transition_parts[name], neutral_margin=neutral_margin)
+        accumulator = combined_accumulator if name == "combined" else accumulators[name]
+        scores = accumulator.finalize(neutral_margin=neutral_margin)
+        rows = int(scores.get("transition_count", 0))
         scores["transition_count"] = float(rows)
         if name in group_counts:
             scores["transition_group_count"] = float(group_counts[name])

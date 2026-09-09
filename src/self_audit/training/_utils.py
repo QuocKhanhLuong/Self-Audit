@@ -283,6 +283,33 @@ def build_patient_dataset(
     split: str,
     train: bool,
 ) -> torch.utils.data.Dataset:
+    dataset_name = str(config.get("dataset", "acdc")).strip().lower()
+    if dataset_name not in {"acdc", "mnms"}:
+        raise ValueError(f"Unsupported dataset {dataset_name!r}")
+    if dataset_name == "mnms":
+        try:
+            from self_audit.data.mnms import DEFAULT_MNMS_TO_ACDC, MNMSClassMapping, MNMSDataset
+        except ImportError:
+            from src.self_audit.data.mnms import DEFAULT_MNMS_TO_ACDC, MNMSClassMapping, MNMSDataset
+
+        num_classes = int(config.get("num_classes", config.get("model", {}).get("num_classes", 4)))
+        if num_classes != 4:
+            raise ValueError(f"M&Ms external evaluation requires the four-class contract (num_classes=4), got {num_classes}")
+        raw_mapping = config.get("raw_to_acdc", DEFAULT_MNMS_TO_ACDC)
+        if not isinstance(raw_mapping, Mapping):
+            raise ValueError("raw_to_acdc must be a mapping from raw M&Ms labels to ACDC labels")
+        kwargs: dict[str, Any] = {
+            "data_root": config.get("data_root", "preprocessed_data/mnm"),
+            "split": split,
+            "image_size": validate_image_size(config.get("image_size")),
+            "augment": bool(train and config.get("augment", False)),
+            "class_mapping": MNMSClassMapping({int(key): int(value) for key, value in raw_mapping.items()}),
+        }
+        for key in ("depth_axis", "expected_slices", "max_cache"):
+            if key in config:
+                kwargs[key] = config[key]
+        return MNMSDataset(**kwargs)
+
     try:
         from self_audit.data.acdc import ACDCDataset
     except ImportError:
@@ -343,8 +370,87 @@ def validate_dataset_splits(config: Mapping[str, Any]) -> dict[str, Any]:
     dataset_name = str(config.get("dataset", "acdc")).lower()
     if dataset_name not in {"acdc", "mnms"}:
         raise ValueError(f"Unsupported dataset {dataset_name!r}")
-    if dataset_name != "acdc":
-        return {"dataset": dataset_name, "validated": False, "reason": "external dataset"}
+    if dataset_name == "mnms":
+        try:
+            from self_audit.data.common import compute_split_signature, load_array, to_depth_first
+            from self_audit.data.mnms import DEFAULT_MNMS_TO_ACDC, MNMSClassMapping, discover_mnms_records
+        except ImportError:
+            from src.self_audit.data.common import compute_split_signature, load_array, to_depth_first
+            from src.self_audit.data.mnms import DEFAULT_MNMS_TO_ACDC, MNMSClassMapping, discover_mnms_records
+
+        num_classes = int(config.get("num_classes", config.get("model", {}).get("num_classes", 4)))
+        if num_classes != 4:
+            raise ValueError(f"M&Ms external evaluation requires the four-class contract (num_classes=4), got {num_classes}")
+        raw_mapping = config.get("raw_to_acdc", DEFAULT_MNMS_TO_ACDC)
+        if not isinstance(raw_mapping, Mapping):
+            raise ValueError("raw_to_acdc must be a mapping from raw M&Ms labels to ACDC labels")
+        mapping = MNMSClassMapping({int(key): int(value) for key, value in raw_mapping.items()})
+        data_root = config.get("data_root", "preprocessed_data/mnm")
+        requested_split = str(config.get("test_split", config.get("split", "testing")))
+        records = discover_mnms_records(data_root, split=requested_split)
+        depth_axis = validate_depth_axis(config.get("depth_axis"))
+        total_slices = 0
+        labels_seen: set[int] = set()
+        mapped_labels_seen: set[int] = set()
+        descriptors: list[dict[str, Any]] = []
+        for record in records:
+            volume, _ = load_array(record.image_path)
+            raw_mask, _ = load_array(record.mask_path)
+            volume_zhw = to_depth_first(volume, depth_axis=depth_axis)
+            mask_zhw = to_depth_first(raw_mask, depth_axis=depth_axis)
+            if volume_zhw.shape != mask_zhw.shape:
+                raise ValueError(
+                    f"M&Ms volume/mask shape mismatch for {record.case_id}: "
+                    f"{volume_zhw.shape} vs {mask_zhw.shape}"
+                )
+            labels_seen.update(int(value) for value in np.unique(mask_zhw))
+            mapped_mask = mapping.apply(mask_zhw)
+            mapped_labels_seen.update(int(value) for value in np.unique(mapped_mask))
+            total_slices += int(volume_zhw.shape[0])
+            descriptors.append({
+                "case_id": record.case_id,
+                "patient_id": record.patient_id,
+                "image_path": str(record.image_path),
+                "mask_path": str(record.mask_path),
+                "split": requested_split,
+                "source_format": record.source_format,
+            })
+        canonical_split = "test"
+        identities = [record.case_id for record in records]
+        patient_count = len({record.patient_id for record in records})
+        signature = compute_split_signature({canonical_split: records})
+        case_counts = {canonical_split: len(records), requested_split: len(records)}
+        patient_counts = {canonical_split: patient_count, requested_split: patient_count}
+        slice_counts = {canonical_split: total_slices, requested_split: total_slices}
+        label_values = {canonical_split: sorted(labels_seen), requested_split: sorted(labels_seen)}
+        mapped_label_values = {
+            canonical_split: sorted(mapped_labels_seen),
+            requested_split: sorted(mapped_labels_seen),
+        }
+        effective_identities = {canonical_split: identities, requested_split: identities}
+        effective_records = {canonical_split: descriptors, requested_split: descriptors}
+        return {
+            "dataset": dataset_name,
+            "validated": True,
+            "strategy": "explicit_split",
+            "split": requested_split,
+            "split_signature": signature,
+            "membership_signature": signature,
+            "cases": case_counts,
+            "case_counts": case_counts,
+            "patients": patient_counts,
+            "patient_counts": patient_counts,
+            "slices": slice_counts,
+            "slice_counts": slice_counts,
+            "label_values": label_values,
+            "mapped_label_values": mapped_label_values,
+            "test_available": True,
+            "records": len(records),
+            "effective_identities": effective_identities,
+            "effective_records": effective_records,
+            "raw_to_acdc": dict(mapping.raw_to_acdc),
+            "content_hash_duplicate_detection": {"executed": False, "status": "deferred"},
+        }
     try:
         from self_audit.data.acdc import discover_acdc_records, resolve_effective_acdc_splits
         from self_audit.data.common import load_array, to_depth_first
