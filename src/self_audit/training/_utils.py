@@ -1042,9 +1042,10 @@ def _cpu_state_dict(state: Mapping[str, Any]) -> dict[str, Any]:
 def _rng_state() -> dict[str, Any]:
     """Capture Python, NumPy, and PyTorch RNG states in a portable weights_only format."""
     np_state = np.random.get_state()
-    # Convert numpy ndarray keys to torch tensor for safe weights_only serialization
-    # (avoids numpy._core.multiarray._reconstruct UnpicklingError under weights_only=True)
-    np_keys = torch.from_numpy(np_state[1].copy())
+    # Keep MT19937 keys as Python ints: older PyTorch versions cannot serialize
+    # torch.uint32 tensors (the dtype produced by torch.from_numpy here).
+    # The restore path converts this list back to np.uint32.
+    np_keys = [int(value) for value in np_state[1].tolist()]
     portable_numpy = (
         str(np_state[0]),
         np_keys,
@@ -1078,7 +1079,8 @@ def _restore_rng_state(state: Mapping[str, Any]) -> None:
         if isinstance(raw_np, (tuple, list)) and len(raw_np) == 5:
             algo, keys, pos, has_gauss, cached_gaussian = raw_np
             if torch.is_tensor(keys):
-                keys_np = keys.cpu().numpy()
+                # Historical checkpoints may contain a torch.uint32/int64 tensor.
+                keys_np = keys.cpu().numpy().astype(np.uint32, copy=False)
             elif isinstance(keys, (list, tuple)):
                 keys_np = np.array(keys, dtype=np.uint32)
             elif isinstance(keys, np.ndarray):
@@ -1092,7 +1094,7 @@ def _restore_rng_state(state: Mapping[str, Any]) -> None:
             if keys is None:
                 raise ValueError("NumPy RNG state mapping missing 'keys'")
             if torch.is_tensor(keys):
-                keys_np = keys.cpu().numpy()
+                keys_np = keys.cpu().numpy().astype(np.uint32, copy=False)
             elif isinstance(keys, (list, tuple)):
                 keys_np = np.array(keys, dtype=np.uint32)
             elif isinstance(keys, np.ndarray):

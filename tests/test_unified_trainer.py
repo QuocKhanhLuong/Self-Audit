@@ -1136,6 +1136,16 @@ def test_rng_state_full_roundtrip_and_backward_compatibility(tmp_path: Path) -> 
         _restore_rng_state("not_a_mapping")
 
 
+def test_rng_state_numpy_keys_use_portable_python_integers() -> None:
+    """NumPy MT19937 keys must not rely on torch.uint32 checkpoint support."""
+    from self_audit.training._utils import _rng_state
+
+    keys = _rng_state()["numpy"][1]
+    assert isinstance(keys, list)
+    assert keys
+    assert all(type(value) is int for value in keys)
+
+
 def test_cohort_descriptor_detects_same_count_changed_patient_fixtures() -> None:
     """compare_cohort_descriptors catches same-count changed patient fixture, nested sampling, and empty metadata."""
     from self_audit.training.unified_trainer import compare_cohort_descriptors
