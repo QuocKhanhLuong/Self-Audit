@@ -102,6 +102,7 @@ for path in (ROOT, SRC):
         sys.path.insert(0, str(path))
 
 from self_audit.audit.counterfactual import CounterfactualGenerator
+from self_audit.artifact_io import atomic_write_json
 from self_audit.audit.semantics import (
     BENEFICIAL,
     DEFAULT_EMPTY_CLASS_POLICY,
@@ -1301,8 +1302,7 @@ def main(argv: Sequence[str] | None = None) -> dict[str, Any]:
     payload["cohort_policy"] = cohort_policy.as_dict()
 
     output = Path(args.output)
-    output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(json_safe(payload), indent=2) + "\n", encoding="utf-8")
+    atomic_write_json(output, payload, indent=2, sort_keys=True)
     _print_summary(payload, output)
     return payload
 

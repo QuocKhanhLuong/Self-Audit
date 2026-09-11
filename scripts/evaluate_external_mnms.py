@@ -25,6 +25,7 @@ for path in (ROOT, SRC):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
+from self_audit.artifact_io import atomic_write_json, json_safe_artifact
 from self_audit.audit.semantics import resolve_empty_policy, resolve_neutral_margin
 from self_audit.data.common import load_array, to_depth_first
 from self_audit.evaluation.cohort import evaluate_volume_cohort
@@ -46,22 +47,7 @@ PHASE_PARTITION_UNAVAILABLE = "unavailable_without_authoritative_metadata"
 DEFAULT_MAPPING = {0: 0, 1: 3, 2: 2, 3: 1}
 
 
-def _json_safe(value: Any) -> Any:
-    if isinstance(value, Mapping):
-        return {str(key): _json_safe(child) for key, child in value.items()}
-    if isinstance(value, (list, tuple)):
-        return [_json_safe(child) for child in value]
-    if torch.is_tensor(value):
-        return _json_safe(value.detach().cpu().tolist())
-    if isinstance(value, np.ndarray):
-        return _json_safe(value.tolist())
-    if isinstance(value, (np.floating, np.integer, np.bool_)):
-        return _json_safe(value.item())
-    if isinstance(value, Path):
-        return str(value)
-    if isinstance(value, float) and not np.isfinite(value):
-        return None
-    return value
+_json_safe = json_safe_artifact
 
 
 def _normalize_external_config(
@@ -324,8 +310,7 @@ def run_external_evaluation(
     safe_payload = _json_safe(payload)
     if output is not None:
         output_path = Path(output)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(json.dumps(safe_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        atomic_write_json(output_path, payload, indent=2, sort_keys=True)
     return safe_payload
 
 

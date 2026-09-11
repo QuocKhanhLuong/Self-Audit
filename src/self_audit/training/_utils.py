@@ -27,6 +27,19 @@ from ..provenance import (
     verify_model_config,
 )
 from ..provenance import file_sha256 as _provenance_file_sha256
+from .checkpoint_commit import (
+    PUBLIC_BEST_NAME,
+    SelectionError,
+    resolve_best_reference,
+)
+from ..serialization import (
+    CheckpointSerializationError,
+    SAFE_TENSOR_DTYPES,
+    atomic_save_torch,
+    clean_wandb_payload,
+    normalize_checkpoint_payload,
+    normalize_metadata_tree,
+)
 
 
 # Keep the model constructor boundary explicit.  Training and data settings
@@ -49,7 +62,7 @@ CHECKPOINT_FORMAT_VERSION = 1
 
 
 def _require_integer(value: Any, name: str, *, minimum: int) -> int:
-    if isinstance(value, bool) or not isinstance(value, Integral):
+    if isinstance(value, (bool, np.bool_)) or not isinstance(value, (Integral, np.integer)):
         raise ValueError(f"{name} must be an integer >= {minimum}, got {value!r}")
     value = int(value)
     if value < minimum:
@@ -1017,20 +1030,65 @@ def finalize_optimizer_step(
 
 
 def _finite_tree(value: Any, name: str) -> None:
-    if torch.is_tensor(value) and not is_finite(value):
-        raise FloatingPointError(f"Non-finite tensor in {name}")
-    if isinstance(value, Mapping):
+    if torch.is_tensor(value):
+        if not is_finite(value):
+            raise FloatingPointError(f"Non-finite tensor in {name}")
+    elif isinstance(value, np.ndarray):
+        if not bool(np.isfinite(value).all()):
+            raise FloatingPointError(f"Non-finite ndarray in {name}")
+    elif isinstance(value, (float, np.floating)):
+        if not math.isfinite(float(value)):
+            raise FloatingPointError(f"Non-finite value in {name}: {value}")
+    elif isinstance(value, (complex, np.complexfloating)):
+        if not (math.isfinite(value.real) and math.isfinite(value.imag)):
+            raise FloatingPointError(f"Non-finite value in {name}: {value}")
+    elif isinstance(value, Mapping):
         for key, child in value.items():
             _finite_tree(child, f"{name}.{key}")
-    elif isinstance(value, (list, tuple)):
+    elif isinstance(value, (list, tuple, set)):
         for index, child in enumerate(value):
             _finite_tree(child, f"{name}[{index}]")
+
+
+def validate_checkpoint_finite_state(payload: Mapping[str, Any]) -> None:
+    """Validate that model, optimizer, scheduler, and scaler states contain only finite values.
+
+    Inspects tensors and numeric scalars across all present training state components
+    ('model', 'state_dict', 'optimizer', 'scheduler', 'scaler').
+    Raises FloatingPointError if any non-finite (NaN or Inf) tensor or scalar is detected.
+    Does not sanitize or mutate any training state.
+    """
+    if not isinstance(payload, Mapping):
+        raise ValueError(f"Checkpoint payload must be a mapping, got {type(payload).__name__}")
+
+    # Validate model / state_dict
+    if "model" in payload and payload["model"] is not None:
+        model_val = payload["model"]
+        if isinstance(model_val, nn.Module):
+            model_val = model_val.state_dict()
+        _finite_tree(model_val, "model")
+    elif "state_dict" in payload and payload["state_dict"] is not None:
+        model_val = payload["state_dict"]
+        if isinstance(model_val, nn.Module):
+            model_val = model_val.state_dict()
+        _finite_tree(model_val, "state_dict")
+    elif payload and all(isinstance(k, str) and torch.is_tensor(v) for k, v in payload.items()):
+        _finite_tree(payload, "model")
+
+    # Validate optimizer, scheduler, scaler if present
+    for component in ("optimizer", "scheduler", "scaler"):
+        if component in payload and payload[component] is not None:
+            _finite_tree(payload[component], component)
 
 
 def _cpu_state_dict(state: Mapping[str, Any]) -> dict[str, Any]:
     result: dict[str, Any] = {}
     for key, value in state.items():
         if torch.is_tensor(value):
+            if value.dtype == getattr(torch, "uint32", None):
+                raise CheckpointSerializationError(
+                    f"Unsupported tensor dtype {value.dtype} at 'model.{key}': not supported for safe weights_only serialization"
+                )
             result[str(key)] = value.detach().cpu().clone()
         elif isinstance(value, Mapping):
             result[str(key)] = _cpu_state_dict(value)
@@ -1042,9 +1100,9 @@ def _cpu_state_dict(state: Mapping[str, Any]) -> dict[str, Any]:
 def _rng_state() -> dict[str, Any]:
     """Capture Python, NumPy, and PyTorch RNG states in a portable weights_only format."""
     np_state = np.random.get_state()
-    # Convert numpy ndarray keys to torch tensor for safe weights_only serialization
-    # (avoids numpy._core.multiarray._reconstruct UnpicklingError under weights_only=True)
-    np_keys = torch.from_numpy(np_state[1].copy())
+    # Lossless int64 NumPy MT keys for safe weights_only serialization on all torch versions
+    # (avoids KeyError uint32 on torch <= 2.4.1 and avoids numpy reconstruct UnpicklingError)
+    np_keys = torch.from_numpy(np_state[1].astype(np.int64))
     portable_numpy = (
         str(np_state[0]),
         np_keys,
@@ -1058,11 +1116,11 @@ def _rng_state() -> dict[str, Any]:
         "torch": torch.get_rng_state(),
     }
     if torch.cuda.is_available():
-        state["cuda"] = [value.clone() for value in torch.cuda.get_rng_state_all()]
+        state["cuda"] = [value.clone().cpu() for value in torch.cuda.get_rng_state_all()]
     return state
 
 
-def _restore_rng_state(state: Mapping[str, Any]) -> None:
+def _restore_rng_state(state: Mapping[str, Any], *, exact_cuda: bool = False) -> None:
     """Restore Python, NumPy, and PyTorch RNG states with backward historical compatibility."""
     if not isinstance(state, Mapping):
         raise TypeError(f"rng_state must be a mapping, got {type(state).__name__}")
@@ -1070,55 +1128,154 @@ def _restore_rng_state(state: Mapping[str, Any]) -> None:
         py_state = state["python"]
         if py_state is None:
             raise ValueError("Malformed 'python' RNG state: value cannot be None")
+        if not isinstance(py_state, (tuple, list)):
+            raise TypeError(f"Malformed 'python' RNG state: expected tuple or list, got {type(py_state).__name__}")
+        if len(py_state) not in (3, 4):
+            raise ValueError(f"Malformed 'python' RNG state: expected 3 or 4 elements, got {len(py_state)}")
+        if isinstance(py_state, list):
+            py_state = tuple(py_state)
+        if isinstance(py_state[1], list):
+            py_state = (py_state[0], tuple(py_state[1]), *py_state[2:])
         random.setstate(py_state)
     if "numpy" in state:
         raw_np = state["numpy"]
         if raw_np is None:
             raise ValueError("Malformed 'numpy' RNG state: value cannot be None")
-        if isinstance(raw_np, (tuple, list)) and len(raw_np) == 5:
+        if isinstance(raw_np, (tuple, list)):
+            if len(raw_np) != 5:
+                raise ValueError(f"Malformed 'numpy' RNG state tuple: expected 5 elements, got {len(raw_np)}")
             algo, keys, pos, has_gauss, cached_gaussian = raw_np
-            if torch.is_tensor(keys):
-                keys_np = keys.cpu().numpy()
-            elif isinstance(keys, (list, tuple)):
-                keys_np = np.array(keys, dtype=np.uint32)
-            elif isinstance(keys, np.ndarray):
-                keys_np = keys
-            else:
-                keys_np = np.array(keys, dtype=np.uint32)
-            np.random.set_state((str(algo), keys_np, int(pos), int(has_gauss), float(cached_gaussian)))
         elif isinstance(raw_np, Mapping):
-            algo = str(raw_np.get("algorithm", "MT19937"))
+            algo = raw_np.get("algorithm", "MT19937")
             keys = raw_np.get("keys")
             if keys is None:
                 raise ValueError("NumPy RNG state mapping missing 'keys'")
-            if torch.is_tensor(keys):
-                keys_np = keys.cpu().numpy()
-            elif isinstance(keys, (list, tuple)):
-                keys_np = np.array(keys, dtype=np.uint32)
-            elif isinstance(keys, np.ndarray):
-                keys_np = keys
-            else:
-                keys_np = np.array(keys, dtype=np.uint32)
-            pos = int(raw_np.get("pos", 0))
-            has_gauss = int(raw_np.get("has_gauss", 0))
-            cached_gaussian = float(raw_np.get("cached_gaussian", 0.0))
-            np.random.set_state((algo, keys_np, pos, has_gauss, cached_gaussian))
+            pos = raw_np.get("pos", 0)
+            has_gauss = raw_np.get("has_gauss", 0)
+            cached_gaussian = raw_np.get("cached_gaussian", 0.0)
         else:
-            np.random.set_state(raw_np)
+            raise TypeError(f"Malformed 'numpy' RNG state: expected tuple, list, or mapping, got {type(raw_np).__name__}")
+
+        if str(algo) != "MT19937":
+            raise ValueError(f"Unsupported NumPy RNG algorithm: {algo}")
+
+        # Validate and extract keys safely through CPU NumPy without torch.uint32 comparison operators
+        if torch.is_tensor(keys):
+            if keys.ndim != 1 or keys.shape[0] != 624:
+                raise ValueError(f"NumPy MT19937 keys must have length 624, got shape {tuple(keys.shape)}")
+            keys_arr = keys.detach().cpu().numpy()
+        elif isinstance(keys, np.ndarray):
+            if keys.ndim != 1 or keys.shape[0] != 624:
+                raise ValueError(f"NumPy MT19937 keys must have length 624, got shape {keys.shape}")
+            keys_arr = keys
+        elif isinstance(keys, (list, tuple)):
+            if len(keys) != 624:
+                raise ValueError(f"NumPy MT19937 keys must have length 624, got {len(keys)}")
+            for idx, val in enumerate(keys):
+                if isinstance(val, (bool, np.bool_)):
+                    raise ValueError(f"NumPy MT19937 key at index {idx} cannot be boolean: {val!r}")
+                if isinstance(val, (complex, np.complexfloating)):
+                    raise ValueError(f"NumPy MT19937 key at index {idx} cannot be complex: {val!r}")
+                if isinstance(val, (float, np.floating)):
+                    if not math.isfinite(float(val)):
+                        raise ValueError(f"NumPy MT19937 key at index {idx} must be finite: {val!r}")
+                    if float(val) != math.floor(float(val)):
+                        raise ValueError(f"NumPy MT19937 key at index {idx} cannot be fractional: {val!r}")
+                    val = int(val)
+                elif not isinstance(val, (int, np.integer)):
+                    raise TypeError(f"NumPy MT19937 key at index {idx} must be an integer, got {type(val).__name__}")
+                if val < 0 or val > 4294967295:
+                    raise ValueError(f"NumPy MT19937 key at index {idx} outside uint32 range [0, 4294967295]: {val}")
+            keys_arr = np.array(keys, dtype=np.uint32)
+        else:
+            raise TypeError(f"Unsupported type for NumPy MT19937 keys: {type(keys).__name__}")
+
+        # Require keys NumPy dtype kind in integer ('i'), unsigned integer ('u'), or real float ('f')
+        # Reject object ('O'), complex ('c'), bool ('b'), string ('U'/'S'), etc. before any comparison or cast
+        if keys_arr.dtype.kind not in ("i", "u", "f"):
+            raise ValueError(
+                f"NumPy MT19937 keys must have integer or real float dtype, got kind '{keys_arr.dtype.kind}' ({keys_arr.dtype})"
+            )
+
+        if keys_arr.dtype.kind == "f":
+            if not np.isfinite(keys_arr).all():
+                raise ValueError("NumPy MT19937 keys contain non-finite values")
+            if not np.equal(keys_arr, np.floor(keys_arr)).all():
+                raise ValueError("NumPy MT19937 keys contain fractional values")
+
+        if keys_arr.dtype == np.uint32:
+            keys_np = keys_arr
+        else:
+            if (keys_arr < 0).any() or (keys_arr > 4294967295).any():
+                raise ValueError("NumPy MT19937 keys contain values outside valid uint32 range [0, 4294967295]")
+            keys_np = keys_arr.astype(np.uint32)
+
+        if isinstance(pos, (bool, np.bool_)):
+            raise ValueError(f"NumPy MT19937 pos cannot be boolean, got {pos!r}")
+        if isinstance(pos, (float, np.floating)):
+            if not math.isfinite(float(pos)):
+                raise ValueError(f"NumPy MT19937 pos must be finite, got {pos!r}")
+            if float(pos) != math.floor(float(pos)):
+                raise ValueError(f"NumPy MT19937 pos cannot be fractional, got {pos!r}")
+            pos = int(pos)
+        elif isinstance(pos, (int, np.integer)):
+            pos = int(pos)
+        else:
+            raise TypeError(f"NumPy MT19937 pos must be an integer, got {type(pos).__name__}")
+        if pos < 0 or pos > 624:
+            raise ValueError(f"NumPy MT19937 pos must be in [0, 624], got {pos}")
+
+        if isinstance(has_gauss, (bool, np.bool_)):
+            raise ValueError(f"NumPy has_gauss cannot be boolean, got {has_gauss!r}")
+        if isinstance(has_gauss, (float, np.floating)):
+            if not math.isfinite(float(has_gauss)):
+                raise ValueError(f"NumPy has_gauss must be finite, got {has_gauss!r}")
+            if float(has_gauss) != math.floor(float(has_gauss)):
+                raise ValueError(f"NumPy has_gauss cannot be fractional, got {has_gauss!r}")
+            has_gauss = int(has_gauss)
+        elif isinstance(has_gauss, (int, np.integer)):
+            has_gauss = int(has_gauss)
+        else:
+            raise TypeError(f"NumPy has_gauss must be an integer, got {type(has_gauss).__name__}")
+        if has_gauss not in (0, 1):
+            raise ValueError(f"NumPy has_gauss must be 0 or 1, got {has_gauss}")
+
+        if isinstance(cached_gaussian, (bool, np.bool_)):
+            raise ValueError(f"NumPy cached_gaussian cannot be boolean, got {cached_gaussian!r}")
+        if not isinstance(cached_gaussian, (float, int, np.floating, np.integer)):
+            raise TypeError(f"NumPy cached_gaussian must be a real number, got {type(cached_gaussian).__name__}")
+        cached_gaussian = float(cached_gaussian)
+        if not math.isfinite(cached_gaussian):
+            raise ValueError(f"NumPy cached_gaussian must be finite, got {cached_gaussian}")
+
+        np.random.set_state((str(algo), keys_np, pos, has_gauss, cached_gaussian))
+
     if "torch" in state:
         torch_state = state["torch"]
         if torch_state is None:
             raise ValueError("Malformed 'torch' RNG state: value cannot be None")
-        if torch.is_tensor(torch_state):
-            torch.set_rng_state(torch_state.cpu())
-        else:
-            torch.set_rng_state(torch_state)
-    if "cuda" in state and torch.cuda.is_available():
-        cuda_states = state["cuda"]
-        if cuda_states is not None:
+        if not torch.is_tensor(torch_state):
+            raise TypeError(f"Malformed 'torch' RNG state: expected Tensor, got {type(torch_state).__name__}")
+        torch.set_rng_state(torch_state.cpu())
+
+    if exact_cuda and not torch.cuda.is_available():
+        raise RuntimeError("CUDA RNG restore requested but CUDA is not available")
+    if torch.cuda.is_available():
+        if "cuda" in state:
+            cuda_states = state["cuda"]
+            if cuda_states is None:
+                raise ValueError("Malformed 'cuda' RNG state: value cannot be None")
             if not isinstance(cuda_states, (list, tuple)):
                 raise TypeError(f"cuda RNG state must be a list or tuple of tensors, got {type(cuda_states).__name__}")
-            torch.cuda.set_rng_state_all([s.cpu() if torch.is_tensor(s) else s for s in cuda_states])
+            dev_count = torch.cuda.device_count()
+            if len(cuda_states) != dev_count:
+                raise ValueError(f"Checkpoint contains {len(cuda_states)} CUDA RNG state(s), but {dev_count} device(s) are available")
+            for idx, s in enumerate(cuda_states):
+                if not torch.is_tensor(s):
+                    raise TypeError(f"CUDA RNG state for device {idx} must be a Tensor, got {type(s).__name__}")
+            torch.cuda.set_rng_state_all([s.cpu() for s in cuda_states])
+        elif exact_cuda:
+            raise ValueError("Missing 'cuda' RNG state in checkpoint for exact GPU resume")
 
 
 def save_checkpoint(
@@ -1167,32 +1324,20 @@ def save_checkpoint(
     if scaler is not None:
         payload["scaler"] = scaler.state_dict()
     if config is not None:
-        payload["config"] = dict(config)
+        if not isinstance(config, Mapping):
+            raise ValueError("checkpoint config must be a mapping")
+        payload["config"] = normalize_metadata_tree(dict(config), "config")
     if extra is not None:
-        reserved = set(payload).intersection(extra)
+        if not isinstance(extra, Mapping):
+            raise ValueError("checkpoint extra must be a mapping")
+        normalized_extra = normalize_metadata_tree(dict(extra), "extra")
+        reserved = set(payload).intersection(normalized_extra)
         if reserved:
             raise ValueError(f"Checkpoint extra uses reserved key(s): {sorted(reserved)}")
-        payload.update(dict(extra))
-    _finite_tree(payload["model"], "model")
-    for key in ("optimizer", "scheduler", "scaler"):
-        if key in payload:
-            _finite_tree(payload[key], key)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary: Path | None = None
-    try:
-        with tempfile.NamedTemporaryFile(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent, delete=False) as handle:
-            temporary = Path(handle.name)
-        torch.save(payload, temporary)
-        with open(temporary, "r+b") as handle:
-            try:
-                os.fsync(handle.fileno())
-            except OSError:
-                pass
-        os.replace(temporary, path)
-    finally:
-        if temporary is not None and temporary.exists():
-            temporary.unlink()
-    return path
+        payload.update(normalized_extra)
+    validate_checkpoint_finite_state(payload)
+    # atomic_save_torch safely normalizes the payload to weights_only types and writes atomically
+    return atomic_save_torch(payload, path)
 
 
 def _extract_model_state(payload: Any) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -1257,6 +1402,7 @@ def load_checkpoint(
     map_location: str | torch.device | None = "cpu",
     strict: bool = True,
     restore_rng: bool = True,
+    exact_cuda: bool | None = None,
 ) -> dict[str, Any]:
     """Load a checkpoint with safe deserialization and optional state restore."""
 
@@ -1268,7 +1414,8 @@ def load_checkpoint(
     except Exception as exc:
         raise ValueError(f"Unable to safely load checkpoint {path}: {exc}") from exc
     model_state, normalized = _extract_model_state(payload)
-    _finite_tree(model_state, "model")
+    normalized["model"] = model_state
+    validate_checkpoint_finite_state(normalized)
     for key in ("epoch", "global_step", "optimizer_step"):
         _checkpoint_counter(normalized, key)
     if model is not None:
@@ -1281,8 +1428,15 @@ def load_checkpoint(
     if scaler is not None and "scaler" in normalized:
         scaler.load_state_dict(normalized["scaler"])
     if restore_rng and isinstance(normalized.get("rng_state"), Mapping):
-        _restore_rng_state(normalized["rng_state"])
-    normalized["model"] = model_state
+        if exact_cuda is None:
+            if torch.cuda.is_available() and (
+                (map_location is not None and "cuda" in str(map_location))
+                or (model is not None and any(p.is_cuda for p in model.parameters()))
+            ):
+                exact_cuda = True
+            else:
+                exact_cuda = False
+        _restore_rng_state(normalized["rng_state"], exact_cuda=exact_cuda)
     return normalized
 
 
@@ -1359,6 +1513,110 @@ def _checkpoint_binding_from_payload(
     )
 
 
+#: Key under which the trainer records the immutable selected-best reference in
+#: ``last.pt``.  ``checkpoint_commit`` owns the reference format; this module
+#: only reads it, and imports nothing from ``unified_trainer``, so no import
+#: cycle is introduced (``checkpoint_commit`` is stdlib-only).
+COMMITTED_BEST_REFERENCE_KEY = "best_reference"
+LAST_CHECKPOINT_NAME = "last.pt"
+
+
+def _require_committed_best_alias(path: Path) -> None:
+    """Refuse to evaluate a public ``best.pt`` that is not the committed selection.
+
+    The Wave 4 commit protocol writes the selected snapshot under
+    ``selected_best/``, records a hash-verified reference to it in ``last.pt``,
+    and only then republishes the public ``best.pt`` alias.  A crash between
+    those last two steps leaves ``last.pt`` correct and ``best.pt`` stale --
+    which is recoverable, but only by *resuming from* ``last.pt``: the resume
+    path resolves the committed reference and republishes the alias.
+
+    Evaluation must not perform that repair.  Evaluation is frozen: it measures
+    the weights it was pointed at, so the honest response to a stale alias is to
+    refuse and say what to run, never to quietly rewrite ``best.pt`` and then
+    report a number for different weights than the operator asked about.
+
+    Compatibility is deliberate:
+
+    * A basename other than ``best.pt`` (the historical ``phase_c_best.pt`` and
+      friends) is not part of this protocol and is left alone.
+    * A standalone copied ``best.pt`` with no sibling ``last.pt`` still binds.
+    * A ``last.pt`` that predates the protocol -- no
+      ``best_reference`` key -- still binds.
+    * An explicit ``best_reference: None`` means the run recorded that it had
+      *no* committed selection, so a ``best.pt`` sitting next to it is
+      unexplained and is refused.
+
+    The sibling is read on CPU with ``weights_only=True`` and no pickle
+    fallback, and that read is **fail-closed**: a ``last.pt`` that exists but
+    cannot be safe-loaded raises, because unreadable bytes are not evidence
+    that the reference key is absent.  A corrupted sibling could just as easily
+    commit a selection this alias contradicts, which is precisely the case the
+    guard exists to catch.  Only the *absence* of a sibling, or a readable
+    sibling with no reference key, is historical compatibility.
+    """
+
+    if path.name != PUBLIC_BEST_NAME:
+        return
+    last_path = path.parent / LAST_CHECKPOINT_NAME
+    if not last_path.is_file():
+        return
+
+    try:
+        last_payload = torch.load(last_path, map_location="cpu", weights_only=True)
+    except Exception as exc:
+        # Fail closed. Unreadable bytes are not evidence that the key is
+        # absent: a sibling that cannot be safe-loaded could equally be a
+        # corrupted last.pt that *does* commit a selection this alias
+        # contradicts. Inferring "historical, no reference" from an unsafe load
+        # would let exactly the stale alias this guard exists to catch through.
+        raise ValueError(
+            f"Refusing to bind {path}: sibling {last_path} exists but could not be safely read "
+            f"with weights_only=True ({exc}), so the committed best selection cannot be verified. "
+            "An unreadable sibling is not treated as one without a committed selection. Repair or "
+            f"remove {last_path.name}, or evaluate a standalone copy of the checkpoint in a "
+            "directory with no sibling last.pt."
+        ) from exc
+
+    if not isinstance(last_payload, Mapping):
+        raise ValueError(
+            f"Refusing to bind {path}: sibling {last_path} did not load as a mapping "
+            f"({type(last_payload).__name__}), so the committed best selection cannot be verified."
+        )
+    if COMMITTED_BEST_REFERENCE_KEY not in last_payload:
+        return
+
+    reference = last_payload[COMMITTED_BEST_REFERENCE_KEY]
+    if reference is None:
+        raise ValueError(
+            f"Refusing to bind {path}: sibling {last_path} explicitly records no committed best "
+            f"selection ({COMMITTED_BEST_REFERENCE_KEY}=None), so the weights in {path.name} are "
+            "not an accountable selection. Evaluate the last checkpoint instead, or resume the "
+            "run so a best selection is committed."
+        )
+
+    try:
+        resolve_best_reference(reference, path.parent)
+    except SelectionError as exc:
+        raise ValueError(
+            f"Refusing to bind {path}: the committed best reference in {last_path} does not "
+            f"verify ({exc}). The immutable snapshot it names must exist and match its recorded "
+            "hash before its alias can be evaluated."
+        ) from exc
+
+    alias_digest = _provenance_file_sha256(path)
+    committed_digest = str(reference["sha256"])
+    if alias_digest != committed_digest:
+        raise ValueError(
+            f"Refusing to bind {path}: the public best alias has sha256 {alias_digest} but "
+            f"{last_path} commits selected-best sha256 {committed_digest}. The alias is stale, "
+            "which is what an interrupted alias publication leaves behind; resume from "
+            f"{last_path.name}, which resolves the committed reference and republishes the alias. "
+            "Evaluation will not repair it, because it must measure exactly the weights it was "
+            "pointed at."
+        )
+
+
 def bind_evaluation_checkpoint(
     model: nn.Module,
     candidates: Iterable[tuple[str, Any]],
@@ -1386,13 +1644,16 @@ def bind_evaluation_checkpoint(
     """
 
     index, role, path, considered = _select_checkpoint_candidate(candidates)
+    _require_committed_best_alias(path)
+    # Stage full checkpoint payload on CPU so calibration/external do not allocate unused optimizer/RNG state on GPU
     payload = load_checkpoint(
         path,
-        model=model,
-        map_location=map_location,
+        map_location="cpu",
         strict=strict,
         restore_rng=False,
     )
+    _validate_checkpoint_architecture(payload, model)
+    model.load_state_dict(payload["model"], strict=strict)
     return _checkpoint_binding_from_payload(
         model,
         payload,
@@ -1421,12 +1682,18 @@ def bind_existing_evaluation_state(
     checkpoint's; if it does not, that is an error the operator has to resolve,
     not something to paper over by loading.
 
+    The full weights_only checkpoint payload is staged on CPU so calibration/external
+    evaluators do not allocate unused optimizer or RNG state in GPU memory; the live
+    model remains on its requested target device.
+
     ``restored`` is empty: no tensor, optimizer, scheduler or RNG state is
     touched.
     """
 
     index, role, path, considered = _select_checkpoint_candidate(candidates)
-    payload = load_checkpoint(path, map_location=map_location, restore_rng=False)
+    _require_committed_best_alias(path)
+    # Stage full checkpoint payload on CPU so calibration/external do not allocate unused optimizer/RNG state on GPU
+    payload = load_checkpoint(path, map_location="cpu", restore_rng=False)
     live_digest = state_digest(model)
     file_digest = state_digest(payload["model"])
     if live_digest != file_digest:
@@ -1487,7 +1754,35 @@ def move_batch(batch: dict[str, Any], device: torch.device) -> dict[str, Any]:
 
 
 class WandbLogger:
-    """Wrapper around Weights & Biases with safe local offline mode and graceful fallback."""
+    """Wrapper around Weights & Biases with safe local offline mode and graceful fallback.
+
+    Run identity is reported, never guessed.  ``run_id`` and ``resume`` are
+    optional, so every existing call site is unaffected, and what the wrapper
+    *requested* is always kept separate from what actually took effect:
+
+    * An explicit ``run_id`` is forwarded to ``wandb.init`` in any mode.
+    * ``resume`` is forwarded **only** in ``online`` mode.  Offline and
+      disabled modes have no backend to resume against, so a requested resume
+      is recorded and explicitly reported as not performed -- reusing the same
+      id offline does not continue a backend run, and this wrapper will not
+      pretend it does.
+    * ``actual_run_id`` comes from the id on the run object the SDK returned,
+      and only when that really is a string.  It is never copied from the
+      requested id and never invented.
+
+    :attr:`identity_summary` renders all of that as a flat dict of
+    ``str``/``bool``/``int``/``None`` values, so the trainer can persist it in
+    checkpoint metadata or a JSON report.  No logger object and no exception
+    object ever leaves through it.
+    """
+
+    #: Values ``wandb.init(resume=...)`` documents (docs.wandb.ai/ref/python/init):
+    #: ``allow``, ``never``, ``must``, ``auto``.  ``True``/``False`` are
+    #: documented as deprecated and are refused here, so a stale bool cannot
+    #: quietly turn a resume into a fresh run.
+    ALLOWED_RESUME_VALUES = ("allow", "never", "must", "auto")
+
+    IDENTITY_SCHEMA_VERSION = 1
 
     def __init__(
         self,
@@ -1500,67 +1795,261 @@ class WandbLogger:
         config: Mapping[str, Any] | None = None,
         mode: str | None = None,
         dir: str | Path | None = None,
+        run_id: str | None = None,
+        resume: str | None = None,
     ) -> None:
         self.enabled = bool(enabled)
+        self.enabled_requested = bool(enabled)
         self.project = project or "self-audit"
         self.entity = entity
         self.run_name = run_name
         self.group = group
         self.tags = list(tags) if tags is not None else None
-        self.config = dict(config) if config is not None else {}
+        self.config = clean_wandb_payload(dict(config)) if config is not None else {}
         self.mode = mode or "offline"
         self.dir = str(dir) if dir is not None else None
         self._run = None
+        self.last_error: Exception | None = None
+        self.failed_log_count: int = 0
+        self.telemetry_errors: list[str] = []
+
+        self.requested_run_id = self._validate_run_id(run_id)
+        self.requested_resume = self._validate_resume(resume)
+        self.actual_run_id: str | None = None
+        self.effective_resume: str | None = None
+        self.backend_resume_performed: bool = False
+        self.resume_limitation: str | None = None
+        self.sdk_available: bool | None = None
+        self.sdk_reported_resumed: bool | None = None
+        self.init_status: str = "not_attempted"
+        self.init_error: str | None = None
+        self.finish_status: str = "not_finished"
+        self.finish_count: int = 0
+        self._finished: bool = False
+
+        if self.requested_resume is not None and not self._is_online:
+            self.resume_limitation = (
+                f"resume={self.requested_resume!r} was requested but mode={self.mode!r} has no "
+                "backend run to resume; the value was not forwarded to wandb.init and reusing a "
+                "run id locally does not continue a backend run"
+            )
 
         if self.enabled:
             self._initialize()
 
+    # -- identity helpers ---------------------------------------------------
+
+    @property
+    def _is_online(self) -> bool:
+        return str(self.mode).strip().lower() == "online"
+
+    @staticmethod
+    def _validate_run_id(run_id: Any) -> str | None:
+        if run_id is None:
+            return None
+        if isinstance(run_id, bool) or not isinstance(run_id, str):
+            raise ValueError(
+                f"run_id must be a string or None, got {type(run_id).__name__}: {run_id!r}"
+            )
+        value = run_id.strip()
+        if not value:
+            raise ValueError("run_id must not be blank; pass None to let W&B allocate one")
+        return value
+
+    @classmethod
+    def _validate_resume(cls, resume: Any) -> str | None:
+        if resume is None:
+            return None
+        if isinstance(resume, bool) or not isinstance(resume, str):
+            raise ValueError(
+                f"resume must be one of {list(cls.ALLOWED_RESUME_VALUES)} or None, got "
+                f"{type(resume).__name__}: {resume!r} (wandb documents True/False as deprecated)"
+            )
+        value = resume.strip().lower()
+        if value not in cls.ALLOWED_RESUME_VALUES:
+            raise ValueError(
+                f"resume must be one of {list(cls.ALLOWED_RESUME_VALUES)} or None, got {resume!r}"
+            )
+        return value
+
+    @staticmethod
+    def _reported_resumed(run: Any) -> bool | None:
+        """Read ``run.resumed``, the SDK's own answer, only when it is a real bool.
+
+        A matching run id is *not* evidence of a resume: ``resume="allow"``
+        creates a new run with that id when none exists, and ``resume="auto"``
+        starts fresh when there is nothing to recover.  ``run.resumed`` is the
+        only explicit proof; anything else is unknown and is never reported as
+        a resume.
+        """
+
+        candidate = getattr(run, "resumed", None)
+        if isinstance(candidate, bool):
+            return candidate
+        return None
+
+    @staticmethod
+    def _reported_run_id(run: Any) -> str | None:
+        """Read the id off the returned run, only when it is genuinely a string.
+
+        A mocked or partial SDK returns something that is not a string; that is
+        an unknown id, and it is reported as ``None`` rather than coerced.
+        """
+
+        candidate = getattr(run, "id", None)
+        if isinstance(candidate, str) and candidate.strip():
+            return candidate
+        return None
+
+    @property
+    def identity_summary(self) -> dict[str, Any]:
+        """A flat, checkpoint-safe description of requested versus actual identity."""
+
+        return {
+            "schema_version": self.IDENTITY_SCHEMA_VERSION,
+            "enabled_requested": bool(self.enabled_requested),
+            "enabled_effective": bool(self.enabled),
+            "mode": str(self.mode),
+            "requested_run_id": self.requested_run_id,
+            "actual_run_id": self.actual_run_id,
+            "requested_resume": self.requested_resume,
+            "effective_resume": self.effective_resume,
+            "backend_resume_performed": bool(self.backend_resume_performed),
+            "resume_limitation": self.resume_limitation,
+            "sdk_available": self.sdk_available,
+            "init_status": str(self.init_status),
+            "init_error": self.init_error,
+            "finish_status": str(self.finish_status),
+            "finish_count": int(self.finish_count),
+            "failed_log_count": int(self.failed_log_count),
+            "telemetry_error_count": len(self.telemetry_errors),
+        }
+
+    def _disable_after_failure(self, status: str, message: str | None) -> None:
+        self.init_status = status
+        self.init_error = message
+        self.enabled = False
+        self._run = None
+        self.effective_resume = None
+        self.backend_resume_performed = False
+        self.sdk_reported_resumed = None
+        if self.requested_resume is not None and self.resume_limitation is None:
+            self.resume_limitation = (
+                f"resume={self.requested_resume!r} was requested but W&B initialization did not "
+                f"succeed ({status}); no backend resume was performed"
+            )
+
     def _initialize(self) -> None:
         try:
             import wandb
-            self._run = wandb.init(
-                project=self.project,
-                entity=self.entity,
-                name=self.run_name,
-                group=self.group,
-                tags=self.tags,
-                config=self.config,
-                mode=self.mode,
-                dir=self.dir,
-            )
-            name_str = getattr(self._run, "name", self.run_name)
-            print(f"[wandb] initialized: project={self.project} run={name_str} mode={self.mode}")
         except ImportError:
             print("[wandb] wandb is not installed. Disabling wandb logging. (Install with `pip install wandb`)")
-            self.enabled = False
-            self._run = None
+            self.sdk_available = False
+            self._disable_after_failure("sdk_missing", "wandb is not installed")
+            return
+
+        init = getattr(wandb, "init", None)
+        if not callable(init):
+            # A namespace package shadowing the SDK (for instance a local
+            # ./wandb run-output directory on sys.path) imports cleanly but has
+            # no init; that is a missing SDK, not a backend failure.
+            print("[wandb] wandb module has no callable init. Disabling wandb logging.")
+            self.sdk_available = False
+            self._disable_after_failure(
+                "sdk_missing", "imported wandb module exposes no callable init"
+            )
+            return
+
+        self.sdk_available = True
+        init_kwargs: dict[str, Any] = {
+            "project": self.project,
+            "entity": self.entity,
+            "name": self.run_name,
+            "group": self.group,
+            "tags": self.tags,
+            "config": self.config,
+            "mode": self.mode,
+            "dir": self.dir,
+        }
+        if self.requested_run_id is not None:
+            init_kwargs["id"] = self.requested_run_id
+        forwarded_resume: str | None = None
+        if self.requested_resume is not None and self._is_online:
+            forwarded_resume = self.requested_resume
+            init_kwargs["resume"] = forwarded_resume
+
+        try:
+            self._run = init(**init_kwargs)
         except Exception as exc:
+            self.last_error = exc
+            self.failed_log_count += 1
+            self.telemetry_errors.append(f"init: {exc}")
             print(f"[wandb] failed to initialize wandb ({exc}). Proceeding with wandb disabled.")
-            self.enabled = False
-            self._run = None
+            self._disable_after_failure("failed", str(exc))
+            return
+
+        self.init_status = "ok"
+        self.effective_resume = forwarded_resume
+        self.actual_run_id = self._reported_run_id(self._run)
+        # Only the SDK's own ``run.resumed`` proves a resume.  A matching id
+        # proves nothing: resume="allow" creates a new run under that id when
+        # none exists, and resume="auto" starts fresh with nothing to recover.
+        self.sdk_reported_resumed = self._reported_resumed(self._run)
+        self.backend_resume_performed = bool(
+            forwarded_resume is not None and self.sdk_reported_resumed is True
+        )
+        if (
+            forwarded_resume is not None
+            and not self.backend_resume_performed
+            and self.resume_limitation is None
+        ):
+            if self.sdk_reported_resumed is False:
+                self.resume_limitation = (
+                    f"resume={forwarded_resume!r} was forwarded to wandb.init but the SDK reports "
+                    f"run.resumed=False: a new backend run was created (returned id "
+                    f"{self.actual_run_id!r}), not a continuation of {self.requested_run_id!r}"
+                )
+            else:
+                self.resume_limitation = (
+                    f"resume={forwarded_resume!r} was forwarded to wandb.init but the SDK did not "
+                    f"report run.resumed, so backend resume is unconfirmed (returned id "
+                    f"{self.actual_run_id!r}); a matching run id is not evidence of a resume"
+                )
+        name_str = getattr(self._run, "name", self.run_name)
+        print(f"[wandb] initialized: project={self.project} run={name_str} mode={self.mode}")
 
     def log(self, metrics: Mapping[str, Any], step: int | None = None) -> None:
         if not self.enabled or self._run is None:
             return
         try:
             import wandb
-            clean_metrics: dict[str, Any] = {}
-            for key, val in metrics.items():
-                if torch.is_tensor(val):
-                    val = val.detach().cpu().item() if val.numel() == 1 else val.detach().cpu().tolist()
-                elif isinstance(val, (np.floating, np.integer)):
-                    val = float(val) if isinstance(val, np.floating) else int(val)
-                if isinstance(val, (int, float)) and not math.isnan(val) and not math.isinf(val):
-                    clean_metrics[key] = val
-                elif isinstance(val, (int, float, str, bool)):
-                    clean_metrics[key] = val
+            clean_metrics = clean_wandb_payload(dict(metrics))
             if clean_metrics:
                 if step is not None:
                     wandb.log(clean_metrics, step=int(step))
                 else:
                     wandb.log(clean_metrics)
         except Exception as exc:
+            self.last_error = exc
+            self.failed_log_count += 1
+            self.telemetry_errors.append(f"log: {exc}")
             print(f"[wandb] warning: failed to log metrics ({exc})")
+
+    def set_summary(self, summary_dict: Mapping[str, Any]) -> None:
+        if not self.enabled or self._run is None:
+            return
+        try:
+            import wandb
+            cleaned = clean_wandb_payload(dict(summary_dict))
+            summary_target = getattr(self._run, "summary", None)
+            if summary_target is not None:
+                for key, val in cleaned.items():
+                    summary_target[key] = val
+        except Exception as exc:
+            self.last_error = exc
+            self.failed_log_count += 1
+            self.telemetry_errors.append(f"set_summary: {exc}")
+            print(f"[wandb] warning: failed to set summary ({exc})")
 
     def log_images(self, images: Mapping[str, Any], step: int | None = None) -> None:
         if not self.enabled or self._run is None:
@@ -1579,15 +2068,36 @@ class WandbLogger:
                 else:
                     wandb.log(payload)
         except Exception as exc:
+            self.last_error = exc
+            self.failed_log_count += 1
+            self.telemetry_errors.append(f"log_images: {exc}")
             print(f"[wandb] warning: failed to log images ({exc})")
 
-    def finish(self) -> None:
+    def finish(self, exit_code: int | None = None) -> None:
+        """Close the run once.
+
+        Idempotent: a second call is a no-op, so a lifecycle that finishes in
+        both a normal path and a failure path cannot double-count telemetry
+        failures or overwrite a recorded ``finish_status``.
+        """
+
+        if self._finished:
+            return
         if self.enabled and self._run is not None:
+            self._finished = True
+            self.finish_count += 1
             try:
                 import wandb
-                wandb.finish()
-            except Exception:
-                pass
+                if exit_code is not None:
+                    wandb.finish(exit_code=int(exit_code))
+                else:
+                    wandb.finish()
+                self.finish_status = "ok"
+            except Exception as exc:
+                self.last_error = exc
+                self.telemetry_errors.append(f"finish: {exc}")
+                self.finish_status = "failed"
+                print(f"[wandb] warning: failed to finish run ({exc})")
             self._run = None
 
 

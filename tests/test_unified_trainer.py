@@ -40,7 +40,7 @@ from self_audit.training.unified_config import (
     load_unified_config,
     parse_unified_config,
 )
-from self_audit.training.unified_trainer import UnifiedTrainer
+from self_audit.training.unified_trainer import SELECTION_METRIC_KEY, UnifiedTrainer
 from self_audit.training.train_annotation import phase_a_loss
 from self_audit.training.train_auditor import _auditor_batch
 from self_audit.training.finetune_joint import compute_joint_losses
@@ -78,6 +78,84 @@ def _make_tiny_net(seed: int = 42) -> SelfAuditNet:
 def _get_valid_config_dict() -> dict[str, Any]:
     with open("configs/self_audit_full.yaml", "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
+
+
+def _unit_fixture_commit_extra(
+    trainer: UnifiedTrainer,
+    *,
+    epoch: int,
+    global_step: int,
+    optimizer_step: int,
+    cohort_descriptor: dict[str, Any] | None = None,
+    loader_cardinality: int,
+    selection_metric_value: float = 0.5,
+    **overrides: Any,
+) -> dict[str, Any]:
+    """Build the commit metadata a UNIT fixture checkpoint must carry.
+
+    These checkpoints are hand-built rather than produced by a real training
+    run, so the counters here are *synthesized*.  They are synthesized
+    coherently: run/source/config identity are read off the live trainer, the
+    per-epoch history is derived from the configured schedule, and its tail row
+    is derived from the same counters the payload records.  The point is that a
+    unit fixture satisfies the same resume contract a genuine commit does,
+    instead of a weakened one -- real end-to-end continuation coverage lives in
+    tests/test_runtime_resume.py.
+
+    ``overrides`` are applied last so a negative test can corrupt exactly one
+    field and still reach the gate it is aiming at.
+    """
+
+    schedule = trainer.schedule
+    history: list[dict[str, Any]] = []
+    for index in range(1, epoch + 1):
+        interval = schedule.get_interval(index - 1)
+        interval_index = schedule.get_interval_index(index - 1)
+        # Monotone interpolation whose final row lands exactly on the payload
+        # counters; optimizer_step <= global_step is preserved row by row.
+        row_global_step = (global_step * index) // epoch
+        row_optimizer_step = (optimizer_step * index) // epoch
+        history.append(
+            {
+                "epoch": index,
+                "global_epoch": index,
+                "interval": interval.name,
+                "interval_index": interval_index,
+                "global_step": row_global_step,
+                "optimizer_step": row_optimizer_step,
+                "validation_complete": True,
+                "checkpoint_committed": True,
+                "status": "checkpoint_committed",
+                "completed_epochs": index,
+                "last_checkpoint_committed_epoch": index,
+                "report_committed": False,
+                SELECTION_METRIC_KEY: float(selection_metric_value),
+            }
+        )
+
+    active_interval = schedule.get_interval(max(epoch - 1, 0))
+    active_index = schedule.get_interval_index(max(epoch - 1, 0))
+    extra: dict[str, Any] = {
+        "run_id": trainer.run_id,
+        "source_signature": trainer.source_signature,
+        "config_signature": trainer.config_signature,
+        "recipe_signature": trainer.config_signature,
+        "resumable": True,
+        "incomplete_epoch": False,
+        "validation_complete": True,
+        "completed_epoch": epoch,
+        "active_interval": active_interval.name,
+        "interval_name": active_interval.name,
+        "interval_index": active_index,
+        "loader_cardinality": loader_cardinality,
+        "last_completed_validation": {SELECTION_METRIC_KEY: float(selection_metric_value)},
+        "epoch_history": history,
+    }
+    if cohort_descriptor is not None:
+        extra["cohort_descriptor"] = cohort_descriptor
+        extra["effective_cohort_descriptor"] = cohort_descriptor
+    extra.update(overrides)
+    return extra
 
 
 # ============================================================================
@@ -413,7 +491,14 @@ def test_resume_lineage_before_and_after_boundary(tmp_path: Path) -> None:
         global_step=495,
         optimizer_step=495,
         config=config.to_dict(),
-        extra={"loader_cardinality": 5, "cohort_descriptor": cohort_desc},
+        extra=_unit_fixture_commit_extra(
+            trainer,
+            epoch=99,
+            global_step=495,
+            optimizer_step=495,
+            cohort_descriptor=cohort_desc,
+            loader_cardinality=5,
+        ),
     )
 
     # Resume in new trainer instance
@@ -427,6 +512,22 @@ def test_resume_lineage_before_and_after_boundary(tmp_path: Path) -> None:
     assert trainer2.optimizer_step == 495
     assert trainer2.global_step == 495
     assert state_digest(trainer2.model) == state_digest(model)
+
+    # The committed history travels with the bytes: a resumed attempt keeps
+    # reporting the epochs it already committed, and its tail describes the
+    # very commit it resumed from.
+    restored = trainer2.report["epochs"]
+    assert [row["epoch"] for row in restored] == list(range(1, 100))
+    assert restored[-1]["checkpoint_committed"] is True
+    assert restored[-1]["completed_epochs"] == 99
+    assert restored[-1]["last_checkpoint_committed_epoch"] == 99
+    assert restored[-1]["global_step"] == 495
+    assert restored[-1]["optimizer_step"] == 495
+    assert trainer2.completed_epochs == 99
+    assert trainer2.last_checkpoint_committed_epoch == 99
+    # save_checkpoint merges extra into the payload top level, so the saved
+    # validation must be restored from there rather than silently reset.
+    assert trainer2.last_completed_validation == {SELECTION_METRIC_KEY: 0.5}
 
 
 # ============================================================================
@@ -860,7 +961,12 @@ def test_strict_resume_failures(tmp_path: Path) -> None:
 
     from self_audit.training._utils import save_checkpoint
 
-    # Case 1: Incomplete epoch / non-resumable smoke checkpoint
+    int_0 = config.training.schedule.intervals[0]
+
+    # Case 1: Incomplete epoch / non-resumable smoke checkpoint.  Every other
+    # field is a complete unit-fixture commit, so the refusal can only come
+    # from the resumability flags themselves.
+    trainer = UnifiedTrainer(config, model=_make_tiny_net(76), device=torch.device("cpu"), disable_tqdm=True)
     smoke_ckpt = ckpt_dir / "smoke.pt"
     save_checkpoint(
         smoke_ckpt,
@@ -869,18 +975,50 @@ def test_strict_resume_failures(tmp_path: Path) -> None:
         global_step=1,
         optimizer_step=1,
         config=config.to_dict(),
-        extra={"resumable": False, "incomplete_epoch": True, "loader_cardinality": 5},
+        extra=_unit_fixture_commit_extra(
+            trainer,
+            epoch=1,
+            global_step=1,
+            optimizer_step=1,
+            loader_cardinality=5,
+            resumable=False,
+            incomplete_epoch=True,
+            validation_complete=False,
+        ),
     )
-    trainer = UnifiedTrainer(config, model=_make_tiny_net(76), device=torch.device("cpu"), disable_tqdm=True)
-    with pytest.raises(ValueError, match="Cannot resume from non-resumable or incomplete checkpoint"):
+    with pytest.raises(ValueError, match=r"'resumable' is False, expected True"):
         trainer.resume_from_checkpoint(smoke_ckpt)
+
+    # Case 1b: An absent flag is unknown, and unknown is not permission -- a
+    # checkpoint that simply omits the certification must be refused exactly
+    # like one that denies it.
+    for omitted in ("resumable", "incomplete_epoch", "validation_complete"):
+        omitted_extra = _unit_fixture_commit_extra(
+            trainer,
+            epoch=1,
+            global_step=1,
+            optimizer_step=1,
+            loader_cardinality=5,
+        )
+        del omitted_extra[omitted]
+        omitted_ckpt = ckpt_dir / f"omitted_{omitted}.pt"
+        save_checkpoint(
+            omitted_ckpt,
+            model,
+            epoch=1,
+            global_step=1,
+            optimizer_step=1,
+            config=config.to_dict(),
+            extra=omitted_extra,
+        )
+        with pytest.raises(ValueError, match=rf"required flag '{omitted}' is absent"):
+            trainer.resume_from_checkpoint(omitted_ckpt)
 
     # Case 2: Loader cardinality mismatch
     card_ckpt = ckpt_dir / "cardinality.pt"
     trainer2 = UnifiedTrainer(config, model=_make_tiny_net(77), device=torch.device("cpu"), disable_tqdm=True)
     mock_ds = _SyntheticDataset(count=6)
     mock_loader = DataLoader(mock_ds, batch_size=2, shuffle=False)  # len is 3, mismatch with 10
-    int_0 = config.training.schedule.intervals[0]
     trainer2._loader_cache[(int_0.batch_size, int_0.augment)] = (mock_loader, mock_loader)
     cohort_desc = trainer2.get_cohort_descriptor(int_0)
     save_checkpoint(
@@ -890,7 +1028,14 @@ def test_strict_resume_failures(tmp_path: Path) -> None:
         global_step=5,
         optimizer_step=5,
         config=config.to_dict(),
-        extra={"resumable": True, "incomplete_epoch": False, "loader_cardinality": 10, "cohort_descriptor": cohort_desc},
+        extra=_unit_fixture_commit_extra(
+            trainer2,
+            epoch=1,
+            global_step=5,
+            optimizer_step=5,
+            cohort_descriptor=cohort_desc,
+            loader_cardinality=10,
+        ),
     )
 
     with pytest.raises(ValueError, match="Loader cardinality mismatch on resume"):
@@ -900,6 +1045,8 @@ def test_strict_resume_failures(tmp_path: Path) -> None:
     cfg_mismatch = config.to_dict()
     cfg_mismatch["model"]["num_classes"] = 99
     mismatch_ckpt = ckpt_dir / "mismatch.pt"
+    trainer3 = UnifiedTrainer(config, model=_make_tiny_net(78), device=torch.device("cpu"), disable_tqdm=True)
+    trainer3._loader_cache[(int_0.batch_size, int_0.augment)] = (mock_loader, mock_loader)
     save_checkpoint(
         mismatch_ckpt,
         model,
@@ -907,12 +1054,109 @@ def test_strict_resume_failures(tmp_path: Path) -> None:
         global_step=5,
         optimizer_step=5,
         config=cfg_mismatch,
-        extra={"resumable": True, "incomplete_epoch": False, "loader_cardinality": 3},
+        extra=_unit_fixture_commit_extra(
+            trainer3,
+            epoch=1,
+            global_step=5,
+            optimizer_step=5,
+            cohort_descriptor=trainer3.get_cohort_descriptor(int_0),
+            loader_cardinality=3,
+        ),
     )
-    trainer3 = UnifiedTrainer(config, model=_make_tiny_net(78), device=torch.device("cpu"), disable_tqdm=True)
-    trainer3._loader_cache[(int_0.batch_size, int_0.augment)] = (mock_loader, mock_loader)
     with pytest.raises(ValueError, match="Config mismatch on resume: saved num_classes=99"):
         trainer3.resume_from_checkpoint(mismatch_ckpt)
+
+    # Case 4: Schedule and counter coherence.  A fully certified checkpoint is
+    # still refused when the epoch falls outside the configured schedule or the
+    # optimizer claims more updates than steps were taken.
+    out_of_range = ckpt_dir / "out_of_range.pt"
+    total_epochs = trainer3.schedule.total_epochs
+    coherent = _unit_fixture_commit_extra(
+        trainer3,
+        epoch=1,
+        global_step=5,
+        optimizer_step=5,
+        cohort_descriptor=trainer3.get_cohort_descriptor(int_0),
+        loader_cardinality=3,
+    )
+    save_checkpoint(
+        out_of_range,
+        model,
+        epoch=total_epochs + 1,
+        global_step=5,
+        optimizer_step=5,
+        config=config.to_dict(),
+        extra=coherent,
+    )
+    with pytest.raises(ValueError, match=rf"is outside the configured schedule \[1, {total_epochs}\]"):
+        trainer3.resume_from_checkpoint(out_of_range)
+
+    inverted = ckpt_dir / "inverted_counters.pt"
+    save_checkpoint(
+        inverted,
+        model,
+        epoch=1,
+        global_step=3,
+        optimizer_step=5,
+        config=config.to_dict(),
+        extra=_unit_fixture_commit_extra(
+            trainer3,
+            epoch=1,
+            global_step=3,
+            optimizer_step=5,
+            cohort_descriptor=trainer3.get_cohort_descriptor(int_0),
+            loader_cardinality=3,
+        ),
+    )
+    with pytest.raises(ValueError, match=r"optimizer_step 5 exceeds global_step 3"):
+        trainer3.resume_from_checkpoint(inverted)
+
+    # Case 5: A history that does not describe exactly epochs 1..N, or whose
+    # tail disagrees with the counters it is saved beside, is a refusal rather
+    # than a silent truncation.
+    truncated_extra = _unit_fixture_commit_extra(
+        trainer3,
+        epoch=2,
+        global_step=6,
+        optimizer_step=6,
+        cohort_descriptor=trainer3.get_cohort_descriptor(int_0),
+        loader_cardinality=3,
+    )
+    truncated_extra["epoch_history"] = truncated_extra["epoch_history"][:1]
+    truncated = ckpt_dir / "truncated_history.pt"
+    save_checkpoint(
+        truncated,
+        model,
+        epoch=2,
+        global_step=6,
+        optimizer_step=6,
+        config=config.to_dict(),
+        extra=truncated_extra,
+    )
+    with pytest.raises(ValueError, match=r"refusing a truncated history"):
+        trainer3.resume_from_checkpoint(truncated)
+
+    uncommitted_extra = _unit_fixture_commit_extra(
+        trainer3,
+        epoch=1,
+        global_step=5,
+        optimizer_step=5,
+        cohort_descriptor=trainer3.get_cohort_descriptor(int_0),
+        loader_cardinality=3,
+    )
+    uncommitted_extra["epoch_history"][-1]["checkpoint_committed"] = False
+    uncommitted = ckpt_dir / "uncommitted_tail.pt"
+    save_checkpoint(
+        uncommitted,
+        model,
+        epoch=1,
+        global_step=5,
+        optimizer_step=5,
+        config=config.to_dict(),
+        extra=uncommitted_extra,
+    )
+    with pytest.raises(ValueError, match=r"tail row is not marked checkpoint_committed"):
+        trainer3.resume_from_checkpoint(uncommitted)
 
 
 def test_fresh_run_refuses_preexisting_best_pt_and_preserves_bytes(tmp_path: Path) -> None:
@@ -1283,15 +1527,18 @@ def test_output_relocation_safety_and_clobber_prevention(tmp_path: Path) -> None
         global_step=5,
         optimizer_step=5,
         config=config.to_dict(),
-        extra={
-            "resumable": True,
-            "incomplete_epoch": False,
-            "loader_cardinality": 2,
-            "cohort_descriptor": cohort_desc,
-            "best_checkpoint_hash": best_hash,
-            "best_epoch": 1,
-            "best_metric": 0.85,
-        },
+        extra=_unit_fixture_commit_extra(
+            trainer,
+            epoch=1,
+            global_step=5,
+            optimizer_step=5,
+            cohort_descriptor=cohort_desc,
+            loader_cardinality=2,
+            selection_metric_value=0.85,
+            best_checkpoint_hash=best_hash,
+            best_epoch=1,
+            best_metric=0.85,
+        ),
     )
 
     # Case A: Safe relocation into clean/new target directory retains best lineage
@@ -1338,13 +1585,18 @@ def test_output_relocation_safety_and_clobber_prevention(tmp_path: Path) -> None
         global_step=5,
         optimizer_step=5,
         config=config.to_dict(),
-        extra={
-            "resumable": True,
-            "incomplete_epoch": False,
-            "loader_cardinality": 2,
-            "cohort_descriptor": cohort_desc,
-            "best_checkpoint_hash": best_hash,  # expects valid hash, but file has corrupt bytes
-        },
+        extra=_unit_fixture_commit_extra(
+            trainer,
+            epoch=1,
+            global_step=5,
+            optimizer_step=5,
+            cohort_descriptor=cohort_desc,
+            loader_cardinality=2,
+            selection_metric_value=0.85,
+            best_checkpoint_hash=best_hash,  # expects valid hash, but file has corrupt bytes
+            best_epoch=1,
+            best_metric=0.85,
+        ),
     )
     trainer_tampered = UnifiedTrainer(config, model=_make_tiny_net(25), device=torch.device("cpu"), disable_tqdm=True)
     for bs in (2, 4):
@@ -1396,7 +1648,14 @@ def test_uninterrupted_vs_resumed_weights_and_optimizer_ordinary_and_reset_bound
         global_step=trainer_uninterrupted.global_step,
         optimizer_step=trainer_uninterrupted.optimizer_step,
         config=config.to_dict(),
-        extra={"resumable": True, "incomplete_epoch": False, "loader_cardinality": len(loader), "cohort_descriptor": cohort_desc},
+        extra=_unit_fixture_commit_extra(
+            trainer_uninterrupted,
+            epoch=1,
+            global_step=trainer_uninterrupted.global_step,
+            optimizer_step=trainer_uninterrupted.optimizer_step,
+            cohort_descriptor=cohort_desc,
+            loader_cardinality=len(loader),
+        ),
     )
 
     # Step 2 uninterrupted
@@ -1436,7 +1695,14 @@ def test_uninterrupted_vs_resumed_weights_and_optimizer_ordinary_and_reset_bound
         global_step=500,
         optimizer_step=500,
         config=config.to_dict(),
-        extra={"resumable": True, "incomplete_epoch": False, "loader_cardinality": len(loader), "cohort_descriptor": cohort_desc_0},
+        extra=_unit_fixture_commit_extra(
+            trainer_uninterrupted,
+            epoch=100,
+            global_step=500,
+            optimizer_step=500,
+            cohort_descriptor=cohort_desc_0,
+            loader_cardinality=len(loader),
+        ),
     )
 
     # Resume at epoch 100: must reset optimizer for auditor

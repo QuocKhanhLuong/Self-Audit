@@ -34,11 +34,17 @@ from scripts.train_self_audit_legacy import (  # noqa: E402
     run_post_training_calibration,
     sweep_thresholds,
 )
+from self_audit.artifact_io import atomic_write_json
+from self_audit.provenance import git_source_provenance
 from self_audit.training.unified_config import (  # noqa: E402
     apply_overrides,
     load_unified_config,
 )
-from self_audit.training.unified_trainer import UnifiedTrainer  # noqa: E402
+from self_audit.training.unified_trainer import (  # noqa: E402
+    UnifiedTrainer,
+    compute_config_signature,
+)
+import uuid
 
 
 LEGACY_FLAGS = {
@@ -112,50 +118,150 @@ def _parse_args() -> argparse.Namespace:
 
     return parser.parse_args()
 
+def _write_pre_init_failure(
+    report_dir: Path | str,
+    exc: BaseException,
+    *,
+    stage: str = "init",
+    status: str = "failed",
+    config_dict: dict[str, Any] | None = None,
+) -> None:
+    """Best-effort minimal failure artifact write before trainer is fully initialized."""
+    try:
+        rdir = Path(report_dir)
+        rdir.mkdir(parents=True, exist_ok=True)
+        canonical_failure_path = rdir / "failure.json"
+        if canonical_failure_path.exists():
+            failure_path = rdir / f"failure_attempt_{uuid.uuid4().hex[:8]}.json"
+        else:
+            failure_path = canonical_failure_path
+
+        try:
+            exc_msg = str(exc)
+        except Exception:
+            exc_msg = f"<unformattable {type(exc).__name__}>"
+
+        cfg_sig = None
+        if config_dict is not None:
+            try:
+                cfg_sig = compute_config_signature(config_dict)
+            except Exception:
+                pass
+
+        git_sha = None
+        try:
+            prov = git_source_provenance()
+            sha = prov.get("git_sha")
+            git_sha = str(sha) if sha and sha != "UNKNOWN" else None
+        except Exception:
+            pass
+
+        payload = {
+            "schema_version": 1,
+            "completed": False,
+            "status": status,
+            "failure_stage": stage,
+            "current_epoch": 0,
+            "global_epoch": 0,  # Alias for zero-based current global_epoch
+            "completed_epochs": 0,
+            "global_step": 0,
+            "optimizer_step": 0,
+            "exception_type": type(exc).__name__,
+            "exception_message": exc_msg,
+            "last_completed_validation": None,
+            "last_checkpoint_committed_epoch": None,
+            "run_id": None,
+            "config_signature": cfg_sig,
+            "config_identity": cfg_sig,  # Alias
+            "recipe_signature": cfg_sig,
+            "source_signature": None,
+            "git_commit": git_sha,
+            "git_sha": git_sha,  # Alias
+            "producer_source_content_signature": None,
+        }
+        atomic_write_json(failure_path, payload, indent=2, sort_keys=True)
+    except Exception as sec_exc:
+        print(f"[lifecycle] Secondary error writing pre-init failure artifact: {sec_exc}", file=sys.stderr)
+
 
 def main() -> None:
-    args = _parse_args()
+    trainer: UnifiedTrainer | None = None
+    resolved_report_dir: Path | None = None
 
-    config_path = Path(args.config)
-    if not config_path.exists():
-        raise FileNotFoundError(f"Unified config file not found: {config_path}")
+    try:
+        args = _parse_args()
+        if args.report_dir:
+            resolved_report_dir = Path(args.report_dir)
 
-    config = load_unified_config(config_path)
+        config_path = Path(args.config)
+        if not config_path.exists():
+            raise FileNotFoundError(f"Unified config file not found: {config_path}")
 
-    overrides: dict[str, Any] = {
-        "data_root": args.data_root,
-        "split_manifest": args.split_manifest,
-        "num_workers": args.num_workers,
-        "device": args.device,
-        "output_dir": args.output_dir,
-        "report_dir": args.report_dir,
-        "tau_accept": args.tau_accept,
-        "skip_calibration": args.skip_calibration,
-        "wandb": args.wandb,
-        "wandb_mode": args.wandb_mode,
-        "wandb_project": args.wandb_project,
-        "wandb_entity": args.wandb_entity,
-        "wandb_run_name": args.wandb_run_name,
-    }
-    config = apply_overrides(config, overrides)
+        config = load_unified_config(config_path)
 
-    trainer = UnifiedTrainer(config, disable_tqdm=args.no_tqdm)
+        overrides: dict[str, Any] = {
+            "data_root": args.data_root,
+            "split_manifest": args.split_manifest,
+            "num_workers": args.num_workers,
+            "device": args.device,
+            "output_dir": args.output_dir,
+            "report_dir": args.report_dir,
+            "tau_accept": args.tau_accept,
+            "skip_calibration": args.skip_calibration,
+            "wandb": args.wandb,
+            "wandb_mode": args.wandb_mode,
+            "wandb_project": args.wandb_project,
+            "wandb_entity": args.wandb_entity,
+            "wandb_run_name": args.wandb_run_name,
+        }
+        config = apply_overrides(config, overrides)
+        resolved_report_dir = Path(config.logging.report_dir)
 
-    start_epoch = 0
-    if args.resume:
-        start_epoch = trainer.resume_from_checkpoint(args.resume)
-        print(f"Resuming unified training from epoch {start_epoch} (checkpoint: {args.resume})")
+        trainer = UnifiedTrainer(config, disable_tqdm=args.no_tqdm)
 
-    report = trainer.train(
-        start_epoch=start_epoch,
-        max_steps=args.max_steps,
-        max_val_batches=args.max_val_batches,
-    )
+        start_epoch = 0
+        if args.resume:
+            trainer.failure_stage = "resume"
+            start_epoch = trainer.resume_from_checkpoint(args.resume)
+            print(f"Resuming unified training from epoch {start_epoch} (checkpoint: {args.resume})")
 
-    print(
-        f"\nUnified training run finished: completed={report.get('completed')} "
-        f"epochs_recorded={len(report.get('epochs', []))}"
-    )
+        report = trainer.train(
+            start_epoch=start_epoch,
+            max_steps=args.max_steps,
+            max_val_batches=args.max_val_batches,
+        )
+
+        print(
+            f"\nUnified training run finished: completed={report.get('completed')} "
+            f"epochs_recorded={len(report.get('epochs', []))}"
+        )
+    except KeyboardInterrupt as exc:
+        config_dict = config.to_dict() if "config" in locals() and config is not None else None
+        if trainer is not None:
+            try:
+                trainer.record_failure(exc, failure_stage="interrupted", status="interrupted")
+            except Exception as sec_exc:
+                print(f"[lifecycle] Secondary error in record_failure during interrupt: {sec_exc}", file=sys.stderr)
+        elif resolved_report_dir is not None:
+            try:
+                _write_pre_init_failure(resolved_report_dir, exc, stage="interrupted", status="interrupted", config_dict=config_dict)
+            except Exception as sec_exc:
+                print(f"[lifecycle] Secondary error in pre-init failure write: {sec_exc}", file=sys.stderr)
+        raise
+    except Exception as exc:
+        config_dict = config.to_dict() if "config" in locals() and config is not None else None
+        if trainer is not None:
+            try:
+                stage = getattr(trainer, "failure_stage", "init")
+                trainer.record_failure(exc, failure_stage=stage, status="failed")
+            except Exception as sec_exc:
+                print(f"[lifecycle] Secondary error in record_failure: {sec_exc}", file=sys.stderr)
+        elif resolved_report_dir is not None:
+            try:
+                _write_pre_init_failure(resolved_report_dir, exc, stage="init", status="failed", config_dict=config_dict)
+            except Exception as sec_exc:
+                print(f"[lifecycle] Secondary error in pre-init failure write: {sec_exc}", file=sys.stderr)
+        raise
 
 
 if __name__ == "__main__":

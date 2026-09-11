@@ -33,6 +33,8 @@ import warnings
 
 import numpy as np
 
+from ..artifact_io import atomic_write_json, json_safe_artifact
+
 from ..audit.semantics import (
     METRIC_SPACES,
     METRIC_SPACE_SLICE_PROXY,
@@ -1239,21 +1241,7 @@ def _get_semantic(lineage: Mapping[str, Any], key: str) -> Any:
 
 def json_safe(value: Any) -> Any:
     """Convert values into strictly JSON-compliant structures (replacing NaN/Inf with null)."""
-    if isinstance(value, Mapping):
-        return {str(key): json_safe(item) for key, item in value.items()}
-    if isinstance(value, (list, tuple)):
-        return [json_safe(item) for item in value]
-    if isinstance(value, (bool, str)) or value is None:
-        return value
-    if isinstance(value, (int, np.integer)):
-        return int(value)
-    if isinstance(value, (float, np.floating)):
-        if not math.isfinite(value):
-            return None
-        return float(value)
-    if isinstance(value, np.ndarray):
-        return [json_safe(item) for item in value.tolist()]
-    return value
+    return json_safe_artifact(value)
 
 
 _json_safe = json_safe
@@ -1417,8 +1405,7 @@ def save_calibration(
             payload, lineage_record, where=f"save_calibration for {path}", error_cls=ContractMismatchError
         )
     destination = Path(os.fspath(path))
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(json.dumps(payload, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
+    atomic_write_json(destination, payload, indent=2, sort_keys=True)
     return payload
 
 

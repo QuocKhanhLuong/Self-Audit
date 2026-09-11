@@ -23,6 +23,8 @@ for path in (ROOT, SRC):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
+from self_audit.artifact_io import atomic_write_json, json_safe_artifact
+from self_audit.serialization import atomic_save_torch
 from self_audit.audit.counterfactual import CounterfactualGenerator
 from self_audit.evaluation.audit_decomposition import (
     evaluate_annotation_headroom,
@@ -192,23 +194,14 @@ def _make_loaders(
     )
 
 
-def _json_safe(value: Any) -> Any:
-    if isinstance(value, dict):
-        return {str(k): _json_safe(v) for k, v in value.items()}
-    if isinstance(value, (list, tuple)):
-        return [_json_safe(v) for v in value]
-    if torch.is_tensor(value):
-        return value.detach().cpu().tolist()
-    if isinstance(value, (np.floating, np.integer)):
-        return value.item()
-    if isinstance(value, float) and not np.isfinite(value):
-        return None
-    return value
+_json_safe = json_safe_artifact
 
 
-def _save_report(path: Path, payload: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(_json_safe(payload), indent=2), encoding="utf-8")
+def _write_json(path: Path, payload: Any) -> Path:
+    return atomic_write_json(path, payload, indent=2)
+
+
+_save_report = _write_json
 
 
 def _log(logger: WandbLogger, phase: str, epoch: int, metrics: dict[str, Any]) -> None:
@@ -614,7 +607,7 @@ def run_post_training_calibration(
     # Last check before the cache is persisted: the bound weights must still be
     # the weights its lineage names.
     verify_bound_state(model, binding, boundary="pre_write_validation_transition_cache")
-    torch.save(cache, report_dir / "validation_transitions.pt")
+    atomic_save_torch(cache, report_dir / "validation_transitions.pt")
     print(
         f"tau={calibrated_tau:+.5f} "
         f"final={best_threshold['final_macro_dice']:.4f} "

@@ -27,6 +27,7 @@ from self_audit.training._utils import (
     validate_dataset_splits,
     verify_bound_state,
 )
+from self_audit.serialization import atomic_save_torch
 from self_audit.training.unified_config import resolve_downstream_config
 from self_audit.training.finetune_joint import collect_validation_transition_cache
 
@@ -110,8 +111,7 @@ def main() -> None:
     # Last check before anything is persisted: the weights that produced these
     # rows must still be the weights the lineage names.
     verify_bound_state(model, binding, boundary="pre_write_validation_transition_cache")
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    torch.save(cache, args.output)
+    atomic_save_torch(cache, args.output)
     print(f"cached_samples={cache['initial_dice'].shape[0]} cached_turns={cache['delta_q'].shape[1]} contract={cache.get('metric_contract')} saved={args.output}")
 
 
