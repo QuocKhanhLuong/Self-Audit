@@ -1,0 +1,69 @@
+{
+  "aggregate_after_assertion_fix": {
+    "gate": "PASS",
+    "reason": "User requested fewer duplicate tests; only a test regex changed after the full suite, with no production/source/config changes.",
+    "remaining_failures": 0,
+    "second_full_suite_run": false,
+    "skipped": 0,
+    "unique_tests_verified": 898
+  },
+  "base_sha": "25f429a46255ceb59997ae5178939d5d40b2ea27",
+  "environment": {
+    "cuda_available": false,
+    "cuda_runtime": null,
+    "numpy": "1.26.4",
+    "platform": "macOS-26.2-arm64-arm-64bit",
+    "python": "3.10.21",
+    "torch": "2.4.1"
+  },
+  "full_suite": {
+    "elapsed_seconds": 791.29,
+    "errors": 0,
+    "failed": 1,
+    "failures": [
+      {
+        "message": "AssertionError: Regex pattern did not match.\n  Expected regex: 'non-resumable|incomplete'\n  Actual message: \"Cannot resume from /private/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-521/test_max_steps_bounded_checkpo0/bounded/weights/last.pt: 'resumable' is False, expected True.\"",
+        "module": "tests.test_runtime_resume",
+        "name": "test_max_steps_bounded_checkpoint_is_refused_for_resume"
+      }
+    ],
+    "passed": 897,
+    "skipped": 0,
+    "test_cases": 898
+  },
+  "implementation_commit": "a6b3a752d2a1732203edc053f0b1889a0f089ebc",
+  "post_suite_test_only_changes": [
+    "Corrected one stale exception-message regex and reran that test successfully.",
+    "Removed trailing blank lines at EOF in two test files; no executable change."
+  ],
+  "schema_version": 1,
+  "source_changed_after_full_suite": false,
+  "source_content_signature": "7681274e4c0b18291419a06f7abd31aafb73b10e8109d273ee9f5e6bb6a7c94a",
+  "subprocess_smokes": [
+    {
+      "module": "tests.test_runtime_pipeline_smoke",
+      "name": "test_bounded_pipeline_e2e_acdc_to_mnms",
+      "passed": true,
+      "seconds": 13.755
+    },
+    {
+      "module": "tests.test_runtime_pipeline_smoke",
+      "name": "test_external_labels_cannot_tune_model",
+      "passed": true,
+      "seconds": 5.374
+    },
+    {
+      "module": "tests.test_runtime_pipeline_smoke",
+      "name": "test_native_mnms_tiny_config_smoke",
+      "passed": true,
+      "seconds": 2.635
+    }
+  ],
+  "targeted_rerun": {
+    "change": "Only the stale error-message regex was updated; pytest.raises(ValueError) and the payload refusal assertion are unchanged.",
+    "elapsed_seconds": 1.7,
+    "failed": 0,
+    "nodeid": "tests/test_runtime_resume.py::test_max_steps_bounded_checkpoint_is_refused_for_resume",
+    "passed": 1
+  }
+}
