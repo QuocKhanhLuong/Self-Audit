@@ -11,6 +11,7 @@ mkdir -p runs logs run_configs
 
 export CUDA_DEVICE_ORDER="${CUDA_DEVICE_ORDER:-PCI_BUS_ID}"
 export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-1}"
+export BATCH_SIZE="${BATCH_SIZE:-8}"
 
 STAMP="${STAMP:-$(date +%Y%m%d_%H%M%S)}"
 ACDC_RUN="${ACDC_RUN:-acdc_candidate_c_4070_${STAMP}}"
@@ -23,7 +24,12 @@ MNMS_CONFIG="run_configs/mnms_candidate_c.yaml"
 # self-contained and the canonical baseline YAML files remain unchanged.
 python - <<'PY'
 from pathlib import Path
+import os
 import yaml
+
+batch_size = int(os.environ.get("BATCH_SIZE", "8"))
+if batch_size <= 0:
+    raise ValueError(f"BATCH_SIZE must be > 0, got {batch_size}")
 
 pairs = [
     (
@@ -44,16 +50,28 @@ for src, dst, experiment_name in pairs:
     cfg["model"]["window_mode"] = "candidate_c"
     cfg["training"]["rollout"]["predicted_history_exposure"] = True
     cfg["training"]["rollout"]["predicted_history_weight"] = 0.1
+
+    # Requested native batch size. Keep it run-local so the canonical baseline
+    # configs remain untouched; BATCH_SIZE can be overridden at invocation.
+    for interval in cfg["training"]["schedule"]["intervals"]:
+        interval["batch_size"] = batch_size
+
     dst.write_text(yaml.safe_dump(cfg, sort_keys=False), encoding="utf-8")
+    schedule = [
+        f"{it['start_epoch']}-{it['end_epoch'] - 1}:{it['batch_size']}"
+        for it in cfg["training"]["schedule"]["intervals"]
+    ]
     print(
         f"[config] {dst}: window_mode={cfg['model']['window_mode']} "
-        f"predicted_history_exposure={cfg['training']['rollout']['predicted_history_exposure']}"
+        f"predicted_history_exposure={cfg['training']['rollout']['predicted_history_exposure']} "
+        f"batch_schedule={','.join(schedule)}"
     )
 PY
 
 echo "=============================================================================="
 echo "Self-Audit sequential Candidate C native training"
 echo "GPU visibility : CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}"
+echo "Batch size     : ${BATCH_SIZE}"
 echo "ACDC run       : ${ACDC_RUN}"
 echo "M&Ms run       : ${MNMS_RUN}"
 echo "=============================================================================="
