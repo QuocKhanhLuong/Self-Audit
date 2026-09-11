@@ -42,26 +42,23 @@ jobs:
               compare_url=$(jq -r '.compare // .repository.html_url // ""' "$event_file")
 
               if [[ "$deleted" == "true" ]]; then
-                content="🗑️ **${repo}** · deleted \`${target}\`\nby **${actor}**"
+                content="🗑️ **${repo}** · \`${target}\` deleted · **${actor}**"
               else
                 count=$(jq '.commits | length' "$event_file")
-                commits=$(jq -r '
-                  .commits[:5][]? |
-                  "• [`" + (.id[0:7]) + "`](" + .url + ") " +
-                  ((.message | split("\n")[0] | gsub("`"; "") | .[0:140]))
+                latest=$(jq -r '
+                  .commits[-1]? |
+                  if . == null then "" else
+                    "[`" + (.id[0:7]) + "`](" + .url + ") " +
+                    ((.message | split("\n")[0] | gsub("`"; "") | .[0:110]))
+                  end
                 ' "$event_file")
 
-                extra=""
-                if (( count > 5 )); then
-                  extra="\n• … and $((count - 5)) more commit(s)"
-                fi
-
-                content="🔬 **${repo}** · push → \`${target}\`\n**${actor}** pushed **${count} commit(s)**"
-                if [[ -n "$commits" ]]; then
-                  content="${content}\n\n${commits}${extra}"
+                content="⬆️ **${repo}** · \`${target}\` · **${actor}** · ${count} commit(s)"
+                if [[ -n "$latest" ]]; then
+                  content="${content}\n${latest}"
                 fi
                 if [[ -n "$compare_url" ]]; then
-                  content="${content}\n\n[View changes](${compare_url})"
+                  content="${content} · [changes](${compare_url})"
                 fi
               fi
               ;;
@@ -69,10 +66,8 @@ jobs:
             pull_request)
               action=$(jq -r '.action // "updated"' "$event_file")
               number=$(jq -r '.pull_request.number // .number' "$event_file")
-              title=$(jq -r '.pull_request.title | gsub("`"; "") | .[0:180]' "$event_file")
+              title=$(jq -r '.pull_request.title | gsub("`"; "") | .[0:120]' "$event_file")
               url=$(jq -r '.pull_request.html_url' "$event_file")
-              head=$(jq -r '.pull_request.head.ref' "$event_file")
-              base=$(jq -r '.pull_request.base.ref' "$event_file")
               merged=$(jq -r '.pull_request.merged // false' "$event_file")
 
               label="$action"
@@ -82,11 +77,11 @@ jobs:
                 label="updated"
               fi
 
-              content="🔀 **${repo}** · PR #${number} **${label}**\n**${title}**\n\`${head}\` → \`${base}\` · by **${actor}**\n\n[Open pull request](${url})"
+              content="🔀 **${repo}** · PR #${number} **${label}** · ${title}\n**${actor}** · [open](${url})"
               ;;
 
             workflow_dispatch)
-              content="✅ **${repo}** · Discord Git Log test\nTriggered manually by **${actor}** on \`${GITHUB_REF_NAME}\`."
+              content="✅ **${repo}** · Git Log test · **${actor}** · \`${GITHUB_REF_NAME}\`"
               ;;
 
             *)
