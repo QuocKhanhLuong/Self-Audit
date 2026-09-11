@@ -92,7 +92,6 @@ python -u scripts/train_self_audit.py \
   --wandb_run_name "$ACDC_RUN" \
   --output_dir "runs/$ACDC_RUN/weights" \
   --report_dir "runs/$ACDC_RUN/reports" \
-  --no_tqdm \
   2>&1 | tee "logs/${ACDC_RUN}.log"
 
 printf '>>> ACDC COMPLETE: %s\n' "$ACDC_RUN"
@@ -114,7 +113,6 @@ python -u scripts/train_self_audit.py \
   --wandb_run_name "$MNMS_RUN" \
   --output_dir "runs/$MNMS_RUN/weights" \
   --report_dir "runs/$MNMS_RUN/reports" \
-  --no_tqdm \
   2>&1 | tee "logs/${MNMS_RUN}.log"
 
 printf '>>> M&Ms COMPLETE: %s\n' "$MNMS_RUN"

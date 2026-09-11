@@ -1345,125 +1345,153 @@ class UnifiedTrainer:
 
         self.optimizer.zero_grad(set_to_none=True)
 
+        total_batches = len(train_loader)
+
         pbar = tqdm(
-            train_loader,
+            total=total_batches,
             desc=f"Epoch {self.global_epoch + 1:03d}/{self.schedule.total_epochs:03d} [{interval.name}]",
             disable=self.disable_tqdm,
-            leave=False,
+            leave=True,
         )
 
-        for batch_index, raw_batch in enumerate(pbar):
-            if max_steps is not None and self.optimizer_step >= int(max_steps):
-                self.completed = False
-                self.incomplete_reason = "max_steps_reached"
-                self.incomplete_epoch = True
-                break
+        try:
+            for batch_index, raw_batch in enumerate(train_loader):
+                if max_steps is not None and self.optimizer_step >= int(max_steps):
+                    self.completed = False
+                    self.incomplete_reason = "max_steps_reached"
+                    self.incomplete_epoch = True
+                    break
 
-            batch = move_batch(raw_batch, self.device)
-            # No record may survive into the next batch.
-            if self.invalidate_candidate_c_records():
-                candidate_c_invalidations += 1
-            loss, details = self.compute_batch_loss(batch, interval)
-
-            # Counters describe what the rollout actually observed, so they are
-            # accumulated before any batch is skipped for having no loss.
-            batch_counters = details.get("rollout_counters")
-            if isinstance(batch_counters, Mapping):
-                accumulate_rollout_counters(rollout_totals, dict(batch_counters))
-            auxiliary_annotation_total += float(details.get("auxiliary_annotation_loss", 0.0))
-            auxiliary_audit_total += float(details.get("auxiliary_audit_loss", 0.0))
-            auxiliary_batches += int(details.get("auxiliary_batches", 0))
-            auxiliary_seconds += float(details.get("auxiliary_seconds", 0.0))
-
-            # Skip batch update if loss is None (e.g. Phase B with zero transitions)
-            if loss is None:
-                continue
-
-            if not is_finite(loss):
-                raise FloatingPointError(
-                    f"Non-finite loss ({float(loss.detach()):r}) at global_epoch={self.global_epoch} "
-                    f"batch={batch_index} details={details}"
-                )
-
-            scaled_loss = loss / float(accumulation_steps)
-            if self.scaler.is_enabled():
-                self.scaler.scale(scaled_loss).backward()
-            else:
-                scaled_loss.backward()
-
-            pending += 1
-            batches += 1
-            batch_size = int(batch["image"].shape[0])
-            total_samples += batch_size
-
-            loss_val = float(loss.detach())
-            if interval.objective == "weighted_a0_a3":
-                # Reference train_annotation_epoch reduces sample-weighted
-                running_loss += loss_val * batch_size
-                if "parts" in details and "loss" in details["parts"]:
-                    ann_val = float(details["parts"]["loss"])
-                elif interval.annotation_weight > 0.0:
-                    ann_val = loss_val / float(interval.annotation_weight)
-                else:
-                    ann_val = float(details.get("annotation_loss", loss_val))
-                running_ann_loss += ann_val * batch_size
-
-            elif interval.objective == "counterfactual_audit":
-                # Reference train_auditor_epoch reduces unweighted mean over batches
-                running_loss += loss_val
-                if interval.audit_weight > 0.0:
-                    aud_val = loss_val / float(interval.audit_weight)
-                else:
-                    aud_val = float(details.get("audit_loss", loss_val))
-                running_aud_loss += aud_val
-
-            elif interval.objective == "retained_final_annotation":
-                # Reference finetune_joint_epoch reduces unweighted components over batches
-                running_loss += loss_val
-                ann_val = float(details.get("annotation_loss", 0.0))
-                aud_val = float(details.get("audit_loss", 0.0))
-                running_ann_loss += ann_val
-                running_aud_loss += aud_val
-
-            else:
-                running_loss += loss_val * batch_size
-                running_ann_loss += float(details.get("annotation_loss", 0.0)) * batch_size
-                running_aud_loss += float(details.get("audit_loss", 0.0)) * batch_size
-
-            if pending == accumulation_steps:
-                step_ok, _ = finalize_optimizer_step(
-                    self.model,
-                    self.optimizer,
-                    self.scaler,
-                    scheduler=self.scheduler,
-                    pending_batches=pending,
-                    accumulation_steps=accumulation_steps,
-                    grad_clip=grad_clip,
-                )
-                if not step_ok:
-                    raise FloatingPointError(
-                        f"Non-finite gradients at global_epoch={self.global_epoch} step={self.optimizer_step}"
-                    )
-                self.optimizer_step += 1
-                self.global_step += 1
-                epoch_optimizer_steps += 1
-                pending = 0
-                # Weights moved: every replay record is now stale.
+                batch = move_batch(raw_batch, self.device)
+                # No record may survive into the next batch.
                 if self.invalidate_candidate_c_records():
                     candidate_c_invalidations += 1
+                loss, details = self.compute_batch_loss(batch, interval)
+
+                # Counters describe what the rollout actually observed, so they are
+                # accumulated before any batch is skipped for having no loss.
+                batch_counters = details.get("rollout_counters")
+                if isinstance(batch_counters, Mapping):
+                    accumulate_rollout_counters(rollout_totals, dict(batch_counters))
+                auxiliary_annotation_total += float(details.get("auxiliary_annotation_loss", 0.0))
+                auxiliary_audit_total += float(details.get("auxiliary_audit_loss", 0.0))
+                auxiliary_batches += int(details.get("auxiliary_batches", 0))
+                auxiliary_seconds += float(details.get("auxiliary_seconds", 0.0))
+
+                # Skip batch update if loss is None (e.g. Phase B with zero transitions)
+                if loss is None:
+                    if hasattr(pbar, "update") and callable(pbar.update):
+                        pbar.update(1)
+                    continue
+
+                if not is_finite(loss):
+                    raise FloatingPointError(
+                        f"Non-finite loss ({float(loss.detach()):r}) at global_epoch={self.global_epoch} "
+                        f"batch={batch_index} details={details}"
+                    )
+
+                scaled_loss = loss / float(accumulation_steps)
+                if self.scaler.is_enabled():
+                    self.scaler.scale(scaled_loss).backward()
+                else:
+                    scaled_loss.backward()
+
+                pending += 1
+                batches += 1
+                batch_size = int(batch["image"].shape[0])
+                total_samples += batch_size
+
+                loss_val = float(loss.detach())
+                if interval.objective == "weighted_a0_a3":
+                    # Reference train_annotation_epoch reduces sample-weighted
+                    running_loss += loss_val * batch_size
+                    if "parts" in details and "loss" in details["parts"]:
+                        ann_val = float(details["parts"]["loss"])
+                    elif interval.annotation_weight > 0.0:
+                        ann_val = loss_val / float(interval.annotation_weight)
+                    else:
+                        ann_val = float(details.get("annotation_loss", loss_val))
+                    running_ann_loss += ann_val * batch_size
+
+                elif interval.objective == "counterfactual_audit":
+                    # Reference train_auditor_epoch reduces unweighted mean over batches
+                    running_loss += loss_val
+                    if interval.audit_weight > 0.0:
+                        aud_val = loss_val / float(interval.audit_weight)
+                    else:
+                        aud_val = float(details.get("audit_loss", loss_val))
+                    running_aud_loss += aud_val
+
+                elif interval.objective == "retained_final_annotation":
+                    # Reference finetune_joint_epoch reduces unweighted components over batches
+                    running_loss += loss_val
+                    ann_val = float(details.get("annotation_loss", 0.0))
+                    aud_val = float(details.get("audit_loss", 0.0))
+                    running_ann_loss += ann_val
+                    running_aud_loss += aud_val
+
+                else:
+                    running_loss += loss_val * batch_size
+                    running_ann_loss += float(details.get("annotation_loss", 0.0)) * batch_size
+                    running_aud_loss += float(details.get("audit_loss", 0.0)) * batch_size
+
+                if pending == accumulation_steps:
+                    step_ok, _ = finalize_optimizer_step(
+                        self.model,
+                        self.optimizer,
+                        self.scaler,
+                        scheduler=self.scheduler,
+                        pending_batches=pending,
+                        accumulation_steps=accumulation_steps,
+                        grad_clip=grad_clip,
+                    )
+                    if not step_ok:
+                        raise FloatingPointError(
+                            f"Non-finite gradients at global_epoch={self.global_epoch} step={self.optimizer_step}"
+                        )
+                    self.optimizer_step += 1
+                    self.global_step += 1
+                    epoch_optimizer_steps += 1
+                    pending = 0
+                    # Weights moved: every replay record is now stale.
+                    if self.invalidate_candidate_c_records():
+                        candidate_c_invalidations += 1
+
+                avg_running = (
+                    running_loss / max(total_samples, 1)
+                    if interval.objective == "weighted_a0_a3"
+                    else running_loss / max(batches, 1)
+                )
+                postfix = {
+                    "loss": f"{loss_val:.4f}",
+                    "avg": f"{avg_running:.4f}",
+                }
+                if interval.objective == "weighted_a0_a3":
+                    postfix["ann_loss"] = f"{(running_ann_loss / max(total_samples, 1)):.4f}"
+                elif interval.objective == "counterfactual_audit":
+                    postfix["audit_loss"] = f"{(running_aud_loss / max(batches, 1)):.4f}"
+                elif interval.objective == "retained_final_annotation":
+                    postfix["ann_loss"] = f"{(running_ann_loss / max(batches, 1)):.4f}"
+                    postfix["audit_loss"] = f"{(running_aud_loss / max(batches, 1)):.4f}"
+                else:
+                    if running_ann_loss > 0:
+                        postfix["ann_loss"] = f"{(running_ann_loss / max(total_samples, 1)):.4f}"
+                    if running_aud_loss > 0:
+                        postfix["audit_loss"] = f"{(running_aud_loss / max(batches, 1)):.4f}"
+                postfix["opt_step"] = self.optimizer_step
+                pbar.set_postfix(postfix)
+
+                if hasattr(pbar, "update") and callable(pbar.update):
+                    pbar.update(1)
 
                 if max_steps is not None and self.optimizer_step >= int(max_steps):
                     self.completed = False
                     self.incomplete_reason = "max_steps_reached"
-                    self.incomplete_epoch = (batch_index + 1 < len(train_loader))
+                    self.incomplete_epoch = (batch_index + 1 < total_batches)
                     break
-
-            avg_running = running_loss / max(total_samples, 1) if interval.objective == "weighted_a0_a3" else running_loss / max(batches, 1)
-            pbar.set_postfix({
-                "loss": f"{float(loss.detach()):.4f}",
-                "avg": f"{avg_running:.4f}",
-                "opt_step": self.optimizer_step,
-            })
+        finally:
+            if hasattr(pbar, "close") and callable(pbar.close):
+                pbar.close()
 
         if pending and not self.incomplete_epoch:
             step_ok, _ = finalize_optimizer_step(
@@ -2518,6 +2546,77 @@ class UnifiedTrainer:
                 print(f"[lifecycle] Secondary error in record_failure during exception: {sec_exc}", file=sys.stderr)
             raise
 
+    def format_epoch_summary(
+        self,
+        epoch: int,
+        interval: ScheduleInterval,
+        train_stats: dict[str, Any],
+        val_stats: dict[str, Any],
+    ) -> str:
+        """Construct a concise, persistent, explicitly named console summary of epoch results."""
+
+        def _fmt(val: Any) -> str | None:
+            if val is None:
+                return None
+            try:
+                fval = float(val)
+            except (TypeError, ValueError):
+                return "N/A"
+            return "N/A" if not math.isfinite(fval) else f"{fval:.4f}"
+
+        parts = [f"[{interval.name}] Epoch {epoch + 1:03d}/{self.schedule.total_epochs:03d}"]
+
+        def _append(name: str, val: Any, allow_na: bool = True) -> None:
+            s = _fmt(val)
+            if s is not None and (allow_na or s != "N/A"):
+                parts.append(f"{name}={s}")
+
+        _append("train_loss", train_stats.get("train_loss", train_stats.get("loss")))
+
+        if interval.objective == "weighted_a0_a3":
+            _append("val_loss", val_stats.get("val_loss", val_stats.get("loss")))
+            _append("val_macro_foreground_dice", val_stats.get("val_macro_foreground_dice", val_stats.get("final_dice")))
+            init_dice = next((val_stats[k] for k in ("phase_a/a0_dice", "a0_dice", "initial_dice", "val/initial_dice") if k in val_stats and val_stats[k] is not None), None)
+            if init_dice is not None:
+                _append("initial_dice", init_dice, allow_na=False)
+
+        elif interval.objective == "counterfactual_audit":
+            _append("val_loss", val_stats.get("audit_loss", val_stats.get("loss", val_stats.get("val_loss"))))
+            source = val_stats.get("primary_metric_source")
+            if source and source != "undefined":
+                primary_val = val_stats.get("primary_metric")
+                s = _fmt(primary_val) if primary_val is not None else "N/A"
+                parts.append(f"{source}={s}")
+            else:
+                parts.append("primary_metric=N/A")
+            _append("on_policy_fix_f1", val_stats.get("audit/on_policy/local_fix_f1"), allow_na=False)
+            _append("on_policy_regress_f1", val_stats.get("audit/on_policy/local_regress_f1"), allow_na=False)
+            _append("combined_fix_f1", val_stats.get("audit/combined/local_fix_f1", val_stats.get("local_fix_f1")), allow_na=False)
+            _append("combined_regress_f1", val_stats.get("audit/combined/local_regress_f1", val_stats.get("local_regress_f1")), allow_na=False)
+
+        elif interval.objective == "retained_final_annotation":
+            _append("val_loss", val_stats.get("val_loss", val_stats.get("loss")))
+            init_dice = val_stats.get("initial_foreground_macro_dice", val_stats.get("initial_dice", val_stats.get("modes/initial_dice")))
+            final_dice = val_stats.get("final_foreground_macro_dice", val_stats.get("final_dice", val_stats.get("modes/self_audit_dice")))
+            net_gain = val_stats.get("net_dice_gain", val_stats.get("net_gain", val_stats.get("modes/self_audit_gain")))
+            if net_gain is None and final_dice is not None and init_dice is not None:
+                try:
+                    net_gain = float(final_dice) - float(init_dice)
+                except (TypeError, ValueError):
+                    pass
+            _append("initial_foreground_macro_dice", init_dice)
+            _append("final_foreground_macro_dice", final_dice)
+            _append("net_gain", net_gain)
+            _append("harmful_acceptance_rate", val_stats.get("harmful_acceptance_rate"))
+            _append("beneficial_rejection_rate", val_stats.get("beneficial_rejection_rate"))
+
+        else:
+            _append("val_loss", val_stats.get("val_loss", val_stats.get("loss")))
+            _append("primary_metric", val_stats.get("primary_metric"))
+
+        parts.append(f"opt_step={self.optimizer_step}")
+        return " ".join(parts)
+
     def _train_impl(
         self,
         *,
@@ -2839,11 +2938,8 @@ class UnifiedTrainer:
             with self._preserving_rng():
                 self.logger.log(log_payload)
 
-            print(
-                f"[{interval.name}] Epoch {epoch+1:03d}/{self.schedule.total_epochs:03d} "
-                f"train_loss={train_stats['train_loss']:.4f} primary_metric={val_stats['primary_metric']:.4f} "
-                f"opt_step={self.optimizer_step}"
-            )
+            summary_str = self.format_epoch_summary(epoch, interval, train_stats, val_stats)
+            print(summary_str, flush=True)
 
             if max_steps is not None and self.optimizer_step >= int(max_steps):
                 self.completed = False
