@@ -24,6 +24,11 @@ from .common import (
 # mapping rather than an implicit assumption in the dataset implementation.
 DEFAULT_MNMS_TO_ACDC = {0: 0, 1: 3, 2: 2, 3: 1}
 
+# Scientific protocol labels
+NATIVE_MNMS_PROTOCOL = "mnms_unified_native_v1"
+EXTERNAL_MNMS_PROTOCOL = "acdc_frozen_to_mnms_external_v1"
+
+
 
 @dataclass(frozen=True)
 class MNMSClassMapping:
@@ -218,6 +223,8 @@ class MNMSDataset(VolumeSliceDataset):
 
     class_names = CLASS_NAMES
     num_classes = NUM_CLASSES
+    scientific_protocol_label = NATIVE_MNMS_PROTOCOL
+    external_protocol_label = EXTERNAL_MNMS_PROTOCOL
 
     def __init__(
         self,

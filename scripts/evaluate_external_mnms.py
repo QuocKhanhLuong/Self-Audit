@@ -30,13 +30,23 @@ from self_audit.audit.semantics import resolve_empty_policy, resolve_neutral_mar
 from self_audit.data.common import load_array, to_depth_first
 from self_audit.evaluation.cohort import evaluate_volume_cohort
 from self_audit.evaluation.volume_inference import COMPARISON_MODES
+from self_audit.provenance import (
+    UNKNOWN,
+    _mechanism_values_equal,
+    verify_model_config,
+)
 from self_audit.training._utils import (
+    CANDIDATE_C_KEYS,
+    CANDIDATE_C_SOLVER_MODES,
+    DEFAULT_WINDOW_MODE,
     bind_evaluation_checkpoint,
     build_model_from_config,
     build_patient_dataset,
     load_config,
     resolve_device,
+    validate_candidate_c_settings,
     validate_dataset_splits,
+    validate_window_mode,
     verify_bound_state,
 )
 
@@ -55,6 +65,7 @@ def _normalize_external_config(
     *,
     data_root: str | Path | None,
     split: str | None,
+    window_mode: str | None = None,
 ) -> dict[str, Any]:
     """Overlay the protocol's ``external_test`` block onto factory settings."""
 
@@ -89,6 +100,15 @@ def _normalize_external_config(
     result["num_classes"] = int(result.get("num_classes", result.get("model", {}).get("num_classes", 4)))
     if result["num_classes"] != 4:
         raise ValueError(f"External M&Ms evaluation requires num_classes=4, got {result['num_classes']}")
+    if window_mode is not None:
+        model_sec = result.setdefault("model", {})
+        if isinstance(model_sec, Mapping):
+            result["model"] = dict(model_sec)
+        result["model"]["window_mode"] = validate_window_mode(window_mode)
+    if "model" in result and isinstance(result["model"], Mapping) and "candidate_c" in result["model"]:
+        c_cfg = result["model"]["candidate_c"]
+        if c_cfg is not None:
+            result["model"]["candidate_c"] = validate_candidate_c_settings(c_cfg)
     return result
 
 
@@ -107,15 +127,7 @@ def _stored_grid(dataset: Any, *, depth_axis: int | None) -> tuple[list[int] | N
     return None, False
 
 
-def _inspect_checkpoint_dataset(checkpoint_path: Path | str) -> tuple[str, str]:
-    """Inspect checkpoint metadata for training dataset identity.
-
-    Returns (training_dataset, evidence_class).
-    Collects all declared source identities, requires exact normalized 'acdc',
-    and rejects incompatible or contradictory claims.
-    Historical checkpoints with missing metadata return ("unknown", "uncertified_historical_checkpoint").
-    ACDC-trained checkpoints return ("acdc", EVIDENCE_CLASS).
-    """
+def _load_checkpoint_payload(checkpoint_path: Path | str) -> Mapping[str, Any]:
     ckpt_path = Path(checkpoint_path)
     if not ckpt_path.is_file():
         raise FileNotFoundError(f"Checkpoint does not exist: {ckpt_path}")
@@ -126,6 +138,23 @@ def _inspect_checkpoint_dataset(checkpoint_path: Path | str) -> tuple[str, str]:
 
     if not isinstance(payload, Mapping):
         raise ValueError(f"Checkpoint must contain a mapping, got {type(payload).__name__}")
+    return payload
+
+
+def _inspect_checkpoint_dataset(
+    checkpoint_path: Path | str,
+    payload: Mapping[str, Any] | None = None,
+) -> tuple[str, str]:
+    """Inspect checkpoint metadata for training dataset identity.
+
+    Returns (training_dataset, evidence_class).
+    Collects all declared source identities, requires exact normalized 'acdc',
+    and rejects incompatible or contradictory claims.
+    Historical checkpoints with missing metadata return ("unknown", "uncertified_historical_checkpoint").
+    ACDC-trained checkpoints return ("acdc", EVIDENCE_CLASS).
+    """
+    if payload is None:
+        payload = _load_checkpoint_payload(checkpoint_path)
 
     declared_identities: set[str] = set()
 
@@ -204,14 +233,200 @@ def run_external_evaluation(
     data_root: str | Path | None = None,
     split: str | None = None,
     tau_accept: float | None = None,
+    window_mode: str | None = None,
     device: torch.device | str | None = None,
     output: str | Path | None = None,
 ) -> dict[str, Any]:
     """Run frozen M&Ms evaluation and optionally write its JSON report."""
 
-    training_dataset, evidence_class = _inspect_checkpoint_dataset(checkpoint)
+    ckpt_payload = _load_checkpoint_payload(checkpoint)
+    training_dataset, evidence_class = _inspect_checkpoint_dataset(checkpoint, payload=ckpt_payload)
     raw_config = load_config(config) if isinstance(config, (str, Path)) else dict(config)
-    flat = _normalize_external_config(raw_config, data_root=data_root, split=split)
+
+    # Checkpoint declared model configuration and execution mechanism
+    ckpt_cfg = ckpt_payload.get("config") if isinstance(ckpt_payload.get("config"), Mapping) else {}
+    ckpt_model = ckpt_cfg.get("model", {}) if isinstance(ckpt_cfg.get("model"), Mapping) else {}
+    ckpt_prov = ckpt_payload.get("provenance") if isinstance(ckpt_payload.get("provenance"), Mapping) else {}
+    ckpt_prov_id = ckpt_prov.get("model_identity") if isinstance(ckpt_prov.get("model_identity"), Mapping) else {}
+    ckpt_top_id = ckpt_payload.get("model_identity") if isinstance(ckpt_payload.get("model_identity"), Mapping) else {}
+
+    # 1. Collect and validate all checkpoint execution mode declarations
+    ckpt_mode_declarations: dict[str, str] = {}
+    if "window_mode" in ckpt_model:
+        ckpt_mode_declarations["checkpoint.config.model.window_mode"] = validate_window_mode(
+            ckpt_model["window_mode"], name="checkpoint.config.model.window_mode"
+        )
+    if "window_mode" in ckpt_cfg:
+        ckpt_mode_declarations["checkpoint.config.window_mode"] = validate_window_mode(
+            ckpt_cfg["window_mode"], name="checkpoint.config.window_mode"
+        )
+    if "window_mode" in ckpt_payload:
+        ckpt_mode_declarations["checkpoint.window_mode"] = validate_window_mode(
+            ckpt_payload["window_mode"], name="checkpoint.window_mode"
+        )
+    if "window_mode" in ckpt_prov_id and ckpt_prov_id["window_mode"] != UNKNOWN:
+        ckpt_mode_declarations["checkpoint.provenance.model_identity.window_mode"] = validate_window_mode(
+            ckpt_prov_id["window_mode"], name="checkpoint.provenance.model_identity.window_mode"
+        )
+    if "window_mode" in ckpt_top_id and ckpt_top_id["window_mode"] != UNKNOWN:
+        ckpt_mode_declarations["checkpoint.model_identity.window_mode"] = validate_window_mode(
+            ckpt_top_id["window_mode"], name="checkpoint.model_identity.window_mode"
+        )
+
+    unique_ckpt_modes = set(ckpt_mode_declarations.values())
+    if len(unique_ckpt_modes) > 1:
+        details = ", ".join(f"{k}={v!r}" for k, v in sorted(ckpt_mode_declarations.items()))
+        raise ValueError(f"Conflicting window_mode declarations in checkpoint: {details}")
+
+    ckpt_window_mode: str | None = next(iter(unique_ckpt_modes)) if unique_ckpt_modes else None
+
+    # 2. Collect and validate all checkpoint candidate_c settings declarations
+    ckpt_c_declarations: dict[str, dict[str, Any]] = {}
+    if "candidate_c" in ckpt_model:
+        ckpt_c_declarations["checkpoint.config.model.candidate_c"] = validate_candidate_c_settings(
+            ckpt_model["candidate_c"], name="checkpoint.config.model.candidate_c"
+        )
+    if "candidate_c" in ckpt_cfg:
+        ckpt_c_declarations["checkpoint.config.candidate_c"] = validate_candidate_c_settings(
+            ckpt_cfg["candidate_c"], name="checkpoint.config.candidate_c"
+        )
+    if "candidate_c" in ckpt_payload:
+        ckpt_c_declarations["checkpoint.candidate_c"] = validate_candidate_c_settings(
+            ckpt_payload["candidate_c"], name="checkpoint.candidate_c"
+        )
+    if "candidate_c_settings" in ckpt_prov_id and ckpt_prov_id["candidate_c_settings"] is not None:
+        ckpt_c_declarations["checkpoint.provenance.model_identity.candidate_c_settings"] = validate_candidate_c_settings(
+            ckpt_prov_id["candidate_c_settings"], name="checkpoint.provenance.model_identity.candidate_c_settings"
+        )
+    if "candidate_c_settings" in ckpt_top_id and ckpt_top_id["candidate_c_settings"] is not None:
+        ckpt_c_declarations["checkpoint.model_identity.candidate_c_settings"] = validate_candidate_c_settings(
+            ckpt_top_id["candidate_c_settings"], name="checkpoint.model_identity.candidate_c_settings"
+        )
+
+    if len(ckpt_c_declarations) > 1:
+        first_loc, first_s = next(iter(ckpt_c_declarations.items()))
+        for other_loc, other_s in list(ckpt_c_declarations.items())[1:]:
+            for k in CANDIDATE_C_KEYS:
+                if not _mechanism_values_equal(first_s[k], other_s[k]):
+                    raise ValueError(
+                        f"Conflicting candidate_c declarations in checkpoint: "
+                        f"{first_loc}.{k}={first_s[k]!r} vs {other_loc}.{k}={other_s[k]!r}"
+                    )
+
+    ckpt_candidate_c: dict[str, Any] | None = (
+        next(iter(ckpt_c_declarations.values())) if ckpt_c_declarations else None
+    )
+
+    # 3. Collect and validate evaluation config declarations
+    config_model = raw_config.get("model", {}) if isinstance(raw_config.get("model"), Mapping) else {}
+
+    config_mode_declarations: dict[str, str] = {}
+    if "window_mode" in config_model:
+        config_mode_declarations["config.model.window_mode"] = validate_window_mode(
+            config_model["window_mode"], name="config.model.window_mode"
+        )
+    if "window_mode" in raw_config:
+        config_mode_declarations["config.window_mode"] = validate_window_mode(
+            raw_config["window_mode"], name="config.window_mode"
+        )
+
+    unique_config_modes = set(config_mode_declarations.values())
+    if len(unique_config_modes) > 1:
+        details = ", ".join(f"{k}={v!r}" for k, v in sorted(config_mode_declarations.items()))
+        raise ValueError(f"Conflicting window_mode declarations in evaluation config: {details}")
+
+    config_window_mode: str | None = next(iter(unique_config_modes)) if unique_config_modes else None
+
+    cli_window_mode: str | None = None
+    if window_mode is not None:
+        cli_window_mode = validate_window_mode(window_mode, name="--window-mode")
+
+    # Reject conflicts across CLI, evaluation config, and checkpoint
+    if cli_window_mode is not None and ckpt_window_mode is not None and cli_window_mode != ckpt_window_mode:
+        raise ValueError(
+            f"CLI --window-mode {cli_window_mode!r} conflicts with checkpoint declared window_mode {ckpt_window_mode!r}"
+        )
+    if cli_window_mode is not None and config_window_mode is not None and cli_window_mode != config_window_mode:
+        raise ValueError(
+            f"CLI --window-mode {cli_window_mode!r} conflicts with config window_mode {config_window_mode!r}"
+        )
+    if config_window_mode is not None and ckpt_window_mode is not None and config_window_mode != ckpt_window_mode:
+        raise ValueError(
+            f"Config window_mode {config_window_mode!r} conflicts with checkpoint declared window_mode {ckpt_window_mode!r}"
+        )
+
+    # Requirement 4: Legacy checkpoints lacking mechanism settings
+    if ckpt_window_mode is None:
+        if cli_window_mode is not None and cli_window_mode != DEFAULT_WINDOW_MODE:
+            raise ValueError(
+                f"Cannot evaluate legacy checkpoint lacking execution mechanism metadata under non-default mode "
+                f"{cli_window_mode!r}; source mechanism identity cannot be established."
+            )
+        if config_window_mode is not None and config_window_mode != DEFAULT_WINDOW_MODE:
+            raise ValueError(
+                f"Cannot evaluate legacy checkpoint lacking execution mechanism metadata under non-default mode "
+                f"{config_window_mode!r}; source mechanism identity cannot be established."
+            )
+
+    resolved_window_mode = cli_window_mode or config_window_mode or ckpt_window_mode or DEFAULT_WINDOW_MODE
+
+    # Requirement 3: Evaluation config candidate_c handling
+    # Explicit candidate_c: null is NOT absence; only absent keys inherit source
+    has_config_candidate_c = ("candidate_c" in config_model) or ("candidate_c" in raw_config)
+    config_c_declarations: dict[str, dict[str, Any]] = {}
+    if "candidate_c" in config_model:
+        config_c_declarations["config.model.candidate_c"] = validate_candidate_c_settings(
+            config_model["candidate_c"], name="config.model.candidate_c"
+        )
+    if "candidate_c" in raw_config:
+        config_c_declarations["config.candidate_c"] = validate_candidate_c_settings(
+            raw_config["candidate_c"], name="config.candidate_c"
+        )
+
+    if len(config_c_declarations) > 1:
+        first_loc, first_s = next(iter(config_c_declarations.items()))
+        for other_loc, other_s in list(config_c_declarations.items())[1:]:
+            for k in CANDIDATE_C_KEYS:
+                if not _mechanism_values_equal(first_s[k], other_s[k]):
+                    raise ValueError(
+                        f"Conflicting candidate_c declarations in evaluation config: "
+                        f"{first_loc}.{k}={first_s[k]!r} vs {other_loc}.{k}={other_s[k]!r}"
+                    )
+
+    config_candidate_c: dict[str, Any] | None = (
+        next(iter(config_c_declarations.values())) if config_c_declarations else None
+    )
+
+    if has_config_candidate_c and config_candidate_c is not None and ckpt_candidate_c is not None:
+        for k in CANDIDATE_C_KEYS:
+            if not _mechanism_values_equal(config_candidate_c[k], ckpt_candidate_c[k]):
+                raise ValueError(
+                    f"Config candidate_c.{k}={config_candidate_c[k]!r} conflicts with checkpoint candidate_c.{k}={ckpt_candidate_c[k]!r}"
+                )
+
+    # Requirement 4: Under non-default solver mode, checkpoint must establish candidate_c settings
+    if resolved_window_mode in CANDIDATE_C_SOLVER_MODES and ckpt_candidate_c is None:
+        raise ValueError(
+            f"Cannot evaluate legacy checkpoint lacking candidate_c settings under non-default solver mode "
+            f"{resolved_window_mode!r}; source mechanism identity cannot be established."
+        )
+
+    # Fallback only when absent in evaluation config
+    resolved_candidate_c: dict[str, Any] | None
+    if has_config_candidate_c:
+        resolved_candidate_c = config_candidate_c
+    else:
+        resolved_candidate_c = ckpt_candidate_c
+
+    flat = _normalize_external_config(
+        raw_config,
+        data_root=data_root,
+        split=split,
+        window_mode=resolved_window_mode,
+    )
+    if resolved_candidate_c is not None:
+        flat.setdefault("model", {})["candidate_c"] = resolved_candidate_c
+
     resolved_split = str(flat["split"])
     validation = validate_dataset_splits(flat)
     if not validation.get("validated"):
@@ -226,6 +441,11 @@ def run_external_evaluation(
         config=flat,
     )
     model.eval()
+
+    # Requirement 1: Unconditional source-config and live model verification
+    verify_model_config(model, flat)
+    if isinstance(ckpt_payload.get("config"), Mapping):
+        verify_model_config(model, ckpt_payload["config"])
 
     dataset = build_patient_dataset(flat, split=resolved_split, train=False)
     verify_bound_state(model, binding, boundary="external_mnms_before_inference")
@@ -273,11 +493,19 @@ def run_external_evaluation(
     patient_count = int(validation.get("patient_counts", validation.get("patients", {})).get("test", len({r.patient_id for r in records})))
     binding_dict = binding.as_dict() if hasattr(binding, "as_dict") else dict(binding)
     grid, is_uniform = _stored_grid(dataset, depth_axis=flat.get("depth_axis"))
+    candidate_c_dict: dict[str, Any] | None = None
+    if hasattr(model, "candidate_c") and model.candidate_c is not None:
+        if hasattr(model.candidate_c, "as_dict"):
+            candidate_c_dict = model.candidate_c.as_dict()
+        elif isinstance(model.candidate_c, Mapping):
+            candidate_c_dict = dict(model.candidate_c)
+
     payload: dict[str, Any] = {
         "external_schema_version": EXTERNAL_SCHEMA_VERSION,
         "schema_version": EXTERNAL_SCHEMA_VERSION,
         "evidence_class": evidence_class,
         "protocol": str(raw_config.get("protocol", "acdc_to_mnms_domain_shift")),
+        "scientific_protocol_label": "acdc_frozen_to_mnms_external_v1",
         "training_dataset": training_dataset,
         "dataset": "mnms",
         "split": resolved_split,
@@ -305,6 +533,8 @@ def run_external_evaluation(
         "checkpoint_path": str(checkpoint),
         "live_state_digest": getattr(binding, "state_digest", binding_dict.get("state_digest")),
         "model_identity": getattr(binding, "model_identity", binding_dict.get("model_identity", {})),
+        "window_mode": getattr(model, "window_mode", flat.get("model", {}).get("window_mode", DEFAULT_WINDOW_MODE)),
+        "candidate_c_settings": candidate_c_dict,
         "metrics": volume,
     }
     safe_payload = _json_safe(payload)
@@ -321,6 +551,13 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--data-root", "--data_root", dest="data_root", default=None)
     parser.add_argument("--split", default=None)
     parser.add_argument("--tau-accept", "--tau_accept", dest="tau_accept", type=float, default=None)
+    parser.add_argument(
+        "--window-mode",
+        "--window_mode",
+        dest="window_mode",
+        default=None,
+        help="Model execution mode override ('current', 'candidate_c', etc.)",
+    )
     parser.add_argument("--device", default=None)
     parser.add_argument("--output", default="reports/external_mnms.json")
     return parser.parse_args(argv)
@@ -334,6 +571,7 @@ def main(argv: Sequence[str] | None = None) -> dict[str, Any]:
         data_root=args.data_root,
         split=args.split,
         tau_accept=args.tau_accept,
+        window_mode=args.window_mode,
         device=args.device,
         output=args.output,
     )

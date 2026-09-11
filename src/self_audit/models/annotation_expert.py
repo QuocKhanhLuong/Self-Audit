@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
 import math
 from typing import Any
 
 import torch
 from torch import Tensor, nn
+from torch.func import functional_call
 import torch.nn.functional as F
 
 from .dynamic_window import DynamicWindowAttention
@@ -194,6 +196,9 @@ class AnnotationExpertOutput:
     candidate_logits: Tensor
     depth: int
     window_metadata: dict[str, Tensor] | None = None
+    # Appended with defaults so existing positional construction keeps working.
+    geometry: tuple[dict[str, Any], ...] = ()
+    state_identity: str | None = None
 
     @property
     def A_candidate(self) -> Tensor:
@@ -202,6 +207,79 @@ class AnnotationExpertOutput:
     def __iter__(self):
         yield self.delta_logits
         yield self.update_gate
+
+
+class StaleReplayRecordError(RuntimeError):
+    """Raised when a replay record no longer matches the live model state."""
+
+
+@dataclass(frozen=True)
+class ExpertReplayRecord:
+    """Bounded, runtime-only replay record for ONE accepted transition.
+
+    Every tensor is a detached ordinary clone (never an inference tensor and
+    never a view of a live autograd graph), so the record can be replayed
+    inside a gradient-enabled region even when it was captured under
+    ``torch.no_grad()`` or ``torch.inference_mode()``.
+
+    The record is deliberately *not* a buffer and is never serialized into a
+    ``state_dict`` or a checkpoint: it describes one in-flight inference, not
+    model state.
+    """
+
+    shared_features: Tensor
+    annotation_logits: Tensor
+    previous_audit_evidence: Tensor | None
+    turn_index: int
+    iteration_index: int
+    depth: int
+    coordinates: tuple[Tensor, ...]
+    coordinates_preclamp: tuple[Tensor, ...]
+    factual_candidate_logits: Tensor
+    factual_update_gate: Tensor
+    state_identity: str
+    record_kind: str
+    audit_conditioning: str
+    offset_mode: str
+    #: The conditioning identities the window generator ACTUALLY used, one per
+    #: internal depth, after the embedding-table clamp.  The raw request
+    #: ``iteration_index + depth`` can exceed the table and be clamped, so
+    #: reporting the raw value would misdescribe the computation.  These are
+    #: read back from the captured geometry, never recomputed.
+    effective_turn_indices: tuple[int, ...] = ()
+    effective_iteration_indices: tuple[int, ...] = ()
+
+    @property
+    def feature_hw(self) -> tuple[int, int]:
+        return int(self.shared_features.shape[-2]), int(self.shared_features.shape[-1])
+
+    @property
+    def batch_size(self) -> int:
+        return int(self.shared_features.shape[0])
+
+
+#: Record kinds.  Only ``ordinary`` transitions are replay-eligible: their
+#: factual output *is* an ordinary AnnotationExpert update of their immediate
+#: pre-state, which is exactly what C1 re-executes.  A transition produced by
+#: the Candidate C solver or by direct rollback is a different function of the
+#: pre-state and is therefore recorded as ineligible, never relabelled.
+RECORD_KIND_ORDINARY: str = "ordinary"
+RECORD_KIND_CANDIDATE_C: str = "candidate_c"
+RECORD_KIND_ROLLBACK: str = "rollback"
+REPLAY_ELIGIBLE_RECORD_KINDS: frozenset[str] = frozenset({RECORD_KIND_ORDINARY})
+
+AUDIT_CONDITIONING_MODES: tuple[str, ...] = ("full", "feature_only")
+
+
+def _freeze_tensor(value: Tensor | None) -> Tensor | None:
+    """Materialise an ordinary detached clone usable by autograd later."""
+
+    if value is None:
+        return None
+    if not torch.is_tensor(value):
+        raise TypeError(f"expected tensor, got {type(value)!r}")
+    with torch.inference_mode(False), torch.no_grad():
+        return value.detach().clone()
 
 
 class AnnotationExpert(nn.Module):
@@ -222,12 +300,25 @@ class AnnotationExpert(nn.Module):
         audit_channels: int = 3,
         window_k: int = 8,
         max_turns: int = 3,
+        audit_conditioning: str = "full",
+        offset_mode: str = "structured",
     ) -> None:
         super().__init__()
         self.feature_channels = int(feature_channels)
         self.num_classes = int(num_classes)
         self.audit_channels = int(audit_channels)
         self.max_turns = int(max_turns)
+        conditioning = str(audit_conditioning).lower().strip()
+        if conditioning not in AUDIT_CONDITIONING_MODES:
+            raise ValueError(
+                f"audit_conditioning must be one of {list(AUDIT_CONDITIONING_MODES)}, got {audit_conditioning!r}"
+            )
+        #: ``feature_only`` removes BOTH explicit audit-evidence entry paths:
+        #: the audit channels of the input projection AND the window
+        #: generator's conditioning map.  The input channel count is kept so
+        #: the ablation shares the baseline parameter shapes exactly.
+        self.audit_conditioning = conditioning
+        self._replay_generation = 0
         input_channels = self.feature_channels + self.num_classes + 1 + self.audit_channels
         self.input_projection = nn.Sequential(
             nn.Conv2d(input_channels, self.feature_channels, 1),
@@ -241,6 +332,7 @@ class AnnotationExpert(nn.Module):
             k=int(window_k),
             condition_channels=self.audit_channels,
             max_turns=max(self.max_turns, 3),
+            offset_mode=offset_mode,
         )
         self.refinement_residual = nn.Sequential(
             nn.Conv2d(self.feature_channels, self.feature_channels, 3, padding=1),
@@ -266,6 +358,8 @@ class AnnotationExpert(nn.Module):
         turn_index: int | Tensor = 0,
         iteration_index: int | Tensor = 0,
         return_metadata: bool = False,
+        coordinate_overrides: Any = None,
+        capture_geometry: bool = False,
     ) -> AnnotationExpertOutput:
         if shared_features.ndim != 4 or annotation_logits.ndim != 4:
             raise ValueError("shared_features and annotation_logits must be four-dimensional")
@@ -275,7 +369,7 @@ class AnnotationExpert(nn.Module):
         annotation_low = F.interpolate(annotation_logits, size=spatial, mode="bilinear", align_corners=False)
         entropy = entropy_from_logits(annotation_logits) if entropy is None else entropy
         entropy_low = F.interpolate(entropy, size=spatial, mode="bilinear", align_corners=False)
-        if previous_audit_evidence is None:
+        if previous_audit_evidence is None or self.audit_conditioning == "feature_only":
             audit_low = shared_features.new_zeros((shared_features.shape[0], self.audit_channels, *spatial))
         else:
             if previous_audit_evidence.ndim != 4:
@@ -300,28 +394,225 @@ class AnnotationExpert(nn.Module):
             turn_value = int(turn_index)
         depth = min(turn_value + 1, 3)
         depth = max(depth, 1)
+        overrides: tuple[Tensor, ...] | None = None
+        if coordinate_overrides is not None:
+            overrides = tuple(coordinate_overrides)
+            if len(overrides) != depth:
+                raise ValueError(
+                    "coordinate_overrides must supply exactly one realized support per internal "
+                    f"iteration: expected {depth} for turn_index={turn_value}, got {len(overrides)}"
+                )
+        # ``feature_only`` also removes the window generator's conditioning map,
+        # so neither audit entry path survives the ablation.
+        window_condition = None if self.audit_conditioning == "feature_only" else audit_low
         metadata: dict[str, Tensor] | None = None
+        geometry: list[dict[str, Any]] = []
+        identity = self.state_identity() if capture_geometry else None
+        want_metadata = bool(return_metadata or capture_geometry)
         for iteration in range(depth):
             iteration_value = iteration
             if isinstance(iteration_index, int):
                 iteration_value += int(iteration_index)
-            window_output, window_metadata = self.refinement_block(
+            block_result = self.refinement_block(
                 state,
-                condition=audit_low,
+                condition=window_condition,
                 turn_index=turn_index,
                 iteration_index=iteration_value,
-                return_metadata=True,
+                return_metadata=want_metadata,
+                coordinate_override=None if overrides is None else overrides[iteration],
             )
+            if want_metadata:
+                window_output, window_metadata = block_result
+            else:
+                window_output, window_metadata = block_result, None
             state = state + self.refinement_residual(window_output)
             if return_metadata:
                 metadata = window_metadata
+            if capture_geometry and window_metadata is not None:
+                # Reported geometry is detached so a training graph is never
+                # retained by diagnostics; the returned candidate logits still
+                # carry the intervention's gradient.
+                geometry.append(
+                    {
+                        "turn_index": window_metadata["turn_index"].detach().clone(),
+                        "iteration_index": window_metadata["iteration_index"].detach().clone(),
+                        "internal_iteration": int(iteration),
+                        "coordinates": window_metadata["coordinates"].detach(),
+                        "coordinates_preclamp": window_metadata["coordinates_preclamp"].detach(),
+                        "attention": window_metadata["attention"].detach(),
+                        "override_used": bool(window_metadata["override_used"].item()),
+                        "feature_hw": (int(spatial[0]), int(spatial[1])),
+                        "state_identity": identity,
+                    }
+                )
         delta_low = self.delta_head(state)
         gate_low = self.gate_head(state)
         delta_logits = F.interpolate(delta_low, size=annotation_logits.shape[-2:], mode="bilinear", align_corners=False)
         update_gate = F.interpolate(gate_low, size=annotation_logits.shape[-2:], mode="bilinear", align_corners=False)
         candidate_logits = annotation_logits + torch.sigmoid(update_gate) * delta_logits
         self.last_window_metadata = metadata
-        return AnnotationExpertOutput(delta_logits, update_gate, candidate_logits, depth, metadata)
+        return AnnotationExpertOutput(
+            delta_logits,
+            update_gate,
+            candidate_logits,
+            depth,
+            metadata,
+            tuple(geometry),
+            identity,
+        )
+
+    # ------------------------------------------------------------------
+    # Candidate C: exact frozen replay of one accepted ordinary transition
+    # ------------------------------------------------------------------
+
+    def state_identity(self) -> str:
+        """A cheap fail-closed signature of the exact replay state.
+
+        Includes per-parameter and per-buffer object identity *and* version
+        counters (an optimizer step bumps the version in place), dtype, device,
+        the module train/eval mode and an explicit invalidation generation.
+        A sum of versions is deliberately not used: it collides trivially.
+        """
+
+        parts: list[str] = [
+            f"gen={int(self._replay_generation)}",
+            f"mode={'train' if self.training else 'eval'}",
+            f"audit={self.audit_conditioning}",
+            f"offsets={self.refinement_block.offset_mode}",
+        ]
+        for name, parameter in self.named_parameters(recurse=True):
+            parts.append(f"p|{name}|{id(parameter)}|{parameter._version}|{parameter.dtype}|{parameter.device}")
+        for name, buffer in self.named_buffers(recurse=True):
+            parts.append(f"b|{name}|{id(buffer)}|{buffer._version}|{buffer.dtype}|{buffer.device}")
+        digest = hashlib.blake2s("\n".join(parts).encode("utf-8"), digest_size=16).hexdigest()
+        return f"annotation_expert_v1:{digest}"
+
+    def invalidate_replay_records(self) -> int:
+        """Bump the generation so every outstanding record fails closed."""
+
+        self._replay_generation = int(self._replay_generation) + 1
+        return self._replay_generation
+
+    def build_replay_record(
+        self,
+        *,
+        shared_features: Tensor,
+        annotation_logits: Tensor,
+        previous_audit_evidence: Tensor | None,
+        turn_index: int,
+        iteration_index: int,
+        output: AnnotationExpertOutput,
+        record_kind: str = RECORD_KIND_ORDINARY,
+    ) -> ExpertReplayRecord:
+        """Freeze one transition into a bounded runtime replay record.
+
+        ``output`` must come from a ``capture_geometry=True`` forward so the
+        *realized* (post-clamp) supports of every internal iteration are known.
+        """
+
+        if not output.geometry:
+            raise ValueError("build_replay_record requires a capture_geometry=True forward")
+        if len(output.geometry) != int(output.depth):
+            raise ValueError(
+                f"captured geometry has {len(output.geometry)} entries for depth {output.depth}"
+            )
+        coordinates = tuple(_freeze_tensor(item["coordinates"]) for item in output.geometry)
+        preclamp = tuple(_freeze_tensor(item["coordinates_preclamp"]) for item in output.geometry)
+        # This architecture conditions every row of a call on the same scalar
+        # turn/iteration identity, so one resolved scalar per depth describes
+        # the call exactly; the values come from the capture, not from a
+        # re-derivation of the clamp.
+        effective_turns = tuple(int(item["turn_index"].reshape(-1)[0]) for item in output.geometry)
+        effective_iterations = tuple(
+            int(item["iteration_index"].reshape(-1)[0]) for item in output.geometry
+        )
+        return ExpertReplayRecord(
+            shared_features=_freeze_tensor(shared_features),
+            annotation_logits=_freeze_tensor(annotation_logits),
+            previous_audit_evidence=_freeze_tensor(previous_audit_evidence),
+            turn_index=int(turn_index),
+            iteration_index=int(iteration_index),
+            depth=int(output.depth),
+            coordinates=coordinates,
+            coordinates_preclamp=preclamp,
+            factual_candidate_logits=_freeze_tensor(output.candidate_logits),
+            factual_update_gate=_freeze_tensor(output.update_gate),
+            state_identity=self.state_identity(),
+            record_kind=str(record_kind),
+            audit_conditioning=self.audit_conditioning,
+            offset_mode=self.refinement_block.offset_mode,
+            effective_turn_indices=effective_turns,
+            effective_iteration_indices=effective_iterations,
+        )
+
+    def _frozen_state(self) -> dict[str, Tensor]:
+        frozen: dict[str, Tensor] = {}
+        for name, parameter in self.named_parameters(recurse=True):
+            frozen[name] = parameter.detach()
+        for name, buffer in self.named_buffers(recurse=True):
+            frozen[name] = buffer.detach()
+        return frozen
+
+    def replay(
+        self,
+        record: ExpertReplayRecord,
+        coordinates: Any = None,
+        *,
+        capture_geometry: bool = False,
+    ) -> AnnotationExpertOutput:
+        """Re-execute a recorded transition, optionally at alternative supports.
+
+        Only the realized sampling coordinates may differ from the record; every
+        other input (features, pre-transition logits, prior audit evidence, turn
+        and internal-iteration identities, depth) is the recorded one.  The
+        replay is functional: parameters and buffers are passed in detached, so
+        no solver gradient can reach the annotator, the encoder, the Auditor or
+        the patient image, and no ``requires_grad`` flag is mutated.
+        """
+
+        if record.record_kind not in REPLAY_ELIGIBLE_RECORD_KINDS:
+            raise ValueError(
+                f"record_kind {record.record_kind!r} is not replay eligible; "
+                f"eligible kinds are {sorted(REPLAY_ELIGIBLE_RECORD_KINDS)}"
+            )
+        if record.audit_conditioning != self.audit_conditioning:
+            raise ValueError(
+                f"record captured with audit_conditioning={record.audit_conditioning!r} "
+                f"but module is {self.audit_conditioning!r}"
+            )
+        if record.offset_mode != self.refinement_block.offset_mode:
+            raise ValueError(
+                f"record captured with offset_mode={record.offset_mode!r} "
+                f"but module is {self.refinement_block.offset_mode!r}"
+            )
+        identity = self.state_identity()
+        if identity != record.state_identity:
+            raise StaleReplayRecordError(
+                "annotation expert state changed since the record was captured "
+                f"({record.state_identity} -> {identity})"
+            )
+        supports = record.coordinates if coordinates is None else tuple(coordinates)
+        if len(supports) != record.depth:
+            raise ValueError(
+                f"replay needs exactly {record.depth} realized supports, got {len(supports)}"
+            )
+        with torch.inference_mode(False):
+            return functional_call(
+                self,
+                self._frozen_state(),
+                args=(),
+                kwargs={
+                    "shared_features": record.shared_features,
+                    "annotation_logits": record.annotation_logits,
+                    "entropy": None,
+                    "previous_audit_evidence": record.previous_audit_evidence,
+                    "turn_index": record.turn_index,
+                    "iteration_index": record.iteration_index,
+                    "return_metadata": False,
+                    "coordinate_overrides": supports,
+                    "capture_geometry": capture_geometry,
+                },
+            )
 
 
 SharedAnnotationExpert = AnnotationExpert

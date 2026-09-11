@@ -42,6 +42,26 @@ model:
   num_classes: 4
   window_k: 8
   max_turns: 3
+  # Execution mode. "current" is the baseline network this recipe was tuned
+  # for; it is the default and nothing else switches it on implicitly.
+  # Allowed: current | feature_only | free_offsets | candidate_c |
+  #          candidate_c_no_fix | direct_rollback
+  window_mode: "current"
+  # Candidate C solver settings. Inert unless window_mode selects a
+  # Candidate C mode ("candidate_c" or "candidate_c_no_fix"); listed here so
+  # the serialized lineage records the exact values that were in force.
+  # lr: null selects the normalized one-feature-pixel proposal rule.
+  candidate_c:
+    rho_feature_pixels: 1.0
+    lam: 1.0
+    lr: null
+    fix_threshold: 0.5
+    regress_threshold: 0.5
+    margin_fraction: 0.5
+    min_regress_mass: 0.001
+    replay_atol: 0.00001
+    replay_rtol: 0.00001
+    max_backtracks: 2
 
 training:
   amp:
@@ -73,6 +93,12 @@ training:
   rollout:
     tau: 0.0
     max_turns: 3
+    # Optional bootstrap curriculum. Off by default: the primary zero-history
+    # annotation objective, the A0 strength and the 130-epoch recipe below are
+    # unchanged. When enabled, the trainer adds a bounded auxiliary accepted-
+    # history rollout annotation loss using predicted auditor evidence.
+    predicted_history_exposure: false
+    predicted_history_weight: 0.1
   schedule:
     total_epochs: 130
     intervals:

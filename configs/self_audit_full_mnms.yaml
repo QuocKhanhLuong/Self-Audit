@@ -42,6 +42,18 @@ model:
   num_classes: 4
   window_k: 8
   max_turns: 3
+  window_mode: "current"
+  candidate_c:
+    rho_feature_pixels: 1.0
+    lam: 1.0
+    lr: null
+    fix_threshold: 0.5
+    regress_threshold: 0.5
+    margin_fraction: 0.5
+    min_regress_mass: 0.001
+    replay_atol: 0.00001
+    replay_rtol: 0.00001
+    max_backtracks: 2
 
 training:
   amp:
@@ -73,6 +85,8 @@ training:
   rollout:
     tau: 0.0
     max_turns: 3
+    predicted_history_exposure: false
+    predicted_history_weight: 0.1
   schedule:
     total_epochs: 130
     intervals:

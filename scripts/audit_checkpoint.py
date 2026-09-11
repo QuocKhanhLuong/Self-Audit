@@ -14,7 +14,7 @@ What it reports
    block rates, attribution residual).
 3. Patient-volume Dice per class (RV/MYO/LV), per patient, per cohort, with ED
    and ES reported separately.
-4. Three research probes:
+4. Four research probes:
 
    * **Probe 1 - synthetic positive quality.**  Measures the counterfactual
      generator's ``kind="positive"`` output around every state of the real
@@ -31,6 +31,34 @@ What it reports
    * **Probe 3 - GT firewall.**  Permuting the oracle target must not change
      deployable ``self_audit`` inference.  Checked over several batches, with
      a strict pass criterion (exact zero, no tolerance).
+   * **Probe 4 - Candidate C runtime diagnostics.**  Reads out the per-attempt
+     rows the Candidate C solver emitted during ordinary ``self_audit``
+     inference: replay error, objective before/after, predicted R/F mass,
+     protected-FIX and tie counts, constraint violation, fallback reason, the
+     solver's own forward/backward counts, innovation magnitude, the official
+     ``delta_q`` and the decision.  With ``--candidate_c_geometry`` it also
+     measures per-point displacement in feature pixels, coordinate saturation,
+     duplicate supports at a stated tolerance, attention entropy and support
+     spread.  It does **not** re-run the replay, re-solve coordinates or
+     re-decide acceptance, and a rejected candidate HALTs its row exactly as in
+     deployment.  It does cost one **additional ordinary inference pass** over
+     the capped batches, which is real extra compute; a window mode that never
+     builds an accepted-transition record (``current``, ``feature_only``,
+     ``free_offsets``) is skipped *before* any forward, so it pays nothing
+     (``infer_calls == 0``).  ``candidate_c``, ``candidate_c_no_fix`` and
+     ``direct_rollback`` are all measured and labelled by name.  An active mode
+     that recorded no attempt is reported separately from an inactive mode:
+     both are ``available: false``, but ``mode_active`` distinguishes them, and
+     an empty diagnostics list is never reported as an available measurement.
+     Geometry is measured per batch and only its numeric summaries are kept, so
+     no image-sized tensor is retained across batches or reaches the report.
+     Ground-truth restitution scoring lives under a separate ``ground_truth``
+     key, is computed after the fact from already-existing logit tensors, and
+     never reaches a model call.  It is split into ``proposal`` (the candidate
+     the Auditor judged, scored whether or not it was accepted) and
+     ``retained`` (what the row actually kept -- the candidate when accepted,
+     the unchanged factual state when rejected), so a rejected proposed repair
+     is never counted as a realized repair.
 
 Evidence class
 --------------
@@ -84,6 +112,7 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, timezone
 import hashlib
+import inspect
 import json
 import math
 from pathlib import Path
@@ -120,6 +149,17 @@ from self_audit.audit.targets import multiclass_dice
 from self_audit.evaluation.audit_decomposition import (
     evaluate_annotation_headroom,
     evaluate_audit_decomposition,
+)
+from self_audit.evaluation.candidate_c import (
+    CANDIDATE_C_DIAGNOSTIC_SCHEMA_VERSION,
+    DEFAULT_DUPLICATE_TOLERANCE_PIXELS,
+    DEFAULT_SATURATION_EPS,
+    geometry_row_metrics as candidate_c_geometry_row_metrics,
+    ground_truth_restitution_metrics,
+    merge_ground_truth_blocks,
+    summarize_diagnostic_rows,
+    summarize_geometry,
+    summarize_geometry_rows,
 )
 from self_audit.evaluation.calibration_lineage import (
     CALIBRATION_LINEAGE_SCHEMA_VERSION,
@@ -730,6 +770,509 @@ def probe_audit_evidence_value(
     }
 
 
+#: Window modes in which the Candidate C restitution machinery actually runs.
+#: ``candidate_c`` is the full method, ``candidate_c_no_fix`` drops only the
+#: FIX-protection constraint, and ``direct_rollback`` is the no-solver
+#: comparison baseline.  All three consume an accepted-transition record and
+#: are therefore measurable comparison paths.  ``current``, ``feature_only``
+#: and ``free_offsets`` never build a record, so probing them would buy
+#: nothing and cost a full extra rollout.
+try:  # pragma: no cover - exercised implicitly by every real run
+    from self_audit.models.self_audit_net import (
+        RECORD_CONSUMING_MODES as CANDIDATE_C_ACTIVE_WINDOW_MODES,
+    )
+except Exception:  # pragma: no cover - defensive, keeps the CLI importable
+    CANDIDATE_C_ACTIVE_WINDOW_MODES = frozenset(
+        {"candidate_c", "candidate_c_no_fix", "direct_rollback"}
+    )
+
+#: Flat keys the Candidate C block always publishes. Every one is present in
+#: ``flat`` even when the path is inactive, with a ``None`` value; a reader can
+#: therefore distinguish "not measured" from "measured as zero".
+CANDIDATE_C_FLAT_KEYS: tuple[str, ...] = (
+    "candidate_c/available",
+    "candidate_c/reason",
+    "candidate_c/window_mode",
+    "candidate_c/mode_active",
+    "candidate_c/batches_measured",
+    "candidate_c/infer_calls",
+    "candidate_c/rows_total",
+    "candidate_c/c1_attempted_count",
+    "candidate_c/c1_pass_rate",
+    "candidate_c/c1_max_abs_err_max",
+    "candidate_c/feasible_rate",
+    "candidate_c/improved_rate",
+    "candidate_c/accepted_rate",
+    "candidate_c/mean_regress_mass",
+    "candidate_c/mean_fix_mass",
+    "candidate_c/protected_sum",
+    "candidate_c/ties_excluded_sum",
+    "candidate_c/max_constraint_violation",
+    "candidate_c/mean_coordinate_displacement",
+    "candidate_c/mean_innovation_magnitude",
+    "candidate_c/mean_delta_q",
+    "candidate_c/objective_strictly_decreased_rate",
+    # ACTUAL solver work, deduplicated per solver invocation (solver-only).
+    "candidate_c/total_forward_sum",
+    "candidate_c/factual_replay_sum",
+    "candidate_c/coordinate_backward_sum",
+    "candidate_c/candidate_checks_sum",
+    "candidate_c/solver_invocations",
+    "candidate_c/solver_invocation_groups_attempted",
+    "candidate_c/solver_groups_without_executed_work",
+    "candidate_c/solver_rows_that_could_hide_work",
+    "candidate_c/solver_invocations_inconsistent",
+    "candidate_c/solver_invocation_key_source",
+    "candidate_c/mean_rows_per_solver_invocation",
+    # The raw per-row sums, which OVER-COUNT: one invocation's counters are
+    # copied into every surviving row. Published, named, never used as "work".
+    "candidate_c/total_forward_row_sum",
+    "candidate_c/factual_replay_row_sum",
+    "candidate_c/coordinate_backward_row_sum",
+    "candidate_c/candidate_checks_row_sum",
+    "candidate_c/geometry_available",
+    "candidate_c/geometry_rows_usable",
+    "candidate_c/ground_truth_available",
+    "candidate_c/ground_truth_rows_scored",
+    # PROPOSAL: what the solver put forward, scored regardless of acceptance.
+    "candidate_c/ground_truth_proposal_prior_true_fix_destroyed_rate",
+    "candidate_c/ground_truth_proposal_prior_true_regress_repaired_rate",
+    "candidate_c/ground_truth_proposal_new_error_rate",
+    # RETAINED: what the model actually kept after the official audit gate.
+    "candidate_c/ground_truth_retained_prior_true_fix_destroyed_rate",
+    "candidate_c/ground_truth_retained_prior_true_regress_repaired_rate",
+    "candidate_c/ground_truth_retained_new_error_rate",
+)
+
+
+def resolve_candidate_c_batches(
+    candidate_c_batches: int | None,
+    probe_batches: int | None,
+    max_val_batches: int | None,
+) -> int | None:
+    """Resolve probe 4's batch cap, inheriting rather than defaulting to uncapped.
+
+    Probe 4 is an ADDITIONAL ordinary inference pass. A programmatic caller
+    that leaves ``candidate_c_batches`` at ``None`` must inherit the bound the
+    other probes already run under -- ``--probe_batches``, then
+    ``--max_val_batches`` -- instead of quietly traversing the entire
+    validation loader one more time. ``None`` is only returned when the caller
+    supplied no bound anywhere.
+    """
+
+    for value in (candidate_c_batches, probe_batches, max_val_batches):
+        if value is not None:
+            return int(value)
+    return None
+
+
+def _dig(node: Any, *path: str) -> Any:
+    """Follow a key path, returning ``None`` the moment it stops existing."""
+
+    for key in path:
+        if not isinstance(node, Mapping):
+            return None
+        node = node.get(key)
+    return node
+
+
+def _inactive_candidate_c_block(
+    *,
+    reason: str,
+    window_mode: Any,
+    mode_active: bool | None,
+    batches_measured: int = 0,
+    infer_calls: int = 0,
+    geometry_requested: bool = False,
+    geometry_supported: bool | None = None,
+) -> dict[str, Any]:
+    """A fully-shaped block for a path that was never measured.
+
+    Every rate stays ``None``.  ``mode_active`` separates "this checkpoint does
+    not run the restitution machinery at all" from "it does, but no sample ever
+    became replay-eligible" -- two findings that mean different things.
+    """
+
+    detail: dict[str, Any] = {
+        "available": False,
+        "reason": reason,
+        "schema_version": int(CANDIDATE_C_DIAGNOSTIC_SCHEMA_VERSION),
+        "window_mode": None if window_mode is None else str(window_mode),
+        "mode_active": mode_active,
+        "batches_measured": int(batches_measured),
+        "infer_calls": int(infer_calls),
+        "diagnostics_key_present": False,
+        "rows": summarize_diagnostic_rows(None),
+        "geometry": summarize_geometry(None),
+        "ground_truth": merge_ground_truth_blocks([]),
+        "geometry_requested": bool(geometry_requested),
+        "geometry_supported_by_infer": geometry_supported,
+    }
+    return _finalize_candidate_c_detail(detail)
+
+
+@torch.no_grad()
+def probe_candidate_c_path(
+    model: torch.nn.Module,
+    loader: Any,
+    device: torch.device,
+    *,
+    tau_accept: float,
+    t_max: int,
+    max_batches: int | None = None,
+    capture_geometry: bool = False,
+    duplicate_tolerance_pixels: float = DEFAULT_DUPLICATE_TOLERANCE_PIXELS,
+    saturation_eps: float = DEFAULT_SATURATION_EPS,
+    ignore_index: int | None = None,
+) -> dict[str, Any]:
+    """Probe 4 - what the runtime Candidate C solver actually did.
+
+    COST.  This probe runs an **additional ordinary inference pass** over the
+    capped batches.  It does not re-run the solver by itself -- the solver runs
+    inside that pass exactly as it would in deployment, and the probe only
+    reads the rows it emitted -- but the rollout itself is real extra compute on
+    top of probes 1-3.  ``--candidate_c_batches`` bounds it, and a window mode
+    that never builds a record is skipped **before** any forward, so a baseline
+    checkpoint pays nothing at all (``infer_calls == 0``).
+
+    This probe *reads out* the per-attempt rows the model emitted; it does not
+    re-run the C1 replay, does not re-solve for coordinates and does not
+    re-decide acceptance.  ``c1_passed``, ``objective_*``, ``evals`` and
+    ``delta_q`` are the solver's own numbers, so a claim made from them is a
+    claim about the runtime, not about a reimplementation here.
+
+    SOLVER WORK.  One solver invocation runs on a batched group and the same
+    evaluation counters are copied into every surviving row, so the counters are
+    deduplicated per invocation before they are totalled -- keyed by
+    ``solver_invocation_id`` when core supplies it, otherwise by
+    ``(batch index, turn, record_turn)``, which is exact while at most one
+    solver invocation runs per turn.  The batch index is supplied here, so a
+    repeated ``(sample_index, turn)`` pair in a later batch cannot be folded
+    into an earlier batch's invocation.  A keyed group whose counters are all
+    explicitly zero executed nothing -- an ordinary annotation turn, a direct
+    rollback (record consumed, solver never called) or a stale-record preflight
+    that aborted before any replay -- so it is reported under
+    ``invocation_groups_attempted`` instead of inflating ``invocations``.  The
+    totals are **solver-only**: the
+    official Auditor's forward, the ordinary Annotation Expert's forward and
+    the separate ordinary-fallback evaluation that follows a C1 replay failure
+    are all outside them.  The raw per-row sums are still published, under
+    ``*_row_sum`` names that say they over-count.
+
+    The inference it runs is ordinary deployable ``self_audit`` inference, so a
+    rejected candidate HALTs that row exactly as it would in deployment: the
+    probe never forces acceptance and never extends a halted row.
+
+    MEMORY.  Geometry is measured one batch at a time and only the resulting
+    numeric summaries are kept; the raw ``candidate_c_geometry`` payload (full
+    coordinate and attention tensors, possibly on the GPU) is released before
+    the next batch is fetched.  Nothing image-sized reaches the report.
+
+    GT DISCIPLINE, in three explicit steps, matching
+    :func:`probe_audit_evidence_value`:
+
+    * **STEP 1 (GT-FREE)** - deployable inference with no ground-truth
+      argument.  The restitution candidate is produced without ground truth.
+    * **STEP 2 (GT-FREE)** - row and geometry measurement.
+    * **STEP 3 (EVALUATION ONLY)** - ground truth enters here and only here, to
+      score already-computed logit tensors, separated into ``proposal`` (what
+      was put forward) and ``retained`` (what the audit gate actually kept).
+      Nothing it produces is fed back into the model.
+    """
+
+    window_mode = getattr(model, "window_mode", None)
+    geometry_requested = bool(capture_geometry)
+
+    # ---- Mode gate, BEFORE any forward pass. ----
+    if window_mode is not None and str(window_mode) not in CANDIDATE_C_ACTIVE_WINDOW_MODES:
+        # Returned fully formed: _inactive_candidate_c_block finalises it.
+        return _inactive_candidate_c_block(
+            reason=(
+                f"window_mode={str(window_mode)!r} never builds an accepted-transition record, "
+                "so there is no restitution attempt to measure; the probe was skipped and ran "
+                "no inference"
+            ),
+            window_mode=window_mode,
+            mode_active=False,
+            geometry_requested=geometry_requested,
+        )
+
+    supports_geometry = False
+    try:
+        supports_geometry = "capture_geometry" in inspect.signature(model.infer).parameters
+    except (TypeError, ValueError):  # pragma: no cover - defensive
+        supports_geometry = False
+    geometry_enabled = geometry_requested and supports_geometry
+
+    was_training = model.training
+    model.eval()
+
+    rows: list[Mapping[str, Any]] = []
+    # Parallel to ``rows``: which loader batch each row came from. The solver's
+    # evaluation counters are shared by every surviving row of one batched
+    # invocation, so they are deduplicated per invocation; without this
+    # namespace a repeated (sample_index, turn) pair in a later batch would be
+    # folded into the earlier batch's invocation and its work would vanish.
+    row_scopes: list[int] = []
+    geometry_metrics: list[Mapping[str, Any]] = []
+    gt_blocks: list[Mapping[str, Any]] = []
+    batches_measured = 0
+    infer_calls = 0
+    diagnostics_key_present = False
+    geometry_key_present = False
+
+    try:
+        for batch_index, raw_batch in enumerate(loader):
+            if max_batches is not None and batch_index >= int(max_batches):
+                break
+            batch = move_batch(raw_batch, device)
+
+            # ---- STEP 1 (GT-FREE): deployable inference, no ground truth. ----
+            kwargs: dict[str, Any] = {
+                "mode": "self_audit",
+                "tau_accept": float(tau_accept),
+                "t_max": int(t_max),
+            }
+            if geometry_enabled:
+                kwargs["capture_geometry"] = True
+            output = model.infer(batch["image"], **kwargs)
+            infer_calls += 1
+            batches_measured += 1
+
+            batch_rows = output.get("candidate_c_diagnostics")
+            if batch_rows is not None:
+                diagnostics_key_present = True
+                batch_rows = [row for row in batch_rows if isinstance(row, Mapping)]
+                rows.extend(batch_rows)
+                row_scopes.extend([int(batch_index)] * len(batch_rows))
+
+                batch_geometry = output.get("candidate_c_geometry")
+                if batch_geometry is not None and not isinstance(batch_geometry, Sequence):
+                    batch_geometry = None
+                if batch_geometry is not None:
+                    geometry_key_present = True
+                    # ---- STEP 2 (GT-FREE): measure geometry NOW, keep only
+                    # the numbers, so the raw tensors can be released below. ----
+                    geometry_metrics.extend(
+                        candidate_c_geometry_row_metrics(
+                            element,
+                            duplicate_tolerance_pixels=float(duplicate_tolerance_pixels),
+                            saturation_eps=float(saturation_eps),
+                        )
+                        for element in batch_geometry
+                        if isinstance(element, Mapping)
+                    )
+
+                # ---- STEP 3 (EVALUATION ONLY): ground truth scores existing
+                # tensors, separated into proposal and retained effects. ----
+                gt_blocks.append(
+                    ground_truth_restitution_metrics(
+                        batch_rows,
+                        transition_previous=output.get("transition_previous"),
+                        transition_candidates=output.get("transition_candidates"),
+                        target=batch.get("mask"),
+                        ignore_index=ignore_index,
+                        geometry=batch_geometry,
+                        keep_per_row=False,
+                    )
+                )
+                # Drop every reference to this batch's image-sized tensors
+                # before the loader produces the next one.
+                batch_geometry = None
+            output = None
+            batch = None
+            raw_batch = None
+    finally:
+        model.train(was_training)
+
+    # An empty diagnostics list is NOT an available measurement: the mode is
+    # active but nothing ever became replay-eligible.
+    if not rows:
+        reason = (
+            "no Candidate C attempt was recorded over "
+            f"{batches_measured} measured batch(es): "
+            + (
+                "the model emitted the diagnostics key but no sample became replay-eligible"
+                if diagnostics_key_present
+                else "model.infer emitted no candidate_c_diagnostics key at all"
+            )
+        )
+        detail = _inactive_candidate_c_block(
+            reason=reason,
+            window_mode=window_mode,
+            mode_active=True if window_mode is not None else None,
+            batches_measured=batches_measured,
+            infer_calls=infer_calls,
+            geometry_requested=geometry_requested,
+            geometry_supported=supports_geometry,
+        )
+        detail["diagnostics_key_present"] = bool(diagnostics_key_present)
+        return _finalize_candidate_c_detail(detail)
+    else:
+        detail = {
+            "available": True,
+            "reason": None,
+            "schema_version": int(CANDIDATE_C_DIAGNOSTIC_SCHEMA_VERSION),
+            "window_mode": None if window_mode is None else str(window_mode),
+            "mode_active": True if window_mode is not None else None,
+            "batches_measured": int(batches_measured),
+            "infer_calls": int(infer_calls),
+            "diagnostics_key_present": True,
+            "rows": summarize_diagnostic_rows(rows, scopes=row_scopes),
+            "geometry": (
+                summarize_geometry_rows(
+                    geometry_metrics,
+                    duplicate_tolerance_pixels=float(duplicate_tolerance_pixels),
+                    saturation_eps=float(saturation_eps),
+                    keep_rows=False,
+                )
+                if geometry_key_present
+                else summarize_geometry(None)
+            ),
+            "ground_truth": merge_ground_truth_blocks(gt_blocks),
+            "geometry_requested": geometry_requested,
+            "geometry_supported_by_infer": bool(supports_geometry),
+        }
+    if geometry_requested and not supports_geometry:
+        detail["geometry"]["reason"] = (
+            "capture_geometry was requested but this model.infer does not accept it; "
+            "geometry is unavailable, not empty"
+        )
+    return _finalize_candidate_c_detail(detail)
+
+
+def _finalize_candidate_c_detail(detail: dict[str, Any]) -> dict[str, Any]:
+    """Attach the provenance notes and the always-complete flat key set.
+
+    Shared by every exit path -- measured, inactive mode, no eligible history,
+    and ``--skip_candidate_c`` -- so a reader never meets a block that is
+    missing keys just because nothing was measured.
+    """
+
+    detail["measurement_scope"] = (
+        "Read out of the runtime solver's own rows. This probe does not re-execute the C1 "
+        "replay, does not re-solve coordinates and does not re-decide acceptance. It does run "
+        "one ADDITIONAL ordinary inference pass over the capped batches, which is real extra "
+        "compute; an inactive window mode is skipped before any forward."
+    )
+    detail["gt_discipline"] = (
+        "Inference is ground-truth-free; ground truth scores already-computed logits only, "
+        "split into proposal (what was put forward) and retained (what the audit gate kept)."
+    )
+
+    row_summary = detail["rows"]
+    geometry_summary = detail["geometry"]
+    gt_summary = detail["ground_truth"]
+    flat: dict[str, Any] = {
+        "candidate_c/available": bool(detail["available"]),
+        "candidate_c/reason": detail["reason"],
+        "candidate_c/window_mode": detail["window_mode"],
+        "candidate_c/mode_active": detail["mode_active"],
+        "candidate_c/batches_measured": int(detail["batches_measured"]),
+        "candidate_c/infer_calls": int(detail["infer_calls"]),
+        "candidate_c/rows_total": int(row_summary.get("rows_total", 0)),
+        "candidate_c/c1_attempted_count": _dig(row_summary, "c1", "attempted_count"),
+        "candidate_c/c1_pass_rate": _dig(row_summary, "c1", "pass_rate"),
+        "candidate_c/c1_max_abs_err_max": _dig(row_summary, "c1", "max_abs_err", "max"),
+        "candidate_c/feasible_rate": _dig(row_summary, "flag/feasible", "rate"),
+        "candidate_c/improved_rate": _dig(row_summary, "flag/improved", "rate"),
+        "candidate_c/accepted_rate": _dig(row_summary, "flag/accepted", "rate"),
+        "candidate_c/mean_regress_mass": _dig(row_summary, "numeric/regress_mass", "mean"),
+        "candidate_c/mean_fix_mass": _dig(row_summary, "numeric/fix_mass", "mean"),
+        "candidate_c/protected_sum": _dig(row_summary, "count/num_protected", "sum"),
+        "candidate_c/ties_excluded_sum": _dig(row_summary, "count/num_ties_excluded", "sum"),
+        "candidate_c/max_constraint_violation": _dig(
+            row_summary, "numeric/constraint_violation", "max"
+        ),
+        "candidate_c/mean_coordinate_displacement": _dig(
+            row_summary, "numeric/coordinate_displacement", "mean"
+        ),
+        "candidate_c/mean_innovation_magnitude": _dig(
+            row_summary, "numeric/innovation_magnitude", "mean"
+        ),
+        "candidate_c/mean_delta_q": _dig(row_summary, "numeric/delta_q", "mean"),
+        "candidate_c/objective_strictly_decreased_rate": row_summary.get(
+            "objective_strictly_decreased_rate"
+        ),
+        # ACTUAL solver work: deduplicated per invocation. Solver-only -- the
+        # official Auditor's forward, the ordinary annotator's forward and the
+        # ordinary-fallback evaluation after a C1 failure are NOT included.
+        "candidate_c/total_forward_sum": _dig(
+            row_summary, "evals", "actual_invocation_totals", "totals", "total_forward"
+        ),
+        "candidate_c/factual_replay_sum": _dig(
+            row_summary, "evals", "actual_invocation_totals", "totals", "factual_replay"
+        ),
+        "candidate_c/coordinate_backward_sum": _dig(
+            row_summary, "evals", "actual_invocation_totals", "totals", "coordinate_backward"
+        ),
+        "candidate_c/candidate_checks_sum": _dig(
+            row_summary, "evals", "actual_invocation_totals", "totals", "candidate_checks"
+        ),
+        "candidate_c/solver_invocations": _dig(
+            row_summary, "evals", "actual_invocation_totals", "invocations"
+        ),
+        "candidate_c/solver_invocation_groups_attempted": _dig(
+            row_summary, "evals", "actual_invocation_totals", "invocation_groups_attempted"
+        ),
+        "candidate_c/solver_groups_without_executed_work": _dig(
+            row_summary, "evals", "actual_invocation_totals", "groups_without_executed_work"
+        ),
+        "candidate_c/solver_rows_that_could_hide_work": _dig(
+            row_summary, "evals", "actual_invocation_totals", "rows_that_could_hide_work"
+        ),
+        "candidate_c/solver_invocations_inconsistent": _dig(
+            row_summary, "evals", "actual_invocation_totals", "invocations_inconsistent"
+        ),
+        "candidate_c/solver_invocation_key_source": _dig(
+            row_summary, "evals", "actual_invocation_totals", "key_source"
+        ),
+        "candidate_c/mean_rows_per_solver_invocation": _dig(
+            row_summary, "evals", "per_row_opportunity", "rows_per_invocation", "mean"
+        ),
+        # The raw per-row sums, published under names that say what they are so
+        # the over-counting number is never hidden and never rebranded.
+        "candidate_c/total_forward_row_sum": _dig(
+            row_summary, "evals", "row_sums_overcounted", "total_forward"
+        ),
+        "candidate_c/factual_replay_row_sum": _dig(
+            row_summary, "evals", "row_sums_overcounted", "factual_replay"
+        ),
+        "candidate_c/coordinate_backward_row_sum": _dig(
+            row_summary, "evals", "row_sums_overcounted", "coordinate_backward"
+        ),
+        "candidate_c/candidate_checks_row_sum": _dig(
+            row_summary, "evals", "row_sums_overcounted", "candidate_checks"
+        ),
+        "candidate_c/geometry_available": bool(geometry_summary.get("available")),
+        "candidate_c/geometry_rows_usable": geometry_summary.get("rows_usable"),
+        "candidate_c/ground_truth_available": bool(gt_summary.get("available")),
+        "candidate_c/ground_truth_rows_scored": gt_summary.get("rows_scored"),
+        "candidate_c/ground_truth_proposal_prior_true_fix_destroyed_rate": _dig(
+            gt_summary, "proposal", "prior_true_fix_destroyed_rate"
+        ),
+        "candidate_c/ground_truth_proposal_prior_true_regress_repaired_rate": _dig(
+            gt_summary, "proposal", "prior_true_regress_repaired_rate"
+        ),
+        "candidate_c/ground_truth_proposal_new_error_rate": _dig(
+            gt_summary, "proposal", "new_error_rate"
+        ),
+        "candidate_c/ground_truth_retained_prior_true_fix_destroyed_rate": _dig(
+            gt_summary, "retained", "prior_true_fix_destroyed_rate"
+        ),
+        "candidate_c/ground_truth_retained_prior_true_regress_repaired_rate": _dig(
+            gt_summary, "retained", "prior_true_regress_repaired_rate"
+        ),
+        "candidate_c/ground_truth_retained_new_error_rate": _dig(
+            gt_summary, "retained", "new_error_rate"
+        ),
+    }
+    for key in CANDIDATE_C_FLAT_KEYS:
+        flat.setdefault(key, None)
+    detail["flat"] = flat
+    return detail
+
+
 # --------------------------------------------------------------------------
 # Probe 3 - GT firewall beyond batch 0
 # --------------------------------------------------------------------------
@@ -885,6 +1428,14 @@ def build_report(
     volume: Mapping[str, Any] | None = None,
     disable_tqdm: bool = False,
     generator: CounterfactualGenerator | None = None,
+    # ``None`` inherits ``probe_batches``, then ``max_val_batches``; it does not
+    # mean "no cap".  Probe 4 is an ADDITIONAL ordinary inference pass, so an
+    # unbounded default would quietly double a full validation traversal.
+    candidate_c_batches: int | None = None,
+    candidate_c_geometry: bool = False,
+    candidate_c_duplicate_tolerance_pixels: float = DEFAULT_DUPLICATE_TOLERANCE_PIXELS,
+    candidate_c_saturation_eps: float = DEFAULT_SATURATION_EPS,
+    skip_candidate_c: bool = False,
 ) -> dict[str, Any]:
     """Run every diagnostic and assemble the single versioned JSON payload."""
 
@@ -934,6 +1485,34 @@ def build_report(
         max_batches=probe_batches,
     )
 
+    if skip_candidate_c:
+        candidate_c = _inactive_candidate_c_block(
+            reason="--skip_candidate_c was given; the Candidate C path was not measured",
+            window_mode=getattr(model, "window_mode", None),
+            mode_active=None,
+            geometry_requested=bool(candidate_c_geometry),
+        )
+
+    else:
+        # A programmatic caller that leaves candidate_c_batches at its default
+        # must NOT silently traverse the whole validation loader for an extra
+        # rollout: probe 4 inherits the same bound as probes 1 and 2, and then
+        # the global --max_val_batches bound, before falling back to uncapped.
+        candidate_c_batches = resolve_candidate_c_batches(
+            candidate_c_batches, probe_batches, max_val_batches
+        )
+        candidate_c = probe_candidate_c_path(
+            model,
+            loader,
+            device,
+            tau_accept=tau_accept,
+            t_max=t_max,
+            max_batches=candidate_c_batches,
+            capture_geometry=bool(candidate_c_geometry),
+            duplicate_tolerance_pixels=float(candidate_c_duplicate_tolerance_pixels),
+            saturation_eps=float(candidate_c_saturation_eps),
+        )
+
     global_modes = {key: audit.get(key, float("nan")) for key in REQUIRED_MODE_KEYS}
     global_modes.update(
         {
@@ -951,6 +1530,7 @@ def build_report(
     flat.update(positive)
     flat.update(evidence)
     flat.update(annotation)
+    flat.update(candidate_c["flat"])
 
     payload: dict[str, Any] = {
         "diagnostic_schema_version": int(DIAGNOSTIC_SCHEMA_VERSION),
@@ -989,6 +1569,7 @@ def build_report(
         "gt_firewall": firewall,
         "synthetic_positive_quality": positive,
         "audit_evidence": evidence,
+        "candidate_c": candidate_c,
         "volume": dict(volume) if volume is not None else None,
         "flat": flat,
     }
@@ -1023,6 +1604,11 @@ def check_required_keys(payload: Mapping[str, Any]) -> dict[str, Any]:
         "gt_firewall/max_abs_logit_diff",
         "gt_firewall/decision_mismatch_rate",
         "gt_firewall/passed",
+        "candidate_c/available",
+        "candidate_c/rows_total",
+        "candidate_c/batches_measured",
+        "candidate_c/infer_calls",
+        "candidate_c/mode_active",
     ):
         if key not in flat:
             missing.append(key)
@@ -1149,6 +1735,48 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         default="self_audit",
         choices=("self_audit", "always_accept_refinement"),
         help="Trajectory probe 2 walks to find states carrying real audit evidence.",
+    )
+    parser.add_argument(
+        "--skip_candidate_c",
+        action="store_true",
+        help="Skip probe 4 (Candidate C runtime diagnostics) entirely.",
+    )
+    parser.add_argument(
+        "--candidate_c_batches",
+        type=int,
+        default=None,
+        help=(
+            "Batch cap for probe 4 (default: --probe_batches, then --max_val_batches). "
+            "Probe 4 is an ADDITIONAL ordinary inference pass over these batches on top of "
+            "probes 1-3; it is skipped entirely, with zero forwards, for a window mode that "
+            "never builds an accepted-transition record."
+        ),
+    )
+    parser.add_argument(
+        "--candidate_c_geometry",
+        action="store_true",
+        help=(
+            "Request per-point support geometry from infer(capture_geometry=True). "
+            "Ignored with an explicit reason when the model's infer does not accept it."
+        ),
+    )
+    parser.add_argument(
+        "--candidate_c_duplicate_tolerance_pixels",
+        type=float,
+        default=DEFAULT_DUPLICATE_TOLERANCE_PIXELS,
+        help=(
+            "Two support points count as duplicates when they agree on both axes to within this "
+            f"many FEATURE pixels (default: {DEFAULT_DUPLICATE_TOLERANCE_PIXELS})."
+        ),
+    )
+    parser.add_argument(
+        "--candidate_c_saturation_eps",
+        type=float,
+        default=DEFAULT_SATURATION_EPS,
+        help=(
+            "A coordinate component counts as saturated within this distance of the +/-1 domain "
+            f"edge (default: {DEFAULT_SATURATION_EPS})."
+        ),
     )
     parser.add_argument("--skip_volume", action="store_true", help="Skip the patient-volume pass.")
     parser.add_argument("--max_volumes", type=int, default=None)
@@ -1296,6 +1924,15 @@ def main(argv: Sequence[str] | None = None) -> dict[str, Any]:
         num_classes=int(legacy_config.get("num_classes", 4)),
         volume=volume_block,
         disable_tqdm=bool(args.no_tqdm),
+        candidate_c_batches=(
+            args.candidate_c_batches
+            if args.candidate_c_batches is not None
+            else (args.probe_batches if args.probe_batches is not None else args.max_val_batches)
+        ),
+        candidate_c_geometry=bool(args.candidate_c_geometry),
+        candidate_c_duplicate_tolerance_pixels=float(args.candidate_c_duplicate_tolerance_pixels),
+        candidate_c_saturation_eps=float(args.candidate_c_saturation_eps),
+        skip_candidate_c=bool(args.skip_candidate_c),
     )
     payload["checkpoint_binding"] = binding.as_dict()
     payload["expected_calibration_lineage"] = expected_lineage
@@ -1377,6 +2014,59 @@ def _print_summary(payload: Mapping[str, Any], output: Path) -> None:
         f"mismatch={_fmt(firewall.get('gt_firewall/decision_mismatch_rate'), '.5f')} "
         f"passed={firewall.get('gt_firewall/passed')}"
     )
+    candidate_c = payload.get("candidate_c") or {}
+    if not candidate_c.get("available"):
+        print(
+            f"candidate_c: unavailable mode={candidate_c.get('window_mode')} "
+            f"mode_active={candidate_c.get('mode_active')} "
+            f"infer_calls={candidate_c.get('infer_calls')} ({candidate_c.get('reason')})"
+        )
+    else:
+        c_flat = candidate_c.get("flat", {})
+        print(
+            f"candidate_c: rows={_fmt(c_flat.get('candidate_c/rows_total'), '.0f')} "
+            f"c1_pass={_fmt(c_flat.get('candidate_c/c1_pass_rate'), '.3f')} "
+            f"c1_max_err={_fmt(c_flat.get('candidate_c/c1_max_abs_err_max'), '.3e')} "
+            f"feasible={_fmt(c_flat.get('candidate_c/feasible_rate'), '.3f')} "
+            f"accepted={_fmt(c_flat.get('candidate_c/accepted_rate'), '.3f')} "
+            f"mean_dq={_fmt(c_flat.get('candidate_c/mean_delta_q'), '+.5f')}"
+        )
+        print(
+            "candidate_c_work[solver-only, per-invocation; excludes Auditor, ordinary "
+            "annotator and C1-failure fallback]: "
+            f"invocations={_fmt(c_flat.get('candidate_c/solver_invocations'), '.0f')} "
+            f"of_groups={_fmt(c_flat.get('candidate_c/solver_invocation_groups_attempted'), '.0f')} "
+            f"fwd={_fmt(c_flat.get('candidate_c/total_forward_sum'), '.0f')} "
+            f"replay={_fmt(c_flat.get('candidate_c/factual_replay_sum'), '.0f')} "
+            f"bwd={_fmt(c_flat.get('candidate_c/coordinate_backward_sum'), '.0f')} "
+            f"checks={_fmt(c_flat.get('candidate_c/candidate_checks_sum'), '.0f')} "
+            f"unknown={_fmt(c_flat.get('candidate_c/solver_invocations_inconsistent'), '.0f')} "
+            f"may_hide={_fmt(c_flat.get('candidate_c/solver_rows_that_could_hide_work'), '.0f')} "
+            f"key={c_flat.get('candidate_c/solver_invocation_key_source')}"
+        )
+        print(
+            "candidate_c_rowsum[OVER-COUNTS shared counters, not work]: "
+            f"fwd={_fmt(c_flat.get('candidate_c/total_forward_row_sum'), '.0f')} "
+            f"rows_per_invocation={_fmt(c_flat.get('candidate_c/mean_rows_per_solver_invocation'), '.2f')} "
+            f"infer_calls={_fmt(c_flat.get('candidate_c/infer_calls'), '.0f')} "
+            f"protected={_fmt(c_flat.get('candidate_c/protected_sum'), '.0f')} "
+            f"ties={_fmt(c_flat.get('candidate_c/ties_excluded_sum'), '.0f')} "
+            f"geometry={c_flat.get('candidate_c/geometry_available')}"
+        )
+        print(
+            "candidate_c_gt[eval-only,PROPOSAL]: "
+            f"rows={_fmt(c_flat.get('candidate_c/ground_truth_rows_scored'), '.0f')} "
+            f"fix_destroyed={_fmt(c_flat.get('candidate_c/ground_truth_proposal_prior_true_fix_destroyed_rate'), '.5f')} "
+            f"regress_repaired={_fmt(c_flat.get('candidate_c/ground_truth_proposal_prior_true_regress_repaired_rate'), '.5f')} "
+            f"new_error={_fmt(c_flat.get('candidate_c/ground_truth_proposal_new_error_rate'), '.5f')}"
+        )
+        print(
+            "candidate_c_gt[eval-only,RETAINED]: "
+            f"available={c_flat.get('candidate_c/ground_truth_available')} "
+            f"fix_destroyed={_fmt(c_flat.get('candidate_c/ground_truth_retained_prior_true_fix_destroyed_rate'), '.5f')} "
+            f"regress_repaired={_fmt(c_flat.get('candidate_c/ground_truth_retained_prior_true_regress_repaired_rate'), '.5f')} "
+            f"new_error={_fmt(c_flat.get('candidate_c/ground_truth_retained_new_error_rate'), '.5f')}"
+        )
     volume = payload.get("volume")
     if volume is None:
         print("volume: skipped (--skip_volume)")

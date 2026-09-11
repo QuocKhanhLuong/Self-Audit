@@ -54,11 +54,149 @@ MODEL_ARCHITECTURE_KEYS = frozenset(
         "num_classes",
         "window_k",
         "max_turns",
+        # Execution-mode switches.  These select which attention/restitution
+        # path the constructed network runs and must reach the constructor;
+        # they are architecture, not runtime knobs, and are never dropped.
+        "window_mode",
+        "candidate_c",
     }
 )
 MODEL_RUNTIME_KEYS = frozenset({"tau_accept", "threshold", "t_max"})
 MODEL_CONFIG_KEYS = MODEL_ARCHITECTURE_KEYS | MODEL_RUNTIME_KEYS
 CHECKPOINT_FORMAT_VERSION = 1
+
+# The exact set of execution modes.  ``current`` reproduces the historical
+# network bit for bit; every other value is an explicit opt-in.
+WINDOW_MODES: tuple[str, ...] = (
+    "current",
+    "feature_only",
+    "free_offsets",
+    "candidate_c",
+    "candidate_c_no_fix",
+    "direct_rollback",
+)
+DEFAULT_WINDOW_MODE = "current"
+# Modes that actually run the Candidate C restitution solver.
+CANDIDATE_C_SOLVER_MODES: frozenset[str] = frozenset({"candidate_c", "candidate_c_no_fix"})
+
+# Candidate C solver settings.  ``lr = None`` selects the documented
+# normalized one-feature-pixel proposal rule (the single gradient at the
+# factual point is rescaled so its longest axis-wise component equals
+# ``rho_feature_pixels`` feature pixels) rather than a fixed step size.
+CANDIDATE_C_DEFAULTS: dict[str, Any] = {
+    "rho_feature_pixels": 1.0,
+    "lam": 1.0,
+    "lr": None,
+    "fix_threshold": 0.5,
+    "regress_threshold": 0.5,
+    "margin_fraction": 0.5,
+    "min_regress_mass": 1e-3,
+    "replay_atol": 1e-5,
+    "replay_rtol": 1e-5,
+    "max_backtracks": 2,
+}
+CANDIDATE_C_KEYS: frozenset[str] = frozenset(CANDIDATE_C_DEFAULTS)
+
+
+def validate_window_mode(value: Any, *, name: str = "model.window_mode") -> str:
+    """Return an exact execution mode or fail; an unknown mode is never coerced."""
+
+    if not isinstance(value, str):
+        raise ValueError(f"{name} must be a string, got {type(value).__name__} ({value!r})")
+    if value not in WINDOW_MODES:
+        raise ValueError(
+            f"{name} must be one of {list(WINDOW_MODES)}, got {value!r}"
+        )
+    return value
+
+
+def validate_candidate_c_settings(
+    value: Any,
+    *,
+    name: str = "model.candidate_c",
+) -> dict[str, Any]:
+    """Validate the Candidate C solver mapping and fill documented defaults.
+
+    Unknown keys, non-finite numbers, and out-of-range values are errors.  The
+    returned mapping always carries every key, so a serialized config never
+    depends on a default that could later drift.
+    """
+
+    if value is None:
+        data: Mapping[str, Any] = {}
+    elif isinstance(value, Mapping):
+        data = value
+    else:
+        raise ValueError(f"{name} must be a mapping or null, got {type(value).__name__}")
+
+    unknown = set(data) - CANDIDATE_C_KEYS
+    if unknown:
+        names = ", ".join(sorted(str(key) for key in unknown))
+        raise ValueError(f"Unsupported {name} key(s): {names}")
+
+    resolved = dict(CANDIDATE_C_DEFAULTS)
+    resolved.update(data)
+
+    out: dict[str, Any] = {}
+    out["rho_feature_pixels"] = _require_positive_finite(
+        resolved["rho_feature_pixels"], f"{name}.rho_feature_pixels"
+    )
+    out["lam"] = _require_nonnegative_finite(resolved["lam"], f"{name}.lam")
+    lr = resolved["lr"]
+    out["lr"] = None if lr is None else _require_positive_finite(lr, f"{name}.lr")
+    out["fix_threshold"] = _require_unit_interval(resolved["fix_threshold"], f"{name}.fix_threshold")
+    out["regress_threshold"] = _require_unit_interval(
+        resolved["regress_threshold"], f"{name}.regress_threshold"
+    )
+    # The model package bounds this to [0, 1]; the schema rejects the same
+    # range so a bad YAML fails at load time, not halfway into a run.
+    out["margin_fraction"] = _require_unit_interval(
+        resolved["margin_fraction"], f"{name}.margin_fraction"
+    )
+    out["min_regress_mass"] = _require_unit_interval(
+        resolved["min_regress_mass"], f"{name}.min_regress_mass"
+    )
+    out["replay_atol"] = _require_nonnegative_finite(resolved["replay_atol"], f"{name}.replay_atol")
+    out["replay_rtol"] = _require_nonnegative_finite(resolved["replay_rtol"], f"{name}.replay_rtol")
+    # The contract budgets at most two candidate checks in total, so the
+    # backtrack count is capped here rather than trusted from the YAML.
+    out["max_backtracks"] = _require_integer(
+        resolved["max_backtracks"], f"{name}.max_backtracks", minimum=0
+    )
+    if out["max_backtracks"] > 2:
+        raise ValueError(
+            f"{name}.max_backtracks must be <= 2 (the contract budgets at most two "
+            f"candidate checks in total), got {out['max_backtracks']}"
+        )
+    return out
+
+
+def _require_finite_real(value: Any, name: str) -> float:
+    value = _require_real(value, name)
+    if not math.isfinite(value):
+        raise ValueError(f"{name} must be a finite number, got {value!r}")
+    return value
+
+
+def _require_positive_finite(value: Any, name: str) -> float:
+    value = _require_finite_real(value, name)
+    if value <= 0.0:
+        raise ValueError(f"{name} must be > 0, got {value}")
+    return value
+
+
+def _require_nonnegative_finite(value: Any, name: str) -> float:
+    value = _require_finite_real(value, name)
+    if value < 0.0:
+        raise ValueError(f"{name} must be >= 0, got {value}")
+    return value
+
+
+def _require_unit_interval(value: Any, name: str) -> float:
+    value = _require_finite_real(value, name)
+    if not 0.0 <= value <= 1.0:
+        raise ValueError(f"{name} must lie in [0, 1], got {value}")
+    return value
 
 
 def _require_integer(value: Any, name: str, *, minimum: int) -> int:
@@ -157,7 +295,14 @@ def filter_model_config(config: Mapping[str, Any]) -> dict[str, Any]:
     if "t_max" in config:
         _require_integer(config["t_max"], "t_max", minimum=0)
 
-    return {key: config[key] for key in MODEL_ARCHITECTURE_KEYS if key in config}
+    kwargs = {key: config[key] for key in MODEL_ARCHITECTURE_KEYS if key in config}
+    # The execution mode is validated and normalized here rather than filtered
+    # out: a config that asks for a non-default mode must reach the model
+    # constructor or fail loudly, never build the historical network silently.
+    if "window_mode" in kwargs or "candidate_c" in kwargs:
+        kwargs["window_mode"] = validate_window_mode(kwargs.get("window_mode", DEFAULT_WINDOW_MODE))
+        kwargs["candidate_c"] = validate_candidate_c_settings(kwargs.get("candidate_c"))
+    return kwargs
 
 
 def load_config(path: str | Path | None) -> dict[str, Any]:
@@ -211,6 +356,8 @@ def build_model_from_config(config: dict[str, Any], device: torch.device) -> nn.
     if raw_model_cfg is None:
         raw_model_cfg = {}
     model_cfg = filter_model_config(raw_model_cfg)
+    model_cfg.setdefault("window_mode", DEFAULT_WINDOW_MODE)
+    model_cfg.setdefault("candidate_c", dict(CANDIDATE_C_DEFAULTS))
     model_cfg.setdefault("num_classes", config.get("num_classes", 4))
     model_cfg.setdefault("encoder_name", "convnext_tiny")
     model_cfg.setdefault("pretrained_encoder", False)
@@ -227,6 +374,8 @@ def build_model_from_config(config: dict[str, Any], device: torch.device) -> nn.
     for key in ("pretrained_encoder", "encoder_allow_fallback"):
         if not isinstance(model_cfg[key], bool):
             raise ValueError(f"model.{key} must be a boolean, got {model_cfg[key]!r}")
+    model_cfg["window_mode"] = validate_window_mode(model_cfg["window_mode"])
+    model_cfg["candidate_c"] = validate_candidate_c_settings(model_cfg["candidate_c"])
     model = build_self_audit_net(**model_cfg)
     return model.to(device)
 

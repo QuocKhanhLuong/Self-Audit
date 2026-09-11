@@ -22,6 +22,7 @@ from pathlib import Path
 import random
 import shutil
 import sys
+import time
 from collections.abc import Iterator
 from numbers import Integral
 from typing import Any, Mapping
@@ -96,9 +97,16 @@ from self_audit.training.checkpoint_commit import (
     resolve_best_reference,
 )
 from self_audit.training.finetune_joint import (
+    ORDINARY_REAL_EVIDENCE_KEY,
+    PREDICTED_HISTORY_COUNTER_KEYS,
+    accumulate_rollout_counters,
     compute_joint_losses,
+    compute_predicted_history_annotation_loss,
+    compute_predicted_history_audit_loss,
     collect_validation_transition_cache,
+    rollout_counters,
     validate_phase_c,
+    zero_rollout_counters,
 )
 from self_audit.training.schedule import Schedule, ScheduleInterval
 from self_audit.training.train_annotation import (
@@ -1084,6 +1092,77 @@ class UnifiedTrainer:
             dtype=self.amp_dtype,
         )
 
+    #: Honest label for the evidence the auxiliary predicted-history rollout
+    #: consumes at each stage.  During the annotation bootstrap the Auditor is
+    #: untrained, so its local evidence is cold and uncalibrated; once the
+    #: Auditor is being optimised the same evidence is non-stationary.  Neither
+    #: is calibrated exposure and neither is logged as such.
+    EVIDENCE_CALIBRATION_LABELS = {
+        "weighted_a0_a3": "cold_untrained_predicted",
+        "counterfactual_audit": "nonstationary_training_predicted",
+        "retained_final_annotation": "nonstationary_training_predicted",
+    }
+
+    def predicted_history_settings(self) -> tuple[bool, float]:
+        """Resolve the optional ``training.rollout`` curriculum fields.
+
+        The config schema is owned by the config worker; this reads the fields
+        defensively so the trainer keeps its documented default (exposure OFF,
+        weight 0.1) on a config revision that does not carry them yet, and
+        rejects an out-of-contract value rather than silently coercing it.
+        """
+
+        rollout = self.config.training.rollout
+        enabled = getattr(rollout, "predicted_history_exposure", False)
+        if not isinstance(enabled, bool):
+            raise TypeError(
+                "training.rollout.predicted_history_exposure must be a bool, got "
+                f"{type(enabled).__name__}"
+            )
+        raw_weight = getattr(rollout, "predicted_history_weight", 0.1)
+        if isinstance(raw_weight, bool) or not isinstance(raw_weight, (int, float)):
+            raise TypeError(
+                "training.rollout.predicted_history_weight must be a real number, got "
+                f"{type(raw_weight).__name__}"
+            )
+        weight = float(raw_weight)
+        if not math.isfinite(weight) or weight < 0.0:
+            raise ValueError(
+                f"training.rollout.predicted_history_weight must be finite and >= 0, got {weight!r}"
+            )
+        return enabled, weight
+
+    def invalidate_candidate_c_records(self) -> bool:
+        """Drop any Candidate-C replay record held by the model, if supported.
+
+        Replay records are only valid against the exact model snapshot that
+        produced them, so they must never span a batch or an optimizer update.
+        The hook is optional: the core model may not expose it, in which case
+        this reports ``False`` and the caller logs zero invalidations rather
+        than implying one happened.
+        """
+
+        hook = getattr(self.model, "invalidate_candidate_c_records", None)
+        if callable(hook):
+            hook()
+            return True
+        return False
+
+    def _empty_rollout_details(self, interval: ScheduleInterval) -> dict[str, Any]:
+        enabled, weight = self.predicted_history_settings()
+        return {
+            "rollout_counters": zero_rollout_counters(),
+            "auxiliary_annotation_loss": 0.0,
+            "auxiliary_audit_loss": 0.0,
+            "auxiliary_batches": 0,
+            "auxiliary_seconds": 0.0,
+            "predicted_history_exposure": enabled,
+            "predicted_history_weight": weight,
+            "evidence_calibration": self.EVIDENCE_CALIBRATION_LABELS.get(
+                interval.objective, "unmeasured"
+            ),
+        }
+
     def compute_batch_loss(
         self,
         batch: dict[str, torch.Tensor],
@@ -1091,6 +1170,9 @@ class UnifiedTrainer:
     ) -> tuple[torch.Tensor | None, dict[str, Any]]:
         """Compute schedule-driven batch loss based on the active interval objective."""
         objective = interval.objective
+        rollout_details = self._empty_rollout_details(interval)
+        exposure_enabled = bool(rollout_details["predicted_history_exposure"])
+        exposure_weight = float(rollout_details["predicted_history_weight"])
 
         if objective == "weighted_a0_a3":
             with autocast_context(enabled=self.amp_enabled, device=self.device, dtype=self.amp_dtype):
@@ -1100,13 +1182,34 @@ class UnifiedTrainer:
                     batch["mask"],
                     stage_weights=self.config.training.annotation_loss.stage_weights,
                 )
+                # The primary zero-history bootstrap objective is unchanged.
                 loss = loss * float(interval.annotation_weight)
+
+            # Optional bounded auxiliary exposure to the official accepted
+            # predicted-history rollout.  Default OFF; when off nothing here
+            # runs and the stage is bit-identical to the baseline schedule.
+            if exposure_enabled and exposure_weight > 0.0 and float(interval.annotation_weight) > 0.0:
+                started = time.perf_counter()
+                with autocast_context(enabled=self.amp_enabled, device=self.device, dtype=self.amp_dtype):
+                    auxiliary, counters = compute_predicted_history_annotation_loss(
+                        self.model,
+                        batch,
+                        tau_accept=self.config.training.rollout.tau,
+                        t_max=self.config.training.rollout.max_turns,
+                    )
+                    loss = loss + float(interval.annotation_weight) * exposure_weight * auxiliary
+                rollout_details["rollout_counters"] = counters
+                rollout_details["auxiliary_annotation_loss"] = float(auxiliary.detach())
+                rollout_details["auxiliary_batches"] = 1
+                rollout_details["auxiliary_seconds"] = time.perf_counter() - started
+
             return loss, {
                 "loss": float(loss.detach()),
                 "annotation_loss": float(loss.detach()),
                 "audit_loss": 0.0,
                 "parts": parts,
                 "objective": objective,
+                **rollout_details,
             }
 
         elif objective == "counterfactual_audit":
@@ -1122,21 +1225,51 @@ class UnifiedTrainer:
                 amp_enabled=self.amp_enabled,
                 amp_dtype=self.amp_dtype,
             )
-            if loss is None:
+
+            # Optional auditor-only exposure to predicted-accepted-history
+            # transitions.  The annotator stays frozen: the rollout runs under
+            # no_grad and every Auditor input is a detached leaf.
+            auxiliary: torch.Tensor | None = None
+            if exposure_enabled and exposure_weight > 0.0 and float(interval.audit_weight) > 0.0:
+                started = time.perf_counter()
+                auxiliary, counters = compute_predicted_history_audit_loss(
+                    self.model,
+                    batch,
+                    tau_accept=self.config.training.rollout.tau,
+                    t_max=self.config.training.rollout.max_turns,
+                    neutral_margin=self.config.training.audit_loss.neutral_margin,
+                    local_weighting=(self.config.training.audit_loss.local_class_weighting != "none"),
+                    audit_margin=self.config.training.audit_loss.audit_margin,
+                    amp_enabled=self.amp_enabled,
+                    amp_dtype=self.amp_dtype,
+                )
+                rollout_details["rollout_counters"] = counters
+                rollout_details["auxiliary_seconds"] = time.perf_counter() - started
+                if auxiliary is not None:
+                    rollout_details["auxiliary_audit_loss"] = float(auxiliary.detach())
+                    rollout_details["auxiliary_batches"] = 1
+
+            if loss is None and auxiliary is None:
                 return None, {
                     "loss": 0.0,
                     "annotation_loss": 0.0,
                     "audit_loss": 0.0,
                     "transitions": 0,
                     "objective": objective,
+                    **rollout_details,
                 }
-            loss = loss * float(interval.audit_weight)
-            return loss, {
-                "loss": float(loss.detach()),
+
+            total = None if loss is None else loss * float(interval.audit_weight)
+            if auxiliary is not None:
+                scaled = float(interval.audit_weight) * exposure_weight * auxiliary
+                total = scaled if total is None else total + scaled
+            return total, {
+                "loss": float(total.detach()),
                 "annotation_loss": 0.0,
-                "audit_loss": float(loss.detach()),
+                "audit_loss": float(total.detach()),
                 "details": details,
                 "objective": objective,
+                **rollout_details,
             }
 
         elif objective == "retained_final_annotation":
@@ -1155,11 +1288,20 @@ class UnifiedTrainer:
                         float(interval.annotation_weight) * details["annotation_loss_tensor"]
                         + float(interval.audit_weight) * details["audit_loss_tensor"]
                     )
+            # The joint objective already rolls out with accepted predicted
+            # history, so the auxiliary rollout is deliberately NOT run here.
+            # Its counters are measured from the joint rollout itself.
+            rollout_details["rollout_counters"] = rollout_counters(
+                details.get("output"),
+                model=self.model,
+                batch_size=int(batch["image"].shape[0]),
+            )
             return loss, {
                 "loss": float(loss.detach()),
                 "annotation_loss": float(details["annotation_loss"]),
                 "audit_loss": float(details["audit_loss"]),
                 "objective": objective,
+                **rollout_details,
             }
 
         else:
@@ -1188,6 +1330,19 @@ class UnifiedTrainer:
         pending = 0
         epoch_optimizer_steps = 0
 
+        exposure_enabled, exposure_weight = self.predicted_history_settings()
+        rollout_totals = zero_rollout_counters()
+        auxiliary_annotation_total = 0.0
+        auxiliary_audit_total = 0.0
+        auxiliary_batches = 0
+        auxiliary_seconds = 0.0
+        candidate_c_invalidations = 0
+        evidence_calibration = self.EVIDENCE_CALIBRATION_LABELS.get(interval.objective, "unmeasured")
+
+        # A replay record is only valid against the snapshot that produced it.
+        if self.invalidate_candidate_c_records():
+            candidate_c_invalidations += 1
+
         self.optimizer.zero_grad(set_to_none=True)
 
         pbar = tqdm(
@@ -1205,7 +1360,20 @@ class UnifiedTrainer:
                 break
 
             batch = move_batch(raw_batch, self.device)
+            # No record may survive into the next batch.
+            if self.invalidate_candidate_c_records():
+                candidate_c_invalidations += 1
             loss, details = self.compute_batch_loss(batch, interval)
+
+            # Counters describe what the rollout actually observed, so they are
+            # accumulated before any batch is skipped for having no loss.
+            batch_counters = details.get("rollout_counters")
+            if isinstance(batch_counters, Mapping):
+                accumulate_rollout_counters(rollout_totals, dict(batch_counters))
+            auxiliary_annotation_total += float(details.get("auxiliary_annotation_loss", 0.0))
+            auxiliary_audit_total += float(details.get("auxiliary_audit_loss", 0.0))
+            auxiliary_batches += int(details.get("auxiliary_batches", 0))
+            auxiliary_seconds += float(details.get("auxiliary_seconds", 0.0))
 
             # Skip batch update if loss is None (e.g. Phase B with zero transitions)
             if loss is None:
@@ -1280,6 +1448,9 @@ class UnifiedTrainer:
                 self.global_step += 1
                 epoch_optimizer_steps += 1
                 pending = 0
+                # Weights moved: every replay record is now stale.
+                if self.invalidate_candidate_c_records():
+                    candidate_c_invalidations += 1
 
                 if max_steps is not None and self.optimizer_step >= int(max_steps):
                     self.completed = False
@@ -1312,6 +1483,8 @@ class UnifiedTrainer:
             self.global_step += 1
             epoch_optimizer_steps += 1
             pending = 0
+            if self.invalidate_candidate_c_records():
+                candidate_c_invalidations += 1
 
         if interval.objective == "weighted_a0_a3":
             avg_loss = running_loss / max(total_samples, 1)
@@ -1345,6 +1518,42 @@ class UnifiedTrainer:
             train_stats["annotation_loss"] = avg_ann_loss
         if avg_aud_loss is not None:
             train_stats["audit_loss"] = avg_aud_loss
+
+        # Sample-level rollout telemetry, emitted for EVERY stage.  A zero is a
+        # measured zero; ``rollout/rollout_batches == 0`` marks a stage that ran
+        # no rollout, and ``rollout/candidate_c_diagnostics_available == 0.0``
+        # marks Candidate-C counters that were not observable at all.
+        for key in PREDICTED_HISTORY_COUNTER_KEYS:
+            train_stats[f"rollout/{key}"] = int(rollout_totals[key])
+        # Narrower companion to real_evidence_attempts: history created by an
+        # ordinary (trainable) annotation transition, not by a restitution or
+        # rollback acceptance.  Forward exposure only; it is not a claim that a
+        # parameter gradient carried that evidence.
+        train_stats[f"rollout/{ORDINARY_REAL_EVIDENCE_KEY}"] = int(
+            rollout_totals[ORDINARY_REAL_EVIDENCE_KEY]
+        )
+        train_stats["rollout/ordinary_accepted_path_from_diagnostics"] = float(
+            rollout_totals["ordinary_accepted_path_from_diagnostics"]
+        )
+        train_stats["rollout/attempted_turn_samples"] = int(rollout_totals["attempted_turn_samples"])
+        train_stats["rollout/rollout_samples"] = int(rollout_totals["rollout_samples"])
+        train_stats["rollout/rollout_batches"] = int(rollout_totals["rollout_batches"])
+        train_stats["rollout/candidate_c_diagnostics_available"] = float(
+            rollout_totals["candidate_c_diagnostics_available"]
+        )
+        train_stats["rollout/predicted_history_exposure"] = 1.0 if exposure_enabled else 0.0
+        train_stats["rollout/predicted_history_weight"] = float(exposure_weight)
+        train_stats["rollout/evidence_calibration"] = evidence_calibration
+        train_stats["rollout/candidate_c_invalidations"] = int(candidate_c_invalidations)
+        # Auxiliary rollout cost is reported separately from the primary loss.
+        train_stats["rollout/auxiliary_batches"] = int(auxiliary_batches)
+        train_stats["rollout/auxiliary_seconds"] = float(auxiliary_seconds)
+        train_stats["rollout/auxiliary_annotation_loss"] = (
+            auxiliary_annotation_total / auxiliary_batches if auxiliary_batches else 0.0
+        )
+        train_stats["rollout/auxiliary_audit_loss"] = (
+            auxiliary_audit_total / auxiliary_batches if auxiliary_batches else 0.0
+        )
 
         for group in self.optimizer.param_groups:
             gname = group.get("name")
@@ -1704,6 +1913,19 @@ class UnifiedTrainer:
                     log_payload[clean_k] = float(v) if isinstance(v, (int, float)) else v
                 elif clean_k.startswith("audit/") and clean_k not in log_payload:
                     log_payload[clean_k] = float(v) if isinstance(v, (int, float)) else v
+
+        # Rollout telemetry is stage-independent: copy the measured counters
+        # and their denominators verbatim so the W&B fields, the JSON report row
+        # and the trainer's own totals cannot disagree.
+        for rollout_key, rollout_value in train_stats.items():
+            if not rollout_key.startswith("rollout/") or rollout_key in log_payload:
+                continue
+            if isinstance(rollout_value, bool):
+                log_payload[rollout_key] = float(rollout_value)
+            elif isinstance(rollout_value, (int, float)):
+                log_payload[rollout_key] = float(rollout_value)
+            else:
+                log_payload[rollout_key] = rollout_value
 
         # Strict hygiene: eliminate any accidental phase_a/, phase_b/, phase_c/ prefixes
         cleaned_payload: dict[str, Any] = {}

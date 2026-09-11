@@ -15,6 +15,14 @@ from typing import Any, ClassVar, Mapping, Sequence
 import torch
 import yaml
 
+from ._utils import (
+    CANDIDATE_C_DEFAULTS,
+    CANDIDATE_C_SOLVER_MODES,
+    DEFAULT_WINDOW_MODE,
+    WINDOW_MODES,
+    validate_candidate_c_settings,
+    validate_window_mode,
+)
 from .schedule import Schedule, ScheduleInterval
 
 
@@ -264,6 +272,36 @@ class DatasetConfig:
 
 
 @dataclass(frozen=True)
+class CandidateCSettings:
+    """Validated Candidate C solver settings carried by the model section.
+
+    This is the schema-side record only; the model package owns the runtime
+    ``CandidateCConfig`` and converts the validated mapping produced here.
+    Keeping the conversion on the model side avoids an import cycle between
+    the configuration schema and the network.
+    """
+
+    rho_feature_pixels: float = float(CANDIDATE_C_DEFAULTS["rho_feature_pixels"])
+    lam: float = float(CANDIDATE_C_DEFAULTS["lam"])
+    lr: float | None = CANDIDATE_C_DEFAULTS["lr"]
+    fix_threshold: float = float(CANDIDATE_C_DEFAULTS["fix_threshold"])
+    regress_threshold: float = float(CANDIDATE_C_DEFAULTS["regress_threshold"])
+    margin_fraction: float = float(CANDIDATE_C_DEFAULTS["margin_fraction"])
+    min_regress_mass: float = float(CANDIDATE_C_DEFAULTS["min_regress_mass"])
+    replay_atol: float = float(CANDIDATE_C_DEFAULTS["replay_atol"])
+    replay_rtol: float = float(CANDIDATE_C_DEFAULTS["replay_rtol"])
+    max_backtracks: int = int(CANDIDATE_C_DEFAULTS["max_backtracks"])
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any] | None) -> CandidateCSettings:
+        return cls(**validate_candidate_c_settings(data))
+
+    def to_mapping(self) -> dict[str, Any]:
+        """Return the complete validated mapping handed to the model package."""
+        return asdict(self)
+
+
+@dataclass(frozen=True)
 class ModelConfig:
     encoder_name: str
     pretrained_encoder: bool
@@ -272,26 +310,34 @@ class ModelConfig:
     num_classes: int
     window_k: int
     max_turns: int
+    # Execution mode.  ``current`` is the historical network; every other value
+    # is an explicit opt-in and is never inferred from any other setting.
+    window_mode: str = DEFAULT_WINDOW_MODE
+    candidate_c: CandidateCSettings = field(default_factory=CandidateCSettings)
 
     @property
     def encoder_allow_fallback(self) -> bool:
         return self.fallback
 
+    @property
+    def runs_candidate_c_solver(self) -> bool:
+        return self.window_mode in CANDIDATE_C_SOLVER_MODES
+
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> ModelConfig:
-        _check_keys(
-            data,
-            {
-                "encoder_name",
-                "pretrained_encoder",
-                "fallback",
-                "shared_channels",
-                "num_classes",
-                "window_k",
-                "max_turns",
-            },
-            "model",
-        )
+        allowed = {
+            "encoder_name",
+            "pretrained_encoder",
+            "fallback",
+            "shared_channels",
+            "num_classes",
+            "window_k",
+            "max_turns",
+            "window_mode",
+            "candidate_c",
+        }
+        required = allowed - {"window_mode", "candidate_c"}
+        _check_keys(data, allowed, "model", required=required)
         return cls(
             encoder_name=_ensure_str(data["encoder_name"], "model.encoder_name"),
             pretrained_encoder=_ensure_bool(data["pretrained_encoder"], "model.pretrained_encoder"),
@@ -300,6 +346,8 @@ class ModelConfig:
             num_classes=_ensure_int(data["num_classes"], "model.num_classes", min_val=1),
             window_k=_ensure_int(data["window_k"], "model.window_k", min_val=1),
             max_turns=_ensure_int(data["max_turns"], "model.max_turns", min_val=1),
+            window_mode=validate_window_mode(data.get("window_mode", DEFAULT_WINDOW_MODE)),
+            candidate_c=CandidateCSettings.from_dict(data.get("candidate_c")),
         )
 
 
@@ -479,13 +527,27 @@ class CounterfactualConfig:
 class RolloutConfig:
     tau: float
     max_turns: int
+    # Opt-in bootstrap curriculum.  Disabled by default so the primary
+    # zero-history annotation objective and the 130-epoch recipe are unchanged.
+    predicted_history_exposure: bool = False
+    predicted_history_weight: float = 0.1
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> RolloutConfig:
-        _check_keys(data, {"tau", "max_turns"}, "training.rollout")
+        allowed = {"tau", "max_turns", "predicted_history_exposure", "predicted_history_weight"}
+        _check_keys(data, allowed, "training.rollout", required={"tau", "max_turns"})
         return cls(
             tau=_ensure_float(data["tau"], "training.rollout.tau"),
             max_turns=_ensure_int(data["max_turns"], "training.rollout.max_turns", min_val=1),
+            predicted_history_exposure=_ensure_bool(
+                data.get("predicted_history_exposure", False),
+                "training.rollout.predicted_history_exposure",
+            ),
+            predicted_history_weight=_ensure_float(
+                data.get("predicted_history_weight", 0.1),
+                "training.rollout.predicted_history_weight",
+                min_val=0.0,
+            ),
         )
 
 
@@ -774,9 +836,15 @@ class UnifiedConfig:
                 "num_classes": self.model.num_classes,
                 "window_k": self.model.window_k,
                 "max_turns": self.model.max_turns,
+                # The execution mode travels with the model kwargs so the
+                # constructed network, the checkpoint lineage, and the config
+                # can never disagree about which variant ran.
+                "window_mode": self.model.window_mode,
+                "candidate_c": self.model.candidate_c.to_mapping(),
             },
             "num_classes": self.model.num_classes,
             "device": self.experiment.device,
+            "window_mode": self.model.window_mode,
         }
 
 
@@ -925,10 +993,15 @@ class ResolvedExecutionConfig:
         if "model" in self.flat_config and isinstance(self.flat_config["model"], Mapping):
             cfg = dict(self.flat_config["model"])
             cfg.setdefault("num_classes", self.flat_config.get("num_classes", 4))
+            # A historical flat config carries no execution mode; it is the
+            # historical network, stated explicitly rather than left unset.
+            cfg["window_mode"] = validate_window_mode(cfg.get("window_mode", DEFAULT_WINDOW_MODE))
+            cfg["candidate_c"] = validate_candidate_c_settings(cfg.get("candidate_c"))
             return {
                 "model": cfg,
                 "num_classes": cfg.get("num_classes", 4),
                 "device": self.flat_config.get("device", "cpu"),
+                "window_mode": cfg["window_mode"],
             }
         return dict(self.flat_config)
 
@@ -1049,6 +1122,28 @@ class ResolvedExecutionConfig:
         if self.unified_config is not None:
             return str(self.unified_config.calibration.metric_contract)
         return str(self.flat_config.get("metric_contract", "foreground_dice_exclude_v1"))
+
+    @property
+    def window_mode(self) -> str:
+        """The execution mode this resolved config will actually build."""
+        if self.unified_config is not None:
+            return self.unified_config.model.window_mode
+        model_section = self.flat_config.get("model")
+        raw = (
+            model_section.get("window_mode", DEFAULT_WINDOW_MODE)
+            if isinstance(model_section, Mapping)
+            else self.flat_config.get("window_mode", DEFAULT_WINDOW_MODE)
+        )
+        return validate_window_mode(raw)
+
+    @property
+    def candidate_c_settings(self) -> dict[str, Any]:
+        """The complete validated Candidate C solver mapping."""
+        if self.unified_config is not None:
+            return self.unified_config.model.candidate_c.to_mapping()
+        model_section = self.flat_config.get("model")
+        raw = model_section.get("candidate_c") if isinstance(model_section, Mapping) else None
+        return validate_candidate_c_settings(raw)
 
     @property
     def metric_space(self) -> str:

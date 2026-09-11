@@ -311,6 +311,566 @@ def compute_joint_losses(
     return total, details
 
 
+#: Sample-level rollout counters reported for every schedule interval.
+#:
+#: A zero here is a **measured** zero: the stage ran an accepted-history
+#: rollout and observed none of that event.  A stage that could not observe a
+#: counter family at all reports the matching ``*_available`` flag as ``0.0``
+#: instead of presenting the zeros as valid telemetry.
+PREDICTED_HISTORY_COUNTER_KEYS = (
+    "real_evidence_attempts",
+    "accepted_history_count",
+    "candidate_c_attempts",
+    "candidate_c_feasible",
+    "candidate_c_fallback",
+    "candidate_c_replay_failure",
+)
+
+#: Window modes under which the Candidate-C counters describe a solver that is
+#: actually running.  Under ``current``/``feature_only``/``free_offsets``/
+#: ``direct_rollback`` there is no C solver, so the C counters are reported as
+#: zero with ``candidate_c_diagnostics_available = 0.0``.
+CANDIDATE_C_WINDOW_MODES = ("candidate_c", "candidate_c_no_fix")
+
+
+#: Post-acceptance attempts whose own forward is the trainable ordinary
+#: annotation generator, whatever produced the evidence they consume.  Reported
+#: alongside -- never instead of -- the six agreed counters, because
+#: ``real_evidence_attempts`` deliberately counts every attempt that consumed
+#: the latest accepted evidence, including turns where a solver consumes it.
+ORDINARY_REAL_EVIDENCE_KEY = "ordinary_annotation_real_evidence_attempts"
+
+
+def zero_rollout_counters() -> dict[str, float]:
+    """Return the counter block for a stage/batch that ran no rollout at all."""
+
+    counters: dict[str, float] = {key: 0 for key in PREDICTED_HISTORY_COUNTER_KEYS}
+    counters[ORDINARY_REAL_EVIDENCE_KEY] = 0
+    counters["attempted_turn_samples"] = 0
+    counters["rollout_samples"] = 0
+    counters["rollout_batches"] = 0
+    counters["candidate_c_diagnostics_available"] = 0.0
+    counters["ordinary_accepted_path_from_diagnostics"] = 0.0
+    return counters
+
+
+def _counter_masks(output: Mapping[str, Any], *names: str) -> list[torch.Tensor]:
+    """Return per-turn ``[B]`` boolean masks from the first present key."""
+
+    for name in names:
+        value = output.get(name)
+        if isinstance(value, (list, tuple)) and value and all(torch.is_tensor(item) for item in value):
+            return [item.detach().reshape(-1).to(dtype=torch.bool) for item in value]
+        if torch.is_tensor(value) and value.ndim == 2:
+            return [row.detach().reshape(-1).to(dtype=torch.bool) for row in value]
+    return []
+
+
+def candidate_c_counters_meaningful(model: Any) -> bool:
+    """Return whether ``model`` actually runs the Candidate-C solver."""
+
+    return str(getattr(model, "window_mode", "")) in CANDIDATE_C_WINDOW_MODES
+
+
+#: ``accepted_path`` value denoting an ordinary annotation transition.  Any
+#: other published path (a replayed factual support, a counterfactual
+#: restitution, a direct rollback) is not an ordinary trainable annotation.
+ORDINARY_ACCEPTED_PATH = "ordinary"
+
+
+def _row_sample_indices(row: Mapping[str, Any]) -> list[int]:
+    """Return the sample rows one diagnostics row refers to."""
+
+    index = row.get("sample_index")
+    if isinstance(index, int) and not isinstance(index, bool):
+        return [index]
+    active = row.get("active_indices")
+    if isinstance(active, (list, tuple)):
+        return [int(value) for value in active if isinstance(value, int) and not isinstance(value, bool)]
+    if torch.is_tensor(active):
+        return [int(value) for value in active.detach().reshape(-1).tolist()]
+    return []
+
+
+def _ordinary_attempt_masks(
+    output: Mapping[str, Any],
+    active_masks: list[torch.Tensor],
+) -> tuple[list[torch.Tensor], bool]:
+    """Mark, per turn, the attempts whose **own** path is ordinary annotation.
+
+    Returns ``(masks, from_diagnostics)``.  ``masks[t]`` is the subset of the
+    rows attempted at turn ``t`` whose diagnostics row for that turn reports
+    ``accepted_path == "ordinary"`` -- that is, rows where the *receiving*
+    forward at turn ``t`` is the trainable ordinary annotation generator.
+
+    The path is read from the **current** turn, never the previous one.  What
+    produced the consumed evidence does not determine which module consumes it:
+    a previous ordinary acceptance followed by a Candidate-C turn has its
+    evidence consumed inside the solver, while a previous restitution followed
+    by an ordinary turn has its evidence consumed by the trainable generator.
+    A row whose C solve failed C1 and was routed back to normal annotation
+    reports ``accepted_path == "ordinary"`` and therefore counts here: it really
+    did feed the previous predicted evidence into the ordinary generator.
+
+    A row is cleared only when it publishes a path that is not ordinary; a
+    missing ``accepted_path`` leaves the attempt as it stands, and a rollout
+    that publishes no rows at all has no restitution path by construction, so
+    every attempt is ordinary and the flag records that this was structural.
+    """
+
+    rows = output.get("candidate_c_diagnostics")
+    if not isinstance(rows, (list, tuple)) or not rows:
+        return [mask.clone() for mask in active_masks], False
+
+    ordinary = [mask.clone() for mask in active_masks]
+    usable = False
+    for row in rows:
+        if not isinstance(row, Mapping):
+            continue
+        turn = row.get("turn")
+        path = row.get("accepted_path")
+        if not isinstance(turn, int) or isinstance(turn, bool) or path is None:
+            continue
+        if turn < 0 or turn >= len(ordinary):
+            continue
+        usable = True
+        if str(path) == ORDINARY_ACCEPTED_PATH:
+            continue
+        for sample in _row_sample_indices(row):
+            if 0 <= sample < int(ordinary[turn].numel()):
+                ordinary[turn][sample] = False
+    if not usable:
+        return [mask.clone() for mask in active_masks], False
+    return ordinary, True
+
+
+def _candidate_c_attempted(row: Mapping[str, Any]) -> bool:
+    """Return whether one diagnostics row is an actual record-consuming attempt.
+
+    An attempt is a turn that reached the solver holding a replayable ordinary
+    record -- a valid ``record_turn`` with ``record_kind == "ordinary"`` -- and
+    is counted **regardless of whether the solve was eligible or succeeded**.
+    Gating on ``eligible`` would make a C1 replay failure or a zero-REGRESS
+    turn invisible, which would in turn make ``candidate_c_replay_failure``
+    unable to increment for a real core failure.  A fresh ordinary turn holding
+    no record is not an attempt.  An explicit ``attempted`` boolean from the
+    core module overrides the inference when present.
+    """
+
+    explicit = row.get("attempted")
+    if isinstance(explicit, bool):
+        return explicit
+    record_turn = row.get("record_turn")
+    if not isinstance(record_turn, int) or isinstance(record_turn, bool) or record_turn < 0:
+        return False
+    return str(row.get("record_kind")) == "ordinary"
+
+
+def rollout_counters(
+    output: Any,
+    *,
+    model: Any = None,
+    batch_size: int | None = None,
+) -> dict[str, float]:
+    """Derive the six sample-level rollout counters from one ``infer`` output.
+
+    Definitions (all counted in *sample-turn attempts*, never in batches):
+
+    ``real_evidence_attempts``
+        Attempts in which the annotator consumed the latest real predicted
+        accepted evidence, i.e. rows whose *previous* turn was accepted and
+        which were attempted again this turn.  A rejected attempt HALTs and can
+        never contribute, so attempted-but-rejected history is never counted
+        here.  **Whatever produced that acceptance counts**: under a
+        restitution window mode the previous acceptance may be a Candidate-C or
+        direct-rollback action, whose evidence is consumed by the solver rather
+        than by a trainable ordinary annotation forward.  Use
+        ``ordinary_annotation_real_evidence_attempts`` for the narrower
+        quantity.
+    ``accepted_history_count``
+        **All** accepted transitions **created** by this rollout, ordinary and
+        restitution alike, read from the state masks.  It includes a final-turn
+        acceptance that no later turn could consume, so it is a creation count,
+        not a reuse count.
+    ``candidate_c_attempts`` / ``candidate_c_feasible`` /
+    ``candidate_c_fallback`` / ``candidate_c_replay_failure``
+        Derived from the per-attempt sample rows in ``candidate_c_diagnostics``
+        and only when ``model.window_mode`` actually selects the C solver.
+        An **attempt** is a turn that reached the solver holding a replayable
+        ordinary record (valid ``record_turn`` with ``record_kind ==
+        "ordinary"``, or an explicit ``attempted`` flag from the core), counted
+        whether or not the solve was eligible or succeeded -- so a C1 replay
+        failure and a zero-REGRESS turn both land in the denominator.  A fresh
+        ordinary turn holding no record is not an attempt.  The other three are
+        counted strictly within those attempted rows: ``feasible is True``,
+        a non-null ``fallback_reason``, and ``c1_passed is False`` (``None`` is
+        unmeasured and does not count).
+
+    Reported alongside the six, and clearly named so it cannot be mistaken for
+    one of them:
+
+    ``ordinary_annotation_real_evidence_attempts``
+        Post-acceptance attempts whose **own** forward is the trainable ordinary
+        annotation generator: accepted at ``t-1``, attempted at ``t``, and the
+        row for turn ``t`` reports ``accepted_path == "ordinary"``.  The
+        receiving path is what matters, not the path that produced the
+        evidence -- previous-ordinary followed by a C turn has its evidence
+        consumed inside the solver and does **not** count, while
+        previous-C followed by an ordinary turn does.  A C1 replay failure
+        routed back to normal annotation counts here too (and still counts as a
+        C attempt above).  Under a baseline ordinary rollout no other path
+        exists, so every post-accept attempt qualifies and the count equals
+        ``real_evidence_attempts``; ``ordinary_accepted_path_from_diagnostics``
+        says which derivation was used (``1.0`` = per-sample ``accepted_path``).
+
+        This counts **forward exposure**, not a guaranteed parameter gradient:
+        an accepted conditional update or a gradient probe would be a separate
+        measurement, and none is claimed here.
+
+    Denominators reported alongside: ``attempted_turn_samples`` (total
+    sample-turn attempts), ``rollout_samples`` (rows entering the rollout) and
+    ``rollout_batches``.
+    """
+
+    counters = zero_rollout_counters()
+    if not isinstance(output, Mapping):
+        return counters
+
+    active_masks = _counter_masks(output, "transition_active_masks", "active_masks")
+    state_masks = _counter_masks(output, "transition_state_masks", "state_masks")
+
+    counters["attempted_turn_samples"] = sum(int(mask.sum().item()) for mask in active_masks)
+    counters["accepted_history_count"] = sum(int(mask.sum().item()) for mask in state_masks)
+
+    real_evidence = 0
+    for index in range(1, len(active_masks)):
+        if index - 1 >= len(state_masks):
+            break
+        previous_accepted = state_masks[index - 1]
+        attempt = active_masks[index]
+        if previous_accepted.numel() != attempt.numel():
+            continue
+        real_evidence += int((previous_accepted & attempt.to(previous_accepted.device)).sum().item())
+    counters["real_evidence_attempts"] = real_evidence
+
+    ordinary_masks, from_diagnostics = _ordinary_attempt_masks(output, active_masks)
+    counters["ordinary_accepted_path_from_diagnostics"] = 1.0 if from_diagnostics else 0.0
+    ordinary_evidence = 0
+    for index in range(1, len(active_masks)):
+        if index - 1 >= len(state_masks) or index >= len(ordinary_masks):
+            break
+        previous_accepted = state_masks[index - 1]
+        attempt = active_masks[index]
+        ordinary_now = ordinary_masks[index]
+        if previous_accepted.numel() != attempt.numel() or ordinary_now.numel() != attempt.numel():
+            continue
+        device = previous_accepted.device
+        ordinary_evidence += int(
+            (
+                previous_accepted
+                & attempt.to(device)
+                & ordinary_now.to(device)
+            ).sum().item()
+        )
+    counters[ORDINARY_REAL_EVIDENCE_KEY] = ordinary_evidence
+
+    if batch_size is None:
+        logits = output.get("logits")
+        batch_size = int(logits.shape[0]) if torch.is_tensor(logits) else 0
+    counters["rollout_samples"] = int(batch_size)
+    counters["rollout_batches"] = 1
+
+    rows = output.get("candidate_c_diagnostics")
+    if model is not None and candidate_c_counters_meaningful(model) and isinstance(rows, (list, tuple)):
+        counters["candidate_c_diagnostics_available"] = 1.0
+        for row in rows:
+            if not isinstance(row, Mapping):
+                continue
+            if not _candidate_c_attempted(row):
+                continue
+            counters["candidate_c_attempts"] += 1
+            if row.get("feasible") is True:
+                counters["candidate_c_feasible"] += 1
+            if row.get("c1_passed") is False:
+                counters["candidate_c_replay_failure"] += 1
+            if row.get("fallback_reason") is not None:
+                counters["candidate_c_fallback"] += 1
+    return counters
+
+
+def accumulate_rollout_counters(
+    total: dict[str, float],
+    update: Mapping[str, float],
+) -> dict[str, float]:
+    """Accumulate one batch's counters into a stage total.
+
+    Counts add.  The two ``*_available`` / ``*_from_diagnostics`` flags are
+    conjunctions over the batches that actually ran a rollout: a stage claims a
+    provenance only when every measured rollout batch supplied it.
+    """
+
+    flags = ("candidate_c_diagnostics_available", "ordinary_accepted_path_from_diagnostics")
+    had_rollout = float(total.get("rollout_batches", 0)) > 0
+    for key, value in update.items():
+        if key in flags:
+            continue
+        total[key] = total.get(key, 0) + value
+    if float(update.get("rollout_batches", 0)) > 0:
+        for flag in flags:
+            incoming = float(update.get(flag, 0.0))
+            current = float(total.get(flag, 0.0))
+            total[flag] = min(current, incoming) if had_rollout else incoming
+    return total
+
+
+def _rollout_shared_features(output: Mapping[str, Any]) -> torch.Tensor:
+    """Return the detached shared features the rollout itself was built on.
+
+    ``infer`` already publishes the exact encoder output the official Auditor
+    was conditioned on for this trajectory, so the auxiliary auditor loss reuses
+    it instead of running a second encoder forward.  There is deliberately no
+    fallback: raw images are not shared features, and silently substituting
+    them would score the Auditor on an input it never saw.
+    """
+
+    shared = output.get("shared_features")
+    if not torch.is_tensor(shared):
+        raise KeyError(
+            "Predicted-history auditor exposure requires 'shared_features' in the infer "
+            "output; refusing to re-encode or to substitute raw images"
+        )
+    return shared.detach()
+
+
+def _select_active_rows(value: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
+    """Select active rows, avoiding a full copy when every row is active."""
+
+    if bool(mask.all()):
+        return value
+    return _select_batch_rows(value, mask)
+
+
+def _entropy_from_probs(probs: torch.Tensor) -> torch.Tensor:
+    values = probs.clamp_min(1e-8)
+    return -(values * values.log()).sum(dim=1, keepdim=True)
+
+
+def compute_predicted_history_annotation_loss(
+    model: torch.nn.Module,
+    batch: dict[str, torch.Tensor],
+    *,
+    tau_accept: float = 0.0,
+    t_max: int = 3,
+) -> tuple[torch.Tensor, dict[str, float]]:
+    """Auxiliary annotation loss over the official accepted-predicted-history rollout.
+
+    This runs the deployable ``model.infer(mode="self_audit")`` path -- the same
+    official gate, the same strict ``delta_q > tau`` acceptance, rejection still
+    HALTs -- and applies the ordinary annotation loss to the **retained final**
+    state.  Ground truth enters only as the supervised target; no ground truth
+    is passed into the runtime proposal, no acceptance is forced, and no
+    oracle or synthetic audit map is injected.
+
+    The audit evidence consumed by the annotator here is the model's own
+    *predicted* local evidence, detached inside ``infer``.  During the
+    annotation bootstrap that evidence comes from an **untrained** Auditor: it
+    is explicitly uncalibrated exposure to the shape of a history-conditioned
+    input, not evidence that the history is informative.
+    """
+
+    if not hasattr(model, "infer"):
+        raise AttributeError("Predicted-history exposure requires model.infer")
+    output = model.infer(
+        batch["image"],
+        mode="self_audit",
+        tau_accept=float(tau_accept),
+        t_max=int(t_max),
+    )
+    if not isinstance(output, Mapping):
+        raise TypeError("Predicted-history exposure requires a mapping inference output")
+    final_logits = output.get("logits")
+    if not torch.is_tensor(final_logits):
+        final_logits = extract_initial_logits(output)
+    loss = annotation_loss(final_logits, batch["mask"])[0]
+    counters = rollout_counters(output, model=model, batch_size=int(batch["image"].shape[0]))
+    return loss, counters
+
+
+@torch.no_grad()
+def _collect_predicted_history_rollout(
+    model: torch.nn.Module,
+    batch: dict[str, torch.Tensor],
+    *,
+    tau_accept: float = 0.0,
+    t_max: int = 3,
+) -> tuple[list[dict[str, Any]], dict[str, float], torch.Tensor]:
+    """Collect on-policy transition pairs from an accepted-history rollout.
+
+    Runs under ``no_grad`` so the annotation network cannot be reached from
+    anything built here; the returned probabilities are detached leaves.  The
+    pairs are genuinely on-policy (the network produced them at inference), so
+    they carry ``provenance_kind = "on_policy"`` with a fine-grained
+    ``provenance`` naming the predicted-history rollout.
+    """
+
+    if not hasattr(model, "infer"):
+        raise AttributeError("Predicted-history exposure requires model.infer")
+    output = model.infer(
+        batch["image"],
+        mode="self_audit",
+        tau_accept=float(tau_accept),
+        t_max=int(t_max),
+    )
+    if not isinstance(output, Mapping):
+        raise TypeError("Predicted-history exposure requires a mapping inference output")
+
+    device = batch["image"].device
+    batch_size = int(batch["image"].shape[0])
+    transitions: list[dict[str, Any]] = []
+    previous_states = output.get("transition_previous", [])
+    candidate_states = output.get("transition_candidates", output.get("candidates", []))
+    audit_outputs = output.get("audits", [])
+    for index, (previous, candidate, audit_output) in enumerate(
+        zip(previous_states, candidate_states, audit_outputs)
+    ):
+        active_mask = _transition_active_mask(
+            output,
+            audit_output,
+            index,
+            batch_size=batch_size,
+            device=device,
+        )
+        if not bool(active_mask.any()):
+            continue
+        transitions.append(
+            {
+                # ``infer`` states are logits; softmax matches the probability
+                # convention ``build_auditor_transitions`` feeds the Auditor.
+                "previous": previous.detach().softmax(dim=1),
+                "candidate": candidate.detach().softmax(dim=1),
+                "turn_index": index,
+                "provenance": "on_policy:predicted_history",
+                "provenance_kind": "on_policy",
+                "valid_mask": active_mask.detach(),
+            }
+        )
+    counters = rollout_counters(output, model=model, batch_size=batch_size)
+    return transitions, counters, _rollout_shared_features(output)
+
+
+def collect_predicted_history_transitions(
+    model: torch.nn.Module,
+    batch: dict[str, torch.Tensor],
+    *,
+    tau_accept: float = 0.0,
+    t_max: int = 3,
+) -> tuple[list[dict[str, Any]], dict[str, float]]:
+    """Public form of :func:`_collect_predicted_history_rollout`.
+
+    Callers that only want the transition pairs do not have to handle the
+    shared-feature tensor the auditor loss needs.
+    """
+
+    transitions, counters, _ = _collect_predicted_history_rollout(
+        model,
+        batch,
+        tau_accept=tau_accept,
+        t_max=t_max,
+    )
+    return transitions, counters
+
+
+def compute_predicted_history_audit_loss(
+    model: torch.nn.Module,
+    batch: dict[str, torch.Tensor],
+    *,
+    tau_accept: float = 0.0,
+    t_max: int = 3,
+    neutral_margin: float = 0.005,
+    local_weighting: bool = True,
+    audit_margin: float = 0.05,
+    amp_enabled: bool = False,
+    amp_dtype: torch.dtype = torch.float16,
+) -> tuple[torch.Tensor | None, dict[str, float]]:
+    """Auditor-only loss over predicted-accepted-history transitions.
+
+    The rollout itself runs under ``no_grad`` and every Auditor input --
+    features, previous probabilities, candidate probabilities -- is a detached
+    leaf, so this term can update Auditor parameters only.  The annotation
+    network stays frozen, exactly as the auditor-only interval requires.
+    Ground truth is used only to build the supervised transition targets.
+
+    **Added cost, stated explicitly.**  Exactly one encoder forward runs, inside
+    ``infer``; the shared features the official Auditor was conditioned on are
+    reused here rather than re-derived.  The Auditor itself runs twice per
+    active transition: once inside ``infer`` under ``no_grad`` as the official
+    acceptance gate, and once here with gradients enabled to produce the loss.
+
+    Under the **baseline** ``window_mode="current"`` rollout that is ``1``
+    encoder forward, ``T`` annotator forwards and ``2 x T`` Auditor forwards per
+    batch for ``T`` active turns, plus one backward through the Auditor only.
+
+    Under a **restitution** window mode the annotator cost is strictly larger
+    and ``T`` is no longer the whole story: each record-consuming attempt adds
+    one differentiable historical replay of the stored support and up to two
+    candidate checks per solver group, plus a coordinate backward inside the
+    solver.  Those replays and checks are extra annotation-expert evaluations
+    the solver performs on its own, and a factual batch can exceed the count of
+    active rows because the solver groups supports.  This function does not
+    perform or double-count them -- they belong to ``infer`` -- but the
+    auxiliary path inherits them, so the baseline ``T`` figure must not be
+    quoted for a Candidate-C or direct-rollback run.
+    """
+
+    auditor = getattr(model, "auditor", None)
+    if auditor is None:
+        raise AttributeError("Predicted-history auditor exposure requires model.auditor")
+
+    transitions, counters, features = _collect_predicted_history_rollout(
+        model,
+        batch,
+        tau_accept=tau_accept,
+        t_max=t_max,
+    )
+    device = batch["image"].device
+
+    losses: list[torch.Tensor] = []
+    for transition in transitions:
+        valid_mask = transition["valid_mask"].to(device=device, dtype=torch.bool)
+        if not bool(valid_mask.any()):
+            continue
+        previous = _select_active_rows(transition["previous"], valid_mask)
+        candidate = _select_active_rows(transition["candidate"], valid_mask)
+        target = _select_active_rows(batch["mask"], valid_mask)
+        targets = build_transition_targets(previous, candidate, target)
+        weights = _local_class_weights(targets.local) if local_weighting else None
+        with torch.no_grad():
+            entropy_previous = _entropy_from_probs(previous)
+            entropy_candidate = _entropy_from_probs(candidate)
+        with autocast_context(enabled=amp_enabled, device=device, dtype=amp_dtype):
+            audit_output = auditor(
+                _select_active_rows(features, valid_mask),
+                previous,
+                candidate,
+                candidate - previous,
+                entropy_previous=entropy_previous,
+                entropy_candidate=entropy_candidate,
+            )
+        loss, _ = audit_loss(
+            audit_output,
+            targets,
+            margin=float(audit_margin),
+            neutral_margin=float(neutral_margin),
+            local_class_weights=weights,
+        )
+        losses.append(loss)
+
+    counters["predicted_history_transitions"] = len(losses)
+    if not losses:
+        return None, counters
+    return torch.stack(losses).mean(), counters
+
+
 def _audit_output_tensor(output: Any, *names: str) -> torch.Tensor | None:
     for name in names:
         value = output.get(name) if isinstance(output, Mapping) else getattr(output, name, None)

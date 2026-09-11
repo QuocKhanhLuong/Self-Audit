@@ -29,6 +29,7 @@ def test_external_evaluator_report_is_fixed_tau_and_independent(tmp_path, monkey
         def __init__(self):
             super().__init__()
             self.weight = nn.Parameter(torch.ones(1))
+            self.num_classes = 4
 
     class FakeBinding:
         state_digest = "live-digest"

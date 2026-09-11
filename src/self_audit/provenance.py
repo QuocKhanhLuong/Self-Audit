@@ -413,6 +413,86 @@ def checkpoint_producer(payload: Mapping[str, Any] | None) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
+#: The historical execution mechanism.  A model running this mode computes
+#: exactly what every pre-Candidate-C revision computed, so it contributes
+#: nothing to the signed identity and historical signatures are preserved
+#: byte for byte.  The authoritative list of valid modes lives with the model
+#: and the configuration layer; this module deliberately knows only which
+#: single value is the no-op, so it never has to be kept in sync with the rest
+#: and never imports from either layer.
+DEFAULT_WINDOW_MODE = "current"
+
+#: Identity fields that are recorded but not signed.  ``parameter_count`` is
+#: excluded because it is derivable; the mechanism fields are excluded from
+#: the *unconditional* payload because they are folded in only when the model
+#: actually runs a non-default mechanism (see :func:`resolve_model_identity`).
+_UNSIGNED_IDENTITY_FIELDS = frozenset(
+    {"parameter_count", "window_mode", "candidate_c_settings", "candidate_c_signature"}
+)
+
+
+def _resolve_window_mode(model: nn.Module) -> str:
+    """Read the live execution mode, or report it unknown.
+
+    A module that predates the execution-mode switches has no attribute and is
+    reported as :data:`UNKNOWN` -- never silently as ``"current"``, because
+    "this model cannot tell me" and "this model told me it is the baseline"
+    are different facts and the consumer decides what to do about each.
+    """
+
+    value = getattr(model, "window_mode", None)
+    if value is None:
+        return UNKNOWN
+    if not isinstance(value, str) or not value.strip():
+        return UNKNOWN
+    return str(value)
+
+
+def _resolve_candidate_c_settings(model: nn.Module) -> dict[str, Any] | None:
+    """Read the live Candidate C solver settings as plain primitives.
+
+    Accepts either an object exposing ``as_dict()`` or a plain mapping, so no
+    import of the model package is needed here and no import cycle is created.
+    ``None`` means the live model could not report settings at all.
+    """
+
+    value = getattr(model, "candidate_c", None)
+    if value is None:
+        return None
+    raw: Any = value
+    as_dict = getattr(value, "as_dict", None)
+    if callable(as_dict):
+        try:
+            raw = as_dict()
+        except Exception:  # pragma: no cover - a broken accessor is "unreadable"
+            return None
+    if not isinstance(raw, Mapping):
+        return None
+    resolved: dict[str, Any] = {}
+    for key in sorted(raw):
+        entry = raw[key]
+        if entry is None or isinstance(entry, str):
+            resolved[str(key)] = entry
+        elif isinstance(entry, bool):
+            resolved[str(key)] = bool(entry)
+        elif isinstance(entry, int):
+            resolved[str(key)] = int(entry)
+        elif isinstance(entry, float):
+            resolved[str(key)] = float(entry)
+        else:
+            # An unreportable value makes the whole settings block a guess.
+            return None
+    return resolved
+
+
+def _candidate_c_signature(settings: Mapping[str, Any] | None) -> str:
+    """Sign the solver settings, or report them unknown."""
+
+    if settings is None:
+        return UNKNOWN
+    return _stable_signature(dict(settings), domain="candidate_c_settings.v1")
+
+
 def resolve_model_identity(model: nn.Module) -> dict[str, Any]:
     """Describe the model that was actually constructed and loaded.
 
@@ -420,6 +500,21 @@ def resolve_model_identity(model: nn.Module) -> dict[str, Any]:
     checkpoint filename, a directory name, or the YAML that was *requested* --
     a fallback encoder that silently replaced the ImageNet backbone shows up
     here as ``encoder_backend == "fallback_synthetic"``.
+
+    The *mechanism* the model runs is recorded alongside its architecture.
+    Equal weights are not equal models: Candidate C adds no parameter, so a
+    ``current`` network and a ``candidate_c`` network share every tensor, every
+    state digest and every file hash while computing different transitions.
+    ``window_mode`` and ``candidate_c_signature`` are therefore always recorded,
+    and they are folded into ``signature`` exactly when the live model runs a
+    non-default mechanism.  A model running :data:`DEFAULT_WINDOW_MODE`, and a
+    legacy module that cannot report a mode at all, keep the historical
+    signature unchanged, so existing artifacts stay comparable; anything else
+    signs differently and cannot be mistaken for the baseline.
+
+    Solver settings are signed only under a non-default mode because they are
+    inert otherwise: two ``current`` runs whose configuration happens to carry
+    different Candidate C values compute the same thing.
     """
 
     encoder = getattr(model, "encoder", None)
@@ -443,11 +538,105 @@ def resolve_model_identity(model: nn.Module) -> dict[str, Any]:
         "buffer_count": int(sum(1 for _ in model.buffers())),
         "torch_version": str(torch.__version__),
     }
-    identity["signature"] = _stable_signature(
-        {key: identity[key] for key in sorted(identity) if key != "parameter_count"},
-        domain="model_identity.v1",
-    )
+    window_mode = _resolve_window_mode(model)
+    candidate_c_settings = _resolve_candidate_c_settings(model)
+    identity["window_mode"] = window_mode
+    identity["candidate_c_settings"] = candidate_c_settings
+    identity["candidate_c_signature"] = _candidate_c_signature(candidate_c_settings)
+    signed = {
+        key: identity[key] for key in sorted(identity) if key not in _UNSIGNED_IDENTITY_FIELDS
+    }
+    if window_mode not in (DEFAULT_WINDOW_MODE, UNKNOWN):
+        # A non-default mechanism is part of what the weights mean, so it joins
+        # the signature together with the settings that parameterise it.  An
+        # unreadable settings block signs as "unknown" rather than as absent:
+        # it must not collide with a model whose settings were readable.
+        signed["window_mode"] = window_mode
+        signed["candidate_c_signature"] = identity["candidate_c_signature"]
+    identity["signature"] = _stable_signature(signed, domain="model_identity.v1")
     return identity
+
+
+def _verify_execution_mechanism(
+    configured: Mapping[str, Any],
+    identity: Mapping[str, Any],
+    mismatches: list[str],
+    unresolved: list[str],
+) -> None:
+    """Compare the configured mechanism against the live one, failing closed.
+
+    Appends to ``mismatches``/``unresolved`` rather than raising, so a
+    mechanism disagreement is reported in the same refusal as an architecture
+    disagreement instead of masking it.
+    """
+
+    live_mode = str(identity.get("window_mode", UNKNOWN))
+    if "window_mode" in configured:
+        declared = configured["window_mode"]
+        if not isinstance(declared, str) or not declared.strip():
+            unresolved.append(f"window_mode (config={declared!r} is not a mode name)")
+        elif live_mode == UNKNOWN:
+            if declared != DEFAULT_WINDOW_MODE:
+                unresolved.append(
+                    f"window_mode (config={declared!r}; the live model reports no execution "
+                    f"mode, and only {DEFAULT_WINDOW_MODE!r} can be satisfied without one)"
+                )
+        elif declared != live_mode:
+            mismatches.append(f"window_mode: config={declared!r}, model={live_mode!r}")
+
+    if "candidate_c" not in configured:
+        return
+    if live_mode in (DEFAULT_WINDOW_MODE, UNKNOWN):
+        # The solver never runs, so its settings do not describe this model and
+        # comparing them would refuse runs that compute identical results.
+        return
+    declared_settings = configured["candidate_c"]
+    if declared_settings is None:
+        # An explicit null means "the documented defaults", which the live model
+        # has already resolved; there is nothing to contradict.
+        return
+    if not isinstance(declared_settings, Mapping):
+        unresolved.append(
+            f"candidate_c (config={type(declared_settings).__name__} is not a settings mapping)"
+        )
+        return
+    live_settings = identity.get("candidate_c_settings")
+    if not isinstance(live_settings, Mapping):
+        unresolved.append(
+            f"candidate_c (config declares solver settings under window_mode={live_mode!r} "
+            "but the live model cannot report any)"
+        )
+        return
+    for key in sorted(declared_settings):
+        name = str(key)
+        if name not in live_settings:
+            unresolved.append(
+                f"candidate_c.{name} (config={declared_settings[key]!r}; the live model "
+                "reports no such setting)"
+            )
+            continue
+        if not _mechanism_values_equal(declared_settings[key], live_settings[name]):
+            mismatches.append(
+                f"candidate_c.{name}: config={declared_settings[key]!r}, "
+                f"model={live_settings[name]!r}"
+            )
+
+
+def _mechanism_values_equal(declared: Any, live: Any) -> bool:
+    """Compare one solver setting without coercing across kinds.
+
+    ``None`` (the documented "use the normalized proposal rule" sentinel) is
+    only equal to ``None``; booleans never compare equal to numbers; numbers
+    compare by exact float value so ``1`` and ``1.0`` agree.
+    """
+
+    if declared is None or live is None:
+        return declared is None and live is None
+    if isinstance(declared, bool) or isinstance(live, bool):
+        return isinstance(declared, bool) and isinstance(live, bool) and declared is live
+    if isinstance(declared, (int, float)) and isinstance(live, (int, float)):
+        return float(declared) == float(live)
+    return str(declared) == str(live)
 
 
 def verify_model_config(model: nn.Module, config: Mapping[str, Any] | None) -> dict[str, Any]:
@@ -456,6 +645,15 @@ def verify_model_config(model: nn.Module, config: Mapping[str, Any] | None) -> d
     Returns the resolved identity when compatible.  Unset configuration keys
     are not invented, and a value the live model could not report (``-1`` /
     ``"unknown"``) is skipped rather than treated as a mismatch.
+
+    The execution mechanism is verified here too.  A configured
+    ``model.window_mode`` must equal the mode the live model reports, and under
+    a non-default mode the configured ``model.candidate_c`` settings must equal
+    the live solver settings key for key.  A module that cannot report a mode
+    binds only against the configured default, which is the one claim a
+    pre-mechanism module can honestly satisfy; a non-default claim against such
+    a module fails closed rather than running the baseline under another
+    mode's name.
     """
 
     identity = resolve_model_identity(model)
@@ -479,6 +677,7 @@ def verify_model_config(model: nn.Module, config: Mapping[str, Any] | None) -> d
             continue
         if str(configured[key]) != str(actual):
             mismatches.append(f"{key}: config={configured[key]!r}, model={actual!r}")
+    _verify_execution_mechanism(configured, identity, mismatches, unresolved)
     if unresolved:
         raise ValueError(
             "Cannot resolve live model attribute(s) required by the configuration; "
