@@ -1,0 +1,113 @@
+name: Discord Git Log
+
+on:
+  push:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review, closed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  notify-discord:
+    runs-on: ubuntu-latest
+    env:
+      WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+    steps:
+      - name: Build and send Discord notification
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${WEBHOOK_URL:-}" ]]; then
+            echo "DISCORD_WEBHOOK_URL secret is missing."
+            exit 1
+          fi
+
+          event_file="$GITHUB_EVENT_PATH"
+          repo=$(jq -r --arg fallback "$GITHUB_REPOSITORY" '.repository.full_name // $fallback' "$event_file")
+          actor=$(jq -r --arg fallback "$GITHUB_ACTOR" '.sender.login // $fallback' "$event_file")
+
+          case "$GITHUB_EVENT_NAME" in
+            push)
+              ref=$(jq -r '.ref // ""' "$event_file")
+              case "$ref" in
+                refs/heads/*) target="${ref#refs/heads/}" ;;
+                refs/tags/*) target="tag:${ref#refs/tags/}" ;;
+                *) target="$ref" ;;
+              esac
+
+              deleted=$(jq -r '.deleted // false' "$event_file")
+              compare_url=$(jq -r '.compare // .repository.html_url // ""' "$event_file")
+
+              if [[ "$deleted" == "true" ]]; then
+                content="🗑️ **${repo}** · deleted \`${target}\`\nby **${actor}**"
+              else
+                count=$(jq '.commits | length' "$event_file")
+                commits=$(jq -r '
+                  .commits[:5][]? |
+                  "• [`" + (.id[0:7]) + "`](" + .url + ") " +
+                  ((.message | split("\n")[0] | gsub("`"; "") | .[0:140]))
+                ' "$event_file")
+
+                extra=""
+                if (( count > 5 )); then
+                  extra="\n• … and $((count - 5)) more commit(s)"
+                fi
+
+                content="🔬 **${repo}** · push → \`${target}\`\n**${actor}** pushed **${count} commit(s)**"
+                if [[ -n "$commits" ]]; then
+                  content="${content}\n\n${commits}${extra}"
+                fi
+                if [[ -n "$compare_url" ]]; then
+                  content="${content}\n\n[View changes](${compare_url})"
+                fi
+              fi
+              ;;
+
+            pull_request)
+              action=$(jq -r '.action // "updated"' "$event_file")
+              number=$(jq -r '.pull_request.number // .number' "$event_file")
+              title=$(jq -r '.pull_request.title | gsub("`"; "") | .[0:180]' "$event_file")
+              url=$(jq -r '.pull_request.html_url' "$event_file")
+              head=$(jq -r '.pull_request.head.ref' "$event_file")
+              base=$(jq -r '.pull_request.base.ref' "$event_file")
+              merged=$(jq -r '.pull_request.merged // false' "$event_file")
+
+              label="$action"
+              if [[ "$action" == "closed" && "$merged" == "true" ]]; then
+                label="merged"
+              elif [[ "$action" == "synchronize" ]]; then
+                label="updated"
+              fi
+
+              content="🔀 **${repo}** · PR #${number} **${label}**\n**${title}**\n\`${head}\` → \`${base}\` · by **${actor}**\n\n[Open pull request](${url})"
+              ;;
+
+            workflow_dispatch)
+              content="✅ **${repo}** · Discord Git Log test\nTriggered manually by **${actor}** on \`${GITHUB_REF_NAME}\`."
+              ;;
+
+            *)
+              echo "Unsupported event: $GITHUB_EVENT_NAME"
+              exit 0
+              ;;
+          esac
+
+          payload=$(jq -n \
+            --arg content "$content" \
+            '{
+              username: "Research Git Log",
+              content: $content,
+              allowed_mentions: { parse: [] }
+            }')
+
+          curl \
+            --fail-with-body \
+            --silent \
+            --show-error \
+            --retry 2 \
+            -H 'Content-Type: application/json' \
+            -d "$payload" \
+            "$WEBHOOK_URL"
