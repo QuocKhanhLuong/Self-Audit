@@ -1573,6 +1573,19 @@ class UnifiedTrainer:
         train_stats["rollout/predicted_history_weight"] = float(exposure_weight)
         train_stats["rollout/evidence_calibration"] = evidence_calibration
         train_stats["rollout/candidate_c_invalidations"] = int(candidate_c_invalidations)
+        # Whether the Auditor's accept/reject decision was live in this stage's
+        # own rollout, and whether both module families were trainable in it.
+        # These are read off the interval contract, not inferred from the
+        # auxiliary exposure flags above: ``predicted_history_exposure`` is a
+        # *separate, optional second* rollout, so a reader must not take its
+        # zero to mean the Auditor gate was inactive.  A ``threshold_gate``
+        # interval consumes accepted predicted Auditor feedback inside its own
+        # single rollout whatever that flag says.
+        train_stats["rollout/feedback_gates"] = (
+            "active" if interval.rollout == "threshold_gate" else "inactive"
+        )
+        train_stats["rollout/joint_trainable"] = 1.0 if interval.trainable == "all" else 0.0
+        train_stats["rollout/interval_rollout"] = interval.rollout
         # Auxiliary rollout cost is reported separately from the primary loss.
         train_stats["rollout/auxiliary_batches"] = int(auxiliary_batches)
         train_stats["rollout/auxiliary_seconds"] = float(auxiliary_seconds)
@@ -1697,6 +1710,14 @@ class UnifiedTrainer:
         log_payload["schedule/rollout_mode"] = str(interval.rollout)
         if hasattr(interval, "transition_population"):
             log_payload["schedule/transition_population"] = str(interval.transition_population)
+        # Explicit, contract-derived answer to "was the Auditor's accept/reject
+        # live here, and were both families training?".  Needed because the
+        # auxiliary ``rollout/predicted_history_*`` flags describe an optional
+        # second rollout and must never be read as the gate's own state.
+        log_payload["schedule/feedback_gates"] = (
+            "active" if interval.rollout == "threshold_gate" else "inactive"
+        )
+        log_payload["schedule/joint_trainable"] = 1.0 if interval.trainable == "all" else 0.0
 
         # On-policy fraction: ONLY actual population ratio if observed, NEVER fabricate
         on_policy_count: float | None = None

@@ -5,6 +5,12 @@
 # Executes the single-process unified training pipeline (Schema Version 1)
 # via configs/self_audit_full.yaml across the 130-epoch curriculum.
 #
+# The default config is unchanged and remains the canonical staged curriculum.
+# To run the joint-from-epoch-1 profile instead, pass it explicitly:
+#   bash scripts/run_full_pipeline.sh --config configs/self_audit_joint_from_start.yaml
+#   bash scripts/run_full_pipeline.sh --config configs/self_audit_joint_from_start_mnms.yaml
+# See reports/candidate_c/joint_from_start_usage.md for what that profile changes.
+#
 # For historical multi-stage (A -> B -> C) execution, see:
 #   scripts/run_full_pipeline_legacy.sh
 # ==============================================================================
@@ -37,6 +43,12 @@ Usage: bash scripts/run_full_pipeline.sh [OPTIONS]
 
 Canonical Unified Pipeline Options:
   --config <path>                         Path to unified YAML (default: configs/self_audit_full.yaml)
+                                          Staged curriculum (default):
+                                            configs/self_audit_full.yaml
+                                            configs/self_audit_full_mnms.yaml
+                                          Joint from epoch 1 (opt in explicitly):
+                                            configs/self_audit_joint_from_start.yaml
+                                            configs/self_audit_joint_from_start_mnms.yaml
   --smoke                                 Run bounded smoke verification (CPU safe, 2 steps)
   --device <cuda|cpu>                     Target compute device (default: cuda)
   --data_root <path>                      Dataset root directory override
