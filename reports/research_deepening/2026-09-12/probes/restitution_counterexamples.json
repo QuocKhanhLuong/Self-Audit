@@ -1,0 +1,120 @@
+{
+  "evidence_type": "constructed arithmetic examples; not trained-model or medical results",
+  "oracle_rollback": {
+    "previous": [
+      0,
+      1,
+      2,
+      0,
+      1,
+      2
+    ],
+    "factual": [
+      1,
+      2,
+      2,
+      0,
+      0,
+      1
+    ],
+    "gt_offline_only": [
+      0,
+      2,
+      2,
+      1,
+      1,
+      0
+    ],
+    "true_regress_indices": [
+      0,
+      4
+    ],
+    "true_fix_indices": [
+      1
+    ],
+    "oracle": [
+      0,
+      2,
+      2,
+      0,
+      1,
+      1
+    ],
+    "regress_repair_fraction": 1.0,
+    "previous_fix_destroyed": 0
+  },
+  "gate_can_suppress_repair": {
+    "gate": 0.2,
+    "factual_pairwise_margin": -0.2,
+    "counterfactual_pairwise_margin": 0.3,
+    "final_pairwise_margin": -0.10000000000000003,
+    "required_gate_strictly_greater_than": 0.4
+  },
+  "signed_masked_rollback_identity": {
+    "selected_indices": [
+      0,
+      1,
+      2,
+      3,
+      5
+    ],
+    "net_correct_delta": 0,
+    "selected_true_regress_minus_selected_true_fix": 0
+  },
+  "initial_gradients_by_lambda": {
+    "0": [
+      -2,
+      -2
+    ],
+    "0.1": [
+      -2.0,
+      -2.0
+    ],
+    "1": [
+      -2,
+      -2
+    ],
+    "10": [
+      -2,
+      -2
+    ]
+  },
+  "feasible_direction_missed_by_two_checks": {
+    "factual": {
+      "coordinates": [
+        0,
+        0
+      ],
+      "restoration_loss": 2,
+      "protected_margin": 0.1,
+      "feasible": true
+    },
+    "full": {
+      "coordinates": [
+        1,
+        1
+      ],
+      "restoration_loss": 0,
+      "protected_margin": -1.9,
+      "feasible": false
+    },
+    "half": {
+      "coordinates": [
+        0.5,
+        0.5
+      ],
+      "restoration_loss": 0.5,
+      "protected_margin": -0.9,
+      "feasible": false
+    },
+    "missed_feasible": {
+      "coordinates": [
+        0,
+        1
+      ],
+      "restoration_loss": 1,
+      "protected_margin": 0.1,
+      "feasible": true
+    }
+  }
+}
