@@ -129,9 +129,40 @@ def _find_pair_dirs(root: Path) -> list[tuple[Path, Path]]:
     return pairs
 
 
+# Mask filenames may repeat the image key verbatim or add one of these
+# suffixes.  The order is the matching precedence and is deliberately fixed so
+# discovery is deterministic when several of them exist for one image.
+MASK_KEY_SUFFIXES = ("_gt", "_label", "_seg")
+
+
+def _mask_key_candidates(image_key: str) -> list[str]:
+    return [image_key, *(f"{image_key}{suffix}" for suffix in MASK_KEY_SUFFIXES)]
+
+
 def _supported_volume_file(path: Path) -> bool:
     name = path.name.lower()
     return name.endswith((".npy", ".npz", ".nii", ".nii.gz"))
+
+
+def _group_volume_files(directory: Path) -> dict[str, list[Path]]:
+    """Group the supported volume files of one directory by normalized key.
+
+    Several distinct files can normalize to the same key (``case.npy`` beside
+    ``case.npz``).  Grouping keeps every one of them visible instead of letting
+    a dictionary comprehension silently drop all but the last, so the strict
+    caller can refuse to choose.
+
+    Directory order is preserved deliberately: the tolerant caller takes the
+    LAST entry of a group, which is the file the previous dictionary
+    comprehension over ``iterdir()`` would have kept.  External and default
+    discovery therefore selects exactly what it selected before.
+    """
+
+    groups: dict[str, list[Path]] = {}
+    for path in directory.iterdir():
+        if path.is_file() and _supported_volume_file(path):
+            groups.setdefault(_volume_key(path), []).append(path)
+    return groups
 
 
 def _volume_key(path: Path) -> str:
@@ -150,7 +181,27 @@ def is_mnms_binary_path(path: str | Path) -> bool:
     return False
 
 
-def discover_mnms_records(data_root: str | Path, split: str | None = None) -> list[VolumeRecord]:
+def discover_mnms_records(
+    data_root: str | Path,
+    split: str | None = None,
+    *,
+    strict_pairing: bool = False,
+) -> list[VolumeRecord]:
+    """Discover paired M&Ms image/mask volumes under ``data_root``.
+
+    ``strict_pairing`` controls what happens when the layout is not an exact
+    one-to-one pairing.  The default, ``False``, keeps its historical tolerant
+    behaviour — an unpartnered volume is skipped and the discovered cohort is
+    returned — which is what external evaluation over a tree that intentionally
+    carries unlabelled volumes needs.
+
+    ``True`` raises instead, so a supervised training cohort can neither
+    silently shrink nor be guessed at. It rejects an image with no mask, a mask
+    with no image, several files normalizing to one key (``case.npy`` beside
+    ``case.npz``), an image matching more than one candidate mask, and one mask
+    claimed by two different images (``p`` and ``p_gt`` both taking ``p_gt``).
+    """
+
     root = Path(data_root)
     if is_mnms_binary_path(root):
         raise ValueError(
@@ -176,28 +227,64 @@ def discover_mnms_records(data_root: str | Path, split: str | None = None) -> li
             raise FileNotFoundError(f"M&Ms split directory {split!r} not found under {root}")
     records: list[VolumeRecord] = []
     seen: set[str] = set()
+    images_without_mask: list[str] = []
+    masks_without_image: list[str] = []
+    colliding_keys: list[str] = []
+    ambiguous_masks: list[str] = []
+    shared_masks: list[str] = []
+    duplicate_cases: list[str] = []
     for candidate in roots:
         for image_dir, mask_dir in _find_pair_dirs(candidate):
-            image_files = {
-                _volume_key(p): p
-                for p in image_dir.iterdir()
-                if p.is_file() and _supported_volume_file(p)
-            }
-            mask_files = {
-                _volume_key(p): p
-                for p in mask_dir.iterdir()
-                if p.is_file() and _supported_volume_file(p)
-            }
+            image_groups = _group_volume_files(image_dir)
+            mask_groups = _group_volume_files(mask_dir)
+            # Two files that normalise to one key (``case.npy`` and
+            # ``case.npz``) used to collapse into a single dictionary entry,
+            # hiding one of them.  Record the collision; strict mode refuses to
+            # guess which file was meant.
+            for role, groups in (("image", image_groups), ("mask", mask_groups)):
+                for key, paths in sorted(groups.items()):
+                    if len(paths) > 1:
+                        colliding_keys.append(
+                            f"{role} key {key!r}: {sorted(str(p) for p in paths)}"
+                        )
+            # The last entry of a group is what the previous dictionary
+            # comprehension kept; tolerant selection is unchanged.
+            image_files = {key: paths[-1] for key, paths in image_groups.items()}
+            mask_files = {key: paths[-1] for key, paths in mask_groups.items()}
+            mask_claims: dict[str, list[str]] = {}
             for image_key, image_path in sorted(image_files.items()):
-                candidates = [image_key, f"{image_key}_gt", f"{image_key}_label", f"{image_key}_seg"]
-                mask_path = next((mask_files[key] for key in candidates if key in mask_files), None)
-                if mask_path is None:
+                matching_keys = [
+                    key for key in _mask_key_candidates(image_key) if key in mask_files
+                ]
+                if not matching_keys:
+                    images_without_mask.append(str(image_path))
                     continue
+                if len(matching_keys) > 1:
+                    ambiguous_masks.append(
+                        f"{image_path}: {[str(mask_files[key]) for key in matching_keys]}"
+                    )
+                mask_key = matching_keys[0]
+                mask_claims.setdefault(mask_key, []).append(image_key)
+                mask_path = mask_files[mask_key]
                 case_id = _strip_archive_suffix(image_path)
                 if case_id in seen:
+                    # Two pair directories or two split aliases offered the same
+                    # case.  Tolerant discovery keeps the first and moves on;
+                    # strict discovery will not pick one silently.
+                    duplicate_cases.append(f"{case_id}: {image_path}")
                     continue
                 seen.add(case_id)
                 records.append(VolumeRecord(case_id, patient_id_from_case_id(case_id), image_path, mask_path, split or "", source_format="nifti" if image_path.name.lower().endswith((".nii", ".nii.gz")) else "npy"))
+            # One mask cannot be the ground truth of two different images
+            # (``p`` matching ``p_gt`` while ``p_gt`` itself is also an image).
+            for mask_key, image_keys in sorted(mask_claims.items()):
+                if len(image_keys) > 1:
+                    shared_masks.append(
+                        f"{mask_files[mask_key]} claimed by {sorted(image_keys)}"
+                    )
+            masks_without_image.extend(
+                str(mask_files[key]) for key in sorted(set(mask_files) - set(mask_claims))
+            )
         if not records:
             masks = sorted(candidate.rglob("*_gt.nii")) + sorted(candidate.rglob("*_gt.nii.gz"))
             for mask_path in masks:
@@ -207,6 +294,29 @@ def discover_mnms_records(data_root: str | Path, split: str | None = None) -> li
                     raise FileNotFoundError(f"M&Ms mask has no matching image: {mask_path}")
                 case_id = _strip_archive_suffix(image_path)
                 records.append(VolumeRecord(case_id, patient_id_from_case_id(case_id), image_path, mask_path, split or "", source_format="nifti"))
+    if strict_pairing:
+        details: list[str] = []
+        if images_without_mask:
+            details.append(f"images with no mask: {sorted(images_without_mask)}")
+        if masks_without_image:
+            details.append(f"masks with no image: {sorted(masks_without_image)}")
+        if colliding_keys:
+            details.append(f"files sharing one normalized key: {sorted(colliding_keys)}")
+        if ambiguous_masks:
+            details.append(f"images matching several masks: {sorted(ambiguous_masks)}")
+        if shared_masks:
+            details.append(f"masks claimed by several images: {sorted(shared_masks)}")
+        if duplicate_cases:
+            details.append(
+                f"case ids discovered more than once: {sorted(duplicate_cases)}"
+            )
+        if details:
+            raise FileNotFoundError(
+                f"M&Ms cohort under {root} (split={split!r}) is not unambiguously paired; "
+                "a supervised cohort must not silently shrink or guess. "
+                + "; ".join(details)
+                + f". Accepted mask key suffixes: {list(MASK_KEY_SUFFIXES)}."
+            )
     if not records:
         raise FileNotFoundError(
             f"No paired M&Ms image/mask volumes found under {root}. Expected image(s)/mask(s) or paired NIfTI files."

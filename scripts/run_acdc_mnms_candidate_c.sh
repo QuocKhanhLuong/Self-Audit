@@ -61,8 +61,21 @@ STAMP="${STAMP:-$(date +%Y%m%d_%H%M%S)}"
 ACDC_RUN="${ACDC_RUN:-acdc_candidate_c_${CURRICULUM}_4070_${STAMP}}"
 MNMS_RUN="${MNMS_RUN:-mnms_candidate_c_${CURRICULUM}_4070_${STAMP}}"
 
-ACDC_CONFIG="run_configs/acdc_candidate_c_${CURRICULUM}.yaml"
-MNMS_CONFIG="run_configs/mnms_candidate_c_${CURRICULUM}.yaml"
+# Each invocation writes its generated run configs into its OWN directory.
+#
+# This matters because the M&Ms leg starts hours after generation: the ACDC leg
+# runs to completion first.  With a shared filename, a second invocation started
+# in the meantime would rewrite the config the first invocation's pending M&Ms
+# leg is about to read, and that leg would silently train under the second
+# invocation's BATCH_SIZE.  A timestamp alone does not fix it (two invocations
+# can share a second), so the directory is always created with mktemp, which
+# fails rather than reuse an existing path.  There is deliberately no way to
+# point this at an existing directory: an override would reintroduce exactly the
+# sharing this prevents.  The directory is kept after the run: the generated
+# configs are the provenance record of what was actually executed.
+RUN_CONFIG_DIR="$(mktemp -d "run_configs/${CURRICULUM}_${STAMP}_XXXXXX")"
+ACDC_CONFIG="${RUN_CONFIG_DIR}/acdc_candidate_c_${CURRICULUM}.yaml"
+MNMS_CONFIG="${RUN_CONFIG_DIR}/mnms_candidate_c_${CURRICULUM}.yaml"
 
 echo "=============================================================================="
 echo "Self-Audit sequential Candidate C native training"
@@ -73,6 +86,7 @@ echo "GPU visibility : CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}"
 echo "Batch size     : ${BATCH_SIZE} (run-local override, applied to every interval)"
 echo "ACDC run       : ${ACDC_RUN}"
 echo "M&Ms run       : ${MNMS_RUN}"
+echo "Run configs    : ${RUN_CONFIG_DIR} (unique per invocation, kept as provenance)"
 echo "=============================================================================="
 
 # Generate run-specific configs from the checked-in profile configs so this
@@ -145,7 +159,21 @@ for src, dst, experiment_name in pairs:
         interval["batch_size"] = batch_size
 
     dst.parent.mkdir(parents=True, exist_ok=True)
-    dst.write_text(yaml.safe_dump(cfg, sort_keys=False), encoding="utf-8")
+    # Exclusive create: the file is claimed and written in one step, so there is
+    # no window between "does it exist?" and "write it" for another invocation
+    # to slip through.  An existing path here means the per-invocation directory
+    # was bypassed, not that a rerun is harmless, and the OS raises
+    # FileExistsError before any byte is written.
+    try:
+        with open(dst, "x", encoding="utf-8") as handle:
+            handle.write(yaml.safe_dump(cfg, sort_keys=False))
+    except FileExistsError as exc:
+        raise FileExistsError(
+            f"Refusing to overwrite an existing generated run config: {dst}. "
+            "Each invocation must generate into its own fresh directory."
+        ) from exc
+    # Provenance: the executed config is read-only once written.
+    dst.chmod(0o444)
 
     # Validate the generated YAML through the real strict loader so a broken
     # profile fails now rather than after the dataset has been built.
@@ -232,4 +260,5 @@ echo "ALL NATIVE RUNS COMPLETE"
 echo "Curriculum : $CURRICULUM"
 echo "ACDC       : runs/$ACDC_RUN"
 echo "M&Ms       : runs/$MNMS_RUN"
+echo "Configs    : $RUN_CONFIG_DIR"
 echo "=============================================================================="

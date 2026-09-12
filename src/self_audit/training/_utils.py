@@ -630,7 +630,13 @@ def validate_dataset_splits(config: Mapping[str, Any]) -> dict[str, Any]:
             total_cohort_records = 0
 
             for canonical_split, requested_split in splits_to_check:
-                records = discover_mnms_records(data_root, split=requested_split)
+                # Native supervised splits: every image must carry a mask and
+                # every mask an image.  Silently dropping an unpaired volume
+                # here would train on a smaller cohort than the operator
+                # believes was deployed, so discovery fails closed instead.
+                records = discover_mnms_records(
+                    data_root, split=requested_split, strict_pairing=True
+                )
                 if not records:
                     raise ValueError(f"M&Ms split {requested_split!r} ({canonical_split}) contains zero records")
                 records_by_split[canonical_split] = records
