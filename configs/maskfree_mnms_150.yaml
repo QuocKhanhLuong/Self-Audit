@@ -1,0 +1,56 @@
+# Mask-free anatomical label generation - M&Ms native, one 150-epoch global timeline.
+#
+# Parsed ONLY by src/self_audit_maskfree/config.py (W5's strict MaskfreeConfig
+# dataclass); unknown keys are rejected. See configs/maskfree_acdc_150.yaml for
+# the shared rationale - the two files differ only in dataset identity, data
+# root and output root.
+#
+# INDEPENDENCE IS THE POINT OF THIS FILE. The M&Ms run starts from random
+# initialization at global epoch 0. It never resumes from, initializes from, or
+# otherwise consumes the ACDC run's producer or student checkpoints, and the
+# launcher refuses to pass --resume across datasets. M&Ms is a separate site
+# population; transferring ACDC weights would make the two runs one experiment
+# and would quietly convert a cross-site claim into a fine-tuning claim.
+#
+# Supervision ledger: no mask path, no reference/annotation path, no pretrained
+# weight path, no vendor/site label used for training selection, no threshold,
+# no GT-driven checkpoint selection. Vendor/site metadata may be recorded in the
+# manifest for reporting; it is not a training input.
+
+dataset: mnms
+# UNVERIFIED placeholder: set MNMS_DATA_ROOT to inventoried raw images.
+# Existing supervised preprocessing is not presumed mask independent.
+data_root: /home/linhdang/workspace/quockhanh_workspace/SpecMamba/raw_images/MnMs
+# output_dir is the WORKSPACE ROOT, not the run directory: the trainer
+# appends runs/maskfree150/<dataset>/<run_id> to it, so every run of every
+# dataset lands under one contained tree with an immutable per-run id.
+output_dir: /home/linhdang/workspace/quockhanh_workspace/SpecMamba
+
+total_epochs: 150
+seed: 42
+
+batch_size: 8
+accumulation_steps: 1
+
+image_size: 128
+lr: 0.001
+weight_decay: 0.0001
+warmup_epochs: 5
+
+width: 16
+feature_dim: 16
+
+# v1 implements spatial_predictive only. Keep protocol resolution in W3 so the
+# inventory records the actual source geometry and its limitations; no temporal
+# protocol claim is made before the requested images are inventoried.
+protocol: auto
+depth_axis: 2
+
+device: cuda
+num_workers: 0
+amp: true
+
+wandb_mode: offline
+wandb_project: self-audit-maskfree
+
+allow_cpu: false

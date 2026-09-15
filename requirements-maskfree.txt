@@ -1,0 +1,9 @@
+# Independent mask-free pipeline; no pretrained model or supervised teacher.
+# Target: Python 3.10+, PyTorch 2.4.1+ (install appropriate CUDA wheel separately).
+torch>=2.4.1
+numpy>=1.24
+scipy>=1.10
+nibabel>=5.1
+PyYAML>=6.0
+# W&B is optional; wandb_mode=disabled does not require it.
+wandb>=0.17
