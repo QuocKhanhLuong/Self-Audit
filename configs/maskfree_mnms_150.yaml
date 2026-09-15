@@ -50,7 +50,9 @@ device: cuda
 num_workers: 0
 amp: true
 
-wandb_mode: offline
+# Operational only (OPERATIONAL_FIELDS): mode/project never enter the
+# scientific hash, so a resumed run may change them.
+wandb_mode: online
 wandb_project: self-audit-maskfree
 
 allow_cpu: false
