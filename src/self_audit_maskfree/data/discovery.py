@@ -49,6 +49,7 @@ HEADER_GRID_TOLERANCE_VOXELS = 1e-4
 
 _OFFICIAL_TEST_DIRS = {"testing", "test"}
 _OFFICIAL_TRAIN_DIRS = {"training", "train"}
+_OFFICIAL_DEV_DIRS = {"validation", "valid", "val", "dev", "development"}
 _PREPROCESSED_DIR_TOKENS = {"preprocessed_data", "preprocessed", "volumes"}
 
 _FRAME_SUFFIX = re.compile(r"_(?:frame|time)\d+$", re.IGNORECASE)
@@ -87,6 +88,14 @@ class MixedStudyGeometryError(ValueError):
         super().__init__(message)
 
 
+class OfficialSplitConflictError(ValueError):
+    """Raised when one patient is declared in multiple official cohorts."""
+
+    def __init__(self, message: str, *, details: dict[str, Any] | None = None) -> None:
+        self.details = details if details is not None else {}
+        super().__init__(message)
+
+
 def _strip_suffixes(stem: str) -> str:
     """Strip only known frame/series suffixes from a file stem.
 
@@ -122,9 +131,29 @@ def patient_id_from_path(path: str | Path) -> str:
     return base or stem
 
 
-def official_split_from_path(path: str | Path) -> str | None:
-    """Return ``test``/``train`` when a folder explicitly declares a cohort."""
-    parts = [part.lower() for part in Path(path).parts]
+def official_split_from_path(
+    path: str | Path, root: str | Path | None = None
+) -> str | None:
+    """Return an official cohort from path components relative to ``root``.
+
+    Relative matching prevents an unrelated absolute parent such as
+    ``.../test/runs/...`` from turning a source under ``root`` into an official
+    test image.  ``root=None`` preserves the small public helper's historical
+    path-component behaviour for callers that do not have a discovery root.
+    """
+    image_path = Path(path)
+    if root is not None:
+        root_path = Path(root)
+        try:
+            image_path = image_path.resolve().relative_to(root_path.resolve())
+        except ValueError:
+            try:
+                image_path = image_path.relative_to(root_path)
+            except ValueError:
+                return None
+    parts = [part.lower() for part in image_path.parts]
+    if any(part in _OFFICIAL_DEV_DIRS for part in parts):
+        return "dev"
     if any(part in _OFFICIAL_TEST_DIRS for part in parts):
         return "test"
     if any(part in _OFFICIAL_TRAIN_DIRS for part in parts):
@@ -223,17 +252,43 @@ def _hash_fraction(*parts: str) -> float:
 def assign_splits(
     patients: list[str], *, dataset: str, seed: int, official: dict[str, str]
 ) -> tuple[dict[str, str], dict[str, Any]]:
-    """Assign patient-disjoint splits from patient identity and the seed only."""
+    """Assign patient-disjoint splits while preserving declared M&Ms cohorts.
+
+    ACDC's ``training`` directory is a source location, not a held-out split:
+    its patient IDs continue through the deterministic 70/15/15 policy.  M&Ms
+    publishes separate Training/Validation/Testing folders, so those folders
+    map directly to train/dev/test and only genuinely unassigned patients use
+    the deterministic fallback.
+    """
     assignment: dict[str, str] = {}
     official_test = sorted(p for p in patients if official.get(p) == "test")
-    for patient in official_test:
-        assignment[patient] = "test"
+    official_folder_patients = {
+        split: sorted(p for p in patients if official.get(p) == split)
+        for split in SPLITS
+    }
+    preserve_mnms_folders = dataset == "mnms" and bool(official_folder_patients["dev"])
+    if preserve_mnms_folders:
+        for split, members in official_folder_patients.items():
+            for patient in members:
+                assignment[patient] = split
+    else:
+        # ACDC's training folder is intentionally not treated as an official
+        # train split.  Preserve only an explicitly declared testing cohort.
+        for patient in official_test:
+            assignment[patient] = "test"
 
     remaining = sorted(p for p in patients if p not in assignment)
     # The source/frame and full-content fingerprints are deliberately absent.
     ranked = sorted(remaining, key=lambda p: (_hash_fraction(dataset, str(seed), p), p))
 
-    if official_test:
+    if preserve_mnms_folders:
+        if official_test:
+            total = SPLIT_RATIOS["train"] + SPLIT_RATIOS["dev"]
+            targets = [("dev", SPLIT_RATIOS["dev"] / total)]
+        else:
+            targets = [("test", SPLIT_RATIOS["test"]), ("dev", SPLIT_RATIOS["dev"])]
+        rule = "official_mnms_folder_membership_plus_rank_hashed_unassigned"
+    elif official_test:
         total = SPLIT_RATIOS["train"] + SPLIT_RATIOS["dev"]
         targets = [("dev", SPLIT_RATIOS["dev"] / total)]
         rule = "official_test_folder_plus_rank_hashed_train_dev"
@@ -256,15 +311,24 @@ def assign_splits(
     for patient in ranked[cursor:]:
         assignment[patient] = "train"
 
+    selection_inputs = ["patient_id", "seed"]
+    if dataset == "mnms" and official:
+        selection_inputs.append("official_folder_membership")
+    elif official_test:
+        selection_inputs.append("official_test_membership")
     provenance = {
         "rule": rule,
         "seed": int(seed),
         "ratios": dict(SPLIT_RATIOS),
         "official_test_membership": bool(official_test),
         "official_test_patients": len(official_test),
+        "official_folder_membership": bool(official),
+        "official_folder_patients": {
+            split: len(members) for split, members in official_folder_patients.items()
+        },
         "patient_level_disjoint": True,
         "split_identity": "patient_id",
-        "selection_inputs": ["patient_id", "seed"],
+        "selection_inputs": selection_inputs,
         "annotation_inputs": [],
         "content_fingerprint_used": False,
     }
@@ -459,6 +523,70 @@ def _volume_id(dataset: str, relative_path: str, frame_index: int) -> str:
     return f"{dataset}:vol-{source_digest}:t{int(frame_index):04d}"
 
 
+def _official_split_assignments(
+    entries: list[dict[str, Any]],
+) -> tuple[dict[str, str], dict[str, Any]]:
+    """Validate official folder membership and return one role per patient."""
+    memberships: dict[str, dict[str, list[str]]] = {}
+    for entry in entries:
+        role = entry.get("official_folder")
+        if role is None:
+            continue
+        patient_memberships = memberships.setdefault(entry["patient_id"], {})
+        patient_memberships.setdefault(role, []).append(entry["path"])
+
+    conflicts = []
+    for patient_id in sorted(memberships):
+        roles = memberships[patient_id]
+        if len(roles) <= 1:
+            continue
+        conflicts.append(
+            {
+                "patient_id": patient_id,
+                "official_folders": sorted(roles),
+                "source_paths": {
+                    role: sorted(paths) for role, paths in sorted(roles.items())
+                },
+            }
+        )
+    if conflicts:
+        details = {
+            "code": "official_split_patient_conflict",
+            "conflicts": conflicts,
+            "mismatch_explanation": (
+                "A patient appears in multiple official cohort folders; assigning "
+                "one role would silently override source membership."
+            ),
+        }
+        raise OfficialSplitConflictError(
+            "patient-level official split conflict across folders: "
+            + json.dumps(details, sort_keys=True),
+            details=details,
+        )
+
+    assignments = {
+        patient_id: next(iter(roles))
+        for patient_id, roles in memberships.items()
+        if roles
+    }
+    membership_summary = {
+        split: sorted(
+            patient_id
+            for patient_id, role in assignments.items()
+            if role == split
+        )
+        for split in SPLITS
+    }
+    return assignments, {
+        "status": "passed",
+        "patient_memberships": {
+            split: len(members) for split, members in membership_summary.items()
+        },
+        "patients": membership_summary,
+        "conflicts": [],
+    }
+
+
 def _prepare_entry(
     path: Path,
     root_path: Path,
@@ -523,7 +651,7 @@ def _prepare_entry(
         "source_fingerprint": source_fingerprint,
         "frame_fingerprints": frame_fingerprints,
         "geometry_key": _geometry_key(geometry, depth_axis),
-        "official_folder": official_split_from_path(path),
+        "official_folder": official_split_from_path(path, root_path),
         "preprocessed_root": _is_preprocessed(path),
     }
 
@@ -1012,7 +1140,6 @@ def discover_dataset(
         raise DataRootError(f"dataset root {root_path} is not a directory")
 
     entries: list[dict[str, Any]] = []
-    official: dict[str, str] = {}
     preprocessed_roots = False
     skipped_unreadable: list[dict[str, str]] = []
     progress = current_progress()
@@ -1081,12 +1208,11 @@ def discover_dataset(
             progress.event("discovery.file_skipped", **skipped)
             continue
         entries.append(entry)
-        patient_id = entry["patient_id"]
-        if entry["official_folder"] == "test":
-            official[patient_id] = "test"
         if entry["preprocessed_root"]:
             preprocessed_roots = True
 
+    official, official_split_check = _official_split_assignments(entries)
+    progress.event("discovery.official_split_check", **official_split_check)
     counted, duplicates = _dedup(entries, dataset=dataset, progress=progress)
     geometry_checks = _ensure_study_grids(counted, progress=progress)
 
@@ -1260,6 +1386,7 @@ def discover_dataset(
             "no_resampling": True,
         },
         "split_provenance": split_provenance,
+        "official_split_check": official_split_check,
         "records": records,
         "duplicates": duplicates,
         "geometry_checks": geometry_checks,

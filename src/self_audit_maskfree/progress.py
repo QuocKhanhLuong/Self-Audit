@@ -81,6 +81,7 @@ class TerminalProgress:
         self._last_refresh = 0.0
         self._bar_started = 0.0
         self._loss_postfix = ""
+        self._validation_operation = ""
 
     def attach(self, path):
         """Append on resume; never rewrite the experiment's metric stream."""
@@ -135,16 +136,24 @@ class TerminalProgress:
         self._close_bar()
         self._bar_kind, self._bar_owner = kind, owner
         self._bar_started = time.monotonic()
+        dynamic, columns, rows = True, None, None
+        try:
+            size = os.get_terminal_size(self.stream.fileno())
+            if size.columns == 0 or size.lines <= 1:
+                dynamic, columns, rows = False, size.columns or 120, max(size.lines, 24)
+        except (OSError, AttributeError, ValueError):
+            pass
         self._bar = tqdm(total=total, initial=initial, desc=description, file=self.stream,
-                         unit="batch" if kind == "epoch" else "file", ascii=True,
-                         mininterval=1.0, dynamic_ncols=True, leave=True, disable=False,
-                         delay=0 if kind == "epoch" else 0.5,
+                         unit="batch" if kind in {"epoch", "validation"} else "file", ascii=True,
+                         mininterval=1.0, dynamic_ncols=dynamic, ncols=columns, nrows=rows, leave=True, disable=False,
+                         delay=0 if kind in {"epoch", "validation"} else 0.5,
                          bar_format="{desc} [{elapsed}{postfix}]" if kind == "phase" else None)
 
     def _close_bar(self):
         if self._bar is not None:
             self._bar.close()
         self._bar = self._bar_kind = self._bar_owner = None
+        self._validation_operation = ""
 
     def _line(self, text):
         if self._bar is not None:
@@ -154,7 +163,74 @@ class TerminalProgress:
 
     @staticmethod
     def _number(value):
-        return "--" if value is None else f"{value:.4f}"
+        if value is None:
+            return "--"
+        if isinstance(value, bool):
+            return str(value)
+        try:
+            number = float(value)
+        except (TypeError, ValueError):
+            return str(value)
+        return "--" if not math.isfinite(number) else f"{number:.4f}"
+
+    @staticmethod
+    def _seconds(value):
+        if value is None:
+            return "--"
+        try:
+            number = float(value)
+        except (TypeError, ValueError):
+            return f"{value}s"
+        return "--" if not math.isfinite(number) else f"{number:.1f}s"
+
+    @staticmethod
+    def _epoch_label(payload):
+        """Return the human-facing one-based epoch and timeline length."""
+        # A resumed run may retain an old one-based ``epoch`` in the shared
+        # progress context. The explicit zero-based global counter is the
+        # authoritative label whenever the caller supplies both fields.
+        epoch = payload.get("global_epoch")
+        if epoch is not None:
+            try:
+                epoch = int(epoch) + 1
+            except (TypeError, ValueError):
+                pass
+        else:
+            epoch = payload.get("epoch")
+        return ("?" if epoch is None else epoch,
+                payload.get("total_epochs", payload.get("epochs", "?")))
+
+    @staticmethod
+    def _metric(mapping, name, metric):
+        if not isinstance(mapping, dict):
+            return None
+        if name:
+            nested = mapping.get(name)
+            if isinstance(nested, dict) and metric in nested:
+                return nested.get(metric)
+            return mapping.get(f"{name}/{metric}")
+        return mapping.get(metric, mapping.get(f"producer/{metric}"))
+
+    @staticmethod
+    def _short_reason(reason, default):
+        if reason is None or reason == "":
+            reason = default
+        return str(reason).split("\n", 1)[0][:180]
+
+    def _advance_validation(self, payload):
+        if self._bar is None or self._bar_kind != "validation":
+            return
+        completed = payload.get("batch", payload.get("batch_cursor", self._bar.n))
+        try:
+            completed = int(completed)
+        except (TypeError, ValueError):
+            completed = self._bar.n
+        self._bar.update(max(0, completed - self._bar.n))
+        operation = payload.get("operation")
+        changed = operation is not None and str(operation) != self._validation_operation
+        if operation is not None:
+            self._validation_operation = str(operation)
+        self._refresh_bar(force=changed)
 
     def _advance_epoch(self, payload):
         if self._bar is None or self._bar_kind != "epoch":
@@ -172,7 +248,7 @@ class TerminalProgress:
         if self._bar is None:
             return
         now = time.monotonic()
-        if self._bar_kind != "epoch" and now - self._bar_started < 0.5:
+        if self._bar_kind == "phase" and now - self._bar_started < 0.5:
             return
         if not force and now - self._last_refresh < 1.0:
             return
@@ -181,7 +257,21 @@ class TerminalProgress:
         # line on close, even if this phase has no counter updates.
         self._bar.delay = 0
         phase = ""
-        if self._stack:
+        if self._bar_kind == "validation":
+            operation = self._validation_operation
+            started = self._bar_started
+            frames = [frame for frame in self._stack if frame["name"].startswith("validation.")]
+            if frames:
+                frame = frames[-1]
+                started = frame["start"]
+                frame_operation = frame["details"].get("operation")
+                if frame_operation:
+                    operation = frame_operation
+                elif frame["name"] != "validation" or not operation:
+                    operation = str(frame["name"]).removeprefix("validation.") or operation
+            if operation:
+                phase = f"{operation} {now - started:.0f}s"
+        elif self._stack:
             frame = self._stack[-1]
             phase = f"{frame['name']} {now - frame['start']:.0f}s"
         postfix = " | ".join(part for part in (self._loss_postfix if self._bar_kind == "epoch" else "", phase) if part)
@@ -192,24 +282,87 @@ class TerminalProgress:
         event = payload["event"]
         if event == "epoch.start":
             self._loss_postfix = ""
-            self._open_bar(f"{payload.get('dataset', '')} Epoch {payload['epoch']}/{payload['epochs']} Train",
-                           kind="epoch", total=payload["batches"], initial=payload.get("resumed_from_batch", 0))
+            epoch, epochs = self._epoch_label(payload)
+            self._open_bar(f"{payload.get('dataset', '')} Epoch {epoch}/{epochs} Train",
+                           kind="epoch", total=payload.get("batches"),
+                           initial=payload.get("resumed_from_batch", 0))
+        elif event == "epoch.train_done":
+            # Training and report-only validation have separate bars. The
+            # summary is deliberately emitted after validation by the caller.
+            if self._bar_kind == "epoch":
+                self._close_bar()
+        elif event == "validation.start":
+            epoch, epochs = self._epoch_label(payload)
+            self._open_bar(f"{payload.get('dataset', '')} Epoch {epoch}/{epochs} Val",
+                           kind="validation", total=payload.get("batches", payload.get("units")))
+            self._validation_operation = str(payload["operation"]) if payload.get("operation") else ""
+            self._refresh_bar(force=True)
+        elif event == "validation.batch":
+            self._advance_validation(payload)
+        elif event == "validation.end":
+            if self._bar_kind == "validation":
+                self._close_bar()
+        elif event in {"stage.start", "stage.done", "stage.error"} and self._bar_kind == "validation":
+            operation = payload.get("operation")
+            phase = payload.get("phase")
+            previous_operation = self._validation_operation
+            if operation is not None:
+                self._validation_operation = str(operation)
+            elif phase:
+                self._validation_operation = str(phase).removeprefix("validation.")
+            if self._validation_operation != previous_operation and str(phase or "").startswith("validation."):
+                self._refresh_bar(force=True)
         elif event == "metrics":
             self._advance_epoch(payload)
         elif event == "epoch.summary":
-            self._advance_epoch(payload)
             self._close_bar()
-            producer, students = payload["producer"], payload["students"]
+            producer = payload.get("producer", {})
+            students = payload.get("students", {})
             audit = payload.get("audit", {})
             status = "" if payload.get("epoch_complete") else " PARTIAL"
-            self._line(
-                f"Epoch {payload['global_epoch'] + 1}/{payload.get('epochs', '?')}{status} | "
-                f"time={payload['epoch_seconds']:.1f}s | "
-                f"loss P/U/A={self._number(producer.get('producer/loss'))}/"
-                f"{self._number(students.get('student_no_audit/loss'))}/"
-                f"{self._number(students.get('student_audited/loss'))} | "
-                f"select NLL={self._number(audit.get('select_nll_mean'))} | "
-                "val Dice=-- (reference evaluation not configured)")
+            epoch, epochs = self._epoch_label(payload)
+            validation = payload.get("validation")
+            validation_available = isinstance(validation, dict) and bool(validation.get("available"))
+            validation_reason = self._short_reason(
+                validation.get("reason") if isinstance(validation, dict) else None,
+                "reference evaluation not configured",
+            )
+            train_seconds = self._seconds(payload.get("epoch_seconds"))
+            validation_seconds = self._seconds(
+                validation.get("elapsed_seconds") if isinstance(validation, dict) else None
+            )
+            total_seconds = self._seconds(payload.get("total_elapsed_seconds"))
+            if validation_available or isinstance(validation, dict):
+                timing = f"train={train_seconds} val={validation_seconds} total={total_seconds}"
+            else:
+                # Keep the long-standing unavailable-validation summary token
+                # for operators and existing log consumers.
+                timing = f"time={train_seconds} val={validation_seconds} total={total_seconds}"
+            summary = (
+                f"Epoch {epoch}/{epochs}{status} | {timing} | "
+                f"loss P/U/A={self._number(self._metric(producer, '', 'loss'))}/"
+                f"{self._number(self._metric(students, 'student_no_audit', 'loss'))}/"
+                f"{self._number(self._metric(students, 'student_audited', 'loss'))} | "
+                f"select NLL={self._number(audit.get('select_nll_mean') if isinstance(audit, dict) else None)}"
+            )
+            if not validation_available:
+                summary += f" | val Dice=-- ({validation_reason})"
+            self._line(summary)
+            if validation_available:
+                validation_students = validation.get("students", {})
+                for name in ("student_no_audit", "student_audited"):
+                    student = validation_students.get(name, {}) if isinstance(validation_students, dict) else {}
+                    available_student = isinstance(student, dict)
+                    dice = student.get("dice") if available_student else None
+                    iou = student.get("iou") if available_student else None
+                    per_class = student.get("dice_per_class", {}) if available_student else {}
+                    if not isinstance(per_class, dict):
+                        per_class = {}
+                    classes = "/".join(self._number(per_class.get(key)) for key in ("RV", "MYO", "LV"))
+                    self._line(
+                        f"  {name}: Dice={self._number(dice)} IoU={self._number(iou)} "
+                        f"Dice(RV/MYO/LV)={classes} val={validation_seconds}"
+                    )
         elif event == "discovery.files_listed" and self._bar_kind == "inventory":
             self._bar.total = payload["files_total"]
         elif event == "stage.done" and payload.get("phase") == "discovery.header" and self._bar_kind == "inventory":
@@ -237,9 +390,9 @@ class TerminalProgress:
                 return f"{value:.5g}"
             return json.dumps(value, ensure_ascii=True, separators=(",", ":"))
 
-        rows = [f"[maskfree {payload['timestamp']}] {payload['event']} "
-                f"dataset={payload.get('dataset')} epoch={payload.get('epoch')}/{payload.get('epochs')} "
-                f"batch={payload.get('batch_cursor', payload.get('batch'))}/{payload.get('batches')}"]
+        rows = [(f"[maskfree {payload['timestamp']}] {payload['event']} "
+                 f"dataset={payload.get('dataset')} epoch={payload.get('epoch')}/{payload.get('epochs')} "
+                 f"batch={payload.get('batch_cursor', payload.get('batch'))}/{payload.get('batches')}")]
 
         def group(name, values):
             pairs = [f"{k}={display(v)}" for k, v in values.items()]

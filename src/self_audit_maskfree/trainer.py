@@ -500,14 +500,20 @@ class MaskfreeTrainer:
             stop_reason = "bounded_run"
 
         runtime.reset_peak_memory(self.device)
+        # A saved epoch boundary can precede a interrupted validation job. Its
+        # exact model state is still available here, before another update.
+        if (config.epoch_validation and self.start_batch == 0 and
+                self.last_completed_epoch >= 0 and self.start_epoch == self.last_completed_epoch + 1):
+            self._observe_epoch(self.last_completed_epoch, resumed=True)
         for epoch in range(self.start_epoch, epoch_limit):
             if config.max_steps is not None and self.global_step >= config.max_steps:
                 stop_reason = "max_steps"
                 break
+            epoch_started = time.monotonic()
             epoch_record, epoch_complete, permutation = self._train_epoch(epoch)
             self.history.append(epoch_record)
             runtime.append_jsonl(self.paths.epoch_metrics, epoch_record)
-            current_progress().event("epoch.summary", **epoch_record)
+            current_progress().event("epoch.train_done", **epoch_record)
             if self.sink is not None and epoch_complete:
                 self._log_epoch(epoch, epoch_record)
             if epoch_complete:
@@ -521,6 +527,11 @@ class MaskfreeTrainer:
                     completed=False,
                     status=STATUS_PARTIAL,
                 )
+                if config.epoch_validation:
+                    self._observe_epoch(epoch, epoch_started=epoch_started)
+                else:
+                    current_progress().event("epoch.summary", **epoch_record,
+                                             total_elapsed_seconds=time.monotonic() - epoch_started)
             else:
                 # An epoch stopped mid-way is NOT a completed epoch. The exact
                 # sampler permutation and cursor are stored so the continuation
@@ -533,6 +544,8 @@ class MaskfreeTrainer:
                     completed=False,
                     status=STATUS_PARTIAL,
                 )
+                current_progress().event("epoch.summary", **epoch_record,
+                                         total_elapsed_seconds=time.monotonic() - epoch_started)
             if config.max_steps is not None and self.global_step >= config.max_steps:
                 stop_reason = "max_steps"
                 break
@@ -565,6 +578,7 @@ class MaskfreeTrainer:
             status=status,
         )
 
+        from .epoch_validation import validation_status
         report = {
             "schema_version": TRAINER_SCHEMA_VERSION,
             "status": status,
@@ -598,12 +612,31 @@ class MaskfreeTrainer:
             "timing": self.timing.as_dict(),
             "elapsed_seconds": time.time() - started,
             "finalization": finalization,
+            "epoch_validation": validation_status(self.paths.root, enabled=config.epoch_validation,
+                                                    epochs=self.last_completed_epoch + 1),
             "wandb": self.sink.summary() if self.sink is not None else None,
             "epoch_metrics_path": str(self.paths.epoch_metrics),
             "history_tail": self.history[-3:],
         }
         runtime.atomic_write_json(self.paths.pipeline_report, report)
         return report
+
+    def _observe_epoch(self, epoch: int, *, resumed: bool = False,
+                       epoch_started: float | None = None) -> None:
+        from .epoch_validation import observe_epoch
+
+        # Report-only: reference values never enter self.history, which is
+        # checkpointed, or any training/schedule/selection decision.
+        with self.timing.stage("validation.epoch", epoch=epoch + 1, global_epoch=epoch):
+            validation = observe_epoch(self, epoch)
+        record = next((row for row in reversed(self.history)
+                       if row.get("global_epoch") == epoch and row.get("epoch_complete")), None)
+        if record is not None and not (resumed and validation.get("cached")):
+            total_seconds = (time.monotonic() - epoch_started if epoch_started is not None else
+                             record["epoch_seconds"] + validation.get("elapsed_seconds", 0.0))
+            current_progress().event("epoch.summary", **record, epoch=epoch + 1,
+                                     total_epochs=self.config.total_epochs, validation=validation,
+                                     total_elapsed_seconds=total_seconds)
 
     def _log_epoch(self, epoch: int, record: dict[str, Any]) -> None:
         assert self.sink is not None

@@ -12,6 +12,14 @@ Examples
     python scripts/train_maskfree.py --config configs/maskfree_acdc_150.yaml \
         --resume runs/maskfree150/acdc/<run_id>/checkpoints/last.pt
 
+Epoch validation observes both frozen students on the image-only development
+split after every completed epoch.  It is report-only: reference masks belong
+to the separate evaluator and never tune or select a checkpoint.  Use
+``--no-epoch-validation`` for an explicit operational opt-out, or pass
+``--epoch-reference-config`` to forward a child evaluator control-plane path;
+the training process never opens that path.  No checkpoint selection is
+performed.
+
 Exit codes: 0 completed, 2 partial (bounded or interrupted), 3 failed.
 """
 from __future__ import annotations
@@ -52,6 +60,21 @@ def build_parser() -> argparse.ArgumentParser:
                         help="permit CPU execution for bounded checks; not a full-run mode")
     parser.add_argument("--run-id", default=None, help="explicit immutable run identifier")
     parser.add_argument("--device", default=None, help="operational device override, e.g. cuda:0")
+    parser.add_argument(
+        "--epoch-validation", dest="epoch_validation",
+        action=argparse.BooleanOptionalAction, default=None,
+        help=(
+            "enable/disable report-only Dice observation after each completed epoch "
+            "(frozen students on image-only dev; no checkpoint selection; default from config)"
+        ),
+    )
+    parser.add_argument(
+        "--epoch-reference-config", default=None,
+        help=(
+            "optional control-plane path forwarded to the isolated epoch evaluator; "
+            "training never opens it and it never selects a checkpoint"
+        ),
+    )
     parser.add_argument("--preflight", action="store_true",
                         help="bounded fit/score/edit/backward/checkpoint/export gate; never completes a run")
     parser.add_argument("--print-config", action="store_true",
@@ -88,6 +111,10 @@ def _execute(args: argparse.Namespace, progress: TerminalProgress) -> int:
         overrides["run_id"] = args.run_id
     if args.device is not None:
         overrides["device"] = args.device
+    if args.epoch_validation is not None:
+        overrides["epoch_validation"] = args.epoch_validation
+    if args.epoch_reference_config is not None:
+        overrides["epoch_reference_config"] = args.epoch_reference_config
     try:
         config = config.replace(**overrides)
     except ConfigError as exc:

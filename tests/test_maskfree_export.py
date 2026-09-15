@@ -411,7 +411,7 @@ MASKFREE_CONFIG_FIELDS = {
     "accumulation_steps", "image_size", "lr", "weight_decay", "warmup_epochs",
     "width", "feature_dim", "protocol", "depth_axis", "device", "num_workers",
     "amp", "wandb_mode", "wandb_project", "run_id", "max_steps", "max_epochs",
-    "resume", "allow_cpu",
+    "resume", "allow_cpu", "epoch_validation", "epoch_reference_config",
 }
 
 FORBIDDEN_CONFIG_SUBSTRINGS = (

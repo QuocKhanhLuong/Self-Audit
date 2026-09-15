@@ -51,6 +51,8 @@ OPERATIONAL_FIELDS = (
     "max_epochs",
     "resume",
     "allow_cpu",
+    "epoch_validation",
+    "epoch_reference_config",
 )
 
 #: Keys that belonged to the supervised pipelines. Rejected with an explicit
@@ -102,6 +104,12 @@ class MaskfreeConfig:
     max_epochs: int | None = None
     resume: str | None = None
     allow_cpu: bool = False
+    # Epoch validation is a report-only observation of frozen student outputs
+    # on the image-only development split.  It is deliberately operational:
+    # enabling it or forwarding a child evaluator config cannot change the
+    # scientific identity of the learned run or select a checkpoint.
+    epoch_validation: bool = True
+    epoch_reference_config: str | None = None
 
     def __post_init__(self) -> None:
         self._validate()
@@ -155,9 +163,14 @@ class MaskfreeConfig:
             value = getattr(self, name)
             if value is not None and not isinstance(value, str):
                 raise ConfigError(f"{name} must be a string or null")
-        for name in ("amp", "allow_cpu"):
+        for name in ("amp", "allow_cpu", "epoch_validation"):
             if not isinstance(getattr(self, name), bool):
                 raise ConfigError(f"{name} must be a boolean")
+        if self.epoch_reference_config is not None:
+            if not isinstance(self.epoch_reference_config, str):
+                raise ConfigError("epoch_reference_config must be a string or null")
+            if not self.epoch_reference_config.strip():
+                raise ConfigError("epoch_reference_config must be a non-empty string when given")
         if self.run_id is not None and (not self.run_id or self.run_id in (".", "..") or
                                        Path(self.run_id).name != self.run_id or "\\" in self.run_id):
             raise ConfigError("run_id must be a nonempty single path component")

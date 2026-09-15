@@ -119,6 +119,11 @@ class ReferenceCase:
     volume_id: str | None = None
     study_id: str | None = None
     frame_index: int | None = None
+    # For a sparse 4-D native annotation (for example M&Ms ``_sa_gt``), this
+    # identifies the mask frame that is scored.  It is deliberately separate
+    # from ``frame_index``: the latter belongs to the frozen image record and
+    # the former is proof that the matching annotation frame was selected.
+    mask_frame_index: int | None = None
     spacing: tuple[float, float, float] | None = None
     geometry_valid: bool = False
     note: str | None = None
@@ -163,6 +168,11 @@ class ReferenceConfig:
     bootstrap_iterations: int = 2000
     seed: int = 42
     oracle_diagnostic: bool = False
+    # The final evaluator remains strict by default.  The isolated epoch
+    # evaluator may set this only for native sparse annotations (for example
+    # ED/ES masks in an all-frame image-only development freeze), where every
+    # unmatched frozen volume is recorded explicitly as unavailable.
+    allow_unmapped_volumes: bool = False
 
     @classmethod
     def from_mapping(cls, payload: Mapping[str, Any]) -> "ReferenceConfig":
@@ -199,6 +209,11 @@ class ReferenceConfig:
                         if entry.get("frame_index") is None
                         else int(entry.get("frame_index"))
                     ),
+                    mask_frame_index=(
+                        None
+                        if entry.get("mask_frame_index") is None
+                        else int(entry.get("mask_frame_index"))
+                    ),
                     spacing=None if spacing is None else tuple(float(v) for v in spacing),
                     geometry_valid=bool(entry.get("geometry_valid", False)),
                     note=entry.get("note"),
@@ -224,6 +239,8 @@ class ReferenceConfig:
         if unknown:
             raise ReferenceConfigError(f"unknown reference config keys: {', '.join(unknown)}")
         data.setdefault("protocol", "unknown")
+        if not isinstance(data.get("allow_unmapped_volumes", False), bool):
+            raise ReferenceConfigError("allow_unmapped_volumes must be a boolean")
         return cls(
             cases=cases,
             student_arms=tuple(arms),
@@ -757,6 +774,13 @@ def _reference_catalog(
             missing.append(f"{patient}/{key}")
             continue
         raw_reference, reference_geometry = _load_volume_with_geometry(mask_path)
+        if case.mask_frame_index is not None:
+            index = case.mask_frame_index
+            if raw_reference.ndim != 4 or not 0 <= index < raw_reference.shape[3]:
+                raise ReferenceConfigError(
+                    f"reference mask_frame_index {index} is invalid for {mask_path}: {raw_reference.shape}"
+                )
+            raw_reference = raw_reference[..., index]
         if raw_reference.ndim != 3:
             raise ReferenceConfigError(
                 f"reference mask {mask_path} must be a 3-D volume, got shape {raw_reference.shape}"
@@ -1188,6 +1212,10 @@ def evaluate_reference(
         for patient, volume_entries in sorted(per_patient_entries.items()):
             patient_volume_count = len(volume_entries)
             for volume_key, entry in sorted(volume_entries.items()):
+                if (config.allow_unmapped_volumes and
+                        _entry_reference_key(entry, volume_key) not in reference_catalog.get(patient, {})):
+                    skipped.append(f"{patient}/{volume_key}")
+                    continue
                 reference_entry = _resolve_reference(
                     patient, volume_key, entry, reference_catalog, patient_volume_count
                 )
@@ -1512,7 +1540,7 @@ def evaluate_reference(
             "ci_low": None,
             "ci_high": None,
         }
-    row("students.dice_difference", bootstrap.get("mean_difference"), unit="dice",
+    row("students.dice_difference", bootstrap.get("mean_difference") if bootstrap.get("available") else None, unit="dice",
         checkpoint=f"{audited_name}-{unaudited_name}", population="patient",
         count=int(bootstrap.get("count", 0)), available=bool(bootstrap.get("available")),
         reason=None if bootstrap.get("available") else bootstrap.get("reason"),

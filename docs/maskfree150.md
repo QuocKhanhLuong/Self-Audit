@@ -143,11 +143,45 @@ show their own elapsed-time bar; phases shorter than 0.5 seconds are hidden.
 The display reaches GUI terminals through the launcher's `tee` pipeline.
 `tqdm>=4.66` is included in `requirements-maskfree.txt`.
 
-The epoch line shows wall time, producer/unaudited/audited losses (`P/U/A`) and
-selection NLL. NLL here is a training-side image-only audit score, not validation
-Dice. **There is currently no per-epoch reference validation pass.** `val Dice`
-therefore stays `--`; no pseudo-label agreement is substituted for GT Dice.
-The existing optional reference evaluator runs separately after final freeze.
+The epoch line shows train/validation wall time, producer/unaudited/audited
+losses (`P/U/A`) and selection NLL. Each completed epoch now runs **validation
+Dice by default**, as explicitly requested on 2026-09-15. A separate Val bar
+tracks image loading, student inference, native export/freeze and reference
+scoring. Two compact lines show unaudited/audited Dice, IoU and RV/MYO/LV Dice.
+Unavailable references show `--` with a reason; no pseudo-label agreement is
+substituted for reference Dice.
+
+ACDC development patients are deterministically held out from `training` by
+the existing patient-ID split: 70/15/15 when there is no official test folder,
+or train/dev in the ratio 70:15 with the official test folder reserved. M&Ms
+preserves its separate `Training` / `Validation` / `Testing` folders as
+train/dev/test. One patient in conflicting official folders is rejected.
+If M&Ms has only a training folder and no official development folder, the
+existing patient-ID holdout policy supplies development membership instead.
+All training and development patients are disjoint.
+
+After saving the epoch resume checkpoint, both students predict the same
+development images with full image inputs. Every frame/slice in that image-only
+cohort is exported before the child process can inspect references. The child
+matches colocated native masks, with explicit sparse-frame accounting. This
+extra pass and its frozen files consume time and disk each epoch, including
+cine frames that have no reference annotation. Training batch size remains 8;
+validation uses the configured physical batch with its normal final short batch.
+
+Per-epoch artifacts are in `validation/epoch_0001/` through `epoch_0150/`:
+immutable student checkpoints, an image manifest, native predictions and their
+complete freeze, `reference/reference_metrics.{json,csv,md}`, and `receipt.json`.
+The receipt contains classwise metrics, counts, timing and availability.
+HD95/ASSD are included in the report only where physical geometry supports them.
+The pipeline report records validation completion separately from training.
+
+`epoch_validation: true` is the default even for an older YAML. An optional
+`epoch_reference_config` is forwarded to the isolated evaluator; the trainer
+does not open it. Use `EPOCH_REFERENCE_CONFIG` for the single launcher, or
+`ACDC_EPOCH_REFERENCE_CONFIG` / `MNMS_EPOCH_REFERENCE_CONFIG` for the sequential
+launcher. An explicit per-epoch reference config must describe `split: dev`.
+`--no-epoch-validation` or `EPOCH_VALIDATION=0` disables the pass explicitly.
+Final test reference configs remain separate.
 
 Use `MASKFREE_PROGRESS=verbose` (or Python CLI `--progress verbose`) only when
 debugging. Shape/affine dumps, file events, heartbeats, detailed metric tables,
@@ -323,13 +357,18 @@ not receive that fast path, and an exit hash mismatch fails the session.
 
 ## Supervision ledger for this layer
 
-Nothing in `export.py`, the two launchers or the three configs reads, writes,
-resolves or accepts a path to a manual mask, a reference segmentation, an
-annotation file, a pretrained weight, or a GT-derived threshold. There is no
-selection logic here at all: the exporter records what it was handed. Ground
-truth is read only by `src/self_audit_maskfree/evaluation/` through
-`scripts/evaluate_maskfree_reference.py`, as a separate process, after a
-validated freeze, and it cannot return a decision into training.
+The generating pipeline never opens manual masks, annotation metadata,
+pretrained weights or GT-derived thresholds. The exporter records predictions
+without selecting them. Only the isolated reference processes
+`scripts/evaluate_maskfree_epoch.py` and `scripts/evaluate_maskfree_reference.py`
+may inspect references, after validating their complete prediction freeze.
+The training control plane can forward a reference-config path and display
+scalar metrics, but reference values never enter loss, scheduler, thresholds,
+training history, or checkpoint selection. There is no Dice-best checkpoint.
+
+Epoch monitoring makes the development cohort visible during training; it is
+not an untouched final test. The image-only O_verify observations and final
+common-bank experiments keep their existing final-freeze boundary.
 
 The configs contain only `MaskfreeConfig` fields, so W5's strict loader rejects
 any legacy or pretrained option that is added to them by accident.
@@ -362,6 +401,17 @@ calling the sequential launcher. The hook runs only after both dataset freezes
 pass; it does not feed a reference metric back into training or selection.
 
 ### Exact resume
+
+The training checkpoint is saved before epoch validation. If interruption
+occurs there, resume validates or regenerates that exact epoch snapshot before
+advancing to another epoch. Snapshot identity binds model tensors, source,
+config and the image manifest. Completed freezes are reused and rehashed;
+rolling `last.pt` is never a dependency of an immutable validation freeze.
+Validation restores all RNG states and module modes, and its reference reports
+are separate from checkpointed training history.
+Completed receipts also hash the reference report. Missing/altered reports or
+a changed explicit reference-config path trigger a new isolated evaluation
+attempt on the same frozen predictions, with the previous receipt retained.
 
 An interrupted dataset run resumes in its existing immutable run directory with
 the same resolved config, checkpoint, source manifest, runtime settings and

@@ -15,6 +15,11 @@ to `requirements-maskfree.txt` (the checked local environment has 4.70.0).
 
 ## Validation metric boundary
 
+**Superseded later on 2026-09-15:** the user explicitly enabled isolated
+reference Dice every epoch and clarified native validation locations. See
+`epoch_validation_20260915.md` and the current operator guide. The text below
+records the earlier compact-display change, before that authorization.
+
 Per-epoch GT validation is **not implemented by this console change**. The
 trainer currently has no val Dice/IoU/HD95; its audit NLL is explicitly labelled
 selection NLL. The console shows `val Dice=--`, rather than substituting

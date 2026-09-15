@@ -54,3 +54,10 @@ wandb_mode: offline
 wandb_project: self-audit-maskfree
 
 allow_cpu: false
+
+# Report-only validation after each completed epoch: both students are frozen
+# on image-only development inputs before the isolated evaluator is invoked.
+# Reference masks never enter training or checkpoint selection. The optional
+# path is forwarded to that child evaluator and is never opened here.
+epoch_validation: true
+epoch_reference_config: null

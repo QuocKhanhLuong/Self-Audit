@@ -66,6 +66,13 @@ ENVIRONMENT
   TOTAL_EPOCHS=150      Global epochs. 150 is the contracted timeline.
   BATCH_SIZE=8          Requested PHYSICAL batch. Default 8.
   ACCUM_STEPS=1         Gradient accumulation. Default 1.
+  EPOCH_VALIDATION=1    Report-only frozen-student dev Dice after every
+                        completed epoch. Set 0 for an explicit operational
+                        opt-out; it never selects a checkpoint.
+  EPOCH_REFERENCE_CONFIG=<path>
+                        Optional control-plane path forwarded to the isolated
+                        epoch evaluator. Training never opens it; reference
+                        masks stay in the separate evaluator.
   MASKFREE_FALLBACK=    Explicit pre-run OOM fallback, resolved BEFORE the run:
                         "4x2" or "2x4" for effective batch 8. There is no
                         mid-run OOM retry, batch change, LR rescale or
@@ -98,7 +105,10 @@ NOT DONE BY THIS SCRIPT
   No commit, no push, no checkpoint migration, no cross-dataset resume, no
   reference/ground-truth reading. The isolated reference evaluator is a
   separate process (scripts/evaluate_maskfree_reference.py) that runs only
-  after a validated freeze.
+  after a validated freeze. Epoch validation follows the same isolation rule:
+  every epoch freezes both students on image-only development inputs, and any
+  mask-based Dice is computed by its child evaluator without tuning or
+  checkpoint selection.
 HELPTEXT
 }
 
@@ -334,12 +344,19 @@ WORKSPACE="${WORKSPACE:-$DEFAULT_WORKSPACE}"
 TOTAL_EPOCHS="${TOTAL_EPOCHS:-150}"
 BATCH_SIZE="${BATCH_SIZE:-8}"
 ACCUM_STEPS="${ACCUM_STEPS:-1}"
+EPOCH_VALIDATION="${EPOCH_VALIDATION:-1}"
+EPOCH_REFERENCE_CONFIG="${EPOCH_REFERENCE_CONFIG:-}"
 MASKFREE_FALLBACK="${MASKFREE_FALLBACK:-}"
 MASKFREE_GPU_UUID="${MASKFREE_GPU_UUID:-}"
 MASKFREE_GPU_OVERRIDE="${MASKFREE_GPU_OVERRIDE:-}"
 MASKFREE_ALLOW_GPU_NAME="${MASKFREE_ALLOW_GPU_NAME:-}"
 DATA_ROOT="${DATA_ROOT:-}"
 REQUESTED_CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-}"
+
+case "$EPOCH_VALIDATION" in
+  0|1) ;;
+  *) die "EPOCH_VALIDATION must be 0 or 1, got '$EPOCH_VALIDATION'" ;;
+esac
 
 TEMPLATE_CONFIG="configs/maskfree_${DATASET}_150.yaml"
 [ -f "$TEMPLATE_CONFIG" ] || die "missing template config: $TEMPLATE_CONFIG"
@@ -493,6 +510,7 @@ cat <<PLAN
 [maskfree] accumulation       : $ACCUM_STEPS
 [maskfree] effective batch    : $EFFECTIVE_BATCH
 [maskfree] batch fallback     : $CONTRASTIVE_NOTE
+[maskfree] epoch validation   : enabled=$EPOCH_VALIDATION reference_config=${EPOCH_REFERENCE_CONFIG:-<none>} (report-only frozen students on dev; separate evaluator; no checkpoint selection)
 [maskfree] device             : $DEVICE
 [maskfree] gpu gate           : $GPU_REPORT
 [maskfree] interpreter        : $PYTHON
@@ -600,6 +618,8 @@ MASKFREE_BATCH="$BATCH_SIZE" \
 MASKFREE_ACCUM="$ACCUM_STEPS" \
 MASKFREE_DEVICE="$DEVICE" \
 MASKFREE_ALLOW_CPU="$ALLOW_CPU" \
+MASKFREE_EPOCH_VALIDATION="$EPOCH_VALIDATION" \
+MASKFREE_EPOCH_REFERENCE_CONFIG="$EPOCH_REFERENCE_CONFIG" \
 MASKFREE_LAUNCH_ENV="$LOG_DIR/launch_env.sh" \
 MASKFREE_REPO="$ROOT" \
 "$PYTHON" - <<'PY'
@@ -623,10 +643,16 @@ overrides = {
     "accumulation_steps": int(os.environ["MASKFREE_ACCUM"]),
     "device": os.environ["MASKFREE_DEVICE"],
     "allow_cpu": os.environ["MASKFREE_ALLOW_CPU"] == "1",
+    "epoch_validation": os.environ["MASKFREE_EPOCH_VALIDATION"] == "1",
 }
 data_root = os.environ.get("MASKFREE_DATA_ROOT") or ""
 if data_root:
     overrides["data_root"] = data_root
+epoch_reference_config = os.environ.get("MASKFREE_EPOCH_REFERENCE_CONFIG") or ""
+if epoch_reference_config:
+    # This is a control-plane value for the isolated child evaluator. The
+    # training process deliberately does not open or validate that path.
+    overrides["epoch_reference_config"] = epoch_reference_config
 
 # dataclasses.replace re-runs MaskfreeConfig.__post_init__, so an override that
 # violates the schema fails here, not deep inside a 150-epoch run.
@@ -649,6 +675,8 @@ env_path.write_text(
             ("RESOLVED_SEED", resolved.seed),
             ("RESOLVED_DEPTH_AXIS", resolved.depth_axis),
             ("RESOLVED_IMAGE_SIZE", resolved.image_size),
+            ("RESOLVED_EPOCH_VALIDATION", resolved.epoch_validation),
+            ("RESOLVED_EPOCH_REFERENCE_CONFIG", resolved.epoch_reference_config or ""),
         )
     )
     + "\n",

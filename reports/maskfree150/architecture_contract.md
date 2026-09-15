@@ -13,6 +13,16 @@ by workers. Each worker is not alone: respect ownership; never revert others.
 
 ## Supervision and information firewall
 
+2026-09-15 user amendment: enable validation Dice every epoch after freezing
+both compared students' development predictions. ACDC development membership
+comes from the existing patient-ID training split; M&Ms preserves its official
+validation image folder. Reference masks/metadata remain confined to a separate
+post-freeze evaluation process. Scalars are report-only, with no threshold,
+loss, scheduler or checkpoint selection feedback. This overrides the original
+final-only reference timing below; O_verify and common-bank final freeze rules
+remain unchanged. Production configs enable `epoch_validation` by default and
+may forward an opaque `epoch_reference_config` path to the isolated process.
+
 New package `src/self_audit_maskfree` MUST NOT import `self_audit` or
 `self_audit_candidate_c` or their utilities. No pretrained weights, GT teacher,
 manual mask loading, reference-derived crop, ED/ES selection, split, tuning,

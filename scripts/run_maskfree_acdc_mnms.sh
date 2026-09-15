@@ -53,6 +53,14 @@ USAGE
 
   ACDC_DATA_ROOT=<dir>   Override the ACDC image root for this invocation.
   MNMS_DATA_ROOT=<dir>   Override the M&Ms image root for this invocation.
+  EPOCH_VALIDATION=1     Report-only frozen-student dev Dice after every
+                         completed epoch; set 0 for an explicit opt-out.
+  ACDC_EPOCH_REFERENCE_CONFIG=<path>
+                          Optional control-plane path forwarded only to the
+                          ACDC epoch evaluator; training never opens it.
+  MNMS_EPOCH_REFERENCE_CONFIG=<path>
+                          Optional control-plane path forwarded only to the
+                          M&Ms epoch evaluator; training never opens it.
   ACDC_REFERENCE_CONFIG=<path>
                           Optional explicit reference config, evaluated only
                           after both dataset freezes validate.
@@ -126,17 +134,28 @@ for dataset in "${SEQUENCE[@]}"; do
   dataset_run_id="${BASE_RUN_ID}_${dataset}"
 
   dataset_data_root=""
+  dataset_epoch_reference_config=""
   case "$dataset" in
-    acdc) dataset_data_root="${ACDC_DATA_ROOT:-}" ;;
-    mnms) dataset_data_root="${MNMS_DATA_ROOT:-}" ;;
+    acdc)
+      dataset_data_root="${ACDC_DATA_ROOT:-}"
+      dataset_epoch_reference_config="${ACDC_EPOCH_REFERENCE_CONFIG:-}"
+      ;;
+    mnms)
+      dataset_data_root="${MNMS_DATA_ROOT:-}"
+      dataset_epoch_reference_config="${MNMS_EPOCH_REFERENCE_CONFIG:-}"
+      ;;
   esac
+  log "epoch validation: enabled=${EPOCH_VALIDATION:-1} reference_config=${dataset_epoch_reference_config:-<none>}"
 
   # DATA_ROOT and RUN_ID are set per dataset and deliberately not inherited from
   # the caller's environment: one root or one id shared by two datasets would
   # make the runs dependent, which is exactly what this sequence must prevent.
-  env_args=(env -u DATA_ROOT -u RUN_ID)
+  env_args=(env -u DATA_ROOT -u RUN_ID -u EPOCH_REFERENCE_CONFIG)
   if [ -n "$dataset_data_root" ]; then env_args+=("DATA_ROOT=$dataset_data_root"); fi
-  env_args+=("RUN_ID=$dataset_run_id")
+  if [ -n "$dataset_epoch_reference_config" ]; then
+    env_args+=("EPOCH_REFERENCE_CONFIG=$dataset_epoch_reference_config")
+  fi
+  env_args+=("RUN_ID=$dataset_run_id" "WORKSPACE=$WORKSPACE" "PYTHON=$PYTHON")
   "${env_args[@]}" bash "$FULL" --dataset "$dataset"
 
   if [ "$RUN_FULL" = "1" ]; then
