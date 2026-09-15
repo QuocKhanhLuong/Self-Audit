@@ -14,7 +14,9 @@ from __future__ import annotations
 
 import pytest
 import torch
+from torch.nn import functional as F
 
+from self_audit_maskfree import models as models_module
 from self_audit_maskfree.losses import (
     MAX_SAMPLES_PER_IMAGE,
     _sample_support_locations,
@@ -62,6 +64,105 @@ def test_shapes_parameter_budget_and_small_images():
         tiny = torch.randn(1, 3, height, width)
         assert Producer()(tiny)["features"].shape == (1, 16, height, width)
         assert Student()(tiny).shape == (1, 4, height, width)
+
+
+@pytest.mark.parametrize("height,width", [(2, 2), (8, 6), (128, 128)])
+def test_even_grid_downsampling_matches_adaptive_forward_backward(height, width):
+    """The fixed production stencil matches the former adaptive operator.
+
+    CPU implementations are expected to be bitwise equal for these even-grid
+    cases, including their input gradients. This test intentionally compares
+    the new helper with the old adaptive expression rather than relying only
+    on output shapes.
+    """
+    x = torch.randn(2, 3, height, width, requires_grad=True)
+    old = F.adaptive_avg_pool2d(x, (height // 2, width // 2))
+    new = models_module._down(x)
+    assert new.shape == old.shape
+    assert torch.equal(new, old)
+
+    old_loss = old.square().mean()
+    new_loss = new.square().mean()
+    old_grad = torch.autograd.grad(old_loss, x, retain_graph=True)[0]
+    new_grad = torch.autograd.grad(new_loss, x)[0]
+    assert torch.equal(new_grad, old_grad)
+
+
+def test_production_even_ladder_is_deterministic():
+    """The 128 -> 64 -> 32 production ladder stays on fixed pooling."""
+    x = torch.randn(1, 3, 128, 128)
+    first = models_module._down(x)
+    second = models_module._down(first)
+    assert first.shape[-2:] == (64, 64)
+    assert second.shape[-2:] == (32, 32)
+    assert torch.equal(first, F.adaptive_avg_pool2d(x, (64, 64)))
+    assert torch.equal(second, F.adaptive_avg_pool2d(first, (32, 32)))
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA unavailable")
+def test_cuda_even_pooling_backward_is_deterministic():
+    """When CUDA is present, fixed pooling has repeatable outputs and grads."""
+    previous = torch.are_deterministic_algorithms_enabled()
+    try:
+        torch.use_deterministic_algorithms(True)
+        base = torch.randn(2, 3, 128, 128, device="cuda", dtype=torch.float32)
+
+        def run_once():
+            sample = base.detach().clone().requires_grad_(True)
+            pooled = models_module._down(sample)
+            pooled.square().mean().backward()
+            torch.cuda.synchronize()
+            return pooled.detach().cpu(), sample.grad.detach().cpu()
+
+        output_a, grad_a = run_once()
+        output_b, grad_b = run_once()
+        assert torch.equal(output_a, output_b)
+        assert torch.equal(grad_a, grad_b)
+    finally:
+        torch.use_deterministic_algorithms(previous)
+
+
+@pytest.mark.parametrize("model_factory", [Producer, Student])
+@pytest.mark.parametrize("height,width", [(8, 6), (32, 24)])
+def test_model_even_grid_forward_backward_matches_adaptive_reference(
+    model_factory, height, width, monkeypatch
+):
+    """Model-level CPU equivalence holds when only the pooling implementation changes."""
+    torch.manual_seed(123)
+    optimized = model_factory()
+    reference = model_factory()
+    reference.load_state_dict(optimized.state_dict())
+    optimized_input = torch.randn(1, 3, height, width, requires_grad=True)
+    reference_input = optimized_input.detach().clone().requires_grad_(True)
+
+    optimized_output = optimized(optimized_input)
+
+    def output_loss(output):
+        if isinstance(output, dict):
+            return sum(value.square().mean() for value in output.values())
+        return output.square().mean()
+
+    optimized_loss = output_loss(optimized_output)
+    optimized_loss.backward()
+
+    def adaptive_down(x):
+        h, w = x.shape[-2:]
+        return F.adaptive_avg_pool2d(x, (max(1, h // 2), max(1, w // 2)))
+
+    monkeypatch.setattr(models_module, "_down", adaptive_down)
+    reference_output = reference(reference_input)
+    reference_loss = output_loss(reference_output)
+    reference_loss.backward()
+
+    if isinstance(optimized_output, dict):
+        assert optimized_output.keys() == reference_output.keys()
+        for key in optimized_output:
+            assert torch.equal(optimized_output[key], reference_output[key])
+    else:
+        assert torch.equal(optimized_output, reference_output)
+    assert torch.equal(optimized_input.grad, reference_input.grad)
+    for optimized_param, reference_param in zip(optimized.parameters(), reference.parameters()):
+        assert torch.equal(optimized_param.grad, reference_param.grad)
 
 
 def test_students_start_identical_without_shared_storage():
