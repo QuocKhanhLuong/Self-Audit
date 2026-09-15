@@ -1831,6 +1831,14 @@ def _write_image_only_reports_single(
             "\n`valid_fg_collapse` is a support diagnostic only; it does not establish label quality.\n"
         )
 
+    # Emit the computed aggregates once per split. Per-unit rows and all epoch
+    # records remain in the reports; rendering must not re-score any evidence.
+    from .progress import current_progress
+    progress = current_progress()
+    if progress.enabled:
+        for row in [*verification_metric_rows[len(candidate_rows):],
+                    *coverage_metric_rows, temporal_metric_row]:
+            progress.event("image_only.metric", metric=_safe(row))
     return {"json": json_path, "csv": csv_path, "md": md_path}
 
 

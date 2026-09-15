@@ -104,13 +104,17 @@ def _get_record(manifest: dict[str, Any], unit_id: str) -> dict[str, Any]:
 
 
 def _native_stack(record: dict[str, Any]) -> torch.Tensor:
-    stack = read_slice_stack(
-        record["path"],
-        depth_axis=int(record["depth_axis"]),
-        slice_index=int(record["slice_index"]),
-        frame_index=record["frame_index"],
-        frame_axis=record.get("frame_axis"),
-    )
+    from ..progress import current_progress
+    with current_progress().stage("data.decode_slice_stack", path=record["path"],
+                                  unit_id=record["unit_id"], slice_index=record["slice_index"],
+                                  frame_index=record["frame_index"]):
+        stack = read_slice_stack(
+            record["path"],
+            depth_axis=int(record["depth_axis"]),
+            slice_index=int(record["slice_index"]),
+            frame_index=record["frame_index"],
+            frame_axis=record.get("frame_axis"),
+        )
     return torch.from_numpy(np.ascontiguousarray(stack)).to(torch.float32)
 
 
@@ -178,7 +182,9 @@ def _build_unit_tensors(
             f"unit {record['unit_id']} loaded {height}x{width}, manifest says {record['native_hw']}"
         )
 
-    stats = _fit_statistics(stack, partition.fit)
+    from ..progress import current_progress
+    with current_progress().stage("data.fit_normalization", unit_id=record["unit_id"]):
+        stats = _fit_statistics(stack, partition.fit)
     normalized = _normalize(stack, stats)
     out_hw = (int(image_size), int(image_size))
 

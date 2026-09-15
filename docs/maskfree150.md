@@ -7,11 +7,12 @@ pipeline does *not* claim.
 
 ## Status at the time of writing
 
-**Full execution: NOT STARTED.** The user's RTX 4070 is occupied and real
-execution is deferred, so nothing in this repository has been run against a GPU
-or against real cardiac data. Every check reported for this layer is a CPU
-software check on synthetic fixtures. No Dice, no dataset readiness and no batch
-size in this document is backed by a run.
+**150-epoch training: NOT STARTED in the latest supplied log.** On 2026-09-15
+the user reported an ACDC launch on an explicitly selected RTX 5070 Ti. Stage 2
+inventory failed with `MixedStudyGeometryError` for `acdc:patient001`, before
+preflight or training. That log establishes neither a passed batch-8 gate nor
+a trained checkpoint. The implementation checks in this checkout use synthetic
+CPU fixtures; the actual conflicting source headers have not been inspected here.
 
 The launchers reflect that: without `RUN_FULL=1` they print a fully resolved
 plan and exit 0 without touching the GPU, the data or the workspace.
@@ -132,6 +133,62 @@ The full run is gated on `reports/gate_receipt.json` with `status: "pass"`, and
 the launcher additionally refuses to proceed if the gate measured a different
 physical/accumulation shape than the run requests. A receipt only licenses the
 shape it actually measured.
+
+## Live terminal metrics and load diagnostics
+
+The Python entry points print flushed progress to stderr, captured by the
+launcher's existing `tee` logs. The display is a plain terminal dashboard that
+also works inside a GUI terminal and redirected logs, without cursor escapes.
+It starts before importing torch. No extra UI package is required.
+
+* `stage.start` / `stage.done`: operation, path or unit, and elapsed wall seconds.
+  Inventory includes file index/count, shape, affine, orientation, source hash,
+  current frame fingerprinting, duplicate decisions and grid comparisons.
+* `heartbeat`: every 10 seconds, including the innermost active phase, nested
+  phase path, current file/frame/slice or unit, and phase elapsed time. Set
+  `MASKFREE_HEARTBEAT_SECONDS=5` for a shorter interval. This is liveness context,
+  not a claim that the GPU is busy or that a blocked operation has progressed.
+* `metrics`: at most every 5 seconds after a batch, plus the final batch. Shows
+  global epoch/batch, physical batch, accumulation, LR, label ramp, actual
+  component update counts, producer loss components/collapse diagnostics, both
+  student losses and support, audit fit/select NLL and improvement, coverage,
+  unresolved/accepted counts, class occupancy, stage times and CUDA memory bytes.
+  Values are running epoch means with denominators per metric: loss counts are
+  batch observations, while NLL counts are scored pixels (across candidate fits).
+  Student `valid_support` sums weights; coverage counts positive-weight pixels.
+  Loss is recorded once per batch. CPU memory fields remain unavailable.
+* `epoch.summary`: completed/partial status, full epoch metrics and counters.
+  `image_only.metric` prints computed aggregate results by split after freezing:
+  verification NLL, paired comparisons, stability, coverage and availability
+  reasons. Per-unit details and controls remain in the complete report files.
+
+Diagnostic journals are `manifests/inventory_progress.jsonl`,
+`reports/preflight_progress.jsonl`, and `reports/progress.jsonl`. They append on
+resume and may contain repeated attempted work; checkpoints and
+`reports/epoch_metrics.jsonl` remain authoritative. Repeated fast stage messages
+are throttled, while the heartbeat always describes the current operation.
+Stage times are inclusive and must not be summed into end-to-end latency.
+
+### Recovering the ACDC inventory geometry failure
+
+Discovery first proves duplicate image content using decoded frame shape, dtype
+and bytes. An identical native NIfTI 3D frame re-export can be omitted in favor of its 4D
+cine source even when its header differs; the manifest records both geometries
+and the content proof. Different image content is retained.
+
+Remaining sources must share a study's spatial grid and observation partition.
+Only affine rounding with maximum displacement at the eight spatial corners
+of **at most 0.0001 voxel**, in both voxel bases, is accepted. Original affines
+are preserved for export. This does not enable temporal evidence or resampling.
+Material shape, orientation, unit or affine conflicts still stop inventory,
+with full source paths and geometry differences saved in `inventory_acdc.json`
+as `FAILED` / `training_status: NOT_STARTED`.
+
+Pull the fix on the rented host and relaunch with a **new run ID**, retaining
+the chosen image root and the explicit GPU override. The failed inventory has
+no training checkpoint to resume. Do not edit or reuse its read-only YAML.
+The launcher generates a fresh ID when `RUN_ID` is unset; preflight must still
+measure the requested physical batch 8 before the 150-epoch run starts.
 
 ## Completion check
 
@@ -335,7 +392,7 @@ resumes ACDC automatically.
 
 ## Known limitations of this layer
 
-* No GPU and no real data were touched. The reverse geometry transform has been
+* The local implementation checks did not touch a GPU or real data. The reverse geometry transform has been
   checked against synthetic asymmetric volumes only; whether ACDC and M&Ms
   records actually carry the metadata it needs is unverified, and the
   preprocessed `.npy` roots are expected to resolve to stored-grid exports with

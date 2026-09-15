@@ -1,5 +1,6 @@
 """Bounded native-grid software integration; no real data or GPU evidence."""
 from pathlib import Path
+import io
 import json
 import subprocess
 import sys
@@ -12,6 +13,7 @@ import torch
 from self_audit_maskfree.config import MaskfreeConfig
 from self_audit_maskfree.trainer import MaskfreeTrainer
 from self_audit_maskfree.export import validate_freeze
+from self_audit_maskfree.progress import TerminalProgress
 
 
 @pytest.mark.parametrize("dataset", ["acdc", "mnms"])
@@ -34,12 +36,18 @@ def test_native_multiframe_pipeline_freezes_all_methods_before_verification(tmp_
         width=4, feature_dim=4, device="cpu", allow_cpu=True, amp=False,
         wandb_mode="disabled", run_id="native-integration")
     trainer = MaskfreeTrainer(config)
-    report = trainer.run()
+    with TerminalProgress(stream=io.StringIO()) as progress:
+        progress.attach(trainer.paths.reports / "progress.jsonl")
+        report = trainer.run()
     assert report["status"] == "partial", report
     assert not report["full_150_complete"]
     assert report["finalization"]["available"], report["finalization"]
     assert report["finalization"]["units"] == 16
     assert report["finalization"]["verification_rows"] == 16
+    events = list(map(json.loads, (trainer.paths.reports / "progress.jsonl").read_text().splitlines()))
+    aggregates = [r for r in events if r["event"] == "image_only.metric"]
+    assert aggregates and all("available" in r["metric"] and "count" in r["metric"] for r in aggregates)
+    assert any("student_audited" in r["metric"]["name"] for r in aggregates)
     frozen = json.loads(trainer.paths.freeze_manifest.read_text())
     validate_freeze(frozen)
     volumes = [row for row in frozen["predictions"] if row["kind"] == "volume"]

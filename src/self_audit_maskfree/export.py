@@ -204,10 +204,12 @@ def _utc_now() -> str:
 
 
 def _sha256(path: Path) -> str:
+    from .progress import current_progress
     digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1 << 20), b""):
-            digest.update(chunk)
+    with current_progress().stage("export.sha256", path=str(path)):
+        with path.open("rb") as handle:
+            for chunk in iter(lambda: handle.read(1 << 20), b""):
+                digest.update(chunk)
     return digest.hexdigest()
 
 
@@ -767,7 +769,10 @@ def assemble_volume(output_dir: str | Path, *, prediction_name: str,
         # The explicit volume id controls the on-disk grouping.  ``study_id``
         # remains a metadata field and is checked after the units are loaded.
         _ = legacy_study
-    units = _collect_units(root, name, requested_volume)
+    from .progress import current_progress
+    with current_progress().stage("export.load_volume_shards", method=name, volume_id=requested_volume,
+                                  path=str(root)):
+        units = _collect_units(root, name, requested_volume)
     study = _safe_component(study_id or units[0]["record"].get("study_id"), "study_id")
 
     actual_volume_ids = {

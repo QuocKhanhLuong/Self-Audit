@@ -114,6 +114,8 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 PYTHON="${PYTHON:-}"
+# Flush progress immediately inside GUI terminals and the tee log pipelines.
+export PYTHONUNBUFFERED=1
 if [ -z "$PYTHON" ]; then
   if command -v python3 >/dev/null 2>&1; then PYTHON="python3"; else PYTHON="python"; fi
 fi

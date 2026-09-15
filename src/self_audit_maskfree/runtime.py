@@ -22,6 +22,8 @@ from typing import Any, Iterator
 
 import torch
 
+from .progress import current_progress
+
 RUNTIME_SCHEMA_VERSION = "maskfree150.runtime.v1"
 
 _PACKAGE_DIR = Path(__file__).resolve().parent
@@ -89,8 +91,9 @@ def atomic_save_torch(path: str | Path, payload: Any) -> Path:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp_path = path.with_name(path.name + f".tmp-{os.getpid()}")
-    torch.save(payload, tmp_path)
-    _atomic_replace(tmp_path, path)
+    with current_progress().stage("checkpoint.write", path=str(path)):
+        torch.save(payload, tmp_path)
+        _atomic_replace(tmp_path, path)
     return path
 
 
@@ -117,9 +120,10 @@ def sha256_bytes(payload: bytes) -> str:
 
 def sha256_file(path: str | Path) -> str:
     digest = hashlib.sha256()
-    with open(path, "rb") as handle:
-        for chunk in iter(lambda: handle.read(1 << 20), b""):
-            digest.update(chunk)
+    with current_progress().stage("file.sha256", path=str(path)):
+        with open(path, "rb") as handle:
+            for chunk in iter(lambda: handle.read(1 << 20), b""):
+                digest.update(chunk)
     return digest.hexdigest()
 
 
@@ -337,18 +341,19 @@ class TimingAccumulator:
         return cls(seconds={}, calls={})
 
     @contextmanager
-    def stage(self, name: str) -> Iterator[None]:
-        if self.device is not None and self.device.type == "cuda":
-            torch.cuda.synchronize(self.device)
-        start = time.perf_counter()
-        try:
-            yield
-        finally:
+    def stage(self, name: str, **details: Any) -> Iterator[None]:
+        with current_progress().stage(name, **details):
             if self.device is not None and self.device.type == "cuda":
                 torch.cuda.synchronize(self.device)
-            elapsed = time.perf_counter() - start
-            self.seconds[name] = self.seconds.get(name, 0.0) + elapsed
-            self.calls[name] = self.calls.get(name, 0) + 1
+            start = time.perf_counter()
+            try:
+                yield
+            finally:
+                if self.device is not None and self.device.type == "cuda":
+                    torch.cuda.synchronize(self.device)
+                elapsed = time.perf_counter() - start
+                self.seconds[name] = self.seconds.get(name, 0.0) + elapsed
+                self.calls[name] = self.calls.get(name, 0) + 1
 
     def add(self, name: str, seconds: float) -> None:
         self.seconds[name] = self.seconds.get(name, 0.0) + float(seconds)

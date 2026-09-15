@@ -67,8 +67,30 @@ def _write_nifti(path: Path, array: np.ndarray, *, frame_duration: float | None)
     image.header.set_zooms(
         (1.25, 1.25, 8.0, frame_duration) if array.ndim == 4 else (1.25, 1.25, 8.0)
     )
-    if array.ndim == 4:
-        image.header.set_xyzt_units("mm", "sec")
+    image.header.set_xyzt_units("mm", "sec" if array.ndim == 4 else None)
+    nib.save(image, str(path))
+
+
+def _write_nifti_header(
+    path: Path,
+    array: np.ndarray,
+    affine: np.ndarray,
+    *,
+    spatial_unit: str = "mm",
+    frame_duration: float | None = None,
+) -> None:
+    """Write a synthetic source while keeping header changes explicit."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    image = nib.Nifti1Image(array, affine)
+    image.header.set_zooms(
+        (1.25, 1.25, 8.0, frame_duration)
+        if array.ndim == 4
+        else (1.25, 1.25, 8.0)
+    )
+    image.header.set_xyzt_units(
+        spatial_unit,
+        "sec" if array.ndim == 4 else None,
+    )
     nib.save(image, str(path))
 
 
@@ -270,6 +292,160 @@ def test_discovery_fails_closed_on_mixed_native_study_grid(tmp_path):
 
     with pytest.raises(MixedStudyGeometryError, match="mixed native grid/affine/orientation"):
         discover_dataset(tmp_path / "acdc", "acdc", seed=42)
+
+
+def test_image_identical_reheader_frame_export_prefers_rank4_cine(tmp_path):
+    """A reheadered 3-D frame is removed only after exact content proof."""
+    root = tmp_path / "acdc" / "training" / "patient001"
+    cine = _volume(31, (*NATIVE_HW, DEPTH, FRAMES))
+    cine_path = root / "patient001_4d.nii.gz"
+    _write_nifti_header(cine_path, cine, _affine(), frame_duration=0.035)
+
+    reheader_affine = _affine()
+    reheader_affine[0, 3] += 0.5
+    export_path = root / "patient001_frame03.nii.gz"
+    _write_nifti_header(export_path, cine[..., 3], reheader_affine)
+
+    manifest = discover_dataset(tmp_path / "acdc", "acdc", seed=42)
+    assert manifest["readiness"]["n_source_files"] == 2
+    assert manifest["readiness"]["n_frames_enumerated"] == FRAMES + 1
+    assert manifest["readiness"]["n_volumes"] == FRAMES
+    assert manifest["readiness"]["n_records"] == FRAMES * DEPTH
+    assert manifest["readiness"]["n_duplicates_collapsed"] == 1
+
+    duplicate = manifest["duplicates"][0]
+    assert duplicate["reason"] == "image_identical_frame_export"
+    assert duplicate["cross_rank_export"] is True
+    assert duplicate["geometry_match"] is False
+    assert duplicate["primary_source_path"] == str(cine_path)
+    assert duplicate["source_path"] == str(export_path)
+    assert duplicate["primary_geometry"]["shape"] == [*NATIVE_HW, DEPTH, FRAMES]
+    assert duplicate["duplicate_geometry"]["shape"] == [*NATIVE_HW, DEPTH]
+    assert "byte-identical" in duplicate["rationale"]
+    assert "header geometry differences" in duplicate["rationale"]
+    assert all(record["path"] == str(cine_path) for record in manifest["records"])
+
+
+def test_same_patient_nonidentical_sources_with_tiny_affine_drift_share_partition(tmp_path):
+    """Bounded header precision drift keeps one study partition and raw affines."""
+    root = tmp_path / "acdc" / "training" / "patient001"
+    first_path = root / "patient001_sa.nii.gz"
+    second_path = root / "patient001_la.nii.gz"
+    first_affine = _affine()
+    second_affine = _affine()
+    second_affine[0, 3] += 1.0e-5
+    _write_nifti_header(
+        first_path,
+        _volume(41, (*NATIVE_HW, DEPTH)),
+        first_affine,
+    )
+    _write_nifti_header(
+        second_path,
+        _volume(42, (*NATIVE_HW, DEPTH)),
+        second_affine,
+    )
+
+    manifest = discover_dataset(tmp_path / "acdc", "acdc", seed=42)
+    assert manifest["readiness"]["n_duplicates_collapsed"] == 0
+    assert len({record["partition_id"] for record in manifest["records"]}) == 1
+    assert manifest["geometry_checks"]["status"] == "passed"
+    check = manifest["geometry_checks"]["studies"]["acdc:patient001"]
+    comparison = check["comparisons"][0]
+    assert comparison["compatible"] is True
+    assert 0.0 < comparison["measured_max_voxel_displacement"] <= 1.0e-4
+
+    by_path = {
+        path: next(record for record in manifest["records"] if record["path"] == str(path))
+        for path in (first_path, second_path)
+    }
+    assert by_path[first_path]["native_affine"] != by_path[second_path]["native_affine"]
+    for record in by_path.values():
+        compatibility = record["study_grid_compatibility"]
+        assert compatibility["status"] == "compatible"
+        assert compatibility["tolerance_voxels"] == pytest.approx(1.0e-4)
+        assert compatibility["measured_max_voxel_displacement"] <= 1.0e-4
+        assert "original source affine retained" in compatibility["rationale"]
+
+
+def test_different_rank4_cines_with_shared_frame_are_not_deduplicated(tmp_path):
+    """A matching frame cannot erase a distinct rank-4 acquisition."""
+    root = tmp_path / "acdc" / "training" / "patient001"
+    first = _volume(51, (*NATIVE_HW, DEPTH, FRAMES))
+    second = first.copy()
+    second[..., 1:] += 3.0
+    first_path = root / "patient001_4d.nii.gz"
+    second_path = root / "patient001_cine.nii.gz"
+    _write_nifti_header(first_path, first, _affine(), frame_duration=0.035)
+    shifted = _affine()
+    shifted[0, 3] += 0.5
+    _write_nifti_header(second_path, second, shifted, frame_duration=0.035)
+
+    with pytest.raises(MixedStudyGeometryError) as raised:
+        discover_dataset(tmp_path / "acdc", "acdc", seed=42)
+    details = raised.value.details
+    assert details["study_id"] == "acdc:patient001"
+    assert {geometry["source_path"] for geometry in details["geometries"]} == {
+        str(first_path),
+        str(second_path),
+    }
+    assert any(
+        difference["code"] == "affine_voxel_displacement_exceeds_tolerance"
+        for comparison in details["differences"]
+        for difference in comparison["differences"]
+    )
+
+
+def test_declared_spatial_unit_mismatch_is_rejected_with_diagnostic(tmp_path):
+    root = tmp_path / "acdc" / "training" / "patient001"
+    first_path = root / "patient001_sa.nii.gz"
+    second_path = root / "patient001_la.nii.gz"
+    _write_nifti_header(
+        first_path,
+        _volume(61, (*NATIVE_HW, DEPTH)),
+        _affine(),
+        spatial_unit="mm",
+    )
+    _write_nifti_header(
+        second_path,
+        _volume(62, (*NATIVE_HW, DEPTH)),
+        _affine(),
+        spatial_unit="meter",
+    )
+
+    with pytest.raises(MixedStudyGeometryError) as raised:
+        discover_dataset(tmp_path / "acdc", "acdc", seed=42)
+    details = raised.value.details
+    assert details["geometries"][0]["shape"] == [*NATIVE_HW, DEPTH]
+    assert {geometry["spatial_unit"] for geometry in details["geometries"]} == {
+        "mm",
+        "meter",
+    }
+    assert any(
+        difference["code"] == "spatial_unit_difference"
+        for comparison in details["differences"]
+        for difference in comparison["differences"]
+    )
+
+
+def test_depth_extent_mismatch_is_rejected_before_partitioning(tmp_path):
+    root = tmp_path / "acdc" / "training" / "patient001"
+    first_path = root / "patient001_sa.nii.gz"
+    second_path = root / "patient001_la.nii.gz"
+    _write_nifti_header(first_path, _volume(71, (*NATIVE_HW, DEPTH)), _affine())
+    _write_nifti_header(second_path, _volume(72, (*NATIVE_HW, DEPTH + 1)), _affine())
+
+    with pytest.raises(MixedStudyGeometryError) as raised:
+        discover_dataset(tmp_path / "acdc", "acdc", seed=42)
+    details = raised.value.details
+    assert {tuple(geometry["stored_frame_shape"]) for geometry in details["geometries"]} == {
+        (*NATIVE_HW, DEPTH),
+        (*NATIVE_HW, DEPTH + 1),
+    }
+    assert any(
+        difference["code"] == "depth_extent_difference"
+        for comparison in details["differences"]
+        for difference in comparison["differences"]
+    )
 
 
 def test_mnms_time_suffixes_share_one_patient_split_identity(tmp_path):

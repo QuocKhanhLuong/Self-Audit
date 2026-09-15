@@ -34,6 +34,7 @@ from typing import Any, Callable, Sequence
 import torch
 
 from . import runtime
+from .progress import current_progress
 from .config import MaskfreeConfig, compare_configs
 from .contracts import VERSION as CONTRACT_VERSION
 from .contracts import AuditResult, FittingView, Hypothesis, ScoringView, TrainingUnit
@@ -313,7 +314,7 @@ class MaskfreeTrainer:
         config = self.config
         runtime.seed_everything(config.seed)
 
-        with self.timing.stage("data_discovery"):
+        with self.timing.stage("data_discovery", root=config.data_root, dataset=config.dataset):
             self.manifest = self.components.discover_dataset(
                 config.data_root,
                 config.dataset,
@@ -327,7 +328,7 @@ class MaskfreeTrainer:
         if unreadable:
             raise TrainerContractError(f"image inventory contains unreadable selected files: {unreadable[:3]}")
 
-        with self.timing.stage("dataset_build"):
+        with self.timing.stage("dataset_build", split="train", image_size=config.image_size):
             self.dataset = self.components.dataset_factory(
                 self.manifest, split="train", image_size=config.image_size, seed=config.seed
             )
@@ -345,7 +346,8 @@ class MaskfreeTrainer:
         for name in ("producer", "student_no_audit", "student_audited"):
             if name not in built:
                 raise TrainerContractError(f"make_models must return {name!r}")
-            self.models[name] = built[name].to(self.device)
+            with self.timing.stage("model.to_device", model=name, device=str(self.device)):
+                self.models[name] = built[name].to(self.device)
         # Anything else make_models reports (measured parameter counts, version)
         # is provenance, not a trainable component.
         self.model_info = {
@@ -362,7 +364,11 @@ class MaskfreeTrainer:
         self.scaler = runtime.make_grad_scaler(self.device, enabled=use_amp)
         self.amp_enabled = use_amp
 
-        self._write_run_identity()
+        with self.timing.stage("run_identity.write", path=str(self.paths.root)):
+            self._write_run_identity()
+        current_progress().event("setup.ready", units=len(self.dataset), batches=self.batches_per_epoch,
+                                 protocol=self.manifest.get("resolved_protocol"),
+                                 effective_data_workers=0, amp=use_amp)
         self._setup_done = True
 
     def _write_run_identity(self) -> None:
@@ -456,13 +462,15 @@ class MaskfreeTrainer:
                         raise TrainerContractError(f"preflight gate mismatch: {key}")
             if self.config.resume:
                 self._load_checkpoint(self.config.resume)
-            self.sink = runtime.MetricSink(
-                project=self.config.wandb_project,
-                mode=self.config.wandb_mode,
-                run_id=self.run_id,
-                config=self.config.to_dict(),
-                directory=self.paths.root / "wandb",
-            )
+            with self.timing.stage("metrics.wandb_initialize", mode=self.config.wandb_mode):
+                self.sink = runtime.MetricSink(
+                    project=self.config.wandb_project,
+                    mode=self.config.wandb_mode,
+                    run_id=self.run_id,
+                    config=self.config.to_dict(),
+                    directory=self.paths.root / "wandb",
+                )
+            current_progress().event("metrics.sink", **self.sink.summary())
             result = self._run_epochs(started)
         except Exception as exc:  # noqa: BLE001 - reported, never swallowed
             failure = {
@@ -499,6 +507,7 @@ class MaskfreeTrainer:
             epoch_record, epoch_complete, permutation = self._train_epoch(epoch)
             self.history.append(epoch_record)
             runtime.append_jsonl(self.paths.epoch_metrics, epoch_record)
+            current_progress().event("epoch.summary", **epoch_record)
             if self.sink is not None and epoch_complete:
                 self._log_epoch(epoch, epoch_record)
             if epoch_complete:
@@ -640,9 +649,18 @@ class MaskfreeTrainer:
             audit_counters = dict(self._partial_epoch["audit_counters"])
             class_pixels = dict(self._partial_epoch["class_pixels"])
         batch_cursor = start_batch
+        progress = current_progress()
+        progress.update(epoch=epoch + 1, epochs=config.total_epochs, batch=start_batch,
+                        batches=len(batches), operation="training", unit_id=None)
+        progress.event("epoch.start", resumed_from_batch=start_batch, label_ramp=ramp)
         for batch_index in range(start_batch, len(batches)):
             batch_cursor = batch_index
             indices = batches[batch_index]
+            progress.update(batch=batch_index + 1, physical_batch=len(indices),
+                            accumulation=config.accumulation_steps, unit_id=None,
+                            operation="load training batch")
+            batch_started = time.monotonic()
+            prior_timing = dict(self.timing.seconds)
             is_group_end = (
                 (batch_index + 1) % config.accumulation_steps == 0
                 or batch_index == len(batches) - 1
@@ -663,6 +681,24 @@ class MaskfreeTrainer:
             )
             self.micro_batches_seen += 1
             batch_cursor = batch_index + 1
+            if progress.enabled:
+                progress.update(operation="batch completed", unit_id=None)
+                progress.dashboard(
+                    force=batch_cursor == len(batches) or (
+                        config.max_steps is not None and self.global_step >= config.max_steps),
+                    metric_scope="running_epoch_means", lr=self.current_lr(), label_ramp=ramp,
+                    global_optimizer_steps=self.global_step, component_steps=dict(self.component_steps),
+                    metrics={key: accumulator.mean(key) for key in sorted(accumulator.values)},
+                    metric_counts=dict(accumulator.counts), audit=dict(audit_counters),
+                    labelled_pixels=class_pixels["total"],
+                    class_occupancy={str(k): class_pixels[k] / class_pixels["total"]
+                                     if class_pixels["total"] else None for k in range(4)},
+                    batch_seconds=time.monotonic() - batch_started,
+                    batch_stage_seconds={k: v - prior_timing.get(k, 0.0)
+                                         for k, v in self.timing.seconds.items()},
+                    timing_note="inclusive stages; do not sum", gpu_stats=runtime.gpu_stats(self.device),
+                    verification_status="locked_until_all_predictions_frozen",
+                )
             self._partial_epoch = {
                 "epoch": epoch,
                 "accumulator": {"values": accumulator.values, "counts": accumulator.counts},
@@ -753,14 +789,15 @@ class MaskfreeTrainer:
         group_weight: float = 1.0,
     ) -> None:
         config = self.config
-        with self.timing.stage("data_load"):
+        with self.timing.stage("data_load", indices=list(indices), batch_units=len(indices)):
             units: list[TrainingUnit] = [self.dataset[index] for index in indices]
         for unit in units:
             unit.fitting.validate()
             unit.selection.validate()
 
-        context = torch.stack([unit.fitting.context for unit in units]).to(self.device).float()
-        fit_support = torch.stack([unit.fitting.support for unit in units]).to(self.device)
+        with self.timing.stage("batch.to_device", device=str(self.device), batch_units=len(units)):
+            context = torch.stack([unit.fitting.context for unit in units]).to(self.device).float()
+            fit_support = torch.stack([unit.fitting.support for unit in units]).to(self.device)
 
         producer = self.models["producer"]
         producer.train()
@@ -774,6 +811,8 @@ class MaskfreeTrainer:
             self.scaler.scale(loss * group_weight).backward()
             self._active_arms.add("producer")
         for key, value in (producer_metrics or {}).items():
+            if key == "loss":  # loss itself is recorded once below
+                continue
             number = _scalar(value)
             if number is not None:
                 accumulator.add(f"producer/{key}", number)
@@ -793,6 +832,8 @@ class MaskfreeTrainer:
         validity_audited: list[torch.Tensor] = []
 
         for offset, unit in enumerate(units):
+            current_progress().update(unit_id=unit.fitting.unit_id, unit_in_batch=offset + 1,
+                                      operation="generate hypotheses and audit select evidence")
             audit = self._audit_unit(
                 epoch=epoch,
                 unit=unit,
@@ -823,6 +864,7 @@ class MaskfreeTrainer:
             ),
         }
         for arm, (probabilities, validity) in targets.items():
+            current_progress().update(operation=arm, unit_id=None, unit_in_batch=None)
             model = self.models[arm]
             model.train()
             with self.timing.stage(f"{arm}_step"):
@@ -843,6 +885,8 @@ class MaskfreeTrainer:
                     self._active_arms.add(arm)
             accumulator.add(f"{arm}/loss", float(student_value.detach().cpu().item()))
             for key, value in (student_metrics or {}).items():
+                if key == "loss":  # do not double the observation count
+                    continue
                 number = _scalar(value)
                 if number is not None:
                     accumulator.add(f"{arm}/{key}", number)
@@ -856,7 +900,8 @@ class MaskfreeTrainer:
         )
 
         if is_group_end:
-            self._optimizer_step(accumulator)
+            with self.timing.stage("optimizers.step", active_arms=sorted(self._active_arms)):
+                self._optimizer_step(accumulator)
 
     def _optimizer_step(self, accumulator: EpochAccumulator) -> None:
         lr = self.current_lr()
@@ -901,13 +946,13 @@ class MaskfreeTrainer:
         lineage_path: Path,
     ) -> AuditResult:
         seed = _stable_unit_seed(self.config.seed, epoch, unit.fitting.unit_id)
-        with self.timing.stage("bank_generation"):
+        with self.timing.stage("bank_generation", unit_id=unit.fitting.unit_id):
             bank = self.components.generate_bank(unit.fitting, features=features.detach().cpu(), seed=seed)
         if not bank:
             raise TrainerContractError(
                 f"generate_bank returned no candidate for unit {unit.fitting.unit_id}"
             )
-        with self.timing.stage("audit"):
+        with self.timing.stage("audit", unit_id=unit.fitting.unit_id, candidates=len(bank), rounds=AUDIT_ROUNDS):
             audit = self.components.audit_bank(
                 bank,
                 unit.fitting,
@@ -1036,7 +1081,8 @@ class MaskfreeTrainer:
         path = Path(path)
         if not path.is_file():
             raise ResumeIdentityError(f"resume checkpoint not found: {path}")
-        payload = torch.load(path, map_location=self.device, weights_only=False)
+        with self.timing.stage("checkpoint.load", path=str(path), device=str(self.device)):
+            payload = torch.load(path, map_location=self.device, weights_only=False)
 
         diff = compare_configs(payload.get("config", {}), self.config)
         if diff["scientific"]:
@@ -1061,9 +1107,11 @@ class MaskfreeTrainer:
             raise ResumeIdentityError("refusing to resume a run already marked completed")
 
         for name, model in self.models.items():
-            model.load_state_dict(payload["models"][name])
+            with self.timing.stage("checkpoint.restore_model", model=name):
+                model.load_state_dict(payload["models"][name])
         for name, optimizer in self.optimizers.items():
-            optimizer.load_state_dict(payload["optimizers"][name])
+            with self.timing.stage("checkpoint.restore_optimizer", model=name):
+                optimizer.load_state_dict(payload["optimizers"][name])
         if payload.get("scaler") is not None and self.scaler is not None:
             self.scaler.load_state_dict(payload["scaler"])
         runtime.restore_rng_state(payload["rng"])
@@ -1171,6 +1219,9 @@ class MaskfreeTrainer:
         """Stream frozen fits and predictions to disk before opening verification."""
         from .experiments import ForeignEvidenceCache
         config = self.config
+        progress = current_progress()
+        progress.update(operation="finalization: prepare frozen checkpoints", unit_id=None,
+                        unit_in_batch=None, batch=None, epoch=config.total_epochs)
         try:
             if runtime.package_source_hash(refresh=True)["combined"] != self.source["package"]["combined"]:
                 raise TrainerContractError("package sources changed during run; finalization refused")
@@ -1200,17 +1251,21 @@ class MaskfreeTrainer:
                     dataset=config.dataset, run_id=self.manifest["manifest_id"])
                 seen_studies = set()
                 # First pass: audit each unit, persist it, seed genuine foreign evidence.
+                progress.event("finalization.pass", operation="audit and repeat annotation")
                 for split, dataset in final_datasets.items():
                     for index in range(len(dataset)):
+                        progress.update(operation="final audit and repeat annotation", split=split,
+                                        item=index + 1, items=len(dataset), unit_id=dataset.unit_ids[index])
                         unit = dataset[index]
                         with torch.no_grad():
                             context = unit.fitting.context.unsqueeze(0).to(self.device).float()
                             features = self.models["producer"](context)["features"][0].detach().cpu()
-                        audit = self.components.audit_bank(
-                            self.components.generate_bank(unit.fitting, features=features,
-                                seed=_stable_unit_seed(config.seed, config.total_epochs - 1, unit.fitting.unit_id)),
-                            unit.fitting, unit.selection, self.observation,
-                            rounds=AUDIT_ROUNDS, improvement_threshold=IMPROVEMENT_THRESHOLD)
+                        with self.timing.stage("finalize.audit", unit_id=unit.fitting.unit_id):
+                            audit = self.components.audit_bank(
+                                self.components.generate_bank(unit.fitting, features=features,
+                                    seed=_stable_unit_seed(config.seed, config.total_epochs - 1, unit.fitting.unit_id)),
+                                unit.fitting, unit.selection, self.observation,
+                                rounds=AUDIT_ROUNDS, improvement_threshold=IMPROVEMENT_THRESHOLD)
                         token = runtime.sha256_bytes(unit.fitting.unit_id.encode())[:24]
                         path = self.paths.checkpoints / "fitted_states" / f"{token}.pt"
                         with self.timing.stage("annotation_repeat"):
@@ -1226,17 +1281,22 @@ class MaskfreeTrainer:
                             seen_studies.add(unit.fitting.study_id)
                 entries, experiment_rows, coverage_rows = [], [], []
                 # Second pass: all compared selectors, controls, and both students.
+                progress.event("finalization.pass", operation="common-bank controls, students, native exports")
                 for split, dataset in final_datasets.items():
                     for index in range(len(dataset)):
+                        progress.update(operation="selectors, controls and primary exports", split=split,
+                                        item=index + 1, items=len(dataset), unit_id=dataset.unit_ids[index])
                         unit = dataset[index]
                         path = state_paths[unit.fitting.unit_id]
-                        cached = torch.load(path, map_location="cpu", weights_only=False)
+                        with self.timing.stage("fitted_state.load", path=str(path)):
+                            cached = torch.load(path, map_location="cpu", weights_only=False)
                         audit = cached["audit"]
                         unit.fitting.metadata.update(epoch=config.total_epochs - 1,
                             checkpoint=checkpoint_paths["producer"])
-                        experiments = self.components.run_bank_experiments(
-                            audit, unit.fitting, unit.selection, self.observation,
-                            seed=config.seed, foreign_cache=foreign_cache)
+                        with self.timing.stage("finalize.common_bank"):
+                            experiments = self.components.run_bank_experiments(
+                                audit, unit.fitting, unit.selection, self.observation,
+                                seed=config.seed, foreign_cache=foreign_cache)
                         predictions = dict(experiments["predictions"])
                         fitted_predictions = dict(experiments["fitted_predictions"])
                         student_predictions = {}
@@ -1290,20 +1350,22 @@ class MaskfreeTrainer:
                         for row in experiments["rows"]:
                             experiment_rows.append({**row, "unit_id": unit.fitting.unit_id, "split": split})
                         for name, hypothesis in predictions.items():
-                            entries.append(self.components.export_prediction(
-                                self.paths.exports, record=unit.record, prediction_name=name,
-                                labels=hypothesis.labels, probabilities=hypothesis.probabilities,
-                                validity=hypothesis.validity, alternatives=hypothesis.alternatives,
-                                checkpoint_id=checkpoint_paths.get(name, checkpoint_paths["producer"]), version=version))
+                            with self.timing.stage("export.native_prediction", method=name, path=str(self.paths.exports)):
+                                entries.append(self.components.export_prediction(
+                                    self.paths.exports, record=unit.record, prediction_name=name,
+                                    labels=hypothesis.labels, probabilities=hypothesis.probabilities,
+                                    validity=hypothesis.validity, alternatives=hypothesis.alternatives,
+                                    checkpoint_id=checkpoint_paths.get(name, checkpoint_paths["producer"]), version=version))
                 runtime.atomic_write_json(self.paths.reports / "experiment_rows.json", {
                     "rows": experiment_rows, "coverage": coverage_rows,
                     "splits": sorted(final_datasets),
                     "units_per_split": {k: len(v) for k, v in final_datasets.items()}})
-                freeze_manifest = self.components.freeze_predictions(
-                    self.paths.exports, entries, checkpoint_paths, dataset=config.dataset,
-                    protocol=self.manifest["resolved_protocol"], epoch=config.total_epochs - 1,
-                    required_unit_ids=sorted(state_paths),
-                    nuisance_files={path.stem: str(path) for path in state_paths.values()})
+                with self.timing.stage("freeze.primary_assemble_hash", predictions=len(entries)):
+                    freeze_manifest = self.components.freeze_predictions(
+                        self.paths.exports, entries, checkpoint_paths, dataset=config.dataset,
+                        protocol=self.manifest["resolved_protocol"], epoch=config.total_epochs - 1,
+                        required_unit_ids=sorted(state_paths),
+                        nuisance_files={path.stem: str(path) for path in state_paths.values()})
                 runtime.atomic_write_json(self.paths.freeze_manifest, freeze_manifest)
                 self.components.validate_freeze(freeze_manifest)
             else:
@@ -1319,9 +1381,12 @@ class MaskfreeTrainer:
             # Full-input deployment happens only after predictive labels/fits freeze.
             deployment_freeze_path = self.paths.exports / "deployment" / "freeze_manifest.json"
             if not deployment_freeze_path.exists():
+                progress.event("finalization.pass", operation="full-input deployment exports")
                 deployment_entries = []
                 for split, dataset in final_datasets.items():
-                    for unit_id in dataset.unit_ids:
+                    for index, unit_id in enumerate(dataset.unit_ids):
+                        progress.update(operation="deployment image load and export", unit_id=unit_id,
+                                        item=index + 1, items=len(dataset), split=split)
                         full_input, record = self.components.load_full_input(
                             self.manifest, unit_id, image_size=config.image_size)
                         with torch.no_grad():
@@ -1333,12 +1398,13 @@ class MaskfreeTrainer:
                                     prediction_name=f"{arm}_full_input", labels=probabilities.argmax(0).long(),
                                     probabilities=probabilities, validity=torch.ones_like(probabilities[0]),
                                     alternatives=[], checkpoint_id=checkpoint_paths[arm], version=version))
-                deployment_manifest = self.components.freeze_predictions(
-                    self.paths.exports / "deployment", deployment_entries,
-                    {arm: checkpoint_paths[arm] for arm in ("student_no_audit", "student_audited")},
-                    dataset=config.dataset, protocol=self.manifest["resolved_protocol"], epoch=config.total_epochs - 1,
-                    required_methods=[f"{arm}_full_input" for arm in ("student_no_audit", "student_audited")],
-                    required_unit_ids=sorted(state_paths))
+                with self.timing.stage("freeze.deployment_assemble_hash", predictions=len(deployment_entries)):
+                    deployment_manifest = self.components.freeze_predictions(
+                        self.paths.exports / "deployment", deployment_entries,
+                        {arm: checkpoint_paths[arm] for arm in ("student_no_audit", "student_audited")},
+                        dataset=config.dataset, protocol=self.manifest["resolved_protocol"], epoch=config.total_epochs - 1,
+                        required_methods=[f"{arm}_full_input" for arm in ("student_no_audit", "student_audited")],
+                        required_unit_ids=sorted(state_paths))
                 self.components.validate_freeze(deployment_manifest, require_complete=True)
             else:
                 deployment_manifest = json.loads(deployment_freeze_path.read_text())
@@ -1346,25 +1412,30 @@ class MaskfreeTrainer:
                 deployment_entries = deployment_manifest["predictions"]
             from .export import verified_freeze_session
             verification = []
+            progress.event("finalization.pass", operation="frozen verification", freeze_id=freeze_manifest["freeze_id"])
             # Each unit has an atomic cached result. Resuming reuses that result
             # rather than rescoring O_verify; no quadratic all-unit journal rewrite.
             with verified_freeze_session(freeze_manifest, require_complete=True):
-                for unit_id, path in state_paths.items():
-                    state = torch.load(path, map_location="cpu", weights_only=False)
-                    view = self.components.load_verification_unit(
-                        self.manifest, unit_id, freeze_manifest,
-                        image_size=config.image_size, seed=config.seed)
+                for index, (unit_id, path) in enumerate(state_paths.items()):
+                    progress.update(operation="frozen verification load and score", unit_id=unit_id,
+                                    item=index + 1, items=len(state_paths), split=None)
+                    with self.timing.stage("verification.load", path=str(path)):
+                        state = torch.load(path, map_location="cpu", weights_only=False)
+                        view = self.components.load_verification_unit(
+                            self.manifest, unit_id, freeze_manifest,
+                            image_size=config.image_size, seed=config.seed)
                     fits = {fit.hypothesis.candidate_id: fit for fit in state["fitted"]}
                     method_map = state["method_to_candidate"]
-                    row = self.components.verify_frozen_bank(
-                        state["fitted"], view, self.observation, freeze_manifest,
-                        selection_scores=state["selection_scores"], control_fitted=state["control_fitted"],
-                        method_to_candidate=method_map,
-                        student_fitted_by_arm={arm: fits[method_map[arm]]
-                            for arm in ("student_no_audit", "student_audited")},
-                        seed=config.seed, selected_candidate_id=state["audit"].selected.candidate_id,
-                        resume_cached=True,
-                        ledger_path=self.paths.reports / "verification_units" / f"{path.stem}.json")
+                    with self.timing.stage("verification.score_frozen", unit_id=unit_id):
+                        row = self.components.verify_frozen_bank(
+                            state["fitted"], view, self.observation, freeze_manifest,
+                            selection_scores=state["selection_scores"], control_fitted=state["control_fitted"],
+                            method_to_candidate=method_map,
+                            student_fitted_by_arm={arm: fits[method_map[arm]]
+                                for arm in ("student_no_audit", "student_audited")},
+                            seed=config.seed, selected_candidate_id=state["audit"].selected.candidate_id,
+                            resume_cached=True,
+                            ledger_path=self.paths.reports / "verification_units" / f"{path.stem}.json")
                     verification.append({**row, "unit_id": unit_id, "patient_id": state["patient_id"],
                                          "split": state["split"], "method_to_candidate": method_map,
                                          "repeated_annotation_stability": state["repeated_annotation"]["metrics"]})
@@ -1372,10 +1443,12 @@ class MaskfreeTrainer:
                 "freeze_id": freeze_manifest["freeze_id"], "rows": verification})
             self.components.validate_freeze(deployment_manifest, require_complete=True)
             from .reporting import write_image_only_reports
-            image_only_reports = write_image_only_reports(
-                self.paths.root, self.manifest, self.history, verification,
-                experiment_rows, coverage_rows, config.total_epochs - 1,
-                checkpoint_paths["producer"])
+            with self.timing.stage("reports.image_only_metrics", path=str(self.paths.reports), units=len(verification)):
+                image_only_reports = write_image_only_reports(
+                    self.paths.root, self.manifest, self.history, verification,
+                    experiment_rows, coverage_rows, config.total_epochs - 1,
+                    checkpoint_paths["producer"])
+            progress.event("reports.ready", paths={key: str(path) for key, path in image_only_reports.items()})
             foreground = sum(row["valid_foreground_student_audited"] for row in coverage_rows)
             if self.paths.failure_report.exists():
                 self.paths.failure_report.rename(
@@ -1395,6 +1468,7 @@ class MaskfreeTrainer:
             failure = {"stage": "finalization", "error": f"{type(exc).__name__}: {exc}",
                        "traceback": traceback.format_exc()}
             runtime.atomic_write_json(self.paths.failure_report, failure)
+            progress.event("finalization.failed", error=failure["error"], path=str(self.paths.failure_report))
             return {"attempted": True, "available": False, "reason": failure["error"]}
 
     # -- preflight -------------------------------------------------------

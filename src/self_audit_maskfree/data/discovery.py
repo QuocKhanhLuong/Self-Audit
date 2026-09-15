@@ -33,6 +33,7 @@ import numpy as np
 from .firewall import assert_image_only, forbidden_reason, has_allowed_suffix
 from .geometry import read_geometry
 from .partition import partition_identity
+from ..progress import current_progress
 
 SCHEMA_VERSION = "maskfree150.data.v2"
 SUPPORTED_DATASETS = ("acdc", "mnms")
@@ -41,6 +42,10 @@ SPLITS = ("train", "dev", "test")
 SPLIT_RATIOS = {"train": 0.70, "dev": 0.15, "test": 0.15}
 MIN_CINE_FRAMES = 8
 IMPLEMENTED_PROTOCOLS = ("spatial_predictive",)
+# A source header may be rounded differently by a writer as long as the
+# resulting native voxel-coordinate map is effectively unchanged.  This is a
+# coordinate tolerance, not a permission to resample or to ignore a grid.
+HEADER_GRID_TOLERANCE_VOXELS = 1e-4
 
 _OFFICIAL_TEST_DIRS = {"testing", "test"}
 _OFFICIAL_TRAIN_DIRS = {"training", "train"}
@@ -60,7 +65,26 @@ class ProtocolUnavailableError(ValueError):
 
 
 class MixedStudyGeometryError(ValueError):
-    """Raised when one study cannot share one exact observation-grid map."""
+    """Raised when one study cannot share one observation-grid role map.
+
+    ``details`` is intentionally JSON-serializable so the preparation CLI can
+    persist a failed inventory without turning a geometry conflict into an
+    opaque traceback.  ``diagnostic`` is retained as an alias for callers that
+    used the earlier review terminology.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        details: dict[str, Any] | None = None,
+        diagnostic: dict[str, Any] | None = None,
+    ) -> None:
+        if details is None:
+            details = diagnostic if diagnostic is not None else {}
+        self.details = details
+        self.diagnostic = details
+        super().__init__(message)
 
 
 def _strip_suffixes(stem: str) -> str:
@@ -271,25 +295,131 @@ def _load_frame(path: Path, frame_index: int) -> np.ndarray:
     if len(data.shape) == 4:
         if not 0 <= frame_index < int(data.shape[3]):
             raise ValueError(f"frame {frame_index} outside source shape {data.shape}")
-        array = np.asarray(data[..., frame_index], dtype=np.float32)
+        array = np.asarray(data[..., frame_index])
     elif len(data.shape) == 3:
         if frame_index != 0:
             raise ValueError(f"single-frame source does not have frame {frame_index}")
-        array = np.asarray(data, dtype=np.float32)
+        array = np.asarray(data)
     else:
         raise ValueError(f"expected rank-3 or rank-4 source, got {data.shape}")
-    if not np.isfinite(array).all():
-        array = np.nan_to_num(array, nan=0.0, posinf=0.0, neginf=0.0)
+    if not np.issubdtype(array.dtype, np.number):
+        raise ValueError(f"image frame has non-numeric dtype {array.dtype}")
+    # Duplicate detection must compare the stored frame representation.  In
+    # particular, do not convert float64 to float32 or replace non-finite
+    # values: either operation could collapse two different stored frames.
     return np.ascontiguousarray(array)
 
 
 def _frame_fingerprint(array: np.ndarray) -> str:
     digest = hashlib.blake2b(digest_size=20)
+    array = np.ascontiguousarray(array)
     digest.update(
-        json.dumps({"shape": list(array.shape), "dtype": "float32"}, sort_keys=True).encode()
+        json.dumps(
+            {"shape": list(array.shape), "dtype": np.dtype(array.dtype).str},
+            sort_keys=True,
+        ).encode()
     )
-    digest.update(np.ascontiguousarray(array, dtype=np.float32).tobytes(order="C"))
+    digest.update(array.tobytes(order="C"))
     return digest.hexdigest()
+
+
+def _frame_stored_shape(entry: dict[str, Any]) -> tuple[int, ...]:
+    """Return the exact rank-3 shape of one stored frame.
+
+    A rank-4 cine and its rank-3 frame export deliberately have different
+    *source* shapes but the same extracted frame shape.  The latter is the
+    shape that participates in the exact image-content duplicate proof.
+    """
+    geometry = entry["geometry"]
+    shape = [int(s) for s in geometry["shape"]]
+    if len(shape) == 4:
+        frame_axis = int(entry["frames"].get("frame_axis", 3))
+        if frame_axis < 0 or frame_axis >= len(shape):
+            raise ValueError(f"frame axis {frame_axis} is outside source shape {shape}")
+        shape.pop(frame_axis)
+    return tuple(shape)
+
+
+def _geometry_descriptor(entry: dict[str, Any]) -> dict[str, Any]:
+    """Return a complete, JSON-safe geometry descriptor for diagnostics."""
+    geometry = entry["geometry"]
+    depth_axis = int(geometry.get("depth_axis", 2))
+    shape = [int(s) for s in geometry.get("shape", [])]
+    return {
+        "source_path": entry.get("path"),
+        "relative_path": entry.get("relative_path"),
+        "source_format": geometry.get("source_format"),
+        "shape": shape,
+        "full_shape": list(shape),
+        "stored_frame_shape": list(_frame_stored_shape(entry)),
+        "spatial_shape": _spatial_shape(shape, depth_axis),
+        "depth_axis": depth_axis,
+        "native_geometry": geometry.get("native_geometry"),
+        "native_geometry_reason": geometry.get("native_geometry_reason"),
+        "native_affine": geometry.get("native_affine"),
+        "orientation": geometry.get("orientation"),
+        "zooms": geometry.get("zooms"),
+        "xyzt_units": geometry.get("xyzt_units"),
+        "spatial_unit": geometry.get("spatial_unit"),
+        "spacing_mm": geometry.get("spacing_mm"),
+    }
+
+
+def _affine_voxel_displacement(
+    left: dict[str, Any], right: dict[str, Any], source_shape: list[int]
+) -> float | None:
+    """Measure the largest corner displacement in voxel coordinates.
+
+    World coordinates of every corner are compared, then expressed in both
+    source voxel bases.  Taking the larger L2 displacement is conservative for
+    small scale/shear changes while remaining independent of the units label.
+    No resampling is performed.
+    """
+    left_affine = np.asarray(left.get("native_affine"), dtype=np.float64)
+    right_affine = np.asarray(right.get("native_affine"), dtype=np.float64)
+    if left_affine.shape != (4, 4) or right_affine.shape != (4, 4):
+        return None
+    if not np.all(np.isfinite(left_affine)) or not np.all(np.isfinite(right_affine)):
+        return None
+    left_linear = left_affine[:3, :3]
+    right_linear = right_affine[:3, :3]
+    if abs(float(np.linalg.det(left_linear))) <= 0.0:
+        return None
+    if abs(float(np.linalg.det(right_linear))) <= 0.0:
+        return None
+    if len(source_shape) < 3:
+        return None
+    spatial_shape = [int(size) for size in source_shape[:3]]
+    if any(size <= 0 for size in spatial_shape):
+        return None
+    corners = np.asarray(
+        [
+            [x, y, z]
+            for x in (0, spatial_shape[0] - 1)
+            for y in (0, spatial_shape[1] - 1)
+            for z in (0, spatial_shape[2] - 1)
+        ],
+        dtype=np.float64,
+    )
+    left_world = corners @ left_linear.T + left_affine[:3, 3]
+    right_world = corners @ right_linear.T + right_affine[:3, 3]
+    try:
+        # Compare in each source's voxel coordinates.  The maximum of both
+        # directions is robust to a small scale change near a long corner.
+        left_delta = np.linalg.solve(
+            left_linear, (right_world - left_world).T
+        ).T
+        right_delta = np.linalg.solve(
+            right_linear, (left_world - right_world).T
+        ).T
+    except np.linalg.LinAlgError:
+        return None
+    displacement = np.concatenate(
+        [np.linalg.norm(left_delta, axis=1), np.linalg.norm(right_delta, axis=1)]
+    )
+    if not np.all(np.isfinite(displacement)):
+        return None
+    return float(np.max(displacement))
 
 
 def _geometry_key(geometry: dict[str, Any], depth_axis: int) -> str:
@@ -302,6 +432,7 @@ def _geometry_key(geometry: dict[str, Any], depth_axis: int) -> str:
         "native_affine": geometry.get("native_affine"),
         "orientation": geometry.get("orientation"),
         "zooms": (geometry.get("zooms") or [])[:3],
+        "spatial_unit": geometry.get("spatial_unit"),
     }
     return json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
 
@@ -315,6 +446,7 @@ def _study_geometry_key(geometry: dict[str, Any], depth_axis: int) -> str:
         "native_geometry": geometry.get("native_geometry"),
         "native_affine": geometry.get("native_affine"),
         "orientation": geometry.get("orientation"),
+        "spatial_unit": geometry.get("spatial_unit"),
     }
     return json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
 
@@ -328,14 +460,55 @@ def _volume_id(dataset: str, relative_path: str, frame_index: int) -> str:
 
 
 def _prepare_entry(
-    path: Path, root_path: Path, geometry: dict[str, Any], depth_axis: int, dataset: str
+    path: Path,
+    root_path: Path,
+    geometry: dict[str, Any],
+    depth_axis: int,
+    dataset: str,
+    *,
+    progress: Any | None = None,
+    file_index: int | None = None,
+    files_total: int | None = None,
 ) -> dict[str, Any]:
+    progress = current_progress() if progress is None else progress
+    progress_details = {"path": str(path)}
+    if file_index is not None:
+        progress_details["file_index"] = int(file_index)
+    if files_total is not None:
+        progress_details["files_total"] = int(files_total)
     frames = _frame_metadata(geometry, depth_axis)
-    source_fingerprint = _source_fingerprint(path)
-    frame_fingerprints = {
-        int(frame): _frame_fingerprint(_load_frame(path, int(frame)))
-        for frame in frames["frame_indices"]
-    }
+    with progress.stage("discovery.hash", **progress_details):
+        source_fingerprint = _source_fingerprint(path)
+        progress.event(
+            "discovery.source_hash",
+            **progress_details,
+            source_fingerprint=source_fingerprint,
+        )
+    frame_fingerprints: dict[int, str] = {}
+    with progress.stage(
+        "discovery.frame_fingerprint",
+        **progress_details,
+        frame_count=len(frames["frame_indices"]),
+    ):
+        for frame in frames["frame_indices"]:
+            frame = int(frame)
+            # Set the live context before decompression/hash work so a
+            # heartbeat identifies the frame currently being read.
+            progress.update(**progress_details, frame_index=frame)
+            progress.event(
+                "discovery.frame_fingerprint_start",
+                **progress_details,
+                frame_index=frame,
+            )
+            fingerprint = _frame_fingerprint(_load_frame(path, frame))
+            frame_fingerprints[frame] = fingerprint
+            progress.event(
+                "discovery.frame_fingerprint",
+                **progress_details,
+                frame_index=frame,
+                stored_frame_shape=list(_frame_stored_shape({"geometry": geometry, "frames": frames})),
+                frame_fingerprint=fingerprint,
+            )
     relative_path = str(path.relative_to(root_path))
     patient_id = patient_id_from_path(path)
     return {
@@ -356,15 +529,18 @@ def _prepare_entry(
 
 
 def _dedup(
-    entries: list[dict[str, Any]], *, dataset: str
+    entries: list[dict[str, Any]], *, dataset: str, progress: Any | None = None
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    """Collapse only cross-file, geometry-and-image-identical frame exports.
+    """Collapse only cross-file, stored-shape-and-image-identical frame exports.
 
     All frames from one source file remain counted, even when two adjacent cine
     frames happen to contain identical pixels. A single-frame export is
-    collapsed only when its frame exactly matches a frame from another source
-    with the same geometry; unrelated series from the same patient survive.
+    collapsed only when its extracted frame has exactly the same stored shape
+    and content as a frame from another source. Header-only geometry changes do
+    not disprove this content identity (and are recorded in the duplicate
+    evidence); unrelated non-identical series from the same patient survive.
     """
+    progress = current_progress() if progress is None else progress
     refs: list[dict[str, Any]] = []
     for entry in entries:
         for frame_index in entry["frames"]["frame_indices"]:
@@ -380,62 +556,439 @@ def _dedup(
                 }
             )
 
-    groups: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
+    groups: dict[tuple[str, tuple[int, ...], str], list[dict[str, Any]]] = {}
     for ref in refs:
         entry = ref["entry"]
-        key = (entry["patient_id"], entry["geometry_key"], ref["frame_fingerprint"])
+        # A frame fingerprint already contains shape, but retaining the shape
+        # explicitly makes the proof visible and prevents future hash changes
+        # from accidentally broadening a duplicate group.
+        key = (
+            entry["patient_id"],
+            _frame_stored_shape(entry),
+            ref["frame_fingerprint"],
+        )
         groups.setdefault(key, []).append(ref)
 
     duplicates: list[dict[str, Any]] = []
-    for group in groups.values():
-        source_paths = {ref["entry"]["path"] for ref in group}
-        if len(source_paths) <= 1:
-            continue
-        primary_ref = min(
-            group,
-            key=lambda ref: (
-                0 if ref["entry"]["frames"]["is_multi_frame"] else 1,
-                ref["entry"]["relative_path"],
-                ref["frame_index"],
-            ),
-        )
-        primary_path = primary_ref["entry"]["path"]
-        for ref in group:
-            if ref["entry"]["path"] == primary_path:
+    with progress.stage("discovery.dedup", frame_candidates=len(refs)):
+        for group in groups.values():
+            source_paths = {ref["entry"]["path"] for ref in group}
+            if len(source_paths) <= 1:
                 continue
-            ref["counted"] = False
-            ref["duplicate_of"] = primary_ref["volume_id"]
-            duplicates.append(
-                {
+
+            # A matching frame from one 4-D cine and one 3-D export is the
+            # only case in which a header-different geometry can be called a
+            # re-export.  Exact-geometry frame exports remain eligible, while
+            # two 4-D series are retained even if one frame happens to match;
+            # that frame equality does not prove the acquisitions are one
+            # series.
+            ordered = sorted(
+                group,
+                key=lambda ref: (
+                    0 if ref["entry"]["frames"]["is_multi_frame"] else 1,
+                    ref["entry"]["relative_path"],
+                    ref["frame_index"],
+                ),
+            )
+            canonical: list[dict[str, Any]] = []
+            for ref in ordered:
+                entry = ref["entry"]
+                candidates = [
+                    primary
+                    for primary in canonical
+                    if primary["entry"]["path"] != entry["path"]
+                    and not (
+                        primary["entry"]["frames"]["is_multi_frame"]
+                        and entry["frames"]["is_multi_frame"]
+                    )
+                    and (
+                        primary["entry"]["geometry_key"] == entry["geometry_key"]
+                        or (
+                            primary["entry"]["frames"]["is_multi_frame"]
+                            != entry["frames"]["is_multi_frame"]
+                            and primary["entry"]["geometry"].get("source_format")
+                            == "nifti"
+                            and entry["geometry"].get("source_format") == "nifti"
+                            and primary["entry"]["geometry"].get("native_geometry")
+                            == "available"
+                            and entry["geometry"].get("native_geometry") == "available"
+                        )
+                    )
+                ]
+                if not candidates:
+                    canonical.append(ref)
+                    continue
+                primary_ref = min(
+                    candidates,
+                    key=lambda candidate: (
+                        0 if candidate["entry"]["frames"]["is_multi_frame"] else 1,
+                        candidate["entry"]["relative_path"],
+                        candidate["frame_index"],
+                    ),
+                )
+                ref["counted"] = False
+                ref["duplicate_of"] = primary_ref["volume_id"]
+                primary_entry = primary_ref["entry"]
+                duplicate_entry = ref["entry"]
+                geometry_match = (
+                    primary_entry["geometry_key"] == duplicate_entry["geometry_key"]
+                )
+                cross_rank_export = (
+                    primary_entry["frames"]["is_multi_frame"]
+                    != duplicate_entry["frames"]["is_multi_frame"]
+                )
+                rationale = (
+                    "stored frame shape and content are byte-identical after exact "
+                    "dtype-preserving extraction; rank-4 cine is preferred over its "
+                    "rank-3 frame re-export despite header geometry differences"
+                    if cross_rank_export and not geometry_match
+                    else "stored frame shape and content are byte-identical and the "
+                    "source geometries also match"
+                )
+                duplicate = {
                     "volume_id": ref["volume_id"],
                     "source_path": ref["entry"]["path"],
                     "relative_path": ref["entry"]["relative_path"],
                     "frame_index": ref["frame_index"],
                     "duplicate_of": primary_ref["volume_id"],
-                    "reason": "geometry_and_image_identical_frame_export",
+                    # Keep a stable broad reason for old inventory readers;
+                    # ``rationale`` records exactly what was proven.
+                    "reason": "image_identical_frame_export",
+                    "rationale": rationale,
+                    "stored_frame_shape": list(_frame_stored_shape(duplicate_entry)),
+                    "stored_frame_fingerprint": ref["frame_fingerprint"],
+                    "geometry_match": bool(geometry_match),
+                    "cross_rank_export": bool(cross_rank_export),
+                    "primary_source_path": primary_entry["path"],
+                    "primary_relative_path": primary_entry["relative_path"],
+                    "primary_frame_index": primary_ref["frame_index"],
+                    "primary_geometry": _geometry_descriptor(primary_entry),
+                    "duplicate_geometry": _geometry_descriptor(duplicate_entry),
                 }
-            )
+                duplicates.append(duplicate)
+                progress.event("discovery.duplicate", **duplicate)
     return [ref for ref in refs if ref["counted"]], sorted(duplicates, key=lambda x: x["volume_id"])
 
 
-def _ensure_study_grids(counted: list[dict[str, Any]]) -> None:
-    """Refuse mixed study grids before any role partition is materialised."""
-    by_study: dict[str, set[str]] = {}
+def _grid_comparison(
+    left: dict[str, Any],
+    right: dict[str, Any],
+    *,
+    depth_axis: int,
+    tolerance_voxels: float,
+) -> dict[str, Any]:
+    """Compare two source grids without modifying either source affine."""
+    left_geometry = left["geometry"]
+    right_geometry = right["geometry"]
+    left_shape = [int(s) for s in left_geometry["shape"]]
+    right_shape = [int(s) for s in right_geometry["shape"]]
+    left_stored_shape = list(_frame_stored_shape(left))
+    right_stored_shape = list(_frame_stored_shape(right))
+    left_spatial = _spatial_shape(left_shape, depth_axis)
+    right_spatial = _spatial_shape(right_shape, depth_axis)
+    left_orientation = left_geometry.get("orientation")
+    right_orientation = right_geometry.get("orientation")
+    left_status = left_geometry.get("native_geometry")
+    right_status = right_geometry.get("native_geometry")
+
+    blocking: list[dict[str, Any]] = []
+    header_differences: list[dict[str, Any]] = []
+
+    if left_spatial != right_spatial:
+        blocking.append(
+            {
+                "code": "spatial_shape_difference",
+                "left": list(left_spatial),
+                "right": list(right_spatial),
+            }
+        )
+    if left_stored_shape != right_stored_shape:
+        blocking.append(
+            {
+                "code": "stored_frame_shape_difference",
+                "left": left_stored_shape,
+                "right": right_stored_shape,
+            }
+        )
+    left_depth = int(left_shape[depth_axis])
+    right_depth = int(right_shape[depth_axis])
+    if left_depth != right_depth:
+        blocking.append(
+            {
+                "code": "depth_extent_difference",
+                "left": left_depth,
+                "right": right_depth,
+            }
+        )
+    if int(left_geometry.get("depth_axis", depth_axis)) != int(
+        right_geometry.get("depth_axis", depth_axis)
+    ):
+        blocking.append(
+            {
+                "code": "depth_axis_difference",
+                "left": int(left_geometry.get("depth_axis", depth_axis)),
+                "right": int(right_geometry.get("depth_axis", depth_axis)),
+            }
+        )
+    if left_orientation != right_orientation:
+        blocking.append(
+            {
+                "code": "orientation_difference",
+                "left": left_orientation,
+                "right": right_orientation,
+            }
+        )
+    if left_geometry.get("source_format") != right_geometry.get("source_format"):
+        # A known NIfTI affine and an affine-less NPY source cannot be proven
+        # to share the same role-coordinate map, even when their array shape
+        # happens to agree.
+        blocking.append(
+            {
+                "code": "source_format_difference",
+                "left": left_geometry.get("source_format"),
+                "right": right_geometry.get("source_format"),
+            }
+        )
+    left_unit = left_geometry.get("spatial_unit")
+    right_unit = right_geometry.get("spatial_unit")
+    if left_unit != right_unit:
+        unit_difference = {
+            "code": "spatial_unit_difference",
+            "left": left_unit,
+            "right": right_unit,
+        }
+        # A missing/unknown declaration is also not proof of a shared physical
+        # map.  Two sources must make the same spatial-unit claim; this keeps
+        # millimetre metrics and native role coordinates fail-closed.
+        blocking.append(unit_difference)
+
+    max_displacement: float | None = None
+    if left_status != right_status:
+        blocking.append(
+            {
+                "code": "native_geometry_availability_difference",
+                "left": left_status,
+                "right": right_status,
+            }
+        )
+    elif left_status == "available":
+        max_displacement = _affine_voxel_displacement(
+            left_geometry,
+            right_geometry,
+            left_shape[:3],
+        )
+        if max_displacement is None:
+            blocking.append(
+                {
+                    "code": "affine_comparison_unavailable",
+                    "left": left_geometry.get("native_affine"),
+                    "right": right_geometry.get("native_affine"),
+                }
+            )
+        elif max_displacement > tolerance_voxels:
+            blocking.append(
+                {
+                    "code": "affine_voxel_displacement_exceeds_tolerance",
+                    "measured_max_voxel_displacement": max_displacement,
+                    "tolerance_voxels": tolerance_voxels,
+                }
+            )
+
+    # Header units/zooms are retained as provenance.  They do not alter the
+    # index-to-index role map when the affine corner displacement is within
+    # tolerance, but the difference must remain inspectable for physical-metric
+    # review.
+    if left_geometry.get("xyzt_units") != right_geometry.get("xyzt_units"):
+        header_differences.append(
+            {
+                "code": "xyzt_units_difference",
+                "left": left_geometry.get("xyzt_units"),
+                "right": right_geometry.get("xyzt_units"),
+            }
+        )
+    if left_geometry.get("zooms") != right_geometry.get("zooms"):
+        header_differences.append(
+            {
+                "code": "header_zooms_difference",
+                "left": left_geometry.get("zooms"),
+                "right": right_geometry.get("zooms"),
+            }
+        )
+
+    return {
+        "left_path": left["path"],
+        "right_path": right["path"],
+        "left_relative_path": left.get("relative_path"),
+        "right_relative_path": right.get("relative_path"),
+        "left_shape": list(left_shape),
+        "right_shape": list(right_shape),
+        "left_stored_frame_shape": left_stored_shape,
+        "right_stored_frame_shape": right_stored_shape,
+        "left_spatial_shape": list(left_spatial),
+        "right_spatial_shape": list(right_spatial),
+        "left_depth_axis": int(left_geometry.get("depth_axis", depth_axis)),
+        "right_depth_axis": int(right_geometry.get("depth_axis", depth_axis)),
+        "left_orientation": left_orientation,
+        "right_orientation": right_orientation,
+        "left_native_geometry": left_status,
+        "right_native_geometry": right_status,
+        "left_native_affine": left_geometry.get("native_affine"),
+        "right_native_affine": right_geometry.get("native_affine"),
+        "left_xyzt_units": left_geometry.get("xyzt_units"),
+        "right_xyzt_units": right_geometry.get("xyzt_units"),
+        "left_spatial_unit": left_geometry.get("spatial_unit"),
+        "right_spatial_unit": right_geometry.get("spatial_unit"),
+        "max_voxel_displacement": max_displacement,
+        "measured_max_voxel_displacement": max_displacement,
+        "tolerance_voxels": tolerance_voxels,
+        "displacement_metric": "max_l2_over_8_spatial_corners",
+        "differences": blocking,
+        "header_differences": header_differences,
+        "compatible": not blocking,
+    }
+
+
+def _ensure_study_grids(
+    counted: list[dict[str, Any]],
+    *,
+    progress: Any | None = None,
+    tolerance_voxels: float = HEADER_GRID_TOLERANCE_VOXELS,
+) -> dict[str, Any]:
+    """Validate one shared grid map per study before role partitioning.
+
+    Exact duplicate frame exports are removed before this function runs.  For
+    the remaining sources, only a bounded affine-header precision difference is
+    accepted.  Spatial shape, depth axis, orientation and affine availability
+    remain hard requirements; no resampling or per-unit partition is created.
+    """
+    progress = current_progress() if progress is None else progress
+    by_study: dict[str, dict[str, dict[str, Any]]] = {}
     for ref in counted:
         entry = ref["entry"]
-        by_study.setdefault(entry["study_id"], set()).add(
-            _study_geometry_key(entry["geometry"], int(entry["geometry"]["depth_axis"]))
-            if "depth_axis" in entry["geometry"]
-            else _study_geometry_key(entry["geometry"], 2)
-        )
-    mixed = {study: keys for study, keys in by_study.items() if len(keys) > 1}
-    if mixed:
-        study = min(mixed)
-        raise MixedStudyGeometryError(
-            f"study {study!r} has mixed native grid/affine/orientation across "
-            f"{len(mixed[study])} source geometries; refusing discovery because a "
-            "single study-scoped observation partition cannot be mapped exactly"
-        )
+        by_study.setdefault(entry["study_id"], {})[entry["path"]] = entry
+
+    checks: dict[str, Any] = {
+        "status": "passed",
+        "tolerance_voxels": float(tolerance_voxels),
+        "displacement_metric": "max_l2_over_8_spatial_corners",
+        "no_resampling": True,
+        "studies": {},
+    }
+    with progress.stage(
+        "discovery.grid_check",
+        study_count=len(by_study),
+        source_count=sum(len(entries) for entries in by_study.values()),
+        tolerance_voxels=float(tolerance_voxels),
+    ):
+        for study_id in sorted(by_study):
+            entries = sorted(
+                by_study[study_id].values(), key=lambda entry: entry["relative_path"]
+            )
+            comparisons: list[dict[str, Any]] = []
+            incompatible: list[dict[str, Any]] = []
+            for index, left in enumerate(entries):
+                for right in entries[index + 1 :]:
+                    comparison = _grid_comparison(
+                        left,
+                        right,
+                        depth_axis=int(left["geometry"].get("depth_axis", 2)),
+                        tolerance_voxels=float(tolerance_voxels),
+                    )
+                    comparisons.append(comparison)
+                    progress.event("discovery.grid_comparison", **comparison)
+                    if not comparison["compatible"]:
+                        incompatible.append(comparison)
+
+            if incompatible:
+                details = {
+                    "code": "mixed_study_native_grid",
+                    "study_id": study_id,
+                    "tolerance_voxels": float(tolerance_voxels),
+                    "displacement_metric": "max_l2_over_8_spatial_corners",
+                    "no_resampling": True,
+                    "geometries": [_geometry_descriptor(entry) for entry in entries],
+                    "differences": incompatible,
+                    "mismatch_explanation": (
+                        "The study contains source geometries whose spatial shape, "
+                        "depth axis, orientation, native-affine availability, or "
+                        "corner displacement cannot share one exact role map."
+                    ),
+                }
+                message = (
+                    f"study {study_id!r} has mixed native grid/affine/orientation "
+                    f"across {len(entries)} source geometries; refusing discovery "
+                    "because a single study-scoped observation partition cannot be "
+                    f"mapped within {tolerance_voxels:g} voxel ({json.dumps(details, sort_keys=True, default=str)})"
+                )
+                progress.event("discovery.grid_conflict", **details)
+                raise MixedStudyGeometryError(message, details=details)
+
+            reference = entries[0] if entries else None
+            study_check = {
+                "status": "compatible",
+                "source_paths": [entry["path"] for entry in entries],
+                "n_source_geometries": len(entries),
+                "comparisons": comparisons,
+                "tolerance_voxels": float(tolerance_voxels),
+                "displacement_metric": "max_l2_over_8_spatial_corners",
+                "no_resampling": True,
+            }
+            checks["studies"][study_id] = study_check
+
+            for entry in entries:
+                own_comparisons = [
+                    comparison
+                    for comparison in comparisons
+                    if comparison["left_path"] == entry["path"]
+                    or comparison["right_path"] == entry["path"]
+                ]
+                displacements = [
+                    float(comparison["max_voxel_displacement"])
+                    for comparison in own_comparisons
+                    if comparison["max_voxel_displacement"] is not None
+                ]
+                measured = max(displacements, default=(0.0 if entry["geometry"].get("native_geometry") == "available" else None))
+                unit_differences = [
+                    difference
+                    for comparison in own_comparisons
+                    for difference in comparison["header_differences"]
+                ]
+                if entry["geometry"].get("native_geometry") != "available":
+                    rationale = (
+                        "same stored-grid source format, spatial shape, depth axis and "
+                        "orientation; no native affine comparison was available; no "
+                        "resampling performed"
+                    )
+                elif measured == 0.0:
+                    rationale = (
+                        "same native spatial shape, depth axis and orientation; affine "
+                        "corner displacement is 0 voxel; original source affine retained"
+                    )
+                else:
+                    rationale = (
+                        "same native spatial shape, depth axis and orientation; measured "
+                        f"header corner displacement {measured:.12g} voxel is within "
+                        f"the {tolerance_voxels:.12g}-voxel tolerance; no resampling "
+                        "performed; original source affine retained per record"
+                    )
+                if unit_differences:
+                    rationale += (
+                        "; declared header units/zooms differ and remain recorded as "
+                        "physical-spacing provenance"
+                    )
+                entry["study_grid_compatibility"] = {
+                    "status": "compatible",
+                    "reference_source_path": reference["path"] if reference else None,
+                    "tolerance_voxels": float(tolerance_voxels),
+                    "measured_max_voxel_displacement": measured,
+                    "max_voxel_displacement": measured,
+                    "displacement_metric": "max_l2_over_8_spatial_corners",
+                    "rationale": rationale,
+                    "header_differences": unit_differences,
+                    "comparison_count": len(own_comparisons),
+                    "no_resampling": True,
+                }
+    return checks
 
 
 def discover_dataset(
@@ -462,21 +1015,70 @@ def discover_dataset(
     official: dict[str, str] = {}
     preprocessed_roots = False
     skipped_unreadable: list[dict[str, str]] = []
+    progress = current_progress()
 
-    for path in iter_image_files(root_path):
+    with progress.stage("discovery.list_files", root=str(root_path), dataset=dataset):
+        image_paths = list(iter_image_files(root_path))
+        progress.event(
+            "discovery.files_listed",
+            root=str(root_path),
+            dataset=dataset,
+            files_total=len(image_paths),
+        )
+    progress.update(
+        operation="discovery",
+        dataset=dataset,
+        root=str(root_path),
+        files_total=len(image_paths),
+    )
+
+    for file_index, path in enumerate(image_paths, start=1):
+        progress.update(
+            operation="discovery",
+            item=str(path),
+            file_index=file_index,
+            files_total=len(image_paths),
+        )
         try:
-            geometry = read_geometry(path)
-            geometry["dataset"] = dataset
-            geometry["depth_axis"] = int(depth_axis)
-            shape = [int(s) for s in geometry["shape"]]
-            if len(shape) not in (3, 4):
-                raise ValueError(f"unsupported array rank {len(shape)}")
-            _spatial_shape(shape, depth_axis)
-            entry = _prepare_entry(path, root_path, geometry, depth_axis, dataset)
+            with progress.stage(
+                "discovery.header",
+                path=str(path),
+                file_index=file_index,
+                files_total=len(image_paths),
+            ):
+                geometry = read_geometry(path)
+                geometry["dataset"] = dataset
+                geometry["depth_axis"] = int(depth_axis)
+                shape = [int(s) for s in geometry["shape"]]
+                if len(shape) not in (3, 4):
+                    raise ValueError(f"unsupported array rank {len(shape)}")
+                _spatial_shape(shape, depth_axis)
+                progress.event(
+                    "discovery.header_read",
+                    path=str(path),
+                    file_index=file_index,
+                    files_total=len(image_paths),
+                    source_format=geometry.get("source_format"),
+                    shape=shape,
+                    native_affine=geometry.get("native_affine"),
+                    orientation=geometry.get("orientation"),
+                    xyzt_units=geometry.get("xyzt_units"),
+                    zooms=geometry.get("zooms"),
+                )
+                entry = _prepare_entry(
+                    path,
+                    root_path,
+                    geometry,
+                    depth_axis,
+                    dataset,
+                    progress=progress,
+                    file_index=file_index,
+                    files_total=len(image_paths),
+                )
         except Exception as exc:
-            skipped_unreadable.append(
-                {"path": str(path), "reason": f"{type(exc).__name__}: {exc}"}
-            )
+            skipped = {"path": str(path), "reason": f"{type(exc).__name__}: {exc}"}
+            skipped_unreadable.append(skipped)
+            progress.event("discovery.file_skipped", **skipped)
             continue
         entries.append(entry)
         patient_id = entry["patient_id"]
@@ -485,8 +1087,8 @@ def discover_dataset(
         if entry["preprocessed_root"]:
             preprocessed_roots = True
 
-    counted, duplicates = _dedup(entries, dataset=dataset)
-    _ensure_study_grids(counted)
+    counted, duplicates = _dedup(entries, dataset=dataset, progress=progress)
+    geometry_checks = _ensure_study_grids(counted, progress=progress)
 
     patients = sorted({ref["entry"]["patient_id"] for ref in counted})
     split_map, split_provenance = assign_splits(
@@ -552,6 +1154,7 @@ def discover_dataset(
             "spacing_mm": geometry.get("spacing_mm"),
             "spacing_reason": geometry.get("spacing_reason"),
             "spacing_valid": geometry["spacing_valid"],
+            "study_grid_compatibility": entry.get("study_grid_compatibility"),
             "export_grid": geometry["export_grid"],
             "native_grid_export": geometry["native_grid_export"],
             "frames": frames,
@@ -644,13 +1247,37 @@ def discover_dataset(
         "resolved_protocol": resolved_protocol,
         "protocol_reason": protocol_reason,
         "depth_axis": int(depth_axis),
+        "discovery_contract": {
+            "version": "maskfree150.data.discovery.v2",
+            "source_fingerprint": "sha256_source_file_bytes_once",
+            "frame_fingerprint": "blake2b160_shape_dtype_stored_frame_bytes",
+            "duplicate_proof": (
+                "exact_stored_frame_shape_and_content; exact_geometry_cross_file_exports "
+                "or_native_nifti_rank4_cine_to_rank3_frame_export"
+            ),
+            "grid_check": "pairwise_native_affine_corner_voxel_displacement",
+            "grid_check_tolerance_voxels": float(HEADER_GRID_TOLERANCE_VOXELS),
+            "no_resampling": True,
+        },
         "split_provenance": split_provenance,
         "records": records,
         "duplicates": duplicates,
+        "geometry_checks": geometry_checks,
         "readiness": readiness,
         "limitations": limitations,
     }
     manifest["manifest_id"] = manifest_identity(manifest)
+    progress.update(
+        operation="discovery",
+        dataset=dataset,
+        files_total=len(image_paths),
+        files_read=len(entries),
+        files_skipped=len(skipped_unreadable),
+        frames_enumerated=readiness["n_frames_enumerated"],
+        units_enumerated=readiness["n_units"],
+        duplicates_collapsed=readiness["n_duplicates_collapsed"],
+        studies_checked=len(geometry_checks["studies"]),
+    )
     return manifest
 
 

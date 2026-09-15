@@ -35,12 +35,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(REPO_ROOT / "src"))
 
-from self_audit_maskfree.data import (  # noqa: E402
-    DataRootError,
-    ImageOnlyDataset,
-    discover_dataset,
-    save_manifest,
-)
+from self_audit_maskfree.progress import TerminalProgress, current_progress  # noqa: E402
 
 
 def _atomic_write(path: Path, text: str) -> Path:
@@ -172,6 +167,7 @@ def _markdown(inventory: dict[str, Any]) -> str:
 
 
 def _probe_unit(manifest: dict[str, Any], image_size: int, seed: int) -> dict[str, Any]:
+    from self_audit_maskfree.data import ImageOnlyDataset
     for split in ("train", "dev", "test"):
         dataset = ImageOnlyDataset(manifest, split=split, image_size=image_size, seed=seed)
         if len(dataset) == 0:
@@ -217,17 +213,30 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
+    with TerminalProgress() as progress:
+        progress.attach(Path(args.output).expanduser() / "inventory_progress.jsonl")
+        progress.update(dataset=args.dataset)
+        return _execute(args)
+
+
+def _execute(args: argparse.Namespace) -> int:
+    progress = current_progress()
+    with progress.stage("imports.load", modules="torch, numpy, nibabel, image-only discovery"):
+        from self_audit_maskfree.data import DataRootError, discover_dataset, save_manifest
+        from self_audit_maskfree.data.discovery import MixedStudyGeometryError
+
     output = Path(args.output).expanduser()
     root = Path(args.root).expanduser()
 
     try:
-        manifest = discover_dataset(
-            root,
-            args.dataset,
-            seed=args.seed,
-            protocol=args.protocol,
-            depth_axis=args.depth_axis,
-        )
+        with progress.stage("inventory.discover", root=str(root)):
+            manifest = discover_dataset(
+                root,
+                args.dataset,
+                seed=args.seed,
+                protocol=args.protocol,
+                depth_axis=args.depth_axis,
+            )
     except DataRootError as exc:
         inventory = _not_inspected(root, args.dataset, str(exc))
         _atomic_write(
@@ -238,13 +247,29 @@ def main(argv: list[str] | None = None) -> int:
         print(f"NOT INSPECTED: {exc}")
         print(f"inventory written to {output / f'inventory_{args.dataset}.json'}")
         return 0 if args.allow_missing_root else 2
+    except MixedStudyGeometryError as exc:
+        inventory = {
+            "inventory_status": "FAILED", "training_status": "NOT_STARTED",
+            "dataset": args.dataset, "root": str(root),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "error_type": type(exc).__name__, "reason": str(exc),
+            "geometry_conflict": getattr(exc, "details", None),
+        }
+        path = output / f"inventory_{args.dataset}.json"
+        _atomic_write(path, json.dumps(inventory, indent=2) + "\n")
+        _atomic_write(output / f"inventory_{args.dataset}.md",
+                      "# Inventory FAILED; training NOT_STARTED\n\n" + str(exc) + "\n")
+        progress.event("inventory.failed", **inventory, diagnostic_path=str(path))
+        return 3
 
-    probe = None if args.no_probe else _probe_unit(manifest, args.image_size, args.seed)
+    with progress.stage("inventory.unit_probe", image_size=args.image_size, skipped=args.no_probe):
+        probe = None if args.no_probe else _probe_unit(manifest, args.image_size, args.seed)
     inventory = _inventory(manifest, probe)
 
-    manifest_path = save_manifest(manifest, output / f"manifest_{args.dataset}.json")
-    _atomic_write(output / f"inventory_{args.dataset}.json", json.dumps(inventory, indent=2))
-    _atomic_write(output / f"inventory_{args.dataset}.md", _markdown(inventory))
+    with progress.stage("inventory.write", path=str(output)):
+        manifest_path = save_manifest(manifest, output / f"manifest_{args.dataset}.json")
+        _atomic_write(output / f"inventory_{args.dataset}.json", json.dumps(inventory, indent=2))
+        _atomic_write(output / f"inventory_{args.dataset}.md", _markdown(inventory))
 
     readiness = manifest["readiness"]
     print(f"dataset={args.dataset} manifest_id={manifest['manifest_id']}")

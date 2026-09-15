@@ -27,12 +27,7 @@ if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
 from self_audit_maskfree.config import ConfigError, load_config  # noqa: E402
-from self_audit_maskfree.trainer import (  # noqa: E402
-    STATUS_COMPLETED,
-    STATUS_PARTIAL,
-    MaskfreeTrainer,
-    TrainerContractError,
-)
+from self_audit_maskfree.progress import TerminalProgress  # noqa: E402
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -66,8 +61,14 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    with TerminalProgress() as progress:
+        return _execute(args, progress)
+
+
+def _execute(args: argparse.Namespace, progress: TerminalProgress) -> int:
     try:
-        config = load_config(args.config)
+        with progress.stage("config.load", path=args.config):
+            config = load_config(args.config)
     except ConfigError as exc:
         print(f"config error: {exc}", file=sys.stderr)
         return 3
@@ -95,25 +96,41 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(config.to_dict(), indent=2, sort_keys=True))
         return 0
 
+    with progress.stage("imports.load", modules="torch, numpy, maskfree trainer/components"):
+        from self_audit_maskfree.trainer import (
+            STATUS_COMPLETED, STATUS_PARTIAL, MaskfreeTrainer, TrainerContractError,
+        )
     try:
-        trainer = MaskfreeTrainer(config, repo_root=_REPO_ROOT)
+        with progress.stage("trainer.initialize", dataset=config.dataset, device=config.device):
+            trainer = MaskfreeTrainer(config, repo_root=_REPO_ROOT)
     except TrainerContractError as exc:
         print(f"trainer unavailable: {exc}", file=sys.stderr)
         return 3
 
+    progress.attach(trainer.paths.reports / ("preflight_progress.jsonl" if args.preflight else "progress.jsonl"))
+    progress.update(dataset=config.dataset, run_id=trainer.run_id)
+    progress.event("run.start", mode="preflight" if args.preflight else "train",
+                   physical_batch=config.batch_size, accumulation=config.accumulation_steps,
+                   effective_batch=config.effective_batch, epochs=config.total_epochs,
+                   data_root=config.data_root, device=str(trainer.device))
     if args.preflight:
-        receipt = trainer.preflight()
+        with progress.stage("preflight", operation="fit/score/edit/backward/checkpoint/export gate"):
+            receipt = trainer.preflight()
+        progress.event("preflight.result", status=receipt.get("status"))
         print(json.dumps(receipt, indent=2, sort_keys=True, default=str))
         return 0 if receipt.get("status") == "pass" else 3
 
     try:
         report = trainer.run()
     except Exception as exc:  # noqa: BLE001 - surfaced with the failure report path
+        progress.event("run.failed", error_type=type(exc).__name__, error=str(exc),
+                       failure_report=str(trainer.paths.failure_report))
         print(f"run failed: {type(exc).__name__}: {exc}", file=sys.stderr)
         print(f"failure report: {trainer.paths.failure_report}", file=sys.stderr)
         return 3
 
     print(json.dumps(report, indent=2, sort_keys=True, default=str))
+    progress.event("run.result", status=report["status"], epochs_completed=report["epochs_completed"])
     if report["status"] == STATUS_COMPLETED:
         return 0
     if report["status"] == STATUS_PARTIAL:
