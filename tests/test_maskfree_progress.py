@@ -18,7 +18,7 @@ def test_blocked_load_has_live_heartbeat_and_exact_item(tmp_path):
     stream = io.StringIO()
     before = (random.getstate(), np.random.get_state(), torch.get_rng_state().clone())
     journal = tmp_path / "progress.jsonl"
-    with TerminalProgress(stream=stream, heartbeat_seconds=.02) as progress:
+    with TerminalProgress(stream=stream, heartbeat_seconds=.02, mode="verbose") as progress:
         progress.attach(journal)
         progress.update(epoch=1, batch=1, batches=3)
         with progress.stage("data_load"):
@@ -52,7 +52,7 @@ def test_gui_terminal_dashboard_is_readable_through_pipe_and_journal_appends(tmp
     stream = io.StringIO()  # no isatty capability; same display under tee
     journal = tmp_path / "progress.jsonl"
     for epoch in (1, 2):
-        with TerminalProgress(stream=stream) as progress:
+        with TerminalProgress(stream=stream, mode="verbose") as progress:
             progress.attach(journal)
             progress.update(dataset="acdc", epoch=epoch, epochs=150, batch=1, batches=10)
             progress.dashboard(force=True, lr=.001, component_steps={"producer": 1},
@@ -115,6 +115,46 @@ def test_inventory_cli_reports_geometry_failure_before_training(tmp_path):
     assert inventory["geometry_conflict"]["study_id"] == "acdc:patient001"
     assert len(inventory["geometry_conflict"]["geometries"]) == 2
     assert not (output / "manifest_acdc.json").exists()
-    assert "imports.load" in result.stderr
-    assert "patient001_frame00.nii.gz" in result.stderr
-    assert "patient001_frame01.nii.gz" in result.stderr
+    assert str(output / "inventory_acdc.json") in result.stderr
+
+
+def test_compact_tqdm_hides_detail_but_preserves_journal_and_epoch_summary(tmp_path):
+    stream = io.StringIO()
+    with TerminalProgress(stream=stream, mode="compact") as progress:
+        progress.attach(tmp_path / "progress.jsonl")
+        progress.update(dataset="acdc", epoch=1, epochs=150, batches=2)
+        progress.event("epoch.start", resumed_from_batch=0)
+        for batch in (1, 2):
+            progress.update(batch=batch)
+            with progress.stage("data.decode_slice_stack", path="do_not_print_this_file.nii.gz"):
+                progress.event("discovery.header_read", native_affine=[[1, 0], [0, 1]])
+                progress.heartbeat()
+            progress.dashboard(force=True, metrics={"producer/loss": .5,
+                "student_no_audit/loss": .8, "student_audited/loss": .7})
+        progress.event("epoch.summary", global_epoch=0, epoch_complete=True, epoch_seconds=12.3,
+            batch_cursor=2, producer={"producer/loss": .5},
+            students={"student_no_audit/loss": .8, "student_audited/loss": .7},
+            audit={"select_nll_mean": 1.5})
+    output = stream.getvalue()
+    assert "Epoch 1/150 Train" in output
+    assert "2/2" in output
+    assert "time=12.3s" in output
+    assert output.count("loss P/U/A=") == 1
+    assert "val Dice=--" in output
+    for hidden in ("do_not_print_this_file", "native_affine", "heartbeat", "stage.start", "metric_counts"):
+        assert hidden not in output
+    events = list(map(json.loads, (tmp_path / "progress.jsonl").read_text().splitlines()))
+    assert any(row["event"] == "heartbeat" for row in events)
+    assert any("native_affine" in row for row in events)
+    assert any(row.get("path") == "do_not_print_this_file.nii.gz" for row in events)
+
+
+def test_delayed_phase_bar_closes_line_before_next_console_message():
+    stream = io.StringIO()
+    with TerminalProgress(stream=stream, mode="compact") as progress:
+        with progress.stage("model.load"):
+            threading.Event().wait(.55)
+            progress.heartbeat()
+        progress.event("run.result", status="partial", report="report.json")
+    assert "model.load" in stream.getvalue()
+    assert "\n[maskfree] run.result:" in stream.getvalue()

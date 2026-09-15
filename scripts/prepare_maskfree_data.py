@@ -211,9 +211,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="record a NOT INSPECTED inventory and exit 0 when the root is absent",
     )
+    parser.add_argument("--progress", choices=("compact", "verbose"), default=None,
+                        help="console display; default compact tqdm (or MASKFREE_PROGRESS)")
     args = parser.parse_args(argv)
 
-    with TerminalProgress() as progress:
+    with TerminalProgress(mode=args.progress) as progress:
         progress.attach(Path(args.output).expanduser() / "inventory_progress.jsonl")
         progress.update(dataset=args.dataset)
         return _execute(args)
@@ -272,16 +274,16 @@ def _execute(args: argparse.Namespace) -> int:
         _atomic_write(output / f"inventory_{args.dataset}.md", _markdown(inventory))
 
     readiness = manifest["readiness"]
-    print(f"dataset={args.dataset} manifest_id={manifest['manifest_id']}")
-    print(f"protocol={manifest['resolved_protocol']} ({manifest['protocol_reason']})")
+    print(f"dataset={args.dataset} protocol={manifest['resolved_protocol']}")
     print(
         f"volumes={readiness['n_volumes']} frames={readiness['n_frames_enumerated']} "
         f"units={readiness['n_units']} patients={readiness['n_patients']} "
         f"duplicates_collapsed={readiness['n_duplicates_collapsed']} "
         f"splits={readiness['per_split_records']}"
     )
-    for item in manifest["limitations"]:
-        print(f"limitation: {item['code']}")
+    if progress.mode == "verbose":
+        for item in manifest["limitations"]:
+            print(f"limitation: {item['code']}")
     print(f"manifest written to {manifest_path}")
     if not readiness["usable_for_training"]:
         print("NOT USABLE: no training units discovered")

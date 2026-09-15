@@ -102,6 +102,7 @@ matter most:
 | `MASKFREE_FALLBACK` | `4x2` or `2x4`, resolved **before** the run |
 | `ALLOW_CPU=1` | CPU software check; not the contracted experiment |
 | `ACDC_DATA_ROOT` / `MNMS_DATA_ROOT` | per-dataset image roots (sequence script) |
+| `MASKFREE_PROGRESS` | `compact` (default tqdm) or `verbose` (diagnostic console) |
 
 ## The GPU and batch gates
 
@@ -136,31 +137,22 @@ shape it actually measured.
 
 ## Live terminal metrics and load diagnostics
 
-The Python entry points print flushed progress to stderr, captured by the
-launcher's existing `tee` logs. The display is a plain terminal dashboard that
-also works inside a GUI terminal and redirected logs, without cursor escapes.
-It starts before importing torch. No extra UI package is required.
+Default: **compact tqdm**, with one train bar per epoch (batch count, elapsed,
+ETA and current operation), then one epoch summary. Long preparation phases
+show their own elapsed-time bar; phases shorter than 0.5 seconds are hidden.
+The display reaches GUI terminals through the launcher's `tee` pipeline.
+`tqdm>=4.66` is included in `requirements-maskfree.txt`.
 
-* `stage.start` / `stage.done`: operation, path or unit, and elapsed wall seconds.
-  Inventory includes file index/count, shape, affine, orientation, source hash,
-  current frame fingerprinting, duplicate decisions and grid comparisons.
-* `heartbeat`: every 10 seconds, including the innermost active phase, nested
-  phase path, current file/frame/slice or unit, and phase elapsed time. Set
-  `MASKFREE_HEARTBEAT_SECONDS=5` for a shorter interval. This is liveness context,
-  not a claim that the GPU is busy or that a blocked operation has progressed.
-* `metrics`: at most every 5 seconds after a batch, plus the final batch. Shows
-  global epoch/batch, physical batch, accumulation, LR, label ramp, actual
-  component update counts, producer loss components/collapse diagnostics, both
-  student losses and support, audit fit/select NLL and improvement, coverage,
-  unresolved/accepted counts, class occupancy, stage times and CUDA memory bytes.
-  Values are running epoch means with denominators per metric: loss counts are
-  batch observations, while NLL counts are scored pixels (across candidate fits).
-  Student `valid_support` sums weights; coverage counts positive-weight pixels.
-  Loss is recorded once per batch. CPU memory fields remain unavailable.
-* `epoch.summary`: completed/partial status, full epoch metrics and counters.
-  `image_only.metric` prints computed aggregate results by split after freezing:
-  verification NLL, paired comparisons, stability, coverage and availability
-  reasons. Per-unit details and controls remain in the complete report files.
+The epoch line shows wall time, producer/unaudited/audited losses (`P/U/A`) and
+selection NLL. NLL here is a training-side image-only audit score, not validation
+Dice. **There is currently no per-epoch reference validation pass.** `val Dice`
+therefore stays `--`; no pseudo-label agreement is substituted for GT Dice.
+The existing optional reference evaluator runs separately after final freeze.
+
+Use `MASKFREE_PROGRESS=verbose` (or Python CLI `--progress verbose`) only when
+debugging. Shape/affine dumps, file events, heartbeats, detailed metric tables,
+and full result JSON are hidden from the default console. All detailed events
+and computed post-freeze image-only metrics still go to the diagnostic journal.
 
 Diagnostic journals are `manifests/inventory_progress.jsonl`,
 `reports/preflight_progress.jsonl`, and `reports/progress.jsonl`. They append on
@@ -168,6 +160,8 @@ resume and may contain repeated attempted work; checkpoints and
 `reports/epoch_metrics.jsonl` remain authoritative. Repeated fast stage messages
 are throttled, while the heartbeat always describes the current operation.
 Stage times are inclusive and must not be summed into end-to-end latency.
+The heartbeat refreshes the current bar without printing extra log lines;
+`MASKFREE_HEARTBEAT_SECONDS` changes its interval (default 10 seconds).
 
 ### Recovering the ACDC inventory geometry failure
 

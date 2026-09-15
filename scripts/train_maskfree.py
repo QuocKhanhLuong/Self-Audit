@@ -56,12 +56,14 @@ def build_parser() -> argparse.ArgumentParser:
                         help="bounded fit/score/edit/backward/checkpoint/export gate; never completes a run")
     parser.add_argument("--print-config", action="store_true",
                         help="resolve and print the config, then exit without running")
+    parser.add_argument("--progress", choices=("compact", "verbose"), default=None,
+                        help="console display; default compact tqdm (or MASKFREE_PROGRESS)")
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    with TerminalProgress() as progress:
+    with TerminalProgress(mode=args.progress) as progress:
         return _execute(args, progress)
 
 
@@ -116,8 +118,9 @@ def _execute(args: argparse.Namespace, progress: TerminalProgress) -> int:
     if args.preflight:
         with progress.stage("preflight", operation="fit/score/edit/backward/checkpoint/export gate"):
             receipt = trainer.preflight()
-        progress.event("preflight.result", status=receipt.get("status"))
-        print(json.dumps(receipt, indent=2, sort_keys=True, default=str))
+        progress.event("preflight.result", status=receipt.get("status"), report=str(trainer.paths.gate_receipt))
+        if progress.mode == "verbose":
+            print(json.dumps(receipt, indent=2, sort_keys=True, default=str))
         return 0 if receipt.get("status") == "pass" else 3
 
     try:
@@ -129,8 +132,10 @@ def _execute(args: argparse.Namespace, progress: TerminalProgress) -> int:
         print(f"failure report: {trainer.paths.failure_report}", file=sys.stderr)
         return 3
 
-    print(json.dumps(report, indent=2, sort_keys=True, default=str))
-    progress.event("run.result", status=report["status"], epochs_completed=report["epochs_completed"])
+    if progress.mode == "verbose":
+        print(json.dumps(report, indent=2, sort_keys=True, default=str))
+    progress.event("run.result", status=report["status"], epochs_completed=report["epochs_completed"],
+                   report=str(trainer.paths.pipeline_report))
     if report["status"] == STATUS_COMPLETED:
         return 0
     if report["status"] == STATUS_PARTIAL:

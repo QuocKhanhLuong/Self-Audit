@@ -91,6 +91,8 @@ ENVIRONMENT
   ALLOW_CPU=1           Run on CPU. Skips the GPU gate. For software checks
                         only; a CPU run is not the contracted experiment.
   PYTHON=<path>         Interpreter. Default: python3 if present, else python.
+  MASKFREE_PROGRESS=    compact (default): tqdm and one summary per epoch.
+                        verbose: print detailed diagnostic events and metrics.
 
 NOT DONE BY THIS SCRIPT
   No commit, no push, no checkpoint migration, no cross-dataset resume, no
