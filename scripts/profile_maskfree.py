@@ -1724,6 +1724,16 @@ def _compare_reports(reference: dict[str, Any], candidate: dict[str, Any]) -> di
     ref_scientific_hash = reference.get("config", {}).get("scientific_hash")
     cand_scientific_hash = candidate.get("config", {}).get("scientific_hash")
     checks["scientific_hash"] = _nonempty(ref_scientific_hash) and ref_scientific_hash == cand_scientific_hash
+    reference_audit_execution = reference.get("device", {}).get("audit_execution")
+    candidate_audit_execution = candidate.get("device", {}).get("audit_execution")
+    # Backend placement is provenance, not an equivalence prerequisite.  A
+    # matched CPU-reference/CUDA-audit profile intentionally compares numerical
+    # outputs/counters through the existing gates below; retain this metadata as
+    # a diagnostic only so historical reports remain comparable.
+    numeric_differences["audit_backend"] = {
+        "reference": reference_audit_execution,
+        "candidate": candidate_audit_execution,
+    }
     reference_resolution = _resolution_metadata(reference)
     candidate_resolution = _resolution_metadata(candidate)
     checks["image_size"] = (
@@ -2091,6 +2101,14 @@ def _prepare_config(args: argparse.Namespace, output: Path) -> tuple[Any, dict[s
     from self_audit_maskfree.config import MaskfreeConfig, load_config
 
     requested_image_size = _selected_image_size(args)
+    supports_audit_device = any(
+        field.name == "audit_device" for field in dataclasses.fields(MaskfreeConfig)
+    )
+    requested_audit_override = getattr(args, "audit_device", None)
+    if requested_audit_override is not None and not supports_audit_device:
+        raise ValueError(
+            "--audit-device requires a source snapshot/config with audit_device support"
+        )
     fixture: dict[str, Any] | None = None
     config_source_sha256: str | None = None
     if args.synthetic:
@@ -2108,7 +2126,7 @@ def _prepare_config(args: argparse.Namespace, output: Path) -> tuple[Any, dict[s
             depth=SYNTHETIC_DEPTH,
             file_format=args.synthetic_format,
         )
-        config = MaskfreeConfig(
+        config_kwargs = dict(
             dataset="acdc",
             data_root=fixture["root"],
             output_dir=str(output / "trainer_workspace"),
@@ -2137,6 +2155,9 @@ def _prepare_config(args: argparse.Namespace, output: Path) -> tuple[Any, dict[s
             epoch_validation=True,
             epoch_reference_config=None,
         )
+        if supports_audit_device:
+            config_kwargs["audit_device"] = requested_audit_override or "auto"
+        config = MaskfreeConfig(**config_kwargs)
     else:
         if args.config is None:
             raise ValueError("--config or --synthetic is required")
@@ -2148,7 +2169,10 @@ def _prepare_config(args: argparse.Namespace, output: Path) -> tuple[Any, dict[s
             )
         config_source_sha256 = _sha256_file(Path(args.config).expanduser().resolve())
         requested_device = args.device or config.device
-        config = config.replace(
+        requested_audit_device = getattr(args, "audit_device", None) or getattr(
+            config, "audit_device", "auto"
+        )
+        config_overrides = dict(
             output_dir=str(output / "trainer_workspace"),
             run_id=args.run_id,
             device=requested_device,
@@ -2158,6 +2182,9 @@ def _prepare_config(args: argparse.Namespace, output: Path) -> tuple[Any, dict[s
             wandb_mode="disabled",
             allow_cpu=bool(config.allow_cpu or requested_device == "cpu"),
         )
+        if supports_audit_device:
+            config_overrides["audit_device"] = requested_audit_device
+        config = config.replace(**config_overrides)
 
     scientific_requirements = _scientific_requirements(requested_image_size)
     values = {name: getattr(config, name) for name in scientific_requirements}
@@ -2181,6 +2208,7 @@ def _prepare_config(args: argparse.Namespace, output: Path) -> tuple[Any, dict[s
         },
         "scientific_requirements": scientific_requirements,
         "config_source_sha256": config_source_sha256,
+        "audit_device_override": getattr(args, "audit_device", None),
     }
 
 
@@ -2498,6 +2526,19 @@ def _run_profile(args: argparse.Namespace) -> dict[str, Any]:
         ]
     if initial_state.get("torch_deterministic_algorithms_effective") is not True:
         validation_errors.append("effective deterministic-algorithms state was not true at first batch")
+    resolved_audit_device = getattr(trainer, "audit_device", None)
+    audit_identity = (
+        runtime.device_identity(resolved_audit_device)
+        if resolved_audit_device is not None
+        else None
+    )
+    audit_gpu_stats = (
+        runtime.gpu_stats(resolved_audit_device)
+        if resolved_audit_device is not None
+        else None
+    )
+    audit_execution_identity = getattr(trainer, "_audit_execution_identity", None)
+    audit_execution = audit_execution_identity() if callable(audit_execution_identity) else None
     report = {
         "schema_version": PROFILE_SCHEMA_VERSION,
         "status": "completed_bounded" if not validation_errors else "failed",
@@ -2534,7 +2575,12 @@ def _run_profile(args: argparse.Namespace) -> dict[str, Any]:
         "device": {
             "requested": config.device,
             "resolved": runtime.device_identity(getattr(trainer, "device", None)),
+            "audit_requested": getattr(config, "audit_device", "auto"),
+            "audit_resolved": audit_identity,
+            "audit_numerical_backend": getattr(trainer, "audit_numerical_backend", None),
+            "audit_execution": audit_execution,
             "gpu_stats_after": runtime.gpu_stats(getattr(trainer, "device", None)),
+            "audit_gpu_stats_after": audit_gpu_stats,
             "nvidia_smi_before_training": nvidia,
             "nvidia_smi_before_training_note": (
                 "pre-training observation only; no measured GPU utilization claim"
@@ -2669,6 +2715,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="spatial profiler contract (128 preserves the historical default; 224 matches production configs)",
     )
     parser.add_argument("--device", choices=("cpu", "cuda"), default=None)
+    parser.add_argument(
+        "--audit-device",
+        choices=("auto", "cpu", "cuda"),
+        default=None,
+        help="observation/audit execution backend override (auto follows --device/model device)",
+    )
     parser.add_argument("--warmup-batches", "--warmup", dest="warmup_batches", type=int, default=5)
     parser.add_argument("--measured-batches", "--measured", dest="measured_batches", type=int, default=20)
     parser.add_argument("--run-id", default=None)

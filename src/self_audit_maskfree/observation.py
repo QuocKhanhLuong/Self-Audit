@@ -306,7 +306,11 @@ def _check_hypothesis(hypothesis: Hypothesis, height: int, width: int) -> None:
         raise ObservationContractError("hypothesis.validity must lie in [0,1]")
 
 
-def _freeze_hypothesis(hypothesis: Hypothesis) -> Hypothesis:
+def _freeze_hypothesis(
+    hypothesis: Hypothesis,
+    *,
+    device: torch.device | None = None,
+) -> Hypothesis:
     """Return a private deep copy of a candidate, detached from the caller.
 
     ``Hypothesis`` is a mutable dataclass holding mutable tensors. If a
@@ -316,15 +320,32 @@ def _freeze_hypothesis(hypothesis: Hypothesis) -> Hypothesis:
     while the fitted appearance parameters still belonged to the old partition.
     Freezing at fit time makes the fitted identity immutable from outside.
     """
+    def clone_tensor(tensor: torch.Tensor) -> torch.Tensor:
+        clone = tensor.detach().clone()
+        if device is not None:
+            clone = clone.to(device=device)
+        return clone
+
+    def clone_nested(value: Any) -> Any:
+        if isinstance(value, torch.Tensor):
+            return clone_tensor(value)
+        if isinstance(value, dict):
+            return {copy.deepcopy(key): clone_nested(nested) for key, nested in value.items()}
+        if isinstance(value, list):
+            return [clone_nested(nested) for nested in value]
+        if isinstance(value, tuple):
+            return tuple(clone_nested(nested) for nested in value)
+        return copy.deepcopy(value)
+
     return Hypothesis(
         candidate_id=hypothesis.candidate_id,
-        labels=hypothesis.labels.detach().clone(),
-        probabilities=hypothesis.probabilities.detach().clone(),
-        validity=hypothesis.validity.detach().clone(),
+        labels=clone_tensor(hypothesis.labels),
+        probabilities=clone_tensor(hypothesis.probabilities),
+        validity=clone_tensor(hypothesis.validity),
         source=hypothesis.source,
         semantic_unresolved=hypothesis.semantic_unresolved,
-        alternatives=copy.deepcopy(hypothesis.alternatives),
-        metadata=copy.deepcopy(hypothesis.metadata),
+        alternatives=clone_nested(hypothesis.alternatives),
+        metadata=clone_nested(hypothesis.metadata),
     )
 
 
@@ -609,6 +630,7 @@ def _validate_score_context(
         raise ObservationContractError("score requires a contracts.FittedHypothesis")
     if not isinstance(scoring_view, ScoringView):
         raise ObservationContractError("score requires a contracts.ScoringView")
+    model._validate_execution_view_device(scoring_view)
     scoring_view.validate()
     if fitted.study_id != scoring_view.study_id:
         raise ObservationContractError(
@@ -655,7 +677,12 @@ def _validate_score_context(
         raise ObservationContractError("scoring observations overlap fitting observations")
 
     hypothesis = fitted.hypothesis
-    _check_hypothesis(hypothesis, height, width)
+    compute_hypothesis = (
+        hypothesis
+        if not model._uses_cuda_execution
+        else _freeze_hypothesis(hypothesis, device=torch.device("cpu"))
+    )
+    _check_hypothesis(compute_hypothesis, height, width)
     recorded_digest = fitted.metadata.get("hypothesis_digest")
     if not isinstance(recorded_digest, str):
         raise ObservationContractError(
@@ -668,31 +695,42 @@ def _validate_score_context(
             "belong to the partition that was fitted, not to this one. Refit instead."
         )
 
-    complexity = _neighbor_disagreement(hypothesis.labels) + float(
+    complexity = _neighbor_disagreement(compute_hypothesis.labels) + float(
         fitted.metadata.get("component_penalty", 0.0)
     )
-    prior = _prior_penalty(hypothesis)
+    prior = _prior_penalty(compute_hypothesis)
     components = _components_from_parameters(fitted)
     raw_bias = fitted.parameters.get("bias_coefficients")
     if not isinstance(raw_bias, (list, tuple)) or len(raw_bias) != 3:
         raise ObservationContractError("fitted hypothesis carries malformed bias coefficients")
     try:
+        target_device = (
+            model.execution_device
+            if model._uses_cuda_execution
+            else scoring_view.image.device
+        )
         bias_coefficients = torch.tensor(
             [float(value) for value in raw_bias], dtype=torch.float64,
-            device=scoring_view.image.device,
+            device=target_device,
         )
     except (TypeError, ValueError) as exc:
         raise ObservationContractError("fitted hypothesis carries malformed bias coefficients") from exc
     if not torch.isfinite(bias_coefficients).all():
         raise ObservationContractError("fitted bias coefficients must be finite")
+    source_support = support.detach()
+    compute_support = (
+        source_support
+        if not model._uses_cuda_execution
+        else source_support.to(device=target_device)
+    )
     return _ScoreContext(
         fitted=fitted,
         scoring_view=scoring_view,
-        hypothesis=hypothesis,
+        hypothesis=compute_hypothesis,
         complexity=complexity,
         prior=prior,
-        support=support,
-        count=int(support.sum().item()),
+        support=compute_support,
+        count=int(source_support.sum().item()),
         components=components,
         bias_coefficients=bias_coefficients,
         height=height,
@@ -784,6 +822,70 @@ def _batch_log_mixture(
     return output
 
 
+def _batch_log_mixture_tensors(
+    residual: torch.Tensor,
+    labels: torch.Tensor,
+    means: torch.Tensor,
+    variances: torch.Tensor,
+    log_weights: torch.Tensor,
+    normalizers: torch.Tensor,
+    distribution: Distribution,
+    max_modes: int,
+) -> torch.Tensor:
+    """Evaluate a mixture from already-device-resident component tensors.
+
+    ``_batch_log_mixture`` intentionally accepts the portable Python component
+    dictionaries stored in a :class:`FittedHypothesis`.  The explicit
+    ``execution_device`` fitting path keeps the corresponding sufficient
+    statistics as tensors throughout all fitting iterations and calls this
+    helper only once, at the operation boundary.  Keeping this expression in a
+    single helper avoids a second density implementation while avoiding any
+    candidate-wise scalar device transfers in the hot loop.
+    """
+    if residual.ndim != 2 or labels.ndim != 2:
+        raise ObservationContractError("batched mixture inputs must be [B,N]")
+    if tuple(residual.shape) != tuple(labels.shape):
+        raise ObservationContractError("batched mixture residual/labels shape mismatch")
+    batch_size, _pixel_count = residual.shape
+    expected_shape = (batch_size, NUM_REGIONS, max_modes)
+    for name, tensor in (
+        ("means", means),
+        ("variances", variances),
+        ("log_weights", log_weights),
+        ("normalizers", normalizers),
+    ):
+        if tuple(tensor.shape) != expected_shape:
+            raise ObservationContractError(
+                f"batched mixture {name} must have shape {expected_shape}, got {tuple(tensor.shape)}"
+            )
+    valid_labels = (labels >= 0) & (labels < NUM_REGIONS)
+    if labels.is_floating_point():
+        integer_labels = labels.to(dtype=torch.long)
+        valid_labels = valid_labels & torch.isfinite(labels) & (labels == integer_labels)
+    else:
+        integer_labels = labels.to(dtype=torch.long)
+    safe_labels = torch.where(valid_labels, integer_labels, torch.zeros_like(integer_labels))
+    region_index = safe_labels.unsqueeze(-1).expand(-1, -1, max_modes)
+    selected_means = means.gather(1, region_index).transpose(1, 2)
+    selected_variances = variances.gather(1, region_index).transpose(1, 2)
+    selected_log_weights = log_weights.gather(1, region_index).transpose(1, 2)
+    selected_normalizers = normalizers.gather(1, region_index).transpose(1, 2)
+    density = _log_density_batch(
+        residual,
+        selected_means,
+        selected_variances,
+        distribution,
+        selected_normalizers,
+    )
+    density = density + selected_log_weights
+    output = torch.logsumexp(density, dim=1)
+    if not bool(valid_labels.all()):
+        output = torch.where(valid_labels, output, torch.full_like(output, float("nan")))
+    if torch.isnan(output).any():
+        raise ObservationContractError("unscored pixels remain in the mixture density")
+    return output
+
+
 def _score_from_nll(
     *,
     nll_sum: float,
@@ -844,6 +946,13 @@ class ObservationModel:
         Ridge coefficient of the affine bias solve; contract minimum 0.1.
     distribution:
         ``'gaussian'`` or ``'student_t'``.
+    execution_device:
+        Optional explicit device for detached tensor-heavy fitting and scoring
+        math. ``None`` and explicit ``'cpu'`` preserve the legacy CPU reference
+        path (CPU capability views are required for the latter); explicit CUDA
+        selects the tensorized path. CUDA fits serialize portable CPU
+        hypotheses and Python parameter values, and execution placement is not
+        part of the comparison recipe.
 
     The model holds no per-candidate state. ``fit`` returns all fitted
     parameters inside its :class:`FittedHypothesis`, so two candidates can never
@@ -861,6 +970,7 @@ class ObservationModel:
         background_modes: int = 1,
         bias_ridge: float = 0.1,
         distribution: Distribution = "gaussian",
+        execution_device: str | torch.device | None = None,
     ) -> None:
         if not isinstance(max_iterations, int) or max_iterations < 1:
             raise ObservationContractError("max_iterations must be a positive int")
@@ -874,12 +984,67 @@ class ObservationModel:
             raise ObservationContractError("bias_ridge must be >= 0.1 per the contract")
         if distribution not in ("gaussian", "student_t"):
             raise ObservationContractError("distribution must be 'gaussian' or 'student_t'")
+        if execution_device is not None and not isinstance(execution_device, (str, torch.device)):
+            raise ObservationContractError(
+                "execution_device must be None, a device string, or torch.device"
+            )
+        try:
+            normalized_device = (
+                None if execution_device is None else torch.device(execution_device)
+            )
+        except (TypeError, RuntimeError, ValueError) as exc:
+            raise ObservationContractError("execution_device is not a valid torch device") from exc
+        if normalized_device is not None and normalized_device.type not in ("cpu", "cuda"):
+            raise ObservationContractError(
+                "execution_device supports only CPU and CUDA devices"
+            )
+        if normalized_device is not None and normalized_device.type == "cuda":
+            if normalized_device.index is not None and normalized_device.index < 0:
+                raise ObservationContractError("execution_device CUDA index must be non-negative")
+            if not torch.cuda.is_available():
+                raise ObservationContractError(
+                    "execution_device CUDA is unavailable; refusing CPU fallback"
+                )
+            if (
+                normalized_device.index is not None
+                and normalized_device.index >= torch.cuda.device_count()
+            ):
+                raise ObservationContractError(
+                    "execution_device CUDA index is unavailable; refusing fallback"
+                )
         self.max_iterations = max_iterations
         self.variance_floor = float(variance_floor)
         self.beta = float(beta)
         self.background_modes = int(background_modes)
         self.bias_ridge = float(bias_ridge)
         self.distribution: Distribution = distribution
+        # ``None`` and explicit CPU retain the legacy reference arithmetic;
+        # explicit CUDA opts into the detached tensorized path.
+        self.execution_device = normalized_device
+
+    def _target_device(self, input_device: torch.device) -> torch.device:
+        """Resolve the heavy-math device without changing the legacy default."""
+        return self.execution_device if self._uses_cuda_execution else input_device
+
+    @property
+    def _uses_cuda_execution(self) -> bool:
+        """Whether public dispatch should use the explicit tensorized CUDA path."""
+        return self.execution_device is not None and self.execution_device.type == "cuda"
+
+    def _validate_execution_view_device(
+        self,
+        view: FittingView | ScoringView,
+    ) -> None:
+        """Reject capability tensors that would silently bypass explicit CPU placement."""
+        if self.execution_device is None or self.execution_device.type != "cpu":
+            return
+        tensors: list[torch.Tensor] = [view.image, view.support]
+        if isinstance(view, FittingView):
+            tensors.append(view.context)
+        if any(tensor.device.type != "cpu" for tensor in tensors):
+            raise ObservationContractError(
+                "execution_device='cpu' requires CPU capability view tensors"
+            )
 
     @property
     def capacity(self) -> int:
@@ -921,6 +1086,7 @@ class ObservationModel:
         """
         if not isinstance(fitting_view, FittingView):
             raise ObservationContractError("fit requires a contracts.FittingView")
+        self._validate_execution_view_device(fitting_view)
         fitting_view.validate()
         if fitting_view.protocol not in SUPPORTED_PROTOCOLS:
             raise ObservationContractError(
@@ -929,6 +1095,15 @@ class ObservationModel:
                 "must not be approximated by a spatial fit"
             )
         height, width = fitting_view.support.shape
+        if self._uses_cuda_execution:
+            # Keep validation/topology and the frozen public hypothesis portable
+            # even when the fitting view arrives on CUDA.  The tensorized helper
+            # below moves only detached working arrays to ``execution_device``.
+            if not isinstance(hypothesis, Hypothesis):
+                raise ObservationContractError("fit/score require a contracts.Hypothesis")
+            frozen = _freeze_hypothesis(hypothesis, device=torch.device("cpu"))
+            _check_hypothesis(frozen, height, width)
+            return self._fit_many_group([frozen], [fitting_view])[0]
         _check_hypothesis(hypothesis, height, width)
         # Freeze immediately: everything below, and everything the returned
         # FittedHypothesis exposes, uses this private copy. A caller mutating
@@ -1067,6 +1242,7 @@ class ObservationModel:
         for candidate, view in zip(candidates, views):
             if not isinstance(view, FittingView):  # pragma: no cover - _coerce_views checks
                 raise ObservationContractError("fit_many requires FittingView inputs")
+            self._validate_execution_view_device(view)
             view.validate()
             if view.protocol not in SUPPORTED_PROTOCOLS:
                 raise ObservationContractError(
@@ -1075,8 +1251,15 @@ class ObservationModel:
                     "and must not be approximated by a spatial fit"
                 )
             height, width = view.support.shape
-            _check_hypothesis(candidate, height, width)
-            frozen.append(_freeze_hypothesis(candidate))
+            if not self._uses_cuda_execution:
+                _check_hypothesis(candidate, height, width)
+                frozen.append(_freeze_hypothesis(candidate))
+            else:
+                if not isinstance(candidate, Hypothesis):
+                    raise ObservationContractError("fit/score require a contracts.Hypothesis")
+                frozen_candidate = _freeze_hypothesis(candidate, device=torch.device("cpu"))
+                _check_hypothesis(frozen_candidate, height, width)
+                frozen.append(frozen_candidate)
 
         groups: dict[tuple[Any, ...], list[int]] = {}
         for index, view in enumerate(views):
@@ -1125,6 +1308,8 @@ class ObservationModel:
         """Batch the heavy region/bias equations for one compatible view group."""
         if not hypotheses:
             return []
+        if self._uses_cuda_execution:
+            return self._fit_many_group_on_device(hypotheses, fitting_views)
         height, width = fitting_views[0].support.shape
         device = fitting_views[0].image.device
         batch_size = len(hypotheses)
@@ -1342,6 +1527,346 @@ class ObservationModel:
             )
         return result
 
+    def _fit_background_modes_batch_on_device(
+        self,
+        values: torch.Tensor,
+        support: torch.Tensor,
+        global_variance: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Fit the deterministic two-mode background mixture without host syncs.
+
+        ``values`` is a full ``[B,N]`` residual grid and ``support`` selects the
+        background pixels for each candidate.  The scalar reference uses
+        ``torch.quantile`` over a ragged selection; sorting masked rows and
+        applying the same linear interpolation gives the equivalent quartiles
+        while keeping all five fitting iterations on the execution device.
+        Rows with fewer than ``MIN_REGION_PIXELS`` are replaced by the caller's
+        global fallback, so their temporary masked values are never serialized.
+        """
+        batch_size, pixel_count = values.shape
+        device = values.device
+        dtype = values.dtype
+        counts = support.sum(dim=1).to(dtype=torch.long)
+        safe_counts = counts.clamp_min(1)
+        masked = torch.where(
+            support,
+            values,
+            torch.full_like(values, float("inf")),
+        )
+        sorted_values = torch.sort(masked, dim=1).values
+        quantile_values: list[torch.Tensor] = []
+        for quantile in (0.25, 0.75):
+            position = (safe_counts.to(dtype) - 1.0) * quantile
+            lower = position.floor().to(dtype=torch.long)
+            upper = position.ceil().to(dtype=torch.long)
+            fraction = position - lower.to(dtype)
+            lower_value = sorted_values.gather(1, lower.unsqueeze(1)).squeeze(1)
+            upper_value = sorted_values.gather(1, upper.unsqueeze(1)).squeeze(1)
+            quantile_values.append(lower_value + fraction * (upper_value - lower_value))
+        centers = torch.stack(quantile_values, dim=1)
+        spread = global_variance.clamp_min(self.variance_floor).sqrt()
+        degenerate = (~torch.isfinite(centers).all(dim=1)) | (
+            centers[:, 1] - centers[:, 0] <= 0.0
+        )
+        global_mean = torch.where(
+            support,
+            values,
+            values.new_zeros(()),
+        ).sum(dim=1) / safe_counts.to(dtype)
+        fallback_centers = torch.stack(
+            (global_mean - spread, global_mean + spread), dim=1
+        )
+        centers = torch.where(degenerate.unsqueeze(1), fallback_centers, centers)
+
+        assignment = torch.zeros((batch_size, pixel_count), dtype=torch.long, device=device)
+        for _ in range(3):
+            distances = torch.stack(
+                (
+                    (values - centers[:, 0].unsqueeze(1)).abs(),
+                    (values - centers[:, 1].unsqueeze(1)).abs(),
+                ),
+                dim=1,
+            )
+            assignment = distances.argmin(dim=1)
+            mode_masks = torch.stack(
+                (support & (assignment == 0), support & (assignment == 1)), dim=1
+            )
+            mode_counts = mode_masks.sum(dim=2)
+            mode_safe = mode_counts.clamp_min(1).to(dtype)
+            mode_values = values.unsqueeze(1) * mode_masks.to(dtype)
+            mode_means = mode_values.sum(dim=2) / mode_safe
+            enough = mode_counts >= MIN_REGION_PIXELS
+            centers = torch.where(enough, mode_means, centers)
+
+        mode_masks = torch.stack(
+            (support & (assignment == 0), support & (assignment == 1)), dim=1
+        )
+        mode_counts = mode_masks.sum(dim=2)
+        mode_safe = mode_counts.clamp_min(1).to(dtype)
+        mode_values = values.unsqueeze(1) * mode_masks.to(dtype)
+        raw_means = mode_values.sum(dim=2) / mode_safe
+        enough = mode_counts >= MIN_REGION_PIXELS
+        means = torch.where(enough, raw_means, centers)
+        deviations = values.unsqueeze(1) - means.unsqueeze(2)
+        raw_variances = (
+            deviations.pow(2) * mode_masks.to(dtype)
+        ).sum(dim=2) / mode_safe
+        variances = torch.where(
+            enough,
+            raw_variances.clamp_min(self.variance_floor),
+            global_variance.unsqueeze(1).expand(-1, 2),
+        )
+        log_weights = torch.log(
+            mode_counts.clamp_min(1).to(dtype)
+            / counts.clamp_min(1).to(dtype).unsqueeze(1)
+        )
+        fallback = ~enough
+        return means, variances, log_weights, fallback
+
+    def _fit_many_group_on_device(
+        self,
+        hypotheses: Sequence[Hypothesis],
+        fitting_views: Sequence[FittingView],
+        device: torch.device | None = None,
+    ) -> list[FittedHypothesis]:
+        """Tensorized explicit-device fitting with one host serialization boundary."""
+        if not hypotheses:
+            return []
+        height, width = fitting_views[0].support.shape
+        if device is None:
+            device = self.execution_device or fitting_views[0].image.device
+        batch_size = len(hypotheses)
+        # Stack on the source device first, then perform one bulk transfer per
+        # logical array.  This avoids one ``.to(device)`` call for every
+        # candidate when a CPU bank is dispatched to CUDA.
+        images = torch.stack(
+            [view.image.detach()[0] for view in fitting_views], dim=0
+        ).reshape(batch_size, -1).to(device=device, dtype=torch.float64)
+        supports = torch.stack(
+            [view.support.detach() for view in fitting_views], dim=0
+        ).reshape(batch_size, -1).to(device=device)
+        labels = torch.stack(
+            [hypothesis.labels.detach() for hypothesis in hypotheses], dim=0
+        ).reshape(batch_size, -1).to(device=device, dtype=torch.long)
+        basis = _plane_basis(height, width, device)
+        dtype = torch.float64
+        support_weights = supports.to(dtype=dtype)
+        observed = support_weights.sum(dim=1)
+        if bool((observed <= 0).any()):  # validation should have caught this on the source device
+            raise ObservationContractError("fitting view has empty support")
+        safe_observed = observed.clamp_min(1.0)
+        global_mean_tensor = (images * support_weights).sum(dim=1) / safe_observed
+        global_variance_tensor = (
+            (images - global_mean_tensor.unsqueeze(1)).pow(2) * support_weights
+        ).sum(dim=1) / safe_observed
+        global_variance_tensor = global_variance_tensor.clamp_min(self.variance_floor)
+
+        bias_coefficients = torch.zeros((batch_size, 3), dtype=dtype, device=device)
+        region_ids = torch.arange(NUM_REGIONS, dtype=torch.long, device=device).view(1, -1, 1)
+        mode_count = self.background_modes
+        component_means = torch.zeros(
+            (batch_size, NUM_REGIONS, mode_count), dtype=dtype, device=device
+        )
+        component_variances = torch.ones_like(component_means)
+        component_log_weights = torch.full_like(component_means, float("-inf"))
+        component_fallback = torch.zeros(
+            (batch_size, NUM_REGIONS, mode_count), dtype=torch.bool, device=device
+        )
+        # Labels/supports are fixed for every fitting pass.  Build their
+        # region masks and sufficient-count tensors once, outside the hot loop;
+        # only residual-dependent moments and the bias solve are repeated.
+        region_masks = supports.unsqueeze(1) & (labels.unsqueeze(1) == region_ids)
+        region_masks_float = region_masks.to(dtype=dtype)
+        region_counts = region_masks.sum(dim=2)
+        region_safe = region_counts.clamp_min(1).to(dtype)
+        enough_regions = region_counts >= MIN_REGION_PIXELS
+
+        for _ in range(self.max_iterations):
+            residual = images - (basis @ bias_coefficients.transpose(0, 1)).transpose(0, 1)
+            region_values = residual.unsqueeze(1) * region_masks_float
+            raw_means = region_values.sum(dim=2) / region_safe
+            deviations = residual.unsqueeze(1) - raw_means.unsqueeze(2)
+            raw_variances = (
+                deviations.pow(2) * region_masks_float
+            ).sum(dim=2) / region_safe
+            region_means = torch.where(
+                enough_regions,
+                raw_means,
+                global_mean_tensor.unsqueeze(1).expand(-1, NUM_REGIONS),
+            )
+            region_variances = torch.where(
+                enough_regions,
+                raw_variances.clamp_min(self.variance_floor),
+                global_variance_tensor.unsqueeze(1).expand(-1, NUM_REGIONS),
+            )
+
+            component_means.zero_()
+            component_variances.fill_(1.0)
+            component_log_weights.fill_(float("-inf"))
+            component_fallback.zero_()
+            component_means[:, :, 0] = region_means
+            component_variances[:, :, 0] = region_variances
+            component_log_weights[:, :, 0] = 0.0
+            component_fallback[:, :, 0] = ~enough_regions
+
+            if mode_count == 2:
+                background_mask = region_masks[:, 0]
+                bg_means, bg_variances, bg_log_weights, bg_fallback = (
+                    self._fit_background_modes_batch_on_device(
+                        residual,
+                        background_mask,
+                        global_variance_tensor,
+                    )
+                )
+                bg_enough = enough_regions[:, 0].unsqueeze(1)
+                bg_mean_fallback = global_mean_tensor.unsqueeze(1).expand(-1, 2)
+                bg_variance_fallback = global_variance_tensor.unsqueeze(1).expand(-1, 2)
+                bg_log_fallback = torch.full_like(bg_log_weights, -math.log(2.0))
+                bg_means = torch.where(bg_enough, bg_means, bg_mean_fallback)
+                bg_variances = torch.where(bg_enough, bg_variances, bg_variance_fallback)
+                bg_log_weights = torch.where(bg_enough, bg_log_weights, bg_log_fallback)
+                bg_fallback = torch.where(
+                    bg_enough,
+                    bg_fallback,
+                    torch.ones_like(bg_fallback),
+                )
+                component_means[:, 0, :] = bg_means
+                component_variances[:, 0, :] = bg_variances
+                component_log_weights[:, 0, :] = bg_log_weights
+                component_fallback[:, 0, :] = bg_fallback
+                background_weights = bg_log_weights.exp()
+                background_weight_sum = background_weights.sum(dim=1).clamp_min(torch.finfo(dtype).tiny)
+                region_means[:, 0] = (
+                    (background_weights * bg_means).sum(dim=1) / background_weight_sum
+                )
+                region_variances[:, 0] = (
+                    (background_weights * bg_variances).sum(dim=1) / background_weight_sum
+                )
+
+            reconstructed = residual + (
+                basis @ bias_coefficients.transpose(0, 1)
+            ).transpose(0, 1)
+            bias_coefficients = self._fit_bias_batch(
+                reconstructed,
+                labels,
+                supports,
+                basis,
+                region_means,
+                region_variances,
+            )
+
+        residual = images - (basis @ bias_coefficients.transpose(0, 1)).transpose(0, 1)
+        normalizers = torch.zeros_like(component_means)
+        if self.distribution == "gaussian":
+            normalizers = -0.5 * torch.log(2.0 * math.pi * component_variances)
+        else:
+            dof = STUDENT_T_DOF
+            normalizers = (
+                math.lgamma((dof + 1.0) / 2.0)
+                - math.lgamma(dof / 2.0)
+                - 0.5 * torch.log(dof * math.pi * component_variances)
+            )
+        log_mixture = _batch_log_mixture_tensors(
+            residual,
+            labels,
+            component_means,
+            component_variances,
+            component_log_weights,
+            normalizers,
+            self.distribution,
+            mode_count,
+        )
+        nll = -log_mixture
+        nll_sum_tensor = torch.where(supports, nll, torch.zeros_like(nll)).sum(dim=1)
+
+        # One detached transfer per sufficient-statistic family at the logical
+        # operation boundary.  No candidate-wise scalar ``.item()`` occurs in
+        # the fitting loop above.
+        means_cpu = component_means.detach().cpu()
+        variances_cpu = component_variances.detach().cpu()
+        log_weights_cpu = component_log_weights.detach().cpu()
+        fallback_cpu = component_fallback.detach().cpu()
+        bias_cpu = bias_coefficients.detach().cpu().tolist()
+        global_mean_cpu = global_mean_tensor.detach().cpu().tolist()
+        global_variance_cpu = global_variance_tensor.detach().cpu().tolist()
+        counts_cpu = region_counts.detach().cpu()
+        observed_cpu = observed.detach().cpu()
+        nll_sum_cpu = nll_sum_tensor.detach().cpu().tolist()
+        result: list[FittedHypothesis] = []
+        component_penalty = COMPONENT_PENALTY * float(self.capacity - NUM_REGIONS)
+        for index, (hypothesis, view) in enumerate(zip(hypotheses, fitting_views)):
+            observed_count = int(observed_cpu[index].item())
+            nll_sum = float(nll_sum_cpu[index])
+            counts = [int(value) for value in counts_cpu[index].tolist()]
+            fallback_regions = [region for region, value in enumerate(counts) if value < MIN_REGION_PIXELS]
+            complexity = _neighbor_disagreement(hypothesis.labels.detach().cpu()) + component_penalty
+            prior = _prior_penalty(hypothesis)
+            normalized = nll_sum / float(observed_count)
+            fit_score = EvidenceScore(
+                nll_sum=nll_sum,
+                count=observed_count,
+                normalized_nll=normalized,
+                complexity=complexity,
+                prior=prior,
+                total=normalized + self.beta * complexity + prior,
+                role="fit",
+                available=True,
+                reason=None,
+            )
+            components: list[dict[str, Any]] = []
+            for region in range(NUM_REGIONS):
+                modes = mode_count if region == 0 else 1
+                for mode in range(modes):
+                    components.append(
+                        {
+                            "region": region,
+                            "mean": float(means_cpu[index, region, mode].item()),
+                            "variance": float(variances_cpu[index, region, mode].item()),
+                            "log_weight": float(log_weights_cpu[index, region, mode].item()),
+                            "fallback": bool(fallback_cpu[index, region, mode].item()),
+                        }
+                    )
+            parameters: dict[str, Any] = {
+                "fit_support_shape": list(view.support.shape),
+                "fit_support_bits": np.packbits(view.support.detach().cpu().numpy()).tobytes().hex(),
+                "bias_coefficients": [float(value) for value in bias_cpu[index]],
+                "bias_ridge": self.bias_ridge,
+                "components": components,
+                "distribution": self.distribution,
+                "student_t_dof": STUDENT_T_DOF if self.distribution == "student_t" else None,
+                "variance_floor": self.variance_floor,
+                "global_mean": float(global_mean_cpu[index]),
+                "global_variance": float(global_variance_cpu[index]),
+                "region_counts": {region: counts[region] for region in range(NUM_REGIONS)},
+                "fallback_regions": fallback_regions,
+                "fallback_region_count": len(fallback_regions),
+                "observed_fit_pixels": observed_count,
+            }
+            result.append(
+                FittedHypothesis(
+                    hypothesis=hypothesis,
+                    parameters=parameters,
+                    fit_score=fit_score,
+                    fitting_steps=self.max_iterations,
+                    capacity=self.capacity,
+                    study_id=view.study_id,
+                    unit_id=view.unit_id,
+                    partition_id=view.partition_id,
+                    metadata={
+                        "contract_version": VERSION,
+                        "protocol": view.protocol,
+                        "beta": self.beta,
+                        "background_modes": self.background_modes,
+                        "component_penalty": component_penalty,
+                        "max_iterations": self.max_iterations,
+                        "temporal_support": self.supports_temporal,
+                        "recipe": self.recipe(),
+                        "hypothesis_digest": _hypothesis_digest(hypothesis),
+                    },
+                )
+            )
+        return result
+
     def _fit_bias_batch(
         self,
         values: torch.Tensor,
@@ -1512,6 +2037,47 @@ class ObservationModel:
     # ------------------------------------------------------------------
     # scoring
     # ------------------------------------------------------------------
+    def _score_on_device(
+        self,
+        fitted: FittedHypothesis,
+        scoring_view: ScoringView,
+    ) -> EvidenceScore:
+        """Score one fit after routing detached residual/density work to target."""
+        context = _validate_score_context(self, fitted, scoring_view)
+        if context.count == 0:
+            return _score_from_nll(
+                nll_sum=0.0,
+                count=0,
+                complexity=context.complexity,
+                prior=context.prior,
+                beta=self.beta,
+                role=scoring_view.role,
+            )
+        support = context.support
+        device = support.device
+        height, width = context.height, context.width
+        flat_support = support.reshape(-1)
+        image = scoring_view.image.detach().to(device=device, dtype=torch.float64)[0].reshape(-1)
+        labels = context.hypothesis.labels.detach().to(device=device, dtype=torch.long).reshape(-1)
+        basis = _plane_basis(height, width, device)[flat_support]
+        residual = image[flat_support] - basis @ context.bias_coefficients
+        log_mixture = _batch_log_mixture(
+            residual.unsqueeze(0),
+            labels[flat_support].unsqueeze(0),
+            [context.components],
+            self.distribution,
+            self.background_modes,
+        )[0]
+        nll_sum = _as_float((-log_mixture).sum())
+        return _score_from_nll(
+            nll_sum=nll_sum,
+            count=context.count,
+            complexity=context.complexity,
+            prior=context.prior,
+            beta=self.beta,
+            role=scoring_view.role,
+        )
+
     def score(self, fitted: FittedHypothesis, scoring_view: ScoringView) -> EvidenceScore:
         """Score a *frozen* fit against withheld observations. Never refits.
 
@@ -1523,6 +2089,9 @@ class ObservationModel:
             raise ObservationContractError("score requires a contracts.FittedHypothesis")
         if not isinstance(scoring_view, ScoringView):
             raise ObservationContractError("score requires a contracts.ScoringView")
+        self._validate_execution_view_device(scoring_view)
+        if self._uses_cuda_execution:
+            return self._score_on_device(fitted, scoring_view)
         scoring_view.validate()
         if fitted.study_id != scoring_view.study_id:
             raise ObservationContractError(
@@ -1658,14 +2227,30 @@ class ObservationModel:
         context = _validate_score_context(self, fitted, scoring_view)
         support = context.support
         height, width = context.height, context.width
-        nll_full = torch.zeros((height, width), dtype=torch.float64, device=scoring_view.image.device)
+        device = support.device
+        nll_full = torch.zeros((height, width), dtype=torch.float64, device=device)
         if context.count:
             flat_support = support.reshape(-1)
-            flat_image = scoring_view.image.detach().to(torch.float64)[0].reshape(-1)[flat_support]
-            flat_labels = context.hypothesis.labels.detach().to(support.device).reshape(-1)[flat_support]
-            basis = _plane_basis(height, width, scoring_view.image.device)[flat_support]
+            flat_image = (
+                scoring_view.image.detach().to(device=device, dtype=torch.float64)[0]
+                .reshape(-1)[flat_support]
+            )
+            flat_labels = (
+                context.hypothesis.labels.detach().to(device=device, dtype=torch.long)
+                .reshape(-1)[flat_support]
+            )
+            basis = _plane_basis(height, width, device)[flat_support]
             residual = flat_image - basis @ context.bias_coefficients
-            nll_values = -self._log_mixture(residual, flat_labels, list(context.components))
+            if not self._uses_cuda_execution:
+                nll_values = -self._log_mixture(residual, flat_labels, list(context.components))
+            else:
+                nll_values = -_batch_log_mixture(
+                    residual.unsqueeze(0),
+                    flat_labels.unsqueeze(0),
+                    [context.components],
+                    self.distribution,
+                    self.background_modes,
+                )[0]
             nll_full.reshape(-1)[flat_support] = nll_values
             nll_sum = _as_float(nll_values.sum())
         else:
@@ -1682,9 +2267,15 @@ class ObservationModel:
             (key, _freeze_recipe_value(value))
             for key, value in sorted(self.recipe().items(), key=lambda item: item[0])
         )
+        # Regional auditing supplies CPU connected-component masks and performs
+        # integrity hashing on CPU.  CUDA likelihood work therefore crosses one
+        # full-grid D2H boundary here; the immutable PreparedScore and all
+        # subsequent score_region reductions stay portable CPU tensors.
+        prepared_nll = nll_full.detach().cpu() if self._uses_cuda_execution else nll_full
+        prepared_support = support.detach().cpu() if self._uses_cuda_execution else support
         return PreparedScore(
-            nll_per_pixel=nll_full,
-            support=support,
+            nll_per_pixel=prepared_nll,
+            support=prepared_support,
             nll_sum=result.nll_sum,
             count=result.count,
             normalized_nll=result.normalized_nll,
@@ -1789,20 +2380,29 @@ class ObservationModel:
         if not contexts:
             return []
         height, width = contexts[0].height, contexts[0].width
-        device = contexts[0].scoring_view.image.device
+        device = self._target_device(contexts[0].scoring_view.image.device)
         batch_size = len(contexts)
         images = torch.stack(
-            [context.scoring_view.image.detach().to(torch.float64)[0] for context in contexts],
+            [
+                context.scoring_view.image.detach().to(device=device, dtype=torch.float64)[0]
+                for context in contexts
+            ],
             dim=0,
         ).reshape(batch_size, -1)
         supports = torch.stack(
-            [context.support.detach() for context in contexts], dim=0
+            [context.support.detach().to(device=device) for context in contexts], dim=0
         ).reshape(batch_size, -1)
         labels = torch.stack(
-            [context.hypothesis.labels.detach().to(device=device) for context in contexts], dim=0
+            [
+                context.hypothesis.labels.detach().to(device=device, dtype=torch.long)
+                for context in contexts
+            ],
+            dim=0,
         ).reshape(batch_size, -1)
         basis = _plane_basis(height, width, device)
-        bias = torch.stack([context.bias_coefficients for context in contexts], dim=0)
+        bias = torch.stack(
+            [context.bias_coefficients.to(device=device) for context in contexts], dim=0
+        )
         residual = images - (basis @ bias.transpose(0, 1)).transpose(0, 1)
         components = [context.components for context in contexts]
         log_mixture = _batch_log_mixture(

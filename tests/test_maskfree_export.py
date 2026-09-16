@@ -409,7 +409,7 @@ def test_verified_freeze_session_hashes_once_per_phase_and_rejects_mutation(
 MASKFREE_CONFIG_FIELDS = {
     "dataset", "data_root", "output_dir", "total_epochs", "seed", "batch_size",
     "accumulation_steps", "image_size", "lr", "weight_decay", "warmup_epochs",
-    "width", "feature_dim", "protocol", "depth_axis", "device", "num_workers",
+    "width", "feature_dim", "protocol", "depth_axis", "device", "audit_device", "num_workers",
     "amp", "wandb_mode", "wandb_project", "run_id", "max_steps", "max_epochs",
     "resume", "allow_cpu", "epoch_validation", "epoch_reference_config",
 }

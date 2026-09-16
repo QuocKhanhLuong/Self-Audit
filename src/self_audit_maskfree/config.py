@@ -17,6 +17,11 @@ CONFIG_SCHEMA_VERSION = "maskfree150.config.v1"
 DATASETS = ("acdc", "mnms")
 PROTOCOLS = ("auto", "cine_predictive", "spatial_predictive")
 WANDB_MODES = ("offline", "online", "disabled")
+# The observation/audit path may execute on the trainer's model device, or on
+# an explicitly selected backend for a matched reference run. ``auto`` is the
+# production setting: it resolves to the trainer model device at construction
+# time rather than silently falling back when CUDA is unavailable.
+AUDIT_DEVICES = ("auto", "cpu", "cuda")
 
 #: Fields that define the scientific identity of a run. A resume whose config
 #: disagrees on any of them is a different experiment and fails closed.
@@ -43,6 +48,7 @@ SCIENTIFIC_FIELDS = (
 OPERATIONAL_FIELDS = (
     "output_dir",
     "device",
+    "audit_device",
     "num_workers",
     "wandb_mode",
     "wandb_project",
@@ -95,6 +101,7 @@ class MaskfreeConfig:
     protocol: str = "auto"
     depth_axis: int = 2
     device: str = "cuda"
+    audit_device: str = "auto"
     num_workers: int = 0
     amp: bool = True
     wandb_mode: str = "offline"
@@ -122,6 +129,10 @@ class MaskfreeConfig:
             raise ConfigError(f"protocol must be one of {PROTOCOLS}, got {self.protocol!r}")
         if self.wandb_mode not in WANDB_MODES:
             raise ConfigError(f"wandb_mode must be one of {WANDB_MODES}, got {self.wandb_mode!r}")
+        if self.audit_device not in AUDIT_DEVICES:
+            raise ConfigError(
+                f"audit_device must be one of {AUDIT_DEVICES}, got {self.audit_device!r}"
+            )
         if self.depth_axis not in (0, 1, 2):
             raise ConfigError("depth_axis must be 0, 1 or 2")
         if not str(self.data_root).strip():

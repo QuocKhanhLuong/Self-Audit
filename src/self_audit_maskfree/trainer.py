@@ -22,6 +22,7 @@ missing interfaces rather than training against invented data.
 """
 from __future__ import annotations
 
+import inspect
 import json
 import math
 import time
@@ -57,6 +58,12 @@ STATUS_COMPLETED = "completed"
 STATUS_PARTIAL = "partial"
 STATUS_FAILED = "failed"
 
+# W1 keeps observation sufficient statistics and likelihood arithmetic in
+# FP64 on whichever execution device the trainer resolves.  This is an
+# identity-bearing contract: a checkpoint cannot silently migrate between
+# observation backends during an exact resume.
+AUDIT_NUMERICAL_BACKEND = "torch.float64"
+
 
 class TrainerContractError(RuntimeError):
     """Raised when the run cannot proceed without violating the contract."""
@@ -68,6 +75,46 @@ class MissingComponentError(TrainerContractError):
 
 class ResumeIdentityError(TrainerContractError):
     """Raised when a checkpoint belongs to a different experiment."""
+
+
+def _resolve_audit_device(requested: str, model_device: torch.device) -> torch.device:
+    """Resolve the observation execution device without implicit CUDA fallback.
+
+    ``runtime.resolve_device`` intentionally permits a CUDA-to-CPU fallback for
+    bounded neural-network software checks when ``allow_cpu`` is enabled.  The
+    audit path has a stricter contract: an explicit ``audit_device='cuda'`` is a
+    request for CUDA arithmetic and must fail closed when CUDA is unavailable.
+    ``auto`` follows the already-resolved trainer model device, so CPU smoke
+    runs remain portable while production templates stay on CUDA.
+    """
+    requested = str(requested)
+    if requested == "auto":
+        return torch.device(model_device)
+    if requested == "cpu":
+        return torch.device("cpu")
+    if requested != "cuda":
+        raise TrainerContractError(
+            f"audit_device must be 'auto', 'cpu' or 'cuda', got {requested!r}"
+        )
+    if not torch.cuda.is_available():
+        raise TrainerContractError(
+            "audit_device='cuda' is unavailable; refusing a silent CPU fallback"
+        )
+    try:
+        # If neural models already target an indexed CUDA device, audit math
+        # follows that same device.  A bare explicit CUDA request with CPU
+        # models uses the current/default CUDA device as its independent audit
+        # placement; no implicit cross-GPU migration is allowed.
+        device = model_device if model_device.type == "cuda" else torch.device("cuda")
+        # Force validation of a malformed/no-visible-device CUDA runtime before
+        # constructing the observation model.  This does not synchronize any
+        # kernels and is therefore outside the measured inner audit loop.
+        torch.cuda.get_device_properties(device)
+    except (RuntimeError, AssertionError, IndexError) as exc:
+        raise TrainerContractError(
+            f"audit_device='cuda' could not be initialized: {exc}"
+        ) from exc
+    return device
 
 
 # ---------------------------------------------------------------------------
@@ -234,6 +281,8 @@ class MaskfreeTrainer:
         self.repo_root = Path(repo_root) if repo_root is not None else Path(__file__).resolve().parents[2]
 
         self.device = runtime.resolve_device(config.device, allow_cpu=config.allow_cpu)
+        self.audit_device = _resolve_audit_device(config.audit_device, self.device)
+        self.audit_numerical_backend = AUDIT_NUMERICAL_BACKEND
         self.run_id = config.run_id or self._default_run_id()
         run_root = Path(config.output_dir) / "runs" / "maskfree150" / config.dataset / self.run_id
         if (run_root / "run_identity.json").exists() and not config.resume:
@@ -242,7 +291,13 @@ class MaskfreeTrainer:
 
         self.source = runtime.source_identity(self.repo_root)
         self.timing = runtime.TimingAccumulator.empty()
-        self.timing.device = self.device
+        # TimingAccumulator synchronizes at stage boundaries.  Audit math may
+        # run on a distinct explicit CUDA device from the neural models, so use
+        # whichever resolved backend can enqueue CUDA work; no extra per-region
+        # synchronization is introduced by the trainer.
+        self.timing.device = (
+            self.audit_device if self.audit_device.type == "cuda" else self.device
+        )
 
         self.sampling_generator = torch.Generator()
         self.sampling_generator.manual_seed(config.seed * 7919 + 13)
@@ -254,11 +309,35 @@ class MaskfreeTrainer:
         self.models: dict[str, torch.nn.Module] = {}
         self.optimizers: dict[str, torch.optim.Optimizer] = {}
         self.scaler: torch.amp.GradScaler | None = None
-        self.observation = self.components.observation_model(
-            max_iterations=OBSERVATION_MAX_ITERATIONS,
-            variance_floor=OBSERVATION_VARIANCE_FLOOR,
-            beta=OBSERVATION_BETA,
+        observation_factory = self.components.observation_model
+        observation_kwargs = {
+            "max_iterations": OBSERVATION_MAX_ITERATIONS,
+            "variance_floor": OBSERVATION_VARIANCE_FLOOR,
+            "beta": OBSERVATION_BETA,
+        }
+        # W1's additive execution_device keyword is optional for injected test
+        # doubles and older source snapshots.  Inspect the callable rather than
+        # catching arbitrary TypeError from inside a real constructor: custom
+        # components therefore keep working without masking implementation
+        # errors, while the canonical model receives the resolved device.
+        try:
+            signature = inspect.signature(observation_factory)
+        except (TypeError, ValueError):  # pragma: no cover - exotic callables
+            signature = None
+        supports_execution_device = signature is None or "execution_device" in (
+            signature.parameters if signature is not None else {}
+        ) or any(
+            parameter.kind is inspect.Parameter.VAR_KEYWORD
+            for parameter in (signature.parameters.values() if signature is not None else ())
         )
+        if self.audit_device.type == "cuda" and not supports_execution_device:
+            raise TrainerContractError(
+                "resolved CUDA audit device requires an ObservationModel factory "
+                "that accepts execution_device"
+            )
+        if supports_execution_device:
+            observation_kwargs["execution_device"] = self.audit_device
+        self.observation = observation_factory(**observation_kwargs)
 
         self.global_step = 0
         self.component_steps = {"producer": 0, "student_no_audit": 0, "student_audited": 0}
@@ -284,6 +363,7 @@ class MaskfreeTrainer:
         return f"{self.config.dataset}-{stamp}-{digest}-{uuid.uuid4().hex[:8]}"
 
     def identity(self) -> dict[str, Any]:
+        audit_identity = self._audit_execution_identity()
         return {
             "schema_version": TRAINER_SCHEMA_VERSION,
             "contract_version": CONTRACT_VERSION,
@@ -299,6 +379,21 @@ class MaskfreeTrainer:
             "git_commit": self.source["git"].get("commit"),
             "runtime_environment": self.source["environment"],
             "device_identity": runtime.device_identity(self.device),
+            "audit_device_requested": self.config.audit_device,
+            "audit_device_identity": audit_identity["resolved_device"],
+            "audit_numerical_backend": audit_identity["numerical_backend"],
+            "audit_execution": audit_identity,
+        }
+
+    def _audit_execution_identity(self) -> dict[str, Any]:
+        """Return portable placement/backend metadata for reports and resumes."""
+        return {
+            "requested_device": self.config.audit_device,
+            "resolved_device": runtime.device_identity(self.audit_device),
+            "placement": self.audit_device.type,
+            "numerical_backend": self.audit_numerical_backend,
+            "model_device": runtime.device_identity(self.device),
+            "execution_device_source": "trainer_model_device" if self.config.audit_device == "auto" else "explicit_config",
         }
 
     @property
@@ -383,7 +478,9 @@ class MaskfreeTrainer:
             self._write_run_identity()
         current_progress().event("setup.ready", units=len(self.dataset), batches=self.batches_per_epoch,
                                  protocol=self.manifest.get("resolved_protocol"),
-                                 effective_data_workers=0, amp=use_amp)
+                                 effective_data_workers=0, amp=use_amp,
+                                 audit_device=self._audit_execution_identity()["resolved_device"],
+                                 audit_numerical_backend=self.audit_numerical_backend)
         self._setup_done = True
 
     def _write_run_identity(self) -> None:
@@ -396,7 +493,10 @@ class MaskfreeTrainer:
             stored = json.loads(path.read_text(encoding="utf-8"))
             mismatches = {
                 key: {"stored": stored.get(key), "current": identity.get(key)}
-                for key in ("run_id", "dataset", "scientific_hash", "manifest_hash", "partition_hash")
+                for key in (
+                    "run_id", "dataset", "scientific_hash", "manifest_hash", "partition_hash",
+                    "audit_device_identity", "audit_numerical_backend",
+                )
                 if stored.get(key) != identity.get(key)
             }
             if mismatches:
@@ -469,6 +569,8 @@ class MaskfreeTrainer:
                     "status": "pass", "actual_physical_batch": self.config.batch_size,
                     "accumulation_steps": self.config.accumulation_steps,
                     "device": runtime.device_identity(self.device),
+                    "audit_device_identity": runtime.device_identity(self.audit_device),
+                    "audit_numerical_backend": self.audit_numerical_backend,
                     "scientific_hash": self.identity()["scientific_hash"],
                     "source_hash": self.identity()["source_hash"],
                     "manifest_hash": self.identity()["manifest_hash"],
@@ -606,6 +708,7 @@ class MaskfreeTrainer:
             "run_id": self.run_id,
             "run_root": str(self.paths.root),
             "identity": self.identity(),
+            "audit_execution": self._audit_execution_identity(),
             "epochs_completed": self.last_completed_epoch + 1,
             "last_completed_epoch": self.last_completed_epoch,
             "total_epochs": config.total_epochs,
@@ -618,7 +721,10 @@ class MaskfreeTrainer:
             "effective_data_workers": 0,
             "steps_per_epoch": self.steps_per_epoch,
             "device": runtime.device_identity(self.device),
+            "audit_device": runtime.device_identity(self.audit_device),
+            "audit_numerical_backend": self.audit_numerical_backend,
             "gpu_stats": runtime.gpu_stats(self.device),
+            "audit_gpu_stats": runtime.gpu_stats(self.audit_device),
             "amp_enabled": self.amp_enabled,
             "model_info": self.model_info,
             "physical_batch": config.batch_size,
@@ -761,7 +867,10 @@ class MaskfreeTrainer:
                     batch_seconds=time.monotonic() - batch_started,
                     batch_stage_seconds={k: v - prior_timing.get(k, 0.0)
                                          for k, v in self.timing.seconds.items()},
-                    timing_note="inclusive stages; do not sum", gpu_stats=runtime.gpu_stats(self.device),
+                    timing_note="inclusive stages; do not sum",
+                    gpu_stats=runtime.gpu_stats(self.device),
+                    audit_gpu_stats=runtime.gpu_stats(self.audit_device),
+                    audit_execution=self._audit_execution_identity(),
                     verification_status="locked_until_all_predictions_frozen",
                 )
             self._partial_epoch = {
@@ -782,6 +891,7 @@ class MaskfreeTrainer:
             "dataset": config.dataset,
             "protocol": self.manifest.get("resolved_protocol"),
             "contract_version": CONTRACT_VERSION,
+            "audit_execution": self._audit_execution_identity(),
             "pseudo_label_version": self.pseudo_label_version(epoch),
             "label_ramp": ramp,
             "lr": self.current_lr(),
@@ -889,9 +999,13 @@ class MaskfreeTrainer:
             with torch.no_grad():
                 features = producer(context)["features"].detach()
             producer.train()
-        # Observation fitting is a detached CPU-side workload.  Stage one
-        # transfer for the complete physical batch; the per-unit path below
-        # only indexes this CPU tensor and never calls ``.cpu()`` again.
+        # Hypothesis generation remains a detached CPU-side workload so the
+        # candidate IDs/labels and topology stay byte-for-byte deterministic.
+        # Stage exactly one feature transfer for the complete physical batch;
+        # W1's ObservationModel owns the subsequent fitting/scoring placement
+        # on ``self.audit_device`` and its public outputs remain portable.
+        # The per-unit path below only indexes this CPU tensor and never calls
+        # ``.cpu()`` again.
         with self.timing.stage("features.to_cpu", batch_units=len(units)):
             features_cpu = features.detach().cpu()
 
@@ -1154,6 +1268,7 @@ class MaskfreeTrainer:
                 "unit_id": unit.fitting.unit_id,
                 "study_id": unit.fitting.study_id,
                 "partition_id": unit.fitting.partition_id,
+                "audit_execution": self._audit_execution_identity(),
                 "pseudo_label_version": self.pseudo_label_version(epoch),
                 "initial_candidate_id": audit.initial.candidate_id,
                 "selected_candidate_id": audit.selected.candidate_id,
@@ -1232,6 +1347,7 @@ class MaskfreeTrainer:
             "schema_version": TRAINER_SCHEMA_VERSION,
             "contract_version": CONTRACT_VERSION,
             "identity": self.identity(),
+            "audit_execution": self._audit_execution_identity(),
             "config": self.config.to_dict(),
             "status": status,
             "completed": bool(completed),
@@ -1284,7 +1400,10 @@ class MaskfreeTrainer:
                     f"resume refused: {key} mismatch "
                     f"(checkpoint={stored_identity.get(key)!r}, current={current_identity.get(key)!r})"
                 )
-        for key in ("run_id", "runtime_environment", "device_identity"):
+        for key in (
+            "run_id", "runtime_environment", "device_identity",
+            "audit_device_identity", "audit_numerical_backend",
+        ):
             if stored_identity.get(key) != current_identity.get(key):
                 raise ResumeIdentityError(f"exact resume refused: {key} mismatch")
         old_root = Path(payload["config"]["output_dir"]).resolve()
@@ -1322,7 +1441,11 @@ class MaskfreeTrainer:
         saved_timing = payload.get("timing", {})
         self.timing = runtime.TimingAccumulator(
             seconds=dict(saved_timing.get("seconds", {})), calls=dict(saved_timing.get("calls", {})),
-            device=self.device)
+            # Audit stages may enqueue CUDA work on an explicit device that
+            # differs from the neural model device.  Preserve that placement
+            # across exact resume; CPU audit timing falls back to model timing
+            # for legacy behavior.
+            device=(self.audit_device if self.audit_device.type == "cuda" else self.device))
         # Discard log writes beyond the committed checkpoint transaction.
         for relative, offset in payload.get("log_offsets", {}).items():
             log_path = self.paths.root / relative
@@ -1641,6 +1764,7 @@ class MaskfreeTrainer:
                 self.paths.failure_report.rename(
                     self.paths.reports / f"recovered_failure_{uuid.uuid4().hex[:12]}.json")
             return {"attempted": True, "available": True,
+                    "audit_execution": self._audit_execution_identity(),
                     "splits": sorted(final_datasets), "units_per_split": {k: len(v) for k, v in final_datasets.items()},
                     "units": len(state_paths), "exported_predictions": len(entries),
                     "deployment_predictions": len(deployment_entries),
@@ -1673,6 +1797,9 @@ class MaskfreeTrainer:
             "status": "fail",
             "run_id": self.run_id,
             "device": runtime.device_identity(self.device),
+            "audit_device": runtime.device_identity(self.audit_device),
+            "audit_execution": self._audit_execution_identity(),
+            "audit_numerical_backend": self.audit_numerical_backend,
             "physical_batch": self.config.batch_size,
             "accumulation_steps": self.config.accumulation_steps,
             "effective_batch": self.config.effective_batch,
@@ -1684,6 +1811,7 @@ class MaskfreeTrainer:
             receipt.update({key: self.identity()[key] for key in
                             ("scientific_hash", "source_hash", "manifest_hash")})
             runtime.reset_peak_memory(self.device)
+            runtime.reset_peak_memory(self.audit_device)
             accumulator = EpochAccumulator()
             audit_counters = {
                 "units": 0, "accepted_edits": 0, "no_change": 0, "semantic_unresolved": 0,
@@ -1774,6 +1902,7 @@ class MaskfreeTrainer:
                     "export_unavailable_reason": export_reason,
                     "amp_enabled": self.amp_enabled,
                     "gpu_stats": runtime.gpu_stats(self.device),
+                    "audit_gpu_stats": runtime.gpu_stats(self.audit_device),
                     "cpu_only_evidence": self.device.type != "cuda",
                     "elapsed_seconds": time.time() - started,
                     "timing": self.timing.as_dict(),

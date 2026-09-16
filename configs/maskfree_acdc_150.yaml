@@ -63,6 +63,10 @@ protocol: auto
 depth_axis: 2
 
 device: cuda
+# ``auto`` resolves audit math to the trainer model device. This keeps the
+# production path on CUDA while allowing an explicit CPU audit only for a
+# matched software reference run.
+audit_device: auto
 num_workers: 0
 amp: false
 
