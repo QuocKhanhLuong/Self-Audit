@@ -1,6 +1,7 @@
 """Large neural batch / bounded IPC regression tests. CPU fixtures, not GPU timing."""
 from dataclasses import asdict, replace
 import json
+import math
 import random
 from pathlib import Path
 
@@ -12,7 +13,7 @@ from scripts.check_maskfree_audit_device import build_synthetic_units
 from self_audit_maskfree import auditor
 from self_audit_maskfree.candidate_execution import (
     CandidatePoolExecutor, CandidateExecutionError, MAX_PAYLOAD_BYTES_PER_UNIT,
-    MAX_RESULT_TENSOR_BYTES_PER_UNIT, _worker_task, generate_candidate_banks,
+    MAX_RESULT_TENSOR_BYTES_PER_UNIT, generate_candidate_banks,
 )
 from self_audit_maskfree.config import ConfigError, MaskfreeConfig, RUNTIME_FIELDS
 from self_audit_maskfree.export import export_prediction
@@ -37,6 +38,18 @@ def exact(a, b):
         assert a == b
 
 
+def candidate_state(bank):
+    """Compare every scientific field; measured runtime cannot be equal."""
+    values = []
+    for hypothesis in bank:
+        state = asdict(hypothesis)
+        latency = state["metadata"].pop("generation_latency")
+        assert set(latency) == {"bank_wall_seconds"}
+        assert math.isfinite(latency["bank_wall_seconds"]) and latency["bank_wall_seconds"] >= 0
+        values.append(state)
+    return values
+
+
 @pytest.fixture(scope='module')
 def batch32():
     units = build_synthetic_units(size=224, seed=42, count=32)
@@ -57,7 +70,7 @@ def test_chunked_real_candidates_exact(batch32, batch, workers):
         assert stats['max_input_tensor_bytes'] <= 8 * MAX_PAYLOAD_BYTES_PER_UNIT
         assert stats['max_result_window_tensor_bytes'] <= 8 * MAX_RESULT_TENSOR_BYTES_PER_UNIT
     for ref, got in zip(reference, actual):
-        exact([asdict(h) for h in ref], [asdict(h) for h in got])
+        exact(candidate_state(ref), candidate_state(got))
     exact(before, (random.getstate(), np.random.get_state(), torch.get_rng_state()))
 
 
@@ -80,7 +93,7 @@ def test_window_order_default_seeds_and_short_tail(batch32, monkeypatch):
     assert [n for n, _ in windows] == [3, 3, 3, 3, 3, 2]
     assert [s for _, seeds in windows for s in seeds] == list(range(42, 59))
     for ref, got in zip(reference, actual):
-        exact([asdict(h) for h in ref], [asdict(h) for h in got])
+        exact(candidate_state(ref), candidate_state(got))
 
 
 @pytest.mark.parametrize('chunk', [0, -1, 9, True, '8'])
@@ -117,6 +130,7 @@ def test_large_batch_config_and_profile_cli(tmp_path):
     resolved, info = p._prepare_config(args, tmp_path / 'profile')
     assert resolved.batch_size == 32 and resolved.candidate_workers == 8
     assert info['scientific_requirements']['batch_size'] == 32
+    # A B8 comparator is not silently repurposed into B32 by the config.
     args.batch_size = 8
     with pytest.raises(ValueError, match='mismatches'):
         p._prepare_config(args, tmp_path / 'bad')
@@ -140,6 +154,7 @@ def large_components(monkeypatch):
         return manifest
     components = replace(fixture.build_components(), discover_dataset=discover,
                          audit_banks=auditor.audit_banks, export_prediction=export_prediction)
+    # Explicit fixture boundary, not a claim about CI/rental CPU quota.
     monkeypatch.setattr('self_audit_maskfree.resources.resource_snapshot',
                         lambda **kwargs: {'cgroup': {'visible_cpu_upper_bound_cores': 8}})
     return fixture, components
