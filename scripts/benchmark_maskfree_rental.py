@@ -27,7 +27,10 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--output", type=Path, required=True)
     p.add_argument("--prefetch-batches", type=int, choices=(0, 1, 2), default=0)
     p.add_argument("--data-cache-bytes", type=int, default=64 * 1024 * 1024)
-    p.add_argument("--candidate-workers", type=int, choices=(0, 2, 4), default=0)
+    p.add_argument("--batch-size", type=int, choices=(8, 16, 32), default=8)
+    p.add_argument("--candidate-workers", type=int, choices=(0, 2, 4, 8), default=0)
+    p.add_argument("--candidate-chunk-size", type=int, choices=range(1, 9), default=8)
+    p.add_argument("--prefetch-max-bytes", type=int, default=32 * 1024 * 1024)
     p.add_argument("--diagnostic", action="store_true", help="1 warmup + 3 instrumented batches and cProfile")
     p.add_argument("--reference-report", type=Path, help="existing matched ordinary report; strict comparator unchanged")
     p.add_argument("--print-plan", action="store_true", help="validate configs and print commands without execution")
@@ -41,18 +44,19 @@ def configs_and_commands(args):
     for dataset, root in roots.items():
         config = load_config(ROOT / f"configs/maskfree_{dataset}_150.yaml").replace(
             data_root=str(root.resolve()), output_dir=str(output / "preflight_workspace"),
-            run_id=f"rental-{dataset}-gate", image_size=224, batch_size=8,
+            run_id=f"rental-{dataset}-gate", image_size=224, batch_size=args.batch_size,
             accumulation_steps=1, total_epochs=150, amp=False, device="cuda", audit_device="cpu",
             allow_cpu=False, max_steps=None, max_epochs=None, resume=None,
             timing_mode="diagnostic" if args.diagnostic else "production", logging_mode="buffered",
             data_cache_bytes=args.data_cache_bytes, prefetch_batches=args.prefetch_batches,
-            candidate_workers=args.candidate_workers)
+            candidate_workers=args.candidate_workers, candidate_chunk_size=args.candidate_chunk_size,
+            prefetch_max_bytes=args.prefetch_max_bytes)
         configs[dataset] = config
         commands.append([sys.executable, str(ROOT / "scripts/train_maskfree.py"), "--config",
                          str(output / f"{dataset}.json"), "--preflight"])
     profile = [sys.executable, str(ROOT / "scripts/profile_maskfree.py"), "--config", str(output / "acdc.json"),
                "--output", str(output / "profile"), "--kind", "optimized", "--device", "cuda",
-               "--audit-device", "cpu", "--image-size", "224", "--warmup-batches", "1" if args.diagnostic else "5",
+               "--audit-device", "cpu", "--image-size", "224", "--batch-size", str(args.batch_size), "--warmup-batches", "1" if args.diagnostic else "5",
                "--measured-batches", "3" if args.diagnostic else "30", "--timing-mode",
                "instrumented" if args.diagnostic else "ordinary"]
     if args.diagnostic:
@@ -83,7 +87,7 @@ def main(argv=None) -> int:
     if not selected_uuid or not initial.get("gpu", {}).get("compute_apps_available"):
         raise RuntimeError("Cannot establish selected GPU identity/competing compute processes; inspect resource diagnostics first")
     competing = [app for app in initial.get("gpu", {}).get("competing_apps", [])
-                 if str(app.get("gpu_uuid", "")) == selected_uuid and app.get("pid") != os.getpid()]
+                 if str(app.get("gpu_uuid", "")).removeprefix("GPU-").lower() == selected_uuid.removeprefix("GPU-").lower() and app.get("pid") != os.getpid()]
     if competing:
         raise RuntimeError(f"Selected GPU has compute processes; schedule this gate alone: {competing}")
     args.output.mkdir(parents=True)

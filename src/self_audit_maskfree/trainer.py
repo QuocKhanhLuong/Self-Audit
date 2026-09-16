@@ -371,9 +371,11 @@ class MaskfreeTrainer:
         self._prefetched_batches = None
         self._prefetch_stats: dict[str, Any] = {}
         self._candidate_executor = None
+        self._candidate_stats: dict[str, Any] = {}
 
     def _close_candidate_executor(self) -> None:
         if self._candidate_executor is not None:
+            self._candidate_stats = self._candidate_executor.stats()
             self._candidate_executor.close()
             self._candidate_executor = None
 
@@ -449,6 +451,8 @@ class MaskfreeTrainer:
             "image_size": self.config.image_size,
             "cache": cache_stats() if callable(cache_stats) else None,
             "prefetch": dict(self._prefetch_stats),
+            "candidate_execution": (self._candidate_executor.stats() if self._candidate_executor is not None
+                                    else dict(self._candidate_stats)),
             "lineage_writers": {str(path.relative_to(self.paths.root)): dict(writer.stats)
                                 for path, writer in self._lineage_writers.items()},
         }
@@ -547,11 +551,12 @@ class MaskfreeTrainer:
         self.scaler = runtime.make_grad_scaler(self.device, enabled=use_amp)
         self.amp_enabled = use_amp
         if config.candidate_workers:
-            if not self._bulk_audit_enabled() or config.batch_size > 8:
-                raise TrainerContractError("candidate workers require canonical audit components and batch <= 8")
+            if not self._bulk_audit_enabled():
+                raise TrainerContractError("candidate workers require canonical audit components")
             from .candidate_execution import CandidatePoolExecutor
             self._candidate_executor = CandidatePoolExecutor(
-                workers=config.candidate_workers, worker_threads=config.candidate_worker_threads)
+                workers=config.candidate_workers, worker_threads=config.candidate_worker_threads,
+                chunk_size=config.candidate_chunk_size)
 
         with self.timing.stage("run_identity.write", path=str(self.paths.root)):
             self._write_run_identity()
