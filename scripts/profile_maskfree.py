@@ -51,6 +51,7 @@ SYNTHETIC_TRAIN_UNITS_MIN = 256
 PARTIAL_EPOCH_MAX_BATCHES = SYNTHETIC_DEPTH // 8
 TIMING_MODES = ("ordinary", "instrumented")
 IMAGE_SIZE_CHOICES = (128, 224)
+BATCH_SIZE_CHOICES = (8, 16, 32)
 SCIENTIFIC_REQUIREMENTS = {
     "total_epochs": 150,
     "seed": 42,
@@ -81,10 +82,13 @@ def _selected_image_size(args: argparse.Namespace) -> int:
     return int(image_size)
 
 
-def _scientific_requirements(image_size: int) -> dict[str, Any]:
+def _scientific_requirements(image_size: int, batch_size: int = 8) -> dict[str, Any]:
     """Return the fixed profiler contract with the selected spatial resolution."""
     requirements = dict(SCIENTIFIC_REQUIREMENTS)
+    if isinstance(batch_size, bool) or batch_size not in BATCH_SIZE_CHOICES:
+        raise ValueError(f"batch-size must be one of {BATCH_SIZE_CHOICES}")
     requirements["image_size"] = int(image_size)
+    requirements["batch_size"] = int(batch_size)
     return requirements
 
 
@@ -2128,6 +2132,7 @@ def _prepare_config(args: argparse.Namespace, output: Path) -> tuple[Any, dict[s
     from self_audit_maskfree.config import MaskfreeConfig, load_config
 
     requested_image_size = _selected_image_size(args)
+    requested_batch_size = getattr(args, "batch_size", 8)
     supports_audit_device = any(
         field.name == "audit_device" for field in dataclasses.fields(MaskfreeConfig)
     )
@@ -2159,7 +2164,7 @@ def _prepare_config(args: argparse.Namespace, output: Path) -> tuple[Any, dict[s
             output_dir=str(output / "trainer_workspace"),
             total_epochs=150,
             seed=args.seed,
-            batch_size=8,
+            batch_size=requested_batch_size,
             accumulation_steps=1,
             image_size=requested_image_size,
             lr=0.001,
@@ -2215,7 +2220,7 @@ def _prepare_config(args: argparse.Namespace, output: Path) -> tuple[Any, dict[s
 
     runtime_overrides = {}
     for field in ("timing_mode", "logging_mode", "log_buffer_bytes", "data_cache_bytes",
-                  "prefetch_batches", "prefetch_max_bytes", "candidate_workers", "candidate_worker_threads"):
+                  "prefetch_batches", "prefetch_max_bytes", "candidate_workers", "candidate_worker_threads", "candidate_chunk_size"):
         arg = "runtime_timing_mode" if field == "timing_mode" else field
         value = getattr(args, arg, None)
         if value is not None:
@@ -2225,7 +2230,7 @@ def _prepare_config(args: argparse.Namespace, output: Path) -> tuple[Any, dict[s
     if runtime_overrides:
         config = config.replace(**runtime_overrides)
 
-    scientific_requirements = _scientific_requirements(requested_image_size)
+    scientific_requirements = _scientific_requirements(requested_image_size, requested_batch_size)
     values = {name: getattr(config, name) for name in scientific_requirements}
     mismatches = {
         name: {"expected": expected, "actual": values[name]}
@@ -2255,7 +2260,8 @@ def _run_profile(args: argparse.Namespace) -> dict[str, Any]:
     """Execute one bounded trainer run and write a JSON report."""
     if args.warmup_batches < 0 or args.measured_batches <= 0:
         raise ValueError("warmup-batches must be non-negative and measured-batches must be positive")
-    if args.warmup_batches + args.measured_batches >= PARTIAL_EPOCH_MAX_BATCHES:
+    if args.warmup_batches + args.measured_batches >= min(PARTIAL_EPOCH_MAX_BATCHES,
+            SYNTHETIC_DEPTH // getattr(args, "batch_size", 8) if args.synthetic else PARTIAL_EPOCH_MAX_BATCHES):
         raise ValueError(
             "profiling bound crosses the fixed 1024-unit synthetic epoch; "
             "keep warmup+measured below 128 batches"
@@ -2542,9 +2548,9 @@ def _run_profile(args: argparse.Namespace) -> dict[str, Any]:
             int(batch.get("logical_work", {}).get("fit_many", {}).get("items", 0))
             for batch in measured
         ]
-        if any(item != 32 for item in fit_many_items):
+        if any(item != config.batch_size * PROFILE_BUDGET_REQUIREMENTS["bank_size"] for item in fit_many_items):
             validation_errors.append(
-                "canonical bulk fit_many item count mismatch: expected 32 per measured batch"
+                f"canonical bulk fit_many item count mismatch: expected {config.batch_size * PROFILE_BUDGET_REQUIREMENTS['bank_size']} per measured batch"
             )
     if result is None:
         validation_errors.append("trainer returned no result")
@@ -2576,7 +2582,8 @@ def _run_profile(args: argparse.Namespace) -> dict[str, Any]:
         validation_errors.append(
             f"synthetic train cohort is too small: {len(unit_ids)} < {SYNTHETIC_TRAIN_UNITS_MIN}"
         )
-    if args.warmup_batches + args.measured_batches >= PARTIAL_EPOCH_MAX_BATCHES:
+    if args.warmup_batches + args.measured_batches >= min(PARTIAL_EPOCH_MAX_BATCHES,
+            SYNTHETIC_DEPTH // getattr(args, "batch_size", 8) if args.synthetic else PARTIAL_EPOCH_MAX_BATCHES):
         validation_errors.append(
             "requested profiling bound crosses the fixed synthetic epoch; use a partial-epoch bound"
         )
@@ -2616,6 +2623,8 @@ def _run_profile(args: argparse.Namespace) -> dict[str, Any]:
             "scientific_identity": config.scientific_identity(),
             "scientific_hash": runtime.sha256_json(config.scientific_identity()),
             "image_size_contract": preparation.get("image_size_contract"),
+            "physical_batch": config.batch_size,
+            "effective_batch": config.effective_batch,
         },
         "source": {
             "snapshot": snapshot,
@@ -2777,6 +2786,8 @@ def build_parser() -> argparse.ArgumentParser:
         default=SCIENTIFIC_REQUIREMENTS["image_size"],
         help="spatial profiler contract (128 preserves the historical default; 224 matches production configs)",
     )
+    parser.add_argument("--batch-size", type=int, choices=BATCH_SIZE_CHOICES, default=8,
+                        help="explicit profile contract; must match the supplied YAML (default 8)")
     parser.add_argument("--device", choices=("cpu", "cuda"), default=None)
     parser.add_argument(
         "--audit-device",
@@ -2792,7 +2803,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--runtime-timing-mode", choices=("production", "diagnostic"), default=None)
     parser.add_argument("--logging-mode", choices=("sync", "buffered"), default=None)
     for field in ("log_buffer_bytes", "data_cache_bytes", "prefetch_batches", "prefetch_max_bytes",
-                  "candidate_workers", "candidate_worker_threads"):
+                  "candidate_workers", "candidate_worker_threads", "candidate_chunk_size"):
         parser.add_argument("--" + field.replace("_", "-"), type=int, default=None)
     parser.add_argument(
         "--source-root",
@@ -2815,7 +2826,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.warmup_batches < 0 or args.measured_batches <= 0:
         parser.error("warmup-batches must be non-negative and measured-batches must be positive")
-    if args.warmup_batches + args.measured_batches >= PARTIAL_EPOCH_MAX_BATCHES:
+    if args.warmup_batches + args.measured_batches >= min(PARTIAL_EPOCH_MAX_BATCHES,
+            SYNTHETIC_DEPTH // getattr(args, "batch_size", 8) if args.synthetic else PARTIAL_EPOCH_MAX_BATCHES):
         parser.error("warmup-batches + measured-batches must stay below the fixed epoch (128 batches)")
     if args.run_id is None:
         args.run_id = f"profile-{time.strftime('%Y%m%d-%H%M%S', time.gmtime())}-{os.getpid()}"

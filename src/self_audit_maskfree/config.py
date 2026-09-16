@@ -25,6 +25,7 @@ AUDIT_DEVICES = ("auto", "cpu", "cuda")
 RUNTIME_FIELDS = (
     "timing_mode", "logging_mode", "log_buffer_bytes", "data_cache_bytes",
     "prefetch_batches", "prefetch_max_bytes", "candidate_workers", "candidate_worker_threads",
+    "candidate_chunk_size",
 )
 
 #: Fields that define the scientific identity of a run. A resume whose config
@@ -115,6 +116,7 @@ class MaskfreeConfig:
     prefetch_max_bytes: int = 32 * 1024 * 1024
     candidate_workers: int = 0
     candidate_worker_threads: int = 1
+    candidate_chunk_size: int = 8
     num_workers: int = 0
     amp: bool = True
     wandb_mode: str = "offline"
@@ -151,15 +153,17 @@ class MaskfreeConfig:
         if self.logging_mode not in ("sync", "buffered"):
             raise ConfigError("logging_mode must be sync or buffered")
         for name in ("log_buffer_bytes", "data_cache_bytes", "prefetch_batches",
-                     "prefetch_max_bytes", "candidate_workers", "candidate_worker_threads"):
+                     "prefetch_max_bytes", "candidate_workers", "candidate_worker_threads", "candidate_chunk_size"):
             value = getattr(self, name)
             minimum = 1 if name in ("log_buffer_bytes", "prefetch_max_bytes", "candidate_worker_threads") else 0
             if not isinstance(value, int) or isinstance(value, bool) or value < minimum:
                 raise ConfigError(f"{name} must be an integer >= {minimum}")
         if self.prefetch_batches > 2:
             raise ConfigError("prefetch_batches must be 0, 1 or 2 (bounded input lookahead)")
-        if self.candidate_workers not in (0, 2, 4):
-            raise ConfigError("candidate_workers must be 0, 2 or 4")
+        if self.candidate_workers not in (0, 2, 4, 8):
+            raise ConfigError("candidate_workers must be 0, 2, 4 or 8")
+        if not 1 <= self.candidate_chunk_size <= 8:
+            raise ConfigError("candidate_chunk_size must be between 1 and 8")
         if self.depth_axis not in (0, 1, 2):
             raise ConfigError("depth_axis must be 0, 1 or 2")
         if not str(self.data_root).strip():

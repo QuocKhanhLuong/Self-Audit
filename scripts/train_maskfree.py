@@ -155,7 +155,7 @@ def _execute(args: argparse.Namespace, progress: TerminalProgress) -> int:
         f"cpu_leaf_quota={cpu.get('leaf_cpu', {}).get('quota_cores')} "
         f"cpu_visible_upper_bound={cpu.get('visible_cpu_upper_bound_cores')} "
         f"threads={trainer.runtime_summary()['torch_threads']} candidates_workers={config.candidate_workers} "
-        f"cache_bytes={config.data_cache_bytes} prefetch={config.prefetch_batches}/{config.prefetch_max_bytes}B "
+        f"candidate_chunk={config.candidate_chunk_size} cache_bytes={config.data_cache_bytes} prefetch={config.prefetch_batches}/{config.prefetch_max_bytes}B "
         f"timing={config.timing_mode} logging={config.logging_mode}", file=sys.stderr)
     progress.update(dataset=config.dataset, run_id=trainer.run_id)
     progress.event("run.start", mode="preflight" if args.preflight else "train",

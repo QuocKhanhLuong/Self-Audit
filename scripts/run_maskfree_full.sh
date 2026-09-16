@@ -108,8 +108,9 @@ ENVIRONMENT
   DATA_CACHE_BYTES=67108864
   PREFETCH_BATCHES=0   0, 1 or 2; input-only bounded lookahead, no pseudo-label cache.
   PREFETCH_MAX_BYTES=33554432
-  CANDIDATE_WORKERS=0  0, 2 or 4; optional CPU spawn pool, benchmark before use.
+  CANDIDATE_WORKERS=0  0, 2, 4 or 8; optional CPU spawn pool, benchmark before use.
   CANDIDATE_WORKER_THREADS=1
+  CANDIDATE_CHUNK_SIZE=8  1..8 in-flight units, independent of physical batch.
                         Runtime values above override the strict config only
                         when explicitly set. They are recorded in preflight,
                         startup reports and exact-resume identity.
