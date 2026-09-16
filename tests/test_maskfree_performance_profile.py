@@ -31,6 +31,14 @@ def test_percentile_is_empty_safe_and_deterministic() -> None:
     assert percentile([1.0, 2.0, 3.0, 4.0], 0.95) == pytest.approx(3.85)
 
 
+def test_profiler_image_size_cli_defaults_and_choices() -> None:
+    parser = profiler.build_parser()
+    assert parser.parse_args(["--synthetic"]).image_size == 128
+    assert parser.parse_args(["--synthetic", "--image-size", "224"]).image_size == 224
+    with pytest.raises(SystemExit):
+        parser.parse_args(["--synthetic", "--image-size", "256"])
+
+
 def test_synthetic_fixture_is_image_only_and_reproducible(tmp_path: Path) -> None:
     first = make_synthetic_fixture(tmp_path / "one", seed=17)
     second = make_synthetic_fixture(tmp_path / "two", seed=17)
@@ -41,6 +49,93 @@ def test_synthetic_fixture_is_image_only_and_reproducible(tmp_path: Path) -> Non
     assert first["mask_inputs_used"] is False
     assert first["reference_inputs_used"] is False
     assert not list(tmp_path.rglob("*mask*"))
+
+
+def test_synthetic_fixture_uses_requested_production_resolution(tmp_path: Path) -> None:
+    fixture = make_synthetic_fixture(tmp_path / "production", image_size=224, depth=256)
+    assert fixture["image_size"] == 224
+    assert fixture["shape"] == [224, 224, 256]
+    assert fixture["source_sha256"]
+    with pytest.raises(ValueError, match="recipe mismatch"):
+        make_synthetic_fixture(tmp_path / "production", image_size=128, depth=256)
+
+
+def test_profiler_image_size_must_match_loaded_config(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.syspath_prepend(str(REPO_ROOT / "src"))
+    config_path = tmp_path / "maskfree.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "dataset": "acdc",
+                "data_root": str(tmp_path),
+                "output_dir": str(tmp_path),
+                "image_size": 224,
+                "device": "cpu",
+                "amp": False,
+                "allow_cpu": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+    parser = profiler.build_parser()
+    mismatch = parser.parse_args(
+        ["--config", str(config_path), "--image-size", "128"]
+    )
+    with pytest.raises(ValueError, match="does not match the loaded config image_size"):
+        profiler._prepare_config(mismatch, tmp_path / "mismatch-output")
+
+    matching = parser.parse_args(
+        ["--config", str(config_path), "--image-size", "224"]
+    )
+    config, preparation = profiler._prepare_config(matching, tmp_path / "matching-output")
+    assert config.image_size == 224
+    assert preparation["image_size_contract"] == {
+        "requested": 224,
+        "resolved": 224,
+        "allowed": [128, 224],
+        "matches": True,
+    }
+
+
+def test_comparison_rejects_mismatched_resolution_even_with_shared_hash() -> None:
+    def report(image_size: int) -> dict[str, Any]:
+        return {
+            "status": "completed_bounded",
+            "profiler": {"timing_mode": "instrumented"},
+            "config": {
+                "scientific_hash": "intentionally-shared-for-gate-test",
+                "resolved": {"image_size": image_size},
+                "scientific_identity": {"image_size": image_size},
+                "image_size_contract": {
+                    "requested": image_size,
+                    "resolved": image_size,
+                },
+            },
+            "units": {
+                "fixture": {
+                    "image_size": image_size,
+                    "shape": [image_size, image_size, 8],
+                }
+            },
+        }
+
+    comparison = _compare_reports(report(128), report(224))
+    assert comparison["checks"]["scientific_hash"] is True
+    assert comparison["checks"]["image_size"] is False
+    assert comparison["matched"] is False
+
+    reference = report(128)
+    candidate = report(128)
+    without_diagnostic_hashes = _compare_reports(reference, candidate)
+    reference["config"]["source_sha256"] = "a" * 64
+    candidate["config"]["source_sha256"] = "b" * 64
+    with_diagnostic_hashes = _compare_reports(reference, candidate)
+    assert "config_source" not in with_diagnostic_hashes["checks"]
+    assert with_diagnostic_hashes["checks"] == without_diagnostic_hashes["checks"]
+    assert with_diagnostic_hashes["matched"] == without_diagnostic_hashes["matched"]
 
 
 def test_source_snapshot_rejects_added_changed_and_missing_bytes(tmp_path: Path) -> None:

@@ -12,11 +12,14 @@ copy of the module is created under a different top-level name::
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 import torch
 from torch.nn import functional as F
 
 from self_audit_maskfree import models as models_module
+from self_audit_maskfree.config import load_config
 from self_audit_maskfree.losses import (
     MAX_SAMPLES_PER_IMAGE,
     _sample_support_locations,
@@ -41,6 +44,26 @@ def _batch(batch: int = 2, height: int = 32, width: int = 32, *, seed: int = 0):
     support[:, : height * 3 // 4, :] = True
     context = context * support.unsqueeze(1)  # withheld pixels are physically zero
     return context, support
+
+
+@pytest.mark.parametrize("filename", ["maskfree_acdc_150.yaml", "maskfree_mnms_150.yaml"])
+def test_production_configs_resolve_224_and_keep_training_budget(filename):
+    """Both production templates request 224 without changing the run budget."""
+    config = load_config(Path(__file__).resolve().parents[1] / "configs" / filename)
+
+    assert config.image_size == 224
+    assert config.scientific_identity()["image_size"] == 224
+    assert config.total_epochs == 150
+    assert config.seed == 42
+    assert config.batch_size == 8
+    assert config.accumulation_steps == 1
+    assert config.effective_batch == 8
+    assert config.amp is False
+    assert config.lr == 0.001
+    assert config.weight_decay == 0.0001
+    assert config.warmup_epochs == 5
+    assert config.width == 16
+    assert config.feature_dim == 16
 
 
 def test_shapes_parameter_budget_and_small_images():
@@ -88,24 +111,28 @@ def test_even_grid_downsampling_matches_adaptive_forward_backward(height, width)
     assert torch.equal(new_grad, old_grad)
 
 
-def test_production_even_ladder_is_deterministic():
-    """The 128 -> 64 -> 32 production ladder stays on fixed pooling."""
-    x = torch.randn(1, 3, 128, 128)
+@pytest.mark.parametrize("size", [128, 224])
+def test_production_even_ladder_is_deterministic(size):
+    """Even production ladders stay on fixed pooling at both resolutions."""
+    x = torch.randn(1, 3, size, size)
     first = models_module._down(x)
     second = models_module._down(first)
-    assert first.shape[-2:] == (64, 64)
-    assert second.shape[-2:] == (32, 32)
-    assert torch.equal(first, F.adaptive_avg_pool2d(x, (64, 64)))
-    assert torch.equal(second, F.adaptive_avg_pool2d(first, (32, 32)))
+    assert first.shape[-2:] == (size // 2, size // 2)
+    assert second.shape[-2:] == (size // 4, size // 4)
+    assert torch.equal(first, F.adaptive_avg_pool2d(x, (size // 2, size // 2)))
+    assert torch.equal(
+        second, F.adaptive_avg_pool2d(first, (size // 4, size // 4))
+    )
 
 
+@pytest.mark.parametrize("size", [128, 224])
 @pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA unavailable")
-def test_cuda_even_pooling_backward_is_deterministic():
+def test_cuda_even_pooling_backward_is_deterministic(size):
     """When CUDA is present, fixed pooling has repeatable outputs and grads."""
     previous = torch.are_deterministic_algorithms_enabled()
     try:
         torch.use_deterministic_algorithms(True)
-        base = torch.randn(2, 3, 128, 128, device="cuda", dtype=torch.float32)
+        base = torch.randn(2, 3, size, size, device="cuda", dtype=torch.float32)
 
         def run_once():
             sample = base.detach().clone().requires_grad_(True)
@@ -120,6 +147,63 @@ def test_cuda_even_pooling_backward_is_deterministic():
         assert torch.equal(grad_a, grad_b)
     finally:
         torch.use_deterministic_algorithms(previous)
+
+
+@pytest.mark.parametrize(
+    ("model_factory", "expected_shape"),
+    [
+        (Producer, (1, 16, 224, 224)),
+        (Student, (1, 4, 224, 224)),
+    ],
+)
+def test_cpu_224_model_forward_backward_is_deterministic(model_factory, expected_shape):
+    """224x224 CPU outputs and gradients are finite, shaped, and repeatable."""
+    previous_determinism = torch.are_deterministic_algorithms_enabled()
+    previous_rng = torch.get_rng_state()
+    try:
+        torch.use_deterministic_algorithms(True)
+
+        def run_once():
+            torch.manual_seed(224)
+            model = model_factory()
+            sample = torch.randn(1, 3, 224, 224, requires_grad=True)
+            output = model(sample)
+            if isinstance(output, dict):
+                assert output["features"].shape == expected_shape
+                assert output["reconstruction"].shape == (1, 1, 224, 224)
+                loss = sum(value.square().mean() for value in output.values())
+                output_copy = {key: value.detach().clone() for key, value in output.items()}
+            else:
+                assert output.shape == expected_shape
+                loss = output.square().mean()
+                output_copy = output.detach().clone()
+            assert torch.isfinite(loss)
+            loss.backward()
+            input_grad = sample.grad.detach().clone()
+            parameter_grads = [
+                parameter.grad.detach().clone()
+                for parameter in model.parameters()
+                if parameter.grad is not None
+            ]
+            assert torch.isfinite(input_grad).all()
+            assert parameter_grads and all(torch.isfinite(grad).all() for grad in parameter_grads)
+            assert any(grad.abs().sum() > 0 for grad in parameter_grads)
+            return output_copy, input_grad, parameter_grads
+
+        output_a, input_grad_a, parameter_grads_a = run_once()
+        output_b, input_grad_b, parameter_grads_b = run_once()
+        if isinstance(output_a, dict):
+            assert output_a.keys() == output_b.keys()
+            for key in output_a:
+                assert torch.equal(output_a[key], output_b[key])
+        else:
+            assert torch.equal(output_a, output_b)
+        assert torch.equal(input_grad_a, input_grad_b)
+        assert len(parameter_grads_a) == len(parameter_grads_b)
+        assert all(torch.equal(left, right) for left, right in zip(parameter_grads_a, parameter_grads_b))
+    finally:
+        torch.set_rng_state(previous_rng)
+        torch.use_deterministic_algorithms(previous_determinism)
 
 
 @pytest.mark.parametrize("model_factory", [Producer, Student])

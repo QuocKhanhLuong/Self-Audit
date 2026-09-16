@@ -50,6 +50,7 @@ SYNTHETIC_DEPTH = 1024
 SYNTHETIC_TRAIN_UNITS_MIN = 256
 PARTIAL_EPOCH_MAX_BATCHES = SYNTHETIC_DEPTH // 8
 TIMING_MODES = ("ordinary", "instrumented")
+IMAGE_SIZE_CHOICES = (128, 224)
 SCIENTIFIC_REQUIREMENTS = {
     "total_epochs": 150,
     "seed": 42,
@@ -66,6 +67,25 @@ PROFILE_BUDGET_REQUIREMENTS = {
     "max_scored_regions": 32,
     "max_region_score_calls": 128,
 }
+
+
+def _selected_image_size(args: argparse.Namespace) -> int:
+    """Resolve the explicit profiler resolution while retaining the 128 default."""
+    image_size = getattr(args, "image_size", SCIENTIFIC_REQUIREMENTS["image_size"])
+    if isinstance(image_size, bool) or image_size not in IMAGE_SIZE_CHOICES:
+        raise ValueError(
+            "image-size must be one of "
+            + ", ".join(str(value) for value in IMAGE_SIZE_CHOICES)
+            + f", got {image_size!r}"
+        )
+    return int(image_size)
+
+
+def _scientific_requirements(image_size: int) -> dict[str, Any]:
+    """Return the fixed profiler contract with the selected spatial resolution."""
+    requirements = dict(SCIENTIFIC_REQUIREMENTS)
+    requirements["image_size"] = int(image_size)
+    return requirements
 
 
 def _json_default(value: Any) -> Any:
@@ -624,10 +644,15 @@ def make_synthetic_fixture(
     The structured phantom has no segmentation labels, mask sidecar or
     reference intensity.  The default source has 1024 acquired slices, yielding
     at least 256 train units independent of warm-up/measured arguments while
-    preserving the canonical ``ImageOnlyDataset`` and discovery path.
+    preserving the canonical ``ImageOnlyDataset`` and discovery path.  Both
+    supported profiler resolutions (128 and 224) are generated at their
+    requested spatial shape and recorded in the immutable fixture manifest.
     """
-    if image_size != 128:
-        raise ValueError("the scientific profiling fixture is fixed at image_size=128")
+    if image_size not in IMAGE_SIZE_CHOICES:
+        raise ValueError(
+            "the scientific profiling fixture image_size must be one of "
+            + ", ".join(str(value) for value in IMAGE_SIZE_CHOICES)
+        )
     if depth < 256:
         raise ValueError("the profiling fixture must contain at least 256 acquired slices")
     if file_format not in ("npy", "nifti"):
@@ -1614,6 +1639,72 @@ def _image_inventory(manifest: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _resolution_metadata(report: dict[str, Any]) -> dict[str, Any]:
+    """Collect every recorded spatial-size identity and require agreement.
+
+    ``scientific_hash`` already commits the resolved config, but keeping an
+    explicit gate over the resolved/identity/fixture metadata prevents a
+    hand-edited or legacy report from making 128 and 224 runs look equivalent.
+    Older fixtures did not store ``fixture.image_size``; their square shape is
+    retained as a backward-compatible source of the same immutable identity.
+    """
+    config = report.get("config", {}) if isinstance(report.get("config", {}), dict) else {}
+    resolved = config.get("resolved", {}) if isinstance(config.get("resolved", {}), dict) else {}
+    scientific = (
+        config.get("scientific_identity", {})
+        if isinstance(config.get("scientific_identity", {}), dict)
+        else {}
+    )
+    contract = (
+        config.get("image_size_contract", {})
+        if isinstance(config.get("image_size_contract", {}), dict)
+        else {}
+    )
+    units = report.get("units", {})
+    fixture = units.get("fixture") if isinstance(units, dict) else None
+    fixture = fixture if isinstance(fixture, dict) else {}
+    values: dict[str, int] = {}
+    invalid = False
+
+    def _record(label: str, value: Any) -> None:
+        nonlocal invalid
+        if value is None:
+            return
+        if isinstance(value, bool) or not isinstance(value, int):
+            invalid = True
+            return
+        if value <= 0:
+            invalid = True
+            return
+        values[label] = value
+
+    _record("config.resolved.image_size", resolved.get("image_size"))
+    _record("config.scientific_identity.image_size", scientific.get("image_size"))
+    _record("config.image_size_contract.requested", contract.get("requested"))
+    _record("config.image_size_contract.resolved", contract.get("resolved"))
+    _record("units.fixture.image_size", fixture.get("image_size"))
+    shape = fixture.get("shape")
+    if isinstance(shape, (list, tuple)) and len(shape) >= 2:
+        first, second = shape[0], shape[1]
+        if (
+            isinstance(first, int)
+            and not isinstance(first, bool)
+            and isinstance(second, int)
+            and not isinstance(second, bool)
+            and first == second
+        ):
+            _record("units.fixture.shape", first)
+        elif first is not None or second is not None:
+            invalid = True
+
+    unique_values = sorted(set(values.values()))
+    return {
+        "image_size": unique_values[0] if len(unique_values) == 1 and not invalid else None,
+        "values": values,
+        "consistent": bool(values) and len(unique_values) == 1 and not invalid,
+    }
+
+
 def _compare_reports(reference: dict[str, Any], candidate: dict[str, Any]) -> dict[str, Any]:
     """Machine-readable equivalence gate for ordinary/instrumented or A/B runs."""
     checks: dict[str, Any] = {}
@@ -1633,6 +1724,18 @@ def _compare_reports(reference: dict[str, Any], candidate: dict[str, Any]) -> di
     ref_scientific_hash = reference.get("config", {}).get("scientific_hash")
     cand_scientific_hash = candidate.get("config", {}).get("scientific_hash")
     checks["scientific_hash"] = _nonempty(ref_scientific_hash) and ref_scientific_hash == cand_scientific_hash
+    reference_resolution = _resolution_metadata(reference)
+    candidate_resolution = _resolution_metadata(candidate)
+    checks["image_size"] = (
+        reference_resolution["consistent"]
+        and candidate_resolution["consistent"]
+        and reference_resolution["image_size"] is not None
+        and reference_resolution["image_size"] == candidate_resolution["image_size"]
+    )
+    numeric_differences["image_size"] = {
+        "reference": reference_resolution,
+        "candidate": candidate_resolution,
+    }
     ref_fixture = reference.get("units", {}).get("fixture") or {}
     cand_fixture = candidate.get("units", {}).get("fixture") or {}
     fixture_keys = ("source_sha256", "shape", "dtype", "seed", "format")
@@ -1987,7 +2090,9 @@ def _compare_reports(reference: dict[str, Any], candidate: dict[str, Any]) -> di
 def _prepare_config(args: argparse.Namespace, output: Path) -> tuple[Any, dict[str, Any]]:
     from self_audit_maskfree.config import MaskfreeConfig, load_config
 
+    requested_image_size = _selected_image_size(args)
     fixture: dict[str, Any] | None = None
+    config_source_sha256: str | None = None
     if args.synthetic:
         if args.seed != 42:
             raise ValueError("the matched maskfree150 profiler fixture is fixed at seed=42")
@@ -1999,7 +2104,7 @@ def _prepare_config(args: argparse.Namespace, output: Path) -> tuple[Any, dict[s
         fixture = make_synthetic_fixture(
             fixture_root,
             seed=args.seed,
-            image_size=128,
+            image_size=requested_image_size,
             depth=SYNTHETIC_DEPTH,
             file_format=args.synthetic_format,
         )
@@ -2011,7 +2116,7 @@ def _prepare_config(args: argparse.Namespace, output: Path) -> tuple[Any, dict[s
             seed=args.seed,
             batch_size=8,
             accumulation_steps=1,
-            image_size=128,
+            image_size=requested_image_size,
             lr=0.001,
             weight_decay=0.0001,
             warmup_epochs=5,
@@ -2036,6 +2141,12 @@ def _prepare_config(args: argparse.Namespace, output: Path) -> tuple[Any, dict[s
         if args.config is None:
             raise ValueError("--config or --synthetic is required")
         config = load_config(args.config)
+        if config.image_size != requested_image_size:
+            raise ValueError(
+                "--image-size does not match the loaded config image_size: "
+                f"selected {requested_image_size}, config {config.image_size}"
+            )
+        config_source_sha256 = _sha256_file(Path(args.config).expanduser().resolve())
         requested_device = args.device or config.device
         config = config.replace(
             output_dir=str(output / "trainer_workspace"),
@@ -2048,10 +2159,11 @@ def _prepare_config(args: argparse.Namespace, output: Path) -> tuple[Any, dict[s
             allow_cpu=bool(config.allow_cpu or requested_device == "cpu"),
         )
 
-    values = {name: getattr(config, name) for name in SCIENTIFIC_REQUIREMENTS}
+    scientific_requirements = _scientific_requirements(requested_image_size)
+    values = {name: getattr(config, name) for name in scientific_requirements}
     mismatches = {
         name: {"expected": expected, "actual": values[name]}
-        for name, expected in SCIENTIFIC_REQUIREMENTS.items()
+        for name, expected in scientific_requirements.items()
         if values[name] != expected
     }
     if mismatches:
@@ -2059,7 +2171,17 @@ def _prepare_config(args: argparse.Namespace, output: Path) -> tuple[Any, dict[s
             "profiling requires the scientific150 FP32 contract; mismatches: "
             + json.dumps(mismatches, sort_keys=True)
         )
-    return config, {"synthetic_fixture": fixture}
+    return config, {
+        "synthetic_fixture": fixture,
+        "image_size_contract": {
+            "requested": requested_image_size,
+            "resolved": int(config.image_size),
+            "allowed": list(IMAGE_SIZE_CHOICES),
+            "matches": int(config.image_size) == requested_image_size,
+        },
+        "scientific_requirements": scientific_requirements,
+        "config_source_sha256": config_source_sha256,
+    }
 
 
 def _run_profile(args: argparse.Namespace) -> dict[str, Any]:
@@ -2385,9 +2507,11 @@ def _run_profile(args: argparse.Namespace) -> dict[str, Any]:
         "harness": harness,
         "config": {
             "path": str(Path(args.config).expanduser().resolve()) if args.config else None,
+            "source_sha256": preparation.get("config_source_sha256"),
             "resolved": config.to_dict(),
             "scientific_identity": config.scientific_identity(),
             "scientific_hash": runtime.sha256_json(config.scientific_identity()),
+            "image_size_contract": preparation.get("image_size_contract"),
         },
         "source": {
             "snapshot": snapshot,
@@ -2536,6 +2660,13 @@ def build_parser() -> argparse.ArgumentParser:
         dest="output",
         type=Path,
         default=REPO_ROOT / "reports/maskfree150/local_baseline",
+    )
+    parser.add_argument(
+        "--image-size",
+        type=int,
+        choices=IMAGE_SIZE_CHOICES,
+        default=SCIENTIFIC_REQUIREMENTS["image_size"],
+        help="spatial profiler contract (128 preserves the historical default; 224 matches production configs)",
     )
     parser.add_argument("--device", choices=("cpu", "cuda"), default=None)
     parser.add_argument("--warmup-batches", "--warmup", dest="warmup_batches", type=int, default=5)

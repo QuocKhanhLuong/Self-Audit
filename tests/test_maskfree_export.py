@@ -501,7 +501,7 @@ def test_configs_match_w5_schema_and_experiment_manifest(tmp_path: Path) -> None
         assert payload["total_epochs"] == 150
         assert payload["batch_size"] == 8
         assert payload["accumulation_steps"] == 1
-        assert payload["image_size"] == 128
+        assert payload["image_size"] == 224
         assert payload["seed"] == 42
         assert payload["allow_cpu"] is False
         text = path.read_text().lower()
