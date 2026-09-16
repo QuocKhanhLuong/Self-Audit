@@ -5,42 +5,17 @@ on:
 permissions:
   contents: read
 jobs:
-  source-snapshot:
+  test-dependency:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Package tracked source and tests (no data, weights, or credentials)
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          mkdir -p /tmp/maskfree-source
-          python - <<'PY'
-          import io, os, pathlib, urllib.request, zipfile
-          sha = os.environ['GITHUB_SHA']
-          repo = os.environ['GITHUB_REPOSITORY']
-          request = urllib.request.Request(
-              f'https://api.github.com/repos/{repo}/zipball/{sha}',
-              headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
-                       'Accept': 'application/vnd.github+json'})
-          with urllib.request.urlopen(request, timeout=120) as response:
-              raw = response.read()
-          prefixes = ('src/', 'scripts/', 'tests/', 'configs/', 'docs/', '.github/workflows/')
-          top = {'docs.md', 'README.md', 'requirements-maskfree.txt', 'requirements.txt', 'pyproject.toml', 'pytest.ini', 'setup.cfg'}
-          with zipfile.ZipFile(io.BytesIO(raw)) as source, zipfile.ZipFile('/tmp/maskfree-source/source.zip', 'w', zipfile.ZIP_DEFLATED) as dest:
-              for member in source.infolist():
-                  name = member.filename.partition('/')[2]
-                  if name and not member.is_dir() and (name.startswith(prefixes) or name in top):
-                      if '..' in pathlib.PurePosixPath(name).parts:
-                          raise RuntimeError('invalid archive path')
-                      dest.writestr(name, source.read(member))
-              dest.writestr('REVISION.txt', sha + '\n')
-          pathlib.Path('/tmp/maskfree-source/REVISION.txt').write_text(sha + '\n')
-          PY
       - name: Download pinned NIfTI dependency for offline tests
-        run: python -m pip download --no-deps --only-binary=:all: nibabel==5.4.2 -d /tmp/maskfree-source/wheels
+        run: |
+          mkdir -p /tmp/maskfree-dependencies
+          python -m pip download --no-deps --only-binary=:all: nibabel==5.4.2 -d /tmp/maskfree-dependencies
       - uses: actions/upload-artifact@v4
         with:
-          name: maskfree-audit-source
-          path: /tmp/maskfree-source/
+          name: maskfree-audit-dependencies
+          path: /tmp/maskfree-dependencies/
           retention-days: 3
           if-no-files-found: error
