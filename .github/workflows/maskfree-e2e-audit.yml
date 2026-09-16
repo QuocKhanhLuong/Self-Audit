@@ -36,6 +36,8 @@ jobs:
               dest.writestr('REVISION.txt', sha + '\n')
           pathlib.Path('/tmp/maskfree-source/REVISION.txt').write_text(sha + '\n')
           PY
+      - name: Download pinned NIfTI dependency for offline tests
+        run: python -m pip download --no-deps --only-binary=:all: nibabel==5.4.2 -d /tmp/maskfree-source/wheels
       - uses: actions/upload-artifact@v4
         with:
           name: maskfree-audit-source
