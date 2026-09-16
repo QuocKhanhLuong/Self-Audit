@@ -28,7 +28,7 @@ import hashlib
 import json
 from collections import OrderedDict
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 
 import numpy as np
 import torch
@@ -444,6 +444,8 @@ class ImageOnlyDataset:
         image_size: int = 128,
         seed: int = 42,
         cache: SourceDataCache | None = _DEFAULT_CACHE,
+        *,
+        data_cache_bytes: int | None = None,
     ) -> None:
         if manifest.get("schema_version") != SCHEMA_VERSION:
             raise ValueError(f"unsupported manifest schema {manifest.get('schema_version')!r}")
@@ -453,8 +455,20 @@ class ImageOnlyDataset:
         self.split = split
         self.image_size = int(image_size)
         self.seed = int(seed)
-        self.cache = cache
-        self._manifest_digest = _manifest_digest(manifest) if cache is not None else None
+
+        if data_cache_bytes is not None:
+            if isinstance(data_cache_bytes, bool) or not isinstance(data_cache_bytes, int):
+                raise TypeError("data_cache_bytes must be an integer")
+            if data_cache_bytes < 0:
+                raise ValueError("data_cache_bytes must be non-negative")
+            if data_cache_bytes == 0:
+                self.cache = None
+            else:
+                self.cache = SourceDataCache(max_bytes=data_cache_bytes)
+        else:
+            self.cache = cache
+
+        self._manifest_digest = _manifest_digest(manifest) if self.cache is not None else None
         self.dataset = manifest["dataset"]
         self.manifest_id = manifest["manifest_id"]
         self.protocol = manifest["resolved_protocol"]
@@ -462,6 +476,31 @@ class ImageOnlyDataset:
         self._records = [r for r in manifest["records"] if r["split"] == split]
         self.unit_ids: list[str] = [r["unit_id"] for r in self._records]
         self.patient_ids: list[str] = sorted({r["patient_id"] for r in self._records})
+
+    @property
+    def data_cache_bytes(self) -> int:
+        """Configured maximum bytes for the source data cache (0 if disabled)."""
+        return int(self.cache.max_bytes) if self.cache is not None else 0
+
+    def iter_batches(
+        self,
+        batches: Sequence[Sequence[int]],
+        *,
+        prefetch_batches: int = 0,
+        prefetch_max_bytes: int = 33554432,
+        start_batch: int = 0,
+        yield_index: bool = False,
+    ) -> Any:
+        """Iterate over batches with optional bounded single-thread prefetch."""
+        from .prefetch import iter_batches
+        return iter_batches(
+            self,
+            batches,
+            prefetch_batches=prefetch_batches,
+            prefetch_max_bytes=prefetch_max_bytes,
+            start_batch=start_batch,
+            yield_index=yield_index,
+        )
 
     def __len__(self) -> int:
         return len(self._records)

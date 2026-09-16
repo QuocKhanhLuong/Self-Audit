@@ -34,7 +34,7 @@ _SRC = _REPO_ROOT / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from self_audit_maskfree.config import ConfigError, load_config  # noqa: E402
+from self_audit_maskfree.config import ConfigError, RUNTIME_FIELDS, load_config  # noqa: E402
 from self_audit_maskfree.progress import TerminalProgress  # noqa: E402
 
 
@@ -60,6 +60,11 @@ def build_parser() -> argparse.ArgumentParser:
                         help="permit CPU execution for bounded checks; not a full-run mode")
     parser.add_argument("--run-id", default=None, help="explicit immutable run identifier")
     parser.add_argument("--device", default=None, help="operational device override, e.g. cuda:0")
+    parser.add_argument("--audit-device", choices=("auto", "cpu", "cuda"), default=None)
+    parser.add_argument("--timing-mode", choices=("production", "diagnostic"), default=None)
+    parser.add_argument("--logging-mode", choices=("sync", "buffered"), default=None)
+    for field in RUNTIME_FIELDS[2:]:
+        parser.add_argument("--" + field.replace("_", "-"), type=int, default=None)
     parser.add_argument(
         "--epoch-validation", dest="epoch_validation",
         action=argparse.BooleanOptionalAction, default=None,
@@ -111,6 +116,9 @@ def _execute(args: argparse.Namespace, progress: TerminalProgress) -> int:
         overrides["run_id"] = args.run_id
     if args.device is not None:
         overrides["device"] = args.device
+    for field in ("audit_device",) + RUNTIME_FIELDS:
+        if getattr(args, field, None) is not None:
+            overrides[field] = getattr(args, field)
     if args.epoch_validation is not None:
         overrides["epoch_validation"] = args.epoch_validation
     if args.epoch_reference_config is not None:
@@ -137,6 +145,18 @@ def _execute(args: argparse.Namespace, progress: TerminalProgress) -> int:
         return 3
 
     progress.attach(trainer.paths.reports / ("preflight_progress.jsonl" if args.preflight else "progress.jsonl"))
+    from self_audit_maskfree.resources import resource_snapshot
+    resources = resource_snapshot(include_gpu=False)
+    cpu = resources.get("cgroup", {})
+    print(
+        f"[maskfree] model={trainer.device} audit={trainer.audit_device} "
+        f"precision={'fp16_amp' if config.amp else 'fp32'}/obs-fp64 "
+        f"image={config.image_size} batch={config.batch_size} effective={config.effective_batch} "
+        f"cpu_leaf_quota={cpu.get('leaf_cpu', {}).get('quota_cores')} "
+        f"cpu_visible_upper_bound={cpu.get('visible_cpu_upper_bound_cores')} "
+        f"threads={trainer.runtime_summary()['torch_threads']} candidates_workers={config.candidate_workers} "
+        f"cache_bytes={config.data_cache_bytes} prefetch={config.prefetch_batches}/{config.prefetch_max_bytes}B "
+        f"timing={config.timing_mode} logging={config.logging_mode}", file=sys.stderr)
     progress.update(dataset=config.dataset, run_id=trainer.run_id)
     progress.event("run.start", mode="preflight" if args.preflight else "train",
                    physical_batch=config.batch_size, accumulation=config.accumulation_steps,

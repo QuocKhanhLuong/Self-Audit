@@ -36,6 +36,14 @@ class RuntimeContractError(RuntimeError):
 # ---------------------------------------------------------------------------
 # atomic IO
 # ---------------------------------------------------------------------------
+def fsync_directory(path: str | Path) -> None:
+    fd = os.open(path, os.O_RDONLY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
 def _atomic_replace(tmp_path: Path, path: Path) -> None:
     fd = os.open(tmp_path, os.O_RDONLY)
     try:
@@ -109,6 +117,110 @@ def append_jsonl(path: str | Path, payload: Any) -> Path:
         handle.flush()
         os.fsync(handle.fileno())
     return path
+
+
+class JSONLWriter:
+    """Bounded JSONL writer with durable persistent handles."""
+
+    def __init__(self, path: str | Path, max_resident_bytes: int = 262144) -> None:
+        if isinstance(max_resident_bytes, bool) or not isinstance(max_resident_bytes, int) or max_resident_bytes < 1:
+            raise ValueError("max_resident_bytes must be a positive integer")
+        self.path = Path(path)
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.max_resident_bytes = max_resident_bytes
+        self.handle = open(self.path, "a", encoding="utf-8")
+        self.offset = self.handle.tell()
+        self.buffer: list[str] = []
+        self.buffer_bytes = 0
+        self.failed = False
+        self._directory_synced = False
+        self.stats = {
+            "records": 0, "bytes": 0, "writes": 0,
+            "flushes": 0, "fsyncs": 0,
+            "write_seconds": 0.0, "flush_seconds": 0.0, "fsync_seconds": 0.0
+        }
+
+    def append(self, payload: Any) -> None:
+        self._check_open()
+        line = json.dumps(payload, sort_keys=True, default=json_default) + "\n"
+        encoded = line.encode("utf-8")
+        if self.buffer_bytes + len(encoded) > self.max_resident_bytes:
+            self._write_buffer()
+        if len(encoded) > self.max_resident_bytes:
+            # The one serialized record is unavoidable; do not retain it in
+            # the bounded queue alongside other records.
+            try:
+                started = time.perf_counter()
+                self.handle.write(line)
+                self.stats["writes"] += 1
+                self.stats["write_seconds"] += time.perf_counter() - started
+            except Exception:
+                self.failed = True
+                raise
+        else:
+            self.buffer.append(line)
+            self.buffer_bytes += len(encoded)
+        self.stats["records"] += 1
+        self.stats["bytes"] += len(encoded)
+        if self.buffer_bytes >= self.max_resident_bytes:
+            self._write_buffer()
+
+    def _write_buffer(self) -> None:
+        self._check_open()
+        if not self.buffer:
+            return
+        start = time.perf_counter()
+        try:
+            self.handle.writelines(self.buffer)
+        except Exception:
+            self.failed = True
+            raise
+        self.stats["write_seconds"] += (time.perf_counter() - start)
+        self.stats["writes"] += 1
+        self.buffer.clear()
+        self.buffer_bytes = 0
+
+    def flush(self) -> int:
+        self._check_open()
+        start_flush = time.perf_counter()
+        self._write_buffer()
+        try:
+            self.handle.flush()
+        except Exception:
+            self.failed = True
+            raise
+        self.stats["flush_seconds"] += (time.perf_counter() - start_flush)
+        self.stats["flushes"] += 1
+
+        start_fsync = time.perf_counter()
+        try:
+            os.fsync(self.handle.fileno())
+            if not self._directory_synced:
+                fsync_directory(self.path.parent)
+                self.stats["fsyncs"] += 1
+                self._directory_synced = True
+        except Exception:
+            self.failed = True
+            raise
+        self.stats["fsync_seconds"] += (time.perf_counter() - start_fsync)
+        self.stats["fsyncs"] += 1
+
+        self.offset = self.handle.tell()
+        return self.offset
+
+    def close(self) -> None:
+        if not self.handle.closed:
+            try:
+                if not self.failed:
+                    self.flush()
+            finally:
+                self.buffer.clear()
+                self.buffer_bytes = 0
+                self.handle.close()
+
+    def _check_open(self) -> None:
+        if self.failed or self.handle.closed:
+            raise RuntimeError("JSONL writer is failed or closed")
 
 
 # ---------------------------------------------------------------------------
@@ -335,21 +447,27 @@ class TimingAccumulator:
     seconds: dict[str, float]
     calls: dict[str, int]
     device: torch.device | None = None
+    mode: str = "production"
+
+    def __post_init__(self) -> None:
+        if self.mode not in ("production", "diagnostic"):
+            raise ValueError("timing mode must be production or diagnostic")
 
     @classmethod
-    def empty(cls) -> "TimingAccumulator":
-        return cls(seconds={}, calls={})
+    def empty(cls, mode: str = "production") -> "TimingAccumulator":
+        return cls(seconds={}, calls={}, mode=mode)
 
     @contextmanager
     def stage(self, name: str, **details: Any) -> Iterator[None]:
         with current_progress().stage(name, **details):
-            if self.device is not None and self.device.type == "cuda":
+            should_sync = (self.mode == "diagnostic" and self.device is not None and self.device.type == "cuda")
+            if should_sync:
                 torch.cuda.synchronize(self.device)
             start = time.perf_counter()
             try:
                 yield
             finally:
-                if self.device is not None and self.device.type == "cuda":
+                if should_sync:
                     torch.cuda.synchronize(self.device)
                 elapsed = time.perf_counter() - start
                 self.seconds[name] = self.seconds.get(name, 0.0) + elapsed
@@ -361,7 +479,9 @@ class TimingAccumulator:
 
     def as_dict(self) -> dict[str, Any]:
         return {"seconds": dict(self.seconds), "calls": dict(self.calls),
-                "cuda_synchronized": self.device is not None and self.device.type == "cuda",
+                "mode": self.mode,
+                "cuda_synchronized": self.mode == "diagnostic" and self.device is not None and self.device.type == "cuda",
+                "clock": "host_wall_with_completed_device_boundaries" if self.mode == "diagnostic" else "host_wall_including_enqueue_and_dependency_waits",
                 "aggregation_note": "inclusive stages may overlap; do not sum into end-to-end latency"}
 
 
@@ -387,12 +507,24 @@ def set_lr(optimizer: torch.optim.Optimizer, lr: float) -> None:
 
 
 def global_grad_norm(parameters: Any) -> float:
-    total = 0.0
+    values = []
+    by_device = {}
     for param in parameters:
         if param.grad is None:
             continue
-        value = param.grad.detach()
-        total += float(value.float().norm(2).item() ** 2)
+        scalar = param.grad.detach().float().norm(2)
+        index = len(values)
+        values.append(None)
+        if scalar.device.type == "cpu":
+            values[index] = scalar.item()
+        else:
+            by_device.setdefault(scalar.device, []).append((index, scalar))
+    for group in by_device.values():
+        for (index, _), value in zip(group, torch.stack([scalar for _, scalar in group]).cpu().tolist()):
+            values[index] = value
+    total = 0.0
+    for value in values:
+        total += float(value ** 2)
     return float(total**0.5)
 
 

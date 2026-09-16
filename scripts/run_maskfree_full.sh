@@ -100,6 +100,19 @@ ENVIRONMENT
   PYTHON=<path>         Interpreter. Default: python3 if present, else python.
   MASKFREE_PROGRESS=    compact (default): tqdm and one summary per epoch.
                         verbose: print detailed diagnostic events and metrics.
+  AUDIT_DEVICE=cpu     Validated CPU observation reference; cuda is experimental.
+                        When unset, preserve the template's intentional setting.
+  TIMING_MODE=production|diagnostic
+  LOGGING_MODE=buffered|sync
+  LOG_BUFFER_BYTES=262144
+  DATA_CACHE_BYTES=67108864
+  PREFETCH_BATCHES=0   0, 1 or 2; input-only bounded lookahead, no pseudo-label cache.
+  PREFETCH_MAX_BYTES=33554432
+  CANDIDATE_WORKERS=0  0, 2 or 4; optional CPU spawn pool, benchmark before use.
+  CANDIDATE_WORKER_THREADS=1
+                        Runtime values above override the strict config only
+                        when explicitly set. They are recorded in preflight,
+                        startup reports and exact-resume identity.
 
 NOT DONE BY THIS SCRIPT
   No commit, no push, no checkpoint migration, no cross-dataset resume, no
@@ -512,6 +525,10 @@ cat <<PLAN
 [maskfree] batch fallback     : $CONTRASTIVE_NOTE
 [maskfree] epoch validation   : enabled=$EPOCH_VALIDATION reference_config=${EPOCH_REFERENCE_CONFIG:-<none>} (report-only frozen students on dev; separate evaluator; no checkpoint selection)
 [maskfree] device             : $DEVICE
+[maskfree] audit override     : ${AUDIT_DEVICE:-<template default>}
+[maskfree] timing / logging   : ${TIMING_MODE:-<template default>} / ${LOGGING_MODE:-<template default>}
+[maskfree] CPU candidates     : ${CANDIDATE_WORKERS:-<template default>} workers x ${CANDIDATE_WORKER_THREADS:-<template default>} threads
+[maskfree] cache / prefetch   : ${DATA_CACHE_BYTES:-<template default>} bytes / ${PREFETCH_BATCHES:-<template default>} batches, ${PREFETCH_MAX_BYTES:-<template default>} bytes
 [maskfree] gpu gate           : $GPU_REPORT
 [maskfree] interpreter        : $PYTHON
 [maskfree] ---------------------------------------------------------------
@@ -632,7 +649,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(os.environ["MASKFREE_REPO"]) / "src"))
-from self_audit_maskfree.config import load_config
+from self_audit_maskfree.config import RUNTIME_FIELDS, load_config
 
 config = load_config(os.environ["MASKFREE_TEMPLATE"])
 overrides = {
@@ -645,6 +662,10 @@ overrides = {
     "allow_cpu": os.environ["MASKFREE_ALLOW_CPU"] == "1",
     "epoch_validation": os.environ["MASKFREE_EPOCH_VALIDATION"] == "1",
 }
+for field in ("audit_device",) + RUNTIME_FIELDS:
+    value = os.environ.get(field.upper())
+    if value is not None:
+        overrides[field] = int(value) if isinstance(getattr(config, field), int) else value
 data_root = os.environ.get("MASKFREE_DATA_ROOT") or ""
 if data_root:
     overrides["data_root"] = data_root

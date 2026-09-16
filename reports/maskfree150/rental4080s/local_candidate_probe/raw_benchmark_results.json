@@ -1,0 +1,67 @@
+{
+  "metadata": {
+    "hostname": "Alvins-MacBook-Pro",
+    "platform": "Darwin 25.2.0 arm64 (macOS)",
+    "python_version": "3.11.16",
+    "git_commit": "5c3113970693319bf8bf92b738e12787b473ea17",
+    "scope": "synthetic-only",
+    "synthetic_fixture": "scripts.check_maskfree_audit_device.build_synthetic_units",
+    "units": 8,
+    "image_size": 224,
+    "candidate_worker_threads": 1,
+    "recorded_at_utc": "2026-09-16T11:44:30Z",
+    "source_task_id": "2d3f16f4-288a-4cb3-91d0-fbacba83d0f3/task-196"
+  },
+  "serialization": {
+    "input_payload_bytes": 32524981,
+    "input_serialize_ms": 6.74,
+    "result_payload_bytes": 45007675
+  },
+  "serial": {
+    "workers": 0,
+    "worker_threads": 1,
+    "repeats": 5,
+    "times": [
+      1.0191,
+      0.9079,
+      0.9008,
+      0.8832,
+      0.8901
+    ],
+    "mean_s": 0.9202,
+    "p50_s": 0.9008,
+    "per_unit_ms": 115.03
+  },
+  "pool_workers_2": {
+    "workers": 2,
+    "worker_threads": 1,
+    "repeats": 5,
+    "times": [
+      0.362,
+      0.3636,
+      0.3656,
+      0.3626,
+      0.3641
+    ],
+    "mean_s": 0.3636,
+    "p50_s": 0.3636,
+    "speedup_vs_serial": 2.53,
+    "exact_match": true
+  },
+  "pool_workers_4": {
+    "workers": 4,
+    "worker_threads": 1,
+    "repeats": 5,
+    "times": [
+      0.1957,
+      0.2155,
+      0.1932,
+      0.1964,
+      0.2002
+    ],
+    "mean_s": 0.2002,
+    "p50_s": 0.1964,
+    "speedup_vs_serial": 4.60,
+    "exact_match": true
+  }
+}

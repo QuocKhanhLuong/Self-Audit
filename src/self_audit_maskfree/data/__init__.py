@@ -43,18 +43,29 @@ from .partition import (
     build_partition,
     partition_identity,
 )
+from .prefetch import (
+    DEFAULT_PREFETCH_BATCHES,
+    DEFAULT_PREFETCH_MAX_BYTES,
+    MAX_ALLOWED_PREFETCH_BATCHES,
+    PrefetchBatchIterator,
+    iter_batches,
+)
 
 __all__ = [
     "BLOCK_SIZE",
+    "DEFAULT_PREFETCH_BATCHES",
+    "DEFAULT_PREFETCH_MAX_BYTES",
     "DataRootError",
     "FreezeReceiptError",
     "GUARD_BAND",
     "GeometryError",
     "ImageOnlyDataset",
+    "MAX_ALLOWED_PREFETCH_BATCHES",
     "MaskAccessError",
     "MixedStudyGeometryError",
     "PARTITION_SPEC_VERSION",
     "PartitionError",
+    "PrefetchBatchIterator",
     "ProtocolUnavailableError",
     "RolePartition",
     "SCHEMA_VERSION",
@@ -67,6 +78,7 @@ __all__ = [
     "forbidden_reason",
     "inverse_transform_record",
     "is_image_only_path",
+    "iter_batches",
     "load_full_input",
     "load_manifest",
     "load_verification_unit",
