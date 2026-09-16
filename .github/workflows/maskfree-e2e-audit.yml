@@ -1,0 +1,36 @@
+name: maskfree-e2e-audit
+on:
+  push:
+    branches: [audit/maskfree-e2e-20260916]
+permissions:
+  contents: read
+jobs:
+  source-snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Package tracked source and tests (no data, weights, or credentials)
+        run: |
+          mkdir -p /tmp/maskfree-source
+          git rev-parse HEAD > /tmp/maskfree-source/REVISION.txt
+          python - <<'PY'
+          import pathlib, subprocess, zipfile
+          root = pathlib.Path.cwd()
+          names = subprocess.check_output(['git', 'ls-files', '-z']).decode().split('\0')
+          prefixes = ('src/', 'scripts/', 'tests/', 'configs/', 'docs/', '.github/workflows/')
+          top = {'docs.md', 'README.md', 'requirements-maskfree.txt', 'requirements.txt', 'pyproject.toml', 'pytest.ini', 'setup.cfg'}
+          with zipfile.ZipFile('/tmp/maskfree-source/source.zip', 'w', zipfile.ZIP_DEFLATED) as z:
+              for name in names:
+                  if name and (name.startswith(prefixes) or name in top) and (root / name).is_file():
+                      z.write(root / name, name)
+              z.writestr('REVISION.txt', subprocess.check_output(['git', 'rev-parse', 'HEAD']))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: maskfree-audit-source
+          path: /tmp/maskfree-source/
+          retention-days: 3
+          if-no-files-found: error
