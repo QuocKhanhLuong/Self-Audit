@@ -39,9 +39,9 @@ def exact(a, b):
 
 @pytest.fixture(scope='module')
 def batch32():
-    units = build_synthetic_units(size=32, seed=42, count=32)
+    units = build_synthetic_units(size=224, seed=42, count=32)
     rng = torch.Generator().manual_seed(918)
-    return [u.fitting for u in units], [torch.randn(16, 32, 32, generator=rng) for _ in units], list(range(400, 432))
+    return [u.fitting for u in units], [torch.randn(16, 224, 224, generator=rng) for _ in units], list(range(400, 432))
 
 
 @pytest.mark.parametrize('batch,workers', [(8, 2), (16, 4), (32, 8), (32, 2)])
