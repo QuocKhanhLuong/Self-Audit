@@ -9,31 +9,32 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-          sparse-checkout: |
-            src
-            scripts
-            tests
-            configs
-            docs
-            .github
       - name: Package tracked source and tests (no data, weights, or credentials)
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p /tmp/maskfree-source
-          git rev-parse HEAD > /tmp/maskfree-source/REVISION.txt
           python - <<'PY'
-          import pathlib, subprocess, zipfile
-          root = pathlib.Path.cwd()
-          names = subprocess.check_output(['git', 'ls-files', '-z']).decode().split('\0')
+          import io, os, pathlib, urllib.request, zipfile
+          sha = os.environ['GITHUB_SHA']
+          repo = os.environ['GITHUB_REPOSITORY']
+          request = urllib.request.Request(
+              f'https://api.github.com/repos/{repo}/zipball/{sha}',
+              headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+                       'Accept': 'application/vnd.github+json'})
+          with urllib.request.urlopen(request, timeout=120) as response:
+              raw = response.read()
           prefixes = ('src/', 'scripts/', 'tests/', 'configs/', 'docs/', '.github/workflows/')
           top = {'docs.md', 'README.md', 'requirements-maskfree.txt', 'requirements.txt', 'pyproject.toml', 'pytest.ini', 'setup.cfg'}
-          with zipfile.ZipFile('/tmp/maskfree-source/source.zip', 'w', zipfile.ZIP_DEFLATED) as z:
-              for name in names:
-                  if name and (name.startswith(prefixes) or name in top) and (root / name).is_file():
-                      z.write(root / name, name)
-              z.writestr('REVISION.txt', subprocess.check_output(['git', 'rev-parse', 'HEAD']))
+          with zipfile.ZipFile(io.BytesIO(raw)) as source, zipfile.ZipFile('/tmp/maskfree-source/source.zip', 'w', zipfile.ZIP_DEFLATED) as dest:
+              for member in source.infolist():
+                  name = member.filename.partition('/')[2]
+                  if name and not member.is_dir() and (name.startswith(prefixes) or name in top):
+                      if '..' in pathlib.PurePosixPath(name).parts:
+                          raise RuntimeError('invalid archive path')
+                      dest.writestr(name, source.read(member))
+              dest.writestr('REVISION.txt', sha + '\n')
+          pathlib.Path('/tmp/maskfree-source/REVISION.txt').write_text(sha + '\n')
           PY
       - uses: actions/upload-artifact@v4
         with:
