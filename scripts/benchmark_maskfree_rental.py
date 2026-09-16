@@ -25,9 +25,12 @@ def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--data-root", type=Path, default=Path("/root/Self-Audit/data"))
     p.add_argument("--output", type=Path, required=True)
+    p.add_argument("--total-epochs", type=int, choices=(50, 150), default=150)
+    p.add_argument("--acdc-data-root", type=Path, default=None)
+    p.add_argument("--mnms-data-root", type=Path, default=None)
     p.add_argument("--prefetch-batches", type=int, choices=(0, 1, 2), default=0)
     p.add_argument("--data-cache-bytes", type=int, default=64 * 1024 * 1024)
-    p.add_argument("--batch-size", type=int, choices=(8, 16, 32), default=8)
+    p.add_argument("--batch-size", type=int, choices=(8, 16, 32, 64), default=8)
     p.add_argument("--candidate-workers", type=int, choices=(0, 2, 4, 8), default=0)
     p.add_argument("--candidate-chunk-size", type=int, choices=range(1, 9), default=8)
     p.add_argument("--prefetch-max-bytes", type=int, default=32 * 1024 * 1024)
@@ -39,13 +42,17 @@ def parser() -> argparse.ArgumentParser:
 
 def configs_and_commands(args):
     output = args.output.resolve()
-    roots = {"acdc": args.data_root / "ACDC", "mnms": args.data_root / "MnM/extracted/M&M"}
+    roots = {
+        "acdc": getattr(args, "acdc_data_root", None) or args.data_root / "ACDC",
+        "mnms": getattr(args, "mnms_data_root", None) or args.data_root / "MnM/extracted/M&M",
+    }
+    total_epochs = getattr(args, "total_epochs", 150)
     configs, commands = {}, []
     for dataset, root in roots.items():
         config = load_config(ROOT / f"configs/maskfree_{dataset}_150.yaml").replace(
             data_root=str(root.resolve()), output_dir=str(output / "preflight_workspace"),
             run_id=f"rental-{dataset}-gate", image_size=224, batch_size=args.batch_size,
-            accumulation_steps=1, total_epochs=150, amp=False, device="cuda", audit_device="cpu",
+            accumulation_steps=1, total_epochs=total_epochs, amp=False, device="cuda", audit_device="cpu",
             allow_cpu=False, max_steps=None, max_epochs=None, resume=None,
             timing_mode="diagnostic" if args.diagnostic else "production", logging_mode="buffered",
             data_cache_bytes=args.data_cache_bytes, prefetch_batches=args.prefetch_batches,
@@ -59,6 +66,7 @@ def configs_and_commands(args):
                "--audit-device", "cpu", "--image-size", "224", "--batch-size", str(args.batch_size), "--warmup-batches", "1" if args.diagnostic else "5",
                "--measured-batches", "3" if args.diagnostic else "30", "--timing-mode",
                "instrumented" if args.diagnostic else "ordinary"]
+    profile.extend(["--total-epochs", str(total_epochs)])
     if args.diagnostic:
         profile.extend(["--cprofile", "--torch-trace"])
     if args.reference_report:

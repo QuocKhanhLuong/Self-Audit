@@ -200,6 +200,49 @@ def _selected_regions(labels: torch.Tensor) -> tuple[list[dict[str, Any]], bool]
     return regions, converged_all
 
 
+def _indexed_selected_regions(
+    labels: torch.Tensor,
+) -> tuple[list[dict[str, Any]], torch.Tensor, bool]:
+    """Index the same ordered regions without allocating one HxW mask per region.
+
+    Integer counts preserve exact areas and the stable role/component tie order
+    of ``_selected_regions``.  The connected-component implementation and its
+    non-convergence fallback are unchanged.  Region ids are private accounting
+    indices; anatomical labels and reported component ids never change.
+    """
+    regions: list[dict[str, Any]] = []
+    region_ids = torch.empty_like(labels, dtype=torch.long)
+    converged_all = True
+    for role, name in ROLE_LABELS:
+        role_mask = labels == role
+        if not bool(role_mask.any()):
+            continue
+        components, converged = connected_components(role_mask)
+        converged_all &= converged
+        if not converged:
+            index = len(regions)
+            region_ids[role_mask] = index
+            regions.append({"role": name, "component": 0, "index": index,
+                            "pixels": int(role_mask.sum().item())})
+            continue
+        component_values = components[role_mask]
+        keys, counts = torch.unique(component_values, sorted=True, return_counts=True)
+        start = len(regions)
+        lookup = torch.empty(int(keys[-1].item()) + 1, dtype=torch.long, device=labels.device)
+        lookup[keys] = torch.arange(start, start + keys.numel(), device=labels.device)
+        region_ids[role_mask] = lookup[component_values]
+        for component, pixels in zip(keys.tolist(), counts.tolist()):
+            regions.append({"role": name, "component": int(component),
+                            "index": len(regions), "pixels": int(pixels)})
+    regions.sort(key=lambda entry: entry["pixels"], reverse=True)
+    return regions, region_ids, converged_all
+
+
+def _region_counts(region_ids: torch.Tensor, support: torch.Tensor, count: int) -> list[int]:
+    """Exact integer accounting, with no likelihood reduction or score change."""
+    return torch.bincount(region_ids[support], minlength=count).tolist()
+
+
 def _regional_margin(
     bank: Sequence[Hypothesis],
     selected_index: int,
@@ -284,29 +327,32 @@ def _regional_margin(
         close_report()
         return margin, True, report
 
-    regions, converged = _selected_regions(selected.labels)
+    regions, region_ids, converged = _indexed_selected_regions(selected.labels)
     report["components_converged"] = converged
     report["regions_total"] = len(regions)
+    observed_counts = _region_counts(region_ids, selection_view.support, len(regions))
+    # Scan each challenger's disagreement only once, not once per connected
+    # region.  The region report still includes all unobserved/over-budget
+    # regions; only their unnecessary full-image masks are eliminated.
+    disagreement_counts: dict[int, tuple[list[int], list[int]]] = {}
+    for index in challengers:
+        difference = bank[index].labels != selected.labels
+        disagreement_counts[index] = (
+            _region_counts(region_ids, difference, len(regions)),
+            _region_counts(region_ids, difference & selection_view.support, len(regions)),
+        )
     scored_anywhere = False
 
     for position, region in enumerate(regions):
-        mask = region["mask"]
-        pixels = int(mask.sum().item())
-        observed = int((selection_view.support & mask).sum().item())
-        # A candidate is a regional alternative only when it disagrees on an
-        # observed selection pixel in this region. Differences confined to fit
-        # pixels cannot earn an O_select margin.
-        observed_mask = mask & selection_view.support
-        disagreeing_anywhere = [
-            index
-            for index in challengers
-            if bool((bank[index].labels != selected.labels)[mask].any())
-        ]
-        disagreeing = [
-            index
-            for index in challengers
-            if bool((bank[index].labels != selected.labels)[observed_mask].any())
-        ]
+        region_index = region["index"]
+        pixels = region["pixels"]
+        observed = observed_counts[region_index]
+        # A candidate is an alternative only if it disagrees on an observed
+        # selection pixel. Differences confined to fitting pixels do not count.
+        disagreeing_anywhere = [index for index in challengers
+                               if disagreement_counts[index][0][region_index] > 0]
+        disagreeing = [index for index in challengers
+                      if disagreement_counts[index][1][region_index] > 0]
         row: dict[str, Any] = {
             "role": region["role"],
             "component": region["component"],
@@ -339,6 +385,9 @@ def _regional_margin(
         # The region becomes evidence-bearing only after at least one challenger
         # produces an available score on this same O_select support.
 
+        # Allocate a mask only for a region that actually enters scoring.
+        # At most MAX_SCORED_REGIONS masks are made, one at a time.
+        mask = region_ids == region_index
         sub_view = _restricted_selection_view(selection_view, mask)
 
         def score_one(
