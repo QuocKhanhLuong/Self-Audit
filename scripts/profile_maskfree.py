@@ -791,6 +791,7 @@ class TimingProbe:
             "event_seconds": 0.0,
         }
         self.cuda_sync = {"calls": 0, "wall_seconds": 0.0, "process_cpu_seconds": 0.0}
+        self.fsync = {"calls": 0, "wall_seconds": 0.0}
         self.connected_components = {
             "calls": 0,
             "wall_seconds": 0.0,
@@ -1225,7 +1226,17 @@ class Instrumentation:
 
         original_batch = self.trainer._train_batch
 
+        def complete_devices() -> None:
+            devices = {str(device) for device in
+                       (self.trainer.device, getattr(self.trainer, "audit_device", self.trainer.device))
+                       if device.type == "cuda"}
+            for device in sorted(devices):
+                torch.cuda.synchronize(device)
+
         def train_batch(*args: Any, **kwargs: Any) -> Any:
+            # Production stages intentionally do not synchronize. Completed
+            # throughput requires boundaries around the entire logical batch.
+            complete_devices()
             indices = list(kwargs.get("indices", []))
             batch = self.probe.begin_batch(
                 epoch=int(kwargs.get("epoch", -1)),
@@ -1235,13 +1246,31 @@ class Instrumentation:
             try:
                 output = original_batch(*args, **kwargs)
             except Exception as exc:
+                complete_devices()
                 self.probe.end_batch(batch, success=False, error=f"{type(exc).__name__}: {exc}")
                 raise
             else:
+                complete_devices()
                 self.probe.end_batch(batch, success=True)
+                if getattr(self, "torch_trace", None) is not None:
+                    self.torch_trace.step()
                 return output
 
         self._set(self.trainer, "_train_batch", train_batch)
+
+        original_save = self.trainer._save_checkpoint
+
+        def save_checkpoint(*args: Any, **kwargs: Any) -> Any:
+            started = time.perf_counter()
+            process_started = time.process_time()
+            try:
+                return original_save(*args, **kwargs)
+            finally:
+                self.probe.checkpoint["calls"] += 1
+                self.probe.checkpoint["wall_seconds"] += time.perf_counter() - started
+                self.probe.checkpoint["process_cpu_seconds"] += time.process_time() - process_started
+
+        self._set(self.trainer, "_save_checkpoint", save_checkpoint)
 
         # Ordinary mode intentionally stops at the minimal whole-batch timer;
         # finite-gradient hooks, per-loss timing, and progress wrappers belong
@@ -1347,20 +1376,6 @@ class Instrumentation:
             ),
         )
 
-        original_save = self.trainer._save_checkpoint
-
-        def save_checkpoint(*args: Any, **kwargs: Any) -> Any:
-            started = time.perf_counter()
-            process_started = time.process_time()
-            try:
-                return original_save(*args, **kwargs)
-            finally:
-                self.probe.checkpoint["calls"] += 1
-                self.probe.checkpoint["wall_seconds"] += time.perf_counter() - started
-                self.probe.checkpoint["process_cpu_seconds"] += time.process_time() - process_started
-
-        self._set(self.trainer, "_save_checkpoint", save_checkpoint)
-
         # Progress calls are kept separate from scientific stages.  Quiet
         # progress is the default, but this remains useful with compact output.
         progress = self._current_progress()
@@ -1403,6 +1418,18 @@ class Instrumentation:
         # Count logical observation APIs without changing the trainer's bulk
         # eligibility identity (see _install_observation_wrappers).
         self._install_observation_wrappers()
+
+        original_fsync = os.fsync
+
+        def fsync(fd: int) -> None:
+            started = time.perf_counter()
+            try:
+                return original_fsync(fd)
+            finally:
+                self.probe.fsync["calls"] += 1
+                self.probe.fsync["wall_seconds"] += time.perf_counter() - started
+
+        self._set(os, "fsync", fsync)
 
         if torch.cuda.is_available():
             original_sync = torch.cuda.synchronize
@@ -2186,6 +2213,18 @@ def _prepare_config(args: argparse.Namespace, output: Path) -> tuple[Any, dict[s
             config_overrides["audit_device"] = requested_audit_device
         config = config.replace(**config_overrides)
 
+    runtime_overrides = {}
+    for field in ("timing_mode", "logging_mode", "log_buffer_bytes", "data_cache_bytes",
+                  "prefetch_batches", "prefetch_max_bytes", "candidate_workers", "candidate_worker_threads"):
+        arg = "runtime_timing_mode" if field == "timing_mode" else field
+        value = getattr(args, arg, None)
+        if value is not None:
+            if not hasattr(config, field):
+                raise ValueError(f"selected source does not support runtime option {field}")
+            runtime_overrides[field] = value
+    if runtime_overrides:
+        config = config.replace(**runtime_overrides)
+
     scientific_requirements = _scientific_requirements(requested_image_size)
     values = {name: getattr(config, name) for name in scientific_requirements}
     mismatches = {
@@ -2282,12 +2321,27 @@ def _run_profile(args: argparse.Namespace) -> dict[str, Any]:
     )
     instrumentation = Instrumentation(trainer, probe)
     instrumentation.install()
+    torch_trace = None
+    if getattr(args, "torch_trace", False):
+        import torch
+        if args.timing_mode != "instrumented" or args.measured_batches < 2:
+            raise ValueError("--torch-trace requires a separate instrumented run with at least two measured batches")
+        activities = [torch.profiler.ProfilerActivity.CPU]
+        if trainer.device.type == "cuda" or trainer.audit_device.type == "cuda":
+            activities.append(torch.profiler.ProfilerActivity.CUDA)
+        torch_trace = torch.profiler.profile(
+            activities=activities, record_shapes=False, with_stack=False, profile_memory=False,
+            schedule=torch.profiler.schedule(wait=args.warmup_batches, warmup=1, active=1, repeat=1),
+            on_trace_ready=lambda trace: trace.export_chrome_trace(str(output / "one_batch_trace.json")))
+        instrumentation.torch_trace = torch_trace
     profile = cProfile.Profile() if args.cprofile else None
     result: dict[str, Any] | None = None
     error_payload: dict[str, Any] | None = None
     started_wall = time.perf_counter()
     started_process = time.process_time()
     try:
+        if torch_trace is not None:
+            torch_trace.start()
         if profile is not None:
             profile.enable()
         result = trainer.run()
@@ -2298,6 +2352,8 @@ def _run_profile(args: argparse.Namespace) -> dict[str, Any]:
             "traceback": traceback.format_exc(),
         }
     finally:
+        if torch_trace is not None:
+            torch_trace.stop()
         if profile is not None:
             profile.disable()
             profile_path = Path(args.cprofile_output).expanduser() if args.cprofile_output else output / "profile.prof"
@@ -2345,14 +2401,21 @@ def _run_profile(args: argparse.Namespace) -> dict[str, Any]:
         "process_cpu_seconds": summary(process_values),
         "unattributed_batch_seconds": summary(unattributed_values),
         "stages": _aggregate_stage_batches([batch for batch in measured if batch.get("success")]),
-        "interval_overhead": dict(probe.progress),
+        "interval_overhead": ({"available": True, **probe.progress} if args.timing_mode == "instrumented"
+                              else {"available": False, "reason": "ordinary mode does not intercept progress calls",
+                                    **{key: None for key in probe.progress}}),
         "checkpoint_overhead": dict(probe.checkpoint),
-        "cuda_sync": dict(probe.cuda_sync),
+        "cuda_sync": ({"available": True, **probe.cuda_sync} if args.timing_mode == "instrumented"
+                      else {"available": False, "reason": "ordinary mode does not intercept synchronization", "calls": None, "wall_seconds": None}),
+        "fsync": ({"available": True, **probe.fsync} if args.timing_mode == "instrumented"
+                  else {"available": False, "reason": "ordinary mode does not intercept fsync; lineage writer counters are in runtime_options", "calls": None, "wall_seconds": None}),
         "gpu_memory_peak": peak_gpu,
         "run_wall_seconds": elapsed_wall,
         "run_process_cpu_seconds": elapsed_process,
         "stage_aggregation_note": "inclusive nested stages overlap; do not sum them into batch latency",
         "batch_scope": "trainer._train_batch; progress/checkpoint overhead is reported separately",
+        "device_completion": "CUDA synchronized at complete batch boundaries in both ordinary and instrumented modes",
+        "runtime_timing_mode": getattr(config, "timing_mode", "legacy_synchronized"),
         "timing_mode": args.timing_mode,
         "logical_work": _logical_work_report(probe),
         "raw_neural_compute_note": "producer/feature/student stages exclude audit, optimizer, checkpoint, and logging; nested values are not summed",
@@ -2726,6 +2789,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--run-id", default=None)
     parser.add_argument("--kind", choices=("early", "baseline", "optimized"), default="baseline")
     parser.add_argument("--timing-mode", choices=TIMING_MODES, default="instrumented")
+    parser.add_argument("--runtime-timing-mode", choices=("production", "diagnostic"), default=None)
+    parser.add_argument("--logging-mode", choices=("sync", "buffered"), default=None)
+    for field in ("log_buffer_bytes", "data_cache_bytes", "prefetch_batches", "prefetch_max_bytes",
+                  "candidate_workers", "candidate_worker_threads"):
+        parser.add_argument("--" + field.replace("_", "-"), type=int, default=None)
     parser.add_argument(
         "--source-root",
         type=Path,
@@ -2733,6 +2801,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="immutable snapshot directory (or files/ child) imported before trainer construction",
     )
     parser.add_argument("--cprofile", "--profile", action="store_true")
+    parser.add_argument("--torch-trace", action="store_true", help="one active batch CPU/CUDA trace; separate diagnostic run only")
     parser.add_argument("--cprofile-output", "--profile-output", dest="cprofile_output", type=Path, default=None)
     parser.add_argument("--reference-snapshot", type=Path, default=None)
     parser.add_argument("--reference-report", type=Path, default=None,

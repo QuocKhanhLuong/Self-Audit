@@ -39,7 +39,7 @@ from . import auditor as auditor_module
 from . import hypotheses as hypotheses_module
 from . import observation as observation_module
 from . import runtime
-from .config import MaskfreeConfig, compare_configs
+from .config import RUNTIME_FIELDS, MaskfreeConfig, compare_configs
 from .contracts import VERSION as CONTRACT_VERSION
 from .contracts import AuditResult, Hypothesis, ScoringView, TrainingUnit
 from .progress import current_progress
@@ -263,6 +263,20 @@ def _scalar(value: Any) -> float | None:
     return number if math.isfinite(number) else None
 
 
+def _scalar_metrics(values: dict[str, Any]) -> dict[str, float | None]:
+    """Copy independent scalar metrics once per device/dtype, preserving values."""
+    copied = dict(values)
+    groups: dict[tuple[torch.device, torch.dtype], list[tuple[str, torch.Tensor]]] = {}
+    for key, value in values.items():
+        if isinstance(value, torch.Tensor) and value.numel() == 1 and value.device.type != "cpu":
+            groups.setdefault((value.device, value.dtype), []).append((key, value.detach().reshape(())))
+    for group in groups.values():
+        numbers = torch.stack([value for _, value in group]).cpu().tolist()
+        for (key, _), number in zip(group, numbers):
+            copied[key] = number
+    return {key: _scalar(value) for key, value in copied.items()}
+
+
 # ---------------------------------------------------------------------------
 # trainer
 # ---------------------------------------------------------------------------
@@ -290,11 +304,9 @@ class MaskfreeTrainer:
         self.paths = runtime.RunPaths(run_root).ensure()
 
         self.source = runtime.source_identity(self.repo_root)
-        self.timing = runtime.TimingAccumulator.empty()
-        # TimingAccumulator synchronizes at stage boundaries.  Audit math may
-        # run on a distinct explicit CUDA device from the neural models, so use
-        # whichever resolved backend can enqueue CUDA work; no extra per-region
-        # synchronization is introduced by the trainer.
+        self.timing = runtime.TimingAccumulator.empty(mode=config.timing_mode)
+        # Only diagnostic timing synchronizes stage boundaries. Production
+        # stage values are inclusive host wall time, including enqueue/waits.
         self.timing.device = (
             self.audit_device if self.audit_device.type == "cuda" else self.device
         )
@@ -355,6 +367,40 @@ class MaskfreeTrainer:
         self._partial_epoch: dict[str, Any] | None = None
         self._active_arms: set[str] = set()
         self._student_weight_sums: dict[str, float] = {}
+        self._lineage_writers: dict[Path, Any] = {}
+        self._prefetched_batches = None
+        self._prefetch_stats: dict[str, Any] = {}
+        self._candidate_executor = None
+
+    def _close_candidate_executor(self) -> None:
+        if self._candidate_executor is not None:
+            self._candidate_executor.close()
+            self._candidate_executor = None
+
+    def _append_lineage(self, path: Path, record: dict[str, Any]) -> None:
+        if self.config.logging_mode == "sync":
+            runtime.append_jsonl(path, record)
+            return
+        if path not in self._lineage_writers:
+            self._lineage_writers[path] = runtime.JSONLWriter(
+                path, max_resident_bytes=self.config.log_buffer_bytes)
+        self._lineage_writers[path].append(record)
+
+    def _flush_lineage(self) -> None:
+        for writer in self._lineage_writers.values():
+            writer.flush()
+
+    def _close_lineage(self) -> None:
+        # Attempt every close; do not silently swallow a durability failure.
+        errors = []
+        for writer in self._lineage_writers.values():
+            try:
+                writer.close()
+            except Exception as exc:
+                errors.append(exc)
+        self._lineage_writers.clear()
+        if errors:
+            raise errors[0]
 
     # -- identity -------------------------------------------------------
     def _default_run_id(self) -> str:
@@ -383,6 +429,28 @@ class MaskfreeTrainer:
             "audit_device_identity": audit_identity["resolved_device"],
             "audit_numerical_backend": audit_identity["numerical_backend"],
             "audit_execution": audit_identity,
+            "runtime_options": self._runtime_options(),
+        }
+
+    def _runtime_options(self) -> dict[str, Any]:
+        return {name: getattr(self.config, name) for name in RUNTIME_FIELDS}
+
+    def runtime_summary(self) -> dict[str, Any]:
+        cache_stats = getattr(self.dataset, "cache_stats", None)
+        return {
+            **self._runtime_options(),
+            "model_device": str(self.device), "audit_device": str(self.audit_device),
+            "neural_precision": "fp16_amp" if self.config.amp and self.device.type == "cuda" else "fp32",
+            "observation_precision": self.audit_numerical_backend,
+            "torch_threads": torch.get_num_threads(),
+            "torch_interop_threads": torch.get_num_interop_threads(),
+            "data_worker_threads": int(bool(self.config.prefetch_batches)),
+            "physical_batch": self.config.batch_size, "effective_batch": self.config.effective_batch,
+            "image_size": self.config.image_size,
+            "cache": cache_stats() if callable(cache_stats) else None,
+            "prefetch": dict(self._prefetch_stats),
+            "lineage_writers": {str(path.relative_to(self.paths.root)): dict(writer.stats)
+                                for path, writer in self._lineage_writers.items()},
         }
 
     def _audit_execution_identity(self) -> dict[str, Any]:
@@ -439,9 +507,14 @@ class MaskfreeTrainer:
             raise TrainerContractError(f"image inventory contains unreadable selected files: {unreadable[:3]}")
 
         with self.timing.stage("dataset_build", split="train", image_size=config.image_size):
-            self.dataset = self.components.dataset_factory(
-                self.manifest, split="train", image_size=config.image_size, seed=config.seed
-            )
+            dataset_kwargs = dict(split="train", image_size=config.image_size, seed=config.seed)
+            if "data_cache_bytes" in inspect.signature(self.components.dataset_factory).parameters:
+                dataset_kwargs["data_cache_bytes"] = config.data_cache_bytes
+            elif config.data_cache_bytes != 64 * 1024 * 1024:
+                raise TrainerContractError("custom dataset does not support data_cache_bytes")
+            self.dataset = self.components.dataset_factory(self.manifest, **dataset_kwargs)
+            if config.prefetch_batches and not hasattr(self.dataset, "iter_batches"):
+                raise TrainerContractError("prefetch requires the canonical deterministic dataset iterator")
         self.unit_ids = list(self.dataset.unit_ids)
         if len(self.dataset) == 0:
             raise TrainerContractError("training split is empty; refusing to report a trained run")
@@ -473,12 +546,27 @@ class MaskfreeTrainer:
         use_amp = bool(config.amp and self.device.type == "cuda")
         self.scaler = runtime.make_grad_scaler(self.device, enabled=use_amp)
         self.amp_enabled = use_amp
+        if config.candidate_workers:
+            if not self._bulk_audit_enabled() or config.batch_size > 8:
+                raise TrainerContractError("candidate workers require canonical audit components and batch <= 8")
+            from .candidate_execution import CandidatePoolExecutor
+            self._candidate_executor = CandidatePoolExecutor(
+                workers=config.candidate_workers, worker_threads=config.candidate_worker_threads)
 
         with self.timing.stage("run_identity.write", path=str(self.paths.root)):
             self._write_run_identity()
+        from .resources import resource_snapshot
+        self.startup_resources = resource_snapshot(
+            data_roots=(config.data_root,), report_dir=self.paths.reports, include_gpu=False)
+        visible_cpu = self.startup_resources.get("cgroup", {}).get("visible_cpu_upper_bound_cores")
+        if visible_cpu is not None and config.candidate_workers * config.candidate_worker_threads > visible_cpu:
+            raise TrainerContractError("candidate worker threads exceed visible container CPU upper bound")
+        runtime.atomic_write_json(self.paths.reports / "startup_resources.json", self.startup_resources)
+        runtime.atomic_write_json(self.paths.reports / "runtime_options.json", self.runtime_summary())
         current_progress().event("setup.ready", units=len(self.dataset), batches=self.batches_per_epoch,
                                  protocol=self.manifest.get("resolved_protocol"),
-                                 effective_data_workers=0, amp=use_amp,
+                                 effective_data_workers=int(bool(config.prefetch_batches)), amp=use_amp,
+                                 runtime_options=self.runtime_summary(),
                                  audit_device=self._audit_execution_identity()["resolved_device"],
                                  audit_numerical_backend=self.audit_numerical_backend)
         self._setup_done = True
@@ -496,6 +584,7 @@ class MaskfreeTrainer:
                 for key in (
                     "run_id", "dataset", "scientific_hash", "manifest_hash", "partition_hash",
                     "audit_device_identity", "audit_numerical_backend",
+                    "runtime_options",
                 )
                 if stored.get(key) != identity.get(key)
             }
@@ -557,26 +646,32 @@ class MaskfreeTrainer:
         return [list(permutation[i : i + size]) for i in range(0, len(permutation), size)]
 
     # -- main loop ------------------------------------------------------
+    def _validate_preflight_gate(self) -> None:
+        """Validate the receipt emitted by preflight without rewriting it."""
+        if not self.paths.gate_receipt.is_file():
+            raise TrainerContractError("150-epoch GPU run requires a completed matching preflight")
+        gate = json.loads(self.paths.gate_receipt.read_text())
+        identity = self.identity()
+        for key, value in {
+            "status": "pass", "actual_physical_batch": self.config.batch_size,
+            "accumulation_steps": self.config.accumulation_steps,
+            "device": runtime.device_identity(self.device),
+            "audit_device_identity": runtime.device_identity(self.audit_device),
+            "audit_numerical_backend": self.audit_numerical_backend,
+            "scientific_hash": identity["scientific_hash"],
+            "source_hash": identity["source_hash"],
+            "manifest_hash": identity["manifest_hash"],
+            "runtime_options": self._runtime_options(),
+        }.items():
+            if gate.get(key) != value:
+                raise TrainerContractError(f"preflight gate mismatch: {key}")
+
     def run(self) -> dict[str, Any]:
         started = time.time()
         try:
             self.setup()
             if self.config.total_epochs == 150 and not self.config.is_bounded_run and self.device.type == "cuda":
-                if not self.paths.gate_receipt.is_file():
-                    raise TrainerContractError("150-epoch GPU run requires a completed matching preflight")
-                gate = json.loads(self.paths.gate_receipt.read_text())
-                for key, value in {
-                    "status": "pass", "actual_physical_batch": self.config.batch_size,
-                    "accumulation_steps": self.config.accumulation_steps,
-                    "device": runtime.device_identity(self.device),
-                    "audit_device_identity": runtime.device_identity(self.audit_device),
-                    "audit_numerical_backend": self.audit_numerical_backend,
-                    "scientific_hash": self.identity()["scientific_hash"],
-                    "source_hash": self.identity()["source_hash"],
-                    "manifest_hash": self.identity()["manifest_hash"],
-                }.items():
-                    if gate.get(key) != value:
-                        raise TrainerContractError(f"preflight gate mismatch: {key}")
+                self._validate_preflight_gate()
             if self.config.resume:
                 self._load_checkpoint(self.config.resume)
             with self.timing.stage("metrics.wandb_initialize", mode=self.config.wandb_mode):
@@ -607,6 +702,10 @@ class MaskfreeTrainer:
         finally:
             if self.sink is not None:
                 self.sink.finish()
+            try:
+                self._close_lineage()
+            finally:
+                self._close_candidate_executor()
         return result
 
     def _run_epochs(self, started: float) -> dict[str, Any]:
@@ -718,7 +817,8 @@ class MaskfreeTrainer:
             "component_steps": dict(self.component_steps),
             "micro_batches": self.micro_batches_seen,
             "batches_per_epoch": self.batches_per_epoch,
-            "effective_data_workers": 0,
+            "effective_data_workers": int(bool(config.prefetch_batches)),
+            "runtime_options": self.runtime_summary(),
             "steps_per_epoch": self.steps_per_epoch,
             "device": runtime.device_identity(self.device),
             "audit_device": runtime.device_identity(self.audit_device),
@@ -824,65 +924,76 @@ class MaskfreeTrainer:
         progress.update(epoch=epoch + 1, epochs=config.total_epochs, batch=start_batch,
                         batches=len(batches), operation="training", unit_id=None)
         progress.event("epoch.start", resumed_from_batch=start_batch, label_ramp=ramp)
-        for batch_index in range(start_batch, len(batches)):
-            batch_cursor = batch_index
-            indices = batches[batch_index]
-            progress.update(batch=batch_index + 1, physical_batch=len(indices),
-                            accumulation=config.accumulation_steps, unit_id=None,
-                            operation="load training batch")
-            batch_started = time.monotonic()
-            prior_timing = dict(self.timing.seconds)
-            is_group_end = (
-                (batch_index + 1) % config.accumulation_steps == 0
-                or batch_index == len(batches) - 1
-            )
-            self._train_batch(
-                epoch=epoch,
-                batch_index=batch_index,
-                indices=indices,
-                ramp=ramp,
-                accumulator=accumulator,
-                audit_counters=audit_counters,
-                class_pixels=class_pixels,
-                lineage_path=lineage_path,
-                is_group_end=is_group_end,
-                group_weight=len(indices) / sum(len(b) for b in batches[
-                    (batch_index // config.accumulation_steps) * config.accumulation_steps:
-                    (batch_index // config.accumulation_steps + 1) * config.accumulation_steps]),
-            )
-            self.micro_batches_seen += 1
-            batch_cursor = batch_index + 1
-            if progress.enabled:
-                progress.update(operation="batch completed", unit_id=None)
-                progress.dashboard(
-                    force=batch_cursor == len(batches) or (
-                        config.max_steps is not None and self.global_step >= config.max_steps),
-                    metric_scope="running_epoch_means", lr=self.current_lr(), label_ramp=ramp,
-                    global_optimizer_steps=self.global_step, component_steps=dict(self.component_steps),
-                    metrics={key: accumulator.mean(key) for key in sorted(accumulator.values)},
-                    metric_counts=dict(accumulator.counts), audit=dict(audit_counters),
-                    labelled_pixels=class_pixels["total"],
-                    class_occupancy={str(k): class_pixels[k] / class_pixels["total"]
-                                     if class_pixels["total"] else None for k in range(4)},
-                    batch_seconds=time.monotonic() - batch_started,
-                    batch_stage_seconds={k: v - prior_timing.get(k, 0.0)
-                                         for k, v in self.timing.seconds.items()},
-                    timing_note="inclusive stages; do not sum",
-                    gpu_stats=runtime.gpu_stats(self.device),
-                    audit_gpu_stats=runtime.gpu_stats(self.audit_device),
-                    audit_execution=self._audit_execution_identity(),
-                    verification_status="locked_until_all_predictions_frozen",
+        if config.prefetch_batches:
+            self._prefetched_batches = self.dataset.iter_batches(
+                batches, start_batch=start_batch, prefetch_batches=config.prefetch_batches,
+                prefetch_max_bytes=config.prefetch_max_bytes)
+        try:
+            for batch_index in range(start_batch, len(batches)):
+                batch_cursor = batch_index
+                indices = batches[batch_index]
+                progress.update(batch=batch_index + 1, physical_batch=len(indices),
+                                accumulation=config.accumulation_steps, unit_id=None,
+                                operation="load training batch")
+                batch_started = time.monotonic()
+                prior_timing = dict(self.timing.seconds)
+                is_group_end = (
+                    (batch_index + 1) % config.accumulation_steps == 0
+                    or batch_index == len(batches) - 1
                 )
-            self._partial_epoch = {
-                "epoch": epoch,
-                "accumulator": {"values": accumulator.values, "counts": accumulator.counts},
-                "audit_counters": audit_counters, "class_pixels": class_pixels,
-            }
-            if is_group_end and self.global_step % 50 == 0:
-                self._save_checkpoint(epoch=epoch, batch_cursor=batch_cursor,
-                                      permutation=permutation, completed=False, status=STATUS_PARTIAL)
-            if config.max_steps is not None and self.global_step >= config.max_steps:
-                break
+                self._train_batch(
+                    epoch=epoch,
+                    batch_index=batch_index,
+                    indices=indices,
+                    ramp=ramp,
+                    accumulator=accumulator,
+                    audit_counters=audit_counters,
+                    class_pixels=class_pixels,
+                    lineage_path=lineage_path,
+                    is_group_end=is_group_end,
+                    group_weight=len(indices) / sum(len(b) for b in batches[
+                        (batch_index // config.accumulation_steps) * config.accumulation_steps:
+                        (batch_index // config.accumulation_steps + 1) * config.accumulation_steps]),
+                )
+                self.micro_batches_seen += 1
+                batch_cursor = batch_index + 1
+                if progress.enabled:
+                    progress.update(operation="batch completed", unit_id=None)
+                    progress.dashboard(
+                        force=batch_cursor == len(batches) or (
+                            config.max_steps is not None and self.global_step >= config.max_steps),
+                        metric_scope="running_epoch_means", lr=self.current_lr(), label_ramp=ramp,
+                        global_optimizer_steps=self.global_step, component_steps=dict(self.component_steps),
+                        metrics={key: accumulator.mean(key) for key in sorted(accumulator.values)},
+                        metric_counts=dict(accumulator.counts), audit=dict(audit_counters),
+                        labelled_pixels=class_pixels["total"],
+                        class_occupancy={str(k): class_pixels[k] / class_pixels["total"]
+                                         if class_pixels["total"] else None for k in range(4)},
+                        batch_seconds=time.monotonic() - batch_started,
+                        batch_stage_seconds={k: v - prior_timing.get(k, 0.0)
+                                             for k, v in self.timing.seconds.items()},
+                        timing_note="inclusive stages; do not sum",
+                        gpu_stats=runtime.gpu_stats(self.device),
+                        audit_gpu_stats=runtime.gpu_stats(self.audit_device),
+                        audit_execution=self._audit_execution_identity(),
+                        verification_status="locked_until_all_predictions_frozen",
+                    )
+                self._partial_epoch = {
+                    "epoch": epoch,
+                    "accumulator": {"values": accumulator.values, "counts": accumulator.counts},
+                    "audit_counters": audit_counters, "class_pixels": class_pixels,
+                }
+                if is_group_end and self.global_step % 50 == 0:
+                    self._save_checkpoint(epoch=epoch, batch_cursor=batch_cursor,
+                                          permutation=permutation, completed=False, status=STATUS_PARTIAL)
+                if config.max_steps is not None and self.global_step >= config.max_steps:
+                    break
+
+        finally:
+            if self._prefetched_batches is not None:
+                self._prefetched_batches.close()
+                self._prefetch_stats = self._prefetched_batches.stats()
+                self._prefetched_batches = None
 
         units = max(audit_counters["units"], 1)
         record = {
@@ -964,7 +1075,8 @@ class MaskfreeTrainer:
         group_weight: float = 1.0,
     ) -> None:
         with self.timing.stage("data_load", indices=list(indices), batch_units=len(indices)):
-            units: list[TrainingUnit] = [self.dataset[index] for index in indices]
+            units: list[TrainingUnit] = (next(self._prefetched_batches) if self._prefetched_batches is not None
+                                         else [self.dataset[index] for index in indices])
         for unit in units:
             unit.fitting.validate()
             unit.selection.validate()
@@ -984,13 +1096,13 @@ class MaskfreeTrainer:
                 raise TrainerContractError("nonfinite producer loss")
             self.scaler.scale(loss * group_weight).backward()
             self._active_arms.add("producer")
-        for key, value in (producer_metrics or {}).items():
+        producer_numbers = _scalar_metrics({**(producer_metrics or {}), "loss": loss})
+        for key, number in producer_numbers.items():
             if key == "loss":  # loss itself is recorded once below
                 continue
-            number = _scalar(value)
             if number is not None:
                 accumulator.add(f"producer/{key}", number)
-        accumulator.add("producer/loss", float(loss.detach().cpu().item()))
+        accumulator.add("producer/loss", producer_numbers["loss"])
 
         # Bank generation consumes DETACHED producer features: no student or
         # auditor gradient ever reaches the representation producer.
@@ -1017,16 +1129,24 @@ class MaskfreeTrainer:
         bulk_audits: list[AuditResult] | None = None
         banks: list[list[Hypothesis]] | None = None
         if self._bulk_audit_enabled():
-            banks = []
-            for offset, unit in enumerate(units):
-                # Keep the scalar path's per-unit progress contract: each
-                # unit announces the same operation before bank generation and
-                # audit work, even though the canonical bulk call follows.
-                current_progress().update(
-                    unit_id=unit.fitting.unit_id, unit_in_batch=offset + 1,
-                    operation="generate hypotheses and audit select evidence",
-                )
-                banks.append(self._generate_bank(epoch=epoch, unit=unit, features=features_cpu[offset]))
+            if self._candidate_executor is not None:
+                with self.timing.stage("bank_generation", batch_units=len(units), workers=self.config.candidate_workers):
+                    banks = self._candidate_executor.generate_banks(
+                        [unit.fitting for unit in units], features=list(features_cpu),
+                        seeds=[_stable_unit_seed(self.config.seed, epoch, unit.fitting.unit_id) for unit in units])
+                if len(banks) != len(units) or any(not bank for bank in banks):
+                    raise TrainerContractError("candidate worker returned an incomplete batch")
+            else:
+                banks = []
+                for offset, unit in enumerate(units):
+                    # Keep the scalar path's per-unit progress contract: each
+                    # unit announces the same operation before bank generation and
+                    # audit work, even though the canonical bulk call follows.
+                    current_progress().update(
+                        unit_id=unit.fitting.unit_id, unit_in_batch=offset + 1,
+                        operation="generate hypotheses and audit select evidence",
+                    )
+                    banks.append(self._generate_bank(epoch=epoch, unit=unit, features=features_cpu[offset]))
             with self.timing.stage(
                 "audit", batch_units=len(units), candidates=sum(len(bank) for bank in banks),
                 rounds=AUDIT_ROUNDS, physical_mode="bulk",
@@ -1075,10 +1195,10 @@ class MaskfreeTrainer:
                     lineage_path=lineage_path,
                 )
             initial, selected = audit.initial, audit.selected
-            probs_initial.append(initial.probabilities.to(self.device).float())
-            probs_audited.append(selected.probabilities.to(self.device).float())
-            validity_initial.append(initial.validity.to(self.device).float())
-            validity_audited.append(audit.validity.to(self.device).float())
+            probs_initial.append(initial.probabilities)
+            probs_audited.append(selected.probabilities)
+            validity_initial.append(initial.validity)
+            validity_audited.append(audit.validity)
             labels = selected.labels.detach().cpu()
             valid_pixels = audit.validity.detach().cpu() > 0
             class_pixels["total"] += int(valid_pixels.sum())
@@ -1087,12 +1207,12 @@ class MaskfreeTrainer:
 
         targets = {
             "student_no_audit": (
-                torch.stack(probs_initial).detach(),
-                torch.stack(validity_initial).detach(),
+                torch.stack(probs_initial).detach().to(self.device).float(),
+                torch.stack(validity_initial).detach().to(self.device).float(),
             ),
             "student_audited": (
-                torch.stack(probs_audited).detach(),
-                torch.stack(validity_audited).detach(),
+                torch.stack(probs_audited).detach().to(self.device).float(),
+                torch.stack(validity_audited).detach().to(self.device).float(),
             ),
         }
         for arm, (probabilities, validity) in targets.items():
@@ -1115,14 +1235,14 @@ class MaskfreeTrainer:
                     self.scaler.scale(student_value * ramp * weight).backward()
                     self._student_weight_sums[arm] = self._student_weight_sums.get(arm, 0.0) + weight
                     self._active_arms.add(arm)
-            accumulator.add(f"{arm}/loss", float(student_value.detach().cpu().item()))
-            for key, value in (student_metrics or {}).items():
+            student_numbers = _scalar_metrics({**(student_metrics or {}), "loss": student_value})
+            accumulator.add(f"{arm}/loss", student_numbers["loss"])
+            for key, number in student_numbers.items():
                 if key == "loss":  # do not double the observation count
                     continue
-                number = _scalar(value)
                 if number is not None:
                     accumulator.add(f"{arm}/{key}", number)
-            if (student_metrics or {}).get("skipped"):
+            if student_numbers.get("skipped"):
                 accumulator.add(f"{arm}/skipped_batches", 1.0)
             coverage_key = "coverage/student_no_audit" if arm == "student_no_audit" else "coverage/student_audited"
             accumulator.add(coverage_key, float((validity > 0).float().mean().cpu().item()))
@@ -1261,7 +1381,7 @@ class MaskfreeTrainer:
             key = "audit/select_nll" if getattr(score, "role", "") == "select" else "audit/fit_nll"
             accumulator.add(key, value, count=score.count)
 
-        runtime.append_jsonl(
+        self._append_lineage(
             lineage_path,
             {
                 "global_epoch": epoch,
@@ -1343,6 +1463,10 @@ class MaskfreeTrainer:
                 "refusing to write a checkpoint with an open accumulation group; "
                 f"{len(pending)} parameters still hold gradients (first: {pending[0]})"
             )
+        # Journal bytes must be durable BEFORE offsets enter the atomic
+        # checkpoint. Bytes beyond those offsets may be discarded/replayed.
+        self._flush_lineage()
+        runtime.fsync_directory(self.paths.reports)
         payload = {
             "schema_version": TRAINER_SCHEMA_VERSION,
             "contract_version": CONTRACT_VERSION,
@@ -1372,7 +1496,8 @@ class MaskfreeTrainer:
             "partial_epoch": self._partial_epoch if batch_cursor else None,
             "log_offsets": {
                 str(p.relative_to(self.paths.root)): p.stat().st_size
-                for p in (self.paths.epoch_metrics, self.paths.reports / "label_lineage.jsonl") if p.exists()
+                for p in (self.paths.epoch_metrics, self.paths.reports / "label_lineage.jsonl",
+                          self.paths.reports / "preflight_label_lineage.jsonl") if p.exists()
             },
             "timing": self.timing.as_dict(),
         }
@@ -1403,6 +1528,7 @@ class MaskfreeTrainer:
         for key in (
             "run_id", "runtime_environment", "device_identity",
             "audit_device_identity", "audit_numerical_backend",
+            "runtime_options",
         ):
             if stored_identity.get(key) != current_identity.get(key):
                 raise ResumeIdentityError(f"exact resume refused: {key} mismatch")
@@ -1445,13 +1571,18 @@ class MaskfreeTrainer:
             # differs from the neural model device.  Preserve that placement
             # across exact resume; CPU audit timing falls back to model timing
             # for legacy behavior.
-            device=(self.audit_device if self.audit_device.type == "cuda" else self.device))
+            device=(self.audit_device if self.audit_device.type == "cuda" else self.device),
+            mode=self.config.timing_mode)
         # Discard log writes beyond the committed checkpoint transaction.
         for relative, offset in payload.get("log_offsets", {}).items():
             log_path = self.paths.root / relative
-            if log_path.exists():
-                with log_path.open("r+b") as handle:
-                    handle.truncate(offset)
+            if (not log_path.resolve().is_relative_to(self.paths.root.resolve())
+                    or not isinstance(offset, int) or isinstance(offset, bool) or offset < 0):
+                raise ResumeIdentityError("invalid checkpoint journal offset/path")
+            if not log_path.is_file() or log_path.stat().st_size < offset:
+                raise ResumeIdentityError(f"checkpointed journal missing or shorter than durable offset: {relative}")
+            with log_path.open("r+b") as handle:
+                handle.truncate(offset)
         runtime.atomic_write_text(self.paths.epoch_metrics, "".join(
             json.dumps(row, default=runtime.json_default) + "\n" for row in self.history))
         self._resume_position = (self.start_epoch, self.start_batch,
@@ -1798,9 +1929,11 @@ class MaskfreeTrainer:
             "run_id": self.run_id,
             "device": runtime.device_identity(self.device),
             "audit_device": runtime.device_identity(self.audit_device),
+            "audit_device_identity": runtime.device_identity(self.audit_device),
             "audit_execution": self._audit_execution_identity(),
             "audit_numerical_backend": self.audit_numerical_backend,
             "physical_batch": self.config.batch_size,
+            "runtime_options": self._runtime_options(),
             "accumulation_steps": self.config.accumulation_steps,
             "effective_batch": self.config.effective_batch,
             "completed": False,
@@ -1826,6 +1959,12 @@ class MaskfreeTrainer:
             class_pixels["total"] = 0
             if len(self.dataset) < self.config.effective_batch:
                 raise TrainerContractError("preflight requires one full effective batch of distinct units")
+            if self.config.prefetch_batches:
+                self._prefetched_batches = self.dataset.iter_batches(
+                    [list(range(m * self.config.batch_size, (m + 1) * self.config.batch_size))
+                     for m in range(self.config.accumulation_steps)],
+                    prefetch_batches=self.config.prefetch_batches,
+                    prefetch_max_bytes=self.config.prefetch_max_bytes)
             for micro in range(self.config.accumulation_steps):
                 indices = list(range(micro * self.config.batch_size, (micro + 1) * self.config.batch_size))
                 self._train_batch(
@@ -1837,6 +1976,10 @@ class MaskfreeTrainer:
                     is_group_end=micro == self.config.accumulation_steps - 1,
                     group_weight=1.0 / self.config.accumulation_steps,
                 )
+            if self._prefetched_batches is not None:
+                self._prefetched_batches.close()
+                self._prefetch_stats = self._prefetched_batches.stats()
+                self._prefetched_batches = None
             checkpoint_path = self._save_checkpoint(
                 epoch=0, batch_cursor=self.config.accumulation_steps, permutation=list(range(len(self.dataset))),
                 completed=False, status=STATUS_PARTIAL,
@@ -1920,6 +2063,17 @@ class MaskfreeTrainer:
         except Exception as exc:  # noqa: BLE001
             receipt["reason"] = f"{type(exc).__name__}: {exc}"
             receipt["traceback"] = traceback.format_exc()
+        finally:
+            try:
+                if self._prefetched_batches is not None:
+                    self._prefetched_batches.close()
+                    self._prefetched_batches = None
+                self._close_lineage()
+            except Exception as exc:
+                receipt["status"] = "fail"
+                receipt["reason"] = f"lineage durability failure: {exc}"
+            finally:
+                self._close_candidate_executor()
         runtime.write_gate_receipt(self.paths.gate_receipt, receipt)
         runtime.atomic_write_json(self.paths.reports / "preflight_report.json", receipt)
         runtime.write_gate_receipt(parent_paths.gate_receipt, receipt)

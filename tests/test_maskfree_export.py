@@ -412,6 +412,8 @@ MASKFREE_CONFIG_FIELDS = {
     "width", "feature_dim", "protocol", "depth_axis", "device", "audit_device", "num_workers",
     "amp", "wandb_mode", "wandb_project", "run_id", "max_steps", "max_epochs",
     "resume", "allow_cpu", "epoch_validation", "epoch_reference_config",
+    "timing_mode", "logging_mode", "log_buffer_bytes", "data_cache_bytes",
+    "prefetch_batches", "prefetch_max_bytes", "candidate_workers", "candidate_worker_threads",
 }
 
 FORBIDDEN_CONFIG_SUBSTRINGS = (

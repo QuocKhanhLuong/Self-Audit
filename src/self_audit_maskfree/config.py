@@ -22,6 +22,10 @@ WANDB_MODES = ("offline", "online", "disabled")
 # production setting: it resolves to the trainer model device at construction
 # time rather than silently falling back when CUDA is unavailable.
 AUDIT_DEVICES = ("auto", "cpu", "cuda")
+RUNTIME_FIELDS = (
+    "timing_mode", "logging_mode", "log_buffer_bytes", "data_cache_bytes",
+    "prefetch_batches", "prefetch_max_bytes", "candidate_workers", "candidate_worker_threads",
+)
 
 #: Fields that define the scientific identity of a run. A resume whose config
 #: disagrees on any of them is a different experiment and fails closed.
@@ -43,8 +47,9 @@ SCIENTIFIC_FIELDS = (
     "amp",
 )
 
-#: Fields that may legitimately differ between an interrupted run and its
-#: continuation. They change operations, not the learned quantity.
+#: Non-scientific fields. This classification does not authorize exact-resume
+#: migration: trainer identity also locks source, backend and RUNTIME_FIELDS.
+#: A runtime tuning trial requires a fresh run unless a migration is supported.
 OPERATIONAL_FIELDS = (
     "output_dir",
     "device",
@@ -59,7 +64,7 @@ OPERATIONAL_FIELDS = (
     "allow_cpu",
     "epoch_validation",
     "epoch_reference_config",
-)
+) + RUNTIME_FIELDS
 
 #: Keys that belonged to the supervised pipelines. Rejected with an explicit
 #: message instead of the generic unknown-key error, because silently accepting
@@ -102,6 +107,14 @@ class MaskfreeConfig:
     depth_axis: int = 2
     device: str = "cuda"
     audit_device: str = "auto"
+    timing_mode: str = "production"
+    logging_mode: str = "buffered"
+    log_buffer_bytes: int = 256 * 1024
+    data_cache_bytes: int = 64 * 1024 * 1024
+    prefetch_batches: int = 0
+    prefetch_max_bytes: int = 32 * 1024 * 1024
+    candidate_workers: int = 0
+    candidate_worker_threads: int = 1
     num_workers: int = 0
     amp: bool = True
     wandb_mode: str = "offline"
@@ -133,6 +146,20 @@ class MaskfreeConfig:
             raise ConfigError(
                 f"audit_device must be one of {AUDIT_DEVICES}, got {self.audit_device!r}"
             )
+        if self.timing_mode not in ("production", "diagnostic"):
+            raise ConfigError("timing_mode must be production or diagnostic")
+        if self.logging_mode not in ("sync", "buffered"):
+            raise ConfigError("logging_mode must be sync or buffered")
+        for name in ("log_buffer_bytes", "data_cache_bytes", "prefetch_batches",
+                     "prefetch_max_bytes", "candidate_workers", "candidate_worker_threads"):
+            value = getattr(self, name)
+            minimum = 1 if name in ("log_buffer_bytes", "prefetch_max_bytes", "candidate_worker_threads") else 0
+            if not isinstance(value, int) or isinstance(value, bool) or value < minimum:
+                raise ConfigError(f"{name} must be an integer >= {minimum}")
+        if self.prefetch_batches > 2:
+            raise ConfigError("prefetch_batches must be 0, 1 or 2 (bounded input lookahead)")
+        if self.candidate_workers not in (0, 2, 4):
+            raise ConfigError("candidate_workers must be 0, 2 or 4")
         if self.depth_axis not in (0, 1, 2):
             raise ConfigError("depth_axis must be 0, 1 or 2")
         if not str(self.data_root).strip():
