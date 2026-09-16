@@ -12,6 +12,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          sparse-checkout: |
+            src
+            scripts
+            tests
+            configs
+            docs
+            .github
       - name: Package tracked source and tests (no data, weights, or credentials)
         run: |
           mkdir -p /tmp/maskfree-source
