@@ -1,21 +1,73 @@
-name: maskfree-e2e-audit
+name: Publish reviewed maskfree patch
 on:
   push:
     branches: [audit/maskfree-e2e-20260916]
+    paths: [reports/maskfree_e2e_20260916/runtime.patch]
 permissions:
-  contents: read
+  contents: write
 jobs:
-  test-dependency:
+  publish-exact-patch:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Download pinned NIfTI dependency for offline tests
+      - name: Verify exact input/output blobs and commit only to the audit branch
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          mkdir -p /tmp/maskfree-dependencies
-          python -m pip download --no-deps --only-binary=:all: nibabel==5.4.2 -d /tmp/maskfree-dependencies
-      - uses: actions/upload-artifact@v4
-        with:
-          name: maskfree-audit-dependencies
-          path: /tmp/maskfree-dependencies/
-          retention-days: 3
-          if-no-files-found: error
+          python - <<'PY'
+          import base64, hashlib, json, os, pathlib, subprocess, tempfile, urllib.request
+          repo = os.environ['GITHUB_REPOSITORY']
+          branch = 'audit/maskfree-e2e-20260916'
+          head = os.environ['GITHUB_SHA']
+          assert repo == 'QuocKhanhLuong/Self-Audit'
+          assert os.environ['GITHUB_REF'] == 'refs/heads/' + branch
+          endpoint = 'https://api.github.com/repos/' + repo + '/'
+          def api(path, data=None, method=None):
+              raw = None if data is None else json.dumps(data).encode()
+              req = urllib.request.Request(endpoint + path, data=raw, method=method,
+                  headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+                           'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json'})
+              with urllib.request.urlopen(req, timeout=60) as response:
+                  return json.load(response)
+          def read(path):
+              value = api('contents/' + path + '?ref=' + head)
+              return base64.b64decode(value['content'])
+          def blob(raw):
+              return hashlib.sha1(b'blob ' + str(len(raw)).encode() + b'\0' + raw).hexdigest()
+          prefix = 'reports/maskfree_e2e_20260916/'
+          manifest = json.loads(read(prefix + 'patch_manifest.json'))
+          patch = read(prefix + 'runtime.patch')
+          assert hashlib.sha256(patch).hexdigest() == manifest['patch_sha256'], 'patch digest mismatch'
+          allowed = {'scripts/benchmark_maskfree_rental.py', 'scripts/profile_maskfree.py',
+                     'src/self_audit_maskfree/auditor.py', 'src/self_audit_maskfree/trainer.py'}
+          assert {f['path'] for f in manifest['files']} == allowed
+          assert len(manifest['files']) == len(allowed)
+          assert api('git/ref/heads/' + branch)['object']['sha'] == head, 'branch moved'
+          with tempfile.TemporaryDirectory() as directory:
+              root = pathlib.Path(directory)
+              subprocess.run(['git', 'init', '-q', directory], check=True)
+              for entry in manifest['files']:
+                  raw = read(entry['path'])
+                  assert blob(raw) == entry['before'], 'base changed: ' + entry['path']
+                  file = root / entry['path']
+                  file.parent.mkdir(parents=True, exist_ok=True)
+                  file.write_bytes(raw)
+              patch_file = root / 'review.patch'
+              patch_file.write_bytes(patch)
+              subprocess.run(['git', 'apply', '--check', str(patch_file)], cwd=root, check=True)
+              subprocess.run(['git', 'apply', str(patch_file)], cwd=root, check=True)
+              elements = []
+              for entry in manifest['files']:
+                  raw = (root / entry['path']).read_bytes()
+                  assert blob(raw) == entry['after'], 'output changed: ' + entry['path']
+                  created = api('git/blobs', {'content': raw.decode(), 'encoding': 'utf-8'})
+                  assert created['sha'] == entry['after']
+                  elements.append({'path': entry['path'], 'mode': '100644', 'type': 'blob', 'sha': created['sha']})
+              parent = api('git/commits/' + head)
+              tree = api('git/trees', {'base_tree': parent['tree']['sha'], 'tree': elements})
+              commit = api('git/commits', {'message': 'Optimize maskfree regional accounting and consumed-feature transfer; expose B64/50 profiling',
+                           'tree': tree['sha'], 'parents': [head]})
+              assert api('git/ref/heads/' + branch)['object']['sha'] == head, 'branch moved during publication'
+              api('git/refs/heads/' + branch, {'sha': commit['sha'], 'force': False}, method='PATCH')
+              print('Published exact reviewed blobs to audit branch:', commit['sha'])
+          PY
