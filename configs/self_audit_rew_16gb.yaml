@@ -1,0 +1,31 @@
+# Experimental supervised REW; fresh run only, NOT maskfree B64.
+# Both host RAM and VRAM need a target-host smoke measurement.
+schema: rew_v1
+seed: 42
+image_size: 256
+channels: 96
+max_turns: 3
+tile_size: 32
+harm_weight: 2.0
+min_gain: 0.01
+tau_accept: 0.0
+checkpoint_reads: true
+pretrained: true
+batch_size: 1
+accumulation_steps: 8
+num_workers: 2
+cache_volumes_per_worker: 1
+cpu_threads: 4
+amp: bfloat16
+epochs: 50
+warmup_epochs: 5
+encoder_lr: 0.00003
+actor_lr: 0.0003
+auditor_lr: 0.0003
+weight_decay: 0.0001
+grad_clip: 3.0
+proposal_weight: 0.5
+audit_weight: 1.0
+read_advantage_weight: 0.2
+synthetic_weight: 0.25
+validation_every: 1

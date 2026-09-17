@@ -1,0 +1,21 @@
+{
+  "schema_version": "cuts.cardiac.p0.environment-lock.v1",
+  "purpose": "bounded local development and synthetic P0 verification only",
+  "scientific_environment": false,
+  "os": "Windows-11-10.0.26200-SP0",
+  "python": "3.14.3",
+  "torch": "2.9.0+cu128",
+  "cuda_runtime": "12.8",
+  "cudnn": 91002,
+  "gpu": "NVIDIA GeForce RTX 2050",
+  "gpu_memory_mib": 4096,
+  "gpu_driver": "592.82",
+  "blas_thread_policy": {"torch_threads": 6, "torch_interop_threads": 6, "OMP_NUM_THREADS": null, "MKL_NUM_THREADS": null, "phate_n_jobs": 1},
+  "packages": {"numpy": "2.4.2", "scipy": "1.17.1", "scikit-learn": "1.8.0", "scikit-image": "0.26.0", "phate": "2.0.0", "graphtools": "2.1.0", "tasklogger": "1.2.0", "pygsp": "0.6.1", "nibabel": "5.4.2", "PyYAML": "6.0.3", "sewar": "0.4.8"},
+  "deviation_ledger": [
+    {"category": "runtime compatibility", "deviation": "local runtime differs from README historical Python 3.9.13 / PyTorch 1.12.1 / CUDA 11.3 target", "scientific_method_change": false, "mitigation": "P0 synthetic import, one-step parity, actual PHATE/K10 differential and reproducibility tests"},
+    {"category": "runtime compatibility", "deviation": "installed P0-only missing dependencies phate, scikit-image, nibabel, and sewar in the local user site", "scientific_method_change": false, "mitigation": "versions recorded here; no diffusion packages installed"},
+    {"category": "scientific/protocol change", "deviation": "local manifests are explicitly mock fixtures because real ACDC/M&Ms roots are absent", "scientific_method_change": true, "mitigation": "scientific_run guard rejects mock manifests; P0.1b remains deferred"},
+    {"category": "performance-only", "deviation": "none applied", "scientific_method_change": false}
+  ]
+}
