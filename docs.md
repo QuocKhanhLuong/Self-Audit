@@ -422,3 +422,22 @@ python -m py_compile $(rg --files src scripts tests -g '*.py')
    not compatible with this checkpoint.
 
 The research architecture and its prohibitions remain unchanged.
+
+## Opt-in supervised REW experiment (2026-09-17)
+
+The requested attention/auditor experiment is implemented separately in
+`self_audit.models.read_evaluate_write`, its matching loss and
+`self_audit.training.rew_runner`; entry point `scripts/train_rew.py`.
+The frozen baseline above, Candidate C and `self_audit_maskfree` are unchanged.
+Read the explicit experimental contract, limitations and 16 GB test commands in
+[`docs/rew_16gb.md`](docs/rew_16gb.md) before running it.
+
+REW uses one shared non-QKV pair-message reader/writer with three sampling
+patterns and exact KEEP; a four-state CC/FIX/REGRESS/WW auditor scores each
+candidate and re-audits the actual tile-assembled output. State audit supplies
+A0 feedback before the first edit. Joint training supervises all actual
+proposals even when rejected. Auditor inputs/feedback detach the two gradient
+routes; GT appears only in training/evaluation targets, never model inference.
+Paired read-advantage loss trains the auditor; there is no unimplemented claim
+of learned read-policy distillation. This is a testable new model, not verified
+novelty, quality, safety or GPU speedup. Old checkpoints are not compatible.
