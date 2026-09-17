@@ -1,0 +1,195 @@
+# Strict Unified Self-Audit Configuration (Schema Version 1)
+# Joint-from-epoch-1 profile - ACDC native supervision.
+#
+# WHAT THIS PROFILE CHANGES relative to the canonical staged baseline
+# (configs/self_audit_full.yaml), and nothing else:
+#
+#   * The 3-interval curriculum (annotation_bootstrap -> auditor_training ->
+#     joint_self_audit) is replaced by ONE interval covering [0, 130) with
+#     trainable: "all" and objective: "retained_final_annotation".  The
+#     Annotator and the Auditor therefore both receive a gradient from the
+#     first optimizer step, and the threshold gate is consulted from the first
+#     step as well: there is no curriculum freeze and no bootstrap stage.
+#   * The interval's BASE (peak) learning rates are the canonical EARLY-training
+#     rates (encoder 3e-5, annotation 3e-4, auditor 3e-4) rather than the
+#     canonical joint-stage fine-tune rates (1e-6 / 1e-5 / 1e-5).  They are the
+#     rates reached at the end of the inherited 5-epoch warmup ramp, not the
+#     rates in force at step 0.  The fine-tune rates
+#     exist because the canonical joint stage starts at epoch 120 on already
+#     converged weights; this profile starts at epoch 0 on random weights, so
+#     those rates would not train.  These are a PROVISIONAL scientific recipe,
+#     not a tuned or validated one.
+#   * checkpoint.best_selection_min_epoch is 0 because the gated interval now
+#     starts at epoch 0.  Selection remains gated on the same rule as the
+#     baseline: only inside a rollout == "threshold_gate" interval and only on
+#     final_foreground_macro_dice.
+#   * Output and report directories, experiment name and W&B run name are
+#     distinct from the staged baseline so runs of the two profiles can never
+#     be mixed in one directory.
+#
+# WHAT THIS PROFILE DELIBERATELY DOES NOT CHANGE: dataset contract (root,
+# manifest, splits, class mapping, preprocessing, dataloader), seed, ConvNeXt
+# pretrained encoder, AMP dtype, optimizer, the warmup_cosine LR curve
+# (warmup_epochs: 5 is an optimizer LR ramp, NOT a curriculum freeze; both
+# modules and the feedback gate are live during it), loss settings,
+# counterfactual settings, calibration contract and diagnostics.
+#
+# A run of this profile is a FRESH training run.  It cannot strictly resume a
+# staged 130-epoch checkpoint: the schedule, the interval identity and the
+# config signature all differ, and the lineage guards that reject such a
+# resume must never be bypassed.
+schema_version: 1
+
+experiment:
+  name: "self_audit_joint_from_start"
+  protocol: "unified_schedule_v1"
+  recipe: "curriculum_v1"
+  seed: 42
+  deterministic: false
+  device: "cuda"
+
+dataset:
+  name: "acdc"
+  data_root: "preprocessed_data/ACDC"
+  split_manifest: "splits/acdc_patient_split_seed42.json"
+  train_split: "train"
+  val_split: "val"
+  test_split: "test"
+  image_size: 256
+  depth_axis: 2
+  representation: "paired_3d"
+  class_mapping:
+    0: 0
+    1: 1
+    2: 2
+    3: 3
+  preprocessing:
+    clipping_min: 0.5
+    clipping_max: 99.5
+    foreground_only: false
+  dataloader:
+    num_workers: 2
+    pin_memory: true
+    persistent_workers: false
+    prefetch_factor: 2
+
+model:
+  encoder_name: "convnext_tiny"
+  pretrained_encoder: true
+  fallback: false
+  shared_channels: 96
+  num_classes: 4
+  window_k: 8
+  max_turns: 3
+  # Baseline execution mode, matching the canonical staged baseline: this
+  # profile isolates the schedule change, so it must not also switch the
+  # network. The native Candidate C runner selects "candidate_c" explicitly
+  # in its own generated run config.
+  window_mode: "current"
+  candidate_c:
+    rho_feature_pixels: 1.0
+    lam: 1.0
+    lr: null
+    fix_threshold: 0.5
+    regress_threshold: 0.5
+    margin_fraction: 0.5
+    min_regress_mass: 0.001
+    replay_atol: 0.00001
+    replay_rtol: 0.00001
+    max_backtracks: 2
+
+training:
+  amp:
+    enabled: true
+    dtype: "bfloat16"
+  optimizer:
+    name: "adamw"
+    betas: [0.9, 0.999]
+    eps: 1.0e-8
+    weight_decay: 0.0001
+    grad_clip: 3.0
+  lr_curve:
+    # Inherited unchanged from the canonical recipe.  This is the OPTIMIZER LR
+    # ramp, not a curriculum freeze: both modules are trainable and the
+    # accept/reject gate is consulted from the first step throughout it.  The
+    # interval rates below are BASE (peak) rates reached at the end of the
+    # 5-epoch ramp; the first optimizer step runs at the scheduler's floor
+    # (~1e-8 of base), not at full base LR, and the cosine decays from there.
+    name: "warmup_cosine"
+    warmup_epochs: 5
+    min_ratio: 0.0
+  annotation_loss:
+    stage_weights: [0.5, 0.7, 0.8, 1.0]
+  audit_loss:
+    audit_margin: 0.05
+    neutral_margin: 0.005
+    local_class_weighting: "balanced_clamped"
+    target_contract: "audit_target_legacy_one_v1"
+  counterfactual:
+    mixture: [0.4, 0.4, 0.2]
+    repair_strength_min: 0.3
+    repair_strength_max: 0.6
+    epsilon: 0.02
+    retries: 8
+  rollout:
+    tau: 0.0
+    max_turns: 3
+    # OFF, and that is not a feedback switch.  The trainer's
+    # retained_final_annotation branch does not consult this flag at all: the
+    # gated joint rollout is its own forward and always consumes accepted
+    # predicted auditor feedback, so the auxiliary predicted-history rollout is
+    # never run for this objective whatever the flag says.  OFF simply records
+    # that no auxiliary pass is requested.  Auditor feedback and accept/reject
+    # are live from the first optimizer step either way.
+    predicted_history_exposure: false
+    predicted_history_weight: 0.1
+  schedule:
+    total_epochs: 130
+    intervals:
+      - start_epoch: 0
+        end_epoch: 130
+        name: "joint_self_audit"
+        trainable: "all"
+        encoder_lr: 0.00003
+        annotation_lr: 0.0003
+        auditor_lr: 0.0003
+        annotation_weight: 1.0
+        audit_weight: 1.0
+        objective: "retained_final_annotation"
+        transition_population: "active_attempted"
+        rollout: "threshold_gate"
+        batch_size: 2
+        accumulation_steps: 1
+        augment: true
+        reset_optimizer: true
+
+checkpoint:
+  output_dir: "weights/self_audit_joint_from_start"
+  save_best: true
+  save_last: true
+  best_selection_min_epoch: 0
+  best_metric: "final_foreground_macro_dice"
+  best_metric_mode: "max"
+
+calibration:
+  enabled: true
+  split: "val"
+  threshold_min: -0.02
+  threshold_max: 0.02
+  threshold_steps: 81
+  metric_contract: "foreground_dice_exclude_v1"
+  metric_space: "slice_proxy"
+
+logging:
+  report_dir: "reports/self_audit_joint_from_start"
+  wandb:
+    enabled: false
+    project: "self-audit"
+    entity: null
+    run_name: "joint-from-start"
+    mode: "offline"
+    tags: ["self_audit", "unified", "acdc", "joint_from_start"]
+
+diagnostics:
+  evaluate_headroom: true
+  evaluate_decomposition: true

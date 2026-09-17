@@ -1,0 +1,66 @@
+{
+  "head": "9a612485b7ead1273082d7dd52879f8e9e7a3e83",
+  "source": {
+    "source_content_signature": "394dd2438094b6eeab105d227d104f5c27c94771f3eb2a6ad43694ebe5552eed",
+    "source_content_signature_known": true,
+    "source_signature_version": 2,
+    "source_signature_scope": {
+      "roots": [
+        "src/self_audit",
+        "scripts",
+        "configs"
+      ],
+      "suffixes": [
+        ".py",
+        ".yaml",
+        ".yml",
+        ".sh",
+        ".ps1"
+      ],
+      "excluded_dirs": [
+        "__pycache__",
+        ".git",
+        ".pytest_cache",
+        "checkpoints",
+        "external",
+        "preprocessed_data",
+        "reports",
+        "scratch",
+        "splits",
+        "tests",
+        "wandb",
+        "weights"
+      ],
+      "excluded_suffixes": [
+        ".pyc",
+        ".pyo"
+      ],
+      "file_count": 72
+    }
+  },
+  "files": {
+    "configs/self_audit_full.yaml": "43f1803aa4ae8137926375b9782af5dedd32e9e1d2daa4a3ac7cadfee4c8fad7",
+    "configs/self_audit_full_mnms.yaml": "00c38cef6d1667a61ed3718ff6cf15296ca54c2de002503fe2b6d2889009b2c6",
+    "scripts/audit_checkpoint.py": "852312d371c03945740782d95737f75d45774b3dee0031d45e10bc7b2faa1186",
+    "scripts/evaluate_external_mnms.py": "5a15c25197acefcdb695d6eb2cc483070692eba58b647ac6b29879bfe2ddb580",
+    "src/self_audit/data/mnms.py": "4da51e1bc7d7e00a7ec9f3660c3567c85ec0f9af41b221104133368382d6d169",
+    "src/self_audit/evaluation/candidate_c.py": "c228e87f69472fb396761eddf6849d23ee7e307687f242cecce7a4791cfb2bf4",
+    "src/self_audit/models/__init__.py": "3a1fd0e573b44393e8d1fa13c5593fcba0ef74d3ee49b7c16c75eecf2ce90b59",
+    "src/self_audit/models/annotation_expert.py": "e85a4572982954812b805fe4ced28acb873233d99dc4184f591e65f0458deb07",
+    "src/self_audit/models/dynamic_window.py": "5cf0a07ef9b50254d5bcffce605aea2849772fb0bed16a95685f17ab6eda9fd4",
+    "src/self_audit/models/self_audit_net.py": "c9bfaa2b0520ab2a4b688c25b8ba00d437ba0819ba883c3a71c9ce2a70c2ae2b",
+    "src/self_audit/provenance.py": "309fa3abf3d52ed50bfe6265376137260d40555fc67f4e705bd8527fbbb52ccd",
+    "src/self_audit/training/_utils.py": "2a89972a62ecdf66cf084d5ca5da6b365c0c58437242a77f76ab55e8ff846409",
+    "src/self_audit/training/finetune_joint.py": "00319660bfcc262003798ad7b1ca57aee77b34463cc05338ce0067507d426022",
+    "src/self_audit/training/unified_config.py": "b8c0b1393496823db04115e683baf07b6085a76773b9d6dbf73b1d1f15eee6cc",
+    "src/self_audit/training/unified_trainer.py": "43715e8ba2544ecf4c1ff03538ae93b08d7f5f07a6170c7db800ec01bf3fbcb5",
+    "tests/test_candidate_c.py": "18a34d08d7bef3b918a25cad2d1a770a79e63185b88b6778e1e51b7510ced09b",
+    "tests/test_candidate_c_config.py": "0267df69adf989a8680bd3d14d24e39b87046718ca3906c1bc9b1ee56be18005",
+    "tests/test_candidate_c_diagnostics.py": "6cd8cd3eb8266f69b5a1d2f3be22113008deb059548aedb52ef781bb100e60f9",
+    "tests/test_candidate_c_mnms.py": "bed604cacc6796473494b9a50981d3d04e4dcc10caee47a8232fae3a49a646e6",
+    "tests/test_candidate_c_pipeline_smoke.py": "1200c163a04d109a580998703d299935b5026c7d58b05838380ef6bc74ae2519",
+    "tests/test_candidate_c_runtime.py": "b0b9c4b6464d4023269158489ea9814cbc7bc43967a939bb04694e7592095370",
+    "tests/test_candidate_c_training.py": "caa75cd2b029585e197636af81207fd34df836dc2cf12bd2e83a5c7b2e019bd3",
+    "tests/test_external_mnms_evaluator.py": "8acde233f6cc5ad6a8e6539b86718d996ef02e272c8cb09288936a8c66accca9"
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "schema_version": "maskfree150.root-review.v1",
+  "date": "2026-09-15",
+  "python": "3.11.16",
+  "torch": "2.14.0",
+  "platform": "macOS-26.2-arm64-arm-64bit",
+  "cuda_available": false,
+  "package_source": {
+    "files": {
+      "__init__.py": "51b6f652f4843ee76fd6f222cc6c7847996586eec85324efd5e0686d98f6067f",
+      "auditor.py": "870c074402ca135f9f67689bd93b2572a3e9fd2cf6c8407211c0651bd917905c",
+      "config.py": "be9a33edb0d41cc6a09994fd57a079699e0685a8a0c991b4b375f05cf9ec94df",
+      "contracts.py": "e0a52ac637ee903add55c5c65a80a1642ea95b63ad54b9bd3587cf2672b063d4",
+      "data/__init__.py": "7380951d4933713803bc509a4e86484694ce02c973d502a35a5239fc3b27ab2f",
+      "data/dataset.py": "d746034f6fa5b99d2baadf80b1060e31f150fb661031f29777ef734da5a27644",
+      "data/discovery.py": "3ebadd04db1c0171fb3d2ea6964ca1633af768c4ee7edef348bb34669e1fd154",
+      "data/firewall.py": "92767510e96f4feb816d60e190a6a913cc231d97d0f180c7ffce857ac3ceaca3",
+      "data/geometry.py": "3bda202038d6aae4e812b049ebfb7343a996b51d951344e10dfd32b52f7c485b",
+      "data/partition.py": "ea73313b196055eee9d51d20999dcdce07027d21848dbf6e3b2604539f7023ff",
+      "evaluation/__init__.py": "9e591a54db6a2eaf1be49c4970ee5dcc7919c9bbd039efaa422a2222dba16988",
+      "evaluation/freeze.py": "5379615885479b1897f85b03c5d3175d2158c08733ef71fde565c3270a3073bb",
+      "evaluation/metrics.py": "1c2404c39f681d749a250ff8db03c24a1cad519bb18b62fcca75fba8b6e0c032",
+      "evaluation/partitions.py": "58486dc619df2d3ebe80f94ef5a39f9e487ed28248aa656a9d1d782c5164ad89",
+      "evaluation/reference.py": "382295d7fa6d5020acb926862062635db8b5fae336486caab9af2ec5b49d903c",
+      "evaluation/verification.py": "1d72aad084478fb2e90734ca123ee011cd287d2b5c103e6926114588a1cacd45",
+      "experiments.py": "39b26395e628836162e10f1d0092806491106b9b7a11f9f3f28d46efeeca9d3d",
+      "export.py": "adbb96ccad23f2ea623ae2e3517620a20c87c126004ac7ca675f8317411ae247",
+      "hypotheses.py": "4157d1e682aa39df75d3763b4e8d2425df302171b1d86dd376b18eae17d6c437",
+      "losses.py": "7cf5aaeb40c7a31c75647b24eff3ccdbe74c49717a62655fe1c425260ab4bf9b",
+      "models.py": "b6c407710c9bce7a80b086b91e1bbdf195735d480d831add93dbe9f6612103f9",
+      "observation.py": "7b68e3c9ac2067786a215e5076115191d9a547135c00077e9c432dacc064e1cf",
+      "ontology.py": "88b1a3c51c0f38d6a875a65703ab9cad59e816e57ed1e7695a220351f701c375",
+      "reporting.py": "94c102c3c27d5c857196f6cf88f7b748587d588eb1cc81e0f05e7fa54e33e408",
+      "runtime.py": "a94d1067041a8e3cde27f70eb765bca24f080424422043c6b19b1f19d6de584c",
+      "trainer.py": "5c8f09306e6502e47d8f1623fc6888f09dfd8fba9fd82c22361aecdb2784b852"
+    },
+    "combined": "d5d2881643b2e3e479dc99bf59055a315385cee39f43de1cbf332328281c3296"
+  },
+  "checks": [
+    {
+      "receipt": "focused_checks.xml",
+      "scope": "combined focused package checks",
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "45",
+      "time": "16.279",
+      "timestamp": "2026-09-15T13:00:09.570237+07:00",
+      "hostname": "Alvins-MacBook-Pro"
+    },
+    {
+      "receipt": "reference_checks.xml",
+      "scope": "affected reference and native integration checks after final hardening",
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "5",
+      "time": "13.506",
+      "timestamp": "2026-09-15T13:04:15.531195+07:00",
+      "hostname": "Alvins-MacBook-Pro"
+    }
+  ],
+  "native_software_probes": [
+    {
+      "dataset": "acdc",
+      "path": "runs/maskfree150/software_checks/reference-final-02/test_native_multiframe_pipelin0/runs/maskfree150/acdc/native-integration/reports/pipeline_report.json",
+      "scope": "synthetic CPU software check",
+      "global_epochs": 1,
+      "component_steps": {
+        "producer": 4,
+        "student_audited": 3,
+        "student_no_audit": 4
+      },
+      "status": "partial",
+      "full_150_complete": false,
+      "units": 16,
+      "verification_rows": 16,
+      "scientific_outcome": "label_generation_produced_valid_foreground"
+    },
+    {
+      "dataset": "mnms",
+      "path": "runs/maskfree150/software_checks/reference-final-02/test_native_multiframe_pipelin1/runs/maskfree150/mnms/native-integration/reports/pipeline_report.json",
+      "scope": "synthetic CPU software check",
+      "global_epochs": 1,
+      "component_steps": {
+        "producer": 4,
+        "student_audited": 4,
+        "student_no_audit": 4
+      },
+      "status": "partial",
+      "full_150_complete": false,
+      "units": 16,
+      "verification_rows": 16,
+      "scientific_outcome": "label_generation_produced_valid_foreground"
+    }
+  ],
+  "additional_checks": {
+    "bash_syntax": "both launchers passed",
+    "sequential_dry_run": "passed; no data or GPU execution",
+    "ruff_fatal_checks": "passed",
+    "forbidden_baseline_imports": []
+  },
+  "real_execution": {
+    "acdc_150": "NOT STARTED",
+    "mnms_150": "NOT STARTED",
+    "rtx4070_physical_batch8": "NOT STARTED",
+    "dataset_inventory": "NOT INSPECTED",
+    "reason": "deferred by user; RTX 4070 occupied; hardware rented later"
+  },
+  "implementation_commit": "7607eeac7b185998af030af57208a0902632706a",
+  "initial_head": "a3737081fe10c1e4c38ba3e2fbeaddc79f1c4e65",
+  "baseline_source_diff": []
+}

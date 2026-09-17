@@ -1,9 +1,16 @@
 """Locked Self-Audit model components."""
 
 from .annotation_expert import (
+    AUDIT_CONDITIONING_MODES,
     AnnotationExpert,
     AnnotationExpertOutput,
+    ExpertReplayRecord,
     MODEL_ENTROPY_VERSION,
+    RECORD_KIND_CANDIDATE_C,
+    RECORD_KIND_ORDINARY,
+    RECORD_KIND_ROLLBACK,
+    REPLAY_ELIGIBLE_RECORD_KINDS,
+    StaleReplayRecordError,
     SharedAnnotationExpert,
     annotation_entropy,
     entropy_from_logits,
@@ -11,13 +18,44 @@ from .annotation_expert import (
 )
 from .annotation_head import AnnotationHead, InitialAnnotationHead
 from .auditor import AuditOutput, Auditor, CounterfactualAuditor
-from .dynamic_window import DynamicWindow, DynamicWindowAttention, DynamicWindowGenerator, DynamicWindowParameters
+from .dynamic_window import (
+    OFFSET_MODES,
+    DynamicWindow,
+    DynamicWindowAttention,
+    DynamicWindowGenerator,
+    DynamicWindowParameters,
+    normalized_pixel_step,
+    resolve_offset_mode,
+    validate_coordinate_override,
+)
 from .encoder import ConvNeXtTinyEncoder, build_encoder
 from .fpn import FPN, LightweightFPN
-from .self_audit_net import SelfAudit, SelfAuditNet, build_self_audit_net
+from .self_audit_net import (
+    RECORD_CONSUMING_MODES,
+    SOLVER_MODES,
+    WINDOW_MODES,
+    CandidateCConfig,
+    SelfAudit,
+    SelfAuditNet,
+    build_self_audit_net,
+    resolve_candidate_c_config,
+    resolve_window_mode,
+)
 
 __all__ = [
+    "AUDIT_CONDITIONING_MODES",
+    "OFFSET_MODES",
+    "RECORD_CONSUMING_MODES",
+    "RECORD_KIND_CANDIDATE_C",
+    "RECORD_KIND_ORDINARY",
+    "RECORD_KIND_ROLLBACK",
+    "REPLAY_ELIGIBLE_RECORD_KINDS",
+    "SOLVER_MODES",
+    "WINDOW_MODES",
     "AnnotationExpert",
+    "CandidateCConfig",
+    "ExpertReplayRecord",
+    "StaleReplayRecordError",
     "AnnotationExpertOutput",
     "AnnotationHead",
     "AuditOutput",
@@ -40,4 +78,9 @@ __all__ = [
     "build_self_audit_net",
     "entropy_from_logits",
     "entropy_from_probabilities",
+    "normalized_pixel_step",
+    "resolve_candidate_c_config",
+    "resolve_offset_mode",
+    "resolve_window_mode",
+    "validate_coordinate_override",
 ]

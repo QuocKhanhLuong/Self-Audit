@@ -671,6 +671,7 @@ def test_quality_inconsistent_with_its_own_statistics_is_rejected(sealed_bank) -
     tampered["rows"][0]["delta_dice"] = (
         float(tampered["rows"][0]["q_candidate"]) - 0.999
     )
+    tampered["rows"][0]["delta_class"] = -1
     reseal(tampered)
     with pytest.raises(BankValidationError, match="recomputed from its sufficient statistics"):
         validate_bank(tampered)

@@ -63,7 +63,7 @@ Training runs as a contiguous 130-epoch curriculum across a single optimization 
 ### Checkpoint Selection & Calibration Lineage
 
 - **Saved Checkpoints**: The run saves `best.pt` and `last.pt` in `output_dir` (`weights/self_audit_full`).
-- **Selection Boundary**: Checkpoint selection for `best.pt` occurs **strictly during the gated schedule interval** (`[120, 130)`). Early epochs (< 120) cannot be selected as `best.pt`.
+- **Selection Boundary**: Checkpoint selection for `best.pt` occurs **strictly during the profile's gated schedule interval** (the interval whose `rollout` is `threshold_gate`), and the boundary is therefore per profile, not a global `120`. For the staged profiles (`self_audit_full{,_mnms}.yaml`) the gated interval is `[120, 130)`, so epochs `< 120` cannot be selected. For the joint-from-epoch-1 profiles (`self_audit_joint_from_start{,_mnms}.yaml`) the single interval `[0, 130)` is gated, so selection is open from epoch 0. `checkpoint.best_selection_min_epoch` outside the profile's own gated interval is rejected by the strict loader in both directions.
 - **Integrity**: A missing `best.pt` is not a successful completed pipeline; silent fallback to `last.pt` is strictly prohibited. Bounded smoke runs (`--max_steps` or `--max_val_batches`) cannot certify completion or publish calibration artifacts.
 - **Bound Post-Training Calibration**: Upon completion, `best.pt` is strictly bound into `run_post_training_calibration`, emitting `calibration.json` with cryptographic lineage verification and final diagnostics (`headroom` and `decomposition`) evaluated at the selected $\tau_{calibrated}$.
 
@@ -107,15 +107,61 @@ python scripts/evaluate_external_mnms.py \
   --output reports/external_mnms.json
 ```
 
+`--checkpoint` must point at the frozen ACDC `best.pt` that was actually produced by the source run — `weights/self_audit_full/best.pt` for the canonical staged run, `runs/<ACDC_RUN>/weights/best.pt` for a native Candidate C runner run, `weights/self_audit_joint_from_start/best.pt` for a joint-profile run — and the path above is only the canonical example, not a default that fits every run. `--tau-accept 0.0` is a fixed decision threshold stated for this evaluation; it is not the source run's calibrated $\tau$ and is not derived from `calibration.json`.
+
 `data/ACDC`, `preprocessed_data/ACDC`, and `preprocessed_data/mnm` are local dataset paths ignored by Git. The external evaluation requires four-class `preprocessed_data/mnm`; the two-class `mnm_binary` derivative is incompatible with the four-class checkpoint and is rejected. The external command never trains, calibrates, or selects a threshold from M&Ms.
 
 ### 3. Native M&Ms Supervision Training
 
-Train the full unified Self-Audit curriculum directly on M&Ms native data:
+Train the full unified Self-Audit curriculum directly on M&Ms native data.
+Defaults differ per entrypoint and are stated where each one is described:
+`scripts/train_self_audit.py` and `scripts/run_full_pipeline.sh` default to the
+staged `configs/self_audit_full.yaml`, so the joint-from-epoch-1 curriculum must
+be named explicitly there, while `scripts/run_acdc_mnms_candidate_c.sh` defaults
+to the joint-from-epoch-1 profiles (see below):
 
 ```bash
+# Staged M&Ms curriculum (annotation_bootstrap -> auditor_training -> joint).
 python scripts/train_self_audit.py --config configs/self_audit_full_mnms.yaml
+
+# Joint from epoch 1 on M&Ms: one interval [0, 130), trainable=all,
+# objective=retained_final_annotation, threshold gate live from the first step.
+python scripts/train_self_audit.py --config configs/self_audit_joint_from_start_mnms.yaml
 ```
+
+`scripts/run_full_pipeline.sh` still defaults to `configs/self_audit_full.yaml`;
+passing `--config configs/self_audit_joint_from_start_mnms.yaml` is the only way
+to reach the joint profile through it.
+
+**The profile YAML alone is the baseline network, not Candidate C.** Both
+`configs/self_audit_joint_from_start_mnms.yaml` and `configs/self_audit_full_mnms.yaml`
+declare `model.window_mode: "current"`, so the commands above train the
+current-window baseline under the stated curriculum. Candidate C is selected by
+the native runner, which generates a run-local config with
+`model.window_mode: "candidate_c"` and leaves the checked-in profiles untouched:
+
+```bash
+# ACDC then M&Ms, both Candidate C, both joint from epoch 1 (the runner default).
+bash scripts/run_acdc_mnms_candidate_c.sh
+
+# Same two runs under the staged curriculum instead.
+CURRICULUM=staged bash scripts/run_acdc_mnms_candidate_c.sh
+```
+
+Each invocation writes its generated run configs into its own fresh
+`run_configs/<curriculum>_<stamp>_XXXXXX/` directory and keeps them as the
+provenance record of what was executed, so a second invocation can never rewrite
+the config a running invocation's pending M&Ms leg is about to read. The two
+legs are independent runs: no checkpoint, run directory, or W&B project is
+shared, and neither leg resumes the other.
+
+Native M&Ms supervision requires an unambiguously paired cohort: startup
+validation fails if any `volumes/` entry has no matching `masks/` entry or vice
+versa, if two files normalize to one case key (`case.npy` beside `case.npz`), if
+one image matches more than one candidate mask, or if one mask would be claimed
+by two images — rather than training on a silently smaller or guessed cohort.
+Evaluation-only discovery keeps its
+tolerant behaviour for trees that intentionally carry unlabelled volumes.
 
 ### 4. Proposal-1 Frozen Transition Bank Export
 

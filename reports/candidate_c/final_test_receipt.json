@@ -1,0 +1,61 @@
+{
+  "gate1": {
+    "compiled_files": [
+      "scripts/audit_checkpoint.py",
+      "scripts/evaluate_external_mnms.py",
+      "src/self_audit/data/mnms.py",
+      "src/self_audit/models/__init__.py",
+      "src/self_audit/models/annotation_expert.py",
+      "src/self_audit/models/dynamic_window.py",
+      "src/self_audit/models/self_audit_net.py",
+      "src/self_audit/provenance.py",
+      "src/self_audit/training/_utils.py",
+      "src/self_audit/training/finetune_joint.py",
+      "src/self_audit/training/unified_config.py",
+      "src/self_audit/training/unified_trainer.py",
+      "tests/test_external_mnms_evaluator.py",
+      "src/self_audit/evaluation/candidate_c.py",
+      "tests/test_candidate_c_mnms.py",
+      "tests/test_candidate_c_pipeline_smoke.py",
+      "tests/test_candidate_c_config.py",
+      "tests/test_candidate_c.py",
+      "tests/test_candidate_c_diagnostics.py",
+      "tests/test_candidate_c_training.py",
+      "tests/test_candidate_c_runtime.py"
+    ],
+    "critical_imports": 7,
+    "status": "PASS"
+  },
+  "pytest": {
+    "argv": [
+      "/private/tmp/self-audit-torch241/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "-ra",
+      "tests/test_candidate_c.py",
+      "tests/test_candidate_c_config.py",
+      "tests/test_candidate_c_training.py",
+      "tests/test_candidate_c_diagnostics.py",
+      "tests/test_candidate_c_runtime.py",
+      "tests/test_candidate_c_mnms.py",
+      "tests/test_candidate_c_pipeline_smoke.py",
+      "tests/test_unified_trainer.py",
+      "tests/test_unified_logging.py",
+      "tests/test_unified_config_contract.py",
+      "tests/test_runtime_checkpoint.py",
+      "tests/test_runtime_resume.py",
+      "tests/test_self_audit_core.py",
+      "tests/test_self_audit_audit.py",
+      "tests/test_self_audit_regressions.py",
+      "tests/test_mnms_wave2.py",
+      "tests/test_external_mnms_evaluator.py",
+      "tests/test_runtime_pipeline_smoke.py",
+      "tests/test_checkpoint_binding.py",
+      "tests/test_calibration_lineage.py"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 498.69305396080017,
+    "log": "reports/candidate_c/final_pytest.log"
+  }
+}

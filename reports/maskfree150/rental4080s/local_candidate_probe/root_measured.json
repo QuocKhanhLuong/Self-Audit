@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "hostname": "Alvins-MacBook-Pro",
+    "platform": "Darwin 25.2.0 arm64",
+    "python_version": "3.11.16",
+    "scope": "synthetic-only",
+    "units": 8,
+    "image_size": 224,
+    "candidate_worker_threads": 1,
+    "parent_torch_threads": 8,
+    "torch_version": "2.14.0"
+  },
+  "serialization": {
+    "input_payload_bytes": 19679605,
+    "input_serialize_ms": 4.62,
+    "result_payload_bytes": 45006715
+  },
+  "serial": {
+    "workers": 0,
+    "worker_threads": 1,
+    "repeats": 5,
+    "times": [
+      0.9268,
+      0.8777,
+      0.945,
+      0.9427,
+      0.9258
+    ],
+    "mean_s": 0.9236,
+    "p50_s": 0.9268,
+    "per_unit_ms": 115.45
+  },
+  "pool_workers_2": {
+    "workers": 2,
+    "worker_threads": 1,
+    "repeats": 5,
+    "times": [
+      0.3736,
+      0.3775,
+      0.3915,
+      0.3695,
+      0.4287
+    ],
+    "mean_s": 0.3882,
+    "p50_s": 0.3775,
+    "speedup_vs_serial": 2.38,
+    "exact_match": true
+  },
+  "pool_workers_4": {
+    "workers": 4,
+    "worker_threads": 1,
+    "repeats": 5,
+    "times": [
+      0.2098,
+      0.205,
+      0.2139,
+      0.2107,
+      0.2495
+    ],
+    "mean_s": 0.2178,
+    "p50_s": 0.2107,
+    "speedup_vs_serial": 4.24,
+    "exact_match": true
+  }
+}

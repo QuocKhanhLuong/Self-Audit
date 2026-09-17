@@ -1,0 +1,57 @@
+{
+  "argv": [
+    "/private/tmp/self-audit-torch241/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-ra",
+    "tests/test_candidate_c.py",
+    "tests/test_candidate_c_runtime.py",
+    "tests/test_candidate_c_training.py",
+    "tests/test_runtime_resume.py",
+    "tests/test_runtime_checkpoint.py",
+    "tests/test_self_audit_core.py"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 60.1942982673645,
+  "source": {
+    "source_content_signature": "394dd2438094b6eeab105d227d104f5c27c94771f3eb2a6ad43694ebe5552eed",
+    "source_content_signature_known": true,
+    "source_signature_version": 2,
+    "source_signature_scope": {
+      "roots": [
+        "src/self_audit",
+        "scripts",
+        "configs"
+      ],
+      "suffixes": [
+        ".py",
+        ".yaml",
+        ".yml",
+        ".sh",
+        ".ps1"
+      ],
+      "excluded_dirs": [
+        "__pycache__",
+        ".git",
+        ".pytest_cache",
+        "checkpoints",
+        "external",
+        "preprocessed_data",
+        "reports",
+        "scratch",
+        "splits",
+        "tests",
+        "wandb",
+        "weights"
+      ],
+      "excluded_suffixes": [
+        ".pyc",
+        ".pyo"
+      ],
+      "file_count": 72
+    }
+  },
+  "compiled": "all changed/new Python",
+  "critical_imports": 4
+}

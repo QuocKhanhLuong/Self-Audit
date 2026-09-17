@@ -1,0 +1,168 @@
+# Experiment manifest - the complete enumeration of compared methods.
+#
+# This file is the human-readable mirror of
+# src/self_audit_maskfree/export.py::REQUIRED_COMPARISONS. The order and the
+# exact `name` strings of `comparisons:` below must match that tuple element for
+# element; tests/test_maskfree_export.py asserts it. The freeze manifest reports
+# `completeness.missing` against that same list, so a final freeze that is
+# missing an arm is visible as an incomplete comparison rather than passing as a
+# full one.
+#
+# Nothing here selects anything. This is a declaration of what must be exported
+# and frozen together so that no selector can be compared against a method that
+# was quietly dropped after the numbers were seen.
+#
+# Scope of the comparison:
+#   * E0-E5 and the seven controls are PAIRED-BANK POLICY comparisons. They run
+#     over the SAME frozen candidate bank. They are not separately trained
+#     end-to-end networks, and must never be described as such.
+#   * student_no_audit and student_audited are the two lockstep 150-epoch
+#     learners. They are the only arms that test whether generated labels are
+#     actually useful for learning.
+#   * E4 and E5 may select the identical mask on a fixed bank. That is the
+#     expected outcome when their only difference is ambiguity reporting, and it
+#     must not be reported as a mask-quality gain produced by "the audit".
+
+schema_version: maskfree150.experiments.v1
+contract_version: maskfree150.v1
+
+semantic_order:
+  0: BG
+  1: RV
+  2: MYO
+  3: LV
+
+comparisons:
+  - name: E0_intensity_grouping
+    kind: baseline
+    description: >-
+      Simple image-only region/appearance grouping with the same permitted
+      anatomical rules and the same ontology resolver. No learned features.
+    selector: none
+    uses_selection_observations: false
+
+  - name: E1_cuts_inspired_control
+    kind: baseline
+    description: >-
+      In-repo simplified feature-grouping control inspired by CUTS (MICCAI
+      2024), plus the ontology resolver, with no audit. This is NOT a
+      reproduction of the published CUTS result and must never be reported as
+      one; exact external CUTS reproduction is PENDING, not completed.
+    selector: none
+    uses_selection_observations: false
+    literature_reproduction: pending
+
+  - name: E2_confidence_consistency
+    kind: selector
+    description: >-
+      Choose from the shared bank by fit-side confidence/consistency metadata
+      only. Confidence is not correctness.
+    selector: confidence_consistency
+    uses_selection_observations: false
+
+  - name: E3_fitting_score
+    kind: selector
+    description: Choose by fitting-side score only (observations already seen).
+    selector: fitting_score
+    uses_selection_observations: false
+
+  - name: E4_selection_evidence
+    kind: selector
+    description: >-
+      Choose by withheld-observation predictive evidence on O_select, with no
+      active challenge. This is the hypothesis under test.
+    selector: selection_predictive_nll
+    uses_selection_observations: true
+
+  - name: E5_evidence_plus_challenge
+    kind: selector
+    description: >-
+      Full predictive-evidence selection plus the active challenger (two bounded
+      correction rounds). May tie exactly with E4 on a fixed bank.
+    selector: selection_predictive_nll_plus_challenge
+    uses_selection_observations: true
+
+  - name: control_random_same_budget
+    kind: negative_control
+    description: >-
+      Random selection from the same bank under the same candidate and fitting
+      budget. Diagnostic only; never used as a training augmentation.
+    selector: random
+    uses_selection_observations: false
+
+  - name: control_shuffled_evidence
+    kind: negative_control
+    description: >-
+      Evidence scores shuffled across incompatible studies. If no incompatible
+      study is available in the current queue the row is emitted with
+      available=false and a reason; shuffled evidence is never fabricated.
+    selector: shuffled_evidence
+    uses_selection_observations: true
+
+  - name: control_all_background
+    kind: negative_control
+    description: >-
+      All-background partition. If this wins the observation model, the
+      observation model - not the segmentation - is the finding.
+    selector: degenerate_all_background
+    uses_selection_observations: false
+
+  - name: control_random_spatial_masks
+    kind: negative_control
+    description: Spatially random partitions at matched region count.
+    selector: degenerate_random_masks
+    uses_selection_observations: false
+
+  - name: control_class_permutation
+    kind: negative_control
+    description: >-
+      Semantic class permutations of the selected partition. Appearance
+      likelihood may be identical under permutation; that ambiguity is the
+      point, and the ontology resolver must expose it rather than invent a
+      likelihood distinction.
+    selector: degenerate_class_permutation
+    uses_selection_observations: false
+
+  - name: control_excessive_partition
+    kind: negative_control
+    description: Excessive partitioning, to check the complexity term actually bites.
+    selector: degenerate_excessive_partition
+    uses_selection_observations: false
+
+  - name: control_random_edit_search
+    kind: search_control
+    description: >-
+      Equal-number, equal-fitting-cost RANDOM edit candidates compared against
+      the active challenger's candidates. Without this row, any challenge
+      benefit could be explained by the larger search budget alone.
+    selector: selection_predictive_nll
+    uses_selection_observations: true
+
+  - name: student_no_audit
+    kind: student
+    description: >-
+      Lockstep 150-epoch student trained on labels from the shared initial
+      hypothesis, without evidence-based selection.
+    selector: initial_hypothesis
+    uses_selection_observations: false
+
+  - name: student_audited
+    kind: student
+    description: >-
+      Lockstep 150-epoch student trained on labels selected by the full evidence
+      auditor. Identical initialization, architecture, optimizer, augmentation
+      and update budget as student_no_audit.
+    selector: audited_hypothesis
+    uses_selection_observations: true
+
+coverage_levels: [25, 50, 75, 100]
+
+reporting_rules:
+  - Report natural coverage AND matched coverage; a quality gain without its
+    coverage is not a reported result.
+  - Paired patient bootstrap for the audited-minus-unaudited student difference.
+    Slices are not independent patients.
+  - Both-empty classes are excluded from the aggregate and counted; one-empty is
+    an error; nothing undefined becomes zero.
+  - A score margin is not a probability. No ECE/Brier/confidence-guarantee claim
+    without a separately justified probability model and calibration protocol.

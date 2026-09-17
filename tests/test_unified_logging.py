@@ -440,7 +440,7 @@ def test_train_epoch_loss_aggregation_phase_a_reduction() -> None:
     int_0 = trainer.schedule.intervals[0]
     trainer.setup_interval_optimizer_and_scheduler(int_0, num_batches=2)
 
-    ds = _SyntheticToyDataset(count=6, size=16)
+    ds = _SyntheticToyDataset(count=6, size=32)
     # Loader with batch_size=4 produces batch 1 (size 4) and batch 2 (size 2)
     loader = DataLoader(ds, batch_size=4, shuffle=False)
 
@@ -462,7 +462,7 @@ def test_train_epoch_loss_aggregation_phase_c_nonzero_components() -> None:
     int_2 = trainer.schedule.intervals[2]
     trainer.setup_interval_optimizer_and_scheduler(int_2, num_batches=2)
 
-    ds = _SyntheticToyDataset(count=4, size=16)
+    ds = _SyntheticToyDataset(count=4, size=32)
     loader = DataLoader(ds, batch_size=2, shuffle=False)
 
     stats = trainer.train_epoch(int_2, loader)
@@ -483,7 +483,7 @@ def test_train_epoch_preserves_incomplete_epoch_contract() -> None:
     int_0 = trainer.schedule.intervals[0]
     trainer.setup_interval_optimizer_and_scheduler(int_0, num_batches=4)
 
-    ds = _SyntheticToyDataset(count=8, size=16)
+    ds = _SyntheticToyDataset(count=8, size=32)
     loader = DataLoader(ds, batch_size=2, shuffle=False)
 
     stats = trainer.train_epoch(int_0, loader, max_steps=1)

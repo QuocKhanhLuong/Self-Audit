@@ -87,6 +87,7 @@ from .contracts import (
     score_transition,
     validate_contract,
 )
+from ..artifact_io import atomic_write_json
 from .threshold import json_safe
 
 BANK_SCHEMA_VERSION = 1
@@ -1569,11 +1570,7 @@ def dump_bank(bank: Mapping[str, Any], path: str | Path) -> Path:
 
     validate_bank(bank)
     target = Path(path)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    with target.open("w", encoding="utf-8") as handle:
-        json.dump(json_safe(dict(bank)), handle, sort_keys=True, indent=2, allow_nan=False)
-        handle.write("\n")
-    return target
+    return atomic_write_json(target, dict(bank), indent=2, sort_keys=True)
 
 
 def load_bank(path: str | Path) -> dict[str, Any]:

@@ -1,0 +1,18 @@
+........................................................................ [  9%]
+........................................................................ [ 19%]
+........................................................................ [ 29%]
+........................................................................ [ 39%]
+........................................................................ [ 48%]
+........................................................................ [ 58%]
+........................................................................ [ 68%]
+........................................................................ [ 78%]
+........................................................................ [ 88%]
+........................................................................ [ 97%]
+...............                                                          [100%]
+=============================== warnings summary ===============================
+tests/test_unified_logging.py::test_canonical_learning_rate_keys
+  /private/tmp/self-audit-torch241/lib/python3.10/site-packages/torch/optim/lr_scheduler.py:216: UserWarning: Detected call of `lr_scheduler.step()` before `optimizer.step()`. In PyTorch 1.1.0 and later, you should call them in the opposite order: `optimizer.step()` before `lr_scheduler.step()`.  Failure to do this will result in PyTorch skipping the first value of the learning rate schedule. See more details at https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+735 passed, 1 warning in 498.26s (0:08:18)

@@ -1,0 +1,84 @@
+{
+  "id": "b9846292-3d1e-4b23-adf8-e176ada3e8d7",
+  "ok": true,
+  "result": {
+    "runId": "run_d19ed61b546b",
+    "taskId": "task_3ccf6465970a",
+    "dispatchId": "ctx_1197c0a977c6",
+    "state": "ready",
+    "stage": "input_accepted",
+    "setup": {
+      "requested": "not_applicable",
+      "effective": "not_applicable",
+      "source": "existing_worktree",
+      "hookFound": false,
+      "startupPolicy": "start-immediately",
+      "state": "not_applicable"
+    },
+    "launch": {
+      "requested": {
+        "agent": "claude",
+        "model": "opus",
+        "effort": null
+      },
+      "effective": {
+        "agent": "claude",
+        "model": "opus",
+        "effort": null
+      }
+    },
+    "mode": {
+      "mode": "terminal",
+      "preferred": "terminal",
+      "reason": "user_default",
+      "detail": "Started a terminal agent worker, the default for new agent tabs in your settings."
+    },
+    "timeoutMs": 60000,
+    "effects": [
+      {
+        "kind": "worktree",
+        "action": "reused",
+        "id": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit"
+      },
+      {
+        "kind": "setup",
+        "action": "not_applicable",
+        "state": "not_applicable"
+      },
+      {
+        "kind": "terminal",
+        "role": "agent",
+        "action": "created",
+        "id": "term_9b2c1cf8-0509-4be7-9e80-62f92ae5ff7b",
+        "surface": "visible"
+      },
+      {
+        "kind": "dispatch_input",
+        "role": "agent",
+        "id": "term_9b2c1cf8-0509-4be7-9e80-62f92ae5ff7b",
+        "state": "accepted"
+      }
+    ],
+    "prompt": {
+      "requestId": "eb62c986-9d8d-422b-827d-8d3d0d53c301",
+      "stages": [
+        "input_accepted"
+      ],
+      "provider": "claude",
+      "observation": "supported",
+      "processIncarnation": "f7b0083f-0113-496f-b25c-359024581e31",
+      "generation": 73,
+      "baselineWorkingSequence": 0,
+      "baselineExplicitWorkingStartedAt": null,
+      "baselinePermissionSequence": 1
+    },
+    "residualResources": [],
+    "mutation": {
+      "requestId": "eb62c986-9d8d-422b-827d-8d3d0d53c301",
+      "replayed": false
+    }
+  },
+  "_meta": {
+    "runtimeId": "3a1eeb25-5acb-4652-bf9a-f004079f0bbf"
+  }
+}

@@ -1,0 +1,81 @@
+# Mask-free anatomical label generation - ACDC, one 150-epoch global timeline.
+#
+# This file is parsed ONLY by src/self_audit_maskfree/config.py (W5's strict
+# MaskfreeConfig dataclass). Every key below is a declared field of that
+# dataclass; unknown keys are rejected by the loader, so an accidental legacy
+# option cannot leak in silently. There is no second parser for this file.
+#
+# It is checked in as a *template*. scripts/run_maskfree_full.sh never trains
+# from it directly: it loads it through W5's loader, applies the operator
+# overrides it is allowed to apply, and writes a unique read-only resolved
+# config under <workspace>/run_configs/maskfree150/<run_id>/. That resolved file
+# is the run's identity.
+#
+# Supervision ledger for this config: no mask path, no reference/annotation
+# path, no pretrained weight path, no ED/ES selection option, no threshold, no
+# GT-driven checkpoint selection option. The optional isolated reference
+# evaluator is configured separately and never from here.
+#
+# Data root: point this at the ACDC image root in the user's workspace. The
+# data layer (W3) discovers images only; it never opens a mask tree and never
+# reads Info.cfg to establish cohort membership. Raw native NIfTI is preferred
+# when present; a preprocessed ED/ES-only root resolves with a recorded
+# cohort-selection limitation and, absent a native affine, stored-grid exports.
+#
+# Independence: this run must never load an M&Ms checkpoint and must never hand
+# weights to the M&Ms run. Two datasets x 150 epochs = 300 dataset-global
+# epochs, not 150 shared.
+
+dataset: acdc
+# UNVERIFIED placeholder: set ACDC_DATA_ROOT to inventoried raw images.
+# Do not silently consume the supervised pipeline's preprocessed_data tree;
+# its crop/cohort provenance has not been established as mask independent.
+data_root: /home/linhdang/workspace/quockhanh_workspace/SpecMamba/raw_images/ACDC
+# output_dir is the WORKSPACE ROOT, not the run directory: the trainer
+# appends runs/maskfree150/<dataset>/<run_id> to it, so every run of every
+# dataset lands under one contained tree with an immutable per-run id.
+output_dir: /home/linhdang/workspace/quockhanh_workspace/SpecMamba
+
+total_epochs: 150
+seed: 42
+
+# Requested physical batch 8, accumulation 1. Neither has been verified on the
+# target GPU: the 4070 is occupied and execution is deferred by the user. If the
+# bounded preflight probe OOMs, the fallback (4x2 or 2x4 for effective batch 8)
+# is resolved BEFORE the run by the launcher and recorded together with its
+# contrastive-negative limitation. There is no mid-run OOM retry.
+batch_size: 8
+accumulation_steps: 1
+
+image_size: 128
+lr: 0.001
+weight_decay: 0.0001
+warmup_epochs: 5
+
+width: 16
+feature_dim: 16
+
+# v1 implements the spatial_predictive observation protocol only. 'auto' keeps
+# W3's resolver in charge of recording that decision and its reason, while the
+# source's actual frame count, timing and native geometry remain unconfirmed
+# until image-only inventory runs on the requested data root.
+protocol: auto
+depth_axis: 2
+
+device: cuda
+num_workers: 0
+amp: false
+
+# Operational only (OPERATIONAL_FIELDS): mode/project never enter the
+# scientific hash, so a resumed run may change them.
+wandb_mode: online
+wandb_project: self-audit-maskfree
+
+allow_cpu: false
+
+# Report-only validation after each completed epoch: both students are frozen
+# on image-only development inputs before the isolated evaluator is invoked.
+# Reference masks never enter training or checkpoint selection. The optional
+# path is forwarded to that child evaluator and is never opened here.
+epoch_validation: true
+epoch_reference_config: null

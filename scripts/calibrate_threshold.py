@@ -60,9 +60,12 @@ from self_audit.evaluation.threshold import (
 
 def _load(path: Path) -> dict[str, object]:
     try:
-        payload = torch.load(path, map_location="cpu", weights_only=False)
-    except TypeError:  # pragma: no cover - older PyTorch
-        payload = torch.load(path, map_location="cpu")
+        payload = torch.load(path, map_location="cpu", weights_only=True)
+    except Exception as exc:
+        raise ValueError(
+            f"Failed to load transition cache from {path} with weights_only=True: "
+            f"unsupported legacy cache format or unsafe objects detected: {exc}"
+        ) from exc
     if not isinstance(payload, dict):
         raise ValueError("Cached validation transitions must be a mapping")
     if "transitions" in payload and isinstance(payload["transitions"], dict):
