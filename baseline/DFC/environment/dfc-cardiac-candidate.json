@@ -1,0 +1,7 @@
+{
+  "environment_id": "dfc-cardiac-candidate-local-v1",
+  "scope": "local-candidate-not-scientific",
+  "baseline": {"python": "record at qualification", "torch": "record at qualification", "torchvision": "optional; not required by wrapper", "numpy": "record at qualification", "opencv": "record at qualification", "mri_io": "nibabel optional for future real decoder", "pytest": "record at qualification"},
+  "policy": {"dtype": "float32", "amp": false, "scheduler": "none", "deterministic_algorithms": true, "cudnn_benchmark": false, "tf32": false},
+  "qualification": "Local parity and fixtures only. Target server/GPU/CUDA qualification remains required before scientific use."
+}

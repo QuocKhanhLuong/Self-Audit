@@ -27,7 +27,10 @@ def main() -> None:
     sys.path.insert(0, str(freemask_root / "src"))
     from self_audit_maskfree.data.discovery import discover_dataset
     discovery = discover_dataset(args.image_root, args.dataset, seed=42, protocol="auto", depth_axis=2)
-    payload = from_freemask_discovery(discovery, source_root=args.image_root, manifest_kind="scientific")
+    payload = from_freemask_discovery(
+        discovery, source_root=args.image_root, repo_root=freemask_root,
+        fixture=False, scientific=True,
+    )
     manifest_hash = write_manifest(payload, args.output)
     print(f"shared scientific manifest: {args.output}\nmanifest_hash: {manifest_hash}")
 
