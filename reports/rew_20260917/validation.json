@@ -1,0 +1,25 @@
+{
+  "base_commit": "96c32b10fc7b8e09b48822e10ae9eb6cc149e253",
+  "experiment": "supervised_rew_v1",
+  "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONPATH=src python -m pytest -q tests/test_rew.py tests/test_self_audit_core.py --disable-warnings",
+  "result": {"passed": 41, "skipped_cuda": 1, "warnings": 1, "seconds": 11.83},
+  "tested_blobs": {
+    "src/self_audit/models/read_evaluate_write.py": "a832f47fc37ca314b9d6eafd0a0e6bc917408b7d",
+    "src/self_audit/losses/read_evaluate_write.py": "dbb069028122ed5fb830ac97f8b540a2b18dda51",
+    "src/self_audit/training/rew_runner.py": "9de740f5736f96ae3cb11fe374471b239db7f509",
+    "tests/test_rew.py": "ca713db71783726907bc8c1b3cedc66cb76c6de6"
+  },
+  "bounded_fixture": {"status": "completed_bounded", "microbatches": 3, "optimizer_steps": 2, "epochs_completed": 0, "partial_validation_dice": null, "encoder": "explicit small synthetic fixture"},
+  "resume_fixture": "completed-epoch model weights and Torch RNG bitwise match uninterrupted CPU fixture",
+  "known_legacy_failure": {
+    "test": "tests/test_candidate_c.py::test_backtracking_rescues_a_step_that_violates_the_fix_margin",
+    "line": 348,
+    "reason": "expected not all settled; both rows settled",
+    "reproduced_on_untouched_baseline": true,
+    "fixed_by_this_patch": false
+  },
+  "not_run": ["CUDA", "real MRI", "timm model instantiation", "pretrained weight download", "real 16 GB memory gate", "clinical accuracy", "full repository CI"],
+  "production_baseline_changed": false,
+  "candidate_c_enabled": false,
+  "maskfree_changed": false
+}
