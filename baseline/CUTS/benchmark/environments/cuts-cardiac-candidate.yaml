@@ -1,0 +1,32 @@
+# Candidate only. Do not call this a frozen scientific environment until the
+# server-side P0 parity, reproducibility, manifest, and real-data smoke gates pass.
+name: cuts-cardiac
+
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python=3.10
+  - pytorch=2.1.2
+  - torchvision=0.16.2
+  - torchaudio=2.1.2
+  - pytorch-cuda=12.1
+  - numpy=1.26.4
+  - scipy
+  - scikit-learn
+  - scikit-image
+  - nibabel
+  - simpleitk
+  - pyyaml
+  - tqdm
+  - matplotlib
+  - pandas
+  - h5py
+  - tabulate
+  - pip
+  - pip:
+      - phate
+      - sewar

@@ -1,0 +1,19 @@
+{
+  "schema_version": "cuts.cardiac.p0.environment.v1",
+  "status": "local-development-runtime-compatibility",
+  "scientific_environment": false,
+  "deviation_ledger": [
+    {
+      "category": "runtime compatibility",
+      "old_target": "Python 3.9.13 / PyTorch 1.12.1 / CUDA 11.3",
+      "local_runtime": "Python 3.14.3 / PyTorch 2.9.0+cu128 / CUDA 12.8",
+      "rationale": "historical binary stack is not the active local interpreter; no CUTS core source change was made",
+      "required_validation": "synthetic import, forward, backward, and PHATE/K10 parity/smoke tests"
+    },
+    {
+      "category": "runtime compatibility",
+      "packages_added_to_user_environment": ["phate==2.0.0", "scikit-image==0.26.0", "nibabel==5.4.2", "sewar==0.4.8"],
+      "rationale": "required P0 imports only; no diffusion packages installed"
+    }
+  ]
+}
