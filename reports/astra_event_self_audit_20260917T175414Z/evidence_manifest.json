@@ -1,0 +1,853 @@
+{
+  "schema": "astra-event-self-audit-evidence-v1",
+  "created_utc": "2026-09-17T19:07:56.635965+00:00",
+  "root_reviewer": "Astra",
+  "branch": "feat/event-triggered-reference-free-audit",
+  "fetched_main": "874c0772c9b00a0fbc5e781ea8e457794160f654",
+  "original_active_head": "605e62b5e11ce1fc792068813e9ec2b829cefd4f",
+  "publication": "local experimental branch only; no main update, merge or remote push",
+  "decision": "C",
+  "decision_scope": "The implemented fixed-feature region/edge compatibility proxy is too weak for the proposed new core; not an impossibility theorem for all reference-free audit.",
+  "required_reports": [
+    "00_EXECUTIVE_SUMMARY.md",
+    "01_CURRENT_CODEBASE_AUDIT.md",
+    "02_PRIOR_ART_AND_NOVELTY.md",
+    "03_PROBLEM_FORMULATION.md",
+    "04_MATHEMATICAL_MODEL.md",
+    "05_ARCHITECTURE_OPTIONS.md",
+    "06_SELECTED_MINIMAL_BASELINE.md",
+    "07_FAILURE_MODES.md",
+    "08_IMPLEMENTATION_AUDIT.md",
+    "09_UNIT_TEST_RESULTS.md",
+    "10_BOUNDED_EXPERIMENTS.md",
+    "11_BASELINE_COMPARISON.md",
+    "12_CONVERGENCE_ANALYSIS.md",
+    "13_NEXT_DECISION.md"
+  ],
+  "source_sha256": {
+    "configs/self_audit_event_acdc.yaml": "5d755a19a4b7c68aeac338948dde54c8371332382251091a8e62086e753baa8f",
+    "scripts/check_event_audit.py": "445a2c619a66079e425025c7c14721c6fb8d4b3667470058f78e73d8d01913cc",
+    "scripts/train_event_audit.py": "8b9ed229a313021099abf71f67f700638bd4110ca51eff7c0ed3914e6d439462",
+    "src/self_audit/models/dynamic_window.py": "5cf0a07ef9b50254d5bcffce605aea2849772fb0bed16a95685f17ab6eda9fd4",
+    "src/self_audit_event/__init__.py": "d3a80aabdb4263a09b9e7ccbd9a8bcde20b5e73dbcd39541b279259066756efc",
+    "src/self_audit_event/annotation.py": "5b3c15afae027c3c1602e7dccbcf9741209af0003bba2fa99def677a8ccec234",
+    "src/self_audit_event/audit_trigger.py": "24569af9a626d4193f38a33ee4504c6f8b762afd0f0816bc26c4ff57f29b58d9",
+    "src/self_audit_event/data.py": "a8bf03d0fb218a9dbe03661ea7335ea00022f6e757669f2c138aa68c4a6563dd",
+    "src/self_audit_event/evaluation.py": "c986ac36a3960bd66fed4e8d0a6f3a82c1f618fa5ec431dcd3f02d978bd52ad5",
+    "src/self_audit_event/losses.py": "9f8528402de07383499fb4d36a3bb513a24113f8c438961c652e5f34f4b10fd0",
+    "src/self_audit_event/model.py": "a2ceb4778a705ff71f9bf85f983903dcc60a28a1e806cc06bff9f7c62ffbe5e2",
+    "src/self_audit_event/reference_free_auditor.py": "56a36269772dd3a3fcea4149877ba6c22e677662fba3f3a29ef8039f25eb28db",
+    "src/self_audit_event/replay.py": "f23cd1170dd5be62c9a70630321570a15721c9530530e00dc0b8b90cc87121c7",
+    "src/self_audit_event/training.py": "56e17a102b9330eb2d6be71b9b6cb9f21352da223bb8a1b184e452fc4cdd31ca",
+    "tests/test_event_audit.py": "ee174a7ff17595957af929c48a86e11d6604deadf84813c4bbf4d1f955254374"
+  },
+  "unit_tests": {
+    "status": "TESTED",
+    "passed": 16,
+    "receipt": "evidence/unit_final.xml",
+    "device": "cpu"
+  },
+  "experiments": {
+    "status": "MEASURED",
+    "real_acdc_runs": 21,
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "validation_patients": 20,
+    "complete_validation_volumes": 40,
+    "validation_slices": 376,
+    "physical_batch": 8,
+    "effective_batch": 8,
+    "accumulation": 1,
+    "image_size": 64,
+    "actor_updates_including_setup": 120,
+    "supervised_examples": 960,
+    "new_cuda_runs": 0,
+    "full_training": "NOT RUN",
+    "mnms": "NOT RUN",
+    "test_gt_used": false
+  },
+  "orchestration_receipt": "evidence/orchestration_final.json",
+  "primary_sources": "evidence/primary_sources.json",
+  "active_checkout_preservation": "evidence/active_checkout_preservation.json",
+  "remote_current_status": "UNKNOWN: final read-only SSH recheck refused; earlier occupied GPU observation prevented GPU launch",
+  "artifact_manifest_self_excluded": true,
+  "artifacts": [
+    {
+      "path": "00_EXECUTIVE_SUMMARY.md",
+      "sha256": "b223abb408e1d2040f1631a08262c56898f74ff1fe0855145d38a9bca266132b",
+      "bytes": 3619,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "00_ORCHESTRATION.md",
+      "sha256": "b581cbbf596b60ca8451c12d410ab239f74b85086ca0791736507b1e6eb2573e",
+      "bytes": 3268,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "01_CURRENT_CODEBASE_AUDIT.md",
+      "sha256": "7c746b246327aae1993d004b4c2913b7d6a6a910aad6f2a1a9efdb40c21ca71d",
+      "bytes": 7307,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "02_PRIOR_ART_AND_NOVELTY.md",
+      "sha256": "20cd1566c68a6f7dda2087ec69a84322756c55252153b0fa75d8981f825963b9",
+      "bytes": 12705,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "03_PROBLEM_FORMULATION.md",
+      "sha256": "f7851e5bb130ba62c82be88478a2c531aafbde9a5077991022094d798347ca04",
+      "bytes": 5489,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "04_MATHEMATICAL_MODEL.md",
+      "sha256": "d19b8ed020dbe429604ab50f81e984d0af501dc7cc4b346d24782ec94f87f168",
+      "bytes": 5860,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "05_ARCHITECTURE_OPTIONS.md",
+      "sha256": "5a082df973c1beeccdca539b3304f39d797078a53ce389d09bcf797d1b46dfa0",
+      "bytes": 4879,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "06_SELECTED_MINIMAL_BASELINE.md",
+      "sha256": "78ee1a043e501d1a208924c590f1a16a435d88dc189c832ab33848563d170301",
+      "bytes": 3278,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "07_FAILURE_MODES.md",
+      "sha256": "ffba6dca6d9c33b041d0639e3e43e6cd6b2ca57c315513fbd1a41295409bcd8c",
+      "bytes": 4397,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "08_IMPLEMENTATION_AUDIT.md",
+      "sha256": "31d35b461b801027361df56103c1c694c2cb446bd3b6be55c95c15295428e7aa",
+      "bytes": 7101,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "09_UNIT_TEST_RESULTS.md",
+      "sha256": "c32d7673566147775afd4d251aeb922515894de45eaed5333ef76cb9ab4c0fc7",
+      "bytes": 1679,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "10_BOUNDED_EXPERIMENTS.md",
+      "sha256": "d23e8b8bc7f46c4204521deea4b01560f15449827d6f714c544929b50982b86c",
+      "bytes": 9885,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "11_BASELINE_COMPARISON.md",
+      "sha256": "396edf350a01f01f0fcc5872c96c953fc81e25d90e190cccbec7f84d97b873c7",
+      "bytes": 5567,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "12_CONVERGENCE_ANALYSIS.md",
+      "sha256": "26b3728c95f64a11326e5faa46ed762edffe4dee11d85d58ec2e501d2350636a",
+      "bytes": 6406,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "13_NEXT_DECISION.md",
+      "sha256": "329ed2b527949ba74f0d7a9bd6aa26fa3f33c6793f9f74f97616044869bb35d4",
+      "bytes": 5463,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_bounded/provenance.json",
+      "sha256": "5ef514e7613bd45b35a0ca6f26e5ecb17a71dfe01e939e3a3f5d6bc5d8a81531",
+      "bytes": 103933,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed0_always.json",
+      "sha256": "9c1481b5dbc4b9ed96853899e1a25cfc15f6de11649b4e52d4890337fa321d70",
+      "bytes": 109646,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed0_always.pt",
+      "sha256": "0ccfa69163acfed76b166c25b3ff534ad7c39b331b725a85bb4b37931ae4b7e3",
+      "bytes": 103195,
+      "publication": "local_only_gitignored_checkpoint"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed0_entropy.json",
+      "sha256": "aee5fefea399f7c91631edf45caf920229e80e84e577430971a3b7b08e35b1e8",
+      "bytes": 106028,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed0_entropy.pt",
+      "sha256": "dbad620be78d3e59e8a7da0a14be7553450be3f688d2dcb1e9fc288a0f1e1178",
+      "bytes": 103246,
+      "publication": "local_only_gitignored_checkpoint"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed0_learned.json",
+      "sha256": "b46c98530708fd70f5af8ff8cad8a979f270a95f4fef1508037f76d41c1bda78",
+      "bytes": 105161,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed0_learned.pt",
+      "sha256": "314f9e2f7f0ebbeeba442a26ae1430513e5b740114e565b594858203f58a3d8d",
+      "bytes": 103246,
+      "publication": "local_only_gitignored_checkpoint"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed0_none.json",
+      "sha256": "edbc6bad8ee42f97725d11296605427477aea7b8acafd643d675395687563765",
+      "bytes": 98515,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed0_none.pt",
+      "sha256": "b3b616ea65d23a45f844ef090abfe50e73b5c1c453b2a53d3797b8b86598103f",
+      "bytes": 103093,
+      "publication": "local_only_gitignored_checkpoint"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed0_periodic.json",
+      "sha256": "6413aa06dc3d8a1bdc9dd1d89d0a1bf2ea98588fc9d715d779c72e40a95c379b",
+      "bytes": 106563,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed0_periodic.pt",
+      "sha256": "18858ef80ced182e04423760ce43e0c5b30691f8f548ed5318b37d1311b99e86",
+      "bytes": 103297,
+      "publication": "local_only_gitignored_checkpoint"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed0_random.json",
+      "sha256": "d4cec2544cf7aff8a36a660ba6fccb4ea5cbe96eb783d905e8141e3ac27802f3",
+      "bytes": 106870,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed0_random.pt",
+      "sha256": "b025f2db5fb89f97a42d56d3b76e9df48f7e52fdc8550931501a98422deeb233",
+      "bytes": 103195,
+      "publication": "local_only_gitignored_checkpoint"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed0_setup.json",
+      "sha256": "c324ee6a779bf369fce8c3c096de23cbde3cacb5577c28598e9a5f78a0485223",
+      "bytes": 4430,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed0_unguided.json",
+      "sha256": "b4b13871babbcc922559b03610d8fdfc2479a16e1a463ac87a30fb704f261a56",
+      "bytes": 104197,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed0_unguided.pt",
+      "sha256": "ce00c787199637c4f809cac2a17b4649844d854d7828d1d4d697f22a01af9025",
+      "bytes": 103297,
+      "publication": "local_only_gitignored_checkpoint"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed1_always.json",
+      "sha256": "5dda04e38f42f662ae594a189c0a0d5a1d19f775b63dfc57bdb4a7c5ea2a3432",
+      "bytes": 111761,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed1_always.pt",
+      "sha256": "5c16e72c0d05eceeccf7271325fad96687193f88d4f1e0351ea7225803b74a44",
+      "bytes": 103195,
+      "publication": "local_only_gitignored_checkpoint"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed1_entropy.json",
+      "sha256": "e3f81ca4d2a61a175e28f60417294b1ad360a9b8bd6a4355a683ebada2573c1a",
+      "bytes": 111028,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed1_entropy.pt",
+      "sha256": "86e59dd5b08cbe77554d796e6584c96fe897e731e0f75aa0275a49cd7b5bdc8b",
+      "bytes": 103246,
+      "publication": "local_only_gitignored_checkpoint"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed1_learned.json",
+      "sha256": "9512e02b073cc7107053d6ad77136936d9d6f5e888fbc7c764c7aaf9ba2ae75f",
+      "bytes": 109964,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed1_learned.pt",
+      "sha256": "f3ee3cf0fbc5772f612cca29585fda82d3cf147b80034a0fb6942668075b5bdc",
+      "bytes": 103246,
+      "publication": "local_only_gitignored_checkpoint"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed1_none.json",
+      "sha256": "809f1e3a80187a9dba6cd515cdc4e3d0085b2b916d399cd8b208ac5266cb7a60",
+      "bytes": 105064,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed1_none.pt",
+      "sha256": "7c580a4bda083e5f746f55d80fa0f6dd05aabe4daa8b6e8b916a40786435ae15",
+      "bytes": 103093,
+      "publication": "local_only_gitignored_checkpoint"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed1_periodic.json",
+      "sha256": "d4ad20be38b2a58895934a90bc178799de67f41f1b1dc1318319e2729a3cfce5",
+      "bytes": 111727,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed1_periodic.pt",
+      "sha256": "9c303d1a800421293bc3bc91f9c746599ef11a5e4f06171f9dbb813d467ec447",
+      "bytes": 103297,
+      "publication": "local_only_gitignored_checkpoint"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed1_random.json",
+      "sha256": "675dcf22a97aced8d4d69a2e6ad152e36d7608c881070c75faf002bba28ad362",
+      "bytes": 111278,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed1_random.pt",
+      "sha256": "55184d5dedc8fd0b30fd68938dfb39cd80b5f8243847798cbd7ef997162382ab",
+      "bytes": 103195,
+      "publication": "local_only_gitignored_checkpoint"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed1_setup.json",
+      "sha256": "40e156e0bbc8a55f2de507191384fc38e23e29f2cd7e136b06b2e9b32cb4134d",
+      "bytes": 4418,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed1_unguided.json",
+      "sha256": "27093560a08415ae530a74ad67342ff70f421163d100f3b08d900674c5bf00d3",
+      "bytes": 106429,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed1_unguided.pt",
+      "sha256": "6ffa22bb5db3dca64bd8e5f451a3f1a3a0ad51074ff5c910467a45169f076b78",
+      "bytes": 103297,
+      "publication": "local_only_gitignored_checkpoint"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed2_always.json",
+      "sha256": "800e48ba71f286bdd7e7fc9a32535570a5646e5c1403aac06e88dea07a5ae2ef",
+      "bytes": 107952,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed2_always.pt",
+      "sha256": "642df4a446284e01521fce93ae3ee2fece4e3464edc7195e0158aa13da654eff",
+      "bytes": 103195,
+      "publication": "local_only_gitignored_checkpoint"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed2_entropy.json",
+      "sha256": "7f13833233a15eb501c33f73301daf73596fd67b028744f2deffb18080c73a95",
+      "bytes": 109841,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed2_entropy.pt",
+      "sha256": "58ddd24bfa0fe9ff634bb383cd4ca2f410f0f134c8d044fd8ce55f7026c8b3d2",
+      "bytes": 103246,
+      "publication": "local_only_gitignored_checkpoint"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed2_learned.json",
+      "sha256": "d928f04a6f317ff944ad04e1ae646d8c5ef2b0a12b5798997c45c0b7069e3c9c",
+      "bytes": 107122,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed2_learned.pt",
+      "sha256": "50fab1e67f98b3024f3b703e8186114997baaf26c693e7bfe46c216868d5405f",
+      "bytes": 103246,
+      "publication": "local_only_gitignored_checkpoint"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed2_none.json",
+      "sha256": "0656e8040bf868fb0442a97020c252e81066ec515e31ac76d84158d4d83356ba",
+      "bytes": 101324,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed2_none.pt",
+      "sha256": "69f156422c238f5b8a327cd8ce0ba193d2c85091bc26ef029d58dc50ef9d9b6e",
+      "bytes": 103093,
+      "publication": "local_only_gitignored_checkpoint"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed2_periodic.json",
+      "sha256": "bf78b09e0c07f49fc6db6a651c435b3de3f7901fec805dc952ff2b0ec3b1e50b",
+      "bytes": 108201,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed2_periodic.pt",
+      "sha256": "ca7e9d9297703c389c2d4cfc9b3c2319f0003945416de69512c8a440c97b5e8d",
+      "bytes": 103297,
+      "publication": "local_only_gitignored_checkpoint"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed2_random.json",
+      "sha256": "567c7c1a7eed23cc906f76c55bdf3b5f0b3516fcfdda71fea01eb6685465bd42",
+      "bytes": 107614,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed2_random.pt",
+      "sha256": "c7516d02b01bf0a716bb6bf0f40976c21adecbe81139ba9b6c4b89db10fd128f",
+      "bytes": 103195,
+      "publication": "local_only_gitignored_checkpoint"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed2_setup.json",
+      "sha256": "52b73a3f51d9883aa65b32b900cc8d3ddb075904c00578fa1fe097c563090365",
+      "bytes": 4392,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed2_unguided.json",
+      "sha256": "c550967a5bcc3826a561de050eba78cd99485e2078768e4c7e32f8c8c0af7174",
+      "bytes": 104233,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_bounded/seed2_unguided.pt",
+      "sha256": "291f92276cc20f5b7853dc5cb18002abbed960cd539d70d5bbdf2b423f339b27",
+      "bytes": 103297,
+      "publication": "local_only_gitignored_checkpoint"
+    },
+    {
+      "path": "evidence/acdc_bounded/summary.json",
+      "sha256": "d23f064bc3d22d5e47c4c4312e5756d11d36e7f7d3602ee495773e1c83d9437b",
+      "bytes": 41854,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_copy_receipt.json",
+      "sha256": "309d65ea9a5a29ec85a5bb7cf3158bb5cb851bba942ee0952306e3536e43b03e",
+      "bytes": 405,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_data_identity.json",
+      "sha256": "af0086ca35344e848274b578ab52dae87a22d28867264a327c04f5c4d0db00e9",
+      "bytes": 97648,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_interventions_seed0.json",
+      "sha256": "716b8d65b064ddb887975fb82ffca4d984a765dc8dbddbe1a5383dc2e2d0f2bf",
+      "bytes": 756030,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_interventions_seed0.log",
+      "sha256": "80bd3d0ef69e1c1965326bf29116d164e601ab61b594c2334a81cf83707830ee",
+      "bytes": 5411,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_interventions_seed0_fresh_value.json",
+      "sha256": "8da706981496e7ff842283fbafeffa17f7a5cfd229a56cc7f2a7683e71cfa440",
+      "bytes": 756253,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_interventions_seed0_fresh_value.log",
+      "sha256": "08d44c27166c0180a06f9560958122a4357ca0d496b0d2f3dc397b0177a0d364",
+      "bytes": 5975,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_interventions_seed1.json",
+      "sha256": "8ed45b119bad17d5c31ed50f3ab994e1f6d41f5bea8e5b69632326c170e93754",
+      "bytes": 759392,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_interventions_seed1.log",
+      "sha256": "ad209463d1071c54fdc66bfbde0afb76bf56df33f47f031f212bb05ed6357ec7",
+      "bytes": 5753,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_interventions_seed2.json",
+      "sha256": "00d0928fa7b2225b14d45b255544007daf93f40f1add921439ed300f8b4861db",
+      "bytes": 754855,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/acdc_interventions_seed2.log",
+      "sha256": "d6be5c38e476cc377afc90ab56111ceb22834ca50d7baa7cb252a540a27b70d8",
+      "bytes": 5502,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/active_checkout_preservation.json",
+      "sha256": "666ad05bcd554b8cf41a4cf26247fde938165755dc312e208c72d68dc1573b41",
+      "bytes": 2027,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/active_status_before.txt",
+      "sha256": "72d25c65a5acd4149f75f9354e2879a3b24e6433918fc1b4e912cc5c342b1273",
+      "bytes": 749,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/analysis_details.json",
+      "sha256": "1f8218886d5157c26c88fbcb29b635299181ec726e212795ed72d339edd1bb76",
+      "bytes": 32231,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/analyze_results.py",
+      "sha256": "44b6c609e47338494a8310e2c736e2f8d116e8989b192c394bdd68e30be9c6e1",
+      "bytes": 5450,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/base_log.txt",
+      "sha256": "9df74462107651a1a13913f525d5ea4fb83d7b27a24bd09367acc2f49eb1a604",
+      "bytes": 371,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/bounded_learning_curves.png",
+      "sha256": "6def58fe690e0193c660a14060b4f7db53d40da51b7855037cd708c4da3d1b9c",
+      "bytes": 206699,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/bounded_learning_curves.svg",
+      "sha256": "0c010db7f5d39aeb58ff7123e708798ef491f3fd8a1ccfe9e9574545049aac1a",
+      "bytes": 92747,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/comparison_aggregate.json",
+      "sha256": "6466b2797afff000858c51157d69ddff1bb0b2bfd2b3ba8f08ed3d9805ccd24b",
+      "bytes": 6528,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/copy_acdc.py",
+      "sha256": "b32fcd372ca4a6742245e9e74e34483b4396eba3f4a66f43ca2afe1b2918dde3",
+      "bytes": 2332,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/experiment_consistency_checks.json",
+      "sha256": "2dc2d5db970f732d9557691c6ed5f7bf6920e4b6fbb6049256ff022967b54c5e",
+      "bytes": 5784,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/extent_red_team.json",
+      "sha256": "32681eab074eafc212586ab70032d5f9ca269156b526937a846afc0ba6a09236",
+      "bytes": 153239,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/extent_red_team.py",
+      "sha256": "972849490c4b013e940cee7d2bbf7cc207041332c02ad78c4e84e1006cfa71d8",
+      "bytes": 3071,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/frozen_value_probe_plan.json",
+      "sha256": "8d89425b47079ed8e9c2a2c964a0c297aa7d84b0b1d1935265140da137ecd057",
+      "bytes": 587,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/initial_prior_art_matrix.md",
+      "sha256": "65f1c30cda5b4206abc99686ac6e494a824c480f08d8cae029a0af45b6240a0d",
+      "bytes": 3513,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/orchestration_final.json",
+      "sha256": "9390665b2cdb46878283071df014ff6962eb7e122be1f0a4004d81a78f6113da",
+      "bytes": 691,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/primary_sources.json",
+      "sha256": "2fb46d3406100748a3600b16c54508609d181b17636a5ea1db1a541d6431d3bb",
+      "bytes": 7380,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/provenance.json",
+      "sha256": "4c67b2d08dbb7e56c2ce85abd93427d2aa06b5e016ed5c248c01b273a7d374fe",
+      "bytes": 371,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/receipt_redactions.json",
+      "sha256": "c7284447999f256333f06f8498d14c26daafc5a577275d530204043ab06d4afb",
+      "bytes": 451,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/remote_recheck_failure.json",
+      "sha256": "9ca6a3ed07ab1be367ed47fe4b34f9616db692c7d0bd6f905a985382d43d911d",
+      "bytes": 412,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/stage_a/provenance.json",
+      "sha256": "28e7b385577abe39bf118881a1bab5df3945e8d078415fe2a74e1e8e75bb74e7",
+      "bytes": 3041,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/stage_a/seed0_always.json",
+      "sha256": "84fd298c986d0089f127f4bd5f795dae1abf645edea91843601b7f7b4b7f5239",
+      "bytes": 71481,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/stage_a/seed0_always.pt",
+      "sha256": "ba00f1f1db0f7f8ea61dc4dd1c9abe13999c35d725d2ac5d40d7920bf5c33826",
+      "bytes": 103195,
+      "publication": "local_only_gitignored_checkpoint"
+    },
+    {
+      "path": "evidence/stage_a/seed0_entropy.json",
+      "sha256": "fe8d4ce49271e661d9c20dd7b2680719db8f20dbeb404b44509dbd1194f5ceb8",
+      "bytes": 70906,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/stage_a/seed0_entropy.pt",
+      "sha256": "98b8a23846bee42227cb1fc8bede58b4919f284455942c92f303956c2e26349f",
+      "bytes": 103246,
+      "publication": "local_only_gitignored_checkpoint"
+    },
+    {
+      "path": "evidence/stage_a/seed0_learned.json",
+      "sha256": "aa94cf0a1be9b90f0c36b817b51d0f64b83ab76c159c765161720034db5b0e47",
+      "bytes": 70149,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/stage_a/seed0_learned.pt",
+      "sha256": "3361e7028aac717b51889e94f8dd7c73cff588063c8afe14893311d2dd0b1861",
+      "bytes": 103246,
+      "publication": "local_only_gitignored_checkpoint"
+    },
+    {
+      "path": "evidence/stage_a/seed0_none.json",
+      "sha256": "abb7dddd39fbd49489c81c1885881d163155bc1974fbc7be031a312d9de39d1d",
+      "bytes": 69946,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/stage_a/seed0_none.pt",
+      "sha256": "07003831648ffd05572c7af467317883bc52b3d31e4ccc512c4ffac9537ea5d6",
+      "bytes": 103093,
+      "publication": "local_only_gitignored_checkpoint"
+    },
+    {
+      "path": "evidence/stage_a/seed0_random.json",
+      "sha256": "1baf1fce6450c1c614c4fdb6023c5c54e09eba1124db426c6a0fa77db6e95929",
+      "bytes": 70873,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/stage_a/seed0_random.pt",
+      "sha256": "8375705c937faeed8487e0bba0c2b2b85b445b28a1bf9fa429e580963c17e0eb",
+      "bytes": 103195,
+      "publication": "local_only_gitignored_checkpoint"
+    },
+    {
+      "path": "evidence/stage_a/seed0_setup.json",
+      "sha256": "377d86c8bbbef013f5fbe1af8a4d932044852ee03612b53e8619cb8bb50cfc46",
+      "bytes": 1697,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/stage_a/summary.json",
+      "sha256": "74361e5a1df84171cc556a21d040872a96604b97955c59039cb4753935d54fe2",
+      "bytes": 10100,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/stage_a.yaml",
+      "sha256": "64d0d1fc2953a5b65b3220b8e67b82d8ba6fc9609423dfa7731ca68af4d50058",
+      "bytes": 497,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/stage_a_interventions.json",
+      "sha256": "1ac10d3483493888b094c641cdd2599bf5742500e2b0dae326f4740774746afa",
+      "bytes": 54321,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/unit_final.txt",
+      "sha256": "6709fee2915e65d3d1f218b5e8da49358b83a47489275d2443c2a0f2fab9826a",
+      "bytes": 99,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/unit_final.xml",
+      "sha256": "33c225fa39c6b92f692d921a2de5a37d726ac0ec06e8d063b441c167b52d332c",
+      "bytes": 2177,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "evidence/unit_initial.xml",
+      "sha256": "004d3996639aff9c20ea24111e0c7f0bf06288d4ae8455c33a685e7b9922f167",
+      "bytes": 1924,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "workers/implementation_contract.md",
+      "sha256": "2ec00e858d87a9602b2d0812fb9138c6d1583d977ab96eb3424dc86290dd18a8",
+      "bytes": 5886,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "workers/luna_value_identifiability/astra_verification.md",
+      "sha256": "ea00a5a1b313b0b47b1aabdfefd0165f06178d17a7d3631ca14beff2c2493c12",
+      "bytes": 1790,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "workers/union_implementation/annotation_partial.py.txt",
+      "sha256": "ab394298a5293fa4a20753b61280b0f4582a8b760dd8dcdd4f8dff708ba63e81",
+      "bytes": 6115,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "workers/union_implementation/dispatch.json",
+      "sha256": "61f84623171b9da45df35ad458bd4c1a0e8393b685280a10dcad667ebc1a0679",
+      "bytes": 1843,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "workers/union_implementation/readiness.json",
+      "sha256": "68314b89c98a41fb29d157a2e92cb1fc9616be04e44da35c0ebe39a7e81eba01",
+      "bytes": 345,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "workers/union_implementation/task.md",
+      "sha256": "1ae2da65927f372ada0fa294e8d5e88feccb0ace5f8a60ca66e9f1e6dbf263be",
+      "bytes": 1355,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "workers/union_implementation/terminal_create.json",
+      "sha256": "a1fda304c9b398d7e4c983044ed45764041f6c98d344726aa430d9ddf51b0b66",
+      "bytes": 778,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "workers/union_rf_prior/dispatch.json",
+      "sha256": "6217a956438e0973c85edfb290439dc6429ad04ae6e5ba12c37dc8c870c94560",
+      "bytes": 1843,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "workers/union_rf_prior/model_observation.json",
+      "sha256": "b00d6c10f7209112a1c8348706ea688cc6655b258acd6d6e46cebf547acf509a",
+      "bytes": 5840,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "workers/union_rf_prior/readiness.json",
+      "sha256": "4d58cfb0cdb813c4fc257460f04047c8f739866183cce2f43fa7b7947b38e9ea",
+      "bytes": 345,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "workers/union_rf_prior/report.md",
+      "sha256": "0aef7b82b80e4d20fe67f5bbcdf3599802ba9da6d9274c875fe2ac79d5ce81ab",
+      "bytes": 9131,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "workers/union_rf_prior/task.md",
+      "sha256": "0859264748226538368e4b9e990e31c8c42c97636c819d16cf9b5d604bb40b65",
+      "bytes": 1893,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "workers/union_rf_prior/terminal_create.json",
+      "sha256": "40b79fa4ccba650e34b3a38c76b35943fadb10d080b3c0bf773c5b7446457579",
+      "bytes": 772,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "workers/union_rf_prior/timebox_observation.json",
+      "sha256": "27424928aa06f6d2fffb85deb0329a0d0dc913e8bf11acba524d109a1faabed7",
+      "bytes": 5840,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "workers/union_source/dispatch.json",
+      "sha256": "509a4c83a6855f474728f3521c06c65e31b76a6a9320e97d467f12727f86bb92",
+      "bytes": 1843,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "workers/union_source/model_observation.json",
+      "sha256": "45ca18df9a083fdc3f6a16b631686e49507f0d883c87b004228b451bc23f6507",
+      "bytes": 5022,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "workers/union_source/readiness.json",
+      "sha256": "67e83c9beb483fa5216bd3b8e0935d3ad737f0ba8ed37e76c4f3d9576e702175",
+      "bytes": 345,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "workers/union_source/task.md",
+      "sha256": "15818ef8fce828f0dfc079e2f644050334bcb4e6e6c13c535be038e1d704f06e",
+      "bytes": 1785,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "workers/union_source/terminal_create.json",
+      "sha256": "06bbc5da9bdc730a6c08b149c3abd0de67ae2c87bb696c1f78d930f922ffb640",
+      "bytes": 770,
+      "publication": "experimental_report_artifact"
+    },
+    {
+      "path": "workers/union_source/timebox_observation.json",
+      "sha256": "0db5ff9447b075e77d8553b47f8d510bc9ee1a8efc32d65a80e38b2c604bdf48",
+      "bytes": 4617,
+      "publication": "experimental_report_artifact"
+    }
+  ]
+}

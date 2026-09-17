@@ -1,0 +1,1661 @@
+{
+  "source": "REAL_ACDC",
+  "root": "/private/tmp/astra_event_acdc_training",
+  "manifest": "/private/tmp/astra_event_acdc_training/acdc_patient_split_seed42.json",
+  "manifest_sha256": "bc42574017276a6defc668bf533330fd41a64a5e90a75ea1b8958fc9e469265a",
+  "image_size": 64,
+  "depth_axis": 2,
+  "augment": false,
+  "validation_patients": [
+    "patient004",
+    "patient005",
+    "patient012",
+    "patient014",
+    "patient015",
+    "patient018",
+    "patient028",
+    "patient029",
+    "patient030",
+    "patient032",
+    "patient036",
+    "patient055",
+    "patient065",
+    "patient070",
+    "patient076",
+    "patient082",
+    "patient087",
+    "patient089",
+    "patient095",
+    "patient098"
+  ],
+  "all_manifest_validation_patients": [
+    "patient004",
+    "patient005",
+    "patient012",
+    "patient014",
+    "patient015",
+    "patient018",
+    "patient028",
+    "patient029",
+    "patient030",
+    "patient032",
+    "patient036",
+    "patient055",
+    "patient065",
+    "patient070",
+    "patient076",
+    "patient082",
+    "patient087",
+    "patient089",
+    "patient095",
+    "patient098"
+  ],
+  "bounded_validation_subset": false,
+  "test_images_or_masks_opened": false,
+  "inventory": {
+    "train": [
+      {
+        "patient_id": "patient001",
+        "case_id": "patient001_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient001/patient001_frame01.nii",
+        "image_sha256": "edff5601509333037e723da177b812d3cd9e07bfdb90e297c20fb2705480fc7c",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient001/patient001_frame01_gt.nii",
+        "mask_sha256": "6d4e6e032a739a03b330c44888b2209ddeaf3adb56460fa74280aeaef33e9cad"
+      },
+      {
+        "patient_id": "patient001",
+        "case_id": "patient001_frame12",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient001/patient001_frame12.nii",
+        "image_sha256": "6ed366988e7c50bc329add9af0aaf0508c23cdd488bd586e86e6103699eefd58",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient001/patient001_frame12_gt.nii",
+        "mask_sha256": "a1203caa23dc015b1fa16af7037eda59948c0afe10f81f85f4adf06506d2fa7c"
+      },
+      {
+        "patient_id": "patient002",
+        "case_id": "patient002_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient002/patient002_frame01.nii",
+        "image_sha256": "3067968f3581c5a8989dfc6d617a46d0a18cc14d2fea6fa4773c5a3081aea73a",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient002/patient002_frame01_gt.nii",
+        "mask_sha256": "005f1c4453114f32bc51de2f49b86382eceb3f0ad4892a65299c9da9ac23394e"
+      },
+      {
+        "patient_id": "patient002",
+        "case_id": "patient002_frame12",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient002/patient002_frame12.nii",
+        "image_sha256": "9acfe52f64ca715f3a49bdf3e6fe7c607f68e9a91f5f129fbfaa9772aeacdeb3",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient002/patient002_frame12_gt.nii",
+        "mask_sha256": "c338f93929cf95f15bf74107d37e9a8455c1e1aca630e43d54210a697c7df63b"
+      },
+      {
+        "patient_id": "patient003",
+        "case_id": "patient003_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient003/patient003_frame01.nii",
+        "image_sha256": "af8c873091ca60274a53b5c4b4a325ea2eff68b78ac3d7daff7d435b3743907a",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient003/patient003_frame01_gt.nii",
+        "mask_sha256": "d5fee2c181a2b97bc857723a886806c6aa920782850b4ad9ef79891a4357e422"
+      },
+      {
+        "patient_id": "patient003",
+        "case_id": "patient003_frame15",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient003/patient003_frame15.nii",
+        "image_sha256": "2741acaef32e9d41803b06f7bb02f6d5d91ef26214a1b7afb73eacb66bab5f1f",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient003/patient003_frame15_gt.nii",
+        "mask_sha256": "3ad8ac2ece23fc3594c9d9ffefff58a5aed6b0dfbcc049c5c93f717c07686eda"
+      },
+      {
+        "patient_id": "patient006",
+        "case_id": "patient006_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient006/patient006_frame01.nii",
+        "image_sha256": "69f38aa534113dbf918a71524047d5f8de65c82b28bbfc5bc2435248b3626afb",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient006/patient006_frame01_gt.nii",
+        "mask_sha256": "eac3bccf200ecd0f5f5ac37a2b1dfa1aee146891a597e690d28fd8b14ac8ecd9"
+      },
+      {
+        "patient_id": "patient006",
+        "case_id": "patient006_frame16",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient006/patient006_frame16.nii",
+        "image_sha256": "84b5a96b5153bc69745bf23252642a14bb3bbfa63fd3aea1c15c41ed2e2d6f5a",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient006/patient006_frame16_gt.nii",
+        "mask_sha256": "59fad7fcefeb17581b68f586f300e8bca8e108e019881f7a346ebc791df6eb89"
+      },
+      {
+        "patient_id": "patient007",
+        "case_id": "patient007_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient007/patient007_frame01.nii",
+        "image_sha256": "2f97504966066a2115f5e71283efcd4be32998d13d03184ba7a3ac0a13a362aa",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient007/patient007_frame01_gt.nii",
+        "mask_sha256": "112cc112be8adee5f37a3ed4f3efa8089636ea6d3fe7ce8f00c2c21331328142"
+      },
+      {
+        "patient_id": "patient007",
+        "case_id": "patient007_frame07",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient007/patient007_frame07.nii",
+        "image_sha256": "67a7a1718f19ceaca8b44101454b1c4a5a903f2825a2e0019b54c82b19eba8a1",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient007/patient007_frame07_gt.nii",
+        "mask_sha256": "3064a6a02132b14d9878caa29069729ceab6d3e12f7ebe71154df3e70757b41b"
+      },
+      {
+        "patient_id": "patient008",
+        "case_id": "patient008_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient008/patient008_frame01.nii",
+        "image_sha256": "1d136125785800f330edfb3dcc731adcf5d96da0d9db661cd2611c25322c82ee",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient008/patient008_frame01_gt.nii",
+        "mask_sha256": "71fa7210454c66b287b5530a6fd9d80d98c971afe3130d6a0e9db5b75b641d5d"
+      },
+      {
+        "patient_id": "patient008",
+        "case_id": "patient008_frame13",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient008/patient008_frame13.nii",
+        "image_sha256": "9fee02d6b4c8dcc27caef4e10a8d54aaef3073d2e441f6e740b14ab626b2a7d8",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient008/patient008_frame13_gt.nii",
+        "mask_sha256": "f45b46737db99066ab9dba897ea285982acb3493663ad22147f5a876b18ab793"
+      },
+      {
+        "patient_id": "patient009",
+        "case_id": "patient009_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient009/patient009_frame01.nii",
+        "image_sha256": "fb9c12787868836e3506554956d059d652c4fb6baa6e7d858d9fa549ca145abc",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient009/patient009_frame01_gt.nii",
+        "mask_sha256": "d942fbb936b61d2f057e3c34d8f28a3fb0427da1a5dbd8405fc089ab2f303c9a"
+      },
+      {
+        "patient_id": "patient009",
+        "case_id": "patient009_frame13",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient009/patient009_frame13.nii",
+        "image_sha256": "0786bd8fdd047d10e9fab2398ce4f1e547ef50b6315c84e9301705eb5df1fc2b",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient009/patient009_frame13_gt.nii",
+        "mask_sha256": "1552d7fcba9a535c8fdffc34e914352d82bb0fa230faf886e31e49edd3da8c23"
+      },
+      {
+        "patient_id": "patient010",
+        "case_id": "patient010_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient010/patient010_frame01.nii",
+        "image_sha256": "18c7e3e26da5213c327ca4b631cf12797d92108a19cc00ed585e6005d9ee2b07",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient010/patient010_frame01_gt.nii",
+        "mask_sha256": "bc8eefd60c8a2913afa650d024a3a67dec915eb606ea21a1f9278a826feec2b2"
+      },
+      {
+        "patient_id": "patient010",
+        "case_id": "patient010_frame13",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient010/patient010_frame13.nii",
+        "image_sha256": "8b4f4eda8e2f46c6779e48e725af3b0c9bcd1b7b0dfbaebed00b9c7828c17fa2",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient010/patient010_frame13_gt.nii",
+        "mask_sha256": "427c9b73bb7dff19c577fd15379eff81b2707e9c845cfa779e3030435811d661"
+      },
+      {
+        "patient_id": "patient011",
+        "case_id": "patient011_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient011/patient011_frame01.nii",
+        "image_sha256": "a27d87d61b5c21ecfab1f7feb8a77ec489fe974f34545e1e5c4184a912360bda",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient011/patient011_frame01_gt.nii",
+        "mask_sha256": "26f37d4e2098256d8440a9daf5ad6906f698736f5ffcce27170c010c934071c7"
+      },
+      {
+        "patient_id": "patient011",
+        "case_id": "patient011_frame08",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient011/patient011_frame08.nii",
+        "image_sha256": "79b5174d26891f410a84c45856becfffe0ab4e5de2d2e72c43f4944d4efdb386",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient011/patient011_frame08_gt.nii",
+        "mask_sha256": "009f50019e2806cd4aa0c56144e3ce73956671a77fd3e3868aa9ade1068167a7"
+      },
+      {
+        "patient_id": "patient013",
+        "case_id": "patient013_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient013/patient013_frame01.nii",
+        "image_sha256": "07837c182ae0d1a87996c4f513aeb5e42bff20f36d46593748d4fd174d03f638",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient013/patient013_frame01_gt.nii",
+        "mask_sha256": "756a0890b9038877717257a2a54aeb47253ee501e4494826055621137124c0e7"
+      },
+      {
+        "patient_id": "patient013",
+        "case_id": "patient013_frame14",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient013/patient013_frame14.nii",
+        "image_sha256": "d26f2d8c19bc0538d0224e8e51400524c195fa887b0fc406ba8b98ddc263c8d9",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient013/patient013_frame14_gt.nii",
+        "mask_sha256": "bceefe6e82aacc85253f1e723853157f0b1af3ab43997bfa351a00ed28e7ebb9"
+      },
+      {
+        "patient_id": "patient016",
+        "case_id": "patient016_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient016/patient016_frame01.nii",
+        "image_sha256": "fbd4d02977215f2cf4536de205ce9f88fbf402cdd5ea45a3b9a849fb95f242f7",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient016/patient016_frame01_gt.nii",
+        "mask_sha256": "db1c44e254994331109ac09df435f6258162ba191f3b2c461604a9a534e43acc"
+      },
+      {
+        "patient_id": "patient016",
+        "case_id": "patient016_frame12",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient016/patient016_frame12.nii",
+        "image_sha256": "0948608c707194da20bb40403963daa1b35c2b76939342b3068201a2087e5a49",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient016/patient016_frame12_gt.nii",
+        "mask_sha256": "db50b1a5438140c1f9e19ad60f8d43ee9562ab7cdcc41526853e4d95cd5d6471"
+      },
+      {
+        "patient_id": "patient017",
+        "case_id": "patient017_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient017/patient017_frame01.nii",
+        "image_sha256": "8db197a0ddecbbf2310499e7305381757bacde12da360fa1615c82806de776bb",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient017/patient017_frame01_gt.nii",
+        "mask_sha256": "6477aef83eb3076a654dbefdd9a38b22e9dd478b5204a354fd24bbcae7afa952"
+      },
+      {
+        "patient_id": "patient017",
+        "case_id": "patient017_frame09",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient017/patient017_frame09.nii",
+        "image_sha256": "154f477559a36fcead431d8ccab8777baac4649296823c66a38286106c7677f4",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient017/patient017_frame09_gt.nii",
+        "mask_sha256": "678743a5b9b11f1e955c323b77de65b569882727425879cdb546473fa5a95106"
+      },
+      {
+        "patient_id": "patient019",
+        "case_id": "patient019_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient019/patient019_frame01.nii",
+        "image_sha256": "f6fa7e6d817c3ae2c9c389e95027c5426acc24d39cc74e35ee0574666b22ae1c",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient019/patient019_frame01_gt.nii",
+        "mask_sha256": "017ceb9cacfcdf8f98b87d3455dc0689b0c78d489d4857e79d3d72400753e887"
+      },
+      {
+        "patient_id": "patient019",
+        "case_id": "patient019_frame11",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient019/patient019_frame11.nii",
+        "image_sha256": "6c8f7476c5bd76625d51ec30c433ea7e45edcb4704e1821a8200815a2d86dd69",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient019/patient019_frame11_gt.nii",
+        "mask_sha256": "93d409aa2078ed043baef6dafe5c3a09701713c8cde7335f87f5df150c8dfe57"
+      },
+      {
+        "patient_id": "patient020",
+        "case_id": "patient020_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient020/patient020_frame01.nii",
+        "image_sha256": "91f11692baf8688981bd3b7b6824f19560e79b28f8ad7cdff1dc5973c9a2ca9c",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient020/patient020_frame01_gt.nii",
+        "mask_sha256": "edc1637d269cd08ea3927be07ac890937d17b274e6a05427671ee3ba6b4e84c2"
+      },
+      {
+        "patient_id": "patient020",
+        "case_id": "patient020_frame11",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient020/patient020_frame11.nii",
+        "image_sha256": "aa34e95a51b140033c5348514cfcc42ccd6498bccb27923550c7d94ae8ef9c56",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient020/patient020_frame11_gt.nii",
+        "mask_sha256": "1634a9a636e007b76955412166b1cb585246abc0526c54c4e0651c2ff63a8c39"
+      },
+      {
+        "patient_id": "patient021",
+        "case_id": "patient021_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient021/patient021_frame01.nii",
+        "image_sha256": "908d43f2651a7f4891693550b0b0e88f0c3a588cbdb49f6641cb9d4e400e0bfb",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient021/patient021_frame01_gt.nii",
+        "mask_sha256": "02e0cf02b2a660938b427c3e4596b7d25edee60ed030fb5eb4ed1a7bf489ebcc"
+      },
+      {
+        "patient_id": "patient021",
+        "case_id": "patient021_frame13",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient021/patient021_frame13.nii",
+        "image_sha256": "88a79baebf10fe0e3b8ce2c68c204dcaa6cfecb362ab05ad8738380cb018b32e",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient021/patient021_frame13_gt.nii",
+        "mask_sha256": "8436ea48fca54f3aa752ec099fad6920464f3a9fa9a6d4b4afad694fbe9e3d58"
+      },
+      {
+        "patient_id": "patient022",
+        "case_id": "patient022_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient022/patient022_frame01.nii",
+        "image_sha256": "7d8192b5a4584e7af29c1d6bd427d9d760e780c052606f76ee4c31287ebd2422",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient022/patient022_frame01_gt.nii",
+        "mask_sha256": "8843f00869f562ab174bb4a122168ec8e20d4c73de2c3fe026000e6047b4ca23"
+      },
+      {
+        "patient_id": "patient022",
+        "case_id": "patient022_frame11",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient022/patient022_frame11.nii",
+        "image_sha256": "8e50b242233c76c82a5f0cf68de46154bfe306e7f8e9aec49f256967f99b2039",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient022/patient022_frame11_gt.nii",
+        "mask_sha256": "820b0d36260e5d85aa4f4b11a65c68f1b0ea04af66b6507fa939027f03e7686b"
+      },
+      {
+        "patient_id": "patient023",
+        "case_id": "patient023_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient023/patient023_frame01.nii",
+        "image_sha256": "0529eb395bf0fb002ff8862e0677e76e7d4e2dc176c928d16babb5f38389332b",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient023/patient023_frame01_gt.nii",
+        "mask_sha256": "d1edaae998f651a9196cc1ce57cb1bf67b2e1698234be3eb5e40f1a68429c13b"
+      },
+      {
+        "patient_id": "patient023",
+        "case_id": "patient023_frame09",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient023/patient023_frame09.nii",
+        "image_sha256": "979c7ce88445990fa7ba8767fc919c1f747759527bd9a54c8d62973f1b8d42c0",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient023/patient023_frame09_gt.nii",
+        "mask_sha256": "b64a060a1a5d49e7a3fdf5d71a946b76961b1a872fabd042b073a6357803ba96"
+      },
+      {
+        "patient_id": "patient024",
+        "case_id": "patient024_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient024/patient024_frame01.nii",
+        "image_sha256": "915c7ab59a1a4d896dc17bb5378a156dcd02db19bb3935c32e7b7118fa746dd7",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient024/patient024_frame01_gt.nii",
+        "mask_sha256": "12f2c9d727c39d5a1dc78f425e5d629f5f77601919eab11cce25564b296d516a"
+      },
+      {
+        "patient_id": "patient024",
+        "case_id": "patient024_frame09",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient024/patient024_frame09.nii",
+        "image_sha256": "4dee0e62f1aa92746465c3d018359378f23c2b15babe9e9dbff99377d11bbb9a",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient024/patient024_frame09_gt.nii",
+        "mask_sha256": "8851a3ca3bb1edf814f543e1ab2658fdd609c9ca7b2a7138d288a2b219231ffb"
+      },
+      {
+        "patient_id": "patient025",
+        "case_id": "patient025_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient025/patient025_frame01.nii",
+        "image_sha256": "c6c1f637eeb8700c062f29179e1709deacb4049bc0142d69bc16d554642958cd",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient025/patient025_frame01_gt.nii",
+        "mask_sha256": "9a2436bbad82d9d41c47a220db711b6fd14ca5157a79b49dacadd1393e5aace9"
+      },
+      {
+        "patient_id": "patient025",
+        "case_id": "patient025_frame09",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient025/patient025_frame09.nii",
+        "image_sha256": "d56b11c3a30d826cd757a9177a19bd4d158a6bb06ebdd1cd37fd87cffa7b3d92",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient025/patient025_frame09_gt.nii",
+        "mask_sha256": "4c9dbcf97db83b434220bcfdc8b6e3bb2b635f8dc076dc32e51a7bee59c6f530"
+      },
+      {
+        "patient_id": "patient026",
+        "case_id": "patient026_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient026/patient026_frame01.nii",
+        "image_sha256": "ec091ee7f460a414c7224cb31d63ae6604cc4137b5a13ec4f5cfce2e083bd84d",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient026/patient026_frame01_gt.nii",
+        "mask_sha256": "31f2a567205dd01ce5e38ab754204e2dd90f16ce8bdad1f8baf2704f91913c0b"
+      },
+      {
+        "patient_id": "patient026",
+        "case_id": "patient026_frame12",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient026/patient026_frame12.nii",
+        "image_sha256": "3b2eb5491cea620fc69d40f75517e161be3ebb2f1c65c002cefa3971274b2f4d",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient026/patient026_frame12_gt.nii",
+        "mask_sha256": "1ea0320fe1e15826c227f1a39f0882530cc3e80bcbc0121073729b1dc2b9b23e"
+      },
+      {
+        "patient_id": "patient027",
+        "case_id": "patient027_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient027/patient027_frame01.nii",
+        "image_sha256": "9b782abdc571e411b7de08c9408ecd3ed1583ab853c3817c4480af3d567ab7fe",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient027/patient027_frame01_gt.nii",
+        "mask_sha256": "42197a5b0c22d14d5278cf9acd535c9c4f22e1a7d04bdbc3d78dcf535143a720"
+      },
+      {
+        "patient_id": "patient027",
+        "case_id": "patient027_frame11",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient027/patient027_frame11.nii",
+        "image_sha256": "65435a15c309ba27f4707a96855e1a73f5840b2e22cd9a5fe85baf06435a1fd1",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient027/patient027_frame11_gt.nii",
+        "mask_sha256": "67b0e81b36d14a87a0b3f6e9d5b61f6e5a393d2e75b64ede1681c7872ce3c6af"
+      },
+      {
+        "patient_id": "patient031",
+        "case_id": "patient031_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient031/patient031_frame01.nii",
+        "image_sha256": "0d947bb3fde5b8e624f216cccc2190864c62134656c20a041692f0d1fe88e46a",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient031/patient031_frame01_gt.nii",
+        "mask_sha256": "63453d534374e2f9f09768a861b509b142a1277dc40e79f74a93aae807edd831"
+      },
+      {
+        "patient_id": "patient031",
+        "case_id": "patient031_frame10",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient031/patient031_frame10.nii",
+        "image_sha256": "ccad82d4b7ebbd541f53387416adf9d06997f37194800e9b0d9e14b7b3a9a79e",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient031/patient031_frame10_gt.nii",
+        "mask_sha256": "1227b050ea55a912261478a92672112e50353b5ec432832ced96957e731402cb"
+      },
+      {
+        "patient_id": "patient033",
+        "case_id": "patient033_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient033/patient033_frame01.nii",
+        "image_sha256": "295a7f5817584c3177995b848fd9d41605c376da450c15f2e90293e0c754e5f2",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient033/patient033_frame01_gt.nii",
+        "mask_sha256": "f573b55bb00a4632659c660cb0c4a33d992c7053198a30106bf76c757fb16b62"
+      },
+      {
+        "patient_id": "patient033",
+        "case_id": "patient033_frame14",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient033/patient033_frame14.nii",
+        "image_sha256": "160c2a4a51c20a9e3710fa3e9bceeca719393ffdd69294681e47a62e17eb0275",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient033/patient033_frame14_gt.nii",
+        "mask_sha256": "651a680046f921894de50a5ef8b64e8bcf48102f266611720ae483d97712d0bd"
+      },
+      {
+        "patient_id": "patient034",
+        "case_id": "patient034_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient034/patient034_frame01.nii",
+        "image_sha256": "bcd8f2cb6c2c2fe13419bf2560f2adcc5c4ab809544f7413d60819bae2243486",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient034/patient034_frame01_gt.nii",
+        "mask_sha256": "315bf5cc94f5fbd27082efcaefc16cd8c3647b2731d6f570c0f6cc7f9d8c1eae"
+      },
+      {
+        "patient_id": "patient034",
+        "case_id": "patient034_frame16",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient034/patient034_frame16.nii",
+        "image_sha256": "1546ef6949f95e48a6ed945a8d1e99421365a983f023701596ba831a0317e63c",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient034/patient034_frame16_gt.nii",
+        "mask_sha256": "7bf087e86bf6866cda3f5a0b2a1de6c4c455da5e536f541ae5ebdf8ae05076be"
+      },
+      {
+        "patient_id": "patient035",
+        "case_id": "patient035_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient035/patient035_frame01.nii",
+        "image_sha256": "6839e93c654ada42b31eacc5b662a462511c0ae42869acca1f310161505eb84a",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient035/patient035_frame01_gt.nii",
+        "mask_sha256": "7132c976cbdcbfbeb9ee9b0ae604c27f0aa88fe73a79709f25281dd801df6125"
+      },
+      {
+        "patient_id": "patient035",
+        "case_id": "patient035_frame11",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient035/patient035_frame11.nii",
+        "image_sha256": "7d7fb730e86b12de21307b431f85e80f0c8c2355123836447a61a4167c787a6b",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient035/patient035_frame11_gt.nii",
+        "mask_sha256": "9095272f512dd9266e2b9b3c83bb52729d701dbd60c849f262526a808a2ad8d9"
+      },
+      {
+        "patient_id": "patient037",
+        "case_id": "patient037_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient037/patient037_frame01.nii",
+        "image_sha256": "d246117eca2da8ccdc33a526bfb080da9f4e1f97ac7e6632f16d7330e61973ee",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient037/patient037_frame01_gt.nii",
+        "mask_sha256": "0ff06be119fce54a3c3db8bf559326d69b6c0d9c4d2665b71eccd5cdef26985d"
+      },
+      {
+        "patient_id": "patient037",
+        "case_id": "patient037_frame12",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient037/patient037_frame12.nii",
+        "image_sha256": "5f07f9259c495eeea4bced684a1994081ec10189fe7a0c5587a20ef38d511c02",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient037/patient037_frame12_gt.nii",
+        "mask_sha256": "1ae2b264f0d954dffeea80336504ce5036566f1eaf2efa2767e8de4b6ea112e8"
+      },
+      {
+        "patient_id": "patient038",
+        "case_id": "patient038_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient038/patient038_frame01.nii",
+        "image_sha256": "78e49b5bc348f62ced7c0449fa78c497dfefc07b5e20ff3b87932a803465909e",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient038/patient038_frame01_gt.nii",
+        "mask_sha256": "ea1b2520ee8ec2bb9e173f5460f934a22d770cfa7f34af4e1cec81879032aec2"
+      },
+      {
+        "patient_id": "patient038",
+        "case_id": "patient038_frame11",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient038/patient038_frame11.nii",
+        "image_sha256": "ebca2cf5d201877d46334de077dabfaef3fb8c5a17564f98d43dc12323c0b3cc",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient038/patient038_frame11_gt.nii",
+        "mask_sha256": "e01edb8d6a3477062dcd8345c21be701189da4628c1e818d712ca6a3f6d5c270"
+      },
+      {
+        "patient_id": "patient039",
+        "case_id": "patient039_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient039/patient039_frame01.nii",
+        "image_sha256": "c3f1d75f512a6c9f16d3ab60d13eb0c14b683fcd7f9c7734cdb18bfa161e00b6",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient039/patient039_frame01_gt.nii",
+        "mask_sha256": "488d6691fd96f971e112ac33cd656520079188e5e011c035e07bc060d8d3df54"
+      },
+      {
+        "patient_id": "patient039",
+        "case_id": "patient039_frame10",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient039/patient039_frame10.nii",
+        "image_sha256": "115dbabed6737c585db11620650e4cfb07d0ba59e7fe08bedac6355fd5c174c1",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient039/patient039_frame10_gt.nii",
+        "mask_sha256": "43dd5d999a8e99f76dccc7481fcc7f37866ae4b62946cbf6946e639221660624"
+      },
+      {
+        "patient_id": "patient040",
+        "case_id": "patient040_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient040/patient040_frame01.nii",
+        "image_sha256": "934f37ad37ee76d9a707e663446276184748421458c480299c439ce6a6da1fb8",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient040/patient040_frame01_gt.nii",
+        "mask_sha256": "1f51d7a971d2daa851dbee40fd47a78f8fd11803aebb28a270d86e5efdc7267b"
+      },
+      {
+        "patient_id": "patient040",
+        "case_id": "patient040_frame13",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient040/patient040_frame13.nii",
+        "image_sha256": "2c7bd64acdd3cb15a5cf536fbc6072af659157ab66f2b3a663ed3b205898835c",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient040/patient040_frame13_gt.nii",
+        "mask_sha256": "dd0468dc47c92235d1d266c55e789dc8b3150afa789d79f257a2254822daf184"
+      },
+      {
+        "patient_id": "patient041",
+        "case_id": "patient041_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient041/patient041_frame01.nii",
+        "image_sha256": "a3aad8a74ad31fb9e139da45e2c28aa81e009019ce1fb1659cc8821a44fb1345",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient041/patient041_frame01_gt.nii",
+        "mask_sha256": "ac2a36770e92625622635ec0f9df9d6cc33884084d78c576d91f5ea2c1de4ebf"
+      },
+      {
+        "patient_id": "patient041",
+        "case_id": "patient041_frame11",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient041/patient041_frame11.nii",
+        "image_sha256": "ddf5f78554be1f02f04427114c75942e4dc6edbd599876db73e49c89c39be0f2",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient041/patient041_frame11_gt.nii",
+        "mask_sha256": "f318fd5fe2464d3aa73187703fc66f388edc007262fda33968e07ffe86d784cb"
+      },
+      {
+        "patient_id": "patient042",
+        "case_id": "patient042_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient042/patient042_frame01.nii",
+        "image_sha256": "adbbebe263bc6aee4f1f876c4773f06be0ba1a89cc4933b7a2956971d89bfd8e",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient042/patient042_frame01_gt.nii",
+        "mask_sha256": "4701d0a241c2435916c3e9d8f38b47d05ca871d08fc6d50f0ff5e424349bdf56"
+      },
+      {
+        "patient_id": "patient042",
+        "case_id": "patient042_frame16",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient042/patient042_frame16.nii",
+        "image_sha256": "2aafec5935381b8d67179e8504475a8593d50cc538df50ba848dbfbe207a8b00",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient042/patient042_frame16_gt.nii",
+        "mask_sha256": "7897e53561e50e48123bcfcaf29e5e70bc3138d893c60cd7ba2fe9487a1f8e38"
+      },
+      {
+        "patient_id": "patient043",
+        "case_id": "patient043_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient043/patient043_frame01.nii",
+        "image_sha256": "03fc8d5bf2663d5019dd12fc1c985e6d73c9e7186523b291749de991757142b0",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient043/patient043_frame01_gt.nii",
+        "mask_sha256": "48961737bf27d38a1bab05b8b561a3caf16d57da1fca9af54c37f6ec08221706"
+      },
+      {
+        "patient_id": "patient043",
+        "case_id": "patient043_frame07",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient043/patient043_frame07.nii",
+        "image_sha256": "afda1245da719a0b28cbbc190a79a8f84e299cdb73da1c476133111421b4b980",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient043/patient043_frame07_gt.nii",
+        "mask_sha256": "0d010d187b0f91c151665e7fcd841a4376729557ee15819afcb188e38d4c316f"
+      },
+      {
+        "patient_id": "patient044",
+        "case_id": "patient044_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient044/patient044_frame01.nii",
+        "image_sha256": "6d108c984f5ae3fabb443318cddc6e7a317d2dc97c1fa2afd8f236745ffff65a",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient044/patient044_frame01_gt.nii",
+        "mask_sha256": "d4fa9d5176c1f5580ce17f7357d5bdb361d8af6ee63b4a5405c2da918fe02008"
+      },
+      {
+        "patient_id": "patient044",
+        "case_id": "patient044_frame11",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient044/patient044_frame11.nii",
+        "image_sha256": "0a1b293215e3738264518f36b18e45e8217899193b4a26caccb43cbee47aa515",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient044/patient044_frame11_gt.nii",
+        "mask_sha256": "2ac09c98aa94c5b28f97dfdd58121a470f033ae20e27e2842bbe0eadc54851cb"
+      },
+      {
+        "patient_id": "patient045",
+        "case_id": "patient045_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient045/patient045_frame01.nii",
+        "image_sha256": "802dd5d6a85526f690d92e482609d99f4b477eeab5d3503b08f1b6d489f5424e",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient045/patient045_frame01_gt.nii",
+        "mask_sha256": "95cc2ffc3d3e8dbfd285b2e99a530bf74bfee4e932e16160b366f9015a1e68c2"
+      },
+      {
+        "patient_id": "patient045",
+        "case_id": "patient045_frame13",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient045/patient045_frame13.nii",
+        "image_sha256": "4c148d62f62ae4c668ca3ab78c24506810bd641223f48a14e30ed56d4ab90b74",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient045/patient045_frame13_gt.nii",
+        "mask_sha256": "9f63997eaf1838bca8f894f9c6a438701b793181a1dd79b0842eb3439d2f6d81"
+      },
+      {
+        "patient_id": "patient046",
+        "case_id": "patient046_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient046/patient046_frame01.nii",
+        "image_sha256": "597c5523acb59d3fa091acc45c065f433b073999e8b10b6427f7a4d134b893e2",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient046/patient046_frame01_gt.nii",
+        "mask_sha256": "3d3382dfd1c4e1b4c6e7f88c8c720f26e2cf2b07dc1574d07de2afed73c42a50"
+      },
+      {
+        "patient_id": "patient046",
+        "case_id": "patient046_frame10",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient046/patient046_frame10.nii",
+        "image_sha256": "7c142a4c74f6610331cfcd643ba27a0a211fcd55f8173f66d8546d040464b0ff",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient046/patient046_frame10_gt.nii",
+        "mask_sha256": "9666d1cec9a59c5dd82df6d6049cd3afe368a1842f8c49aaca486c111eeb21a0"
+      },
+      {
+        "patient_id": "patient047",
+        "case_id": "patient047_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient047/patient047_frame01.nii",
+        "image_sha256": "fb16170d907364f8b36e207aeabe289e552fb12494a75d1205e62717dfcd000c",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient047/patient047_frame01_gt.nii",
+        "mask_sha256": "264b9074bffa268882e721df5327f7b938894aabf874313d300f3ee1db01d508"
+      },
+      {
+        "patient_id": "patient047",
+        "case_id": "patient047_frame09",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient047/patient047_frame09.nii",
+        "image_sha256": "bdeb2b3a0518496919f6156ef6dd052d5cbff8c9a073c5c8f8edaf5fc2cbc387",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient047/patient047_frame09_gt.nii",
+        "mask_sha256": "c0221f8eb6ab4a73548c33d5b29e0731f0eb139e58daa2129e66ad3a4bc6808d"
+      },
+      {
+        "patient_id": "patient048",
+        "case_id": "patient048_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient048/patient048_frame01.nii",
+        "image_sha256": "f7b70a6b45deaaca997a53fb89a3c02936d2669550ba667efad1fe8df8f20460",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient048/patient048_frame01_gt.nii",
+        "mask_sha256": "27908bfd357cde190406a6e4718117a887020ff58de9880cd6e26eb8f5cc98ab"
+      },
+      {
+        "patient_id": "patient048",
+        "case_id": "patient048_frame08",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient048/patient048_frame08.nii",
+        "image_sha256": "f7daea15ace1c3f11aeb07f33f6ace18ef3bac256e6ac7da2c64f9190b16073e",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient048/patient048_frame08_gt.nii",
+        "mask_sha256": "31ad77708af3e3b254d55e6e6271a85fdb97a34d4f0f5584855fe98e9fdc66dc"
+      },
+      {
+        "patient_id": "patient049",
+        "case_id": "patient049_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient049/patient049_frame01.nii",
+        "image_sha256": "af8bdada9ab49e305b28d8908c70f8eef50ff0042b1df123b712181279b332a6",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient049/patient049_frame01_gt.nii",
+        "mask_sha256": "97639107fc402e695f6429d6f2c616c1afcd3a41f554c317c433aade5dff9eec"
+      },
+      {
+        "patient_id": "patient049",
+        "case_id": "patient049_frame11",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient049/patient049_frame11.nii",
+        "image_sha256": "56f160be4c1079f301377ac8fdd7f5faff6eec6bc568c8a9b5829a9aaa576325",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient049/patient049_frame11_gt.nii",
+        "mask_sha256": "6822802407d053bbf4fead2922d4cbc1ecd328f2cc526a7a902344158d63fc01"
+      },
+      {
+        "patient_id": "patient050",
+        "case_id": "patient050_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient050/patient050_frame01.nii",
+        "image_sha256": "ca04a476ac59862031ecad884fc0676b52b76e4118b281b0752e2cca4f6d08ba",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient050/patient050_frame01_gt.nii",
+        "mask_sha256": "1284fb90066194361a5885df9a25c38efe6055c1b5984bdf35e1a3632299c34f"
+      },
+      {
+        "patient_id": "patient050",
+        "case_id": "patient050_frame12",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient050/patient050_frame12.nii",
+        "image_sha256": "ca146df810da1157e6a03bcfab04194a1e6362c063d07a39446713d16c8e8dad",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient050/patient050_frame12_gt.nii",
+        "mask_sha256": "eb28135551ce64c814fc07f24e754fd57b52aaa7b3efd49525127a9f0594e03f"
+      },
+      {
+        "patient_id": "patient051",
+        "case_id": "patient051_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient051/patient051_frame01.nii",
+        "image_sha256": "c707487e189063d22d8ed5f3d6f28e32492eaf8be0682ac5b8bd6d0701b6cb55",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient051/patient051_frame01_gt.nii",
+        "mask_sha256": "03670c1027964d7848b69350651c0e27e27f72291a40b01e926dbf559d586c9d"
+      },
+      {
+        "patient_id": "patient051",
+        "case_id": "patient051_frame11",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient051/patient051_frame11.nii",
+        "image_sha256": "a9beeaeb912344f7f42a48e97f30bee6900f77021ca2d36f556aafde39045e6c",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient051/patient051_frame11_gt.nii",
+        "mask_sha256": "259f2cfcbf77799c317f5fcc3cf1a1acbb8ca90948d6a80c66b29ca395f6f9fd"
+      },
+      {
+        "patient_id": "patient052",
+        "case_id": "patient052_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient052/patient052_frame01.nii",
+        "image_sha256": "acb00eea1c382e2b60c21c1e33502da1f4c3df2578c71a06adc9bf45d83f8e58",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient052/patient052_frame01_gt.nii",
+        "mask_sha256": "d5f86159057ecf8b5c659cb352f7414ddf67584f73ed269c7a628f6c486459f8"
+      },
+      {
+        "patient_id": "patient052",
+        "case_id": "patient052_frame09",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient052/patient052_frame09.nii",
+        "image_sha256": "59ebd82baa72d097bc7595f42d49b6dc94efbf95a2335df3d253ed6c208d4634",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient052/patient052_frame09_gt.nii",
+        "mask_sha256": "257f434ad8f0630a3e1164af886159341ba8f39864785b9140983969adfff627"
+      },
+      {
+        "patient_id": "patient053",
+        "case_id": "patient053_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient053/patient053_frame01.nii",
+        "image_sha256": "bf4c48f13bf3b5812a6291f229ca65f5463918e8a4ac4041785a0c04de342b30",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient053/patient053_frame01_gt.nii",
+        "mask_sha256": "ef0a4101a6d62eb5c7a835123b48930d2231197d35a5b5b48f02c90a97ee8e23"
+      },
+      {
+        "patient_id": "patient053",
+        "case_id": "patient053_frame12",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient053/patient053_frame12.nii",
+        "image_sha256": "91710fe1570bbad28c72df4ed71c32d8dd1faf49df9158253b0a39a167a77df7",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient053/patient053_frame12_gt.nii",
+        "mask_sha256": "eb1930fe4ba69d3f42309dc3094c2f923d09bcc27e2c5b68ce37bb3ad267977c"
+      },
+      {
+        "patient_id": "patient054",
+        "case_id": "patient054_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient054/patient054_frame01.nii",
+        "image_sha256": "ba8d212611abdc05c5e1e0e23fa3e52191817dc68a466e4c4a4c4a9e65380a1e",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient054/patient054_frame01_gt.nii",
+        "mask_sha256": "0260b4e280b705da1bdb58d130b5081637faa1ef026a9325de7a084a9baa068e"
+      },
+      {
+        "patient_id": "patient054",
+        "case_id": "patient054_frame12",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient054/patient054_frame12.nii",
+        "image_sha256": "c2a7dfcb82f5c267793615a9e7c756fb3ec485eb901a841e2bd69ba10d874695",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient054/patient054_frame12_gt.nii",
+        "mask_sha256": "e938ef5ce87e25e9703e111d499ee95a79301687e7045643c3e832aeb12cbbcd"
+      },
+      {
+        "patient_id": "patient056",
+        "case_id": "patient056_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient056/patient056_frame01.nii",
+        "image_sha256": "597d55394d1e7f08995586eaa35749c5317a03c27d48c5916a565978700f5bbf",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient056/patient056_frame01_gt.nii",
+        "mask_sha256": "3ef0958a93453254d0698a8e6329ee4e8afba0e8324e9959d80b1977462e414e"
+      },
+      {
+        "patient_id": "patient056",
+        "case_id": "patient056_frame12",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient056/patient056_frame12.nii",
+        "image_sha256": "cf9b3ec3e587a2508c25f31813978cf3cdb7ee0ce216459b234c28565e662ea9",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient056/patient056_frame12_gt.nii",
+        "mask_sha256": "c66efe6648b89b337480a66e10de6bf17a5651901bedf7f188534ea1d6822b4a"
+      },
+      {
+        "patient_id": "patient057",
+        "case_id": "patient057_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient057/patient057_frame01.nii",
+        "image_sha256": "9aecf847b3304413e61f629c334e9e84c14d1ee31cf76baf17ebc45b0b1144b3",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient057/patient057_frame01_gt.nii",
+        "mask_sha256": "066da52171e94f28f4c42a124e67c0f888d383e773e843d39479e34b6f9cf67c"
+      },
+      {
+        "patient_id": "patient057",
+        "case_id": "patient057_frame09",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient057/patient057_frame09.nii",
+        "image_sha256": "5c6ea06387616c82c8601b6bc84e149bd46cacab7e2ff06ee4a410f78b264691",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient057/patient057_frame09_gt.nii",
+        "mask_sha256": "df6100045a977c1d74a58db849e182e5982442c468578df25ccdfb272bd8d9dc"
+      },
+      {
+        "patient_id": "patient058",
+        "case_id": "patient058_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient058/patient058_frame01.nii",
+        "image_sha256": "03dd1d6ed78fae0036fb0c3a758df594e9b1e5c0e907a2562caf531a34a959f3",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient058/patient058_frame01_gt.nii",
+        "mask_sha256": "920261b4f3aa86473a06eb812e04e19e433f5033fb070c98c235719ae30f2493"
+      },
+      {
+        "patient_id": "patient058",
+        "case_id": "patient058_frame14",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient058/patient058_frame14.nii",
+        "image_sha256": "34415ddd4f6c23a2cb49ead433fb5f3d3d435798304ef6ae472a7c04d1bdb8a5",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient058/patient058_frame14_gt.nii",
+        "mask_sha256": "f6b5a74a45d32c11c39c39fac2bd6d74c4840762fa988b4151d1885d1659d9be"
+      },
+      {
+        "patient_id": "patient059",
+        "case_id": "patient059_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient059/patient059_frame01.nii",
+        "image_sha256": "992e06b18d7fc1ab545ab5e78183f0be2b88de0b42ef312f9e32270cfca5426b",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient059/patient059_frame01_gt.nii",
+        "mask_sha256": "89f33967d85f774d2fcaa869235c43551ac135f0cec25e236bf06b2cbf6d37b5"
+      },
+      {
+        "patient_id": "patient059",
+        "case_id": "patient059_frame09",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient059/patient059_frame09.nii",
+        "image_sha256": "2f9c923572aaa3bcc7dd51ff923b0202af17388ef9adc63c26e53c9038a62d65",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient059/patient059_frame09_gt.nii",
+        "mask_sha256": "21ed24fdf491db402e1e48597212a7ad5cab4c66784260d7e35453dcfab84260"
+      },
+      {
+        "patient_id": "patient060",
+        "case_id": "patient060_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient060/patient060_frame01.nii",
+        "image_sha256": "91adf843bb2da6a8df82d9ebd1bba4b66066fede0bff97e43acdf5dd161f232f",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient060/patient060_frame01_gt.nii",
+        "mask_sha256": "72f43a559cf71eecea511d23c479df6f534b20e3a0737aa24bbcc3e11f7c13fd"
+      },
+      {
+        "patient_id": "patient060",
+        "case_id": "patient060_frame14",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient060/patient060_frame14.nii",
+        "image_sha256": "9db91b137f5ddfea09d8cff596347e12200b8f2445c907ad3599279113e61643",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient060/patient060_frame14_gt.nii",
+        "mask_sha256": "35baecbd7f753fd84b19bda740140ba55ef7c9717c38ee3cd700fe7bf8710946"
+      },
+      {
+        "patient_id": "patient061",
+        "case_id": "patient061_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient061/patient061_frame01.nii",
+        "image_sha256": "0ff919402fe1ae6d787a27197ed39f51d87006909c4cbbe0061cd787a148cef5",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient061/patient061_frame01_gt.nii",
+        "mask_sha256": "32c80e2728f7726c2d347ab7057a10eb2aa3f246f8113ee736b05f9af7e869b2"
+      },
+      {
+        "patient_id": "patient061",
+        "case_id": "patient061_frame10",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient061/patient061_frame10.nii",
+        "image_sha256": "4b09b78fb77755e47143fe6a375f99e3cb11b62b4dfe40220fe93b46528722c4",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient061/patient061_frame10_gt.nii",
+        "mask_sha256": "43041d12d08f44c9d02788c29505c5468af7659184e0dd8ca7a008b10b7f3b3a"
+      },
+      {
+        "patient_id": "patient062",
+        "case_id": "patient062_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient062/patient062_frame01.nii",
+        "image_sha256": "fb754c183c8228b09b0712e18ae6eba4481901ea5f989fe350110c70b2a35f54",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient062/patient062_frame01_gt.nii",
+        "mask_sha256": "7267637ca6cd2646f82b9dc99021689e0c4f8b839f7f998dc0aa88385d6a793e"
+      },
+      {
+        "patient_id": "patient062",
+        "case_id": "patient062_frame09",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient062/patient062_frame09.nii",
+        "image_sha256": "494190601ec11ec055a9afcd58d2d220da147eb24e669e15ad0f41a3de336c23",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient062/patient062_frame09_gt.nii",
+        "mask_sha256": "74aed4e51c8d6764d5ae58482fb075e6b200ddc6e219d6136b3c170500c754ae"
+      },
+      {
+        "patient_id": "patient063",
+        "case_id": "patient063_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient063/patient063_frame01.nii",
+        "image_sha256": "1b52ae53de396f368fd22908747ad1aecbb7240e26ceca6534db7b02a89c9a86",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient063/patient063_frame01_gt.nii",
+        "mask_sha256": "15701a78e1ab8c83e580a1a3c1530f7b3b9660b5b87ae9e0707a861fda66c0a2"
+      },
+      {
+        "patient_id": "patient063",
+        "case_id": "patient063_frame16",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient063/patient063_frame16.nii",
+        "image_sha256": "d1d892bdcc5c89e61a63a236b05bedaa68a32e9c023b01a405671ff9dad8acc5",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient063/patient063_frame16_gt.nii",
+        "mask_sha256": "9b47b80d5f39d5cf30fa3872f19b42dbccfe36c3e3fd7eb5af3d0a5c1b69c732"
+      },
+      {
+        "patient_id": "patient064",
+        "case_id": "patient064_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient064/patient064_frame01.nii",
+        "image_sha256": "d7c6da5295785e01f490841762094e751cedd820c99373a64ba8c14df12562db",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient064/patient064_frame01_gt.nii",
+        "mask_sha256": "39ebd706924b594faa258e5ad2bfd819e488b12756070df0aaba97de75c403a5"
+      },
+      {
+        "patient_id": "patient064",
+        "case_id": "patient064_frame12",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient064/patient064_frame12.nii",
+        "image_sha256": "8a58e09bf284da5151c79530131b450028dd9f21d1c0c281fe882e20cc92c6d7",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient064/patient064_frame12_gt.nii",
+        "mask_sha256": "5081e9182dfac7ddf43904dfd211aa8e2f07e4c4a6a4fc8a91f4636fa76b9881"
+      },
+      {
+        "patient_id": "patient066",
+        "case_id": "patient066_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient066/patient066_frame01.nii",
+        "image_sha256": "76e72443be47dd1db6f1be5d063a4816a49bf547607ec2c791ba348bf1ebf8d8",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient066/patient066_frame01_gt.nii",
+        "mask_sha256": "761e85d9f8110da122360caf89ca6f1ecf451a0a2c19671dddc1493e877bfb4c"
+      },
+      {
+        "patient_id": "patient066",
+        "case_id": "patient066_frame11",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient066/patient066_frame11.nii",
+        "image_sha256": "a668f897d76330cff971515f179364d091a267ab990a37d11fbde3e19fa9cd87",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient066/patient066_frame11_gt.nii",
+        "mask_sha256": "64a465e0b19f49004266e9c11f90aea3f0c7af669f08bd6089de4e972b2db2b0"
+      },
+      {
+        "patient_id": "patient067",
+        "case_id": "patient067_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient067/patient067_frame01.nii",
+        "image_sha256": "b83e1b542a941c7ed45e2fe59ec849c0c04ff734a27c2092f7e2f7e585878bda",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient067/patient067_frame01_gt.nii",
+        "mask_sha256": "5d1287c098c9a83e044c0ed056140cd98d6b2d30320eebedeb9de71a8f9ee2e6"
+      },
+      {
+        "patient_id": "patient067",
+        "case_id": "patient067_frame10",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient067/patient067_frame10.nii",
+        "image_sha256": "0f0155e7f94605e893d5516baa7e70720bfd19ec6ffd0196d004dd24b260b24a",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient067/patient067_frame10_gt.nii",
+        "mask_sha256": "9519a86dda4769c359c1f5962e7baef419031e1bdb61ee626f186927759c613d"
+      },
+      {
+        "patient_id": "patient068",
+        "case_id": "patient068_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient068/patient068_frame01.nii",
+        "image_sha256": "a63acaeb285400dbf35c85582f92c8756f38dbd60fb272c1baa2aa85d695f13f",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient068/patient068_frame01_gt.nii",
+        "mask_sha256": "2489170d8be9801db69ba933cbafb1add607bf03566dccc0a412f58eb8fbceba"
+      },
+      {
+        "patient_id": "patient068",
+        "case_id": "patient068_frame12",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient068/patient068_frame12.nii",
+        "image_sha256": "a026c2538662570283023b5a2ebf31762d9dbbdebb7268096bb947bc0dcddb3c",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient068/patient068_frame12_gt.nii",
+        "mask_sha256": "d6d8d9a17664ff558ecb0043d4c3e579a3da2fc2f43a6272b6bf525f24caffce"
+      },
+      {
+        "patient_id": "patient069",
+        "case_id": "patient069_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient069/patient069_frame01.nii",
+        "image_sha256": "97a72fa21e1e6341ad2038dfe2f9e3a314807725cf875e9a52b9a13243598fcd",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient069/patient069_frame01_gt.nii",
+        "mask_sha256": "7f1c059fc1fafb7acac84255f4ce03127a891149f0d21be5a8471e109df4b3b0"
+      },
+      {
+        "patient_id": "patient069",
+        "case_id": "patient069_frame12",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient069/patient069_frame12.nii",
+        "image_sha256": "50913744f2e5ebf50e6380438eb555e4dde608d4cebbae8e8bff1838f693c679",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient069/patient069_frame12_gt.nii",
+        "mask_sha256": "1a5a930d7ddaf069172dfb6ba7ef7ec9371fc59cc9d1f5dd45ba1755885028f3"
+      },
+      {
+        "patient_id": "patient071",
+        "case_id": "patient071_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient071/patient071_frame01.nii",
+        "image_sha256": "2edd203acc2cd462b19494b2fa31c8d13eb94f99fe859bf86ee5797b8840bb74",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient071/patient071_frame01_gt.nii",
+        "mask_sha256": "08b7ad27eb2113f3d87761667cd7d5e63a20cdfe4f2a3cd774e57503840273ff"
+      },
+      {
+        "patient_id": "patient071",
+        "case_id": "patient071_frame09",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient071/patient071_frame09.nii",
+        "image_sha256": "af1c8a0faef05afdc6a7d85907017056f00986184ae6c2ea3f67f23a2df18611",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient071/patient071_frame09_gt.nii",
+        "mask_sha256": "a8dcbf800e644029a82f0d43dadbc9b3f35bb18ffc7896314f87cd9a00938d60"
+      },
+      {
+        "patient_id": "patient072",
+        "case_id": "patient072_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient072/patient072_frame01.nii",
+        "image_sha256": "0ef31d1c18fca8f65862af788d856b9966a0016a2aa3d0d16ebc10ef776879f1",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient072/patient072_frame01_gt.nii",
+        "mask_sha256": "5d41372333e4744fbe0581af1c899d7973fe835657c74b07b6e82af8e94428c5"
+      },
+      {
+        "patient_id": "patient072",
+        "case_id": "patient072_frame11",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient072/patient072_frame11.nii",
+        "image_sha256": "ae0383a5179d38a2f3a95416549fd86f7fc197c878bf0bf56339da778cf51245",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient072/patient072_frame11_gt.nii",
+        "mask_sha256": "4be7878b88988a51703d33f7cc237a2c9d0a44ee37103ebc4104d3379c3b5230"
+      },
+      {
+        "patient_id": "patient073",
+        "case_id": "patient073_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient073/patient073_frame01.nii",
+        "image_sha256": "b964534c1faf14ff53a5921c07352981b7a2e730fe037b0337d73adbdbf56dbf",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient073/patient073_frame01_gt.nii",
+        "mask_sha256": "6b0d661fc7d06af452bd570b2c057cda22afb8f88b7c927dd411d1c69892ae5b"
+      },
+      {
+        "patient_id": "patient073",
+        "case_id": "patient073_frame10",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient073/patient073_frame10.nii",
+        "image_sha256": "360a6152ce562ada8f5f590f314d1ec8774ccba6634d17ae5f2598b6da208487",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient073/patient073_frame10_gt.nii",
+        "mask_sha256": "5dccc075c29bf1b3904505ecdeb98183476422e40c652d646248fee968f65b26"
+      },
+      {
+        "patient_id": "patient074",
+        "case_id": "patient074_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient074/patient074_frame01.nii",
+        "image_sha256": "5974b2ecd0dbbcef008cde777f6a7191d28bba8a09040b7929a08a6c891f1d44",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient074/patient074_frame01_gt.nii",
+        "mask_sha256": "1576a7071997aab834071c11cd66e4e4d85b436950d2444e34669613189a66b5"
+      },
+      {
+        "patient_id": "patient074",
+        "case_id": "patient074_frame12",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient074/patient074_frame12.nii",
+        "image_sha256": "9c8caeb6a02cdc736475e7fe818e853552b2c810e6f8942d2c120923b48b945a",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient074/patient074_frame12_gt.nii",
+        "mask_sha256": "307ac358d80558901a862f08425ce3c2ff36209630df22b43e633556f6d26961"
+      },
+      {
+        "patient_id": "patient075",
+        "case_id": "patient075_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient075/patient075_frame01.nii",
+        "image_sha256": "5bde717d2da8b237c10202559f917858a64f979e79e1b9f1a4eb966d24036c7d",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient075/patient075_frame01_gt.nii",
+        "mask_sha256": "a2370536f339a36addfd97ee528b7d49b91771cd931c5a2ecdd3f3006e69d603"
+      },
+      {
+        "patient_id": "patient075",
+        "case_id": "patient075_frame06",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient075/patient075_frame06.nii",
+        "image_sha256": "0dc8895f41ff12edeabda9e87c2f4f3a1754aa37be5bb054c12ccdbcd375a27b",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient075/patient075_frame06_gt.nii",
+        "mask_sha256": "962a588b76e89497c94760bbd45f8fbfd1c4706052c81bbf3c5c38384ddc174e"
+      },
+      {
+        "patient_id": "patient077",
+        "case_id": "patient077_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient077/patient077_frame01.nii",
+        "image_sha256": "529aa991af2851086c42d4b69b9fd250ae10d0de9048dfa37547a628a230895e",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient077/patient077_frame01_gt.nii",
+        "mask_sha256": "be58855b5074d0aac627f113e61fdc3bb913463e34a75613ed242f80bf5ffc2a"
+      },
+      {
+        "patient_id": "patient077",
+        "case_id": "patient077_frame09",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient077/patient077_frame09.nii",
+        "image_sha256": "2fd419477a67b8fd5163f16a17206a2f9ed0ea2aebe196df9789a76cf2ab3110",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient077/patient077_frame09_gt.nii",
+        "mask_sha256": "ab9f055e6f0e46ec37a1b6941f1839a40ff18f594054084575a0e9416fc6902a"
+      },
+      {
+        "patient_id": "patient078",
+        "case_id": "patient078_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient078/patient078_frame01.nii",
+        "image_sha256": "dc0089410614e15cccefb1926d0608c1d9e99fa48d3a8a93e0b46d76df7d2bd2",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient078/patient078_frame01_gt.nii",
+        "mask_sha256": "c31a0e1b03660c6ee972081f0c0d751a1c88714e32125ab57b1b5561ff9518d9"
+      },
+      {
+        "patient_id": "patient078",
+        "case_id": "patient078_frame09",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient078/patient078_frame09.nii",
+        "image_sha256": "5b2019c8d27869cee75cfec64abc436a8897317e72ec9f45cdd0c99108e0662d",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient078/patient078_frame09_gt.nii",
+        "mask_sha256": "0d6f38b963a142c63b8652744c89adacc6c800171b8b90a0956e0fcd4e959d7e"
+      },
+      {
+        "patient_id": "patient079",
+        "case_id": "patient079_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient079/patient079_frame01.nii",
+        "image_sha256": "f00c2336bfd2b7dc788593108b32c03190ccb2ccbe7ea175fedf5e9c8cbe16cf",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient079/patient079_frame01_gt.nii",
+        "mask_sha256": "13cc17eb3db39573b460e7045585560c5f66b70511da54eba890eab50e32defa"
+      },
+      {
+        "patient_id": "patient079",
+        "case_id": "patient079_frame11",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient079/patient079_frame11.nii",
+        "image_sha256": "17999cd7f14f18962c34f3a857f98738ec1f7804cb294882e3313424dd46ee8c",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient079/patient079_frame11_gt.nii",
+        "mask_sha256": "7f6483a301178c3078a47e49f9cca70216d65d5e42f152d0b5e1b1bbda720deb"
+      },
+      {
+        "patient_id": "patient080",
+        "case_id": "patient080_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient080/patient080_frame01.nii",
+        "image_sha256": "ff858d80144a2e15acd7a7b58b44d845ff36cde4aade4e7c9dcee079bf42776a",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient080/patient080_frame01_gt.nii",
+        "mask_sha256": "6809031e79b906d0a7d65b32e44d5bb149f1d0e32737f4c5207ef7aa3c34053e"
+      },
+      {
+        "patient_id": "patient080",
+        "case_id": "patient080_frame10",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient080/patient080_frame10.nii",
+        "image_sha256": "0939acff6b97eb17fa3089c1c0c4123000b6f3b95abe254cdacf0d85ce7b6b04",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient080/patient080_frame10_gt.nii",
+        "mask_sha256": "431d083519e5b5fb2d43d205416bfc756686b54a4f99de0f3a22f5295044a5b5"
+      },
+      {
+        "patient_id": "patient081",
+        "case_id": "patient081_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient081/patient081_frame01.nii",
+        "image_sha256": "5e45f9c171afa66ef92219251bd836950e4003b0cd23f515f158c1083b094852",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient081/patient081_frame01_gt.nii",
+        "mask_sha256": "487bf09f3a31eedd9ef36b986c1e6b3339c909961f79dac5c2e241c12e8bedcf"
+      },
+      {
+        "patient_id": "patient081",
+        "case_id": "patient081_frame07",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient081/patient081_frame07.nii",
+        "image_sha256": "a7b9458f4fc83bb0d53a8535995ea66bdd84ed295f307329e06fd3039cd81eed",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient081/patient081_frame07_gt.nii",
+        "mask_sha256": "b009334d18ca79c1cf78ab5518b8f7913018282545ed7bd7ea3534d8da5d041c"
+      },
+      {
+        "patient_id": "patient083",
+        "case_id": "patient083_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient083/patient083_frame01.nii",
+        "image_sha256": "da2c8fe18e84cdc06a982247b76209cb57164ecc95359a9a5f90a61085834327",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient083/patient083_frame01_gt.nii",
+        "mask_sha256": "d321c5f0627b1b33fa7d57ccc350f82aadf554d87a5442d204fb80b268007ab0"
+      },
+      {
+        "patient_id": "patient083",
+        "case_id": "patient083_frame08",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient083/patient083_frame08.nii",
+        "image_sha256": "a3c4e22c10445b3c5f860c41c7cfb8ca15f2d806a3b6bc613bb6ccbbe5d53b6e",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient083/patient083_frame08_gt.nii",
+        "mask_sha256": "f936c29dbdf1d94dc08ca44ce2e34717d23f1f2cc2eb2012b404c51027ebbf39"
+      },
+      {
+        "patient_id": "patient084",
+        "case_id": "patient084_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient084/patient084_frame01.nii",
+        "image_sha256": "b8267e563de76f5b2c433997fb56382e38426fa7d6fae7b3b5995d20219a3c13",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient084/patient084_frame01_gt.nii",
+        "mask_sha256": "100b53c55ca5fa73e2afa4835312cd5a041d4542ca7cf8dcad9b33293c43540d"
+      },
+      {
+        "patient_id": "patient084",
+        "case_id": "patient084_frame10",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient084/patient084_frame10.nii",
+        "image_sha256": "17dc912b8a5e08e75291398a521043d3d52bb367f018461b9860355626676793",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient084/patient084_frame10_gt.nii",
+        "mask_sha256": "dc55472a02fa6ca02ba834cbc65b0e32ff5696ac94cfa0518980f7de7eca2787"
+      },
+      {
+        "patient_id": "patient085",
+        "case_id": "patient085_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient085/patient085_frame01.nii",
+        "image_sha256": "c8f91f53ad05c3caaaadb8752a56cac18cd17ee1c35410741e4c168facba19ac",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient085/patient085_frame01_gt.nii",
+        "mask_sha256": "8df6c25bad4a770887292d3e66463ab9cc4f8769244f87a0fcec0dfab9a1c19a"
+      },
+      {
+        "patient_id": "patient085",
+        "case_id": "patient085_frame09",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient085/patient085_frame09.nii",
+        "image_sha256": "0d683c127168aa23aae08dfef4faf16d4350b94059d9ebdb26880f9002ad1f50",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient085/patient085_frame09_gt.nii",
+        "mask_sha256": "1375ad060720ddf092bc0049d3f57b9c056f64491c36717ebdb35cf319d87793"
+      },
+      {
+        "patient_id": "patient086",
+        "case_id": "patient086_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient086/patient086_frame01.nii",
+        "image_sha256": "ca02bb4ab24a238116e3311b7c26218a5657474b2ad478439c25c566779fe3db",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient086/patient086_frame01_gt.nii",
+        "mask_sha256": "7fe648618536583dae5ea2158fa82833e7a32b141b727c0f4a53f9207d865a25"
+      },
+      {
+        "patient_id": "patient086",
+        "case_id": "patient086_frame08",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient086/patient086_frame08.nii",
+        "image_sha256": "180da0ea978cc9985d98e7f97800a162b672647efefc6bae2842a541caf47eaf",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient086/patient086_frame08_gt.nii",
+        "mask_sha256": "565c4bc0ca02400891645fae914879477d2fb1a1fc6d50728fd178cc52943eba"
+      },
+      {
+        "patient_id": "patient088",
+        "case_id": "patient088_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient088/patient088_frame01.nii",
+        "image_sha256": "693522743a516648155aa8f0334650e214daeb5c5464edb6baea0214d2ab18f5",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient088/patient088_frame01_gt.nii",
+        "mask_sha256": "d476dd81341c4b87e7734b6777e49d0358ec51bdae4abe298ac0e5e51c47ae92"
+      },
+      {
+        "patient_id": "patient088",
+        "case_id": "patient088_frame12",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient088/patient088_frame12.nii",
+        "image_sha256": "2bac5bcd81d94d23501b0678d5f78c2ad2ee33ebf67989865dbe95093dce3167",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient088/patient088_frame12_gt.nii",
+        "mask_sha256": "11cd4e6718b24a6f7ea26a416fc7c9a0071816a4ede4d924d2c4bdd9c8e77dcd"
+      },
+      {
+        "patient_id": "patient090",
+        "case_id": "patient090_frame04",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient090/patient090_frame04.nii",
+        "image_sha256": "722ef137289d247baaa48deec9cbf234b69639bae3a31b60fc55c54124869674",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient090/patient090_frame04_gt.nii",
+        "mask_sha256": "21a334d87911be102ba93856898925d2d6b6e40adb307be56331375aae5478a5"
+      },
+      {
+        "patient_id": "patient090",
+        "case_id": "patient090_frame11",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient090/patient090_frame11.nii",
+        "image_sha256": "554fca4662fe92e790551398dac7c18a401ff2af892d6d000ddfab5c62b18d74",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient090/patient090_frame11_gt.nii",
+        "mask_sha256": "a363d862edd8a31225073ebec2223ae64081ea4c31d9e02dfe41745eae479bad"
+      },
+      {
+        "patient_id": "patient091",
+        "case_id": "patient091_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient091/patient091_frame01.nii",
+        "image_sha256": "4e025a53101f18528036a58305200e0fec5621aab796c209b9f6eb8243e0a139",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient091/patient091_frame01_gt.nii",
+        "mask_sha256": "aa1a97ea6f6dfc4045b79b7df98c5b6f8c8ff0b985c1ecc1a2ae35a17d97679d"
+      },
+      {
+        "patient_id": "patient091",
+        "case_id": "patient091_frame09",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient091/patient091_frame09.nii",
+        "image_sha256": "150c215b60a4d5bd2522b3becc6ecf85d8bcd015e5f0830107bfdfa39bbe14cb",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient091/patient091_frame09_gt.nii",
+        "mask_sha256": "0e261c9314d553c5d889726d2a28e5b60ea6a9632255d27fb4cbb88a958a6c25"
+      },
+      {
+        "patient_id": "patient092",
+        "case_id": "patient092_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient092/patient092_frame01.nii",
+        "image_sha256": "c22bd92cb2be00942d6545ba0877371b3af6c9d4e057151b89e6fda0ddc951ef",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient092/patient092_frame01_gt.nii",
+        "mask_sha256": "0058616779c767ec65b8242ce50e7f2dd8b0e7787dfcbf33bff7bbeae4567e12"
+      },
+      {
+        "patient_id": "patient092",
+        "case_id": "patient092_frame06",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient092/patient092_frame06.nii",
+        "image_sha256": "6abdaeee28d054cb0303d4405b53076035f9c482856cfe10edc9a39a49d2c257",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient092/patient092_frame06_gt.nii",
+        "mask_sha256": "b7b59398a5e0fd734f6b848f5aee17b69e218c33eddf40d77e19687b1d58c038"
+      },
+      {
+        "patient_id": "patient093",
+        "case_id": "patient093_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient093/patient093_frame01.nii",
+        "image_sha256": "5181f995a07cad1a6ce489ddebae7f8c8a6812b019d445963fc7309dc9c1803e",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient093/patient093_frame01_gt.nii",
+        "mask_sha256": "39b6ba0ba4aa6b287d6daa383ff8c2cd21b34f67750bf35df32e009c3ba84b16"
+      },
+      {
+        "patient_id": "patient093",
+        "case_id": "patient093_frame14",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient093/patient093_frame14.nii",
+        "image_sha256": "83d92662a139ebb8cf755f98146ef2e9b912710af7ec3d3120b843dc395d6629",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient093/patient093_frame14_gt.nii",
+        "mask_sha256": "3af6df25b3acd416262b8c53edb1d9266de0396365a6b9f9c95487f31bd503bd"
+      },
+      {
+        "patient_id": "patient094",
+        "case_id": "patient094_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient094/patient094_frame01.nii",
+        "image_sha256": "f10a48fc8048060441d35923a7919b7322003c9f4f92cc6d7317e8d2ee8e4ccc",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient094/patient094_frame01_gt.nii",
+        "mask_sha256": "7f446c3d3d65358783bba1a987c3ac649dcf64f1008539a1beb0dbbf3c2e7686"
+      },
+      {
+        "patient_id": "patient094",
+        "case_id": "patient094_frame07",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient094/patient094_frame07.nii",
+        "image_sha256": "564e34d95608adc0ab4702915c652e997158d91b15f3dc4266f864fb7de0c653",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient094/patient094_frame07_gt.nii",
+        "mask_sha256": "485161dd3492d26634760fa883d5aca28354806012d5466bbb4a65bef5c9bb3b"
+      },
+      {
+        "patient_id": "patient096",
+        "case_id": "patient096_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient096/patient096_frame01.nii",
+        "image_sha256": "af94c84b26ba5dd1ea28c7f790d8d81932a64c157199c3e82d36071cc05c388f",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient096/patient096_frame01_gt.nii",
+        "mask_sha256": "503719658dc44bfdc18a9a8072e1a807fcf8d982c9a543ef92628e51cb23e296"
+      },
+      {
+        "patient_id": "patient096",
+        "case_id": "patient096_frame08",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient096/patient096_frame08.nii",
+        "image_sha256": "803d8d0d6a7cc4848014501592fd7552ff4d7815c7f64a9a482beed6986f9ace",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient096/patient096_frame08_gt.nii",
+        "mask_sha256": "81a1c7db666d1aeebb6425bea669053ca3c8840853b3243a4467ad5609afd1b0"
+      },
+      {
+        "patient_id": "patient097",
+        "case_id": "patient097_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient097/patient097_frame01.nii",
+        "image_sha256": "469d7af71ce935e01b256d8666100fe5eb1370edd8a9f191defd28523e232062",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient097/patient097_frame01_gt.nii",
+        "mask_sha256": "646698882334b3c26e9b9749dcde2d15b45073361c282944ee7f1efdc82b515d"
+      },
+      {
+        "patient_id": "patient097",
+        "case_id": "patient097_frame11",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient097/patient097_frame11.nii",
+        "image_sha256": "b03d7319212fb05e3c6a4960fad87f2bc7a555b4968308e589f290ae40e47e5e",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient097/patient097_frame11_gt.nii",
+        "mask_sha256": "1f03a7c746ed95d3ec0b6bd5d5bc3a52cca20de50bf034b9906762d39aadd6d5"
+      },
+      {
+        "patient_id": "patient099",
+        "case_id": "patient099_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient099/patient099_frame01.nii",
+        "image_sha256": "e9e4f38e4edaecd742ab48063c60725acf2aa4f57ab248fc506a424bb52cc5c9",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient099/patient099_frame01_gt.nii",
+        "mask_sha256": "4327d11e9d8ab68077d43b1529142007d8af4ed5a57b1992b2562d8b0df69614"
+      },
+      {
+        "patient_id": "patient099",
+        "case_id": "patient099_frame09",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient099/patient099_frame09.nii",
+        "image_sha256": "b33d307e20ecce2d6f3368dc60046b57e7599194508d0b24c554e9ab200023e4",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient099/patient099_frame09_gt.nii",
+        "mask_sha256": "faabcdaf64cd7b71747aedec9731007543d0762189ef01583751319ab2ede7e6"
+      },
+      {
+        "patient_id": "patient100",
+        "case_id": "patient100_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient100/patient100_frame01.nii",
+        "image_sha256": "1f938949018460e413dd1bd406e259c5cb75437cf10764216b1dae8bdec73b87",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient100/patient100_frame01_gt.nii",
+        "mask_sha256": "80f32c99a621dcf745275009b9c1a155ef7b51c312d5ff7a1d548df9bfbe0bde"
+      },
+      {
+        "patient_id": "patient100",
+        "case_id": "patient100_frame13",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient100/patient100_frame13.nii",
+        "image_sha256": "30ba94245baefed8cf20756e91bc4e230c2ac637383be1aa8bf3f3cc41be4e5a",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient100/patient100_frame13_gt.nii",
+        "mask_sha256": "57f685ddbdd6533126cdbe79a53e170aff309afc92bcc4c4e411eda4ec623b59"
+      }
+    ],
+    "val": [
+      {
+        "patient_id": "patient004",
+        "case_id": "patient004_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient004/patient004_frame01.nii",
+        "image_sha256": "44e9f14bc23f3e07f29d86e090b4c706e9a951c4362ed064591522578ce4329f",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient004/patient004_frame01_gt.nii",
+        "mask_sha256": "5df66dae7b3dc3458c2257a772c1f663c999a556db50369326486058f0ed1be4"
+      },
+      {
+        "patient_id": "patient004",
+        "case_id": "patient004_frame15",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient004/patient004_frame15.nii",
+        "image_sha256": "ac59ffb6b32bfdfe57510717cb3c016a19fbe2173b7e4799b436af6e9fa32dd5",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient004/patient004_frame15_gt.nii",
+        "mask_sha256": "cfc1349ef33efa329f4872f6e010306a48734f03ad3b513eecad317cd9a66d53"
+      },
+      {
+        "patient_id": "patient005",
+        "case_id": "patient005_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient005/patient005_frame01.nii",
+        "image_sha256": "09a5b9e0ca825935228a9094a52b2f7ec2585a91ea64c8f7619beb896ab00284",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient005/patient005_frame01_gt.nii",
+        "mask_sha256": "09bb6dec25a5be3ac43f38f3ffe683bc1ec8dd89944d48c177d3625c0cfce33d"
+      },
+      {
+        "patient_id": "patient005",
+        "case_id": "patient005_frame13",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient005/patient005_frame13.nii",
+        "image_sha256": "03cdc9b19864162f8a337ee977002ea189321c1c48789a1c30d1a813c5971f74",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient005/patient005_frame13_gt.nii",
+        "mask_sha256": "24400992788b67046b72225cfa89adca7ff78d24c2994240f4fd0e2fe567870b"
+      },
+      {
+        "patient_id": "patient012",
+        "case_id": "patient012_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient012/patient012_frame01.nii",
+        "image_sha256": "227752a86ef2b5f60091b18aee4f589ccba0896fc0aec93ab6645f7165ca834d",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient012/patient012_frame01_gt.nii",
+        "mask_sha256": "4d7e5feaf88c2732b88305e4784bd5bbbb490283f752f93deac21e0f855b7355"
+      },
+      {
+        "patient_id": "patient012",
+        "case_id": "patient012_frame13",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient012/patient012_frame13.nii",
+        "image_sha256": "787bc269017b144a3877f6aef1ecebe487e86a54fd46c45eeb35f4f4e100e5d4",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient012/patient012_frame13_gt.nii",
+        "mask_sha256": "e13510033c012d893fa41d1484481984510db8ba61ab62bdee1b99bd47cdbb2a"
+      },
+      {
+        "patient_id": "patient014",
+        "case_id": "patient014_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient014/patient014_frame01.nii",
+        "image_sha256": "7c0dfea8c4b491615ac0c2a5ce333af7e1ccfb648354e3b2d64aa4ba82d25c78",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient014/patient014_frame01_gt.nii",
+        "mask_sha256": "f72b8bbd8f9ba23b16841aec28d2bbcb509ebf95641e80bcb6e775dbe4fb00ff"
+      },
+      {
+        "patient_id": "patient014",
+        "case_id": "patient014_frame13",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient014/patient014_frame13.nii",
+        "image_sha256": "0cf04ca5faede4ddddc6e972247bc083906706c9c899df9371c0a4fe7f82f7dc",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient014/patient014_frame13_gt.nii",
+        "mask_sha256": "12abb14bc581049a7cf14a6f3e349284dea8bd6cbb6bc655c55b21b38a78b904"
+      },
+      {
+        "patient_id": "patient015",
+        "case_id": "patient015_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient015/patient015_frame01.nii",
+        "image_sha256": "b4f674adedd5f748d4b37ff9a91f3ad4bfc9b8f2fdfc9faa450514bd3f3b547e",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient015/patient015_frame01_gt.nii",
+        "mask_sha256": "4a60b2384e2a6d9b1ad53f84e53f5f043a1a0cfadf41c2108c2a107d2e70bc85"
+      },
+      {
+        "patient_id": "patient015",
+        "case_id": "patient015_frame10",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient015/patient015_frame10.nii",
+        "image_sha256": "1b0e003bd43e894aca79ff4f459452e9fe5d19486c01fd010151e3748b54499c",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient015/patient015_frame10_gt.nii",
+        "mask_sha256": "90d6e4fa9b0c79a758e583fa77fccec7143a159d31ce81d45b0b30933ada2f9a"
+      },
+      {
+        "patient_id": "patient018",
+        "case_id": "patient018_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient018/patient018_frame01.nii",
+        "image_sha256": "36ea6bdb5197e51bf1f49ace74253bb9a120abb0111ba8cc4f6695d2854f08ea",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient018/patient018_frame01_gt.nii",
+        "mask_sha256": "1c0dadacf78507b7b2f7ecb8143ced1ab80f824d8ad13c17305e84b30d953bbe"
+      },
+      {
+        "patient_id": "patient018",
+        "case_id": "patient018_frame10",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient018/patient018_frame10.nii",
+        "image_sha256": "8f0b8ab0819c05b8b133218f933d78647b2755c33b4f4f99a4b96e8c55ed2a60",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient018/patient018_frame10_gt.nii",
+        "mask_sha256": "66fb9a382d4aa3364ad6014ebc08a4e72e3f5b08d3336d5880e6f775ce06c752"
+      },
+      {
+        "patient_id": "patient028",
+        "case_id": "patient028_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient028/patient028_frame01.nii",
+        "image_sha256": "2f0ad220391572027ccc0142689db3330dfba5b4d4f4ca014da77c8a8183fb14",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient028/patient028_frame01_gt.nii",
+        "mask_sha256": "15fdb2c8e7ecc9fb85f18bda6bbae984808e6e09090f33c1b68f0592b725f256"
+      },
+      {
+        "patient_id": "patient028",
+        "case_id": "patient028_frame09",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient028/patient028_frame09.nii",
+        "image_sha256": "79cab2a248548b850d1ed53993e5a2943f5476d27bca2ca72a382c202222ba58",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient028/patient028_frame09_gt.nii",
+        "mask_sha256": "c9e8da4a5b81cfdbcb6b0ae2b30b2eba39fbdb23bfb531dc707e3831d848dd3b"
+      },
+      {
+        "patient_id": "patient029",
+        "case_id": "patient029_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient029/patient029_frame01.nii",
+        "image_sha256": "7fc81d60d52c9801d1d2e55ea12ab773bd33ab80be0d5f72ecd3c718edb43842",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient029/patient029_frame01_gt.nii",
+        "mask_sha256": "c4d46293d82335fabd7bf70c2dd65a4f7a30105d4e0da16ea3bd3af320298760"
+      },
+      {
+        "patient_id": "patient029",
+        "case_id": "patient029_frame12",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient029/patient029_frame12.nii",
+        "image_sha256": "b6965266f5231f473ff861daa90b56ee9244aa7b971f5776c14b73247f0a79bc",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient029/patient029_frame12_gt.nii",
+        "mask_sha256": "6833153d20499effe11fc3b746bbc35e844b6e20ace9bc8c96987ee8f774b17c"
+      },
+      {
+        "patient_id": "patient030",
+        "case_id": "patient030_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient030/patient030_frame01.nii",
+        "image_sha256": "f3a94a5d8f8470c84ad103d24ef437286b7397b3efb1953dfda59636b431931a",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient030/patient030_frame01_gt.nii",
+        "mask_sha256": "1967cfc36ad5b7764a7d11fd52231fab91848c19b863cda50b7d27821ee48285"
+      },
+      {
+        "patient_id": "patient030",
+        "case_id": "patient030_frame12",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient030/patient030_frame12.nii",
+        "image_sha256": "132774f1477d17b241108ee854328ac31d8c39e63c8d59e7fd2721bed89b11a0",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient030/patient030_frame12_gt.nii",
+        "mask_sha256": "5bedd81e534524d0af4e26a8957f7d6809ac0c1cfc2809eaa82fe9d5d4a29242"
+      },
+      {
+        "patient_id": "patient032",
+        "case_id": "patient032_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient032/patient032_frame01.nii",
+        "image_sha256": "27152c2ca387eaf151bb4c491b47ed90a4cfcc7c2f4dbaa1e546ac1f9918b493",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient032/patient032_frame01_gt.nii",
+        "mask_sha256": "019a0bc115e0183760d13d3a6c5fa8913089b1b4eb1c9bf505ed753f725e13d3"
+      },
+      {
+        "patient_id": "patient032",
+        "case_id": "patient032_frame12",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient032/patient032_frame12.nii",
+        "image_sha256": "b7169636e1e191ee3254326f4eeacf14a67a13996741d80af7b5bdc7ae9daa69",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient032/patient032_frame12_gt.nii",
+        "mask_sha256": "afec9ad3ee3ef5140b6bdddf0411a2cd50d250cfa8cc20e488d370ef393018bc"
+      },
+      {
+        "patient_id": "patient036",
+        "case_id": "patient036_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient036/patient036_frame01.nii",
+        "image_sha256": "8957a0a3f07c8ef5e82b5b95c4dc11532422133544ce2d38eee3acfabcb48ec1",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient036/patient036_frame01_gt.nii",
+        "mask_sha256": "e384db486b90d2fed90955316b9c4b239f7204df26e8b2870eb30dfa05c6bb6d"
+      },
+      {
+        "patient_id": "patient036",
+        "case_id": "patient036_frame12",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient036/patient036_frame12.nii",
+        "image_sha256": "45410e17b9776ac0a8512694c30fe9087eb2926b34fcced53be0de23fe612075",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient036/patient036_frame12_gt.nii",
+        "mask_sha256": "2ae8e4f833109b6c8ec90a8487f5a24c8e6deb8a40a39d788ee14f30c0ec8eb4"
+      },
+      {
+        "patient_id": "patient055",
+        "case_id": "patient055_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient055/patient055_frame01.nii",
+        "image_sha256": "df3f3a57a3e8f262b8da34631bfe680e6ad4968c2e7f59b2f090e3135c590b75",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient055/patient055_frame01_gt.nii",
+        "mask_sha256": "c70ce5e27160e6409cc4792585f7c587996f1bf144db61122e21d917821dbde7"
+      },
+      {
+        "patient_id": "patient055",
+        "case_id": "patient055_frame10",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient055/patient055_frame10.nii",
+        "image_sha256": "11f7c54643e1da512c0d7b654b1b8e9f263b050d3ac6bdeed29789ec48c946c0",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient055/patient055_frame10_gt.nii",
+        "mask_sha256": "72f7ef3b9e17b0a187b1ff61c26dd7c8f516f1371579d4e3ae5b538a7d1153d1"
+      },
+      {
+        "patient_id": "patient065",
+        "case_id": "patient065_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient065/patient065_frame01.nii",
+        "image_sha256": "bf86e22fa991f66511f0d73242a72086d8e76be2308b4c2f0560965ca3edd5d7",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient065/patient065_frame01_gt.nii",
+        "mask_sha256": "a4b74dc9a38e46dbf476ab3093f29c0bc5698a13624615e64442df8443c6894d"
+      },
+      {
+        "patient_id": "patient065",
+        "case_id": "patient065_frame14",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient065/patient065_frame14.nii",
+        "image_sha256": "e7ac9ef78214dd94d6028bc5202672f84b5e2bb04836f28ac7360f462d91e9d1",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient065/patient065_frame14_gt.nii",
+        "mask_sha256": "9216e1642cd3c8db4ad5e40710db86336fff7ba50f8a9693ae0c063992b409be"
+      },
+      {
+        "patient_id": "patient070",
+        "case_id": "patient070_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient070/patient070_frame01.nii",
+        "image_sha256": "2fb8b2546c91b446d97fdae313a99b96120780aabbc9161cf69c021948612611",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient070/patient070_frame01_gt.nii",
+        "mask_sha256": "f5136b2a17c7d9ed1e1ec63a178aff86278232e4d5a0c00821fccec23cccc787"
+      },
+      {
+        "patient_id": "patient070",
+        "case_id": "patient070_frame10",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient070/patient070_frame10.nii",
+        "image_sha256": "31953c00cdd1767b4adc6fc4565ef29effac8fc5b51c16b3d83ec7d294c15b91",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient070/patient070_frame10_gt.nii",
+        "mask_sha256": "95b8904e77bffc9a4e8904e202640b5e787756954b50caed19957edbe4933f48"
+      },
+      {
+        "patient_id": "patient076",
+        "case_id": "patient076_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient076/patient076_frame01.nii",
+        "image_sha256": "5974b2ecd0dbbcef008cde777f6a7191d28bba8a09040b7929a08a6c891f1d44",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient076/patient076_frame01_gt.nii",
+        "mask_sha256": "44145d676262d63ff1da5f568e6ccf4a3d9fc519f17152051c588d5cc63ffb3a"
+      },
+      {
+        "patient_id": "patient076",
+        "case_id": "patient076_frame12",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient076/patient076_frame12.nii",
+        "image_sha256": "9c8caeb6a02cdc736475e7fe818e853552b2c810e6f8942d2c120923b48b945a",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient076/patient076_frame12_gt.nii",
+        "mask_sha256": "a50bbb65d52b5039119d1d72bf996270f5dc4dfb6dcab9e21e1db7dd1d2f0e99"
+      },
+      {
+        "patient_id": "patient082",
+        "case_id": "patient082_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient082/patient082_frame01.nii",
+        "image_sha256": "5f90f4ce2b2078c83847d8ec68cc6be397fd4a2a7360ff51353e5634ff9afad7",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient082/patient082_frame01_gt.nii",
+        "mask_sha256": "31f45f636cc44458949c66d47802cbc01f176b9e7b584cf5d7a3666406e9e38d"
+      },
+      {
+        "patient_id": "patient082",
+        "case_id": "patient082_frame07",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient082/patient082_frame07.nii",
+        "image_sha256": "c17911d173202ab73b1a845a5ab1c7e7765004b0165eef110db1d7e1a4d35335",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient082/patient082_frame07_gt.nii",
+        "mask_sha256": "230ef5a0f30ea18a30f81f5580593f5c1c9fff4940540316781b40132f0d7451"
+      },
+      {
+        "patient_id": "patient087",
+        "case_id": "patient087_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient087/patient087_frame01.nii",
+        "image_sha256": "419d479fd5cefa957fe4b1bf2fef29029e8e3dafe58b827bfef764c56cef0c2b",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient087/patient087_frame01_gt.nii",
+        "mask_sha256": "7a170b577fd9e3b881d1d3e700823fea0fe02ad8729eb262ec763b6bde726af3"
+      },
+      {
+        "patient_id": "patient087",
+        "case_id": "patient087_frame10",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient087/patient087_frame10.nii",
+        "image_sha256": "d53b1058055accb295b53fa7483c2845e0eac2a384c80629ebb5ed06937432e3",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient087/patient087_frame10_gt.nii",
+        "mask_sha256": "e4926e8e30197977cd11a48ddab3b5a43c8455b8107d78319a02b78afa95f26e"
+      },
+      {
+        "patient_id": "patient089",
+        "case_id": "patient089_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient089/patient089_frame01.nii",
+        "image_sha256": "cb36adc1940d4f1099bdc438eaf0c3a510102d2cd0f0c6b65d1c02f760bbfa88",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient089/patient089_frame01_gt.nii",
+        "mask_sha256": "610860bfe47ac10fe596601f27836c76b5a93a5555e6a3323029f34597a4e106"
+      },
+      {
+        "patient_id": "patient089",
+        "case_id": "patient089_frame10",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient089/patient089_frame10.nii",
+        "image_sha256": "697eac52c10d931765c77e83105f07fa669973db8e50d77198ce2d586384253a",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient089/patient089_frame10_gt.nii",
+        "mask_sha256": "ed57159721b889f4dfa10cccff84cb5be76d3727608ee6f3e920d9ac39c67997"
+      },
+      {
+        "patient_id": "patient095",
+        "case_id": "patient095_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient095/patient095_frame01.nii",
+        "image_sha256": "af3562cc451ef6cc4f023676a08817bc1b0e535672d838cdc32033686bcfef5c",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient095/patient095_frame01_gt.nii",
+        "mask_sha256": "e65604d515fe9921265393cfb98afdd7a97ec8933c6824935932a14edfdf5cb0"
+      },
+      {
+        "patient_id": "patient095",
+        "case_id": "patient095_frame12",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient095/patient095_frame12.nii",
+        "image_sha256": "4b316b0b07302a7a738cdaffba87d8639d9ef96aea1c9f7035f9df3d0afa1101",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient095/patient095_frame12_gt.nii",
+        "mask_sha256": "c434f401eea28608b490b429810e91cc1a39ae1efb925938fc90bc423ee7f7a5"
+      },
+      {
+        "patient_id": "patient098",
+        "case_id": "patient098_frame01",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient098/patient098_frame01.nii",
+        "image_sha256": "83be2149f59ffb7f387df8e912f9047fc5021d43d4e291f26163c23c0201fadd",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient098/patient098_frame01_gt.nii",
+        "mask_sha256": "59652d0ce7b373693ad909655a88abb8905959ebf0e8d5777d4ef23abef7d576"
+      },
+      {
+        "patient_id": "patient098",
+        "case_id": "patient098_frame09",
+        "image": "/private/tmp/astra_event_acdc_training/training/patient098/patient098_frame09.nii",
+        "image_sha256": "d6f86815c6aa74f81a62430a763a8a05fd86538916179a4d516bfed5c9def7eb",
+        "mask": "/private/tmp/astra_event_acdc_training/training/patient098/patient098_frame09_gt.nii",
+        "mask_sha256": "101403cd7387c3d2ccd59364a46260ed56df6fd6571ed1f50c4a5da190f9c6de"
+      }
+    ]
+  }
+}

@@ -1,0 +1,2393 @@
+{
+  "seed": 0,
+  "policy": "random",
+  "config": {
+    "seed": 0,
+    "channels": 16,
+    "k": 8,
+    "batch_size": 4,
+    "actor_lr": 0.001,
+    "rf_lr": 0.001,
+    "trigger_lr": 0.001,
+    "budget_fraction": 0.5,
+    "exploration_fraction": 0.25,
+    "cost": 0.001,
+    "slow_every": 4,
+    "replay_capacity": 256,
+    "replay_max_age": 8,
+    "period": 2
+  },
+  "setup": {
+    "actor_seconds": 0.0526574159739539,
+    "rf_seconds": 0.018083999981172383,
+    "trigger_seconds": 0.026738875079900026,
+    "actor_updates": 12,
+    "actor_examples": 48,
+    "rf_updates": 8,
+    "trigger_updates": 8,
+    "rf_examples": 32,
+    "trigger_probe_examples": 32,
+    "rf_distillation_before": {
+      "mse": 1.1509055867791176,
+      "teacher_ranking_accuracy": 0.6416666666666667,
+      "pairs": 120,
+      "meaning": "Fit to intrinsic teacher only, NOT ranking by true Dice."
+    },
+    "rf_distillation_after": {
+      "mse": 1.0594863519072533,
+      "teacher_ranking_accuracy": 0.5333333333333333,
+      "pairs": 120,
+      "meaning": "Fit to intrinsic teacher only, NOT ranking by true Dice."
+    },
+    "trigger_warmup_net_values": [
+      -0.027168644592165947,
+      -0.02190704457461834,
+      -0.01092238537967205,
+      -0.009249521419405937,
+      -0.02704639546573162,
+      -0.05922551080584526,
+      -0.04350132867693901,
+      -0.045418690890073776,
+      -0.012759996578097343,
+      -0.01786424033343792,
+      -0.029469026252627373,
+      -0.033712755888700485,
+      -0.03757108375430107,
+      -0.013753307983279228,
+      -0.02482755295932293,
+      -0.01488049142062664,
+      -0.024474335834383965,
+      0.0004420151235535741,
+      -0.021748138591647148,
+      -0.01896841637790203,
+      -0.02942676655948162,
+      -0.009249521419405937,
+      -0.028586281463503838,
+      -0.033712755888700485,
+      -0.012759996578097343,
+      -0.04350132867693901,
+      -0.03360165283083916,
+      -0.022626234218478203,
+      -0.04346276447176933,
+      -0.027168644592165947,
+      0.0018021335126832128,
+      -0.013753307983279228
+    ],
+    "note": "RF/trigger setup uses only training images/model predictions; cost included only for policies using that module."
+  },
+  "training": [
+    {
+      "loss": 1.4911718368530273,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 2.2354213437549046,
+      "window_grad_norm": 0.06676795785079923,
+      "selected": 2,
+      "probes": 1,
+      "rf_deltas": [
+        -0.026168644428253174
+      ],
+      "actor_and_probe_seconds": 0.00604091607965529,
+      "slow_update_seconds": 5.958019755780697e-06,
+      "update": 13,
+      "data_seconds": 1.1999974958598614e-05
+    },
+    {
+      "loss": 1.4602186679840088,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 2.1900136139862787,
+      "window_grad_norm": 0.08010840120662362,
+      "selected": 2,
+      "probes": 3,
+      "rf_deltas": [
+        -0.030082762241363525,
+        -0.03755295276641846,
+        -0.03696942329406738
+      ],
+      "actor_and_probe_seconds": 0.006558915949426591,
+      "slow_update_seconds": 5.375011824071407e-06,
+      "update": 14,
+      "data_seconds": 1.1041993275284767e-05
+    },
+    {
+      "loss": 1.3976166248321533,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 2.157701261233277,
+      "window_grad_norm": 0.07973411965849085,
+      "selected": 2,
+      "probes": 1,
+      "rf_deltas": [
+        -0.020070672035217285
+      ],
+      "actor_and_probe_seconds": 0.006118791992776096,
+      "slow_update_seconds": 7.542083039879799e-06,
+      "update": 15,
+      "data_seconds": 1.0041054338216782e-05
+    },
+    {
+      "loss": 1.3437005281448364,
+      "rf_loss": 1.098611831665039,
+      "trigger_loss": null,
+      "actor_grad_norm": 2.118233309997549,
+      "window_grad_norm": 0.11017145099090161,
+      "selected": 2,
+      "probes": 1,
+      "rf_deltas": [
+        -0.014368534088134766
+      ],
+      "actor_and_probe_seconds": 0.0061431670328602195,
+      "slow_update_seconds": 0.0013455830048769712,
+      "update": 16,
+      "data_seconds": 1.5124911442399025e-05
+    },
+    {
+      "loss": 1.2846686840057373,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 2.003545011538889,
+      "window_grad_norm": 0.10288356126428568,
+      "selected": 2,
+      "probes": 0,
+      "rf_deltas": [],
+      "actor_and_probe_seconds": 0.005008834064938128,
+      "slow_update_seconds": 5.332985892891884e-06,
+      "update": 17,
+      "data_seconds": 1.2750038877129555e-05
+    },
+    {
+      "loss": 1.2404077053070068,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 1.957134786592533,
+      "window_grad_norm": 0.13327957900497156,
+      "selected": 2,
+      "probes": 0,
+      "rf_deltas": [],
+      "actor_and_probe_seconds": 0.005250207963399589,
+      "slow_update_seconds": 6.209011189639568e-06,
+      "update": 18,
+      "data_seconds": 9.916955605149269e-06
+    },
+    {
+      "loss": 1.1695454120635986,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 1.8937244647240499,
+      "window_grad_norm": 0.10472874820053195,
+      "selected": 2,
+      "probes": 1,
+      "rf_deltas": [
+        0.0012584924697875977
+      ],
+      "actor_and_probe_seconds": 0.009336167015135288,
+      "slow_update_seconds": 6.666057743132114e-06,
+      "update": 19,
+      "data_seconds": 1.1917087249457836e-05
+    },
+    {
+      "loss": 1.113245964050293,
+      "rf_loss": 1.0155248641967773,
+      "trigger_loss": null,
+      "actor_grad_norm": 1.744792780563158,
+      "window_grad_norm": 0.13325584018045764,
+      "selected": 2,
+      "probes": 1,
+      "rf_deltas": [
+        -0.00012153387069702148
+      ],
+      "actor_and_probe_seconds": 0.006085958913899958,
+      "slow_update_seconds": 0.0013020830228924751,
+      "update": 20,
+      "data_seconds": 1.3999990187585354e-05
+    },
+    {
+      "loss": 1.085733413696289,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 1.838963718603549,
+      "window_grad_norm": 0.09360061815444416,
+      "selected": 2,
+      "probes": 1,
+      "rf_deltas": [
+        0.0027598142623901367
+      ],
+      "actor_and_probe_seconds": 0.005877791903913021,
+      "slow_update_seconds": 6.166985258460045e-06,
+      "update": 21,
+      "data_seconds": 1.1416967026889324e-05
+    },
+    {
+      "loss": 1.0384894609451294,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 1.6448068119599395,
+      "window_grad_norm": 0.04828787281852764,
+      "selected": 2,
+      "probes": 1,
+      "rf_deltas": [
+        0.005985677242279053
+      ],
+      "actor_and_probe_seconds": 0.005763790919445455,
+      "slow_update_seconds": 5.707959644496441e-06,
+      "update": 22,
+      "data_seconds": 1.0833959095180035e-05
+    },
+    {
+      "loss": 1.016759991645813,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 1.59986848641718,
+      "window_grad_norm": 0.03652465607560457,
+      "selected": 2,
+      "probes": 1,
+      "rf_deltas": [
+        -0.0030170083045959473
+      ],
+      "actor_and_probe_seconds": 0.005607333965599537,
+      "slow_update_seconds": 4.792003892362118e-06,
+      "update": 23,
+      "data_seconds": 1.1457945220172405e-05
+    },
+    {
+      "loss": 0.9731494188308716,
+      "rf_loss": 0.9433386325836182,
+      "trigger_loss": null,
+      "actor_grad_norm": 1.6170250423995631,
+      "window_grad_norm": 0.09552829232804949,
+      "selected": 2,
+      "probes": 0,
+      "rf_deltas": [],
+      "actor_and_probe_seconds": 0.004746250109747052,
+      "slow_update_seconds": 0.0013520000502467155,
+      "update": 24,
+      "data_seconds": 1.029099803417921e-05
+    }
+  ],
+  "curve": [
+    {
+      "updates": 12,
+      "examples_seen": 48,
+      "wall_seconds": 0.08786262397188693,
+      "patient_count": 24,
+      "volume_count": 24,
+      "patients": [
+        {
+          "patient_id": "phantom_100_0000",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": 0.0049484893679618835,
+          "audit_fraction": 0.0,
+          "a0_class_dice": [
+            0.0,
+            0.38,
+            0.3924050632911392
+          ],
+          "a0_dice": 0.25746835443037974,
+          "final_class_dice": [
+            0.0,
+            0.38,
+            0.3924050632911392
+          ],
+          "final_dice": 0.25746835443037974,
+          "audit_class_dice": [
+            0.0,
+            0.38,
+            0.3924050632911392
+          ],
+          "audit_dice": 0.25746835443037974,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "phantom_100_0001",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": 0.009520873427391052,
+          "audit_fraction": 0.0,
+          "a0_class_dice": [
+            0.08163265306122448,
+            0.44339622641509435,
+            0.6120689655172413
+          ],
+          "a0_dice": 0.3790326149978534,
+          "final_class_dice": [
+            0.08163265306122448,
+            0.44339622641509435,
+            0.6120689655172413
+          ],
+          "final_dice": 0.3790326149978534,
+          "audit_class_dice": [
+            0.08163265306122448,
+            0.44339622641509435,
+            0.6120689655172413
+          ],
+          "audit_dice": 0.3790326149978534,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "phantom_100_0002",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": 0.0009631812572479248,
+          "audit_fraction": 1.0,
+          "a0_class_dice": [
+            0.0,
+            0.45384615384615384,
+            0.5263157894736842
+          ],
+          "a0_dice": 0.32672064777327936,
+          "final_class_dice": [
+            0.0,
+            0.42953020134228187,
+            0.32142857142857145
+          ],
+          "final_dice": 0.2503195909236178,
+          "audit_class_dice": [
+            0.0,
+            0.45384615384615384,
+            0.5263157894736842
+          ],
+          "audit_dice": 0.32672064777327936,
+          "true_delta": 0.0,
+          "retained_delta": -0.07640105684966159
+        },
+        {
+          "patient_id": "phantom_100_0003",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": 0.009145848453044891,
+          "audit_fraction": 1.0,
+          "a0_class_dice": [
+            0.0,
+            0.49327354260089684,
+            0.710204081632653
+          ],
+          "a0_dice": 0.40115920807784994,
+          "final_class_dice": [
+            0.03508771929824561,
+            0.4566929133858268,
+            0.541871921182266
+          ],
+          "final_dice": 0.34455085128877944,
+          "audit_class_dice": [
+            0.0,
+            0.49327354260089684,
+            0.710204081632653
+          ],
+          "audit_dice": 0.40115920807784994,
+          "true_delta": 0.0,
+          "retained_delta": -0.0566083567890705
+        },
+        {
+          "patient_id": "phantom_100_0004",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": 0.0074480511248111725,
+          "audit_fraction": 1.0,
+          "a0_class_dice": [
+            0.45901639344262296,
+            0.52,
+            0.6779661016949152
+          ],
+          "a0_dice": 0.5523274983791794,
+          "final_class_dice": [
+            0.43478260869565216,
+            0.4855072463768116,
+            0.5252525252525253
+          ],
+          "final_dice": 0.48184746010832963,
+          "audit_class_dice": [
+            0.45901639344262296,
+            0.52,
+            0.6779661016949152
+          ],
+          "audit_dice": 0.5523274983791794,
+          "true_delta": 0.0,
+          "retained_delta": -0.07048003827084975
+        },
+        {
+          "patient_id": "phantom_100_0005",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": 0.004588548094034195,
+          "audit_fraction": 0.0,
+          "a0_class_dice": [
+            0.16666666666666666,
+            0.42786069651741293,
+            0.48314606741573035
+          ],
+          "a0_dice": 0.3592244768666033,
+          "final_class_dice": [
+            0.16666666666666666,
+            0.42786069651741293,
+            0.48314606741573035
+          ],
+          "final_dice": 0.3592244768666033,
+          "audit_class_dice": [
+            0.16666666666666666,
+            0.42786069651741293,
+            0.48314606741573035
+          ],
+          "audit_dice": 0.3592244768666033,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "phantom_100_0006",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": 0.008373990654945374,
+          "audit_fraction": 1.0,
+          "a0_class_dice": [
+            0.37037037037037035,
+            0.3651452282157676,
+            0.5829596412556054
+          ],
+          "a0_dice": 0.4394917466139144,
+          "final_class_dice": [
+            0.45614035087719296,
+            0.32764505119453924,
+            0.24203821656050956
+          ],
+          "final_dice": 0.34194120621074725,
+          "audit_class_dice": [
+            0.37037037037037035,
+            0.3651452282157676,
+            0.5829596412556054
+          ],
+          "audit_dice": 0.4394917466139144,
+          "true_delta": 0.0,
+          "retained_delta": -0.09755054040316713
+        },
+        {
+          "patient_id": "phantom_100_0007",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": 0.006987664848566055,
+          "audit_fraction": 0.0,
+          "a0_class_dice": [
+            0.0,
+            0.3723404255319149,
+            0.4588235294117647
+          ],
+          "a0_dice": 0.27705465164789317,
+          "final_class_dice": [
+            0.0,
+            0.3723404255319149,
+            0.4588235294117647
+          ],
+          "final_dice": 0.27705465164789317,
+          "audit_class_dice": [
+            0.0,
+            0.3723404255319149,
+            0.4588235294117647
+          ],
+          "audit_dice": 0.27705465164789317,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "phantom_100_0008",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": 0.009226080030202866,
+          "audit_fraction": 1.0,
+          "a0_class_dice": [
+            0.43333333333333335,
+            0.43171806167400884,
+            0.5365853658536586
+          ],
+          "a0_dice": 0.4672122536203336,
+          "final_class_dice": [
+            0.1509433962264151,
+            0.35986159169550175,
+            0.11764705882352941
+          ],
+          "final_dice": 0.20948401558181542,
+          "audit_class_dice": [
+            0.43333333333333335,
+            0.43171806167400884,
+            0.5365853658536586
+          ],
+          "audit_dice": 0.4672122536203336,
+          "true_delta": 0.0,
+          "retained_delta": -0.2577282380385182
+        },
+        {
+          "patient_id": "phantom_100_0009",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": 0.013070479035377502,
+          "audit_fraction": 1.0,
+          "a0_class_dice": [
+            0.07692307692307693,
+            0.4298245614035088,
+            0.33766233766233766
+          ],
+          "a0_dice": 0.2814699919963078,
+          "final_class_dice": [
+            0.06666666666666667,
+            0.39357429718875503,
+            0.096
+          ],
+          "final_dice": 0.1854136546184739,
+          "audit_class_dice": [
+            0.07692307692307693,
+            0.4298245614035088,
+            0.33766233766233766
+          ],
+          "audit_dice": 0.2814699919963078,
+          "true_delta": 0.0,
+          "retained_delta": -0.0960563373778339
+        },
+        {
+          "patient_id": "phantom_100_0010",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": -6.369128823280334e-05,
+          "audit_fraction": 0.0,
+          "a0_class_dice": [
+            0.0,
+            0.43137254901960786,
+            0.6448979591836734
+          ],
+          "a0_dice": 0.35875683606776043,
+          "final_class_dice": [
+            0.0,
+            0.43137254901960786,
+            0.6448979591836734
+          ],
+          "final_dice": 0.35875683606776043,
+          "audit_class_dice": [
+            0.0,
+            0.43137254901960786,
+            0.6448979591836734
+          ],
+          "audit_dice": 0.35875683606776043,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "phantom_100_0011",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": 0.003936760127544403,
+          "audit_fraction": 0.0,
+          "a0_class_dice": [
+            0.19230769230769232,
+            0.3894736842105263,
+            0.3443708609271523
+          ],
+          "a0_dice": 0.3087174124817903,
+          "final_class_dice": [
+            0.19230769230769232,
+            0.3894736842105263,
+            0.3443708609271523
+          ],
+          "final_dice": 0.3087174124817903,
+          "audit_class_dice": [
+            0.19230769230769232,
+            0.3894736842105263,
+            0.3443708609271523
+          ],
+          "audit_dice": 0.3087174124817903,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "phantom_100_0012",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": 0.010134801268577576,
+          "audit_fraction": 0.0,
+          "a0_class_dice": [
+            0.3793103448275862,
+            0.45918367346938777,
+            0.5207100591715976
+          ],
+          "a0_dice": 0.4530680258228572,
+          "final_class_dice": [
+            0.3793103448275862,
+            0.45918367346938777,
+            0.5207100591715976
+          ],
+          "final_dice": 0.4530680258228572,
+          "audit_class_dice": [
+            0.3793103448275862,
+            0.45918367346938777,
+            0.5207100591715976
+          ],
+          "audit_dice": 0.4530680258228572,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "phantom_100_0013",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": 0.0030298903584480286,
+          "audit_fraction": 1.0,
+          "a0_class_dice": [
+            0.3333333333333333,
+            0.39090909090909093,
+            0.5502645502645502
+          ],
+          "a0_dice": 0.42483565816899144,
+          "final_class_dice": [
+            0.36065573770491804,
+            0.37344398340248963,
+            0.40764331210191085
+          ],
+          "final_dice": 0.38058101106977277,
+          "audit_class_dice": [
+            0.3333333333333333,
+            0.39090909090909093,
+            0.5502645502645502
+          ],
+          "audit_dice": 0.42483565816899144,
+          "true_delta": 0.0,
+          "retained_delta": -0.04425464709921867
+        },
+        {
+          "patient_id": "phantom_100_0014",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": 0.008944328874349594,
+          "audit_fraction": 1.0,
+          "a0_class_dice": [
+            0.6349206349206349,
+            0.4540540540540541,
+            0.5113636363636364
+          ],
+          "a0_dice": 0.5334461084461085,
+          "final_class_dice": [
+            0.6666666666666666,
+            0.4864864864864865,
+            0.44776119402985076
+          ],
+          "final_dice": 0.533638115727668,
+          "audit_class_dice": [
+            0.6349206349206349,
+            0.4540540540540541,
+            0.5113636363636364
+          ],
+          "audit_dice": 0.5334461084461085,
+          "true_delta": 0.0,
+          "retained_delta": 0.00019200728155943647
+        },
+        {
+          "patient_id": "phantom_100_0015",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": 0.004154220223426819,
+          "audit_fraction": 0.0,
+          "a0_class_dice": [
+            0.0,
+            0.4541832669322709,
+            0.48677248677248675
+          ],
+          "a0_dice": 0.3136519179015859,
+          "final_class_dice": [
+            0.0,
+            0.4541832669322709,
+            0.48677248677248675
+          ],
+          "final_dice": 0.3136519179015859,
+          "audit_class_dice": [
+            0.0,
+            0.4541832669322709,
+            0.48677248677248675
+          ],
+          "audit_dice": 0.3136519179015859,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "phantom_100_0016",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": 0.007125228643417358,
+          "audit_fraction": 1.0,
+          "a0_class_dice": [
+            0.1509433962264151,
+            0.4263959390862944,
+            0.541871921182266
+          ],
+          "a0_dice": 0.3730704188316585,
+          "final_class_dice": [
+            0.17543859649122806,
+            0.391304347826087,
+            0.358974358974359
+          ],
+          "final_dice": 0.30857243443055804,
+          "audit_class_dice": [
+            0.1509433962264151,
+            0.4263959390862944,
+            0.541871921182266
+          ],
+          "audit_dice": 0.3730704188316585,
+          "true_delta": 0.0,
+          "retained_delta": -0.06449798440110044
+        },
+        {
+          "patient_id": "phantom_100_0017",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": 0.011404305696487427,
+          "audit_fraction": 1.0,
+          "a0_class_dice": [
+            0.15384615384615385,
+            0.4144144144144144,
+            0.24836601307189543
+          ],
+          "a0_dice": 0.27220886044415454,
+          "final_class_dice": [
+            0.20689655172413793,
+            0.40625,
+            0.0
+          ],
+          "final_dice": 0.20438218390804597,
+          "audit_class_dice": [
+            0.15384615384615385,
+            0.4144144144144144,
+            0.24836601307189543
+          ],
+          "audit_dice": 0.27220886044415454,
+          "true_delta": 0.0,
+          "retained_delta": -0.06782667653610858
+        },
+        {
+          "patient_id": "phantom_100_0018",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": 0.00840369239449501,
+          "audit_fraction": 0.0,
+          "a0_class_dice": [
+            0.0,
+            0.4581497797356828,
+            0.6694915254237288
+          ],
+          "a0_dice": 0.37588043505313723,
+          "final_class_dice": [
+            0.0,
+            0.4581497797356828,
+            0.6694915254237288
+          ],
+          "final_dice": 0.37588043505313723,
+          "audit_class_dice": [
+            0.0,
+            0.4581497797356828,
+            0.6694915254237288
+          ],
+          "audit_dice": 0.37588043505313723,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "phantom_100_0019",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": 0.008740290999412537,
+          "audit_fraction": 0.0,
+          "a0_class_dice": [
+            0.0,
+            0.40594059405940597,
+            0.5683060109289617
+          ],
+          "a0_dice": 0.3247488683294559,
+          "final_class_dice": [
+            0.0,
+            0.40594059405940597,
+            0.5683060109289617
+          ],
+          "final_dice": 0.3247488683294559,
+          "audit_class_dice": [
+            0.0,
+            0.40594059405940597,
+            0.5683060109289617
+          ],
+          "audit_dice": 0.3247488683294559,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "phantom_100_0020",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": 0.005121298134326935,
+          "audit_fraction": 0.0,
+          "a0_class_dice": [
+            0.07272727272727272,
+            0.47257383966244726,
+            0.6403508771929824
+          ],
+          "a0_dice": 0.3952173298609008,
+          "final_class_dice": [
+            0.07272727272727272,
+            0.47257383966244726,
+            0.6403508771929824
+          ],
+          "final_dice": 0.3952173298609008,
+          "audit_class_dice": [
+            0.07272727272727272,
+            0.47257383966244726,
+            0.6403508771929824
+          ],
+          "audit_dice": 0.3952173298609008,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "phantom_100_0021",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": 0.009427599608898163,
+          "audit_fraction": 1.0,
+          "a0_class_dice": [
+            0.4126984126984127,
+            0.5,
+            0.5915492957746479
+          ],
+          "a0_dice": 0.5014159028243536,
+          "final_class_dice": [
+            0.325,
+            0.42379182156133827,
+            0.3057324840764331
+          ],
+          "final_dice": 0.35150810187925713,
+          "audit_class_dice": [
+            0.4126984126984127,
+            0.5,
+            0.5915492957746479
+          ],
+          "audit_dice": 0.5014159028243536,
+          "true_delta": 0.0,
+          "retained_delta": -0.14990780094509643
+        },
+        {
+          "patient_id": "phantom_100_0022",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": 0.005561172962188721,
+          "audit_fraction": 0.0,
+          "a0_class_dice": [
+            0.25,
+            0.4423963133640553,
+            0.6636771300448431
+          ],
+          "a0_dice": 0.45202448113629945,
+          "final_class_dice": [
+            0.25,
+            0.4423963133640553,
+            0.6636771300448431
+          ],
+          "final_dice": 0.45202448113629945,
+          "audit_class_dice": [
+            0.25,
+            0.4423963133640553,
+            0.6636771300448431
+          ],
+          "audit_dice": 0.45202448113629945,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "phantom_100_0023",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": 0.011846646666526794,
+          "audit_fraction": 1.0,
+          "a0_class_dice": [
+            0.08163265306122448,
+            0.49523809523809526,
+            0.5325443786982249
+          ],
+          "a0_dice": 0.36980504233251493,
+          "final_class_dice": [
+            0.0,
+            0.43410852713178294,
+            0.06837606837606838
+          ],
+          "final_dice": 0.16749486516928377,
+          "audit_class_dice": [
+            0.08163265306122448,
+            0.49523809523809526,
+            0.5325443786982249
+          ],
+          "audit_dice": 0.36980504233251493,
+          "true_delta": 0.0,
+          "retained_delta": -0.20231017716323116
+        }
+      ],
+      "a0_dice": 0.3832503642543818,
+      "final_dice": 0.33394078731303606,
+      "class_dice": [
+        0.1675384551642319,
+        0.4210444798545711,
+        0.41323942692030524
+      ],
+      "harm_patient_rate": 0.4583333333333333,
+      "audit_fraction": 0.5,
+      "costs": {
+        "policy_audit_calls": 12,
+        "read_calls": 36,
+        "probe_audit_calls": 0
+      },
+      "evaluation_seconds": 0.016969042015261948,
+      "metric_note": "Patient mean of per-volume foreground Dice on resized complete volumes; no slice CI."
+    },
+    {
+      "updates": 24,
+      "examples_seen": 96,
+      "wall_seconds": 0.18225383188109845,
+      "patient_count": 24,
+      "volume_count": 24,
+      "patients": [
+        {
+          "patient_id": "phantom_100_0000",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": -0.04512234032154083,
+          "audit_fraction": 0.0,
+          "a0_class_dice": [
+            0.8333333333333334,
+            0.6956521739130435,
+            0.7761194029850746
+          ],
+          "a0_dice": 0.7683683034104839,
+          "final_class_dice": [
+            0.8333333333333334,
+            0.6956521739130435,
+            0.7761194029850746
+          ],
+          "final_dice": 0.7683683034104839,
+          "audit_class_dice": [
+            0.8333333333333334,
+            0.6956521739130435,
+            0.7761194029850746
+          ],
+          "audit_dice": 0.7683683034104839,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "phantom_100_0001",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": -0.04125925153493881,
+          "audit_fraction": 0.0,
+          "a0_class_dice": [
+            0.7547169811320755,
+            0.673469387755102,
+            0.8
+          ],
+          "a0_dice": 0.7427287896290592,
+          "final_class_dice": [
+            0.7547169811320755,
+            0.673469387755102,
+            0.8
+          ],
+          "final_dice": 0.7427287896290592,
+          "audit_class_dice": [
+            0.7547169811320755,
+            0.673469387755102,
+            0.8
+          ],
+          "audit_dice": 0.7427287896290592,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "phantom_100_0002",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": -0.04900936037302017,
+          "audit_fraction": 1.0,
+          "a0_class_dice": [
+            0.8222222222222222,
+            0.6637168141592921,
+            0.8145454545454546
+          ],
+          "a0_dice": 0.766828163642323,
+          "final_class_dice": [
+            0.7872340425531915,
+            0.6495726495726496,
+            0.8015267175572519
+          ],
+          "final_dice": 0.746111136561031,
+          "audit_class_dice": [
+            0.8222222222222222,
+            0.6637168141592921,
+            0.8145454545454546
+          ],
+          "audit_dice": 0.766828163642323,
+          "true_delta": 0.0,
+          "retained_delta": -0.020717027081291972
+        },
+        {
+          "patient_id": "phantom_100_0003",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": -0.045537643134593964,
+          "audit_fraction": 1.0,
+          "a0_class_dice": [
+            0.7047619047619048,
+            0.6442307692307693,
+            0.8339483394833949
+          ],
+          "a0_dice": 0.7276470044920229,
+          "final_class_dice": [
+            0.7222222222222222,
+            0.6697674418604651,
+            0.8409090909090909
+          ],
+          "final_dice": 0.7442995849972593,
+          "audit_class_dice": [
+            0.7047619047619048,
+            0.6442307692307693,
+            0.8339483394833949
+          ],
+          "audit_dice": 0.7276470044920229,
+          "true_delta": 0.0,
+          "retained_delta": 0.016652580505236436
+        },
+        {
+          "patient_id": "phantom_100_0004",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": -0.04584901034832001,
+          "audit_fraction": 1.0,
+          "a0_class_dice": [
+            0.6486486486486487,
+            0.6515837104072398,
+            0.7970479704797048
+          ],
+          "a0_dice": 0.6990934431785311,
+          "final_class_dice": [
+            0.6981132075471698,
+            0.6637554585152838,
+            0.8199233716475096
+          ],
+          "final_dice": 0.7272640125699876,
+          "audit_class_dice": [
+            0.6486486486486487,
+            0.6515837104072398,
+            0.7970479704797048
+          ],
+          "audit_dice": 0.6990934431785311,
+          "true_delta": 0.0,
+          "retained_delta": 0.028170569391456568
+        },
+        {
+          "patient_id": "phantom_100_0005",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": -0.04485023766756058,
+          "audit_fraction": 0.0,
+          "a0_class_dice": [
+            0.7755102040816326,
+            0.7241379310344828,
+            0.8093023255813954
+          ],
+          "a0_dice": 0.7696501535658369,
+          "final_class_dice": [
+            0.7755102040816326,
+            0.7241379310344828,
+            0.8093023255813954
+          ],
+          "final_dice": 0.7696501535658369,
+          "audit_class_dice": [
+            0.7755102040816326,
+            0.7241379310344828,
+            0.8093023255813954
+          ],
+          "audit_dice": 0.7696501535658369,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "phantom_100_0006",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": -0.044365085661411285,
+          "audit_fraction": 1.0,
+          "a0_class_dice": [
+            0.6792452830188679,
+            0.6190476190476191,
+            0.7924528301886793
+          ],
+          "a0_dice": 0.6969152440850553,
+          "final_class_dice": [
+            0.6981132075471698,
+            0.6486486486486487,
+            0.8047808764940239
+          ],
+          "final_dice": 0.7171809108966141,
+          "audit_class_dice": [
+            0.6792452830188679,
+            0.6190476190476191,
+            0.7924528301886793
+          ],
+          "audit_dice": 0.6969152440850553,
+          "true_delta": 0.0,
+          "retained_delta": 0.020265666811558725
+        },
+        {
+          "patient_id": "phantom_100_0007",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": -0.042112693190574646,
+          "audit_fraction": 0.0,
+          "a0_class_dice": [
+            0.7676767676767676,
+            0.6013071895424836,
+            0.7707317073170732
+          ],
+          "a0_dice": 0.7132385548454415,
+          "final_class_dice": [
+            0.7676767676767676,
+            0.6013071895424836,
+            0.7707317073170732
+          ],
+          "final_dice": 0.7132385548454415,
+          "audit_class_dice": [
+            0.7676767676767676,
+            0.6013071895424836,
+            0.7707317073170732
+          ],
+          "audit_dice": 0.7132385548454415,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "phantom_100_0008",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": -0.04275014251470566,
+          "audit_fraction": 1.0,
+          "a0_class_dice": [
+            0.7008547008547008,
+            0.6243386243386243,
+            0.7520661157024794
+          ],
+          "a0_dice": 0.6924198136319348,
+          "final_class_dice": [
+            0.6949152542372882,
+            0.696078431372549,
+            0.7807017543859649
+          ],
+          "final_dice": 0.7238984799986007,
+          "audit_class_dice": [
+            0.7008547008547008,
+            0.6243386243386243,
+            0.7520661157024794
+          ],
+          "audit_dice": 0.6924198136319348,
+          "true_delta": 0.0,
+          "retained_delta": 0.03147866636666585
+        },
+        {
+          "patient_id": "phantom_100_0009",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": -0.03868325799703598,
+          "audit_fraction": 1.0,
+          "a0_class_dice": [
+            0.8,
+            0.6666666666666666,
+            0.7272727272727273
+          ],
+          "a0_dice": 0.7313131313131315,
+          "final_class_dice": [
+            0.7766990291262136,
+            0.6881720430107527,
+            0.7319587628865979
+          ],
+          "final_dice": 0.7322766116745214,
+          "audit_class_dice": [
+            0.8,
+            0.6666666666666666,
+            0.7272727272727273
+          ],
+          "audit_dice": 0.7313131313131315,
+          "true_delta": 0.0,
+          "retained_delta": 0.0009634803613899345
+        },
+        {
+          "patient_id": "phantom_100_0010",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": -0.05013603717088699,
+          "audit_fraction": 0.0,
+          "a0_class_dice": [
+            0.6608695652173913,
+            0.6396396396396397,
+            0.8243727598566308
+          ],
+          "a0_dice": 0.7082939882378873,
+          "final_class_dice": [
+            0.6608695652173913,
+            0.6396396396396397,
+            0.8243727598566308
+          ],
+          "final_dice": 0.7082939882378873,
+          "audit_class_dice": [
+            0.6608695652173913,
+            0.6396396396396397,
+            0.8243727598566308
+          ],
+          "audit_dice": 0.7082939882378873,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "phantom_100_0011",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": -0.04292202740907669,
+          "audit_fraction": 0.0,
+          "a0_class_dice": [
+            0.7741935483870968,
+            0.6666666666666666,
+            0.7788461538461539
+          ],
+          "a0_dice": 0.739902122966639,
+          "final_class_dice": [
+            0.7741935483870968,
+            0.6666666666666666,
+            0.7788461538461539
+          ],
+          "final_dice": 0.739902122966639,
+          "audit_class_dice": [
+            0.7741935483870968,
+            0.6666666666666666,
+            0.7788461538461539
+          ],
+          "audit_dice": 0.739902122966639,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "phantom_100_0012",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": -0.03974595665931702,
+          "audit_fraction": 0.0,
+          "a0_class_dice": [
+            0.8,
+            0.6503067484662577,
+            0.7881773399014779
+          ],
+          "a0_dice": 0.7461613627892452,
+          "final_class_dice": [
+            0.8,
+            0.6503067484662577,
+            0.7881773399014779
+          ],
+          "final_dice": 0.7461613627892452,
+          "audit_class_dice": [
+            0.8,
+            0.6503067484662577,
+            0.7881773399014779
+          ],
+          "audit_dice": 0.7461613627892452,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "phantom_100_0013",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": -0.04388124495744705,
+          "audit_fraction": 1.0,
+          "a0_class_dice": [
+            0.845360824742268,
+            0.5979381443298969,
+            0.7848101265822784
+          ],
+          "a0_dice": 0.7427030318848145,
+          "final_class_dice": [
+            0.84,
+            0.6467661691542289,
+            0.8266666666666667
+          ],
+          "final_dice": 0.7711442786069652,
+          "audit_class_dice": [
+            0.845360824742268,
+            0.5979381443298969,
+            0.7848101265822784
+          ],
+          "audit_dice": 0.7427030318848145,
+          "true_delta": 0.0,
+          "retained_delta": 0.02844124672215076
+        },
+        {
+          "patient_id": "phantom_100_0014",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": -0.04075152426958084,
+          "audit_fraction": 1.0,
+          "a0_class_dice": [
+            0.803921568627451,
+            0.5882352941176471,
+            0.7534883720930232
+          ],
+          "a0_dice": 0.7152150782793738,
+          "final_class_dice": [
+            0.7884615384615384,
+            0.625,
+            0.7821782178217822
+          ],
+          "final_dice": 0.7318799187611068,
+          "audit_class_dice": [
+            0.803921568627451,
+            0.5882352941176471,
+            0.7534883720930232
+          ],
+          "audit_dice": 0.7152150782793738,
+          "true_delta": 0.0,
+          "retained_delta": 0.016664840481733
+        },
+        {
+          "patient_id": "phantom_100_0015",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": -0.044634513556957245,
+          "audit_fraction": 0.0,
+          "a0_class_dice": [
+            0.8431372549019608,
+            0.714975845410628,
+            0.8188976377952756
+          ],
+          "a0_dice": 0.7923369127026215,
+          "final_class_dice": [
+            0.8431372549019608,
+            0.714975845410628,
+            0.8188976377952756
+          ],
+          "final_dice": 0.7923369127026215,
+          "audit_class_dice": [
+            0.8431372549019608,
+            0.714975845410628,
+            0.8188976377952756
+          ],
+          "audit_dice": 0.7923369127026215,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "phantom_100_0016",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": -0.04585596174001694,
+          "audit_fraction": 1.0,
+          "a0_class_dice": [
+            0.7610619469026548,
+            0.6086956521739131,
+            0.7899159663865546
+          ],
+          "a0_dice": 0.7198911884877074,
+          "final_class_dice": [
+            0.7350427350427351,
+            0.6477272727272727,
+            0.7927927927927928
+          ],
+          "final_dice": 0.7251876001876002,
+          "audit_class_dice": [
+            0.7610619469026548,
+            0.6086956521739131,
+            0.7899159663865546
+          ],
+          "audit_dice": 0.7198911884877074,
+          "true_delta": 0.0,
+          "retained_delta": 0.005296411699892811
+        },
+        {
+          "patient_id": "phantom_100_0017",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": -0.03966701030731201,
+          "audit_fraction": 1.0,
+          "a0_class_dice": [
+            0.75,
+            0.711864406779661,
+            0.7142857142857143
+          ],
+          "a0_dice": 0.7253833736884584,
+          "final_class_dice": [
+            0.7391304347826086,
+            0.7165775401069518,
+            0.7227722772277227
+          ],
+          "final_dice": 0.7261600840390944,
+          "audit_class_dice": [
+            0.75,
+            0.711864406779661,
+            0.7142857142857143
+          ],
+          "audit_dice": 0.7253833736884584,
+          "true_delta": 0.0,
+          "retained_delta": 0.0007767103506359785
+        },
+        {
+          "patient_id": "phantom_100_0018",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": -0.04348541051149368,
+          "audit_fraction": 0.0,
+          "a0_class_dice": [
+            0.7787610619469026,
+            0.7009345794392523,
+            0.8108108108108109
+          ],
+          "a0_dice": 0.763502150732322,
+          "final_class_dice": [
+            0.7787610619469026,
+            0.7009345794392523,
+            0.8108108108108109
+          ],
+          "final_dice": 0.763502150732322,
+          "audit_class_dice": [
+            0.7787610619469026,
+            0.7009345794392523,
+            0.8108108108108109
+          ],
+          "audit_dice": 0.763502150732322,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "phantom_100_0019",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": -0.04382731765508652,
+          "audit_fraction": 0.0,
+          "a0_class_dice": [
+            0.7422680412371134,
+            0.6857142857142857,
+            0.8038277511961722
+          ],
+          "a0_dice": 0.7439366927158572,
+          "final_class_dice": [
+            0.7422680412371134,
+            0.6857142857142857,
+            0.8038277511961722
+          ],
+          "final_dice": 0.7439366927158572,
+          "audit_class_dice": [
+            0.7422680412371134,
+            0.6857142857142857,
+            0.8038277511961722
+          ],
+          "audit_dice": 0.7439366927158572,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "phantom_100_0020",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": -0.043351881206035614,
+          "audit_fraction": 0.0,
+          "a0_class_dice": [
+            0.7047619047619048,
+            0.6411483253588517,
+            0.789272030651341
+          ],
+          "a0_dice": 0.7117274202573659,
+          "final_class_dice": [
+            0.7047619047619048,
+            0.6411483253588517,
+            0.789272030651341
+          ],
+          "final_dice": 0.7117274202573659,
+          "audit_class_dice": [
+            0.7047619047619048,
+            0.6411483253588517,
+            0.789272030651341
+          ],
+          "audit_dice": 0.7117274202573659,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "phantom_100_0021",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": -0.04269734025001526,
+          "audit_fraction": 1.0,
+          "a0_class_dice": [
+            0.6666666666666666,
+            0.649746192893401,
+            0.8047808764940239
+          ],
+          "a0_dice": 0.7070645786846971,
+          "final_class_dice": [
+            0.6727272727272727,
+            0.6732673267326733,
+            0.8130081300813008
+          ],
+          "final_dice": 0.719667576513749,
+          "audit_class_dice": [
+            0.6666666666666666,
+            0.649746192893401,
+            0.8047808764940239
+          ],
+          "audit_dice": 0.7070645786846971,
+          "true_delta": 0.0,
+          "retained_delta": 0.012602997829051943
+        },
+        {
+          "patient_id": "phantom_100_0022",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": -0.04603830724954605,
+          "audit_fraction": 0.0,
+          "a0_class_dice": [
+            0.6607142857142857,
+            0.6105263157894737,
+            0.8249027237354085
+          ],
+          "a0_dice": 0.6987144417463892,
+          "final_class_dice": [
+            0.6607142857142857,
+            0.6105263157894737,
+            0.8249027237354085
+          ],
+          "final_dice": 0.6987144417463892,
+          "audit_class_dice": [
+            0.6607142857142857,
+            0.6105263157894737,
+            0.8249027237354085
+          ],
+          "audit_dice": 0.6987144417463892,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "phantom_100_0023",
+          "case_count": 1,
+          "rf_delta": null,
+          "predicted_value": -0.04002300649881363,
+          "audit_fraction": 1.0,
+          "a0_class_dice": [
+            0.7962962962962963,
+            0.5562130177514792,
+            0.7906976744186046
+          ],
+          "a0_dice": 0.7144023294887933,
+          "final_class_dice": [
+            0.7962962962962963,
+            0.6444444444444445,
+            0.848780487804878
+          ],
+          "final_dice": 0.7631737428485396,
+          "audit_class_dice": [
+            0.7962962962962963,
+            0.5562130177514792,
+            0.7906976744186046
+          ],
+          "audit_dice": 0.7144023294887933,
+          "true_delta": 0.0,
+          "retained_delta": 0.04877141335974622
+        }
+      ],
+      "a0_dice": 0.7307265531023329,
+      "final_dice": 0.7386168679689257,
+      "class_dice": [
+        0.7518707578722572,
+        0.6655940214531704,
+        0.7983858245813499
+      ],
+      "harm_patient_rate": 0.041666666666666664,
+      "audit_fraction": 0.5,
+      "costs": {
+        "policy_audit_calls": 12,
+        "read_calls": 36,
+        "probe_audit_calls": 0
+      },
+      "evaluation_seconds": 0.016437541926279664,
+      "metric_note": "Patient mean of per-volume foreground Dice on resized complete volumes; no slice CI."
+    }
+  ],
+  "convergence": {
+    "thresholds": {
+      "0.5": {
+        "updates": 24,
+        "examples_seen": 96,
+        "wall_seconds": 0.18225383188109845,
+        "right_censored": false
+      },
+      "0.7": {
+        "updates": 24,
+        "examples_seen": 96,
+        "wall_seconds": 0.18225383188109845,
+        "right_censored": false
+      },
+      "0.8": {
+        "updates": null,
+        "examples_seen": null,
+        "wall_seconds": null,
+        "right_censored": true
+      }
+    },
+    "area_under_curve": {
+      "updates": {
+        "integral": 6.435345931691771,
+        "normalized": 0.5362788276409809
+      },
+      "examples_seen": {
+        "integral": 25.741383726767083,
+        "normalized": 0.5362788276409809
+      },
+      "wall_seconds": {
+        "integral": 0.05062000631716804,
+        "normalized": 0.5362788276409809
+      }
+    },
+    "best_validation_dice": 0.7386168679689257
+  },
+  "counters": {
+    "actor_updates": 12,
+    "rf_updates": 3,
+    "trigger_updates": 0,
+    "examples_seen": 48,
+    "policy_audit_calls": 24,
+    "probe_audit_calls": 11,
+    "policy_read_calls": 72,
+    "probe_read_calls": 11,
+    "quality_evaluations": 22,
+    "rf_train_examples": 12
+  },
+  "final": {
+    "patient_count": 24,
+    "volume_count": 24,
+    "patients": [
+      {
+        "patient_id": "phantom_100_0000",
+        "case_count": 1,
+        "rf_delta": 0.009421348571777344,
+        "predicted_value": -0.04512234032154083,
+        "audit_fraction": 0.0,
+        "a0_class_dice": [
+          0.8333333333333334,
+          0.6956521739130435,
+          0.7761194029850746
+        ],
+        "a0_dice": 0.7683683034104839,
+        "final_class_dice": [
+          0.8333333333333334,
+          0.6956521739130435,
+          0.7761194029850746
+        ],
+        "final_dice": 0.7683683034104839,
+        "audit_class_dice": [
+          0.8421052631578947,
+          0.7361963190184049,
+          0.8102564102564103
+        ],
+        "audit_dice": 0.7961859974775699,
+        "true_delta": 0.027817694067086007,
+        "retained_delta": 0.0
+      },
+      {
+        "patient_id": "phantom_100_0001",
+        "case_count": 1,
+        "rf_delta": 0.0047928690910339355,
+        "predicted_value": -0.04125925153493881,
+        "audit_fraction": 0.0,
+        "a0_class_dice": [
+          0.7547169811320755,
+          0.673469387755102,
+          0.8
+        ],
+        "a0_dice": 0.7427287896290592,
+        "final_class_dice": [
+          0.7547169811320755,
+          0.673469387755102,
+          0.8
+        ],
+        "final_dice": 0.7427287896290592,
+        "audit_class_dice": [
+          0.7663551401869159,
+          0.696078431372549,
+          0.8163265306122449
+        ],
+        "audit_dice": 0.7595867007239033,
+        "true_delta": 0.016857911094844136,
+        "retained_delta": 0.0
+      },
+      {
+        "patient_id": "phantom_100_0002",
+        "case_count": 1,
+        "rf_delta": -0.00024819374084472656,
+        "predicted_value": -0.04900936037302017,
+        "audit_fraction": 1.0,
+        "a0_class_dice": [
+          0.8222222222222222,
+          0.6637168141592921,
+          0.8145454545454546
+        ],
+        "a0_dice": 0.766828163642323,
+        "final_class_dice": [
+          0.7872340425531915,
+          0.6495726495726496,
+          0.8015267175572519
+        ],
+        "final_dice": 0.746111136561031,
+        "audit_class_dice": [
+          0.7872340425531915,
+          0.6495726495726496,
+          0.8015267175572519
+        ],
+        "audit_dice": 0.746111136561031,
+        "true_delta": -0.020717027081291972,
+        "retained_delta": -0.020717027081291972
+      },
+      {
+        "patient_id": "phantom_100_0003",
+        "case_count": 1,
+        "rf_delta": 0.009426355361938477,
+        "predicted_value": -0.045537643134593964,
+        "audit_fraction": 1.0,
+        "a0_class_dice": [
+          0.7047619047619048,
+          0.6442307692307693,
+          0.8339483394833949
+        ],
+        "a0_dice": 0.7276470044920229,
+        "final_class_dice": [
+          0.7222222222222222,
+          0.6697674418604651,
+          0.8409090909090909
+        ],
+        "final_dice": 0.7442995849972593,
+        "audit_class_dice": [
+          0.7222222222222222,
+          0.6697674418604651,
+          0.8409090909090909
+        ],
+        "audit_dice": 0.7442995849972593,
+        "true_delta": 0.016652580505236436,
+        "retained_delta": 0.016652580505236436
+      },
+      {
+        "patient_id": "phantom_100_0004",
+        "case_count": 1,
+        "rf_delta": 0.0074083805084228516,
+        "predicted_value": -0.04584901034832001,
+        "audit_fraction": 1.0,
+        "a0_class_dice": [
+          0.6486486486486487,
+          0.6515837104072398,
+          0.7970479704797048
+        ],
+        "a0_dice": 0.6990934431785311,
+        "final_class_dice": [
+          0.6981132075471698,
+          0.6637554585152838,
+          0.8199233716475096
+        ],
+        "final_dice": 0.7272640125699876,
+        "audit_class_dice": [
+          0.6981132075471698,
+          0.6637554585152838,
+          0.8199233716475096
+        ],
+        "audit_dice": 0.7272640125699876,
+        "true_delta": 0.028170569391456568,
+        "retained_delta": 0.028170569391456568
+      },
+      {
+        "patient_id": "phantom_100_0005",
+        "case_count": 1,
+        "rf_delta": 0.0061637163162231445,
+        "predicted_value": -0.04485023766756058,
+        "audit_fraction": 0.0,
+        "a0_class_dice": [
+          0.7755102040816326,
+          0.7241379310344828,
+          0.8093023255813954
+        ],
+        "a0_dice": 0.7696501535658369,
+        "final_class_dice": [
+          0.7755102040816326,
+          0.7241379310344828,
+          0.8093023255813954
+        ],
+        "final_dice": 0.7696501535658369,
+        "audit_class_dice": [
+          0.8080808080808081,
+          0.7486631016042781,
+          0.821256038647343
+        ],
+        "audit_dice": 0.792666649444143,
+        "true_delta": 0.02301649587830612,
+        "retained_delta": 0.0
+      },
+      {
+        "patient_id": "phantom_100_0006",
+        "case_count": 1,
+        "rf_delta": 0.008433818817138672,
+        "predicted_value": -0.044365085661411285,
+        "audit_fraction": 1.0,
+        "a0_class_dice": [
+          0.6792452830188679,
+          0.6190476190476191,
+          0.7924528301886793
+        ],
+        "a0_dice": 0.6969152440850553,
+        "final_class_dice": [
+          0.6981132075471698,
+          0.6486486486486487,
+          0.8047808764940239
+        ],
+        "final_dice": 0.7171809108966141,
+        "audit_class_dice": [
+          0.6981132075471698,
+          0.6486486486486487,
+          0.8047808764940239
+        ],
+        "audit_dice": 0.7171809108966141,
+        "true_delta": 0.020265666811558725,
+        "retained_delta": 0.020265666811558725
+      },
+      {
+        "patient_id": "phantom_100_0007",
+        "case_count": 1,
+        "rf_delta": 0.008661866188049316,
+        "predicted_value": -0.042112693190574646,
+        "audit_fraction": 0.0,
+        "a0_class_dice": [
+          0.7676767676767676,
+          0.6013071895424836,
+          0.7707317073170732
+        ],
+        "a0_dice": 0.7132385548454415,
+        "final_class_dice": [
+          0.7676767676767676,
+          0.6013071895424836,
+          0.7707317073170732
+        ],
+        "final_dice": 0.7132385548454415,
+        "audit_class_dice": [
+          0.7843137254901961,
+          0.6503067484662577,
+          0.7979274611398963
+        ],
+        "audit_dice": 0.7441826450321166,
+        "true_delta": 0.0309440901866751,
+        "retained_delta": 0.0
+      },
+      {
+        "patient_id": "phantom_100_0008",
+        "case_count": 1,
+        "rf_delta": 0.00644683837890625,
+        "predicted_value": -0.04275014251470566,
+        "audit_fraction": 1.0,
+        "a0_class_dice": [
+          0.7008547008547008,
+          0.6243386243386243,
+          0.7520661157024794
+        ],
+        "a0_dice": 0.6924198136319348,
+        "final_class_dice": [
+          0.6949152542372882,
+          0.696078431372549,
+          0.7807017543859649
+        ],
+        "final_dice": 0.7238984799986007,
+        "audit_class_dice": [
+          0.6949152542372882,
+          0.696078431372549,
+          0.7807017543859649
+        ],
+        "audit_dice": 0.7238984799986007,
+        "true_delta": 0.03147866636666585,
+        "retained_delta": 0.03147866636666585
+      },
+      {
+        "patient_id": "phantom_100_0009",
+        "case_count": 1,
+        "rf_delta": 0.0012969374656677246,
+        "predicted_value": -0.03868325799703598,
+        "audit_fraction": 1.0,
+        "a0_class_dice": [
+          0.8,
+          0.6666666666666666,
+          0.7272727272727273
+        ],
+        "a0_dice": 0.7313131313131315,
+        "final_class_dice": [
+          0.7766990291262136,
+          0.6881720430107527,
+          0.7319587628865979
+        ],
+        "final_dice": 0.7322766116745214,
+        "audit_class_dice": [
+          0.7766990291262136,
+          0.6881720430107527,
+          0.7319587628865979
+        ],
+        "audit_dice": 0.7322766116745214,
+        "true_delta": 0.0009634803613899345,
+        "retained_delta": 0.0009634803613899345
+      },
+      {
+        "patient_id": "phantom_100_0010",
+        "case_count": 1,
+        "rf_delta": 0.0066048502922058105,
+        "predicted_value": -0.05013603717088699,
+        "audit_fraction": 0.0,
+        "a0_class_dice": [
+          0.6608695652173913,
+          0.6396396396396397,
+          0.8243727598566308
+        ],
+        "a0_dice": 0.7082939882378873,
+        "final_class_dice": [
+          0.6608695652173913,
+          0.6396396396396397,
+          0.8243727598566308
+        ],
+        "final_dice": 0.7082939882378873,
+        "audit_class_dice": [
+          0.6782608695652174,
+          0.6608695652173913,
+          0.8487084870848709
+        ],
+        "audit_dice": 0.7292796406224932,
+        "true_delta": 0.020985652384605924,
+        "retained_delta": 0.0
+      },
+      {
+        "patient_id": "phantom_100_0011",
+        "case_count": 1,
+        "rf_delta": 0.0014657974243164062,
+        "predicted_value": -0.04292202740907669,
+        "audit_fraction": 0.0,
+        "a0_class_dice": [
+          0.7741935483870968,
+          0.6666666666666666,
+          0.7788461538461539
+        ],
+        "a0_dice": 0.739902122966639,
+        "final_class_dice": [
+          0.7741935483870968,
+          0.6666666666666666,
+          0.7788461538461539
+        ],
+        "final_dice": 0.739902122966639,
+        "audit_class_dice": [
+          0.7708333333333334,
+          0.6887417218543046,
+          0.8
+        ],
+        "audit_dice": 0.7531916850625461,
+        "true_delta": 0.013289562095907037,
+        "retained_delta": 0.0
+      },
+      {
+        "patient_id": "phantom_100_0012",
+        "case_count": 1,
+        "rf_delta": 0.008416056632995605,
+        "predicted_value": -0.03974595665931702,
+        "audit_fraction": 0.0,
+        "a0_class_dice": [
+          0.8,
+          0.6503067484662577,
+          0.7881773399014779
+        ],
+        "a0_dice": 0.7461613627892452,
+        "final_class_dice": [
+          0.8,
+          0.6503067484662577,
+          0.7881773399014779
+        ],
+        "final_dice": 0.7461613627892452,
+        "audit_class_dice": [
+          0.7920792079207921,
+          0.6746987951807228,
+          0.8163265306122449
+        ],
+        "audit_dice": 0.7610348445712534,
+        "true_delta": 0.014873481782008202,
+        "retained_delta": 0.0
+      },
+      {
+        "patient_id": "phantom_100_0013",
+        "case_count": 1,
+        "rf_delta": 0.009362339973449707,
+        "predicted_value": -0.04388124495744705,
+        "audit_fraction": 1.0,
+        "a0_class_dice": [
+          0.845360824742268,
+          0.5979381443298969,
+          0.7848101265822784
+        ],
+        "a0_dice": 0.7427030318848145,
+        "final_class_dice": [
+          0.84,
+          0.6467661691542289,
+          0.8266666666666667
+        ],
+        "final_dice": 0.7711442786069652,
+        "audit_class_dice": [
+          0.84,
+          0.6467661691542289,
+          0.8266666666666667
+        ],
+        "audit_dice": 0.7711442786069652,
+        "true_delta": 0.02844124672215076,
+        "retained_delta": 0.02844124672215076
+      },
+      {
+        "patient_id": "phantom_100_0014",
+        "case_count": 1,
+        "rf_delta": 0.013271987438201904,
+        "predicted_value": -0.04075152426958084,
+        "audit_fraction": 1.0,
+        "a0_class_dice": [
+          0.803921568627451,
+          0.5882352941176471,
+          0.7534883720930232
+        ],
+        "a0_dice": 0.7152150782793738,
+        "final_class_dice": [
+          0.7884615384615384,
+          0.625,
+          0.7821782178217822
+        ],
+        "final_dice": 0.7318799187611068,
+        "audit_class_dice": [
+          0.7884615384615384,
+          0.625,
+          0.7821782178217822
+        ],
+        "audit_dice": 0.7318799187611068,
+        "true_delta": 0.016664840481733,
+        "retained_delta": 0.016664840481733
+      },
+      {
+        "patient_id": "phantom_100_0015",
+        "case_count": 1,
+        "rf_delta": 0.008183777332305908,
+        "predicted_value": -0.044634513556957245,
+        "audit_fraction": 0.0,
+        "a0_class_dice": [
+          0.8431372549019608,
+          0.714975845410628,
+          0.8188976377952756
+        ],
+        "a0_dice": 0.7923369127026215,
+        "final_class_dice": [
+          0.8431372549019608,
+          0.714975845410628,
+          0.8188976377952756
+        ],
+        "final_dice": 0.7923369127026215,
+        "audit_class_dice": [
+          0.819047619047619,
+          0.7488151658767772,
+          0.8442622950819673
+        ],
+        "audit_dice": 0.8040416933354545,
+        "true_delta": 0.011704780632832978,
+        "retained_delta": 0.0
+      },
+      {
+        "patient_id": "phantom_100_0016",
+        "case_count": 1,
+        "rf_delta": 0.01375800371170044,
+        "predicted_value": -0.04585596174001694,
+        "audit_fraction": 1.0,
+        "a0_class_dice": [
+          0.7610619469026548,
+          0.6086956521739131,
+          0.7899159663865546
+        ],
+        "a0_dice": 0.7198911884877074,
+        "final_class_dice": [
+          0.7350427350427351,
+          0.6477272727272727,
+          0.7927927927927928
+        ],
+        "final_dice": 0.7251876001876002,
+        "audit_class_dice": [
+          0.7350427350427351,
+          0.6477272727272727,
+          0.7927927927927928
+        ],
+        "audit_dice": 0.7251876001876002,
+        "true_delta": 0.005296411699892811,
+        "retained_delta": 0.005296411699892811
+      },
+      {
+        "patient_id": "phantom_100_0017",
+        "case_count": 1,
+        "rf_delta": 0.007029891014099121,
+        "predicted_value": -0.03966701030731201,
+        "audit_fraction": 1.0,
+        "a0_class_dice": [
+          0.75,
+          0.711864406779661,
+          0.7142857142857143
+        ],
+        "a0_dice": 0.7253833736884584,
+        "final_class_dice": [
+          0.7391304347826086,
+          0.7165775401069518,
+          0.7227722772277227
+        ],
+        "final_dice": 0.7261600840390944,
+        "audit_class_dice": [
+          0.7391304347826086,
+          0.7165775401069518,
+          0.7227722772277227
+        ],
+        "audit_dice": 0.7261600840390944,
+        "true_delta": 0.0007767103506359785,
+        "retained_delta": 0.0007767103506359785
+      },
+      {
+        "patient_id": "phantom_100_0018",
+        "case_count": 1,
+        "rf_delta": 0.0012938380241394043,
+        "predicted_value": -0.04348541051149368,
+        "audit_fraction": 0.0,
+        "a0_class_dice": [
+          0.7787610619469026,
+          0.7009345794392523,
+          0.8108108108108109
+        ],
+        "a0_dice": 0.763502150732322,
+        "final_class_dice": [
+          0.7787610619469026,
+          0.7009345794392523,
+          0.8108108108108109
+        ],
+        "final_dice": 0.763502150732322,
+        "audit_class_dice": [
+          0.8,
+          0.6995515695067265,
+          0.813953488372093
+        ],
+        "audit_dice": 0.7711683526262733,
+        "true_delta": 0.0076662018939512855,
+        "retained_delta": 0.0
+      },
+      {
+        "patient_id": "phantom_100_0019",
+        "case_count": 1,
+        "rf_delta": 0.006821691989898682,
+        "predicted_value": -0.04382731765508652,
+        "audit_fraction": 0.0,
+        "a0_class_dice": [
+          0.7422680412371134,
+          0.6857142857142857,
+          0.8038277511961722
+        ],
+        "a0_dice": 0.7439366927158572,
+        "final_class_dice": [
+          0.7422680412371134,
+          0.6857142857142857,
+          0.8038277511961722
+        ],
+        "final_dice": 0.7439366927158572,
+        "audit_class_dice": [
+          0.7676767676767676,
+          0.6702702702702703,
+          0.7860696517412935
+        ],
+        "audit_dice": 0.7413388965627771,
+        "true_delta": -0.0025977961530800897,
+        "retained_delta": 0.0
+      },
+      {
+        "patient_id": "phantom_100_0020",
+        "case_count": 1,
+        "rf_delta": 0.0030867457389831543,
+        "predicted_value": -0.043351881206035614,
+        "audit_fraction": 0.0,
+        "a0_class_dice": [
+          0.7047619047619048,
+          0.6411483253588517,
+          0.789272030651341
+        ],
+        "a0_dice": 0.7117274202573659,
+        "final_class_dice": [
+          0.7047619047619048,
+          0.6411483253588517,
+          0.789272030651341
+        ],
+        "final_dice": 0.7117274202573659,
+        "audit_class_dice": [
+          0.7037037037037037,
+          0.6851851851851852,
+          0.8142292490118577
+        ],
+        "audit_dice": 0.7343727126335823,
+        "true_delta": 0.022645292376216375,
+        "retained_delta": 0.0
+      },
+      {
+        "patient_id": "phantom_100_0021",
+        "case_count": 1,
+        "rf_delta": 0.00044149160385131836,
+        "predicted_value": -0.04269734025001526,
+        "audit_fraction": 1.0,
+        "a0_class_dice": [
+          0.6666666666666666,
+          0.649746192893401,
+          0.8047808764940239
+        ],
+        "a0_dice": 0.7070645786846971,
+        "final_class_dice": [
+          0.6727272727272727,
+          0.6732673267326733,
+          0.8130081300813008
+        ],
+        "final_dice": 0.719667576513749,
+        "audit_class_dice": [
+          0.6727272727272727,
+          0.6732673267326733,
+          0.8130081300813008
+        ],
+        "audit_dice": 0.719667576513749,
+        "true_delta": 0.012602997829051943,
+        "retained_delta": 0.012602997829051943
+      },
+      {
+        "patient_id": "phantom_100_0022",
+        "case_count": 1,
+        "rf_delta": 0.008701145648956299,
+        "predicted_value": -0.04603830724954605,
+        "audit_fraction": 0.0,
+        "a0_class_dice": [
+          0.6607142857142857,
+          0.6105263157894737,
+          0.8249027237354085
+        ],
+        "a0_dice": 0.6987144417463892,
+        "final_class_dice": [
+          0.6607142857142857,
+          0.6105263157894737,
+          0.8249027237354085
+        ],
+        "final_dice": 0.6987144417463892,
+        "audit_class_dice": [
+          0.6785714285714286,
+          0.65,
+          0.8273092369477911
+        ],
+        "audit_dice": 0.7186268885064067,
+        "true_delta": 0.019912446760017466,
+        "retained_delta": 0.0
+      },
+      {
+        "patient_id": "phantom_100_0023",
+        "case_count": 1,
+        "rf_delta": 0.0024718046188354492,
+        "predicted_value": -0.04002300649881363,
+        "audit_fraction": 1.0,
+        "a0_class_dice": [
+          0.7962962962962963,
+          0.5562130177514792,
+          0.7906976744186046
+        ],
+        "a0_dice": 0.7144023294887933,
+        "final_class_dice": [
+          0.7962962962962963,
+          0.6444444444444445,
+          0.848780487804878
+        ],
+        "final_dice": 0.7631737428485396,
+        "audit_class_dice": [
+          0.7962962962962963,
+          0.6444444444444445,
+          0.848780487804878
+        ],
+        "audit_dice": 0.7631737428485396,
+        "true_delta": 0.04877141335974622,
+        "retained_delta": 0.04877141335974622
+      }
+    ],
+    "a0_dice": 0.7307265531023329,
+    "final_dice": 0.7386168679689257,
+    "class_dice": [
+      0.7518707578722572,
+      0.6655940214531704,
+      0.7983858245813499
+    ],
+    "harm_patient_rate": 0.041666666666666664,
+    "audit_fraction": 0.5,
+    "costs": {
+      "policy_audit_calls": 12,
+      "read_calls": 36,
+      "probe_audit_calls": 24
+    },
+    "evaluation_seconds": 0.04222266701981425,
+    "metric_note": "Patient mean of per-volume foreground Dice on resized complete volumes; no slice CI.",
+    "patient_transition_metrics": {
+      "n": 24,
+      "pearson": 0.2290935589750226,
+      "spearman": 0.22869565217391302,
+      "rf_sign_agreement": 0.9583333333333334,
+      "true_beneficial_fraction": 0.9166666666666666,
+      "rf_beneficial_fraction": 0.9583333333333334,
+      "mean_true_delta": 0.0165201404082332,
+      "oracle_mean_retained_delta": 0.017491591376332036,
+      "rf_auroc_auprc": {
+        "auroc": 0.7727272727272727,
+        "auprc": 0.9748110110930418,
+        "reason": null
+      },
+      "trigger_auroc_auprc": {
+        "auroc": 0.75,
+        "auprc": 0.9729994168901432,
+        "reason": null
+      },
+      "value_bins": [
+        {
+          "n": 5,
+          "predicted_value": -0.04737773537635803,
+          "observed_true_delta": 0.01072961063093616,
+          "beneficial_frequency": 0.8
+        },
+        {
+          "n": 5,
+          "predicted_value": -0.04490196406841278,
+          "observed_true_delta": 0.019891443579004055,
+          "beneficial_frequency": 1.0
+        },
+        {
+          "n": 5,
+          "predicted_value": -0.04349357634782791,
+          "observed_true_delta": 0.013888901387029074,
+          "beneficial_frequency": 0.8
+        },
+        {
+          "n": 5,
+          "predicted_value": -0.041914190351963046,
+          "observed_true_delta": 0.021709701191794006,
+          "beneficial_frequency": 1.0
+        },
+        {
+          "n": 4,
+          "predicted_value": -0.03952980786561966,
+          "observed_true_delta": 0.016346271463445083,
+          "beneficial_frequency": 1.0
+        }
+      ],
+      "value_bin_note": "Value is in intrinsic proxy units; bins are diagnostic, not calibrated Dice/probability.",
+      "aggregation_note": "Patient-average RF contrast vs patient volume Dice contrast; trigger actions occur on slices, not patients."
+    }
+  },
+  "training_total_seconds": 0.18227999890223145,
+  "peak_process_host_rss_raw": 325992448,
+  "rss_note": "Process-wide cumulative high water mark; macOS bytes, Linux KiB. Not VRAM or isolated-policy peak.",
+  "wall_note": "Includes setup used by this policy, data loading, training and scheduled validation. Final twin diagnostics excluded and separately timed."
+}

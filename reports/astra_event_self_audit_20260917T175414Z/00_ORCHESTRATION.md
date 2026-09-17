@@ -1,0 +1,16 @@
+# Astra orchestration ledger
+
+Astra alone set the question, architecture, scope, falsifiers and verdict. Main branch and the occupied training checkout were preserved. Applied skills: Academic Research Suite and [Orca orchestration](/Users/alvinluong/.agents/skills/orchestration/SKILL.md), using its live version-matched guide. User explicitly authorized Union/Luna delegation. No other worker model was launched.
+
+| Task | Actual worker/provider evidence | Outcome | Astra verification |
+|---|---|---|---|
+| Source reconstruction / reuse / firewall | `opencode/union-alpha`; TUI **Union Alpha Free / OpenCode Zen**; dispatch ctx_0fcb30b055ec | FAILED delivery; repeated no-op tool loop, no usable report. Interrupted, observed return to shell, then fenced as `abandoned`. | Root independently read DynamicWindow, REW model/loss, ACDC and runner code. No worker source conclusion used. |
+| RF nearest-prior-art audit | Same observed Union provider; ctx_240206a776cd | Completed, report preserved; accepted worker_done, release requested (external terminal retained by Orca) | RCA, In-Context RCA and SegAE checked independently; rejected broad evidence-acquisition classification and excluded unverified entries. |
+| Core implementation, initially seven modules | Same observed Union provider; ctx_be14ef791790 | PARTIAL then FAILED delivery: annotation.py defects and empty Auditor file; worker explicitly reported repeated aborted Write calls. Scope narrowed, then ended; process exit observed, fenced `abandoned`. | Root identified five contract violations, preserved partial artifact, corrected actor and implemented remaining modules after worker exit. Root unit suite validates final tree. |
+| Four narrow mathematical checks | GPT-5.6 Luna via collaboration service, explicit model override; `/root/luna_value_identifiability` | Completed | Root independently checked counterexample, bound, twin/propensity distinction and detach limitations. See worker verification note. |
+
+Requested Union timeboxes (8 minutes for source/prior work, 20 for implementation) were exceeded. This is a delivery failure, not concealed as successful parallelism. Union was given priority before root recovery. No duplicate editor was launched into owned files; recovery modules were prepared in private scratch and integrated only after the editing worker exited. External terminals remain retained by Orca. Source and implementation Union process exits were directly observed; the completed prior-art terminal is retained, and its process exit is not claimed. Final reclaimable-worker enumeration returned none.
+
+Orca structured provider metadata was null for these custom-launch terminals; actual display and launch command establish the observable Union identity. Its undisclosed underlying backend model is UNKNOWN. No claim infers a backend from the brand. Capability-bearing injected prompts were redacted from report receipts, with raw copies kept privately outside Git.
+
+Root produced data/evaluation/training harnesses, causal diagnostics, tests, mathematics, literature synthesis and final decision. Worker success never substitutes for root verification. CPU synthetic, CPU real ACDC, GPU observations, and proposed future experiments are distinct evidence categories.

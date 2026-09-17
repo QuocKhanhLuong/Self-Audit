@@ -1,0 +1,70 @@
+{
+  "config": {
+    "device": "cpu",
+    "cpu_threads": 2,
+    "image_size": 32,
+    "seeds": [
+      0
+    ],
+    "warmup_steps": 12,
+    "rf_warmup_steps": 8,
+    "trigger_warmup_steps": 8,
+    "steps": 12,
+    "eval_every": 12,
+    "validation_patient_limit": null,
+    "dice_thresholds": [
+      0.5,
+      0.7,
+      0.8
+    ],
+    "policies": [
+      "none",
+      "always",
+      "random",
+      "entropy",
+      "learned"
+    ],
+    "training": {
+      "channels": 16,
+      "k": 8,
+      "batch_size": 4,
+      "actor_lr": 0.001,
+      "rf_lr": 0.001,
+      "trigger_lr": 0.001,
+      "budget_fraction": 0.5,
+      "exploration_fraction": 0.25,
+      "cost": 0.001,
+      "slow_every": 4,
+      "replay_capacity": 256,
+      "replay_max_age": 8,
+      "period": 2
+    }
+  },
+  "data": {
+    "source": "SYNTHETIC_PHANTOM",
+    "image_size": 32,
+    "independent_patient_count": 0
+  },
+  "python": "3.11.16 | packaged by conda-forge | (main, Aug 21 2026, 22:39:01) [Clang 19.1.7 ]",
+  "torch": "2.14.0",
+  "platform": "macOS-26.2-arm64-arm-64bit",
+  "device": "cpu",
+  "cuda_used": false,
+  "physical_batch": 4,
+  "accumulation": 1,
+  "source_hashes": {
+    "/Users/alvinluong/Self-Audit-event/src/self_audit_event/reference_free_auditor.py": "56a36269772dd3a3fcea4149877ba6c22e677662fba3f3a29ef8039f25eb28db",
+    "/Users/alvinluong/Self-Audit-event/src/self_audit_event/annotation.py": "5b3c15afae027c3c1602e7dccbcf9741209af0003bba2fa99def677a8ccec234",
+    "/Users/alvinluong/Self-Audit-event/src/self_audit_event/audit_trigger.py": "24569af9a626d4193f38a33ee4504c6f8b762afd0f0816bc26c4ff57f29b58d9",
+    "/Users/alvinluong/Self-Audit-event/src/self_audit_event/evaluation.py": "c986ac36a3960bd66fed4e8d0a6f3a82c1f618fa5ec431dcd3f02d978bd52ad5",
+    "/Users/alvinluong/Self-Audit-event/src/self_audit_event/__init__.py": "d3a80aabdb4263a09b9e7ccbd9a8bcde20b5e73dbcd39541b279259066756efc",
+    "/Users/alvinluong/Self-Audit-event/src/self_audit_event/model.py": "a2ceb4778a705ff71f9bf85f983903dcc60a28a1e806cc06bff9f7c62ffbe5e2",
+    "/Users/alvinluong/Self-Audit-event/src/self_audit_event/replay.py": "f23cd1170dd5be62c9a70630321570a15721c9530530e00dc0b8b90cc87121c7",
+    "/Users/alvinluong/Self-Audit-event/src/self_audit_event/losses.py": "9f8528402de07383499fb4d36a3bb513a24113f8c438961c652e5f34f4b10fd0",
+    "/Users/alvinluong/Self-Audit-event/src/self_audit_event/training.py": "1db47627483c2379f88cc9857c670fb5a23376d2798cce9b8db6160adf406ac4",
+    "/Users/alvinluong/Self-Audit-event/src/self_audit_event/data.py": "a8bf03d0fb218a9dbe03661ea7335ea00022f6e757669f2c138aa68c4a6563dd",
+    "/Users/alvinluong/Self-Audit-event/scripts/train_event_audit.py": "8b9ed229a313021099abf71f67f700638bd4110ca51eff7c0ed3914e6d439462",
+    "reports/astra_event_self_audit_20260917T175414Z/evidence/stage_a.yaml": "64d0d1fc2953a5b65b3220b8e67b82d8ba6fc9609423dfa7731ca68af4d50058",
+    "/Users/alvinluong/Self-Audit-event/src/self_audit/models/dynamic_window.py": "5cf0a07ef9b50254d5bcffce605aea2849772fb0bed16a95685f17ab6eda9fd4"
+  }
+}

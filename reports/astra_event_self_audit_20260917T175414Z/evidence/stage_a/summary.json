@@ -1,0 +1,317 @@
+[
+  {
+    "seed": 0,
+    "policy": "none",
+    "dice": 0.6515782986856616,
+    "a0": 0.6515782986856616,
+    "harm": 0.0,
+    "audit_rate": 0.0,
+    "seconds": 0.119483957067132,
+    "correlation": {
+      "n": 24,
+      "pearson": 0.5042697873781861,
+      "spearman": 0.41130434782608694,
+      "rf_sign_agreement": 0.75,
+      "true_beneficial_fraction": 0.7916666666666666,
+      "rf_beneficial_fraction": 0.9583333333333334,
+      "mean_true_delta": 0.027691568097602315,
+      "oracle_mean_retained_delta": 0.03149204173105416,
+      "rf_auroc_auprc": {
+        "auroc": 0.6526315789473685,
+        "auprc": 0.9057669910836025,
+        "reason": null
+      },
+      "trigger_auroc_auprc": {
+        "auroc": 0.3684210526315789,
+        "auprc": 0.751885987597743,
+        "reason": null
+      },
+      "value_bins": [
+        {
+          "n": 5,
+          "predicted_value": -0.0505950927734375,
+          "observed_true_delta": 0.03449441161260194,
+          "beneficial_frequency": 1.0
+        },
+        {
+          "n": 5,
+          "predicted_value": -0.04837325662374496,
+          "observed_true_delta": 0.03131557233843676,
+          "beneficial_frequency": 0.8
+        },
+        {
+          "n": 5,
+          "predicted_value": -0.04748369306325913,
+          "observed_true_delta": 0.01759596189002597,
+          "beneficial_frequency": 0.6
+        },
+        {
+          "n": 5,
+          "predicted_value": -0.045657411217689514,
+          "observed_true_delta": 0.0323658134946452,
+          "beneficial_frequency": 0.8
+        },
+        {
+          "n": 4,
+          "predicted_value": -0.04355517961084843,
+          "observed_true_delta": 0.021434709415976555,
+          "beneficial_frequency": 0.75
+        }
+      ],
+      "value_bin_note": "Value is in intrinsic proxy units; bins are diagnostic, not calibrated Dice/probability.",
+      "aggregation_note": "Patient-average RF contrast vs patient volume Dice contrast; trigger actions occur on slices, not patients."
+    }
+  },
+  {
+    "seed": 0,
+    "policy": "always",
+    "dice": 0.7312823173230439,
+    "a0": 0.7243380908432314,
+    "harm": 0.3333333333333333,
+    "audit_rate": 1.0,
+    "seconds": 0.19105208187829703,
+    "correlation": {
+      "n": 24,
+      "pearson": -0.08585226712300603,
+      "spearman": -0.19999999999999998,
+      "rf_sign_agreement": 0.625,
+      "true_beneficial_fraction": 0.6666666666666666,
+      "rf_beneficial_fraction": 0.9583333333333334,
+      "mean_true_delta": 0.006944226479812558,
+      "oracle_mean_retained_delta": 0.00895223416690922,
+      "rf_auroc_auprc": {
+        "auroc": 0.3125,
+        "auprc": 0.6384924366200236,
+        "reason": null
+      },
+      "trigger_auroc_auprc": {
+        "auroc": 0.765625,
+        "auprc": 0.8466940279899839,
+        "reason": null
+      },
+      "value_bins": [
+        {
+          "n": 5,
+          "predicted_value": -0.046366246044635774,
+          "observed_true_delta": -0.0013767743365458828,
+          "beneficial_frequency": 0.4
+        },
+        {
+          "n": 5,
+          "predicted_value": -0.04370491951704025,
+          "observed_true_delta": 0.009453826001663912,
+          "beneficial_frequency": 0.6
+        },
+        {
+          "n": 5,
+          "predicted_value": -0.042050440609455106,
+          "observed_true_delta": 0.006409381924162317,
+          "beneficial_frequency": 0.6
+        },
+        {
+          "n": 5,
+          "predicted_value": -0.040650452673435214,
+          "observed_true_delta": 0.01655547231667136,
+          "beneficial_frequency": 1.0
+        },
+        {
+          "n": 4,
+          "predicted_value": -0.037433478981256485,
+          "observed_true_delta": 0.002862976496435715,
+          "beneficial_frequency": 0.75
+        }
+      ],
+      "value_bin_note": "Value is in intrinsic proxy units; bins are diagnostic, not calibrated Dice/probability.",
+      "aggregation_note": "Patient-average RF contrast vs patient volume Dice contrast; trigger actions occur on slices, not patients."
+    }
+  },
+  {
+    "seed": 0,
+    "policy": "random",
+    "dice": 0.7386168679689257,
+    "a0": 0.7307265531023329,
+    "harm": 0.041666666666666664,
+    "audit_rate": 0.5,
+    "seconds": 0.18227999890223145,
+    "correlation": {
+      "n": 24,
+      "pearson": 0.2290935589750226,
+      "spearman": 0.22869565217391302,
+      "rf_sign_agreement": 0.9583333333333334,
+      "true_beneficial_fraction": 0.9166666666666666,
+      "rf_beneficial_fraction": 0.9583333333333334,
+      "mean_true_delta": 0.0165201404082332,
+      "oracle_mean_retained_delta": 0.017491591376332036,
+      "rf_auroc_auprc": {
+        "auroc": 0.7727272727272727,
+        "auprc": 0.9748110110930418,
+        "reason": null
+      },
+      "trigger_auroc_auprc": {
+        "auroc": 0.75,
+        "auprc": 0.9729994168901432,
+        "reason": null
+      },
+      "value_bins": [
+        {
+          "n": 5,
+          "predicted_value": -0.04737773537635803,
+          "observed_true_delta": 0.01072961063093616,
+          "beneficial_frequency": 0.8
+        },
+        {
+          "n": 5,
+          "predicted_value": -0.04490196406841278,
+          "observed_true_delta": 0.019891443579004055,
+          "beneficial_frequency": 1.0
+        },
+        {
+          "n": 5,
+          "predicted_value": -0.04349357634782791,
+          "observed_true_delta": 0.013888901387029074,
+          "beneficial_frequency": 0.8
+        },
+        {
+          "n": 5,
+          "predicted_value": -0.041914190351963046,
+          "observed_true_delta": 0.021709701191794006,
+          "beneficial_frequency": 1.0
+        },
+        {
+          "n": 4,
+          "predicted_value": -0.03952980786561966,
+          "observed_true_delta": 0.016346271463445083,
+          "beneficial_frequency": 1.0
+        }
+      ],
+      "value_bin_note": "Value is in intrinsic proxy units; bins are diagnostic, not calibrated Dice/probability.",
+      "aggregation_note": "Patient-average RF contrast vs patient volume Dice contrast; trigger actions occur on slices, not patients."
+    }
+  },
+  {
+    "seed": 0,
+    "policy": "entropy",
+    "dice": 0.7269046808177363,
+    "a0": 0.720863730217256,
+    "harm": 0.08333333333333333,
+    "audit_rate": 0.5,
+    "seconds": 0.20255895797163248,
+    "correlation": {
+      "n": 24,
+      "pearson": -0.08987221333211562,
+      "spearman": -0.01652173913043478,
+      "rf_sign_agreement": 0.5833333333333334,
+      "true_beneficial_fraction": 0.7083333333333334,
+      "rf_beneficial_fraction": 0.7916666666666666,
+      "mean_true_delta": 0.007939428347383681,
+      "oracle_mean_retained_delta": 0.0116921223984597,
+      "rf_auroc_auprc": {
+        "auroc": 0.48739495798319327,
+        "auprc": 0.6969714281246787,
+        "reason": null
+      },
+      "trigger_auroc_auprc": {
+        "auroc": 0.6302521008403361,
+        "auprc": 0.8094635998979468,
+        "reason": null
+      },
+      "value_bins": [
+        {
+          "n": 5,
+          "predicted_value": -0.04777345806360245,
+          "observed_true_delta": -0.008244873990898415,
+          "beneficial_frequency": 0.4
+        },
+        {
+          "n": 5,
+          "predicted_value": -0.045219050347805025,
+          "observed_true_delta": 0.016704928099670502,
+          "beneficial_frequency": 1.0
+        },
+        {
+          "n": 5,
+          "predicted_value": -0.04370774328708649,
+          "observed_true_delta": 0.005487361712122096,
+          "beneficial_frequency": 0.4
+        },
+        {
+          "n": 5,
+          "predicted_value": -0.04228906780481338,
+          "observed_true_delta": 0.01956149995143841,
+          "beneficial_frequency": 1.0
+        },
+        {
+          "n": 4,
+          "predicted_value": -0.03919643722474575,
+          "observed_true_delta": 0.005750425368886342,
+          "beneficial_frequency": 0.75
+        }
+      ],
+      "value_bin_note": "Value is in intrinsic proxy units; bins are diagnostic, not calibrated Dice/probability.",
+      "aggregation_note": "Patient-average RF contrast vs patient volume Dice contrast; trigger actions occur on slices, not patients."
+    }
+  },
+  {
+    "seed": 0,
+    "policy": "learned",
+    "dice": 0.7091550009973976,
+    "a0": 0.7091550009973976,
+    "harm": 0.0,
+    "audit_rate": 0.0,
+    "seconds": 0.2006582070607692,
+    "correlation": {
+      "n": 24,
+      "pearson": -0.05156892287443498,
+      "spearman": 0.013913043478260868,
+      "rf_sign_agreement": 0.7083333333333334,
+      "true_beneficial_fraction": 0.75,
+      "rf_beneficial_fraction": 0.875,
+      "mean_true_delta": 0.011172229853645193,
+      "oracle_mean_retained_delta": 0.01328397566374998,
+      "rf_auroc_auprc": {
+        "auroc": 0.5370370370370371,
+        "auprc": 0.734865572566923,
+        "reason": null
+      },
+      "trigger_auroc_auprc": {
+        "auroc": 0.5833333333333334,
+        "auprc": 0.779417079165531,
+        "reason": null
+      },
+      "value_bins": [
+        {
+          "n": 5,
+          "predicted_value": -0.0923391342163086,
+          "observed_true_delta": 0.0033552534053580274,
+          "beneficial_frequency": 0.6
+        },
+        {
+          "n": 5,
+          "predicted_value": -0.08988243937492371,
+          "observed_true_delta": 0.010095213790859736,
+          "beneficial_frequency": 0.8
+        },
+        {
+          "n": 5,
+          "predicted_value": -0.0887474924325943,
+          "observed_true_delta": 0.017333270361373377,
+          "beneficial_frequency": 0.8
+        },
+        {
+          "n": 5,
+          "predicted_value": -0.08691107034683228,
+          "observed_true_delta": 0.013935689865591416,
+          "beneficial_frequency": 0.8
+        },
+        {
+          "n": 4,
+          "predicted_value": -0.08431650325655937,
+          "observed_true_delta": 0.011134094842892961,
+          "beneficial_frequency": 0.75
+        }
+      ],
+      "value_bin_note": "Value is in intrinsic proxy units; bins are diagnostic, not calibrated Dice/probability.",
+      "aggregation_note": "Patient-average RF contrast vs patient volume Dice contrast; trigger actions occur on slices, not patients."
+    }
+  }
+]

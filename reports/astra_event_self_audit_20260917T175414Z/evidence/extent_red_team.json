@@ -1,0 +1,5527 @@
+{
+  "status": "EVALUATION_ONLY_ORACLE_RED_TEAM",
+  "training_or_threshold_changes": false,
+  "note": "GT masks construct a known-correct reference ONLY for this analysis. The fixed score never receives a separate reference/target, corruption name, or ID. This is not natural-transition validity or a slice-independent CI. One-pixel operation at 64x64.",
+  "summary": {
+    "erosion": {
+      "evaluated_slices": 364,
+      "patient_count": 20,
+      "rf_prefers_wrong_mask_fraction": 0.0,
+      "mean_rf_delta": -0.004811857919116596,
+      "mean_myocardium_dice": 0.1993036102476251,
+      "patient_mean_rf_delta": {
+        "patient004": -0.003785604238510132,
+        "patient005": -0.013719481229782105,
+        "patient012": -0.005230539723446495,
+        "patient014": -0.009443584084510803,
+        "patient015": -0.004629542430241902,
+        "patient018": -0.008403822779655457,
+        "patient028": -0.004384875297546387,
+        "patient029": -0.004622842136182283,
+        "patient030": -0.002122240908005658,
+        "patient032": -0.0022312371354354056,
+        "patient036": -0.004676826298236847,
+        "patient055": -0.0029972559875912136,
+        "patient065": -0.002749991416931152,
+        "patient070": -0.0015216519435246785,
+        "patient076": -0.0027979090809822083,
+        "patient082": -0.0029519423842430115,
+        "patient087": -0.0036879591643810272,
+        "patient089": -0.0019399374723434448,
+        "patient095": -0.005894660949707031,
+        "patient098": -0.005798263209206718
+      }
+    },
+    "dilation": {
+      "evaluated_slices": 364,
+      "patient_count": 20,
+      "rf_prefers_wrong_mask_fraction": 0.6730769230769231,
+      "mean_rf_delta": 0.0009507754674324623,
+      "mean_myocardium_dice": 0.6525939924346493,
+      "patient_mean_rf_delta": {
+        "patient004": 0.0011294096708297729,
+        "patient005": 0.005402597784996033,
+        "patient012": 0.0006623393610904092,
+        "patient014": 0.001571241021156311,
+        "patient015": 0.0012812415758768718,
+        "patient018": 0.001714073121547699,
+        "patient028": 0.00040285454856024846,
+        "patient029": 0.0016848790018182051,
+        "patient030": 6.360166213091682e-05,
+        "patient032": -3.141792196976511e-05,
+        "patient036": 0.0010792464017868042,
+        "patient055": 0.0001655419667561849,
+        "patient065": -0.0009487628936767578,
+        "patient070": 0.0003139177958170573,
+        "patient076": -8.552148938179016e-05,
+        "patient082": -3.223679959774017e-05,
+        "patient087": 0.0004648379981517792,
+        "patient089": -0.0007226864496866862,
+        "patient095": 0.0012963016827901204,
+        "patient098": 0.002860592944281442
+      }
+    }
+  },
+  "rows": [
+    {
+      "patient_id": "patient004",
+      "case_id": "patient004_frame01",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.007115423679351807,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.00014716386795043945,
+        "myocardium_dice": 0.6224489795918368,
+        "area_ratio": 2.2131147540983607
+      }
+    },
+    {
+      "patient_id": "patient004",
+      "case_id": "patient004_frame01",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.006709575653076172,
+        "myocardium_dice": 0.1111111111111111,
+        "area_ratio": 0.058823529411764705
+      },
+      "dilation": {
+        "rf_delta": 0.0005938410758972168,
+        "myocardium_dice": 0.6746031746031746,
+        "area_ratio": 1.964705882352941
+      }
+    },
+    {
+      "patient_id": "patient004",
+      "case_id": "patient004_frame01",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.00672382116317749,
+        "myocardium_dice": 0.1111111111111111,
+        "area_ratio": 0.058823529411764705
+      },
+      "dilation": {
+        "rf_delta": 0.0017195940017700195,
+        "myocardium_dice": 0.6666666666666666,
+        "area_ratio": 2.0
+      }
+    },
+    {
+      "patient_id": "patient004",
+      "case_id": "patient004_frame01",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.006711781024932861,
+        "myocardium_dice": 0.09195402298850575,
+        "area_ratio": 0.04819277108433735
+      },
+      "dilation": {
+        "rf_delta": 0.0030655860900878906,
+        "myocardium_dice": 0.6613545816733067,
+        "area_ratio": 2.0240963855421685
+      }
+    },
+    {
+      "patient_id": "patient004",
+      "case_id": "patient004_frame01",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.0038405656814575195,
+        "myocardium_dice": 0.15730337078651685,
+        "area_ratio": 0.08536585365853659
+      },
+      "dilation": {
+        "rf_delta": 0.0016646981239318848,
+        "myocardium_dice": 0.6693877551020408,
+        "area_ratio": 1.9878048780487805
+      }
+    },
+    {
+      "patient_id": "patient004",
+      "case_id": "patient004_frame01",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.003477752208709717,
+        "myocardium_dice": 0.056338028169014086,
+        "area_ratio": 0.028985507246376812
+      },
+      "dilation": {
+        "rf_delta": 0.0009435415267944336,
+        "myocardium_dice": 0.6388888888888888,
+        "area_ratio": 2.130434782608696
+      }
+    },
+    {
+      "patient_id": "patient004",
+      "case_id": "patient004_frame01",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.0026468634605407715,
+        "myocardium_dice": 0.10344827586206896,
+        "area_ratio": 0.05454545454545454
+      },
+      "dilation": {
+        "rf_delta": 0.00025957822799682617,
+        "myocardium_dice": 0.6077348066298343,
+        "area_ratio": 2.290909090909091
+      }
+    },
+    {
+      "patient_id": "patient004",
+      "case_id": "patient004_frame01",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.0021636486053466797,
+        "myocardium_dice": 0.07142857142857142,
+        "area_ratio": 0.037037037037037035
+      },
+      "dilation": {
+        "rf_delta": -8.553266525268555e-05,
+        "myocardium_dice": 0.6352941176470588,
+        "area_ratio": 2.1481481481481484
+      }
+    },
+    {
+      "patient_id": "patient004",
+      "case_id": "patient004_frame01",
+      "slice_idx": 8,
+      "erosion": {
+        "rf_delta": -0.0011870861053466797,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0003857612609863281,
+        "myocardium_dice": 0.5950413223140496,
+        "area_ratio": 2.361111111111111
+      }
+    },
+    {
+      "patient_id": "patient004",
+      "case_id": "patient004_frame01",
+      "slice_idx": 9,
+      "erosion": {
+        "rf_delta": -0.00012230873107910156,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0005336999893188477,
+        "myocardium_dice": 0.46808510638297873,
+        "area_ratio": 3.272727272727273
+      }
+    },
+    {
+      "patient_id": "patient004",
+      "case_id": "patient004_frame15",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.005630314350128174,
+        "myocardium_dice": 0.18181818181818182,
+        "area_ratio": 0.1
+      },
+      "dilation": {
+        "rf_delta": 0.001916646957397461,
+        "myocardium_dice": 0.6382978723404256,
+        "area_ratio": 2.1333333333333333
+      }
+    },
+    {
+      "patient_id": "patient004",
+      "case_id": "patient004_frame15",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.006357073783874512,
+        "myocardium_dice": 0.14457831325301204,
+        "area_ratio": 0.07792207792207792
+      },
+      "dilation": {
+        "rf_delta": 0.002495288848876953,
+        "myocardium_dice": 0.6609442060085837,
+        "area_ratio": 2.0259740259740258
+      }
+    },
+    {
+      "patient_id": "patient004",
+      "case_id": "patient004_frame15",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.006447792053222656,
+        "myocardium_dice": 0.17777777777777778,
+        "area_ratio": 0.0975609756097561
+      },
+      "dilation": {
+        "rf_delta": 0.001602470874786377,
+        "myocardium_dice": 0.6721311475409836,
+        "area_ratio": 1.975609756097561
+      }
+    },
+    {
+      "patient_id": "patient004",
+      "case_id": "patient004_frame15",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.0063076019287109375,
+        "myocardium_dice": 0.20408163265306123,
+        "area_ratio": 0.11363636363636363
+      },
+      "dilation": {
+        "rf_delta": 0.003383636474609375,
+        "myocardium_dice": 0.6875,
+        "area_ratio": 1.9090909090909092
+      }
+    },
+    {
+      "patient_id": "patient004",
+      "case_id": "patient004_frame15",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.0029654502868652344,
+        "myocardium_dice": 0.1875,
+        "area_ratio": 0.10344827586206896
+      },
+      "dilation": {
+        "rf_delta": 0.0014406442642211914,
+        "myocardium_dice": 0.6850393700787402,
+        "area_ratio": 1.9195402298850575
+      }
+    },
+    {
+      "patient_id": "patient004",
+      "case_id": "patient004_frame15",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.002895951271057129,
+        "myocardium_dice": 0.1095890410958904,
+        "area_ratio": 0.057971014492753624
+      },
+      "dilation": {
+        "rf_delta": 0.0009881854057312012,
+        "myocardium_dice": 0.6448598130841121,
+        "area_ratio": 2.101449275362319
+      }
+    },
+    {
+      "patient_id": "patient004",
+      "case_id": "patient004_frame15",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.002054154872894287,
+        "myocardium_dice": 0.03278688524590164,
+        "area_ratio": 0.016666666666666666
+      },
+      "dilation": {
+        "rf_delta": 0.0008249282836914062,
+        "myocardium_dice": 0.6282722513089005,
+        "area_ratio": 2.183333333333333
+      }
+    },
+    {
+      "patient_id": "patient004",
+      "case_id": "patient004_frame15",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.0015764832496643066,
+        "myocardium_dice": 0.13333333333333333,
+        "area_ratio": 0.07142857142857142
+      },
+      "dilation": {
+        "rf_delta": 0.0002945065498352051,
+        "myocardium_dice": 0.6511627906976745,
+        "area_ratio": 2.0714285714285716
+      }
+    },
+    {
+      "patient_id": "patient004",
+      "case_id": "patient004_frame15",
+      "slice_idx": 8,
+      "erosion": {
+        "rf_delta": -0.0006285309791564941,
+        "myocardium_dice": 0.25,
+        "area_ratio": 0.14285714285714285
+      },
+      "dilation": {
+        "rf_delta": 0.0003044605255126953,
+        "myocardium_dice": 0.6363636363636364,
+        "area_ratio": 2.142857142857143
+      }
+    },
+    {
+      "patient_id": "patient004",
+      "case_id": "patient004_frame15",
+      "slice_idx": 9,
+      "erosion": {
+        "rf_delta": -0.00014990568161010742,
+        "myocardium_dice": 0.18181818181818182,
+        "area_ratio": 0.1
+      },
+      "dilation": {
+        "rf_delta": 0.0004038214683532715,
+        "myocardium_dice": 0.6349206349206349,
+        "area_ratio": 2.15
+      }
+    },
+    {
+      "patient_id": "patient005",
+      "case_id": "patient005_frame01",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.01892101764678955,
+        "myocardium_dice": 0.1702127659574468,
+        "area_ratio": 0.09302325581395349
+      },
+      "dilation": {
+        "rf_delta": 0.009218811988830566,
+        "myocardium_dice": 0.6640926640926641,
+        "area_ratio": 2.011627906976744
+      }
+    },
+    {
+      "patient_id": "patient005",
+      "case_id": "patient005_frame01",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.022409021854400635,
+        "myocardium_dice": 0.2,
+        "area_ratio": 0.1111111111111111
+      },
+      "dilation": {
+        "rf_delta": 0.00021344423294067383,
+        "myocardium_dice": 0.6875,
+        "area_ratio": 1.9090909090909092
+      }
+    },
+    {
+      "patient_id": "patient005",
+      "case_id": "patient005_frame01",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.01940864324569702,
+        "myocardium_dice": 0.2833333333333333,
+        "area_ratio": 0.1650485436893204
+      },
+      "dilation": {
+        "rf_delta": 0.00040161609649658203,
+        "myocardium_dice": 0.7006802721088435,
+        "area_ratio": 1.854368932038835
+      }
+    },
+    {
+      "patient_id": "patient005",
+      "case_id": "patient005_frame01",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.018372416496276855,
+        "myocardium_dice": 0.21568627450980393,
+        "area_ratio": 0.12087912087912088
+      },
+      "dilation": {
+        "rf_delta": 0.00790858268737793,
+        "myocardium_dice": 0.6715867158671587,
+        "area_ratio": 1.978021978021978
+      }
+    },
+    {
+      "patient_id": "patient005",
+      "case_id": "patient005_frame01",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.016668856143951416,
+        "myocardium_dice": 0.2702702702702703,
+        "area_ratio": 0.15625
+      },
+      "dilation": {
+        "rf_delta": 0.007789194583892822,
+        "myocardium_dice": 0.6956521739130435,
+        "area_ratio": 1.875
+      }
+    },
+    {
+      "patient_id": "patient005",
+      "case_id": "patient005_frame01",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.01691800355911255,
+        "myocardium_dice": 0.16091954022988506,
+        "area_ratio": 0.0875
+      },
+      "dilation": {
+        "rf_delta": 0.01083594560623169,
+        "myocardium_dice": 0.6584362139917695,
+        "area_ratio": 2.0375
+      }
+    },
+    {
+      "patient_id": "patient005",
+      "case_id": "patient005_frame01",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.020351767539978027,
+        "myocardium_dice": 0.029411764705882353,
+        "area_ratio": 0.014925373134328358
+      },
+      "dilation": {
+        "rf_delta": 0.010756313800811768,
+        "myocardium_dice": 0.6350710900473934,
+        "area_ratio": 2.1492537313432836
+      }
+    },
+    {
+      "patient_id": "patient005",
+      "case_id": "patient005_frame01",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.017966866493225098,
+        "myocardium_dice": 0.11428571428571428,
+        "area_ratio": 0.06060606060606061
+      },
+      "dilation": {
+        "rf_delta": 0.004799962043762207,
+        "myocardium_dice": 0.6567164179104478,
+        "area_ratio": 2.0454545454545454
+      }
+    },
+    {
+      "patient_id": "patient005",
+      "case_id": "patient005_frame01",
+      "slice_idx": 8,
+      "erosion": {
+        "rf_delta": -0.008255362510681152,
+        "myocardium_dice": 0.04081632653061224,
+        "area_ratio": 0.020833333333333332
+      },
+      "dilation": {
+        "rf_delta": 0.005250811576843262,
+        "myocardium_dice": 0.6357615894039735,
+        "area_ratio": 2.1458333333333335
+      }
+    },
+    {
+      "patient_id": "patient005",
+      "case_id": "patient005_frame01",
+      "slice_idx": 9,
+      "erosion": {
+        "rf_delta": -0.003995418548583984,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0027922391891479492,
+        "myocardium_dice": 0.5428571428571428,
+        "area_ratio": 2.6842105263157894
+      }
+    },
+    {
+      "patient_id": "patient005",
+      "case_id": "patient005_frame13",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.0066672563552856445,
+        "myocardium_dice": 0.3146067415730337,
+        "area_ratio": 0.18666666666666668
+      },
+      "dilation": {
+        "rf_delta": 0.0038598179817199707,
+        "myocardium_dice": 0.6880733944954128,
+        "area_ratio": 1.9066666666666667
+      }
+    },
+    {
+      "patient_id": "patient005",
+      "case_id": "patient005_frame13",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.012684404850006104,
+        "myocardium_dice": 0.4461538461538462,
+        "area_ratio": 0.2871287128712871
+      },
+      "dilation": {
+        "rf_delta": 0.005111873149871826,
+        "myocardium_dice": 0.7266187050359713,
+        "area_ratio": 1.7524752475247525
+      }
+    },
+    {
+      "patient_id": "patient005",
+      "case_id": "patient005_frame13",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.014286637306213379,
+        "myocardium_dice": 0.48717948717948717,
+        "area_ratio": 0.3220338983050847
+      },
+      "dilation": {
+        "rf_delta": -0.0013068914413452148,
+        "myocardium_dice": 0.7468354430379747,
+        "area_ratio": 1.6779661016949152
+      }
+    },
+    {
+      "patient_id": "patient005",
+      "case_id": "patient005_frame13",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.014277279376983643,
+        "myocardium_dice": 0.39705882352941174,
+        "area_ratio": 0.24770642201834864
+      },
+      "dilation": {
+        "rf_delta": 0.002245187759399414,
+        "myocardium_dice": 0.7266666666666667,
+        "area_ratio": 1.7522935779816513
+      }
+    },
+    {
+      "patient_id": "patient005",
+      "case_id": "patient005_frame13",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.011894822120666504,
+        "myocardium_dice": 0.4583333333333333,
+        "area_ratio": 0.2972972972972973
+      },
+      "dilation": {
+        "rf_delta": 0.004063785076141357,
+        "myocardium_dice": 0.7350993377483444,
+        "area_ratio": 1.7207207207207207
+      }
+    },
+    {
+      "patient_id": "patient005",
+      "case_id": "patient005_frame13",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.014810442924499512,
+        "myocardium_dice": 0.417910447761194,
+        "area_ratio": 0.2641509433962264
+      },
+      "dilation": {
+        "rf_delta": 0.006308555603027344,
+        "myocardium_dice": 0.7310344827586207,
+        "area_ratio": 1.7358490566037736
+      }
+    },
+    {
+      "patient_id": "patient005",
+      "case_id": "patient005_frame13",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.014002859592437744,
+        "myocardium_dice": 0.34782608695652173,
+        "area_ratio": 0.21052631578947367
+      },
+      "dilation": {
+        "rf_delta": 0.008801758289337158,
+        "myocardium_dice": 0.7142857142857143,
+        "area_ratio": 1.8
+      }
+    },
+    {
+      "patient_id": "patient005",
+      "case_id": "patient005_frame13",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.012655198574066162,
+        "myocardium_dice": 0.21428571428571427,
+        "area_ratio": 0.12
+      },
+      "dilation": {
+        "rf_delta": 0.010479509830474854,
+        "myocardium_dice": 0.6880733944954128,
+        "area_ratio": 1.9066666666666667
+      }
+    },
+    {
+      "patient_id": "patient005",
+      "case_id": "patient005_frame13",
+      "slice_idx": 8,
+      "erosion": {
+        "rf_delta": -0.006174206733703613,
+        "myocardium_dice": 0.037037037037037035,
+        "area_ratio": 0.018867924528301886
+      },
+      "dilation": {
+        "rf_delta": 0.003673553466796875,
+        "myocardium_dice": 0.654320987654321,
+        "area_ratio": 2.056603773584906
+      }
+    },
+    {
+      "patient_id": "patient005",
+      "case_id": "patient005_frame13",
+      "slice_idx": 9,
+      "erosion": {
+        "rf_delta": -0.003669142723083496,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.004847884178161621,
+        "myocardium_dice": 0.6024096385542169,
+        "area_ratio": 2.32
+      }
+    },
+    {
+      "patient_id": "patient012",
+      "case_id": "patient012_frame01",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.0065081119537353516,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.003280043601989746,
+        "myocardium_dice": 0.6169154228855721,
+        "area_ratio": 2.2419354838709675
+      }
+    },
+    {
+      "patient_id": "patient012",
+      "case_id": "patient012_frame01",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.007033109664916992,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.000780642032623291,
+        "myocardium_dice": 0.5876288659793815,
+        "area_ratio": 2.4035087719298245
+      }
+    },
+    {
+      "patient_id": "patient012",
+      "case_id": "patient012_frame01",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.007333993911743164,
+        "myocardium_dice": 0.058823529411764705,
+        "area_ratio": 0.030303030303030304
+      },
+      "dilation": {
+        "rf_delta": -0.00037384033203125,
+        "myocardium_dice": 0.6082949308755761,
+        "area_ratio": 2.287878787878788
+      }
+    },
+    {
+      "patient_id": "patient012",
+      "case_id": "patient012_frame01",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.007359027862548828,
+        "myocardium_dice": 0.07692307692307693,
+        "area_ratio": 0.04
+      },
+      "dilation": {
+        "rf_delta": 0.0007709860801696777,
+        "myocardium_dice": 0.6302521008403361,
+        "area_ratio": 2.1733333333333333
+      }
+    },
+    {
+      "patient_id": "patient012",
+      "case_id": "patient012_frame01",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.008093714714050293,
+        "myocardium_dice": 0.028985507246376812,
+        "area_ratio": 0.014705882352941176
+      },
+      "dilation": {
+        "rf_delta": 0.0023978352546691895,
+        "myocardium_dice": 0.6126126126126126,
+        "area_ratio": 2.264705882352941
+      }
+    },
+    {
+      "patient_id": "patient012",
+      "case_id": "patient012_frame01",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.007413029670715332,
+        "myocardium_dice": 0.029850746268656716,
+        "area_ratio": 0.015151515151515152
+      },
+      "dilation": {
+        "rf_delta": 0.0012564659118652344,
+        "myocardium_dice": 0.6139534883720931,
+        "area_ratio": 2.257575757575758
+      }
+    },
+    {
+      "patient_id": "patient012",
+      "case_id": "patient012_frame01",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.007073819637298584,
+        "myocardium_dice": 0.03389830508474576,
+        "area_ratio": 0.017241379310344827
+      },
+      "dilation": {
+        "rf_delta": 0.0012661218643188477,
+        "myocardium_dice": 0.6010362694300518,
+        "area_ratio": 2.3275862068965516
+      }
+    },
+    {
+      "patient_id": "patient012",
+      "case_id": "patient012_frame01",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.004544258117675781,
+        "myocardium_dice": 0.07547169811320754,
+        "area_ratio": 0.0392156862745098
+      },
+      "dilation": {
+        "rf_delta": 0.0009660124778747559,
+        "myocardium_dice": 0.5862068965517241,
+        "area_ratio": 2.411764705882353
+      }
+    },
+    {
+      "patient_id": "patient012",
+      "case_id": "patient012_frame01",
+      "slice_idx": 8,
+      "erosion": {
+        "rf_delta": -0.0035375356674194336,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.0010376572608947754,
+        "myocardium_dice": 0.5833333333333334,
+        "area_ratio": 2.4285714285714284
+      }
+    },
+    {
+      "patient_id": "patient012",
+      "case_id": "patient012_frame01",
+      "slice_idx": 9,
+      "erosion": {
+        "rf_delta": -0.0014827847480773926,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.00010347366333007812,
+        "myocardium_dice": 0.4878048780487805,
+        "area_ratio": 3.1
+      }
+    },
+    {
+      "patient_id": "patient012",
+      "case_id": "patient012_frame13",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.005152463912963867,
+        "myocardium_dice": 0.2962962962962963,
+        "area_ratio": 0.17391304347826086
+      },
+      "dilation": {
+        "rf_delta": -0.0007879734039306641,
+        "myocardium_dice": 0.6699029126213593,
+        "area_ratio": 1.9855072463768115
+      }
+    },
+    {
+      "patient_id": "patient012",
+      "case_id": "patient012_frame13",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.006942927837371826,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.00042897462844848633,
+        "myocardium_dice": 0.6124401913875598,
+        "area_ratio": 2.265625
+      }
+    },
+    {
+      "patient_id": "patient012",
+      "case_id": "patient012_frame13",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.005109131336212158,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0027799606323242188,
+        "myocardium_dice": 0.5911330049261084,
+        "area_ratio": 2.3833333333333333
+      }
+    },
+    {
+      "patient_id": "patient012",
+      "case_id": "patient012_frame13",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.005476593971252441,
+        "myocardium_dice": 0.031746031746031744,
+        "area_ratio": 0.016129032258064516
+      },
+      "dilation": {
+        "rf_delta": 0.0025709867477416992,
+        "myocardium_dice": 0.5990338164251208,
+        "area_ratio": 2.338709677419355
+      }
+    },
+    {
+      "patient_id": "patient012",
+      "case_id": "patient012_frame13",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.005571722984313965,
+        "myocardium_dice": 0.031746031746031744,
+        "area_ratio": 0.016129032258064516
+      },
+      "dilation": {
+        "rf_delta": 0.0017006397247314453,
+        "myocardium_dice": 0.6048780487804878,
+        "area_ratio": 2.306451612903226
+      }
+    },
+    {
+      "patient_id": "patient012",
+      "case_id": "patient012_frame13",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.004464089870452881,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0029106736183166504,
+        "myocardium_dice": 0.5894736842105263,
+        "area_ratio": 2.392857142857143
+      }
+    },
+    {
+      "patient_id": "patient012",
+      "case_id": "patient012_frame13",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.0032345056533813477,
+        "myocardium_dice": 0.03508771929824561,
+        "area_ratio": 0.017857142857142856
+      },
+      "dilation": {
+        "rf_delta": 0.0003520846366882324,
+        "myocardium_dice": 0.632768361581921,
+        "area_ratio": 2.1607142857142856
+      }
+    },
+    {
+      "patient_id": "patient012",
+      "case_id": "patient012_frame13",
+      "slice_idx": 8,
+      "erosion": {
+        "rf_delta": -0.0022743940353393555,
+        "myocardium_dice": 0.09090909090909091,
+        "area_ratio": 0.047619047619047616
+      },
+      "dilation": {
+        "rf_delta": -0.00024372339248657227,
+        "myocardium_dice": 0.6086956521739131,
+        "area_ratio": 2.2857142857142856
+      }
+    },
+    {
+      "patient_id": "patient012",
+      "case_id": "patient012_frame13",
+      "slice_idx": 9,
+      "erosion": {
+        "rf_delta": -0.0007750391960144043,
+        "myocardium_dice": 0.12903225806451613,
+        "area_ratio": 0.06896551724137931
+      },
+      "dilation": {
+        "rf_delta": 2.282857894897461e-05,
+        "myocardium_dice": 0.6041666666666666,
+        "area_ratio": 2.310344827586207
+      }
+    },
+    {
+      "patient_id": "patient014",
+      "case_id": "patient014_frame01",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.00504225492477417,
+        "myocardium_dice": 0.1111111111111111,
+        "area_ratio": 0.058823529411764705
+      },
+      "dilation": {
+        "rf_delta": -0.0018351078033447266,
+        "myocardium_dice": 0.6210045662100456,
+        "area_ratio": 2.2205882352941178
+      }
+    },
+    {
+      "patient_id": "patient014",
+      "case_id": "patient014_frame01",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.016697704792022705,
+        "myocardium_dice": 0.025974025974025976,
+        "area_ratio": 0.013157894736842105
+      },
+      "dilation": {
+        "rf_delta": -0.005317807197570801,
+        "myocardium_dice": 0.6204081632653061,
+        "area_ratio": 2.223684210526316
+      }
+    },
+    {
+      "patient_id": "patient014",
+      "case_id": "patient014_frame01",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.013184905052185059,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.0008456110954284668,
+        "myocardium_dice": 0.6160337552742616,
+        "area_ratio": 2.2465753424657535
+      }
+    },
+    {
+      "patient_id": "patient014",
+      "case_id": "patient014_frame01",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.012410283088684082,
+        "myocardium_dice": 0.025974025974025976,
+        "area_ratio": 0.013157894736842105
+      },
+      "dilation": {
+        "rf_delta": 0.002979457378387451,
+        "myocardium_dice": 0.6229508196721312,
+        "area_ratio": 2.210526315789474
+      }
+    },
+    {
+      "patient_id": "patient014",
+      "case_id": "patient014_frame01",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.01291358470916748,
+        "myocardium_dice": 0.025974025974025976,
+        "area_ratio": 0.013157894736842105
+      },
+      "dilation": {
+        "rf_delta": 0.002405881881713867,
+        "myocardium_dice": 0.6204081632653061,
+        "area_ratio": 2.223684210526316
+      }
+    },
+    {
+      "patient_id": "patient014",
+      "case_id": "patient014_frame01",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.012278437614440918,
+        "myocardium_dice": 0.02631578947368421,
+        "area_ratio": 0.013333333333333334
+      },
+      "dilation": {
+        "rf_delta": 0.00548630952835083,
+        "myocardium_dice": 0.6198347107438017,
+        "area_ratio": 2.2266666666666666
+      }
+    },
+    {
+      "patient_id": "patient014",
+      "case_id": "patient014_frame01",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.012536048889160156,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.00641554594039917,
+        "myocardium_dice": 0.574585635359116,
+        "area_ratio": 2.480769230769231
+      }
+    },
+    {
+      "patient_id": "patient014",
+      "case_id": "patient014_frame01",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.010143637657165527,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.003344893455505371,
+        "myocardium_dice": 0.5894736842105263,
+        "area_ratio": 2.392857142857143
+      }
+    },
+    {
+      "patient_id": "patient014",
+      "case_id": "patient014_frame01",
+      "slice_idx": 8,
+      "erosion": {
+        "rf_delta": -0.0037080049514770508,
+        "myocardium_dice": 0.1276595744680851,
+        "area_ratio": 0.06818181818181818
+      },
+      "dilation": {
+        "rf_delta": 0.002768874168395996,
+        "myocardium_dice": 0.6153846153846154,
+        "area_ratio": 2.25
+      }
+    },
+    {
+      "patient_id": "patient014",
+      "case_id": "patient014_frame01",
+      "slice_idx": 9,
+      "erosion": {
+        "rf_delta": -0.0019122958183288574,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0010488629341125488,
+        "myocardium_dice": 0.6129032258064516,
+        "area_ratio": 2.263157894736842
+      }
+    },
+    {
+      "patient_id": "patient014",
+      "case_id": "patient014_frame13",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.003998756408691406,
+        "myocardium_dice": 0.09375,
+        "area_ratio": 0.04918032786885246
+      },
+      "dilation": {
+        "rf_delta": 0.002423405647277832,
+        "myocardium_dice": 0.6192893401015228,
+        "area_ratio": 2.2295081967213113
+      }
+    },
+    {
+      "patient_id": "patient014",
+      "case_id": "patient014_frame13",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.012665331363677979,
+        "myocardium_dice": 0.047619047619047616,
+        "area_ratio": 0.024390243902439025
+      },
+      "dilation": {
+        "rf_delta": -0.004725515842437744,
+        "myocardium_dice": 0.6482213438735178,
+        "area_ratio": 2.0853658536585367
+      }
+    },
+    {
+      "patient_id": "patient014",
+      "case_id": "patient014_frame13",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.008856713771820068,
+        "myocardium_dice": 0.07317073170731707,
+        "area_ratio": 0.0379746835443038
+      },
+      "dilation": {
+        "rf_delta": -0.001712501049041748,
+        "myocardium_dice": 0.6448979591836734,
+        "area_ratio": 2.1012658227848102
+      }
+    },
+    {
+      "patient_id": "patient014",
+      "case_id": "patient014_frame13",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.012987136840820312,
+        "myocardium_dice": 0.09302325581395349,
+        "area_ratio": 0.04878048780487805
+      },
+      "dilation": {
+        "rf_delta": 0.00207674503326416,
+        "myocardium_dice": 0.6482213438735178,
+        "area_ratio": 2.0853658536585367
+      }
+    },
+    {
+      "patient_id": "patient014",
+      "case_id": "patient014_frame13",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.010931134223937988,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0011621713638305664,
+        "myocardium_dice": 0.6363636363636364,
+        "area_ratio": 2.142857142857143
+      }
+    },
+    {
+      "patient_id": "patient014",
+      "case_id": "patient014_frame13",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.009947717189788818,
+        "myocardium_dice": 0.07692307692307693,
+        "area_ratio": 0.04
+      },
+      "dilation": {
+        "rf_delta": 0.004931211471557617,
+        "myocardium_dice": 0.6329113924050633,
+        "area_ratio": 2.16
+      }
+    },
+    {
+      "patient_id": "patient014",
+      "case_id": "patient014_frame13",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.012800633907318115,
+        "myocardium_dice": 0.03333333333333333,
+        "area_ratio": 0.01694915254237288
+      },
+      "dilation": {
+        "rf_delta": 0.00761336088180542,
+        "myocardium_dice": 0.6113989637305699,
+        "area_ratio": 2.2711864406779663
+      }
+    },
+    {
+      "patient_id": "patient014",
+      "case_id": "patient014_frame13",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.011494994163513184,
+        "myocardium_dice": 0.10126582278481013,
+        "area_ratio": 0.05333333333333334
+      },
+      "dilation": {
+        "rf_delta": 0.002305924892425537,
+        "myocardium_dice": 0.6666666666666666,
+        "area_ratio": 2.0
+      }
+    },
+    {
+      "patient_id": "patient014",
+      "case_id": "patient014_frame13",
+      "slice_idx": 8,
+      "erosion": {
+        "rf_delta": -0.003706216812133789,
+        "myocardium_dice": 0.07142857142857142,
+        "area_ratio": 0.037037037037037035
+      },
+      "dilation": {
+        "rf_delta": 0.0010824203491210938,
+        "myocardium_dice": 0.6666666666666666,
+        "area_ratio": 2.0
+      }
+    },
+    {
+      "patient_id": "patient014",
+      "case_id": "patient014_frame13",
+      "slice_idx": 9,
+      "erosion": {
+        "rf_delta": -0.0006558895111083984,
+        "myocardium_dice": 0.24561403508771928,
+        "area_ratio": 0.14
+      },
+      "dilation": {
+        "rf_delta": -0.0001837015151977539,
+        "myocardium_dice": 0.6993006993006993,
+        "area_ratio": 1.86
+      }
+    },
+    {
+      "patient_id": "patient015",
+      "case_id": "patient015_frame01",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.007688999176025391,
+        "myocardium_dice": 0.06451612903225806,
+        "area_ratio": 0.03333333333333333
+      },
+      "dilation": {
+        "rf_delta": 0.0017699003219604492,
+        "myocardium_dice": 0.6153846153846154,
+        "area_ratio": 2.25
+      }
+    },
+    {
+      "patient_id": "patient015",
+      "case_id": "patient015_frame01",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.008536279201507568,
+        "myocardium_dice": 0.028169014084507043,
+        "area_ratio": 0.014285714285714285
+      },
+      "dilation": {
+        "rf_delta": -0.001080632209777832,
+        "myocardium_dice": 0.6422018348623854,
+        "area_ratio": 2.1142857142857143
+      }
+    },
+    {
+      "patient_id": "patient015",
+      "case_id": "patient015_frame01",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.007725358009338379,
+        "myocardium_dice": 0.0821917808219178,
+        "area_ratio": 0.04285714285714286
+      },
+      "dilation": {
+        "rf_delta": 0.00038444995880126953,
+        "myocardium_dice": 0.6278026905829597,
+        "area_ratio": 2.1857142857142855
+      }
+    },
+    {
+      "patient_id": "patient015",
+      "case_id": "patient015_frame01",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.006601154804229736,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0015293359756469727,
+        "myocardium_dice": 0.6,
+        "area_ratio": 2.3333333333333335
+      }
+    },
+    {
+      "patient_id": "patient015",
+      "case_id": "patient015_frame01",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.007588386535644531,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0026682019233703613,
+        "myocardium_dice": 0.5957446808510638,
+        "area_ratio": 2.357142857142857
+      }
+    },
+    {
+      "patient_id": "patient015",
+      "case_id": "patient015_frame01",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.005392730236053467,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0005555152893066406,
+        "myocardium_dice": 0.588957055214724,
+        "area_ratio": 2.3958333333333335
+      }
+    },
+    {
+      "patient_id": "patient015",
+      "case_id": "patient015_frame01",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.004783332347869873,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0010892152786254883,
+        "myocardium_dice": 0.593103448275862,
+        "area_ratio": 2.372093023255814
+      }
+    },
+    {
+      "patient_id": "patient015",
+      "case_id": "patient015_frame01",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.002164125442504883,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0005338191986083984,
+        "myocardium_dice": 0.5544554455445545,
+        "area_ratio": 2.607142857142857
+      }
+    },
+    {
+      "patient_id": "patient015",
+      "case_id": "patient015_frame01",
+      "slice_idx": 8,
+      "erosion": {
+        "rf_delta": -0.00013488531112670898,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.00014251470565795898,
+        "myocardium_dice": 0.5306122448979592,
+        "area_ratio": 2.769230769230769
+      }
+    },
+    {
+      "patient_id": "patient015",
+      "case_id": "patient015_frame10",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.004068970680236816,
+        "myocardium_dice": 0.24,
+        "area_ratio": 0.13636363636363635
+      },
+      "dilation": {
+        "rf_delta": 0.00024330615997314453,
+        "myocardium_dice": 0.6839378238341969,
+        "area_ratio": 1.9242424242424243
+      }
+    },
+    {
+      "patient_id": "patient015",
+      "case_id": "patient015_frame10",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.005277097225189209,
+        "myocardium_dice": 0.21176470588235294,
+        "area_ratio": 0.11842105263157894
+      },
+      "dilation": {
+        "rf_delta": -0.00020939111709594727,
+        "myocardium_dice": 0.6846846846846847,
+        "area_ratio": 1.9210526315789473
+      }
+    },
+    {
+      "patient_id": "patient015",
+      "case_id": "patient015_frame10",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.006657063961029053,
+        "myocardium_dice": 0.11904761904761904,
+        "area_ratio": 0.06329113924050633
+      },
+      "dilation": {
+        "rf_delta": 0.0015411972999572754,
+        "myocardium_dice": 0.6781115879828327,
+        "area_ratio": 1.9493670886075949
+      }
+    },
+    {
+      "patient_id": "patient015",
+      "case_id": "patient015_frame10",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.005835890769958496,
+        "myocardium_dice": 0.1038961038961039,
+        "area_ratio": 0.0547945205479452
+      },
+      "dilation": {
+        "rf_delta": 0.005495727062225342,
+        "myocardium_dice": 0.6547085201793722,
+        "area_ratio": 2.0547945205479454
+      }
+    },
+    {
+      "patient_id": "patient015",
+      "case_id": "patient015_frame10",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.003235936164855957,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.003929197788238525,
+        "myocardium_dice": 0.6432160804020101,
+        "area_ratio": 2.109375
+      }
+    },
+    {
+      "patient_id": "patient015",
+      "case_id": "patient015_frame10",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.0038002729415893555,
+        "myocardium_dice": 0.18421052631578946,
+        "area_ratio": 0.10144927536231885
+      },
+      "dilation": {
+        "rf_delta": 0.0029169321060180664,
+        "myocardium_dice": 0.6831683168316832,
+        "area_ratio": 1.9275362318840579
+      }
+    },
+    {
+      "patient_id": "patient015",
+      "case_id": "patient015_frame10",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.002318859100341797,
+        "myocardium_dice": 0.16129032258064516,
+        "area_ratio": 0.08771929824561403
+      },
+      "dilation": {
+        "rf_delta": 0.0014817118644714355,
+        "myocardium_dice": 0.6785714285714286,
+        "area_ratio": 1.9473684210526316
+      }
+    },
+    {
+      "patient_id": "patient015",
+      "case_id": "patient015_frame10",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.0014702677726745605,
+        "myocardium_dice": 0.2222222222222222,
+        "area_ratio": 0.125
+      },
+      "dilation": {
+        "rf_delta": 0.0005276203155517578,
+        "myocardium_dice": 0.6906474820143885,
+        "area_ratio": 1.8958333333333333
+      }
+    },
+    {
+      "patient_id": "patient015",
+      "case_id": "patient015_frame10",
+      "slice_idx": 8,
+      "erosion": {
+        "rf_delta": -5.21540641784668e-05,
+        "myocardium_dice": 0.3076923076923077,
+        "area_ratio": 0.18181818181818182
+      },
+      "dilation": {
+        "rf_delta": -0.00017124414443969727,
+        "myocardium_dice": 0.6285714285714286,
+        "area_ratio": 2.1818181818181817
+      }
+    },
+    {
+      "patient_id": "patient018",
+      "case_id": "patient018_frame01",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.01098787784576416,
+        "myocardium_dice": 0.03278688524590164,
+        "area_ratio": 0.016666666666666666
+      },
+      "dilation": {
+        "rf_delta": 0.0012407898902893066,
+        "myocardium_dice": 0.5970149253731343,
+        "area_ratio": 2.35
+      }
+    },
+    {
+      "patient_id": "patient018",
+      "case_id": "patient018_frame01",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.013212263584136963,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.002950906753540039,
+        "myocardium_dice": 0.6074766355140186,
+        "area_ratio": 2.292307692307692
+      }
+    },
+    {
+      "patient_id": "patient018",
+      "case_id": "patient018_frame01",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.011891603469848633,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.001157522201538086,
+        "myocardium_dice": 0.5729166666666666,
+        "area_ratio": 2.4909090909090907
+      }
+    },
+    {
+      "patient_id": "patient018",
+      "case_id": "patient018_frame01",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.013237595558166504,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0013844966888427734,
+        "myocardium_dice": 0.6030150753768844,
+        "area_ratio": 2.316666666666667
+      }
+    },
+    {
+      "patient_id": "patient018",
+      "case_id": "patient018_frame01",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.009065032005310059,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0031780600547790527,
+        "myocardium_dice": 0.5487804878048781,
+        "area_ratio": 2.6444444444444444
+      }
+    },
+    {
+      "patient_id": "patient018",
+      "case_id": "patient018_frame01",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.008186817169189453,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.003087282180786133,
+        "myocardium_dice": 0.5333333333333333,
+        "area_ratio": 2.75
+      }
+    },
+    {
+      "patient_id": "patient018",
+      "case_id": "patient018_frame01",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.0059005022048950195,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0015822649002075195,
+        "myocardium_dice": 0.5142857142857142,
+        "area_ratio": 2.888888888888889
+      }
+    },
+    {
+      "patient_id": "patient018",
+      "case_id": "patient018_frame01",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.003736555576324463,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0011722445487976074,
+        "myocardium_dice": 0.5483870967741935,
+        "area_ratio": 2.6470588235294117
+      }
+    },
+    {
+      "patient_id": "patient018",
+      "case_id": "patient018_frame10",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.008991718292236328,
+        "myocardium_dice": 0.06349206349206349,
+        "area_ratio": 0.03278688524590164
+      },
+      "dilation": {
+        "rf_delta": 4.744529724121094e-05,
+        "myocardium_dice": 0.6224489795918368,
+        "area_ratio": 2.2131147540983607
+      }
+    },
+    {
+      "patient_id": "patient018",
+      "case_id": "patient018_frame10",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.010018348693847656,
+        "myocardium_dice": 0.03225806451612903,
+        "area_ratio": 0.01639344262295082
+      },
+      "dilation": {
+        "rf_delta": 0.0006673336029052734,
+        "myocardium_dice": 0.61,
+        "area_ratio": 2.278688524590164
+      }
+    },
+    {
+      "patient_id": "patient018",
+      "case_id": "patient018_frame10",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.01034456491470337,
+        "myocardium_dice": 0.03225806451612903,
+        "area_ratio": 0.01639344262295082
+      },
+      "dilation": {
+        "rf_delta": 0.0016621947288513184,
+        "myocardium_dice": 0.6130653266331658,
+        "area_ratio": 2.262295081967213
+      }
+    },
+    {
+      "patient_id": "patient018",
+      "case_id": "patient018_frame10",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.008442461490631104,
+        "myocardium_dice": 0.037037037037037035,
+        "area_ratio": 0.018867924528301886
+      },
+      "dilation": {
+        "rf_delta": 0.003260970115661621,
+        "myocardium_dice": 0.5955056179775281,
+        "area_ratio": 2.358490566037736
+      }
+    },
+    {
+      "patient_id": "patient018",
+      "case_id": "patient018_frame10",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.006909966468811035,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0030483007431030273,
+        "myocardium_dice": 0.5975609756097561,
+        "area_ratio": 2.3469387755102042
+      }
+    },
+    {
+      "patient_id": "patient018",
+      "case_id": "patient018_frame10",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.006276488304138184,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0020294189453125,
+        "myocardium_dice": 0.5736434108527132,
+        "area_ratio": 2.4864864864864864
+      }
+    },
+    {
+      "patient_id": "patient018",
+      "case_id": "patient018_frame10",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.005160152912139893,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0006158351898193359,
+        "myocardium_dice": 0.5714285714285714,
+        "area_ratio": 2.5
+      }
+    },
+    {
+      "patient_id": "patient018",
+      "case_id": "patient018_frame10",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.0020992159843444824,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0003401041030883789,
+        "myocardium_dice": 0.5185185185185185,
+        "area_ratio": 2.857142857142857
+      }
+    },
+    {
+      "patient_id": "patient028",
+      "case_id": "patient028_frame01",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.013552546501159668,
+        "myocardium_dice": 0.41237113402061853,
+        "area_ratio": 0.2597402597402597
+      },
+      "dilation": {
+        "rf_delta": -0.001113593578338623,
+        "myocardium_dice": 0.7298578199052133,
+        "area_ratio": 1.7402597402597402
+      }
+    },
+    {
+      "patient_id": "patient028",
+      "case_id": "patient028_frame01",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.010468780994415283,
+        "myocardium_dice": 0.4,
+        "area_ratio": 0.25
+      },
+      "dilation": {
+        "rf_delta": 0.0009686946868896484,
+        "myocardium_dice": 0.7272727272727273,
+        "area_ratio": 1.75
+      }
+    },
+    {
+      "patient_id": "patient028",
+      "case_id": "patient028_frame01",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.005909621715545654,
+        "myocardium_dice": 0.2891566265060241,
+        "area_ratio": 0.16901408450704225
+      },
+      "dilation": {
+        "rf_delta": -4.553794860839844e-05,
+        "myocardium_dice": 0.6995073891625616,
+        "area_ratio": 1.8591549295774648
+      }
+    },
+    {
+      "patient_id": "patient028",
+      "case_id": "patient028_frame01",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.005121946334838867,
+        "myocardium_dice": 0.3333333333333333,
+        "area_ratio": 0.2
+      },
+      "dilation": {
+        "rf_delta": 0.0005780458450317383,
+        "myocardium_dice": 0.7,
+        "area_ratio": 1.8571428571428572
+      }
+    },
+    {
+      "patient_id": "patient028",
+      "case_id": "patient028_frame01",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.0052495598793029785,
+        "myocardium_dice": 0.22857142857142856,
+        "area_ratio": 0.12903225806451613
+      },
+      "dilation": {
+        "rf_delta": -0.0018090009689331055,
+        "myocardium_dice": 0.6813186813186813,
+        "area_ratio": 1.935483870967742
+      }
+    },
+    {
+      "patient_id": "patient028",
+      "case_id": "patient028_frame01",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.006810784339904785,
+        "myocardium_dice": 0.35,
+        "area_ratio": 0.21212121212121213
+      },
+      "dilation": {
+        "rf_delta": -0.0011013150215148926,
+        "myocardium_dice": 0.717391304347826,
+        "area_ratio": 1.7878787878787878
+      }
+    },
+    {
+      "patient_id": "patient028",
+      "case_id": "patient028_frame01",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.0045815110206604,
+        "myocardium_dice": 0.34285714285714286,
+        "area_ratio": 0.20689655172413793
+      },
+      "dilation": {
+        "rf_delta": -0.0002944469451904297,
+        "myocardium_dice": 0.7160493827160493,
+        "area_ratio": 1.793103448275862
+      }
+    },
+    {
+      "patient_id": "patient028",
+      "case_id": "patient028_frame01",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.002626180648803711,
+        "myocardium_dice": 0.13636363636363635,
+        "area_ratio": 0.07317073170731707
+      },
+      "dilation": {
+        "rf_delta": 0.0006277561187744141,
+        "myocardium_dice": 0.6776859504132231,
+        "area_ratio": 1.951219512195122
+      }
+    },
+    {
+      "patient_id": "patient028",
+      "case_id": "patient028_frame01",
+      "slice_idx": 8,
+      "erosion": {
+        "rf_delta": -0.0009841322898864746,
+        "myocardium_dice": 0.2777777777777778,
+        "area_ratio": 0.16129032258064516
+      },
+      "dilation": {
+        "rf_delta": -0.00042432546615600586,
+        "myocardium_dice": 0.6813186813186813,
+        "area_ratio": 1.935483870967742
+      }
+    },
+    {
+      "patient_id": "patient028",
+      "case_id": "patient028_frame09",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.011977314949035645,
+        "myocardium_dice": 0.5555555555555556,
+        "area_ratio": 0.38461538461538464
+      },
+      "dilation": {
+        "rf_delta": 0.00850135087966919,
+        "myocardium_dice": 0.7536231884057971,
+        "area_ratio": 1.6538461538461537
+      }
+    },
+    {
+      "patient_id": "patient028",
+      "case_id": "patient028_frame09",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.006817996501922607,
+        "myocardium_dice": 0.6666666666666666,
+        "area_ratio": 0.5
+      },
+      "dilation": {
+        "rf_delta": 0.0008462667465209961,
+        "myocardium_dice": 0.8,
+        "area_ratio": 1.5
+      }
+    },
+    {
+      "patient_id": "patient028",
+      "case_id": "patient028_frame09",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.002475261688232422,
+        "myocardium_dice": 0.6423357664233577,
+        "area_ratio": 0.4731182795698925
+      },
+      "dilation": {
+        "rf_delta": 0.000249326229095459,
+        "myocardium_dice": 0.7914893617021277,
+        "area_ratio": 1.5268817204301075
+      }
+    },
+    {
+      "patient_id": "patient028",
+      "case_id": "patient028_frame09",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.0011683106422424316,
+        "myocardium_dice": 0.5950413223140496,
+        "area_ratio": 0.4235294117647059
+      },
+      "dilation": {
+        "rf_delta": -0.00035703182220458984,
+        "myocardium_dice": 0.776255707762557,
+        "area_ratio": 1.576470588235294
+      }
+    },
+    {
+      "patient_id": "patient028",
+      "case_id": "patient028_frame09",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.0007063746452331543,
+        "myocardium_dice": 0.6341463414634146,
+        "area_ratio": 0.4642857142857143
+      },
+      "dilation": {
+        "rf_delta": -0.00018137693405151367,
+        "myocardium_dice": 0.7887323943661971,
+        "area_ratio": 1.5357142857142858
+      }
+    },
+    {
+      "patient_id": "patient028",
+      "case_id": "patient028_frame09",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.00021982192993164062,
+        "myocardium_dice": 0.6542056074766355,
+        "area_ratio": 0.4861111111111111
+      },
+      "dilation": {
+        "rf_delta": 0.00015747547149658203,
+        "myocardium_dice": 0.7955801104972375,
+        "area_ratio": 1.5138888888888888
+      }
+    },
+    {
+      "patient_id": "patient028",
+      "case_id": "patient028_frame09",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.00011008977890014648,
+        "myocardium_dice": 0.693069306930693,
+        "area_ratio": 0.5303030303030303
+      },
+      "dilation": {
+        "rf_delta": 0.00023752450942993164,
+        "myocardium_dice": 0.8098159509202454,
+        "area_ratio": 1.4696969696969697
+      }
+    },
+    {
+      "patient_id": "patient028",
+      "case_id": "patient028_frame09",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.00010031461715698242,
+        "myocardium_dice": 0.7380952380952381,
+        "area_ratio": 0.5849056603773585
+      },
+      "dilation": {
+        "rf_delta": 0.00016433000564575195,
+        "myocardium_dice": 0.803030303030303,
+        "area_ratio": 1.490566037735849
+      }
+    },
+    {
+      "patient_id": "patient028",
+      "case_id": "patient028_frame09",
+      "slice_idx": 8,
+      "erosion": {
+        "rf_delta": -4.7206878662109375e-05,
+        "myocardium_dice": 0.6666666666666666,
+        "area_ratio": 0.5
+      },
+      "dilation": {
+        "rf_delta": 0.0002472400665283203,
+        "myocardium_dice": 0.7619047619047619,
+        "area_ratio": 1.625
+      }
+    },
+    {
+      "patient_id": "patient029",
+      "case_id": "patient029_frame01",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.00888824462890625,
+        "myocardium_dice": 0.2413793103448276,
+        "area_ratio": 0.13725490196078433
+      },
+      "dilation": {
+        "rf_delta": 0.0037689208984375,
+        "myocardium_dice": 0.6623376623376623,
+        "area_ratio": 2.019607843137255
+      }
+    },
+    {
+      "patient_id": "patient029",
+      "case_id": "patient029_frame01",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.009853661060333252,
+        "myocardium_dice": 0.46153846153846156,
+        "area_ratio": 0.3
+      },
+      "dilation": {
+        "rf_delta": 0.002299010753631592,
+        "myocardium_dice": 0.7352941176470589,
+        "area_ratio": 1.72
+      }
+    },
+    {
+      "patient_id": "patient029",
+      "case_id": "patient029_frame01",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.010924339294433594,
+        "myocardium_dice": 0.5847953216374269,
+        "area_ratio": 0.4132231404958678
+      },
+      "dilation": {
+        "rf_delta": 0.0030753016471862793,
+        "myocardium_dice": 0.7707006369426752,
+        "area_ratio": 1.5950413223140496
+      }
+    },
+    {
+      "patient_id": "patient029",
+      "case_id": "patient029_frame01",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.007314741611480713,
+        "myocardium_dice": 0.5847953216374269,
+        "area_ratio": 0.4132231404958678
+      },
+      "dilation": {
+        "rf_delta": 0.0030857324600219727,
+        "myocardium_dice": 0.7682539682539683,
+        "area_ratio": 1.603305785123967
+      }
+    },
+    {
+      "patient_id": "patient029",
+      "case_id": "patient029_frame01",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.007321000099182129,
+        "myocardium_dice": 0.5477707006369427,
+        "area_ratio": 0.37719298245614036
+      },
+      "dilation": {
+        "rf_delta": 0.002712249755859375,
+        "myocardium_dice": 0.7549668874172185,
+        "area_ratio": 1.6491228070175439
+      }
+    },
+    {
+      "patient_id": "patient029",
+      "case_id": "patient029_frame01",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.00858372449874878,
+        "myocardium_dice": 0.4748201438848921,
+        "area_ratio": 0.3113207547169811
+      },
+      "dilation": {
+        "rf_delta": 0.0029021501541137695,
+        "myocardium_dice": 0.7412587412587412,
+        "area_ratio": 1.6981132075471699
+      }
+    },
+    {
+      "patient_id": "patient029",
+      "case_id": "patient029_frame01",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.00717771053314209,
+        "myocardium_dice": 0.3047619047619048,
+        "area_ratio": 0.1797752808988764
+      },
+      "dilation": {
+        "rf_delta": 0.0032448768615722656,
+        "myocardium_dice": 0.7091633466135459,
+        "area_ratio": 1.8202247191011236
+      }
+    },
+    {
+      "patient_id": "patient029",
+      "case_id": "patient029_frame01",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.006550610065460205,
+        "myocardium_dice": 0.09375,
+        "area_ratio": 0.04918032786885246
+      },
+      "dilation": {
+        "rf_delta": 0.0005258321762084961,
+        "myocardium_dice": 0.6387434554973822,
+        "area_ratio": 2.1311475409836067
+      }
+    },
+    {
+      "patient_id": "patient029",
+      "case_id": "patient029_frame01",
+      "slice_idx": 8,
+      "erosion": {
+        "rf_delta": -0.005695223808288574,
+        "myocardium_dice": 0.1724137931034483,
+        "area_ratio": 0.09433962264150944
+      },
+      "dilation": {
+        "rf_delta": -0.0005345344543457031,
+        "myocardium_dice": 0.6463414634146342,
+        "area_ratio": 2.0943396226415096
+      }
+    },
+    {
+      "patient_id": "patient029",
+      "case_id": "patient029_frame01",
+      "slice_idx": 9,
+      "erosion": {
+        "rf_delta": -0.0038427114486694336,
+        "myocardium_dice": 0.19607843137254902,
+        "area_ratio": 0.10869565217391304
+      },
+      "dilation": {
+        "rf_delta": -0.001703500747680664,
+        "myocardium_dice": 0.6715328467153284,
+        "area_ratio": 1.9782608695652173
+      }
+    },
+    {
+      "patient_id": "patient029",
+      "case_id": "patient029_frame01",
+      "slice_idx": 10,
+      "erosion": {
+        "rf_delta": -0.0009752511978149414,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -4.875659942626953e-05,
+        "myocardium_dice": 0.59375,
+        "area_ratio": 2.3684210526315788
+      }
+    },
+    {
+      "patient_id": "patient029",
+      "case_id": "patient029_frame12",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.004815280437469482,
+        "myocardium_dice": 0.6341463414634146,
+        "area_ratio": 0.4642857142857143
+      },
+      "dilation": {
+        "rf_delta": 0.005846619606018066,
+        "myocardium_dice": 0.7887323943661971,
+        "area_ratio": 1.5357142857142858
+      }
+    },
+    {
+      "patient_id": "patient029",
+      "case_id": "patient029_frame12",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.0030808448791503906,
+        "myocardium_dice": 0.7211538461538461,
+        "area_ratio": 0.5639097744360902
+      },
+      "dilation": {
+        "rf_delta": 0.003847837448120117,
+        "myocardium_dice": 0.8209876543209876,
+        "area_ratio": 1.4360902255639099
+      }
+    },
+    {
+      "patient_id": "patient029",
+      "case_id": "patient029_frame12",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.0011739134788513184,
+        "myocardium_dice": 0.7791164658634538,
+        "area_ratio": 0.6381578947368421
+      },
+      "dilation": {
+        "rf_delta": 0.001078784465789795,
+        "myocardium_dice": 0.8467966573816156,
+        "area_ratio": 1.361842105263158
+      }
+    },
+    {
+      "patient_id": "patient029",
+      "case_id": "patient029_frame12",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.000546574592590332,
+        "myocardium_dice": 0.7876106194690266,
+        "area_ratio": 0.6496350364963503
+      },
+      "dilation": {
+        "rf_delta": 0.0003718137741088867,
+        "myocardium_dice": 0.8509316770186336,
+        "area_ratio": 1.3503649635036497
+      }
+    },
+    {
+      "patient_id": "patient029",
+      "case_id": "patient029_frame12",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.0006175637245178223,
+        "myocardium_dice": 0.7572815533980582,
+        "area_ratio": 0.609375
+      },
+      "dilation": {
+        "rf_delta": 0.0005524754524230957,
+        "myocardium_dice": 0.8366013071895425,
+        "area_ratio": 1.390625
+      }
+    },
+    {
+      "patient_id": "patient029",
+      "case_id": "patient029_frame12",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.00027871131896972656,
+        "myocardium_dice": 0.7027027027027027,
+        "area_ratio": 0.5416666666666666
+      },
+      "dilation": {
+        "rf_delta": 0.0003628730773925781,
+        "myocardium_dice": 0.8135593220338984,
+        "area_ratio": 1.4583333333333333
+      }
+    },
+    {
+      "patient_id": "patient029",
+      "case_id": "patient029_frame12",
+      "slice_idx": 8,
+      "erosion": {
+        "rf_delta": -0.00010246038436889648,
+        "myocardium_dice": 0.5813953488372093,
+        "area_ratio": 0.4098360655737705
+      },
+      "dilation": {
+        "rf_delta": 0.0003527402877807617,
+        "myocardium_dice": 0.7721518987341772,
+        "area_ratio": 1.5901639344262295
+      }
+    },
+    {
+      "patient_id": "patient029",
+      "case_id": "patient029_frame12",
+      "slice_idx": 9,
+      "erosion": {
+        "rf_delta": -9.143352508544922e-05,
+        "myocardium_dice": 0.6060606060606061,
+        "area_ratio": 0.43478260869565216
+      },
+      "dilation": {
+        "rf_delta": 0.0002722740173339844,
+        "myocardium_dice": 0.7796610169491526,
+        "area_ratio": 1.565217391304348
+      }
+    },
+    {
+      "patient_id": "patient030",
+      "case_id": "patient030_frame01",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.005257904529571533,
+        "myocardium_dice": 0.3333333333333333,
+        "area_ratio": 0.2
+      },
+      "dilation": {
+        "rf_delta": -0.001016080379486084,
+        "myocardium_dice": 0.6896551724137931,
+        "area_ratio": 1.9
+      }
+    },
+    {
+      "patient_id": "patient030",
+      "case_id": "patient030_frame01",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.008318185806274414,
+        "myocardium_dice": 0.3488372093023256,
+        "area_ratio": 0.2112676056338028
+      },
+      "dilation": {
+        "rf_delta": 0.0003326535224914551,
+        "myocardium_dice": 0.7171717171717171,
+        "area_ratio": 1.7887323943661972
+      }
+    },
+    {
+      "patient_id": "patient030",
+      "case_id": "patient030_frame01",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.004842281341552734,
+        "myocardium_dice": 0.38636363636363635,
+        "area_ratio": 0.23943661971830985
+      },
+      "dilation": {
+        "rf_delta": 0.001832127571105957,
+        "myocardium_dice": 0.7244897959183674,
+        "area_ratio": 1.7605633802816902
+      }
+    },
+    {
+      "patient_id": "patient030",
+      "case_id": "patient030_frame01",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.002634882926940918,
+        "myocardium_dice": 0.3076923076923077,
+        "area_ratio": 0.18181818181818182
+      },
+      "dilation": {
+        "rf_delta": 0.001458585262298584,
+        "myocardium_dice": 0.7058823529411765,
+        "area_ratio": 1.8333333333333333
+      }
+    },
+    {
+      "patient_id": "patient030",
+      "case_id": "patient030_frame01",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.0025550127029418945,
+        "myocardium_dice": 0.18461538461538463,
+        "area_ratio": 0.1016949152542373
+      },
+      "dilation": {
+        "rf_delta": 0.000874638557434082,
+        "myocardium_dice": 0.6820809248554913,
+        "area_ratio": 1.9322033898305084
+      }
+    },
+    {
+      "patient_id": "patient030",
+      "case_id": "patient030_frame01",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.0026804208755493164,
+        "myocardium_dice": 0.25396825396825395,
+        "area_ratio": 0.14545454545454545
+      },
+      "dilation": {
+        "rf_delta": 0.0001793503761291504,
+        "myocardium_dice": 0.6962025316455697,
+        "area_ratio": 1.8727272727272728
+      }
+    },
+    {
+      "patient_id": "patient030",
+      "case_id": "patient030_frame01",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.002379477024078369,
+        "myocardium_dice": 0.22641509433962265,
+        "area_ratio": 0.1276595744680851
+      },
+      "dilation": {
+        "rf_delta": 0.00019919872283935547,
+        "myocardium_dice": 0.6962962962962963,
+        "area_ratio": 1.872340425531915
+      }
+    },
+    {
+      "patient_id": "patient030",
+      "case_id": "patient030_frame01",
+      "slice_idx": 8,
+      "erosion": {
+        "rf_delta": -0.0014603137969970703,
+        "myocardium_dice": 0.16216216216216217,
+        "area_ratio": 0.08823529411764706
+      },
+      "dilation": {
+        "rf_delta": -0.0009647607803344727,
+        "myocardium_dice": 0.68,
+        "area_ratio": 1.9411764705882353
+      }
+    },
+    {
+      "patient_id": "patient030",
+      "case_id": "patient030_frame01",
+      "slice_idx": 9,
+      "erosion": {
+        "rf_delta": -0.00020486116409301758,
+        "myocardium_dice": 0.25,
+        "area_ratio": 0.14285714285714285
+      },
+      "dilation": {
+        "rf_delta": 0.0002734661102294922,
+        "myocardium_dice": 0.5833333333333334,
+        "area_ratio": 2.4285714285714284
+      }
+    },
+    {
+      "patient_id": "patient030",
+      "case_id": "patient030_frame12",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.0019115805625915527,
+        "myocardium_dice": 0.4,
+        "area_ratio": 0.25
+      },
+      "dilation": {
+        "rf_delta": 0.00026237964630126953,
+        "myocardium_dice": 0.7272727272727273,
+        "area_ratio": 1.75
+      }
+    },
+    {
+      "patient_id": "patient030",
+      "case_id": "patient030_frame12",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.0020040273666381836,
+        "myocardium_dice": 0.6507936507936508,
+        "area_ratio": 0.4823529411764706
+      },
+      "dilation": {
+        "rf_delta": -0.0012556910514831543,
+        "myocardium_dice": 0.794392523364486,
+        "area_ratio": 1.5176470588235293
+      }
+    },
+    {
+      "patient_id": "patient030",
+      "case_id": "patient030_frame12",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.0008858442306518555,
+        "myocardium_dice": 0.6341463414634146,
+        "area_ratio": 0.4642857142857143
+      },
+      "dilation": {
+        "rf_delta": 0.0001856088638305664,
+        "myocardium_dice": 0.7887323943661971,
+        "area_ratio": 1.5357142857142858
+      }
+    },
+    {
+      "patient_id": "patient030",
+      "case_id": "patient030_frame12",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.000202178955078125,
+        "myocardium_dice": 0.7417218543046358,
+        "area_ratio": 0.5894736842105263
+      },
+      "dilation": {
+        "rf_delta": -0.00017529726028442383,
+        "myocardium_dice": 0.8296943231441049,
+        "area_ratio": 1.4105263157894736
+      }
+    },
+    {
+      "patient_id": "patient030",
+      "case_id": "patient030_frame12",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -9.191036224365234e-05,
+        "myocardium_dice": 0.7022900763358778,
+        "area_ratio": 0.5411764705882353
+      },
+      "dilation": {
+        "rf_delta": -0.00010228157043457031,
+        "myocardium_dice": 0.8133971291866029,
+        "area_ratio": 1.4588235294117646
+      }
+    },
+    {
+      "patient_id": "patient030",
+      "case_id": "patient030_frame12",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.00021708011627197266,
+        "myocardium_dice": 0.6476190476190476,
+        "area_ratio": 0.4788732394366197
+      },
+      "dilation": {
+        "rf_delta": -0.0004234910011291504,
+        "myocardium_dice": 0.7932960893854749,
+        "area_ratio": 1.5211267605633803
+      }
+    },
+    {
+      "patient_id": "patient030",
+      "case_id": "patient030_frame12",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -7.140636444091797e-05,
+        "myocardium_dice": 0.6172839506172839,
+        "area_ratio": 0.44642857142857145
+      },
+      "dilation": {
+        "rf_delta": -0.0002695322036743164,
+        "myocardium_dice": 0.7832167832167832,
+        "area_ratio": 1.5535714285714286
+      }
+    },
+    {
+      "patient_id": "patient030",
+      "case_id": "patient030_frame12",
+      "slice_idx": 8,
+      "erosion": {
+        "rf_delta": -0.00036072731018066406,
+        "myocardium_dice": 0.5454545454545454,
+        "area_ratio": 0.375
+      },
+      "dilation": {
+        "rf_delta": -0.0003096461296081543,
+        "myocardium_dice": 0.7529411764705882,
+        "area_ratio": 1.65625
+      }
+    },
+    {
+      "patient_id": "patient032",
+      "case_id": "patient032_frame01",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.005005598068237305,
+        "myocardium_dice": 0.25,
+        "area_ratio": 0.14285714285714285
+      },
+      "dilation": {
+        "rf_delta": -0.00016760826110839844,
+        "myocardium_dice": 0.6961325966850829,
+        "area_ratio": 1.873015873015873
+      }
+    },
+    {
+      "patient_id": "patient032",
+      "case_id": "patient032_frame01",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.006124913692474365,
+        "myocardium_dice": 0.3488372093023256,
+        "area_ratio": 0.2112676056338028
+      },
+      "dilation": {
+        "rf_delta": -0.0013819336891174316,
+        "myocardium_dice": 0.7171717171717171,
+        "area_ratio": 1.7887323943661972
+      }
+    },
+    {
+      "patient_id": "patient032",
+      "case_id": "patient032_frame01",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.0035772323608398438,
+        "myocardium_dice": 0.3373493975903614,
+        "area_ratio": 0.2028985507246377
+      },
+      "dilation": {
+        "rf_delta": -0.000713348388671875,
+        "myocardium_dice": 0.7076923076923077,
+        "area_ratio": 1.826086956521739
+      }
+    },
+    {
+      "patient_id": "patient032",
+      "case_id": "patient032_frame01",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.0033845901489257812,
+        "myocardium_dice": 0.27848101265822783,
+        "area_ratio": 0.16176470588235295
+      },
+      "dilation": {
+        "rf_delta": 0.00099945068359375,
+        "myocardium_dice": 0.6938775510204082,
+        "area_ratio": 1.8823529411764706
+      }
+    },
+    {
+      "patient_id": "patient032",
+      "case_id": "patient032_frame01",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.0032294392585754395,
+        "myocardium_dice": 0.037037037037037035,
+        "area_ratio": 0.018867924528301886
+      },
+      "dilation": {
+        "rf_delta": 0.00018709897994995117,
+        "myocardium_dice": 0.6385542168674698,
+        "area_ratio": 2.1320754716981134
+      }
+    },
+    {
+      "patient_id": "patient032",
+      "case_id": "patient032_frame01",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.003995120525360107,
+        "myocardium_dice": 0.10909090909090909,
+        "area_ratio": 0.057692307692307696
+      },
+      "dilation": {
+        "rf_delta": 0.000536501407623291,
+        "myocardium_dice": 0.6459627329192547,
+        "area_ratio": 2.0961538461538463
+      }
+    },
+    {
+      "patient_id": "patient032",
+      "case_id": "patient032_frame01",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.003958344459533691,
+        "myocardium_dice": 0.11320754716981132,
+        "area_ratio": 0.06
+      },
+      "dilation": {
+        "rf_delta": -0.00020551681518554688,
+        "myocardium_dice": 0.6493506493506493,
+        "area_ratio": 2.08
+      }
+    },
+    {
+      "patient_id": "patient032",
+      "case_id": "patient032_frame01",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.003600001335144043,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.0006107091903686523,
+        "myocardium_dice": 0.6271186440677966,
+        "area_ratio": 2.189189189189189
+      }
+    },
+    {
+      "patient_id": "patient032",
+      "case_id": "patient032_frame01",
+      "slice_idx": 8,
+      "erosion": {
+        "rf_delta": -0.0019497871398925781,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.0005102157592773438,
+        "myocardium_dice": 0.6236559139784946,
+        "area_ratio": 2.206896551724138
+      }
+    },
+    {
+      "patient_id": "patient032",
+      "case_id": "patient032_frame01",
+      "slice_idx": 9,
+      "erosion": {
+        "rf_delta": -0.00026154518127441406,
+        "myocardium_dice": 0.11764705882352941,
+        "area_ratio": 0.0625
+      },
+      "dilation": {
+        "rf_delta": -0.0003815889358520508,
+        "myocardium_dice": 0.6274509803921569,
+        "area_ratio": 2.1875
+      }
+    },
+    {
+      "patient_id": "patient032",
+      "case_id": "patient032_frame12",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.001205146312713623,
+        "myocardium_dice": 0.5454545454545454,
+        "area_ratio": 0.375
+      },
+      "dilation": {
+        "rf_delta": 0.0003567337989807129,
+        "myocardium_dice": 0.7619047619047619,
+        "area_ratio": 1.625
+      }
+    },
+    {
+      "patient_id": "patient032",
+      "case_id": "patient032_frame12",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.0017603039741516113,
+        "myocardium_dice": 0.656,
+        "area_ratio": 0.4880952380952381
+      },
+      "dilation": {
+        "rf_delta": 0.0003063082695007324,
+        "myocardium_dice": 0.7962085308056872,
+        "area_ratio": 1.5119047619047619
+      }
+    },
+    {
+      "patient_id": "patient032",
+      "case_id": "patient032_frame12",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.001350998878479004,
+        "myocardium_dice": 0.6716417910447762,
+        "area_ratio": 0.5056179775280899
+      },
+      "dilation": {
+        "rf_delta": 0.0007510781288146973,
+        "myocardium_dice": 0.8018018018018018,
+        "area_ratio": 1.4943820224719102
+      }
+    },
+    {
+      "patient_id": "patient032",
+      "case_id": "patient032_frame12",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.000910639762878418,
+        "myocardium_dice": 0.6557377049180327,
+        "area_ratio": 0.4878048780487805
+      },
+      "dilation": {
+        "rf_delta": 0.0006464719772338867,
+        "myocardium_dice": 0.7961165048543689,
+        "area_ratio": 1.5121951219512195
+      }
+    },
+    {
+      "patient_id": "patient032",
+      "case_id": "patient032_frame12",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.0005505681037902832,
+        "myocardium_dice": 0.6956521739130435,
+        "area_ratio": 0.5333333333333333
+      },
+      "dilation": {
+        "rf_delta": 0.0002282261848449707,
+        "myocardium_dice": 0.8108108108108109,
+        "area_ratio": 1.4666666666666666
+      }
+    },
+    {
+      "patient_id": "patient032",
+      "case_id": "patient032_frame12",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.000476837158203125,
+        "myocardium_dice": 0.672566371681416,
+        "area_ratio": 0.5066666666666667
+      },
+      "dilation": {
+        "rf_delta": -0.0002015829086303711,
+        "myocardium_dice": 0.8021390374331551,
+        "area_ratio": 1.4933333333333334
+      }
+    },
+    {
+      "patient_id": "patient032",
+      "case_id": "patient032_frame12",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.0005310773849487305,
+        "myocardium_dice": 0.6341463414634146,
+        "area_ratio": 0.4642857142857143
+      },
+      "dilation": {
+        "rf_delta": -0.00029653310775756836,
+        "myocardium_dice": 0.7887323943661971,
+        "area_ratio": 1.5357142857142858
+      }
+    },
+    {
+      "patient_id": "patient032",
+      "case_id": "patient032_frame12",
+      "slice_idx": 8,
+      "erosion": {
+        "rf_delta": -0.00036019086837768555,
+        "myocardium_dice": 0.6984126984126984,
+        "area_ratio": 0.5365853658536586
+      },
+      "dilation": {
+        "rf_delta": -7.94529914855957e-05,
+        "myocardium_dice": 0.780952380952381,
+        "area_ratio": 1.5609756097560976
+      }
+    },
+    {
+      "patient_id": "patient032",
+      "case_id": "patient032_frame12",
+      "slice_idx": 9,
+      "erosion": {
+        "rf_delta": -0.00016117095947265625,
+        "myocardium_dice": 0.2,
+        "area_ratio": 0.1111111111111111
+      },
+      "dilation": {
+        "rf_delta": -6.031990051269531e-05,
+        "myocardium_dice": 0.6,
+        "area_ratio": 2.3333333333333335
+      }
+    },
+    {
+      "patient_id": "patient036",
+      "case_id": "patient036_frame01",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.011528551578521729,
+        "myocardium_dice": 0.29213483146067415,
+        "area_ratio": 0.17105263157894737
+      },
+      "dilation": {
+        "rf_delta": -0.002268195152282715,
+        "myocardium_dice": 0.6846846846846847,
+        "area_ratio": 1.9210526315789473
+      }
+    },
+    {
+      "patient_id": "patient036",
+      "case_id": "patient036_frame01",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.011166691780090332,
+        "myocardium_dice": 0.3564356435643564,
+        "area_ratio": 0.21686746987951808
+      },
+      "dilation": {
+        "rf_delta": -0.00016695261001586914,
+        "myocardium_dice": 0.6974789915966386,
+        "area_ratio": 1.8674698795180722
+      }
+    },
+    {
+      "patient_id": "patient036",
+      "case_id": "patient036_frame01",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.008930087089538574,
+        "myocardium_dice": 0.3595505617977528,
+        "area_ratio": 0.2191780821917808
+      },
+      "dilation": {
+        "rf_delta": 0.0008007287979125977,
+        "myocardium_dice": 0.6759259259259259,
+        "area_ratio": 1.9589041095890412
+      }
+    },
+    {
+      "patient_id": "patient036",
+      "case_id": "patient036_frame01",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.00924140214920044,
+        "myocardium_dice": 0.0625,
+        "area_ratio": 0.03225806451612903
+      },
+      "dilation": {
+        "rf_delta": 0.0026416778564453125,
+        "myocardium_dice": 0.6391752577319587,
+        "area_ratio": 2.129032258064516
+      }
+    },
+    {
+      "patient_id": "patient036",
+      "case_id": "patient036_frame01",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.005948781967163086,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.004652202129364014,
+        "myocardium_dice": 0.5935483870967742,
+        "area_ratio": 2.369565217391304
+      }
+    },
+    {
+      "patient_id": "patient036",
+      "case_id": "patient036_frame01",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.004052519798278809,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.002336263656616211,
+        "myocardium_dice": 0.5645161290322581,
+        "area_ratio": 2.5428571428571427
+      }
+    },
+    {
+      "patient_id": "patient036",
+      "case_id": "patient036_frame01",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.0025466084480285645,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.00017893314361572266,
+        "myocardium_dice": 0.5227272727272727,
+        "area_ratio": 2.8260869565217392
+      }
+    },
+    {
+      "patient_id": "patient036",
+      "case_id": "patient036_frame01",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.0007361173629760742,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -5.161762237548828e-05,
+        "myocardium_dice": 0.6071428571428571,
+        "area_ratio": 2.2941176470588234
+      }
+    },
+    {
+      "patient_id": "patient036",
+      "case_id": "patient036_frame12",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.0031713247299194336,
+        "myocardium_dice": 0.3614457831325301,
+        "area_ratio": 0.22058823529411764
+      },
+      "dilation": {
+        "rf_delta": 0.0017105340957641602,
+        "myocardium_dice": 0.7157894736842105,
+        "area_ratio": 1.7941176470588236
+      }
+    },
+    {
+      "patient_id": "patient036",
+      "case_id": "patient036_frame12",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.005049705505371094,
+        "myocardium_dice": 0.6540880503144654,
+        "area_ratio": 0.48598130841121495
+      },
+      "dilation": {
+        "rf_delta": -0.0012862682342529297,
+        "myocardium_dice": 0.7955390334572491,
+        "area_ratio": 1.514018691588785
+      }
+    },
+    {
+      "patient_id": "patient036",
+      "case_id": "patient036_frame12",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.003570556640625,
+        "myocardium_dice": 0.7027027027027027,
+        "area_ratio": 0.5416666666666666
+      },
+      "dilation": {
+        "rf_delta": 0.0006632804870605469,
+        "myocardium_dice": 0.8135593220338984,
+        "area_ratio": 1.4583333333333333
+      }
+    },
+    {
+      "patient_id": "patient036",
+      "case_id": "patient036_frame12",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.00277864933013916,
+        "myocardium_dice": 0.6216216216216216,
+        "area_ratio": 0.45098039215686275
+      },
+      "dilation": {
+        "rf_delta": 0.0027943849563598633,
+        "myocardium_dice": 0.7846153846153846,
+        "area_ratio": 1.5490196078431373
+      }
+    },
+    {
+      "patient_id": "patient036",
+      "case_id": "patient036_frame12",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.0030980706214904785,
+        "myocardium_dice": 0.4090909090909091,
+        "area_ratio": 0.2571428571428571
+      },
+      "dilation": {
+        "rf_delta": 0.003597557544708252,
+        "myocardium_dice": 0.7253886010362695,
+        "area_ratio": 1.7571428571428571
+      }
+    },
+    {
+      "patient_id": "patient036",
+      "case_id": "patient036_frame12",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.0017910599708557129,
+        "myocardium_dice": 0.2413793103448276,
+        "area_ratio": 0.13725490196078433
+      },
+      "dilation": {
+        "rf_delta": 0.0013158321380615234,
+        "myocardium_dice": 0.6938775510204082,
+        "area_ratio": 1.8823529411764706
+      }
+    },
+    {
+      "patient_id": "patient036",
+      "case_id": "patient036_frame12",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.0008580684661865234,
+        "myocardium_dice": 0.058823529411764705,
+        "area_ratio": 0.030303030303030304
+      },
+      "dilation": {
+        "rf_delta": 0.0004885196685791016,
+        "myocardium_dice": 0.6534653465346535,
+        "area_ratio": 2.0606060606060606
+      }
+    },
+    {
+      "patient_id": "patient036",
+      "case_id": "patient036_frame12",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.000361025333404541,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.00021892786026000977,
+        "myocardium_dice": 0.6415094339622641,
+        "area_ratio": 2.1176470588235294
+      }
+    },
+    {
+      "patient_id": "patient055",
+      "case_id": "patient055_frame01",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.00641942024230957,
+        "myocardium_dice": 0.09375,
+        "area_ratio": 0.04918032786885246
+      },
+      "dilation": {
+        "rf_delta": 0.0008689165115356445,
+        "myocardium_dice": 0.6594594594594595,
+        "area_ratio": 2.0327868852459017
+      }
+    },
+    {
+      "patient_id": "patient055",
+      "case_id": "patient055_frame01",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.006090402603149414,
+        "myocardium_dice": 0.18421052631578946,
+        "area_ratio": 0.10144927536231885
+      },
+      "dilation": {
+        "rf_delta": -0.0010287761688232422,
+        "myocardium_dice": 0.6798029556650246,
+        "area_ratio": 1.9420289855072463
+      }
+    },
+    {
+      "patient_id": "patient055",
+      "case_id": "patient055_frame01",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.006096005439758301,
+        "myocardium_dice": 0.21333333333333335,
+        "area_ratio": 0.11940298507462686
+      },
+      "dilation": {
+        "rf_delta": 0.0015693306922912598,
+        "myocardium_dice": 0.6767676767676768,
+        "area_ratio": 1.955223880597015
+      }
+    },
+    {
+      "patient_id": "patient055",
+      "case_id": "patient055_frame01",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.005016148090362549,
+        "myocardium_dice": 0.16666666666666666,
+        "area_ratio": 0.09090909090909091
+      },
+      "dilation": {
+        "rf_delta": 0.0003091096878051758,
+        "myocardium_dice": 0.676923076923077,
+        "area_ratio": 1.9545454545454546
+      }
+    },
+    {
+      "patient_id": "patient055",
+      "case_id": "patient055_frame01",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.0030431747436523438,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0005224347114562988,
+        "myocardium_dice": 0.6097560975609756,
+        "area_ratio": 2.28
+      }
+    },
+    {
+      "patient_id": "patient055",
+      "case_id": "patient055_frame01",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.002239048480987549,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.0008193850517272949,
+        "myocardium_dice": 0.5777777777777777,
+        "area_ratio": 2.4615384615384617
+      }
+    },
+    {
+      "patient_id": "patient055",
+      "case_id": "patient055_frame01",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.0019184350967407227,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.00018393993377685547,
+        "myocardium_dice": 0.5272727272727272,
+        "area_ratio": 2.793103448275862
+      }
+    },
+    {
+      "patient_id": "patient055",
+      "case_id": "patient055_frame01",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.0016970634460449219,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -8.046627044677734e-06,
+        "myocardium_dice": 0.5411764705882353,
+        "area_ratio": 2.6956521739130435
+      }
+    },
+    {
+      "patient_id": "patient055",
+      "case_id": "patient055_frame01",
+      "slice_idx": 8,
+      "erosion": {
+        "rf_delta": -0.0007308721542358398,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0002124309539794922,
+        "myocardium_dice": 0.49056603773584906,
+        "area_ratio": 3.076923076923077
+      }
+    },
+    {
+      "patient_id": "patient055",
+      "case_id": "patient055_frame10",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.003213226795196533,
+        "myocardium_dice": 0.30303030303030304,
+        "area_ratio": 0.17857142857142858
+      },
+      "dilation": {
+        "rf_delta": 0.0006435513496398926,
+        "myocardium_dice": 0.6829268292682927,
+        "area_ratio": 1.9285714285714286
+      }
+    },
+    {
+      "patient_id": "patient055",
+      "case_id": "patient055_frame10",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.003574550151824951,
+        "myocardium_dice": 0.55,
+        "area_ratio": 0.3793103448275862
+      },
+      "dilation": {
+        "rf_delta": -0.00046646595001220703,
+        "myocardium_dice": 0.7631578947368421,
+        "area_ratio": 1.6206896551724137
+      }
+    },
+    {
+      "patient_id": "patient055",
+      "case_id": "patient055_frame10",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.0031171441078186035,
+        "myocardium_dice": 0.5254237288135594,
+        "area_ratio": 0.3563218390804598
+      },
+      "dilation": {
+        "rf_delta": 0.0009700655937194824,
+        "myocardium_dice": 0.7565217391304347,
+        "area_ratio": 1.6436781609195403
+      }
+    },
+    {
+      "patient_id": "patient055",
+      "case_id": "patient055_frame10",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.0026540160179138184,
+        "myocardium_dice": 0.4807692307692308,
+        "area_ratio": 0.31645569620253167
+      },
+      "dilation": {
+        "rf_delta": 0.0003146529197692871,
+        "myocardium_dice": 0.7452830188679245,
+        "area_ratio": 1.6835443037974684
+      }
+    },
+    {
+      "patient_id": "patient055",
+      "case_id": "patient055_frame10",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.002731025218963623,
+        "myocardium_dice": 0.2028985507246377,
+        "area_ratio": 0.11290322580645161
+      },
+      "dilation": {
+        "rf_delta": -0.00019872188568115234,
+        "myocardium_dice": 0.6813186813186813,
+        "area_ratio": 1.935483870967742
+      }
+    },
+    {
+      "patient_id": "patient055",
+      "case_id": "patient055_frame10",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.0017082691192626953,
+        "myocardium_dice": 0.09523809523809523,
+        "area_ratio": 0.05
+      },
+      "dilation": {
+        "rf_delta": -0.0007126927375793457,
+        "myocardium_dice": 0.5970149253731343,
+        "area_ratio": 2.35
+      }
+    },
+    {
+      "patient_id": "patient055",
+      "case_id": "patient055_frame10",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.0019254684448242188,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 7.62939453125e-05,
+        "myocardium_dice": 0.48,
+        "area_ratio": 3.1666666666666665
+      }
+    },
+    {
+      "patient_id": "patient055",
+      "case_id": "patient055_frame10",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.0009489059448242188,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0002193450927734375,
+        "myocardium_dice": 0.425,
+        "area_ratio": 3.7058823529411766
+      }
+    },
+    {
+      "patient_id": "patient055",
+      "case_id": "patient055_frame10",
+      "slice_idx": 8,
+      "erosion": {
+        "rf_delta": -0.0008274316787719727,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0003237724304199219,
+        "myocardium_dice": 0.4528301886792453,
+        "area_ratio": 3.4166666666666665
+      }
+    },
+    {
+      "patient_id": "patient065",
+      "case_id": "patient065_frame01",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.005230426788330078,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.002620995044708252,
+        "myocardium_dice": 0.5483870967741935,
+        "area_ratio": 2.6470588235294117
+      }
+    },
+    {
+      "patient_id": "patient065",
+      "case_id": "patient065_frame01",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.007652401924133301,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.0018761157989501953,
+        "myocardium_dice": 0.5573770491803278,
+        "area_ratio": 2.588235294117647
+      }
+    },
+    {
+      "patient_id": "patient065",
+      "case_id": "patient065_frame01",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.004253089427947998,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.0013843774795532227,
+        "myocardium_dice": 0.5641025641025641,
+        "area_ratio": 2.5454545454545454
+      }
+    },
+    {
+      "patient_id": "patient065",
+      "case_id": "patient065_frame01",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.004373311996459961,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.0013701319694519043,
+        "myocardium_dice": 0.509090909090909,
+        "area_ratio": 2.9285714285714284
+      }
+    },
+    {
+      "patient_id": "patient065",
+      "case_id": "patient065_frame01",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.0040850043296813965,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.0022405385971069336,
+        "myocardium_dice": 0.5420560747663551,
+        "area_ratio": 2.689655172413793
+      }
+    },
+    {
+      "patient_id": "patient065",
+      "case_id": "patient065_frame01",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.0034799575805664062,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.002394735813140869,
+        "myocardium_dice": 0.52,
+        "area_ratio": 2.8461538461538463
+      }
+    },
+    {
+      "patient_id": "patient065",
+      "case_id": "patient065_frame01",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.0016995668411254883,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.0016309618949890137,
+        "myocardium_dice": 0.4383561643835616,
+        "area_ratio": 3.5625
+      }
+    },
+    {
+      "patient_id": "patient065",
+      "case_id": "patient065_frame01",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.0007902979850769043,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -1.1622905731201172e-05,
+        "myocardium_dice": 0.5263157894736842,
+        "area_ratio": 2.8
+      }
+    },
+    {
+      "patient_id": "patient065",
+      "case_id": "patient065_frame14",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.002874016761779785,
+        "myocardium_dice": 0.1951219512195122,
+        "area_ratio": 0.10810810810810811
+      },
+      "dilation": {
+        "rf_delta": 0.0008889436721801758,
+        "myocardium_dice": 0.6324786324786325,
+        "area_ratio": 2.1621621621621623
+      }
+    },
+    {
+      "patient_id": "patient065",
+      "case_id": "patient065_frame14",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.0016111135482788086,
+        "myocardium_dice": 0.13953488372093023,
+        "area_ratio": 0.075
+      },
+      "dilation": {
+        "rf_delta": -0.00020831823348999023,
+        "myocardium_dice": 0.6722689075630253,
+        "area_ratio": 1.975
+      }
+    },
+    {
+      "patient_id": "patient065",
+      "case_id": "patient065_frame14",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.002000093460083008,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 3.272294998168945e-05,
+        "myocardium_dice": 0.6226415094339622,
+        "area_ratio": 2.212121212121212
+      }
+    },
+    {
+      "patient_id": "patient065",
+      "case_id": "patient065_frame14",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.0013041496276855469,
+        "myocardium_dice": 0.058823529411764705,
+        "area_ratio": 0.030303030303030304
+      },
+      "dilation": {
+        "rf_delta": -0.00017940998077392578,
+        "myocardium_dice": 0.6226415094339622,
+        "area_ratio": 2.212121212121212
+      }
+    },
+    {
+      "patient_id": "patient065",
+      "case_id": "patient065_frame14",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.0009285211563110352,
+        "myocardium_dice": 0.11764705882352941,
+        "area_ratio": 0.0625
+      },
+      "dilation": {
+        "rf_delta": -0.00010508298873901367,
+        "myocardium_dice": 0.6464646464646465,
+        "area_ratio": 2.09375
+      }
+    },
+    {
+      "patient_id": "patient065",
+      "case_id": "patient065_frame14",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.0005332827568054199,
+        "myocardium_dice": 0.12903225806451613,
+        "area_ratio": 0.06896551724137931
+      },
+      "dilation": {
+        "rf_delta": -0.0011845827102661133,
+        "myocardium_dice": 0.6666666666666666,
+        "area_ratio": 2.0
+      }
+    },
+    {
+      "patient_id": "patient065",
+      "case_id": "patient065_frame14",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.00043463706970214844,
+        "myocardium_dice": 0.13333333333333333,
+        "area_ratio": 0.07142857142857142
+      },
+      "dilation": {
+        "rf_delta": 5.3763389587402344e-05,
+        "myocardium_dice": 0.6222222222222222,
+        "area_ratio": 2.2142857142857144
+      }
+    },
+    {
+      "patient_id": "patient070",
+      "case_id": "patient070_frame01",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.0032917261123657227,
+        "myocardium_dice": 0.0425531914893617,
+        "area_ratio": 0.021739130434782608
+      },
+      "dilation": {
+        "rf_delta": -0.0002942681312561035,
+        "myocardium_dice": 0.6174496644295302,
+        "area_ratio": 2.239130434782609
+      }
+    },
+    {
+      "patient_id": "patient070",
+      "case_id": "patient070_frame01",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.0023564696311950684,
+        "myocardium_dice": 0.09090909090909091,
+        "area_ratio": 0.047619047619047616
+      },
+      "dilation": {
+        "rf_delta": 0.0010895729064941406,
+        "myocardium_dice": 0.6,
+        "area_ratio": 2.3333333333333335
+      }
+    },
+    {
+      "patient_id": "patient070",
+      "case_id": "patient070_frame01",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.001983642578125,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0011337995529174805,
+        "myocardium_dice": 0.5736434108527132,
+        "area_ratio": 2.4864864864864864
+      }
+    },
+    {
+      "patient_id": "patient070",
+      "case_id": "patient070_frame01",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.0022301077842712402,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0006712675094604492,
+        "myocardium_dice": 0.5806451612903226,
+        "area_ratio": 2.4444444444444446
+      }
+    },
+    {
+      "patient_id": "patient070",
+      "case_id": "patient070_frame01",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.0015689730644226074,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.00037407875061035156,
+        "myocardium_dice": 0.5360824742268041,
+        "area_ratio": 2.730769230769231
+      }
+    },
+    {
+      "patient_id": "patient070",
+      "case_id": "patient070_frame01",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.0013247132301330566,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0004445314407348633,
+        "myocardium_dice": 0.5151515151515151,
+        "area_ratio": 2.8823529411764706
+      }
+    },
+    {
+      "patient_id": "patient070",
+      "case_id": "patient070_frame10",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.002253413200378418,
+        "myocardium_dice": 0.3939393939393939,
+        "area_ratio": 0.24528301886792453
+      },
+      "dilation": {
+        "rf_delta": 0.00023424625396728516,
+        "myocardium_dice": 0.7066666666666667,
+        "area_ratio": 1.830188679245283
+      }
+    },
+    {
+      "patient_id": "patient070",
+      "case_id": "patient070_frame10",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.000643312931060791,
+        "myocardium_dice": 0.36619718309859156,
+        "area_ratio": 0.22413793103448276
+      },
+      "dilation": {
+        "rf_delta": 0.00017279386520385742,
+        "myocardium_dice": 0.7204968944099379,
+        "area_ratio": 1.7758620689655173
+      }
+    },
+    {
+      "patient_id": "patient070",
+      "case_id": "patient070_frame10",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.0007598400115966797,
+        "myocardium_dice": 0.28125,
+        "area_ratio": 0.16363636363636364
+      },
+      "dilation": {
+        "rf_delta": 0.0004779696464538574,
+        "myocardium_dice": 0.7051282051282052,
+        "area_ratio": 1.8363636363636364
+      }
+    },
+    {
+      "patient_id": "patient070",
+      "case_id": "patient070_frame10",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.0006145834922790527,
+        "myocardium_dice": 0.4225352112676056,
+        "area_ratio": 0.26785714285714285
+      },
+      "dilation": {
+        "rf_delta": -6.878376007080078e-05,
+        "myocardium_dice": 0.7320261437908496,
+        "area_ratio": 1.7321428571428572
+      }
+    },
+    {
+      "patient_id": "patient070",
+      "case_id": "patient070_frame10",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.0005989670753479004,
+        "myocardium_dice": 0.37037037037037035,
+        "area_ratio": 0.22727272727272727
+      },
+      "dilation": {
+        "rf_delta": -0.00030177831649780273,
+        "myocardium_dice": 0.7213114754098361,
+        "area_ratio": 1.7727272727272727
+      }
+    },
+    {
+      "patient_id": "patient070",
+      "case_id": "patient070_frame10",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.0006340742111206055,
+        "myocardium_dice": 0.4,
+        "area_ratio": 0.25
+      },
+      "dilation": {
+        "rf_delta": -0.00016641616821289062,
+        "myocardium_dice": 0.6956521739130435,
+        "area_ratio": 1.875
+      }
+    },
+    {
+      "patient_id": "patient076",
+      "case_id": "patient076_frame01",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.005335330963134766,
+        "myocardium_dice": 0.10526315789473684,
+        "area_ratio": 0.05555555555555555
+      },
+      "dilation": {
+        "rf_delta": -0.0028268098831176758,
+        "myocardium_dice": 0.6545454545454545,
+        "area_ratio": 2.0555555555555554
+      }
+    },
+    {
+      "patient_id": "patient076",
+      "case_id": "patient076_frame01",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.005889534950256348,
+        "myocardium_dice": 0.0784313725490196,
+        "area_ratio": 0.04081632653061224
+      },
+      "dilation": {
+        "rf_delta": -0.001803755760192871,
+        "myocardium_dice": 0.6282051282051282,
+        "area_ratio": 2.183673469387755
+      }
+    },
+    {
+      "patient_id": "patient076",
+      "case_id": "patient076_frame01",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.005293607711791992,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.0012199878692626953,
+        "myocardium_dice": 0.589041095890411,
+        "area_ratio": 2.395348837209302
+      }
+    },
+    {
+      "patient_id": "patient076",
+      "case_id": "patient076_frame01",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.004359304904937744,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.000767052173614502,
+        "myocardium_dice": 0.5693430656934306,
+        "area_ratio": 2.5128205128205128
+      }
+    },
+    {
+      "patient_id": "patient076",
+      "case_id": "patient076_frame01",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.0038546323776245117,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.0002759099006652832,
+        "myocardium_dice": 0.5645161290322581,
+        "area_ratio": 2.5428571428571427
+      }
+    },
+    {
+      "patient_id": "patient076",
+      "case_id": "patient076_frame01",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.0036982297897338867,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0005488395690917969,
+        "myocardium_dice": 0.5523809523809524,
+        "area_ratio": 2.6206896551724137
+      }
+    },
+    {
+      "patient_id": "patient076",
+      "case_id": "patient076_frame01",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.0038620829582214355,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0015416741371154785,
+        "myocardium_dice": 0.5,
+        "area_ratio": 3.0
+      }
+    },
+    {
+      "patient_id": "patient076",
+      "case_id": "patient076_frame01",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.0008502006530761719,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 7.289648056030273e-05,
+        "myocardium_dice": 0.5116279069767442,
+        "area_ratio": 2.909090909090909
+      }
+    },
+    {
+      "patient_id": "patient076",
+      "case_id": "patient076_frame12",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.002633213996887207,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0008071660995483398,
+        "myocardium_dice": 0.5961538461538461,
+        "area_ratio": 2.3548387096774195
+      }
+    },
+    {
+      "patient_id": "patient076",
+      "case_id": "patient076_frame12",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.0024323463439941406,
+        "myocardium_dice": 0.2127659574468085,
+        "area_ratio": 0.11904761904761904
+      },
+      "dilation": {
+        "rf_delta": 0.0006772279739379883,
+        "myocardium_dice": 0.6774193548387096,
+        "area_ratio": 1.9523809523809523
+      }
+    },
+    {
+      "patient_id": "patient076",
+      "case_id": "patient076_frame12",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.0028361082077026367,
+        "myocardium_dice": 0.3939393939393939,
+        "area_ratio": 0.24528301886792453
+      },
+      "dilation": {
+        "rf_delta": -2.104043960571289e-05,
+        "myocardium_dice": 0.7162162162162162,
+        "area_ratio": 1.7924528301886793
+      }
+    },
+    {
+      "patient_id": "patient076",
+      "case_id": "patient076_frame12",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.0016685128211975098,
+        "myocardium_dice": 0.31746031746031744,
+        "area_ratio": 0.18867924528301888
+      },
+      "dilation": {
+        "rf_delta": 0.0001659393310546875,
+        "myocardium_dice": 0.7066666666666667,
+        "area_ratio": 1.830188679245283
+      }
+    },
+    {
+      "patient_id": "patient076",
+      "case_id": "patient076_frame12",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.0015494227409362793,
+        "myocardium_dice": 0.23728813559322035,
+        "area_ratio": 0.1346153846153846
+      },
+      "dilation": {
+        "rf_delta": 0.0006442666053771973,
+        "myocardium_dice": 0.697986577181208,
+        "area_ratio": 1.8653846153846154
+      }
+    },
+    {
+      "patient_id": "patient076",
+      "case_id": "patient076_frame12",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.0004450082778930664,
+        "myocardium_dice": 0.32142857142857145,
+        "area_ratio": 0.19148936170212766
+      },
+      "dilation": {
+        "rf_delta": 0.0007062554359436035,
+        "myocardium_dice": 0.706766917293233,
+        "area_ratio": 1.8297872340425532
+      }
+    },
+    {
+      "patient_id": "patient076",
+      "case_id": "patient076_frame12",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -3.647804260253906e-05,
+        "myocardium_dice": 0.1875,
+        "area_ratio": 0.10344827586206896
+      },
+      "dilation": {
+        "rf_delta": 0.00022679567337036133,
+        "myocardium_dice": 0.6666666666666666,
+        "area_ratio": 2.0
+      }
+    },
+    {
+      "patient_id": "patient076",
+      "case_id": "patient076_frame12",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -2.2530555725097656e-05,
+        "myocardium_dice": 0.42105263157894735,
+        "area_ratio": 0.26666666666666666
+      },
+      "dilation": {
+        "rf_delta": 0.0001551508903503418,
+        "myocardium_dice": 0.6666666666666666,
+        "area_ratio": 2.0
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame01",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.008840203285217285,
+        "myocardium_dice": 0.14492753623188406,
+        "area_ratio": 0.078125
+      },
+      "dilation": {
+        "rf_delta": 0.0002561807632446289,
+        "myocardium_dice": 0.6305418719211823,
+        "area_ratio": 2.171875
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame01",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.00733572244644165,
+        "myocardium_dice": 0.23376623376623376,
+        "area_ratio": 0.1323529411764706
+      },
+      "dilation": {
+        "rf_delta": -7.748603820800781e-07,
+        "myocardium_dice": 0.6601941747572816,
+        "area_ratio": 2.0294117647058822
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame01",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.006743967533111572,
+        "myocardium_dice": 0.2222222222222222,
+        "area_ratio": 0.125
+      },
+      "dilation": {
+        "rf_delta": 5.185604095458984e-06,
+        "myocardium_dice": 0.6336633663366337,
+        "area_ratio": 2.15625
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame01",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.005310118198394775,
+        "myocardium_dice": 0.1917808219178082,
+        "area_ratio": 0.10606060606060606
+      },
+      "dilation": {
+        "rf_delta": -0.0005613565444946289,
+        "myocardium_dice": 0.6346153846153846,
+        "area_ratio": 2.1515151515151514
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame01",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.004186093807220459,
+        "myocardium_dice": 0.15384615384615385,
+        "area_ratio": 0.08333333333333333
+      },
+      "dilation": {
+        "rf_delta": -0.0005726218223571777,
+        "myocardium_dice": 0.6217616580310881,
+        "area_ratio": 2.216666666666667
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame01",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.0035254955291748047,
+        "myocardium_dice": 0.06557377049180328,
+        "area_ratio": 0.03389830508474576
+      },
+      "dilation": {
+        "rf_delta": -0.0001646876335144043,
+        "myocardium_dice": 0.6178010471204188,
+        "area_ratio": 2.23728813559322
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame01",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.0036433935165405273,
+        "myocardium_dice": 0.034482758620689655,
+        "area_ratio": 0.017543859649122806
+      },
+      "dilation": {
+        "rf_delta": 0.0001876354217529297,
+        "myocardium_dice": 0.6129032258064516,
+        "area_ratio": 2.263157894736842
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame01",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.003580331802368164,
+        "myocardium_dice": 0.10526315789473684,
+        "area_ratio": 0.05555555555555555
+      },
+      "dilation": {
+        "rf_delta": -0.00013756752014160156,
+        "myocardium_dice": 0.6206896551724138,
+        "area_ratio": 2.2222222222222223
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame01",
+      "slice_idx": 8,
+      "erosion": {
+        "rf_delta": -0.003608226776123047,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0007496476173400879,
+        "myocardium_dice": 0.5789473684210527,
+        "area_ratio": 2.4545454545454546
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame01",
+      "slice_idx": 9,
+      "erosion": {
+        "rf_delta": -0.004209637641906738,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.0006694197654724121,
+        "myocardium_dice": 0.6075949367088608,
+        "area_ratio": 2.2916666666666665
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame01",
+      "slice_idx": 10,
+      "erosion": {
+        "rf_delta": -0.0035518407821655273,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.00048422813415527344,
+        "myocardium_dice": 0.5957446808510638,
+        "area_ratio": 2.357142857142857
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame01",
+      "slice_idx": 11,
+      "erosion": {
+        "rf_delta": -0.0033271312713623047,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.00021755695343017578,
+        "myocardium_dice": 0.578125,
+        "area_ratio": 2.4594594594594597
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame01",
+      "slice_idx": 12,
+      "erosion": {
+        "rf_delta": -0.0034139156341552734,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.0005398988723754883,
+        "myocardium_dice": 0.5619834710743802,
+        "area_ratio": 2.5588235294117645
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame01",
+      "slice_idx": 13,
+      "erosion": {
+        "rf_delta": -0.002833247184753418,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.0018229484558105469,
+        "myocardium_dice": 0.5686274509803921,
+        "area_ratio": 2.5172413793103448
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame01",
+      "slice_idx": 14,
+      "erosion": {
+        "rf_delta": -0.0028604865074157715,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.0019161105155944824,
+        "myocardium_dice": 0.547945205479452,
+        "area_ratio": 2.65
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame01",
+      "slice_idx": 15,
+      "erosion": {
+        "rf_delta": -0.0011426210403442383,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.000868678092956543,
+        "myocardium_dice": 0.5396825396825397,
+        "area_ratio": 2.7058823529411766
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame07",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.0028104186058044434,
+        "myocardium_dice": 0.23333333333333334,
+        "area_ratio": 0.1320754716981132
+      },
+      "dilation": {
+        "rf_delta": 0.0012711882591247559,
+        "myocardium_dice": 0.6503067484662577,
+        "area_ratio": 2.0754716981132075
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame07",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.003246605396270752,
+        "myocardium_dice": 0.4375,
+        "area_ratio": 0.28
+      },
+      "dilation": {
+        "rf_delta": 0.0013480782508850098,
+        "myocardium_dice": 0.7211538461538461,
+        "area_ratio": 1.7733333333333334
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame07",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.003780663013458252,
+        "myocardium_dice": 0.47619047619047616,
+        "area_ratio": 0.3125
+      },
+      "dilation": {
+        "rf_delta": 0.0006123781204223633,
+        "myocardium_dice": 0.7373271889400922,
+        "area_ratio": 1.7125
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame07",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.0027912259101867676,
+        "myocardium_dice": 0.44,
+        "area_ratio": 0.28205128205128205
+      },
+      "dilation": {
+        "rf_delta": 0.0007426738739013672,
+        "myocardium_dice": 0.7255813953488373,
+        "area_ratio": 1.7564102564102564
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame07",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.002085745334625244,
+        "myocardium_dice": 0.4158415841584158,
+        "area_ratio": 0.2625
+      },
+      "dilation": {
+        "rf_delta": 0.0009784698486328125,
+        "myocardium_dice": 0.730593607305936,
+        "area_ratio": 1.7375
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame07",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.0014597773551940918,
+        "myocardium_dice": 0.40816326530612246,
+        "area_ratio": 0.2564102564102564
+      },
+      "dilation": {
+        "rf_delta": 0.0001760721206665039,
+        "myocardium_dice": 0.7289719626168224,
+        "area_ratio": 1.7435897435897436
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame07",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.0016394257545471191,
+        "myocardium_dice": 0.3877551020408163,
+        "area_ratio": 0.24050632911392406
+      },
+      "dilation": {
+        "rf_delta": -0.00024211406707763672,
+        "myocardium_dice": 0.7247706422018348,
+        "area_ratio": 1.759493670886076
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame07",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.0017542839050292969,
+        "myocardium_dice": 0.367816091954023,
+        "area_ratio": 0.22535211267605634
+      },
+      "dilation": {
+        "rf_delta": 0.0005425810813903809,
+        "myocardium_dice": 0.7208121827411168,
+        "area_ratio": 1.7746478873239437
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame07",
+      "slice_idx": 8,
+      "erosion": {
+        "rf_delta": -0.0017397403717041016,
+        "myocardium_dice": 0.2894736842105263,
+        "area_ratio": 0.16923076923076924
+      },
+      "dilation": {
+        "rf_delta": 0.00023740530014038086,
+        "myocardium_dice": 0.7065217391304348,
+        "area_ratio": 1.8307692307692307
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame07",
+      "slice_idx": 9,
+      "erosion": {
+        "rf_delta": -0.0018532276153564453,
+        "myocardium_dice": 0.2857142857142857,
+        "area_ratio": 0.16666666666666666
+      },
+      "dilation": {
+        "rf_delta": 4.559755325317383e-05,
+        "myocardium_dice": 0.7058823529411765,
+        "area_ratio": 1.8333333333333333
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame07",
+      "slice_idx": 10,
+      "erosion": {
+        "rf_delta": -0.0009924769401550293,
+        "myocardium_dice": 0.23728813559322035,
+        "area_ratio": 0.1346153846153846
+      },
+      "dilation": {
+        "rf_delta": 0.0002092123031616211,
+        "myocardium_dice": 0.6933333333333334,
+        "area_ratio": 1.8846153846153846
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame07",
+      "slice_idx": 11,
+      "erosion": {
+        "rf_delta": -0.000631868839263916,
+        "myocardium_dice": 0.25925925925925924,
+        "area_ratio": 0.14893617021276595
+      },
+      "dilation": {
+        "rf_delta": 4.214048385620117e-05,
+        "myocardium_dice": 0.6811594202898551,
+        "area_ratio": 1.9361702127659575
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame07",
+      "slice_idx": 12,
+      "erosion": {
+        "rf_delta": -0.0009856820106506348,
+        "myocardium_dice": 0.13333333333333333,
+        "area_ratio": 0.07142857142857142
+      },
+      "dilation": {
+        "rf_delta": -0.00023376941680908203,
+        "myocardium_dice": 0.6774193548387096,
+        "area_ratio": 1.9523809523809523
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame07",
+      "slice_idx": 13,
+      "erosion": {
+        "rf_delta": -0.00031256675720214844,
+        "myocardium_dice": 0.24242424242424243,
+        "area_ratio": 0.13793103448275862
+      },
+      "dilation": {
+        "rf_delta": -0.0005693435668945312,
+        "myocardium_dice": 0.6904761904761905,
+        "area_ratio": 1.896551724137931
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame07",
+      "slice_idx": 14,
+      "erosion": {
+        "rf_delta": -0.00014257431030273438,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 4.500150680541992e-05,
+        "myocardium_dice": 0.6046511627906976,
+        "area_ratio": 2.3076923076923075
+      }
+    },
+    {
+      "patient_id": "patient082",
+      "case_id": "patient082_frame07",
+      "slice_idx": 15,
+      "erosion": {
+        "rf_delta": -0.00012344121932983398,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 8.493661880493164e-05,
+        "myocardium_dice": 0.5714285714285714,
+        "area_ratio": 2.5
+      }
+    },
+    {
+      "patient_id": "patient087",
+      "case_id": "patient087_frame01",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.008731424808502197,
+        "myocardium_dice": 0.11764705882352941,
+        "area_ratio": 0.0625
+      },
+      "dilation": {
+        "rf_delta": 0.001429736614227295,
+        "myocardium_dice": 0.6530612244897959,
+        "area_ratio": 2.0625
+      }
+    },
+    {
+      "patient_id": "patient087",
+      "case_id": "patient087_frame01",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.007088303565979004,
+        "myocardium_dice": 0.17204301075268819,
+        "area_ratio": 0.09411764705882353
+      },
+      "dilation": {
+        "rf_delta": 0.0014799237251281738,
+        "myocardium_dice": 0.6719367588932806,
+        "area_ratio": 1.9764705882352942
+      }
+    },
+    {
+      "patient_id": "patient087",
+      "case_id": "patient087_frame01",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.007072865962982178,
+        "myocardium_dice": 0.05714285714285714,
+        "area_ratio": 0.029411764705882353
+      },
+      "dilation": {
+        "rf_delta": 0.0025821924209594727,
+        "myocardium_dice": 0.6267281105990783,
+        "area_ratio": 2.1911764705882355
+      }
+    },
+    {
+      "patient_id": "patient087",
+      "case_id": "patient087_frame01",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.007352769374847412,
+        "myocardium_dice": 0.056338028169014086,
+        "area_ratio": 0.028985507246376812
+      },
+      "dilation": {
+        "rf_delta": 0.0011798739433288574,
+        "myocardium_dice": 0.641860465116279,
+        "area_ratio": 2.1159420289855073
+      }
+    },
+    {
+      "patient_id": "patient087",
+      "case_id": "patient087_frame01",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.004618048667907715,
+        "myocardium_dice": 0.14492753623188406,
+        "area_ratio": 0.078125
+      },
+      "dilation": {
+        "rf_delta": 0.002093791961669922,
+        "myocardium_dice": 0.64,
+        "area_ratio": 2.125
+      }
+    },
+    {
+      "patient_id": "patient087",
+      "case_id": "patient087_frame01",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.003747880458831787,
+        "myocardium_dice": 0.043478260869565216,
+        "area_ratio": 0.022222222222222223
+      },
+      "dilation": {
+        "rf_delta": 0.002143561840057373,
+        "myocardium_dice": 0.5960264900662252,
+        "area_ratio": 2.3555555555555556
+      }
+    },
+    {
+      "patient_id": "patient087",
+      "case_id": "patient087_frame01",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.001765608787536621,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.00046747922897338867,
+        "myocardium_dice": 0.5585585585585585,
+        "area_ratio": 2.5806451612903225
+      }
+    },
+    {
+      "patient_id": "patient087",
+      "case_id": "patient087_frame01",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.00124359130859375,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.00039398670196533203,
+        "myocardium_dice": 0.5915492957746479,
+        "area_ratio": 2.380952380952381
+      }
+    },
+    {
+      "patient_id": "patient087",
+      "case_id": "patient087_frame10",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.002286195755004883,
+        "myocardium_dice": 0.40707964601769914,
+        "area_ratio": 0.25555555555555554
+      },
+      "dilation": {
+        "rf_delta": -0.0019418597221374512,
+        "myocardium_dice": 0.7258064516129032,
+        "area_ratio": 1.7555555555555555
+      }
+    },
+    {
+      "patient_id": "patient087",
+      "case_id": "patient087_frame10",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.0031525492668151855,
+        "myocardium_dice": 0.5072463768115942,
+        "area_ratio": 0.33980582524271846
+      },
+      "dilation": {
+        "rf_delta": -0.0025064945220947266,
+        "myocardium_dice": 0.7436823104693141,
+        "area_ratio": 1.6893203883495145
+      }
+    },
+    {
+      "patient_id": "patient087",
+      "case_id": "patient087_frame10",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.003636002540588379,
+        "myocardium_dice": 0.37735849056603776,
+        "area_ratio": 0.23255813953488372
+      },
+      "dilation": {
+        "rf_delta": 0.0003001093864440918,
+        "myocardium_dice": 0.7107438016528925,
+        "area_ratio": 1.813953488372093
+      }
+    },
+    {
+      "patient_id": "patient087",
+      "case_id": "patient087_frame10",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.003480374813079834,
+        "myocardium_dice": 0.4036697247706422,
+        "area_ratio": 0.25287356321839083
+      },
+      "dilation": {
+        "rf_delta": 0.0005109906196594238,
+        "myocardium_dice": 0.7219917012448133,
+        "area_ratio": 1.7701149425287357
+      }
+    },
+    {
+      "patient_id": "patient087",
+      "case_id": "patient087_frame10",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.0022482872009277344,
+        "myocardium_dice": 0.45045045045045046,
+        "area_ratio": 0.29069767441860467
+      },
+      "dilation": {
+        "rf_delta": 0.0005360245704650879,
+        "myocardium_dice": 0.7319148936170212,
+        "area_ratio": 1.7325581395348837
+      }
+    },
+    {
+      "patient_id": "patient087",
+      "case_id": "patient087_frame10",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.0018393993377685547,
+        "myocardium_dice": 0.5233644859813084,
+        "area_ratio": 0.35443037974683544
+      },
+      "dilation": {
+        "rf_delta": -0.00011008977890014648,
+        "myocardium_dice": 0.7488151658767772,
+        "area_ratio": 1.6708860759493671
+      }
+    },
+    {
+      "patient_id": "patient087",
+      "case_id": "patient087_frame10",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.0006226301193237305,
+        "myocardium_dice": 0.4117647058823529,
+        "area_ratio": 0.25925925925925924
+      },
+      "dilation": {
+        "rf_delta": -0.0001818537712097168,
+        "myocardium_dice": 0.7297297297297297,
+        "area_ratio": 1.7407407407407407
+      }
+    },
+    {
+      "patient_id": "patient087",
+      "case_id": "patient087_frame10",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.0001214146614074707,
+        "myocardium_dice": 0.4,
+        "area_ratio": 0.25
+      },
+      "dilation": {
+        "rf_delta": -0.0001519918441772461,
+        "myocardium_dice": 0.6829268292682927,
+        "area_ratio": 1.9285714285714286
+      }
+    },
+    {
+      "patient_id": "patient089",
+      "case_id": "patient089_frame01",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.005281567573547363,
+        "myocardium_dice": 0.09302325581395349,
+        "area_ratio": 0.04878048780487805
+      },
+      "dilation": {
+        "rf_delta": -0.004200279712677002,
+        "myocardium_dice": 0.6119402985074627,
+        "area_ratio": 2.268292682926829
+      }
+    },
+    {
+      "patient_id": "patient089",
+      "case_id": "patient089_frame01",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.0039017200469970703,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.0004742145538330078,
+        "myocardium_dice": 0.5607476635514018,
+        "area_ratio": 2.566666666666667
+      }
+    },
+    {
+      "patient_id": "patient089",
+      "case_id": "patient089_frame01",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.002637028694152832,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0002168416976928711,
+        "myocardium_dice": 0.5217391304347826,
+        "area_ratio": 2.8333333333333335
+      }
+    },
+    {
+      "patient_id": "patient089",
+      "case_id": "patient089_frame01",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.0015450716018676758,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0014324188232421875,
+        "myocardium_dice": 0.49382716049382713,
+        "area_ratio": 3.05
+      }
+    },
+    {
+      "patient_id": "patient089",
+      "case_id": "patient089_frame01",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.0012371540069580078,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -3.421306610107422e-05,
+        "myocardium_dice": 0.4857142857142857,
+        "area_ratio": 3.1176470588235294
+      }
+    },
+    {
+      "patient_id": "patient089",
+      "case_id": "patient089_frame01",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.00036090612411499023,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.0001659393310546875,
+        "myocardium_dice": 0.44,
+        "area_ratio": 3.5454545454545454
+      }
+    },
+    {
+      "patient_id": "patient089",
+      "case_id": "patient089_frame10",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.0030666589736938477,
+        "myocardium_dice": 0.20408163265306123,
+        "area_ratio": 0.11363636363636363
+      },
+      "dilation": {
+        "rf_delta": -0.001984715461730957,
+        "myocardium_dice": 0.6875,
+        "area_ratio": 1.9090909090909092
+      }
+    },
+    {
+      "patient_id": "patient089",
+      "case_id": "patient089_frame10",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.0023899078369140625,
+        "myocardium_dice": 0.2545454545454545,
+        "area_ratio": 0.14583333333333334
+      },
+      "dilation": {
+        "rf_delta": -0.0022225379943847656,
+        "myocardium_dice": 0.7007299270072993,
+        "area_ratio": 1.8541666666666667
+      }
+    },
+    {
+      "patient_id": "patient089",
+      "case_id": "patient089_frame10",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.0014870166778564453,
+        "myocardium_dice": 0.06060606060606061,
+        "area_ratio": 0.03125
+      },
+      "dilation": {
+        "rf_delta": -0.00014013051986694336,
+        "myocardium_dice": 0.6530612244897959,
+        "area_ratio": 2.0625
+      }
+    },
+    {
+      "patient_id": "patient089",
+      "case_id": "patient089_frame10",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.0007110834121704102,
+        "myocardium_dice": 0.12903225806451613,
+        "area_ratio": 0.06896551724137931
+      },
+      "dilation": {
+        "rf_delta": -0.0005571246147155762,
+        "myocardium_dice": 0.6744186046511628,
+        "area_ratio": 1.9655172413793103
+      }
+    },
+    {
+      "patient_id": "patient089",
+      "case_id": "patient089_frame10",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.0006447434425354004,
+        "myocardium_dice": 0.08333333333333333,
+        "area_ratio": 0.043478260869565216
+      },
+      "dilation": {
+        "rf_delta": -0.0004910826683044434,
+        "myocardium_dice": 0.647887323943662,
+        "area_ratio": 2.0869565217391304
+      }
+    },
+    {
+      "patient_id": "patient089",
+      "case_id": "patient089_frame10",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -1.6391277313232422e-05,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -5.125999450683594e-05,
+        "myocardium_dice": 0.5853658536585366,
+        "area_ratio": 2.4166666666666665
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame01",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.012487947940826416,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.001651465892791748,
+        "myocardium_dice": 0.576271186440678,
+        "area_ratio": 2.4705882352941178
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame01",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.010742366313934326,
+        "myocardium_dice": 0.04,
+        "area_ratio": 0.02040816326530612
+      },
+      "dilation": {
+        "rf_delta": 0.0049086809158325195,
+        "myocardium_dice": 0.5798816568047337,
+        "area_ratio": 2.4489795918367347
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame01",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.009935259819030762,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0009919404983520508,
+        "myocardium_dice": 0.5833333333333334,
+        "area_ratio": 2.4285714285714284
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame01",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.011683285236358643,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0012898445129394531,
+        "myocardium_dice": 0.5548387096774193,
+        "area_ratio": 2.604651162790698
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame01",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.012255728244781494,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0014168024063110352,
+        "myocardium_dice": 0.5868263473053892,
+        "area_ratio": 2.4081632653061225
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame01",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.010884523391723633,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0012514591217041016,
+        "myocardium_dice": 0.567741935483871,
+        "area_ratio": 2.522727272727273
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame01",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.009506821632385254,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0009257793426513672,
+        "myocardium_dice": 0.547945205479452,
+        "area_ratio": 2.65
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame01",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.007043123245239258,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0021879076957702637,
+        "myocardium_dice": 0.5771812080536913,
+        "area_ratio": 2.4651162790697674
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame01",
+      "slice_idx": 8,
+      "erosion": {
+        "rf_delta": -0.00642162561416626,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0019677281379699707,
+        "myocardium_dice": 0.5483870967741935,
+        "area_ratio": 2.6470588235294117
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame01",
+      "slice_idx": 9,
+      "erosion": {
+        "rf_delta": -0.004825234413146973,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 9.310245513916016e-05,
+        "myocardium_dice": 0.5528455284552846,
+        "area_ratio": 2.6176470588235294
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame01",
+      "slice_idx": 10,
+      "erosion": {
+        "rf_delta": -0.003110349178314209,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.0007796883583068848,
+        "myocardium_dice": 0.5405405405405406,
+        "area_ratio": 2.7
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame01",
+      "slice_idx": 11,
+      "erosion": {
+        "rf_delta": -0.002847909927368164,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0002733469009399414,
+        "myocardium_dice": 0.5052631578947369,
+        "area_ratio": 2.9583333333333335
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame01",
+      "slice_idx": 12,
+      "erosion": {
+        "rf_delta": -0.0019283890724182129,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0003567337989807129,
+        "myocardium_dice": 0.5116279069767442,
+        "area_ratio": 2.909090909090909
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame01",
+      "slice_idx": 13,
+      "erosion": {
+        "rf_delta": -0.0005971193313598633,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.00024193525314331055,
+        "myocardium_dice": 0.509090909090909,
+        "area_ratio": 2.9285714285714284
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame12",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.007161915302276611,
+        "myocardium_dice": 0.15873015873015872,
+        "area_ratio": 0.08620689655172414
+      },
+      "dilation": {
+        "rf_delta": 0.0023005008697509766,
+        "myocardium_dice": 0.6590909090909091,
+        "area_ratio": 2.0344827586206895
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame12",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.007309377193450928,
+        "myocardium_dice": 0.42857142857142855,
+        "area_ratio": 0.2727272727272727
+      },
+      "dilation": {
+        "rf_delta": 0.0027238130569458008,
+        "myocardium_dice": 0.7333333333333333,
+        "area_ratio": 1.7272727272727273
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame12",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.006287515163421631,
+        "myocardium_dice": 0.24,
+        "area_ratio": 0.13636363636363635
+      },
+      "dilation": {
+        "rf_delta": 0.0003718137741088867,
+        "myocardium_dice": 0.6984126984126984,
+        "area_ratio": 1.8636363636363635
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame12",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.00575786828994751,
+        "myocardium_dice": 0.1935483870967742,
+        "area_ratio": 0.10714285714285714
+      },
+      "dilation": {
+        "rf_delta": 0.0027840733528137207,
+        "myocardium_dice": 0.6746987951807228,
+        "area_ratio": 1.9642857142857142
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame12",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.004560649394989014,
+        "myocardium_dice": 0.25,
+        "area_ratio": 0.14285714285714285
+      },
+      "dilation": {
+        "rf_delta": 0.0017393827438354492,
+        "myocardium_dice": 0.7,
+        "area_ratio": 1.8571428571428572
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame12",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.0053910017013549805,
+        "myocardium_dice": 0.19047619047619047,
+        "area_ratio": 0.10526315789473684
+      },
+      "dilation": {
+        "rf_delta": 0.0028229951858520508,
+        "myocardium_dice": 0.6745562130177515,
+        "area_ratio": 1.9649122807017543
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame12",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.00597226619720459,
+        "myocardium_dice": 0.03773584905660377,
+        "area_ratio": 0.019230769230769232
+      },
+      "dilation": {
+        "rf_delta": 0.0038863420486450195,
+        "myocardium_dice": 0.6540880503144654,
+        "area_ratio": 2.0576923076923075
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame12",
+      "slice_idx": 7,
+      "erosion": {
+        "rf_delta": -0.0035308003425598145,
+        "myocardium_dice": 0.17857142857142858,
+        "area_ratio": 0.09803921568627451
+      },
+      "dilation": {
+        "rf_delta": 0.0009421110153198242,
+        "myocardium_dice": 0.6754966887417219,
+        "area_ratio": 1.9607843137254901
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame12",
+      "slice_idx": 8,
+      "erosion": {
+        "rf_delta": -0.004685044288635254,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0025061964988708496,
+        "myocardium_dice": 0.631578947368421,
+        "area_ratio": 2.1666666666666665
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame12",
+      "slice_idx": 9,
+      "erosion": {
+        "rf_delta": -0.0018211603164672852,
+        "myocardium_dice": 0.13333333333333333,
+        "area_ratio": 0.07142857142857142
+      },
+      "dilation": {
+        "rf_delta": -0.00038826465606689453,
+        "myocardium_dice": 0.6614173228346457,
+        "area_ratio": 2.0238095238095237
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame12",
+      "slice_idx": 10,
+      "erosion": {
+        "rf_delta": -0.0013987421989440918,
+        "myocardium_dice": 0.17142857142857143,
+        "area_ratio": 0.09375
+      },
+      "dilation": {
+        "rf_delta": -0.0002505183219909668,
+        "myocardium_dice": 0.6530612244897959,
+        "area_ratio": 2.0625
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame12",
+      "slice_idx": 11,
+      "erosion": {
+        "rf_delta": -0.0008431673049926758,
+        "myocardium_dice": 0.21052631578947367,
+        "area_ratio": 0.11764705882352941
+      },
+      "dilation": {
+        "rf_delta": -0.0005125999450683594,
+        "myocardium_dice": 0.6476190476190476,
+        "area_ratio": 2.088235294117647
+      }
+    },
+    {
+      "patient_id": "patient095",
+      "case_id": "patient095_frame12",
+      "slice_idx": 12,
+      "erosion": {
+        "rf_delta": -0.0001666545867919922,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.00021886825561523438,
+        "myocardium_dice": 0.6216216216216216,
+        "area_ratio": 2.217391304347826
+      }
+    },
+    {
+      "patient_id": "patient098",
+      "case_id": "patient098_frame01",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.008122563362121582,
+        "myocardium_dice": 0.18421052631578946,
+        "area_ratio": 0.10144927536231885
+      },
+      "dilation": {
+        "rf_delta": 0.0022078752517700195,
+        "myocardium_dice": 0.6731707317073171,
+        "area_ratio": 1.9710144927536233
+      }
+    },
+    {
+      "patient_id": "patient098",
+      "case_id": "patient098_frame01",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.011939585208892822,
+        "myocardium_dice": 0.3486238532110092,
+        "area_ratio": 0.2111111111111111
+      },
+      "dilation": {
+        "rf_delta": 0.005658566951751709,
+        "myocardium_dice": 0.7171314741035857,
+        "area_ratio": 1.788888888888889
+      }
+    },
+    {
+      "patient_id": "patient098",
+      "case_id": "patient098_frame01",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.010422587394714355,
+        "myocardium_dice": 0.38596491228070173,
+        "area_ratio": 0.2391304347826087
+      },
+      "dilation": {
+        "rf_delta": 0.005219221115112305,
+        "myocardium_dice": 0.7244094488188977,
+        "area_ratio": 1.7608695652173914
+      }
+    },
+    {
+      "patient_id": "patient098",
+      "case_id": "patient098_frame01",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.007283806800842285,
+        "myocardium_dice": 0.18823529411764706,
+        "area_ratio": 0.1038961038961039
+      },
+      "dilation": {
+        "rf_delta": 0.004425525665283203,
+        "myocardium_dice": 0.6905829596412556,
+        "area_ratio": 1.896103896103896
+      }
+    },
+    {
+      "patient_id": "patient098",
+      "case_id": "patient098_frame01",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.005548417568206787,
+        "myocardium_dice": 0.09523809523809523,
+        "area_ratio": 0.05
+      },
+      "dilation": {
+        "rf_delta": 0.001977682113647461,
+        "myocardium_dice": 0.6557377049180327,
+        "area_ratio": 2.05
+      }
+    },
+    {
+      "patient_id": "patient098",
+      "case_id": "patient098_frame01",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.003938913345336914,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.00014549493789672852,
+        "myocardium_dice": 0.6131386861313869,
+        "area_ratio": 2.261904761904762
+      }
+    },
+    {
+      "patient_id": "patient098",
+      "case_id": "patient098_frame01",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.0013140439987182617,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": 0.0005424022674560547,
+        "myocardium_dice": 0.55,
+        "area_ratio": 2.6363636363636362
+      }
+    },
+    {
+      "patient_id": "patient098",
+      "case_id": "patient098_frame09",
+      "slice_idx": 0,
+      "erosion": {
+        "rf_delta": -0.004063844680786133,
+        "myocardium_dice": 0.15384615384615385,
+        "area_ratio": 0.08333333333333333
+      },
+      "dilation": {
+        "rf_delta": 0.0007086992263793945,
+        "myocardium_dice": 0.6703910614525139,
+        "area_ratio": 1.9833333333333334
+      }
+    },
+    {
+      "patient_id": "patient098",
+      "case_id": "patient098_frame09",
+      "slice_idx": 1,
+      "erosion": {
+        "rf_delta": -0.009761810302734375,
+        "myocardium_dice": 0.5648854961832062,
+        "area_ratio": 0.39361702127659576
+      },
+      "dilation": {
+        "rf_delta": 0.006782472133636475,
+        "myocardium_dice": 0.7673469387755102,
+        "area_ratio": 1.6063829787234043
+      }
+    },
+    {
+      "patient_id": "patient098",
+      "case_id": "patient098_frame09",
+      "slice_idx": 2,
+      "erosion": {
+        "rf_delta": -0.008807778358459473,
+        "myocardium_dice": 0.5606060606060606,
+        "area_ratio": 0.3894736842105263
+      },
+      "dilation": {
+        "rf_delta": 0.008226156234741211,
+        "myocardium_dice": 0.7661290322580645,
+        "area_ratio": 1.6105263157894736
+      }
+    },
+    {
+      "patient_id": "patient098",
+      "case_id": "patient098_frame09",
+      "slice_idx": 3,
+      "erosion": {
+        "rf_delta": -0.0045716166496276855,
+        "myocardium_dice": 0.6206896551724138,
+        "area_ratio": 0.45
+      },
+      "dilation": {
+        "rf_delta": 0.004439175128936768,
+        "myocardium_dice": 0.7843137254901961,
+        "area_ratio": 1.55
+      }
+    },
+    {
+      "patient_id": "patient098",
+      "case_id": "patient098_frame09",
+      "slice_idx": 4,
+      "erosion": {
+        "rf_delta": -0.002763807773590088,
+        "myocardium_dice": 0.5106382978723404,
+        "area_ratio": 0.34285714285714286
+      },
+      "dilation": {
+        "rf_delta": 0.0007641911506652832,
+        "myocardium_dice": 0.7526881720430108,
+        "area_ratio": 1.6571428571428573
+      }
+    },
+    {
+      "patient_id": "patient098",
+      "case_id": "patient098_frame09",
+      "slice_idx": 5,
+      "erosion": {
+        "rf_delta": -0.0012806057929992676,
+        "myocardium_dice": 0.49230769230769234,
+        "area_ratio": 0.32653061224489793
+      },
+      "dilation": {
+        "rf_delta": -0.0006989240646362305,
+        "myocardium_dice": 0.7480916030534351,
+        "area_ratio": 1.6734693877551021
+      }
+    },
+    {
+      "patient_id": "patient098",
+      "case_id": "patient098_frame09",
+      "slice_idx": 6,
+      "erosion": {
+        "rf_delta": -0.0013563036918640137,
+        "myocardium_dice": 0.0,
+        "area_ratio": 0.0
+      },
+      "dilation": {
+        "rf_delta": -0.0003502368927001953,
+        "myocardium_dice": 0.6470588235294118,
+        "area_ratio": 2.090909090909091
+      }
+    }
+  ]
+}

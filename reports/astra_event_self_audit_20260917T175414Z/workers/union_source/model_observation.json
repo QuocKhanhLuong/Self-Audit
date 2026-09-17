@@ -1,0 +1,123 @@
+{
+  "id": "62642675-8392-48ec-819e-26fa2a2b554d",
+  "ok": true,
+  "result": {
+    "dispatchId": "ctx_0fcb30b055ec",
+    "source": "terminal",
+    "sourceIdentity": "SiFt2FIsjw4YOjyU_3c0LE-AODDpjz8M",
+    "terminal": {
+      "handle": "term_38bb8991-3678-487b-88c8-0b522dbde1d5",
+      "status": "running",
+      "tail": [
+        "  ┃  132-        turn_dim: int = 16,",
+        "  ┃  …",
+        "  ┃",
+        "  ┃  Click to expand",
+        "  ┃",
+        "     → Read src/self_audit/models/dynamic_window.py",
+        "     → Skill \"orchestration\"",
+        "  ┃",
+        "  ┃  $ rtk proxy semble search \"annotation integration REW detached losses ACDC manifest split dynamic window\" . --",
+        "  ┃  top-k 8 --max-snippet-lines 10",
+        "  ┃",
+        "  ┃  {\"query\": \"annotation integration REW detached losses ACDC manifest split dynamic window\", \"results\": [{",
+        "  ┃  \"file_path\": \"src/self_audit/training/rew_runner.py\", \"start_line\": 189, \"end_line\": 199, \"score\": 0.",
+        "  ┃  01996445545648224, \"content\": \"elif manifest is not None:\\n        # Training pool may legitimately be",
+        "  ┃  subdivided by a patient manifest.\\n        # Never overwrite explicit validation/test membership.\\n",
+        "  ┃  relaxed=[replace(r,split='') if r.split=='train' else r for r in records]\\n",
+        "  ┃  splits=resolve_effective_acdc_splits(relaxed,split_manifest=manifest,seed=cfg.seed).splits\\n",
+        "  ┃  strategy='explicit_manifest'\\n    elif split_policy=='preserve':\\n        splits=resolve_effective_acdc_splits(",
+        "  ┃  records,seed=cfg.seed,train_fraction=.8,val_fraction=.1).splits\\n",
+        "  ┃  strategy='canonical_resolver_80_10_10_or_explicit'\\n    else:\"}, {\"file_path\": \"src/self_audit/models/",
+        "  ┃  dynamic_window.py\", \"start_line\": 222, \"end_line\": 240, \"score\": 0.013774550249640163, \"content\": \"residual_unit",
+        "  ┃  = (\\n            torch.tanh(raw[:, 5:])\\n            .permute(0, 2, 3, 1)\\n            .contiguous()\\n…",
+        "  ┃",
+        "  ┃  Click to expand",
+        "  ┃",
+        "     → Read src/self_audit/models/annotation_expert.py [offset=1, limit=250]",
+        "     → Read src/self_audit/losses/read_evaluate_write.py [offset=1, limit=300]",
+        "     ▣  Build · Union Alpha Free",
+        "  ┃",
+        "  ┃",
+        "  ┃",
+        "  ┃  Build · Union Alpha Free OpenCode Zen",
+        "  ╹▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀",
+        "   ⬝⬝⬝⬝⬝⬝⬝⬝  esc interrupt                                                                 15.8K (6%)  ctrl+p commands"
+      ],
+      "truncated": true,
+      "limited": false,
+      "oldestCursor": "0",
+      "nextCursor": "1",
+      "latestCursor": "1",
+      "returnedLineCount": 34,
+      "source": "screen"
+    },
+    "cursor": "owr1_eyJ2IjoxLCJkIjoiY3R4XzBmY2IzMGIwNTVlYyIsInMiOiJ0ZXJtaW5hbCIsImkiOiJTaUZ0MkZJc2p3NFlPanlVXzNjMExFLUFPRERwano4TSIsInAiOjF9",
+    "status": {
+      "worker": "ready",
+      "terminal": "running",
+      "liveness": "live"
+    },
+    "fallbackReason": "session_not_reported",
+    "warnings": [],
+    "sourceExact": false,
+    "contentComplete": false,
+    "clipping": [
+      "terminal_buffer",
+      "terminal_fallback"
+    ],
+    "projection": {
+      "id": "ctx_0fcb30b055ec",
+      "dispatchId": "ctx_0fcb30b055ec",
+      "taskId": "task_118adc2a8940",
+      "runId": "run_3383831eadae",
+      "role": "worker",
+      "parent": null,
+      "provider": null,
+      "host": {
+        "kind": "local",
+        "id": "local"
+      },
+      "workspace": {
+        "id": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit",
+        "kind": "folder_or_worktree"
+      },
+      "stage": {
+        "worker": "ready",
+        "dispatch": "dispatched",
+        "detail": "input_accepted",
+        "activity": "unknown"
+      },
+      "outcome": "in_progress",
+      "liveness": {
+        "verdict": "unverifiable",
+        "reason": "missing_status"
+      },
+      "evidence": {
+        "durable": true,
+        "liveStatus": "unavailable",
+        "lastObservedAt": null
+      },
+      "resource": {
+        "state": "external",
+        "id": "wtr_741a12cedfe5",
+        "ownerDispatchId": "ctx_0fcb30b055ec",
+        "releaseState": "not_requested",
+        "terminalState": "retained"
+      },
+      "nextAction": {
+        "kind": "none",
+        "argv": []
+      },
+      "attention": {
+        "categories": [
+          "unverifiable"
+        ],
+        "requiresAction": true
+      }
+    }
+  },
+  "_meta": {
+    "runtimeId": "685fbdf6-0375-42f2-950a-a6e7db3a8ff9"
+  }
+}

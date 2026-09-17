@@ -1,0 +1,3900 @@
+{
+  "seed": 2,
+  "policy": "entropy",
+  "config": {
+    "seed": 2,
+    "channels": 16,
+    "k": 8,
+    "batch_size": 8,
+    "actor_lr": 0.001,
+    "rf_lr": 0.001,
+    "trigger_lr": 0.001,
+    "budget_fraction": 0.5,
+    "exploration_fraction": 0.25,
+    "cost": 0.001,
+    "slow_every": 4,
+    "replay_capacity": 256,
+    "replay_max_age": 8,
+    "period": 2
+  },
+  "setup": {
+    "actor_seconds": 3.900568792014383,
+    "rf_seconds": 1.4529158329823986,
+    "trigger_seconds": 1.5780902920523658,
+    "actor_updates": 40,
+    "actor_examples": 320,
+    "rf_updates": 16,
+    "trigger_updates": 16,
+    "rf_examples": 128,
+    "trigger_probe_examples": 128,
+    "rf_distillation_before": {
+      "mse": 2.0445175245404243,
+      "teacher_ranking_accuracy": 0.7666666666666667,
+      "pairs": 120,
+      "meaning": "Fit to intrinsic teacher only, NOT ranking by true Dice."
+    },
+    "rf_distillation_after": {
+      "mse": 1.693121962249279,
+      "teacher_ranking_accuracy": 0.5,
+      "pairs": 120,
+      "meaning": "Fit to intrinsic teacher only, NOT ranking by true Dice."
+    },
+    "trigger_warmup_net_values": [
+      -0.0010000000474974513,
+      0.010513948276638985,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      0.0010502805234864354,
+      -0.0010000000474974513,
+      0.0003040899755433202,
+      -0.0010000000474974513,
+      0.003101574257016182,
+      -0.0010000000474974513,
+      0.002606438472867012,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      0.0023279059678316116,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      0.00270991213619709,
+      0.00110362668056041,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      0.001799272489733994,
+      -0.0010000000474974513,
+      0.010888980701565742,
+      0.013646768406033516,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      0.009373115375638008,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      0.00026028056163340807,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513,
+      -0.0010000000474974513
+    ],
+    "note": "RF/trigger setup uses only training images/model predictions; cost included only for policies using that module."
+  },
+  "training": [
+    {
+      "loss": 1.1811418533325195,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.26297832777198904,
+      "window_grad_norm": 0.023623982915268994,
+      "selected": 4,
+      "probes": 4,
+      "rf_deltas": [
+        0.0,
+        0.011513948440551758,
+        0.0,
+        0.0
+      ],
+      "actor_and_probe_seconds": 0.02348116599023342,
+      "slow_update_seconds": 9.08400397747755e-06,
+      "update": 41,
+      "data_seconds": 0.07621575007215142
+    },
+    {
+      "loss": 1.2005728483200073,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.2709005816060972,
+      "window_grad_norm": 0.021683572201388102,
+      "selected": 4,
+      "probes": 1,
+      "rf_deltas": [
+        0.0
+      ],
+      "actor_and_probe_seconds": 0.018455417011864483,
+      "slow_update_seconds": 7.708906196057796e-06,
+      "update": 42,
+      "data_seconds": 0.10690479096956551
+    },
+    {
+      "loss": 1.2120277881622314,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.4647280470611247,
+      "window_grad_norm": 0.026035387101619064,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.0,
+        0.0
+      ],
+      "actor_and_probe_seconds": 0.02201625006273389,
+      "slow_update_seconds": 9.37492586672306e-06,
+      "update": 43,
+      "data_seconds": 0.07416433398611844
+    },
+    {
+      "loss": 1.235626459121704,
+      "rf_loss": 2.4310498237609863,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.38430938311684854,
+      "window_grad_norm": 0.03781036520512148,
+      "selected": 4,
+      "probes": 3,
+      "rf_deltas": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "actor_and_probe_seconds": 0.025540541973896325,
+      "slow_update_seconds": 0.006857958040200174,
+      "update": 44,
+      "data_seconds": 0.0754325829911977
+    },
+    {
+      "loss": 1.1703214645385742,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.4898529835413128,
+      "window_grad_norm": 0.041946022199319005,
+      "selected": 4,
+      "probes": 0,
+      "rf_deltas": [],
+      "actor_and_probe_seconds": 0.015861290972679853,
+      "slow_update_seconds": 9.541981853544712e-06,
+      "update": 45,
+      "data_seconds": 0.08934187504928559
+    },
+    {
+      "loss": 1.2046618461608887,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.41297724369065264,
+      "window_grad_norm": 0.05543002985049919,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.0,
+        0.0
+      ],
+      "actor_and_probe_seconds": 0.02182091702707112,
+      "slow_update_seconds": 8.333008736371994e-06,
+      "update": 46,
+      "data_seconds": 0.080221833079122
+    },
+    {
+      "loss": 1.173426866531372,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.25348824734266784,
+      "window_grad_norm": 0.02941650020316466,
+      "selected": 4,
+      "probes": 3,
+      "rf_deltas": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "actor_and_probe_seconds": 0.026625124970450997,
+      "slow_update_seconds": 8.625094778835773e-06,
+      "update": 47,
+      "data_seconds": 0.08053091610781848
+    },
+    {
+      "loss": 1.1541316509246826,
+      "rf_loss": 2.3176968097686768,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.283803805520079,
+      "window_grad_norm": 0.032145970960332296,
+      "selected": 4,
+      "probes": 0,
+      "rf_deltas": [],
+      "actor_and_probe_seconds": 0.018045500037260354,
+      "slow_update_seconds": 0.007108916994184256,
+      "update": 48,
+      "data_seconds": 0.083593292045407
+    },
+    {
+      "loss": 1.1841387748718262,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.26528315808487024,
+      "window_grad_norm": 0.03280276042206915,
+      "selected": 4,
+      "probes": 1,
+      "rf_deltas": [
+        0.0
+      ],
+      "actor_and_probe_seconds": 0.019115875009447336,
+      "slow_update_seconds": 7.707974873483181e-06,
+      "update": 49,
+      "data_seconds": 0.0838079999666661
+    },
+    {
+      "loss": 1.1541495323181152,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.34832073398933266,
+      "window_grad_norm": 0.06244344463048954,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.01406329870223999,
+        0.0
+      ],
+      "actor_and_probe_seconds": 0.02061866596341133,
+      "slow_update_seconds": 1.0916031897068024e-05,
+      "update": 50,
+      "data_seconds": 0.08071108406875283
+    },
+    {
+      "loss": 1.1940747499465942,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.2560742334074959,
+      "window_grad_norm": 0.033434903132189296,
+      "selected": 4,
+      "probes": 0,
+      "rf_deltas": [],
+      "actor_and_probe_seconds": 0.01750729198101908,
+      "slow_update_seconds": 1.0874937288463116e-05,
+      "update": 51,
+      "data_seconds": 0.09847970807459205
+    },
+    {
+      "loss": 1.1456327438354492,
+      "rf_loss": 1.6687326431274414,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.49554102852218507,
+      "window_grad_norm": 0.07221600583499443,
+      "selected": 4,
+      "probes": 1,
+      "rf_deltas": [
+        0.017726659774780273
+      ],
+      "actor_and_probe_seconds": 0.01857587497215718,
+      "slow_update_seconds": 0.005945708020590246,
+      "update": 52,
+      "data_seconds": 0.09462683298625052
+    },
+    {
+      "loss": 1.1723556518554688,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.3738267257035022,
+      "window_grad_norm": 0.04793929328039628,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.0,
+        0.02573615312576294
+      ],
+      "actor_and_probe_seconds": 0.020198749960400164,
+      "slow_update_seconds": 8.458038792014122e-06,
+      "update": 53,
+      "data_seconds": 0.07836100005079061
+    },
+    {
+      "loss": 1.136734962463379,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.3209847274378909,
+      "window_grad_norm": 0.05226862611523019,
+      "selected": 4,
+      "probes": 3,
+      "rf_deltas": [
+        0.0,
+        0.00578385591506958,
+        0.0
+      ],
+      "actor_and_probe_seconds": 0.026004833984188735,
+      "slow_update_seconds": 8.874922059476376e-06,
+      "update": 54,
+      "data_seconds": 0.07742200000211596
+    },
+    {
+      "loss": 1.1817034482955933,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.2811122243711952,
+      "window_grad_norm": 0.05432303972818697,
+      "selected": 4,
+      "probes": 4,
+      "rf_deltas": [
+        0.0010521411895751953,
+        0.0,
+        0.0,
+        0.008547842502593994
+      ],
+      "actor_and_probe_seconds": 0.0240321250166744,
+      "slow_update_seconds": 8.958042599260807e-06,
+      "update": 55,
+      "data_seconds": 0.06893987499643117
+    },
+    {
+      "loss": 1.1559484004974365,
+      "rf_loss": 1.8697376251220703,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.3563555036604463,
+      "window_grad_norm": 0.058774733587492765,
+      "selected": 4,
+      "probes": 1,
+      "rf_deltas": [
+        0.0
+      ],
+      "actor_and_probe_seconds": 0.02175604202784598,
+      "slow_update_seconds": 0.006044832989573479,
+      "update": 56,
+      "data_seconds": 0.0703154579969123
+    },
+    {
+      "loss": 1.165314793586731,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.3532205422655663,
+      "window_grad_norm": 0.06756000369377044,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.0016582012176513672,
+        0.0
+      ],
+      "actor_and_probe_seconds": 0.022280583041720092,
+      "slow_update_seconds": 9.124982170760632e-06,
+      "update": 57,
+      "data_seconds": 0.08507270808331668
+    },
+    {
+      "loss": 1.1464388370513916,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.31988973478492194,
+      "window_grad_norm": 0.06497371192186577,
+      "selected": 4,
+      "probes": 0,
+      "rf_deltas": [],
+      "actor_and_probe_seconds": 0.019497708068229258,
+      "slow_update_seconds": 8.624978363513947e-06,
+      "update": 58,
+      "data_seconds": 0.08424195810221136
+    },
+    {
+      "loss": 1.1561520099639893,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.37022068750821535,
+      "window_grad_norm": 0.04013188855805895,
+      "selected": 4,
+      "probes": 3,
+      "rf_deltas": [
+        0.006493568420410156,
+        0.0010595321655273438,
+        0.016251444816589355
+      ],
+      "actor_and_probe_seconds": 0.023254791973158717,
+      "slow_update_seconds": 1.2166914530098438e-05,
+      "update": 59,
+      "data_seconds": 0.07288875000085682
+    },
+    {
+      "loss": 1.1174839735031128,
+      "rf_loss": 1.8934491872787476,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.350129449945048,
+      "window_grad_norm": 0.027187868093671717,
+      "selected": 4,
+      "probes": 3,
+      "rf_deltas": [
+        0.013938963413238525,
+        0.0,
+        0.0005742907524108887
+      ],
+      "actor_and_probe_seconds": 0.026610333006829023,
+      "slow_update_seconds": 0.0074501249473541975,
+      "update": 60,
+      "data_seconds": 0.07094220898579806
+    },
+    {
+      "loss": 1.1065144538879395,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.4406770329050011,
+      "window_grad_norm": 0.03418453148766848,
+      "selected": 4,
+      "probes": 3,
+      "rf_deltas": [
+        0.013270318508148193,
+        0.013705849647521973,
+        0.030498385429382324
+      ],
+      "actor_and_probe_seconds": 0.024260416976176202,
+      "slow_update_seconds": 9.66701190918684e-06,
+      "update": 61,
+      "data_seconds": 0.09150987502653152
+    },
+    {
+      "loss": 1.1427841186523438,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.3070381121065002,
+      "window_grad_norm": 0.057426051161170895,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.0,
+        0.0
+      ],
+      "actor_and_probe_seconds": 0.024358083959668875,
+      "slow_update_seconds": 9.458046406507492e-06,
+      "update": 62,
+      "data_seconds": 0.07936233293730766
+    },
+    {
+      "loss": 1.1098532676696777,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.40096369213583044,
+      "window_grad_norm": 0.024185007243244946,
+      "selected": 4,
+      "probes": 1,
+      "rf_deltas": [
+        0.012290596961975098
+      ],
+      "actor_and_probe_seconds": 0.020285749924369156,
+      "slow_update_seconds": 1.0207993909716606e-05,
+      "update": 63,
+      "data_seconds": 0.06435829203110188
+    },
+    {
+      "loss": 1.1151821613311768,
+      "rf_loss": 2.651937484741211,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.3101595769936218,
+      "window_grad_norm": 0.03584717292937088,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.007972896099090576,
+        0.003951013088226318
+      ],
+      "actor_and_probe_seconds": 0.0227629590081051,
+      "slow_update_seconds": 0.005952166044153273,
+      "update": 64,
+      "data_seconds": 0.09027462499216199
+    },
+    {
+      "loss": 1.1095565557479858,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.5216726348520523,
+      "window_grad_norm": 0.0840911817591757,
+      "selected": 4,
+      "probes": 1,
+      "rf_deltas": [
+        0.020746231079101562
+      ],
+      "actor_and_probe_seconds": 0.01868183398619294,
+      "slow_update_seconds": 9.25001222640276e-06,
+      "update": 65,
+      "data_seconds": 0.07790187501814216
+    },
+    {
+      "loss": 1.1312623023986816,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.2497425098582002,
+      "window_grad_norm": 0.040682091163155666,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.0052877068519592285,
+        0.0
+      ],
+      "actor_and_probe_seconds": 0.02289262495469302,
+      "slow_update_seconds": 9.416951797902584e-06,
+      "update": 66,
+      "data_seconds": 0.0959596250904724
+    },
+    {
+      "loss": 1.1004416942596436,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.8818909874436202,
+      "window_grad_norm": 0.10288763719738467,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.007173418998718262,
+        0.012952268123626709
+      ],
+      "actor_and_probe_seconds": 0.019015709054656327,
+      "slow_update_seconds": 1.0499963536858559e-05,
+      "update": 67,
+      "data_seconds": 0.08487858297303319
+    },
+    {
+      "loss": 1.0709037780761719,
+      "rf_loss": 2.3593575954437256,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.9413136428565495,
+      "window_grad_norm": 0.148249419794196,
+      "selected": 4,
+      "probes": 3,
+      "rf_deltas": [
+        0.0,
+        0.015221714973449707,
+        0.0074912309646606445
+      ],
+      "actor_and_probe_seconds": 0.020077832974493504,
+      "slow_update_seconds": 0.006668415968306363,
+      "update": 68,
+      "data_seconds": 0.08111545897554606
+    },
+    {
+      "loss": 1.0948562622070312,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.34042658645726553,
+      "window_grad_norm": 0.11851384389907337,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.01183229684829712,
+        0.0
+      ],
+      "actor_and_probe_seconds": 0.0183087500045076,
+      "slow_update_seconds": 9.750016033649445e-06,
+      "update": 69,
+      "data_seconds": 0.0845579580636695
+    },
+    {
+      "loss": 1.085607886314392,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.3800488686241926,
+      "window_grad_norm": 0.13622566577139175,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.0,
+        0.0
+      ],
+      "actor_and_probe_seconds": 0.026523833046667278,
+      "slow_update_seconds": 1.1625001206994057e-05,
+      "update": 70,
+      "data_seconds": 0.10662920901086181
+    },
+    {
+      "loss": 1.040406584739685,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.5388132781679555,
+      "window_grad_norm": 0.06223661916349796,
+      "selected": 4,
+      "probes": 4,
+      "rf_deltas": [
+        0.0036258697509765625,
+        0.009055614471435547,
+        0.015289723873138428,
+        0.007580935955047607
+      ],
+      "actor_and_probe_seconds": 0.02449400001205504,
+      "slow_update_seconds": 9.916955605149269e-06,
+      "update": 71,
+      "data_seconds": 0.06805437500588596
+    },
+    {
+      "loss": 1.0818860530853271,
+      "rf_loss": 2.6690316200256348,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.401728012531394,
+      "window_grad_norm": 0.048985170328394986,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.0028185248374938965,
+        0.0038084983825683594
+      ],
+      "actor_and_probe_seconds": 0.023402207996696234,
+      "slow_update_seconds": 0.00799141707830131,
+      "update": 72,
+      "data_seconds": 0.07222816697321832
+    },
+    {
+      "loss": 1.1081371307373047,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.5031735361997982,
+      "window_grad_norm": 0.08692195509653557,
+      "selected": 4,
+      "probes": 5,
+      "rf_deltas": [
+        0.003534555435180664,
+        0.0032694339752197266,
+        0.012810826301574707,
+        0.0024839043617248535,
+        0.006729722023010254
+      ],
+      "actor_and_probe_seconds": 0.02620349999051541,
+      "slow_update_seconds": 9.458046406507492e-06,
+      "update": 73,
+      "data_seconds": 0.08001466700807214
+    },
+    {
+      "loss": 1.1100188493728638,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.7733744640592143,
+      "window_grad_norm": 0.0986758681269585,
+      "selected": 4,
+      "probes": 1,
+      "rf_deltas": [
+        0.0005373954772949219
+      ],
+      "actor_and_probe_seconds": 0.017905250075273216,
+      "slow_update_seconds": 8.750008419156075e-06,
+      "update": 74,
+      "data_seconds": 0.07240454200655222
+    },
+    {
+      "loss": 1.1068425178527832,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.4175590221375961,
+      "window_grad_norm": 0.15896512229874216,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.010532140731811523,
+        0.0006698369979858398
+      ],
+      "actor_and_probe_seconds": 0.020960167050361633,
+      "slow_update_seconds": 8.792034350335598e-06,
+      "update": 75,
+      "data_seconds": 0.08483874995727092
+    },
+    {
+      "loss": 1.1294646263122559,
+      "rf_loss": 1.8653641939163208,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.8635939143489819,
+      "window_grad_norm": 0.19154413529998063,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.0,
+        0.006547749042510986
+      ],
+      "actor_and_probe_seconds": 0.02106029202695936,
+      "slow_update_seconds": 0.0067328340373933315,
+      "update": 76,
+      "data_seconds": 0.0732046669581905
+    },
+    {
+      "loss": 1.0580902099609375,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.4262282173615349,
+      "window_grad_norm": 0.11687954854883112,
+      "selected": 4,
+      "probes": 1,
+      "rf_deltas": [
+        0.0
+      ],
+      "actor_and_probe_seconds": 0.0177743750391528,
+      "slow_update_seconds": 9.124982170760632e-06,
+      "update": 77,
+      "data_seconds": 0.07911254197824746
+    },
+    {
+      "loss": 1.0447847843170166,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.5723417238431192,
+      "window_grad_norm": 0.14452226518892428,
+      "selected": 4,
+      "probes": 0,
+      "rf_deltas": [],
+      "actor_and_probe_seconds": 0.016814208938740194,
+      "slow_update_seconds": 9.167008101940155e-06,
+      "update": 78,
+      "data_seconds": 0.07079770800191909
+    },
+    {
+      "loss": 1.0630005598068237,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.5268537763114208,
+      "window_grad_norm": 0.1165673623483783,
+      "selected": 4,
+      "probes": 4,
+      "rf_deltas": [
+        0.008836209774017334,
+        0.012064933776855469,
+        0.0,
+        0.003130316734313965
+      ],
+      "actor_and_probe_seconds": 0.02811037504579872,
+      "slow_update_seconds": 1.00000761449337e-05,
+      "update": 79,
+      "data_seconds": 0.06852154200896621
+    },
+    {
+      "loss": 1.0911122560501099,
+      "rf_loss": 1.8658555746078491,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.5340072940220353,
+      "window_grad_norm": 0.08372832581158667,
+      "selected": 4,
+      "probes": 4,
+      "rf_deltas": [
+        0.0,
+        0.0,
+        0.005889773368835449,
+        0.0
+      ],
+      "actor_and_probe_seconds": 0.024793333956040442,
+      "slow_update_seconds": 0.006408917019143701,
+      "update": 80,
+      "data_seconds": 0.1200102079892531
+    },
+    {
+      "loss": 1.071617841720581,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.5896065555794028,
+      "window_grad_norm": 0.27419063506007696,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.00303041934967041,
+        0.005251169204711914
+      ],
+      "actor_and_probe_seconds": 0.022328666993416846,
+      "slow_update_seconds": 9.16607677936554e-06,
+      "update": 81,
+      "data_seconds": 0.09308620798401535
+    },
+    {
+      "loss": 1.0180038213729858,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 1.2069118727995076,
+      "window_grad_norm": 0.24760631294108892,
+      "selected": 4,
+      "probes": 3,
+      "rf_deltas": [
+        0.0013638734817504883,
+        0.0172041654586792,
+        0.015033066272735596
+      ],
+      "actor_and_probe_seconds": 0.02343137504067272,
+      "slow_update_seconds": 8.584000170230865e-06,
+      "update": 82,
+      "data_seconds": 0.08852641703560948
+    },
+    {
+      "loss": 1.0064237117767334,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.4635870474361528,
+      "window_grad_norm": 0.08956048204934208,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.005611598491668701,
+        0.0
+      ],
+      "actor_and_probe_seconds": 0.020470125018619,
+      "slow_update_seconds": 7.750000804662704e-06,
+      "update": 83,
+      "data_seconds": 0.07681358291301876
+    },
+    {
+      "loss": 1.0478336811065674,
+      "rf_loss": 1.6933759450912476,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.4061788817230485,
+      "window_grad_norm": 0.11263682797248714,
+      "selected": 4,
+      "probes": 3,
+      "rf_deltas": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "actor_and_probe_seconds": 0.02236641605850309,
+      "slow_update_seconds": 0.008688790956512094,
+      "update": 84,
+      "data_seconds": 0.07256762508768588
+    },
+    {
+      "loss": 1.0466814041137695,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.47803840728038843,
+      "window_grad_norm": 0.0839052177256243,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.006777822971343994,
+        0.011284410953521729
+      ],
+      "actor_and_probe_seconds": 0.01928912498988211,
+      "slow_update_seconds": 8.66700429469347e-06,
+      "update": 85,
+      "data_seconds": 0.07450745801907033
+    },
+    {
+      "loss": 1.0297999382019043,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.6636901934940844,
+      "window_grad_norm": 0.22570737982318165,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        -0.0017597675323486328,
+        0.011104822158813477
+      ],
+      "actor_and_probe_seconds": 0.02059312502387911,
+      "slow_update_seconds": 8.707982487976551e-06,
+      "update": 86,
+      "data_seconds": 0.09382416703738272
+    },
+    {
+      "loss": 1.07503342628479,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 1.2578331618105603,
+      "window_grad_norm": 0.23311939903608028,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.0,
+        0.019540727138519287
+      ],
+      "actor_and_probe_seconds": 0.019914999953471124,
+      "slow_update_seconds": 7.583992555737495e-06,
+      "update": 87,
+      "data_seconds": 0.10194187494926155
+    },
+    {
+      "loss": 0.9865027070045471,
+      "rf_loss": 1.903688669204712,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.4350508311136201,
+      "window_grad_norm": 0.18614136300933495,
+      "selected": 4,
+      "probes": 4,
+      "rf_deltas": [
+        0.010139524936676025,
+        0.0,
+        0.0022188425064086914,
+        0.0
+      ],
+      "actor_and_probe_seconds": 0.024306874955073,
+      "slow_update_seconds": 0.007121582981199026,
+      "update": 88,
+      "data_seconds": 0.08393566601444036
+    },
+    {
+      "loss": 0.9810686707496643,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.4780640384977646,
+      "window_grad_norm": 0.15320836950117658,
+      "selected": 4,
+      "probes": 4,
+      "rf_deltas": [
+        0.0058438777923583984,
+        0.007701098918914795,
+        0.0,
+        0.027739524841308594
+      ],
+      "actor_and_probe_seconds": 0.023007208947092295,
+      "slow_update_seconds": 9.041978046298027e-06,
+      "update": 89,
+      "data_seconds": 0.09425945789553225
+    },
+    {
+      "loss": 0.9956666231155396,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.8646646307892327,
+      "window_grad_norm": 0.0919852497990348,
+      "selected": 4,
+      "probes": 0,
+      "rf_deltas": [],
+      "actor_and_probe_seconds": 0.01535695802886039,
+      "slow_update_seconds": 9.542098268866539e-06,
+      "update": 90,
+      "data_seconds": 0.12034049991052598
+    },
+    {
+      "loss": 0.9631325006484985,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.7684628900718877,
+      "window_grad_norm": 0.23491568357793444,
+      "selected": 4,
+      "probes": 0,
+      "rf_deltas": [],
+      "actor_and_probe_seconds": 0.016158250044099987,
+      "slow_update_seconds": 9.499955922365189e-06,
+      "update": 91,
+      "data_seconds": 0.06234383292030543
+    },
+    {
+      "loss": 1.0141963958740234,
+      "rf_loss": 2.2477316856384277,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.499382567653771,
+      "window_grad_norm": 0.11933666542186684,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.0009395480155944824,
+        0.007911384105682373
+      ],
+      "actor_and_probe_seconds": 0.020689832977950573,
+      "slow_update_seconds": 0.007013540947809815,
+      "update": 92,
+      "data_seconds": 0.0850622080033645
+    },
+    {
+      "loss": 0.9939321875572205,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.5504886668698339,
+      "window_grad_norm": 0.16925529523328128,
+      "selected": 4,
+      "probes": 5,
+      "rf_deltas": [
+        0.0029828548431396484,
+        0.00544583797454834,
+        0.012040376663208008,
+        0.008618831634521484,
+        0.008747696876525879
+      ],
+      "actor_and_probe_seconds": 0.025468625011853874,
+      "slow_update_seconds": 9.124982170760632e-06,
+      "update": 93,
+      "data_seconds": 0.08418720797635615
+    },
+    {
+      "loss": 0.9508567452430725,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.981145485264863,
+      "window_grad_norm": 0.3640552159655395,
+      "selected": 4,
+      "probes": 3,
+      "rf_deltas": [
+        0.0030384063720703125,
+        0.0,
+        -0.0003057718276977539
+      ],
+      "actor_and_probe_seconds": 0.022704292088747025,
+      "slow_update_seconds": 9.582960046827793e-06,
+      "update": 94,
+      "data_seconds": 0.06639312498737127
+    },
+    {
+      "loss": 1.0080375671386719,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.8376855887396247,
+      "window_grad_norm": 0.20910742900864615,
+      "selected": 4,
+      "probes": 1,
+      "rf_deltas": [
+        0.0004940629005432129
+      ],
+      "actor_and_probe_seconds": 0.019660750054754317,
+      "slow_update_seconds": 9.582960046827793e-06,
+      "update": 95,
+      "data_seconds": 0.07520916708745062
+    },
+    {
+      "loss": 0.9921504259109497,
+      "rf_loss": 1.6865872144699097,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.8452454137712314,
+      "window_grad_norm": 0.23814736619537047,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.0,
+        0.0033031105995178223
+      ],
+      "actor_and_probe_seconds": 0.02043816598597914,
+      "slow_update_seconds": 0.006543208030052483,
+      "update": 96,
+      "data_seconds": 0.0841264589689672
+    },
+    {
+      "loss": 0.9829460382461548,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.9981433713373751,
+      "window_grad_norm": 0.4006979671159684,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        -0.00018745660781860352,
+        0.00152587890625
+      ],
+      "actor_and_probe_seconds": 0.019303750013932586,
+      "slow_update_seconds": 8.458038792014122e-06,
+      "update": 97,
+      "data_seconds": 0.07272379205096513
+    },
+    {
+      "loss": 0.9575384855270386,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.716517686622573,
+      "window_grad_norm": 0.21377904216711016,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.005363285541534424,
+        0.0009121894836425781
+      ],
+      "actor_and_probe_seconds": 0.019434874993748963,
+      "slow_update_seconds": 8.999952115118504e-06,
+      "update": 98,
+      "data_seconds": 0.08750437491107732
+    },
+    {
+      "loss": 0.9577181935310364,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.9733871053020399,
+      "window_grad_norm": 0.17842729485809505,
+      "selected": 4,
+      "probes": 1,
+      "rf_deltas": [
+        -0.0019192695617675781
+      ],
+      "actor_and_probe_seconds": 0.01852812501601875,
+      "slow_update_seconds": 9.500072337687016e-06,
+      "update": 99,
+      "data_seconds": 0.09551945806015283
+    },
+    {
+      "loss": 1.0160574913024902,
+      "rf_loss": 2.1586151123046875,
+      "trigger_loss": null,
+      "actor_grad_norm": 2.2270457664841463,
+      "window_grad_norm": 0.7388002408708235,
+      "selected": 4,
+      "probes": 1,
+      "rf_deltas": [
+        0.0005967617034912109
+      ],
+      "actor_and_probe_seconds": 0.02034087502397597,
+      "slow_update_seconds": 0.006230207975022495,
+      "update": 100,
+      "data_seconds": 0.0969791249372065
+    },
+    {
+      "loss": 0.9499895572662354,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 1.5088027161965072,
+      "window_grad_norm": 0.29037068958512374,
+      "selected": 4,
+      "probes": 0,
+      "rf_deltas": [],
+      "actor_and_probe_seconds": 0.014477165997959673,
+      "slow_update_seconds": 8.415896445512772e-06,
+      "update": 101,
+      "data_seconds": 0.07165245804935694
+    },
+    {
+      "loss": 0.8678206205368042,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.8373417694868973,
+      "window_grad_norm": 0.40405622092555016,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.004197478294372559,
+        -0.0011159181594848633
+      ],
+      "actor_and_probe_seconds": 0.020001458004117012,
+      "slow_update_seconds": 8.541042916476727e-06,
+      "update": 102,
+      "data_seconds": 0.07174270891118795
+    },
+    {
+      "loss": 0.8972880840301514,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 1.6919727406913645,
+      "window_grad_norm": 0.6003804829334145,
+      "selected": 4,
+      "probes": 4,
+      "rf_deltas": [
+        0.0005455613136291504,
+        0.0005394816398620605,
+        -0.000509798526763916,
+        -0.000764012336730957
+      ],
+      "actor_and_probe_seconds": 0.021440458949655294,
+      "slow_update_seconds": 8.291914127767086e-06,
+      "update": 103,
+      "data_seconds": 0.07918474997859448
+    },
+    {
+      "loss": 0.8247213363647461,
+      "rf_loss": 1.766419768333435,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.8927282223297278,
+      "window_grad_norm": 0.5671976082870847,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        -0.00023102760314941406,
+        0.0009260177612304688
+      ],
+      "actor_and_probe_seconds": 0.02050550002604723,
+      "slow_update_seconds": 0.006388500100001693,
+      "update": 104,
+      "data_seconds": 0.08283124992158264
+    },
+    {
+      "loss": 0.8957409858703613,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.7319313044368638,
+      "window_grad_norm": 0.3386231468749913,
+      "selected": 4,
+      "probes": 1,
+      "rf_deltas": [
+        0.007347047328948975
+      ],
+      "actor_and_probe_seconds": 0.01635099994018674,
+      "slow_update_seconds": 8.707982487976551e-06,
+      "update": 105,
+      "data_seconds": 0.08343191689345986
+    },
+    {
+      "loss": 0.9051278829574585,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 1.0533078565034948,
+      "window_grad_norm": 0.6746980759770289,
+      "selected": 4,
+      "probes": 1,
+      "rf_deltas": [
+        0.012728333473205566
+      ],
+      "actor_and_probe_seconds": 0.016996541991829872,
+      "slow_update_seconds": 8.292030543088913e-06,
+      "update": 106,
+      "data_seconds": 0.08224291598889977
+    },
+    {
+      "loss": 0.9740566611289978,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 1.3288494128952453,
+      "window_grad_norm": 0.8716234058088471,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.007485926151275635,
+        0.00021582841873168945
+      ],
+      "actor_and_probe_seconds": 0.019635083037428558,
+      "slow_update_seconds": 9.874929673969746e-06,
+      "update": 107,
+      "data_seconds": 0.07565112505108118
+    },
+    {
+      "loss": 0.9384416341781616,
+      "rf_loss": 1.6973317861557007,
+      "trigger_loss": null,
+      "actor_grad_norm": 2.049141898836858,
+      "window_grad_norm": 0.25498673890832685,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.001230776309967041,
+        0.0025342702865600586
+      ],
+      "actor_and_probe_seconds": 0.019338499987497926,
+      "slow_update_seconds": 0.007007375010289252,
+      "update": 108,
+      "data_seconds": 0.07724400004372001
+    },
+    {
+      "loss": 0.904485821723938,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 1.520557613679989,
+      "window_grad_norm": 0.28085260228980213,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.0018887519836425781,
+        0.004860103130340576
+      ],
+      "actor_and_probe_seconds": 0.020336167071945965,
+      "slow_update_seconds": 9.66701190918684e-06,
+      "update": 109,
+      "data_seconds": 0.0765674589201808
+    },
+    {
+      "loss": 0.9944238662719727,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 1.7663674041151112,
+      "window_grad_norm": 0.7408670794697108,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.0,
+        0.001241445541381836
+      ],
+      "actor_and_probe_seconds": 0.01947404199745506,
+      "slow_update_seconds": 9.457929991185665e-06,
+      "update": 110,
+      "data_seconds": 0.0887042919639498
+    },
+    {
+      "loss": 0.8854758143424988,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 1.7736659578742056,
+      "window_grad_norm": 0.7655770399468376,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.00013965368270874023,
+        0.002372443675994873
+      ],
+      "actor_and_probe_seconds": 0.019876042031683028,
+      "slow_update_seconds": 8.124974556267262e-06,
+      "update": 111,
+      "data_seconds": 0.07880662498064339
+    },
+    {
+      "loss": 0.9249864816665649,
+      "rf_loss": 1.5402268171310425,
+      "trigger_loss": null,
+      "actor_grad_norm": 1.4662111410111012,
+      "window_grad_norm": 0.4395832720856098,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.004395961761474609,
+        -0.0010668039321899414
+      ],
+      "actor_and_probe_seconds": 0.019269292009994388,
+      "slow_update_seconds": 0.005936624947935343,
+      "update": 112,
+      "data_seconds": 0.07267200003843755
+    },
+    {
+      "loss": 0.8746746778488159,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 1.0528298911930474,
+      "window_grad_norm": 0.40640592640839446,
+      "selected": 4,
+      "probes": 3,
+      "rf_deltas": [
+        -0.0035418272018432617,
+        -0.001503288745880127,
+        -0.0005966424942016602
+      ],
+      "actor_and_probe_seconds": 0.020584083045832813,
+      "slow_update_seconds": 8.457922376692295e-06,
+      "update": 113,
+      "data_seconds": 0.06597695907112211
+    },
+    {
+      "loss": 0.9174004793167114,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 1.342763309302727,
+      "window_grad_norm": 0.4573007415629816,
+      "selected": 4,
+      "probes": 4,
+      "rf_deltas": [
+        0.007163941860198975,
+        -0.0003249645233154297,
+        -0.0019370317459106445,
+        0.0
+      ],
+      "actor_and_probe_seconds": 0.02186191699001938,
+      "slow_update_seconds": 8.082948625087738e-06,
+      "update": 114,
+      "data_seconds": 0.07258808403275907
+    },
+    {
+      "loss": 0.9078675508499146,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 1.5311769849635872,
+      "window_grad_norm": 0.4815018078673657,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.0006484389305114746,
+        0.007106959819793701
+      ],
+      "actor_and_probe_seconds": 0.019183291005901992,
+      "slow_update_seconds": 8.083065040409565e-06,
+      "update": 115,
+      "data_seconds": 0.09218037500977516
+    },
+    {
+      "loss": 0.8197988867759705,
+      "rf_loss": 1.400282621383667,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.95121721966535,
+      "window_grad_norm": 0.3094329224975863,
+      "selected": 4,
+      "probes": 2,
+      "rf_deltas": [
+        0.0008431673049926758,
+        0.0024063587188720703
+      ],
+      "actor_and_probe_seconds": 0.01859774999320507,
+      "slow_update_seconds": 0.006243541021831334,
+      "update": 116,
+      "data_seconds": 0.1202607499435544
+    },
+    {
+      "loss": 0.9237208366394043,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 2.1540497685537887,
+      "window_grad_norm": 0.535398748464236,
+      "selected": 4,
+      "probes": 1,
+      "rf_deltas": [
+        1.3887882232666016e-05
+      ],
+      "actor_and_probe_seconds": 0.017144709010608494,
+      "slow_update_seconds": 9.915907867252827e-06,
+      "update": 117,
+      "data_seconds": 0.07783416600432247
+    },
+    {
+      "loss": 0.8204206824302673,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 1.2090340200360674,
+      "window_grad_norm": 0.7587377445024329,
+      "selected": 4,
+      "probes": 3,
+      "rf_deltas": [
+        0.007633090019226074,
+        0.00040465593338012695,
+        0.0017170310020446777
+      ],
+      "actor_and_probe_seconds": 0.020341541967354715,
+      "slow_update_seconds": 8.66700429469347e-06,
+      "update": 118,
+      "data_seconds": 0.07720729103311896
+    },
+    {
+      "loss": 0.9001030325889587,
+      "rf_loss": null,
+      "trigger_loss": null,
+      "actor_grad_norm": 1.1760455721923049,
+      "window_grad_norm": 0.32960142912194496,
+      "selected": 4,
+      "probes": 1,
+      "rf_deltas": [
+        0.0013541579246520996
+      ],
+      "actor_and_probe_seconds": 0.01782724994700402,
+      "slow_update_seconds": 8.916016668081284e-06,
+      "update": 119,
+      "data_seconds": 0.0859406249364838
+    },
+    {
+      "loss": 0.8927929997444153,
+      "rf_loss": 1.8721067905426025,
+      "trigger_loss": null,
+      "actor_grad_norm": 0.8112418012138989,
+      "window_grad_norm": 0.22704735112098792,
+      "selected": 4,
+      "probes": 3,
+      "rf_deltas": [
+        0.0012996792793273926,
+        0.02746284008026123,
+        0.008724689483642578
+      ],
+      "actor_and_probe_seconds": 0.019383000093512237,
+      "slow_update_seconds": 0.006041249958798289,
+      "update": 120,
+      "data_seconds": 0.08885279204696417
+    }
+  ],
+  "curve": [
+    {
+      "updates": 40,
+      "examples_seen": 320,
+      "wall_seconds": 7.228022207971662,
+      "patient_count": 20,
+      "volume_count": 40,
+      "patients": [
+        {
+          "patient_id": "patient004",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.013798536406829954,
+          "audit_fraction": 0.6,
+          "a0_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.0,
+          "final_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.0,
+          "audit_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.0,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "patient005",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.014090728014707565,
+          "audit_fraction": 0.4,
+          "a0_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.0,
+          "final_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.0,
+          "audit_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.0,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "patient012",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.014699177583679557,
+          "audit_fraction": 0.44999999999999996,
+          "a0_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.0,
+          "final_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.0,
+          "audit_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.0,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "patient014",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.01475703315809369,
+          "audit_fraction": 0.55,
+          "a0_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.0,
+          "final_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.0,
+          "audit_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.0,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "patient015",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.01499269525003102,
+          "audit_fraction": 0.4444444444444444,
+          "a0_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.0,
+          "final_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.0,
+          "audit_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.0,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "patient018",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.01263078092597425,
+          "audit_fraction": 0.625,
+          "a0_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.0,
+          "final_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.0,
+          "audit_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.0,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "patient028",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.013031029282137752,
+          "audit_fraction": 0.5,
+          "a0_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.0,
+          "final_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.0,
+          "audit_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.0,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "patient029",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.013651938558640804,
+          "audit_fraction": 0.45454545454545453,
+          "a0_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.0,
+          "final_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.0,
+          "audit_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.0,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "patient030",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.013759060576558114,
+          "audit_fraction": 0.5,
+          "a0_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.0,
+          "final_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.0,
+          "audit_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.0,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "patient032",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.013442816212773323,
+          "audit_fraction": 0.6,
+          "a0_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.0,
+          "final_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.0,
+          "audit_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.0,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "patient036",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.014187051332555711,
+          "audit_fraction": 0.375,
+          "a0_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.0,
+          "final_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.0,
+          "audit_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.0,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "patient055",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.013534724971072542,
+          "audit_fraction": 0.5555555555555556,
+          "a0_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.0,
+          "final_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.0,
+          "audit_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.0,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "patient065",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.015081407269462943,
+          "audit_fraction": 0.375,
+          "a0_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.0,
+          "final_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.0,
+          "audit_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.0,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "patient070",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.014423515958090622,
+          "audit_fraction": 0.5833333333333333,
+          "a0_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.0,
+          "final_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.0,
+          "audit_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.0,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "patient076",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.01565258187474683,
+          "audit_fraction": 0.4375,
+          "a0_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.0,
+          "final_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.0,
+          "audit_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.0,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "patient082",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.014134608849417418,
+          "audit_fraction": 0.5,
+          "a0_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.0,
+          "final_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.0,
+          "audit_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.0,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "patient087",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.014572162181138992,
+          "audit_fraction": 0.625,
+          "a0_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.0,
+          "final_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.0,
+          "audit_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.0,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "patient089",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.01255027181468904,
+          "audit_fraction": 0.5,
+          "a0_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.0,
+          "final_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.0,
+          "audit_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.0,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "patient095",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.015316097365160073,
+          "audit_fraction": 0.4642857142857143,
+          "a0_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.0,
+          "final_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.0,
+          "audit_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.0,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "patient098",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.0136752598253744,
+          "audit_fraction": 0.5,
+          "a0_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.0,
+          "final_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.0,
+          "audit_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.0,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        }
+      ],
+      "a0_dice": 0.0,
+      "final_dice": 0.0,
+      "class_dice": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "harm_patient_rate": 0.0,
+      "audit_fraction": 0.5019832251082251,
+      "costs": {
+        "policy_audit_calls": 188,
+        "read_calls": 564,
+        "probe_audit_calls": 0
+      },
+      "evaluation_seconds": 1.873981374897994,
+      "metric_note": "Patient mean of per-volume foreground Dice on resized complete volumes; no slice CI."
+    },
+    {
+      "updates": 80,
+      "examples_seen": 640,
+      "wall_seconds": 13.324626125046052,
+      "patient_count": 20,
+      "volume_count": 40,
+      "patients": [
+        {
+          "patient_id": "patient004",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.0066699347458779815,
+          "audit_fraction": 0.4,
+          "a0_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.0,
+          "final_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.0,
+          "audit_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.0,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "patient005",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.006889458326622844,
+          "audit_fraction": 0.6,
+          "a0_class_dice": [
+            0.08924054755020087,
+            0.0,
+            0.0009182736455463728
+          ],
+          "a0_dice": 0.030052940398582417,
+          "final_class_dice": [
+            0.13588983102994204,
+            0.0,
+            0.005484460694698354
+          ],
+          "final_dice": 0.04712476390821346,
+          "audit_class_dice": [
+            0.08924054755020087,
+            0.0,
+            0.0009182736455463728
+          ],
+          "audit_dice": 0.030052940398582417,
+          "true_delta": 0.0,
+          "retained_delta": 0.017071823509631046
+        },
+        {
+          "patient_id": "patient012",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.007515050144866109,
+          "audit_fraction": 0.4,
+          "a0_class_dice": [
+            0.007134363852556481,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.0023781212841854937,
+          "final_class_dice": [
+            0.014101921470342524,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.004700640490114175,
+          "audit_class_dice": [
+            0.007134363852556481,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.0023781212841854937,
+          "true_delta": 0.0,
+          "retained_delta": 0.002322519205928681
+        },
+        {
+          "patient_id": "patient014",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.0075017694849520925,
+          "audit_fraction": 0.6,
+          "a0_class_dice": [
+            0.018860803156770377,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.006286934385590126,
+          "final_class_dice": [
+            0.03865643376293554,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.012885477920978513,
+          "audit_class_dice": [
+            0.018860803156770377,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.006286934385590126,
+          "true_delta": 0.0,
+          "retained_delta": 0.006598543535388387
+        },
+        {
+          "patient_id": "patient015",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.006886352319270372,
+          "audit_fraction": 0.5555555555555556,
+          "a0_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.0,
+          "final_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.0,
+          "audit_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.0,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "patient018",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.004453349189134315,
+          "audit_fraction": 0.375,
+          "a0_class_dice": [
+            0.2537508561898806,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.08458361872996019,
+          "final_class_dice": [
+            0.3479773402443723,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.1159924467481241,
+          "audit_class_dice": [
+            0.2537508561898806,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.08458361872996019,
+          "true_delta": 0.0,
+          "retained_delta": 0.031408828018163915
+        },
+        {
+          "patient_id": "patient028",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.005770148150622845,
+          "audit_fraction": 0.6,
+          "a0_class_dice": [
+            0.13654607533326069,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.04551535844442023,
+          "final_class_dice": [
+            0.1580667719377397,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.052688923979246564,
+          "audit_class_dice": [
+            0.13654607533326069,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.04551535844442023,
+          "true_delta": 0.0,
+          "retained_delta": 0.007173565534826336
+        },
+        {
+          "patient_id": "patient029",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.007379143117842349,
+          "audit_fraction": 0.40909090909090906,
+          "a0_class_dice": [
+            0.19027493169398907,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.06342497723132969,
+          "final_class_dice": [
+            0.20895854585922286,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.06965284861974096,
+          "audit_class_dice": [
+            0.19027493169398907,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.06342497723132969,
+          "true_delta": 0.0,
+          "retained_delta": 0.006227871388411271
+        },
+        {
+          "patient_id": "patient030",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.006588927353732288,
+          "audit_fraction": 0.55,
+          "a0_class_dice": [
+            0.08433734939759036,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.028112449799196786,
+          "final_class_dice": [
+            0.09278350515463918,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.030927835051546393,
+          "audit_class_dice": [
+            0.08433734939759036,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.028112449799196786,
+          "true_delta": 0.0,
+          "retained_delta": 0.0028153852523496066
+        },
+        {
+          "patient_id": "patient032",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.004860315797850489,
+          "audit_fraction": 0.6,
+          "a0_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.0,
+          "final_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.0,
+          "audit_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.0,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "patient036",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.006999841571087018,
+          "audit_fraction": 0.3125,
+          "a0_class_dice": [
+            0.06307673045220258,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.02102557681740086,
+          "final_class_dice": [
+            0.056926546391752576,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.018975515463917524,
+          "audit_class_dice": [
+            0.06307673045220258,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.02102557681740086,
+          "true_delta": 0.0,
+          "retained_delta": -0.002050061353483335
+        },
+        {
+          "patient_id": "patient055",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.006205049705588155,
+          "audit_fraction": 0.5555555555555556,
+          "a0_class_dice": [
+            0.11321330485199878,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.03773776828399959,
+          "final_class_dice": [
+            0.1405019049010463,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.04683396830034877,
+          "audit_class_dice": [
+            0.11321330485199878,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.03773776828399959,
+          "true_delta": 0.0,
+          "retained_delta": 0.009096200016349178
+        },
+        {
+          "patient_id": "patient065",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.006635495199589059,
+          "audit_fraction": 0.5,
+          "a0_class_dice": [
+            0.18573198596852575,
+            0.0,
+            0.002717391304347826
+          ],
+          "a0_dice": 0.06281645909095786,
+          "final_class_dice": [
+            0.20218471852964975,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.06739490617654992,
+          "audit_class_dice": [
+            0.18573198596852575,
+            0.0,
+            0.002717391304347826
+          ],
+          "audit_dice": 0.06281645909095786,
+          "true_delta": 0.0,
+          "retained_delta": 0.004578447085592061
+        },
+        {
+          "patient_id": "patient070",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.006950214970856905,
+          "audit_fraction": 0.5,
+          "a0_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.0,
+          "final_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.0,
+          "audit_class_dice": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.0,
+          "true_delta": 0.0,
+          "retained_delta": 0.0
+        },
+        {
+          "patient_id": "patient076",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.007231878233142197,
+          "audit_fraction": 0.4375,
+          "a0_class_dice": [
+            0.020967741935483872,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.006989247311827957,
+          "final_class_dice": [
+            0.05187319884726225,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.01729106628242075,
+          "audit_class_dice": [
+            0.020967741935483872,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.006989247311827957,
+          "true_delta": 0.0,
+          "retained_delta": 0.010301818970592794
+        },
+        {
+          "patient_id": "patient082",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.007187372364569455,
+          "audit_fraction": 0.5,
+          "a0_class_dice": [
+            0.14053212020953956,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.04684404006984652,
+          "final_class_dice": [
+            0.16313736279933574,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.05437912093311192,
+          "audit_class_dice": [
+            0.14053212020953956,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.04684404006984652,
+          "true_delta": 0.0,
+          "retained_delta": 0.007535080863265396
+        },
+        {
+          "patient_id": "patient087",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.006860938185127452,
+          "audit_fraction": 0.5,
+          "a0_class_dice": [
+            0.0025380710659898475,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.0008460236886632825,
+          "final_class_dice": [
+            0.002531645569620253,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.0008438818565400844,
+          "audit_class_dice": [
+            0.0025380710659898475,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.0008460236886632825,
+          "true_delta": 0.0,
+          "retained_delta": -2.141832123198138e-06
+        },
+        {
+          "patient_id": "patient089",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.005537177707689503,
+          "audit_fraction": 0.5,
+          "a0_class_dice": [
+            0.24952527439140176,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.08317509146380059,
+          "final_class_dice": [
+            0.3128620788195256,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.10428735960650853,
+          "audit_class_dice": [
+            0.24952527439140176,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.08317509146380059,
+          "true_delta": 0.0,
+          "retained_delta": 0.021112268142707946
+        },
+        {
+          "patient_id": "patient095",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.007528520621625441,
+          "audit_fraction": 0.5,
+          "a0_class_dice": [
+            0.19475826810906705,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.06491942270302235,
+          "final_class_dice": [
+            0.21923851129739158,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.0730795037657972,
+          "audit_class_dice": [
+            0.19475826810906705,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.06491942270302235,
+          "true_delta": 0.0,
+          "retained_delta": 0.00816008106277484
+        },
+        {
+          "patient_id": "patient098",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.005922237943325723,
+          "audit_fraction": 0.5714285714285714,
+          "a0_class_dice": [
+            0.7004283478146762,
+            0.0,
+            0.0
+          ],
+          "a0_dice": 0.2334761159382254,
+          "final_class_dice": [
+            0.6888295433706217,
+            0.0,
+            0.0
+          ],
+          "final_dice": 0.22960984779020724,
+          "audit_class_dice": [
+            0.7004283478146762,
+            0.0,
+            0.0
+          ],
+          "audit_dice": 0.2334761159382254,
+          "true_delta": 0.0,
+          "retained_delta": -0.0038662681480181593
+        }
+      ],
+      "a0_dice": 0.040909207282050455,
+      "final_dice": 0.0473334053446683,
+      "class_dice": [
+        0.14172599299926997,
+        0.0,
+        0.0002742230347349177
+      ],
+      "harm_patient_rate": 0.15,
+      "audit_fraction": 0.4983315295815296,
+      "costs": {
+        "policy_audit_calls": 188,
+        "read_calls": 564,
+        "probe_audit_calls": 0
+      },
+      "evaluation_seconds": 1.8671401670435444,
+      "metric_note": "Patient mean of per-volume foreground Dice on resized complete volumes; no slice CI."
+    },
+    {
+      "updates": 120,
+      "examples_seen": 960,
+      "wall_seconds": 19.304001457989216,
+      "patient_count": 20,
+      "volume_count": 40,
+      "patients": [
+        {
+          "patient_id": "patient004",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.006851080851629377,
+          "audit_fraction": 0.4,
+          "a0_class_dice": [
+            0.46757689274447956,
+            0.005988023952095809,
+            0.7289181765659425
+          ],
+          "a0_dice": 0.40082769775417265,
+          "final_class_dice": [
+            0.5208613979943122,
+            0.023567846658213678,
+            0.7274763525316701
+          ],
+          "final_dice": 0.423968532394732,
+          "audit_class_dice": [
+            0.46757689274447956,
+            0.005988023952095809,
+            0.7289181765659425
+          ],
+          "audit_dice": 0.40082769775417265,
+          "true_delta": 0.0,
+          "retained_delta": 0.023140834640559327
+        },
+        {
+          "patient_id": "patient005",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.008520458871498705,
+          "audit_fraction": 0.6,
+          "a0_class_dice": [
+            0.2564436407474382,
+            0.06227033415708606,
+            0.6547419765393321
+          ],
+          "a0_dice": 0.3244853171479521,
+          "final_class_dice": [
+            0.26855166515877216,
+            0.06360760327963935,
+            0.6294896030245747
+          ],
+          "final_dice": 0.3205496238209954,
+          "audit_class_dice": [
+            0.2564436407474382,
+            0.06227033415708606,
+            0.6547419765393321
+          ],
+          "audit_dice": 0.3244853171479521,
+          "true_delta": 0.0,
+          "retained_delta": -0.003935693326956702
+        },
+        {
+          "patient_id": "patient012",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.007905659312382341,
+          "audit_fraction": 0.45,
+          "a0_class_dice": [
+            0.2472968714013843,
+            0.04870189945702455,
+            0.7117237981543592
+          ],
+          "a0_dice": 0.335907523004256,
+          "final_class_dice": [
+            0.2635307465605269,
+            0.07207207207207207,
+            0.7192976200939625
+          ],
+          "final_dice": 0.3516334795755205,
+          "audit_class_dice": [
+            0.2472968714013843,
+            0.04870189945702455,
+            0.7117237981543592
+          ],
+          "audit_dice": 0.335907523004256,
+          "true_delta": 0.0,
+          "retained_delta": 0.015725956571264466
+        },
+        {
+          "patient_id": "patient014",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.007926222099922598,
+          "audit_fraction": 0.55,
+          "a0_class_dice": [
+            0.034986208549705,
+            0.04718021635954883,
+            0.40347261098953296
+          ],
+          "a0_dice": 0.16187967863292893,
+          "final_class_dice": [
+            0.057117286840146414,
+            0.04277812624736272,
+            0.404985396948063
+          ],
+          "final_dice": 0.16829360334519072,
+          "audit_class_dice": [
+            0.034986208549705,
+            0.04718021635954883,
+            0.40347261098953296
+          ],
+          "audit_dice": 0.16187967863292893,
+          "true_delta": 0.0,
+          "retained_delta": 0.006413924712261793
+        },
+        {
+          "patient_id": "patient015",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.008581237091372412,
+          "audit_fraction": 0.5,
+          "a0_class_dice": [
+            0.011152416356877323,
+            0.041500490857773964,
+            0.7674450687650343
+          ],
+          "a0_dice": 0.27336599199322853,
+          "final_class_dice": [
+            0.026755852842809364,
+            0.05344984761853905,
+            0.7568153735818406
+          ],
+          "final_dice": 0.27900702468106303,
+          "audit_class_dice": [
+            0.011152416356877323,
+            0.041500490857773964,
+            0.7674450687650343
+          ],
+          "audit_dice": 0.27336599199322853,
+          "true_delta": 0.0,
+          "retained_delta": 0.005641032687834502
+        },
+        {
+          "patient_id": "patient018",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.006712572881951928,
+          "audit_fraction": 0.4375,
+          "a0_class_dice": [
+            0.4548099518818307,
+            0.0026455026455026454,
+            0.6469894042471056
+          ],
+          "a0_dice": 0.3681482862581464,
+          "final_class_dice": [
+            0.47923856962453837,
+            0.007880958941857261,
+            0.6641629181048269
+          ],
+          "final_dice": 0.38376081555707414,
+          "audit_class_dice": [
+            0.4548099518818307,
+            0.0026455026455026454,
+            0.6469894042471056
+          ],
+          "audit_dice": 0.3681482862581464,
+          "true_delta": 0.0,
+          "retained_delta": 0.015612529298927758
+        },
+        {
+          "patient_id": "patient028",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.007188303396105766,
+          "audit_fraction": 0.6,
+          "a0_class_dice": [
+            0.3753452928473407,
+            0.027252159605100783,
+            0.5257313829787233
+          ],
+          "a0_dice": 0.3094429451437216,
+          "final_class_dice": [
+            0.3723585004603032,
+            0.04003074604829565,
+            0.5383799421407908
+          ],
+          "final_dice": 0.3169230628831299,
+          "audit_class_dice": [
+            0.3753452928473407,
+            0.027252159605100783,
+            0.5257313829787233
+          ],
+          "audit_dice": 0.3094429451437216,
+          "true_delta": 0.0,
+          "retained_delta": 0.007480117739408265
+        },
+        {
+          "patient_id": "patient029",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.007925325602462346,
+          "audit_fraction": 0.45454545454545453,
+          "a0_class_dice": [
+            0.3318115719406042,
+            0.010967863747712506,
+            0.33392946656084216
+          ],
+          "a0_dice": 0.22556963408305294,
+          "final_class_dice": [
+            0.36537917964860434,
+            0.01184733325095292,
+            0.3446693725845522
+          ],
+          "final_dice": 0.2406319618280365,
+          "audit_class_dice": [
+            0.3318115719406042,
+            0.010967863747712506,
+            0.33392946656084216
+          ],
+          "audit_dice": 0.22556963408305294,
+          "true_delta": 0.0,
+          "retained_delta": 0.015062327744983561
+        },
+        {
+          "patient_id": "patient030",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.008234506915323438,
+          "audit_fraction": 0.5,
+          "a0_class_dice": [
+            0.0673758865248227,
+            0.01115101115101115,
+            0.23522106308991556
+          ],
+          "a0_dice": 0.10458265358858314,
+          "final_class_dice": [
+            0.15337423312883436,
+            0.021105910218813445,
+            0.26299468719505587
+          ],
+          "final_dice": 0.14582494351423456,
+          "audit_class_dice": [
+            0.0673758865248227,
+            0.01115101115101115,
+            0.23522106308991556
+          ],
+          "audit_dice": 0.10458265358858314,
+          "true_delta": 0.0,
+          "retained_delta": 0.04124228992565142
+        },
+        {
+          "patient_id": "patient032",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.006141558522358537,
+          "audit_fraction": 0.5,
+          "a0_class_dice": [
+            0.09933774834437085,
+            0.02411873840445269,
+            0.27913669064748203
+          ],
+          "a0_dice": 0.1341977257987685,
+          "final_class_dice": [
+            0.14825581395348839,
+            0.04607104156991629,
+            0.29436038514442914
+          ],
+          "final_dice": 0.16289574688927794,
+          "audit_class_dice": [
+            0.09933774834437085,
+            0.02411873840445269,
+            0.27913669064748203
+          ],
+          "audit_dice": 0.1341977257987685,
+          "true_delta": 0.0,
+          "retained_delta": 0.028698021090509424
+        },
+        {
+          "patient_id": "patient036",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.0074197917128913105,
+          "audit_fraction": 0.375,
+          "a0_class_dice": [
+            0.4411726482684028,
+            0.07974137931034483,
+            0.4243018246938677
+          ],
+          "a0_dice": 0.3150719507575384,
+          "final_class_dice": [
+            0.48123647980745815,
+            0.09221170395869191,
+            0.42377326565143825
+          ],
+          "final_dice": 0.3324071498058628,
+          "audit_class_dice": [
+            0.4411726482684028,
+            0.07974137931034483,
+            0.4243018246938677
+          ],
+          "audit_dice": 0.3150719507575384,
+          "true_delta": 0.0,
+          "retained_delta": 0.017335199048324368
+        },
+        {
+          "patient_id": "patient055",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.007263151851172248,
+          "audit_fraction": 0.6666666666666667,
+          "a0_class_dice": [
+            0.19702605276093724,
+            0.1039773633030448,
+            0.6857493608085217
+          ],
+          "a0_dice": 0.32891759229083456,
+          "final_class_dice": [
+            0.2364179348715431,
+            0.10704815745027171,
+            0.6655556039046748
+          ],
+          "final_dice": 0.33634056540882984,
+          "audit_class_dice": [
+            0.19702605276093724,
+            0.1039773633030448,
+            0.6857493608085217
+          ],
+          "audit_dice": 0.32891759229083456,
+          "true_delta": 0.0,
+          "retained_delta": 0.00742297311799528
+        },
+        {
+          "patient_id": "patient065",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.007308473810553551,
+          "audit_fraction": 0.4375,
+          "a0_class_dice": [
+            0.5346138455382152,
+            0.037275813586639686,
+            0.5098196287762944
+          ],
+          "a0_dice": 0.3605697626337164,
+          "final_class_dice": [
+            0.5543957292139936,
+            0.025337407690348868,
+            0.49715355537658157
+          ],
+          "final_dice": 0.35896223076030803,
+          "audit_class_dice": [
+            0.5346138455382152,
+            0.037275813586639686,
+            0.5098196287762944
+          ],
+          "audit_dice": 0.3605697626337164,
+          "true_delta": 0.0,
+          "retained_delta": -0.001607531873408341
+        },
+        {
+          "patient_id": "patient070",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.007992689963430166,
+          "audit_fraction": 0.5,
+          "a0_class_dice": [
+            0.2334677677485436,
+            0.08148987395553037,
+            0.4333195524987159
+          ],
+          "a0_dice": 0.24942573140092997,
+          "final_class_dice": [
+            0.2604698122097328,
+            0.09480590486604702,
+            0.4477611940298507
+          ],
+          "final_dice": 0.26767897036854355,
+          "audit_class_dice": [
+            0.2334677677485436,
+            0.08148987395553037,
+            0.4333195524987159
+          ],
+          "audit_dice": 0.24942573140092997,
+          "true_delta": 0.0,
+          "retained_delta": 0.018253238967613578
+        },
+        {
+          "patient_id": "patient076",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.007515848090406507,
+          "audit_fraction": 0.4375,
+          "a0_class_dice": [
+            0.30636441647597257,
+            0.03757225433526012,
+            0.6143427878179384
+          ],
+          "a0_dice": 0.3194264862097237,
+          "final_class_dice": [
+            0.4142368768011948,
+            0.036414565826330535,
+            0.6370666714293368
+          ],
+          "final_dice": 0.3625727046856207,
+          "audit_class_dice": [
+            0.30636441647597257,
+            0.03757225433526012,
+            0.6143427878179384
+          ],
+          "audit_dice": 0.3194264862097237,
+          "true_delta": 0.0,
+          "retained_delta": 0.043146218475897
+        },
+        {
+          "patient_id": "patient082",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.00733405321079772,
+          "audit_fraction": 0.53125,
+          "a0_class_dice": [
+            0.21217383356943748,
+            0.16547684755989733,
+            0.5201147485072133
+          ],
+          "a0_dice": 0.29925514321218266,
+          "final_class_dice": [
+            0.25428029926316187,
+            0.163691211195598,
+            0.5339961980941095
+          ],
+          "final_dice": 0.3173225695176231,
+          "audit_class_dice": [
+            0.21217383356943748,
+            0.16547684755989733,
+            0.5201147485072133
+          ],
+          "audit_dice": 0.29925514321218266,
+          "true_delta": 0.0,
+          "retained_delta": 0.018067426305440448
+        },
+        {
+          "patient_id": "patient087",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.006633052078541368,
+          "audit_fraction": 0.4375,
+          "a0_class_dice": [
+            0.029288663082761547,
+            0.053226958799714216,
+            0.3404943739720897
+          ],
+          "a0_dice": 0.14100333195152182,
+          "final_class_dice": [
+            0.06173191048918177,
+            0.06429166207462375,
+            0.35057233050096565
+          ],
+          "final_dice": 0.15886530102159038,
+          "audit_class_dice": [
+            0.029288663082761547,
+            0.053226958799714216,
+            0.3404943739720897
+          ],
+          "audit_dice": 0.14100333195152182,
+          "true_delta": 0.0,
+          "retained_delta": 0.017861969070068567
+        },
+        {
+          "patient_id": "patient089",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.006722700782120228,
+          "audit_fraction": 0.5,
+          "a0_class_dice": [
+            0.25897435897435894,
+            0.11081801155398455,
+            0.39129084902280775
+          ],
+          "a0_dice": 0.2536944065170504,
+          "final_class_dice": [
+            0.35618612741900413,
+            0.15737009544008485,
+            0.4056565656565656
+          ],
+          "final_dice": 0.30640426283855154,
+          "audit_class_dice": [
+            0.25897435897435894,
+            0.11081801155398455,
+            0.39129084902280775
+          ],
+          "audit_dice": 0.2536944065170504,
+          "true_delta": 0.0,
+          "retained_delta": 0.05270985632150116
+        },
+        {
+          "patient_id": "patient095",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.00703632108135415,
+          "audit_fraction": 0.5,
+          "a0_class_dice": [
+            0.33903748452979043,
+            0.061545783786597655,
+            0.6359841461313114
+          ],
+          "a0_dice": 0.3455224714825665,
+          "final_class_dice": [
+            0.38429980738959124,
+            0.07934244717031602,
+            0.6449343315682448
+          ],
+          "final_dice": 0.369525528709384,
+          "audit_class_dice": [
+            0.33903748452979043,
+            0.061545783786597655,
+            0.6359841461313114
+          ],
+          "audit_dice": 0.3455224714825665,
+          "true_delta": 0.0,
+          "retained_delta": 0.024003057226817504
+        },
+        {
+          "patient_id": "patient098",
+          "case_count": 2,
+          "rf_delta": null,
+          "predicted_value": -0.006668199119823319,
+          "audit_fraction": 0.5714285714285714,
+          "a0_class_dice": [
+            0.587815043701628,
+            0.016574151654796816,
+            0.5231906732877394
+          ],
+          "a0_dice": 0.37585995621472135,
+          "final_class_dice": [
+            0.6256704914182318,
+            0.020333139397073714,
+            0.511512054858829
+          ],
+          "final_dice": 0.38583856189137816,
+          "audit_class_dice": [
+            0.587815043701628,
+            0.016574151654796816,
+            0.5231906732877394
+          ],
+          "audit_dice": 0.37585995621472135,
+          "true_delta": 0.0,
+          "retained_delta": 0.009978605676656815
+        }
+      ],
+      "a0_dice": 0.2813577143037798,
+      "final_dice": 0.29947033197484735,
+      "class_dice": [
+        0.31421743575477146,
+        0.061162889048752445,
+        0.5230306711210181
+      ],
+      "harm_patient_rate": 0.1,
+      "audit_fraction": 0.4974445346320347,
+      "costs": {
+        "policy_audit_calls": 188,
+        "read_calls": 564,
+        "probe_audit_calls": 0
+      },
+      "evaluation_seconds": 1.7714787089498714,
+      "metric_note": "Patient mean of per-volume foreground Dice on resized complete volumes; no slice CI."
+    }
+  ],
+  "convergence": {
+    "thresholds": {
+      "0.5": {
+        "updates": null,
+        "examples_seen": null,
+        "wall_seconds": null,
+        "right_censored": true
+      },
+      "0.7": {
+        "updates": null,
+        "examples_seen": null,
+        "wall_seconds": null,
+        "right_censored": true
+      },
+      "0.8": {
+        "updates": null,
+        "examples_seen": null,
+        "wall_seconds": null,
+        "right_censored": true
+      }
+    },
+    "area_under_curve": {
+      "updates": {
+        "integral": 7.882742853283679,
+        "normalized": 0.09853428566604598
+      },
+      "examples_seen": {
+        "integral": 63.06194282626943,
+        "normalized": 0.09853428566604598
+      },
+      "wall_seconds": {
+        "integral": 1.1811213683667934,
+        "normalized": 0.09780750230794547
+      }
+    },
+    "best_validation_dice": 0.29947033197484735
+  },
+  "counters": {
+    "actor_updates": 80,
+    "rf_updates": 20,
+    "trigger_updates": 0,
+    "examples_seen": 640,
+    "policy_audit_calls": 320,
+    "probe_audit_calls": 166,
+    "policy_read_calls": 960,
+    "probe_read_calls": 166,
+    "quality_evaluations": 332,
+    "rf_train_examples": 160
+  },
+  "final": {
+    "patient_count": 20,
+    "volume_count": 40,
+    "patients": [
+      {
+        "patient_id": "patient004",
+        "case_count": 2,
+        "rf_delta": 0.0016902297735214233,
+        "predicted_value": -0.006851080851629377,
+        "audit_fraction": 0.4,
+        "a0_class_dice": [
+          0.46757689274447956,
+          0.005988023952095809,
+          0.7289181765659425
+        ],
+        "a0_dice": 0.40082769775417265,
+        "final_class_dice": [
+          0.5208613979943122,
+          0.023567846658213678,
+          0.7274763525316701
+        ],
+        "final_dice": 0.423968532394732,
+        "audit_class_dice": [
+          0.4895718763897476,
+          0.027615545619292924,
+          0.7225723763570566
+        ],
+        "audit_dice": 0.41325326612203234,
+        "true_delta": 0.012425568367859685,
+        "retained_delta": 0.023140834640559327
+      },
+      {
+        "patient_id": "patient005",
+        "case_count": 2,
+        "rf_delta": 0.005555170774459839,
+        "predicted_value": -0.008520458871498705,
+        "audit_fraction": 0.6,
+        "a0_class_dice": [
+          0.2564436407474382,
+          0.06227033415708606,
+          0.6547419765393321
+        ],
+        "a0_dice": 0.3244853171479521,
+        "final_class_dice": [
+          0.26855166515877216,
+          0.06360760327963935,
+          0.6294896030245747
+        ],
+        "final_dice": 0.3205496238209954,
+        "audit_class_dice": [
+          0.2677049946043455,
+          0.07213982751489399,
+          0.6259704131989401
+        ],
+        "audit_dice": 0.32193841177272653,
+        "true_delta": -0.002546905375225561,
+        "retained_delta": -0.003935693326956702
+      },
+      {
+        "patient_id": "patient012",
+        "case_count": 2,
+        "rf_delta": 0.004231610894203186,
+        "predicted_value": -0.007905659312382341,
+        "audit_fraction": 0.45,
+        "a0_class_dice": [
+          0.2472968714013843,
+          0.04870189945702455,
+          0.7117237981543592
+        ],
+        "a0_dice": 0.335907523004256,
+        "final_class_dice": [
+          0.2635307465605269,
+          0.07207207207207207,
+          0.7192976200939625
+        ],
+        "final_dice": 0.3516334795755205,
+        "audit_class_dice": [
+          0.26617972296589454,
+          0.08726129482999534,
+          0.7219390541376924
+        ],
+        "audit_dice": 0.35846002397786075,
+        "true_delta": 0.022552500973604728,
+        "retained_delta": 0.015725956571264466
+      },
+      {
+        "patient_id": "patient014",
+        "case_count": 2,
+        "rf_delta": 0.0043080240488052365,
+        "predicted_value": -0.007926222099922598,
+        "audit_fraction": 0.55,
+        "a0_class_dice": [
+          0.034986208549705,
+          0.04718021635954883,
+          0.40347261098953296
+        ],
+        "a0_dice": 0.16187967863292893,
+        "final_class_dice": [
+          0.057117286840146414,
+          0.04277812624736272,
+          0.404985396948063
+        ],
+        "final_dice": 0.16829360334519072,
+        "audit_class_dice": [
+          0.05583891767727466,
+          0.05417094267702682,
+          0.4106852880152553
+        ],
+        "audit_dice": 0.17356504945651893,
+        "true_delta": 0.011685370823590002,
+        "retained_delta": 0.006413924712261793
+      },
+      {
+        "patient_id": "patient015",
+        "case_count": 2,
+        "rf_delta": 0.000975489616394043,
+        "predicted_value": -0.008581237091372412,
+        "audit_fraction": 0.5,
+        "a0_class_dice": [
+          0.011152416356877323,
+          0.041500490857773964,
+          0.7674450687650343
+        ],
+        "a0_dice": 0.27336599199322853,
+        "final_class_dice": [
+          0.026755852842809364,
+          0.05344984761853905,
+          0.7568153735818406
+        ],
+        "final_dice": 0.27900702468106303,
+        "audit_class_dice": [
+          0.03503184713375796,
+          0.05675816578643153,
+          0.7640180106313712
+        ],
+        "audit_dice": 0.28526934118385355,
+        "true_delta": 0.011903349190625023,
+        "retained_delta": 0.005641032687834502
+      },
+      {
+        "patient_id": "patient018",
+        "case_count": 2,
+        "rf_delta": 0.007897462695837021,
+        "predicted_value": -0.006712572881951928,
+        "audit_fraction": 0.4375,
+        "a0_class_dice": [
+          0.4548099518818307,
+          0.0026455026455026454,
+          0.6469894042471056
+        ],
+        "a0_dice": 0.3681482862581464,
+        "final_class_dice": [
+          0.47923856962453837,
+          0.007880958941857261,
+          0.6641629181048269
+        ],
+        "final_dice": 0.38376081555707414,
+        "audit_class_dice": [
+          0.48591444019035435,
+          0.00521513272410792,
+          0.6818157877411284
+        ],
+        "audit_dice": 0.39098178688519686,
+        "true_delta": 0.022833500627050474,
+        "retained_delta": 0.015612529298927758
+      },
+      {
+        "patient_id": "patient028",
+        "case_count": 2,
+        "rf_delta": 0.008475372195243835,
+        "predicted_value": -0.007188303396105766,
+        "audit_fraction": 0.6,
+        "a0_class_dice": [
+          0.3753452928473407,
+          0.027252159605100783,
+          0.5257313829787233
+        ],
+        "a0_dice": 0.3094429451437216,
+        "final_class_dice": [
+          0.3723585004603032,
+          0.04003074604829565,
+          0.5383799421407908
+        ],
+        "final_dice": 0.3169230628831299,
+        "audit_class_dice": [
+          0.4013738859833488,
+          0.05100265360583344,
+          0.5217466225530741
+        ],
+        "audit_dice": 0.32470772071408543,
+        "true_delta": 0.01526477557036382,
+        "retained_delta": 0.007480117739408265
+      },
+      {
+        "patient_id": "patient029",
+        "case_count": 2,
+        "rf_delta": 0.004636981270530007,
+        "predicted_value": -0.007925325602462346,
+        "audit_fraction": 0.45454545454545453,
+        "a0_class_dice": [
+          0.3318115719406042,
+          0.010967863747712506,
+          0.33392946656084216
+        ],
+        "a0_dice": 0.22556963408305294,
+        "final_class_dice": [
+          0.36537917964860434,
+          0.01184733325095292,
+          0.3446693725845522
+        ],
+        "final_dice": 0.2406319618280365,
+        "audit_class_dice": [
+          0.3494069477860791,
+          0.031052769589670327,
+          0.35927202370155387
+        ],
+        "audit_dice": 0.24657724702576778,
+        "true_delta": 0.02100761294271483,
+        "retained_delta": 0.015062327744983561
+      },
+      {
+        "patient_id": "patient030",
+        "case_count": 2,
+        "rf_delta": 0.002146005630493164,
+        "predicted_value": -0.008234506915323438,
+        "audit_fraction": 0.5,
+        "a0_class_dice": [
+          0.0673758865248227,
+          0.01115101115101115,
+          0.23522106308991556
+        ],
+        "a0_dice": 0.10458265358858314,
+        "final_class_dice": [
+          0.15337423312883436,
+          0.021105910218813445,
+          0.26299468719505587
+        ],
+        "final_dice": 0.14582494351423456,
+        "audit_class_dice": [
+          0.21448467966573817,
+          0.02957209756300165,
+          0.29263762242485647
+        ],
+        "audit_dice": 0.1788981332178654,
+        "true_delta": 0.07431547962928227,
+        "retained_delta": 0.04124228992565142
+      },
+      {
+        "patient_id": "patient032",
+        "case_count": 2,
+        "rf_delta": 0.002792322635650635,
+        "predicted_value": -0.006141558522358537,
+        "audit_fraction": 0.5,
+        "a0_class_dice": [
+          0.09933774834437085,
+          0.02411873840445269,
+          0.27913669064748203
+        ],
+        "a0_dice": 0.1341977257987685,
+        "final_class_dice": [
+          0.14825581395348839,
+          0.04607104156991629,
+          0.29436038514442914
+        ],
+        "final_dice": 0.16289574688927794,
+        "audit_class_dice": [
+          0.17986577181208055,
+          0.05414725315222828,
+          0.29521276595744683
+        ],
+        "audit_dice": 0.17640859697391856,
+        "true_delta": 0.042210871175150044,
+        "retained_delta": 0.028698021090509424
+      },
+      {
+        "patient_id": "patient036",
+        "case_count": 2,
+        "rf_delta": 0.004066091030836105,
+        "predicted_value": -0.0074197917128913105,
+        "audit_fraction": 0.375,
+        "a0_class_dice": [
+          0.4411726482684028,
+          0.07974137931034483,
+          0.4243018246938677
+        ],
+        "a0_dice": 0.3150719507575384,
+        "final_class_dice": [
+          0.48123647980745815,
+          0.09221170395869191,
+          0.42377326565143825
+        ],
+        "final_dice": 0.3324071498058628,
+        "audit_class_dice": [
+          0.47927959903631046,
+          0.11992109231373035,
+          0.4435815489506765
+        ],
+        "audit_dice": 0.3475940801002391,
+        "true_delta": 0.03252212934270071,
+        "retained_delta": 0.017335199048324368
+      },
+      {
+        "patient_id": "patient055",
+        "case_count": 2,
+        "rf_delta": 0.0023008518748813206,
+        "predicted_value": -0.007263151851172248,
+        "audit_fraction": 0.6666666666666667,
+        "a0_class_dice": [
+          0.19702605276093724,
+          0.1039773633030448,
+          0.6857493608085217
+        ],
+        "a0_dice": 0.32891759229083456,
+        "final_class_dice": [
+          0.2364179348715431,
+          0.10704815745027171,
+          0.6655556039046748
+        ],
+        "final_dice": 0.33634056540882984,
+        "audit_class_dice": [
+          0.262650159634334,
+          0.12079481641468684,
+          0.6531313131313131
+        ],
+        "audit_dice": 0.345525429726778,
+        "true_delta": 0.016607837435943462,
+        "retained_delta": 0.00742297311799528
+      },
+      {
+        "patient_id": "patient065",
+        "case_count": 2,
+        "rf_delta": 0.002837859094142914,
+        "predicted_value": -0.007308473810553551,
+        "audit_fraction": 0.4375,
+        "a0_class_dice": [
+          0.5346138455382152,
+          0.037275813586639686,
+          0.5098196287762944
+        ],
+        "a0_dice": 0.3605697626337164,
+        "final_class_dice": [
+          0.5543957292139936,
+          0.025337407690348868,
+          0.49715355537658157
+        ],
+        "final_dice": 0.35896223076030803,
+        "audit_class_dice": [
+          0.5716058135412974,
+          0.028719248231443353,
+          0.4926283414292303
+        ],
+        "audit_dice": 0.36431780106732364,
+        "true_delta": 0.0037480384336072703,
+        "retained_delta": -0.001607531873408341
+      },
+      {
+        "patient_id": "patient070",
+        "case_count": 2,
+        "rf_delta": 0.0039177387952804565,
+        "predicted_value": -0.007992689963430166,
+        "audit_fraction": 0.5,
+        "a0_class_dice": [
+          0.2334677677485436,
+          0.08148987395553037,
+          0.4333195524987159
+        ],
+        "a0_dice": 0.24942573140092997,
+        "final_class_dice": [
+          0.2604698122097328,
+          0.09480590486604702,
+          0.4477611940298507
+        ],
+        "final_dice": 0.26767897036854355,
+        "audit_class_dice": [
+          0.2795263199307577,
+          0.13273186023396283,
+          0.4813639035861258
+        ],
+        "audit_dice": 0.2978740279169488,
+        "true_delta": 0.04844829651601881,
+        "retained_delta": 0.018253238967613578
+      },
+      {
+        "patient_id": "patient076",
+        "case_count": 2,
+        "rf_delta": 0.0034207329154014587,
+        "predicted_value": -0.007515848090406507,
+        "audit_fraction": 0.4375,
+        "a0_class_dice": [
+          0.30636441647597257,
+          0.03757225433526012,
+          0.6143427878179384
+        ],
+        "a0_dice": 0.3194264862097237,
+        "final_class_dice": [
+          0.4142368768011948,
+          0.036414565826330535,
+          0.6370666714293368
+        ],
+        "final_dice": 0.3625727046856207,
+        "audit_class_dice": [
+          0.4251564367573648,
+          0.05030345471521942,
+          0.6514206968961218
+        ],
+        "audit_dice": 0.3756268627895687,
+        "true_delta": 0.056200376579845,
+        "retained_delta": 0.043146218475897
+      },
+      {
+        "patient_id": "patient082",
+        "case_count": 2,
+        "rf_delta": 0.003476278856396675,
+        "predicted_value": -0.00733405321079772,
+        "audit_fraction": 0.53125,
+        "a0_class_dice": [
+          0.21217383356943748,
+          0.16547684755989733,
+          0.5201147485072133
+        ],
+        "a0_dice": 0.29925514321218266,
+        "final_class_dice": [
+          0.25428029926316187,
+          0.163691211195598,
+          0.5339961980941095
+        ],
+        "final_dice": 0.3173225695176231,
+        "audit_class_dice": [
+          0.2682689867923772,
+          0.15846543600968888,
+          0.5367489259631967
+        ],
+        "audit_dice": 0.3211611162550876,
+        "true_delta": 0.021905973042904925,
+        "retained_delta": 0.018067426305440448
+      },
+      {
+        "patient_id": "patient087",
+        "case_count": 2,
+        "rf_delta": 0.0018549822270870209,
+        "predicted_value": -0.006633052078541368,
+        "audit_fraction": 0.4375,
+        "a0_class_dice": [
+          0.029288663082761547,
+          0.053226958799714216,
+          0.3404943739720897
+        ],
+        "a0_dice": 0.14100333195152182,
+        "final_class_dice": [
+          0.06173191048918177,
+          0.06429166207462375,
+          0.35057233050096565
+        ],
+        "final_dice": 0.15886530102159038,
+        "audit_class_dice": [
+          0.06142668723313884,
+          0.0653258459462065,
+          0.36284929422457624
+        ],
+        "audit_dice": 0.16320060913464052,
+        "true_delta": 0.022197277183118702,
+        "retained_delta": 0.017861969070068567
+      },
+      {
+        "patient_id": "patient089",
+        "case_count": 2,
+        "rf_delta": 0.0012702147165934243,
+        "predicted_value": -0.006722700782120228,
+        "audit_fraction": 0.5,
+        "a0_class_dice": [
+          0.25897435897435894,
+          0.11081801155398455,
+          0.39129084902280775
+        ],
+        "a0_dice": 0.2536944065170504,
+        "final_class_dice": [
+          0.35618612741900413,
+          0.15737009544008485,
+          0.4056565656565656
+        ],
+        "final_dice": 0.30640426283855154,
+        "audit_class_dice": [
+          0.3750957202416404,
+          0.16729552093476144,
+          0.4110249110320285
+        ],
+        "audit_dice": 0.3178053840694768,
+        "true_delta": 0.0641109775524264,
+        "retained_delta": 0.05270985632150116
+      },
+      {
+        "patient_id": "patient095",
+        "case_count": 2,
+        "rf_delta": 0.00538527752671923,
+        "predicted_value": -0.00703632108135415,
+        "audit_fraction": 0.5,
+        "a0_class_dice": [
+          0.33903748452979043,
+          0.061545783786597655,
+          0.6359841461313114
+        ],
+        "a0_dice": 0.3455224714825665,
+        "final_class_dice": [
+          0.38429980738959124,
+          0.07934244717031602,
+          0.6449343315682448
+        ],
+        "final_dice": 0.369525528709384,
+        "audit_class_dice": [
+          0.41017490839983606,
+          0.10078521110961547,
+          0.6638253649645035
+        ],
+        "audit_dice": 0.3915951614913184,
+        "true_delta": 0.046072690008751915,
+        "retained_delta": 0.024003057226817504
+      },
+      {
+        "patient_id": "patient098",
+        "case_count": 2,
+        "rf_delta": 0.006053375346320016,
+        "predicted_value": -0.006668199119823319,
+        "audit_fraction": 0.5714285714285714,
+        "a0_class_dice": [
+          0.587815043701628,
+          0.016574151654796816,
+          0.5231906732877394
+        ],
+        "a0_dice": 0.37585995621472135,
+        "final_class_dice": [
+          0.6256704914182318,
+          0.020333139397073714,
+          0.511512054858829
+        ],
+        "final_dice": 0.38583856189137816,
+        "audit_class_dice": [
+          0.6358022855307226,
+          0.03459135427220533,
+          0.5190238087353887
+        ],
+        "audit_dice": 0.39647248284610553,
+        "true_delta": 0.020612526631384187,
+        "retained_delta": 0.009978605676656815
+      }
+    ],
+    "a0_dice": 0.2813577143037798,
+    "final_dice": 0.29947033197484735,
+    "class_dice": [
+      0.31421743575477146,
+      0.061162889048752445,
+      0.5230306711210181
+    ],
+    "harm_patient_rate": 0.1,
+    "audit_fraction": 0.4974445346320347,
+    "costs": {
+      "policy_audit_calls": 188,
+      "read_calls": 564,
+      "probe_audit_calls": 376
+    },
+    "evaluation_seconds": 2.4926070410292596,
+    "metric_note": "Patient mean of per-volume foreground Dice on resized complete volumes; no slice CI.",
+    "patient_transition_metrics": {
+      "n": 20,
+      "pearson": -0.24483133205307273,
+      "spearman": -0.1609022556390977,
+      "rf_sign_agreement": 0.95,
+      "true_beneficial_fraction": 0.95,
+      "rf_beneficial_fraction": 1.0,
+      "mean_true_delta": 0.028203912332585835,
+      "oracle_mean_retained_delta": 0.028331257601347117,
+      "rf_auroc_auprc": {
+        "auroc": 0.15789473684210525,
+        "auprc": 0.9202944040099816,
+        "reason": null
+      },
+      "trigger_auroc_auprc": {
+        "auroc": 0.9473684210526315,
+        "auprc": 0.9973684210526315,
+        "reason": null
+      },
+      "value_bins": [
+        {
+          "n": 4,
+          "predicted_value": -0.00833222321040618,
+          "observed_true_delta": 0.03303005499017514,
+          "beneficial_frequency": 0.75
+        },
+        {
+          "n": 4,
+          "predicted_value": -0.007818263776293449,
+          "observed_true_delta": 0.02786146532993864,
+          "beneficial_frequency": 1.0
+        },
+        {
+          "n": 4,
+          "predicted_value": -0.007331367646353707,
+          "observed_true_delta": 0.018695994563789092,
+          "beneficial_frequency": 1.0
+        },
+        {
+          "n": 4,
+          "predicted_value": -0.0069496015278023805,
+          "observed_true_delta": 0.034468502874850454,
+          "beneficial_frequency": 1.0
+        },
+        {
+          "n": 4,
+          "predicted_value": -0.006538845650668788,
+          "observed_true_delta": 0.026963543904175852,
+          "beneficial_frequency": 1.0
+        }
+      ],
+      "value_bin_note": "Value is in intrinsic proxy units; bins are diagnostic, not calibrated Dice/probability.",
+      "aggregation_note": "Patient-average RF contrast vs patient volume Dice contrast; trigger actions occur on slices, not patients."
+    }
+  },
+  "training_total_seconds": 19.304028582992032,
+  "peak_process_host_rss_raw": 942899200,
+  "rss_note": "Process-wide cumulative high water mark; macOS bytes, Linux KiB. Not VRAM or isolated-policy peak.",
+  "wall_note": "Includes setup used by this policy, data loading, training and scheduled validation. Final twin diagnostics excluded and separately timed."
+}

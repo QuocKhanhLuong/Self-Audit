@@ -1,0 +1,27 @@
+# Bounded diagnostic, not a full ACDC recipe. No test-set tuning.
+device: cpu
+cpu_threads: 4
+image_size: 64
+seeds: [0, 1, 2]
+warmup_steps: 40
+rf_warmup_steps: 16
+trigger_warmup_steps: 16
+steps: 80
+eval_every: 40
+validation_patient_limit: null
+dice_thresholds: [0.5, 0.7, 0.8]
+policies: [none, always, periodic, random, entropy, learned, unguided]
+training:
+  channels: 16
+  k: 8
+  batch_size: 8
+  actor_lr: 0.001
+  rf_lr: 0.001
+  trigger_lr: 0.001
+  budget_fraction: 0.5
+  exploration_fraction: 0.25
+  cost: 0.001
+  slow_every: 4
+  replay_capacity: 256
+  replay_max_age: 8
+  period: 2
