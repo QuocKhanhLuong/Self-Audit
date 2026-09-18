@@ -39,6 +39,7 @@ class Stage1Config:
     weight_decay: float = 1e-4
     lambda_contrastive_loss: float = 0.001
     benchmark_seed: int = 42
+    image_root: str | None = None
 
     def validate(self) -> None:
         if self.benchmark_seed != 42:
@@ -71,11 +72,11 @@ def loader_seed_policy() -> str:
 
 def build_loaders(config: Stage1Config) -> tuple[DataLoader, DataLoader, dict[str, Any]]:
     config.validate()
-    manifest = require_scientific_manifest(config.manifest_path) if config.scientific_run else load_manifest(config.manifest_path, check_paths=True)
+    manifest = require_scientific_manifest(config.manifest_path, image_root=config.image_root) if config.scientific_run else load_manifest(config.manifest_path, check_paths=True)
     if manifest["dataset"].lower() != config.dataset.lower():
         raise ValueError("checkpoint/run dataset identity differs from manifest")
-    train_ds = ImageOnlyCardiacDataset(manifest, split="train", profile=config.profile, target_hw=config.target_hw)
-    dev_ds = ImageOnlyCardiacDataset(manifest, split="dev", profile=config.profile, target_hw=config.target_hw)
+    train_ds = ImageOnlyCardiacDataset(manifest, split="train", profile=config.profile, target_hw=config.target_hw, source_root=config.image_root)
+    dev_ds = ImageOnlyCardiacDataset(manifest, split="dev", profile=config.profile, target_hw=config.target_hw, source_root=config.image_root)
     # Preserve CUTS's five-batch extension for training only.
     train_source = ExtendedDataset(train_ds, max(len(train_ds), config.batch_size * 5))
     generator = torch.Generator().manual_seed(config.benchmark_seed)
@@ -177,7 +178,7 @@ def load_checkpoint_for_export(config: Stage1Config, checkpoint_path: str | Path
     payload = torch.load(checkpoint_path, map_location=device, weights_only=False)
     if payload["dataset"].lower() != config.dataset.lower() or payload["profile"] != config.profile:
         raise ValueError("dataset/profile checkpoint identity mismatch")
-    manifest = require_scientific_manifest(config.manifest_path) if config.scientific_run else load_manifest(config.manifest_path, check_paths=True)
+    manifest = require_scientific_manifest(config.manifest_path, image_root=config.image_root) if config.scientific_run else load_manifest(config.manifest_path, check_paths=True)
     if payload["manifest_hash"] != manifest["manifest_hash"]:
         raise ValueError("checkpoint manifest identity mismatch")
     model = build_model(config, inference=True).to(device)
