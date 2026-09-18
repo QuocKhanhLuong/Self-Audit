@@ -62,6 +62,9 @@ class _ScriptedSelfAuditNet(SelfAuditNet):
         nn.Module.__init__(self)
         self.num_classes = 2
         self.max_turns = 3
+        # Exercise the shipped, non-record-consuming inference path.  The
+        # production constructor always supplies this configuration field.
+        self.window_mode = "current"
         self.initial_head = _InitialHead()
         self.annotation_expert = _ScriptedExpert()
         self.auditor = _ScriptedAuditor()
