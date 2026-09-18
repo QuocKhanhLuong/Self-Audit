@@ -63,23 +63,65 @@ def _validate_hashes(root: Path, bindings: list[Mapping[str, Any]], field: str) 
             raise FreezeValidationError(f"{field} hash mismatch: {relative}")
 
 
+def _reject_gt_shaped_fixture_fields(value: Any, path: str = "fixture") -> None:
+    forbidden = (
+        "gt", "ground_truth", "mask", "label", "annotation", "dice", "iou",
+        "hausdorff", "oracle", "hungarian", "candidate_bank", "auditor",
+        "predictive", "o_fit", "o_select", "o_verify",
+    )
+    if isinstance(value, Mapping):
+        for key, child in value.items():
+            key_text = str(key).lower()
+            if any(token in key_text for token in forbidden):
+                raise FreezeValidationError(f"forbidden GT-shaped fixture field: {path}.{key}")
+            _reject_gt_shaped_fixture_fields(child, f"{path}.{key}")
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            _reject_gt_shaped_fixture_fields(child, f"{path}[{index}]")
+
+
 def _validate_fixture_set(value: Mapping[str, Any]) -> None:
     if value.get("schema_version") != "shared_benchmark.cardiac_adapter_fixture_set.v1":
         raise FreezeValidationError("unsupported adapter fixture schema")
-    for fixture in value.get("fixtures", []):
+    fixtures = value.get("fixtures")
+    if not isinstance(fixtures, list) or not fixtures:
+        raise FreezeValidationError("fixture set must contain a non-empty list")
+    fixture_ids: list[str] = []
+    allowed_semantic = {"B", "R", "M", "L", "V"}
+    for fixture in fixtures:
+        if not isinstance(fixture, Mapping):
+            raise FreezeValidationError("fixture entries must be objects")
+        _reject_gt_shaped_fixture_fields(fixture, f"fixtures[{fixture.get('id', '?')}]")
+        fixture_id = fixture.get("id")
+        if not isinstance(fixture_id, str) or not fixture_id:
+            raise FreezeValidationError("fixture id must be a non-empty string")
+        fixture_ids.append(fixture_id)
         raw = fixture.get("partition_grid", [])
         semantic = fixture.get("expected_semantic_grid", [])
         validity = fixture.get("expected_validity_grid", [])
         if not raw or len(raw) != len(semantic) or len(raw) != len(validity):
-            raise FreezeValidationError(f"invalid fixture dimensions: {fixture.get('id')}")
+            raise FreezeValidationError(f"invalid fixture dimensions: {fixture_id}")
         ids = fixture.get("raw_id_by_symbol", {})
+        if not isinstance(ids, Mapping) or not ids:
+            raise FreezeValidationError(f"raw_id_by_symbol is required: {fixture_id}")
         for source, output, valid in zip(raw, semantic, validity):
             if len(source) != len(output) or len(source) != len(valid):
-                raise FreezeValidationError(f"non-rectangular fixture: {fixture.get('id')}")
+                raise FreezeValidationError(f"non-rectangular fixture: {fixture_id}")
             if not set(source).issubset(ids):
-                raise FreezeValidationError(f"undefined raw symbol: {fixture.get('id')}")
-            if not set(output).issubset({"B", "R", "M", "L", "V"}) or not set(valid).issubset({"0", "1"}):
-                raise FreezeValidationError(f"invalid expected fixture encoding: {fixture.get('id')}")
+                raise FreezeValidationError(f"undefined raw symbol: {fixture_id}")
+            if not set(output).issubset(allowed_semantic) or not set(valid).issubset({"0", "1"}):
+                raise FreezeValidationError(f"invalid expected fixture encoding: {fixture_id}")
+            for semantic_symbol, validity_symbol in zip(output, valid):
+                expected_validity = "0" if semantic_symbol == "V" else "1"
+                if validity_symbol != expected_validity:
+                    raise FreezeValidationError(
+                        f"semantic/validity invariant violated: {fixture_id} "
+                        f"semantic={semantic_symbol!r} validity={validity_symbol!r}"
+                    )
+    if len(set(fixture_ids)) != len(fixture_ids):
+        raise FreezeValidationError("fixture ids must be unique")
+    if fixture_ids != sorted(fixture_ids):
+        raise FreezeValidationError("fixture ids must use canonical lexicographic ordering")
 
 
 def validate_freeze(freeze_dir: str | Path = DEFAULT_FREEZE_DIR, repo_root: str | Path = REPO_ROOT) -> dict[str, Any]:

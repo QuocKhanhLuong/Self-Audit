@@ -1,7 +1,9 @@
 {
-  "schema_version": "shared_benchmark.spatial-freeze.v1",
-  "spatial_contract_version": "shared_benchmark.spatial.v1",
-  "target_hw": [224, 224],
+  "version": "shared_benchmark.spatial.v1",
+  "target_hw": [
+    224,
+    224
+  ],
   "whole_fov": true,
   "crop": null,
   "crop_rule": "whole_field_of_view_no_image_informed_crop",
@@ -10,6 +12,7 @@
   "inverse_labels": "nearest_exact",
   "inverse_probabilities": "bilinear_then_renormalize",
   "config_provenance": {
+    "source": "FreeMask benchmark configs",
     "config_files": [
       "configs/maskfree_acdc_150.yaml",
       "configs/maskfree_mnms_150.yaml"
@@ -18,22 +21,106 @@
       "configs/maskfree_acdc_150.yaml": "ade0303aed0ff1cc7ec5470e9a10063c2f8b0c2cb99b6bf88d6e99446e34644d",
       "configs/maskfree_mnms_150.yaml": "489a9a75ae098913baeb7c41ec94759beacfbcedb0d4c28f17f5fc94479aea70"
     },
-    "image_size": 224,
-    "source": "FreeMask benchmark configs"
+    "image_size": 224
   },
   "shared_grid_sha256": "7c9d33fed0facbbabe736a5216bc599b65f1b465e3e26a3d19c624cf9be57949",
   "golden_fixture": {
     "fixture_version": "shared_benchmark.masked_resize_golden.v1",
     "input_dtype": "float32",
-    "input_shape": [2, 3, 5],
+    "input_shape": [
+      2,
+      3,
+      5
+    ],
     "input_values": "arange(30).reshape(2,3,5)",
-    "target_hw": [4, 7],
+    "target_hw": [
+      4,
+      7
+    ],
     "output_dtype": "float32",
-    "output_shape": [2, 4, 7],
+    "output_shape": [
+      2,
+      4,
+      7
+    ],
     "output_little_endian_c_order_sha256": "7f697a8d3b3cd2c0ddb8c944cde5deaf5cf4a6e992fd328d79edcee56a84166c",
     "expected_values": [
-      [[0.0, 0.5, 1.5, 2.0, 2.5, 3.5, 4.0], [2.5, 3.0, 4.0, 4.5, 5.0, 6.0, 6.5], [7.5, 8.0, 9.0, 9.5, 10.0, 11.0, 11.5], [10.0, 10.5, 11.5, 12.0, 12.5, 13.5, 14.0]],
-      [[15.0, 15.5, 16.5, 17.0, 17.5, 18.5, 19.0], [17.5, 18.0, 19.0, 19.5, 20.0, 21.0, 21.5], [22.5, 23.0, 24.0, 24.5, 25.0, 26.0, 26.5], [25.0, 25.5, 26.5, 27.0, 27.5, 28.5, 29.0]]
+      [
+        [
+          0.0,
+          0.5,
+          1.5,
+          2.0,
+          2.5,
+          3.5,
+          4.0
+        ],
+        [
+          2.5,
+          3.0,
+          4.0,
+          4.5,
+          5.0,
+          6.0,
+          6.5
+        ],
+        [
+          7.5,
+          8.0,
+          9.0,
+          9.5,
+          10.0,
+          11.0,
+          11.5
+        ],
+        [
+          10.0,
+          10.5,
+          11.5,
+          12.0,
+          12.5,
+          13.5,
+          14.0
+        ]
+      ],
+      [
+        [
+          15.0,
+          15.5,
+          16.5,
+          17.0,
+          17.5,
+          18.5,
+          19.0
+        ],
+        [
+          17.5,
+          18.0,
+          19.0,
+          19.5,
+          20.0,
+          21.0,
+          21.5
+        ],
+        [
+          22.5,
+          23.0,
+          24.0,
+          24.5,
+          25.0,
+          26.0,
+          26.5
+        ],
+        [
+          25.0,
+          25.5,
+          26.5,
+          27.0,
+          27.5,
+          28.5,
+          29.0
+        ]
+      ]
     ]
   }
 }

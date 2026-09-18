@@ -5,11 +5,11 @@
     "python -m pytest -q --basetemp .pytest-freeze-shared tests/shared_benchmark  # 9 passed",
     "python -m pytest -q --basetemp .pytest-freeze-cuts baseline/CUTS/tests/cardiac/test_p0.py  # 8 passed",
     "python -m pytest -q --basetemp .pytest-freeze-dfc baseline/DFC/tests/cardiac  # 8 passed",
-    "python scripts/validate_cardiac_benchmark_freeze.py",
-    "python -m compileall -q src/shared_benchmark  # passed",
-    "git diff --check  # passed"
+    "python -m compileall src/shared_benchmark  # passed",
+    "python scripts/validate_cardiac_benchmark_freeze.py  # passed",
+    "mutation test on copied resolved_shared_contract.json  # rejected"
   ],
-  "real_manifest_validation": "NOT_RUN_NO_REAL_IMAGE_ROOT",
   "failed": 0,
-  "skipped": 0
+  "skipped": 0,
+  "real_manifest_validation": "DEFERRED_NO_REAL_IMAGE_ONLY_ROOT"
 }
