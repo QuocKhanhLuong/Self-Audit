@@ -336,3 +336,19 @@ isolation remain deferred.
 | VOID policy | **READY (design)** | The audit's per-component/pixel coverage policy is unchanged. |
 | Adapter test specification | **READY (design)** | Synthetic topology/permutation/firewall plan remains pending implementation. |
 | Adapter implementation ready | **NO** | Anatomical rules, deterministic tie handling, and semantic tests remain blockers; real scientific manifests are also deferred. |
+
+## 16. Pre-implementation specification freeze (2026-09-18)
+
+`benchmark_freezes/cardiac_benchmark_v1/configs/adapter_v1_spec.json` now
+freezes the v1 boundary before any semantic code: 4-connected assignment
+components, 4-neighbour adjacency, strict hole containment, topology-only
+BG/LV/MYO/RV rules, no region splitting, disabled intensity/orientation
+resolution, deterministic VOID on every unresolved tie, and fixed
+`BG=0,RV=1,MYO=2,LV=3,VOID=4` output encoding.  The spec and its 14 synthetic
+expected-output fixtures are hash-bound in proposed freeze
+`cardiac-benchmark-v1-6feede910fdcb9c9`.
+
+This closes the rule/tie/fixture design blocker for fixture-only adapter
+implementation.  It does not convert the overall benchmark to scientific
+READY: real manifests and physical GT-isolation evidence remain deferred, and
+no adapter implementation or GT access occurred in this freeze task.
