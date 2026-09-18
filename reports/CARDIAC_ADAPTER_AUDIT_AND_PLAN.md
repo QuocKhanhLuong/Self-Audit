@@ -352,3 +352,22 @@ This closes the rule/tie/fixture design blocker for fixture-only adapter
 implementation.  It does not convert the overall benchmark to scientific
 READY: real manifests and physical GT-isolation evidence remain deferred, and
 no adapter implementation or GT access occurred in this freeze task.
+
+## 17. Regenerated fixture-contract status (2026-09-18)
+
+The invalid pre-implementation freeze `cardiac-benchmark-v1-6feede910fdcb9c9`
+was removed and regenerated from explicit pre-freeze sources.  The bad
+`high_k_cuts_like_extra_components_void` expectation remains semantic
+`BVMLLMB` with validity `1011111`; `VOID` is never marked valid.  Global
+validation now enforces the semantic alphabet, rectangular dimensions, binary
+validity, exact validity derivation, unique canonical fixture IDs, and
+GT-shaped-field rejection before freezing.
+
+Replacement freeze identity:
+`cardiac-benchmark-v1-2200633e7f727d37`; payload SHA-256:
+`2200633e7f727d379058c11713308a4fd1dace76e8c573cb7ce4d23dba326391`;
+adapter specification SHA-256:
+`34b1faeb7b40f77c2d4d9789a6e1a342e891fcb8ff8db4edd30957b2ae9d114a`;
+synthetic fixture SHA-256:
+`cdf03cd9f2d312a5156a8ae444b116a1e2231eff8d05f575804a2b398fe6a823`.
+No topology rule, split, inventory, grid, or adapter implementation changed.
