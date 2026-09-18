@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import numpy as np
 import torch
@@ -14,11 +15,12 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
 from cardiac_benchmark.cluster_kmeans import cluster_latent
+import cardiac_benchmark.cluster_kmeans as cluster_kmeans_module
 from cardiac_benchmark.dataset import ImageOnlyCardiacDataset
 from cardiac_benchmark.freeze import FreezeError, evaluator_skeleton, seal_raw_bundle
 from cardiac_benchmark.manifest import ManifestError, counts_by_split, load_manifest, require_scientific_manifest, write_manifest
 from cardiac_benchmark.train_stage1 import (Stage1Config, build_loaders, build_model, build_optimization,
-                                            load_checkpoint_for_export, seed_primary, validate_epoch)
+                                            load_checkpoint_for_export, seed_primary, train_stage1, validate_epoch)
 from data_utils.patch_sampler import PatchSampler
 from model import CUTSEncoder
 from shared_benchmark.manifest import build_shared_manifest
@@ -55,7 +57,68 @@ def make_mock_manifest(root: Path, *, dataset: str = "acdc") -> Path:
     return path
 
 
+def make_context_manifest(root: Path, name: str, left_value: float, right_value: float) -> Path:
+    """Build one image-only target whose central plane is shared by two contexts."""
+    source = root / f"{name}.npy"
+    central = np.arange(16 * 16, dtype=np.float32).reshape(16, 16)
+    np.save(source, np.stack([
+        np.full((16, 16), left_value, dtype=np.float32), central,
+        np.full((16, 16), right_value, dtype=np.float32),
+    ], axis=0), allow_pickle=False)
+    source_hash = sha256_file(source)
+    record = {
+        "dataset": "acdc", "patient_id": name, "study_id": f"acdc:{name}",
+        "volume_id": f"acdc:{name}:volume-0000", "unit_id": f"{name}:z0001",
+        "split": "train", "path": str(source), "source_path": str(source),
+        "relative_path": source.name, "source_format": "npy", "shape": [3, 16, 16],
+        "native_shape": [3, 16, 16], "dtype": "float32", "native_hw": [16, 16],
+        "depth": 3, "num_slices": 3, "depth_axis": 0, "frame_axis": None,
+        "slice_index": 1, "frame_index": 0,
+        "frame_selection_rule": "single_acquired_frame_index_0_image_only",
+        "native_geometry": "unavailable", "native_affine": None, "orientation": None,
+        "spacing_mm": None, "spacing_valid": False, "native_grid_export": False,
+        "export_grid": "stored", "spatial_unit": "unknown", "source_hash": source_hash,
+        "source_fingerprint": source_hash, "frame_fingerprint": f"fixture-{name}",
+        "study_grid_compatibility": None,
+    }
+    upstream = {
+        "schema_version": "maskfree150.data.v2", "dataset": "acdc", "seed": 42,
+        "manifest_id": f"cuts-context-upstream-{name}", "records": [record],
+        "discovery_contract": {"version": "fixture_only_image_only"},
+        "split_provenance": {
+            "rule": "fixture", "seed": 42, "ratios": {},
+            "patient_level_disjoint": True, "split_identity": "patient_id",
+            "selection_inputs": ["fixture"], "content_fingerprint_used": False,
+        },
+    }
+    payload = build_shared_manifest(
+        upstream, build_grid_spec((16, 16), config_provenance={"source": "CUTS context fixture"}),
+        fixture=True, scientific=False, local_source_root=root,
+    )
+    path = root / f"{name}_manifest.json"
+    write_manifest(payload, path)
+    return path
+
+
 class P0Tests(unittest.TestCase):
+    def test_cuts_2d_is_central_only_and_25d_retains_context(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            context_a = make_context_manifest(root, "context_a", -1_000_000.0, 1_000_000.0)
+            context_b = make_context_manifest(root, "context_b", -1.0, 1.0)
+            manifest_a = load_manifest(context_a, check_paths=True)
+            manifest_b = load_manifest(context_b, check_paths=True)
+
+            image_a_2d = ImageOnlyCardiacDataset(manifest_a, split="train", profile="CUTS-2D")[0]
+            image_b_2d = ImageOnlyCardiacDataset(manifest_b, split="train", profile="CUTS-2D")[0]
+            self.assertTrue(torch.equal(image_a_2d.image, image_b_2d.image))
+            self.assertEqual(image_a_2d.provenance["normalization"], "cuts.cardiac.central_percentile_0p5_99p5_unit_interval.v2")
+
+            image_a_25d = ImageOnlyCardiacDataset(manifest_a, split="train", profile="CUTS-2.5D")[0]
+            image_b_25d = ImageOnlyCardiacDataset(manifest_b, split="train", profile="CUTS-2.5D")[0]
+            self.assertFalse(torch.equal(image_a_25d.image, image_b_25d.image))
+            self.assertEqual(image_a_25d.provenance["normalization"], "cuts.cardiac.stack_percentile_0p5_99p5_unit_interval.v1")
+
     def test_manifest_loader_profiles_and_scientific_guard(self):
         with tempfile.TemporaryDirectory() as temporary:
             path = make_mock_manifest(Path(temporary))
@@ -71,6 +134,50 @@ class P0Tests(unittest.TestCase):
             self.assertEqual(tuple(image_2d.shape), (1, 16, 16))
             self.assertEqual(tuple(image_25d.shape), (3, 16, 16))
             self.assertTrue(torch.equal(image_25d[0], image_25d[1]))
+
+    def test_checkpoint_binds_current_shared_provenance(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest_path = make_mock_manifest(root)
+            config = Stage1Config(profile="CUTS-2D", dataset="acdc", manifest_path=str(manifest_path),
+                                  max_epochs=1, batch_size=1, sampled_patches_per_image=2)
+            checkpoint = root / "checkpoint.pt"
+            train_stage1(config, checkpoint, device="cpu")
+            payload = torch.load(checkpoint, map_location="cpu", weights_only=False)
+            manifest = load_manifest(manifest_path)
+            self.assertEqual(payload["source_manifest_logical_sha"], manifest["source_manifest"]["logical_sha256"])
+            self.assertEqual(payload["shared_grid_hash"], manifest["shared_grid_hash"])
+            self.assertEqual(payload["cuts_mode"], "CUTS-2D")
+            self.assertEqual(payload["split_identity"]["split_seed"], 42)
+            self.assertNotIn("freemask_source_sha", payload)
+            self.assertNotIn("source_freemask_reference_sha", payload)
+
+    def test_raw_export_binds_canonical_source_hash(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            raw = np.arange(16, dtype=np.int64).reshape(4, 4)
+            latent_path = root / "latent.npy"
+            np.save(latent_path, np.zeros((4, 4, 4), dtype=np.float32), allow_pickle=False)
+            latent_metadata = {
+                "sample_id": "acdc:patient-p:study-s:volume-v:frame-0000:z-0000",
+                "dataset": "acdc", "profile": "CUTS-2D", "manifest_hash": "manifest",
+                "checkpoint_hash": "checkpoint", "source_cuts_sha": "repo",
+                "repository_commit_sha": "repo", "source_manifest_logical_sha": "source",
+                "shared_grid_hash": "grid", "cuts_mode": "CUTS-2D", "config_hash": "config",
+                "environment_hash": "environment", "latent_hash": "latent",
+                "latent_path": str(latent_path),
+                "provenance": {"source_image_hash": "image-content"},
+            }
+            fake_result = {"status": "success", "raw_cluster_map": raw,
+                           "actual_clustering_seed_used": 1, "raw_partition_hash": "raw"}
+            with patch.object(cluster_kmeans_module, "cluster_latent", return_value=fake_result):
+                result = cluster_kmeans_module.export_raw_partition(latent_metadata, root)
+            metadata = json.loads((root / f"{latent_metadata['sample_id'].replace(':', '_')}.json").read_text())
+            self.assertEqual(result["source_image_hash"], "image-content")
+            self.assertEqual(metadata["source_image_hash"], "image-content")
+            self.assertEqual(metadata["raw_partition_dtype"], "int64")
+            self.assertEqual(metadata["raw_partition_shape"], [4, 4])
+            self.assertNotIn("image_checksum", metadata)
 
     def test_sampler_and_one_step_algebra_parity(self):
         config = Stage1Config(profile="CUTS-2D", dataset="acdc", manifest_path="unused", max_epochs=1,

@@ -14,6 +14,13 @@ from .provenance import sha256_array, write_json
 
 CLUSTERING_SEED = 1
 CLUSTERING_RETRY_SEED = 2
+PHATE_CONFIGURATION = {
+    "n_components": 3,
+    "knn": 100,
+    "n_landmark": 500,
+    "t": 2,
+}
+KMEANS_CONFIGURATION = {"n_clusters": 10}
 
 
 def phate_kmeans(latent_flat: np.ndarray, *, random_seed: int, num_workers: int = 1) -> np.ndarray:
@@ -72,14 +79,27 @@ def export_raw_partition(latent_metadata: dict[str, Any], output_dir: str | Path
     stem = str(latent_metadata["sample_id"]).replace(":", "_")
     if result["status"] == "success":
         raw_path = target / f"{stem}.npy"
-        np.save(raw_path, result.pop("raw_cluster_map"), allow_pickle=False)
+        raw_map = result.pop("raw_cluster_map")
+        np.save(raw_path, raw_map, allow_pickle=False)
         result["raw_partition_path"] = str(raw_path)
+        result["raw_partition_dtype"] = str(raw_map.dtype)
+        result["raw_partition_shape"] = list(raw_map.shape)
+    provenance = latent_metadata.get("provenance", {})
+    source_image_hash = provenance.get("source_image_hash")
+    if not source_image_hash:
+        raise ValueError("latent metadata lacks canonical provenance.source_image_hash")
     result.update({"schema_version": "cuts.cardiac.p0.raw-partition.v1", "sample_id": latent_metadata["sample_id"],
                    "dataset": latent_metadata["dataset"], "profile": latent_metadata["profile"],
                    "manifest_hash": latent_metadata["manifest_hash"], "checkpoint_hash": latent_metadata["checkpoint_hash"],
                    "source_cuts_sha": latent_metadata["source_cuts_sha"],
-                   "source_freemask_reference_sha": latent_metadata["source_freemask_reference_sha"],
-                   "config_hash": latent_metadata["config_hash"], "environment_hash": latent_metadata["environment_hash"]})
-    result["image_checksum"] = latent_metadata["provenance"]["image_checksum"]
+                   "repository_commit_sha": latent_metadata["repository_commit_sha"],
+                   "source_manifest_logical_sha": latent_metadata["source_manifest_logical_sha"],
+                   "shared_grid_hash": latent_metadata["shared_grid_hash"],
+                   "cuts_mode": latent_metadata["cuts_mode"],
+                   "source_image_hash": source_image_hash,
+                   "config_hash": latent_metadata["config_hash"], "environment_hash": latent_metadata["environment_hash"],
+                   "phate_configuration": {**PHATE_CONFIGURATION, "random_state": result.get("actual_clustering_seed_used")},
+                   "kmeans_configuration": {**KMEANS_CONFIGURATION, "random_seed": result.get("actual_clustering_seed_used")},
+                   "latent_hash": latent_metadata.get("latent_hash")})
     result["metadata_hash"] = write_json(target / f"{stem}.json", result)
     return result

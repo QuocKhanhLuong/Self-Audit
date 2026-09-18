@@ -121,3 +121,26 @@ DFC has a per-call transductive runner and returns iteration/loss counts, but no
 4. Freeze raw partitions before invoking the unchanged common adapter; persist a separate semantic-output freeze and test boundary ordering.
 5. Add the missing scientific/reproducibility/firewall tests listed above.
 6. Establish external source identity attestations for CUTS and DFC, and measure DFC `T_base` before deciding server inventory feasibility.
+
+## CUTS repair and replacement freeze (2026-09-18)
+
+The documented CUTS-2D neighbour-normalization defect is repaired without
+changing the CUTS core, PHATE/K=10 clustering, shared split, inventory, or
+spatial contract.  CUTS-2D now performs central-only percentile normalization;
+CUTS-2.5D retains the declared three-slice sensitivity path.  Checkpoint and
+raw-export provenance now bind the canonical shared manifest logical SHA,
+shared-grid hash, source-image SHA-256, mode, seed, config, repository, and
+partition metadata.  Obsolete lowercase `freemask_source_sha` and
+`image_checksum` accesses are gone from executable CUTS code; remaining hits
+are negative test assertions only.
+
+The mandatory CUTS-2D neighbour-isolation and CUTS-2.5D context tests pass,
+along with checkpoint/raw provenance tests.  Post-repair results are 38 shared
+tests passed, 11 CUTS tests passed, and 8 DFC tests passed.  The old freeze was
+allowed to become stale and failed at the repaired CUTS dataset binding; the
+replacement was regenerated in the same directory with freeze ID
+`cardiac-benchmark-v1-56969c44eba76815` and payload SHA-256
+`56969c44eba76815c911ad9050049c4799f5e5b2cb31c907e9a2fb8f7d427a30`.
+Adapter/spec/fixture/grid identities are unchanged.  Raw orchestration,
+adapter handoff, semantic persistence, real data, physical GT isolation, and
+runtime preflight remain blocked or deferred as recorded above.

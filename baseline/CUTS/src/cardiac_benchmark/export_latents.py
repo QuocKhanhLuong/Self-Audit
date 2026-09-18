@@ -37,7 +37,10 @@ def export_latents(config: Stage1Config, checkpoint_path: str | Path, output_dir
                 "manifest_hash": manifest["manifest_hash"], "checkpoint_hash": checkpoint_hash,
                 "benchmark_seed": 42, "latent_path": str(path), "latent_hash": sha256_array(latent),
                 "source_cuts_sha": checkpoint_payload["source_cuts_sha"],
-                "source_freemask_reference_sha": checkpoint_payload["source_freemask_reference_sha"],
+                "repository_commit_sha": checkpoint_payload["repository_commit_sha"],
+                "source_manifest_logical_sha": checkpoint_payload["source_manifest_logical_sha"],
+                "shared_grid_hash": checkpoint_payload["shared_grid_hash"],
+                "cuts_mode": checkpoint_payload["cuts_mode"],
                 "config_hash": checkpoint_payload["config_hash"], "environment_hash": checkpoint_payload["environment_hash"],
                 "shape": list(latent.shape), "provenance": record,
             }

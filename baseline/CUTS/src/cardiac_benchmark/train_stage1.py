@@ -146,6 +146,25 @@ def train_stage1(config: Stage1Config, checkpoint_path: str | Path, *, device: s
     """Train only train patients and select strictly lower finite dev loss."""
     seed_primary(config.benchmark_seed)
     train_loader, dev_loader, manifest = build_loaders(config)
+    source_manifest = manifest.get("source_manifest")
+    if not isinstance(source_manifest, dict) or not source_manifest.get("logical_sha256"):
+        raise ValueError("shared manifest lacks source_manifest.logical_sha256")
+    if not manifest.get("shared_grid_hash"):
+        raise ValueError("shared manifest lacks shared_grid_hash")
+    split_provenance = source_manifest.get("split_provenance", {})
+    manifest_provenance = {
+        "source_manifest_logical_sha": str(source_manifest["logical_sha256"]),
+        "shared_grid_hash": str(manifest["shared_grid_hash"]),
+        "split_identity": {
+            "split_seed": int(manifest["split_seed"]),
+            "split_policy_version": str(manifest["split_policy_version"]),
+            "source_split_identity": split_provenance.get("split_identity"),
+            "training_split": "train",
+            "validation_split": "dev",
+        },
+        "cuts_mode": config.profile,
+        "benchmark_seed": int(config.benchmark_seed),
+    }
     runtime_device = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
     model = build_model(config).to(runtime_device)
     optimizer, scheduler, recon_loss, contrastive_loss = build_optimization(model, config)
@@ -159,18 +178,23 @@ def train_stage1(config: Stage1Config, checkpoint_path: str | Path, *, device: s
         dev_metrics = validate_epoch(model, dev_loader, recon_loss, contrastive_loss, config, runtime_device)
         if math.isfinite(dev_metrics["total"]) and dev_metrics["total"] < best:
             best = dev_metrics["total"]
+            environment = environment_identity()
+            source_cuts_sha = current_cuts_sha()
             payload = {
                 "state_dict": model.state_dict(), "dataset": config.dataset, "profile": config.profile,
                 "manifest_hash": manifest["manifest_hash"], "config": asdict(config), "epoch": epoch,
                 "config_hash": sha256_json(asdict(config)), "dev_metrics": dev_metrics,
                 "rng": rng_contract(loader_seed_policy=loader_seed_policy()),
-                "source_cuts_sha": current_cuts_sha(), "source_freemask_reference_sha": manifest["freemask_source_sha"],
-                "environment": environment_identity(), "environment_hash": sha256_json(environment_identity()),
+                "source_cuts_sha": source_cuts_sha, "repository_commit_sha": source_cuts_sha,
+                **manifest_provenance,
+                "environment": environment, "environment_hash": sha256_json(environment),
             }
             torch.save(payload, checkpoint_path)
             result = {"best_epoch": epoch, "best_dev_total": best, "train_metrics": train_metrics, "dev_metrics": dev_metrics}
     result.update({"checkpoint": str(checkpoint_path), "checkpoint_hash": sha256_file(checkpoint_path),
-                   "manifest_hash": manifest["manifest_hash"], "device": str(runtime_device)})
+                   "manifest_hash": manifest["manifest_hash"], "source_manifest_logical_sha": manifest_provenance["source_manifest_logical_sha"],
+                   "shared_grid_hash": manifest_provenance["shared_grid_hash"], "cuts_mode": config.profile,
+                   "device": str(runtime_device)})
     return result
 
 
@@ -181,6 +205,13 @@ def load_checkpoint_for_export(config: Stage1Config, checkpoint_path: str | Path
     manifest = require_scientific_manifest(config.manifest_path, image_root=config.image_root) if config.scientific_run else load_manifest(config.manifest_path, check_paths=True)
     if payload["manifest_hash"] != manifest["manifest_hash"]:
         raise ValueError("checkpoint manifest identity mismatch")
+    source_manifest = manifest.get("source_manifest", {})
+    if payload.get("source_manifest_logical_sha") != source_manifest.get("logical_sha256"):
+        raise ValueError("checkpoint source-manifest identity mismatch")
+    if payload.get("shared_grid_hash") != manifest.get("shared_grid_hash"):
+        raise ValueError("checkpoint shared-grid identity mismatch")
+    if payload.get("cuts_mode") != config.profile:
+        raise ValueError("checkpoint CUTS mode identity mismatch")
     model = build_model(config, inference=True).to(device)
     model.load_state_dict(payload["state_dict"])
     model.eval()

@@ -95,3 +95,37 @@ The eight tests cover small shared-manifest fixture loading, core architecture/l
 4. Add a dedicated production runner/config with checkpoint/resume, terminal accounting, raw-hash reproducibility, and a 50–100 image-only-slice preflight.
 5. Wire sealed raw partitions to the existing shared adapter, persist distinct semantic/validity outputs, and test that the adapter runs only after raw freeze.
 6. Pin or otherwise attest the actual CUTS upstream source identity, not merely the enclosing monorepo revision.
+
+## Repair and replacement-freeze evidence (2026-09-18)
+
+The historical CUTS-2D deviation above was repaired.  The old executable order
+was `read_context_stack -> normalize all three planes -> shared resize ->
+select resized central channel`; this allowed neighbouring slices to change a
+nominally 2D input.  `ImageOnlyCardiacDataset.__getitem__` now selects
+`stack[1:2]` before `_normalize_image_only` for `CUTS-2D`, then applies the
+shared whole-FOV spatial transform.  `CUTS-2.5D` retains the explicit
+three-plane stack path and is still sensitivity-only by policy.
+
+Checkpoint persistence in `train_stage1.py` now binds
+`manifest_hash`, `source_manifest.logical_sha256`, `shared_grid_hash`, split
+identity/seed, CUTS mode, config hash, repository identity, and benchmark seed.
+Latent and raw partition metadata carry the same fields plus canonical
+`provenance.source_image_hash`; the obsolete lowercase
+`freemask_source_sha`/`image_checksum` accesses were removed.  The local smoke
+fixture now constructs `shared_benchmark_manifest.v1` directly.  Remaining
+occurrences of those two legacy strings are test assertions that verify their
+absence; the uppercase `FREEMASK_SOURCE_SHA` declaration is only a legacy
+reference constant and is not read by the repaired scientific path.
+
+The new regression coverage proves bit-identical CUTS-2D tensors for radically
+different neighbours, proves CUTS-2.5D remains neighbour-sensitive, validates
+checkpoint provenance, and validates raw-export source hashes.  Results:
+`tests/shared_benchmark` 38 passed, CUTS cardiac tests 11 passed, DFC cardiac
+tests 8 passed.  The old freeze was intentionally stale after the repair; its
+validator reached the changed `baseline/CUTS/src/cardiac_benchmark/dataset.py`
+binding.  It was then regenerated in place as
+`cardiac-benchmark-v1-56969c44eba76815` (scientific payload
+`56969c44eba76815c911ad9050049c4799f5e5b2cb31c907e9a2fb8f7d427a30`).
+Adapter, fixture, and shared-grid hashes remain unchanged.  Raw artifact
+orchestration, executable adapter handoff, real manifests, and physical GT
+isolation remain unresolved.
