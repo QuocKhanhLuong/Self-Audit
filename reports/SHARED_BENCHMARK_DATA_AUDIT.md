@@ -361,3 +361,16 @@ so no scientific manifests, counts, grid receipts, or GT metrics were made.
 | GT firewall | **PARTIAL** | Schema/root/hash firewall tests pass; physical server isolation is deployment evidence still required. |
 | Real ACDC scientific manifest | **DEFERRED** | No real image-only root materialized. |
 | Real M&Ms scientific manifest | **DEFERRED** | No real image-only root materialized. |
+
+## 16. Scientific-freeze attempt (2026-09-18)
+
+`benchmark_freezes/cardiac_benchmark_v1/` now binds the merged repository
+commit `826a11ca9c37fd024c9d7d83df594f8b051ec9ca`, authoritative source/config
+content hashes, the shared 224 whole-FOV masked-area contract, firewall
+evidence, and a mutation-tested validator.  The proposed freeze ID is
+`cardiac-benchmark-v1-6feede910fdcb9c9`.
+
+No real image-only ACDC or M&Ms root was available in this execution context.
+Accordingly both scientific manifests and physical GT isolation are **DEFERRED**;
+no patient/sample count or source hash was fabricated.  This is a local
+artifact set ready for review/commit, not an overall scientific-data PASS.
