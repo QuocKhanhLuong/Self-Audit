@@ -11,14 +11,14 @@ max_steps: 5000
 batch_size: 16
 
 num_neighbors: 7
-dataset_name: "cocostuff27"
+dataset_name: "directory"
 
 # Used if dataset_name is "directory"
-dir_dataset_name: ~
-dir_dataset_n_classes: 5
+dir_dataset_name: "ACDC"
+dir_dataset_n_classes: 4
 
-has_labels: False
-crop_type: "five"
+has_labels: True
+crop_type: ~
 crop_ratio: .5
 res: 224
 loader_crop_type: "center"
@@ -27,7 +27,7 @@ loader_crop_type: "center"
 extra_clusters: 0
 use_true_labels: False
 use_recalibrator: False
-model_type: "vit_small"
+model_type: "vit_base"
 arch: "dino"
 use_fit_model: False
 dino_feat_type: "feat"
@@ -41,7 +41,7 @@ dropout: True
 zero_clamp: True
 
 lr: 5e-4
-pretrained_weights: ~
+pretrained_weights: "/data/prj/self-audit/Self-Audit/baseline/STEGO/saved_models/cityscapes_vit_base_1.ckpt"
 use_salience: False
 stabalize: False
 stop_at_zero: True

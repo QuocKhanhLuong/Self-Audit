@@ -7,6 +7,7 @@ import seaborn as sns
 import torch.multiprocessing
 from crf import dense_crf
 from omegaconf import DictConfig, OmegaConf
+from omegaconf import open_dict
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from train_segmentation import LitUnsupervisedSegmenter, prep_for_plot, get_class_labels
@@ -74,6 +75,12 @@ def my_app(cfg: DictConfig) -> None:
             picie_cluster_probe = picie_state["cluster_probe"].module.cuda()
             picie_cluster_metrics = picie_state["cluster_metrics"]
 
+        if cfg.get("override_dir_dataset_name"):
+            print(f"Overriding dataset to zero-shot evaluate on: {cfg.override_dir_dataset_name}")
+            with open_dict(model.cfg):
+                model.cfg.dataset_name = "directory"
+                model.cfg.dir_dataset_name = cfg.override_dir_dataset_name
+
         loader_crop = "center"
         test_dataset = ContrastiveSegDataset(
             pytorch_data_dir=pytorch_data_dir,
@@ -109,6 +116,9 @@ def my_app(cfg: DictConfig) -> None:
             # all_good_images = range(80)
             # all_good_images = [ 5, 20, 56]
             all_good_images = [11, 32, 43, 52]
+        elif model.cfg.dataset_name == "directory":
+            n_vis = min(8, len(test_dataset))
+            all_good_images = list(range(n_vis))
         else:
             raise ValueError("Unknown Dataset {}".format(model.cfg.dataset_name))
         batch_nums = torch.tensor([n // (cfg.batch_size * 2) for n in all_good_images])

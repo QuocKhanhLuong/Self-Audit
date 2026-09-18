@@ -11,7 +11,7 @@ import torch.nn.functional as F
 import wget
 from PIL import Image
 from scipy.optimize import linear_sum_assignment
-from torch._six import string_classes
+string_classes = str
 from torch.utils.data import DataLoader
 from torch.utils.data._utils.collate import np_str_obj_array_pattern, default_collate_err_msg_format
 from torchmetrics import Metric
@@ -177,7 +177,7 @@ def get_transform(res, is_label, crop_type):
                           cropper,
                           ToTargetTensor()])
     else:
-        return T.Compose([T.Resize(res, Image.NEAREST),
+        return T.Compose([T.Resize(res, Image.BILINEAR),
                           cropper,
                           T.ToTensor(),
                           normalize])
@@ -266,11 +266,13 @@ class UnsupervisedMetrics(Metric):
         fn = torch.sum(self.histogram, dim=1) - tp
 
         iou = tp / (tp + fp + fn)
+        dice = 2 * tp / (2 * tp + fp + fn)
         prc = tp / (tp + fn)
         opc = torch.sum(tp) / torch.sum(self.histogram)
 
         metric_dict = {self.prefix + "mIoU": iou[~torch.isnan(iou)].mean().item(),
-                       self.prefix + "Accuracy": opc.item()}
+                       self.prefix + "Accuracy": opc.item(),
+                       self.prefix + "mDice": dice[~torch.isnan(dice)].mean().item()}
         return {k: 100 * v for k, v in metric_dict.items()}
 
 

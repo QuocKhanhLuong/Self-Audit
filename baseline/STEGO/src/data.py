@@ -73,50 +73,59 @@ def create_cityscapes_colormap():
 
 
 class DirectoryDataset(Dataset):
+    """Adapter for ACDCDataset to replace the original DirectoryDataset."""
     def __init__(self, root, path, image_set, transform, target_transform):
         super(DirectoryDataset, self).__init__()
         self.split = image_set
-        self.dir = join(root, path)
-        self.img_dir = join(self.dir, "imgs", self.split)
-        self.label_dir = join(self.dir, "labels", self.split)
-
+        
+        # path = cfg.dir_dataset_name (vd: "ACDC"). Resolve absolute path từ __file__
+        repo_root = os.path.abspath(join(os.path.dirname(__file__), "../../../"))
+        data_root = join(repo_root, "preprocessed_data", path)
+        assert os.path.isdir(data_root), f"Data root not found: {data_root}"
+        
+        dataset_key = path.lower()
+        if dataset_key == "acdc":
+            from self_audit.data.acdc import ACDCDataset as TargetDataset
+        elif dataset_key == "mnms":
+            from self_audit.data.mnms import MNMSDataset as TargetDataset
+        else:
+            raise ValueError(f"Unknown dataset configuration path: '{path}'. Expected 'ACDC' or 'MNMS'.")
+        self.inner = TargetDataset(data_root=data_root, split=self.split)
+        
         self.transform = transform
         self.target_transform = target_transform
 
-        self.img_files = np.array(sorted(os.listdir(self.img_dir)))
-        assert len(self.img_files) > 0
-        if os.path.exists(join(self.dir, "labels")):
-            self.label_files = np.array(sorted(os.listdir(self.label_dir)))
-            assert len(self.img_files) == len(self.label_files)
-        else:
-            self.label_files = None
-
     def __getitem__(self, index):
-        image_fn = self.img_files[index]
-        img = Image.open(join(self.img_dir, image_fn))
+        sample = self.inner[index]
+        image_tensor = sample["image"]
+        mask_tensor = sample["mask"]
 
-        if self.label_files is not None:
-            label_fn = self.label_files[index]
-            label = Image.open(join(self.label_dir, label_fn))
+        # Extract center slice (index 1) and replicate to 3 channels
+        center_slice = image_tensor[1:2]
+        image_tensor = center_slice.repeat(3, 1, 1)
+
+        # Value mapping: Fixed Affine clip [-3.0, 3.0] -> scale -> uint8
+        image_tensor = torch.clamp(image_tensor, -3.0, 3.0)
+        image_tensor = (image_tensor + 3.0) / 6.0 * 255.0
+        
+        img = to_pil_image(image_tensor.to(torch.uint8))
+        label = to_pil_image(mask_tensor.to(torch.uint8))
 
         seed = np.random.randint(2147483647)
         random.seed(seed)
         torch.manual_seed(seed)
         img = self.transform(img)
 
-        if self.label_files is not None:
-            random.seed(seed)
-            torch.manual_seed(seed)
-            label = self.target_transform(label)
-        else:
-            label = torch.zeros(img.shape[1], img.shape[2], dtype=torch.int64) - 1
-
-        mask = (label > 0).to(torch.float32)
+        random.seed(seed)
+        torch.manual_seed(seed)
+        label = self.target_transform(label)
+        
+        # >= 0 để include class Background (0) của ACDC
+        mask = (label >= 0).to(torch.float32)
         return img, label, mask
 
     def __len__(self):
-        return len(self.img_files)
-
+        return len(self.inner)
 
 class Potsdam(Dataset):
     def __init__(self, root, image_set, transform, target_transform, coarse_labels):

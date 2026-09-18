@@ -44,18 +44,24 @@ class DinoFeaturizer(nn.Module):
             raise ValueError("Unknown arch and patch size")
 
         if cfg.pretrained_weights is not None:
-            state_dict = torch.load(cfg.pretrained_weights, map_location="cpu")
-            state_dict = state_dict["teacher"]
-            # remove `module.` prefix
-            state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
-            # remove `backbone.` prefix induced by multicrop wrapper
-            state_dict = {k.replace("backbone.", ""): v for k, v in state_dict.items()}
-
-            # state_dict = {k.replace("projection_head", "mlp"): v for k, v in state_dict.items()}
-            # state_dict = {k.replace("prototypes", "last_layer"): v for k, v in state_dict.items()}
-
-            msg = self.model.load_state_dict(state_dict, strict=False)
-            print('Pretrained weights found at {} and loaded with msg: {}'.format(cfg.pretrained_weights, msg))
+            ckpt = torch.load(cfg.pretrained_weights, map_location="cpu", weights_only=False)
+            if "teacher" in ckpt:
+                state_dict = ckpt["teacher"]
+                state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
+                state_dict = {k.replace("backbone.", ""): v for k, v in state_dict.items()}
+                msg = self.model.load_state_dict(state_dict, strict=False)
+                print('DINO weights loaded from {} with msg: {}'.format(cfg.pretrained_weights, msg))
+            elif "state_dict" in ckpt:
+                pl_state = ckpt["state_dict"]
+                backbone_state = {k[len("net.model."):]: v
+                                  for k, v in pl_state.items() if k.startswith("net.model.")}
+                msg = self.model.load_state_dict(backbone_state, strict=False)
+                print('STEGO backbone loaded from {} with msg: {}'.format(cfg.pretrained_weights, msg))
+                self._pending_head_state = {k[len("net."):]: v
+                                            for k, v in pl_state.items()
+                                            if k.startswith("net.cluster1.") or k.startswith("net.cluster2.")}
+            else:
+                raise ValueError("Unknown checkpoint format in {}".format(cfg.pretrained_weights))
         else:
             print("Since no pretrained weights have been provided, we load the reference pretrained DINO weights.")
             state_dict = torch.hub.load_state_dict_from_url(url="https://dl.fbaipublicfiles.com/dino/" + url)
@@ -69,6 +75,14 @@ class DinoFeaturizer(nn.Module):
         self.proj_type = cfg.projection_type
         if self.proj_type == "nonlinear":
             self.cluster2 = self.make_nonlinear_clusterer(self.n_feats)
+
+        if hasattr(self, "_pending_head_state") and self._pending_head_state:
+            try:
+                msg = self.load_state_dict(self._pending_head_state, strict=False)
+                print('STEGO head weights loaded with msg: {}'.format(msg))
+            except RuntimeError as e:
+                print('STEGO head weights skipped (dim mismatch, will train from scratch): {}'.format(e))
+            del self._pending_head_state
 
     def make_clusterer(self, in_channels):
         return torch.nn.Sequential(
