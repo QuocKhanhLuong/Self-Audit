@@ -1,10 +1,10 @@
 {
   "freeze_schema": "shared_benchmark.cardiac_benchmark_freeze.v1",
-  "freeze_id": "cardiac-benchmark-v1-2200633e7f727d37",
-  "scientific_payload_sha256": "2200633e7f727d379058c11713308a4fd1dace76e8c573cb7ce4d23dba326391",
+  "freeze_id": "cardiac-benchmark-v1-56969c44eba76815",
+  "scientific_payload_sha256": "56969c44eba76815c911ad9050049c4799f5e5b2cb31c907e9a2fb8f7d427a30",
   "scientific_payload": {
     "freeze_schema_version": "shared_benchmark.cardiac_benchmark_freeze.v1",
-    "repository_commit_sha": "94944e35ebdde5ce89ec2ad98ac792008e6c5d5b",
+    "repository_commit_sha": "f0d61da5ae27832fec75c792d6f07d67dd8c2d50",
     "authoritative_freemask_policy": {
       "source_manifest_schema": "maskfree150.data.v2",
       "split_policy_version": "maskfree150.data.discovery.v2",
@@ -142,7 +142,7 @@
       },
       {
         "path": "scripts/regenerate_cardiac_benchmark_freeze.py",
-        "sha256": "de9f04983ff25954009b28b8cc92431b53d0863b88714101c63653661fdd9ba6"
+        "sha256": "6b343bc995dc0373a209cdcc75ef152a1f6f392175c9c92a6e441a15fc234d45"
       },
       {
         "path": "baseline/CUTS/src/cardiac_benchmark/manifest.py",
@@ -150,7 +150,27 @@
       },
       {
         "path": "baseline/CUTS/src/cardiac_benchmark/dataset.py",
-        "sha256": "e4f7c96fa51ee81a1437da9984ed6b78c9669debda25efedbd499ca56242395a"
+        "sha256": "35748861ce6ce5469dca18ff52192dd3133959e612da66e37d6befac898b1fe7"
+      },
+      {
+        "path": "baseline/CUTS/src/cardiac_benchmark/train_stage1.py",
+        "sha256": "7b05b9b2c45bc17039581f91e89d88c4db710abc73e1cb10d9868f53c6d1ddd8"
+      },
+      {
+        "path": "baseline/CUTS/src/cardiac_benchmark/export_latents.py",
+        "sha256": "11d992ec8dae707dd49cabf46bc520f3c64cf89ce5704cadda9309db95c66702"
+      },
+      {
+        "path": "baseline/CUTS/src/cardiac_benchmark/cluster_kmeans.py",
+        "sha256": "22cb667615816e28e0ad8a33d6a24eecc2670ae46828037b0341383a35e07b41"
+      },
+      {
+        "path": "baseline/CUTS/src/cardiac_benchmark/provenance.py",
+        "sha256": "dfb6adb95483a1e3f37d0d5186299f2cbd1224c6ecbc56e15da6e127ac8334f2"
+      },
+      {
+        "path": "baseline/CUTS/scripts_cardiac/p0_local_smoke.py",
+        "sha256": "2b557a27386e6ecb63db21fc436025cc3c90092623318d4fbe4e17909c7433a0"
       },
       {
         "path": "baseline/DFC/src/cardiac_benchmark/manifest.py",

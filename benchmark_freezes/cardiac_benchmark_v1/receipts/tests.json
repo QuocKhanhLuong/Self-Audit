@@ -2,12 +2,14 @@
   "receipt_schema": "shared_benchmark.freeze_test_receipt.v1",
   "status": "PASS_LOCAL_FIXTURE_AND_CONTRACT",
   "commands": [
-    "python -m pytest -q --basetemp .pytest-freeze-shared tests/shared_benchmark  # 9 passed",
-    "python -m pytest -q --basetemp .pytest-freeze-cuts baseline/CUTS/tests/cardiac/test_p0.py  # 8 passed",
-    "python -m pytest -q --basetemp .pytest-freeze-dfc baseline/DFC/tests/cardiac  # 8 passed",
+    "python -m pytest -q --basetemp .pytest-shared tests/shared_benchmark  # 38 passed",
+    "python -m pytest -q --basetemp .pytest-cuts baseline/CUTS/tests/cardiac/test_p0.py  # 11 passed",
+    "python -m pytest -q --basetemp .pytest-dfc baseline/DFC/tests/cardiac  # 8 passed",
     "python -m compileall src/shared_benchmark  # passed",
+    "python -m compileall baseline/CUTS/src/cardiac_benchmark  # passed",
     "python scripts/validate_cardiac_benchmark_freeze.py  # passed",
-    "mutation test on copied resolved_shared_contract.json  # rejected"
+    "CUTS p0 local smoke fixture  # passed",
+    "mutation test on copied bound artifact  # rejected"
   ],
   "failed": 0,
   "skipped": 0,
