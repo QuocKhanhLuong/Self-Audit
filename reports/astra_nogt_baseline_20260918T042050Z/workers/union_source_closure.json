@@ -1,0 +1,201 @@
+{
+  "id": "fd440d7d-2a9f-42e6-bab5-e9ff28ba738f",
+  "ok": true,
+  "result": {
+    "dispatch": {
+      "id": "ctx_cdcc6132dd19",
+      "runId": "run_0e2b48d17d7f",
+      "taskId": "task_f7558b890bc4",
+      "task_id": "task_f7558b890bc4",
+      "contractVersion": 1,
+      "assigneeHandle": "term_3d82e46c-cc18-45dc-8e26-3f46614da9a4",
+      "assigneePaneKey": "1ddd9042-5dfb-431e-8809-1ea6087b1e42:86ea3600-6c9f-4fc9-8998-11ca484f01ce",
+      "processIncarnation": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit@@d99b4a7c:b70827b8-90cc-41c2-966c-360c47013b9f",
+      "capabilityRevokedAt": "2026-09-18T04:27:35.470Z",
+      "retryOfDispatchId": null,
+      "creatorDispatchId": null,
+      "hostScope": {
+        "kind": "local",
+        "hostId": "local"
+      },
+      "status": "failed",
+      "failureCount": 1,
+      "lastFailure": "Terminal closed by operator request",
+      "terminationReason": "operator_close",
+      "depth": 1,
+      "dispatchedAt": "2026-09-18 04:21:23",
+      "completedAt": "2026-09-18T04:27:57.322Z",
+      "createdAt": "2026-09-18 04:21:23",
+      "lastHeartbeatAt": null
+    },
+    "worker": {
+      "dispatchId": "ctx_cdcc6132dd19",
+      "runtimeEpoch": "685fbdf6-0375-42f2-950a-a6e7db3a8ff9",
+      "state": "failed",
+      "stage": "process_exited",
+      "worktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit",
+      "agentTerminalHandle": "term_3d82e46c-cc18-45dc-8e26-3f46614da9a4",
+      "setupState": "not_applicable",
+      "effects": [
+        {
+          "kind": "worktree",
+          "action": "reused",
+          "id": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit"
+        },
+        {
+          "kind": "setup",
+          "action": "not_applicable",
+          "state": "not_applicable"
+        },
+        {
+          "kind": "terminal",
+          "role": "agent",
+          "action": "reused",
+          "id": "term_3d82e46c-cc18-45dc-8e26-3f46614da9a4"
+        },
+        {
+          "kind": "dispatch_input",
+          "role": "agent",
+          "id": "term_3d82e46c-cc18-45dc-8e26-3f46614da9a4",
+          "state": "accepted"
+        }
+      ],
+      "residualResources": [],
+      "startOptions": {
+        "worktree": "current",
+        "mode": {
+          "mode": "terminal",
+          "preferred": "terminal",
+          "reason": "user_default",
+          "detail": "Started a terminal agent worker, the default for new agent tabs in your settings."
+        },
+        "resolvedWorktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit",
+        "name": null,
+        "repo": null,
+        "baseBranch": null,
+        "terminal": "term_3d82e46c-cc18-45dc-8e26-3f46614da9a4",
+        "agent": null,
+        "launch": {
+          "requested": {
+            "agent": null,
+            "model": null,
+            "effort": null
+          },
+          "effective": {
+            "agent": null,
+            "model": null,
+            "effort": null
+          }
+        },
+        "timeoutMs": 60000,
+        "setup": "not_applicable",
+        "setupSource": "existing_worktree"
+      },
+      "lastError": "Terminal closed by operator request",
+      "createdAt": "2026-09-18 04:21:23",
+      "updatedAt": "2026-09-18T04:27:57.322Z"
+    },
+    "projection": {
+      "id": "ctx_cdcc6132dd19",
+      "dispatchId": "ctx_cdcc6132dd19",
+      "taskId": "task_f7558b890bc4",
+      "runId": "run_0e2b48d17d7f",
+      "role": "worker",
+      "parent": null,
+      "provider": null,
+      "host": {
+        "kind": "local",
+        "id": "local"
+      },
+      "workspace": {
+        "id": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit",
+        "kind": "folder_or_worktree"
+      },
+      "stage": {
+        "worker": "failed",
+        "dispatch": "failed",
+        "detail": "process_exited",
+        "activity": "unknown"
+      },
+      "outcome": "failed",
+      "liveness": {
+        "verdict": "exited",
+        "source": "execution_host"
+      },
+      "evidence": {
+        "durable": true,
+        "liveStatus": "unavailable",
+        "lastObservedAt": null
+      },
+      "resource": {
+        "state": "external",
+        "id": "wtr_51067fd0c592",
+        "ownerDispatchId": "ctx_cdcc6132dd19",
+        "releaseState": "not_requested",
+        "terminalState": "retained"
+      },
+      "nextAction": {
+        "kind": "none",
+        "argv": []
+      },
+      "attention": {
+        "categories": [
+          "failure",
+          "interruption"
+        ],
+        "requiresAction": true
+      }
+    },
+    "terminal": {
+      "handle": "term_3d82e46c-cc18-45dc-8e26-3f46614da9a4",
+      "ptyId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit@@d99b4a7c",
+      "incarnationId": "b70827b8-90cc-41c2-966c-360c47013b9f",
+      "orphaned": false,
+      "worktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit",
+      "worktreePath": "/Users/alvinluong/Self-Audit",
+      "branch": "refs/heads/main",
+      "tabId": "1ddd9042-5dfb-431e-8809-1ea6087b1e42",
+      "leafId": "86ea3600-6c9f-4fc9-8998-11ca484f01ce",
+      "title": "OpenCode",
+      "connected": false,
+      "writable": false,
+      "lastOutputAt": 1789705289966,
+      "preview": "                                                                          ┃Error from provider (Console): Upstream request failed: Model is unavailable.                      ┃use you were a worker.                                                    and f the                      erminal with a fresh",
+      "exitCause": {
+        "kind": "operator_close"
+      },
+      "executionHostId": "local",
+      "agentIdentity": "opencode",
+      "paneRuntimeId": -1,
+      "rendererGraphEpoch": 0
+    },
+    "observation": {
+      "status": "exited",
+      "exactWorker": true
+    },
+    "terminalResource": {
+      "id": "wtr_51067fd0c592",
+      "ownershipState": "external",
+      "releaseState": "not_requested",
+      "retainedReason": "external_terminal",
+      "terminalHandle": "term_3d82e46c-cc18-45dc-8e26-3f46614da9a4",
+      "worktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit",
+      "endpointId": "685fbdf6-0375-42f2-950a-a6e7db3a8ff9",
+      "endpointIncarnation": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit@@d99b4a7c:b70827b8-90cc-41c2-966c-360c47013b9f",
+      "originDispatchId": "ctx_cdcc6132dd19",
+      "ownerDispatchId": "ctx_cdcc6132dd19",
+      "releaseRequestedAt": null,
+      "releaseCompletedAt": null,
+      "releaseError": null,
+      "recoveryAttemptCount": 0,
+      "lastRecoveryAt": null,
+      "archive": {
+        "source": null,
+        "status": null
+      }
+    }
+  },
+  "_meta": {
+    "runtimeId": "685fbdf6-0375-42f2-950a-a6e7db3a8ff9"
+  }
+}

@@ -1,0 +1,2430 @@
+{
+  "kind": "real-image bounded leaf profile, not whole training throughput",
+  "device": "cpu",
+  "resolution": 224,
+  "batch_size": 1,
+  "threads": 4,
+  "repeats": 8,
+  "warmup": 1,
+  "models": {
+    "producer": 118865,
+    "student_no_audit": 118644,
+    "student_audited": 118644,
+    "total_trainable": 356153
+  },
+  "discovery_seconds": 0.7734427499817684,
+  "median_seconds": {
+    "data_prepare": 0.0361262084916234,
+    "producer_3forward_backward": 0.17949102097190917,
+    "feature_forward": 0.01996375003363937,
+    "bank_generation": 0.09934685402549803,
+    "audit": 0.3362975209602155,
+    "student_no_audit": 0.06055833352729678,
+    "student_audited": 0.06050616648280993
+  },
+  "rows": [
+    {
+      "unit_id": "acdc:vol-23d919b1c283cffc67a9f40f:t0000:z0000",
+      "warmup": true,
+      "data_prepare": 0.0631339579122141,
+      "producer_3forward_backward": 0.21713891602121294,
+      "feature_forward": 0.019193625077605247,
+      "bank_generation": 0.2867880000267178,
+      "audit": 0.4231247090501711,
+      "student_no_audit": 0.061526875011622906,
+      "student_no_audit_has_valid": true,
+      "student_audited": 0.060062792035751045,
+      "student_audited_has_valid": true,
+      "bank_traces": [
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R7_absent",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "enclosure_table": {
+            "4->5": 0.029696969696969697,
+            "5->4": 0.002606962122373869
+          },
+          "absent_roles": [
+            "RV"
+          ],
+          "assignment": {
+            "0": "BG",
+            "1": "BG",
+            "2": "BG",
+            "3": "BG",
+            "4": "LV",
+            "5": "MYO"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 9821,
+          "prior_violations": {
+            "myo_fragment": 64,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R3_enclosure",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "foreground_group_not_adjacent_to_myo"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0
+          ],
+          "enclosure_fraction": 1.0,
+          "enclosure_table": {
+            "2->1": 1.0,
+            "2->3": 0.0
+          },
+          "drafted_unresolved": {
+            "3": "RV"
+          },
+          "absent_roles": [],
+          "assignment": {
+            "0": "BG",
+            "1": "LV",
+            "2": "MYO",
+            "3": "RV"
+          },
+          "unresolved_groups": [
+            3
+          ],
+          "unresolved_pixels": 137,
+          "prior_violations": {},
+          "diagnostic_prior_penalty": 0.0,
+          "diagnostic_prior_penalty_capped": false,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R7_absent",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "enclosure_table": {
+            "4->5": 0.21256038647342995
+          },
+          "absent_roles": [
+            "RV"
+          ],
+          "assignment": {
+            "0": "BG",
+            "1": "BG",
+            "2": "BG",
+            "3": "BG",
+            "4": "LV",
+            "5": "MYO"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 12253,
+          "prior_violations": {
+            "myo_fragment": 66,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R7_absent",
+            "R8_contour_convention",
+            "semantic_alternative"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "enclosure_table": {
+            "4->5": 0.029696969696969697,
+            "5->4": 0.002606962122373869
+          },
+          "absent_roles": [
+            "RV"
+          ],
+          "assignment": {
+            "0": "BG",
+            "1": "BG",
+            "2": "BG",
+            "3": "BG",
+            "4": "LV",
+            "5": "MYO"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 9821,
+          "prior_violations": {
+            "myo_fragment": 64,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0
+          ]
+        }
+      ],
+      "measured_forward_counts": {
+        "producer": 4,
+        "student_no_audit": 1,
+        "student_audited": 1
+      }
+    },
+    {
+      "unit_id": "acdc:vol-23d919b1c283cffc67a9f40f:t0000:z0000",
+      "warmup": false,
+      "data_prepare": 0.03348254191223532,
+      "producer_3forward_backward": 0.17994537495542318,
+      "feature_forward": 0.02020604198332876,
+      "bank_generation": 0.07777687499765307,
+      "audit": 0.3845132499700412,
+      "student_no_audit": 0.06024625001009554,
+      "student_no_audit_has_valid": true,
+      "student_audited": 0.06036112492438406,
+      "student_audited_has_valid": true,
+      "bank_traces": [
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R7_absent",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "enclosure_table": {
+            "4->5": 0.029696969696969697,
+            "5->4": 0.002606962122373869
+          },
+          "absent_roles": [
+            "RV"
+          ],
+          "assignment": {
+            "0": "BG",
+            "1": "BG",
+            "2": "BG",
+            "3": "BG",
+            "4": "LV",
+            "5": "MYO"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 9821,
+          "prior_violations": {
+            "myo_fragment": 64,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R3_enclosure",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "foreground_group_not_adjacent_to_myo"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0
+          ],
+          "enclosure_fraction": 1.0,
+          "enclosure_table": {
+            "2->1": 1.0,
+            "2->3": 0.0
+          },
+          "drafted_unresolved": {
+            "3": "RV"
+          },
+          "absent_roles": [],
+          "assignment": {
+            "0": "BG",
+            "1": "LV",
+            "2": "MYO",
+            "3": "RV"
+          },
+          "unresolved_groups": [
+            3
+          ],
+          "unresolved_pixels": 137,
+          "prior_violations": {},
+          "diagnostic_prior_penalty": 0.0,
+          "diagnostic_prior_penalty_capped": false,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R7_absent",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "enclosure_table": {
+            "4->5": 0.21256038647342995
+          },
+          "absent_roles": [
+            "RV"
+          ],
+          "assignment": {
+            "0": "BG",
+            "1": "BG",
+            "2": "BG",
+            "3": "BG",
+            "4": "LV",
+            "5": "MYO"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 12253,
+          "prior_violations": {
+            "myo_fragment": 66,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R7_absent",
+            "R8_contour_convention",
+            "semantic_alternative"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "enclosure_table": {
+            "4->5": 0.029696969696969697,
+            "5->4": 0.002606962122373869
+          },
+          "absent_roles": [
+            "RV"
+          ],
+          "assignment": {
+            "0": "BG",
+            "1": "BG",
+            "2": "BG",
+            "3": "BG",
+            "4": "LV",
+            "5": "MYO"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 9821,
+          "prior_violations": {
+            "myo_fragment": 64,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0
+          ]
+        }
+      ],
+      "measured_forward_counts": {
+        "producer": 4,
+        "student_no_audit": 1,
+        "student_audited": 1
+      }
+    },
+    {
+      "unit_id": "acdc:vol-9acd27d611b6b56cf829d172:t0000:z0001",
+      "warmup": false,
+      "data_prepare": 0.039527000044472516,
+      "producer_3forward_backward": 0.18181983404792845,
+      "feature_forward": 0.01977650006301701,
+      "bank_generation": 0.10315662494394928,
+      "audit": 0.06293591705616564,
+      "student_no_audit": 0.06330100004561245,
+      "student_no_audit_has_valid": true,
+      "student_audited": 0.06086075003258884,
+      "student_audited_has_valid": true,
+      "bank_traces": [
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            1,
+            2,
+            3
+          ],
+          "enclosure_table": {
+            "0->4": 0.003356911641290013,
+            "0->5": 0.0,
+            "4->0": 0.09104098657961553,
+            "4->5": 0.0,
+            "5->0": 0.0,
+            "5->4": 0.00011988970147464332
+          },
+          "absent_roles": [],
+          "assignment": {
+            "0": "RV",
+            "1": "BG",
+            "2": "BG",
+            "3": "BG",
+            "4": "LV",
+            "5": "MYO"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 12618,
+          "prior_violations": {
+            "myo_fragment": 57,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R3_enclosure",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "foreground_group_not_adjacent_to_myo"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0
+          ],
+          "enclosure_fraction": 1.0,
+          "enclosure_table": {
+            "2->1": 1.0,
+            "2->3": 0.0
+          },
+          "drafted_unresolved": {
+            "3": "RV"
+          },
+          "absent_roles": [],
+          "assignment": {
+            "0": "BG",
+            "1": "LV",
+            "2": "MYO",
+            "3": "RV"
+          },
+          "unresolved_groups": [
+            3
+          ],
+          "unresolved_pixels": 208,
+          "prior_violations": {},
+          "diagnostic_prior_penalty": 0.0,
+          "diagnostic_prior_penalty_capped": false,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            1,
+            2,
+            3
+          ],
+          "enclosure_table": {
+            "4->0": 0.16554578375581996,
+            "4->5": 0.0030075187969924814,
+            "5->0": 0.0,
+            "5->4": 0.0
+          },
+          "absent_roles": [],
+          "assignment": {
+            "0": "RV",
+            "1": "BG",
+            "2": "BG",
+            "3": "BG",
+            "4": "LV",
+            "5": "MYO"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 16149,
+          "prior_violations": {
+            "myo_fragment": 54,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R8_contour_convention",
+            "semantic_alternative"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            1,
+            2,
+            3
+          ],
+          "enclosure_table": {
+            "0->4": 0.003356911641290013,
+            "0->5": 0.0,
+            "4->0": 0.09104098657961553,
+            "4->5": 0.0,
+            "5->0": 0.0,
+            "5->4": 0.00011988970147464332
+          },
+          "absent_roles": [],
+          "assignment": {
+            "0": "RV",
+            "1": "BG",
+            "2": "BG",
+            "3": "BG",
+            "4": "LV",
+            "5": "MYO"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 12618,
+          "prior_violations": {
+            "myo_fragment": 57,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      ],
+      "measured_forward_counts": {
+        "producer": 4,
+        "student_no_audit": 1,
+        "student_audited": 1
+      }
+    },
+    {
+      "unit_id": "acdc:vol-650dabe815d95d4b180347f5:t0000:z0007",
+      "warmup": false,
+      "data_prepare": 0.03800491604488343,
+      "producer_3forward_backward": 0.1881561669288203,
+      "feature_forward": 0.019079290912486613,
+      "bank_generation": 0.08860400004778057,
+      "audit": 0.2626074589788914,
+      "student_no_audit": 0.06004845805000514,
+      "student_no_audit_has_valid": true,
+      "student_audited": 0.059613208984956145,
+      "student_audited_has_valid": true,
+      "bank_traces": [
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0,
+            1,
+            3
+          ],
+          "enclosure_table": {
+            "2->4": 0.00598380851812742,
+            "2->5": 0.0,
+            "4->2": 0.00013345789403443215,
+            "4->5": 0.004395604395604396,
+            "5->2": 0.0,
+            "5->4": 0.00035198873636043646
+          },
+          "absent_roles": [],
+          "assignment": {
+            "0": "BG",
+            "1": "BG",
+            "2": "MYO",
+            "3": "BG",
+            "4": "LV",
+            "5": "RV"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 12154,
+          "prior_violations": {
+            "myo_fragment": 242,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R3_enclosure",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "foreground_group_not_adjacent_to_myo"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0
+          ],
+          "enclosure_fraction": 1.0,
+          "enclosure_table": {
+            "1->2": 0.005813953488372093,
+            "1->3": 0.0,
+            "2->1": 1.0,
+            "2->3": 0.0,
+            "3->1": 0.0,
+            "3->2": 0.0
+          },
+          "drafted_unresolved": {
+            "3": "RV"
+          },
+          "absent_roles": [],
+          "assignment": {
+            "0": "BG",
+            "1": "LV",
+            "2": "MYO",
+            "3": "RV"
+          },
+          "unresolved_groups": [
+            3
+          ],
+          "unresolved_pixels": 158,
+          "prior_violations": {
+            "myo_fragment": 1
+          },
+          "diagnostic_prior_penalty": 0.01,
+          "diagnostic_prior_penalty_capped": false,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R7_absent",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "enclosure_table": {
+            "4->5": 0.004561003420752566,
+            "5->4": 0.0004103405826836274
+          },
+          "absent_roles": [
+            "RV"
+          ],
+          "assignment": {
+            "0": "BG",
+            "1": "BG",
+            "2": "BG",
+            "3": "BG",
+            "4": "MYO",
+            "5": "LV"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 4191,
+          "prior_violations": {
+            "myo_fragment": 91,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R8_contour_convention",
+            "semantic_alternative"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0,
+            1,
+            3
+          ],
+          "enclosure_table": {
+            "2->4": 0.00598380851812742,
+            "2->5": 0.0,
+            "4->2": 0.00013345789403443215,
+            "4->5": 0.004395604395604396,
+            "5->2": 0.0,
+            "5->4": 0.00035198873636043646
+          },
+          "absent_roles": [],
+          "assignment": {
+            "0": "BG",
+            "1": "BG",
+            "2": "MYO",
+            "3": "BG",
+            "4": "LV",
+            "5": "RV"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 12154,
+          "prior_violations": {
+            "myo_fragment": 242,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      ],
+      "measured_forward_counts": {
+        "producer": 4,
+        "student_no_audit": 1,
+        "student_audited": 1
+      }
+    },
+    {
+      "unit_id": "acdc:vol-cfc0db8e142643005cb0135d:t0000:z0004",
+      "warmup": false,
+      "data_prepare": 0.03663324995432049,
+      "producer_3forward_backward": 0.17221304099075496,
+      "feature_forward": 0.019100290955975652,
+      "bank_generation": 0.07844516600016505,
+      "audit": 0.28808179195038974,
+      "student_no_audit": 0.06001725001260638,
+      "student_no_audit_has_valid": true,
+      "student_audited": 0.05934841593261808,
+      "student_audited_has_valid": true,
+      "bank_traces": [
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R7_absent",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0,
+            1,
+            2,
+            4
+          ],
+          "enclosure_table": {
+            "3->5": 0.0037064492216456633,
+            "5->3": 0.0004730368968779565
+          },
+          "absent_roles": [
+            "RV"
+          ],
+          "assignment": {
+            "0": "BG",
+            "1": "BG",
+            "2": "BG",
+            "3": "LV",
+            "4": "BG",
+            "5": "MYO"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 4812,
+          "prior_violations": {
+            "myo_fragment": 78,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R3_enclosure",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "foreground_group_not_adjacent_to_myo"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0
+          ],
+          "enclosure_fraction": 1.0,
+          "enclosure_table": {
+            "2->1": 1.0,
+            "2->3": 0.0
+          },
+          "drafted_unresolved": {
+            "3": "RV"
+          },
+          "absent_roles": [],
+          "assignment": {
+            "0": "BG",
+            "1": "LV",
+            "2": "MYO",
+            "3": "RV"
+          },
+          "unresolved_groups": [
+            3
+          ],
+          "unresolved_pixels": 210,
+          "prior_violations": {},
+          "diagnostic_prior_penalty": 0.0,
+          "diagnostic_prior_penalty_capped": false,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R7_absent",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0,
+            1,
+            2,
+            4
+          ],
+          "enclosure_table": {
+            "5->3": 0.026622296173044926
+          },
+          "absent_roles": [
+            "RV"
+          ],
+          "assignment": {
+            "0": "BG",
+            "1": "BG",
+            "2": "BG",
+            "3": "LV",
+            "4": "BG",
+            "5": "MYO"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 6255,
+          "prior_violations": {
+            "myo_fragment": 34,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R7_absent",
+            "R8_contour_convention",
+            "semantic_alternative"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0,
+            1,
+            2,
+            4
+          ],
+          "enclosure_table": {
+            "3->5": 0.0037064492216456633,
+            "5->3": 0.0004730368968779565
+          },
+          "absent_roles": [
+            "RV"
+          ],
+          "assignment": {
+            "0": "BG",
+            "1": "BG",
+            "2": "BG",
+            "3": "LV",
+            "4": "BG",
+            "5": "MYO"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 4812,
+          "prior_violations": {
+            "myo_fragment": 78,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0
+          ]
+        }
+      ],
+      "measured_forward_counts": {
+        "producer": 4,
+        "student_no_audit": 1,
+        "student_audited": 1
+      }
+    },
+    {
+      "unit_id": "acdc:vol-35584d9b4ebcf45c2af66da0:t0000:z0008",
+      "warmup": false,
+      "data_prepare": 0.03454974992200732,
+      "producer_3forward_backward": 0.17292833304964006,
+      "feature_forward": 0.022521665901876986,
+      "bank_generation": 0.10390141606330872,
+      "audit": 0.4481561250286177,
+      "student_no_audit": 0.060870417044498026,
+      "student_no_audit_has_valid": true,
+      "student_audited": 0.05974283302202821,
+      "student_audited_has_valid": true,
+      "bank_traces": [
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            1,
+            3,
+            4
+          ],
+          "enclosure_table": {
+            "0->2": 0.002258355916892502,
+            "0->5": 0.0,
+            "2->0": 0.014794889038332213,
+            "2->5": 0.0,
+            "5->0": 0.0020174848688634837,
+            "5->2": 0.00015055706112616682
+          },
+          "absent_roles": [],
+          "assignment": {
+            "0": "MYO",
+            "1": "BG",
+            "2": "LV",
+            "3": "BG",
+            "4": "BG",
+            "5": "RV"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 11137,
+          "prior_violations": {
+            "myo_fragment": 128,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R3_enclosure",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "foreground_group_not_adjacent_to_myo"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0
+          ],
+          "enclosure_fraction": 1.0,
+          "enclosure_table": {
+            "2->1": 1.0,
+            "2->3": 0.0
+          },
+          "drafted_unresolved": {
+            "3": "RV"
+          },
+          "absent_roles": [],
+          "assignment": {
+            "0": "BG",
+            "1": "LV",
+            "2": "MYO",
+            "3": "RV"
+          },
+          "unresolved_groups": [
+            3
+          ],
+          "unresolved_pixels": 109,
+          "prior_violations": {},
+          "diagnostic_prior_penalty": 0.0,
+          "diagnostic_prior_penalty_capped": false,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            1,
+            3,
+            4
+          ],
+          "enclosure_table": {
+            "0->2": 0.0,
+            "0->5": 0.0,
+            "2->0": 0.008389932081502197,
+            "2->5": 0.010638297872340425,
+            "5->0": 0.0023971234518577705,
+            "5->2": 0.0004769627015167414
+          },
+          "absent_roles": [],
+          "assignment": {
+            "0": "MYO",
+            "1": "BG",
+            "2": "LV",
+            "3": "BG",
+            "4": "BG",
+            "5": "RV"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 14208,
+          "prior_violations": {
+            "myo_fragment": 117,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R8_contour_convention",
+            "semantic_alternative"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            1,
+            3,
+            4
+          ],
+          "enclosure_table": {
+            "0->2": 0.002258355916892502,
+            "0->5": 0.0,
+            "2->0": 0.014794889038332213,
+            "2->5": 0.0,
+            "5->0": 0.0020174848688634837,
+            "5->2": 0.00015055706112616682
+          },
+          "absent_roles": [],
+          "assignment": {
+            "0": "MYO",
+            "1": "BG",
+            "2": "LV",
+            "3": "BG",
+            "4": "BG",
+            "5": "RV"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 11137,
+          "prior_violations": {
+            "myo_fragment": 128,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      ],
+      "measured_forward_counts": {
+        "producer": 4,
+        "student_no_audit": 1,
+        "student_audited": 1
+      }
+    },
+    {
+      "unit_id": "acdc:vol-e439ab46f77836371308dec7:t0000:z0009",
+      "warmup": false,
+      "data_prepare": 0.03561916702892631,
+      "producer_3forward_backward": 0.1796837089350447,
+      "feature_forward": 0.020524083985947073,
+      "bank_generation": 0.10972904192749411,
+      "audit": 0.06794566591270268,
+      "student_no_audit": 0.05983375001233071,
+      "student_no_audit_has_valid": true,
+      "student_audited": 0.060651208041235805,
+      "student_audited_has_valid": true,
+      "bank_traces": [
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0,
+            1,
+            2
+          ],
+          "enclosure_table": {
+            "3->4": 0.016707507239919803,
+            "3->5": 0.09753954305799649,
+            "4->3": 0.0010416666666666667,
+            "4->5": 0.0,
+            "5->3": 0.0006944444444444445,
+            "5->4": 0.00022276676319893073
+          },
+          "absent_roles": [],
+          "assignment": {
+            "0": "BG",
+            "1": "BG",
+            "2": "BG",
+            "3": "MYO",
+            "4": "LV",
+            "5": "RV"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 12525,
+          "prior_violations": {
+            "myo_fragment": 237,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R3_enclosure",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "foreground_group_not_adjacent_to_myo"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0
+          ],
+          "enclosure_fraction": 1.0,
+          "enclosure_table": {
+            "2->1": 1.0,
+            "2->3": 0.0
+          },
+          "drafted_unresolved": {
+            "3": "RV"
+          },
+          "absent_roles": [],
+          "assignment": {
+            "0": "BG",
+            "1": "LV",
+            "2": "MYO",
+            "3": "RV"
+          },
+          "unresolved_groups": [
+            3
+          ],
+          "unresolved_pixels": 146,
+          "prior_violations": {},
+          "diagnostic_prior_penalty": 0.0,
+          "diagnostic_prior_penalty_capped": false,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0,
+            1,
+            2
+          ],
+          "enclosure_table": {
+            "3->4": 0.02119013062409289,
+            "3->5": 0.11865569272976681,
+            "4->3": 0.0,
+            "4->5": 0.0
+          },
+          "absent_roles": [],
+          "assignment": {
+            "0": "BG",
+            "1": "BG",
+            "2": "BG",
+            "3": "LV",
+            "4": "MYO",
+            "5": "RV"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 14747,
+          "prior_violations": {
+            "myo_fragment": 169,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R8_contour_convention",
+            "semantic_alternative"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0,
+            1,
+            2
+          ],
+          "enclosure_table": {
+            "3->4": 0.016707507239919803,
+            "3->5": 0.09753954305799649,
+            "4->3": 0.0010416666666666667,
+            "4->5": 0.0,
+            "5->3": 0.0006944444444444445,
+            "5->4": 0.00022276676319893073
+          },
+          "absent_roles": [],
+          "assignment": {
+            "0": "BG",
+            "1": "BG",
+            "2": "BG",
+            "3": "MYO",
+            "4": "LV",
+            "5": "RV"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 12525,
+          "prior_violations": {
+            "myo_fragment": 237,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      ],
+      "measured_forward_counts": {
+        "producer": 4,
+        "student_no_audit": 1,
+        "student_audited": 1
+      }
+    },
+    {
+      "unit_id": "acdc:vol-1a621ff6e4fb0b9df1776861:t0000:z0013",
+      "warmup": false,
+      "data_prepare": 0.03369525005109608,
+      "producer_3forward_backward": 0.1776052499189973,
+      "feature_forward": 0.019852249999530613,
+      "bank_generation": 0.10107508301734924,
+      "audit": 0.43920954200439155,
+      "student_no_audit": 0.06521475000772625,
+      "student_no_audit_has_valid": true,
+      "student_audited": 0.06257083301898092,
+      "student_audited_has_valid": true,
+      "bank_traces": [
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            1,
+            2,
+            3
+          ],
+          "enclosure_table": {
+            "0->4": 0.0038245792962774095,
+            "0->5": 0.0,
+            "4->0": 0.033498397902709004,
+            "4->5": 0.026479106330161355,
+            "5->0": 0.0014564520827264782,
+            "5->4": 0.0
+          },
+          "absent_roles": [],
+          "assignment": {
+            "0": "LV",
+            "1": "BG",
+            "2": "BG",
+            "3": "BG",
+            "4": "MYO",
+            "5": "RV"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 9772,
+          "prior_violations": {
+            "myo_fragment": 146,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R3_enclosure",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "foreground_group_not_adjacent_to_myo"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0
+          ],
+          "enclosure_fraction": 1.0,
+          "enclosure_table": {
+            "2->1": 1.0,
+            "2->3": 0.0
+          },
+          "drafted_unresolved": {
+            "3": "RV"
+          },
+          "absent_roles": [],
+          "assignment": {
+            "0": "BG",
+            "1": "LV",
+            "2": "MYO",
+            "3": "RV"
+          },
+          "unresolved_groups": [
+            3
+          ],
+          "unresolved_pixels": 458,
+          "prior_violations": {},
+          "diagnostic_prior_penalty": 0.0,
+          "diagnostic_prior_penalty_capped": false,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            1,
+            2,
+            3
+          ],
+          "enclosure_table": {
+            "0->4": 0.002172024326672459,
+            "0->5": 0.0,
+            "4->0": 0.022172949002217297,
+            "4->5": 0.026207605344295993,
+            "5->0": 0.0018477457501847746,
+            "5->4": 0.0
+          },
+          "absent_roles": [],
+          "assignment": {
+            "0": "LV",
+            "1": "BG",
+            "2": "BG",
+            "3": "BG",
+            "4": "MYO",
+            "5": "RV"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 11558,
+          "prior_violations": {
+            "myo_fragment": 64,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R8_contour_convention",
+            "semantic_alternative"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            1,
+            2,
+            3
+          ],
+          "enclosure_table": {
+            "0->4": 0.0038245792962774095,
+            "0->5": 0.0,
+            "4->0": 0.033498397902709004,
+            "4->5": 0.026479106330161355,
+            "5->0": 0.0014564520827264782,
+            "5->4": 0.0
+          },
+          "absent_roles": [],
+          "assignment": {
+            "0": "LV",
+            "1": "BG",
+            "2": "BG",
+            "3": "BG",
+            "4": "MYO",
+            "5": "RV"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 9772,
+          "prior_violations": {
+            "myo_fragment": 146,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      ],
+      "measured_forward_counts": {
+        "producer": 4,
+        "student_no_audit": 1,
+        "student_audited": 1
+      }
+    },
+    {
+      "unit_id": "acdc:vol-dadf9fe10f19a2bda2e4199b:t0000:z0007",
+      "warmup": false,
+      "data_prepare": 0.039016874972730875,
+      "producer_3forward_backward": 0.17929833300877362,
+      "feature_forward": 0.02007525006774813,
+      "bank_generation": 0.09761862503364682,
+      "audit": 0.5440868749283254,
+      "student_no_audit": 0.06242137507069856,
+      "student_no_audit_has_valid": true,
+      "student_audited": 0.0633087499300018,
+      "student_audited_has_valid": true,
+      "bank_traces": [
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0,
+            2,
+            3
+          ],
+          "enclosure_table": {
+            "1->4": 0.0005213764337851929,
+            "1->5": 0.0,
+            "4->1": 0.018884497145366712,
+            "4->5": 0.08925399644760214,
+            "5->1": 0.0,
+            "5->4": 0.0036496350364963502
+          },
+          "absent_roles": [],
+          "assignment": {
+            "0": "BG",
+            "1": "MYO",
+            "2": "BG",
+            "3": "BG",
+            "4": "LV",
+            "5": "RV"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 12560,
+          "prior_violations": {
+            "myo_fragment": 223,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R3_enclosure",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "foreground_group_not_adjacent_to_myo"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0
+          ],
+          "enclosure_fraction": 1.0,
+          "enclosure_table": {
+            "2->1": 1.0,
+            "2->3": 0.0
+          },
+          "drafted_unresolved": {
+            "3": "RV"
+          },
+          "absent_roles": [],
+          "assignment": {
+            "0": "BG",
+            "1": "LV",
+            "2": "MYO",
+            "3": "RV"
+          },
+          "unresolved_groups": [
+            3
+          ],
+          "unresolved_pixels": 163,
+          "prior_violations": {},
+          "diagnostic_prior_penalty": 0.0,
+          "diagnostic_prior_penalty_capped": false,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R8_contour_convention"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0,
+            2,
+            3
+          ],
+          "enclosure_table": {
+            "1->4": 0.0,
+            "1->5": 0.0,
+            "4->1": 0.018999518999519,
+            "4->5": 0.09006433166547534,
+            "5->1": 0.0,
+            "5->4": 0.002907652942544778
+          },
+          "absent_roles": [],
+          "assignment": {
+            "0": "BG",
+            "1": "MYO",
+            "2": "BG",
+            "3": "BG",
+            "4": "LV",
+            "5": "RV"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 14155,
+          "prior_violations": {
+            "myo_fragment": 222,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "rules_fired": [
+            "R1_background",
+            "R5_intensity_prior",
+            "R8_contour_convention",
+            "semantic_alternative"
+          ],
+          "contour_convention": "LV = cavity/blood pool including papillary muscle pixels; MYO = surrounding wall, cavity excluded; RV = right ventricular cavity",
+          "orientation_available": false,
+          "orientation_rule_executed": false,
+          "orientation_resolution": "unresolved_metadata_unavailable",
+          "notes": [
+            "orientation_metadata_absent_left_right_unresolved"
+          ],
+          "missing_orientation_keys": [
+            "view",
+            "inplane_left_axis",
+            "geometry_valid"
+          ],
+          "unusable_orientation_keys": [],
+          "bg_rule": "border_ring_share",
+          "bg_groups": [
+            0,
+            2,
+            3
+          ],
+          "enclosure_table": {
+            "1->4": 0.0005213764337851929,
+            "1->5": 0.0,
+            "4->1": 0.018884497145366712,
+            "4->5": 0.08925399644760214,
+            "5->1": 0.0,
+            "5->4": 0.0036496350364963502
+          },
+          "absent_roles": [],
+          "assignment": {
+            "0": "BG",
+            "1": "MYO",
+            "2": "BG",
+            "3": "BG",
+            "4": "LV",
+            "5": "RV"
+          },
+          "unresolved_groups": [],
+          "unresolved_pixels": 12560,
+          "prior_violations": {
+            "myo_fragment": 223,
+            "lv_not_enclosed_by_myo": 1
+          },
+          "diagnostic_prior_penalty": 0.1,
+          "diagnostic_prior_penalty_capped": true,
+          "diagnostic_prior_penalty_weights": {
+            "lv_not_enclosed_by_myo": 0.02,
+            "myo_fragment": 0.01,
+            "rv_enclosed_by_myo": 0.02
+          },
+          "primary_prior_penalty": 0.0,
+          "prior_penalty_scored": false,
+          "prior_penalty_shared_across_alternatives": true,
+          "prior_penalty_tied_values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      ],
+      "measured_forward_counts": {
+        "producer": 4,
+        "student_no_audit": 1,
+        "student_audited": 1
+      }
+    }
+  ],
+  "worker_ipc": "NOT MEASURED: workers=0",
+  "optimizer_export": "NOT MEASURED in this leaf profile",
+  "max_rss_bytes_macos": 1000554496
+}

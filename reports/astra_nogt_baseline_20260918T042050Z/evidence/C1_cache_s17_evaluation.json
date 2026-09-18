@@ -1,0 +1,6532 @@
+{
+  "evaluated_unix": 1789707499.849878,
+  "frozen_manifest_sha256": "ce369b8fe76169bc8f7f4f896b5d6d119e18665b87a05f5d203a0e3149e8a810",
+  "prediction_hashes_verified_before_first_reference": true,
+  "gt_read_only_evaluator": true,
+  "gt_mapping_exported": false,
+  "checkpoint_selected_using_gt": false,
+  "unit_of_independence": "patient",
+  "set_status": "development, NOT untouched test",
+  "reference_reads": [
+    "/tmp/astra_event_acdc_training/training/patient004/patient004_frame01_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient004/patient004_frame15_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient005/patient005_frame01_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient005/patient005_frame13_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient012/patient012_frame01_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient012/patient012_frame13_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient014/patient014_frame01_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient014/patient014_frame13_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient015/patient015_frame01_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient015/patient015_frame10_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient018/patient018_frame01_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient018/patient018_frame10_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient028/patient028_frame01_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient028/patient028_frame09_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient029/patient029_frame01_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient029/patient029_frame12_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient030/patient030_frame01_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient030/patient030_frame12_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient032/patient032_frame01_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient032/patient032_frame12_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient036/patient036_frame01_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient036/patient036_frame12_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient055/patient055_frame01_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient055/patient055_frame10_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient065/patient065_frame01_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient065/patient065_frame14_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient070/patient070_frame01_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient070/patient070_frame10_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient076/patient076_frame01_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient076/patient076_frame12_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient082/patient082_frame01_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient082/patient082_frame07_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient087/patient087_frame01_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient087/patient087_frame10_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient089/patient089_frame01_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient089/patient089_frame10_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient095/patient095_frame01_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient095/patient095_frame12_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient098/patient098_frame01_gt.nii",
+    "/tmp/astra_event_acdc_training/training/patient098/patient098_frame09_gt.nii"
+  ],
+  "summary": [
+    {
+      "step": "step_0000",
+      "patients": 20,
+      "foreground_mean_dice": 0.0,
+      "class_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "partition_ari_volume_mean": 5.2522243172448175e-17,
+      "oracle_macro4_dice_volume_mean_ANALYSIS_ONLY": 0.24492619726269296
+    },
+    {
+      "step": "step_0128",
+      "patients": 20,
+      "foreground_mean_dice": 0.06211590284914411,
+      "class_dice": [
+        0.8349598964204876,
+        0.0005714841298985515,
+        0.039269822499025185,
+        0.14650640191850858
+      ],
+      "class_coverage": [
+        0.9313358247624521,
+        0.8305473679873584,
+        0.9148473839473759,
+        0.828041500757702
+      ],
+      "partition_ari_volume_mean": 0.026581839097779576,
+      "oracle_macro4_dice_volume_mean_ANALYSIS_ONLY": 0.2142052200145983
+    },
+    {
+      "step": "step_0256",
+      "patients": 20,
+      "foreground_mean_dice": 0.027205604476192337,
+      "class_dice": [
+        0.8159894655877407,
+        0.0008440605713096237,
+        0.017923903837147294,
+        0.0628488490201201
+      ],
+      "class_coverage": [
+        0.744121392455944,
+        0.3243886536680576,
+        0.6906132081646319,
+        0.2744165730244769
+      ],
+      "partition_ari_volume_mean": 0.022646294727102077,
+      "oracle_macro4_dice_volume_mean_ANALYSIS_ONLY": 0.2042400165592575
+    },
+    {
+      "step": "step_0512",
+      "patients": 20,
+      "foreground_mean_dice": 0.016868415810829283,
+      "class_dice": [
+        0.79662657290082,
+        0.0009226737759697427,
+        0.011513698781520646,
+        0.03816887487499748
+      ],
+      "class_coverage": [
+        0.7050937872105785,
+        0.20632375428106223,
+        0.5793998992713842,
+        0.1898981359424027
+      ],
+      "partition_ari_volume_mean": 0.02340104290028317,
+      "oracle_macro4_dice_volume_mean_ANALYSIS_ONLY": 0.20267624650545474
+    },
+    {
+      "step": "step_0768",
+      "patients": 20,
+      "foreground_mean_dice": 0.029719758141756352,
+      "class_dice": [
+        0.7943746951189796,
+        0.001053364704127292,
+        0.02498580652885602,
+        0.06312010319228575
+      ],
+      "class_coverage": [
+        0.7187194520482669,
+        0.2690065662283476,
+        0.6046970642257207,
+        0.24951281226575692
+      ],
+      "partition_ari_volume_mean": 0.023519459694429878,
+      "oracle_macro4_dice_volume_mean_ANALYSIS_ONLY": 0.2028996968100058
+    },
+    {
+      "step": "step_1024",
+      "patients": 20,
+      "foreground_mean_dice": 0.021455439650828714,
+      "class_dice": [
+        0.7999569846589644,
+        0.0005603591490357764,
+        0.019112875761486216,
+        0.044693084041964155
+      ],
+      "class_coverage": [
+        0.703826382917295,
+        0.19699792878018302,
+        0.6005485299087524,
+        0.17596731600803173
+      ],
+      "partition_ari_volume_mean": 0.021123580681352824,
+      "oracle_macro4_dice_volume_mean_ANALYSIS_ONLY": 0.19869790915649943
+    }
+  ],
+  "patients": [
+    {
+      "step": "step_0000",
+      "patient": "patient004",
+      "class_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "class_coverage": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient005",
+      "class_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "class_coverage": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient012",
+      "class_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "class_coverage": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient014",
+      "class_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "class_coverage": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient015",
+      "class_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "class_coverage": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient018",
+      "class_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "class_coverage": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient028",
+      "class_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "class_coverage": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient029",
+      "class_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "class_coverage": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient030",
+      "class_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "class_coverage": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient032",
+      "class_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "class_coverage": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient036",
+      "class_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "class_coverage": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient055",
+      "class_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "class_coverage": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient065",
+      "class_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "class_coverage": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient070",
+      "class_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "class_coverage": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient076",
+      "class_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "class_coverage": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient082",
+      "class_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "class_coverage": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient087",
+      "class_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "class_coverage": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient089",
+      "class_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "class_coverage": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient095",
+      "class_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "class_coverage": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient098",
+      "class_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "class_coverage": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient004",
+      "class_dice": [
+        0.8077246661814879,
+        0.0,
+        0.0021448639068746412,
+        0.1020780167699599
+      ],
+      "foreground_mean_dice": 0.03474096022561151,
+      "conditional_dice_known_pixels_ONLY": [
+        0.8549505302090789,
+        0.0,
+        0.0021896572107056762,
+        0.10852821037776166
+      ],
+      "class_coverage": [
+        0.9055585608402482,
+        0.5092084639498433,
+        0.7788482473328979,
+        0.7561274979862682
+      ]
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient005",
+      "class_dice": [
+        0.9061042422447619,
+        0.0,
+        0.08696220206259646,
+        0.41549627207649054
+      ],
+      "foreground_mean_dice": 0.16748615804636233,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9300585303916328,
+        0.0,
+        0.08738533239247091,
+        0.41781453159638327
+      ],
+      "class_coverage": [
+        0.9520880596501027,
+        0.9921711057304278,
+        0.9729581832276893,
+        0.9827937166340208
+      ]
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient012",
+      "class_dice": [
+        0.7392279095812049,
+        0.0029735013388970115,
+        0.055050711212987095,
+        0.17787193513724725
+      ],
+      "foreground_mean_dice": 0.07863204922971045,
+      "conditional_dice_known_pixels_ONLY": [
+        0.7392279095812049,
+        0.0029735013388970115,
+        0.055050711212987095,
+        0.17787193513724725
+      ],
+      "class_coverage": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient014",
+      "class_dice": [
+        0.8591428572975601,
+        0.0,
+        0.01806655961212636,
+        0.3583644144995789
+      ],
+      "foreground_mean_dice": 0.12547699137056842,
+      "conditional_dice_known_pixels_ONLY": [
+        0.8591428572975601,
+        0.0,
+        0.01806655961212636,
+        0.3583644144995789
+      ],
+      "class_coverage": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient015",
+      "class_dice": [
+        0.820934443161796,
+        0.0,
+        0.0382421952674488,
+        0.11643202137498715
+      ],
+      "foreground_mean_dice": 0.051558072214145316,
+      "conditional_dice_known_pixels_ONLY": [
+        0.855929309828222,
+        0.0,
+        0.038247366913800235,
+        0.12014118217347836
+      ],
+      "class_coverage": [
+        0.9294982540359377,
+        0.7744703965236285,
+        0.9987383108208402,
+        0.768417575156921
+      ]
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient018",
+      "class_dice": [
+        0.8632171277813301,
+        0.0,
+        0.04764601502623929,
+        0.3249303992982724
+      ],
+      "foreground_mean_dice": 0.12419213810817055,
+      "conditional_dice_known_pixels_ONLY": [
+        0.8632171277813301,
+        0.0,
+        0.04764601502623929,
+        0.3249303992982724
+      ],
+      "class_coverage": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient028",
+      "class_dice": [
+        0.8938792544729658,
+        0.0,
+        0.09599899232547887,
+        0.193632382530477
+      ],
+      "foreground_mean_dice": 0.09654379161865195,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9409712459271266,
+        0.0,
+        0.0966967239113689,
+        0.19417245267343183
+      ],
+      "class_coverage": [
+        0.9085024465954576,
+        1.0,
+        0.9528568069597931,
+        0.9856663616956389
+      ]
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient029",
+      "class_dice": [
+        0.9149550653761112,
+        0.0,
+        0.012404232032105071,
+        0.15300149734561458
+      ],
+      "foreground_mean_dice": 0.055135243125906556,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9227034690632164,
+        0.0,
+        0.012405707894757716,
+        0.15807237952372022
+      ],
+      "class_coverage": [
+        0.984159066097348,
+        0.8937611012433393,
+        0.9992832568807339,
+        0.857588881055494
+      ]
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient030",
+      "class_dice": [
+        0.8630539947966284,
+        0.0,
+        0.00706090026478376,
+        0.023159286186384666
+      ],
+      "foreground_mean_dice": 0.010073395483722809,
+      "conditional_dice_known_pixels_ONLY": [
+        0.8732766024624035,
+        0.0,
+        0.00706090026478376,
+        0.02342715785251053
+      ],
+      "class_coverage": [
+        0.9790814640297931,
+        0.8068862275449101,
+        1.0,
+        0.8109289617486338
+      ]
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient032",
+      "class_dice": [
+        0.7486511923583391,
+        0.0,
+        0.01075858763582244,
+        0.037394775486566424
+      ],
+      "foreground_mean_dice": 0.016051121040796288,
+      "conditional_dice_known_pixels_ONLY": [
+        0.7486511923583391,
+        0.0,
+        0.01075858763582244,
+        0.037394775486566424
+      ],
+      "class_coverage": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient036",
+      "class_dice": [
+        0.8011235370611184,
+        0.0,
+        0.03238338006627581,
+        0.051035007334697645
+      ],
+      "foreground_mean_dice": 0.02780612913365782,
+      "conditional_dice_known_pixels_ONLY": [
+        0.8601983984844208,
+        0.0,
+        0.03298746351748564,
+        0.05315025603787286
+      ],
+      "class_coverage": [
+        0.8839173299883943,
+        0.3739599203093871,
+        0.8670319093803213,
+        0.5453134698944755
+      ]
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient055",
+      "class_dice": [
+        0.7835533083284822,
+        0.0066603923839861,
+        0.10572932208447494,
+        0.1723849854521361
+      ],
+      "foreground_mean_dice": 0.09492489997353237,
+      "conditional_dice_known_pixels_ONLY": [
+        0.8536325608495855,
+        0.006711409395973154,
+        0.1064040350266522,
+        0.176049190214913
+      ],
+      "class_coverage": [
+        0.8645566696217863,
+        0.9600380589914367,
+        0.9220313542361575,
+        0.8773552877270413
+      ]
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient065",
+      "class_dice": [
+        0.7380096318916922,
+        0.0,
+        0.04204873511578319,
+        0.08249496981891348
+      ],
+      "foreground_mean_dice": 0.04151456831156556,
+      "conditional_dice_known_pixels_ONLY": [
+        0.819236071534926,
+        0.0,
+        0.04254336902288748,
+        0.08422974862327731
+      ],
+      "class_coverage": [
+        0.8426234414643603,
+        0.8016177096636867,
+        0.7336683417085427,
+        0.734557896632451
+      ]
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient070",
+      "class_dice": [
+        0.8982124405958474,
+        0.0,
+        0.0,
+        0.004915102770330653
+      ],
+      "foreground_mean_dice": 0.0016383675901102176,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9650950700555382,
+        0.0,
+        0.0,
+        0.005480817140009965
+      ],
+      "class_coverage": [
+        0.8713769251666562,
+        0.8174357103775306,
+        0.9754678408554804,
+        0.7252725470763132
+      ]
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient076",
+      "class_dice": [
+        0.6766170057079749,
+        0.0017957888750879188,
+        0.03817609870812082,
+        0.11754816112084063
+      ],
+      "foreground_mean_dice": 0.05250668290134979,
+      "conditional_dice_known_pixels_ONLY": [
+        0.8941201459065071,
+        0.0019914698707204142,
+        0.04183680299886204,
+        0.14710265626369773
+      ],
+      "class_coverage": [
+        0.6317657158274264,
+        0.4050919633958503,
+        0.4012539184952978,
+        0.34023464458247066
+      ]
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient082",
+      "class_dice": [
+        0.921451466622354,
+        0.0,
+        0.015893145360519122,
+        0.10626003210272873
+      ],
+      "foreground_mean_dice": 0.04071772582108262,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9321015282295139,
+        0.0,
+        0.015932637140380568,
+        0.11521058127392969
+      ],
+      "class_coverage": [
+        0.9783787469940226,
+        0.786401632970451,
+        0.979062326099054,
+        0.778439002059968
+      ]
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient087",
+      "class_dice": [
+        0.9196618161436464,
+        0.0,
+        0.00684674041456342,
+        0.1518410560525346
+      ],
+      "foreground_mean_dice": 0.05289593215569934,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9327009983999904,
+        0.0,
+        0.006854562316035644,
+        0.16646464646464645
+      ],
+      "class_coverage": [
+        0.9731755987122704,
+        0.8784362218206031,
+        0.9931412894375857,
+        0.7926125128529621
+      ]
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient089",
+      "class_dice": [
+        0.886043315024725,
+        0.0,
+        0.008275966987411098,
+        0.05185527952106892
+      ],
+      "foreground_mean_dice": 0.020043748836160006,
+      "conditional_dice_known_pixels_ONLY": [
+        0.886043315024725,
+        0.0,
+        0.008275966987411098,
+        0.05185527952106892
+      ],
+      "class_coverage": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient095",
+      "class_dice": [
+        0.7989008277140818,
+        0.0,
+        0.05098818744716339,
+        0.0990599439994283
+      ],
+      "foreground_mean_dice": 0.05001604381553056,
+      "conditional_dice_known_pixels_ONLY": [
+        0.820464345282741,
+        0.0,
+        0.051207445685596015,
+        0.10111472887751245
+      ],
+      "class_coverage": [
+        0.9559819034852547,
+        0.782686630113876,
+        0.9193978494623656,
+        0.7863825718773475
+      ]
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient098",
+      "class_dice": [
+        0.8587338260676451,
+        0.0,
+        0.11071961444972926,
+        0.19037249949191418
+      ],
+      "foreground_mean_dice": 0.10036403798054781,
+      "conditional_dice_known_pixels_ONLY": [
+        0.8756927106261453,
+        0.0,
+        0.11266581605377395,
+        0.19479227010085706
+      ],
+      "class_coverage": [
+        0.9660523127399785,
+        0.828782217112197,
+        0.8032080440507541,
+        0.8191390881740338
+      ]
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient004",
+      "class_dice": [
+        0.7847831993690003,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9877320534384448,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.65632564382464,
+        0.2581308777429467,
+        0.7336163727411278,
+        0.09059874956848606
+      ]
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient005",
+      "class_dice": [
+        0.8816658223506494,
+        0.0,
+        0.09890217497742332,
+        0.33429663210661115
+      ],
+      "foreground_mean_dice": 0.14439960236134483,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9402524544179524,
+        0.0,
+        0.10080063873672071,
+        0.38269049858889936
+      ],
+      "class_coverage": [
+        0.8867147300404375,
+        0.6634382566585957,
+        0.9210634319850426,
+        0.6453892537542728
+      ]
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient012",
+      "class_dice": [
+        0.7058076442839305,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9953892075017805,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.5481347439988284,
+        0.0327313769751693,
+        0.33524888709024686,
+        0.010450921212667236
+      ]
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient014",
+      "class_dice": [
+        0.8375203587110974,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9873984637420056,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.7339573823638205,
+        0.09371676710386388,
+        0.8732564146719477,
+        0.060789449914190226
+      ]
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient015",
+      "class_dice": [
+        0.786771162117533,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9904899162771293,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.6566710704284081,
+        0.21216730038022813,
+        0.669734303102271,
+        0.05830855632639577
+      ]
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient018",
+      "class_dice": [
+        0.8259502604056488,
+        0.0,
+        0.04579153142519917,
+        0.25918593983873306
+      ],
+      "foreground_mean_dice": 0.1016591570879774,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9041417476715908,
+        0.0,
+        0.0464955152332266,
+        0.29890305696308256
+      ],
+      "class_coverage": [
+        0.8514669497047517,
+        0.6390232108317214,
+        0.8353224350616789,
+        0.559867789743043
+      ]
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient028",
+      "class_dice": [
+        0.8711372534447808,
+        0.0,
+        0.08093667970789555,
+        0.14810905085368092
+      ],
+      "foreground_mean_dice": 0.07634857685385882,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9165415897318044,
+        0.0,
+        0.08224016511987907,
+        0.15208784993873126
+      ],
+      "class_coverage": [
+        0.911439617880479,
+        0.8170299581230538,
+        0.8697390077592287,
+        0.8261665141811528
+      ]
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient029",
+      "class_dice": [
+        0.8753130799003234,
+        0.0,
+        0.026194502470241056,
+        0.11858150418561729
+      ],
+      "foreground_mean_dice": 0.04825866888528612,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9585494905415315,
+        0.0,
+        0.02778021978021978,
+        0.1471755225590052
+      ],
+      "class_coverage": [
+        0.8427419083822142,
+        0.5780417406749556,
+        0.8354835626911316,
+        0.4062846208077349
+      ]
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient030",
+      "class_dice": [
+        0.8426562946910873,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9904793275038279,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.7384310590268481,
+        0.27894211576846306,
+        0.9154580827732579,
+        0.28830601092896174
+      ]
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient032",
+      "class_dice": [
+        0.7767845406209598,
+        0.0,
+        4.6508383136060275e-05,
+        0.0
+      ],
+      "foreground_mean_dice": 1.5502794378686757e-05,
+      "conditional_dice_known_pixels_ONLY": [
+        0.957400014773772,
+        0.0,
+        4.8509544252831746e-05,
+        0.0
+      ],
+      "class_coverage": [
+        0.6867593403294339,
+        0.2379058979456594,
+        0.8928096676737161,
+        0.22133477731149317
+      ]
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient036",
+      "class_dice": [
+        0.7783639742042124,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9908028646135915,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.6447756819807041,
+        0.021680534395874838,
+        0.6956392981417043,
+        0.06517690875232775
+      ]
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient055",
+      "class_dice": [
+        0.7889471973483937,
+        0.01464276697803585,
+        0.03426592702339524,
+        0.10324523124416411
+      ],
+      "foreground_mean_dice": 0.05071797508186507,
+      "conditional_dice_known_pixels_ONLY": [
+        0.8832846250872807,
+        0.017828599532767737,
+        0.03648202494497432,
+        0.1215016146393972
+      ],
+      "class_coverage": [
+        0.8232349403357182,
+        0.32654614652711705,
+        0.41194129419613074,
+        0.33075878458665764
+      ]
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient065",
+      "class_dice": [
+        0.718579765435979,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9989663694878083,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.5614197383904824,
+        0.0021285653469561515,
+        0.16824120603015075,
+        0.0003601656762110571
+      ]
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient070",
+      "class_dice": [
+        0.9032538491200044,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9858856156160106,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.8434661278370137,
+        0.950939266824731,
+        0.9988991979871049,
+        0.6854311199207136
+      ]
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient076",
+      "class_dice": [
+        0.6961221335858429,
+        0.0022384444481566242,
+        0.026942751747610412,
+        0.060260170896569314
+      ],
+      "foreground_mean_dice": 0.029813789030778786,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9099981315645478,
+        0.0026185683856721318,
+        0.030479088855074467,
+        0.07736706373572394
+      ],
+      "class_coverage": [
+        0.6386274557896544,
+        0.21264836459182748,
+        0.4051201671891327,
+        0.20232344145387623
+      ]
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient082",
+      "class_dice": [
+        0.8971264970229104,
+        0.0,
+        0.0247382349557013,
+        0.09568168208130946
+      ],
+      "foreground_mean_dice": 0.04013997234567026,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9566490457530091,
+        0.0,
+        0.02508861239552489,
+        0.1298771676300578
+      ],
+      "class_coverage": [
+        0.8853092356316886,
+        0.4455190513219285,
+        0.9324568725653868,
+        0.39620050354772257
+      ]
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient087",
+      "class_dice": [
+        0.8965538668590447,
+        0.0,
+        0.020659766052343684,
+        0.13761676919571655
+      ],
+      "foreground_mean_dice": 0.052758845082686745,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9560285407222451,
+        0.0,
+        0.020772957079093775,
+        0.19391293180942595
+      ],
+      "class_coverage": [
+        0.8839828038925837,
+        0.5968324931037763,
+        0.9791011054627612,
+        0.4960847900023729
+      ]
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient089",
+      "class_dice": [
+        0.8564840471729026,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9947392340519869,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.7549728377003521,
+        0.09519918283963227,
+        0.9091798467308005,
+        0.12298711755233495
+      ]
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient095",
+      "class_dice": [
+        0.763490355446168,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9955866777826956,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.620854743818886,
+        0.02414592998734711,
+        0.4224516129032258,
+        0.0215119852489244
+      ]
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient098",
+      "class_dice": [
+        0.8324780096643469,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9998898776492804,
+        0.0,
+        0.0,
+        null
+      ],
+      "class_coverage": [
+        0.713141837761936,
+        0.001006036217303823,
+        0.007501396536589259,
+        0.0
+      ]
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient004",
+      "class_dice": [
+        0.7506599422294837,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9914240364739627,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.6071564408055496,
+        0.12940830721003135,
+        0.4550402786849554,
+        0.08522879828161559
+      ]
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient005",
+      "class_dice": [
+        0.87833952286572,
+        0.0,
+        0.11591763185660262,
+        0.3245933186998226
+      ],
+      "foreground_mean_dice": 0.1468369835188084,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9462947984177852,
+        0.0,
+        0.1187948001457903,
+        0.3903100424839555
+      ],
+      "class_coverage": [
+        0.8699113588455608,
+        0.5748991121872478,
+        0.906835697022208,
+        0.5698813227330337
+      ]
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient012",
+      "class_dice": [
+        0.6930180649750426,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9953157880013304,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.5329027075724156,
+        0.023702031602708805,
+        0.33557264265479564,
+        0.010270732915897113
+      ]
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient014",
+      "class_dice": [
+        0.8260172660119287,
+        0.0,
+        0.007297533116522567,
+        0.08781755454993503
+      ],
+      "foreground_mean_dice": 0.031705029222152535,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9703354842856309,
+        0.0,
+        0.0077624029699628755,
+        0.2476780185758514
+      ],
+      "class_coverage": [
+        0.7420418739675303,
+        0.19399149237858915,
+        0.8699845014637506,
+        0.1325384638545148
+      ]
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient015",
+      "class_dice": [
+        0.7436592056026864,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9933818270622917,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.5966304412736895,
+        0.04182509505703422,
+        0.4775122458067389,
+        0.04234115185552252
+      ]
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient018",
+      "class_dice": [
+        0.8134057907557238,
+        0.0,
+        0.01555974121693555,
+        0.10929996144003926
+      ],
+      "foreground_mean_dice": 0.04161990088565827,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9662867486424068,
+        0.0,
+        0.017180576905687674,
+        0.2547801928419676
+      ],
+      "class_coverage": [
+        0.7309732531392092,
+        0.1071083172147002,
+        0.6533948450506468,
+        0.13162384049472226
+      ]
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient028",
+      "class_dice": [
+        0.834415420614946,
+        0.0057167730702263496,
+        0.06999693822275607,
+        0.12191243506837697
+      ],
+      "foreground_mean_dice": 0.06587538212045313,
+      "conditional_dice_known_pixels_ONLY": [
+        0.8921322259819773,
+        0.006112507369139594,
+        0.07291044837145404,
+        0.13289420465707516
+      ],
+      "class_coverage": [
+        0.8883408124079328,
+        0.5208847847095458,
+        0.7007994356924524,
+        0.5245501677340653
+      ]
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient029",
+      "class_dice": [
+        0.8318143370223243,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9836657528076942,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.732238480084572,
+        0.08880994671403197,
+        0.5754491590214067,
+        0.08218350287037969
+      ]
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient030",
+      "class_dice": [
+        0.7516909537687868,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9931998882504398,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.6071739158531835,
+        0.14496007984031936,
+        0.5467279801910152,
+        0.1523497267759563
+      ]
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient032",
+      "class_dice": [
+        0.8236436933283294,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9890545435303298,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.7111863182163707,
+        0.29710625138060526,
+        0.8339577039274925,
+        0.3155543522404224
+      ]
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient036",
+      "class_dice": [
+        0.7696742120868835,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9909723184756758,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.6327983775482691,
+        0.02378999179655455,
+        0.6611386688383801,
+        0.07262569832402235
+      ]
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient055",
+      "class_dice": [
+        0.7632456055785855,
+        0.009696402300387857,
+        0.0044505669174525805,
+        0.05940041460692075
+      ],
+      "foreground_mean_dice": 0.02451579460825373,
+      "conditional_dice_known_pixels_ONLY": [
+        0.8596350012016064,
+        0.011475831503136068,
+        0.004818851771766471,
+        0.07225293376006207
+      ],
+      "class_coverage": [
+        0.818462005901915,
+        0.11750713606089438,
+        0.2181454302868579,
+        0.24257341707689697
+      ]
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient065",
+      "class_dice": [
+        0.708365737920477,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9991617936378032,
+        0.0,
+        0.0,
+        null
+      ],
+      "class_coverage": [
+        0.5489310469142185,
+        0.0034057045551298426,
+        0.13125628140703519,
+        0.0
+      ]
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient070",
+      "class_dice": [
+        0.9168412960658481,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9858536923981864,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.8675253862389465,
+        0.97391938719679,
+        0.9985846831262777,
+        0.752824578790882
+      ]
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient076",
+      "class_dice": [
+        0.6894219655773004,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9972654413544272,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.5275661622231488,
+        0.04983238198785902,
+        0.23761755485893418,
+        0.014377731769036117
+      ]
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient082",
+      "class_dice": [
+        0.8772535129734977,
+        0.0030403001487806455,
+        0.01215880131413307,
+        0.005816526522096479
+      ],
+      "foreground_mean_dice": 0.007005209328336731,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9729697066183866,
+        0.007121212121212121,
+        0.013040471564527282,
+        0.02338586680223691
+      ],
+      "class_coverage": [
+        0.8221427468690005,
+        0.13889968895800933,
+        0.8468280467445742,
+        0.0933852140077821
+      ]
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient087",
+      "class_dice": [
+        0.9025153580625801,
+        0.0,
+        0.004892762986010498,
+        0.054537286612758314
+      ],
+      "foreground_mean_dice": 0.019810016532922938,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9533085878451639,
+        0.0,
+        0.00498922231102715,
+        0.0785455486542443
+      ],
+      "class_coverage": [
+        0.8995042410846775,
+        0.5924569580519357,
+        0.934317760025821,
+        0.46183658941706873
+      ]
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient089",
+      "class_dice": [
+        0.8453672117409042,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9948502378994961,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.7377444354582705,
+        0.0867211440245148,
+        0.8868416761780532,
+        0.10487117552334943
+      ]
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient095",
+      "class_dice": [
+        0.6891176027267378,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9963260460575513,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.5277358876973488,
+        0.016624490369745535,
+        0.3076989247311828,
+        0.008946254182886021
+      ]
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient098",
+      "class_dice": [
+        0.8240647581086149,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9998616537251196,
+        0.0,
+        0.0,
+        null
+      ],
+      "class_coverage": [
+        0.7009098521097614,
+        0.0006227843249976047,
+        0.010294469715106535,
+        0.0
+      ]
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient004",
+      "class_dice": [
+        0.7414791707564118,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9917865609101494,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.5949731245185048,
+        0.12039576802507837,
+        0.42183757892445023,
+        0.08392466725480419
+      ]
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient005",
+      "class_dice": [
+        0.8793040226364643,
+        0.0,
+        0.09989410209957904,
+        0.32773928251959256
+      ],
+      "foreground_mean_dice": 0.14254446153972386,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9250686757146354,
+        0.0,
+        0.10127143833124828,
+        0.37123629489603027
+      ],
+      "class_coverage": [
+        0.9103201716968067,
+        0.6761904761904762,
+        0.9291349354735738,
+        0.6629411990628721
+      ]
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient012",
+      "class_dice": [
+        0.6942685486852318,
+        0.0,
+        0.01152408637873754,
+        0.016532204734823436
+      ],
+      "foreground_mean_dice": 0.00935209703785366,
+      "conditional_dice_known_pixels_ONLY": [
+        0.980812518134293,
+        0.0,
+        0.01974210760337928,
+        0.056657223796033995
+      ],
+      "class_coverage": [
+        0.5502127980615183,
+        0.04079329248629474,
+        0.350951031970862,
+        0.03513671787017433
+      ]
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient014",
+      "class_dice": [
+        0.8279252386235535,
+        0.0,
+        0.012929720059362866,
+        0.1415467799555856
+      ],
+      "foreground_mean_dice": 0.051492166671649485,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9614460996684878,
+        0.0,
+        0.01347828851166635,
+        0.2894487442742063
+      ],
+      "class_coverage": [
+        0.758675650080661,
+        0.28872740163062743,
+        0.8850812238103438,
+        0.2032938909463162
+      ]
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient015",
+      "class_dice": [
+        0.7612103437710013,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9935072463768116,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.6194542199108003,
+        0.03900054318305269,
+        0.4877541932610954,
+        0.043882832287193044
+      ]
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient018",
+      "class_dice": [
+        0.8122741632606427,
+        0.0,
+        0.029357845877809992,
+        0.20714397829450412
+      ],
+      "foreground_mean_dice": 0.07883394139077136,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9288960711039289,
+        0.0,
+        0.030269313779374505,
+        0.28536125783832206
+      ],
+      "class_coverage": [
+        0.7866338361547799,
+        0.32749032882011603,
+        0.7677264065790793,
+        0.3483313786117923
+      ]
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient028",
+      "class_dice": [
+        0.8344614437003477,
+        0.006242269411723907,
+        0.08459525618299991,
+        0.1375565153696547
+      ],
+      "foreground_mean_dice": 0.07613134698812618,
+      "conditional_dice_known_pixels_ONLY": [
+        0.8887088856705003,
+        0.0064818927126721005,
+        0.08773143082242746,
+        0.14558383233532934
+      ],
+      "class_coverage": [
+        0.8946720682371676,
+        0.6566090411253087,
+        0.7510580766517753,
+        0.6671241232082952
+      ]
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient029",
+      "class_dice": [
+        0.8232844772943676,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9844867746916054,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.7184744003479667,
+        0.0719360568383659,
+        0.5114678899082569,
+        0.07080269916406486
+      ]
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient030",
+      "class_dice": [
+        0.7623464775830237,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.992763544484479,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.6215424269896105,
+        0.2220558882235529,
+        0.5615847187831624,
+        0.2157377049180328
+      ]
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient032",
+      "class_dice": [
+        0.8078301691696544,
+        0.0,
+        0.03362422997946612,
+        0.04666289592760181
+      ],
+      "foreground_mean_dice": 0.02676237530235598,
+      "conditional_dice_known_pixels_ONLY": [
+        0.961666186190471,
+        0.0,
+        0.03531314583520532,
+        0.055392362568191356
+      ],
+      "class_coverage": [
+        0.7276672110679883,
+        0.4050143582946764,
+        0.8648942598187311,
+        0.3965073778259104
+      ]
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient036",
+      "class_dice": [
+        0.7708092044999652,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.991012573605502,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.6343012555244247,
+        0.02812609867572952,
+        0.6487747094099355,
+        0.08390233809228223
+      ]
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient055",
+      "class_dice": [
+        0.7641805886010575,
+        0.009029060314754306,
+        0.006398608998043904,
+        0.05288701075824399
+      ],
+      "foreground_mean_dice": 0.02277156002368073,
+      "conditional_dice_known_pixels_ONLY": [
+        0.86004243613795,
+        0.010573794735285419,
+        0.006982127272037339,
+        0.06331323038858329
+      ],
+      "class_coverage": [
+        0.819445311557015,
+        0.11941008563273073,
+        0.1983822548365577,
+        0.24257341707689697
+      ]
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient065",
+      "class_dice": [
+        0.6943516051679183,
+        0.0,
+        0.05205393540294763,
+        0.014396544829240982
+      ],
+      "foreground_mean_dice": 0.022150160077396203,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9817242794171344,
+        0.0,
+        0.0770838170420246,
+        0.02520302436292355
+      ],
+      "class_coverage": [
+        0.5512791385795814,
+        0.03022562792677735,
+        0.16743718592964824,
+        0.03457590491626148
+      ]
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient070",
+      "class_dice": [
+        0.9261697266827281,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9860950101088891,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.8839940908776719,
+        0.9766551158125114,
+        0.9998427425695864,
+        0.7524281466798811
+      ]
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient076",
+      "class_dice": [
+        0.6776825893721559,
+        0.0021683014971605576,
+        0.043799337916984975,
+        0.07755532139093783
+      ],
+      "foreground_mean_dice": 0.041174320268361125,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9220056863786825,
+        0.002566034661833289,
+        0.05255117629086465,
+        0.11077664057796509
+      ],
+      "class_coverage": [
+        0.598542101003164,
+        0.1839267917006433,
+        0.3166144200626959,
+        0.18161950770646423
+      ]
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient082",
+      "class_dice": [
+        0.8767321049458758,
+        0.0036276628589070703,
+        0.01331989874910914,
+        0.03781448538754765
+      ],
+      "foreground_mean_dice": 0.018254015665187955,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9701495221174053,
+        0.010461880912632164,
+        0.014095129118664344,
+        0.08537005163511188
+      ],
+      "class_coverage": [
+        0.8260193803258721,
+        0.17734253499222394,
+        0.8443238731218697,
+        0.1638056000610361
+      ]
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient087",
+      "class_dice": [
+        0.898805350883468,
+        0.0,
+        0.006332703213610586,
+        0.05387931034482758
+      ],
+      "foreground_mean_dice": 0.020070671186146055,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9536622683492927,
+        0.0,
+        0.0064751504022808,
+        0.07979253939756632
+      ],
+      "class_coverage": [
+        0.8920438325499362,
+        0.5647769428326833,
+        0.924876946663439,
+        0.42790476943763345
+      ]
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient089",
+      "class_dice": [
+        0.8456528037692382,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9947584789311408,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.7382806146542934,
+        0.0906026557711951,
+        0.8936898744496984,
+        0.1143317230273752
+      ]
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient095",
+      "class_dice": [
+        0.7007394925391291,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.99619263372657,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.541569854036342,
+        0.017889779277379447,
+        0.32559139784946234,
+        0.010448678549477565
+      ]
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient098",
+      "class_dice": [
+        0.7879863804373555,
+        0.0,
+        0.10588640571846876,
+        0.1486877343331548
+      ],
+      "foreground_mean_dice": 0.08485804668387452,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9585778203770302,
+        0.0,
+        0.13306637084336698,
+        0.19338658740479286
+      ],
+      "class_coverage": [
+        0.7062875547912367,
+        0.34296253712752706,
+        0.24291756444018833,
+        0.2509835686183754
+      ]
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient004",
+      "class_dice": [
+        0.7963002699721152,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9873226635870959,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.6729768820558618,
+        0.218064263322884,
+        0.6826692793381233,
+        0.18472632426834415
+      ]
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient005",
+      "class_dice": [
+        0.8728986739141169,
+        0.0,
+        0.08197219478842209,
+        0.18857117485125655
+      ],
+      "foreground_mean_dice": 0.0901811232132262,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9670900818498116,
+        0.0,
+        0.09133425034387896,
+        0.3340806293018682
+      ],
+      "class_coverage": [
+        0.8245463692322995,
+        0.21089588377723972,
+        0.753887546171736,
+        0.24649537197065713
+      ]
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient012",
+      "class_dice": [
+        0.7044130487170888,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9953881753786769,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.5464549928771452,
+        0.017413737504030958,
+        0.3443140428976123,
+        0.009099508986891302
+      ]
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient014",
+      "class_dice": [
+        0.8221907009158359,
+        0.0,
+        0.014023976475910428,
+        0.14268867924528303
+      ],
+      "foreground_mean_dice": 0.05223755190706448,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9705265803030002,
+        0.0,
+        0.014812455204268535,
+        0.3569126563609548
+      ],
+      "class_coverage": [
+        0.7358175223052179,
+        0.28101736972704716,
+        0.8784225934217323,
+        0.17246258994971847
+      ]
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient015",
+      "class_dice": [
+        0.7678800543950092,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9935862811697457,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.6282736171367447,
+        0.03737099402498642,
+        0.4968086685468309,
+        0.03876225085343024
+      ]
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient018",
+      "class_dice": [
+        0.8084394111240258,
+        0.0,
+        0.010856301283399959,
+        0.04274475156716732
+      ],
+      "foreground_mean_dice": 0.01786701761685576,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9786048207075289,
+        0.0,
+        0.012803334822093197,
+        0.16691309347790373
+      ],
+      "class_coverage": [
+        0.7055963157399433,
+        0.05264748549323017,
+        0.6375488917861799,
+        0.057362192131357286
+      ]
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient028",
+      "class_dice": [
+        0.8633774429070702,
+        0.0,
+        0.1020420986490732,
+        0.15603576751117734
+      ],
+      "foreground_mean_dice": 0.08602595538675017,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9511789713938937,
+        0.0,
+        0.109375,
+        0.18025307738658863
+      ],
+      "class_coverage": [
+        0.8363343886922496,
+        0.49500697949103406,
+        0.6863978368210675,
+        0.4501372369624886
+      ]
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient029",
+      "class_dice": [
+        0.8506166395736668,
+        0.0,
+        0.02323452791663733,
+        0.11543443842057285
+      ],
+      "foreground_mean_dice": 0.04622298877907006,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9717758323390002,
+        0.0,
+        0.026825633383010434,
+        0.17816943127962084
+      ],
+      "class_coverage": [
+        0.7795865303093005,
+        0.28507992895204265,
+        0.7274464831804281,
+        0.2608520495518179
+      ]
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient030",
+      "class_dice": [
+        0.7951877995594774,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9916668724229032,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.6674129109805927,
+        0.23203592814371257,
+        0.7243721259285462,
+        0.21442622950819673
+      ]
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient032",
+      "class_dice": [
+        0.8251625420984519,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.989079391358233,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.7134283150570032,
+        0.30472719240114865,
+        0.8338368580060423,
+        0.30865033166373357
+      ]
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient036",
+      "class_dice": [
+        0.7628779180469067,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9911658785436418,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.6235091380139034,
+        0.020508613617719443,
+        0.6386318205374991,
+        0.07034967928822677
+      ]
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient055",
+      "class_dice": [
+        0.7546331210298285,
+        0.00976491862567812,
+        0.0035943314068561474,
+        0.05539618545510932
+      ],
+      "foreground_mean_dice": 0.022918478495881193,
+      "conditional_dice_known_pixels_ONLY": [
+        0.8537255720453023,
+        0.011528831783863517,
+        0.0038895171515712277,
+        0.06698228180369363
+      ],
+      "class_coverage": [
+        0.813425816091667,
+        0.11446241674595624,
+        0.20063375583722481,
+        0.24257341707689697
+      ]
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient065",
+      "class_dice": [
+        0.7121208938187573,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9992789858143223,
+        0.0,
+        0.0,
+        null
+      ],
+      "class_coverage": [
+        0.5533823539414882,
+        0.002270469703419895,
+        0.11477386934673367,
+        0.0
+      ]
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient070",
+      "class_dice": [
+        0.8400821488921238,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9869288066842696,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.7384264952442496,
+        0.74721867590735,
+        0.8174241232898255,
+        0.5694747274529237
+      ]
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient076",
+      "class_dice": [
+        0.6803690782403269,
+        0.0014422643550374087,
+        0.031181952791568678,
+        0.07897229457731471
+      ],
+      "foreground_mean_dice": 0.03719883724130693,
+      "conditional_dice_known_pixels_ONLY": [
+        0.959562746019088,
+        0.0020210526315789473,
+        0.044306930693069305,
+        0.14427860696517414
+      ],
+      "class_coverage": [
+        0.5577513428662529,
+        0.1364501223158467,
+        0.28923719958202715,
+        0.12054290315159881
+      ]
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient082",
+      "class_dice": [
+        0.878107061555892,
+        0.0,
+        0.009593588082901554,
+        0.01998105245026268
+      ],
+      "foreground_mean_dice": 0.009858213511054745,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9663603699529607,
+        0.0,
+        0.010018388180838247,
+        0.038312278094294445
+      ],
+      "class_coverage": [
+        0.8347889256904395,
+        0.17884914463452567,
+        0.8542710072342794,
+        0.15228503852903028
+      ]
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient087",
+      "class_dice": [
+        0.8903081858332799,
+        0.0,
+        0.004598026385597567,
+        0.028048571917222508
+      ],
+      "foreground_mean_dice": 0.010882199434273357,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9690519576949846,
+        0.0,
+        0.004781345397035566,
+        0.06250794054122728
+      ],
+      "class_coverage": [
+        0.8495057956308772,
+        0.3942737563017217,
+        0.9125312676510934,
+        0.23514988531203038
+      ]
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient089",
+      "class_dice": [
+        0.8377111932418163,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9948761059634811,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.7261335759226376,
+        0.07671092951991829,
+        0.8889613565954672,
+        0.09359903381642512
+      ]
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient095",
+      "class_dice": [
+        0.755923098443341,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "foreground_mean_dice": 0.0,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9951846490795965,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "class_coverage": [
+        0.6112116473041406,
+        0.0337761844510052,
+        0.42098924731182796,
+        0.03407771631496278
+      ]
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient098",
+      "class_dice": [
+        0.7805404109001547,
+        0.0,
+        0.10116051744935735,
+        0.06598876484391666
+      ],
+      "foreground_mean_dice": 0.05571642743109134,
+      "conditional_dice_known_pixels_ONLY": [
+        0.9861851131705428,
+        0.0,
+        0.1890988259077832,
+        0.15662447257383966
+      ],
+      "class_coverage": [
+        0.6579647232538858,
+        0.10117849956884162,
+        0.1078126246907669,
+        0.058319833371904654
+      ]
+    }
+  ],
+  "volumes": [
+    {
+      "step": "step_0000",
+      "patient": "patient004",
+      "volume": "patient004_frame01",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9517578125,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2438206744721305
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient004",
+      "volume": "patient004_frame15",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9562247440732758,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2444056458672056
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient005",
+      "volume": "patient005_frame01",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9394006799768518,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2421883960533788
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient005",
+      "volume": "patient005_frame13",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9514485677083333,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24378007790019768
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient012",
+      "volume": "patient012_frame01",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9505710767663044,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24366481388163
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient012",
+      "volume": "patient012_frame13",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9629054857336956,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.245275560319141
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient014",
+      "volume": "patient014_frame01",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": -1.4825583547590877e-15,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9292697482638889,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24083458238541294
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient014",
+      "volume": "patient014_frame13",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9383481626157407,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24204840510939712
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient015",
+      "volume": "patient015_frame01",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.954640078446502,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2441984304356497
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient015",
+      "volume": "patient015_frame10",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9632945119598766,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24532603389143565
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient018",
+      "volume": "patient018_frame01",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9445619936342593,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24287268719803956
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient018",
+      "volume": "patient018_frame10",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9530956127025463,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24399614809019118
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient028",
+      "volume": "patient028_frame01",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9661952427455357,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24570175477496575
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient028",
+      "volume": "patient028_frame09",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9764613560267857,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24702262785186282
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient029",
+      "volume": "patient029_frame01",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9535392992424242,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2440542915139213
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient029",
+      "volume": "patient029_frame12",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9727283824573864,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24654392138001255
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient030",
+      "volume": "patient030_frame01",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9753128616898148,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24687554073218226
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient030",
+      "volume": "patient030_frame12",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9836027922453704,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24793340584380952
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient032",
+      "volume": "patient032_frame01",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.96583984375,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2456557808665587
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient032",
+      "volume": "patient032_frame12",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9804638671875,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2475338943143351
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient036",
+      "volume": "patient036_frame01",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9580733687789352,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2446469534939834
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient036",
+      "volume": "patient036_frame12",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9702532732928241,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24622551994832356
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient055",
+      "volume": "patient055_frame01",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": -3.2381179395672516e-15,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9609274530606996,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24501861391170868
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient055",
+      "volume": "patient055_frame10",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9701826935442387,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24621642874116895
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient065",
+      "volume": "patient065_frame01",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9688350340136055,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2460427149243095
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient065",
+      "volume": "patient065_frame14",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 7.008195551780665e-15,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9844626913265306,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24804263028710768
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient070",
+      "volume": "patient070_frame01",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 4.729094375397709e-15,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9676889272836539,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24589479410740106
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient070",
+      "volume": "patient070_frame10",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9794546274038461,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24740517257737044
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient076",
+      "volume": "patient076_frame01",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 3.1621151493043638e-15,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9640121459960938,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24541908968367732
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient076",
+      "volume": "patient076_frame12",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9801006317138672,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2474875811906452
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient082",
+      "volume": "patient082_frame01",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9476153032235621,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2432757900533881
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient082",
+      "volume": "patient082_frame07",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9653111955009277,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24558736491980462
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient087",
+      "volume": "patient087_frame01",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9322085173233695,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24122875687731934
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient087",
+      "volume": "patient087_frame10",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.945556640625,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2430041410465554
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient089",
+      "volume": "patient089_frame01",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": -5.982873784689306e-15,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9750675154320988,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24684409717983152
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient089",
+      "volume": "patient089_frame10",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9791381698933782,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24736478351739513
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient095",
+      "volume": "patient095_frame01",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9423876842403628,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24258485880199446
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient095",
+      "volume": "patient095_frame12",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9606735402494331,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2449855930955283
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient098",
+      "volume": "patient098_frame01",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": 0.0,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.9417782738095238,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24250407127119455
+    },
+    {
+      "step": "step_0000",
+      "patient": "patient098",
+      "volume": "patient098_frame09",
+      "named_dice": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.0,
+      "partition_ari": -2.094965270569165e-15,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.949593357308201,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24353626199755377
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient004",
+      "volume": "patient004_frame01",
+      "named_dice": [
+        0.8081968757148047,
+        0.0,
+        0.002651214637918395,
+        0.11971703246871032
+      ],
+      "coverage": 0.8968295393318966,
+      "partition_ari": 0.025888636584351137,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4472925646551724,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.22007797538063106
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient004",
+      "volume": "patient004_frame15",
+      "named_dice": [
+        0.8072549284072084,
+        0.0,
+        0.0016357522945969689,
+        0.08332208228055625
+      ],
+      "coverage": 0.8969962284482759,
+      "partition_ari": 0.019118771836697666,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4484139278017241,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.20445606910169187
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient005",
+      "volume": "patient005_frame01",
+      "named_dice": [
+        0.9111621032176709,
+        0.0,
+        0.11627521231422505,
+        0.45084738072010344
+      ],
+      "coverage": 0.9539478443287037,
+      "partition_ari": 0.08716644146049068,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4854202835648148,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.3012063332579133
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient005",
+      "volume": "patient005_frame13",
+      "named_dice": [
+        0.9010984739212184,
+        0.0,
+        0.058540664854693704,
+        0.37299877267148507
+      ],
+      "coverage": 0.9533998842592593,
+      "partition_ari": 0.04460573455522425,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.48251410590277777,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.26993757016405534
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient012",
+      "volume": "patient012_frame01",
+      "named_dice": [
+        0.7267844642895022,
+        0.0016207455429497568,
+        0.07023302430468555,
+        0.20548534489774564
+      ],
+      "coverage": 1.0,
+      "partition_ari": 0.02938778541125309,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3733971637228261,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.20621160857883397
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient012",
+      "volume": "patient012_frame13",
+      "named_dice": [
+        0.7512448002447265,
+        0.004749420570690376,
+        0.03979097147893975,
+        0.14733675319165349
+      ],
+      "coverage": 1.0,
+      "partition_ari": 0.01663500331268907,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.37326341711956523,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.18522560622897716
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient014",
+      "volume": "patient014_frame01",
+      "named_dice": [
+        0.8607687967288576,
+        0.0,
+        0.017836142689141514,
+        0.38157528071469554
+      ],
+      "coverage": 1.0,
+      "partition_ari": 0.05140117688356643,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.47526403356481484,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.28950572867093227
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient014",
+      "volume": "patient014_frame13",
+      "named_dice": [
+        0.8575296422222606,
+        0.0,
+        0.01829380804681528,
+        0.3327853749299998
+      ],
+      "coverage": 1.0,
+      "partition_ari": 0.03749485330759504,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4610785590277778,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.26533299944143945
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient015",
+      "volume": "patient015_frame01",
+      "named_dice": [
+        0.8226185416941436,
+        0.0,
+        0.044674197459952776,
+        0.141549255604358
+      ],
+      "coverage": 0.9243445376800411,
+      "partition_ari": 0.020484071090307976,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.41671489197530864,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.20191582972649874
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient015",
+      "volume": "patient015_frame10",
+      "named_dice": [
+        0.8192669691136498,
+        0.0,
+        0.03184824501578137,
+        0.08978974436545152
+      ],
+      "coverage": 0.9277805909207819,
+      "partition_ari": 0.009075392236383244,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4102828414351852,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.18224776874153947
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient018",
+      "volume": "patient018_frame01",
+      "named_dice": [
+        0.86682801546364,
+        0.0,
+        0.050922978994271166,
+        0.3624808135072909
+      ],
+      "coverage": 1.0,
+      "partition_ari": 0.05792256251260771,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.46810121889467593,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.26981720276777027
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient018",
+      "volume": "patient018_frame10",
+      "named_dice": [
+        0.8596209943803355,
+        0.0,
+        0.04447932464392148,
+        0.28257635188140773
+      ],
+      "coverage": 1.0,
+      "partition_ari": 0.04083340978237029,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4569046585648148,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24560384303072014
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient028",
+      "volume": "patient028_frame01",
+      "named_dice": [
+        0.8952040911937744,
+        0.0,
+        0.09134980644694475,
+        0.2616238023197176
+      ],
+      "coverage": 0.9105538504464286,
+      "partition_ari": 0.04271917108136214,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.464892578125,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2430791889376774
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient028",
+      "volume": "patient028_frame09",
+      "named_dice": [
+        0.892565958965384,
+        0.0,
+        0.10059965989438825,
+        0.0970929399971359
+      ],
+      "coverage": 0.9101353236607143,
+      "partition_ari": 0.019117202903903924,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.46669747488839286,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.20075799992356977
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient029",
+      "volume": "patient029_frame01",
+      "named_dice": [
+        0.916396555440372,
+        0.0,
+        0.019801331016621317,
+        0.2570807761216788
+      ],
+      "coverage": 0.9747961795691288,
+      "partition_ari": 0.04651744010616406,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.49913256096117425,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.28476610111706735
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient029",
+      "volume": "patient029_frame12",
+      "named_dice": [
+        0.9135369397642431,
+        0.0,
+        0.00547019053472649,
+        0.0
+      ],
+      "coverage": 0.9902769146543561,
+      "partition_ari": 0.009967877148985973,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.49077444365530304,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1990734364510027
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient030",
+      "volume": "patient030_frame01",
+      "named_dice": [
+        0.8695626161745987,
+        0.0,
+        0.011706283193474056,
+        0.04227429133213174
+      ],
+      "coverage": 0.9725314670138889,
+      "partition_ari": 0.007488867174750497,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3724283854166667,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.17050576488726493
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient030",
+      "volume": "patient030_frame12",
+      "named_dice": [
+        0.8565236560541988,
+        0.0,
+        0.0029210546544699823,
+        0.005226480836236934
+      ],
+      "coverage": 0.9835268373842593,
+      "partition_ari": -0.00409091345962766,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3721987123842593,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.15085466890989346
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient032",
+      "volume": "patient032_frame01",
+      "named_dice": [
+        0.7517521002857199,
+        0.0,
+        0.017710965133906013,
+        0.06847380634967659
+      ],
+      "coverage": 1.0,
+      "partition_ari": 0.007485452596607543,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.33306803385416667,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.16639098938414346
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient032",
+      "volume": "patient032_frame12",
+      "named_dice": [
+        0.7455939631736377,
+        0.0,
+        0.0038281850121519687,
+        0.003234524752797647
+      ],
+      "coverage": 1.0,
+      "partition_ari": -0.0007955563024270434,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.32657063802083336,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1473762770352261
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient036",
+      "volume": "patient036_frame01",
+      "named_dice": [
+        0.8062200357831529,
+        0.0,
+        0.02532128769563558,
+        0.07180445921617505
+      ],
+      "coverage": 0.8755267107928241,
+      "partition_ari": 0.014631018223233231,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4473402235243056,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.19403440611241052
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient036",
+      "volume": "patient036_frame12",
+      "named_dice": [
+        0.7960575355309978,
+        0.0,
+        0.038923037646550536,
+        0.0282535221964835
+      ],
+      "coverage": 0.8745569299768519,
+      "partition_ari": 0.0019640567315184123,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4424732349537037,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1765064911996365
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient055",
+      "volume": "patient055_frame01",
+      "named_dice": [
+        0.783796772389692,
+        0.012094856288645784,
+        0.10621562156215622,
+        0.21800619062866902
+      ],
+      "coverage": 0.8652404031635802,
+      "partition_ari": 0.040227048620066694,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4682637281378601,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.23046468209299775
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient055",
+      "volume": "patient055_frame10",
+      "named_dice": [
+        0.7833123778117416,
+        0.00046479200557750407,
+        0.10525611518492747,
+        0.11887323943661972
+      ],
+      "coverage": 0.867577321244856,
+      "partition_ari": 0.026825923953072126,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4715731899434156,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.21019578284564766
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient065",
+      "volume": "patient065_frame01",
+      "named_dice": [
+        0.7418226029213723,
+        0.0,
+        0.040967414710540835,
+        0.12934671523282934
+      ],
+      "coverage": 0.8417517006802722,
+      "partition_ari": 0.0243317364487886,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.36445843962585034,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.18050683282495616
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient065",
+      "volume": "patient065_frame14",
+      "named_dice": [
+        0.7342316440382689,
+        0.0,
+        0.0431004638925431,
+        0.028975963121501483
+      ],
+      "coverage": 0.8396922831632653,
+      "partition_ari": 0.009530539226036305,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3535714285714286,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1526336696210397
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient070",
+      "volume": "patient070_frame01",
+      "named_dice": [
+        0.8964695030153247,
+        0.0,
+        0.0,
+        0.008408714485921773
+      ],
+      "coverage": 0.8688777043269231,
+      "partition_ari": 0.003680816499698126,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.43219776642628205,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.17813887142663415
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient070",
+      "volume": "patient070_frame10",
+      "named_dice": [
+        0.8999389682531472,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.8727150941506411,
+      "partition_ari": -0.005723057426290907,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.42529922876602566,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.15709832811931085
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient076",
+      "volume": "patient076_frame01",
+      "named_dice": [
+        0.6840456099749067,
+        0.0007229049658010343,
+        0.05807105313153062,
+        0.16965973534971646
+      ],
+      "coverage": 0.6281242370605469,
+      "partition_ari": 0.03267891617405375,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.39681434631347656,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.20049643361468145
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient076",
+      "volume": "patient076_frame12",
+      "named_dice": [
+        0.6692332246487783,
+        0.003046310399585183,
+        0.019643699858423784,
+        0.04164515573911547
+      ],
+      "coverage": 0.6215934753417969,
+      "partition_ari": 0.00642720730617101,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3873119354248047,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.15803489658188893
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient082",
+      "volume": "patient082_frame01",
+      "named_dice": [
+        0.9206097369712485,
+        0.0,
+        0.01568039482109669,
+        0.15845979614949038
+      ],
+      "coverage": 0.9706560180890538,
+      "partition_ari": 0.05325166016295407,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.45508899582560297,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.26643971699075586
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient082",
+      "volume": "patient082_frame07",
+      "named_dice": [
+        0.9222754100763746,
+        0.0,
+        0.01613043705471458,
+        0.030970271153217904
+      ],
+      "coverage": 0.9742144016697588,
+      "partition_ari": 0.021992100066323857,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.45848975243506496,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.21116007701205802
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient087",
+      "volume": "patient087_frame01",
+      "named_dice": [
+        0.9196546012388207,
+        0.0,
+        0.0011378991536875045,
+        0.2072168250240205
+      ],
+      "coverage": 0.9831861413043478,
+      "partition_ari": 0.04132735866826334,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.515975288722826,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.28399805213740026
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient087",
+      "volume": "patient087_frame10",
+      "named_dice": [
+        0.9196689358065593,
+        0.0,
+        0.014301191765980499,
+        0.05849005669036264
+      ],
+      "coverage": 0.9524774966032609,
+      "partition_ari": 0.015544911486436228,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.5211075492527174,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2263278135538375
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient089",
+      "volume": "patient089_frame01",
+      "named_dice": [
+        0.8864873859006692,
+        0.0,
+        0.006693256315041489,
+        0.07871640153592979
+      ],
+      "coverage": 1.0,
+      "partition_ari": 0.019709823418487517,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.44309413580246915,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.19274316040033945
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient089",
+      "volume": "patient089_frame10",
+      "named_dice": [
+        0.8856012756016464,
+        0.0,
+        0.009844606670099657,
+        0.02190004282131278
+      ],
+      "coverage": 1.0,
+      "partition_ari": 0.011408144743509098,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4433023814534231,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.18168014383833714
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient095",
+      "volume": "patient095_frame01",
+      "named_dice": [
+        0.8025495826855963,
+        0.0,
+        0.050744582612359805,
+        0.13428114531171575
+      ],
+      "coverage": 0.9618268140589569,
+      "partition_ari": 0.034948495027885176,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.42028946995464855,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.22011128063852378
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient095",
+      "volume": "patient095_frame12",
+      "named_dice": [
+        0.7953062935828406,
+        0.0,
+        0.05124142558902475,
+        0.05485232067510549
+      ],
+      "coverage": 0.93624929138322,
+      "partition_ari": 0.018000565797240006,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.41535218253968254,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1980141937422886
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient098",
+      "volume": "patient098_frame01",
+      "named_dice": [
+        0.8578173216999013,
+        0.0,
+        0.09607595116612896,
+        0.24205733209148297
+      ],
+      "coverage": 0.9581395709325397,
+      "partition_ari": 0.06803976072761628,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4128895916005291,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2676884692387377
+    },
+    {
+      "step": "step_0128",
+      "patient": "patient098",
+      "volume": "patient098_frame09",
+      "named_dice": [
+        0.8596410435321936,
+        0.0,
+        0.12495165478755732,
+        0.12429714890520606
+      ],
+      "coverage": 0.9580103959986772,
+      "partition_ari": 0.05605315783286408,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.416472904265873,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2775925368556009
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient004",
+      "volume": "patient004_frame01",
+      "named_dice": [
+        0.7853877025722656,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6391096443965517,
+      "partition_ari": 0.025834487356096586,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.43762627963362066,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2225058308614942
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient004",
+      "volume": "patient004_frame15",
+      "named_dice": [
+        0.7841823267831387,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6442551185344828,
+      "partition_ari": 0.019633915801801887,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.43583142510775863,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.20600048487101394
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient005",
+      "volume": "patient005_frame01",
+      "named_dice": [
+        0.8871931851454097,
+        0.0,
+        0.124269347673603,
+        0.37889277362291324
+      ],
+      "coverage": 0.8973958333333333,
+      "partition_ari": 0.07303321243782253,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4736798321759259,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2823402847420978
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient005",
+      "volume": "patient005_frame13",
+      "named_dice": [
+        0.8761896583502287,
+        0.0,
+        0.06682271775286436,
+        0.2697156652360515
+      ],
+      "coverage": 0.8610297309027778,
+      "partition_ari": 0.036538814547459914,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.46883499710648147,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2521710293293091
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient012",
+      "volume": "patient012_frame01",
+      "named_dice": [
+        0.7087753037163544,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5286769701086956,
+      "partition_ari": 0.02483141278986397,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.36641049592391306,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.19911483734713298
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient012",
+      "volume": "patient012_frame13",
+      "named_dice": [
+        0.7028669028376067,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5298828125,
+      "partition_ari": 0.015522542690167273,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.36532566236413044,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.17902402352664204
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient014",
+      "volume": "patient014_frame01",
+      "named_dice": [
+        0.8318936016515325,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6904730902777778,
+      "partition_ari": 0.04220147305333448,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.45824110243055555,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.27256424829203807
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient014",
+      "volume": "patient014_frame13",
+      "named_dice": [
+        0.8430318586412915,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.7152669270833333,
+      "partition_ari": 0.030805343045949087,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4416160300925926,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24953355258523857
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient015",
+      "volume": "patient015_frame01",
+      "named_dice": [
+        0.7895396798792206,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6398353105709876,
+      "partition_ari": 0.014945166191997478,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3938822177211934,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.19111472922580425
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient015",
+      "volume": "patient015_frame10",
+      "named_dice": [
+        0.7840243862794669,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6438018422067902,
+      "partition_ari": 0.008015149256959096,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.38980115097736623,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.17814215086507806
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient018",
+      "volume": "patient018_frame01",
+      "named_dice": [
+        0.8296153627018967,
+        0.0,
+        0.0472976047813358,
+        0.3027423654551693
+      ],
+      "coverage": 0.8817839445891203,
+      "partition_ari": 0.044787329677643865,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4277999312789352,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24211167784853338
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient018",
+      "volume": "patient018_frame10",
+      "named_dice": [
+        0.8222981655441333,
+        0.0,
+        0.04345679012345679,
+        0.19112430916439827
+      ],
+      "coverage": 0.80047607421875,
+      "partition_ari": 0.03135131650645892,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.41624168113425924,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.22048660665117661
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient028",
+      "volume": "patient028_frame01",
+      "named_dice": [
+        0.872398301359477,
+        0.0,
+        0.07830827688749381,
+        0.2214379863089417
+      ],
+      "coverage": 0.8877162388392857,
+      "partition_ari": 0.037090252854557415,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.44063197544642857,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.22028744809712464
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient028",
+      "volume": "patient028_frame09",
+      "named_dice": [
+        0.8698860288564172,
+        0.0,
+        0.08294338004364113,
+        0.06212294959365808
+      ],
+      "coverage": 0.9314174107142857,
+      "partition_ari": 0.01878037894489598,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4445120675223214,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1949010443787256
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient029",
+      "volume": "patient029_frame01",
+      "named_dice": [
+        0.877425780026992,
+        0.0,
+        0.03788620631436772,
+        0.19164434922335297
+      ],
+      "coverage": 0.8316206498579546,
+      "partition_ari": 0.04193946118205968,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4827233516808712,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.26556146748791754
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient029",
+      "volume": "patient029_frame12",
+      "named_dice": [
+        0.8732324704530411,
+        0.0,
+        0.014917109077288864,
+        0.0017135023989033585
+      ],
+      "coverage": 0.8411569306344697,
+      "partition_ari": 0.009420425061010618,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4725378787878788,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1959174943157921
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient030",
+      "volume": "patient030_frame01",
+      "named_dice": [
+        0.8439639243476827,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.7355016637731482,
+      "partition_ari": 0.006840887725731194,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.35865162037037035,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.16486368416623193
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient030",
+      "volume": "patient030_frame12",
+      "named_dice": [
+        0.8413574861119423,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.7388310185185185,
+      "partition_ari": -0.003849136849550837,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.358228443287037,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1478337845535454
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient032",
+      "volume": "patient032_frame01",
+      "named_dice": [
+        0.7788848216911205,
+        0.0,
+        9.530162965786715e-05,
+        0.0
+      ],
+      "coverage": 0.6800358072916667,
+      "partition_ari": 0.005795857882850356,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3242008463541667,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.16160232135175756
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient032",
+      "volume": "patient032_frame12",
+      "named_dice": [
+        0.7747118316390298,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6868229166666666,
+      "partition_ari": 7.298030422066663e-05,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3177571614583333,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1459360897047363
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient036",
+      "volume": "patient036_frame01",
+      "named_dice": [
+        0.7844914800341195,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6373268410011574,
+      "partition_ari": 0.009520072162025842,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4269476996527778,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1852397646854783
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient036",
+      "volume": "patient036_frame12",
+      "named_dice": [
+        0.7722515901060071,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6290938765914352,
+      "partition_ari": 0.003404479889854276,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.41820384837962965,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.17455018524022384
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient055",
+      "volume": "patient055_frame01",
+      "named_dice": [
+        0.7899257283845861,
+        0.026463475840671626,
+        0.029935752734849802,
+        0.11131658145690562
+      ],
+      "coverage": 0.8065280992798354,
+      "partition_ari": 0.03496865290314372,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.44925491898148145,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2183342683426735
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient055",
+      "volume": "patient055_frame10",
+      "named_dice": [
+        0.787976835185475,
+        0.0,
+        0.03852859731291238,
+        0.09430476343481405
+      ],
+      "coverage": 0.8078824266975309,
+      "partition_ari": 0.024303686843676595,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.452049977494856,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2036739164741687
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient065",
+      "volume": "patient065_frame01",
+      "named_dice": [
+        0.7228038886557561,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5509353741496599,
+      "partition_ari": 0.01934372119473486,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.35188934948979594,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.17342310662701266
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient065",
+      "volume": "patient065_frame14",
+      "named_dice": [
+        0.714390501474824,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.547953869047619,
+      "partition_ari": 0.008642970054015885,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3397082270408163,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.149900207333393
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient070",
+      "volume": "patient070_frame01",
+      "named_dice": [
+        0.8929360688368886,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.8296461838942307,
+      "partition_ari": 0.005013447735222395,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4270739433092949,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1818748366545004
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient070",
+      "volume": "patient070_frame10",
+      "named_dice": [
+        0.9133368618287704,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.8597286909054487,
+      "partition_ari": -0.004772803473593134,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.41913624298878205,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.15755392800161397
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient076",
+      "volume": "patient076_frame01",
+      "named_dice": [
+        0.7033756511208432,
+        0.0015382248884786955,
+        0.03945850786134887,
+        0.09369144284821987
+      ],
+      "coverage": 0.6108322143554688,
+      "partition_ari": 0.02610920130602645,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.372955322265625,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.18752687983101363
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient076",
+      "volume": "patient076_frame12",
+      "named_dice": [
+        0.6889137954504109,
+        0.003070399883032385,
+        0.02061729152604774,
+        0.03184901209082867
+      ],
+      "coverage": 0.6459579467773438,
+      "partition_ari": 0.005957229007007414,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.36380767822265625,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1519126591696297
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient082",
+      "volume": "patient082_frame01",
+      "named_dice": [
+        0.8960868214089355,
+        0.0,
+        0.021918792669780814,
+        0.1369722522933166
+      ],
+      "coverage": 0.8596050991419295,
+      "partition_ari": 0.046556943726542226,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4339379928107607,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.25496549939746393
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient082",
+      "volume": "patient082_frame07",
+      "named_dice": [
+        0.8981430576289307,
+        0.0,
+        0.02734418244215654,
+        0.03773886623490845
+      ],
+      "coverage": 0.8842311427411874,
+      "partition_ari": 0.02062467639853178,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4344507334183674,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.20642042101921843
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient087",
+      "volume": "patient087_frame01",
+      "named_dice": [
+        0.8976169999939007,
+        0.0,
+        0.0048381285706932935,
+        0.16654882551653705
+      ],
+      "coverage": 0.8576713230298914,
+      "partition_ari": 0.04383983239324329,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.5054931640625,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2781110269994848
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient087",
+      "volume": "patient087_frame10",
+      "named_dice": [
+        0.8955035461847631,
+        0.0,
+        0.03159805003024588,
+        0.09765625
+      ],
+      "coverage": 0.8843861455502717,
+      "partition_ari": 0.021288570064188155,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.5040628184442935,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.22711191132660447
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient089",
+      "volume": "patient089_frame01",
+      "named_dice": [
+        0.8570820157094767,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.7440332140852974,
+      "partition_ari": 0.015706151184760656,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4079554222783389,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.17883559321910775
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient089",
+      "volume": "patient089_frame10",
+      "named_dice": [
+        0.8558884973172048,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.7469442690796857,
+      "partition_ari": 0.009426027291335579,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4074994739057239,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.16924522081928442
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient095",
+      "volume": "patient095_frame01",
+      "named_dice": [
+        0.7618907547941128,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5873511904761904,
+      "partition_ari": 0.022316279338784783,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.39611678004535145,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2043716020837048
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient095",
+      "volume": "patient095_frame12",
+      "named_dice": [
+        0.7650535936794429,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6046485260770975,
+      "partition_ari": 0.011789752415304168,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3910076530612245,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.18613483777596862
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient098",
+      "volume": "patient098_frame01",
+      "named_dice": [
+        0.8315280535510245,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6703326512896826,
+      "partition_ari": 0.053578870167711616,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.38720703125,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.23882381223242066
+    },
+    {
+      "step": "step_0256",
+      "patient": "patient098",
+      "volume": "patient098_frame09",
+      "named_dice": [
+        0.8334184782436245,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6787806919642857,
+      "partition_ari": 0.04464275802023651,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.39265046296296297,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24957819493594335
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient004",
+      "volume": "patient004_frame01",
+      "named_dice": [
+        0.7597416974169742,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5996295797413793,
+      "partition_ari": 0.03101471291280942,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4649649784482759,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.23297885304759672
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient004",
+      "volume": "patient004_frame15",
+      "named_dice": [
+        0.7414817130353235,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5788557381465518,
+      "partition_ari": 0.026057602883721387,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4628215921336207,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.21907051878405573
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient005",
+      "volume": "patient005_frame01",
+      "named_dice": [
+        0.8841842612808157,
+        0.0,
+        0.14876373909636442,
+        0.37621489621489623
+      ],
+      "coverage": 0.8820185908564815,
+      "partition_ari": 0.07146256515027179,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4263834635416667,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2693169921420522
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient005",
+      "volume": "patient005_frame13",
+      "named_dice": [
+        0.8725489783906499,
+        0.0,
+        0.07150027886224206,
+        0.2419026756376154
+      ],
+      "coverage": 0.8385308159722222,
+      "partition_ari": 0.03754885017651119,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.42072120949074077,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2505714564851571
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient012",
+      "volume": "patient012_frame01",
+      "named_dice": [
+        0.6967979150157403,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.51484375,
+      "partition_ari": 0.025185549163678773,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.38976095448369563,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2061818637498106
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient012",
+      "volume": "patient012_frame13",
+      "named_dice": [
+        0.6892687679445433,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5144510020380435,
+      "partition_ari": 0.0168704386535702,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.38053031589673914,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.19055543522241714
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient014",
+      "volume": "patient014_frame01",
+      "named_dice": [
+        0.827178199669658,
+        0.0,
+        0.013459806051613586,
+        0.14049552706435256
+      ],
+      "coverage": 0.7140498408564815,
+      "partition_ari": 0.04006674130621455,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4108742042824074,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.25627036014056676
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient014",
+      "volume": "patient014_frame13",
+      "named_dice": [
+        0.8248660693437231,
+        0.0,
+        0.0011609498680738787,
+        0.0251214366321574
+      ],
+      "coverage": 0.715087890625,
+      "partition_ari": 0.03084247453196278,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3979564525462963,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2352627833414145
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient015",
+      "volume": "patient015_frame01",
+      "named_dice": [
+        0.7457118656957122,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5778919110082305,
+      "partition_ari": 0.013977117064903805,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3577835648148148,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1809019492237846
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient015",
+      "volume": "patient015_frame10",
+      "named_dice": [
+        0.7416230417563552,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5816534850823045,
+      "partition_ari": 0.009273572586344963,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3517694669495885,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.16946816690982083
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient018",
+      "volume": "patient018_frame01",
+      "named_dice": [
+        0.8171223918132267,
+        0.0,
+        0.018046541079626405,
+        0.15320361635220126
+      ],
+      "coverage": 0.7485871491608797,
+      "partition_ari": 0.04017302739417617,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3945041232638889,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2284855001677247
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient018",
+      "volume": "patient018_frame10",
+      "named_dice": [
+        0.8097010697364059,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6628644024884259,
+      "partition_ari": 0.02841800354831154,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3826022677951389,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.20716909995932575
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient028",
+      "volume": "patient028_frame01",
+      "named_dice": [
+        0.822413370313372,
+        0.009320738643481747,
+        0.06262106370026012,
+        0.14087530966143683
+      ],
+      "coverage": 0.8877354213169643,
+      "partition_ari": 0.037384171778793315,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4309709821428571,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.22094011588208337
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient028",
+      "volume": "patient028_frame09",
+      "named_dice": [
+        0.8460428619555856,
+        0.0007583853286910959,
+        0.07967187528357017,
+        0.08792184724689166
+      ],
+      "coverage": 0.87325439453125,
+      "partition_ari": 0.020812803651377384,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.42228306361607143,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.19358816467091103
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient029",
+      "volume": "patient029_frame01",
+      "named_dice": [
+        0.8430215027992627,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.7210748845880682,
+      "partition_ari": 0.049541036104988306,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.519601532907197,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.27126086304550884
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient029",
+      "volume": "patient029_frame12",
+      "named_dice": [
+        0.8205527174739384,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.7146754409327651,
+      "partition_ari": 0.016963762940552497,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.5106478604403409,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2071824369830977
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient030",
+      "volume": "patient030_frame01",
+      "named_dice": [
+        0.7539540581017083,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6029405381944445,
+      "partition_ari": 0.008952689304562606,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3890118634259259,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.17427427476699947
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient030",
+      "volume": "patient030_frame12",
+      "named_dice": [
+        0.7494394024548872,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6027488425925925,
+      "partition_ari": -0.0009319469448189776,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3821072048611111,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.15880812733198238
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient032",
+      "volume": "patient032_frame01",
+      "named_dice": [
+        0.8251294326794124,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.7041080729166667,
+      "partition_ari": 0.007532894018494526,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.34649576822916667,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.16851408090562492
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient032",
+      "volume": "patient032_frame12",
+      "named_dice": [
+        0.8221766040234482,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.710712890625,
+      "partition_ari": 0.002628903723872743,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.34073079427083336,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.15496957750763965
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient036",
+      "volume": "patient036_frame01",
+      "named_dice": [
+        0.7756990545161939,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6263789424189815,
+      "partition_ari": 0.007346891547338901,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3916332103587963,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.17534706037827708
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient036",
+      "volume": "patient036_frame12",
+      "named_dice": [
+        0.7636565728535804,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6160956488715278,
+      "partition_ari": 0.004162694668363873,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.38804343894675924,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.16855958072739627
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient055",
+      "volume": "patient055_frame01",
+      "named_dice": [
+        0.7637078178780672,
+        0.018162460073902424,
+        0.004039219518551093,
+        0.05401914602643975
+      ],
+      "coverage": 0.7968227559156379,
+      "partition_ari": 0.03287017206009015,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4107108410493827,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2095520796587093
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient055",
+      "volume": "patient055_frame10",
+      "named_dice": [
+        0.7627874357556771,
+        0.0,
+        0.004862686226196498,
+        0.06534138567354471
+      ],
+      "coverage": 0.7971985114454733,
+      "partition_ari": 0.0235219580069882,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.41315827546296297,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.19735503652227346
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient065",
+      "volume": "patient065_frame01",
+      "named_dice": [
+        0.7273864640272664,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5561782525510204,
+      "partition_ari": 0.0191634362683209,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3832536139455782,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.18123478594078707
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient065",
+      "volume": "patient065_frame14",
+      "named_dice": [
+        0.6890575555984003,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5178465136054422,
+      "partition_ari": 0.008695194233602486,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.37096088435374147,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.15924885551488982
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient070",
+      "volume": "patient070_frame01",
+      "named_dice": [
+        0.9233521654065918,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.8832945212339743,
+      "partition_ari": 0.007507972124203761,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3583514873798077,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.17186139006386278
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient070",
+      "volume": "patient070_frame10",
+      "named_dice": [
+        0.9102695395707029,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.8543795072115384,
+      "partition_ari": -0.00022459858931535244,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3553216396233974,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.15404446132328536
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient076",
+      "volume": "patient076_frame01",
+      "named_dice": [
+        0.694422243586526,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5179920196533203,
+      "partition_ari": 0.025470480454248903,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3687019348144531,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.18659251077442643
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient076",
+      "volume": "patient076_frame12",
+      "named_dice": [
+        0.6844597822116527,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5132808685302734,
+      "partition_ari": 0.006993059338545207,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3564109802246094,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1557038239460942
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient082",
+      "volume": "patient082_frame01",
+      "named_dice": [
+        0.8762144358913493,
+        0.0050570260383042825,
+        0.01622588475788936,
+        0.008734453621950062
+      ],
+      "coverage": 0.7908290091604824,
+      "partition_ari": 0.0494629669180552,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4741056934137291,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.26779628622850077
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient082",
+      "volume": "patient082_frame07",
+      "named_dice": [
+        0.8782693831880274,
+        0.0,
+        0.008394915755246823,
+        0.0
+      ],
+      "coverage": 0.8113223272263451,
+      "partition_ari": 0.025874308289302112,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4738067457096475,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2187727965378492
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient087",
+      "volume": "patient087_frame01",
+      "named_dice": [
+        0.9029834667036316,
+        0.0,
+        0.001486104919007282,
+        0.08050048993743876
+      ],
+      "coverage": 0.88201904296875,
+      "partition_ari": 0.04362856464875565,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.44876496688179346,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2617197772878659
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient087",
+      "volume": "patient087_frame10",
+      "named_dice": [
+        0.9020523138832998,
+        0.0,
+        0.008030662529658696,
+        0.01623484932725453
+      ],
+      "coverage": 0.8863180409307065,
+      "partition_ari": 0.023757775905372754,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4485579780910326,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.21506273467537348
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient089",
+      "volume": "patient089_frame01",
+      "named_dice": [
+        0.8460375434005419,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.7270403689674523,
+      "partition_ari": 0.015711245868758873,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.38257356551627386,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.17718837061305906
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient089",
+      "volume": "patient089_frame10",
+      "named_dice": [
+        0.8446994771060721,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.7295897341470258,
+      "partition_ari": 0.010226707294920633,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.38015133978675647,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.17058411627036155
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient095",
+      "volume": "patient095_frame01",
+      "named_dice": [
+        0.6926410951195493,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5057504251700681,
+      "partition_ari": 0.017269244820648046,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.348171768707483,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.18752240085101446
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient095",
+      "volume": "patient095_frame12",
+      "named_dice": [
+        0.6856385683622602,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5059700963718821,
+      "partition_ari": 0.009331203680330953,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3454311933106576,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.17231647003430534
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient098",
+      "volume": "patient098_frame01",
+      "named_dice": [
+        0.822670940343455,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6581695395171958,
+      "partition_ari": 0.0500266066222643,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.38071986607142855,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.23563096577966655
+    },
+    {
+      "step": "step_0512",
+      "patient": "patient098",
+      "volume": "patient098_frame09",
+      "named_dice": [
+        0.8254434750941576,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6678783275462963,
+      "partition_ari": 0.041470861900232296,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3887803819444444,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24518573682261832
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient004",
+      "volume": "patient004_frame01",
+      "named_dice": [
+        0.7419339548286038,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.575665072737069,
+      "partition_ari": 0.03113223867918531,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.46579505657327586,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.23437396980067443
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient004",
+      "volume": "patient004_frame15",
+      "named_dice": [
+        0.7410265019102354,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5783354660560345,
+      "partition_ari": 0.026233803318015746,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.46270541487068967,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.22049638362684232
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient005",
+      "volume": "patient005_frame01",
+      "named_dice": [
+        0.8850225196569887,
+        0.0,
+        0.13916269595897138,
+        0.3818420265513195
+      ],
+      "coverage": 0.8993145978009259,
+      "partition_ari": 0.07191135022282089,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4300220630787037,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.27157069523618055
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient005",
+      "volume": "patient005_frame13",
+      "named_dice": [
+        0.8736395591977508,
+        0.0,
+        0.06346689160691692,
+        0.2529422991284433
+      ],
+      "coverage": 0.905177589699074,
+      "partition_ari": 0.0378838211100743,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4244502314814815,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24931470604793124
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient012",
+      "volume": "patient012_frame01",
+      "named_dice": [
+        0.6979890829315165,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.516455078125,
+      "partition_ari": 0.02518781541193849,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3910750679347826,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.20676579162554826
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient012",
+      "volume": "patient012_frame13",
+      "named_dice": [
+        0.6905779386791573,
+        0.0,
+        0.01746518763275903,
+        0.028409090909090908
+      ],
+      "coverage": 0.5477623980978261,
+      "partition_ari": 0.016991903728737576,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3820906929347826,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.19128333855649327
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient014",
+      "volume": "patient014_frame01",
+      "named_dice": [
+        0.8290320234118391,
+        0.0,
+        0.011458191242668121,
+        0.14434274841715053
+      ],
+      "coverage": 0.7473994502314815,
+      "partition_ari": 0.04036958336432327,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4139937789351852,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2567571210181221
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient014",
+      "volume": "patient014_frame13",
+      "named_dice": [
+        0.8268275845229401,
+        0.0,
+        0.015101938082053864,
+        0.13754577035020185
+      ],
+      "coverage": 0.7213957609953704,
+      "partition_ari": 0.03135966830631684,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4010091145833333,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.23548726370603845
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient015",
+      "volume": "patient015_frame01",
+      "named_dice": [
+        0.7782758875985122,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6195264274691358,
+      "partition_ari": 0.014229038036604583,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.35783982767489714,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1811323328673461
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient015",
+      "volume": "patient015_frame10",
+      "named_dice": [
+        0.7438492604568416,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5840747974537037,
+      "partition_ari": 0.009838046127083831,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.35222961676954734,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.17015429950783956
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient018",
+      "volume": "patient018_frame01",
+      "named_dice": [
+        0.8159727731078279,
+        0.0,
+        0.0187848022005054,
+        0.2157769047068793
+      ],
+      "coverage": 0.7902153862847222,
+      "partition_ari": 0.03939272375876765,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3938259548611111,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.22746400926218308
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient018",
+      "volume": "patient018_frame10",
+      "named_dice": [
+        0.8085867620751341,
+        0.0,
+        0.04404273822835135,
+        0.19511671585725784
+      ],
+      "coverage": 0.7468691225405093,
+      "partition_ari": 0.027958600216533118,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.38182011357060186,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2062363379939191
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient028",
+      "volume": "patient028_frame01",
+      "named_dice": [
+        0.8223756616945088,
+        0.010473956648333872,
+        0.0796780975857319,
+        0.1992811879315237
+      ],
+      "coverage": 0.8687935965401786,
+      "partition_ari": 0.037482106841955076,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4293178013392857,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.21982298422643357
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient028",
+      "volume": "patient028_frame09",
+      "named_dice": [
+        0.8461696030414575,
+        0.0005937761463928099,
+        0.08888116528168347,
+        0.0667931688804554
+      ],
+      "coverage": 0.9098214285714286,
+      "partition_ari": 0.02126390407907521,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.42046072823660713,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1942127115942659
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient029",
+      "volume": "patient029_frame01",
+      "named_dice": [
+        0.8252624190696439,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6907774029356061,
+      "partition_ari": 0.04926791813987795,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.5194998076467803,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2705142616034689
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient029",
+      "volume": "patient029_frame12",
+      "named_dice": [
+        0.8213340964220235,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.7154929421164773,
+      "partition_ari": 0.016970341622086722,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.5105294892282197,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.20691498100076794
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient030",
+      "volume": "patient030_frame01",
+      "named_dice": [
+        0.7645131452761558,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.618138744212963,
+      "partition_ari": 0.008905049637764437,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3895055700231482,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.17439184306260067
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient030",
+      "volume": "patient030_frame12",
+      "named_dice": [
+        0.7601897062445349,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6171603732638888,
+      "partition_ari": -0.0011012936402677923,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3826497395833333,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.15897265293900922
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient032",
+      "volume": "patient032_frame01",
+      "named_dice": [
+        0.8095411856963304,
+        0.0,
+        0.0358590308370044,
+        0.06083426487027122
+      ],
+      "coverage": 0.7220345052083333,
+      "partition_ari": 0.007605716208537226,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.34746744791666667,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1687371879623143
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient032",
+      "volume": "patient032_frame12",
+      "named_dice": [
+        0.8061413526202259,
+        0.0,
+        0.03151505072343256,
+        0.025329908776901958
+      ],
+      "coverage": 0.7282600911458333,
+      "partition_ari": 0.0025719767514598905,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3418245442708333,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1551150569782799
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient036",
+      "volume": "patient036_frame01",
+      "named_dice": [
+        0.7764303132486848,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6280427155671297,
+      "partition_ari": 0.006996125320459594,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3917575412326389,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.17505739727892836
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient036",
+      "volume": "patient036_frame12",
+      "named_dice": [
+        0.7651931223523548,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6172824435763888,
+      "partition_ari": 0.004871300841275512,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3890426070601852,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1704162552274358
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient055",
+      "volume": "patient055_frame01",
+      "named_dice": [
+        0.7644310684824019,
+        0.01804757998359311,
+        0.003993376838414337,
+        0.05333636811957058
+      ],
+      "coverage": 0.7974235628858025,
+      "partition_ari": 0.033368835595119946,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4116331500771605,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.21058847741993417
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient055",
+      "volume": "patient055_frame10",
+      "named_dice": [
+        0.7639323715981174,
+        0.0,
+        0.009172079441439081,
+        0.05246137261947539
+      ],
+      "coverage": 0.7980605388374485,
+      "partition_ari": 0.024200946667971693,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4147014853395062,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.19936430612237233
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient065",
+      "volume": "patient065_frame01",
+      "named_dice": [
+        0.6986096256684492,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5219175170068027,
+      "partition_ari": 0.01926032397529955,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3833466198979592,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.18110980214085629
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient065",
+      "volume": "patient065_frame14",
+      "named_dice": [
+        0.6901296929292786,
+        0.0,
+        0.06488810710446595,
+        0.021536252692031587
+      ],
+      "coverage": 0.5581845238095238,
+      "partition_ari": 0.008864331606230643,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.37113626700680274,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.15948080001039802
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient070",
+      "volume": "patient070_frame01",
+      "named_dice": [
+        0.9236636446776536,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.8838767027243589,
+      "partition_ari": 0.0074334008051482195,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3601637620192308,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.171817264182006
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient070",
+      "volume": "patient070_frame10",
+      "named_dice": [
+        0.9286572433419243,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.8859299879807693,
+      "partition_ari": -0.00033543864432704395,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3543043870192308,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.15387134565888283
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient076",
+      "volume": "patient076_frame01",
+      "named_dice": [
+        0.6701779007760984,
+        0.001377151799687011,
+        0.04482217290099064,
+        0.1127659574468085
+      ],
+      "coverage": 0.5745334625244141,
+      "partition_ari": 0.025702554811885582,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.36896514892578125,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.18706127171244294
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient076",
+      "volume": "patient076_frame12",
+      "named_dice": [
+        0.6849743936118733,
+        0.0031345565749235473,
+        0.04289080155791701,
+        0.025974025974025976
+      ],
+      "coverage": 0.6017627716064453,
+      "partition_ari": 0.007140109065890431,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.35645294189453125,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.15548806986116026
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient082",
+      "volume": "patient082_frame01",
+      "named_dice": [
+        0.8757094072731938,
+        0.005050233707623704,
+        0.01297383489164311,
+        0.05268002549033492
+      ],
+      "coverage": 0.8182307368970315,
+      "partition_ari": 0.049217677707905604,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4731073892625232,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2687009689320894
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient082",
+      "volume": "patient082_frame07",
+      "named_dice": [
+        0.8777323048879497,
+        0.0,
+        0.01404901885928075,
+        0.0
+      ],
+      "coverage": 0.7943765219155844,
+      "partition_ari": 0.025980947887582546,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4722866419294991,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.21832515258237667
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient087",
+      "volume": "patient087_frame01",
+      "named_dice": [
+        0.9044702465594948,
+        0.0,
+        0.0017761989342806395,
+        0.07981326707326256
+      ],
+      "coverage": 0.8827090056046195,
+      "partition_ari": 0.04395432445995849,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4490807574728261,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2616026907598948
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient087",
+      "volume": "patient087_frame10",
+      "named_dice": [
+        0.8931429543671676,
+        0.0,
+        0.010520587701795755,
+        0.015571126682237793
+      ],
+      "coverage": 0.8686258067255435,
+      "partition_ari": 0.02421830812570237,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4485526706861413,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.21544639839153398
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient089",
+      "volume": "patient089_frame01",
+      "named_dice": [
+        0.8462822811843869,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.7277396359427609,
+      "partition_ari": 0.015576002064021035,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3831544612794613,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1775187720652617
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient089",
+      "volume": "patient089_frame10",
+      "named_dice": [
+        0.845025737566588,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.7302166631593715,
+      "partition_ari": 0.010241171283992075,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.380491109006734,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1711820013079083
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient095",
+      "volume": "patient095_frame01",
+      "named_dice": [
+        0.6938711679527717,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5076052295918367,
+      "partition_ari": 0.01721404639104981,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.34860579648526074,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1870429652153186
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient095",
+      "volume": "patient095_frame12",
+      "named_dice": [
+        0.7074162886845271,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5309134070294784,
+      "partition_ari": 0.009521123814798823,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.346077806122449,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.17253006392842965
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient098",
+      "volume": "patient098_frame01",
+      "named_dice": [
+        0.7867202047448759,
+        0.0,
+        0.07508294045748211,
+        0.13982521847690388
+      ],
+      "coverage": 0.6593269469246031,
+      "partition_ari": 0.05022677163549264,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3810350529100529,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.23478613001897317
+    },
+    {
+      "step": "step_0768",
+      "patient": "patient098",
+      "volume": "patient098_frame09",
+      "named_dice": [
+        0.7892392630561533,
+        0.0,
+        0.12397061336066974,
+        0.1570753405615791
+      ],
+      "coverage": 0.7084883432539683,
+      "partition_ari": 0.0416712124408472,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.38923249421296297,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24487981096776987
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient004",
+      "volume": "patient004_frame01",
+      "named_dice": [
+        0.7866988575342697,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6410897090517241,
+      "partition_ari": 0.025781604742926425,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.44382913523706896,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2228349260791892
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient004",
+      "volume": "patient004_frame15",
+      "named_dice": [
+        0.8056705513643552,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6759125808189655,
+      "partition_ari": 0.02110608049082124,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.44356310614224137,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.20868074244912826
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient005",
+      "volume": "patient005_frame01",
+      "named_dice": [
+        0.8786056602102437,
+        0.0,
+        0.08065732544754495,
+        0.18383015226249197
+      ],
+      "coverage": 0.7980161313657408,
+      "partition_ari": 0.0691919545598341,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.44236472800925924,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2710836115231926
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient005",
+      "volume": "patient005_frame13",
+      "named_dice": [
+        0.8672478101457085,
+        0.0,
+        0.08317855712152664,
+        0.1936582447420498
+      ],
+      "coverage": 0.8073061342592592,
+      "partition_ari": 0.03536562498744459,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4366644965277778,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2401945420465748
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient012",
+      "volume": "patient012_frame01",
+      "named_dice": [
+        0.7071221149521739,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5269234035326087,
+      "partition_ari": 0.02223788946586515,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.36856317934782606,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2003391322193227
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient012",
+      "volume": "patient012_frame13",
+      "named_dice": [
+        0.7017290615008356,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5283946161684783,
+      "partition_ari": 0.0146300033010199,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3590799082880435,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1836758801648647
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient014",
+      "volume": "patient014_frame01",
+      "named_dice": [
+        0.8235133976733643,
+        0.0,
+        0.01256555376706994,
+        0.14448264571054356
+      ],
+      "coverage": 0.7098596643518519,
+      "partition_ari": 0.03796583336461267,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4280345775462963,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2611541857604615
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient014",
+      "volume": "patient014_frame13",
+      "named_dice": [
+        0.8208786168708634,
+        0.0,
+        0.01539210910862153,
+        0.1406367041198502
+      ],
+      "coverage": 0.713868995949074,
+      "partition_ari": 0.028427943125876765,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.41378580729166664,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.23970906275976533
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient015",
+      "volume": "patient015_frame01",
+      "named_dice": [
+        0.770365210954658,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6089711130401234,
+      "partition_ari": 0.013189203945820665,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.36581709747942387,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.18316921850593895
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient015",
+      "volume": "patient015_frame10",
+      "named_dice": [
+        0.765412660844269,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.61157327031893,
+      "partition_ari": 0.008666135165482463,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.36082577803497945,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.17177680135806558
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient018",
+      "volume": "patient018_frame01",
+      "named_dice": [
+        0.8122278127774724,
+        0.0,
+        0.0137842602981247,
+        0.06515326407592664
+      ],
+      "coverage": 0.7018839518229166,
+      "partition_ari": 0.038855543960167806,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4003974066840278,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.23273065682955021
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient018",
+      "volume": "patient018_frame10",
+      "named_dice": [
+        0.8046628469948887,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6558679651331019,
+      "partition_ari": 0.02709853254211361,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.38813386140046297,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2102595526415415
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient028",
+      "volume": "patient028_frame01",
+      "named_dice": [
+        0.8646098335662559,
+        0.0,
+        0.11436818473380372,
+        0.20575678281228482
+      ],
+      "coverage": 0.80693359375,
+      "partition_ari": 0.03551340603090361,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.41507393973214285,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.21684705032304022
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient028",
+      "volume": "patient028_frame09",
+      "named_dice": [
+        0.862154260846056,
+        0.0,
+        0.09410063023039571,
+        0.0974184120798831
+      ],
+      "coverage": 0.8513270786830357,
+      "partition_ari": 0.019388617195241587,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.41679513113839284,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1874593116946001
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient029",
+      "volume": "patient029_frame01",
+      "named_dice": [
+        0.8689556537032072,
+        0.0,
+        0.03960475257030844,
+        0.1552758954501452
+      ],
+      "coverage": 0.8037053888494318,
+      "partition_ari": 0.04382828026004714,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.5000351414535985,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.26627751681890577
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient029",
+      "volume": "patient029_frame12",
+      "named_dice": [
+        0.831958591188794,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.7356844815340909,
+      "partition_ari": 0.013250945410201557,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4895352450284091,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.20146599386305578
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient030",
+      "volume": "patient030_frame01",
+      "named_dice": [
+        0.7842745941071025,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.644923683449074,
+      "partition_ari": 0.007285481655414751,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.36744791666666665,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.16797898414866197
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient030",
+      "volume": "patient030_frame12",
+      "named_dice": [
+        0.8057881390202837,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6844545717592593,
+      "partition_ari": -0.0024103803650923953,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3609809027777778,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.15246242897429102
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient032",
+      "volume": "patient032_frame01",
+      "named_dice": [
+        0.8264872321307754,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.7060791015625,
+      "partition_ari": 0.006511143251262245,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.33295084635416666,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.16458214177943145
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient032",
+      "volume": "patient032_frame12",
+      "named_dice": [
+        0.8238548068560225,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.7131315104166667,
+      "partition_ari": 0.001650504836821212,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.326884765625,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.15016300325088008
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient036",
+      "volume": "patient036_frame01",
+      "named_dice": [
+        0.7687033242062604,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6171490704571759,
+      "partition_ari": 0.006510766527691277,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3978904441550926,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.17587604885778482
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient036",
+      "volume": "patient036_frame12",
+      "named_dice": [
+        0.7570585831941568,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6066125940393519,
+      "partition_ari": 0.004203808292042085,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3931749131944444,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1708508150038496
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient055",
+      "volume": "patient055_frame01",
+      "named_dice": [
+        0.7550172704384195,
+        0.018250530002765233,
+        0.003261609588498868,
+        0.04919190042727104
+      ],
+      "coverage": 0.7914998874742798,
+      "partition_ari": 0.031393125059265815,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.42069749871399176,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2087393260000798
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient055",
+      "volume": "patient055_frame10",
+      "named_dice": [
+        0.7542523944489771,
+        0.0,
+        0.003927095374578391,
+        0.062163147870486685
+      ],
+      "coverage": 0.792309670781893,
+      "partition_ari": 0.02248818862874685,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.4230987172067901,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.19608831420149253
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient065",
+      "volume": "patient065_frame01",
+      "named_dice": [
+        0.7162351749818039,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5426498724489796,
+      "partition_ari": 0.017758026339846078,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3634008290816326,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.17584299938671386
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient065",
+      "volume": "patient065_frame14",
+      "named_dice": [
+        0.7080411839155402,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5398304634353741,
+      "partition_ari": 0.007768603175502929,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.35110544217687073,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.15284013567513527
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient070",
+      "volume": "patient070_frame01",
+      "named_dice": [
+        0.8377397843776623,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.7370887169471154,
+      "partition_ari": 0.004793605931264207,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.38083120492788464,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.16897284459539447
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient070",
+      "volume": "patient070_frame10",
+      "named_dice": [
+        0.8424061147462147,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.7388196113782052,
+      "partition_ari": -0.002551864210101028,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.37080578926282054,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.14547163962833795
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient076",
+      "volume": "patient076_frame01",
+      "named_dice": [
+        0.6851826891174518,
+        0.0015696533682145193,
+        0.040292628024760836,
+        0.09294871794871795
+      ],
+      "coverage": 0.5912742614746094,
+      "partition_ari": 0.02406566648416887,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3540306091308594,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.18083073416069956
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient076",
+      "volume": "patient076_frame12",
+      "named_dice": [
+        0.6755932059546267,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5032081604003906,
+      "partition_ari": 0.006191977337355708,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3418598175048828,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.15062631082740666
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient082",
+      "volume": "patient082_frame01",
+      "named_dice": [
+        0.8770115770255559,
+        0.0,
+        0.012407488027862429,
+        0.02910201784709382
+      ],
+      "coverage": 0.7907438543599258,
+      "partition_ari": 0.0417593804777008,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.44591583082096475,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.24952028411734659
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient082",
+      "volume": "patient082_frame07",
+      "named_dice": [
+        0.8791782297146171,
+        0.0,
+        0.007927300850734726,
+        0.009459334137067607
+      ],
+      "coverage": 0.8386805716604824,
+      "partition_ari": 0.020673299606330877,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.44496644538497215,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.20478263162801533
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient087",
+      "volume": "patient087_frame01",
+      "named_dice": [
+        0.8913573615512703,
+        0.0,
+        0.001513431706394249,
+        0.045580878265703166
+      ],
+      "coverage": 0.8248556385869565,
+      "partition_ari": 0.03911752481633073,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.46345851732336957,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.25613797881348976
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient087",
+      "volume": "patient087_frame10",
+      "named_dice": [
+        0.8892706624395026,
+        0.0,
+        0.007305086996945145,
+        0.0
+      ],
+      "coverage": 0.830216117527174,
+      "partition_ari": 0.019839424503370093,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.46221923828125,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.2120102090565775
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient089",
+      "volume": "patient089_frame01",
+      "named_dice": [
+        0.8383013157178093,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.7153128507295174,
+      "partition_ari": 0.014131073310432776,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3711792403198653,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1714557163540304
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient089",
+      "volume": "patient089_frame10",
+      "named_dice": [
+        0.8371235307335291,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.7183181642817059,
+      "partition_ari": 0.008689877756263606,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3706224572109989,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1617395426450703
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient095",
+      "volume": "patient095_frame01",
+      "named_dice": [
+        0.7647365531115756,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5933478599773243,
+      "partition_ari": 0.015966565459446573,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.35739441609977324,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.18914832035563903
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient095",
+      "volume": "patient095_frame12",
+      "named_dice": [
+        0.7471440554297992,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.5810817035147392,
+      "partition_ari": 0.008501822968891046,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3543083900226757,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.1742000546749085
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient098",
+      "volume": "patient098_frame01",
+      "named_dice": [
+        0.7793184504575698,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coverage": 0.6013093171296297,
+      "partition_ari": 0.04744960352514559,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3669007316468254,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.23182242779195647
+    },
+    {
+      "step": "step_1024",
+      "patient": "patient098",
+      "volume": "patient098_frame09",
+      "named_dice": [
+        0.7817497071449993,
+        0.0,
+        0.1347443071638318,
+        0.11517934715154524
+      ],
+      "coverage": 0.6533952339616402,
+      "partition_ari": 0.03865840333763297,
+      "oracle_aligned_accuracy_ANALYSIS_ONLY": 0.3729512855489418,
+      "oracle_macro4_dice_ANALYSIS_ONLY": 0.23811528929558762
+    }
+  ]
+}

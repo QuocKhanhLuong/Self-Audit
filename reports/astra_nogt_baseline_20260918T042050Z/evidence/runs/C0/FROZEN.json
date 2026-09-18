@@ -1,0 +1,114 @@
+{
+  "schema": "nogt.freeze.v1",
+  "time_unix": 1789706528.1709828,
+  "sources": {
+    "self_audit_nogt/__init__.py": "123ab79ae53ca969157f68047e9bafdfbe3cc99669cf5c2a1a6f6e7f77e026ad",
+    "self_audit_nogt/core.py": "6f735a965ae867435deff3494ebe92b422467d894eee17327e9c43349f8d86df",
+    "self_audit_nogt/data.py": "10f9b5a240c6d76b927b6b41aeb39cfbd5283a39760794bad4343f7d84e07927",
+    "self_audit_nogt/runner.py": "13ff2f06aa67984ba07eb695c82a34a183b0f8547efb294452acbf0982fdcd87",
+    "self_audit_maskfree/ontology.py": "22c14e9984c7e5c4b27d3a7d6a6bd85a1c839744bc0d920656956cfb8eb2825c",
+    "self_audit_maskfree/contracts.py": "e0a52ac637ee903add55c5c65a80a1642ea95b63ad54b9bd3587cf2672b063d4"
+  },
+  "config": {
+    "schema": "nogt.v1",
+    "resolution": 224,
+    "threads": 4,
+    "device": "cpu",
+    "batch_size": 4,
+    "updates": 1024,
+    "seeds": [
+      17,
+      29
+    ],
+    "optimizer": "Adam",
+    "learning_rate": 0.001,
+    "weight_decay": 0,
+    "checkpoints": [
+      0,
+      128,
+      256,
+      512,
+      768,
+      1024
+    ],
+    "checkpoint_selection": "fixed last update only",
+    "c0": {
+      "clusters": 4,
+      "iterations": 15,
+      "features": [
+        "intensity",
+        "mean5",
+        "0.10*y",
+        "0.10*x"
+      ]
+    },
+    "direct_loss": {
+      "region": 1.0,
+      "tv": 0.01,
+      "conditional_entropy": 0.01
+    },
+    "cache_loss": {
+      "cross_entropy": 1.0
+    },
+    "ontology": "unchanged self_audit_maskfree.ontology at 826a11ca9c37fd024c9d7d83df594f8b051ec9ca",
+    "unknown": 255,
+    "pretraining": null,
+    "auditor": false,
+    "recurrent_history": false,
+    "teacher_refreshes": 0,
+    "per_test_image_weight_optimization": false
+  },
+  "input_manifest_sha256": "ef55f3cedce12aca63049e74724c34cf3bcefec6d35cbfceccce8b45e52f923e",
+  "split_sha256": "bc42574017276a6defc668bf533330fd41a64a5e90a75ea1b8958fc9e469265a",
+  "checkpoint_sha256": null,
+  "selection_rule": "fixed update, no reference metrics available",
+  "mapping": {
+    "0": "BG",
+    "1": "RV",
+    "2": "MYO",
+    "3": "LV",
+    "255": "UNKNOWN"
+  },
+  "predictions": {
+    "step_0000/patient004_frame01.npz": "0a1a16eb23e82b4187d3684fa1d0cf461ec7715f230f571c919aca435b63ed9a",
+    "step_0000/patient004_frame15.npz": "3f85e3922d2fd74fcb4b8d22d76b0b41b925f79a456446f1db8c2f9ef9956010",
+    "step_0000/patient005_frame01.npz": "82320be3056e1bc45f908b6a07d60322db8044ad83a61052cc7cbd81b23db389",
+    "step_0000/patient005_frame13.npz": "e85aa0bc780f243f7ea5eee7ec7eb63ee3182039b701b1dbab683e555b289e06",
+    "step_0000/patient012_frame01.npz": "4e61197fe2dccbefa545df0595e8eeb24e68c3509d6764e75305b170d96c6839",
+    "step_0000/patient012_frame13.npz": "a6387cc323de941ccc88d7afcaeaf44d27163205392615f9736da6b9afc3cda7",
+    "step_0000/patient014_frame01.npz": "9d497fe0a7a3e9b3f0aa66a22aadc790715f3dc32101618461356088ff295e49",
+    "step_0000/patient014_frame13.npz": "3882b3dc67062410638d5d3da70fba85fd21e252fb167d1b2fde6e8b461ad4bd",
+    "step_0000/patient015_frame01.npz": "a90a6c9ec96c4d14368732fe9f39d04b731b288989f0ec462b1570a7eae6093c",
+    "step_0000/patient015_frame10.npz": "24bd0c90453d0d4e4b986d0cf3e34d04a77f1ddac144e2498983f2a8ef2aeb64",
+    "step_0000/patient018_frame01.npz": "58eddcca2ee427e0ee723792096a42d0db44a74369967acb5cf5de4ed85c0ece",
+    "step_0000/patient018_frame10.npz": "a1d1dde57f9f86fa25a3e455370e1904a33dfdb5fdc60f725151a1410267c348",
+    "step_0000/patient028_frame01.npz": "81ef6322c90837fa1b6048497fe77c4666695a5ee4d5ac5e7f253eba382929fd",
+    "step_0000/patient028_frame09.npz": "f44ff50bdb2d37d45b391569ce804a815dc3dcd5a108ac63922438083e178a03",
+    "step_0000/patient029_frame01.npz": "b6c9a9eb8658e6fe0e0c1a6015fb01418955537d104127500a0483a6261df3f7",
+    "step_0000/patient029_frame12.npz": "6fd1943101504b75c63567708d2d9d2a9fedd639a77faf9632429c05bd66d98e",
+    "step_0000/patient030_frame01.npz": "153631f4ae5fadc2d5050baca4b99dafc9c2eadc2c76b0a9c3207d1c7322df1e",
+    "step_0000/patient030_frame12.npz": "6a1b6653da09cb87f4811710581cd982a4d57c77387cb3dfa6d4432f30613af2",
+    "step_0000/patient032_frame01.npz": "1da1fb26180ea0f70f8c67122babc7b9836c42fe03d5569885aced10c52d1c24",
+    "step_0000/patient032_frame12.npz": "b68fba64eacaf7659f8ffa0252e87c127595c7dc24b3ecc0603b2838a7bf5634",
+    "step_0000/patient036_frame01.npz": "71cd0fab18e76305d747d502dbd7f648b5beea14052d2ee9d9da5bd8fe41cc56",
+    "step_0000/patient036_frame12.npz": "72861b2d776e15d890e630e317e069e3159fb13af0c817f7339af44b4eeb6ea6",
+    "step_0000/patient055_frame01.npz": "2c69f7349d152feef3abb38be5811022508b056a59e86eba3f3f50a85cae03a7",
+    "step_0000/patient055_frame10.npz": "fb31e8ef20955f4f48b401cd23dfffe80ebd8f81e343c3926456723faba8c73e",
+    "step_0000/patient065_frame01.npz": "0c03452910d5d3b48bcef0a19e26a5168d2f8578299421485808b807351d6b29",
+    "step_0000/patient065_frame14.npz": "87520b3f49449e18820171298700216af09871e232d1a81957ecc3c997679d8b",
+    "step_0000/patient070_frame01.npz": "77d9f6778e10276661036f5bdd9b595a3204cc43097d68061d5cda884335b9ba",
+    "step_0000/patient070_frame10.npz": "72e77f2009506b2f831af4f6874b6cfb798d2717ecff119515276364f903dd06",
+    "step_0000/patient076_frame01.npz": "0152d393e600a52e0c53cefe16c1be1c5d9598383f5a3dc3df51b41376b15740",
+    "step_0000/patient076_frame12.npz": "71da18b32e35a93435e7c011f94308adb4edec274e73735524673820bc5588e3",
+    "step_0000/patient082_frame01.npz": "d6df6536cc98c4ed1e78044cdca1d246439ff7f8a36c648d33b8b2b9877c2d58",
+    "step_0000/patient082_frame07.npz": "389b4a29ee6105ee09d3ae29b1c0879ab8a42d11b22efd52b7aa4aae220f2a81",
+    "step_0000/patient087_frame01.npz": "0a38f54a5adb7f81ccecae06ff4f5303ac9ad692661a33daab98172c14ed10e5",
+    "step_0000/patient087_frame10.npz": "0ddb4520ed6626d6c5cb4f64f99863176a5f5fa93ecadca141a6e74b7d23965f",
+    "step_0000/patient089_frame01.npz": "2c60954a7daf10b5e33efc397340e777e56467b19e972560046ca44c5fe8fdff",
+    "step_0000/patient089_frame10.npz": "d00d157498eea2eddcbaa176040157f930a1b78e7b0ce2bfd03a1ac807bda7f6",
+    "step_0000/patient095_frame01.npz": "4a112c4b33fee25f911d3699a4a71d137be19c6bed47f3a2bdbfd5a6306012eb",
+    "step_0000/patient095_frame12.npz": "419781646dc5077a530727d4e5c21865fda5c2063d9b8f49f3655f355bb33c74",
+    "step_0000/patient098_frame01.npz": "f3d1e1f137edfccc3faed81055c193b05deb9e62ecf69d95e20deb4703beb26b",
+    "step_0000/patient098_frame09.npz": "d74011e3d521fc802a68652714ac89c290a77524c08d4344fe8b6b1740f9715c"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "command": [
+    "/Users/alvinluong/miniforge3/bin/python",
+    "scripts/run_nogt_suite.py",
+    "--baseline-only",
+    "--raw",
+    "/tmp/astra_nogt_c0_e2e_smoke/raw",
+    "--split",
+    "/tmp/astra_nogt_c0_e2e_smoke/split.json",
+    "--work",
+    "/tmp/astra_nogt_c0_e2e_smoke/run"
+  ],
+  "exit_code": 0,
+  "checks": {
+    "step_0000/patient002_frame01.npz": true,
+    "native_shape": true,
+    "native_affine": true,
+    "no_train_arm": true,
+    "no_evaluator": true
+  },
+  "scope": "synthetic CLI integration, not MRI evidence"
+}

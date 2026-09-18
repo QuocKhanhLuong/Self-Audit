@@ -1,0 +1,54 @@
+{
+  "selected_baseline": "C0",
+  "time_unix": 1789707330.47373,
+  "status": "PROVISIONAL",
+  "selection_data": "image-only engineering admission, NOT semantic correctness",
+  "gt_metrics_read": false,
+  "checks": {
+    "cache": [
+      {
+        "seed": 17,
+        "agreement": 0.8478552492343954,
+        "agreement_pass": false,
+        "coverage": 0.02786785724480184,
+        "coverage_pass": false,
+        "latency": 0.024834354466293007,
+        "latency_pass": true
+      },
+      {
+        "seed": 29,
+        "agreement": 0.838857928850757,
+        "agreement_pass": false,
+        "coverage": 0.05644129922399697,
+        "coverage_pass": true,
+        "latency": 0.026322353980503976,
+        "latency_pass": true
+      }
+    ],
+    "direct": [
+      {
+        "seed": 17,
+        "agreement": 0.3510031103327067,
+        "agreement_pass": false,
+        "coverage": 0.0,
+        "coverage_pass": false,
+        "latency": 0.012308542034588754,
+        "latency_pass": true
+      },
+      {
+        "seed": 29,
+        "agreement": 0.3510031103327067,
+        "agreement_pass": false,
+        "coverage": 0.0,
+        "coverage_pass": false,
+        "latency": 0.012308375095017254,
+        "latency_pass": true
+      }
+    ]
+  },
+  "c0_coverage": 0.039937344789198755,
+  "c0_latency": 0.05958393745822832,
+  "rule": "locked EXPERIMENT_PROTOCOL.md; candidate must pass both seeds",
+  "config_sha256": "bfe29e093fea13f64d43c0dcf912d3c6b08195630206bc5202289384203d8396",
+  "before_GT_evaluation": true
+}
