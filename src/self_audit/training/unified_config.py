@@ -184,6 +184,8 @@ class DatasetConfig:
     preprocessing: PreprocessingConfig
     dataloader: DataLoaderConfig
     representation: str = "paired_3d"
+    sources: dict[str, dict[str, Any]] = field(default_factory=dict)
+    sampling_strategy: str = "none"
 
     @property
     def has_test(self) -> bool:
@@ -209,6 +211,8 @@ class DatasetConfig:
             "preprocessing",
             "dataloader",
             "representation",
+            "sources",
+            "sampling_strategy",
         }
         required = {
             "name",
@@ -234,6 +238,72 @@ class DatasetConfig:
         if representation != "paired_3d":
             raise ValueError(f"dataset.representation must be 'paired_3d', got {representation!r}")
 
+        dataset_name = _ensure_str(data["name"], "dataset.name").strip().lower()
+        if dataset_name not in {"acdc", "mnms", "cmr_multi", "cmr_motion", "mixed"}:
+            raise ValueError(
+                f"Unsupported dataset {dataset_name!r}; expected acdc, mnms, cmr_multi, cmr_motion, or mixed"
+            )
+        sampling_strategy = _ensure_str(
+            data.get("sampling_strategy", "none"),
+            "dataset.sampling_strategy",
+        )
+        if sampling_strategy not in {"none", "subject_dataset_balanced", "subject_balanced"}:
+            raise ValueError(
+                "dataset.sampling_strategy must be 'none', 'subject_dataset_balanced', or 'subject_balanced'"
+            )
+        raw_sources = data.get("sources", {})
+        if not isinstance(raw_sources, Mapping):
+            raise TypeError("dataset.sources must be a mapping")
+        sources: dict[str, dict[str, Any]] = {}
+        allowed_source_names = {"acdc", "mnms", "cmr_multi", "cmr_motion"}
+        allowed_source_keys = {
+            "data_root",
+            "split_manifest",
+            "class_mapping",
+            "audit_report",
+            "zt_report",
+            "allow_affine_mismatch",
+            "allow_manual_review",
+            "train_split",
+            "val_split",
+            "test_split",
+        }
+        for raw_name, raw_source in raw_sources.items():
+            source_name = _ensure_str(raw_name, "dataset.sources key").strip().lower()
+            if source_name not in allowed_source_names:
+                raise ValueError(f"Unsupported dataset source {source_name!r}")
+            source = _ensure_dict(raw_source, f"dataset.sources.{source_name}")
+            unknown_source_keys = set(source) - allowed_source_keys
+            if unknown_source_keys:
+                raise ValueError(
+                    f"Unknown keys in section 'dataset.sources.{source_name}': {sorted(unknown_source_keys)}"
+                )
+            if "data_root" not in source:
+                raise ValueError(f"dataset.sources.{source_name}.data_root is required")
+            source["data_root"] = _ensure_str(
+                source["data_root"],
+                f"dataset.sources.{source_name}.data_root",
+            )
+            if source.get("split_manifest") is not None:
+                source["split_manifest"] = _ensure_str(
+                    source["split_manifest"],
+                    f"dataset.sources.{source_name}.split_manifest",
+                )
+            if source.get("zt_report") is not None:
+                source["zt_report"] = _ensure_str(
+                    source["zt_report"],
+                    f"dataset.sources.{source_name}.zt_report",
+                )
+            for bool_key in ("allow_affine_mismatch", "allow_manual_review"):
+                if bool_key in source:
+                    source[bool_key] = _ensure_bool(
+                        source[bool_key],
+                        f"dataset.sources.{source_name}.{bool_key}",
+                    )
+            sources[source_name] = source
+        if dataset_name == "mixed" and not sources:
+            raise ValueError("dataset.sources is required when dataset.name is 'mixed'")
+
         class_map = data["class_mapping"]
         if not isinstance(class_map, Mapping):
             raise TypeError(f"dataset.class_mapping must be a mapping, got {type(class_map).__name__}")
@@ -255,7 +325,7 @@ class DatasetConfig:
             final_num_classes = derived_num_classes
 
         return cls(
-            name=_ensure_str(data["name"], "dataset.name"),
+            name=dataset_name,
             data_root=_ensure_str(data["data_root"], "dataset.data_root"),
             split_manifest=split_manifest,
             train_split=_ensure_str(data["train_split"], "dataset.train_split"),
@@ -268,6 +338,8 @@ class DatasetConfig:
             preprocessing=PreprocessingConfig.from_dict(_ensure_dict(data["preprocessing"], "dataset.preprocessing")),
             dataloader=DataLoaderConfig.from_dict(_ensure_dict(data["dataloader"], "dataset.dataloader")),
             representation=representation,
+            sources=sources,
+            sampling_strategy=sampling_strategy,
         )
 
 
@@ -806,6 +878,8 @@ class UnifiedConfig:
             "image_size": self.dataset.image_size,
             "depth_axis": self.dataset.depth_axis,
             "representation": self.dataset.representation,
+            "sources": {name: dict(source) for name, source in self.dataset.sources.items()},
+            "sampling_strategy": self.dataset.sampling_strategy,
             "num_classes": self.dataset.num_classes,
             "class_mapping": dict(self.dataset.class_mapping),
             "raw_to_acdc": dict(self.dataset.class_mapping),
@@ -1262,4 +1336,3 @@ def resolve_downstream_config(
             if v is not None:
                 flat[k] = v
     return ResolvedExecutionConfig(unified_config=None, flat_config=flat, is_unified=False)
-

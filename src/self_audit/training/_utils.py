@@ -453,6 +453,53 @@ def build_patient_dataset(
             config["data_root"] = raw_ds["data_root"]
     else:
         dataset_name = str(raw_ds).strip().lower()
+    if dataset_name == "mixed":
+        try:
+            from self_audit.data.mixed import DatasetSubjectBalancedSampler, MixedCardiacDataset
+        except ImportError:
+            from src.self_audit.data.mixed import DatasetSubjectBalancedSampler, MixedCardiacDataset
+        raw_sources = raw_ds.get("sources", {}) if isinstance(raw_ds, Mapping) else config.get("sources", {})
+        if not isinstance(raw_sources, Mapping) or not raw_sources:
+            raise ValueError("mixed dataset requires a non-empty sources mapping")
+        source_datasets: dict[str, torch.utils.data.Dataset] = {}
+        for source_name, source_config in raw_sources.items():
+            source_name = str(source_name).strip().lower()
+            if not isinstance(source_config, Mapping):
+                raise ValueError(f"mixed source {source_name!r} must be a mapping")
+            child_config = dict(config)
+            child_config["dataset"] = source_name
+            child_config["data_root"] = source_config.get("data_root", config.get("data_root"))
+            child_config["split_manifest"] = source_config.get(
+                "split_manifest",
+                config.get("split_manifest"),
+            )
+            child_config["sources"] = {source_name: dict(source_config)}
+            source_datasets[source_name] = build_patient_dataset(
+                child_config,
+                split=split,
+                train=train,
+            )
+        mixed = MixedCardiacDataset(source_datasets)
+        if train and str(config.get("sampling_strategy", "subject_dataset_balanced")) in {
+            "subject_dataset_balanced",
+            "subject_balanced",
+        }:
+            mixed.training_sampler = DatasetSubjectBalancedSampler(
+                mixed,
+                seed=int(config.get("seed", 42)),
+            )
+        return mixed
+    if dataset_name in {"cmr_multi", "cmr_motion"}:
+        try:
+            from self_audit.data.factory import build_audited_cardiac_dataset
+        except ImportError:
+            from src.self_audit.data.factory import build_audited_cardiac_dataset
+        return build_audited_cardiac_dataset(
+            config,
+            dataset_name=dataset_name,
+            split=split,
+            train=train,
+        )
     if dataset_name not in {"acdc", "mnms"}:
         raise ValueError(f"Unsupported dataset {dataset_name!r}")
     preprocessing = config.get("preprocessing", {})
@@ -526,12 +573,15 @@ def build_data_loader(
     workers = _require_integer(config.get("num_workers", 0), "num_workers", minimum=0)
     size = _require_integer(batch_size if batch_size is not None else config.get("batch_size", 1), "batch_size", minimum=1)
     pin_memory = bool(config.get("pin_memory", device.type == "cuda"))
+    training_sampler = getattr(dataset, "training_sampler", None) if train else None
     kwargs: dict[str, Any] = {
         "batch_size": size,
-        "shuffle": bool(train),
+        "shuffle": bool(train and training_sampler is None),
         "num_workers": workers,
         "pin_memory": pin_memory,
     }
+    if training_sampler is not None:
+        kwargs["sampler"] = training_sampler
     if workers > 0:
         kwargs["persistent_workers"] = bool(config.get("persistent_workers", False))
         if "prefetch_factor" in config:
@@ -558,6 +608,31 @@ def validate_dataset_splits(config: Mapping[str, Any]) -> dict[str, Any]:
             config["data_root"] = raw_ds["data_root"]
     else:
         dataset_name = str(raw_ds).lower()
+    if dataset_name in {"cmr_multi", "cmr_motion"}:
+        try:
+            from self_audit.data.factory import validate_audited_dataset_splits
+        except ImportError:
+            from src.self_audit.data.factory import validate_audited_dataset_splits
+        return validate_audited_dataset_splits(config, dataset_name=dataset_name)
+    if dataset_name == "mixed":
+        raw_sources = raw_ds.get("sources", {}) if isinstance(raw_ds, Mapping) else config.get("sources", {})
+        if not isinstance(raw_sources, Mapping) or not raw_sources:
+            raise ValueError("mixed dataset requires a non-empty sources mapping")
+        validations = {}
+        for source_name, source_config in raw_sources.items():
+            child = dict(config)
+            child["dataset"] = str(source_name).strip().lower()
+            child["data_root"] = source_config.get("data_root", config.get("data_root"))
+            child["split_manifest"] = source_config.get("split_manifest", config.get("split_manifest"))
+            child["sources"] = {child["dataset"]: dict(source_config)}
+            validations[child["dataset"]] = validate_dataset_splits(child)
+        return {
+            "dataset": "mixed",
+            "validated": True,
+            "strategy": "subject_manifest",
+            "source_validations": validations,
+            "test_available": all(item.get("test_available", False) for item in validations.values()),
+        }
     if dataset_name not in {"acdc", "mnms"}:
         raise ValueError(f"Unsupported dataset {dataset_name!r}")
     if dataset_name == "mnms":

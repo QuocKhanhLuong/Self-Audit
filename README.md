@@ -186,3 +186,50 @@ python -m pytest tests/test_wave3_downstream.py -v
 python -m pytest tests/test_unified_trainer.py -v
 python -m py_compile $(find src scripts tests -name "*.py")
 ```
+
+## Audited cardiac adapters
+
+The existing model contract is unchanged: each sample is [3,H,W] with
+[z-1,z,z+1] spatial slices, replicated boundary slices, center-slice target,
+in-plane resize, and volume-wise 0.5/99.5 percentile clipping plus z-score.
+The unified labels are 0 Background, 1 RV, 2 MYO, 3 LV.
+
+The audited configurations are:
+
+- configs/cmr_multi.yaml
+- configs/cmrxmotion.yaml
+- configs/self_audit_mixed_four_datasets.yaml
+
+Dataset source paths are configuration values. The source directories
+data/CMR-MULTI and data/CMRxMotion are read-only. Run the audits before
+training:
+
+    python scripts/audit_cmr_multi.py --data-root data/CMR-MULTI --output-dir reports
+    python scripts/audit_cmrxmotion.py --data-root data/CMRxMotion --output-dir reports
+
+Generate subject-level manifests (never slice/frame-level splits):
+
+    python scripts/generate_subject_splits.py --dataset cmr_multi --data-root data/CMR-MULTI --output splits/cmr_multi_subject_split_seed42.json
+    python scripts/generate_subject_splits.py --dataset cmr_motion --data-root data/CMRxMotion --output splits/cmrxmotion_subject_split_seed42.json
+
+Then build the evidence report and visual QC:
+
+    python scripts/build_dataset_compatibility_report.py
+    python scripts/generate_dataset_qc.py --cmr-multi-root data/CMR-MULTI --cmrxmotion-root data/CMRxMotion --output-dir reports/qc
+
+Adapter/model smoke verification:
+
+    python scripts/verify_dataset_adapters.py --config configs/cmr_multi.yaml --device cpu --num-workers 0
+    python scripts/verify_dataset_adapters.py --config configs/cmrxmotion.yaml --device cpu --num-workers 0
+    python scripts/verify_dataset_adapters.py --config configs/self_audit_mixed_four_datasets.yaml --device cpu --num-workers 0 --allow-missing-sources
+
+Mixed training uses dataset/subject-balanced sampling. ACDC and M&Ms must be
+provided through their configured roots and subject-safe manifests; the smoke
+command reports missing roots instead of fabricating masks. CMR-MULTI cases
+with uncertain Z/T inference are excluded. CMRxMotion volumes without GT are
+excluded from supervised training, and affine-mismatch cases require explicit
+allow_affine_mismatch plus visual QC.
+
+The adapter layer changes file discovery, native format interpretation,
+subject metadata, Z/T reconstruction, and source label mapping only. It does
+not change the model, loss, optimizer, scheduler, or training-loop logic.

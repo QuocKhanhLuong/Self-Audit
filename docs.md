@@ -441,3 +441,52 @@ routes; GT appears only in training/evaluation targets, never model inference.
 Paired read-advantage loss trains the auditor; there is no unimplemented claim
 of learned read-policy distillation. This is a testable new model, not verified
 novelty, quality, safety or GPU speedup. Old checkpoints are not compatible.
+
+## Audited four-dataset extension
+
+The existing contract remains authoritative: the model receives [B,3,H,W]
+with adjacent spatial Z slices [z-1,z,z+1], replicated boundaries, and the
+center-slice mask. Preprocessing remains in-plane resize followed by the
+existing volume-wise 0.5/99.5 percentile clipping and z-score. No Z
+resampling or temporal context is introduced by the new adapters.
+
+The new adapters are selected by configuration:
+
+- CMR-MULTI: configs/cmr_multi.yaml
+- CMRxMotion: configs/cmrxmotion.yaml
+- ACDC + M&Ms + CMR-MULTI + CMRxMotion: configs/self_audit_mixed_four_datasets.yaml
+
+Audit outputs are reports/cmr_multi_audit.csv,
+reports/cmr_multi_zt_inference.csv, reports/cmrxmotion_audit.csv, and
+reports/dataset_compatibility.md. Splits are stored as
+splits/cmr_multi_subject_split_seed42.json and
+splits/cmrxmotion_subject_split_seed42.json.
+
+CMR-MULTI is interpreted as [X,Y,N] and candidate Z/T layouts are scored by
+temporal continuity, cyclic temporal continuity, and spatial continuity. Only
+candidates passing temporal Dice >= 0.90, wrap Dice >= 0.80,
+temporal-minus-spatial Dice >= 0.03, and a top-1/top-2 gap >= 0.02 are used
+for supervised training. The flattened-axis header spacing is retained as
+metadata but is not divided or invented as physical Z spacing.
+
+CMRxMotion is grouped by subject/acquisition/phase from the verified
+Pxxx-acquisition-ED/ES naming convention. Image volumes with a singleton
+fourth axis are squeezed to native 3-D. Missing masks are audit-only and
+never converted to all-background masks. Affine mismatches are reported and
+excluded by default; enabling them requires explicit configuration and QC.
+
+The factory bridge and mixed sampler preserve the current model construction,
+loss, optimizer, scheduler, augmentation, and training loop. Mixed batches
+are namespaced by dataset and sampled with equal dataset mass, equal subject
+mass within a dataset, and uniform sample mass within a subject. A subject
+cannot occur in more than one split.
+
+Commands:
+
+    python scripts/audit_cmr_multi.py --data-root data/CMR-MULTI --output-dir reports
+    python scripts/audit_cmrxmotion.py --data-root data/CMRxMotion --output-dir reports
+    python scripts/generate_subject_splits.py --dataset cmr_multi --data-root data/CMR-MULTI --output splits/cmr_multi_subject_split_seed42.json
+    python scripts/generate_subject_splits.py --dataset cmr_motion --data-root data/CMRxMotion --output splits/cmrxmotion_subject_split_seed42.json
+    python scripts/build_dataset_compatibility_report.py
+    python scripts/generate_dataset_qc.py --cmr-multi-root data/CMR-MULTI --cmrxmotion-root data/CMRxMotion --output-dir reports/qc
+    python scripts/verify_dataset_adapters.py --config configs/self_audit_mixed_four_datasets.yaml --device cpu --num-workers 0 --allow-missing-sources

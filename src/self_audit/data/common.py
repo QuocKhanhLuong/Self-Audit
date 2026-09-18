@@ -16,8 +16,7 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset
 
 
-CLASS_NAMES = ("Background", "RV", "MYO", "LV")
-NUM_CLASSES = 4
+from .label_schema import CLASS_NAMES, NUM_CLASSES
 PATIENT_RE = re.compile(r"^(patient[^_\-]+)", re.IGNORECASE)
 CANONICAL_SPLITS = ("train", "val", "test")
 SUPPORTED_SPLIT_ALIASES: dict[str, str] = {

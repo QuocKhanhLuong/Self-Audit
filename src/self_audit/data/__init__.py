@@ -1,4 +1,4 @@
-"""Locked ACDC/M&Ms data contract for Self-Audit."""
+"""Cardiac dataset contracts and audited adapters for Self-Audit."""
 
 from .acdc import (
     ACDCDataset,
@@ -9,6 +9,9 @@ from .acdc import (
     resolve_acdc_records,
     resolve_effective_acdc_splits,
 )
+from .cardiac35d import Cardiac35DAdapter, Cardiac35DSliceDataset, CardiacUnit, LoadedCardiacUnit
+from .cmr_multi import CMRMultiAdapter, CMR_MULTI_RAW_TO_COMMON, infer_zt, reconstruct_zt
+from .cmrxmotion import CMRxMotionAdapter, CMRXMOTION_RAW_TO_COMMON, parse_cmrxmotion_filename
 from .common import (
     CANONICAL_SPLITS,
     CLASS_NAMES,
@@ -30,6 +33,8 @@ from .common import (
     to_depth_first,
     validate_patient_split,
 )
+from .label_schema import UNIFIED_LABEL_IDS, UNIFIED_LABEL_SCHEMA, remap_labels, validate_label_mapping
+from .mixed import DatasetSubjectBalancedSampler, MixedCardiacDataset
 from .mnms import (
     DEFAULT_MNMS_TO_ACDC,
     MNMSClassMapping,
@@ -39,20 +44,33 @@ from .mnms import (
     discover_mnms_records,
     map_mnms_labels,
 )
+from .splits import subject_level_split, validate_subject_split
 
 __all__ = [
     "ACDCDataset",
     "ACDCSelfAuditDataset",
     "CANONICAL_SPLITS",
     "CLASS_NAMES",
+    "Cardiac35DAdapter",
+    "Cardiac35DSliceDataset",
+    "CardiacUnit",
+    "CMRMultiAdapter",
+    "CMR_MULTI_RAW_TO_COMMON",
+    "CMRxMotionAdapter",
+    "CMRXMOTION_RAW_TO_COMMON",
     "DEFAULT_MNMS_TO_ACDC",
+    "DatasetSubjectBalancedSampler",
     "EffectiveSplits",
+    "LoadedCardiacUnit",
     "MNMSClassMapping",
     "MNMSDataset",
     "MNMsDataset",
+    "MixedCardiacDataset",
     "NUM_CLASSES",
     "SUPPORTED_SPLIT_ALIASES",
     "Sample",
+    "UNIFIED_LABEL_IDS",
+    "UNIFIED_LABEL_SCHEMA",
     "VolumeRecord",
     "build_25d_triplet",
     "build_25d_sample",
@@ -63,15 +81,22 @@ __all__ = [
     "discover_acdc_records",
     "discover_mnms_cases",
     "discover_mnms_records",
+    "infer_depth_axis",
+    "infer_zt",
     "map_mnms_labels",
+    "normalize_volume",
+    "parse_cmrxmotion_filename",
     "patient_id_from_case_id",
     "patient_level_split",
     "percentile_clip_and_zscore",
-    "infer_depth_axis",
+    "reconstruct_zt",
+    "remap_labels",
     "reorder_spacing",
     "resolve_acdc_records",
     "resolve_effective_acdc_splits",
+    "subject_level_split",
     "to_depth_first",
-    "normalize_volume",
+    "validate_label_mapping",
     "validate_patient_split",
+    "validate_subject_split",
 ]
