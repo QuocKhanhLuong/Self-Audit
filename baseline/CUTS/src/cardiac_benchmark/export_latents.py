@@ -16,9 +16,9 @@ from .train_stage1 import Stage1Config, load_checkpoint_for_export
 
 
 def export_latents(config: Stage1Config, checkpoint_path: str | Path, output_dir: str | Path, *, split: str, device: str = "cpu") -> list[dict[str, Any]]:
-    manifest = require_scientific_manifest(config.manifest_path) if config.scientific_run else load_manifest(config.manifest_path, check_paths=True)
+    manifest = require_scientific_manifest(config.manifest_path, image_root=config.image_root) if config.scientific_run else load_manifest(config.manifest_path, check_paths=True)
     model = load_checkpoint_for_export(config, checkpoint_path, device=device)
-    dataset = ImageOnlyCardiacDataset(manifest, split=split, profile=config.profile, target_hw=config.target_hw)
+    dataset = ImageOnlyCardiacDataset(manifest, split=split, profile=config.profile, target_hw=config.target_hw, source_root=config.image_root)
     loader = DataLoader(dataset, batch_size=1, shuffle=False, collate_fn=collate_image_only)
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)

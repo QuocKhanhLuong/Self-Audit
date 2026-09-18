@@ -21,6 +21,9 @@ from cardiac_benchmark.train_stage1 import (Stage1Config, build_loaders, build_m
                                             load_checkpoint_for_export, seed_primary, validate_epoch)
 from data_utils.patch_sampler import PatchSampler
 from model import CUTSEncoder
+from shared_benchmark.manifest import build_shared_manifest
+from shared_benchmark.provenance import sha256_file
+from shared_benchmark.spatial import build_grid_spec
 
 
 def make_mock_manifest(root: Path, *, dataset: str = "acdc") -> Path:
@@ -29,13 +32,24 @@ def make_mock_manifest(root: Path, *, dataset: str = "acdc") -> Path:
     np.save(source, array, allow_pickle=False)
     records = []
     for patient, split, z in (("p_train", "train", 0), ("p_dev", "dev", 1), ("p_test", "test", 2)):
-        records.append({"dataset": dataset, "patient_id": patient, "split": split, "sample_id": f"{patient}:z{z:04d}",
-                        "acquisition_id": "acq", "source_path": str(source), "image_checksum": "fixture-image-sha",
-                        "slice_index": z, "context_indices": [max(0, z-1), z, min(2, z+1)], "frame_index": None,
-                        "frame_axis": None, "depth_axis": 0, "native_shape": [3, 16, 16], "spacing": [1.0, 1.0, 1.0],
-                        "affine": None, "orientation": None})
-    payload = {"manifest_kind": "mock", "dataset": dataset, "freemask_source_sha": "96c32b10fc7b8e09b48822e10ae9eb6cc149e253",
-               "freemask_discovery_contract": {"fixture_only": True}, "image_roots": [str(root)], "records": records}
+        records.append({"dataset": dataset, "patient_id": patient, "study_id": f"{dataset}:{patient}",
+                        "volume_id": f"{dataset}:vol-{patient}:t0000", "unit_id": f"{patient}:z{z:04d}",
+                        "split": split, "path": str(source), "source_path": str(source), "relative_path": source.name,
+                        "source_format": "npy", "shape": [3,16,16], "native_shape": [3,16,16], "dtype": "float32",
+                        "native_hw": [16,16], "depth": 3, "num_slices": 3, "depth_axis": 0, "frame_axis": None,
+                        "slice_index": z, "frame_index": 0, "frame_selection_rule": "single_acquired_frame_index_0_image_only",
+                        "native_geometry": "unavailable", "native_affine": None, "orientation": None, "spacing_mm": None,
+                        "spacing_valid": False, "native_grid_export": False, "export_grid": "stored", "spatial_unit": "unknown",
+                        "source_hash": sha256_file(source), "source_fingerprint": sha256_file(source),
+                        "frame_fingerprint": f"fixture-{patient}", "study_grid_compatibility": None})
+    upstream = {"schema_version": "maskfree150.data.v2", "dataset": dataset, "seed": 42,
+                "manifest_id": "cuts-fixture-upstream-v1", "records": records,
+                "discovery_contract": {"version": "fixture"},
+                "split_provenance": {"rule": "fixture", "seed": 42, "ratios": {},
+                                     "patient_level_disjoint": True, "split_identity": "patient_id",
+                                     "selection_inputs": ["fixture"], "content_fingerprint_used": False}}
+    payload = build_shared_manifest(upstream, build_grid_spec((16,16), config_provenance={"source":"fixture"}),
+                                    fixture=True, scientific=False, local_source_root=root)
     path = root / "mock_manifest.json"
     write_manifest(payload, path)
     return path
