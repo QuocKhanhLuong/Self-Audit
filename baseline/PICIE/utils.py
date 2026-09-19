@@ -10,9 +10,12 @@ import torch.backends.cudnn as cudnn
 import faiss 
 
 from data.coco_train_dataset import TrainCOCO
-from data.coco_eval_dataset import EvalCOCO 
+from data.coco_eval_dataset import EvalCOCO
 from data.cityscapes_train_dataset import TrainCityscapes
 from data.cityscapes_eval_dataset import EvalCityscapes
+from data.acdc_train_dataset import TrainACDC
+from data.acdc_eval_dataset import EvalACDC
+from data.mnms_eval_dataset import EvalMnMs
 
 ################################################################################
 #                                  General-purpose                             #
@@ -135,8 +138,8 @@ def get_metric_as_conv(centroids):
     metric_function  = nn.Conv2d(C, N, 1, padding=0, stride=1, bias=False)
     metric_function.weight.data = centroids_weight
     metric_function = nn.DataParallel(metric_function)
-    metric_function = metric_function.cuda()
-    
+    metric_function = metric_function.to(centroids.device)
+
     return metric_function
 
 ################################################################################
@@ -151,7 +154,7 @@ def freeze_all(model):
 def initialize_classifier(args):
     classifier = get_linear(args.in_dim, args.K_train)
     classifier = nn.DataParallel(classifier)
-    classifier = classifier.cuda()
+    classifier = classifier.to(args.device)
 
     return classifier
 
@@ -178,11 +181,14 @@ def feature_flatten(feats):
 ################################################################################
 
 def get_faiss_module(args):
-    res = faiss.StandardGpuResources()
-    cfg = faiss.GpuIndexFlatConfig()
-    cfg.useFloat16 = False 
-    cfg.device     = 0 #NOTE: Single GPU only. 
-    idx = faiss.GpuIndexFlatL2(res, args.in_dim, cfg)
+    if hasattr(args, 'device') and args.device.type == 'cpu':
+        idx = faiss.IndexFlatL2(args.in_dim)
+    else:
+        res = faiss.StandardGpuResources()
+        cfg = faiss.GpuIndexFlatConfig()
+        cfg.useFloat16 = False
+        cfg.device     = 0
+        idx = faiss.GpuIndexFlatL2(res, args.in_dim, cfg)
 
     return idx
 
@@ -288,7 +294,11 @@ def collate_eval(batch):
     image = torch.stack([b[1] for b in batch])
     label = torch.stack([b[2] for b in batch])
 
-    return indice, image, label 
+    if len(batch[0]) > 3 and batch[0][3] is not None:
+        meta = [b[3] for b in batch]
+        return indice, image, label, meta
+
+    return indice, image, label
 
 def collate_train_baseline(batch):
     if batch[0][-1] is not None:
@@ -300,19 +310,42 @@ def collate_train_baseline(batch):
     return indice, image
 
 def get_dataset(args, mode, inv_list=[], eqv_list=[]):
-    if args.cityscapes:
+    dataset_name = getattr(args, 'dataset', 'coco')
+
+    if dataset_name == 'acdc':
         if mode == 'train':
-            dataset = TrainCityscapes(args.data_root, labeldir=args.save_model_path, res1=args.res1, res2=args.res2, 
+            dataset = TrainACDC(args.data_root, labeldir=args.save_model_path, split='train',
+                                mode='compute', res1=args.res1, res2=args.res2,
+                                inv_list=inv_list, eqv_list=eqv_list,
+                                scale=(args.min_scale, 1), split_manifest=args.split_manifest)
+        elif mode == 'train_val':
+            dataset = EvalACDC(args.data_root, split='val', mode='test', res=args.res,
+                               split_manifest=args.split_manifest)
+        elif mode == 'eval_val':
+            dataset = EvalACDC(args.data_root, split='val', mode='test', res=args.res,
+                               split_manifest=args.split_manifest, label=False)
+        elif mode == 'eval_test':
+            dataset = EvalACDC(args.data_root, split='val', mode='test', res=args.res,
+                               split_manifest=args.split_manifest)
+        else:
+            raise ValueError(f"Unknown mode '{mode}' for dataset 'acdc'. Expected: train, train_val, eval_val, eval_test")
+    elif dataset_name == 'mnms':
+        dataset = EvalMnMs(args.data_root, mode='test', res=args.res)
+    elif args.cityscapes:
+        if mode == 'train':
+            dataset = TrainCityscapes(args.data_root, labeldir=args.save_model_path, res1=args.res1, res2=args.res2,
                                       split='train', mode='compute', inv_list=inv_list, eqv_list=eqv_list, scale=(args.min_scale, 1))
         elif mode == 'train_val':
             dataset = EvalCityscapes(args.data_root, res=args.res, split='val', mode='test',
                                      label_mode=args.label_mode, long_image=args.long_image)
         elif mode == 'eval_val':
-            dataset = EvalCityscapes(args.data_root, res=args.res, split=args.val_type, 
+            dataset = EvalCityscapes(args.data_root, res=args.res, split=args.val_type,
                                      mode='test', label_mode=args.label_mode, long_image=args.long_image, label=False)
         elif mode == 'eval_test':
             dataset = EvalCityscapes(args.data_root, res=args.res, split='val', mode='test',
                                      label_mode=args.label_mode, long_image=args.long_image)
+        else:
+            raise ValueError(f"Unknown mode '{mode}' for dataset 'cityscapes'. Expected: train, train_val, eval_val, eval_test")
     else:
         if mode == 'train':
             dataset = TrainCOCO(args.data_root, labeldir=args.save_model_path, split='train', mode='compute', res1=args.res1,
@@ -324,5 +357,7 @@ def get_dataset(args, mode, inv_list=[], eqv_list=[]):
             dataset = EvalCOCO(args.data_root, res=args.res, split=args.val_type, mode='test', label=False)
         elif mode == 'eval_test':
             dataset = EvalCOCO(args.data_root, res=args.res, split='val', mode='test', stuff=args.stuff, thing=args.thing)
-    
-    return dataset 
+        else:
+            raise ValueError(f"Unknown mode '{mode}' for dataset 'coco'. Expected: train, train_val, eval_val, eval_test")
+
+    return dataset

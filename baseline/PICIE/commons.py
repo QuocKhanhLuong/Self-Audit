@@ -3,7 +3,7 @@ import numpy as np
 import torch 
 import torch.nn as nn 
 
-from sklearn.utils.linear_assignment_ import linear_assignment
+from scipy.optimize import linear_sum_assignment
 from modules import fpn 
 from utils import *
 
@@ -14,7 +14,7 @@ def get_model_and_optimizer(args, logger):
     # Init model 
     model = fpn.PanopticFPN(args)
     model = nn.DataParallel(model)
-    model = model.cuda()
+    model = model.to(args.device)
 
     # Init classifier (for eval only.)
     classifier = initialize_classifier(args)
@@ -28,17 +28,20 @@ def get_model_and_optimizer(args, logger):
         logger.info('Adam optimizer is used.')
         optimizer = torch.optim.Adam(filter(lambda x: x.requires_grad, model.module.parameters()), lr=args.lr)
 
-    # optional restart. 
-    args.start_epoch  = 0 
-    if args.restart or args.eval_only: 
+    # optional restart.
+    args.start_epoch  = 0
+    if args.restart or args.eval_only:
         load_path = os.path.join(args.save_model_path, 'checkpoint.pth.tar')
         if args.eval_only:
             load_path = args.eval_path
         if os.path.isfile(load_path):
-            checkpoint  = torch.load(load_path)
+            checkpoint  = torch.load(load_path, map_location=args.device, weights_only=False)
             args.start_epoch = checkpoint['epoch']
 
-            model.load_state_dict(checkpoint['state_dict'])
+            state_dict = checkpoint['state_dict']
+            if not any(k.startswith('module.') for k in state_dict):
+                state_dict = {'module.' + k: v for k, v in state_dict.items()}
+            model.load_state_dict(state_dict)
             classifier.load_state_dict(checkpoint['classifier1_state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
             logger.info('Loaded checkpoint. [epoch {}]'.format(args.start_epoch))
@@ -69,14 +72,14 @@ def run_mini_batch_kmeans(args, logger, dataloader, model, view):
         for i_batch, (indice, image) in enumerate(dataloader):
             # 1. Compute initial centroids from the first few batches. 
             if view == 1:
-                image = eqv_transform_if_needed(args, dataloader, indice, image.cuda(non_blocking=True))
+                image = eqv_transform_if_needed(args, dataloader, indice, image.to(args.device, non_blocking=True))
                 feats = model(image)
             elif view == 2:
-                image = image.cuda(non_blocking=True)
+                image = image.to(args.device, non_blocking=True)
                 feats = eqv_transform_if_needed(args, dataloader, indice, model(image))
             else:
-                # For evaluation. 
-                image = image.cuda(non_blocking=True)
+                # For evaluation.
+                image = image.to(args.device, non_blocking=True)
                 feats = model(image)
 
             # Normalize.
@@ -128,7 +131,7 @@ def run_mini_batch_kmeans(args, logger, dataloader, model, view):
             if (i_batch % 100) == 0:
                 logger.info('[Saving features]: {} / {} | [K-Means Loss]: {:.4f}'.format(i_batch, len(dataloader), kmeans_loss.avg))
 
-    centroids = torch.tensor(centroids, requires_grad=False).cuda()
+    centroids = torch.tensor(centroids, requires_grad=False).to(args.device)
 
     return centroids, kmeans_loss.avg
 
@@ -153,10 +156,10 @@ def compute_labels(args, logger, dataloader, model, centroids, view):
     with torch.no_grad():
         for i, (indice, image) in enumerate(dataloader):
             if view == 1:
-                image = eqv_transform_if_needed(args, dataloader, indice, image.cuda(non_blocking=True))
+                image = eqv_transform_if_needed(args, dataloader, indice, image.to(args.device, non_blocking=True))
                 feats = model(image)
             elif view == 2:
-                image = image.cuda(non_blocking=True)
+                image = image.to(args.device, non_blocking=True)
                 feats = eqv_transform_if_needed(args, dataloader, indice, model(image))
 
             # Normalize.
@@ -190,8 +193,10 @@ def evaluate(args, logger, dataloader, classifier, model):
     model.eval()
     classifier.eval()
     with torch.no_grad():
-        for i, (_, image, label) in enumerate(dataloader):
-            image = image.cuda(non_blocking=True)
+        for i, batch in enumerate(dataloader):
+            image = batch[1]
+            label = batch[2]
+            image = image.to(args.device, non_blocking=True)
             feats = model(image)
 
             if args.metric_test == 'cosine':
@@ -213,15 +218,15 @@ def evaluate(args, logger, dataloader, classifier, model):
             if i%20==0:
                 logger.info('{}/{}'.format(i, len(dataloader)))
     
-    # Hungarian Matching. 
-    m = linear_assignment(histogram.max() - histogram)
+    # Hungarian Matching.
+    row_ind, col_ind = linear_sum_assignment(histogram.max() - histogram)
 
-    # Evaluate. 
-    acc = histogram[m[:, 0], m[:, 1]].sum() / histogram.sum() * 100
+    # Evaluate.
+    acc = histogram[row_ind, col_ind].sum() / histogram.sum() * 100
 
     new_hist = np.zeros((args.K_test, args.K_test))
     for idx in range(args.K_test):
-        new_hist[m[idx, 1]] = histogram[idx]
+        new_hist[col_ind[idx]] = histogram[idx]
     
     # NOTE: Now [new_hist] is re-ordered to 12 thing + 15 stuff classses. 
     res1 = get_result_metrics(new_hist)

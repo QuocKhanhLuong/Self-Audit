@@ -26,9 +26,9 @@ def parse_arguments():
     # Train. 
     parser.add_argument('--arch', type=str, default='resnet18')
     parser.add_argument('--pretrain', action='store_true', default=False)
-    parser.add_argument('--res', type=int, default=320, help='Input size.')
-    parser.add_argument('--res1', type=int, default=320, help='Input size scale from.')
-    parser.add_argument('--res2', type=int, default=640, help='Input size scale to.')
+    parser.add_argument('--res', type=int, default=224, help='Input size.')
+    parser.add_argument('--res1', type=int, default=224, help='Input size scale from.')
+    parser.add_argument('--res2', type=int, default=224, help='Input size scale to.')
     parser.add_argument('--batch_size_cluster', type=int, default=256)
     parser.add_argument('--batch_size_train', type=int, default=128)
     parser.add_argument('--batch_size_test', type=int, default=128)
@@ -45,8 +45,8 @@ def parse_arguments():
     # Loss. 
     parser.add_argument('--metric_train', type=str, default='cosine')   
     parser.add_argument('--metric_test', type=str, default='cosine')
-    parser.add_argument('--K_train', type=int, default=27) # COCO Stuff-15 / COCO Thing-12 / COCO All-27
-    parser.add_argument('--K_test', type=int, default=27) 
+    parser.add_argument('--K_train', type=int, default=4)
+    parser.add_argument('--K_test', type=int, default=4)
     parser.add_argument('--no_balance', action='store_true', default=False)
     parser.add_argument('--mse', action='store_true', default=False)
 
@@ -74,7 +74,15 @@ def parse_arguments():
     parser.add_argument('--cityscapes', action='store_true', default=False)
     parser.add_argument('--label_mode', type=str, default='gtFine')
     parser.add_argument('--long_image', action='store_true', default=False)
-    
+
+    # Medical dataset.
+    parser.add_argument('--dataset', type=str, default='coco',
+                        choices=['coco', 'cityscapes', 'acdc', 'mnms'])
+    parser.add_argument('--split_manifest', type=str,
+                        default=os.path.join(os.path.dirname(__file__),
+                                             '..', '..', 'splits',
+                                             'acdc_patient_split_seed42.json'))
+
     return parser.parse_args()
 
 
@@ -91,17 +99,17 @@ def train(args, logger, dataloader, model, classifier1, classifier2, criterion1,
     # switch to train mode
     model.train()
     if args.mse:
-        criterion_mse = torch.nn.MSELoss().cuda()
+        criterion_mse = torch.nn.MSELoss().to(args.device)
 
     classifier1.eval()
     classifier2.eval()
     for i, (indice, input1, input2, label1, label2) in enumerate(dataloader):
-        input1 = eqv_transform_if_needed(args, dataloader, indice, input1.cuda(non_blocking=True))
-        label1 = label1.cuda(non_blocking=True)
+        input1 = eqv_transform_if_needed(args, dataloader, indice, input1.to(args.device, non_blocking=True))
+        label1 = label1.to(args.device, non_blocking=True)
         featmap1 = model(input1)
-        
-        input2 = input2.cuda(non_blocking=True)
-        label2 = label2.cuda(non_blocking=True)
+
+        input2 = input2.to(args.device, non_blocking=True)
+        label2 = label2.to(args.device, non_blocking=True)
         featmap2 = eqv_transform_if_needed(args, dataloader, indice, model(input2))
 
         B, C, _ = featmap1.size()[:3]
@@ -178,6 +186,7 @@ def main(args, logger):
 
     # Start time.
     t_start = t.time()
+    total_iterations = 0
 
     # Get model and optimizer.
     model, optimizer, classifier1 = get_model_and_optimizer(args, logger)
@@ -230,11 +239,11 @@ def main(args, logger):
             
             # Criterion.
             if not args.no_balance:
-                criterion1 = torch.nn.CrossEntropyLoss(weight=weight1).cuda()
-                criterion2 = torch.nn.CrossEntropyLoss(weight=weight2).cuda()
+                criterion1 = torch.nn.CrossEntropyLoss(weight=weight1).to(args.device)
+                criterion2 = torch.nn.CrossEntropyLoss(weight=weight2).to(args.device)
             else:
-                criterion1 = torch.nn.CrossEntropyLoss().cuda()
-                criterion2 = torch.nn.CrossEntropyLoss().cuda()
+                criterion1 = torch.nn.CrossEntropyLoss().to(args.device)
+                criterion2 = torch.nn.CrossEntropyLoss().to(args.device)
 
             # Setup nonparametric classifier.
             classifier1 = initialize_classifier(args)
@@ -259,10 +268,11 @@ def main(args, logger):
                                                             worker_init_fn=worker_init_fn(args.seed))
 
             logger.info('Start training ...')
-            train_loss, train_cet, cet_within, cet_across, train_mse = train(args, logger, trainloader_loop, model, classifier1, classifier2, criterion1, criterion2, optimizer, epoch) 
+            train_loss, train_cet, cet_within, cet_across, train_mse = train(args, logger, trainloader_loop, model, classifier1, classifier2, criterion1, criterion2, optimizer, epoch)
+            total_iterations += len(trainloader_loop)
             acc1, res1 = evaluate(args, logger, testloader, classifier1, model)
             acc2, res2 = evaluate(args, logger, testloader, classifier2, model)
-            
+
             logger.info('============== Epoch [{}] =============='.format(epoch))
             logger.info('  Time: [{}]'.format(get_datetime(int(t.time())-int(t1))))
             logger.info('  K-Means loss   : {:.5f} | {:.5f}'.format(kmloss1, kmloss2))
@@ -271,6 +281,7 @@ def main(args, logger):
             logger.info('  Training MSE Loss (Total) : {:.5f}'.format(train_mse))
             logger.info('  [View 1] ACC: {:.4f} | mIoU: {:.4f}'.format(acc1, res1['mean_iou']))
             logger.info('  [View 2] ACC: {:.4f} | mIoU: {:.4f}'.format(acc2, res2['mean_iou']))
+            logger.info('  Total iterations so far: {}'.format(total_iterations))
             logger.info('========================================\n')
             
 
@@ -334,13 +345,28 @@ def main(args, logger):
             res_list_new.append(res_new)
 
         logger.info('Average overall pixel accuracy [NEW] : {:.3f} +/- {:.3f}.'.format(np.mean(acc_list_new), np.std(acc_list_new)))
-        logger.info('Average mIoU [NEW] : {:.3f} +/- {:.3f}. '.format(np.mean([res['mean_iou'] for res in res_list_new]), 
+        logger.info('Average mIoU [NEW] : {:.3f} +/- {:.3f}. '.format(np.mean([res['mean_iou'] for res in res_list_new]),
                                                                     np.std([res['mean_iou'] for res in res_list_new])))
-        logger.info('Experiment done. [{}]\n'.format(get_datetime(int(t.time())-int(t_start))))
+        elapsed_sec = int(t.time()) - int(t_start)
+        gpu_hours = elapsed_sec / 3600.0
+        logger.info('Total iterations: {}'.format(total_iterations))
+        logger.info('Wall-clock time: {} ({:.4f} GPU-hours)'.format(get_datetime(elapsed_sec), gpu_hours))
+        logger.info('Experiment done. [{}]\n'.format(get_datetime(elapsed_sec)))
         
         
 if __name__=='__main__':
     args = parse_arguments()
+
+    # Lock medical-baseline constraints (mục a, b, f).
+    args.pretrain = False
+    args.K_train = 4
+    args.K_test = 4
+    args.jitter = False
+    args.blur = False
+    args.grey = False
+
+    # Device setup (mục g).
+    args.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # Setup the path to save.
     if not args.pretrain:
