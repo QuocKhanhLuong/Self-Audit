@@ -1,0 +1,285 @@
+diff --git a/scripts/benchmark_maskfree_rental.py b/scripts/benchmark_maskfree_rental.py
+index b7b6e27..f0b100a 100644
+--- a/scripts/benchmark_maskfree_rental.py
++++ b/scripts/benchmark_maskfree_rental.py
+@@ -25,9 +25,12 @@ def parser() -> argparse.ArgumentParser:
+     p = argparse.ArgumentParser(description=__doc__)
+     p.add_argument("--data-root", type=Path, default=Path("/root/Self-Audit/data"))
+     p.add_argument("--output", type=Path, required=True)
++    p.add_argument("--total-epochs", type=int, choices=(50, 150), default=150)
++    p.add_argument("--acdc-data-root", type=Path, default=None)
++    p.add_argument("--mnms-data-root", type=Path, default=None)
+     p.add_argument("--prefetch-batches", type=int, choices=(0, 1, 2), default=0)
+     p.add_argument("--data-cache-bytes", type=int, default=64 * 1024 * 1024)
+-    p.add_argument("--batch-size", type=int, choices=(8, 16, 32), default=8)
++    p.add_argument("--batch-size", type=int, choices=(8, 16, 32, 64), default=8)
+     p.add_argument("--candidate-workers", type=int, choices=(0, 2, 4, 8), default=0)
+     p.add_argument("--candidate-chunk-size", type=int, choices=range(1, 9), default=8)
+     p.add_argument("--prefetch-max-bytes", type=int, default=32 * 1024 * 1024)
+@@ -39,13 +42,17 @@ def parser() -> argparse.ArgumentParser:
+ 
+ def configs_and_commands(args):
+     output = args.output.resolve()
+-    roots = {"acdc": args.data_root / "ACDC", "mnms": args.data_root / "MnM/extracted/M&M"}
++    roots = {
++        "acdc": getattr(args, "acdc_data_root", None) or args.data_root / "ACDC",
++        "mnms": getattr(args, "mnms_data_root", None) or args.data_root / "MnM/extracted/M&M",
++    }
++    total_epochs = getattr(args, "total_epochs", 150)
+     configs, commands = {}, []
+     for dataset, root in roots.items():
+         config = load_config(ROOT / f"configs/maskfree_{dataset}_150.yaml").replace(
+             data_root=str(root.resolve()), output_dir=str(output / "preflight_workspace"),
+             run_id=f"rental-{dataset}-gate", image_size=224, batch_size=args.batch_size,
+-            accumulation_steps=1, total_epochs=150, amp=False, device="cuda", audit_device="cpu",
++            accumulation_steps=1, total_epochs=total_epochs, amp=False, device="cuda", audit_device="cpu",
+             allow_cpu=False, max_steps=None, max_epochs=None, resume=None,
+             timing_mode="diagnostic" if args.diagnostic else "production", logging_mode="buffered",
+             data_cache_bytes=args.data_cache_bytes, prefetch_batches=args.prefetch_batches,
+@@ -59,6 +66,7 @@ def configs_and_commands(args):
+                "--audit-device", "cpu", "--image-size", "224", "--batch-size", str(args.batch_size), "--warmup-batches", "1" if args.diagnostic else "5",
+                "--measured-batches", "3" if args.diagnostic else "30", "--timing-mode",
+                "instrumented" if args.diagnostic else "ordinary"]
++    profile.extend(["--total-epochs", str(total_epochs)])
+     if args.diagnostic:
+         profile.extend(["--cprofile", "--torch-trace"])
+     if args.reference_report:
+diff --git a/scripts/profile_maskfree.py b/scripts/profile_maskfree.py
+index 1b2b0ec..1880380 100644
+--- a/scripts/profile_maskfree.py
++++ b/scripts/profile_maskfree.py
+@@ -9,8 +9,8 @@ unchanged, adding process-local accounting around the existing
+ opens a mask or a reference evaluator input.
+ 
+ The default protocol is five discarded warm-up batches followed by twenty
+-measured batches.  A bounded run remains a partial 150-epoch run: ``total_epochs``
+-is kept at 150, while ``max_steps`` stops after the requested batch count.  All
++measured batches.  A bounded run remains partial: ``total_epochs``
++keeps the explicitly selected horizon (150 by default, or 50), while ``max_steps`` stops after the requested batch count.  All
+ timing reports label this software evidence as neither CUDA/5070-Ti nor clinical
+ evidence.
+ """
+@@ -51,7 +51,8 @@ SYNTHETIC_TRAIN_UNITS_MIN = 256
+ PARTIAL_EPOCH_MAX_BATCHES = SYNTHETIC_DEPTH // 8
+ TIMING_MODES = ("ordinary", "instrumented")
+ IMAGE_SIZE_CHOICES = (128, 224)
+-BATCH_SIZE_CHOICES = (8, 16, 32)
++BATCH_SIZE_CHOICES = (8, 16, 32, 64)
++EPOCH_CHOICES = (50, 150)
+ SCIENTIFIC_REQUIREMENTS = {
+     "total_epochs": 150,
+     "seed": 42,
+@@ -82,13 +83,18 @@ def _selected_image_size(args: argparse.Namespace) -> int:
+     return int(image_size)
+ 
+ 
+-def _scientific_requirements(image_size: int, batch_size: int = 8) -> dict[str, Any]:
++def _scientific_requirements(
++    image_size: int, batch_size: int = 8, total_epochs: int = 150,
++) -> dict[str, Any]:
+     """Return the fixed profiler contract with the selected spatial resolution."""
+     requirements = dict(SCIENTIFIC_REQUIREMENTS)
+     if isinstance(batch_size, bool) or batch_size not in BATCH_SIZE_CHOICES:
+         raise ValueError(f"batch-size must be one of {BATCH_SIZE_CHOICES}")
+     requirements["image_size"] = int(image_size)
+     requirements["batch_size"] = int(batch_size)
++    if isinstance(total_epochs, bool) or total_epochs not in EPOCH_CHOICES:
++        raise ValueError(f"total-epochs must be one of {EPOCH_CHOICES}")
++    requirements["total_epochs"] = int(total_epochs)
+     return requirements
+ 
+ 
+@@ -2133,6 +2139,7 @@ def _prepare_config(args: argparse.Namespace, output: Path) -> tuple[Any, dict[s
+ 
+     requested_image_size = _selected_image_size(args)
+     requested_batch_size = getattr(args, "batch_size", 8)
++    requested_total_epochs = getattr(args, "total_epochs", 150)
+     supports_audit_device = any(
+         field.name == "audit_device" for field in dataclasses.fields(MaskfreeConfig)
+     )
+@@ -2162,7 +2169,7 @@ def _prepare_config(args: argparse.Namespace, output: Path) -> tuple[Any, dict[s
+             dataset="acdc",
+             data_root=fixture["root"],
+             output_dir=str(output / "trainer_workspace"),
+-            total_epochs=150,
++            total_epochs=requested_total_epochs,
+             seed=args.seed,
+             batch_size=requested_batch_size,
+             accumulation_steps=1,
+@@ -2230,7 +2237,8 @@ def _prepare_config(args: argparse.Namespace, output: Path) -> tuple[Any, dict[s
+     if runtime_overrides:
+         config = config.replace(**runtime_overrides)
+ 
+-    scientific_requirements = _scientific_requirements(requested_image_size, requested_batch_size)
++    scientific_requirements = _scientific_requirements(
++        requested_image_size, requested_batch_size, requested_total_epochs)
+     values = {name: getattr(config, name) for name in scientific_requirements}
+     mismatches = {
+         name: {"expected": expected, "actual": values[name]}
+@@ -2239,7 +2247,7 @@ def _prepare_config(args: argparse.Namespace, output: Path) -> tuple[Any, dict[s
+     }
+     if mismatches:
+         raise ValueError(
+-            "profiling requires the scientific150 FP32 contract; mismatches: "
++            "profiling requires the explicitly selected FP32 contract; mismatches: "
+             + json.dumps(mismatches, sort_keys=True)
+         )
+     return config, {
+@@ -2788,6 +2796,8 @@ def build_parser() -> argparse.ArgumentParser:
+     )
+     parser.add_argument("--batch-size", type=int, choices=BATCH_SIZE_CHOICES, default=8,
+                         help="explicit profile contract; must match the supplied YAML (default 8)")
++    parser.add_argument("--total-epochs", type=int, choices=EPOCH_CHOICES, default=150,
++                        help="schedule horizon; must match the config, never silently rewritten")
+     parser.add_argument("--device", choices=("cpu", "cuda"), default=None)
+     parser.add_argument(
+         "--audit-device",
+diff --git a/src/self_audit_maskfree/auditor.py b/src/self_audit_maskfree/auditor.py
+index 46e4abc..fd4d07c 100644
+--- a/src/self_audit_maskfree/auditor.py
++++ b/src/self_audit_maskfree/auditor.py
+@@ -200,6 +200,49 @@ def _selected_regions(labels: torch.Tensor) -> tuple[list[dict[str, Any]], bool]
+     return regions, converged_all
+ 
+ 
++def _indexed_selected_regions(
++    labels: torch.Tensor,
++) -> tuple[list[dict[str, Any]], torch.Tensor, bool]:
++    """Index the same ordered regions without allocating one HxW mask per region.
++
++    Integer counts preserve exact areas and the stable role/component tie order
++    of ``_selected_regions``.  The connected-component implementation and its
++    non-convergence fallback are unchanged.  Region ids are private accounting
++    indices; anatomical labels and reported component ids never change.
++    """
++    regions: list[dict[str, Any]] = []
++    region_ids = torch.empty_like(labels, dtype=torch.long)
++    converged_all = True
++    for role, name in ROLE_LABELS:
++        role_mask = labels == role
++        if not bool(role_mask.any()):
++            continue
++        components, converged = connected_components(role_mask)
++        converged_all &= converged
++        if not converged:
++            index = len(regions)
++            region_ids[role_mask] = index
++            regions.append({"role": name, "component": 0, "index": index,
++                            "pixels": int(role_mask.sum().item())})
++            continue
++        component_values = components[role_mask]
++        keys, counts = torch.unique(component_values, sorted=True, return_counts=True)
++        start = len(regions)
++        lookup = torch.empty(int(keys[-1].item()) + 1, dtype=torch.long, device=labels.device)
++        lookup[keys] = torch.arange(start, start + keys.numel(), device=labels.device)
++        region_ids[role_mask] = lookup[component_values]
++        for component, pixels in zip(keys.tolist(), counts.tolist()):
++            regions.append({"role": name, "component": int(component),
++                            "index": len(regions), "pixels": int(pixels)})
++    regions.sort(key=lambda entry: entry["pixels"], reverse=True)
++    return regions, region_ids, converged_all
++
++
++def _region_counts(region_ids: torch.Tensor, support: torch.Tensor, count: int) -> list[int]:
++    """Exact integer accounting, with no likelihood reduction or score change."""
++    return torch.bincount(region_ids[support], minlength=count).tolist()
++
++
+ def _regional_margin(
+     bank: Sequence[Hypothesis],
+     selected_index: int,
+@@ -284,29 +327,32 @@ def _regional_margin(
+         close_report()
+         return margin, True, report
+ 
+-    regions, converged = _selected_regions(selected.labels)
++    regions, region_ids, converged = _indexed_selected_regions(selected.labels)
+     report["components_converged"] = converged
+     report["regions_total"] = len(regions)
++    observed_counts = _region_counts(region_ids, selection_view.support, len(regions))
++    # Scan each challenger's disagreement only once, not once per connected
++    # region.  The region report still includes all unobserved/over-budget
++    # regions; only their unnecessary full-image masks are eliminated.
++    disagreement_counts: dict[int, tuple[list[int], list[int]]] = {}
++    for index in challengers:
++        difference = bank[index].labels != selected.labels
++        disagreement_counts[index] = (
++            _region_counts(region_ids, difference, len(regions)),
++            _region_counts(region_ids, difference & selection_view.support, len(regions)),
++        )
+     scored_anywhere = False
+ 
+     for position, region in enumerate(regions):
+-        mask = region["mask"]
+-        pixels = int(mask.sum().item())
+-        observed = int((selection_view.support & mask).sum().item())
+-        # A candidate is a regional alternative only when it disagrees on an
+-        # observed selection pixel in this region. Differences confined to fit
+-        # pixels cannot earn an O_select margin.
+-        observed_mask = mask & selection_view.support
+-        disagreeing_anywhere = [
+-            index
+-            for index in challengers
+-            if bool((bank[index].labels != selected.labels)[mask].any())
+-        ]
+-        disagreeing = [
+-            index
+-            for index in challengers
+-            if bool((bank[index].labels != selected.labels)[observed_mask].any())
+-        ]
++        region_index = region["index"]
++        pixels = region["pixels"]
++        observed = observed_counts[region_index]
++        # A candidate is an alternative only if it disagrees on an observed
++        # selection pixel. Differences confined to fitting pixels do not count.
++        disagreeing_anywhere = [index for index in challengers
++                               if disagreement_counts[index][0][region_index] > 0]
++        disagreeing = [index for index in challengers
++                      if disagreement_counts[index][1][region_index] > 0]
+         row: dict[str, Any] = {
+             "role": region["role"],
+             "component": region["component"],
+@@ -339,6 +385,9 @@ def _regional_margin(
+         # The region becomes evidence-bearing only after at least one challenger
+         # produces an available score on this same O_select support.
+ 
++        # Allocate a mask only for a region that actually enters scoring.
++        # At most MAX_SCORED_REGIONS masks are made, one at a time.
++        mask = region_ids == region_index
+         sub_view = _restricted_selection_view(selection_view, mask)
+ 
+         def score_one(
+diff --git a/src/self_audit_maskfree/trainer.py b/src/self_audit_maskfree/trainer.py
+index 8c3c78b..c30cb51 100644
+--- a/src/self_audit_maskfree/trainer.py
++++ b/src/self_audit_maskfree/trainer.py
+@@ -1064,6 +1064,18 @@ class MaskfreeTrainer:
+         }
+         return record, batch_cursor >= len(batches), permutation
+ 
++    def _candidate_features_to_cpu(self, features: torch.Tensor) -> torch.Tensor:
++        """Transfer only the channels the canonical candidate generator consumes.
++
++        Custom generators keep the full feature interface.  Slicing is a view
++        before the device copy; no extra full-sized CUDA clone is allocated.
++        The bank identity already hashes exactly these consumed channels.
++        """
++        detached = features.detach()
++        if self.components.generate_bank is hypotheses_module.generate_bank:
++            detached = detached[:, :hypotheses_module.MAX_FEATURE_CHANNELS]
++        return detached.cpu()
++
+     # -- one batch ------------------------------------------------------
+     def _train_batch(
+         self,
+@@ -1124,7 +1136,9 @@ class MaskfreeTrainer:
+         # The per-unit path below only indexes this CPU tensor and never calls
+         # ``.cpu()`` again.
+         with self.timing.stage("features.to_cpu", batch_units=len(units)):
+-            features_cpu = features.detach().cpu()
++            features_cpu = self._candidate_features_to_cpu(features)
++        # Neither bank generation nor the students need the GPU feature map.
++        del features
+ 
+         probs_initial: list[torch.Tensor] = []
+         probs_audited: list[torch.Tensor] = []
