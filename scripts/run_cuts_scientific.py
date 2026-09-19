@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import platform
 import sys
 from pathlib import Path
 from typing import Any
@@ -25,7 +26,6 @@ from shared_benchmark.artifacts import (  # noqa: E402
     ArtifactError,
     GeneratedSample,
     code_identity,
-    config_hash,
     repository_identity,
     run_generation,
     select_manifest_records,
@@ -33,10 +33,12 @@ from shared_benchmark.artifacts import (  # noqa: E402
 )
 from shared_benchmark.provenance import sha256_file  # noqa: E402
 from shared_benchmark.semantic_contract import FROZEN_ADAPTER_SPEC_SHA256  # noqa: E402
+from shared_benchmark.semantic_contract import FROZEN_SHARED_GRID_SHA256  # noqa: E402
+from shared_benchmark.spatial import SPATIAL_CONTRACT_VERSION  # noqa: E402
 from cardiac_benchmark.cluster_kmeans import cluster_latent  # noqa: E402
 from cardiac_benchmark.dataset import ImageOnlyCardiacDataset  # noqa: E402
 from cardiac_benchmark.manifest import load_manifest  # noqa: E402
-from cardiac_benchmark.train_stage1 import Stage1Config, load_checkpoint_for_export  # noqa: E402
+from cardiac_benchmark.train_stage1 import Stage1Config, load_checkpoint_for_export, scientific_config_hash  # noqa: E402
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -55,8 +57,68 @@ def _adapter_spec(path: Path) -> dict[str, Any]:
     return spec
 
 
+def _require_frozen_grid(manifest: dict[str, Any]) -> None:
+    grid = manifest.get("shared_grid")
+    if (
+        manifest.get("schema_version") != "shared_benchmark_manifest.v1"
+        or not isinstance(grid, dict)
+        or grid.get("version") != SPATIAL_CONTRACT_VERSION
+        or grid.get("target_hw") != [224, 224]
+        or grid.get("whole_fov") is not True
+        or manifest.get("shared_grid_hash") != FROZEN_SHARED_GRID_SHA256
+    ):
+        raise ArtifactError("CUTS scientific runner requires the frozen 224x224 whole-FOV shared grid")
+
+
+def _require_expected_config_hash(expected: str | None, computed: str) -> None:
+    if expected is not None and str(expected) != computed:
+        raise ArtifactError("CUTS --config-hash does not match the effective scientific config")
+
+
+def _central_image(sample: Any, profile: str) -> np.ndarray:
+    return np.asarray(sample.image[0 if profile == "CUTS-2D" else 1])
+
+
+def _start_execution_receipt(device: str) -> dict[str, Any]:
+    runtime_device = torch.device(device)
+    cuda_active = runtime_device.type == "cuda" and torch.cuda.is_available()
+    receipt: dict[str, Any] = {
+        "python_version": platform.python_version(),
+        "pytorch_version": torch.__version__,
+        "numpy_version": np.__version__,
+        "cuda_runtime_version": torch.version.cuda,
+        "cuda_available": bool(torch.cuda.is_available()),
+        "requested_device": str(device),
+        "device_name": torch.cuda.get_device_name(runtime_device) if cuda_active else None,
+        "cuda_peak_allocated_bytes": None,
+        "cuda_peak_reserved_bytes": None,
+    }
+    try:
+        import phate
+        receipt["phate_version"] = phate.__version__
+    except Exception:
+        receipt["phate_version"] = None
+    try:
+        import sklearn
+        receipt["scikit_learn_version"] = sklearn.__version__
+    except Exception:
+        receipt["scikit_learn_version"] = None
+    if cuda_active:
+        torch.cuda.reset_peak_memory_stats(runtime_device)
+    return receipt
+
+
+def _finish_execution_receipt(receipt: dict[str, Any], device: str) -> dict[str, Any]:
+    runtime_device = torch.device(device)
+    if runtime_device.type == "cuda" and torch.cuda.is_available():
+        receipt["cuda_peak_allocated_bytes"] = int(torch.cuda.max_memory_allocated(runtime_device))
+        receipt["cuda_peak_reserved_bytes"] = int(torch.cuda.max_memory_reserved(runtime_device))
+    return receipt
+
+
 def run(args: argparse.Namespace) -> list[dict[str, Any]]:
     manifest = validate_scientific_execution(args.manifest, args.image_root)
+    _require_frozen_grid(manifest)
     # Re-load through the baseline compatibility surface as a contract check;
     # it delegates to the same shared schema and does not split or translate.
     baseline_manifest = load_manifest(args.manifest)
@@ -71,17 +133,16 @@ def run(args: argparse.Namespace) -> list[dict[str, Any]]:
         scientific_run=True,
         image_root=str(args.image_root),
     )
+    computed_config_hash = scientific_config_hash(config)
+    _require_expected_config_hash(args.config_hash, computed_config_hash)
     model = load_checkpoint_for_export(config, args.checkpoint, device=args.device)
     checkpoint_payload = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
     checkpoint_hash = sha256_file(args.checkpoint)
-    if args.config_hash:
-        checkpoint_config_hash = str(args.config_hash)
-    elif checkpoint_payload.get("config_hash"):
-        checkpoint_config_hash = str(checkpoint_payload["config_hash"])
-    elif isinstance(checkpoint_payload.get("config"), dict) and checkpoint_payload["config"]:
-        checkpoint_config_hash = config_hash(checkpoint_payload["config"])
-    else:
-        raise ArtifactError("CUTS checkpoint/config identity is missing")
+    if checkpoint_payload.get("config_hash") != computed_config_hash:
+        raise ArtifactError("CUTS checkpoint config hash does not match the effective scientific config")
+    if checkpoint_payload.get("checkpoint_selection_policy") != "final_epoch":
+        raise ArtifactError("CUTS scientific checkpoint must declare final_epoch selection")
+    checkpoint_config_hash = computed_config_hash
     repository = repository_identity(ROOT)
     baseline_code = code_identity([
         ROOT / "baseline" / "CUTS" / "src" / "cardiac_benchmark" / "dataset.py",
@@ -102,6 +163,7 @@ def run(args: argparse.Namespace) -> list[dict[str, Any]]:
         return dataset[by_id[record["sample_id"]]]
 
     def generate(record: dict[str, Any]) -> GeneratedSample:
+        execution_receipt = _start_execution_receipt(args.device)
         sample = prepared(record)
         with torch.no_grad():
             latent = model(sample.image.unsqueeze(0).float().to(args.device)).detach().cpu().numpy()[0].astype(np.float32, copy=False)
@@ -109,7 +171,7 @@ def run(args: argparse.Namespace) -> list[dict[str, Any]]:
         if clustered.get("status") != "success":
             raise RuntimeError(f"CUTS clustering failed for {record['sample_id']}: {clustered.get('exceptions', [])}")
         raw = np.asarray(clustered["raw_cluster_map"], dtype=np.int64)
-        payload_keys = ("epoch", "best_epoch", "dev_metrics", "source_cuts_sha", "source_manifest_logical_sha", "shared_grid_hash", "cuts_mode", "benchmark_seed")
+        payload_keys = ("epoch", "dev_metrics", "source_cuts_sha", "source_manifest_logical_sha", "shared_grid_hash", "cuts_mode", "benchmark_seed", "checkpoint_selection_policy", "scientific_config")
         training = {key: checkpoint_payload[key] for key in payload_keys if key in checkpoint_payload}
         provenance = {
             "checkpoint_sha256": checkpoint_hash,
@@ -124,7 +186,8 @@ def run(args: argparse.Namespace) -> list[dict[str, Any]]:
             "latent_sha256": clustered.get("latent_hash"),
             "raw_partition_sha256": clustered.get("raw_partition_hash"),
         }
-        return GeneratedSample(partition=raw, central_image=np.asarray(sample.image[0]), baseline_metadata=provenance)
+        return GeneratedSample(partition=raw, central_image=_central_image(sample, profile), baseline_metadata=provenance,
+                               execution_receipt=_finish_execution_receipt(execution_receipt, args.device))
 
     adapter_spec = None
     semantic_root = None
@@ -145,9 +208,10 @@ def run(args: argparse.Namespace) -> list[dict[str, Any]]:
         generate=generate,
         semantic_root=semantic_root,
         adapter_spec=adapter_spec,
-        central_image_for_record=lambda record: np.asarray(prepared(record).image[0]),
+        central_image_for_record=lambda record: _central_image(prepared(record), profile),
         adapter_implementation_sha256=None,
         retry_failed=args.retry_failed,
+        extra_raw_identity_for_record=lambda _record: {"checkpoint_sha256": checkpoint_hash},
     )
 
 
@@ -177,7 +241,7 @@ def main(argv: list[str] | None = None) -> int:
     args.sample_list = args.sample_list.read_text(encoding="utf-8").splitlines() if args.sample_list else None
     results = run(args)
     print(json.dumps({"baseline": "CUTS", "mode": "CUTS-2D" if args.mode == "2d" else "CUTS-2.5D", "results": [{key: value for key, value in row.items() if key in {"sample_id", "raw_status", "semantic_status", "error"}} for row in results]}, sort_keys=True))
-    return 0 if all(row.get("raw_status") != "FAILED" for row in results) else 1
+    return 0 if all(row.get("raw_status") != "FAILED" and row.get("semantic_status") != "FAILED" for row in results) else 1
 
 
 if __name__ == "__main__":

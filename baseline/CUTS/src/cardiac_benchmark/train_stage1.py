@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import math
 import random
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -48,6 +47,28 @@ class Stage1Config:
             raise ValueError("scientific Stage-1 requires the frozen 200 epoch recipe")
         if self.lambda_contrastive_loss != 0.001:
             raise ValueError("primary loss mixture must retain lambda=0.001")
+
+
+def scientific_config_payload(config: Stage1Config) -> dict[str, Any]:
+    """Canonical behavior-affecting Stage-1 identity, independent of mount paths."""
+    return {
+        "profile": config.profile,
+        "dataset": config.dataset,
+        "batch_size": config.batch_size,
+        "num_workers": config.num_workers,
+        "max_epochs": config.max_epochs,
+        "num_kernels": config.num_kernels,
+        "sampled_patches_per_image": config.sampled_patches_per_image,
+        "patch_size": config.patch_size,
+        "learning_rate": config.learning_rate,
+        "weight_decay": config.weight_decay,
+        "lambda_contrastive_loss": config.lambda_contrastive_loss,
+        "benchmark_seed": config.benchmark_seed,
+    }
+
+
+def scientific_config_hash(config: Stage1Config) -> str:
+    return sha256_json(scientific_config_payload(config))
 
 
 def seed_primary(seed: int = 42) -> None:
@@ -143,7 +164,7 @@ def validate_epoch(model: CUTSEncoder, loader: DataLoader, recon_loss, contrasti
 
 
 def train_stage1(config: Stage1Config, checkpoint_path: str | Path, *, device: str | None = None) -> dict[str, Any]:
-    """Train only train patients and select strictly lower finite dev loss."""
+    """Train only train patients and save the fixed-budget final epoch."""
     seed_primary(config.benchmark_seed)
     train_loader, dev_loader, manifest = build_loaders(config)
     source_manifest = manifest.get("source_manifest")
@@ -168,32 +189,32 @@ def train_stage1(config: Stage1Config, checkpoint_path: str | Path, *, device: s
     runtime_device = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
     model = build_model(config).to(runtime_device)
     optimizer, scheduler, recon_loss, contrastive_loss = build_optimization(model, config)
-    best = math.inf
-    result: dict[str, Any] = {"best_epoch": None, "best_dev_total": None}
+    result: dict[str, Any] = {"checkpoint_selection_policy": "final_epoch"}
     checkpoint_path = Path(checkpoint_path)
     checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
     for epoch in range(config.max_epochs):
         train_metrics = train_epoch(model, train_loader, optimizer, recon_loss, contrastive_loss, config, runtime_device)
         scheduler.step()
         dev_metrics = validate_epoch(model, dev_loader, recon_loss, contrastive_loss, config, runtime_device)
-        if math.isfinite(dev_metrics["total"]) and dev_metrics["total"] < best:
-            best = dev_metrics["total"]
-            environment = environment_identity()
-            source_cuts_sha = current_cuts_sha()
-            payload = {
-                "state_dict": model.state_dict(), "dataset": config.dataset, "profile": config.profile,
-                "manifest_hash": manifest["manifest_hash"], "config": asdict(config), "epoch": epoch,
-                "config_hash": sha256_json(asdict(config)), "dev_metrics": dev_metrics,
-                "rng": rng_contract(loader_seed_policy=loader_seed_policy()),
-                "source_cuts_sha": source_cuts_sha, "repository_commit_sha": source_cuts_sha,
-                **manifest_provenance,
-                "environment": environment, "environment_hash": sha256_json(environment),
-            }
-            torch.save(payload, checkpoint_path)
-            result = {"best_epoch": epoch, "best_dev_total": best, "train_metrics": train_metrics, "dev_metrics": dev_metrics}
+        result.update({"epoch": epoch, "train_metrics": train_metrics, "dev_metrics": dev_metrics})
+    environment = environment_identity()
+    source_cuts_sha = current_cuts_sha()
+    payload = {
+        "state_dict": model.state_dict(), "dataset": config.dataset, "profile": config.profile,
+        "manifest_hash": manifest["manifest_hash"], "config": asdict(config),
+        "scientific_config": scientific_config_payload(config), "epoch": config.max_epochs - 1,
+        "config_hash": scientific_config_hash(config), "dev_metrics": result["dev_metrics"],
+        "checkpoint_selection_policy": "final_epoch",
+        "rng": rng_contract(loader_seed_policy=loader_seed_policy()),
+        "source_cuts_sha": source_cuts_sha, "repository_commit_sha": source_cuts_sha,
+        **manifest_provenance,
+        "environment": environment, "environment_hash": sha256_json(environment),
+    }
+    torch.save(payload, checkpoint_path)
     result.update({"checkpoint": str(checkpoint_path), "checkpoint_hash": sha256_file(checkpoint_path),
                    "manifest_hash": manifest["manifest_hash"], "source_manifest_logical_sha": manifest_provenance["source_manifest_logical_sha"],
                    "shared_grid_hash": manifest_provenance["shared_grid_hash"], "cuts_mode": config.profile,
+                   "checkpoint_selection_policy": "final_epoch",
                    "device": str(runtime_device)})
     return result
 
@@ -212,6 +233,11 @@ def load_checkpoint_for_export(config: Stage1Config, checkpoint_path: str | Path
         raise ValueError("checkpoint shared-grid identity mismatch")
     if payload.get("cuts_mode") != config.profile:
         raise ValueError("checkpoint CUTS mode identity mismatch")
+    if config.scientific_run:
+        if payload.get("checkpoint_selection_policy") != "final_epoch":
+            raise ValueError("scientific CUTS checkpoint must use final_epoch selection")
+        if payload.get("config_hash") != scientific_config_hash(config):
+            raise ValueError("scientific CUTS checkpoint config identity mismatch")
     model = build_model(config, inference=True).to(device)
     model.load_state_dict(payload["state_dict"])
     model.eval()

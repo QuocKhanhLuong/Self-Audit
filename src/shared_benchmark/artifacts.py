@@ -17,7 +17,8 @@ import os
 import re
 import subprocess
 import tempfile
-from dataclasses import dataclass
+import time
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Mapping
 
@@ -92,6 +93,9 @@ class GeneratedSample:
     partition: np.ndarray
     central_image: np.ndarray
     baseline_metadata: Mapping[str, Any]
+    # Operational measurements deliberately live outside the scientific raw
+    # payload. They describe one invocation, not the anonymous partition.
+    execution_receipt: Mapping[str, Any] = field(default_factory=dict)
 
 
 def _safe_json(value: Any) -> Any:
@@ -281,6 +285,66 @@ def _scientific_raw_payload(metadata: Mapping[str, Any]) -> dict[str, Any]:
     return payload
 
 
+def _require_mapping(value: Mapping[str, Any], key: str, *, where: str) -> Mapping[str, Any]:
+    candidate = value.get(key)
+    if not isinstance(candidate, Mapping) or not candidate:
+        raise ArtifactError(f"{where} requires non-empty mapping {key}")
+    return candidate
+
+
+def _require_string(value: Mapping[str, Any], key: str, *, where: str) -> str:
+    candidate = value.get(key)
+    if not isinstance(candidate, str) or not candidate:
+        raise ArtifactError(f"{where} requires non-empty string {key}")
+    return candidate
+
+
+def _require_int(value: Mapping[str, Any], key: str, *, where: str) -> int:
+    candidate = value.get(key)
+    if isinstance(candidate, bool) or not isinstance(candidate, (int, np.integer)):
+        raise ArtifactError(f"{where} requires integer {key}")
+    return int(candidate)
+
+
+def _validate_required_baseline_provenance(
+    baseline_name: str, baseline_metadata: Mapping[str, Any] | None,
+) -> None:
+    """Require method evidence for production CUTS/DFC raw artifacts.
+
+    Generic callers retain a baseline-agnostic writer.  The two production
+    names are intentionally fail-closed so a hand-written incomplete mapping
+    cannot become a RAW_COMPLETE scientific artifact.
+    """
+    if baseline_name not in {"CUTS", "DFC"}:
+        return
+    if not isinstance(baseline_metadata, Mapping):
+        raise ArtifactError(f"{baseline_name} RAW_COMPLETE requires baseline provenance")
+    where = f"{baseline_name} provenance"
+    if baseline_name == "CUTS":
+        _require_string(baseline_metadata, "checkpoint_sha256", where=where)
+        _require_mapping(baseline_metadata, "checkpoint_training_provenance", where=where)
+        _require_string(baseline_metadata, "cuts_mode", where=where)
+        _require_mapping(baseline_metadata, "phate_configuration", where=where)
+        _require_mapping(baseline_metadata, "kmeans_configuration", where=where)
+        if _require_int(baseline_metadata, "primary_k", where=where) != 10:
+            raise ArtifactError("CUTS provenance primary_k must be 10")
+        _require_int(baseline_metadata, "clustering_seed", where=where)
+        return
+    _require_int(baseline_metadata, "sample_seed", where=where)
+    derivation = _require_mapping(baseline_metadata, "seed_derivation", where=where)
+    _require_string(derivation, "seed_derivation_version", where=where)
+    _require_int(baseline_metadata, "update_count", where=where)
+    _require_int(baseline_metadata, "iteration_count", where=where)
+    _require_int(baseline_metadata, "final_active_count", where=where)
+    _require_int(baseline_metadata, "minLabels", where=where)
+    _require_int(baseline_metadata, "maxIter", where=where)
+    _require_mapping(baseline_metadata, "optimizer", where=where)
+    _require_string(baseline_metadata, "input_mode", where=where)
+    if baseline_metadata.get("fresh_model_optimizer_bn_state_per_sample") is not True:
+        raise ArtifactError("DFC provenance requires fresh_model_optimizer_bn_state_per_sample=true")
+    _require_string(baseline_metadata, "final_forward_semantics", where=where)
+
+
 def _raw_metadata(
     record: Mapping[str, Any], *, baseline_name: str, baseline_mode: str,
     manifest_hash: str, shared_grid_hash: str, repository: Mapping[str, Any],
@@ -289,6 +353,7 @@ def _raw_metadata(
     raw_partition_path: str,
 ) -> dict[str, Any]:
     identity = _record_identity(record)
+    _validate_required_baseline_provenance(baseline_name, baseline_metadata)
     grid = record.get("shared_grid")
     if not isinstance(grid, Mapping) or grid_hash(grid) != shared_grid_hash:
         raise ArtifactError("record shared-grid hash does not match execution contract")
@@ -316,8 +381,9 @@ def _raw_metadata(
         for key in (
             "checkpoint_sha256", "checkpoint_identity", "checkpoint_training_provenance",
             "cuts_mode", "phate_configuration", "kmeans_configuration", "primary_k",
+            "clustering_seed",
             "sample_seed", "seed_derivation", "iteration_count", "final_active_count",
-            "minLabels", "maxIter", "optimizer", "input_mode", "final_forward_semantics",
+            "update_count", "minLabels", "maxIter", "optimizer", "input_mode", "final_forward_semantics",
             "fresh_model_optimizer_bn_state_per_sample",
         ):
             if key in clean_baseline_metadata:
@@ -514,6 +580,32 @@ def raw_artifact_is_valid(directory: str | Path, *, expected: Mapping[str, Any] 
         return True
     except (ArtifactError, OSError, ValueError):
         return False
+
+
+def write_execution_receipt(
+    directory: str | Path, *, sample_id: str, baseline_name: str, baseline_mode: str,
+    raw_status: str, semantic_status: str | None, raw_generation_elapsed_seconds: float | None,
+    adapter_elapsed_seconds: float | None, total_elapsed_seconds: float,
+    environment: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Persist observational execution metadata outside scientific cache identity."""
+    receipt = {
+        "schema_version": "cardiac_execution_receipt.v1",
+        "sample_id": str(sample_id),
+        "baseline_name": str(baseline_name),
+        "baseline_mode": str(baseline_mode),
+        "raw_status": str(raw_status),
+        "adapter_status": semantic_status,
+        "raw_generation_elapsed_seconds": None if raw_generation_elapsed_seconds is None else float(raw_generation_elapsed_seconds),
+        "adapter_elapsed_seconds": None if adapter_elapsed_seconds is None else float(adapter_elapsed_seconds),
+        "total_elapsed_seconds": float(total_elapsed_seconds),
+        "environment": _safe_json(dict(environment or {})),
+    }
+    _validate_metadata(receipt, where="execution_receipt")
+    target = Path(directory)
+    target.mkdir(parents=True, exist_ok=True)
+    atomic_write_json(target / "execution_receipt.json", receipt)
+    return receipt
 
 
 def _adapter_implementation_hash(repo_root: str | Path | None = None) -> str:
@@ -732,6 +824,7 @@ def run_generation(
     semantic_root: str | Path | None = None, adapter_spec: Mapping[str, Any] | None = None,
     central_image_for_record: Callable[[Mapping[str, Any]], np.ndarray] | None = None,
     adapter_implementation_sha256: str | None = None, retry_failed: bool = True,
+    extra_raw_identity_for_record: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     """Execute/resume a bounded set of samples with persistent stage receipts."""
     if code_identity is not None:
@@ -742,6 +835,10 @@ def run_generation(
         raise ArtifactError("generation record list contains duplicate sample IDs")
     results: list[dict[str, Any]] = []
     for record in records:
+        sample_started = time.perf_counter()
+        raw_generation_elapsed_seconds: float | None = None
+        adapter_elapsed_seconds: float | None = None
+        execution_environment: Mapping[str, Any] | None = None
         sample_id = str(record["sample_id"])
         directory = artifact_directory(output_root, baseline_name=baseline_name, baseline_mode=baseline_mode, sample_id=sample_id)
         expected_base = {
@@ -753,14 +850,33 @@ def run_generation(
             "code_identity": _safe_json(code_identity_value or {}),
             "source_image_sha256": str(record["source"]["sha256"]),
         }
+        if extra_raw_identity_for_record is not None:
+            extra = extra_raw_identity_for_record(record)
+            if not isinstance(extra, Mapping):
+                raise ArtifactError("extra raw identity callback must return a mapping")
+            expected_base.update(_safe_json(dict(extra)))
         raw: RawArtifact | None = None
         try:
             if raw_artifact_is_valid(directory, expected=expected_base):
                 raw = verify_raw_partition(directory, expected=expected_base)
                 status = "SKIPPED_RAW_COMPLETE"
+                prior_receipt_path = raw.directory / "execution_receipt.json"
+                if prior_receipt_path.is_file():
+                    try:
+                        prior_receipt = json.loads(prior_receipt_path.read_text(encoding="utf-8"))
+                    except (OSError, json.JSONDecodeError) as exc:
+                        raise ArtifactError("existing execution receipt is invalid") from exc
+                    if not isinstance(prior_receipt, Mapping):
+                        raise ArtifactError("existing execution receipt is invalid")
+                    raw_generation_elapsed_seconds = prior_receipt.get("raw_generation_elapsed_seconds")
+                    adapter_elapsed_seconds = prior_receipt.get("adapter_elapsed_seconds")
+                    execution_environment = prior_receipt.get("environment")
             else:
                 mark_pending(directory, sample_id)
+                raw_started = time.perf_counter()
                 generated = generate(record)
+                raw_generation_elapsed_seconds = time.perf_counter() - raw_started
+                execution_environment = generated.execution_receipt
                 raw = seal_raw_partition(
                     output_root, generated.partition, record=record,
                     baseline_name=baseline_name, baseline_mode=baseline_mode,
@@ -783,16 +899,35 @@ def run_generation(
                         raise ArtifactError("a central_image_for_record callback is required for adapter resume")
                     else:
                         central_image = np.asarray(central_image_for_record(record))
-                    semantic = run_adapter_after_raw(
-                        raw, semantic_root=semantic_root, record=record,
-                        central_image=central_image, adapter_spec=adapter_spec,
-                        baseline_name=baseline_name, baseline_mode=baseline_mode,
-                        adapter_implementation_sha256=adapter_implementation_sha256,
-                    )
+                    adapter_started = time.perf_counter()
+                    try:
+                        semantic = run_adapter_after_raw(
+                            raw, semantic_root=semantic_root, record=record,
+                            central_image=central_image, adapter_spec=adapter_spec,
+                            baseline_name=baseline_name, baseline_mode=baseline_mode,
+                            adapter_implementation_sha256=adapter_implementation_sha256,
+                        )
+                    finally:
+                        adapter_elapsed_seconds = time.perf_counter() - adapter_started
                     semantic_status = "SEMANTIC_COMPLETE"
-                results.append({"sample_id": sample_id, "raw_status": status, "semantic_status": semantic_status, "raw_artifact": raw, "semantic_artifact": semantic})
+                receipt = write_execution_receipt(
+                    raw.directory, sample_id=sample_id, baseline_name=baseline_name, baseline_mode=baseline_mode,
+                    raw_status=status, semantic_status=semantic_status,
+                    raw_generation_elapsed_seconds=raw_generation_elapsed_seconds,
+                    adapter_elapsed_seconds=adapter_elapsed_seconds,
+                    total_elapsed_seconds=time.perf_counter() - sample_started,
+                    environment=execution_environment,
+                )
+                results.append({"sample_id": sample_id, "raw_status": status, "semantic_status": semantic_status, "raw_artifact": raw, "semantic_artifact": semantic, "execution_receipt": receipt})
             else:
-                results.append({"sample_id": sample_id, "raw_status": status, "semantic_status": None, "raw_artifact": raw})
+                receipt = write_execution_receipt(
+                    raw.directory, sample_id=sample_id, baseline_name=baseline_name, baseline_mode=baseline_mode,
+                    raw_status=status, semantic_status=None,
+                    raw_generation_elapsed_seconds=raw_generation_elapsed_seconds,
+                    adapter_elapsed_seconds=None, total_elapsed_seconds=time.perf_counter() - sample_started,
+                    environment=execution_environment,
+                )
+                results.append({"sample_id": sample_id, "raw_status": status, "semantic_status": None, "raw_artifact": raw, "execution_receipt": receipt})
         except Exception as exc:
             # The raw writer records its own failure receipt.  This outer path
             # also covers failures before a directory exists (e.g. callback
@@ -808,9 +943,20 @@ def run_generation(
                 if semantic_root is not None:
                     semantic_directory = artifact_directory(semantic_root, baseline_name=baseline_name, baseline_mode=baseline_mode, sample_id=sample_id, stage="semantic")
                     mark_failed(semantic_directory, sample_id, exc)
+            if raw is not None:
+                receipt = write_execution_receipt(
+                    raw.directory, sample_id=sample_id, baseline_name=baseline_name, baseline_mode=baseline_mode,
+                    raw_status=raw_status, semantic_status=FAILED,
+                    raw_generation_elapsed_seconds=raw_generation_elapsed_seconds,
+                    adapter_elapsed_seconds=adapter_elapsed_seconds,
+                    total_elapsed_seconds=time.perf_counter() - sample_started,
+                    environment=execution_environment,
+                )
+            else:
+                receipt = None
             if not retry_failed:
                 raise
-            results.append({"sample_id": sample_id, "raw_status": raw_status, "semantic_status": FAILED if raw is not None else None, "error": {"exception_type": type(exc).__name__, "message": str(exc)[:2000]}})
+            results.append({"sample_id": sample_id, "raw_status": raw_status, "semantic_status": FAILED if raw is not None else None, "execution_receipt": receipt, "error": {"exception_type": type(exc).__name__, "message": str(exc)[:2000]}})
     return results
 
 
@@ -827,7 +973,7 @@ __all__ = [
     "ArtifactError", "GeneratedSample", "RawArtifact", "SemanticArtifact",
     "RAW_SCHEMA_VERSION", "SEMANTIC_SCHEMA_VERSION", "STATE_SCHEMA_VERSION",
     "PENDING", "RUNNING", "RAW_COMPLETE", "SEMANTIC_COMPLETE", "FAILED",
-    "atomic_write_bytes", "atomic_write_json", "atomic_write_npy", "artifact_directory",
+    "atomic_write_bytes", "atomic_write_json", "atomic_write_npy", "artifact_directory", "write_execution_receipt",
     "code_identity", "config_hash", "repository_identity", "mark_failed", "mark_pending", "mark_running",
     "raw_artifact_is_valid", "seal_raw_partition", "verify_raw_partition",
     "seal_semantic_partition", "verify_semantic_partition", "run_adapter_after_raw",
