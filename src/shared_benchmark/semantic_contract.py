@@ -8,7 +8,7 @@ import numpy as np
 
 from .firewall import FirewallError, validate_image_only_source_locator, validate_image_only_value
 from .provenance import canonical_json_bytes, sha256_bytes, sha256_json
-from .spatial import SPATIAL_CONTRACT_VERSION, grid_hash
+from .spatial import SELF_AUDIT_SPATIAL_CONTRACT_VERSION, SPATIAL_CONTRACT_VERSION, grid_hash
 
 
 ADAPTER_VERSION = "cardiac_adapter_v1"
@@ -16,7 +16,11 @@ ADAPTER_INPUT_SCHEMA_VERSION = "shared_benchmark.anonymous_partition.v1"
 ADAPTER_OUTPUT_SCHEMA_VERSION = "shared_benchmark.cardiac-semantic.v1"
 FROZEN_ADAPTER_SPEC_SHA256 = "34b1faeb7b40f77c2d4d9789a6e1a342e891fcb8ff8db4edd30957b2ae9d114a"
 FROZEN_ADAPTER_SPEC_CANONICAL_SHA256 = "c15050164214414a532e862cef17f3a6151c40836e72ce1e6fa06288b2c1f013"
-FROZEN_SHARED_GRID_SHA256 = "7c9d33fed0facbbabe736a5216bc599b65f1b465e3e26a3d19c624cf9be57949"
+# Historical v1/v2 hashes remain accepted for old freeze artifacts.  New
+# scientific CUTS/DFC manifests must use the Self-Audit-derived hash below.
+FROZEN_SHARED_GRID_SHA256 = "2d53b65aa94d6cc151a02444a03b2246034cc5334e089e4d86a8de69ce494fc1"
+FROZEN_SELF_AUDIT_SHARED_GRID_SHA256 = "57858ddf831decee0ce40c0fcc66f68b794e9c94b8f1eebe0a3a146502e535bf"
+SUPPORTED_FROZEN_GRID_SHA256 = frozenset({FROZEN_SHARED_GRID_SHA256, FROZEN_SELF_AUDIT_SHARED_GRID_SHA256})
 
 BG = 0
 RV = 1
@@ -173,14 +177,27 @@ def validate_adapter_record(record: Mapping[str, Any], partition: np.ndarray, ce
     if record.get("central_image_sha256") != array_hash(image_value):
         raise AdapterContractError("central_image_sha256 does not match central_image")
     grid = record.get("shared_grid")
-    if not isinstance(grid, Mapping) or grid.get("version") != SPATIAL_CONTRACT_VERSION:
+    if not isinstance(grid, Mapping) or grid.get("version") not in {
+        SPATIAL_CONTRACT_VERSION, SELF_AUDIT_SPATIAL_CONTRACT_VERSION
+    }:
         raise AdapterContractError("record must carry a supported shared-grid contract")
+    expected_grid_hash = grid_hash(grid)
+    # Historical topology fixtures intentionally use small arbitrary v1
+    # grids.  Preserve that synthetic contract while requiring an exact hash
+    # whenever a scientific Self-Audit grid is carried.
+    if grid.get("version") == SELF_AUDIT_SPATIAL_CONTRACT_VERSION and expected_grid_hash != FROZEN_SELF_AUDIT_SHARED_GRID_SHA256:
+        raise AdapterContractError("record Self-Audit shared-grid content is not the frozen scientific contract")
     if list(grid.get("target_hw", [])) != [int(partition_value.shape[0]), int(partition_value.shape[1])]:
         raise AdapterContractError("partition shape must equal the declared shared target grid")
     if grid.get("whole_fov") is not True or grid.get("crop") is not None:
         raise AdapterContractError("adapter requires the whole-FOV shared grid")
-    if grid.get("forward_values") != "masked_area_normalized_convolution":
-        raise AdapterContractError("adapter requires the frozen masked-area shared grid")
+    expected_forward = (
+        "masked_area_normalized_convolution"
+        if grid.get("version") == SPATIAL_CONTRACT_VERSION
+        else "bilinear_align_corners_false"
+    )
+    if grid.get("forward_values") != expected_forward:
+        raise AdapterContractError("record shared-grid interpolation does not match its frozen contract")
     if not isinstance(record.get("geometry_validity"), Mapping):
         raise AdapterContractError("geometry_validity metadata is required")
     sample_id = record.get("sample_id")

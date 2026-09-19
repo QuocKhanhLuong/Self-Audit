@@ -8,8 +8,8 @@ from pathlib import Path
 
 def test_cardiac_freeze_validator_rejects_a_bound_artifact_mutation(tmp_path):
     repo_root = Path(__file__).resolve().parents[2]
-    source = repo_root / "benchmark_freezes" / "cardiac_benchmark_v1"
-    frozen_copy = tmp_path / "cardiac_benchmark_v1"
+    source = repo_root / "benchmark_freezes" / "cardiac_benchmark_v3"
+    frozen_copy = tmp_path / "cardiac_benchmark_v3"
     shutil.copytree(source, frozen_copy)
     command = [
         sys.executable,

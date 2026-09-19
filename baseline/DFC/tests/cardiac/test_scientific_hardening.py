@@ -21,8 +21,8 @@ def _runner():
 
 def test_frozen_grid_config_and_cpu_receipt_helpers():
     runner = _runner()
-    grid = json.loads((ROOT / "benchmark_freezes" / "cardiac_benchmark_v1" / "configs" / "resolved_shared_contract.json").read_text())
-    manifest = {"schema_version": "shared_benchmark_manifest.v1", "shared_grid": grid, "shared_grid_hash": runner.FROZEN_SHARED_GRID_SHA256}
+    grid = json.loads((ROOT / "benchmark_freezes" / "cardiac_benchmark_v3" / "configs" / "resolved_shared_contract.json").read_text())
+    manifest = {"schema_version": "shared_benchmark_manifest.v1", "split_policy_version": "self_audit.acdc.patient_split.v1", "shared_grid": grid, "shared_grid_hash": runner.FROZEN_SELF_AUDIT_SHARED_GRID_SHA256}
     runner._require_frozen_grid(manifest)
     with pytest.raises(runner.ArtifactError):
         runner._require_frozen_grid({**manifest, "shared_grid_hash": "not-frozen"})
@@ -56,7 +56,7 @@ def test_scientific_runner_rejects_valid_source_checked_8x8_manifest(tmp_path):
         "--manifest", str(manifest_path), "--image-root", str(image_root),
         "--output-root", str(tmp_path / "outputs"), "--split", "test",
     ])
-    with pytest.raises(runner.ArtifactError, match="frozen 224x224 whole-FOV"):
+    with pytest.raises(runner.ArtifactError, match="frozen Self-Audit 256x256 whole-FOV"):
         runner.run(args)
 
 

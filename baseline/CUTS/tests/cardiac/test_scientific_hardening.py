@@ -22,12 +22,12 @@ def _runner():
 
 
 def _grid() -> dict:
-    return json.loads((ROOT / "benchmark_freezes" / "cardiac_benchmark_v1" / "configs" / "resolved_shared_contract.json").read_text())
+    return json.loads((ROOT / "benchmark_freezes" / "cardiac_benchmark_v3" / "configs" / "resolved_shared_contract.json").read_text())
 
 
 def test_frozen_grid_config_and_25d_center_helpers():
     runner = _runner()
-    manifest = {"schema_version": "shared_benchmark_manifest.v1", "shared_grid": _grid(), "shared_grid_hash": runner.FROZEN_SHARED_GRID_SHA256}
+    manifest = {"schema_version": "shared_benchmark_manifest.v1", "split_policy_version": "self_audit.acdc.patient_split.v1", "shared_grid": _grid(), "shared_grid_hash": runner.FROZEN_SELF_AUDIT_SHARED_GRID_SHA256}
     runner._require_frozen_grid(manifest)
     bad = {**manifest, "shared_grid": {**manifest["shared_grid"], "target_hw": [8, 8]}}
     with pytest.raises(runner.ArtifactError):

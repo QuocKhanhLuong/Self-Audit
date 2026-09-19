@@ -237,24 +237,29 @@ Use `stop_reason=label_threshold` when the official check fires, including on th
 
 ## 9. Cardiac preprocessing adaptation
 
-Label this explicitly as a cardiac preprocessing adaptation. Original DFC's OpenCV BGR uint8 `/255` behavior is preserved only in the source reference/parity harness, not claimed for MRI inputs.
+The original DFC direct path (`demo.py:68-70`) reads OpenCV BGR `uint8` and
+divides by `255`; it has no percentile, mean/std, MRI, crop, or geometry
+normalizer. That byte-image rule is retained only in the source parity harness
+and is not silently applied to float NIfTI MRI.
 
-Freeze the normalization algorithm for primary 2D:
-
-1. Decode scaled MRI intensities to float32 on the native full field of view, using the common image-only decoding policy.
-2. Read only the central slice for image values/statistics. Retain manifest context indices as metadata without using neighbor intensities.
-3. Calculate the 0.5 and 99.5 percentiles across all central-slice pixels, including image background. Use float64 statistical accumulation and linear quantile interpolation.
-4. If the upper percentile is not greater than the lower, set it to `lower + 1e-6`, then clip.
-5. Compute the clipped population mean and population standard deviation (`ddof=0`); denominator is `max(std,1e-6)` in raw intensity units.
-6. Apply the affine normalization, cast the result to float32, and transform the whole field of view to the frozen shared grid.
-
-For 2.5D, first assemble the clipped/replicated `[z-1,z,z+1]` stack and compute one common set of percentiles/mean/std across all three planes and all their pixels, including replicated edge planes. Apply the same transform to all three channels. This is the sole stack-statistics rule for that profile; independent per-channel standardization is not an implicit alternative.
-
-Record quantile bounds, mean, std/floor, context indices, interpolation policy, source/target shapes, and preprocessing version. Constant slices normalize deterministically and remain in accounting; no anatomy-based exclusions are allowed. Nonfinite input handling must match the shared decoder and be logged; confirmation of that decoder contract is UNRESOLVED. Nonfinite tensors at the runner boundary fail explicitly.
+For Self-Audit ACDC v3, the adapter therefore uses the checked-in source
+normalization (`scripts/preprocess_acdc.py:19-25` and
+`src/self_audit/data/common.py:188-204,529-546`): decode the full image-only
+frame, clip at 0.5/99.5 percentiles, apply one volume-wise population z-score,
+then select the central plane for direct 2D DFC. The endpoint context remains
+manifest provenance and is not used as an additional DFC statistic. There is
+no DFC-specific re-normalization, no GT/ROI support, and no per-slice or
+dataset-global fit. Record the source normalization version, context indices,
+grid transform, and source identity. Constant volumes use the source epsilon
+floor and remain in accounting.
 
 The audited FreeMask full-input path uses whole-field area-based resizing. P0.1a verifies the pinned spatial-policy interface and behavior for implementation; local P0.3 may implement and test the 2D loader, optional 2.5D loader, normalization, geometry, context, and strict schema validation against mock manifests and a synthetic common-grid fixture. Real shared-grid/geometry verification is DEFERRED to P0.1b/server validation when images are unavailable. Scientific P0.3 passes only with validated real shared manifests, real source images, and their real common grid/geometry contract. No method-specific crop or invented affine is allowed. Reject a scientific mismatch rather than substituting an unrecorded transform.
 
-FreeMask's internal fitting/selection/verification preprocessing is method-specific and is not imported. Central-only DFC statistics differ from FreeMask's three-slice full-input statistics; disclose that context difference. Shared cohort/FOV/grid does not imply byte-identical method inputs. No masks, ROIs, GT-derived statistics, or withheld-observation roles enter DFC normalization.
+FreeMask's internal fitting/selection/verification preprocessing is not
+imported. Shared cohort/FOV/grid does not imply byte-identical method inputs:
+DFC consumes one source-normalized central plane and preserves the source stack
+indices only as metadata. No masks, ROIs, GT-derived statistics, or withheld-
+observation roles enter DFC normalization.
 
 ## 10. Raw output and provenance contract
 

@@ -22,12 +22,12 @@ def test_loader_is_central_only_geometry_and_nonfinite_rejection(tmp_path):
     manifest, original = fixture(tmp_path); record = next(row for row in manifest["records"] if row["slice_index"] == 1)
     tensor, meta = load_primary_2d(record, tmp_path)
     assert tensor.shape == (1,1,9,13) and tensor.dtype == __import__("torch").float32
-    assert meta["central_slice"] == 1 and abs(float(tensor.mean())) < 1e-5
+    assert meta["central_slice"] == 1 and float(tensor.mean()) == pytest.approx(175.0)
     altered = original.copy(); altered[0] += 1e6; altered[2] -= 1e6; np.save(tmp_path / "image_0.npy", altered)
     # Neighbors cannot alter central-plane preprocessing; bypass manifest source hash here deliberately.
     next_tensor, _ = load_primary_2d(record, tmp_path)
     assert np.array_equal(tensor.numpy(), next_tensor.numpy())
-    assert np.all(normalize_central_slice(np.ones((5,7), np.float32)) == 0)
+    assert np.array_equal(normalize_central_slice(np.ones((5,7), np.float32)), np.ones((5,7), np.float32))
     with pytest.raises(DataContractError): normalize_central_slice(np.array([[np.nan, 1],[1,1]], np.float32))
 
 def test_canonical_hash_and_freeze_reject_mutations(tmp_path):

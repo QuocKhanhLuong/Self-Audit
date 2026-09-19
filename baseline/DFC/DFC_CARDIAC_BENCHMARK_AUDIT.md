@@ -473,19 +473,24 @@ There is:
 
 Source: [direct preprocessing, line 68](https://github.com/kanezaki/pytorch-unsupervised-segmentation-tip/blob/181318ad40dbfb5c0add8580a05c30e5e3a7ad58/demo.py#L68).
 
-For MRI, recommend a documented image-only normalization aligned with the benchmark’s common normalization recipe:
+For the Self-Audit ACDC v3 MRI adapter, use the checked-in source
+normalization rather than inventing a DFC-specific transform:
 
-1. Read physical image intensities as float32.
-2. Use full-field image values; no mask or ROI.
-3. Clip at fixed `0.5/99.5` image percentiles.
-4. Subtract clipped mean and divide by population standard deviation, with a fixed floor.
-5. Apply the frozen shared grid transformation.
+1. Read the selected physical image frame as float32.
+2. Use full-field image values across the source volume; no mask or ROI.
+3. Clip at the source's fixed `0.5/99.5` percentiles.
+4. Subtract the source volume mean and divide by its population standard deviation, with the source floor.
+5. Select the central plane for direct 2D DFC and apply the frozen shared grid transformation.
 
-This matches the **kind** of normalization used by current FreeMask; its full-input deployment path computes these statistics across the three-slice stack and performs area-based resizing. [FreeMask dataset normalization and full-input loader](https://github.com/QuocKhanhLuong/Self-Audit/blob/96c32b10fc7b8e09b48822e10ae9eb6cc149e253/src/self_audit_maskfree/data/dataset.py#L148)
+The source rule is established by the checked-in Self-Audit loader, not by
+FreeMask's role/fitting code. FreeMask geometry is only a shared decoder
+implementation detail here; it is not the normalization authority.
 
-For strictly 2D DFC, calculate statistics from the central slice only. For 2.5D, use a declared common transform across the supplied stack.
-
-**Fairness qualification:** central-only statistics and FreeMask’s stack statistics are not byte-identical preprocessing. Freeze and disclose this input-context distinction. Do not silently describe them as identical, or import FreeMask’s withheld-observation normalization into direct DFC.
+The original DFC `/255` rule is not applied because the cardiac source is
+float NIfTI rather than BGR uint8. The source volume transform is shared with
+the Self-Audit protocol; DFC adds no central-slice percentile or mean/std fit.
+This remains a modality/input adaptation, not a claim that the original
+OpenCV byte path and MRI inputs are byte-identical.
 
 A constant slice requires a predefined denominator floor and accounting; it must not be silently dropped.
 

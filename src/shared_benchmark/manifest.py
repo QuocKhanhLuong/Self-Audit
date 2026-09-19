@@ -1,4 +1,9 @@
-"""Canonical projection of the authoritative FreeMask image-only manifest."""
+"""Canonical projection of an authoritative image-only source manifest.
+
+The projector accepts the historical FreeMask receipt for reproducibility and
+the original Self-Audit ACDC receipt for current CUTS/DFC scientific runs. It
+never computes a split itself.
+"""
 from __future__ import annotations
 
 import copy
@@ -8,11 +13,19 @@ from typing import Any, Mapping
 
 from .firewall import FirewallError, validate_image_only_manifest
 from .provenance import canonical_json_bytes as _canonical_json_bytes, sha256_file, sha256_json
-from .spatial import SPATIAL_CONTRACT_VERSION, grid_hash, spatial_transform_for_record
+from .spatial import (
+    SELF_AUDIT_SPATIAL_CONTRACT_VERSION,
+    SPATIAL_CONTRACT_VERSION,
+    grid_hash,
+    spatial_transform_for_record,
+)
 
 
 MANIFEST_SCHEMA_VERSION = "shared_benchmark_manifest.v1"
 SPLIT_POLICY_VERSION = "maskfree150.data.discovery.v2"
+SELF_AUDIT_SPLIT_POLICY_VERSION = "self_audit.acdc.patient_split.v1"
+SUPPORTED_SPLIT_POLICY_VERSIONS = frozenset({SPLIT_POLICY_VERSION, SELF_AUDIT_SPLIT_POLICY_VERSION})
+SUPPORTED_SOURCE_MANIFEST_SCHEMAS = frozenset({"maskfree150.data.v2", "self_audit.acdc.image_only.v1"})
 _SPLITS = {"train", "dev", "test"}
 
 
@@ -136,13 +149,11 @@ def _split_provenance(upstream: Mapping[str, Any]) -> dict[str, Any]:
     image-only policy facts.
     """
     source = upstream.get("split_provenance", {})
-    keys = (
-        "rule", "seed", "ratios", "official_test_membership",
-        "official_test_patients", "official_folder_membership",
-        "official_folder_patients", "patient_level_disjoint", "split_identity",
-        "selection_inputs", "content_fingerprint_used",
-    )
-    return {key: copy.deepcopy(source[key]) for key in keys if key in source}
+    # The historical source has the FreeMask split fields above; the original
+    # Self-Audit source carries an explicit cohort and ED/ES selection rule.
+    # Preserve both verbatim as provenance.  This function never computes or
+    # changes membership.
+    return copy.deepcopy(dict(source)) if isinstance(source, Mapping) else {}
 
 
 def manifest_hash(manifest: Mapping[str, Any]) -> str:
@@ -158,14 +169,17 @@ def build_shared_manifest(
     local_source_root: str | Path | None = None,
     upstream_file_sha256: str | None = None,
 ) -> dict[str, Any]:
-    """Project a completed FreeMask discovery result without re-splitting it."""
+    """Project a completed source discovery result without re-splitting it."""
     if fixture == scientific:
         raise SharedManifestError("exactly one of fixture or scientific must be true")
-    if upstream.get("schema_version") != "maskfree150.data.v2":
-        raise SharedManifestError("projection requires authoritative maskfree150.data.v2")
+    if upstream.get("schema_version") not in SUPPORTED_SOURCE_MANIFEST_SCHEMAS:
+        raise SharedManifestError(
+            "projection requires a supported authoritative source manifest: "
+            f"{sorted(SUPPORTED_SOURCE_MANIFEST_SCHEMAS)}"
+        )
     if int(upstream.get("seed", -1)) != 42:
         raise SharedManifestError("shared benchmark requires the authoritative split seed 42")
-    if grid.get("version") != SPATIAL_CONTRACT_VERSION:
+    if grid.get("version") not in {SPATIAL_CONTRACT_VERSION, SELF_AUDIT_SPATIAL_CONTRACT_VERSION}:
         raise SharedManifestError("unsupported shared spatial contract")
     records = [_source_record(record, grid) for record in upstream.get("records", [])]
     records.sort(key=lambda record: record["sample_id"])
@@ -179,7 +193,9 @@ def build_shared_manifest(
         "scientific": bool(scientific),
         "dataset": str(upstream["dataset"]),
         "split_seed": 42,
-        "split_policy_version": SPLIT_POLICY_VERSION,
+        "split_policy_version": str(
+            upstream.get("split_provenance", {}).get("policy_version", SPLIT_POLICY_VERSION)
+        ),
         "sample_order": "sample_id_lexicographic",
         "source_manifest": {
             "schema_version": str(upstream["schema_version"]),
@@ -191,7 +207,12 @@ def build_shared_manifest(
         "shared_grid": copy.deepcopy(dict(grid)),
         "shared_grid_hash": grid_hash(grid),
         "context_policy": "z_minus_1_z_z_plus_1_endpoint_replicated",
-        "generation_membership": "all_authoritatively_discovered_frames_x_all_z_slices",
+        "generation_membership": str(
+            upstream.get(
+                "generation_membership",
+                "all_authoritatively_discovered_frames_x_all_z_slices",
+            )
+        ),
         "records": records,
     }
     if local_source_root is not None or upstream_file_sha256 is not None:
@@ -217,12 +238,15 @@ def validate_manifest(manifest: Mapping[str, Any]) -> None:
         validate_image_only_manifest(manifest)
     except FirewallError as exc:
         raise SharedManifestError(str(exc)) from exc
-    if manifest.get("split_seed") != 42 or manifest.get("split_policy_version") != SPLIT_POLICY_VERSION:
-        raise SharedManifestError("shared split provenance is not the frozen FreeMask policy")
+    if manifest.get("split_seed") != 42 or manifest.get("split_policy_version") not in SUPPORTED_SPLIT_POLICY_VERSIONS:
+        raise SharedManifestError("shared split provenance is not a supported frozen policy")
     if manifest.get("sample_order") != "sample_id_lexicographic":
         raise SharedManifestError("unknown shared sample ordering")
     grid = manifest.get("shared_grid")
-    if not isinstance(grid, Mapping) or grid.get("version") != SPATIAL_CONTRACT_VERSION:
+    if not isinstance(grid, Mapping) or grid.get("version") not in {
+        SPATIAL_CONTRACT_VERSION,
+        SELF_AUDIT_SPATIAL_CONTRACT_VERSION,
+    }:
         raise SharedManifestError("shared grid contract is missing or unsupported")
     if manifest.get("shared_grid_hash") != grid_hash(grid):
         raise SharedManifestError("shared grid hash mismatch")

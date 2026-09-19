@@ -10,14 +10,23 @@ import torch
 from torch.utils.data import Dataset
 
 from shared_benchmark.manifest import SharedManifestError
-from shared_benchmark.spatial import grid_hash, read_context_stack, resize_values_to_grid
+from shared_benchmark.spatial import (
+    SELF_AUDIT_NORMALIZATION_VERSION,
+    SELF_AUDIT_SPATIAL_CONTRACT_VERSION,
+    grid_hash,
+    read_context_stack,
+    read_self_audit_context_stack,
+    resize_values_to_grid,
+)
 
 
 PROFILES = ("CUTS-2D", "CUTS-2.5D")
-NORMALIZATION_VERSION_2D = "cuts.cardiac.central_percentile_0p5_99p5_unit_interval.v2"
-NORMALIZATION_VERSION_25D = "cuts.cardiac.stack_percentile_0p5_99p5_unit_interval.v1"
-# Backward-compatible import name for callers that describe the 2.5D path.
-NORMALIZATION_VERSION = NORMALIZATION_VERSION_25D
+LEGACY_NORMALIZATION_VERSION = "source.float32_identity.legacy_fixture.v1"
+# These aliases are retained for callers that inspect the old profile names;
+# scientific v3 provenance now records the source Self-Audit transform.
+NORMALIZATION_VERSION_2D = SELF_AUDIT_NORMALIZATION_VERSION
+NORMALIZATION_VERSION_25D = SELF_AUDIT_NORMALIZATION_VERSION
+NORMALIZATION_VERSION = SELF_AUDIT_NORMALIZATION_VERSION
 
 
 @dataclass(frozen=True)
@@ -26,26 +35,20 @@ class ImageOnlySample:
     provenance: dict[str, Any]
 
 
-def _normalize_image_only(stack: np.ndarray) -> np.ndarray:
-    finite = np.nan_to_num(stack.astype(np.float32, copy=False), nan=0.0, posinf=0.0, neginf=0.0)
-    low, high = np.percentile(finite, (0.5, 99.5))
-    if not high > low:
-        high = low + 1.0
-    return np.clip((finite - low) / (high - low), 0.0, 1.0).astype(np.float32, copy=False)
+def _prepare_profile_values(
+    stack: np.ndarray, profile: str, *, scientific_source: bool,
+) -> tuple[np.ndarray, str]:
+    """Select CUTS channels without adding a method-specific normalizer.
 
-
-def _prepare_profile_values(stack: np.ndarray, profile: str) -> tuple[np.ndarray, str]:
-    """Normalize only the channels that the declared CUTS profile consumes.
-
-    CUTS-2D is a central-slice experiment: neighbouring context is decoded for
-    the shared record, but it is removed before any percentile statistics are
-    computed.  CUTS-2.5D intentionally retains the full endpoint-replicated
-    context and therefore keeps the historical stack normalization.
+    The source Self-Audit volume transform is applied before this function for
+    v3 records.  The legacy identity branch exists only for old synthetic
+    fixtures and is never accepted by the scientific runner.
     """
+    normalization = SELF_AUDIT_NORMALIZATION_VERSION if scientific_source else LEGACY_NORMALIZATION_VERSION
     if profile == "CUTS-2D":
-        return _normalize_image_only(stack[1:2]), NORMALIZATION_VERSION_2D
+        return stack[1:2], normalization
     if profile == "CUTS-2.5D":
-        return _normalize_image_only(stack), NORMALIZATION_VERSION_25D
+        return stack, normalization
     raise ValueError(f"profile must be one of {PROFILES}")
 
 
@@ -75,8 +78,15 @@ class ImageOnlyCardiacDataset(Dataset[ImageOnlySample]):
 
     def __getitem__(self, index: int) -> ImageOnlySample:
         record = self.records[index]
-        stack = read_context_stack(record, source_root=self.source_root)
-        values, normalization_version = _prepare_profile_values(stack, self.profile)
+        scientific_source = self.grid.get("version") == SELF_AUDIT_SPATIAL_CONTRACT_VERSION
+        stack = (
+            read_self_audit_context_stack(record, source_root=self.source_root)
+            if scientific_source
+            else read_context_stack(record, source_root=self.source_root)
+        )
+        values, normalization_version = _prepare_profile_values(
+            stack, self.profile, scientific_source=scientific_source,
+        )
         image = resize_values_to_grid(torch.from_numpy(values), self.grid)
         provenance = {
             "dataset": record["dataset"], "sample_id": record["sample_id"], "patient_id": record["patient_id"],

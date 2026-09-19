@@ -33,7 +33,7 @@ from helpers import discovered_projection, write_image
 
 
 ROOT = Path(__file__).resolve().parents[2]
-SPEC = json.loads((ROOT / "benchmark_freezes/cardiac_benchmark_v1/configs/adapter_v1_spec.json").read_text(encoding="utf-8"))
+SPEC = json.loads((ROOT / "benchmark_freezes/cardiac_benchmark_v2/configs/adapter_v1_spec.json").read_text(encoding="utf-8"))
 
 
 @pytest.fixture()

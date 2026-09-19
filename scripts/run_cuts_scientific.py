@@ -33,8 +33,8 @@ from shared_benchmark.artifacts import (  # noqa: E402
 )
 from shared_benchmark.provenance import sha256_file  # noqa: E402
 from shared_benchmark.semantic_contract import FROZEN_ADAPTER_SPEC_SHA256  # noqa: E402
-from shared_benchmark.semantic_contract import FROZEN_SHARED_GRID_SHA256  # noqa: E402
-from shared_benchmark.spatial import SPATIAL_CONTRACT_VERSION  # noqa: E402
+from shared_benchmark.semantic_contract import FROZEN_SELF_AUDIT_SHARED_GRID_SHA256  # noqa: E402
+from shared_benchmark.spatial import SELF_AUDIT_SPATIAL_CONTRACT_VERSION  # noqa: E402
 from cardiac_benchmark.cluster_kmeans import cluster_latent  # noqa: E402
 from cardiac_benchmark.dataset import ImageOnlyCardiacDataset  # noqa: E402
 from cardiac_benchmark.manifest import load_manifest  # noqa: E402
@@ -62,12 +62,15 @@ def _require_frozen_grid(manifest: dict[str, Any]) -> None:
     if (
         manifest.get("schema_version") != "shared_benchmark_manifest.v1"
         or not isinstance(grid, dict)
-        or grid.get("version") != SPATIAL_CONTRACT_VERSION
-        or grid.get("target_hw") != [224, 224]
+        or manifest.get("split_policy_version") != "self_audit.acdc.patient_split.v1"
+        or grid.get("version") != SELF_AUDIT_SPATIAL_CONTRACT_VERSION
+        or grid.get("target_hw") != [256, 256]
         or grid.get("whole_fov") is not True
-        or manifest.get("shared_grid_hash") != FROZEN_SHARED_GRID_SHA256
+        or grid.get("crop") is not None
+        or grid.get("forward_values") != "bilinear_align_corners_false"
+        or manifest.get("shared_grid_hash") != FROZEN_SELF_AUDIT_SHARED_GRID_SHA256
     ):
-        raise ArtifactError("CUTS scientific runner requires the frozen 224x224 whole-FOV shared grid")
+        raise ArtifactError("CUTS scientific runner requires the frozen Self-Audit 256x256 whole-FOV shared grid")
 
 
 def _require_expected_config_hash(expected: str | None, computed: str) -> None:
@@ -178,6 +181,8 @@ def run(args: argparse.Namespace) -> list[dict[str, Any]]:
             "checkpoint_identity": checkpoint_hash,
             "checkpoint_training_provenance": training,
             "cuts_mode": profile,
+            "input_normalization": sample.provenance["normalization"],
+            "input_channels": sample.provenance["input_channels"],
             "phate_configuration": clustered.get("phate_configuration", {"n_components": 3, "knn": 100, "n_landmark": 500, "t": 2}),
             "kmeans_configuration": clustered.get("kmeans_configuration", {"n_clusters": 10}),
             "primary_k": 10,
@@ -229,7 +234,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--num-workers", type=int, default=1)
     parser.add_argument("--config-hash")
     parser.add_argument("--apply-adapter", action="store_true")
-    parser.add_argument("--adapter-spec", type=Path, default=ROOT / "benchmark_freezes" / "cardiac_benchmark_v1" / "configs" / "adapter_v1_spec.json")
+    parser.add_argument("--adapter-spec", type=Path, default=ROOT / "benchmark_freezes" / "cardiac_benchmark_v3" / "configs" / "adapter_v1_spec.json")
     parser.add_argument("--semantic-root", type=Path)
     parser.add_argument("--no-retry-failed", dest="retry_failed", action="store_false")
     parser.set_defaults(retry_failed=True)

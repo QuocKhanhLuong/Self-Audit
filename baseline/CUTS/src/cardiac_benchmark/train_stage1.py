@@ -18,7 +18,9 @@ from utils.scheduler import LinearWarmupCosineAnnealingLR
 
 from .dataset import ImageOnlyCardiacDataset, collate_image_only
 from .manifest import load_manifest, require_scientific_manifest
+from shared_benchmark.manifest import validate_scientific_manifest
 from .provenance import current_cuts_sha, environment_identity, rng_contract, sha256_file, sha256_json
+from shared_benchmark.spatial import SELF_AUDIT_NORMALIZATION_VERSION
 
 
 @dataclass(frozen=True)
@@ -64,6 +66,7 @@ def scientific_config_payload(config: Stage1Config) -> dict[str, Any]:
         "weight_decay": config.weight_decay,
         "lambda_contrastive_loss": config.lambda_contrastive_loss,
         "benchmark_seed": config.benchmark_seed,
+        "input_normalization": SELF_AUDIT_NORMALIZATION_VERSION,
     }
 
 
@@ -93,7 +96,16 @@ def loader_seed_policy() -> str:
 
 def build_loaders(config: Stage1Config) -> tuple[DataLoader, DataLoader, dict[str, Any]]:
     config.validate()
-    manifest = require_scientific_manifest(config.manifest_path, image_root=config.image_root) if config.scientific_run else load_manifest(config.manifest_path, check_paths=True)
+    if config.scientific_run:
+        manifest = require_scientific_manifest(config.manifest_path, image_root=config.image_root)
+    elif config.image_root is not None:
+        # The limited timing probe still consumes the scientific v3 manifest,
+        # but may use max_epochs=1.  Validate hashes against the explicitly
+        # mounted image-only root rather than the host-local receipt path.
+        manifest = load_manifest(config.manifest_path, check_paths=False)
+        validate_scientific_manifest(manifest, image_root=config.image_root)
+    else:
+        manifest = load_manifest(config.manifest_path, check_paths=True)
     if manifest["dataset"].lower() != config.dataset.lower():
         raise ValueError("checkpoint/run dataset identity differs from manifest")
     train_ds = ImageOnlyCardiacDataset(manifest, split="train", profile=config.profile, target_hw=config.target_hw, source_root=config.image_root)
@@ -185,6 +197,7 @@ def train_stage1(config: Stage1Config, checkpoint_path: str | Path, *, device: s
         },
         "cuts_mode": config.profile,
         "benchmark_seed": int(config.benchmark_seed),
+        "input_normalization": SELF_AUDIT_NORMALIZATION_VERSION,
     }
     runtime_device = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
     model = build_model(config).to(runtime_device)
@@ -238,6 +251,8 @@ def load_checkpoint_for_export(config: Stage1Config, checkpoint_path: str | Path
             raise ValueError("scientific CUTS checkpoint must use final_epoch selection")
         if payload.get("config_hash") != scientific_config_hash(config):
             raise ValueError("scientific CUTS checkpoint config identity mismatch")
+        if payload.get("input_normalization") != SELF_AUDIT_NORMALIZATION_VERSION:
+            raise ValueError("scientific CUTS checkpoint normalization identity mismatch")
     model = build_model(config, inference=True).to(device)
     model.load_state_dict(payload["state_dict"])
     model.eval()

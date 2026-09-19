@@ -1,107 +1,97 @@
-# CUTS + DFC Blackwell Server Preflight Plan
+# CUTS + DFC — preflight plan after Self-Audit protocol correction
 
-Actionable chronological plan for an NVIDIA Blackwell server. Do not assume exact model, driver or CUDA. Preflight output is not production output.
+This plan covers ACDC only. M&Ms remains deferred. The authorized CUTS-only
+Stage 1 limited timing probe has completed; DFC and full scientific runtime
+remain gated on a later user decision.
 
-## Server Gate 0 — Pull / context sync
+## Current authority
 
-    git fetch origin --prune
-    git checkout main
-    git pull --ff-only origin main
-    git status --short
-    git rev-parse HEAD
-    git rev-parse origin/main
-    git log -1 --oneline
-    python scripts/validate_cardiac_benchmark_freeze.py
+1. Read reports/SERVER_HANDOFF_CUTS_DFC.md and this state file.
+2. Preserve the dirty worktree and all unrelated jobs.
+3. Validate benchmark_freezes/cardiac_benchmark_v3 with
+   scripts/validate_cardiac_benchmark_freeze.py.
+4. Use the checked-in Self-Audit source identity:
+   configs/self_audit_full.yaml, splits/acdc_patient_split_seed42.json,
+   scripts/preprocess_acdc.py, src/self_audit/data/acdc.py, and
+   src/self_audit/data/common.py. Do not infer membership from
+   self_audit_maskfree.
 
-Require clean HEAD equal to origin/main, freeze ID cardiac-benchmark-v1-79a716b74dd67a76 and payload 79a716b74dd67a76c5a13f0ba4d8876ab28ba6e29d819a4dbcfad75780382b3c. Read handoff/state and stop on mismatch.
+## Static gates already completed
 
-## Server Gate 1 — Blackwell environment
+- Self-Audit source trace and 70/15/15 versus 82/18/50 explanation.
+- v3 grid: 256x256, whole-FOV, crop=null, PyTorch bilinear align_corners=False,
+  source config hashes bound; old v1/v2 contracts retained as history.
+- Selection receipt: ACDC/training, seed 42, 80 train / 20 dev patients, ED+ES
+  only, no test.
+- Image-only hardlink tree and bwrap namespace: no Info.cfg, *_gt, original
+  workspace/data path, or annotation locator.
+- Shared manifest builder: source-hash validation and counts 1,526/376/0
+  records (train/dev/test), 80/20/0 patients.
+- Dependency/CUDA probes, compileall, synthetic shared/CUTS/DFC tests and v3
+  freeze validator.
+- Upstream normalization audit: CUTS has no cardiac normalizer (its unrelated
+  brain-tumor NIfTI loader uses per-image `[-1,1]`), while direct DFC only uses
+  BGR-`uint8` `/255`. v3 therefore applies the Self-Audit source volume
+  transform once and adds no method-specific intensity transform.
 
-    nvidia-smi
-    python --version
-    python -m pip freeze
-    python -c "import torch; print(torch.__version__,torch.version.cuda,torch.cuda.is_available(),torch.cuda.device_count(),torch.cuda.get_arch_list()); [print(i,torch.cuda.get_device_name(i),torch.cuda.get_device_capability(i),torch.cuda.get_device_properties(i)) for i in range(torch.cuda.device_count())]"
-    python -c "import torch; assert torch.cuda.is_available(); a=torch.randn((1024,1024),device='cuda'); b=a@a; torch.cuda.synchronize(); print(float(b[0,0]),torch.cuda.max_memory_allocated(),torch.cuda.max_memory_reserved())"
+## Before any runtime authorization
 
-Persist driver, GPU model, capability, PyTorch, CUDA, Python and pip receipt. Visible GPU is insufficient; allocation/matmul/synchronize/read must pass. Failure is ENVIRONMENT/COMPATIBILITY, not algorithm failure.
+- Recheck Git HEAD/origin and worktree; do not checkout, reset, stash, merge,
+  or overwrite current user changes.
+- Recheck GPU processes/utilization and choose only an authorized free device;
+  do not stop or reconfigure the resident job.
+- Recheck image-only mount namespace and source-hash receipt. Never expose
+  data/ACDC or any GT path to a baseline process.
+- Check output capacity and record it. Disk pressure must not change cohort,
+  split, or scientific scope; ask the user for an output location if runtime
+  artifacts do not fit.
 
-## Server Gate 2 — Dependency smoke
+## Two-stage prospective runtime runbook (not run)
 
-    python -c "import torch,numpy; print(torch.__version__,numpy.__version__)"
-    python -c "import sklearn,phate; print(sklearn.__version__,phate.__version__)"
-    python -m compileall src/shared_benchmark
-    python -m compileall baseline/CUTS/src/cardiac_benchmark
-    python -m compileall baseline/DFC/src/cardiac_benchmark
-    python -m pytest -q --basetemp .pytest-shared tests/shared_benchmark
-    python -m pytest -q --basetemp .pytest-cuts baseline/CUTS/tests/cardiac
-    python -m pytest -q --basetemp .pytest-dfc baseline/DFC/tests/cardiac
+The two stages are separately authorized. Stage 1 is a limited benchmark that
+reports measured time/peak VRAM and then stops; Stage 2 is full ACDC only after
+the user's next decision. CUTS 200 epochs is not part of Stage 1.
 
-Use fresh counts/times; close DFC 8x8 regression before approval.
+### Stage 1 — limited benchmark (CUTS completed; DFC pending)
 
-## Server Gate 3 — Physical GT isolation
+Use a fresh output root, the v3 manifest, and the validated image-only bwrap
+mapping: `/opt/self_audit/src` ← `src/`, `/opt/self_audit/cuts` ←
+`baseline/CUTS/src/`, `/opt/self_audit/dfc` ← `baseline/DFC/src/`,
+`/opt/self_audit/scripts` ← the two runners/configs, `/images` ←
+`.runtime/acdc_self_audit_images_only`, `/manifest.json` ← v3 manifest,
+`/selection.json` ← selection receipt, and `/outputs` read-write. No
+`data/ACDC`, `Info.cfg`, or GT path is mounted.
 
-Use image-only mounts such as /data/cardiac/acdc_images_only and /data/cardiac/mnms_images_only. Do not mount GT into baseline process/container.
+Inside bwrap, the limited CUTS train entrypoint is:
 
-    findmnt -T /data/cardiac/acdc_images_only
-    findmnt -T /data/cardiac/mnms_images_only
-    python -c "from pathlib import Path; assert not Path('/data/cardiac/GT').exists(); print('GT mount absent')"
+    /env/bin/python -c 'from cardiac_benchmark.train_stage1 import Stage1Config, train_stage1; train_stage1(Stage1Config(profile="CUTS-2D", dataset="acdc", manifest_path="/manifest.json", image_root="/images", scientific_run=False, max_epochs=1), "/outputs/cuts_limited/checkpoint.pt", device="cuda")'
 
-Adapt explicit forbidden path to provider layout; filename filtering is insufficient.
+with `PYTHONPATH=/opt/self_audit/src:/opt/self_audit/cuts`. This is a timing
+probe only; it cannot produce the scientific 200-epoch checkpoint. The CUTS
+dev generation/evaluation entrypoint is:
 
-## Server Gate 4 — Real manifests
+    /env/bin/python /opt/self_audit/scripts/run_cuts_scientific.py --manifest /manifest.json --image-root /images --output-root /outputs/cuts_dev --checkpoint /outputs/cuts_limited/checkpoint.pt --split dev --mode 2d --device cuda
 
-Use existing builder, never hand-write:
+The command above is only valid after a provenance-qualified scientific
+checkpoint exists; otherwise dev generation remains `NOT_RUN`. If train
+generation is used for diagnostics, label it `train_diagnostic` and never
+report its metrics as validation. DFC's bounded dev pilot is:
 
-    python scripts/prepare_shared_benchmark_manifest.py --image-root /data/cardiac/acdc_images_only --dataset acdc --output /runs/cardiac_benchmark/manifests/acdc.json
-    python scripts/prepare_shared_benchmark_manifest.py --image-root /data/cardiac/mnms_images_only --dataset mnms --output /runs/cardiac_benchmark/manifests/mnms.json
+    /env/bin/python /opt/self_audit/scripts/run_dfc_scientific.py --manifest /manifest.json --image-root /images --output-root /outputs/dfc_dev --split dev --device cuda
 
-For each record patient/split/frame/sample counts, manifest hash, source manifest logical hash, shared-grid hash and root identity. Validate source hashes/firewall; do not run GT metrics.
+The pilot keeps MinL3, `maxIter=1000`, and fresh model/optimizer/BN per image.
+The CUTS timing result is 215.102 s for train+dev, with peak allocated 3.82
+GiB and reserved 4.98 GiB; a linear 200-epoch extrapolation is about 11 h 57
+min. These are measured-versus-extrapolated values, not a scientific result.
+DFC remains unrun. GT is only mounted in a separate evaluator after raw output
+and mapping/config freeze; it cannot affect generation, mapping, or tuning.
 
-## Server Gate 5 — CUTS checkpoint
+### Stage 2 — full ACDC (new decision required)
 
-    test -f /checkpoints/cuts_final_epoch.pt
-    sha256sum /checkpoints/cuts_final_epoch.pt
+Only after Stage 1's ETA/VRAM report and DFC `T_budget=1.25*T_base` check may
+the user authorize full ACDC. Then use the unchanged CUTS-2D 200-epoch
+final-epoch protocol and full DFC protocol. No Stage-2 command is executed or
+authorized in this handoff. M&Ms remains deferred.
 
-Verify dataset, mode, 200 epochs, final_epoch, manifest/grid/config lineage and random-init S0 lineage. Loading alone is insufficient.
-
-## Server Gate 6 — One-sample preflight
-
-Use current-head CLI options and deterministic list; replace paths with Gate 4/5 values.
-
-    python scripts/run_cuts_scientific.py --manifest /runs/cardiac_benchmark/manifests/acdc.json --image-root /data/cardiac/acdc_images_only --output-root /runs/cardiac_benchmark/preflight/cuts/acdc --checkpoint /checkpoints/cuts_final_epoch.pt --split test --mode 2d --sample-list /runs/cardiac_benchmark/lists/acdc-one.txt --device cuda --num-workers 1 --apply-adapter --semantic-root /runs/cardiac_benchmark/preflight/cuts/acdc-semantic
-    python scripts/run_dfc_scientific.py --manifest /runs/cardiac_benchmark/manifests/acdc.json --image-root /data/cardiac/acdc_images_only --output-root /runs/cardiac_benchmark/preflight/dfc/acdc --split test --sample-list /runs/cardiac_benchmark/lists/acdc-one.txt --device cuda --apply-adapter --semantic-root /runs/cardiac_benchmark/preflight/dfc/acdc-semantic
-
-Verify RAW_COMPLETE, raw hash, provenance, runtime/environment/GPU memory, optional adapter and SEMANTIC_COMPLETE.
-
-## Server Gate 7 — Resume test
-
-Rerun Gate-6 commands. CUTS must safely prove changed checkpoint identity cannot reuse old raw preflight artifacts; do not alter production checkpoint.
-
-## Server Gate 8 — Ten-sample smoke
-
-Use manifest order or deterministic list, never manual random selection. Run --limit 10 for CUTS-2D and DFC MinL3. Inspect decoding/boundaries/NaN/Inf/PHATE/DFC/OOM, artifacts, resume, semantic failures, runtimes and VRAM. No full run.
-
-## Server Gate 9 — 50–100 sample preflight
-
-Run deterministic --limit 50 or --limit 100 separately for CUTS-2D and DFC MinL3/dataset. Record success/failure, raw/adapter/total seconds/sample, median and p90/p95 where practical, peak VRAM, environment and retry/resume evidence.
-
-## Server Gate 10 — DFC runtime budget
-
-From real measurements and declared full workload/sample mix/device/concurrency/extrapolation, compute T_base. Set T_budget = 1.25 * T_base and require T_budget <= 72 hours. Never fabricate runtime.
-
-## Server Gate 11 — CUTS cost
-
-Separate Stage-1 training wall time/peak VRAM from generation/PHATE/KMeans seconds/sample/peak VRAM. Keep 200 scientific epochs; do not force 150 or compare only inference against another method full training.
-
-## Server Gate 12 — Full-run decision
-
-Only mark READY_FOR_FULL_RUN after repository/freeze, CUDA kernel, server tests, image-only roots, GT isolation, manifests, checkpoint, 1-sample, resume, 10-sample, 50–100 sample, runtime/VRAM and DFC budget gates pass. Otherwise BLOCKED with exact blocker.
-
-## Output directory plan
-
-    /runs/cardiac_benchmark/
-      preflight/{cuts,dfc}/{acdc,mnms}/
-      production/{cuts,dfc}/{acdc,mnms}/
-
-Do not reuse preflight artifacts in production unless explicitly permitted; prefer fresh production roots.
-
+The above commands are prospective only; they are not runtime evidence or a
+readiness claim.
