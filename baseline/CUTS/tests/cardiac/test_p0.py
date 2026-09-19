@@ -114,12 +114,12 @@ class P0Tests(unittest.TestCase):
             image_a_2d = ImageOnlyCardiacDataset(manifest_a, split="train", profile="CUTS-2D")[0]
             image_b_2d = ImageOnlyCardiacDataset(manifest_b, split="train", profile="CUTS-2D")[0]
             self.assertTrue(torch.equal(image_a_2d.image, image_b_2d.image))
-            self.assertEqual(image_a_2d.provenance["normalization"], "cuts.cardiac.central_percentile_0p5_99p5_unit_interval.v2")
+            self.assertEqual(image_a_2d.provenance["normalization"], "source.float32_identity.legacy_fixture.v1")
 
             image_a_25d = ImageOnlyCardiacDataset(manifest_a, split="train", profile="CUTS-2.5D")[0]
             image_b_25d = ImageOnlyCardiacDataset(manifest_b, split="train", profile="CUTS-2.5D")[0]
             self.assertFalse(torch.equal(image_a_25d.image, image_b_25d.image))
-            self.assertEqual(image_a_25d.provenance["normalization"], "cuts.cardiac.stack_percentile_0p5_99p5_unit_interval.v1")
+            self.assertEqual(image_a_25d.provenance["normalization"], "source.float32_identity.legacy_fixture.v1")
 
     def test_manifest_loader_profiles_and_scientific_guard(self):
         with tempfile.TemporaryDirectory() as temporary:

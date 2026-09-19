@@ -1,5 +1,8 @@
 # Final CUTS Re-Audit
 
+> Historical 224/FreeMask audit. Superseded by the Self-Audit-aligned v3
+> static preflight in `reports/SERVER_PREFLIGHT_STATE_CUTS_DFC.md`.
+
 ## Evidence
 
 Independent read-only audit at e737f2dac7dddb318b241ffc8ef1d3805aa9b5e1, matched origin/main and was clean before report creation. Freeze validator PASS: cardiac-benchmark-v1-79a716b74dd67a76; payload 79a716b74dd67a76c5a13f0ba4d8876ab28ba6e29d819a4dbcfad75780382b3c. Adapter-spec SHA-256: 34b1faeb7b40f77c2d4d9789a6e1a342e891fcb8ff8db4edd30957b2ae9d114a. Synthetic-fixture SHA-256: cdf03cd9f2d312a5156a8ae444b116a1e2231eff8d05f575804a2b398fe6a823. Shared-grid identity: 7c9d33fed0facbbabe736a5216bc599b65f1b465e3e26a3d19c624cf9be57949. ACDC/M&Ms: DEFERRED_NO_ROOT.
@@ -27,4 +30,3 @@ No real training, checkpoint, CUDA or GT metric was run. Cross-process locking, 
 CUTS: READY LOCAL
 
 CUTS LOCAL ENGINEERING: DONE
-

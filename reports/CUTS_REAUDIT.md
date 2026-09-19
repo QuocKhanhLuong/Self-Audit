@@ -1,5 +1,8 @@
 # CUTS cardiac benchmark re-audit
 
+> Historical 224/FreeMask audit. Superseded by the Self-Audit-aligned v3
+> static preflight in `reports/SERVER_PREFLIGHT_STATE_CUTS_DFC.md`.
+
 Audit date: 2026-09-18.  Scope was executable code and local tests only; no real dataset, ground truth, or segmentation metric was opened or run.
 
 ## Gate and evidence

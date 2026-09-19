@@ -1,5 +1,9 @@
 # CUTS / DFC cross-baseline cardiac benchmark audit
 
+> Historical audit. The current Self-Audit-aligned protocol, v3 freeze, and
+> static-only verdict supersede the 224/FreeMask claims below; see
+> `reports/SERVER_PREFLIGHT_STATE_CUTS_DFC.md`.
+
 Audit date: 2026-09-18.  Read-only scope: executable benchmark code, frozen artifacts, and local unit/fixture tests.  No GT, labels, segmentation metrics, real training, or real scientific execution was run.
 
 ## Common benchmark gate
