@@ -20,7 +20,9 @@ from cardiac_benchmark.dataset import ImageOnlyCardiacDataset
 from cardiac_benchmark.freeze import FreezeError, evaluator_skeleton, seal_raw_bundle
 from cardiac_benchmark.manifest import ManifestError, counts_by_split, load_manifest, require_scientific_manifest, write_manifest
 from cardiac_benchmark.train_stage1 import (Stage1Config, build_loaders, build_model, build_optimization,
-                                            load_checkpoint_for_export, seed_primary, train_stage1, validate_epoch)
+                                            load_checkpoint_for_export, seed_primary, train_stage1, validate_epoch,
+                                            scientific_config_hash)
+import cardiac_benchmark.train_stage1 as train_stage1_module
 from data_utils.patch_sampler import PatchSampler
 from model import CUTSEncoder
 from shared_benchmark.manifest import build_shared_manifest
@@ -151,6 +153,27 @@ class P0Tests(unittest.TestCase):
             self.assertEqual(payload["split_identity"]["split_seed"], 42)
             self.assertNotIn("freemask_source_sha", payload)
             self.assertNotIn("source_freemask_reference_sha", payload)
+
+    def test_scientific_checkpoint_selection_is_fixed_final_epoch(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest_path = make_mock_manifest(root)
+            config = Stage1Config(profile="CUTS-2D", dataset="acdc", manifest_path=str(manifest_path),
+                                  max_epochs=2, batch_size=1, sampled_patches_per_image=2)
+            checkpoint = root / "final.pt"
+            train_metrics = {"reconstruction": 1.0, "contrastive": 1.0, "total": 1.0}
+            dev_metrics = iter((
+                {"reconstruction": 0.1, "contrastive": 0.1, "total": 0.1},
+                {"reconstruction": 9.0, "contrastive": 9.0, "total": 9.0},
+            ))
+            with patch.object(train_stage1_module, "train_epoch", return_value=train_metrics), \
+                 patch.object(train_stage1_module, "validate_epoch", side_effect=lambda *args: next(dev_metrics)):
+                train_stage1(config, checkpoint, device="cpu")
+            payload = torch.load(checkpoint, map_location="cpu", weights_only=False)
+            self.assertEqual(payload["checkpoint_selection_policy"], "final_epoch")
+            self.assertEqual(payload["epoch"], 1)
+            self.assertEqual(payload["dev_metrics"]["total"], 9.0)
+            self.assertEqual(payload["config_hash"], scientific_config_hash(config))
 
     def test_raw_export_binds_canonical_source_hash(self):
         with tempfile.TemporaryDirectory() as temporary:

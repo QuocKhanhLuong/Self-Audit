@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import platform
 import sys
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
 import numpy as np
+import torch
 
 ROOT = Path(__file__).resolve().parents[1]
 for _path in (ROOT / "src", ROOT / "baseline" / "DFC" / "src"):
@@ -28,6 +30,8 @@ from shared_benchmark.artifacts import (  # noqa: E402
 )
 from shared_benchmark.provenance import sha256_file  # noqa: E402
 from shared_benchmark.semantic_contract import FROZEN_ADAPTER_SPEC_SHA256  # noqa: E402
+from shared_benchmark.semantic_contract import FROZEN_SHARED_GRID_SHA256  # noqa: E402
+from shared_benchmark.spatial import SPATIAL_CONTRACT_VERSION  # noqa: E402
 from cardiac_benchmark.config import load_primary_config  # noqa: E402
 from cardiac_benchmark.dataset import load_primary_2d  # noqa: E402
 from cardiac_benchmark.dfc_runner import run_dfc  # noqa: E402
@@ -48,8 +52,55 @@ def _adapter_spec(path: Path) -> dict[str, Any]:
     return spec
 
 
+def _require_frozen_grid(manifest: dict[str, Any]) -> None:
+    grid = manifest.get("shared_grid")
+    if (
+        manifest.get("schema_version") != "shared_benchmark_manifest.v1"
+        or not isinstance(grid, dict)
+        or grid.get("version") != SPATIAL_CONTRACT_VERSION
+        or grid.get("target_hw") != [224, 224]
+        or grid.get("whole_fov") is not True
+        or manifest.get("shared_grid_hash") != FROZEN_SHARED_GRID_SHA256
+    ):
+        raise ArtifactError("DFC scientific runner requires the frozen 224x224 whole-FOV shared grid")
+
+
+def _require_expected_config_hash(expected: str | None, computed: str) -> None:
+    if expected is not None and str(expected) != computed:
+        raise ArtifactError("DFC --config-hash does not match the effective scientific config")
+
+
+def _start_execution_receipt(device: str) -> dict[str, Any]:
+    runtime_device = torch.device(device)
+    cuda_active = runtime_device.type == "cuda" and torch.cuda.is_available()
+    receipt: dict[str, Any] = {
+        "python_version": platform.python_version(), "pytorch_version": torch.__version__,
+        "numpy_version": np.__version__, "cuda_runtime_version": torch.version.cuda,
+        "cuda_available": bool(torch.cuda.is_available()), "requested_device": str(device),
+        "device_name": torch.cuda.get_device_name(runtime_device) if cuda_active else None,
+        "cuda_peak_allocated_bytes": None, "cuda_peak_reserved_bytes": None,
+    }
+    try:
+        import sklearn
+        receipt["scikit_learn_version"] = sklearn.__version__
+    except Exception:
+        receipt["scikit_learn_version"] = None
+    if cuda_active:
+        torch.cuda.reset_peak_memory_stats(runtime_device)
+    return receipt
+
+
+def _finish_execution_receipt(receipt: dict[str, Any], device: str) -> dict[str, Any]:
+    runtime_device = torch.device(device)
+    if runtime_device.type == "cuda" and torch.cuda.is_available():
+        receipt["cuda_peak_allocated_bytes"] = int(torch.cuda.max_memory_allocated(runtime_device))
+        receipt["cuda_peak_reserved_bytes"] = int(torch.cuda.max_memory_reserved(runtime_device))
+    return receipt
+
+
 def run(args: argparse.Namespace) -> list[dict[str, Any]]:
     manifest = validate_scientific_execution(args.manifest, args.image_root)
+    _require_frozen_grid(manifest)
     records = select_manifest_records(manifest, split=args.split, limit=args.limit, sample_list=args.sample_list)
     config = load_primary_config(args.config)
     if config.profile_id != "DFC-Direct-2D-Default-MinL3":
@@ -63,13 +114,15 @@ def run(args: argparse.Namespace) -> list[dict[str, Any]]:
         ROOT / "src" / "shared_benchmark" / "artifacts.py",
         ROOT / "scripts" / "run_dfc_scientific.py",
     ], repo_root=ROOT)
-    baseline_config_hash = args.config_hash or config_hash(args.config)
+    baseline_config_hash = config_hash(asdict(config))
+    _require_expected_config_hash(args.config_hash, baseline_config_hash)
 
     def prepared(record: dict[str, Any]):
         tensor, metadata = load_primary_2d(record, args.image_root)
         return tensor, metadata
 
     def generate(record: dict[str, Any]) -> GeneratedSample:
+        execution_receipt = _start_execution_receipt(args.device)
         tensor, metadata = prepared(record)
         seed_info = derive_sample_seed(record["sample_id"])
         result = run_dfc(tensor.float(), config, seed_info["sample_seed"], device=args.device)
@@ -92,7 +145,10 @@ def run(args: argparse.Namespace) -> list[dict[str, Any]]:
             "fresh_model_optimizer_bn_state_per_sample": True,
             "loader_metadata": metadata,
         }
-        return GeneratedSample(partition=np.asarray(result.raw_cluster_map, dtype=np.int32), central_image=np.asarray(tensor[0, 0]), baseline_metadata=provenance)
+        return GeneratedSample(
+            partition=np.asarray(result.raw_cluster_map, dtype=np.int32), central_image=np.asarray(tensor[0, 0]),
+            baseline_metadata=provenance, execution_receipt=_finish_execution_receipt(execution_receipt, args.device),
+        )
 
     adapter_spec = None
     semantic_root = None
@@ -142,7 +198,7 @@ def main(argv: list[str] | None = None) -> int:
     args.sample_list = args.sample_list.read_text(encoding="utf-8").splitlines() if args.sample_list else None
     results = run(args)
     print(json.dumps({"baseline": "DFC", "mode": "DFC-Direct-2D-Default-MinL3", "results": [{key: value for key, value in row.items() if key in {"sample_id", "raw_status", "semantic_status", "error"}} for row in results]}, sort_keys=True))
-    return 0 if all(row.get("raw_status") != "FAILED" for row in results) else 1
+    return 0 if all(row.get("raw_status") != "FAILED" and row.get("semantic_status") != "FAILED" for row in results) else 1
 
 
 if __name__ == "__main__":

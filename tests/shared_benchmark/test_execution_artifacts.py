@@ -54,6 +54,25 @@ def _seal(tmp_path: Path, manifest: dict, record: dict, *, config: str = "cfg", 
     )
 
 
+def _cuts_provenance(checkpoint: str = "checkpoint-a") -> dict:
+    return {
+        "checkpoint_sha256": checkpoint,
+        "checkpoint_training_provenance": {"checkpoint_selection_policy": "final_epoch"},
+        "cuts_mode": "CUTS-2D", "phate_configuration": {"n_components": 3},
+        "kmeans_configuration": {"n_clusters": 10}, "primary_k": 10, "clustering_seed": 1,
+    }
+
+
+def _dfc_provenance() -> dict:
+    return {
+        "sample_seed": 42, "seed_derivation": {"seed_derivation_version": "fixture"},
+        "update_count": 3, "iteration_count": 3, "final_active_count": 4,
+        "minLabels": 3, "maxIter": 1000, "optimizer": {"name": "SGD"},
+        "input_mode": "central_slice_2d", "final_forward_semantics": "fixture",
+        "fresh_model_optimizer_bn_state_per_sample": True,
+    }
+
+
 def test_raw_hash_stability_and_resume_identity(fixture_manifest):
     root, manifest = fixture_manifest
     record = manifest["records"][0]
@@ -168,7 +187,7 @@ def test_cut_and_dfc_provenance_fields_are_preserved(fixture_manifest):
         manifest_hash=manifest["manifest_hash"], shared_grid_hash=manifest["shared_grid_hash"],
         repository={"repository_commit_sha": "c", "working_tree_sha256": "t"},
         baseline_config_hash="cuts-config", seed=42,
-        baseline_metadata={"checkpoint_sha256": "ckpt", "cuts_mode": "CUTS-2D", "phate_configuration": {"n_components": 3}, "kmeans_configuration": {"n_clusters": 10}, "primary_k": 10},
+        baseline_metadata={"checkpoint_sha256": "ckpt", "checkpoint_training_provenance": {"checkpoint_selection_policy": "final_epoch"}, "cuts_mode": "CUTS-2D", "phate_configuration": {"n_components": 3}, "kmeans_configuration": {"n_clusters": 10}, "primary_k": 10, "clustering_seed": 1},
     )
     assert raw.metadata["baseline_provenance"]["checkpoint_sha256"] == "ckpt"
     raw_dfc = seal_raw_partition(
@@ -176,9 +195,78 @@ def test_cut_and_dfc_provenance_fields_are_preserved(fixture_manifest):
         baseline_name="DFC", baseline_mode="DFC-Direct-2D-Default-MinL3",
         manifest_hash=manifest["manifest_hash"], shared_grid_hash=manifest["shared_grid_hash"],
         repository={"repository_commit_sha": "c", "working_tree_sha256": "t"}, baseline_config_hash="dfc-config", seed=123,
-        baseline_metadata={"sample_seed": 123, "iteration_count": 4, "final_active_count": 3, "minLabels": 3, "maxIter": 1000, "fresh_model_optimizer_bn_state_per_sample": True},
+        baseline_metadata={"sample_seed": 123, "seed_derivation": {"seed_derivation_version": "fixture"}, "update_count": 4, "iteration_count": 4, "final_active_count": 3, "minLabels": 3, "maxIter": 1000, "optimizer": {"name": "SGD"}, "input_mode": "central_slice_2d", "final_forward_semantics": "fixture", "fresh_model_optimizer_bn_state_per_sample": True},
     )
     assert raw_dfc.metadata["baseline_provenance"]["sample_seed"] == 123
+
+
+def test_cuts_checkpoint_identity_invalidates_resume_and_receipt_is_operational(fixture_manifest):
+    root, manifest = fixture_manifest
+    record = manifest["records"][0]
+    calls: list[str] = []
+    checkpoint = ["checkpoint-a"]
+
+    def generate(_record):
+        calls.append("generated")
+        return GeneratedSample(np.zeros((8, 8), dtype=np.int32), np.zeros((8, 8), dtype=np.float32), _cuts_provenance(checkpoint[0]), {"python_version": "fixture", "cuda_peak_allocated_bytes": None, "cuda_peak_reserved_bytes": None})
+
+    common = dict(
+        output_root=root / "cuts", baseline_name="CUTS", baseline_mode="CUTS-2D",
+        manifest_hash=manifest["manifest_hash"], shared_grid_hash=manifest["shared_grid_hash"],
+        repository={"repository_commit_sha": "c", "working_tree_sha256": "t"}, baseline_config_hash="cfg",
+        seed_for_record=lambda _record: 42, generate=generate,
+    )
+    first = run_generation([record], extra_raw_identity_for_record=lambda _r: {"checkpoint_sha256": "checkpoint-a"}, **common)
+    checkpoint[0] = "checkpoint-b"
+    second = run_generation([record], extra_raw_identity_for_record=lambda _r: {"checkpoint_sha256": "checkpoint-b"}, **common)
+    assert first[0]["raw_status"] == "RAW_COMPLETE"
+    assert second[0]["raw_status"] == "RAW_COMPLETE"
+    assert calls == ["generated", "generated"]
+    assert second[0]["raw_artifact"].metadata["checkpoint_sha256"] == "checkpoint-b"
+    receipt = json.loads((second[0]["raw_artifact"].directory / "execution_receipt.json").read_text())
+    assert receipt["raw_generation_elapsed_seconds"] is not None
+    assert receipt["adapter_elapsed_seconds"] is None
+    assert receipt["total_elapsed_seconds"] >= receipt["raw_generation_elapsed_seconds"]
+    assert receipt["environment"]["cuda_peak_allocated_bytes"] is None
+
+
+@pytest.mark.parametrize(
+    ("baseline_name", "baseline_mode", "metadata"),
+    [("CUTS", "CUTS-2D", {}), ("DFC", "DFC-Direct-2D-Default-MinL3", {})],
+)
+def test_production_baselines_reject_missing_required_provenance(fixture_manifest, baseline_name, baseline_mode, metadata):
+    root, manifest = fixture_manifest
+    with pytest.raises(ArtifactError):
+        seal_raw_partition(
+            root / "out", np.zeros((8, 8), dtype=np.int32), record=manifest["records"][0],
+            baseline_name=baseline_name, baseline_mode=baseline_mode,
+            manifest_hash=manifest["manifest_hash"], shared_grid_hash=manifest["shared_grid_hash"],
+            repository={"repository_commit_sha": "c", "working_tree_sha256": "t"},
+            baseline_config_hash="cfg", seed=42, baseline_metadata=metadata,
+        )
+
+
+def test_dfc_execution_receipt_persists_environment(fixture_manifest):
+    root, manifest = fixture_manifest
+    record = manifest["records"][0]
+
+    def generate(_record):
+        return GeneratedSample(
+            np.zeros((8, 8), dtype=np.int32), np.zeros((8, 8), dtype=np.float32), _dfc_provenance(),
+            {"python_version": "fixture", "pytorch_version": "fixture", "numpy_version": "fixture",
+             "cuda_available": False, "device_name": None, "cuda_peak_allocated_bytes": None,
+             "cuda_peak_reserved_bytes": None},
+        )
+
+    row = run_generation(
+        [record], output_root=root / "dfc", baseline_name="DFC", baseline_mode="DFC-Direct-2D-Default-MinL3",
+        manifest_hash=manifest["manifest_hash"], shared_grid_hash=manifest["shared_grid_hash"],
+        repository={"repository_commit_sha": "c", "working_tree_sha256": "t"}, baseline_config_hash="cfg",
+        seed_for_record=lambda _record: 42, generate=generate,
+    )[0]
+    receipt = json.loads((row["raw_artifact"].directory / "execution_receipt.json").read_text())
+    assert receipt["environment"]["pytorch_version"] == "fixture"
+    assert receipt["environment"]["cuda_peak_reserved_bytes"] is None
 
 
 def test_deterministic_limit_selection_and_failure_receipt(fixture_manifest):
