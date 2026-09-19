@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from unittest.mock import patch
 
+import numpy as np
 import pytest
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -31,6 +32,32 @@ def test_frozen_grid_config_and_cpu_receipt_helpers():
     assert receipt["cuda_peak_allocated_bytes"] is None
     assert receipt["cuda_peak_reserved_bytes"] is None
     assert receipt["scikit_learn_version"]
+
+
+def test_scientific_runner_rejects_valid_source_checked_8x8_manifest(tmp_path):
+    """The production ``run`` path must reject a self-consistent non-frozen grid."""
+    runner = _runner()
+    from cardiac_benchmark.manifest import make_fixture_manifest
+    from shared_benchmark.manifest import manifest_hash
+
+    image_root = tmp_path / "images"
+    image_root.mkdir()
+    np.save(image_root / "image_0.npy", np.arange(3 * 8 * 8, dtype=np.float32).reshape(3, 8, 8))
+    manifest = make_fixture_manifest(image_root)
+    # This remains a source-valid shared scientific manifest.  Its only
+    # intended violation is the self-consistent, but non-frozen, 8x8 grid.
+    manifest["fixture"] = False
+    manifest["scientific"] = True
+    manifest["manifest_hash"] = manifest_hash(manifest)
+    manifest_path = tmp_path / "scientific_8x8.json"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    args = runner.build_parser().parse_args([
+        "--manifest", str(manifest_path), "--image-root", str(image_root),
+        "--output-root", str(tmp_path / "outputs"), "--split", "test",
+    ])
+    with pytest.raises(runner.ArtifactError, match="frozen 224x224 whole-FOV"):
+        runner.run(args)
 
 
 def test_semantic_failure_exits_nonzero():
