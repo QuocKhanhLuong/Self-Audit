@@ -32,13 +32,16 @@ from .semantic_contract import (
     ADAPTER_VERSION,
     FROZEN_ADAPTER_SPEC_SHA256,
     AdapterContractError,
+    adapter_metadata_payload,
     array_hash,
+    validate_adapter_metadata,
 )
 from .spatial import grid_hash
 
 
 RAW_SCHEMA_VERSION = "cardiac_raw_partition.v1"
-SEMANTIC_SCHEMA_VERSION = "cardiac_semantic_partition.v1"
+SEMANTIC_SCHEMA_VERSION = "cardiac_semantic_partition.v2"
+SEMANTIC_ARTIFACT_STAGE = f"semantic-{ADAPTER_VERSION}"
 STATE_SCHEMA_VERSION = "cardiac_execution_state.v1"
 
 PENDING = "PENDING"
@@ -86,7 +89,7 @@ class GeneratedSample:
     """Output of a baseline callback used by :func:`run_generation`.
 
     ``central_image`` is the already prepared central image in the shared
-    target grid.  It is passed to the adapter only after raw sealing; v1 does
+    target grid.  It is passed to the adapter only after raw sealing; v2 does
     not use its intensity values for semantic decisions.
     """
 
@@ -203,8 +206,8 @@ def _sample_slug(sample_id: str) -> str:
 
 
 def artifact_directory(output_root: str | Path, *, baseline_name: str, baseline_mode: str, sample_id: str, stage: str = "raw") -> Path:
-    if stage not in {"raw", "semantic"}:
-        raise ArtifactError("stage must be raw or semantic")
+    if stage not in {"raw", "semantic", SEMANTIC_ARTIFACT_STAGE}:
+        raise ArtifactError("stage must be raw, historical semantic, or the current semantic adapter stage")
     if not baseline_name or not baseline_mode:
         raise ArtifactError("baseline name and mode are required")
     return Path(output_root) / stage / _sample_slug(baseline_name) / _sample_slug(baseline_mode) / _sample_slug(sample_id)
@@ -608,13 +611,53 @@ def write_execution_receipt(
     return receipt
 
 
-def _adapter_implementation_hash(repo_root: str | Path | None = None) -> str:
+def _adapter_implementation_files(repo_root: str | Path | None = None) -> list[Path]:
     root = Path(repo_root or Path(__file__).resolve().parents[2])
-    return code_identity([
+    return [
         root / "src/shared_benchmark/adapter.py",
         root / "src/shared_benchmark/region_graph.py",
         root / "src/shared_benchmark/semantic_contract.py",
-    ], repo_root=root)["sha256"]
+        root / "src/shared_benchmark/artifacts.py",
+        root / "src/shared_benchmark/firewall.py",
+        root / "src/shared_benchmark/spatial.py",
+        root / "src/shared_benchmark/provenance.py",
+        root / "src/self_audit_maskfree/data/firewall.py",
+    ]
+
+
+def _adapter_implementation_hash(repo_root: str | Path | None = None) -> str:
+    root = Path(repo_root or Path(__file__).resolve().parents[2])
+    return code_identity(_adapter_implementation_files(root), repo_root=root)["sha256"]
+
+
+def _semantic_scientific_payload(metadata: Mapping[str, Any]) -> dict[str, Any]:
+    """Everything except the outer self-referential scientific payload hash."""
+    return {
+        str(key): _safe_json(value)
+        for key, value in metadata.items()
+        if str(key) != "scientific_payload_hash"
+    }
+
+
+def _adapter_record_for_raw(
+    record: Mapping[str, Any], raw_artifact: RawArtifact, central_image: np.ndarray,
+) -> dict[str, Any]:
+    """Bind the adapter to a sealed raw partition and one central image."""
+    adapter_record = dict(record)
+    if "geometry_validity" not in adapter_record:
+        adapter_record["geometry_validity"] = (
+            dict(record.get("geometry", {}))
+            if isinstance(record.get("geometry"), Mapping)
+            else {"orientation_valid": False}
+        )
+    adapter_record.update({
+        "shared_manifest_sha256": raw_artifact.metadata["shared_manifest_hash"],
+        "partition_sha256": array_hash(raw_artifact.partition),
+        "central_image_sha256": array_hash(np.asarray(central_image)),
+        "adapter_version": ADAPTER_VERSION,
+        "adapter_config_sha256": FROZEN_ADAPTER_SPEC_SHA256,
+    })
+    return adapter_record
 
 
 def seal_semantic_partition(
@@ -644,7 +687,28 @@ def seal_semantic_partition(
         raise ArtifactError("semantic artifact violates semantic/validity contract")
     if adapter_spec_sha256 != FROZEN_ADAPTER_SPEC_SHA256:
         raise ArtifactError("unsupported adapter specification hash")
-    directory = artifact_directory(output_root, baseline_name=baseline_name, baseline_mode=baseline_mode, sample_id=str(raw_artifact.metadata["sample_id"]), stage="semantic")
+    try:
+        adapter_payload = validate_adapter_metadata(result_metadata)
+    except AdapterContractError as exc:
+        raise ArtifactError(str(exc)) from exc
+    required_metadata = {
+        "adapter_version": ADAPTER_VERSION,
+        "adapter_config_sha256": adapter_spec_sha256,
+        "sample_id": raw_artifact.metadata["sample_id"],
+        "shared_manifest_sha256": raw_artifact.metadata["shared_manifest_hash"],
+        "partition_sha256": raw_artifact.metadata["raw_partition_sha256"],
+        "shared_grid_sha256": raw_artifact.metadata["shared_grid_hash"],
+        "semantic_map_sha256": array_hash(semantic),
+        "validity_map_sha256": array_hash(validity),
+    }
+    if any(result_metadata.get(key) != value for key, value in required_metadata.items()):
+        raise ArtifactError("adapter metadata does not bind the sealed raw/result identity")
+    if adapter_payload != adapter_metadata_payload(result_metadata):
+        raise ArtifactError("adapter metadata payload is not canonical")
+    directory = artifact_directory(
+        output_root, baseline_name=baseline_name, baseline_mode=baseline_mode,
+        sample_id=str(raw_artifact.metadata["sample_id"]), stage=SEMANTIC_ARTIFACT_STAGE,
+    )
     directory.mkdir(parents=True, exist_ok=True)
     mark_running(directory, str(raw_artifact.metadata["sample_id"]))
     semantic_path = directory / "semantic_map.npy"
@@ -666,10 +730,14 @@ def seal_semantic_partition(
         "validity_map_path": validity_path.name,
         "coverage": float(validity.mean()),
         "assignments": result_metadata.get("assignments", []),
-        "assignment_reasons": result_metadata.get("role_reasons", {}),
+        "assignment_reasons": result_metadata.get("assignment_reasons", {}),
         "void_reasons": result_metadata.get("void_reasons", {}),
         "role_reasons": result_metadata.get("role_reasons", {}),
+        "unresolved_reasons": result_metadata.get("unresolved_reasons", {}),
         "component_graph_digest": result_metadata.get("component_graph_digest"),
+        "central_image_sha256": result_metadata.get("central_image_sha256"),
+        "adapter_metadata_sha256": result_metadata.get("metadata_sha256"),
+        "scientific_result_sha256": result_metadata.get("scientific_result_sha256"),
         "intensity_resolution": result_metadata.get("intensity_resolution", "disabled"),
         "orientation_resolution": result_metadata.get("orientation_resolution", "disabled"),
         "region_splitting": result_metadata.get("region_splitting", False),
@@ -684,7 +752,7 @@ def seal_semantic_partition(
             "semantic_map_sha256": array_hash(semantic_loaded),
             "validity_map_sha256": array_hash(validity_loaded),
         })
-        metadata["scientific_payload_hash"] = sha256_json({key: value for key, value in _safe_json(metadata).items() if key not in {"scientific_payload_hash", "adapter_metadata"}})
+        metadata["scientific_payload_hash"] = sha256_json(_semantic_scientific_payload(metadata))
         _validate_metadata(metadata, allow_semantic=True)
         atomic_write_json(directory / "metadata.json", metadata)
         _mark_complete(directory, str(raw_artifact.metadata["sample_id"]), SEMANTIC_COMPLETE, metadata["scientific_payload_hash"])
@@ -697,7 +765,9 @@ def seal_semantic_partition(
 
 
 def verify_semantic_partition(
-    directory: str | Path, *, raw_artifact: RawArtifact, adapter_spec_sha256: str = FROZEN_ADAPTER_SPEC_SHA256,
+    directory: str | Path, *, raw_artifact: RawArtifact, record: Mapping[str, Any],
+    central_image: np.ndarray, adapter_spec: Mapping[str, Any],
+    adapter_spec_sha256: str = FROZEN_ADAPTER_SPEC_SHA256,
     adapter_implementation_sha256: str | None = None,
 ) -> SemanticArtifact:
     # Re-verify the on-disk raw seal at every semantic read.  Holding an old
@@ -736,10 +806,37 @@ def verify_semantic_partition(
         raise ArtifactError("semantic map encoding/validity mismatch")
     if metadata.get("semantic_map_sha256") != array_hash(semantic) or metadata.get("validity_map_sha256") != array_hash(validity):
         raise ArtifactError("semantic map hash mismatch")
-    semantic_payload = _safe_json(dict(metadata))
-    expected_payload = {key: value for key, value in semantic_payload.items() if key not in {"scientific_payload_hash", "adapter_metadata"}}
-    if metadata.get("scientific_payload_hash") != sha256_json(expected_payload):
+    if metadata.get("scientific_payload_hash") != sha256_json(_semantic_scientific_payload(metadata)):
         raise ArtifactError("semantic scientific payload hash mismatch")
+    adapter_metadata = metadata.get("adapter_metadata")
+    try:
+        if not isinstance(adapter_metadata, Mapping):
+            raise ArtifactError("semantic artifact adapter_metadata is required")
+        validate_adapter_metadata(adapter_metadata)
+        adapter_record = _adapter_record_for_raw(record, current_raw, np.asarray(central_image))
+        recomputed = adapt_partition(
+            adapter_record, current_raw.partition, np.asarray(central_image), adapter_spec=adapter_spec,
+        )
+    except (AdapterContractError, ValueError) as exc:
+        raise ArtifactError(f"semantic adapter verification failed: {exc}") from exc
+    if not np.array_equal(semantic, recomputed.semantic_map) or not np.array_equal(validity, recomputed.validity_map):
+        raise ArtifactError("semantic maps do not reproduce from verified raw input")
+    if _safe_json(dict(adapter_metadata)) != _safe_json(recomputed.metadata):
+        raise ArtifactError("semantic adapter_metadata does not reproduce from verified raw input")
+    copied_metadata = {
+        "assignments": recomputed.metadata["assignments"],
+        "assignment_reasons": recomputed.metadata["assignment_reasons"],
+        "void_reasons": recomputed.metadata["void_reasons"],
+        "role_reasons": recomputed.metadata["role_reasons"],
+        "unresolved_reasons": recomputed.metadata["unresolved_reasons"],
+        "component_graph_digest": recomputed.metadata["component_graph_digest"],
+        "central_image_sha256": recomputed.metadata["central_image_sha256"],
+        "adapter_metadata_sha256": recomputed.metadata["metadata_sha256"],
+        "scientific_result_sha256": recomputed.metadata["scientific_result_sha256"],
+        "coverage": float(recomputed.validity_map.mean()),
+    }
+    if any(_safe_json(metadata.get(key)) != _safe_json(value) for key, value in copied_metadata.items()):
+        raise ArtifactError("semantic artifact copied adapter metadata mismatch")
     return SemanticArtifact(directory=target, semantic_map=np.ascontiguousarray(semantic), validity_map=np.ascontiguousarray(validity), metadata=metadata)
 
 
@@ -791,18 +888,7 @@ def run_adapter_after_raw(
     if raw_artifact.metadata.get("completion_status") != RAW_COMPLETE:
         raise ArtifactError("adapter handoff requires RAW_COMPLETE")
     partition = verify_raw_partition(raw_artifact.directory).partition
-    from .semantic_contract import array_hash as semantic_array_hash
-
-    adapter_record = dict(record)
-    if "geometry_validity" not in adapter_record:
-        adapter_record["geometry_validity"] = dict(record.get("geometry", {})) if isinstance(record.get("geometry"), Mapping) else {"orientation_valid": False}
-    adapter_record.update({
-        "shared_manifest_sha256": raw_artifact.metadata["shared_manifest_hash"],
-        "partition_sha256": semantic_array_hash(partition),
-        "central_image_sha256": semantic_array_hash(np.asarray(central_image)),
-        "adapter_version": ADAPTER_VERSION,
-        "adapter_config_sha256": FROZEN_ADAPTER_SPEC_SHA256,
-    })
+    adapter_record = _adapter_record_for_raw(record, raw_artifact, np.asarray(central_image))
     try:
         result = adapt_partition(adapter_record, partition, np.asarray(central_image), adapter_spec=adapter_spec)
     except (AdapterContractError, ValueError) as exc:
@@ -888,17 +974,24 @@ def run_generation(
                 status = "RAW_COMPLETE"
             semantic_status = None
             if semantic_root is not None and adapter_spec is not None:
-                semantic_directory = artifact_directory(semantic_root, baseline_name=baseline_name, baseline_mode=baseline_mode, sample_id=sample_id, stage="semantic")
+                semantic_directory = artifact_directory(
+                    semantic_root, baseline_name=baseline_name, baseline_mode=baseline_mode,
+                    sample_id=sample_id, stage=SEMANTIC_ARTIFACT_STAGE,
+                )
+                if status == "RAW_COMPLETE":
+                    central_image = np.asarray(generated.central_image)
+                elif central_image_for_record is None:
+                    raise ArtifactError("a central_image_for_record callback is required for adapter resume")
+                else:
+                    central_image = np.asarray(central_image_for_record(record))
                 try:
-                    semantic = verify_semantic_partition(semantic_directory, raw_artifact=raw, adapter_implementation_sha256=adapter_implementation_sha256)
+                    semantic = verify_semantic_partition(
+                        semantic_directory, raw_artifact=raw, record=record,
+                        central_image=central_image, adapter_spec=adapter_spec,
+                        adapter_implementation_sha256=adapter_implementation_sha256,
+                    )
                     semantic_status = "SKIPPED_SEMANTIC_COMPLETE"
                 except ArtifactError:
-                    if status == "RAW_COMPLETE":
-                        central_image = generated.central_image
-                    elif central_image_for_record is None:
-                        raise ArtifactError("a central_image_for_record callback is required for adapter resume")
-                    else:
-                        central_image = np.asarray(central_image_for_record(record))
                     adapter_started = time.perf_counter()
                     try:
                         semantic = run_adapter_after_raw(
@@ -941,7 +1034,10 @@ def run_generation(
                 # receipt so a later invocation can retry only the handoff.
                 raw_status = status if "status" in locals() else RAW_COMPLETE
                 if semantic_root is not None:
-                    semantic_directory = artifact_directory(semantic_root, baseline_name=baseline_name, baseline_mode=baseline_mode, sample_id=sample_id, stage="semantic")
+                    semantic_directory = artifact_directory(
+                        semantic_root, baseline_name=baseline_name, baseline_mode=baseline_mode,
+                        sample_id=sample_id, stage=SEMANTIC_ARTIFACT_STAGE,
+                    )
                     mark_failed(semantic_directory, sample_id, exc)
             if raw is not None:
                 receipt = write_execution_receipt(
@@ -971,7 +1067,7 @@ verify_semantic_artifact = verify_semantic_partition
 
 __all__ = [
     "ArtifactError", "GeneratedSample", "RawArtifact", "SemanticArtifact",
-    "RAW_SCHEMA_VERSION", "SEMANTIC_SCHEMA_VERSION", "STATE_SCHEMA_VERSION",
+    "RAW_SCHEMA_VERSION", "SEMANTIC_SCHEMA_VERSION", "SEMANTIC_ARTIFACT_STAGE", "STATE_SCHEMA_VERSION",
     "PENDING", "RUNNING", "RAW_COMPLETE", "SEMANTIC_COMPLETE", "FAILED",
     "atomic_write_bytes", "atomic_write_json", "atomic_write_npy", "artifact_directory", "write_execution_receipt",
     "code_identity", "config_hash", "repository_identity", "mark_failed", "mark_pending", "mark_running",

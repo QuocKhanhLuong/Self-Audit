@@ -1,0 +1,12 @@
+{
+  "receipt_schema": "shared_benchmark.freeze_test_receipt.v1",
+  "status": "PASS_STATIC",
+  "commands": [
+    "python -m compileall -q src scripts baseline/CUTS/src baseline/DFC/src tests/shared_benchmark",
+    "pytest -q tests/shared_benchmark (55 passed)",
+    "pytest -q baseline/CUTS/tests/cardiac (14 passed)",
+    "pytest -q baseline/DFC/tests/cardiac (11 passed)",
+    "validate_cardiac_benchmark_freeze.py (PASS)"
+  ],
+  "runtime_gates": "CUTS_STAGE1_LIMITED_PASS; DFC_AND_FULL_NOT_RUN"
+}

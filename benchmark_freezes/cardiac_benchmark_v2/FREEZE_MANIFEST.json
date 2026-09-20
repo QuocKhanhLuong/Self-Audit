@@ -1,0 +1,228 @@
+{
+  "freeze_schema": "shared_benchmark.cardiac_benchmark_freeze.v2",
+  "freeze_id": "cardiac-benchmark-v2-e4a62c94abdc6e4a",
+  "scientific_payload_sha256": "e4a62c94abdc6e4a2955b66cba448eb9c7f2f1786f593f5bd144401dd80795fa",
+  "scientific_payload": {
+    "freeze_schema_version": "shared_benchmark.cardiac_benchmark_freeze.v2",
+    "repository_commit_sha": "817f2ba1427506732ce6bb30bc5980e955710533",
+    "authoritative_freemask_policy": {
+      "source_manifest_schema": "maskfree150.data.v2",
+      "split_policy_version": "maskfree150.data.discovery.v2",
+      "split_seed": 42,
+      "patient_level": true,
+      "fallback_ratio": [
+        0.7,
+        0.15,
+        0.15
+      ],
+      "fallback_ranking": "blake2b(dataset, seed, patient_id)",
+      "official_membership": "preserved before fallback for unassigned patients",
+      "generation_inventory": "all acquired frames x all target z slices",
+      "context_policy": "[max(z-1,0),z,min(z+1,Z-1)]",
+      "annotation_derived_generation_eligibility": false
+    },
+    "shared_manifest": {
+      "schema_version": "shared_benchmark_manifest.v1",
+      "sample_id": "dataset+patient_id+study_id+volume_id+frame_index+slice_index",
+      "scientific_manifest_materialization": "DEFERRED_NO_REAL_IMAGE_ONLY_ROOT"
+    },
+    "datasets": {
+      "acdc": {
+        "scientific_manifest_status": "DEFERRED",
+        "root_availability": false,
+        "root_logical_identity": "configured_acdc_image_only_root_not_available",
+        "image_only_firewall_result": "DEFERRED_NO_ROOT"
+      },
+      "mnms": {
+        "scientific_manifest_status": "DEFERRED",
+        "root_availability": false,
+        "root_logical_identity": "configured_mnms_image_only_root_not_available",
+        "image_only_firewall_result": "DEFERRED_NO_ROOT"
+      }
+    },
+    "shared_spatial_contract": {
+      "version": "shared_benchmark.spatial.v1",
+      "target_hw": [
+        224,
+        224
+      ],
+      "whole_fov": true,
+      "resampling": "masked_area_normalized_convolution",
+      "grid_sha256": "2d53b65aa94d6cc151a02444a03b2246034cc5334e089e4d86a8de69ce494fc1"
+    },
+    "consumer_contract": {
+      "cuts_primary": "CUTS-2D",
+      "cuts_sensitivity": "CUTS-2.5D",
+      "dfc_primary": "DFC-Direct-2D-Default-MinL3",
+      "shared_inventory_required": true,
+      "method_specific_normalization": [
+        "FreeMask fit-only/masked",
+        "CUTS cardiac preprocessing",
+        "DFC central percentile/z-score"
+      ]
+    },
+    "firewall": {
+      "schema_status": "PASS_LOCAL",
+      "physical_isolation_status": "DEFERRED_NO_REAL_IMAGE_ONLY_MOUNT"
+    },
+    "adapter": {
+      "adapter_version": "cardiac_adapter_v1",
+      "input_schema_version": "shared_benchmark.anonymous_partition.v1",
+      "specification_status": "FROZEN_PRE_IMPLEMENTATION",
+      "specification_sha256": "34b1faeb7b40f77c2d4d9789a6e1a342e891fcb8ff8db4edd30957b2ae9d114a",
+      "synthetic_fixture_set_version": "cardiac_adapter_v1.synthetic_topology.v1",
+      "synthetic_fixture_set_sha256": "fa564c1af626692a309584e59337f3b028230c79e5cefc568a2f20a5c7f2f258",
+      "synthetic_fixture_invariant": "validity == (semantic != VOID)"
+    },
+    "scientific_readiness": "NOT_READY_REAL_DATA_AND_PHYSICAL_GT_ISOLATION_DEFERRED",
+    "bound_repository_files": [
+      {
+        "path": "configs/maskfree_acdc_150.yaml",
+        "sha256": "201c3460b9b015c9a0505a3b70b2bb34b35b5daa4c3c35e80603329fd41098cf"
+      },
+      {
+        "path": "configs/maskfree_mnms_150.yaml",
+        "sha256": "d917d903e8f901bb1cc483b1286cc6e47a2df0f43a923756d0b29743522128f9"
+      },
+      {
+        "path": "configs/adapter_v1_spec_source.json",
+        "sha256": "34b1faeb7b40f77c2d4d9789a6e1a342e891fcb8ff8db4edd30957b2ae9d114a"
+      },
+      {
+        "path": "configs/adapter_v1_synthetic_fixtures_source.json",
+        "sha256": "2695f0ebbf9160a1f4a84c8ad8889577e7dec548aaebc470300cadff16eb2a59"
+      },
+      {
+        "path": "src/self_audit_maskfree/data/discovery.py",
+        "sha256": "d32b5fbbb0415078b54f08715414ea94f08831a18e155c4bcc150cac145b0ce3"
+      },
+      {
+        "path": "src/self_audit_maskfree/data/dataset.py",
+        "sha256": "653a0d74da405405252fe739891cc48f51088adf1ecacb72f77d6cc279d214f4"
+      },
+      {
+        "path": "src/self_audit_maskfree/data/geometry.py",
+        "sha256": "3bfb1625e693f5789402568ffb214e6f786c4001908b35b6048e027f1e2b2ce9"
+      },
+      {
+        "path": "src/self_audit_maskfree/data/firewall.py",
+        "sha256": "92767510e96f4feb816d60e190a6a913cc231d97d0f180c7ffce857ac3ceaca3"
+      },
+      {
+        "path": "src/shared_benchmark/__init__.py",
+        "sha256": "57e6fb23aed99ea209d055f6bd05c394b491f100cf412db8030951cdf8c80433"
+      },
+      {
+        "path": "src/shared_benchmark/manifest.py",
+        "sha256": "608cd1ecd22cbc56589a1c8c2040cd1a0d9f3f5bdf499861ba9bc75ea8d09eaf"
+      },
+      {
+        "path": "src/shared_benchmark/spatial.py",
+        "sha256": "c83535bb53f8b0f110e823a7c145e61e2f2b2513ae4cc7acc9748ed2fdf94830"
+      },
+      {
+        "path": "src/shared_benchmark/firewall.py",
+        "sha256": "d973bf7e2be8f6f601b0807440e908074a42559bb6c4aa5128d9938c96cd2511"
+      },
+      {
+        "path": "src/shared_benchmark/provenance.py",
+        "sha256": "6844a7b0d06422f39e8e87a2686fe082ca47f0ca9588e49c88c24a39d63760d5"
+      },
+      {
+        "path": "scripts/prepare_maskfree_data.py",
+        "sha256": "1f7e684cd4324d20869cf1337d06cf2a9c038c1e4185342c9b5580ef990c4e4a"
+      },
+      {
+        "path": "scripts/prepare_shared_benchmark_manifest.py",
+        "sha256": "3d17880b845628ceb5d53dff7e700b0fe2c9964baec347749306fc23812850dd"
+      },
+      {
+        "path": "scripts/validate_cardiac_benchmark_freeze.py",
+        "sha256": "63fd2c68cdb837c64efe6c9256dc21774399c4309edd1f020806f0c2c9a79b5b"
+      },
+      {
+        "path": "scripts/regenerate_cardiac_benchmark_freeze.py",
+        "sha256": "66f3d080175732db38013cc13cf5fec866a91a5cf17fd2e44579dbb2bc0d52c3"
+      },
+      {
+        "path": "scripts/run_cuts_scientific.py",
+        "sha256": "f869c184e2d3329334ce75ec923049705354036ca5ab9b443c341436479a0837"
+      },
+      {
+        "path": "scripts/run_dfc_scientific.py",
+        "sha256": "a4693129fbd33309175842b4232a9f17bac4a71844ed963ae7ee94fbd9bde29c"
+      },
+      {
+        "path": "src/shared_benchmark/semantic_contract.py",
+        "sha256": "bcad52f8e571d7f2f8737434b67b696abc4ea869f7dba9a124012cfb89d988ae"
+      },
+      {
+        "path": "baseline/CUTS/src/cardiac_benchmark/manifest.py",
+        "sha256": "e1feb0612b358a179ca460eec7d662c887d4315f589158fc43d99477fb69770e"
+      },
+      {
+        "path": "baseline/CUTS/src/cardiac_benchmark/dataset.py",
+        "sha256": "35748861ce6ce5469dca18ff52192dd3133959e612da66e37d6befac898b1fe7"
+      },
+      {
+        "path": "baseline/CUTS/src/cardiac_benchmark/train_stage1.py",
+        "sha256": "f55302b0e726bd065a40b9bd91f26b5fff517f2cc134febf94aef7ad9a744374"
+      },
+      {
+        "path": "baseline/CUTS/src/cardiac_benchmark/export_latents.py",
+        "sha256": "61fa74e1e11d8c799c27e0390e456665ba04974199a6116ed6d1c0968e08994a"
+      },
+      {
+        "path": "baseline/CUTS/src/cardiac_benchmark/cluster_kmeans.py",
+        "sha256": "03c2f9f6d15c362ed0d4ded674c1a0575a94ff8df96c6eb82830fa4193890b9a"
+      },
+      {
+        "path": "baseline/CUTS/src/cardiac_benchmark/provenance.py",
+        "sha256": "d93623d0c27a07e0545a7b08f729a63c1cbcc18f943abbc02db3eebe86c96e84"
+      },
+      {
+        "path": "baseline/CUTS/scripts_cardiac/p0_local_smoke.py",
+        "sha256": "07b3b8fa9ae05d68b8588b51f497a000896a4f5766d6afc49f5cf06bf3623b52"
+      },
+      {
+        "path": "baseline/DFC/src/cardiac_benchmark/manifest.py",
+        "sha256": "efdf7534eaa39cd46d1419b3d8f09d36c4e3f4c649a08fc6357bdcfa1ec935b0"
+      },
+      {
+        "path": "baseline/DFC/src/cardiac_benchmark/dataset.py",
+        "sha256": "7fba15e15bf7610e4b4a7edc7f55dfb29cfca27e94552365469f8b6e75091ca0"
+      },
+      {
+        "path": "baseline/DFC/src/cardiac_benchmark/config.py",
+        "sha256": "7ddd39d8161ebb3f4fc69e156cb7fc105957b2e6b48cd12368a423ecaf69d9a8"
+      },
+      {
+        "path": "baseline/DFC/src/cardiac_benchmark/dfc_runner.py",
+        "sha256": "8aee1338ac9e4fba7c2fc7ae6b15afe7474c6ac1d8ccf815bf73c8a96ac89fa7"
+      },
+      {
+        "path": "baseline/DFC/config/cardiac/dfc_direct_2d_minl3.yaml",
+        "sha256": "15688e08c97ad2dc6e88fdb8ef35f29886b020091fb5c82440d492be07dc5ec5"
+      }
+    ],
+    "bound_freeze_files": [
+      {
+        "path": "configs/resolved_shared_contract.json",
+        "sha256": "2e92c466b4ddfced1535064d1309a82daf3a1f06c74a305603ee4c1934f15972"
+      },
+      {
+        "path": "configs/adapter_v1_spec.json",
+        "sha256": "34b1faeb7b40f77c2d4d9789a6e1a342e891fcb8ff8db4edd30957b2ae9d114a"
+      },
+      {
+        "path": "configs/adapter_v1_synthetic_fixtures.json",
+        "sha256": "fa564c1af626692a309584e59337f3b028230c79e5cefc568a2f20a5c7f2f258"
+      }
+    ],
+    "pre_freeze_sources": {
+      "adapter_spec_source_sha256": "34b1faeb7b40f77c2d4d9789a6e1a342e891fcb8ff8db4edd30957b2ae9d114a",
+      "fixture_source_sha256": "2695f0ebbf9160a1f4a84c8ad8889577e7dec548aaebc470300cadff16eb2a59",
+      "fixture_generator": "scripts/regenerate_cardiac_benchmark_freeze.py"
+    }
+  }
+}

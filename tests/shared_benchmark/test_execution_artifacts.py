@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -11,6 +12,7 @@ from shared_benchmark.artifacts import (
     ArtifactError,
     FAILED,
     RAW_COMPLETE,
+    SEMANTIC_ARTIFACT_STAGE,
     GeneratedSample,
     artifact_directory,
     atomic_write_bytes,
@@ -24,8 +26,8 @@ from shared_benchmark.artifacts import (
     verify_raw_partition,
     verify_semantic_partition,
 )
-from shared_benchmark.provenance import sha256_file
-from shared_benchmark.semantic_contract import FROZEN_ADAPTER_SPEC_SHA256
+from shared_benchmark.provenance import sha256_json
+from shared_benchmark.semantic_contract import FROZEN_ADAPTER_SPEC_SHA256, adapter_metadata_payload, canonical_metadata_hash
 from shared_benchmark.manifest import build_shared_manifest
 from shared_benchmark.spatial import build_grid_spec
 
@@ -33,7 +35,7 @@ from helpers import discovered_projection, write_image
 
 
 ROOT = Path(__file__).resolve().parents[2]
-SPEC = json.loads((ROOT / "benchmark_freezes/cardiac_benchmark_v2/configs/adapter_v1_spec.json").read_text(encoding="utf-8"))
+SPEC = json.loads((ROOT / "benchmark_freezes/cardiac_benchmark_v6/configs/adapter_v2_spec.json").read_text(encoding="utf-8"))
 
 
 @pytest.fixture()
@@ -141,14 +143,16 @@ def test_adapter_handoff_requires_raw_complete_and_semantic_binds_raw(fixture_ma
         central_image=np.zeros((8, 8), dtype=np.float32), adapter_spec=SPEC,
         baseline_name="TEST", baseline_mode="2d",
     )
-    checked = verify_semantic_partition(handoff.directory, raw_artifact=raw)
+    assert handoff.directory.parts[-4] == SEMANTIC_ARTIFACT_STAGE
+    image = np.zeros((8, 8), dtype=np.float32)
+    checked = verify_semantic_partition(handoff.directory, raw_artifact=raw, record=record, central_image=image, adapter_spec=SPEC)
     assert checked.metadata["raw_partition_sha256"] == raw.metadata["raw_partition_sha256"]
     raw_path = raw.directory / raw.metadata["raw_partition_path"]
     changed = np.load(raw_path, allow_pickle=False)
     changed[0, 0] += 1
     np.save(raw_path, changed, allow_pickle=False)
     with pytest.raises(ArtifactError):
-        verify_semantic_partition(handoff.directory, raw_artifact=raw)
+        verify_semantic_partition(handoff.directory, raw_artifact=raw, record=record, central_image=image, adapter_spec=SPEC)
 
     pending = type(raw)(directory=raw.directory, partition=raw.partition, metadata={**raw.metadata, "completion_status": "RUNNING"})
     with pytest.raises(ArtifactError):
@@ -157,6 +161,67 @@ def test_adapter_handoff_requires_raw_complete_and_semantic_binds_raw(fixture_ma
             central_image=np.zeros((8, 8), dtype=np.float32), adapter_spec=SPEC,
             baseline_name="TEST", baseline_mode="2d",
         )
+
+
+@pytest.mark.parametrize("field", ["assignment_reason", "central_image_sha256", "coverage"])
+def test_semantic_adapter_metadata_tamper_is_rejected_even_after_rehash(fixture_manifest, field):
+    """A forged outer/inner hash cannot replace adapter recomputation."""
+    root, manifest = fixture_manifest
+    record = manifest["records"][0]
+    image = np.zeros((8, 8), dtype=np.float32)
+    raw = _seal(root, manifest, record)
+    handoff = run_adapter_after_raw(
+        raw, semantic_root=root / "semantic", record=record, central_image=image,
+        adapter_spec=SPEC, baseline_name="TEST", baseline_mode="2d",
+    )
+    metadata_path = handoff.directory / "metadata.json"
+    state_path = handoff.directory / "state.json"
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    adapter_metadata = metadata["adapter_metadata"]
+    if field == "assignment_reason":
+        adapter_metadata["assignments"][0]["reason"] = "forged_assignment_reason"
+    elif field == "central_image_sha256":
+        adapter_metadata["central_image_sha256"] = "0" * 64
+    else:
+        adapter_metadata["coverage"] = 0.123456
+    # Model an attacker who knows both serialization formats and recomputes
+    # every seal that was available in the artifact itself.
+    adapter_metadata["metadata_sha256"] = canonical_metadata_hash(adapter_metadata_payload(adapter_metadata))
+    for key in (
+        "assignments", "assignment_reasons", "void_reasons", "role_reasons", "unresolved_reasons",
+        "component_graph_digest", "central_image_sha256", "scientific_result_sha256",
+    ):
+        metadata[key] = adapter_metadata[key]
+    metadata["adapter_metadata_sha256"] = adapter_metadata["metadata_sha256"]
+    metadata["coverage"] = adapter_metadata["coverage"]
+    metadata["scientific_payload_hash"] = sha256_json({key: value for key, value in metadata.items() if key != "scientific_payload_hash"})
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    state["artifact_scientific_payload_hash"] = metadata["scientific_payload_hash"]
+    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+    state_path.write_text(json.dumps(state), encoding="utf-8")
+    with pytest.raises(ArtifactError):
+        verify_semantic_partition(
+            handoff.directory, raw_artifact=raw, record=record, central_image=image, adapter_spec=SPEC,
+        )
+
+
+def test_adapter_implementation_identity_includes_real_dependencies(tmp_path: Path):
+    from shared_benchmark.artifacts import _adapter_implementation_files, _adapter_implementation_hash
+
+    paths = _adapter_implementation_files(ROOT)
+    relative = {path.relative_to(ROOT).as_posix() for path in paths}
+    assert {
+        "src/shared_benchmark/firewall.py", "src/shared_benchmark/spatial.py",
+        "src/shared_benchmark/provenance.py", "src/self_audit_maskfree/data/firewall.py",
+    }.issubset(relative)
+    for source in paths:
+        destination = tmp_path / source.relative_to(ROOT)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, destination)
+    original = _adapter_implementation_hash(tmp_path)
+    dependency = tmp_path / "src/shared_benchmark/spatial.py"
+    dependency.write_text(dependency.read_text(encoding="utf-8") + "\n# test identity mutation\n", encoding="utf-8")
+    assert _adapter_implementation_hash(tmp_path) != original
 
 
 def test_semantic_failure_does_not_demote_sealed_raw(fixture_manifest):

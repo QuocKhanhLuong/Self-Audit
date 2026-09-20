@@ -12,7 +12,7 @@ from shared_benchmark.spatial import build_grid_spec
 
 
 ROOT = Path(__file__).resolve().parents[2]
-SPEC = json.loads((ROOT / "benchmark_freezes/cardiac_benchmark_v2/configs/adapter_v1_spec.json").read_text())
+SPEC = json.loads((ROOT / "benchmark_freezes/cardiac_benchmark_v6/configs/adapter_v2_spec.json").read_text())
 
 
 def _adapt(partition: np.ndarray):
@@ -78,3 +78,23 @@ def test_repeated_execution_is_bit_identical():
     np.testing.assert_array_equal(first.semantic_map, second.semantic_map)
     np.testing.assert_array_equal(first.validity_map, second.validity_map)
     assert first.metadata == second.metadata
+
+
+def test_assigned_components_keep_their_resolution_reason_in_trace():
+    partition = np.asarray([
+        [19, 19, 19, 19, 19, 19, 19],
+        [19, 19, 19, 19, 19, 19, 19],
+        [19, 19, -7, -7, -7, -7, 19],
+        [19, 19, -7, 42, 42, -7, 19],
+        [19, 0, -7, 42, 42, -7, 19],
+        [19, 19, -7, -7, -7, -7, 19],
+        [19, 19, 19, 19, 19, 19, 19],
+    ], dtype=np.int64)
+    result = _adapt(partition)
+    reasons = {row["semantic"]: row["reason"] for row in result.metadata["assignments"]}
+    assert reasons == {
+        "BG": "unique_border_background",
+        "MYO": "unique_enclosure_outer",
+        "LV": "unique_enclosure_inner",
+        "RV": "unique_adjacent_rv",
+    }

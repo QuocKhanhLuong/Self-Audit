@@ -1,8 +1,10 @@
 # CUTS + DFC — preflight plan after Self-Audit protocol correction
 
 This plan covers ACDC only. M&Ms remains deferred. The authorized CUTS-only
-Stage 1 limited timing probe has completed; DFC and full scientific runtime
-remain gated on a later user decision.
+Stage 1 limited timing probe and the full CUTS-2D 200-epoch training have
+completed. A one-sample image-only generation smoke and a 10-sample generation
+benchmark also passed in tmux `self-audit-runtime`; full dev
+generation/evaluation and DFC remain gated separately.
 
 ## Current authority
 
@@ -29,6 +31,8 @@ remain gated on a later user decision.
   records (train/dev/test), 80/20/0 patients.
 - Dependency/CUDA probes, compileall, synthetic shared/CUTS/DFC tests and v3
   freeze validator.
+- CUTS epoch-boundary checkpoint/resume guard: `checkpoint_last.pt` is written
+  after each completed epoch and final export remains epoch-200-only.
 - Upstream normalization audit: CUTS has no cardiac normalizer (its unrelated
   brain-tumor NIfTI loader uses per-image `[-1,1]`), while direct DFC only uses
   BGR-`uint8` `/255`. v3 therefore applies the Self-Audit source volume
@@ -86,12 +90,29 @@ min. These are measured-versus-extrapolated values, not a scientific result.
 DFC remains unrun. GT is only mounted in a separate evaluator after raw output
 and mapping/config freeze; it cannot affect generation, mapping, or tuning.
 
-### Stage 2 — full ACDC (new decision required)
+### Stage 2 — full ACDC (CUTS training complete; generation/evaluation pending; DFC pending)
 
-Only after Stage 1's ETA/VRAM report and DFC `T_budget=1.25*T_base` check may
-the user authorize full ACDC. Then use the unchanged CUTS-2D 200-epoch
-final-epoch protocol and full DFC protocol. No Stage-2 command is executed or
-authorized in this handoff. M&Ms remains deferred.
+The unchanged CUTS-2D 200-epoch final-epoch protocol completed successfully;
+the final checkpoint is in `.runtime/cuts_acdc_200ep_20260920`. The authorized
+one-sample dev generation smoke and deterministic 10-sample benchmark also
+completed in image-only bwrap using PHATE/KMeans and adapter v1. Full
+376-sample dev generation and isolated GT evaluation have not run. DFC
+`T_budget=1.25*T_base` remains unmeasured and unrun. M&Ms remains deferred.
 
 The above commands are prospective only; they are not runtime evidence or a
 readiness claim.
+
+## Adapter-v2 prerequisite for any future runtime decision
+
+Use the active v6 adapter spec:
+`benchmark_freezes/cardiac_benchmark_v6/configs/adapter_v2_spec.json`. It
+binds the actual Self-Audit runtime central image: full-volume 0.5/99.5 clip,
+population z-score, then whole-FOV 256x256 bilinear resize with
+`align_corners=False`. This is shared source preprocessing, not an added CUTS
+or DFC normalizer; adapter intensity/orientation resolution remain disabled.
+
+The old v1 semantic stage is preserved. v2 writes only to
+`semantic-cardiac_adapter_v2`, so an authorized regeneration must verify each
+raw artifact, reconstruct the image-only central plane, and call the v2
+raw-to-adapter handoff. Do not re-seal old metadata. Static v6 validation and
+synthetic tests passed; this remediation added no runtime workload.
