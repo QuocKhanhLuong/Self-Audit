@@ -47,8 +47,8 @@ def _load_json(path: Path) -> dict[str, Any]:
 
 def _adapter_spec(path: Path) -> dict[str, Any]:
     spec = _load_json(path)
-    if spec.get("adapter_version") != "cardiac_adapter_v1" or sha256_file(path) != FROZEN_ADAPTER_SPEC_SHA256:
-        raise ValueError("adapter spec hash is not the frozen cardiac_adapter_v1 contract")
+    if spec.get("adapter_version") != "cardiac_adapter_v2" or sha256_file(path) != FROZEN_ADAPTER_SPEC_SHA256:
+        raise ValueError("adapter spec hash is not the frozen cardiac_adapter_v2 contract")
     return spec
 
 
@@ -190,7 +190,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--sample-list", type=Path)
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--apply-adapter", action="store_true")
-    parser.add_argument("--adapter-spec", type=Path, default=ROOT / "benchmark_freezes" / "cardiac_benchmark_v3" / "configs" / "adapter_v1_spec.json")
+    parser.add_argument("--adapter-spec", type=Path, default=ROOT / "benchmark_freezes" / "cardiac_benchmark_v6" / "configs" / "adapter_v2_spec.json")
     parser.add_argument("--semantic-root", type=Path)
     parser.add_argument("--no-retry-failed", dest="retry_failed", action="store_false")
     parser.set_defaults(retry_failed=True)

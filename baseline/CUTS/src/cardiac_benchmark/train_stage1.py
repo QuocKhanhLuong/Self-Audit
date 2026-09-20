@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import json
 import random
+import os
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 import numpy as np
 import torch
@@ -21,6 +23,9 @@ from .manifest import load_manifest, require_scientific_manifest
 from shared_benchmark.manifest import validate_scientific_manifest
 from .provenance import current_cuts_sha, environment_identity, rng_contract, sha256_file, sha256_json
 from shared_benchmark.spatial import SELF_AUDIT_NORMALIZATION_VERSION
+
+
+CHECKPOINT_SCHEMA_VERSION = "cuts.cardiac.stage1.checkpoint.v2"
 
 
 @dataclass(frozen=True)
@@ -45,6 +50,8 @@ class Stage1Config:
     def validate(self) -> None:
         if self.benchmark_seed != 42:
             raise ValueError("primary benchmark_seed must be 42")
+        if self.max_epochs <= 0:
+            raise ValueError("max_epochs must be positive")
         if self.scientific_run and self.max_epochs != 200:
             raise ValueError("scientific Stage-1 requires the frozen 200 epoch recipe")
         if self.lambda_contrastive_loss != 0.001:
@@ -92,6 +99,102 @@ def seed_worker(worker_id: int) -> None:
 
 def loader_seed_policy() -> str:
     return "torch.Generator.manual_seed(42); worker_seed=torch.initial_seed()%2**32"
+
+
+def _capture_rng_state() -> dict[str, Any]:
+    """Capture every RNG stream needed to continue at an epoch boundary."""
+    return {
+        "python": random.getstate(),
+        "numpy": np.random.get_state(),
+        "torch": torch.get_rng_state(),
+        "cuda": torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None,
+    }
+
+
+def _restore_rng_state(state: Mapping[str, Any]) -> None:
+    random.setstate(state["python"])
+    np.random.set_state(state["numpy"])
+    torch.set_rng_state(state["torch"])
+    cuda_state = state.get("cuda")
+    if cuda_state is not None and torch.cuda.is_available():
+        torch.cuda.set_rng_state_all(cuda_state)
+
+
+def _atomic_torch_save(payload: Mapping[str, Any], path: Path) -> None:
+    """Keep the previous completed-epoch checkpoint if a write is interrupted."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.tmp")
+    torch.save(dict(payload), temporary)
+    os.replace(temporary, path)
+
+
+def _checkpoint_path_for_resume(checkpoint_path: Path) -> Path:
+    return checkpoint_path.with_name(f"{checkpoint_path.stem}_last{checkpoint_path.suffix}")
+
+
+def _validate_resume_payload(
+    payload: Mapping[str, Any], config: Stage1Config, manifest: Mapping[str, Any],
+) -> None:
+    if payload.get("checkpoint_schema_version") != CHECKPOINT_SCHEMA_VERSION:
+        raise ValueError("resume checkpoint schema is not epoch-resumable")
+    if payload.get("checkpoint_kind") != "last":
+        raise ValueError("resume requires checkpoint_last.pt, not the final export checkpoint")
+    if payload.get("dataset", "").lower() != config.dataset.lower() or payload.get("profile") != config.profile:
+        raise ValueError("resume checkpoint dataset/profile identity mismatch")
+    if payload.get("manifest_hash") != manifest["manifest_hash"]:
+        raise ValueError("resume checkpoint manifest identity mismatch")
+    source_manifest = manifest.get("source_manifest", {})
+    if payload.get("source_manifest_logical_sha") != source_manifest.get("logical_sha256"):
+        raise ValueError("resume checkpoint source-manifest identity mismatch")
+    if payload.get("shared_grid_hash") != manifest.get("shared_grid_hash"):
+        raise ValueError("resume checkpoint shared-grid identity mismatch")
+    if payload.get("cuts_mode") != config.profile:
+        raise ValueError("resume checkpoint CUTS mode identity mismatch")
+    if payload.get("config_hash") != scientific_config_hash(config):
+        raise ValueError("resume checkpoint config identity mismatch")
+    if "optimizer_state_dict" not in payload or "scheduler_state_dict" not in payload:
+        raise ValueError("resume checkpoint lacks optimizer/scheduler state")
+    if "rng_state" not in payload or "loader_generator_state" not in payload:
+        raise ValueError("resume checkpoint lacks RNG/loader state")
+
+
+def _checkpoint_payload(
+    *, config: Stage1Config, manifest: Mapping[str, Any], manifest_provenance: Mapping[str, Any],
+    model: torch.nn.Module, optimizer: torch.optim.Optimizer, scheduler: Any,
+    epoch: int, train_metrics: Mapping[str, float], dev_metrics: Mapping[str, float],
+    train_loader: DataLoader, environment: Mapping[str, Any], source_cuts_sha: str,
+    checkpoint_kind: str,
+) -> dict[str, Any]:
+    loader_generator = getattr(train_loader, "generator", None)
+    loader_state = loader_generator.get_state() if loader_generator is not None else None
+    payload = {
+        "checkpoint_schema_version": CHECKPOINT_SCHEMA_VERSION,
+        "checkpoint_kind": checkpoint_kind,
+        "state_dict": model.state_dict(),
+        "dataset": config.dataset,
+        "profile": config.profile,
+        "manifest_hash": manifest["manifest_hash"],
+        "config": asdict(config),
+        "scientific_config": scientific_config_payload(config),
+        "epoch": epoch,
+        "next_epoch": epoch + 1,
+        "config_hash": scientific_config_hash(config),
+        "train_metrics": dict(train_metrics),
+        "dev_metrics": dict(dev_metrics),
+        "checkpoint_selection_policy": "final_epoch",
+        "rng": rng_contract(loader_seed_policy=loader_seed_policy()),
+        "rng_state": _capture_rng_state(),
+        "loader_generator_state": loader_state,
+        "optimizer_state_dict": optimizer.state_dict(),
+        "scheduler_state_dict": scheduler.state_dict(),
+        "source_cuts_sha": source_cuts_sha,
+        "repository_commit_sha": source_cuts_sha,
+        **dict(manifest_provenance),
+        "environment": dict(environment),
+        "environment_hash": sha256_json(environment),
+        "input_normalization": SELF_AUDIT_NORMALIZATION_VERSION,
+    }
+    return payload
 
 
 def build_loaders(config: Stage1Config) -> tuple[DataLoader, DataLoader, dict[str, Any]]:
@@ -175,8 +278,11 @@ def validate_epoch(model: CUTSEncoder, loader: DataLoader, recon_loss, contrasti
     return {key: value / totals["samples"] for key, value in totals.items() if key != "samples"}
 
 
-def train_stage1(config: Stage1Config, checkpoint_path: str | Path, *, device: str | None = None) -> dict[str, Any]:
-    """Train only train patients and save the fixed-budget final epoch."""
+def train_stage1(
+    config: Stage1Config, checkpoint_path: str | Path, *, device: str | None = None,
+    resume_checkpoint: str | Path | None = None,
+) -> dict[str, Any]:
+    """Train train patients with epoch-boundary resume and a fixed final epoch."""
     seed_primary(config.benchmark_seed)
     train_loader, dev_loader, manifest = build_loaders(config)
     source_manifest = manifest.get("source_manifest")
@@ -202,33 +308,77 @@ def train_stage1(config: Stage1Config, checkpoint_path: str | Path, *, device: s
     runtime_device = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
     model = build_model(config).to(runtime_device)
     optimizer, scheduler, recon_loss, contrastive_loss = build_optimization(model, config)
-    result: dict[str, Any] = {"checkpoint_selection_policy": "final_epoch"}
     checkpoint_path = Path(checkpoint_path)
     checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
-    for epoch in range(config.max_epochs):
+    last_checkpoint_path = _checkpoint_path_for_resume(checkpoint_path)
+    environment = environment_identity()
+    source_cuts_sha = current_cuts_sha()
+    start_epoch = 0
+    resumed_from: str | None = None
+    train_metrics: dict[str, float] = {}
+    dev_metrics: dict[str, float] = {}
+
+    if resume_checkpoint is not None:
+        resume_path = Path(resume_checkpoint)
+        payload = torch.load(resume_path, map_location=runtime_device, weights_only=False)
+        _validate_resume_payload(payload, config, manifest)
+        model.load_state_dict(payload["state_dict"])
+        optimizer.load_state_dict(payload["optimizer_state_dict"])
+        scheduler.load_state_dict(payload["scheduler_state_dict"])
+        _restore_rng_state(payload["rng_state"])
+        loader_generator = getattr(train_loader, "generator", None)
+        if loader_generator is None:
+            raise ValueError("train loader has no generator for deterministic resume")
+        loader_generator.set_state(payload["loader_generator_state"])
+        start_epoch = int(payload["next_epoch"])
+        if start_epoch > config.max_epochs:
+            raise ValueError("resume checkpoint is beyond the configured max_epochs")
+        train_metrics = {str(key): float(value) for key, value in payload.get("train_metrics", {}).items()}
+        dev_metrics = {str(key): float(value) for key, value in payload.get("dev_metrics", {}).items()}
+        resumed_from = str(resume_path)
+
+    result: dict[str, Any] = {
+        "checkpoint_selection_policy": "final_epoch",
+        "resumed_from": resumed_from,
+        "last_checkpoint": str(last_checkpoint_path),
+    }
+    for epoch in range(start_epoch, config.max_epochs):
         train_metrics = train_epoch(model, train_loader, optimizer, recon_loss, contrastive_loss, config, runtime_device)
         scheduler.step()
         dev_metrics = validate_epoch(model, dev_loader, recon_loss, contrastive_loss, config, runtime_device)
         result.update({"epoch": epoch, "train_metrics": train_metrics, "dev_metrics": dev_metrics})
-    environment = environment_identity()
-    source_cuts_sha = current_cuts_sha()
-    payload = {
-        "state_dict": model.state_dict(), "dataset": config.dataset, "profile": config.profile,
-        "manifest_hash": manifest["manifest_hash"], "config": asdict(config),
-        "scientific_config": scientific_config_payload(config), "epoch": config.max_epochs - 1,
-        "config_hash": scientific_config_hash(config), "dev_metrics": result["dev_metrics"],
-        "checkpoint_selection_policy": "final_epoch",
-        "rng": rng_contract(loader_seed_policy=loader_seed_policy()),
-        "source_cuts_sha": source_cuts_sha, "repository_commit_sha": source_cuts_sha,
-        **manifest_provenance,
-        "environment": environment, "environment_hash": sha256_json(environment),
-    }
-    torch.save(payload, checkpoint_path)
+
+        last_payload = _checkpoint_payload(
+            config=config, manifest=manifest, manifest_provenance=manifest_provenance,
+            model=model, optimizer=optimizer, scheduler=scheduler, epoch=epoch,
+            train_metrics=train_metrics, dev_metrics=dev_metrics, train_loader=train_loader,
+            environment=environment, source_cuts_sha=source_cuts_sha, checkpoint_kind="last",
+        )
+        _atomic_torch_save(last_payload, last_checkpoint_path)
+        print(json.dumps({
+            "event": "epoch_complete",
+            "epoch": epoch + 1,
+            "total_epochs": config.max_epochs,
+            "checkpoint": str(last_checkpoint_path),
+            "train_total": train_metrics.get("total"),
+            "dev_total": dev_metrics.get("total"),
+        }, sort_keys=True), flush=True)
+
+    if not train_metrics or not dev_metrics:
+        raise ValueError("training produced no completed epoch; no final checkpoint can be written")
+    final_payload = _checkpoint_payload(
+        config=config, manifest=manifest, manifest_provenance=manifest_provenance,
+        model=model, optimizer=optimizer, scheduler=scheduler, epoch=config.max_epochs - 1,
+        train_metrics=train_metrics, dev_metrics=dev_metrics, train_loader=train_loader,
+        environment=environment, source_cuts_sha=source_cuts_sha, checkpoint_kind="final",
+    )
+    _atomic_torch_save(final_payload, checkpoint_path)
+    result.update({"epoch": config.max_epochs - 1, "train_metrics": train_metrics, "dev_metrics": dev_metrics})
     result.update({"checkpoint": str(checkpoint_path), "checkpoint_hash": sha256_file(checkpoint_path),
                    "manifest_hash": manifest["manifest_hash"], "source_manifest_logical_sha": manifest_provenance["source_manifest_logical_sha"],
                    "shared_grid_hash": manifest_provenance["shared_grid_hash"], "cuts_mode": config.profile,
                    "checkpoint_selection_policy": "final_epoch",
-                   "device": str(runtime_device)})
+                   "device": str(runtime_device), "checkpoint_schema_version": CHECKPOINT_SCHEMA_VERSION})
     return result
 
 
@@ -249,6 +399,8 @@ def load_checkpoint_for_export(config: Stage1Config, checkpoint_path: str | Path
     if config.scientific_run:
         if payload.get("checkpoint_selection_policy") != "final_epoch":
             raise ValueError("scientific CUTS checkpoint must use final_epoch selection")
+        if payload.get("checkpoint_kind", "final") != "final":
+            raise ValueError("scientific CUTS export requires the completed final checkpoint")
         if payload.get("config_hash") != scientific_config_hash(config):
             raise ValueError("scientific CUTS checkpoint config identity mismatch")
         if payload.get("input_normalization") != SELF_AUDIT_NORMALIZATION_VERSION:

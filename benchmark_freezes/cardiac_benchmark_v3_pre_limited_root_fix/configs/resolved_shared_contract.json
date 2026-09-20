@@ -1,0 +1,139 @@
+{
+  "version": "shared_benchmark.spatial.self_audit.v1",
+  "target_hw": [
+    256,
+    256
+  ],
+  "whole_fov": true,
+  "crop": null,
+  "crop_rule": "whole_field_of_view_no_image_informed_crop",
+  "forward_values": "bilinear_align_corners_false",
+  "forward_masks": "nearest_exact",
+  "inverse_labels": "nearest_exact",
+  "inverse_probabilities": "bilinear_then_renormalize",
+  "config_provenance": {
+    "source": "Self-Audit original ACDC loader/config protocol",
+    "config_files": [
+      "configs/self_audit_full.yaml",
+      "configs/self_audit_annotation.yaml",
+      "configs/self_audit_auditor.yaml",
+      "configs/self_audit_joint.yaml"
+    ],
+    "config_sha256": {
+      "configs/self_audit_full.yaml": "43f1803aa4ae8137926375b9782af5dedd32e9e1d2daa4a3ac7cadfee4c8fad7",
+      "configs/self_audit_annotation.yaml": "fd5559c40acacd604c7ebbb2e3dcb9185b254d957f4129b14eaf0d390567d59b",
+      "configs/self_audit_auditor.yaml": "b84431f4d238a96dbbef49acf6b40c8ef259519600cf22c7160467af2d35d31c",
+      "configs/self_audit_joint.yaml": "a503a4b300199aefe847f478a794100dff8647211e1ec06f61996d855670f877"
+    },
+    "image_size": 256,
+    "depth_axis": 2,
+    "crop": null,
+    "whole_fov": true,
+    "preprocessing": {
+      "clipping_min": 0.5,
+      "clipping_max": 99.5,
+      "normalization": "volume_percentile_clip_then_volume_zscore"
+    },
+    "interpolation": "torch.nn.functional.interpolate(mode=bilinear,align_corners=False)"
+  },
+  "shared_grid_sha256": "57858ddf831decee0ce40c0fcc66f68b794e9c94b8f1eebe0a3a146502e535bf",
+  "golden_fixture": {
+    "fixture_version": "shared_benchmark.self_audit_bilinear_golden.v1",
+    "input_dtype": "float32",
+    "input_shape": [
+      2,
+      3,
+      5
+    ],
+    "input_values": "arange(30).reshape(2,3,5)",
+    "target_hw": [
+      4,
+      7
+    ],
+    "output_dtype": "float32",
+    "output_shape": [
+      2,
+      4,
+      7
+    ],
+    "output_little_endian_c_order_sha256": "45cb8f813ba87dd5bbff31a92e3bc324966582f0a9c93e51e9ab8db8255fe4cd",
+    "expected_values": [
+      [
+        [
+          0.0,
+          0.5714285969734192,
+          1.2857143878936768,
+          2.0,
+          2.7142858505249023,
+          3.4285714626312256,
+          4.0
+        ],
+        [
+          3.125,
+          3.6964287757873535,
+          4.410714149475098,
+          5.125,
+          5.839285850524902,
+          6.553571701049805,
+          7.125
+        ],
+        [
+          6.875,
+          7.446428298950195,
+          8.160714149475098,
+          8.875,
+          9.589285850524902,
+          10.303570747375488,
+          10.875
+        ],
+        [
+          10.0,
+          10.571428298950195,
+          11.285714149475098,
+          12.0,
+          12.714285850524902,
+          13.428571701049805,
+          14.0
+        ]
+      ],
+      [
+        [
+          15.0,
+          15.571428298950195,
+          16.28571319580078,
+          17.0,
+          17.71428680419922,
+          18.428571701049805,
+          19.0
+        ],
+        [
+          18.125,
+          18.696428298950195,
+          19.410715103149414,
+          20.125,
+          20.839284896850586,
+          21.553571701049805,
+          22.125
+        ],
+        [
+          21.875,
+          22.446428298950195,
+          23.160715103149414,
+          23.875,
+          24.58928680419922,
+          25.303571701049805,
+          25.875
+        ],
+        [
+          25.0,
+          25.571428298950195,
+          26.285715103149414,
+          27.0,
+          27.714284896850586,
+          28.428571701049805,
+          29.0
+        ]
+      ]
+    ]
+  }
+}
