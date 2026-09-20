@@ -11,6 +11,7 @@ import torch
 import torch.nn.functional as F
 
 from shared_benchmark.artifacts import GeneratedSample
+from shared_benchmark.region_graph import build_region_graph
 
 from .config import STEGOConfig
 
@@ -51,6 +52,21 @@ def load_stego_model(config: STEGOConfig, *, device: str | torch.device = "cpu")
     model = model.to(torch.device(device))
     model.eval()
     return model
+
+
+def topology_summary(partition: np.ndarray) -> dict[str, Any]:
+    graph = build_region_graph(partition)
+    non_border = [component for component in graph.components if not component.border_contact]
+    enclosure_pairs = graph.enclosure_pairs()
+    largest = max((component.area_fraction for component in graph.components), default=0.0)
+    return {
+        "component_count": len(graph.components),
+        "border_component_count": sum(component.border_contact for component in graph.components),
+        "non_border_component_count": len(non_border),
+        "enclosure_pair_count": len(enclosure_pairs),
+        "largest_component_fraction": float(largest),
+        "graph_digest": graph.digest,
+    }
 
 
 def run_inference(
@@ -98,7 +114,9 @@ def generate_sample(
         "checkpoint_identity": checkpoint_sha256,
         "normalization": sample.provenance["normalization"],
         "profile": sample.provenance["profile"],
+        "benchmark_tier": sample.provenance.get("benchmark_tier", "compat"),
         "input_channels": sample.provenance["input_channels"],
+        "raw_topology": topology_summary(partition),
     }
     return GeneratedSample(
         partition=partition,

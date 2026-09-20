@@ -10,11 +10,18 @@ import torch
 from torch.utils.data import Dataset
 
 from shared_benchmark.manifest import SharedManifestError
-from shared_benchmark.spatial import grid_hash, read_context_stack, resize_values_to_grid
+from shared_benchmark.spatial import (
+    SELF_AUDIT_COMPAT_224_SPATIAL_CONTRACT_VERSION,
+    grid_hash,
+    read_context_stack,
+    read_self_audit_context_stack,
+    resize_values_to_grid,
+)
 
 
-PROFILES = ("PICIE-2D",)
+PROFILES = ("PICIE-2D", "PICIE-SA224", "PICIE-SA224-FAIR")
 NORMALIZATION_VERSION = "picie.cardiac.context_percentile_imagenet_v1"
+SA224_NORMALIZATION_VERSION = "picie.cardiac.sa224_self_audit_volume_then_fixed_affine_imagenet_v1"
 
 
 @dataclass(frozen=True)
@@ -35,6 +42,12 @@ def _imagenet_normalize(image: torch.Tensor) -> torch.Tensor:
     mean = torch.tensor([0.485, 0.456, 0.406], dtype=image.dtype, device=image.device).view(3, 1, 1)
     std = torch.tensor([0.229, 0.224, 0.225], dtype=image.dtype, device=image.device).view(3, 1, 1)
     return (image - mean) / std
+
+
+def _self_audit_affine_unit_interval(image: torch.Tensor) -> torch.Tensor:
+    finite = torch.nan_to_num(image.float(), nan=0.0, posinf=0.0, neginf=0.0)
+    clipped = finite.clamp(-3.0, 3.0)
+    return (clipped + 3.0) / 6.0
 
 
 class PICIECardiacDataset(Dataset[ImageOnlySample]):
@@ -68,9 +81,18 @@ class PICIECardiacDataset(Dataset[ImageOnlySample]):
 
     def __getitem__(self, index: int) -> ImageOnlySample:
         record = self.records[index]
-        stack = _normalize_image_only(read_context_stack(record, source_root=self.source_root))
-        image = resize_values_to_grid(torch.from_numpy(stack), self.grid).float()
-        image = _imagenet_normalize(image)
+        if self.profile in {"PICIE-SA224", "PICIE-SA224-FAIR"}:
+            if self.grid.get("version") != SELF_AUDIT_COMPAT_224_SPATIAL_CONTRACT_VERSION:
+                raise SharedManifestError("PICIE-SA224 requires the Self-Audit compat 224 shared grid")
+            stack = read_self_audit_context_stack(record, source_root=self.source_root)
+            image = resize_values_to_grid(torch.from_numpy(stack), self.grid).float()
+            image = _imagenet_normalize(_self_audit_affine_unit_interval(image))
+            normalization_version = SA224_NORMALIZATION_VERSION
+        else:
+            stack = _normalize_image_only(read_context_stack(record, source_root=self.source_root))
+            image = resize_values_to_grid(torch.from_numpy(stack), self.grid).float()
+            image = _imagenet_normalize(image)
+            normalization_version = NORMALIZATION_VERSION
         provenance = {
             "dataset": record["dataset"], "sample_id": record["sample_id"], "patient_id": record["patient_id"],
             "study_id": record["study_id"], "volume_id": record["volume_id"],
@@ -80,8 +102,9 @@ class PICIECardiacDataset(Dataset[ImageOnlySample]):
             "target_shape": self.grid["target_hw"], "spatial_transform": record["spatial_transform"],
             "manifest_hash": self.manifest_hash, "shared_grid_version": self.grid["version"],
             "shared_grid_hash": grid_hash(self.grid), "profile": self.profile,
-            "normalization": NORMALIZATION_VERSION, "augmentation_policy": "none_scientific",
+            "normalization": normalization_version, "augmentation_policy": "none_scientific",
             "input_channels": int(image.shape[0]),
+            "benchmark_tier": "fair" if self.profile.endswith("-FAIR") else "compat",
         }
         return ImageOnlySample(image=image, provenance=provenance)
 

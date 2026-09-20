@@ -31,9 +31,12 @@ from .provenance import canonical_json_bytes, sha256_bytes, sha256_file, sha256_
 from .semantic_contract import (
     ADAPTER_VERSION,
     FROZEN_ADAPTER_SPEC_SHA256,
+    FROZEN_ADAPTER_V3_SPEC_SHA256,
     AdapterContractError,
     adapter_metadata_payload,
     array_hash,
+    load_and_validate_spec,
+    semantic_artifact_stage,
     validate_adapter_metadata,
 )
 from .spatial import grid_hash
@@ -41,7 +44,7 @@ from .spatial import grid_hash
 
 RAW_SCHEMA_VERSION = "cardiac_raw_partition.v1"
 SEMANTIC_SCHEMA_VERSION = "cardiac_semantic_partition.v2"
-SEMANTIC_ARTIFACT_STAGE = f"semantic-{ADAPTER_VERSION}"
+SEMANTIC_ARTIFACT_STAGE = semantic_artifact_stage(ADAPTER_VERSION)
 STATE_SCHEMA_VERSION = "cardiac_execution_state.v1"
 
 PENDING = "PENDING"
@@ -206,7 +209,7 @@ def _sample_slug(sample_id: str) -> str:
 
 
 def artifact_directory(output_root: str | Path, *, baseline_name: str, baseline_mode: str, sample_id: str, stage: str = "raw") -> Path:
-    if stage not in {"raw", "semantic", SEMANTIC_ARTIFACT_STAGE}:
+    if stage != "raw" and stage != "semantic" and not str(stage).startswith("semantic-cardiac_adapter_"):
         raise ArtifactError("stage must be raw, historical semantic, or the current semantic adapter stage")
     if not baseline_name or not baseline_mode:
         raise ArtifactError("baseline name and mode are required")
@@ -641,6 +644,9 @@ def _semantic_scientific_payload(metadata: Mapping[str, Any]) -> dict[str, Any]:
 
 def _adapter_record_for_raw(
     record: Mapping[str, Any], raw_artifact: RawArtifact, central_image: np.ndarray,
+    *,
+    adapter_version: str = ADAPTER_VERSION,
+    adapter_config_sha256: str = FROZEN_ADAPTER_SPEC_SHA256,
 ) -> dict[str, Any]:
     """Bind the adapter to a sealed raw partition and one central image."""
     adapter_record = dict(record)
@@ -654,8 +660,8 @@ def _adapter_record_for_raw(
         "shared_manifest_sha256": raw_artifact.metadata["shared_manifest_hash"],
         "partition_sha256": array_hash(raw_artifact.partition),
         "central_image_sha256": array_hash(np.asarray(central_image)),
-        "adapter_version": ADAPTER_VERSION,
-        "adapter_config_sha256": FROZEN_ADAPTER_SPEC_SHA256,
+        "adapter_version": str(adapter_version),
+        "adapter_config_sha256": str(adapter_config_sha256),
     })
     return adapter_record
 
@@ -667,6 +673,7 @@ def seal_semantic_partition(
     result: Any,
     baseline_name: str,
     baseline_mode: str,
+    adapter_version: str = ADAPTER_VERSION,
     adapter_spec_sha256: str = FROZEN_ADAPTER_SPEC_SHA256,
     adapter_implementation_sha256: str | None = None,
 ) -> SemanticArtifact:
@@ -685,14 +692,14 @@ def seal_semantic_partition(
     validity = np.asarray(validity_input, dtype=bool)
     if validity.shape != semantic.shape or not np.array_equal(validity, semantic != 4):
         raise ArtifactError("semantic artifact violates semantic/validity contract")
-    if adapter_spec_sha256 != FROZEN_ADAPTER_SPEC_SHA256:
+    if adapter_spec_sha256 not in {FROZEN_ADAPTER_SPEC_SHA256, FROZEN_ADAPTER_V3_SPEC_SHA256}:
         raise ArtifactError("unsupported adapter specification hash")
     try:
         adapter_payload = validate_adapter_metadata(result_metadata)
     except AdapterContractError as exc:
         raise ArtifactError(str(exc)) from exc
     required_metadata = {
-        "adapter_version": ADAPTER_VERSION,
+        "adapter_version": adapter_version,
         "adapter_config_sha256": adapter_spec_sha256,
         "sample_id": raw_artifact.metadata["sample_id"],
         "shared_manifest_sha256": raw_artifact.metadata["shared_manifest_hash"],
@@ -707,7 +714,7 @@ def seal_semantic_partition(
         raise ArtifactError("adapter metadata payload is not canonical")
     directory = artifact_directory(
         output_root, baseline_name=baseline_name, baseline_mode=baseline_mode,
-        sample_id=str(raw_artifact.metadata["sample_id"]), stage=SEMANTIC_ARTIFACT_STAGE,
+        sample_id=str(raw_artifact.metadata["sample_id"]), stage=semantic_artifact_stage(adapter_version),
     )
     directory.mkdir(parents=True, exist_ok=True)
     mark_running(directory, str(raw_artifact.metadata["sample_id"]))
@@ -721,7 +728,7 @@ def seal_semantic_partition(
         "sample_id": raw_artifact.metadata["sample_id"],
         "raw_artifact_scientific_hash": raw_artifact.metadata["scientific_payload_hash"],
         "raw_partition_sha256": raw_artifact.metadata["raw_partition_sha256"],
-        "adapter_version": ADAPTER_VERSION,
+        "adapter_version": adapter_version,
         "adapter_spec_sha256": adapter_spec_sha256,
         "adapter_implementation_sha256": adapter_implementation_sha256 or _adapter_implementation_hash(),
         "shared_manifest_hash": raw_artifact.metadata["shared_manifest_hash"],
@@ -767,6 +774,7 @@ def seal_semantic_partition(
 def verify_semantic_partition(
     directory: str | Path, *, raw_artifact: RawArtifact, record: Mapping[str, Any],
     central_image: np.ndarray, adapter_spec: Mapping[str, Any],
+    adapter_version: str = ADAPTER_VERSION,
     adapter_spec_sha256: str = FROZEN_ADAPTER_SPEC_SHA256,
     adapter_implementation_sha256: str | None = None,
 ) -> SemanticArtifact:
@@ -790,6 +798,8 @@ def verify_semantic_partition(
     _validate_metadata(metadata, allow_semantic=True)
     if metadata.get("sample_id") != raw_artifact.metadata.get("sample_id"):
         raise ArtifactError("semantic/raw sample identity mismatch")
+    if metadata.get("adapter_version") != adapter_version:
+        raise ArtifactError("semantic artifact adapter version mismatch")
     if metadata.get("raw_artifact_scientific_hash") != raw_artifact.metadata.get("scientific_payload_hash") or metadata.get("raw_partition_sha256") != raw_artifact.metadata.get("raw_partition_sha256"):
         raise ArtifactError("semantic artifact is stale for the current raw partition")
     if metadata.get("adapter_spec_sha256") != adapter_spec_sha256:
@@ -813,7 +823,13 @@ def verify_semantic_partition(
         if not isinstance(adapter_metadata, Mapping):
             raise ArtifactError("semantic artifact adapter_metadata is required")
         validate_adapter_metadata(adapter_metadata)
-        adapter_record = _adapter_record_for_raw(record, current_raw, np.asarray(central_image))
+        adapter_record = _adapter_record_for_raw(
+            record,
+            current_raw,
+            np.asarray(central_image),
+            adapter_version=adapter_version,
+            adapter_config_sha256=adapter_spec_sha256,
+        )
         recomputed = adapt_partition(
             adapter_record, current_raw.partition, np.asarray(central_image), adapter_spec=adapter_spec,
         )
@@ -882,13 +898,21 @@ def validate_scientific_execution(manifest_path: str | Path, image_root: str | P
 def run_adapter_after_raw(
     raw_artifact: RawArtifact, *, semantic_root: str | Path, record: Mapping[str, Any],
     central_image: np.ndarray, adapter_spec: Mapping[str, Any], baseline_name: str,
-    baseline_mode: str, adapter_implementation_sha256: str | None = None,
+    baseline_mode: str, adapter_version: str = ADAPTER_VERSION,
+    adapter_spec_sha256: str = FROZEN_ADAPTER_SPEC_SHA256,
+    adapter_implementation_sha256: str | None = None,
 ) -> SemanticArtifact:
     """Shared raw->adapter handoff; baseline modules are not imported here."""
     if raw_artifact.metadata.get("completion_status") != RAW_COMPLETE:
         raise ArtifactError("adapter handoff requires RAW_COMPLETE")
     partition = verify_raw_partition(raw_artifact.directory).partition
-    adapter_record = _adapter_record_for_raw(record, raw_artifact, np.asarray(central_image))
+    adapter_record = _adapter_record_for_raw(
+        record,
+        raw_artifact,
+        np.asarray(central_image),
+        adapter_version=adapter_version,
+        adapter_config_sha256=adapter_spec_sha256,
+    )
     try:
         result = adapt_partition(adapter_record, partition, np.asarray(central_image), adapter_spec=adapter_spec)
     except (AdapterContractError, ValueError) as exc:
@@ -896,7 +920,8 @@ def run_adapter_after_raw(
     return seal_semantic_partition(
         semantic_root, raw_artifact=raw_artifact, result=result,
         baseline_name=baseline_name, baseline_mode=baseline_mode,
-        adapter_spec_sha256=FROZEN_ADAPTER_SPEC_SHA256,
+        adapter_version=adapter_version,
+        adapter_spec_sha256=adapter_spec_sha256,
         adapter_implementation_sha256=adapter_implementation_sha256,
     )
 
@@ -919,6 +944,14 @@ def run_generation(
         code_identity_value = code_identity
     if len({str(record.get("sample_id")) for record in records}) != len(records):
         raise ArtifactError("generation record list contains duplicate sample IDs")
+    resolved_adapter_spec = None
+    adapter_spec_sha256 = None
+    adapter_version = ADAPTER_VERSION
+    adapter_stage = SEMANTIC_ARTIFACT_STAGE
+    if adapter_spec is not None:
+        resolved_adapter_spec, adapter_spec_sha256 = load_and_validate_spec(adapter_spec)
+        adapter_version = str(resolved_adapter_spec["adapter_version"])
+        adapter_stage = semantic_artifact_stage(adapter_version)
     results: list[dict[str, Any]] = []
     for record in records:
         sample_started = time.perf_counter()
@@ -976,7 +1009,7 @@ def run_generation(
             if semantic_root is not None and adapter_spec is not None:
                 semantic_directory = artifact_directory(
                     semantic_root, baseline_name=baseline_name, baseline_mode=baseline_mode,
-                    sample_id=sample_id, stage=SEMANTIC_ARTIFACT_STAGE,
+                    sample_id=sample_id, stage=adapter_stage,
                 )
                 if status == "RAW_COMPLETE":
                     central_image = np.asarray(generated.central_image)
@@ -987,7 +1020,9 @@ def run_generation(
                 try:
                     semantic = verify_semantic_partition(
                         semantic_directory, raw_artifact=raw, record=record,
-                        central_image=central_image, adapter_spec=adapter_spec,
+                        central_image=central_image, adapter_spec=resolved_adapter_spec,
+                        adapter_version=adapter_version,
+                        adapter_spec_sha256=str(adapter_spec_sha256),
                         adapter_implementation_sha256=adapter_implementation_sha256,
                     )
                     semantic_status = "SKIPPED_SEMANTIC_COMPLETE"
@@ -996,8 +1031,10 @@ def run_generation(
                     try:
                         semantic = run_adapter_after_raw(
                             raw, semantic_root=semantic_root, record=record,
-                            central_image=central_image, adapter_spec=adapter_spec,
+                            central_image=central_image, adapter_spec=resolved_adapter_spec,
                             baseline_name=baseline_name, baseline_mode=baseline_mode,
+                            adapter_version=adapter_version,
+                            adapter_spec_sha256=str(adapter_spec_sha256),
                             adapter_implementation_sha256=adapter_implementation_sha256,
                         )
                     finally:
@@ -1036,7 +1073,7 @@ def run_generation(
                 if semantic_root is not None:
                     semantic_directory = artifact_directory(
                         semantic_root, baseline_name=baseline_name, baseline_mode=baseline_mode,
-                        sample_id=sample_id, stage=SEMANTIC_ARTIFACT_STAGE,
+                        sample_id=sample_id, stage=adapter_stage,
                     )
                     mark_failed(semantic_directory, sample_id, exc)
             if raw is not None:

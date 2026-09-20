@@ -14,6 +14,7 @@ from typing import Any, Mapping
 from .firewall import FirewallError, validate_image_only_manifest
 from .provenance import canonical_json_bytes as _canonical_json_bytes, sha256_file, sha256_json
 from .spatial import (
+    SELF_AUDIT_COMPAT_224_SPATIAL_CONTRACT_VERSION,
     SELF_AUDIT_SPATIAL_CONTRACT_VERSION,
     SPATIAL_CONTRACT_VERSION,
     grid_hash,
@@ -179,7 +180,11 @@ def build_shared_manifest(
         )
     if int(upstream.get("seed", -1)) != 42:
         raise SharedManifestError("shared benchmark requires the authoritative split seed 42")
-    if grid.get("version") not in {SPATIAL_CONTRACT_VERSION, SELF_AUDIT_SPATIAL_CONTRACT_VERSION}:
+    if grid.get("version") not in {
+        SPATIAL_CONTRACT_VERSION,
+        SELF_AUDIT_SPATIAL_CONTRACT_VERSION,
+        SELF_AUDIT_COMPAT_224_SPATIAL_CONTRACT_VERSION,
+    }:
         raise SharedManifestError("unsupported shared spatial contract")
     records = [_source_record(record, grid) for record in upstream.get("records", [])]
     records.sort(key=lambda record: record["sample_id"])
@@ -246,6 +251,7 @@ def validate_manifest(manifest: Mapping[str, Any]) -> None:
     if not isinstance(grid, Mapping) or grid.get("version") not in {
         SPATIAL_CONTRACT_VERSION,
         SELF_AUDIT_SPATIAL_CONTRACT_VERSION,
+        SELF_AUDIT_COMPAT_224_SPATIAL_CONTRACT_VERSION,
     }:
         raise SharedManifestError("shared grid contract is missing or unsupported")
     if manifest.get("shared_grid_hash") != grid_hash(grid):
