@@ -8,8 +8,6 @@ import tempfile
 import unittest
 from pathlib import Path
 
-import numpy as np
-
 # from main_tbc
 from shared_benchmark.manifest import write_shared_manifest
 from helpers import discovered_projection, write_image
@@ -19,6 +17,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 CUTS_SRC = REPO_ROOT / "baseline" / "CUTS" / "src"
 STEGO_SRC = REPO_ROOT / "baseline" / "STEGO" / "src"
 PICIE_SRC = REPO_ROOT / "baseline" / "PICIE" / "src"
+
+
 def _consumer_row(repo_root, baseline, manifest_path):
     code = """
 import json, sys
@@ -61,7 +61,7 @@ def test_all_baselines_consume_identical_shared_sample_identity_and_grid(tmp_pat
     _, manifest = discovered_projection(tmp_path, target_hw=(8, 8))
     path = tmp_path / "shared.json"
     write_shared_manifest(manifest, path)
-    repo_root = __import__("pathlib").Path(__file__).resolve().parents[2]
+    repo_root = Path(__file__).resolve().parents[2]
     expected = next(row for row in manifest["records"] if row["split"] == "test")
     rows = [_consumer_row(repo_root, baseline, path) for baseline in ("CUTS", "DFC", "STEGO", "PICIE")]
     for row in rows:
@@ -72,88 +72,43 @@ def test_all_baselines_consume_identical_shared_sample_identity_and_grid(tmp_pat
         assert row["slice_index"] == expected["slice_index"]
         assert row["context_indices"] == expected["context_indices"]
         assert row["target_shape"] == expected["shared_grid"]["target_hw"]
+
+
+def _purge_cardiac_benchmark_modules() -> None:
+    for name in list(sys.modules):
+        if name == "cardiac_benchmark" or name.startswith("cardiac_benchmark."):
+            sys.modules.pop(name, None)
+
+
+def _import_baseline(src: Path):
+    baseline_paths = {str(CUTS_SRC), str(STEGO_SRC), str(PICIE_SRC)}
+    sys.path[:] = [entry for entry in sys.path if entry not in baseline_paths]
+    _purge_cardiac_benchmark_modules()
+    sys.path.insert(0, str(src))
+    from cardiac_benchmark import dataset as baseline_dataset
+    from cardiac_benchmark import manifest as baseline_manifest
+    return baseline_manifest, baseline_dataset
+
+
 def _import_cuts():
-    import sys
-    sys.modules.pop("cardiac_benchmark", None)
-    sys.modules.pop("cardiac_benchmark.manifest", None)
-    sys.modules.pop("cardiac_benchmark.dataset", None)
-    sys.modules.pop("cardiac_benchmark.config", None)
-    if str(CUTS_SRC) not in sys.path:
-        sys.path.insert(0, str(CUTS_SRC))
-    from cardiac_benchmark import manifest as cuts_manifest
-    from cardiac_benchmark import dataset as cuts_dataset
-    return cuts_manifest, cuts_dataset
+    return _import_baseline(CUTS_SRC)
 
 
 def _import_stego():
-    import sys
-    sys.modules.pop("cardiac_benchmark", None)
-    sys.modules.pop("cardiac_benchmark.manifest", None)
-    sys.modules.pop("cardiac_benchmark.dataset", None)
-    sys.modules.pop("cardiac_benchmark.config", None)
-    if str(STEGO_SRC) not in sys.path:
-        sys.path.insert(0, str(STEGO_SRC))
-    from cardiac_benchmark import manifest as stego_manifest
-    from cardiac_benchmark import dataset as stego_dataset
-    return stego_manifest, stego_dataset
+    return _import_baseline(STEGO_SRC)
+
 
 def _import_picie():
-    import sys
-    sys.modules.pop("cardiac_benchmark", None)
-    sys.modules.pop("cardiac_benchmark.manifest", None)
-    sys.modules.pop("cardiac_benchmark.dataset", None)
-    sys.modules.pop("cardiac_benchmark.config", None)
-    if str(PICIE_SRC) not in sys.path:
-        sys.path.insert(0, str(PICIE_SRC))
-    from cardiac_benchmark import manifest as picie_manifest
-    from cardiac_benchmark import dataset as picie_dataset
-    return picie_manifest, picie_dataset
+    return _import_baseline(PICIE_SRC)
 
 
 def _make_shared_manifest(root: Path) -> Path:
-    """Create a minimal manifest that baselines can consume."""
-    source = root / "volume.npy"
-    array = np.stack(
-        [np.full((16, 16), float(v), dtype=np.float32) for v in range(5)],
-        axis=0,
-    )
-    np.save(source, array, allow_pickle=False)
-    records = []
-    for patient, split, z in [
-        ("patient001", "train", 0),
-        ("patient001", "train", 1),
-        ("patient002", "dev", 2),
-        ("patient003", "test", 3),
-        ("patient003", "test", 4),
-    ]:
-        records.append({
-            "dataset": "acdc",
-            "patient_id": patient,
-            "split": split,
-            "sample_id": f"{patient}:z{z:04d}",
-            "acquisition_id": "acq_shared",
-            "source_path": str(source),
-            "image_checksum": "shared-fixture-hash",
-            "slice_index": z,
-            "context_indices": [max(0, z - 1), z, min(4, z + 1)],
-            "frame_index": None,
-            "frame_axis": None,
-            "depth_axis": 0,
-            "native_shape": [5, 16, 16],
-            "spacing": [1.5, 1.25, 1.25],
-        })
-    # Use STEGO's writer (all should produce identical manifests)
-    stego_manifest, _ = _import_stego()
-    payload = {
-        "manifest_kind": "mock",
-        "dataset": "acdc",
-        "freemask_source_sha": "96c32b10fc7b8e09b48822e10ae9eb6cc149e253",
-        "freemask_discovery_contract": {"fixture_only": True},
-        "image_roots": [str(root)],
-        "records": records,
-    }
+    """Create a minimal valid shared manifest that baselines can consume."""
+    for index in range(3):
+        write_image(root, f"patient{index:03d}.npy", shape=(16, 16, 3), seed=index)
+    _, payload = discovered_projection(root, target_hw=(16, 16))
     path = root / "shared_manifest.json"
-    stego_manifest.write_manifest(payload, path)
+    write_shared_manifest(payload, path)
     return path
 
 
@@ -246,24 +201,24 @@ class CrossBaselineManifestTests(unittest.TestCase):
         self.assertEqual(cuts_counts, stego_counts)
         self.assertEqual(cuts_counts, picie_counts)
 
-    def test_record_manifest_hash_matches_top_level(self):
-        """Each record's manifest_hash equals the top-level hash in all baselines."""
+    def test_records_do_not_shadow_top_level_manifest_hash(self):
+        """Records rely on the top-level manifest hash instead of duplicating it."""
         for label, manifest in [
             ("cuts", self._load_with_cuts()),
             ("stego", self._load_with_stego()),
-            ("picie", self._load_with_picie())
+            ("picie", self._load_with_picie()),
         ]:
+            self.assertIn("manifest_hash", manifest, f"{label} manifest missing top-level manifest_hash")
             for record in manifest["records"]:
-                self.assertEqual(
-                    record["manifest_hash"],
-                    manifest["manifest_hash"],
-                    f"{label} record {record['sample_id']} has wrong manifest_hash",
+                self.assertNotIn(
+                    "manifest_hash",
+                    record,
+                    f"{label} record {record['sample_id']} should not shadow top-level manifest_hash",
                 )
 
     def test_both_reject_gt_contaminated_manifest(self):
         """All baselines reject manifests with GT keys."""
         import copy
-        import json
 
         stego_m = self._load_with_stego()
         bad = copy.deepcopy(stego_m)
@@ -326,7 +281,7 @@ class CrossBaselineDatasetTests(unittest.TestCase):
         sample = ds[0]
         shared_keys = {
             "sample_id", "patient_id", "split", "dataset",
-            "manifest_hash", "normalization", "input_channels", "augmentation_policy"
+            "manifest_hash", "normalization", "input_channels", "augmentation_policy",
         }
         missing = shared_keys - set(sample.provenance)
         self.assertFalse(missing, f"PICIE missing shared provenance keys: {missing}")

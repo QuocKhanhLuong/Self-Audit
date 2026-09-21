@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import sys
 import tempfile
 import unittest
@@ -10,56 +11,48 @@ from pathlib import Path
 import numpy as np
 import torch
 
-ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "src"))
+BASELINE_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[4]
+sys.path.insert(0, str(REPO_ROOT / "src"))
+sys.path.insert(0, str(BASELINE_ROOT / "src"))
+
+
+def _purge_cardiac_benchmark_modules() -> None:
+    for name in list(sys.modules):
+        if name == "cardiac_benchmark" or name.startswith("cardiac_benchmark."):
+            sys.modules.pop(name, None)
+
+
+_purge_cardiac_benchmark_modules()
+
+from self_audit_maskfree.data.discovery import discover_dataset
+from shared_benchmark.manifest import build_shared_manifest
+from shared_benchmark.spatial import build_grid_spec
 
 from cardiac_benchmark.config import STEGOConfig
 from cardiac_benchmark.dataset import (
     STEGOCardiacDataset,
     fixed_affine_normalize,
     NORMALIZATION_VERSION,
-    PROFILES,
 )
 from cardiac_benchmark.manifest import ManifestError, write_manifest, load_manifest, counts_by_split
 from cardiac_benchmark.stego_runner import run_inference
 
 
-def make_mock_manifest(root: Path, *, dataset: str = "acdc") -> Path:
-    """Create a 3-sample mock manifest with synthetic 3×16×16 volumes."""
-    source = root / "image.npy"
-    array = np.stack(
-        [np.full((16, 16), value, dtype=np.float32) for value in range(3)],
-        axis=0,
+def make_mock_manifest(root: Path, *, dataset: str = "acdc", target_hw: tuple[int, int] = (16, 16)) -> Path:
+    """Create a valid shared manifest with one sample per split."""
+    for index in range(3):
+        source = root / f"patient{index:03d}.npy"
+        array = np.full((16, 16, 1), float(index), dtype=np.float32)
+        np.save(source, array, allow_pickle=False)
+    upstream = discover_dataset(root, dataset, seed=42, protocol="auto", depth_axis=2)
+    payload = build_shared_manifest(
+        upstream,
+        build_grid_spec(target_hw, config_provenance={"source": "stego-smoke-test"}),
+        fixture=True,
+        scientific=False,
+        local_source_root=root,
     )
-    np.save(source, array, allow_pickle=False)
-    records = []
-    for patient, split, z in (("p_train", "train", 0), ("p_dev", "dev", 1), ("p_test", "test", 2)):
-        records.append({
-            "dataset": dataset,
-            "patient_id": patient,
-            "split": split,
-            "sample_id": f"{patient}:z{z:04d}",
-            "acquisition_id": "acq",
-            "source_path": str(source),
-            "image_checksum": "fixture-image-sha",
-            "slice_index": z,
-            "context_indices": [max(0, z - 1), z, min(2, z + 1)],
-            "frame_index": None,
-            "frame_axis": None,
-            "depth_axis": 0,
-            "native_shape": [3, 16, 16],
-            "spacing": [1.0, 1.0, 1.0],
-            "affine": None,
-            "orientation": None,
-        })
-    payload = {
-        "manifest_kind": "mock",
-        "dataset": dataset,
-        "freemask_source_sha": "96c32b10fc7b8e09b48822e10ae9eb6cc149e253",
-        "freemask_discovery_contract": {"fixture_only": True},
-        "image_roots": [str(root)],
-        "records": records,
-    }
     path = root / "mock_manifest.json"
     write_manifest(payload, path)
     return path
@@ -89,6 +82,7 @@ class SmokeTests(unittest.TestCase):
             self.assertIn("normalization", sample.provenance)
             self.assertEqual(sample.provenance["normalization"], NORMALIZATION_VERSION)
             self.assertEqual(sample.provenance["input_channels"], 3)
+            self.assertEqual(sample.provenance["target_shape"], [16, 16])
 
     def test_fixed_affine_output_range(self):
         plane = np.array([[-5.0, -3.0, 0.0], [1.5, 3.0, 5.0]], dtype=np.float32)
@@ -133,6 +127,7 @@ class SmokeTests(unittest.TestCase):
                 super().__init__()
                 self.patch_size = 8
                 self.cfg = type("C", (), {"dropout": False})()
+
             def forward(self, img, n=1, return_class_feat=False):
                 b, c, h, w = img.shape
                 fh, fw = h // self.patch_size, w // self.patch_size
@@ -156,28 +151,12 @@ class SmokeTests(unittest.TestCase):
 
     def test_empty_split_raises(self):
         with tempfile.TemporaryDirectory() as tmp:
-            source = Path(tmp) / "image.npy"
-            np.save(source, np.zeros((3, 16, 16), dtype=np.float32))
-            payload = {
-                "manifest_kind": "mock",
-                "dataset": "acdc",
-                "freemask_source_sha": "96c32b10fc7b8e09b48822e10ae9eb6cc149e253",
-                "freemask_discovery_contract": {"fixture_only": True},
-                "image_roots": [tmp],
-                "records": [{
-                    "dataset": "acdc", "patient_id": "p1", "split": "train",
-                    "sample_id": "p1:z0000", "acquisition_id": "acq",
-                    "source_path": str(source), "image_checksum": "sha",
-                    "slice_index": 0, "context_indices": [0, 0, 1],
-                    "frame_index": None, "frame_axis": None, "depth_axis": 0,
-                    "native_shape": [3, 16, 16], "spacing": [1.0, 1.0, 1.0],
-                }],
-            }
-            path = Path(tmp) / "m.json"
-            write_manifest(payload, path)
-            manifest = load_manifest(path)
+            path = make_mock_manifest(Path(tmp))
+            manifest = copy.deepcopy(load_manifest(path, check_paths=True))
+            for record in manifest["records"]:
+                record["split"] = "train"
             with self.assertRaises(ManifestError):
-                STEGOCardiacDataset(manifest, split="test")
+                STEGOCardiacDataset(manifest, split="test", profile="STEGO-2D", resolution=16)
 
 
 if __name__ == "__main__":
