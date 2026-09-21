@@ -1,5 +1,8 @@
 # DFC cardiac benchmark re-audit
 
+> Historical 224/FreeMask audit. Superseded by the Self-Audit-aligned v3
+> static preflight in `reports/SERVER_PREFLIGHT_STATE_CUTS_DFC.md`.
+
 Audit date: 2026-09-18.  This was a read-only code/test audit.  No real images, GT, masks, or GT-derived metrics were accessed.
 
 ## Gate and upstream evidence

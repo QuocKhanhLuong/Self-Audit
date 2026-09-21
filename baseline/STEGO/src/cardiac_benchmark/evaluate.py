@@ -47,8 +47,10 @@ def _surface_distances(pred_mask: np.ndarray, gt_mask: np.ndarray, spacing: tupl
     pred_border = pred_mask ^ binary_erosion(pred_mask, iterations=1)
     gt_border = gt_mask ^ binary_erosion(gt_mask, iterations=1)
 
+    if not np.any(pred_border) and not np.any(gt_border):
+        return np.array([0.0])
     if not np.any(pred_border) or not np.any(gt_border):
-        return np.array([])
+        return np.array([float("inf")])
 
     dt_pred = distance_transform_edt(~pred_border, sampling=spacing)
     dt_gt = distance_transform_edt(~gt_border, sampling=spacing)

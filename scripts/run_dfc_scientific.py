@@ -30,8 +30,8 @@ from shared_benchmark.artifacts import (  # noqa: E402
 )
 from shared_benchmark.provenance import sha256_file  # noqa: E402
 from shared_benchmark.semantic_contract import FROZEN_ADAPTER_SPEC_SHA256  # noqa: E402
-from shared_benchmark.semantic_contract import FROZEN_SHARED_GRID_SHA256  # noqa: E402
-from shared_benchmark.spatial import SPATIAL_CONTRACT_VERSION  # noqa: E402
+from shared_benchmark.semantic_contract import FROZEN_SELF_AUDIT_SHARED_GRID_SHA256  # noqa: E402
+from shared_benchmark.spatial import SELF_AUDIT_SPATIAL_CONTRACT_VERSION  # noqa: E402
 from cardiac_benchmark.config import load_primary_config  # noqa: E402
 from cardiac_benchmark.dataset import load_primary_2d  # noqa: E402
 from cardiac_benchmark.dfc_runner import run_dfc  # noqa: E402
@@ -47,8 +47,8 @@ def _load_json(path: Path) -> dict[str, Any]:
 
 def _adapter_spec(path: Path) -> dict[str, Any]:
     spec = _load_json(path)
-    if spec.get("adapter_version") != "cardiac_adapter_v1" or sha256_file(path) != FROZEN_ADAPTER_SPEC_SHA256:
-        raise ValueError("adapter spec hash is not the frozen cardiac_adapter_v1 contract")
+    if spec.get("adapter_version") != "cardiac_adapter_v2" or sha256_file(path) != FROZEN_ADAPTER_SPEC_SHA256:
+        raise ValueError("adapter spec hash is not the frozen cardiac_adapter_v2 contract")
     return spec
 
 
@@ -57,12 +57,15 @@ def _require_frozen_grid(manifest: dict[str, Any]) -> None:
     if (
         manifest.get("schema_version") != "shared_benchmark_manifest.v1"
         or not isinstance(grid, dict)
-        or grid.get("version") != SPATIAL_CONTRACT_VERSION
-        or grid.get("target_hw") != [224, 224]
+        or manifest.get("split_policy_version") != "self_audit.acdc.patient_split.v1"
+        or grid.get("version") != SELF_AUDIT_SPATIAL_CONTRACT_VERSION
+        or grid.get("target_hw") != [256, 256]
         or grid.get("whole_fov") is not True
-        or manifest.get("shared_grid_hash") != FROZEN_SHARED_GRID_SHA256
+        or grid.get("crop") is not None
+        or grid.get("forward_values") != "bilinear_align_corners_false"
+        or manifest.get("shared_grid_hash") != FROZEN_SELF_AUDIT_SHARED_GRID_SHA256
     ):
-        raise ArtifactError("DFC scientific runner requires the frozen 224x224 whole-FOV shared grid")
+        raise ArtifactError("DFC scientific runner requires the frozen Self-Audit 256x256 whole-FOV shared grid")
 
 
 def _require_expected_config_hash(expected: str | None, computed: str) -> None:
@@ -141,6 +144,7 @@ def run(args: argparse.Namespace) -> list[dict[str, Any]]:
             "maxIter": config.maxIter,
             "optimizer": asdict(config),
             "input_mode": "central_slice_2d",
+            "input_normalization": metadata["normalization"],
             "final_forward_semantics": config.final_forward_policy,
             "fresh_model_optimizer_bn_state_per_sample": True,
             "loader_metadata": metadata,
@@ -186,7 +190,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--sample-list", type=Path)
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--apply-adapter", action="store_true")
-    parser.add_argument("--adapter-spec", type=Path, default=ROOT / "benchmark_freezes" / "cardiac_benchmark_v1" / "configs" / "adapter_v1_spec.json")
+    parser.add_argument("--adapter-spec", type=Path, default=ROOT / "benchmark_freezes" / "cardiac_benchmark_v6" / "configs" / "adapter_v2_spec.json")
     parser.add_argument("--semantic-root", type=Path)
     parser.add_argument("--no-retry-failed", dest="retry_failed", action="store_false")
     parser.set_defaults(retry_failed=True)

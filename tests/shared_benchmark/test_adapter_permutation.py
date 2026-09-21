@@ -13,8 +13,8 @@ from test_adapter_frozen_fixtures import _fixture_input
 
 
 ROOT = Path(__file__).resolve().parents[2]
-SPEC = json.loads((ROOT / "benchmark_freezes/cardiac_benchmark_v1/configs/adapter_v1_spec.json").read_text())
-FIXTURE = json.loads((ROOT / "benchmark_freezes/cardiac_benchmark_v1/configs/adapter_v1_synthetic_fixtures.json").read_text())["fixtures"][0]
+SPEC = json.loads((ROOT / "benchmark_freezes/cardiac_benchmark_v6/configs/adapter_v2_spec.json").read_text())
+FIXTURE = json.loads((ROOT / "benchmark_freezes/cardiac_benchmark_v6/configs/adapter_v1_synthetic_fixtures.json").read_text())["fixtures"][0]
 
 
 def _run(partition: np.ndarray):

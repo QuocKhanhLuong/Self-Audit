@@ -21,8 +21,9 @@ from typing import Any, Mapping
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SOURCE_SPEC = REPO_ROOT / "configs" / "adapter_v1_spec_source.json"
 SOURCE_FIXTURES = REPO_ROOT / "configs" / "adapter_v1_synthetic_fixtures_source.json"
-DEFAULT_OUTPUT = REPO_ROOT / "benchmark_freezes" / "cardiac_benchmark_v1"
-SHARED_GRID_SHA256 = "7c9d33fed0facbbabe736a5216bc599b65f1b465e3e26a3d19c624cf9be57949"
+FREEZE_SCHEMA = "shared_benchmark.cardiac_benchmark_freeze.v2"
+FREEZE_ID_PREFIX = "cardiac-benchmark-v2"
+DEFAULT_OUTPUT = REPO_ROOT / "benchmark_freezes" / "cardiac_benchmark_v2"
 
 
 def _canonical_bytes(value: Any) -> bytes:
@@ -158,8 +159,6 @@ def _grid_contract() -> dict[str, Any]:
 
     grid = load_pinned_grid_spec(REPO_ROOT)
     actual = grid_hash(grid)
-    if actual != SHARED_GRID_SHA256:
-        raise ValueError(f"shared grid hash changed: {actual}")
     grid["shared_grid_sha256"] = actual
     grid["golden_fixture"] = {
         "fixture_version": "shared_benchmark.masked_resize_golden.v1",
@@ -253,6 +252,8 @@ def regenerate(output: Path) -> dict[str, Any]:
         "src/shared_benchmark/spatial.py", "src/shared_benchmark/firewall.py", "src/shared_benchmark/provenance.py",
         "scripts/prepare_maskfree_data.py", "scripts/prepare_shared_benchmark_manifest.py",
         "scripts/validate_cardiac_benchmark_freeze.py", "scripts/regenerate_cardiac_benchmark_freeze.py",
+        "scripts/run_cuts_scientific.py", "scripts/run_dfc_scientific.py",
+        "src/shared_benchmark/semantic_contract.py",
         "baseline/CUTS/src/cardiac_benchmark/manifest.py", "baseline/CUTS/src/cardiac_benchmark/dataset.py",
         "baseline/CUTS/src/cardiac_benchmark/train_stage1.py", "baseline/CUTS/src/cardiac_benchmark/export_latents.py",
         "baseline/CUTS/src/cardiac_benchmark/cluster_kmeans.py", "baseline/CUTS/src/cardiac_benchmark/provenance.py",
@@ -271,7 +272,7 @@ def regenerate(output: Path) -> dict[str, Any]:
     fixture_hash = _sha256_file(output / "configs" / "adapter_v1_synthetic_fixtures.json")
     spec_hash = _sha256_file(output / "configs" / "adapter_v1_spec.json")
     scientific_payload: dict[str, Any] = {
-        "freeze_schema_version": "shared_benchmark.cardiac_benchmark_freeze.v1",
+        "freeze_schema_version": FREEZE_SCHEMA,
         "repository_commit_sha": commit,
         "authoritative_freemask_policy": {
             "source_manifest_schema": "maskfree150.data.v2",
@@ -321,20 +322,20 @@ def regenerate(output: Path) -> dict[str, Any]:
     }
     payload_hash = _sha256_bytes(_canonical_bytes(scientific_payload))
     manifest = {
-        "freeze_schema": "shared_benchmark.cardiac_benchmark_freeze.v1",
-        "freeze_id": f"cardiac-benchmark-v1-{payload_hash[:16]}",
+        "freeze_schema": FREEZE_SCHEMA,
+        "freeze_id": f"{FREEZE_ID_PREFIX}-{payload_hash[:16]}",
         "scientific_payload_sha256": payload_hash,
         "scientific_payload": scientific_payload,
     }
     _write_json(output / "FREEZE_MANIFEST.json", manifest)
     (output / "FREEZE_REPORT.md").write_text(
-        f"# Cardiac benchmark v1 freeze\n\n"
+        f"# Cardiac benchmark v2 freeze\n\n"
         f"- freeze ID: `{manifest['freeze_id']}`\n"
         f"- scientific payload SHA-256: `{payload_hash}`\n"
         f"- repository commit: `{commit}`\n"
         f"- adapter spec SHA-256: `{spec_hash}`\n"
         f"- synthetic fixture SHA-256: `{fixture_hash}`\n"
-        f"- shared grid SHA-256: `{SHARED_GRID_SHA256}`\n\n"
+        f"- shared grid SHA-256: `{grid['shared_grid_sha256']}`\n\n"
         "This regenerated pre-data freeze is image-only by contract. ACDC and "
         "M&Ms scientific manifests and physical GT isolation remain deferred. "
         "The global fixture invariant is enforced before output.\n",

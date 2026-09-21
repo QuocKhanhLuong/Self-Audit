@@ -114,12 +114,12 @@ class P0Tests(unittest.TestCase):
             image_a_2d = ImageOnlyCardiacDataset(manifest_a, split="train", profile="CUTS-2D")[0]
             image_b_2d = ImageOnlyCardiacDataset(manifest_b, split="train", profile="CUTS-2D")[0]
             self.assertTrue(torch.equal(image_a_2d.image, image_b_2d.image))
-            self.assertEqual(image_a_2d.provenance["normalization"], "cuts.cardiac.central_percentile_0p5_99p5_unit_interval.v2")
+            self.assertEqual(image_a_2d.provenance["normalization"], "source.float32_identity.legacy_fixture.v1")
 
             image_a_25d = ImageOnlyCardiacDataset(manifest_a, split="train", profile="CUTS-2.5D")[0]
             image_b_25d = ImageOnlyCardiacDataset(manifest_b, split="train", profile="CUTS-2.5D")[0]
             self.assertFalse(torch.equal(image_a_25d.image, image_b_25d.image))
-            self.assertEqual(image_a_25d.provenance["normalization"], "cuts.cardiac.stack_percentile_0p5_99p5_unit_interval.v1")
+            self.assertEqual(image_a_25d.provenance["normalization"], "source.float32_identity.legacy_fixture.v1")
 
     def test_manifest_loader_profiles_and_scientific_guard(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -174,6 +174,43 @@ class P0Tests(unittest.TestCase):
             self.assertEqual(payload["epoch"], 1)
             self.assertEqual(payload["dev_metrics"]["total"], 9.0)
             self.assertEqual(payload["config_hash"], scientific_config_hash(config))
+
+    def test_epoch_checkpoint_resume_restores_completed_work(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest_path = make_mock_manifest(root)
+            config = Stage1Config(profile="CUTS-2D", dataset="acdc", manifest_path=str(manifest_path),
+                                  max_epochs=2, batch_size=1, sampled_patches_per_image=2)
+            checkpoint = root / "final.pt"
+            train_metrics = {"reconstruction": 1.0, "contrastive": 1.0, "total": 1.0}
+            dev_metrics = {"reconstruction": 2.0, "contrastive": 2.0, "total": 2.0}
+            calls = {"validate": 0}
+
+            def interrupted_validate(*args):
+                calls["validate"] += 1
+                if calls["validate"] == 2:
+                    raise RuntimeError("simulated interruption")
+                return dev_metrics
+
+            with patch.object(train_stage1_module, "train_epoch", return_value=train_metrics), \
+                 patch.object(train_stage1_module, "validate_epoch", side_effect=interrupted_validate):
+                with self.assertRaisesRegex(RuntimeError, "simulated interruption"):
+                    train_stage1(config, checkpoint, device="cpu")
+
+            last_checkpoint = root / "final_last.pt"
+            self.assertTrue(last_checkpoint.is_file())
+            interrupted = torch.load(last_checkpoint, map_location="cpu", weights_only=False)
+            self.assertEqual(interrupted["checkpoint_kind"], "last")
+            self.assertEqual(interrupted["epoch"], 0)
+            self.assertEqual(interrupted["next_epoch"], 1)
+
+            with patch.object(train_stage1_module, "train_epoch", return_value=train_metrics), \
+                 patch.object(train_stage1_module, "validate_epoch", return_value=dev_metrics):
+                result = train_stage1(config, checkpoint, device="cpu", resume_checkpoint=last_checkpoint)
+            final = torch.load(checkpoint, map_location="cpu", weights_only=False)
+            self.assertEqual(final["checkpoint_kind"], "final")
+            self.assertEqual(final["epoch"], 1)
+            self.assertEqual(result["resumed_from"], str(last_checkpoint))
 
     def test_raw_export_binds_canonical_source_hash(self):
         with tempfile.TemporaryDirectory() as temporary:

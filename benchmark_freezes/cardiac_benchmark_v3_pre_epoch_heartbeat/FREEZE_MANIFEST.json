@@ -1,0 +1,347 @@
+{
+  "freeze_schema": "shared_benchmark.cardiac_benchmark_freeze.v3",
+  "freeze_id": "cardiac-benchmark-v3-7f0cfc7736b38dc4",
+  "scientific_payload_sha256": "7f0cfc7736b38dc49f8bd69223741cb3120f387e3a3b2f3f2b5f94be17e51929",
+  "scientific_payload": {
+    "freeze_schema_version": "shared_benchmark.cardiac_benchmark_freeze.v3",
+    "repository_commit_sha": "3483f92cdf398e3af9d6e4f025cef5b12bec4d9f",
+    "authoritative_self_audit_policy": {
+      "source_manifest_schema": "self_audit.acdc.image_only.v1",
+      "split_policy_version": "self_audit.acdc.patient_split.v1",
+      "split_seed": 42,
+      "cohort": "ACDC/training only",
+      "patient_counts": {
+        "train": 80,
+        "dev": 20,
+        "test": 0
+      },
+      "volume_counts": {
+        "train": 160,
+        "dev": 40,
+        "test": 0
+      },
+      "frame_selection": "Info.cfg ED and ES",
+      "generation_inventory": "selected ED+ES frames x all acquired Z slices",
+      "context_policy": "[max(z-1,0),z,min(z+1,Z-1)]",
+      "independent_test": false
+    },
+    "shared_manifest": {
+      "schema_version": "shared_benchmark_manifest.v1",
+      "source_manifest_schema": "self_audit.acdc.image_only.v1",
+      "manifest_sha256": "a334cc20bfab90d93fa05579a9c508e419297f20647dbae655156b00669935aa",
+      "manifest_copy_sha256": "c05d9c107789a68e0a9004e0a16ca705a700a7e3ac111482fe116ac446baf02f",
+      "patient_counts": {
+        "train": 80,
+        "dev": 20,
+        "test": 0
+      },
+      "sample_counts": {
+        "train": 1526,
+        "dev": 376,
+        "test": 0
+      },
+      "volume_counts": {
+        "train": 160,
+        "dev": 40,
+        "test": 0
+      },
+      "scientific_manifest_materialization": "PASS_IMAGE_ONLY_STATIC"
+    },
+    "datasets": {
+      "acdc": {
+        "scientific_manifest_status": "PASS_STATIC",
+        "root_availability": true,
+        "manifest_sha256": "a334cc20bfab90d93fa05579a9c508e419297f20647dbae655156b00669935aa",
+        "patient_counts": {
+          "train": 80,
+          "dev": 20,
+          "test": 0
+        },
+        "sample_counts": {
+          "train": 1526,
+          "dev": 376,
+          "test": 0
+        },
+        "volume_counts": {
+          "train": 160,
+          "dev": 40,
+          "test": 0
+        },
+        "frame_selection": "ED+ES",
+        "runtime_status": "NOT_RUN"
+      },
+      "mnms": {
+        "scientific_manifest_status": "DEFERRED",
+        "root_availability": false,
+        "runtime_status": "NOT_RUN"
+      }
+    },
+    "shared_spatial_contract": {
+      "version": "shared_benchmark.spatial.self_audit.v1",
+      "target_hw": [
+        256,
+        256
+      ],
+      "whole_fov": true,
+      "crop": null,
+      "resampling": "bilinear_align_corners_false",
+      "grid_sha256": "57858ddf831decee0ce40c0fcc66f68b794e9c94b8f1eebe0a3a146502e535bf",
+      "config_provenance": {
+        "source": "Self-Audit original ACDC loader/config protocol",
+        "config_files": [
+          "configs/self_audit_full.yaml",
+          "configs/self_audit_annotation.yaml",
+          "configs/self_audit_auditor.yaml",
+          "configs/self_audit_joint.yaml"
+        ],
+        "config_sha256": {
+          "configs/self_audit_full.yaml": "43f1803aa4ae8137926375b9782af5dedd32e9e1d2daa4a3ac7cadfee4c8fad7",
+          "configs/self_audit_annotation.yaml": "fd5559c40acacd604c7ebbb2e3dcb9185b254d957f4129b14eaf0d390567d59b",
+          "configs/self_audit_auditor.yaml": "b84431f4d238a96dbbef49acf6b40c8ef259519600cf22c7160467af2d35d31c",
+          "configs/self_audit_joint.yaml": "a503a4b300199aefe847f478a794100dff8647211e1ec06f61996d855670f877"
+        },
+        "image_size": 256,
+        "depth_axis": 2,
+        "crop": null,
+        "whole_fov": true,
+        "preprocessing": {
+          "clipping_min": 0.5,
+          "clipping_max": 99.5,
+          "normalization": "volume_percentile_clip_then_volume_zscore"
+        },
+        "interpolation": "torch.nn.functional.interpolate(mode=bilinear,align_corners=False)"
+      }
+    },
+    "consumer_contract": {
+      "cuts_primary": "CUTS-2D",
+      "cuts_sensitivity": "CUTS-2.5D",
+      "dfc_primary": "DFC-Direct-2D-Default-MinL3",
+      "shared_inventory_required": true,
+      "normalization_contract": {
+        "source_version": "self_audit.volume_percentile_clip_0p5_99p5_zscore.v1",
+        "source_operation": "one full-frame volume 0.5/99.5 clip followed by population z-score",
+        "cuts_2d": "source-normalized volume then central channel selection",
+        "cuts_25d": "source-normalized volume then endpoint-replicated [z-1,z,z+1] selection",
+        "dfc_2d": "source-normalized volume then central channel selection",
+        "method_specific_normalization": false,
+        "legacy_fixture_identity": "source.float32_identity.legacy_fixture.v1",
+        "upstream_basis": {
+          "cuts": "no cardiac intensity normalizer; generic CUTS model is input-agnostic",
+          "dfc": "upstream direct path only divides BGR uint8 by 255; not applied to float MRI"
+        }
+      },
+      "optimization_protocol_unchanged": true
+    },
+    "firewall": {
+      "schema_status": "PASS_STATIC",
+      "physical_isolation_status": "PASS_BWRAP_IMAGE_ONLY",
+      "runtime_status": "NOT_RUN"
+    },
+    "adapter": {
+      "adapter_version": "cardiac_adapter_v1",
+      "input_schema_version": "shared_benchmark.anonymous_partition.v1",
+      "specification_status": "FROZEN_PRE_IMPLEMENTATION",
+      "specification_sha256": "34b1faeb7b40f77c2d4d9789a6e1a342e891fcb8ff8db4edd30957b2ae9d114a",
+      "synthetic_fixture_set_version": "cardiac_adapter_v1.synthetic_topology.v1",
+      "synthetic_fixture_set_sha256": "fa564c1af626692a309584e59337f3b028230c79e5cefc568a2f20a5c7f2f258",
+      "synthetic_fixture_invariant": "validity == (semantic != VOID)"
+    },
+    "scientific_readiness": "CODE_AND_STATIC_PREFLIGHT_PASS_WAITING_FOR_USER_DECISION",
+    "bound_repository_files": [
+      {
+        "path": "configs/self_audit_full.yaml",
+        "sha256": "43f1803aa4ae8137926375b9782af5dedd32e9e1d2daa4a3ac7cadfee4c8fad7"
+      },
+      {
+        "path": "configs/self_audit_annotation.yaml",
+        "sha256": "fd5559c40acacd604c7ebbb2e3dcb9185b254d957f4129b14eaf0d390567d59b"
+      },
+      {
+        "path": "configs/self_audit_auditor.yaml",
+        "sha256": "b84431f4d238a96dbbef49acf6b40c8ef259519600cf22c7160467af2d35d31c"
+      },
+      {
+        "path": "configs/self_audit_joint.yaml",
+        "sha256": "a503a4b300199aefe847f478a794100dff8647211e1ec06f61996d855670f877"
+      },
+      {
+        "path": "splits/acdc_patient_split_seed42.json",
+        "sha256": "bc42574017276a6defc668bf533330fd41a64a5e90a75ea1b8958fc9e469265a"
+      },
+      {
+        "path": "scripts/preprocess_acdc.py",
+        "sha256": "d35608111c8e7b1bd3f15d7b491d5923d110262872248c2ce1fe4164bbb986b7"
+      },
+      {
+        "path": "scripts/train_self_audit.py",
+        "sha256": "1d37e9cd77777cf185fa915556f5c045cc084682c07c80194315bef8247eff69"
+      },
+      {
+        "path": "src/self_audit/data/acdc.py",
+        "sha256": "b08132d9be460dcd264087e0f82c6d1493bae3adc67eccf0f948eec93c8576aa"
+      },
+      {
+        "path": "src/self_audit/data/common.py",
+        "sha256": "e609794c25bc6791d729d07d6573b228f362ea358a014f4d335b70ae4c4f0024"
+      },
+      {
+        "path": "src/self_audit/training/_utils.py",
+        "sha256": "749b7d99d0fc11dd2da2ce65ed43c0f267b22c7cc35635d14b4c164b3b8173a9"
+      },
+      {
+        "path": "src/self_audit/training/unified_trainer.py",
+        "sha256": "dd6a25e8980406b7e934a2486e367b9cb2b3c84c02f184c6877d9cfefc5f0199"
+      },
+      {
+        "path": "docs.md",
+        "sha256": "30a89817b8c8378035d7c1632af0f6733ee23507d59be3c011d7ab212b34999f"
+      },
+      {
+        "path": "configs/adapter_v1_spec_source.json",
+        "sha256": "34b1faeb7b40f77c2d4d9789a6e1a342e891fcb8ff8db4edd30957b2ae9d114a"
+      },
+      {
+        "path": "configs/adapter_v1_synthetic_fixtures_source.json",
+        "sha256": "2695f0ebbf9160a1f4a84c8ad8889577e7dec548aaebc470300cadff16eb2a59"
+      },
+      {
+        "path": "src/shared_benchmark/__init__.py",
+        "sha256": "16ba5a96396113956d2e60d7d2afcec92be462e225d7251ad1f51dcf8cf5ba43"
+      },
+      {
+        "path": "src/shared_benchmark/manifest.py",
+        "sha256": "704ea00a250060916124f45566fb789c944c37e151fc842bdb09d371f312243f"
+      },
+      {
+        "path": "src/shared_benchmark/spatial.py",
+        "sha256": "e1f4b217cba36f8dafdde1e2218e245a07c8a61a860a2e1cadd05c929e1d1a74"
+      },
+      {
+        "path": "src/shared_benchmark/self_audit_protocol.py",
+        "sha256": "693969613df23e353df3b87af59277309df534fc3c05b8b36f8dbb1debe7b90e"
+      },
+      {
+        "path": "src/shared_benchmark/firewall.py",
+        "sha256": "d973bf7e2be8f6f601b0807440e908074a42559bb6c4aa5128d9938c96cd2511"
+      },
+      {
+        "path": "src/shared_benchmark/provenance.py",
+        "sha256": "6844a7b0d06422f39e8e87a2686fe082ca47f0ca9588e49c88c24a39d63760d5"
+      },
+      {
+        "path": "src/shared_benchmark/semantic_contract.py",
+        "sha256": "731867495e0b8bbc3076b42e120beec95dd0fa417255be81a3443851de95a7cb"
+      },
+      {
+        "path": "scripts/build_self_audit_acdc_selection.py",
+        "sha256": "f05706c83c0dc63a1f77275d16e6fcceafda0348bde294cb1f4ca9db6947880b"
+      },
+      {
+        "path": "scripts/prepare_self_audit_shared_benchmark_manifest.py",
+        "sha256": "84d1db4cee46f001967b09d4e2b521b42e8d9091b36beeffe4206fa2433958f3"
+      },
+      {
+        "path": "scripts/prepare_shared_benchmark_manifest.py",
+        "sha256": "1468c46d354dc93fd433a9b1ef6c8b16134e4d7276d7ab8c0c74152782fe3969"
+      },
+      {
+        "path": "scripts/regenerate_cardiac_benchmark_freeze.py",
+        "sha256": "66f3d080175732db38013cc13cf5fec866a91a5cf17fd2e44579dbb2bc0d52c3"
+      },
+      {
+        "path": "scripts/regenerate_self_audit_cardiac_benchmark_freeze.py",
+        "sha256": "732107f5e5e907d7897cfda5f985db90a39be511913ef7b9978586dfb7585eca"
+      },
+      {
+        "path": "scripts/validate_cardiac_benchmark_freeze.py",
+        "sha256": "c3200b3e5e9697cd53e14a5961aab77b7811480250d056494cb2e7a42bd1d726"
+      },
+      {
+        "path": "scripts/run_cuts_scientific.py",
+        "sha256": "15a5225ad0351ec0c7be20a4691e81d58e18c0a135bcb48148e59ecef64d82f1"
+      },
+      {
+        "path": "scripts/run_dfc_scientific.py",
+        "sha256": "57dd2068b31047eb7173258c93fc9a0792cf12612ead8debea583cdbb2426efb"
+      },
+      {
+        "path": "baseline/CUTS/src/cardiac_benchmark/manifest.py",
+        "sha256": "e3bb49e25d886ab7eb5aed6178c35fb08931a3b21f6cbcaff3462c14acc82e1a"
+      },
+      {
+        "path": "baseline/CUTS/src/cardiac_benchmark/dataset.py",
+        "sha256": "b7845883b0e80029a6dce498a4c4d67664781fb06db3dd37919137a42aec46ff"
+      },
+      {
+        "path": "baseline/CUTS/src/cardiac_benchmark/train_stage1.py",
+        "sha256": "4a7f2324e0324ba774cfa083537d0128bfd9440fa61b44b260eb41ad80b48402"
+      },
+      {
+        "path": "baseline/CUTS/src/cardiac_benchmark/export_latents.py",
+        "sha256": "61fa74e1e11d8c799c27e0390e456665ba04974199a6116ed6d1c0968e08994a"
+      },
+      {
+        "path": "baseline/CUTS/src/cardiac_benchmark/cluster_kmeans.py",
+        "sha256": "03c2f9f6d15c362ed0d4ded674c1a0575a94ff8df96c6eb82830fa4193890b9a"
+      },
+      {
+        "path": "baseline/CUTS/src/cardiac_benchmark/provenance.py",
+        "sha256": "d93623d0c27a07e0545a7b08f729a63c1cbcc18f943abbc02db3eebe86c96e84"
+      },
+      {
+        "path": "baseline/DFC/src/cardiac_benchmark/manifest.py",
+        "sha256": "efdf7534eaa39cd46d1419b3d8f09d36c4e3f4c649a08fc6357bdcfa1ec935b0"
+      },
+      {
+        "path": "baseline/DFC/src/cardiac_benchmark/dataset.py",
+        "sha256": "127deeaea6eb942928d11ccaf7fe886d64e021e7e9e671879e9e087f8d6ced3a"
+      },
+      {
+        "path": "baseline/DFC/src/cardiac_benchmark/config.py",
+        "sha256": "7ddd39d8161ebb3f4fc69e156cb7fc105957b2e6b48cd12368a423ecaf69d9a8"
+      },
+      {
+        "path": "baseline/DFC/src/cardiac_benchmark/dfc_runner.py",
+        "sha256": "8aee1338ac9e4fba7c2fc7ae6b15afe7474c6ac1d8ccf815bf73c8a96ac89fa7"
+      },
+      {
+        "path": "baseline/DFC/config/cardiac/dfc_direct_2d_minl3.yaml",
+        "sha256": "15688e08c97ad2dc6e88fdb8ef35f29886b020091fb5c82440d492be07dc5ec5"
+      }
+    ],
+    "bound_freeze_files": [
+      {
+        "path": "configs/resolved_shared_contract.json",
+        "sha256": "86c7ebe6e463203828e2f97124bd8b2bc6ec7a07a26f229caae048b0b3dbad70"
+      },
+      {
+        "path": "configs/adapter_v1_spec.json",
+        "sha256": "34b1faeb7b40f77c2d4d9789a6e1a342e891fcb8ff8db4edd30957b2ae9d114a"
+      },
+      {
+        "path": "configs/adapter_v1_synthetic_fixtures.json",
+        "sha256": "fa564c1af626692a309584e59337f3b028230c79e5cefc568a2f20a5c7f2f258"
+      },
+      {
+        "path": "data/acdc_shared_manifest.json",
+        "sha256": "c05d9c107789a68e0a9004e0a16ca705a700a7e3ac111482fe116ac446baf02f"
+      },
+      {
+        "path": "data/acdc_selection_receipt.json",
+        "sha256": "9bd55de920bcccc2da8bf9f94c5f313c30bd7af0bcea53fba52569bb689236e8"
+      },
+      {
+        "path": "data/acdc_patient_split_seed42.json",
+        "sha256": "bc42574017276a6defc668bf533330fd41a64a5e90a75ea1b8958fc9e469265a"
+      }
+    ],
+    "pre_freeze_sources": {
+      "adapter_spec_source_sha256": "34b1faeb7b40f77c2d4d9789a6e1a342e891fcb8ff8db4edd30957b2ae9d114a",
+      "fixture_source_sha256": "2695f0ebbf9160a1f4a84c8ad8889577e7dec548aaebc470300cadff16eb2a59",
+      "split_source_sha256": "bc42574017276a6defc668bf533330fd41a64a5e90a75ea1b8958fc9e469265a",
+      "selection_receipt_sha256": "9bd55de920bcccc2da8bf9f94c5f313c30bd7af0bcea53fba52569bb689236e8",
+      "source_manifest_sha256": "7183c6ad64d99ea636a5e82b0c42319c3baf99613fca648e8a1530f40b11049b",
+      "freeze_generator": "scripts/regenerate_self_audit_cardiac_benchmark_freeze.py"
+    }
+  }
+}

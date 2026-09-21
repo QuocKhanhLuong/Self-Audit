@@ -66,7 +66,7 @@ def one_hot_feats(labels, n_classes):
     return F.one_hot(labels, n_classes).permute(0, 3, 1, 2).to(torch.float32)
 
 
-def load_model(model_type, data_dir):
+def load_model(model_type, data_dir, device=None):
     if model_type == "robust_resnet50":
         model = models.resnet50(pretrained=False)
         model_file = join(data_dir, 'imagenet_l2_3_0.pt')
@@ -121,7 +121,8 @@ def load_model(model_type, data_dir):
         raise ValueError("No model: {} found".format(model_type))
 
     model.eval()
-    model.cuda()
+    runtime_device = torch.device(device if device is not None else ("cuda" if torch.cuda.is_available() else "cpu"))
+    model.to(runtime_device)
     return model
 
 

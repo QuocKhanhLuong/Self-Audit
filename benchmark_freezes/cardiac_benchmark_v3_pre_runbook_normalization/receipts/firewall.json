@@ -1,0 +1,12 @@
+{
+  "receipt_schema": "shared_benchmark.freeze_firewall_receipt.v1",
+  "schema_firewall": "PASS_STATIC",
+  "physical_gt_isolation": "PASS_BWRAP_IMAGE_ONLY",
+  "manifest_materialization": "PASS_IMAGE_ONLY_STATIC",
+  "runtime_workloads": "NOT_RUN_BY_USER_PROTOCOL",
+  "evidence": [
+    "selection receipt contains no annotation-shaped fields",
+    "image-only root contains 200 selected image hardlinks and no Info.cfg or *_gt",
+    "scientific manifest source hashes were verified in the namespace"
+  ]
+}

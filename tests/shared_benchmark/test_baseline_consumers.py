@@ -27,14 +27,25 @@ repo = Path(sys.argv[1]); manifest_path = Path(sys.argv[2])
 sys.path.insert(0, str(repo / 'src')); sys.path.insert(0, str(repo / 'baseline' / sys.argv[3] / 'src'))
 from shared_benchmark.manifest import load_shared_manifest
 manifest = load_shared_manifest(manifest_path)
-if sys.argv[3] == 'CUTS':
+baseline = sys.argv[3]
+if baseline == 'CUTS':
     from cardiac_benchmark.dataset import ImageOnlyCardiacDataset
     sample = ImageOnlyCardiacDataset(manifest, split='test', profile='CUTS-2D')[0]
     row = sample.provenance
-else:
+elif baseline == 'DFC':
     from cardiac_benchmark.dataset import load_primary_2d
     record = next(row for row in manifest['records'] if row['split'] == 'test')
     _, row = load_primary_2d(record, manifest['local_receipt']['local_source_root'])
+elif baseline == 'STEGO':
+    from cardiac_benchmark.dataset import STEGOCardiacDataset
+    sample = STEGOCardiacDataset(manifest, split='test', profile='STEGO-2D')[0]
+    row = sample.provenance
+elif baseline == 'PICIE':
+    from cardiac_benchmark.dataset import PICIECardiacDataset
+    sample = PICIECardiacDataset(manifest, split='test', profile='PICIE-2D')[0]
+    row = sample.provenance
+else:
+    raise AssertionError(f'unknown baseline: {baseline}')
 print(json.dumps(row, sort_keys=True))
 """
     result = subprocess.run(
@@ -44,7 +55,7 @@ print(json.dumps(row, sort_keys=True))
     return json.loads(result.stdout)
 
 
-def test_cuts_and_dfc_consume_identical_shared_sample_identity_and_grid(tmp_path):
+def test_all_baselines_consume_identical_shared_sample_identity_and_grid(tmp_path):
     for index in range(7):
         write_image(tmp_path, f"patient{index:03d}.npy", seed=index)
     _, manifest = discovered_projection(tmp_path, target_hw=(8, 8))
@@ -52,9 +63,8 @@ def test_cuts_and_dfc_consume_identical_shared_sample_identity_and_grid(tmp_path
     write_shared_manifest(manifest, path)
     repo_root = __import__("pathlib").Path(__file__).resolve().parents[2]
     expected = next(row for row in manifest["records"] if row["split"] == "test")
-    cuts = _consumer_row(repo_root, "CUTS", path)
-    dfc = _consumer_row(repo_root, "DFC", path)
-    for row in (cuts, dfc):
+    rows = [_consumer_row(repo_root, baseline, path) for baseline in ("CUTS", "DFC", "STEGO", "PICIE")]
+    for row in rows:
         assert row["sample_id"] == expected["sample_id"]
         assert row["patient_id"] == expected["patient_id"]
         assert row["split"] == expected["split"]

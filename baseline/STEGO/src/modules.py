@@ -29,7 +29,7 @@ class DinoFeaturizer(nn.Module):
             num_classes=0)
         for p in self.model.parameters():
             p.requires_grad = False
-        self.model.eval().cuda()
+        self.model.eval()
         self.dropout = torch.nn.Dropout2d(p=.1)
 
         if arch == "vit_small" and patch_size == 16:

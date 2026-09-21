@@ -26,6 +26,8 @@ class PICIEConfig:
     scientific_run: bool = False
 
     def validate(self) -> None:
+        if self.profile not in {"PICIE-2D", "PICIE-SA224", "PICIE-SA224-FAIR"}:
+            raise ValueError("unsupported PiCIE cardiac profile")
         if self.benchmark_seed != 42:
             raise ValueError("benchmark_seed must be 42")
         if self.resolution != 224:

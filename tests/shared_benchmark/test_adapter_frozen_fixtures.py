@@ -12,8 +12,9 @@ from shared_benchmark.spatial import build_grid_spec
 
 
 ROOT = Path(__file__).resolve().parents[2]
-SPEC = json.loads((ROOT / "benchmark_freezes/cardiac_benchmark_v1/configs/adapter_v1_spec.json").read_text())
-FIXTURES = json.loads((ROOT / "benchmark_freezes/cardiac_benchmark_v1/configs/adapter_v1_synthetic_fixtures.json").read_text())
+FREEZE = ROOT / "benchmark_freezes/cardiac_benchmark_v6"
+SPEC = json.loads((FREEZE / "configs/adapter_v2_spec.json").read_text())
+FIXTURES = json.loads((FREEZE / "configs/adapter_v1_synthetic_fixtures.json").read_text())
 
 
 def _fixture_input(fixture: dict) -> tuple[dict, np.ndarray, np.ndarray]:
@@ -59,5 +60,6 @@ def test_all_frozen_topology_fixtures_match_exact_maps_and_validity():
 
 
 def test_frozen_spec_and_fixture_hashes_are_unchanged():
-    assert sha256_file(ROOT / "benchmark_freezes/cardiac_benchmark_v1/configs/adapter_v1_spec.json") == "34b1faeb7b40f77c2d4d9789a6e1a342e891fcb8ff8db4edd30957b2ae9d114a"
-    assert sha256_file(ROOT / "benchmark_freezes/cardiac_benchmark_v1/configs/adapter_v1_synthetic_fixtures.json") == "cdf03cd9f2d312a5156a8ae444b116a1e2231eff8d05f575804a2b398fe6a823"
+    assert sha256_file(FREEZE / "configs/adapter_v2_spec.json") == FROZEN_ADAPTER_SPEC_SHA256
+    payload = json.loads((FREEZE / "FREEZE_MANIFEST.json").read_text())["scientific_payload"]
+    assert sha256_file(FREEZE / "configs/adapter_v1_synthetic_fixtures.json") == payload["adapter"]["synthetic_fixture_set_sha256"]

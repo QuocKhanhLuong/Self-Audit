@@ -1,0 +1,12 @@
+{
+  "receipt_schema": "shared_benchmark.freeze_test_receipt.v1",
+  "status": "PASS_STATIC",
+  "commands": [
+    "python -m compileall -q src scripts baseline/CUTS/src baseline/DFC/src tests/shared_benchmark",
+    "PYTHONPATH=src python -m pytest -q tests/shared_benchmark (55 passed)",
+    "PYTHONPATH=src:baseline/CUTS/src python -m pytest -q baseline/CUTS/tests/cardiac (14 passed)",
+    "PYTHONPATH=src:baseline/DFC/src python -m pytest -q baseline/DFC/tests/cardiac (11 passed)",
+    "python scripts/validate_cardiac_benchmark_freeze.py --freeze-dir benchmark_freezes/cardiac_benchmark_v3 (PASS)"
+  ],
+  "runtime_gates": "NOT_RUN"
+}

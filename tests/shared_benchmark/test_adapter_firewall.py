@@ -12,7 +12,7 @@ from shared_benchmark.spatial import build_grid_spec
 
 
 ROOT = Path(__file__).resolve().parents[2]
-SPEC = json.loads((ROOT / "benchmark_freezes/cardiac_benchmark_v1/configs/adapter_v1_spec.json").read_text())
+SPEC = json.loads((ROOT / "benchmark_freezes/cardiac_benchmark_v6/configs/adapter_v2_spec.json").read_text())
 
 
 def _record():

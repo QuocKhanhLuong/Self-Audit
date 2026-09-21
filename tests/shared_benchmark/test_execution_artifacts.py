@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import copy
 import json
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -11,6 +13,7 @@ from shared_benchmark.artifacts import (
     ArtifactError,
     FAILED,
     RAW_COMPLETE,
+    SEMANTIC_ARTIFACT_STAGE,
     GeneratedSample,
     artifact_directory,
     atomic_write_bytes,
@@ -24,16 +27,24 @@ from shared_benchmark.artifacts import (
     verify_raw_partition,
     verify_semantic_partition,
 )
-from shared_benchmark.provenance import sha256_file
-from shared_benchmark.semantic_contract import FROZEN_ADAPTER_SPEC_SHA256
+from shared_benchmark.provenance import sha256_json
+from shared_benchmark.semantic_contract import (
+    ADAPTER_V3_VERSION,
+    FROZEN_ADAPTER_SPEC_SHA256,
+    FROZEN_ADAPTER_V3_SPEC_SHA256,
+    adapter_metadata_payload,
+    canonical_metadata_hash,
+    semantic_artifact_stage,
+)
 from shared_benchmark.manifest import build_shared_manifest
-from shared_benchmark.spatial import build_grid_spec
+from shared_benchmark.spatial import build_grid_spec, grid_hash, load_self_audit_compat_224_grid_spec
 
 from helpers import discovered_projection, write_image
 
 
 ROOT = Path(__file__).resolve().parents[2]
-SPEC = json.loads((ROOT / "benchmark_freezes/cardiac_benchmark_v1/configs/adapter_v1_spec.json").read_text(encoding="utf-8"))
+SPEC = json.loads((ROOT / "benchmark_freezes/cardiac_benchmark_v6/configs/adapter_v2_spec.json").read_text(encoding="utf-8"))
+SPEC_V3 = json.loads((ROOT / "benchmark_freezes/cardiac_benchmark_v7/configs/adapter_v3_spec.json").read_text(encoding="utf-8"))
 
 
 @pytest.fixture()
@@ -141,14 +152,16 @@ def test_adapter_handoff_requires_raw_complete_and_semantic_binds_raw(fixture_ma
         central_image=np.zeros((8, 8), dtype=np.float32), adapter_spec=SPEC,
         baseline_name="TEST", baseline_mode="2d",
     )
-    checked = verify_semantic_partition(handoff.directory, raw_artifact=raw)
+    assert handoff.directory.parts[-4] == SEMANTIC_ARTIFACT_STAGE
+    image = np.zeros((8, 8), dtype=np.float32)
+    checked = verify_semantic_partition(handoff.directory, raw_artifact=raw, record=record, central_image=image, adapter_spec=SPEC)
     assert checked.metadata["raw_partition_sha256"] == raw.metadata["raw_partition_sha256"]
     raw_path = raw.directory / raw.metadata["raw_partition_path"]
     changed = np.load(raw_path, allow_pickle=False)
     changed[0, 0] += 1
     np.save(raw_path, changed, allow_pickle=False)
     with pytest.raises(ArtifactError):
-        verify_semantic_partition(handoff.directory, raw_artifact=raw)
+        verify_semantic_partition(handoff.directory, raw_artifact=raw, record=record, central_image=image, adapter_spec=SPEC)
 
     pending = type(raw)(directory=raw.directory, partition=raw.partition, metadata={**raw.metadata, "completion_status": "RUNNING"})
     with pytest.raises(ArtifactError):
@@ -159,19 +172,162 @@ def test_adapter_handoff_requires_raw_complete_and_semantic_binds_raw(fixture_ma
         )
 
 
+def test_adapter_v3_uses_distinct_semantic_stage_and_spec(tmp_path: Path):
+    grid = load_self_audit_compat_224_grid_spec(ROOT)
+    record = {
+        "dataset": "acdc",
+        "patient_id": "patient001",
+        "study_id": "acdc:patient001",
+        "volume_id": "acdc:self_audit:patient001:frame-0001",
+        "sample_id": "acdc:patient-patient001:study-acdc:patient001:volume-acdc:self_audit:patient001:frame-0001:frame-0001:z-0000",
+        "split": "dev",
+        "frame_index": 1,
+        "frame_axis": None,
+        "slice_index": 0,
+        "depth": 1,
+        "depth_axis": 2,
+        "context_indices": [0, 0, 0],
+        "frame_selection_rule": "fixture",
+        "source": {
+            "locator": "images/patient001_frame01.npy",
+            "sha256": "fixture-image-sha",
+            "frame_fingerprint": "fixture-frame-sha",
+            "format": "npy",
+            "dtype": "float32",
+        },
+        "native_shape": [224, 224, 1],
+        "stored_shape": [224, 224, 1],
+        "native_hw": [224, 224],
+        "axis_semantics": {"native_axis_order": "HWZ", "depth_axis": 2, "frame_axis": None},
+        "geometry": {
+            "spacing_mm": None,
+            "spacing_valid": False,
+            "native_affine": None,
+            "affine_valid": False,
+            "orientation": None,
+            "orientation_valid": False,
+            "native_grid_export": True,
+            "export_grid": "native",
+            "spatial_unit": "unknown",
+            "study_grid_compatibility": {"status": "fixture"},
+        },
+        "shared_grid": copy.deepcopy(grid),
+        "spatial_transform": {"forward_resize": {"output_hw": [224, 224]}},
+    }
+    raw = seal_raw_partition(
+        tmp_path / "out",
+        np.zeros((224, 224), dtype=np.int32),
+        record=record,
+        baseline_name="TEST",
+        baseline_mode="SA224",
+        manifest_hash="manifest-v7-fixture",
+        shared_grid_hash=grid_hash(grid),
+        repository={"repository_commit_sha": "commit", "working_tree_sha256": "tree"},
+        baseline_config_hash="cfg-v7",
+        seed=42,
+        baseline_metadata={"required_provenance": "fixture"},
+    )
+    image = np.zeros((224, 224), dtype=np.float32)
+    semantic = run_adapter_after_raw(
+        raw,
+        semantic_root=tmp_path / "semantic",
+        record=record,
+        central_image=image,
+        adapter_spec=SPEC_V3,
+        baseline_name="TEST",
+        baseline_mode="SA224",
+        adapter_version=ADAPTER_V3_VERSION,
+        adapter_spec_sha256=FROZEN_ADAPTER_V3_SPEC_SHA256,
+    )
+    assert semantic.directory.parts[-4] == semantic_artifact_stage(ADAPTER_V3_VERSION)
+    assert semantic.metadata["adapter_version"] == ADAPTER_V3_VERSION
+    assert semantic.metadata["adapter_spec_sha256"] == FROZEN_ADAPTER_V3_SPEC_SHA256
+    checked = verify_semantic_partition(
+        semantic.directory,
+        raw_artifact=raw,
+        record=record,
+        central_image=image,
+        adapter_spec=SPEC_V3,
+        adapter_version=ADAPTER_V3_VERSION,
+        adapter_spec_sha256=FROZEN_ADAPTER_V3_SPEC_SHA256,
+    )
+    assert checked.metadata["adapter_metadata"]["semantic_artifact_stage"] == semantic_artifact_stage(ADAPTER_V3_VERSION)
+
+
+@pytest.mark.parametrize("field", ["assignment_reason", "central_image_sha256", "coverage"])
+def test_semantic_adapter_metadata_tamper_is_rejected_even_after_rehash(fixture_manifest, field):
+    """A forged outer/inner hash cannot replace adapter recomputation."""
+    root, manifest = fixture_manifest
+    record = manifest["records"][0]
+    image = np.zeros((8, 8), dtype=np.float32)
+    raw = _seal(root, manifest, record)
+    handoff = run_adapter_after_raw(
+        raw, semantic_root=root / "semantic", record=record, central_image=image,
+        adapter_spec=SPEC, baseline_name="TEST", baseline_mode="2d",
+    )
+    metadata_path = handoff.directory / "metadata.json"
+    state_path = handoff.directory / "state.json"
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    adapter_metadata = metadata["adapter_metadata"]
+    if field == "assignment_reason":
+        adapter_metadata["assignments"][0]["reason"] = "forged_assignment_reason"
+    elif field == "central_image_sha256":
+        adapter_metadata["central_image_sha256"] = "0" * 64
+    else:
+        adapter_metadata["coverage"] = 0.123456
+    # Model an attacker who knows both serialization formats and recomputes
+    # every seal that was available in the artifact itself.
+    adapter_metadata["metadata_sha256"] = canonical_metadata_hash(adapter_metadata_payload(adapter_metadata))
+    for key in (
+        "assignments", "assignment_reasons", "void_reasons", "role_reasons", "unresolved_reasons",
+        "component_graph_digest", "central_image_sha256", "scientific_result_sha256",
+    ):
+        metadata[key] = adapter_metadata[key]
+    metadata["adapter_metadata_sha256"] = adapter_metadata["metadata_sha256"]
+    metadata["coverage"] = adapter_metadata["coverage"]
+    metadata["scientific_payload_hash"] = sha256_json({key: value for key, value in metadata.items() if key != "scientific_payload_hash"})
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    state["artifact_scientific_payload_hash"] = metadata["scientific_payload_hash"]
+    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+    state_path.write_text(json.dumps(state), encoding="utf-8")
+    with pytest.raises(ArtifactError):
+        verify_semantic_partition(
+            handoff.directory, raw_artifact=raw, record=record, central_image=image, adapter_spec=SPEC,
+        )
+
+
+def test_adapter_implementation_identity_includes_real_dependencies(tmp_path: Path):
+    from shared_benchmark.artifacts import _adapter_implementation_files, _adapter_implementation_hash
+
+    paths = _adapter_implementation_files(ROOT)
+    relative = {path.relative_to(ROOT).as_posix() for path in paths}
+    assert {
+        "src/shared_benchmark/firewall.py", "src/shared_benchmark/spatial.py",
+        "src/shared_benchmark/provenance.py", "src/self_audit_maskfree/data/firewall.py",
+    }.issubset(relative)
+    for source in paths:
+        destination = tmp_path / source.relative_to(ROOT)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, destination)
+    original = _adapter_implementation_hash(tmp_path)
+    dependency = tmp_path / "src/shared_benchmark/spatial.py"
+    dependency.write_text(dependency.read_text(encoding="utf-8") + "\n# test identity mutation\n", encoding="utf-8")
+    assert _adapter_implementation_hash(tmp_path) != original
+
+
 def test_semantic_failure_does_not_demote_sealed_raw(fixture_manifest):
     root, manifest = fixture_manifest
     record = manifest["records"][0]
 
     def generate(_record):
-        return GeneratedSample(np.zeros((8, 8), dtype=np.int32), np.zeros((8, 8), dtype=np.float32), {})
+        return GeneratedSample(np.zeros((8, 8), dtype=np.int32), np.zeros((7, 7), dtype=np.float32), {})
 
     rows = run_generation(
         [record], output_root=root / "handoff", baseline_name="TEST", baseline_mode="2d",
         manifest_hash=manifest["manifest_hash"], shared_grid_hash=manifest["shared_grid_hash"],
         repository={"repository_commit_sha": "c", "working_tree_sha256": "t"}, baseline_config_hash="cfg",
         seed_for_record=lambda _r: 42, generate=generate, semantic_root=root / "handoff",
-        adapter_spec={"not": "the frozen spec"},
+        adapter_spec=SPEC,
     )
     assert rows[0]["raw_status"] == RAW_COMPLETE and rows[0]["semantic_status"] == FAILED
     raw_dir = artifact_directory(root / "handoff", baseline_name="TEST", baseline_mode="2d", sample_id=record["sample_id"])

@@ -1,5 +1,8 @@
 # Final DFC Re-Audit
 
+> Historical 224/FreeMask audit. Superseded by the Self-Audit-aligned v3
+> static preflight in `reports/SERVER_PREFLIGHT_STATE_CUTS_DFC.md`.
+
 ## Evidence
 
 Independent read-only audit at e737f2dac7dddb318b241ffc8ef1d3805aa9b5e1, matched origin/main and was clean before report creation. Freeze validator PASS: cardiac-benchmark-v1-79a716b74dd67a76; payload 79a716b74dd67a76c5a13f0ba4d8876ab28ba6e29d819a4dbcfad75780382b3c; frozen shared-grid identity 7c9d33fed0facbbabe736a5216bc599b65f1b465e3e26a3d19c624cf9be57949. ACDC/M&Ms: DEFERRED_NO_ROOT.

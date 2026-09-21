@@ -17,7 +17,7 @@ from shared_benchmark.manifest import (
     validate_scientific_manifest,
     write_shared_manifest,
 )
-from shared_benchmark.spatial import load_pinned_grid_spec
+from shared_benchmark.spatial import load_pinned_grid_spec, load_self_audit_grid_spec
 
 
 FREEMASK_SOURCE_SHA = "96c32b10fc7b8e09b48822e10ae9eb6cc149e253"
@@ -66,6 +66,26 @@ def from_freemask_discovery(
         fixture=fixture,
         scientific=scientific,
         local_source_root=source_root,
+    )
+
+
+def from_self_audit_discovery(
+    discovery: Mapping[str, Any], *, source_root: str | Path, repo_root: str | Path,
+    upstream_file_sha256: str | None = None, fixture: bool = False, scientific: bool = True,
+) -> dict[str, Any]:
+    """Project the checked-in Self-Audit ACDC receipt for scientific CUTS.
+
+    The historical FreeMask accessor remains available for old artifacts, but
+    current scientific runners must receive a manifest built with the
+    Self-Audit grid and split policy.
+    """
+    return build_shared_manifest(
+        discovery,
+        load_self_audit_grid_spec(repo_root),
+        fixture=fixture,
+        scientific=scientific,
+        local_source_root=source_root,
+        upstream_file_sha256=upstream_file_sha256,
     )
 
 
