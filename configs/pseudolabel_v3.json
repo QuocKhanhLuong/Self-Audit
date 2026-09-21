@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "teacher": {"width": 24, "appearance_dim": 48, "motion_dim": 16, "fused_dim": 64, "anonymous_prototypes": 12},
+  "reliability": {"min_probability": 0.70, "min_margin": 0.20, "prototype_min_confidence": 0.80},
+  "training": {"lr": 0.001, "weight_decay": 0.0001, "bounded_default_epochs": 1},
+  "deployment": {"student_width": 32, "window_k": 8,
+    "profiles": {"compact": 0, "balanced": 1, "accurate": 2}}
+}
