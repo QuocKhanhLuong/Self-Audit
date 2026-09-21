@@ -18,7 +18,10 @@ class EvidenceConfig:
     min_region_pixels: int=4
 
 def _boundary_gradient(image):
-    gy,gx=np.gradient(image.astype(np.float32,copy=False)); return np.sqrt(gx*gx+gy*gy)
+    image=image.astype(np.float32,copy=False)
+    gy=np.gradient(image,axis=0) if image.shape[0]>1 else np.zeros_like(image)
+    gx=np.gradient(image,axis=1) if image.shape[1]>1 else np.zeros_like(image)
+    return np.sqrt(gx*gx+gy*gy)
 
 def _shift(mask,dy,dx):
     out=np.zeros_like(mask)
