@@ -18,9 +18,17 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install numpy scipy nibabel pyyaml pytest tqdm matplotlib
           python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
-      - name: Run Self-Audit tests
+      - name: Run core and pseudo-label regression/integration tests
         env:
           PYTHONPATH: src
-        run: python -m pytest -q tests/test_self_audit_*.py
+          OMP_NUM_THREADS: "1"
+          MKL_NUM_THREADS: "1"
+        run: python -m pytest -q tests/test_self_audit_*.py tests/test_pseudolabel_*.py --junitxml=test-results/self-audit.xml
       - name: Compile source and tests
         run: python -m py_compile $(find src scripts tests -name "*.py")
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: self-audit-test-results
+          path: test-results/
+          retention-days: 7

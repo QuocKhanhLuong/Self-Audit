@@ -7,7 +7,6 @@ from dataclasses import dataclass
 import torch
 from torch import nn
 from torch.nn import functional as F
-from self_audit.models.annotation_expert import AnnotationExpert
 
 NUM_CLASSES=4
 UNKNOWN=255
@@ -74,7 +73,7 @@ def pool_regions(assign,feat,image,motion):
     _,_,h,w=assign.shape; mass=assign.sum((-2,-1)).clamp_min(1e-6)
     fv=torch.einsum("bkhw,bchw->bkc",assign,feat)/mass[...,None]
     img=F.interpolate(image,(h,w),mode="bilinear",align_corners=False)
-    mot=F.interpolate(motion.pow(2).mean(1,keepdim=True).sqrt(),(h,w),mode="bilinear",align_corners=False)
+    mot=F.interpolate((motion.pow(2).mean(1,keepdim=True)+1e-12).sqrt(),(h,w),mode="bilinear",align_corners=False)
     inten=torch.einsum("bkhw,bchw->bkc",assign,img)/mass[...,None]
     mov=torch.einsum("bkhw,bchw->bkc",assign,mot)/mass[...,None]
     area=(mass/float(h*w))[...,None]
@@ -88,22 +87,61 @@ class CinePseudoTeacher(nn.Module):
         self.regions=RegionPrototypeHead(fused_dim,k); self.region_dim=fused_dim+3
         self.semantic=nn.Sequential(nn.Linear(self.region_dim,96),nn.GELU(),nn.Linear(96,NUM_CLASSES))
     def forward(self,prev,cur,nxt,*,evidence_logits=None,min_prob=.70,min_margin=.20):
+        if cur.ndim != 4 or cur.shape[1] != 3 or min(cur.shape[-2:]) < 4:
+            raise ValueError("cine context must be [B,3,H,W], H/W >= 4")
+        if prev.shape != cur.shape or nxt.shape != cur.shape:
+            raise ValueError("temporal context shapes must match")
+        if not all(bool(torch.isfinite(x).all()) for x in (prev,cur,nxt)):
+            raise ValueError("non-finite cine input")
         app,recon=self.appearance(cur); motion,motion_aux=self.motion(prev,cur,nxt)
         fused=self.fuse(torch.cat([app,motion],1)); q=self.regions(fused)
         r=pool_regions(q,fused,cur[:,1:2],motion); logits=self.semantic(r)
-        if evidence_logits is not None:
-            if evidence_logits.shape!=logits.shape: raise ValueError("evidence_logits must be [B,K,4]")
-            logits=logits+evidence_logits
-        prob=logits.softmax(-1); top2=prob.topk(2,-1).values
-        valid_region=(top2[...,0]>=min_prob)&((top2[...,0]-top2[...,1])>=min_margin)
-        dense_prob_low=torch.einsum("bkhw,bkc->bchw",q,prob)
-        dense_valid_low=torch.einsum("bkhw,bk->bhw",q,valid_region.to(q.dtype))>=.5
-        dense_prob=F.interpolate(dense_prob_low,cur.shape[-2:],mode="bilinear",align_corners=False)
-        dense_valid=F.interpolate(dense_valid_low[:,None].float(),cur.shape[-2:],mode="nearest")[:,0].bool()
-        label=dense_prob.argmax(1); pseudo=torch.where(dense_valid,label,torch.full_like(label,UNKNOWN))
-        return {"pseudo_label":pseudo,"valid":dense_valid,"soft_label":dense_prob,"region_prob":q,
-                "region_features":r,"region_valid":valid_region,"semantic_prob":prob,"semantic_logits":logits,
-                "reconstruction":recon,"appearance_features":app,"motion_features":motion,**motion_aux}
+        base={"region_prob":q,"region_features":r,"semantic_logits":logits,
+              "semantic_prob":logits.softmax(-1),"reconstruction":recon,
+              "appearance_features":app,"motion_features":motion,**motion_aux}
+        return self.decode_evidence(base,cur.shape[-2:],evidence_logits=evidence_logits,
+                                    min_prob=min_prob,min_margin=min_margin)
+
+    def decode_evidence(self,base,output_hw,*,evidence_logits=None,evidence_valid=None,
+                        min_prob=.70,min_margin=.20):
+        """Reuse encoded tensors. Scores are not calibrated correctness probabilities.
+
+        The neural semantic logits never include their own supervision target.
+        No external image-only evidence means exact abstention, even for a
+        spuriously confident neural head. UNKNOWN is not a trainable class.
+        """
+        if not 0 <= min_prob <= 1 or not 0 <= min_margin <= 1:
+            raise ValueError("probability/margin thresholds must be in [0,1]")
+        logits=base["semantic_logits"]; q=base["region_prob"]
+        if evidence_logits is None:
+            prob=logits.softmax(-1)
+            valid_region=torch.zeros(logits.shape[:2],device=logits.device,dtype=torch.bool)
+        else:
+            ev=evidence_logits.detach()
+            if ev.shape != logits.shape or not bool(torch.isfinite(ev).all()):
+                raise ValueError("finite evidence_logits must have shape [B,K,4]")
+            evidence_prob=ev.softmax(-1); top=evidence_prob.topk(2,-1).values
+            valid_region=(top[...,0]>=min_prob)&((top[...,0]-top[...,1])>=min_margin)
+            if evidence_valid is not None:
+                if evidence_valid.shape != valid_region.shape or evidence_valid.dtype != torch.bool:
+                    raise ValueError("evidence_valid must be bool [B,K]")
+                valid_region &= evidence_valid
+            prob=(logits+ev).softmax(-1)
+            # A neural guess may not override a contradictory accepted seed.
+            valid_region &= prob.argmax(-1)==evidence_prob.argmax(-1)
+        weights=q*valid_region[:,:,None,None].to(q.dtype)
+        mass=weights.sum(1,keepdim=True)
+        accepted=torch.einsum("bkhw,bkc->bchw",weights,prob)/mass.clamp_min(1e-8)
+        fallback=torch.einsum("bkhw,bkc->bchw",q,prob)
+        dense_low=torch.where(mass>1e-8,accepted,fallback)
+        dense=F.interpolate(dense_low,output_hw,mode="bilinear",align_corners=False)
+        dense_mass=F.interpolate(mass,output_hw,mode="bilinear",align_corners=False)[:,0]
+        top=dense.topk(2,dim=1).values
+        valid=(dense_mass>=.5)&(top[:,0]>=min_prob)&((top[:,0]-top[:,1])>=min_margin)
+        labels=dense.argmax(1)
+        return {**base,"guided_semantic_prob":prob,"region_valid":valid_region,
+                "soft_label":dense,"valid":valid,
+                "pseudo_label":torch.where(valid,labels,torch.full_like(labels,UNKNOWN))}
 
 @dataclass(frozen=True)
 class ResourceProfile:
@@ -120,6 +158,7 @@ class DeploymentEncoder(nn.Module):
 class AdaptiveAnnotationStudent(nn.Module):
     """Final model: shared encoder -> A0 -> optional Dynamic Window turns."""
     def __init__(self,width=32,window_k=8):
+        from self_audit.models.annotation_expert import AnnotationExpert
         super().__init__(); self.encoder=DeploymentEncoder(width); self.a0_head=nn.Conv2d(width,NUM_CLASSES,1)
         self.refiner=AnnotationExpert(feature_channels=width,num_classes=NUM_CLASSES,audit_channels=3,
             window_k=window_k,max_turns=2,audit_conditioning="feature_only",offset_mode="structured")
@@ -139,8 +178,17 @@ class AdaptiveAnnotationStudent(nn.Module):
         return self.refine_from_features(feat,a0,profile=profile,return_metadata=return_metadata)
 
 def pseudo_supervision_loss(outputs,target,valid,a0_weight=.25):
-    if valid.dtype!=torch.bool or valid.shape!=target.shape: raise ValueError("target/valid must be [B,H,W] and valid bool")
+    """Ignore UNKNOWN BEFORE cross entropy, including mixed-validity batches."""
+    if target.dtype != torch.long or valid.dtype != torch.bool or valid.shape != target.shape:
+        raise ValueError("target long and valid bool must both be [B,H,W]")
     final=outputs["final_logits"]; a0=outputs["a0_logits"]
-    if not bool(valid.any()): return final.sum()*0.0
-    def ce(x): return F.cross_entropy(x,target,reduction="none")[valid].mean()
+    if target.shape != (final.shape[0],*final.shape[2:]) or a0.shape != final.shape:
+        raise ValueError("logit/target shape mismatch")
+    if not bool(valid.any()):
+        return final.sum()*0.0+a0.sum()*0.0
+    if bool(((target[valid]<0)|(target[valid]>=NUM_CLASSES)).any()):
+        raise ValueError("accepted target must be a semantic class 0..3")
+    safe=target.detach().masked_fill(~valid,UNKNOWN)
+    def ce(x):
+        return F.cross_entropy(x,safe,ignore_index=UNKNOWN,reduction="sum")/valid.sum()
     return ce(final)+float(a0_weight)*ce(a0)

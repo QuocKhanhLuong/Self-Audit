@@ -1,126 +1,33 @@
-# Self-Audit v3: pseudo teacher, adaptive annotator, and bounded system path
+# Self-Audit v3: reviewed pseudo teacher and annotation workflow
 
-This is research code. It preserves prior C0/C1 evidence and makes **no ACDC >=0.91 claim** until an independent post-freeze evaluation supports it.
+Read [the current integrity review and runbook](pseudolabel_v3_review_runbook.md)
+for commands, protocol changes, supervision limits and regression coverage.
 
-## 1. Offline pseudo-label teacher
+The earlier `103ce77c` implementation was a research scaffold, not an experimentally
+validated cardiac annotation system. The review fixes UNKNOWN loss, circular seed
+supervision, patient-split isolation, native geometry, mask discovery and CI coverage.
 
-```text
-full cine MRI [T,Z,H,W]
-  -> lazy image-only full-cine loader
-  -> 2.5-D appearance encoder (z-1/z/z+1)
-  +  unsupervised pairwise registration (t-1/t/t+1)
-  -> K anonymous appearance/motion prototypes
-  -> auditable region evidence:
-       border / low motion
-       topology enclosure
-       adjacency
-       native left-right orientation
-       image-boundary support
-  -> semantic seed head BG/RV/MYO/LV
-  -> confidence + margin abstention
-  -> class prototype bank (accepted seeds only)
-  -> temporal + cross-slice consistency gate
-  -> frozen named soft pseudo-labels + validity
-```
+## Offline path
 
-Relevant files:
+Full-cine image-only training patients -> appearance + pairwise registration ->
+anonymous prototypes -> raw image-only prior evidence -> partial semantic seed learning
+-> conservative evidence/validity gate -> motion-aligned temporal rejection -> immutable
+named pseudo-label export. Exporting development predictions does NOT train on them.
 
-- `data_v3.py`: ACDC/M&Ms 4-D image-only discovery and lazy LRU loading.
-- `system_v3.py`: appearance, registration-motion, prototypes, semantic teacher, deployment student.
-- `evidence.py`: detached auditable region evidence. No mask input.
-- `evolution.py`: confidence-gated semantic prototype bank.
-- `consistency.py`: conservative time/slice verifier.
-- `losses_v3.py`: reconstruction, anonymous anti-collapse, registration, semantic seed losses.
-- `trainer_v3.py`: bounded progressive teacher loop.
-- `freeze.py`: immutable NPZ hashes + FROZEN.json.
-- `scripts/train_pseudolabel_v3.py`: image-only training and frozen export.
-- `scripts/evaluate_pseudolabel_frozen.py`: separate post-freeze ACDC evaluator.
+## Deployment annotator
 
-The teacher is offline. Its compute is not deployment inference latency.
+Frozen TRAINING pseudo-labels -> small semantic encoder/head -> A0 -> optional shared
+canonical Dynamic Window refinement. Compact/balanced/accurate use 0/1/3 internal
+attention passes. Encoder computation is shared. An entropy/profile cap is an engineering
+selector, not calibrated correctness or evidence that added refinement improves Dice.
 
-## 2. Final annotation model
+## Important limits
 
-```text
-ED/ES 2.5-D image
-  -> one lightweight encoder pass
-  -> A0 BG/RV/MYO/LV
-  -> optional canonical Dynamic Window refinement
-  -> final mask
-```
-
-`AdaptiveAnnotationStudent` learns only from frozen pseudo-label pixels with validity=1.
-UNKNOWN=255 is never a fifth trainable semantic class.
-
-`scripts/train_student_v3.py` verifies frozen pseudo-label hashes before training.
-
-## 3. Dynamic Window and adaptive compute
-
-The final annotator reuses the canonical `AnnotationExpert` with
-`audit_conditioning="feature_only"`. No runtime Auditor is required.
-
-Profiles:
-
-- `compact`: A0 only.
-- `balanced`: one Dynamic Window turn.
-- `accurate`: two recurrent turns.
-
-`AdaptiveRuntime` computes the encoder and A0 exactly once, then selects a profile from
-A0 normalized entropy under an explicit hardware/profile cap. The thresholds are engineering
-configuration and must be locked before evaluation; entropy is not correctness.
-
-Matched-profile accuracy and latency must be reported together.
-
-## 4. Supervision boundary
-
-Proposed training code accepts images/phase metadata only.
-
-The semantic evidence engine may use:
-- image intensity/edges,
-- unsupervised motion,
-- topology,
-- native orientation,
-- neighboring slices/frames,
-- accepted prototype history.
-
-It may NOT use:
-- segmentation masks,
-- GT crops,
-- GT cluster matching,
-- GT checkpoint selection,
-- post-hoc class permutation fed back into training.
-
-ACDC Info.cfg ED/ES indices remain human-curated phase metadata and must be disclosed.
-
-The independent evaluator is allowed to open references only after all pseudo outputs and hashes
-are frozen.
-
-## 5. What is implemented vs still unproven
-
-Implemented in code:
-- full-cine ACDC/M&Ms image-only loader;
-- unsupervised registration-motion branch;
-- anonymous anti-collapse prototypes;
-- auditable semantic evidence;
-- reliability/UNKNOWN;
-- class prototype evolution;
-- temporal/cross-slice consistency gate;
-- frozen export;
-- separate evaluator;
-- frozen-pseudo student trainer;
-- Dynamic Window resource profiles;
-- automatic entropy + resource-cap controller.
-
-Still unproven:
-- real-data pseudo-label quality;
-- semantic identifiability sufficient for RV/MYO/LV;
-- convergence;
-- ACDC >=0.91;
-- M&Ms transfer;
-- matched low-resource speed/accuracy;
-- superiority of Dynamic Window over matched-compute ordinary refinement.
-
-## 6. Immediate scientific gate
-
-Do **not** run a long final-student experiment until the pseudo teacher is frozen and independently
-scored. The next decision is TEACHER_READY vs TEACHER_NOT_READY based on named RV/MYO/LV
-precision/coverage and patient-level harm, not on training loss or self-agreement.
+- No manual scribble or manual segmentation-mask input is introduced.
+- Seeds are still heuristic, not guaranteed high-precision anatomy.
+- No evidence means exact UNKNOWN; zero foreground supervision stops student training.
+- Cross-slice voting without correspondence is disabled. Pairwise temporal checking is
+  not a proven full-cycle physiological model.
+- End-to-end software tests use synthetic NIfTI, not real ACDC/M&Ms quality experiments.
+- No ACDC >=0.91 result, GPU latency, UI or clinical utility claim is made.
+- Schema 3 requires fresh output directories; old freezes are not silently upgraded.
