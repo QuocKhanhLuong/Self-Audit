@@ -1,0 +1,619 @@
+{
+  "id": "3bd1ec17-c517-4a0a-af07-123c968ab7ba",
+  "ok": true,
+  "result": {
+    "workers": [
+      {
+        "dispatchId": "ctx_8631250d2b0b",
+        "taskId": "task_741d2d51484a",
+        "runId": "run_698eb3b460ef",
+        "workerState": "failed",
+        "dispatchStatus": "failed",
+        "agentTerminalHandle": "term_6d44d8dc-84ca-4b56-836f-05ebe83ddf96",
+        "terminalState": "retained",
+        "resource": null,
+        "projection": {
+          "id": "ctx_8631250d2b0b",
+          "dispatchId": "ctx_8631250d2b0b",
+          "taskId": "task_741d2d51484a",
+          "runId": "run_698eb3b460ef",
+          "role": "worker",
+          "parent": null,
+          "provider": null,
+          "host": {
+            "kind": "local",
+            "id": "local"
+          },
+          "workspace": {
+            "id": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit",
+            "kind": "folder_or_worktree"
+          },
+          "stage": {
+            "worker": "failed",
+            "dispatch": "failed",
+            "detail": "agent_readiness",
+            "activity": "unknown"
+          },
+          "outcome": "failed",
+          "liveness": {
+            "verdict": "unverifiable",
+            "reason": "missing_status"
+          },
+          "evidence": {
+            "durable": true,
+            "liveStatus": "unavailable",
+            "lastObservedAt": null
+          },
+          "resource": {
+            "state": "absent",
+            "reason": "not_materialized"
+          },
+          "nextAction": {
+            "kind": "none",
+            "argv": []
+          },
+          "attention": {
+            "categories": [
+              "failure",
+              "unverifiable"
+            ],
+            "requiresAction": true
+          }
+        }
+      },
+      {
+        "dispatchId": "ctx_a752804ac3d2",
+        "taskId": "task_87f5a2436605",
+        "runId": "run_698eb3b460ef",
+        "workerState": "unsupervised",
+        "dispatchStatus": "completed",
+        "agentTerminalHandle": "term_6d44d8dc-84ca-4b56-836f-05ebe83ddf96",
+        "terminalState": "retained",
+        "resource": null,
+        "projection": {
+          "id": "ctx_a752804ac3d2",
+          "dispatchId": "ctx_a752804ac3d2",
+          "taskId": "task_87f5a2436605",
+          "runId": "run_698eb3b460ef",
+          "role": "worker",
+          "parent": null,
+          "provider": null,
+          "host": {
+            "kind": "local",
+            "id": "local"
+          },
+          "workspace": null,
+          "stage": {
+            "worker": "unsupervised",
+            "dispatch": "completed",
+            "detail": null,
+            "activity": "unknown"
+          },
+          "outcome": "succeeded",
+          "liveness": {
+            "verdict": "unverifiable",
+            "reason": "unsupervised_settled"
+          },
+          "evidence": {
+            "durable": true,
+            "liveStatus": "unavailable",
+            "lastObservedAt": null
+          },
+          "resource": {
+            "state": "absent",
+            "reason": "unsupervised"
+          },
+          "nextAction": {
+            "kind": "none",
+            "argv": []
+          },
+          "attention": {
+            "categories": [
+              "root_completion"
+            ],
+            "requiresAction": false
+          }
+        }
+      },
+      {
+        "dispatchId": "ctx_2818e880b7dc",
+        "taskId": "task_7c26026be9b2",
+        "runId": "run_698eb3b460ef",
+        "workerState": "unsupervised",
+        "dispatchStatus": "completed",
+        "agentTerminalHandle": "term_dcd93613-947d-4a0d-9f32-b82e897890c0",
+        "terminalState": "retained",
+        "resource": null,
+        "projection": {
+          "id": "ctx_2818e880b7dc",
+          "dispatchId": "ctx_2818e880b7dc",
+          "taskId": "task_7c26026be9b2",
+          "runId": "run_698eb3b460ef",
+          "role": "worker",
+          "parent": null,
+          "provider": {
+            "id": "antigravity",
+            "model": null
+          },
+          "host": {
+            "kind": "local",
+            "id": "local"
+          },
+          "workspace": {
+            "id": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit",
+            "kind": "folder_or_worktree"
+          },
+          "stage": {
+            "worker": "unsupervised",
+            "dispatch": "completed",
+            "detail": null,
+            "activity": "unknown"
+          },
+          "outcome": "succeeded",
+          "liveness": {
+            "verdict": "unverifiable",
+            "reason": "stale_status",
+            "observedAt": 1789921201103
+          },
+          "evidence": {
+            "durable": true,
+            "liveStatus": "stale",
+            "lastObservedAt": 1789921201103
+          },
+          "resource": {
+            "state": "absent",
+            "reason": "unsupervised"
+          },
+          "nextAction": {
+            "kind": "none",
+            "argv": []
+          },
+          "attention": {
+            "categories": [
+              "stale",
+              "root_completion"
+            ],
+            "requiresAction": false
+          }
+        }
+      },
+      {
+        "dispatchId": "ctx_92d6886af985",
+        "taskId": "task_7fca57e24b5a",
+        "runId": "run_698eb3b460ef",
+        "workerState": "unsupervised",
+        "dispatchStatus": "completed",
+        "agentTerminalHandle": "term_77773f99-9dcc-4ff5-8d09-0e333bc4f97a",
+        "terminalState": "retained",
+        "resource": null,
+        "projection": {
+          "id": "ctx_92d6886af985",
+          "dispatchId": "ctx_92d6886af985",
+          "taskId": "task_7fca57e24b5a",
+          "runId": "run_698eb3b460ef",
+          "role": "worker",
+          "parent": null,
+          "provider": {
+            "id": "antigravity",
+            "model": null
+          },
+          "host": {
+            "kind": "local",
+            "id": "local"
+          },
+          "workspace": {
+            "id": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit",
+            "kind": "folder_or_worktree"
+          },
+          "stage": {
+            "worker": "unsupervised",
+            "dispatch": "completed",
+            "detail": null,
+            "activity": "done"
+          },
+          "outcome": "succeeded",
+          "liveness": {
+            "verdict": "live",
+            "observedAt": 1789921484576,
+            "source": "agent_status"
+          },
+          "evidence": {
+            "durable": true,
+            "liveStatus": "fresh",
+            "lastObservedAt": 1789921484576
+          },
+          "resource": {
+            "state": "absent",
+            "reason": "unsupervised"
+          },
+          "nextAction": {
+            "kind": "none",
+            "argv": []
+          },
+          "attention": {
+            "categories": [
+              "root_completion"
+            ],
+            "requiresAction": false
+          }
+        }
+      },
+      {
+        "dispatchId": "ctx_b97b8aa7ce1a",
+        "taskId": "task_b5dba57b6e0c",
+        "runId": "run_698eb3b460ef",
+        "workerState": "unsupervised",
+        "dispatchStatus": "completed",
+        "agentTerminalHandle": "term_4529e6b3-f63e-440e-8460-fc258d10e5b2",
+        "terminalState": "retained",
+        "resource": null,
+        "projection": {
+          "id": "ctx_b97b8aa7ce1a",
+          "dispatchId": "ctx_b97b8aa7ce1a",
+          "taskId": "task_b5dba57b6e0c",
+          "runId": "run_698eb3b460ef",
+          "role": "worker",
+          "parent": null,
+          "provider": null,
+          "host": {
+            "kind": "local",
+            "id": "local"
+          },
+          "workspace": null,
+          "stage": {
+            "worker": "unsupervised",
+            "dispatch": "completed",
+            "detail": null,
+            "activity": "unknown"
+          },
+          "outcome": "succeeded",
+          "liveness": {
+            "verdict": "unverifiable",
+            "reason": "unsupervised_settled"
+          },
+          "evidence": {
+            "durable": true,
+            "liveStatus": "unavailable",
+            "lastObservedAt": null
+          },
+          "resource": {
+            "state": "absent",
+            "reason": "unsupervised"
+          },
+          "nextAction": {
+            "kind": "none",
+            "argv": []
+          },
+          "attention": {
+            "categories": [
+              "root_completion"
+            ],
+            "requiresAction": false
+          }
+        }
+      },
+      {
+        "dispatchId": "ctx_966061ee6aca",
+        "taskId": "task_1ef1c0a81fda",
+        "runId": "run_698eb3b460ef",
+        "workerState": "unsupervised",
+        "dispatchStatus": "completed",
+        "agentTerminalHandle": "term_0ae197aa-ab2e-4a18-b1c2-c5f57c655c31",
+        "terminalState": "retained",
+        "resource": null,
+        "projection": {
+          "id": "ctx_966061ee6aca",
+          "dispatchId": "ctx_966061ee6aca",
+          "taskId": "task_1ef1c0a81fda",
+          "runId": "run_698eb3b460ef",
+          "role": "worker",
+          "parent": null,
+          "provider": {
+            "id": "antigravity",
+            "model": null
+          },
+          "host": {
+            "kind": "local",
+            "id": "local"
+          },
+          "workspace": {
+            "id": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit",
+            "kind": "folder_or_worktree"
+          },
+          "stage": {
+            "worker": "unsupervised",
+            "dispatch": "completed",
+            "detail": null,
+            "activity": "unknown"
+          },
+          "outcome": "succeeded",
+          "liveness": {
+            "verdict": "unverifiable",
+            "reason": "stale_status",
+            "observedAt": 1789921210569
+          },
+          "evidence": {
+            "durable": true,
+            "liveStatus": "stale",
+            "lastObservedAt": 1789921210569
+          },
+          "resource": {
+            "state": "absent",
+            "reason": "unsupervised"
+          },
+          "nextAction": {
+            "kind": "none",
+            "argv": []
+          },
+          "attention": {
+            "categories": [
+              "stale",
+              "root_completion"
+            ],
+            "requiresAction": false
+          }
+        }
+      },
+      {
+        "dispatchId": "ctx_823c3585cf43",
+        "taskId": "task_9cee0ee49919",
+        "runId": "run_698eb3b460ef",
+        "workerState": "unsupervised",
+        "dispatchStatus": "completed",
+        "agentTerminalHandle": "term_b5dc0e0d-9ded-4532-9be3-696e17a5f649",
+        "terminalState": "retained",
+        "resource": null,
+        "projection": {
+          "id": "ctx_823c3585cf43",
+          "dispatchId": "ctx_823c3585cf43",
+          "taskId": "task_9cee0ee49919",
+          "runId": "run_698eb3b460ef",
+          "role": "worker",
+          "parent": null,
+          "provider": {
+            "id": "antigravity",
+            "model": null
+          },
+          "host": {
+            "kind": "local",
+            "id": "local"
+          },
+          "workspace": {
+            "id": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit",
+            "kind": "folder_or_worktree"
+          },
+          "stage": {
+            "worker": "unsupervised",
+            "dispatch": "completed",
+            "detail": null,
+            "activity": "done"
+          },
+          "outcome": "succeeded",
+          "liveness": {
+            "verdict": "live",
+            "observedAt": 1789921300562,
+            "source": "agent_status"
+          },
+          "evidence": {
+            "durable": true,
+            "liveStatus": "fresh",
+            "lastObservedAt": 1789921300562
+          },
+          "resource": {
+            "state": "absent",
+            "reason": "unsupervised"
+          },
+          "nextAction": {
+            "kind": "none",
+            "argv": []
+          },
+          "attention": {
+            "categories": [
+              "root_completion"
+            ],
+            "requiresAction": false
+          }
+        }
+      },
+      {
+        "dispatchId": "ctx_850fd9c03192",
+        "taskId": "task_c8512d36c05a",
+        "runId": "run_698eb3b460ef",
+        "workerState": "unsupervised",
+        "dispatchStatus": "completed",
+        "agentTerminalHandle": "term_0b6b5359-23fb-4a60-b3fe-4f3c20b01a5a",
+        "terminalState": "retained",
+        "resource": null,
+        "projection": {
+          "id": "ctx_850fd9c03192",
+          "dispatchId": "ctx_850fd9c03192",
+          "taskId": "task_c8512d36c05a",
+          "runId": "run_698eb3b460ef",
+          "role": "worker",
+          "parent": null,
+          "provider": {
+            "id": "antigravity",
+            "model": null
+          },
+          "host": {
+            "kind": "local",
+            "id": "local"
+          },
+          "workspace": {
+            "id": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit",
+            "kind": "folder_or_worktree"
+          },
+          "stage": {
+            "worker": "unsupervised",
+            "dispatch": "completed",
+            "detail": null,
+            "activity": "done"
+          },
+          "outcome": "succeeded",
+          "liveness": {
+            "verdict": "live",
+            "observedAt": 1789922924513,
+            "source": "agent_status"
+          },
+          "evidence": {
+            "durable": true,
+            "liveStatus": "fresh",
+            "lastObservedAt": 1789922924513
+          },
+          "resource": {
+            "state": "absent",
+            "reason": "unsupervised"
+          },
+          "nextAction": {
+            "kind": "none",
+            "argv": []
+          },
+          "attention": {
+            "categories": [
+              "root_completion"
+            ],
+            "requiresAction": false
+          }
+        }
+      },
+      {
+        "dispatchId": "ctx_92ca2e751ac9",
+        "taskId": "task_eb2f88e0df1e",
+        "runId": "run_698eb3b460ef",
+        "workerState": "unsupervised",
+        "dispatchStatus": "completed",
+        "agentTerminalHandle": "term_6d44d8dc-84ca-4b56-836f-05ebe83ddf96",
+        "terminalState": "retained",
+        "resource": null,
+        "projection": {
+          "id": "ctx_92ca2e751ac9",
+          "dispatchId": "ctx_92ca2e751ac9",
+          "taskId": "task_eb2f88e0df1e",
+          "runId": "run_698eb3b460ef",
+          "role": "worker",
+          "parent": null,
+          "provider": {
+            "id": "antigravity",
+            "model": null
+          },
+          "host": {
+            "kind": "local",
+            "id": "local"
+          },
+          "workspace": {
+            "id": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit",
+            "kind": "folder_or_worktree"
+          },
+          "stage": {
+            "worker": "unsupervised",
+            "dispatch": "completed",
+            "detail": null,
+            "activity": "done"
+          },
+          "outcome": "succeeded",
+          "liveness": {
+            "verdict": "live",
+            "observedAt": 1789921357196,
+            "source": "agent_status"
+          },
+          "evidence": {
+            "durable": true,
+            "liveStatus": "fresh",
+            "lastObservedAt": 1789921357196
+          },
+          "resource": {
+            "state": "absent",
+            "reason": "unsupervised"
+          },
+          "nextAction": {
+            "kind": "none",
+            "argv": []
+          },
+          "attention": {
+            "categories": [
+              "root_completion"
+            ],
+            "requiresAction": false
+          }
+        }
+      },
+      {
+        "dispatchId": "ctx_80f870229c9e",
+        "taskId": "task_f3b42a2bb8c9",
+        "runId": "run_698eb3b460ef",
+        "workerState": "unsupervised",
+        "dispatchStatus": "completed",
+        "agentTerminalHandle": "term_4529e6b3-f63e-440e-8460-fc258d10e5b2",
+        "terminalState": "retained",
+        "resource": null,
+        "projection": {
+          "id": "ctx_80f870229c9e",
+          "dispatchId": "ctx_80f870229c9e",
+          "taskId": "task_f3b42a2bb8c9",
+          "runId": "run_698eb3b460ef",
+          "role": "worker",
+          "parent": null,
+          "provider": {
+            "id": "antigravity",
+            "model": null
+          },
+          "host": {
+            "kind": "local",
+            "id": "local"
+          },
+          "workspace": {
+            "id": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit",
+            "kind": "folder_or_worktree"
+          },
+          "stage": {
+            "worker": "unsupervised",
+            "dispatch": "completed",
+            "detail": null,
+            "activity": "done"
+          },
+          "outcome": "succeeded",
+          "liveness": {
+            "verdict": "live",
+            "observedAt": 1789922778321,
+            "source": "agent_status"
+          },
+          "evidence": {
+            "durable": true,
+            "liveStatus": "fresh",
+            "lastObservedAt": 1789922778321
+          },
+          "resource": {
+            "state": "absent",
+            "reason": "unsupervised"
+          },
+          "nextAction": {
+            "kind": "none",
+            "argv": []
+          },
+          "attention": {
+            "categories": [
+              "root_completion"
+            ],
+            "requiresAction": false
+          }
+        }
+      }
+    ],
+    "counts": {
+      "retained": 10
+    },
+    "page": {
+      "limit": 100,
+      "total": 10,
+      "hasMore": false,
+      "nextCursor": null
+    },
+    "scope": {
+      "run": "run_698eb3b460ef",
+      "source": "flag"
+    }
+  },
+  "_meta": {
+    "runtimeId": "685fbdf6-0375-42f2-950a-a6e7db3a8ff9"
+  }
+}

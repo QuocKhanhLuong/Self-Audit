@@ -1,0 +1,64 @@
+{
+  "experiment_id": "astra-v3-r0-dimensionless-seeds-20260920-v2",
+  "seed": 17,
+  "patients_per_split": 4,
+  "selection": "lowest sha256(astra-v3-r0- + patient_id) independently in original train/dev",
+  "normalization_percentiles": [
+    1,
+    99
+  ],
+  "gaussian_fov_fraction": 0.004,
+  "bright_quantile": 70,
+  "bright_floor": 0.45,
+  "lv_radius_fov_fraction": [
+    0.02,
+    0.12
+  ],
+  "lv_max_eccentricity": 0.85,
+  "lv_min_solidity": 0.75,
+  "lv_min_contrast": 0.08,
+  "lv_max_normalized_distance_from_fov_center": 0.35,
+  "winner_ratio": 1.2,
+  "seed_erosion_fov_fraction": 0.006,
+  "myo_annulus_fov_fraction": [
+    0.006,
+    0.018
+  ],
+  "myo_intensity_floor": 0.1,
+  "rv_radius_fov_fraction": [
+    0.015,
+    0.12
+  ],
+  "rv_max_center_distance_fov_fraction": 0.23,
+  "orientation": "NOT RUN: local sform disagrees with header spacing and units unknown",
+  "topology_min_dark_annulus_fraction": 0.7,
+  "boundary_min_contrast": 0.16,
+  "cross_slice_tolerance_fov_fraction": 0.012,
+  "augmentation_gamma": [
+    0.9,
+    1.1
+  ],
+  "arms": [
+    "appearance_anchor",
+    "plus_topology",
+    "plus_boundary",
+    "plus_cross_slice",
+    "plus_augmentation",
+    "all_available",
+    "unknown_control"
+  ],
+  "unavailable_cues": [
+    "motion",
+    "full_cycle_temporal_consistency",
+    "native_orientation"
+  ],
+  "primary_dice": "mean_patient(mean_phase(mean_RV_MYO_LV(native_3D_Dice))); UNKNOWN counts FN",
+  "gate": {
+    "per_class_precision_min": 0.95,
+    "per_class_gt_coverage_min": 0.05,
+    "patient_fraction_with_all_three_classes_min": 0.75
+  },
+  "selection_after_evaluation": "none; one frozen all_available candidate, other arms diagnostic",
+  "geometry_policy": "dimensionless short-axis stored-grid FOV fractions; no mm or trustworthy native orientation claim; z is stored axis 2",
+  "historical_provenance": "ED/ES local copy originally selected by paired GT presence; development informed; not pristine no-GT acquisition"
+}

@@ -1,0 +1,97 @@
+{
+  "evidence_kind": "synthetic_random_weights_only",
+  "seed": 17,
+  "torch": "2.14.0",
+  "platform": "macOS-26.2-arm64-arm-64bit",
+  "source_sha256": "4c07ee074daa060f0a33095162c5a75096e745f97082dcc34d8fa38cfda83226",
+  "interventions": {
+    "baseline": {
+      "accepted_fraction": 0.0,
+      "unknown_fraction": 1.0,
+      "soft_prob_mean_abs_change": 0.0,
+      "soft_prob_max_abs_change": 0.0,
+      "argmax_change_fraction": 0.0,
+      "pseudo_mask_change_fraction": 0.0,
+      "motion_mean_abs_change": 0.0
+    },
+    "zero_motion_descriptor": {
+      "accepted_fraction": 0.0,
+      "unknown_fraction": 1.0,
+      "soft_prob_mean_abs_change": 0.0050402116030454636,
+      "soft_prob_max_abs_change": 0.010017558932304382,
+      "argmax_change_fraction": 0.0,
+      "pseudo_mask_change_fraction": 0.0,
+      "motion_mean_abs_change": 0.2883748412132263
+    },
+    "shuffle_motion_between_cases": {
+      "accepted_fraction": 0.0,
+      "unknown_fraction": 1.0,
+      "soft_prob_mean_abs_change": 0.0009130346588790417,
+      "soft_prob_max_abs_change": 0.003654986619949341,
+      "argmax_change_fraction": 0.0,
+      "pseudo_mask_change_fraction": 0.0,
+      "motion_mean_abs_change": 0.3334151804447174
+    },
+    "zero_temporal_differences": {
+      "accepted_fraction": 0.0,
+      "unknown_fraction": 1.0,
+      "soft_prob_mean_abs_change": 0.005350816994905472,
+      "soft_prob_max_abs_change": 0.008480414748191833,
+      "argmax_change_fraction": 0.0,
+      "pseudo_mask_change_fraction": 0.0,
+      "motion_mean_abs_change": 0.29220718145370483
+    },
+    "swap_temporal_neighbours": {
+      "accepted_fraction": 0.0,
+      "unknown_fraction": 1.0,
+      "soft_prob_mean_abs_change": 0.0010178789962083101,
+      "soft_prob_max_abs_change": 0.003807961940765381,
+      "argmax_change_fraction": 0.0,
+      "pseudo_mask_change_fraction": 0.0,
+      "motion_mean_abs_change": 0.258530855178833
+    },
+    "shuffle_z_neighbours_keep_center": {
+      "accepted_fraction": 0.0,
+      "unknown_fraction": 1.0,
+      "soft_prob_mean_abs_change": 0.0006939953309483826,
+      "soft_prob_max_abs_change": 0.004475921392440796,
+      "argmax_change_fraction": 0.0,
+      "pseudo_mask_change_fraction": 0.0,
+      "motion_mean_abs_change": 0.0
+    },
+    "zero_evidence": {
+      "accepted_fraction": 0.0,
+      "unknown_fraction": 1.0,
+      "soft_prob_mean_abs_change": 0.0,
+      "soft_prob_max_abs_change": 0.0,
+      "argmax_change_fraction": 0.0,
+      "pseudo_mask_change_fraction": 0.0,
+      "motion_mean_abs_change": 0.0
+    },
+    "random_evidence": {
+      "accepted_fraction": 0.978515625,
+      "unknown_fraction": 0.021484375,
+      "soft_prob_mean_abs_change": 0.13944540917873383,
+      "soft_prob_max_abs_change": 0.6193102598190308,
+      "argmax_change_fraction": 0.9947509765625,
+      "pseudo_mask_change_fraction": 0.978515625,
+      "motion_mean_abs_change": 0.0
+    },
+    "strong_LV_evidence": {
+      "accepted_fraction": 1.0,
+      "unknown_fraction": 0.0,
+      "soft_prob_mean_abs_change": 0.37294676899909973,
+      "soft_prob_max_abs_change": 0.7507630586624146,
+      "argmax_change_fraction": 1.0,
+      "pseudo_mask_change_fraction": 1.0,
+      "motion_mean_abs_change": 0.0
+    }
+  },
+  "prototype_permutation_dense_max_error": 1.1920928955078125e-07,
+  "named_class_permutation_equivariance_max_error": 0.0,
+  "conflicting_confident_regions": {
+    "accepted_fraction": 1.0,
+    "mean_dense_max_probability": 0.25,
+    "mean_dense_margin": 0.0
+  }
+}

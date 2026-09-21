@@ -1,0 +1,38 @@
+{
+  "id": "b7244175-d37a-4e6f-96e3-0399069a5dc4",
+  "ok": true,
+  "result": {
+    "runId": "run_698eb3b460ef",
+    "deliveryId": "delivery_32fb6978a35a",
+    "messages": [
+      {
+        "id": "msg_62d65cb3ee1a",
+        "run_id": "run_698eb3b460ef",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_6d44d8dc-84ca-4b56-836f-05ebe83ddf96",
+        "to_handle": "run:run_698eb3b460ef",
+        "subject": "Post-freeze evaluation complete; gate FAILED",
+        "body": "Verified all cryptographic hashes for the frozen manifest and its 35 associated files before opening manual ground truth, validated native 3D geometry, and evaluated all seven frozen arms across 16 phase volumes using an independent test-validated evaluator. All seven arms, including the primary candidate all_available, decisively failed the preregistered evaluation gate on both train and dev splits, exhibiting severe primary Dice collapse (0.1429 train / 0.1391 dev) caused by aggressive heuristic filtering that destroyed anatomical recall. Root owns the final decision on whether to revise seed generation or halt student deployment on these ungrounded dimensionless seeds.",
+        "type": "worker_done",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_eb2f88e0df1e\",\"dispatchId\":\"ctx_92ca2e751ac9\",\"outcome\":\"succeeded\",\"reportPath\":\"reports/astra_v3/workers/H_postfreeze_evaluation.md\"}",
+        "created_at": "2026-09-20T16:22:27Z",
+        "delivered_at": null
+      }
+    ],
+    "count": 1,
+    "replayed": false,
+    "acknowledged": "delivery_87b4392d91d8",
+    "timedOut": false,
+    "cancelled": false,
+    "connectionLost": false,
+    "mutation": {
+      "requestId": "f927f037-da0a-4f18-9857-9464a647ad36",
+      "replayed": false
+    }
+  },
+  "_meta": {
+    "runtimeId": "685fbdf6-0375-42f2-950a-a6e7db3a8ff9"
+  }
+}

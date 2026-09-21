@@ -1,0 +1,4495 @@
+{
+  "status": "PASS",
+  "checks": [
+    "actual verifier rejected simulated hash mismatch: /private/tmp/astra_v3_r0_dimensionless_20260920_v2/FROZEN.json",
+    "actual verifier rejected simulated hash mismatch: /private/tmp/astra_v3_r0_dimensionless_20260920_v2/config.json",
+    "actual verifier rejected simulated hash mismatch: /Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit/reports/astra_v3/evidence/run_round0_seeds_dimensionless.py",
+    "actual verifier rejected simulated hash mismatch: /tmp/astra_event_acdc_training/acdc_patient_split_seed42.json",
+    "actual verifier rejected simulated hash mismatch: /tmp/astra_event_acdc_training/training/patient093/patient093_frame01.nii",
+    "actual verifier rejected simulated hash mismatch: /private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient093_frame01.npz",
+    "phase equal synthetic mean=0.5 despite 100x voxel-count difference",
+    "all record metrics and split metrics exactly reproduce worker H"
+  ],
+  "before": {
+    "verified_utc_start": "2026-09-20T16:27:08.638112+00:00",
+    "verified_utc_end": "2026-09-20T16:27:08.685121+00:00",
+    "manifest_sha256": "c0be95e4f3e6bf63277e576f80f0d89aacc949b48630bf211883e786d141196e",
+    "config_sha256": "c8ec87720cbea78ff3b6b287e888e79d5a379e3da8903e7b0ac32329295c9dfc",
+    "script_sha256": "acdea9e6127afa1212a6a2816ceb3585187d223d7eb265ef2fd66f6b9414d7f4",
+    "split_sha256": "bc42574017276a6defc668bf533330fd41a64a5e90a75ea1b8958fc9e469265a",
+    "records_count": 16,
+    "manifest_data": {
+      "schema": "astra-v3-r0-frozen-v1",
+      "experiment_id": "astra-v3-r0-dimensionless-seeds-20260920-v2",
+      "frozen_utc": "2026-09-20T16:17:58.062889+00:00",
+      "base_commit": "d4f503b7107eca4e8ac85f37a5dd01ec50479666",
+      "config_path": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/config.json",
+      "config_sha256": "c8ec87720cbea78ff3b6b287e888e79d5a379e3da8903e7b0ac32329295c9dfc",
+      "script_path": "/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit/reports/astra_v3/evidence/run_round0_seeds_dimensionless.py",
+      "script_sha256": "acdea9e6127afa1212a6a2816ceb3585187d223d7eb265ef2fd66f6b9414d7f4",
+      "split_path": "/tmp/astra_event_acdc_training/acdc_patient_split_seed42.json",
+      "split_sha256": "bc42574017276a6defc668bf533330fd41a64a5e90a75ea1b8958fc9e469265a",
+      "records": [
+        {
+          "patient_id": "patient093",
+          "split": "train",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient093/patient093_frame01.nii",
+          "image_sha256": "5181f995a07cad1a6ce489ddebae7f8c8a6812b019d445963fc7309dc9c1803e",
+          "shape": [
+            180,
+            224,
+            10
+          ],
+          "header_spacing_unverified_units": [
+            1.5625,
+            1.5625,
+            7.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.005555555555555556,
+            0.005555555555555556,
+            0.005555555555555556
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient093_frame01.npz",
+          "prediction_sha256": "0d2ce8bd6376893d5873f42980980dd000220d6520f38c2c7489d00b5b91b2b8",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 1,
+              "contrast": 0.5150785598815424,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 2,
+              "contrast": 0.5132677272834925,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 3,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 4,
+              "contrast": 0.5407980016700349,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 5,
+              "contrast": 0.5617618585257693,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 6,
+              "contrast": 0.570131254560801,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 7,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 8,
+              "contrast": 0.491636418435149,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 9,
+              "contrast": 0.39585045576692374,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.1565625,
+            "plus_topology": 0.1565625,
+            "plus_boundary": 0.1565625,
+            "plus_cross_slice": 0.14078869047619047,
+            "plus_augmentation": 0.09160218253968254,
+            "all_available": 0.08898065476190477,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient093",
+          "split": "train",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient093/patient093_frame14.nii",
+          "image_sha256": "83d92662a139ebb8cf755f98146ef2e9b912710af7ec3d3120b843dc395d6629",
+          "shape": [
+            180,
+            224,
+            10
+          ],
+          "header_spacing_unverified_units": [
+            1.5625,
+            1.5625,
+            7.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.005555555555555556,
+            0.005555555555555556,
+            0.005555555555555556
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient093_frame14.npz",
+          "prediction_sha256": "0a2506a0dd988afe783eab8d5778cc3832469281739271b8cbb1493897ea5527",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "contrast": 0.44768979995507946,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 1,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 2,
+              "contrast": 0.4365527672859972,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 3,
+              "contrast": 0.5467649397011483,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 4,
+              "contrast": 0.39194327206342033,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 5,
+              "contrast": 0.43442779748111376,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 6,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 7,
+              "contrast": 0.42908825344467527,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 8,
+              "contrast": 0.3482685839055436,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 9,
+              "reason": "no_unique_compact_bright_pool"
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.08645337301587301,
+            "plus_topology": 0.08645337301587301,
+            "plus_boundary": 0.08645337301587301,
+            "plus_cross_slice": 0.07690724206349206,
+            "plus_augmentation": 0.05543650793650794,
+            "all_available": 0.04823164682539682,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient010",
+          "split": "train",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient010/patient010_frame01.nii",
+          "image_sha256": "18c7e3e26da5213c327ca4b631cf12797d92108a19cc00ed585e6005d9ee2b07",
+          "shape": [
+            208,
+            256,
+            10
+          ],
+          "header_spacing_unverified_units": [
+            1.5625,
+            1.5625,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.004807692307692308,
+            0.004807692307692308,
+            0.004807692307692308
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient010_frame01.npz",
+          "prediction_sha256": "3e9f2706e4cc289235644e8325cc94e917b487be68ffc46a7195f9618dd9076e",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "contrast": 0.43784054876976086,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 1,
+              "contrast": 0.4881830371077272,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 2,
+              "contrast": 0.47832390078881526,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 3,
+              "contrast": 0.4699563572439548,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 4,
+              "contrast": 0.4567764873256971,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 5,
+              "contrast": 0.4427228537264644,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 6,
+              "contrast": 0.45181289716815315,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 7,
+              "contrast": 0.3885507815501665,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 8,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 9,
+              "contrast": 0.32301487924989536,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.36243802584134616,
+            "plus_topology": 0.36243802584134616,
+            "plus_boundary": 0.36243802584134616,
+            "plus_cross_slice": 0.35680964543269234,
+            "plus_augmentation": 0.3435452974759615,
+            "all_available": 0.3402869591346154,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient010",
+          "split": "train",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient010/patient010_frame13.nii",
+          "image_sha256": "8b4f4eda8e2f46c6779e48e725af3b0c9bcd1b7b0dfbaebed00b9c7828c17fa2",
+          "shape": [
+            208,
+            256,
+            10
+          ],
+          "header_spacing_unverified_units": [
+            1.5625,
+            1.5625,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.004807692307692308,
+            0.004807692307692308,
+            0.004807692307692308
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient010_frame13.npz",
+          "prediction_sha256": "089b57ec69a847953d8dc0b9ef5085f7cb58079e7b8652830c907de5f816607f",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 1,
+              "contrast": 0.3938521654734525,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 2,
+              "contrast": 0.4245588330913628,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 3,
+              "contrast": 0.44115121297974363,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 4,
+              "contrast": 0.43722827126916686,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 5,
+              "contrast": 0.4353290146184535,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 6,
+              "contrast": 0.4200015302082579,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 7,
+              "contrast": 0.3663221870125728,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 8,
+              "contrast": 0.4212784893987404,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 9,
+              "contrast": 0.2588009990181141,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.3577223557692308,
+            "plus_topology": 0.3577223557692308,
+            "plus_boundary": 0.3577223557692308,
+            "plus_cross_slice": 0.3484356219951923,
+            "plus_augmentation": 0.33824744591346156,
+            "all_available": 0.3317157451923077,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient079",
+          "split": "train",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient079/patient079_frame01.nii",
+          "image_sha256": "f00c2336bfd2b7dc788593108b32c03190ccb2ccbe7ea175fedf5e9c8cbe16cf",
+          "shape": [
+            216,
+            256,
+            9
+          ],
+          "header_spacing_unverified_units": [
+            1.3671900033950806,
+            1.3671900033950806,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.004629629629629629,
+            0.004629629629629629,
+            0.004629629629629629
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient079_frame01.npz",
+          "prediction_sha256": "9a0dcf93efead9296fa28a64178253e333b773fde57e1e1566297cff1335b437",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "contrast": 0.5196373711438951,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 1,
+              "contrast": 0.14118626223485636,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": false
+            },
+            {
+              "z": 2,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 3,
+              "contrast": 0.32831230325143235,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 4,
+              "contrast": 0.32752083079056304,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 5,
+              "contrast": 0.36674617821344263,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 6,
+              "contrast": 0.3083877302456293,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 7,
+              "contrast": 0.3084338401395761,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 8,
+              "contrast": 0.3273048379852346,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.1210475340792181,
+            "plus_topology": 0.1210475340792181,
+            "plus_boundary": 0.12065369405864197,
+            "plus_cross_slice": 0.11050628536522633,
+            "plus_augmentation": 0.06843573173868313,
+            "all_available": 0.06773847415123457,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient079",
+          "split": "train",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient079/patient079_frame11.nii",
+          "image_sha256": "17999cd7f14f18962c34f3a857f98738ec1f7804cb294882e3313424dd46ee8c",
+          "shape": [
+            216,
+            256,
+            9
+          ],
+          "header_spacing_unverified_units": [
+            1.3671900033950806,
+            1.3671900033950806,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.004629629629629629,
+            0.004629629629629629,
+            0.004629629629629629
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient079_frame11.npz",
+          "prediction_sha256": "f2039cb184c3ac696ab49424f55e7b7aef561551225d42c1269332d380e93a70",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "contrast": 0.5463577977777163,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 1,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 2,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 3,
+              "contrast": 0.21525228633794719,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 4,
+              "contrast": 0.22543401692806442,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 5,
+              "contrast": 0.19631415615963815,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 6,
+              "contrast": 0.12401783621952145,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": false
+            },
+            {
+              "z": 7,
+              "contrast": 0.22937737241404388,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 8,
+              "contrast": 0.16177667420264075,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.11415131494341564,
+            "plus_topology": 0.11415131494341564,
+            "plus_boundary": 0.113598733281893,
+            "plus_cross_slice": 0.10442788708847736,
+            "plus_augmentation": 0.06399498456790123,
+            "all_available": 0.06361119148662552,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient057",
+          "split": "train",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient057/patient057_frame01.nii",
+          "image_sha256": "9aecf847b3304413e61f629c334e9e84c14d1ee31cf76baf17ebc45b0b1144b3",
+          "shape": [
+            428,
+            512,
+            8
+          ],
+          "header_spacing_unverified_units": [
+            0.703125,
+            0.703125,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.002336448598130841,
+            0.002336448598130841,
+            0.002336448598130841
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient057_frame01.npz",
+          "prediction_sha256": "eca806e5419d8df6b8e46d9fd5754a7d095680dd45d1937862a8a55470518163",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "contrast": 0.3407220871909005,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 1,
+              "contrast": 0.3498151297948407,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 2,
+              "contrast": 0.2577552100300369,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 3,
+              "contrast": 0.23205996880912144,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 4,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 5,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 6,
+              "contrast": 0.3447847513668345,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 7,
+              "contrast": 0.28278129950039077,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.20913040303738317,
+            "plus_topology": 0.20913040303738317,
+            "plus_boundary": 0.20913040303738317,
+            "plus_cross_slice": 0.19956784827686916,
+            "plus_augmentation": 0.17729457962178738,
+            "all_available": 0.17325313960280375,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient057",
+          "split": "train",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient057/patient057_frame09.nii",
+          "image_sha256": "5c6ea06387616c82c8601b6bc84e149bd46cacab7e2ff06ee4a410f78b264691",
+          "shape": [
+            428,
+            512,
+            8
+          ],
+          "header_spacing_unverified_units": [
+            0.703125,
+            0.703125,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.002336448598130841,
+            0.002336448598130841,
+            0.002336448598130841
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient057_frame09.npz",
+          "prediction_sha256": "a049a9bc804444e699af6276988acbb0ac4f3f9059365e943e890ed70722fa05",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 1,
+              "contrast": 0.30521880561381803,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 2,
+              "contrast": 0.4127041630937215,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 3,
+              "contrast": 0.22079147431726653,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 4,
+              "contrast": 0.2512984232820466,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 5,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 6,
+              "contrast": 0.33334188197027614,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 7,
+              "reason": "no_unique_compact_bright_pool"
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.1994566159827687,
+            "plus_topology": 0.1994566159827687,
+            "plus_boundary": 0.1994566159827687,
+            "plus_cross_slice": 0.18521660064982476,
+            "plus_augmentation": 0.1638303382374416,
+            "all_available": 0.1610272844261098,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient018",
+          "split": "dev",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient018/patient018_frame01.nii",
+          "image_sha256": "36ea6bdb5197e51bf1f49ace74253bb9a120abb0111ba8cc4f6695d2854f08ea",
+          "shape": [
+            216,
+            256,
+            8
+          ],
+          "header_spacing_unverified_units": [
+            1.3671900033950806,
+            1.3671900033950806,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.004629629629629629,
+            0.004629629629629629,
+            0.004629629629629629
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient018_frame01.npz",
+          "prediction_sha256": "30922a4c45be86cda32f9eac951e2787d8dce3a7e663622183d30aebe86db170",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "contrast": 0.4490531239961586,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 1,
+              "contrast": 0.44888326940966394,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 2,
+              "contrast": 0.4784928360175626,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 3,
+              "contrast": 0.5093377251058407,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 4,
+              "contrast": 0.48765506082702004,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 5,
+              "contrast": 0.46876261934563235,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 6,
+              "contrast": 0.4941439752343499,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 7,
+              "contrast": 0.46899976294495355,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.12610993561921297,
+            "plus_topology": 0.12610993561921297,
+            "plus_boundary": 0.12610993561921297,
+            "plus_cross_slice": 0.11784532335069445,
+            "plus_augmentation": 0.07665111400462964,
+            "all_available": 0.07193784360532407,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient018",
+          "split": "dev",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient018/patient018_frame10.nii",
+          "image_sha256": "8f0b8ab0819c05b8b133218f933d78647b2755c33b4f4f99a4b96e8c55ed2a60",
+          "shape": [
+            216,
+            256,
+            8
+          ],
+          "header_spacing_unverified_units": [
+            1.3671900033950806,
+            1.3671900033950806,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.004629629629629629,
+            0.004629629629629629,
+            0.004629629629629629
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient018_frame10.npz",
+          "prediction_sha256": "b632a5501f69d284e9cf04cf02a96ef9e2df86bac90bc23aacbfee1b873a9ec4",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "contrast": 0.41996139595520954,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 1,
+              "contrast": 0.42781901335354544,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 2,
+              "contrast": 0.44248865085809314,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 3,
+              "contrast": 0.45511564291273016,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 4,
+              "contrast": 0.445758048012676,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 5,
+              "contrast": 0.4776402587822725,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 6,
+              "contrast": 0.5158209934647374,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 7,
+              "contrast": 0.5088570875186774,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.14515290436921297,
+            "plus_topology": 0.14515290436921297,
+            "plus_boundary": 0.14515290436921297,
+            "plus_cross_slice": 0.13363082320601852,
+            "plus_augmentation": 0.0941162109375,
+            "all_available": 0.08841733579282407,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient030",
+          "split": "dev",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient030/patient030_frame01.nii",
+          "image_sha256": "f3a94a5d8f8470c84ad103d24ef437286b7397b3efb1953dfda59636b431931a",
+          "shape": [
+            216,
+            256,
+            10
+          ],
+          "header_spacing_unverified_units": [
+            1.4453125,
+            1.4453125,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.004629629629629629,
+            0.004629629629629629,
+            0.004629629629629629
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient030_frame01.npz",
+          "prediction_sha256": "980045fa9f926af6fb7edae1bc0af339a690c4b50eaad5dd4e47787b0f2808f0",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "contrast": 0.5433962505812251,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 1,
+              "contrast": 0.4081243698700883,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 2,
+              "contrast": 0.5472329618957471,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 3,
+              "contrast": 0.5140482952517761,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 4,
+              "contrast": 0.4681442994434334,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 5,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 6,
+              "contrast": 0.43787000359812356,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 7,
+              "contrast": 0.42939678023461847,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 8,
+              "contrast": 0.4216885488801132,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 9,
+              "reason": "no_unique_compact_bright_pool"
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.24137369791666666,
+            "plus_topology": 0.24137369791666666,
+            "plus_boundary": 0.24137369791666666,
+            "plus_cross_slice": 0.2333912037037037,
+            "plus_augmentation": 0.19198133680555557,
+            "all_available": 0.18909866898148148,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient030",
+          "split": "dev",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient030/patient030_frame12.nii",
+          "image_sha256": "132774f1477d17b241108ee854328ac31d8c39e63c8d59e7fd2721bed89b11a0",
+          "shape": [
+            216,
+            256,
+            10
+          ],
+          "header_spacing_unverified_units": [
+            1.4453125,
+            1.4453125,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.004629629629629629,
+            0.004629629629629629,
+            0.004629629629629629
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient030_frame12.npz",
+          "prediction_sha256": "9a453b447bff8e63b7c202f21e9664e5d37b115d925e75c9c3381ae36d734e09",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "contrast": 0.5324122360734986,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 1,
+              "contrast": 0.416646298114274,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 2,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 3,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 4,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 5,
+              "contrast": 0.14254524852840011,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": false
+            },
+            {
+              "z": 6,
+              "contrast": 0.36154775707711756,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 7,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 8,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 9,
+              "reason": "no_unique_compact_bright_pool"
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.2339138454861111,
+            "plus_topology": 0.2339138454861111,
+            "plus_boundary": 0.23348705150462962,
+            "plus_cross_slice": 0.23183232060185185,
+            "plus_augmentation": 0.18513816550925927,
+            "all_available": 0.18366789641203704,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient070",
+          "split": "dev",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient070/patient070_frame01.nii",
+          "image_sha256": "2fb8b2546c91b446d97fdae313a99b96120780aabbc9161cf69c021948612611",
+          "shape": [
+            208,
+            256,
+            6
+          ],
+          "header_spacing_unverified_units": [
+            1.5625,
+            1.5625,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.004807692307692308,
+            0.004807692307692308,
+            0.004807692307692308
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient070_frame01.npz",
+          "prediction_sha256": "d99f865cb0ba7cc2f057d68e6ad69884797584794e7c6f2730ae380185826824",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "contrast": 0.40152576776644,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 1,
+              "contrast": 0.3437607124703239,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 2,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 3,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 4,
+              "contrast": 0.2758074289441658,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 5,
+              "contrast": 0.2682428942289324,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.09847944210737179,
+            "plus_topology": 0.09847944210737179,
+            "plus_boundary": 0.09847944210737179,
+            "plus_cross_slice": 0.09310521834935898,
+            "plus_augmentation": 0.07792154947916667,
+            "all_available": 0.07466634114583333,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient070",
+          "split": "dev",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient070/patient070_frame10.nii",
+          "image_sha256": "31953c00cdd1767b4adc6fc4565ef29effac8fc5b51c16b3d83ec7d294c15b91",
+          "shape": [
+            208,
+            256,
+            6
+          ],
+          "header_spacing_unverified_units": [
+            1.5625,
+            1.5625,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.004807692307692308,
+            0.004807692307692308,
+            0.004807692307692308
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient070_frame10.npz",
+          "prediction_sha256": "ab3ea79672490b6d1ab4bcaa437417bc02bc3b13df5d705540993695481c504f",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "contrast": 0.3548269121367219,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 1,
+              "contrast": 0.3021470314876398,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 2,
+              "contrast": 0.24020455904630222,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 3,
+              "contrast": 0.23346499906110785,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 4,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 5,
+              "reason": "no_unique_compact_bright_pool"
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.09887069310897435,
+            "plus_topology": 0.09887069310897435,
+            "plus_boundary": 0.09887069310897435,
+            "plus_cross_slice": 0.09620079627403846,
+            "plus_augmentation": 0.08591871995192307,
+            "all_available": 0.08559319911858974,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient076",
+          "split": "dev",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient076/patient076_frame01.nii",
+          "image_sha256": "5974b2ecd0dbbcef008cde777f6a7191d28bba8a09040b7929a08a6c891f1d44",
+          "shape": [
+            256,
+            256,
+            8
+          ],
+          "header_spacing_unverified_units": [
+            1.5625,
+            1.5625,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.00390625,
+            0.00390625,
+            0.00390625
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient076_frame01.npz",
+          "prediction_sha256": "da90a590f0b897f15663409cd1b2fd933f5e211e6bd32e16a764ff779dfd8b9e",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "contrast": 0.44609493317361676,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 1,
+              "contrast": 0.3943546396506039,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 2,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 3,
+              "contrast": 0.3855792862614738,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 4,
+              "contrast": 0.4215324589566305,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 5,
+              "contrast": 0.43135623085579794,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 6,
+              "contrast": 0.468285977346832,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 7,
+              "contrast": 0.43145620115082955,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.11330223083496094,
+            "plus_topology": 0.11330223083496094,
+            "plus_boundary": 0.11330223083496094,
+            "plus_cross_slice": 0.10144233703613281,
+            "plus_augmentation": 0.05994224548339844,
+            "all_available": 0.05354499816894531,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient076",
+          "split": "dev",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient076/patient076_frame12.nii",
+          "image_sha256": "9c8caeb6a02cdc736475e7fe818e853552b2c810e6f8942d2c120923b48b945a",
+          "shape": [
+            256,
+            256,
+            8
+          ],
+          "header_spacing_unverified_units": [
+            1.5625,
+            1.5625,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.00390625,
+            0.00390625,
+            0.00390625
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient076_frame12.npz",
+          "prediction_sha256": "f44bf0a6f9bd138285c9c5fde86d62372d0788bd273dc0ebe3b6e2dc52e88dc5",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 1,
+              "contrast": 0.34399389356700943,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 2,
+              "contrast": 0.3756862733493678,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 3,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 4,
+              "contrast": 0.3742377103217628,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 5,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 6,
+              "contrast": 0.1682531922160847,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 7,
+              "reason": "no_unique_compact_bright_pool"
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.10217857360839844,
+            "plus_topology": 0.10217857360839844,
+            "plus_boundary": 0.10217857360839844,
+            "plus_cross_slice": 0.09575843811035156,
+            "plus_augmentation": 0.05109977722167969,
+            "all_available": 0.0501556396484375,
+            "unknown_control": 0.0
+          }
+        }
+      ],
+      "source_reads": [
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient093/patient093_frame01.nii",
+          "purpose": "image_copy",
+          "sha256": "5181f995a07cad1a6ce489ddebae7f8c8a6812b019d445963fc7309dc9c1803e"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient093/patient093_frame14.nii",
+          "purpose": "image_copy",
+          "sha256": "83d92662a139ebb8cf755f98146ef2e9b912710af7ec3d3120b843dc395d6629"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient010/patient010_frame01.nii",
+          "purpose": "image_copy",
+          "sha256": "18c7e3e26da5213c327ca4b631cf12797d92108a19cc00ed585e6005d9ee2b07"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient010/patient010_frame13.nii",
+          "purpose": "image_copy",
+          "sha256": "8b4f4eda8e2f46c6779e48e725af3b0c9bcd1b7b0dfbaebed00b9c7828c17fa2"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient079/patient079_frame01.nii",
+          "purpose": "image_copy",
+          "sha256": "f00c2336bfd2b7dc788593108b32c03190ccb2ccbe7ea175fedf5e9c8cbe16cf"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient079/patient079_frame11.nii",
+          "purpose": "image_copy",
+          "sha256": "17999cd7f14f18962c34f3a857f98738ec1f7804cb294882e3313424dd46ee8c"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient057/patient057_frame01.nii",
+          "purpose": "image_copy",
+          "sha256": "9aecf847b3304413e61f629c334e9e84c14d1ee31cf76baf17ebc45b0b1144b3"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient057/patient057_frame09.nii",
+          "purpose": "image_copy",
+          "sha256": "5c6ea06387616c82c8601b6bc84e149bd46cacab7e2ff06ee4a410f78b264691"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient018/patient018_frame01.nii",
+          "purpose": "image_copy",
+          "sha256": "36ea6bdb5197e51bf1f49ace74253bb9a120abb0111ba8cc4f6695d2854f08ea"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient018/patient018_frame10.nii",
+          "purpose": "image_copy",
+          "sha256": "8f0b8ab0819c05b8b133218f933d78647b2755c33b4f4f99a4b96e8c55ed2a60"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient030/patient030_frame01.nii",
+          "purpose": "image_copy",
+          "sha256": "f3a94a5d8f8470c84ad103d24ef437286b7397b3efb1953dfda59636b431931a"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient030/patient030_frame12.nii",
+          "purpose": "image_copy",
+          "sha256": "132774f1477d17b241108ee854328ac31d8c39e63c8d59e7fd2721bed89b11a0"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient070/patient070_frame01.nii",
+          "purpose": "image_copy",
+          "sha256": "2fb8b2546c91b446d97fdae313a99b96120780aabbc9161cf69c021948612611"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient070/patient070_frame10.nii",
+          "purpose": "image_copy",
+          "sha256": "31953c00cdd1767b4adc6fc4565ef29effac8fc5b51c16b3d83ec7d294c15b91"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient076/patient076_frame01.nii",
+          "purpose": "image_copy",
+          "sha256": "5974b2ecd0dbbcef008cde777f6a7191d28bba8a09040b7929a08a6c891f1d44"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient076/patient076_frame12.nii",
+          "purpose": "image_copy",
+          "sha256": "9c8caeb6a02cdc736475e7fe818e853552b2c810e6f8942d2c120923b48b945a"
+        }
+      ],
+      "gt_opened_by_generator": false,
+      "observed_data_opens": [
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient010_frame01.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient010_frame13.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient018_frame01.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient018_frame10.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient030_frame01.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient030_frame12.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient057_frame01.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient057_frame09.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient070_frame01.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient070_frame10.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient076_frame01.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient076_frame12.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient079_frame01.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient079_frame11.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient093_frame01.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient093_frame14.nii"
+      ],
+      "versions": {
+        "numpy": "2.4.6",
+        "scipy": "1.17.1",
+        "skimage": "0.26.0",
+        "nibabel": "5.4.2"
+      },
+      "cue_availability": {
+        "motion": "NOT RUN: no full cine",
+        "full_cycle": "NOT RUN: no full cine",
+        "orientation": "NOT RUN: insufficient native geometry provenance"
+      },
+      "semantic_source": "explicit bright compact pool, surrounding darker annulus, adjacent bright pool; dimensionless image priors; not learned or verified"
+    }
+  },
+  "after": {
+    "verified_utc_start": "2026-09-20T16:27:09.872626+00:00",
+    "verified_utc_end": "2026-09-20T16:27:09.887499+00:00",
+    "manifest_sha256": "c0be95e4f3e6bf63277e576f80f0d89aacc949b48630bf211883e786d141196e",
+    "config_sha256": "c8ec87720cbea78ff3b6b287e888e79d5a379e3da8903e7b0ac32329295c9dfc",
+    "script_sha256": "acdea9e6127afa1212a6a2816ceb3585187d223d7eb265ef2fd66f6b9414d7f4",
+    "split_sha256": "bc42574017276a6defc668bf533330fd41a64a5e90a75ea1b8958fc9e469265a",
+    "records_count": 16,
+    "manifest_data": {
+      "schema": "astra-v3-r0-frozen-v1",
+      "experiment_id": "astra-v3-r0-dimensionless-seeds-20260920-v2",
+      "frozen_utc": "2026-09-20T16:17:58.062889+00:00",
+      "base_commit": "d4f503b7107eca4e8ac85f37a5dd01ec50479666",
+      "config_path": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/config.json",
+      "config_sha256": "c8ec87720cbea78ff3b6b287e888e79d5a379e3da8903e7b0ac32329295c9dfc",
+      "script_path": "/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit/reports/astra_v3/evidence/run_round0_seeds_dimensionless.py",
+      "script_sha256": "acdea9e6127afa1212a6a2816ceb3585187d223d7eb265ef2fd66f6b9414d7f4",
+      "split_path": "/tmp/astra_event_acdc_training/acdc_patient_split_seed42.json",
+      "split_sha256": "bc42574017276a6defc668bf533330fd41a64a5e90a75ea1b8958fc9e469265a",
+      "records": [
+        {
+          "patient_id": "patient093",
+          "split": "train",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient093/patient093_frame01.nii",
+          "image_sha256": "5181f995a07cad1a6ce489ddebae7f8c8a6812b019d445963fc7309dc9c1803e",
+          "shape": [
+            180,
+            224,
+            10
+          ],
+          "header_spacing_unverified_units": [
+            1.5625,
+            1.5625,
+            7.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.005555555555555556,
+            0.005555555555555556,
+            0.005555555555555556
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient093_frame01.npz",
+          "prediction_sha256": "0d2ce8bd6376893d5873f42980980dd000220d6520f38c2c7489d00b5b91b2b8",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 1,
+              "contrast": 0.5150785598815424,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 2,
+              "contrast": 0.5132677272834925,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 3,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 4,
+              "contrast": 0.5407980016700349,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 5,
+              "contrast": 0.5617618585257693,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 6,
+              "contrast": 0.570131254560801,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 7,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 8,
+              "contrast": 0.491636418435149,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 9,
+              "contrast": 0.39585045576692374,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.1565625,
+            "plus_topology": 0.1565625,
+            "plus_boundary": 0.1565625,
+            "plus_cross_slice": 0.14078869047619047,
+            "plus_augmentation": 0.09160218253968254,
+            "all_available": 0.08898065476190477,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient093",
+          "split": "train",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient093/patient093_frame14.nii",
+          "image_sha256": "83d92662a139ebb8cf755f98146ef2e9b912710af7ec3d3120b843dc395d6629",
+          "shape": [
+            180,
+            224,
+            10
+          ],
+          "header_spacing_unverified_units": [
+            1.5625,
+            1.5625,
+            7.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.005555555555555556,
+            0.005555555555555556,
+            0.005555555555555556
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient093_frame14.npz",
+          "prediction_sha256": "0a2506a0dd988afe783eab8d5778cc3832469281739271b8cbb1493897ea5527",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "contrast": 0.44768979995507946,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 1,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 2,
+              "contrast": 0.4365527672859972,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 3,
+              "contrast": 0.5467649397011483,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 4,
+              "contrast": 0.39194327206342033,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 5,
+              "contrast": 0.43442779748111376,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 6,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 7,
+              "contrast": 0.42908825344467527,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 8,
+              "contrast": 0.3482685839055436,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 9,
+              "reason": "no_unique_compact_bright_pool"
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.08645337301587301,
+            "plus_topology": 0.08645337301587301,
+            "plus_boundary": 0.08645337301587301,
+            "plus_cross_slice": 0.07690724206349206,
+            "plus_augmentation": 0.05543650793650794,
+            "all_available": 0.04823164682539682,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient010",
+          "split": "train",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient010/patient010_frame01.nii",
+          "image_sha256": "18c7e3e26da5213c327ca4b631cf12797d92108a19cc00ed585e6005d9ee2b07",
+          "shape": [
+            208,
+            256,
+            10
+          ],
+          "header_spacing_unverified_units": [
+            1.5625,
+            1.5625,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.004807692307692308,
+            0.004807692307692308,
+            0.004807692307692308
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient010_frame01.npz",
+          "prediction_sha256": "3e9f2706e4cc289235644e8325cc94e917b487be68ffc46a7195f9618dd9076e",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "contrast": 0.43784054876976086,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 1,
+              "contrast": 0.4881830371077272,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 2,
+              "contrast": 0.47832390078881526,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 3,
+              "contrast": 0.4699563572439548,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 4,
+              "contrast": 0.4567764873256971,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 5,
+              "contrast": 0.4427228537264644,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 6,
+              "contrast": 0.45181289716815315,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 7,
+              "contrast": 0.3885507815501665,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 8,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 9,
+              "contrast": 0.32301487924989536,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.36243802584134616,
+            "plus_topology": 0.36243802584134616,
+            "plus_boundary": 0.36243802584134616,
+            "plus_cross_slice": 0.35680964543269234,
+            "plus_augmentation": 0.3435452974759615,
+            "all_available": 0.3402869591346154,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient010",
+          "split": "train",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient010/patient010_frame13.nii",
+          "image_sha256": "8b4f4eda8e2f46c6779e48e725af3b0c9bcd1b7b0dfbaebed00b9c7828c17fa2",
+          "shape": [
+            208,
+            256,
+            10
+          ],
+          "header_spacing_unverified_units": [
+            1.5625,
+            1.5625,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.004807692307692308,
+            0.004807692307692308,
+            0.004807692307692308
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient010_frame13.npz",
+          "prediction_sha256": "089b57ec69a847953d8dc0b9ef5085f7cb58079e7b8652830c907de5f816607f",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 1,
+              "contrast": 0.3938521654734525,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 2,
+              "contrast": 0.4245588330913628,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 3,
+              "contrast": 0.44115121297974363,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 4,
+              "contrast": 0.43722827126916686,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 5,
+              "contrast": 0.4353290146184535,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 6,
+              "contrast": 0.4200015302082579,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 7,
+              "contrast": 0.3663221870125728,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 8,
+              "contrast": 0.4212784893987404,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 9,
+              "contrast": 0.2588009990181141,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.3577223557692308,
+            "plus_topology": 0.3577223557692308,
+            "plus_boundary": 0.3577223557692308,
+            "plus_cross_slice": 0.3484356219951923,
+            "plus_augmentation": 0.33824744591346156,
+            "all_available": 0.3317157451923077,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient079",
+          "split": "train",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient079/patient079_frame01.nii",
+          "image_sha256": "f00c2336bfd2b7dc788593108b32c03190ccb2ccbe7ea175fedf5e9c8cbe16cf",
+          "shape": [
+            216,
+            256,
+            9
+          ],
+          "header_spacing_unverified_units": [
+            1.3671900033950806,
+            1.3671900033950806,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.004629629629629629,
+            0.004629629629629629,
+            0.004629629629629629
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient079_frame01.npz",
+          "prediction_sha256": "9a0dcf93efead9296fa28a64178253e333b773fde57e1e1566297cff1335b437",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "contrast": 0.5196373711438951,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 1,
+              "contrast": 0.14118626223485636,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": false
+            },
+            {
+              "z": 2,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 3,
+              "contrast": 0.32831230325143235,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 4,
+              "contrast": 0.32752083079056304,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 5,
+              "contrast": 0.36674617821344263,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 6,
+              "contrast": 0.3083877302456293,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 7,
+              "contrast": 0.3084338401395761,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 8,
+              "contrast": 0.3273048379852346,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.1210475340792181,
+            "plus_topology": 0.1210475340792181,
+            "plus_boundary": 0.12065369405864197,
+            "plus_cross_slice": 0.11050628536522633,
+            "plus_augmentation": 0.06843573173868313,
+            "all_available": 0.06773847415123457,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient079",
+          "split": "train",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient079/patient079_frame11.nii",
+          "image_sha256": "17999cd7f14f18962c34f3a857f98738ec1f7804cb294882e3313424dd46ee8c",
+          "shape": [
+            216,
+            256,
+            9
+          ],
+          "header_spacing_unverified_units": [
+            1.3671900033950806,
+            1.3671900033950806,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.004629629629629629,
+            0.004629629629629629,
+            0.004629629629629629
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient079_frame11.npz",
+          "prediction_sha256": "f2039cb184c3ac696ab49424f55e7b7aef561551225d42c1269332d380e93a70",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "contrast": 0.5463577977777163,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 1,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 2,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 3,
+              "contrast": 0.21525228633794719,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 4,
+              "contrast": 0.22543401692806442,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 5,
+              "contrast": 0.19631415615963815,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 6,
+              "contrast": 0.12401783621952145,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": false
+            },
+            {
+              "z": 7,
+              "contrast": 0.22937737241404388,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 8,
+              "contrast": 0.16177667420264075,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.11415131494341564,
+            "plus_topology": 0.11415131494341564,
+            "plus_boundary": 0.113598733281893,
+            "plus_cross_slice": 0.10442788708847736,
+            "plus_augmentation": 0.06399498456790123,
+            "all_available": 0.06361119148662552,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient057",
+          "split": "train",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient057/patient057_frame01.nii",
+          "image_sha256": "9aecf847b3304413e61f629c334e9e84c14d1ee31cf76baf17ebc45b0b1144b3",
+          "shape": [
+            428,
+            512,
+            8
+          ],
+          "header_spacing_unverified_units": [
+            0.703125,
+            0.703125,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.002336448598130841,
+            0.002336448598130841,
+            0.002336448598130841
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient057_frame01.npz",
+          "prediction_sha256": "eca806e5419d8df6b8e46d9fd5754a7d095680dd45d1937862a8a55470518163",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "contrast": 0.3407220871909005,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 1,
+              "contrast": 0.3498151297948407,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 2,
+              "contrast": 0.2577552100300369,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 3,
+              "contrast": 0.23205996880912144,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 4,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 5,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 6,
+              "contrast": 0.3447847513668345,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 7,
+              "contrast": 0.28278129950039077,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.20913040303738317,
+            "plus_topology": 0.20913040303738317,
+            "plus_boundary": 0.20913040303738317,
+            "plus_cross_slice": 0.19956784827686916,
+            "plus_augmentation": 0.17729457962178738,
+            "all_available": 0.17325313960280375,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient057",
+          "split": "train",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient057/patient057_frame09.nii",
+          "image_sha256": "5c6ea06387616c82c8601b6bc84e149bd46cacab7e2ff06ee4a410f78b264691",
+          "shape": [
+            428,
+            512,
+            8
+          ],
+          "header_spacing_unverified_units": [
+            0.703125,
+            0.703125,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.002336448598130841,
+            0.002336448598130841,
+            0.002336448598130841
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient057_frame09.npz",
+          "prediction_sha256": "a049a9bc804444e699af6276988acbb0ac4f3f9059365e943e890ed70722fa05",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 1,
+              "contrast": 0.30521880561381803,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 2,
+              "contrast": 0.4127041630937215,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 3,
+              "contrast": 0.22079147431726653,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 4,
+              "contrast": 0.2512984232820466,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 5,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 6,
+              "contrast": 0.33334188197027614,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 7,
+              "reason": "no_unique_compact_bright_pool"
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.1994566159827687,
+            "plus_topology": 0.1994566159827687,
+            "plus_boundary": 0.1994566159827687,
+            "plus_cross_slice": 0.18521660064982476,
+            "plus_augmentation": 0.1638303382374416,
+            "all_available": 0.1610272844261098,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient018",
+          "split": "dev",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient018/patient018_frame01.nii",
+          "image_sha256": "36ea6bdb5197e51bf1f49ace74253bb9a120abb0111ba8cc4f6695d2854f08ea",
+          "shape": [
+            216,
+            256,
+            8
+          ],
+          "header_spacing_unverified_units": [
+            1.3671900033950806,
+            1.3671900033950806,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.004629629629629629,
+            0.004629629629629629,
+            0.004629629629629629
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient018_frame01.npz",
+          "prediction_sha256": "30922a4c45be86cda32f9eac951e2787d8dce3a7e663622183d30aebe86db170",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "contrast": 0.4490531239961586,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 1,
+              "contrast": 0.44888326940966394,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 2,
+              "contrast": 0.4784928360175626,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 3,
+              "contrast": 0.5093377251058407,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 4,
+              "contrast": 0.48765506082702004,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 5,
+              "contrast": 0.46876261934563235,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 6,
+              "contrast": 0.4941439752343499,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 7,
+              "contrast": 0.46899976294495355,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.12610993561921297,
+            "plus_topology": 0.12610993561921297,
+            "plus_boundary": 0.12610993561921297,
+            "plus_cross_slice": 0.11784532335069445,
+            "plus_augmentation": 0.07665111400462964,
+            "all_available": 0.07193784360532407,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient018",
+          "split": "dev",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient018/patient018_frame10.nii",
+          "image_sha256": "8f0b8ab0819c05b8b133218f933d78647b2755c33b4f4f99a4b96e8c55ed2a60",
+          "shape": [
+            216,
+            256,
+            8
+          ],
+          "header_spacing_unverified_units": [
+            1.3671900033950806,
+            1.3671900033950806,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.004629629629629629,
+            0.004629629629629629,
+            0.004629629629629629
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient018_frame10.npz",
+          "prediction_sha256": "b632a5501f69d284e9cf04cf02a96ef9e2df86bac90bc23aacbfee1b873a9ec4",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "contrast": 0.41996139595520954,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 1,
+              "contrast": 0.42781901335354544,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 2,
+              "contrast": 0.44248865085809314,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 3,
+              "contrast": 0.45511564291273016,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 4,
+              "contrast": 0.445758048012676,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 5,
+              "contrast": 0.4776402587822725,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 6,
+              "contrast": 0.5158209934647374,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 7,
+              "contrast": 0.5088570875186774,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.14515290436921297,
+            "plus_topology": 0.14515290436921297,
+            "plus_boundary": 0.14515290436921297,
+            "plus_cross_slice": 0.13363082320601852,
+            "plus_augmentation": 0.0941162109375,
+            "all_available": 0.08841733579282407,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient030",
+          "split": "dev",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient030/patient030_frame01.nii",
+          "image_sha256": "f3a94a5d8f8470c84ad103d24ef437286b7397b3efb1953dfda59636b431931a",
+          "shape": [
+            216,
+            256,
+            10
+          ],
+          "header_spacing_unverified_units": [
+            1.4453125,
+            1.4453125,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.004629629629629629,
+            0.004629629629629629,
+            0.004629629629629629
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient030_frame01.npz",
+          "prediction_sha256": "980045fa9f926af6fb7edae1bc0af339a690c4b50eaad5dd4e47787b0f2808f0",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "contrast": 0.5433962505812251,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 1,
+              "contrast": 0.4081243698700883,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 2,
+              "contrast": 0.5472329618957471,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 3,
+              "contrast": 0.5140482952517761,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 4,
+              "contrast": 0.4681442994434334,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 5,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 6,
+              "contrast": 0.43787000359812356,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 7,
+              "contrast": 0.42939678023461847,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 8,
+              "contrast": 0.4216885488801132,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 9,
+              "reason": "no_unique_compact_bright_pool"
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.24137369791666666,
+            "plus_topology": 0.24137369791666666,
+            "plus_boundary": 0.24137369791666666,
+            "plus_cross_slice": 0.2333912037037037,
+            "plus_augmentation": 0.19198133680555557,
+            "all_available": 0.18909866898148148,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient030",
+          "split": "dev",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient030/patient030_frame12.nii",
+          "image_sha256": "132774f1477d17b241108ee854328ac31d8c39e63c8d59e7fd2721bed89b11a0",
+          "shape": [
+            216,
+            256,
+            10
+          ],
+          "header_spacing_unverified_units": [
+            1.4453125,
+            1.4453125,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.004629629629629629,
+            0.004629629629629629,
+            0.004629629629629629
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient030_frame12.npz",
+          "prediction_sha256": "9a453b447bff8e63b7c202f21e9664e5d37b115d925e75c9c3381ae36d734e09",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "contrast": 0.5324122360734986,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 1,
+              "contrast": 0.416646298114274,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 2,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 3,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 4,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 5,
+              "contrast": 0.14254524852840011,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": false
+            },
+            {
+              "z": 6,
+              "contrast": 0.36154775707711756,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 7,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 8,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 9,
+              "reason": "no_unique_compact_bright_pool"
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.2339138454861111,
+            "plus_topology": 0.2339138454861111,
+            "plus_boundary": 0.23348705150462962,
+            "plus_cross_slice": 0.23183232060185185,
+            "plus_augmentation": 0.18513816550925927,
+            "all_available": 0.18366789641203704,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient070",
+          "split": "dev",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient070/patient070_frame01.nii",
+          "image_sha256": "2fb8b2546c91b446d97fdae313a99b96120780aabbc9161cf69c021948612611",
+          "shape": [
+            208,
+            256,
+            6
+          ],
+          "header_spacing_unverified_units": [
+            1.5625,
+            1.5625,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.004807692307692308,
+            0.004807692307692308,
+            0.004807692307692308
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient070_frame01.npz",
+          "prediction_sha256": "d99f865cb0ba7cc2f057d68e6ad69884797584794e7c6f2730ae380185826824",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "contrast": 0.40152576776644,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 1,
+              "contrast": 0.3437607124703239,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 2,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 3,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 4,
+              "contrast": 0.2758074289441658,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 5,
+              "contrast": 0.2682428942289324,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.09847944210737179,
+            "plus_topology": 0.09847944210737179,
+            "plus_boundary": 0.09847944210737179,
+            "plus_cross_slice": 0.09310521834935898,
+            "plus_augmentation": 0.07792154947916667,
+            "all_available": 0.07466634114583333,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient070",
+          "split": "dev",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient070/patient070_frame10.nii",
+          "image_sha256": "31953c00cdd1767b4adc6fc4565ef29effac8fc5b51c16b3d83ec7d294c15b91",
+          "shape": [
+            208,
+            256,
+            6
+          ],
+          "header_spacing_unverified_units": [
+            1.5625,
+            1.5625,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.004807692307692308,
+            0.004807692307692308,
+            0.004807692307692308
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient070_frame10.npz",
+          "prediction_sha256": "ab3ea79672490b6d1ab4bcaa437417bc02bc3b13df5d705540993695481c504f",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "contrast": 0.3548269121367219,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 1,
+              "contrast": 0.3021470314876398,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 2,
+              "contrast": 0.24020455904630222,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 3,
+              "contrast": 0.23346499906110785,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 4,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 5,
+              "reason": "no_unique_compact_bright_pool"
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.09887069310897435,
+            "plus_topology": 0.09887069310897435,
+            "plus_boundary": 0.09887069310897435,
+            "plus_cross_slice": 0.09620079627403846,
+            "plus_augmentation": 0.08591871995192307,
+            "all_available": 0.08559319911858974,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient076",
+          "split": "dev",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient076/patient076_frame01.nii",
+          "image_sha256": "5974b2ecd0dbbcef008cde777f6a7191d28bba8a09040b7929a08a6c891f1d44",
+          "shape": [
+            256,
+            256,
+            8
+          ],
+          "header_spacing_unverified_units": [
+            1.5625,
+            1.5625,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.00390625,
+            0.00390625,
+            0.00390625
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient076_frame01.npz",
+          "prediction_sha256": "da90a590f0b897f15663409cd1b2fd933f5e211e6bd32e16a764ff779dfd8b9e",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "contrast": 0.44609493317361676,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 1,
+              "contrast": 0.3943546396506039,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 2,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 3,
+              "contrast": 0.3855792862614738,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 4,
+              "contrast": 0.4215324589566305,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 5,
+              "contrast": 0.43135623085579794,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 6,
+              "contrast": 0.468285977346832,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 7,
+              "contrast": 0.43145620115082955,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.11330223083496094,
+            "plus_topology": 0.11330223083496094,
+            "plus_boundary": 0.11330223083496094,
+            "plus_cross_slice": 0.10144233703613281,
+            "plus_augmentation": 0.05994224548339844,
+            "all_available": 0.05354499816894531,
+            "unknown_control": 0.0
+          }
+        },
+        {
+          "patient_id": "patient076",
+          "split": "dev",
+          "source_image": "/tmp/astra_event_acdc_training/training/patient076/patient076_frame12.nii",
+          "image_sha256": "9c8caeb6a02cdc736475e7fe818e853552b2c810e6f8942d2c120923b48b945a",
+          "shape": [
+            256,
+            256,
+            8
+          ],
+          "header_spacing_unverified_units": [
+            1.5625,
+            1.5625,
+            10.0
+          ],
+          "units": [
+            "unknown",
+            "unknown"
+          ],
+          "model_grid_spacing": [
+            0.00390625,
+            0.00390625,
+            0.00390625
+          ],
+          "affine": [
+            [
+              -1.0,
+              -0.0,
+              0.0,
+              0.0
+            ],
+            [
+              -0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "orientation": [
+            "L",
+            "P",
+            "S"
+          ],
+          "prediction": "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/predictions/patient076_frame12.npz",
+          "prediction_sha256": "f44bf0a6f9bd138285c9c5fde86d62372d0788bd273dc0ebe3b6e2dc52e88dc5",
+          "slice_diagnostics": [
+            {
+              "z": 0,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 1,
+              "contrast": 0.34399389356700943,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 2,
+              "contrast": 0.3756862733493678,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 3,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 4,
+              "contrast": 0.3742377103217628,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 5,
+              "reason": "no_unique_compact_bright_pool"
+            },
+            {
+              "z": 6,
+              "contrast": 0.1682531922160847,
+              "orientation_ok": false,
+              "topology_ok": true,
+              "boundary_ok": true
+            },
+            {
+              "z": 7,
+              "reason": "no_unique_compact_bright_pool"
+            }
+          ],
+          "coverage": {
+            "appearance_anchor": 0.10217857360839844,
+            "plus_topology": 0.10217857360839844,
+            "plus_boundary": 0.10217857360839844,
+            "plus_cross_slice": 0.09575843811035156,
+            "plus_augmentation": 0.05109977722167969,
+            "all_available": 0.0501556396484375,
+            "unknown_control": 0.0
+          }
+        }
+      ],
+      "source_reads": [
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient093/patient093_frame01.nii",
+          "purpose": "image_copy",
+          "sha256": "5181f995a07cad1a6ce489ddebae7f8c8a6812b019d445963fc7309dc9c1803e"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient093/patient093_frame14.nii",
+          "purpose": "image_copy",
+          "sha256": "83d92662a139ebb8cf755f98146ef2e9b912710af7ec3d3120b843dc395d6629"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient010/patient010_frame01.nii",
+          "purpose": "image_copy",
+          "sha256": "18c7e3e26da5213c327ca4b631cf12797d92108a19cc00ed585e6005d9ee2b07"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient010/patient010_frame13.nii",
+          "purpose": "image_copy",
+          "sha256": "8b4f4eda8e2f46c6779e48e725af3b0c9bcd1b7b0dfbaebed00b9c7828c17fa2"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient079/patient079_frame01.nii",
+          "purpose": "image_copy",
+          "sha256": "f00c2336bfd2b7dc788593108b32c03190ccb2ccbe7ea175fedf5e9c8cbe16cf"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient079/patient079_frame11.nii",
+          "purpose": "image_copy",
+          "sha256": "17999cd7f14f18962c34f3a857f98738ec1f7804cb294882e3313424dd46ee8c"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient057/patient057_frame01.nii",
+          "purpose": "image_copy",
+          "sha256": "9aecf847b3304413e61f629c334e9e84c14d1ee31cf76baf17ebc45b0b1144b3"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient057/patient057_frame09.nii",
+          "purpose": "image_copy",
+          "sha256": "5c6ea06387616c82c8601b6bc84e149bd46cacab7e2ff06ee4a410f78b264691"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient018/patient018_frame01.nii",
+          "purpose": "image_copy",
+          "sha256": "36ea6bdb5197e51bf1f49ace74253bb9a120abb0111ba8cc4f6695d2854f08ea"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient018/patient018_frame10.nii",
+          "purpose": "image_copy",
+          "sha256": "8f0b8ab0819c05b8b133218f933d78647b2755c33b4f4f99a4b96e8c55ed2a60"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient030/patient030_frame01.nii",
+          "purpose": "image_copy",
+          "sha256": "f3a94a5d8f8470c84ad103d24ef437286b7397b3efb1953dfda59636b431931a"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient030/patient030_frame12.nii",
+          "purpose": "image_copy",
+          "sha256": "132774f1477d17b241108ee854328ac31d8c39e63c8d59e7fd2721bed89b11a0"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient070/patient070_frame01.nii",
+          "purpose": "image_copy",
+          "sha256": "2fb8b2546c91b446d97fdae313a99b96120780aabbc9161cf69c021948612611"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient070/patient070_frame10.nii",
+          "purpose": "image_copy",
+          "sha256": "31953c00cdd1767b4adc6fc4565ef29effac8fc5b51c16b3d83ec7d294c15b91"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient076/patient076_frame01.nii",
+          "purpose": "image_copy",
+          "sha256": "5974b2ecd0dbbcef008cde777f6a7191d28bba8a09040b7929a08a6c891f1d44"
+        },
+        {
+          "path": "/tmp/astra_event_acdc_training/training/patient076/patient076_frame12.nii",
+          "purpose": "image_copy",
+          "sha256": "9c8caeb6a02cdc736475e7fe818e853552b2c810e6f8942d2c120923b48b945a"
+        }
+      ],
+      "gt_opened_by_generator": false,
+      "observed_data_opens": [
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient010_frame01.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient010_frame13.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient018_frame01.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient018_frame10.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient030_frame01.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient030_frame12.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient057_frame01.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient057_frame09.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient070_frame01.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient070_frame10.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient076_frame01.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient076_frame12.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient079_frame01.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient079_frame11.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient093_frame01.nii",
+        "/private/tmp/astra_v3_r0_dimensionless_20260920_v2/images/patient093_frame14.nii"
+      ],
+      "versions": {
+        "numpy": "2.4.6",
+        "scipy": "1.17.1",
+        "skimage": "0.26.0",
+        "nibabel": "5.4.2"
+      },
+      "cue_availability": {
+        "motion": "NOT RUN: no full cine",
+        "full_cycle": "NOT RUN: no full cine",
+        "orientation": "NOT RUN: insufficient native geometry provenance"
+      },
+      "semantic_source": "explicit bright compact pool, surrounding darker annulus, adjacent bright pool; dimensionless image priors; not learned or verified"
+    }
+  },
+  "first_gt_read_utc": "2026-09-20T16:27:08.685186+00:00",
+  "gt_opens_log": [
+    {
+      "record_index": 0,
+      "patient_id": "patient093",
+      "gt_path": "/tmp/astra_event_acdc_training/training/patient093/patient093_frame01_gt.nii",
+      "gt_sha256": "39b6ba0ba4aa6b287d6daa383ff8c2cd21b34f67750bf35df32e009c3ba84b16",
+      "read_time_utc": "2026-09-20T16:27:08.685186+00:00"
+    },
+    {
+      "record_index": 1,
+      "patient_id": "patient093",
+      "gt_path": "/tmp/astra_event_acdc_training/training/patient093/patient093_frame14_gt.nii",
+      "gt_sha256": "3af6df25b3acd416262b8c53edb1d9266de0396365a6b9f9c95487f31bd503bd",
+      "read_time_utc": "2026-09-20T16:27:08.734462+00:00"
+    },
+    {
+      "record_index": 2,
+      "patient_id": "patient010",
+      "gt_path": "/tmp/astra_event_acdc_training/training/patient010/patient010_frame01_gt.nii",
+      "gt_sha256": "bc8eefd60c8a2913afa650d024a3a67dec915eb606ea21a1f9278a826feec2b2",
+      "read_time_utc": "2026-09-20T16:27:08.783609+00:00"
+    },
+    {
+      "record_index": 3,
+      "patient_id": "patient010",
+      "gt_path": "/tmp/astra_event_acdc_training/training/patient010/patient010_frame13_gt.nii",
+      "gt_sha256": "427c9b73bb7dff19c577fd15379eff81b2707e9c845cfa779e3030435811d661",
+      "read_time_utc": "2026-09-20T16:27:08.841708+00:00"
+    },
+    {
+      "record_index": 4,
+      "patient_id": "patient079",
+      "gt_path": "/tmp/astra_event_acdc_training/training/patient079/patient079_frame01_gt.nii",
+      "gt_sha256": "13cc17eb3db39573b460e7045585560c5f66b70511da54eba890eab50e32defa",
+      "read_time_utc": "2026-09-20T16:27:08.897659+00:00"
+    },
+    {
+      "record_index": 5,
+      "patient_id": "patient079",
+      "gt_path": "/tmp/astra_event_acdc_training/training/patient079/patient079_frame11_gt.nii",
+      "gt_sha256": "7f6483a301178c3078a47e49f9cca70216d65d5e42f152d0b5e1b1bbda720deb",
+      "read_time_utc": "2026-09-20T16:27:08.951923+00:00"
+    },
+    {
+      "record_index": 6,
+      "patient_id": "patient057",
+      "gt_path": "/tmp/astra_event_acdc_training/training/patient057/patient057_frame01_gt.nii",
+      "gt_sha256": "066da52171e94f28f4c42a124e67c0f888d383e773e843d39479e34b6f9cf67c",
+      "read_time_utc": "2026-09-20T16:27:09.007416+00:00"
+    },
+    {
+      "record_index": 7,
+      "patient_id": "patient057",
+      "gt_path": "/tmp/astra_event_acdc_training/training/patient057/patient057_frame09_gt.nii",
+      "gt_sha256": "df6100045a977c1d74a58db849e182e5982442c468578df25ccdfb272bd8d9dc",
+      "read_time_utc": "2026-09-20T16:27:09.214725+00:00"
+    },
+    {
+      "record_index": 8,
+      "patient_id": "patient018",
+      "gt_path": "/tmp/astra_event_acdc_training/training/patient018/patient018_frame01_gt.nii",
+      "gt_sha256": "1c0dadacf78507b7b2f7ecb8143ced1ab80f824d8ad13c17305e84b30d953bbe",
+      "read_time_utc": "2026-09-20T16:27:09.416438+00:00"
+    },
+    {
+      "record_index": 9,
+      "patient_id": "patient018",
+      "gt_path": "/tmp/astra_event_acdc_training/training/patient018/patient018_frame10_gt.nii",
+      "gt_sha256": "66fb9a382d4aa3364ad6014ebc08a4e72e3f5b08d3336d5880e6f775ce06c752",
+      "read_time_utc": "2026-09-20T16:27:09.468001+00:00"
+    },
+    {
+      "record_index": 10,
+      "patient_id": "patient030",
+      "gt_path": "/tmp/astra_event_acdc_training/training/patient030/patient030_frame01_gt.nii",
+      "gt_sha256": "1967cfc36ad5b7764a7d11fd52231fab91848c19b863cda50b7d27821ee48285",
+      "read_time_utc": "2026-09-20T16:27:09.518468+00:00"
+    },
+    {
+      "record_index": 11,
+      "patient_id": "patient030",
+      "gt_path": "/tmp/astra_event_acdc_training/training/patient030/patient030_frame12_gt.nii",
+      "gt_sha256": "5bedd81e534524d0af4e26a8957f7d6809ac0c1cfc2809eaa82fe9d5d4a29242",
+      "read_time_utc": "2026-09-20T16:27:09.579940+00:00"
+    },
+    {
+      "record_index": 12,
+      "patient_id": "patient070",
+      "gt_path": "/tmp/astra_event_acdc_training/training/patient070/patient070_frame01_gt.nii",
+      "gt_sha256": "f5136b2a17c7d9ed1e1ec63a178aff86278232e4d5a0c00821fccec23cccc787",
+      "read_time_utc": "2026-09-20T16:27:09.638036+00:00"
+    },
+    {
+      "record_index": 13,
+      "patient_id": "patient070",
+      "gt_path": "/tmp/astra_event_acdc_training/training/patient070/patient070_frame10_gt.nii",
+      "gt_sha256": "95b8904e77bffc9a4e8904e202640b5e787756954b50caed19957edbe4933f48",
+      "read_time_utc": "2026-09-20T16:27:09.675442+00:00"
+    },
+    {
+      "record_index": 14,
+      "patient_id": "patient076",
+      "gt_path": "/tmp/astra_event_acdc_training/training/patient076/patient076_frame01_gt.nii",
+      "gt_sha256": "44145d676262d63ff1da5f568e6ccf4a3d9fc519f17152051c588d5cc63ffb3a",
+      "read_time_utc": "2026-09-20T16:27:09.707713+00:00"
+    },
+    {
+      "record_index": 15,
+      "patient_id": "patient076",
+      "gt_path": "/tmp/astra_event_acdc_training/training/patient076/patient076_frame12_gt.nii",
+      "gt_sha256": "a50bbb65d52b5039119d1d72bf996270f5dc4dfb6dcab9e21e1db7dd1d2f0e99",
+      "read_time_utc": "2026-09-20T16:27:09.780287+00:00"
+    }
+  ],
+  "independent_aggregations": {
+    "train": {
+      "appearance_anchor": {
+        "primary_dice": 0.3680782959364877,
+        "patient_phase_macro_class_dice_RV_MYO_LV": [
+          0.30435448693266365,
+          0.26406343795920595,
+          0.5358169629175935
+        ],
+        "fg_precision": 0.682938233918851,
+        "foreground_correct_accepted": 77409
+      },
+      "plus_topology": {
+        "primary_dice": 0.3680782959364877,
+        "patient_phase_macro_class_dice_RV_MYO_LV": [
+          0.30435448693266365,
+          0.26406343795920595,
+          0.5358169629175935
+        ],
+        "fg_precision": 0.682938233918851,
+        "foreground_correct_accepted": 77409
+      },
+      "plus_boundary": {
+        "primary_dice": 0.3656211097650961,
+        "patient_phase_macro_class_dice_RV_MYO_LV": [
+          0.30323430630182346,
+          0.26088631150891317,
+          0.5327427114845515
+        ],
+        "fg_precision": 0.683475672419292,
+        "foreground_correct_accepted": 77148
+      },
+      "plus_cross_slice": {
+        "primary_dice": 0.16924662875537658,
+        "patient_phase_macro_class_dice_RV_MYO_LV": [
+          0.07869224169628632,
+          0.09514164398147995,
+          0.3339060005883635
+        ],
+        "fg_precision": 0.9088352580503885,
+        "foreground_correct_accepted": 39428
+      },
+      "plus_augmentation": {
+        "primary_dice": 0.2371581124454009,
+        "patient_phase_macro_class_dice_RV_MYO_LV": [
+          0.13694355939409802,
+          0.14744985666923027,
+          0.4270809212728742
+        ],
+        "fg_precision": 0.8211133320361559,
+        "foreground_correct_accepted": 46420
+      },
+      "all_available": {
+        "primary_dice": 0.14294662470725597,
+        "patient_phase_macro_class_dice_RV_MYO_LV": [
+          0.061109744766901675,
+          0.07013312991921923,
+          0.297596999435647
+        ],
+        "fg_precision": 0.9311909479911548,
+        "foreground_correct_accepted": 32425
+      },
+      "unknown_control": {
+        "primary_dice": 0.0,
+        "patient_phase_macro_class_dice_RV_MYO_LV": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "fg_precision": null,
+        "foreground_correct_accepted": 0
+      }
+    },
+    "dev": {
+      "appearance_anchor": {
+        "primary_dice": 0.35239582437815403,
+        "patient_phase_macro_class_dice_RV_MYO_LV": [
+          0.22690949118069834,
+          0.2992237272811848,
+          0.5310542546725792
+        ],
+        "fg_precision": 0.7890533489511234,
+        "foreground_correct_accepted": 37050
+      },
+      "plus_topology": {
+        "primary_dice": 0.35239582437815403,
+        "patient_phase_macro_class_dice_RV_MYO_LV": [
+          0.22690949118069834,
+          0.2992237272811848,
+          0.5310542546725792
+        ],
+        "fg_precision": 0.7890533489511234,
+        "foreground_correct_accepted": 37050
+      },
+      "plus_boundary": {
+        "primary_dice": 0.35318411872356936,
+        "patient_phase_macro_class_dice_RV_MYO_LV": [
+          0.22690949118069834,
+          0.29931023130074574,
+          0.5333326336892641
+        ],
+        "fg_precision": 0.7930392345726578,
+        "foreground_correct_accepted": 37050
+      },
+      "plus_cross_slice": {
+        "primary_dice": 0.16432244374291982,
+        "patient_phase_macro_class_dice_RV_MYO_LV": [
+          0.013986452584044155,
+          0.1684777070693533,
+          0.31050317157536195
+        ],
+        "fg_precision": 0.9644095103256359,
+        "foreground_correct_accepted": 19754
+      },
+      "plus_augmentation": {
+        "primary_dice": 0.24778935559745122,
+        "patient_phase_macro_class_dice_RV_MYO_LV": [
+          0.1024228257349499,
+          0.21650822329040836,
+          0.42443701776699544
+        ],
+        "fg_precision": 0.8783987915407855,
+        "foreground_correct_accepted": 24423
+      },
+      "all_available": {
+        "primary_dice": 0.1391159136273784,
+        "patient_phase_macro_class_dice_RV_MYO_LV": [
+          0.012736443883984868,
+          0.1275498196202116,
+          0.27706147737793874
+        ],
+        "fg_precision": 0.9744271426762882,
+        "foreground_correct_accepted": 15394
+      },
+      "unknown_control": {
+        "primary_dice": 0.0,
+        "patient_phase_macro_class_dice_RV_MYO_LV": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "fg_precision": null,
+        "foreground_correct_accepted": 0
+      }
+    }
+  },
+  "limitations": [
+    "worker synthetic tamper test was tautological; root tests actual verifier",
+    "worker harm correct_voxel_delta includes BG, not foreground only",
+    "topology arm equals anchor on this cohort; not every cue changes outputs",
+    "sparse seed Dice is not a trained teacher or impossibility result",
+    "postfreeze stop/go on development GT is research evaluation feedback, not blind clinical validation"
+  ]
+}

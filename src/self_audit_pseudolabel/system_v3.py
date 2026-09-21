@@ -126,6 +126,12 @@ class CinePseudoTeacher(nn.Module):
         dense_valid_low = torch.einsum("bkhw,bk->bhw", q, valid_region.to(q.dtype)) >= 0.5
         dense_prob = F.interpolate(dense_prob_low, cur.shape[-2:], mode="bilinear", align_corners=False)
         dense_valid = F.interpolate(dense_valid_low[:, None].float(), cur.shape[-2:], mode="nearest")[:, 0].bool()
+        # Confident regions may disagree on their names. Apply the acceptance
+        # contract to the final pixel mixture, including interpolation boundaries.
+        pixel_top2 = dense_prob.topk(2, dim=1).values
+        dense_valid = dense_valid & (pixel_top2[:, 0] >= min_prob) & (
+            (pixel_top2[:, 0] - pixel_top2[:, 1]) >= min_margin
+        )
         label = dense_prob.argmax(1)
         pseudo = torch.where(dense_valid, label, torch.full_like(label, UNKNOWN))
         return {"pseudo_label": pseudo, "valid": dense_valid, "soft_label": dense_prob,
@@ -191,8 +197,11 @@ def pseudo_supervision_loss(outputs, target, valid, a0_weight=0.25):
         raise ValueError("target/valid must be [B,H,W] and valid must be bool")
     final = outputs["final_logits"]
     a0 = outputs["a0_logits"]
-    if not bool(valid.any()):
+    accepted = valid & (target != UNKNOWN)
+    if not bool(accepted.any()):
         return final.sum() * 0.0
     def ce(x):
-        return F.cross_entropy(x, target, reduction="none")[valid].mean()
+        # Select before CE: UNKNOWN must never be passed as a class index,
+        # even if a stale validity mask incorrectly marks that pixel accepted.
+        return F.cross_entropy(x.permute(0, 2, 3, 1)[accepted], target[accepted])
     return ce(final) + float(a0_weight) * ce(a0)

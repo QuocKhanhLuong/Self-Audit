@@ -1,0 +1,65 @@
+{
+  "id": "7ba7a78c-af71-4393-9f29-a4029081417d",
+  "ok": true,
+  "result": {
+    "runId": "run_698eb3b460ef",
+    "taskId": "task_741d2d51484a",
+    "dispatchId": "ctx_8631250d2b0b",
+    "state": "failed",
+    "stage": "agent_readiness",
+    "failedStage": "agent_readiness",
+    "lastError": "Agent startup blocked: agent-trust-workspace",
+    "setup": {
+      "requested": "not_applicable",
+      "effective": "not_applicable",
+      "source": "existing_worktree",
+      "hookFound": false,
+      "startupPolicy": "start-immediately",
+      "state": "not_applicable"
+    },
+    "launch": {
+      "requested": {
+        "agent": null,
+        "model": null,
+        "effort": null
+      },
+      "effective": {
+        "agent": null,
+        "model": null,
+        "effort": null
+      }
+    },
+    "mode": {
+      "mode": "terminal",
+      "preferred": "terminal",
+      "reason": "user_default",
+      "detail": "Started a terminal agent worker, the default for new agent tabs in your settings."
+    },
+    "effects": [
+      {
+        "kind": "worktree",
+        "action": "reused",
+        "id": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit"
+      },
+      {
+        "kind": "setup",
+        "action": "not_applicable",
+        "state": "not_applicable"
+      },
+      {
+        "kind": "terminal",
+        "role": "agent",
+        "action": "reused",
+        "id": "term_6d44d8dc-84ca-4b56-836f-05ebe83ddf96"
+      }
+    ],
+    "residualResources": [],
+    "mutation": {
+      "requestId": "9a42eaac-8f77-4836-9358-5d55d3796832",
+      "replayed": false
+    }
+  },
+  "_meta": {
+    "runtimeId": "685fbdf6-0375-42f2-950a-a6e7db3a8ff9"
+  }
+}

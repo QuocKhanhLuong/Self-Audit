@@ -1,0 +1,38 @@
+{
+  "id": "f2676797-9313-4ae1-bb14-e0e5771a7773",
+  "ok": true,
+  "result": {
+    "runId": "run_698eb3b460ef",
+    "deliveryId": "delivery_8f199fc86371",
+    "messages": [
+      {
+        "id": "msg_cdd325ad1d22",
+        "run_id": "run_698eb3b460ef",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_77773f99-9dcc-4ff5-8d09-0e333bc4f97a",
+        "to_handle": "run:run_698eb3b460ef",
+        "subject": "Dynamic Window & Student Audit Complete",
+        "body": "We audited the Dynamic Window Attention operator, recurrent AnnotationExpert, and AdaptiveAnnotationStudent through mathematical analysis, backward autograd tracing, and empirical synthetic probes. We confirmed active DW execution under feature_only mode with complete audit channel zeroing and retained logits/entropy/image conditioning across single-pass encoder turns, but discovered that unconstrained joint training allows later-stage A2 gradients to cannibalize standalone A0 accuracy (dropping from 70.5% to 60.6%) while creating an artificially inflated headroom metric. We proposed a stop-gradient decoupled training strategy to preserve A0 optimality and established a mandatory matched-compute feedforward CNN baseline that eliminates the 2.16x latency penalty of dynamic grid sampling for rigorous future benchmarking.",
+        "type": "worker_done",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_7fca57e24b5a\",\"dispatchId\":\"ctx_92d6886af985\",\"outcome\":\"succeeded\",\"reportPath\":\"reports/astra_v3/workers/C_dynamic_window_audit.md\"}",
+        "created_at": "2026-09-20T16:24:41Z",
+        "delivered_at": null
+      }
+    ],
+    "count": 1,
+    "replayed": false,
+    "acknowledged": "delivery_32fb6978a35a",
+    "timedOut": false,
+    "cancelled": false,
+    "connectionLost": false,
+    "mutation": {
+      "requestId": "13bd0ea5-c25c-4c22-ad83-94decc657020",
+      "replayed": false
+    }
+  },
+  "_meta": {
+    "runtimeId": "685fbdf6-0375-42f2-950a-a6e7db3a8ff9"
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "active_dw_and_conditioning": {
+    "compact_is_a0": true,
+    "compact_same_obj": true,
+    "compact_turns": 0,
+    "balanced_turns": 1,
+    "accurate_turns": 2,
+    "audit_cond_mode": "feature_only",
+    "offset_mode": "structured",
+    "input_proj_channels": 40,
+    "audit_channels_all_zero": true,
+    "feature_channels_active": true,
+    "logits_channels_active": true,
+    "entropy_channels_active": true,
+    "entropy_matches_formula": true,
+    "dw_coordinates_shape": [
+      2,
+      16,
+      16,
+      8,
+      2
+    ],
+    "dw_attention_shape": [
+      2,
+      4,
+      16,
+      16,
+      8
+    ]
+  },
+  "encoder_passes": {
+    "compact": 1,
+    "balanced": 1,
+    "accurate": 1
+  },
+  "stage_depth": {
+    "total_dw_block_calls": 3,
+    "num_stages": 3
+  },
+  "gradient_paths": {
+    "grad_encoder_from_a2": 0.03547181561589241,
+    "grad_a0_head_from_a2": 0.04138407111167908,
+    "grad_refiner_from_a2": 0.009178826585412025,
+    "grad_norm_on_a1_from_a2": 0.00962620135396719,
+    "grad_norm_on_a0_from_a2": 0.00962849985808134,
+    "has_detaches_in_forward": false,
+    "a0_head_receives_grad_from_a2_without_direct_a0_loss": true,
+    "grad_encoder_full": 0.04270375147461891,
+    "grad_a0_head_full": 0.04772309586405754,
+    "grad_refiner_full": 0.009178826585412025
+  },
+  "headroom_diagnosis": {
+    "strategy_standard_joint_0.25": {
+      "a0_accuracy": 0.6064453125,
+      "a1_accuracy": 0.89251708984375,
+      "a2_accuracy": 0.90106201171875,
+      "headroom_gain_a2_minus_a0": 0.29461669921875
+    },
+    "strategy_detached_a0_stop_gradient": {
+      "a0_accuracy": 0.7052001953125,
+      "a1_accuracy": 0.89044189453125,
+      "a2_accuracy": 0.90606689453125,
+      "headroom_gain_a2_minus_a0": 0.20086669921875
+    },
+    "strategy_equal_multistage_supervision": {
+      "a0_accuracy": 0.68389892578125,
+      "a1_accuracy": 0.89459228515625,
+      "a2_accuracy": 0.9052734375,
+      "headroom_gain_a2_minus_a0": 0.22137451171875
+    }
+  },
+  "matched_cnn_control": {
+    "student_total_params": 80462,
+    "encoder_params": 47328,
+    "a0_head_params": 132,
+    "refiner_params": 33002,
+    "refiner_dw_attention_params": 16533,
+    "refiner_input_proj_params": 1376,
+    "refiner_delta_head_params": 4692,
+    "refiner_gate_head_params": 33,
+    "matched_cnn_params": 121668,
+    "param_ratio_cnn_over_student": 1.5121175213144094,
+    "accurate_student_latency_ms": 14.26987909944728,
+    "matched_cnn_latency_ms": 6.616910494631156,
+    "speedup_matched_cnn_over_accurate_student": 2.1565773197363947
+  },
+  "latency_profiles": {
+    "compact": {
+      "mean_latency_ms": 4.891173052601516,
+      "std_latency_ms": 1.0844119977582887
+    },
+    "balanced": {
+      "mean_latency_ms": 12.69743554876186,
+      "std_latency_ms": 2.501698298010817
+    },
+    "accurate": {
+      "mean_latency_ms": 15.230014605913311,
+      "std_latency_ms": 1.7011339561339396
+    }
+  }
+}

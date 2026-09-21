@@ -1,0 +1,103 @@
+{
+  "id": "astra-v3-B1-cine-anchored-ssl-v1",
+  "status": "SPECIFIED_NOT_IMPLEMENTED_NOT_TRAINED",
+  "blocked_by": [
+    "R0 gate failed",
+    "full cine unavailable",
+    "physical geometry unverified",
+    "M&Ms unavailable"
+  ],
+  "teacher": {
+    "type": "UNet25D",
+    "widths": [
+      24,
+      48,
+      96,
+      192
+    ],
+    "classes": [
+      "BG",
+      "RV",
+      "MYO",
+      "LV"
+    ],
+    "input": "z triplet at each actual cine t",
+    "size": 224,
+    "normalization_percentiles": [
+      1,
+      99
+    ],
+    "resize": "full-FOV aspect-preserving pad",
+    "pretraining": "image-only masked reconstruction, no external weights",
+    "ssl_epochs": 10,
+    "round1_epochs": 5,
+    "round2_epochs": 5,
+    "max_rounds": 3,
+    "round3": false,
+    "group_norm_groups": 8,
+    "decoder_widths": [
+      96,
+      48,
+      24
+    ],
+    "align_corners": false
+  },
+  "student": {
+    "type": "AdaptiveAnnotationStudent",
+    "width": 32,
+    "window_k": 8,
+    "audit_conditioning": "feature_only",
+    "a0_epochs": 20,
+    "refiner_epochs": 10,
+    "freeze_encoder_a0_before_refiner": true,
+    "profiles_outer_turns": {
+      "compact": 0,
+      "balanced": 1,
+      "accurate": 2
+    },
+    "profiles_internal_dw": {
+      "compact": 0,
+      "balanced": 1,
+      "accurate": 3
+    }
+  },
+  "execution": {
+    "batch_size": 8,
+    "accumulation_steps": 1,
+    "dtype": "float32",
+    "initial_seed": 17,
+    "confirmatory_seeds": [
+      17,
+      29,
+      43
+    ]
+  },
+  "teacher_gate": {
+    "mean_fg_dice": 0.88,
+    "min_class_dice": 0.85,
+    "min_class_gt_coverage": 0.8,
+    "max_swap_rate": 0.01
+  },
+  "student_target": 0.91,
+  "metric": "patient mean of phase mean of RV/MYO/LV native-volume Dice; UNKNOWN FN; no Hungarian",
+  "exact_recipe": "09_EXPERIMENT_PLAN.md",
+  "transport": {
+    "method": "bidirectional TV-L1",
+    "attachment": 15,
+    "tightness": 0.3,
+    "num_warp": 5,
+    "num_iter": 10,
+    "tol": 0.0001,
+    "prefilter": false,
+    "forward_backward_max_network_pixels": 1,
+    "max_photometric_residual": 0.1,
+    "wrap": "verified complete cycles only"
+  },
+  "losses": {
+    "segmentation": "mean CE per present accepted class, then mean classes",
+    "augmentation_consistency": "0.1 * MSE softmax vectors at supported gamma0.9/1.1 pixels",
+    "temporal_consistency": "0.1 * MSE to reliable warped stop-gradient softmax targets",
+    "ssl": "L1 hidden center-channel pixels, mask75% of shared-z16x16 blocks",
+    "additional_losses": []
+  }
+}

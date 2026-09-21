@@ -1,0 +1,41 @@
+{
+  "parameter_counts": {
+    "teacher": {
+      "appearance": 166729,
+      "motion": 2928,
+      "fuse": 4224,
+      "regions": 768,
+      "semantic": 6916,
+      "total": 181565
+    },
+    "student": {
+      "encoder": 47328,
+      "a0_head": 132,
+      "refiner": 33002,
+      "total": 80462
+    },
+    "teacher_student_ratio": 2.256531033282792
+  },
+  "permutation_invariance": {
+    "prob_perm_max_abs_error": 0.0,
+    "reconstruction_invariance_error": 0.0,
+    "conclusion": "Class semantics are completely ungrounded and permutable under any unsupervised loss."
+  },
+  "profile_execution_contracts": {
+    "compact": {
+      "dw_calls": 0,
+      "stages": 1,
+      "is_a0_identical_to_final": true
+    },
+    "balanced": {
+      "dw_calls": 1,
+      "stages": 2,
+      "is_a0_identical_to_final": false
+    },
+    "accurate": {
+      "dw_calls": 3,
+      "stages": 3,
+      "is_a0_identical_to_final": false
+    }
+  }
+}

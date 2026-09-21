@@ -1,0 +1,391 @@
+{
+  "trace_shapes": {
+    "cur_shape": [
+      2,
+      3,
+      64,
+      64
+    ],
+    "f_app_shape": [
+      2,
+      48,
+      16,
+      16
+    ],
+    "recon_shape": [
+      2,
+      1,
+      64,
+      64
+    ],
+    "raw_motion_shape": [
+      2,
+      4,
+      64,
+      64
+    ],
+    "f_motion_shape": [
+      2,
+      16,
+      16,
+      16
+    ],
+    "fused_shape": [
+      2,
+      64,
+      16,
+      16
+    ],
+    "proto_q_shape": [
+      2,
+      12,
+      16,
+      16
+    ],
+    "q_softmax_axis": 1,
+    "r_pooled_shape": [
+      2,
+      12,
+      67
+    ],
+    "semantic_logits_shape": [
+      2,
+      12,
+      4
+    ],
+    "semantic_softmax_axis": -1,
+    "valid_region_shape": [
+      2,
+      12
+    ],
+    "dense_prob_low_shape": [
+      2,
+      4,
+      16,
+      16
+    ],
+    "dense_valid_low_shape": [
+      2,
+      16,
+      16
+    ],
+    "dense_prob_shape": [
+      2,
+      4,
+      64,
+      64
+    ],
+    "dense_valid_shape": [
+      2,
+      64,
+      64
+    ],
+    "pseudo_shape": [
+      2,
+      64,
+      64
+    ],
+    "dense_prob_interpolate_mode": "bilinear (align_corners=False)",
+    "dense_valid_interpolate_mode": "nearest",
+    "resolution_compatibility": {
+      "32x32": {
+        "status": "OK",
+        "pseudo_shape": [
+          1,
+          32,
+          32
+        ]
+      },
+      "64x64": {
+        "status": "OK",
+        "pseudo_shape": [
+          1,
+          64,
+          64
+        ]
+      },
+      "128x128": {
+        "status": "OK",
+        "pseudo_shape": [
+          1,
+          128,
+          128
+        ]
+      },
+      "216x216": {
+        "status": "OK",
+        "pseudo_shape": [
+          1,
+          216,
+          216
+        ]
+      },
+      "224x224": {
+        "status": "OK",
+        "pseudo_shape": [
+          1,
+          224,
+          224
+        ]
+      },
+      "33x33": {
+        "status": "OK",
+        "pseudo_shape": [
+          1,
+          33,
+          33
+        ]
+      },
+      "35x35": {
+        "status": "OK",
+        "pseudo_shape": [
+          1,
+          35,
+          35
+        ]
+      }
+    }
+  },
+  "motion": {
+    "zero_motion_feature_norm": 2.877431869506836,
+    "zero_motion_feature_spatial_std": 0.04459812864661217,
+    "zero_vs_base_max_abs_diff": 1.994299292564392,
+    "temporal_swap_relative_l2_diff": 0.9695361256599426,
+    "temporal_swap_mean_abs_diff": 0.29765981435775757,
+    "channel_shuffle_mean_abs_diff": 0.3797837495803833,
+    "pure_flicker_motion_norm_vs_zero": 26.061859130859375,
+    "motion_is_optical_flow": false,
+    "motion_is_pixel_difference": true
+  },
+  "appearance": {
+    "z_flipped_relative_l2_diff": 1.0179038047790527,
+    "z_scrambled_relative_l2_diff": 1.0471357107162476,
+    "recon_mse_initial": 1.0018757581710815
+  },
+  "evidence_and_unknown": {
+    "unseeded_default": {
+      "valid_fraction": 0.0,
+      "unknown_fraction": 1.0,
+      "mean_max_prototype_prob": 0.2681538760662079
+    },
+    "random_evidence_n01": {
+      "valid_fraction": 0.00390625,
+      "unknown_fraction": 0.99609375
+    },
+    "strong_cyclic_evidence": {
+      "valid_fraction": 1.0,
+      "unknown_fraction": 0.0,
+      "classes_present": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    "threshold_sensitivity": {
+      "p0.5_m0.1": {
+        "valid_fraction": 0.0,
+        "unknown_fraction": 1.0
+      },
+      "p0.6_m0.15": {
+        "valid_fraction": 0.0,
+        "unknown_fraction": 1.0
+      },
+      "p0.7_m0.2": {
+        "valid_fraction": 0.0,
+        "unknown_fraction": 1.0
+      },
+      "p0.8_m0.25": {
+        "valid_fraction": 0.0,
+        "unknown_fraction": 1.0
+      },
+      "p0.9_m0.3": {
+        "valid_fraction": 0.0,
+        "unknown_fraction": 1.0
+      }
+    }
+  },
+  "prototype_dynamics": {
+    "seed_sensitivity": {
+      "seed_1": {
+        "active_prototypes": 12,
+        "mean_mass": [
+          7.94,
+          9.46,
+          19.16,
+          6.78,
+          38.59,
+          25.97,
+          52.46,
+          35.54,
+          16.49,
+          22.0,
+          13.28,
+          8.33
+        ],
+        "norm_entropy": 0.7807
+      },
+      "seed_2": {
+        "active_prototypes": 12,
+        "mean_mass": [
+          25.43,
+          51.76,
+          21.67,
+          14.86,
+          42.86,
+          7.64,
+          10.52,
+          14.88,
+          14.99,
+          12.22,
+          16.52,
+          22.65
+        ],
+        "norm_entropy": 0.7903
+      },
+      "seed_3": {
+        "active_prototypes": 12,
+        "mean_mass": [
+          29.99,
+          21.83,
+          46.71,
+          17.27,
+          35.19,
+          10.52,
+          9.2,
+          42.7,
+          5.42,
+          11.81,
+          14.89,
+          10.47
+        ],
+        "norm_entropy": 0.7725
+      },
+      "seed_42": {
+        "active_prototypes": 12,
+        "mean_mass": [
+          50.33,
+          23.04,
+          9.18,
+          13.38,
+          12.37,
+          9.55,
+          17.02,
+          16.57,
+          41.25,
+          20.99,
+          8.1,
+          34.22
+        ],
+        "norm_entropy": 0.7843
+      },
+      "seed_100": {
+        "active_prototypes": 12,
+        "mean_mass": [
+          15.45,
+          28.85,
+          50.4,
+          7.23,
+          17.46,
+          17.74,
+          5.79,
+          12.33,
+          27.81,
+          18.68,
+          40.57,
+          13.68
+        ],
+        "norm_entropy": 0.7817
+      }
+    }
+  },
+  "boundary_mixture": {
+    "boundary_pixel_marked_valid": true,
+    "boundary_pixel_class_probs": [
+      0.1,
+      0.0,
+      0.45,
+      0.45
+    ],
+    "boundary_pixel_top2_margin": 0.0,
+    "mixture_dilution_flaw_detected": true
+  },
+  "gradient_flow": {
+    "student_has_nonzero_grads": true,
+    "teacher_grads_from_student_loss": {
+      "appearance.e0.net.0.weight": null,
+      "appearance.e0.net.1.weight": null,
+      "appearance.e0.net.1.bias": null,
+      "appearance.e0.net.3.weight": null,
+      "appearance.e0.net.4.weight": null,
+      "appearance.e0.net.4.bias": null,
+      "appearance.e1.net.0.weight": null,
+      "appearance.e1.net.1.weight": null,
+      "appearance.e1.net.1.bias": null,
+      "appearance.e1.net.3.weight": null,
+      "appearance.e1.net.4.weight": null,
+      "appearance.e1.net.4.bias": null,
+      "appearance.e2.net.0.weight": null,
+      "appearance.e2.net.1.weight": null,
+      "appearance.e2.net.1.bias": null,
+      "appearance.e2.net.3.weight": null,
+      "appearance.e2.net.4.weight": null,
+      "appearance.e2.net.4.bias": null,
+      "appearance.out.weight": null,
+      "appearance.out.bias": null,
+      "appearance.recon.weight": null,
+      "appearance.recon.bias": null,
+      "motion.net.0.weight": null,
+      "motion.net.1.weight": null,
+      "motion.net.1.bias": null,
+      "motion.net.3.weight": null,
+      "motion.net.3.bias": null,
+      "fuse.0.weight": null,
+      "fuse.1.weight": null,
+      "fuse.1.bias": null,
+      "regions.p": null,
+      "semantic.0.weight": null,
+      "semantic.0.bias": null,
+      "semantic.2.weight": null,
+      "semantic.2.bias": null
+    },
+    "teacher_grads_direct_loss": {
+      "appearance.e0.net.0.weight": 0.02915669046342373,
+      "appearance.e0.net.1.weight": 0.003983369097113609,
+      "appearance.e0.net.1.bias": 0.0030376652721315622,
+      "appearance.e0.net.3.weight": 0.0443621426820755,
+      "appearance.e0.net.4.weight": 0.0023133850190788507,
+      "appearance.e0.net.4.bias": 0.003113571321591735,
+      "appearance.e1.net.0.weight": 0.044143661856651306,
+      "appearance.e1.net.1.weight": 0.004060761071741581,
+      "appearance.e1.net.1.bias": 0.00439349515363574,
+      "appearance.e1.net.3.weight": 0.06414525955915451,
+      "appearance.e1.net.4.weight": 0.004681816324591637,
+      "appearance.e1.net.4.bias": 0.004746727179735899,
+      "appearance.e2.net.0.weight": 0.06173164024949074,
+      "appearance.e2.net.1.weight": 0.004620696417987347,
+      "appearance.e2.net.1.bias": 0.004759861622005701,
+      "appearance.e2.net.3.weight": 0.10184372961521149,
+      "appearance.e2.net.4.weight": 0.005055072717368603,
+      "appearance.e2.net.4.bias": 0.007133005186915398,
+      "appearance.out.weight": 0.04887431487441063,
+      "appearance.out.bias": 0.024932632222771645,
+      "appearance.recon.weight": null,
+      "appearance.recon.bias": null,
+      "motion.net.0.weight": 0.024200981482863426,
+      "motion.net.1.weight": 0.008217711001634598,
+      "motion.net.1.bias": 0.008859103545546532,
+      "motion.net.3.weight": 0.07062771171331406,
+      "motion.net.3.bias": 0.02510237880051136,
+      "fuse.0.weight": 0.0819518119096756,
+      "fuse.1.weight": 0.023446112871170044,
+      "fuse.1.bias": 0.025435922667384148,
+      "regions.p": 0.04052544757723808,
+      "semantic.0.weight": 0.126527339220047,
+      "semantic.0.bias": 0.06619996577501297,
+      "semantic.2.weight": 0.25557395815849304,
+      "semantic.2.bias": 0.21260301768779755
+    },
+    "pseudo_is_detached_integer": true
+  }
+}

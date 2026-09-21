@@ -1,0 +1,32 @@
+{
+  "id": "57b75e02-dc75-4cdc-832d-ac61159682d5",
+  "ok": false,
+  "error": {
+    "code": "agent_unconfigured",
+    "message": "A configured --agent is required when worker-start creates a terminal. Orchestration mutation request ID: 06af2254-390a-4087-b16f-6e3d6d90793a.",
+    "data": {
+      "orchestrationRequestId": "06af2254-390a-4087-b16f-6e3d6d90793a",
+      "originalCommand": [
+        "orca",
+        "orchestration",
+        "worker-start",
+        "--spec",
+        "You are AGY Worker A for Astra's Self-Audit v3 audit, Orca run run_698eb3b460ef. Audited base d4f503b7107eca4e8ac85f37a5dd01ec50479666. Root worktree: /Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit. Original /Users/alvinluong/Self-Audit is READ ONLY, contains unrelated uncommitted work. You are not alone in the codebase. Never revert or overwrite others' edits. Ownership: ONLY reports/astra_v3/workers/A_pseudolabel_code_audit.md and reports/astra_v3/workers/A_evidence/ (create private scratch there). NO source/tests/config edits, no git commit/push/merge, no long training, no expensive GPU run. Do not open manual segmentation GT arrays; this stage is code/research/synthetic analysis. Read image headers or image data only if needed. No semantic performance claims from synthetic tests. Use rtk prefix for shell commands (rtk proxy for raw commands). No .codegraph index exists, do not create one. Use semble MCP search or CLI before discovering code; read supplied exact paths directly. If tool unavailable, record and use scoped fallback. Use current code as truth, cite file:line at base SHA. Negative C0/C1 outcomes are falsification controls, not foundations. Teacher is offline; student deploys; no old Auditor should be reintroduced. User says do NOT send repeated status questions; work independently, return a complete report or a concrete blocking dependency only. Aim to complete within 30 minutes; bound experiments, explicitly mark unavailable evidence. Follow authoritative injected lifecycle preamble; send worker_done with explicit outcome, real report path and 3-sentence summary once done, then idle. Report facts, inference, proposals and NOT RUN separately, commands and reproducibility evidence. Root owns all final decisions. Task-specific requirements:\nInspect src/self_audit_pseudolabel/system_v3.py and scoped tests/docs. Trace input -> appearance -> motion -> fusion -> prototypes -> semantic logits -> reliability -> mask with exact shapes, softmax axes, resize modes, gradients/detaches. Diagnose prototype collapse/permutation, UNKNOWN behavior, semantic mixture construction, reconstruction shortcut, pooled statistics, whether motion is flow versus differences, no-seed semantic-head gradient. Run only small CPU synthetic probes and save scripts/results in A_evidence. Include interventions zero/shuffle motion, shuffled z, temporal swap, zero/random/strong evidence as feasible. Propose decisive regression tests without editing root tests. Main question: coherent software vs named semantic learning missing signal.\nReturn: reports/astra_v3/workers/A_pseudolabel_code_audit.md\n",
+        "--task-title",
+        "A v3 pseudo-label code audit",
+        "--worktree",
+        "path:/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit",
+        "--agent",
+        "agy",
+        "--run",
+        "run_698eb3b460ef",
+        "--timeout-ms",
+        "45000",
+        "--json"
+      ]
+    }
+  },
+  "_meta": {
+    "runtimeId": "685fbdf6-0375-42f2-950a-a6e7db3a8ff9"
+  }
+}

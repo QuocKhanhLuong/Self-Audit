@@ -1,0 +1,96 @@
+{
+  "utc": "2026-09-20T16:53:23.405397+00:00",
+  "base_commit": "d4f503b7107eca4e8ac85f37a5dd01ec50479666",
+  "audit_branch": "QuocKhanhLuong/astra-pseudolabel-v3-audit",
+  "audit_head_before_commit": "d4f503b7107eca4e8ac85f37a5dd01ec50479666",
+  "original_main_head": "d4f503b7107eca4e8ac85f37a5dd01ec50479666",
+  "original_branch": "main",
+  "original_dirty_files_checked": 236,
+  "original_dirty_hash_mismatches": [],
+  "source_files": [
+    {
+      "path": "src/self_audit_pseudolabel/system_v3.py",
+      "base_sha256": "4c07ee074daa060f0a33095162c5a75096e745f97082dcc34d8fa38cfda83226",
+      "candidate_sha256": "1077187c880f463d38f171eb8d2690cf5f0aa0ca022d797e25d1e34a36bafb06"
+    },
+    {
+      "path": "src/self_audit_pseudolabel/__init__.py",
+      "base_sha256": "ce4a0df7912b1c0642bed019a378e0023497b4df22b0bef6979bfeb2b98b165d",
+      "candidate_sha256": "ce4a0df7912b1c0642bed019a378e0023497b4df22b0bef6979bfeb2b98b165d"
+    },
+    {
+      "path": "src/self_audit/models/dynamic_window.py",
+      "base_sha256": "5cf0a07ef9b50254d5bcffce605aea2849772fb0bed16a95685f17ab6eda9fd4",
+      "candidate_sha256": "5cf0a07ef9b50254d5bcffce605aea2849772fb0bed16a95685f17ab6eda9fd4"
+    },
+    {
+      "path": "src/self_audit/models/annotation_expert.py",
+      "base_sha256": "e85a4572982954812b805fe4ced28acb873233d99dc4184f591e65f0458deb07",
+      "candidate_sha256": "e85a4572982954812b805fe4ced28acb873233d99dc4184f591e65f0458deb07"
+    },
+    {
+      "path": "src/self_audit_maskfree/data/discovery.py",
+      "base_sha256": "d32b5fbbb0415078b54f08715414ea94f08831a18e155c4bcc150cac145b0ce3",
+      "candidate_sha256": "d32b5fbbb0415078b54f08715414ea94f08831a18e155c4bcc150cac145b0ce3"
+    },
+    {
+      "path": "src/self_audit_maskfree/data/dataset.py",
+      "base_sha256": "653a0d74da405405252fe739891cc48f51088adf1ecacb72f77d6cc279d214f4",
+      "candidate_sha256": "653a0d74da405405252fe739891cc48f51088adf1ecacb72f77d6cc279d214f4"
+    },
+    {
+      "path": "src/self_audit_maskfree/data/firewall.py",
+      "base_sha256": "92767510e96f4feb816d60e190a6a913cc231d97d0f180c7ffce857ac3ceaca3",
+      "candidate_sha256": "92767510e96f4feb816d60e190a6a913cc231d97d0f180c7ffce857ac3ceaca3"
+    },
+    {
+      "path": "src/self_audit_maskfree/losses.py",
+      "base_sha256": "7cf5aaeb40c7a31c75647b24eff3ccdbe74c49717a62655fe1c425260ab4bf9b",
+      "candidate_sha256": "7cf5aaeb40c7a31c75647b24eff3ccdbe74c49717a62655fe1c425260ab4bf9b"
+    },
+    {
+      "path": "src/self_audit_maskfree/ontology.py",
+      "base_sha256": "22c14e9984c7e5c4b27d3a7d6a6bd85a1c839744bc0d920656956cfb8eb2825c",
+      "candidate_sha256": "22c14e9984c7e5c4b27d3a7d6a6bd85a1c839744bc0d920656956cfb8eb2825c"
+    },
+    {
+      "path": "src/self_audit/data/mnms.py",
+      "base_sha256": "e5bcaae36e1223bbf1ee5000f67a091ea514cc3bc91aaa4d9af191efc5e79575",
+      "candidate_sha256": "e5bcaae36e1223bbf1ee5000f67a091ea514cc3bc91aaa4d9af191efc5e79575"
+    },
+    {
+      "path": "scripts/preprocess_acdc.py",
+      "base_sha256": "d35608111c8e7b1bd3f15d7b491d5923d110262872248c2ce1fe4164bbb986b7",
+      "candidate_sha256": "d35608111c8e7b1bd3f15d7b491d5923d110262872248c2ce1fe4164bbb986b7"
+    },
+    {
+      "path": "tests/test_pseudolabel_system_v3.py",
+      "base_sha256": "4e4cb600cb478675f3b855a93a422fbfb65ce729a510d687a2f5ceadce3d15e4",
+      "candidate_sha256": "4e4cb600cb478675f3b855a93a422fbfb65ce729a510d687a2f5ceadce3d15e4"
+    },
+    {
+      "path": "tests/test_pseudolabel_v3_audit.py",
+      "base_sha256": null,
+      "candidate_sha256": "2addf17345f04770787deb656533f64fefe580a6263a2d2aaa8283c359098bf9"
+    },
+    {
+      "path": "docs/pseudolabel_system_v3.md",
+      "base_sha256": "74e7b31e3fd12d5aac31887373fe98ca6fcc49477c2aacc8948a65d850d9b8ca",
+      "candidate_sha256": "603c544be73b16fb45a534f7bdb9266045d803217be1d5dc93e4a81d4cb70350"
+    }
+  ],
+  "python": "3.11.16",
+  "platform": "macOS-26.2-arm64-arm-64bit",
+  "packages": {
+    "torch": "2.14.0",
+    "numpy": "2.4.6",
+    "scipy": "1.17.1",
+    "scikit-image": "0.26.0",
+    "nibabel": "5.4.2",
+    "pytest": "9.1.1",
+    "pandas": null,
+    "psutil": "7.2.2"
+  },
+  "software_candidate_identity": "astra-v3-software-audit-fix-v1",
+  "scientific_seed_identity": "astra-v3-r0-dimensionless-seeds-20260920-v2"
+}

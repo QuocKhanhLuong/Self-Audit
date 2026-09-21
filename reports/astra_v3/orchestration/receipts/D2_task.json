@@ -1,0 +1,30 @@
+{
+  "id": "f00908f3-8600-4dcf-b0f3-bd5535ee1161",
+  "ok": true,
+  "result": {
+    "task": {
+      "id": "task_f3b42a2bb8c9",
+      "run_id": "run_698eb3b460ef",
+      "parent_id": null,
+      "created_by_terminal_handle": "term_fdc735d0-48da-41ba-9e90-9c3676099834",
+      "created_by_pane_key": "8bbf0e06-4421-420a-ba74-4960390c644a:9ff50719-b88d-483a-afe1-9417b2a61523",
+      "created_by_process_incarnation": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit@@e4d79379:4018ff4c-cb6c-47bc-8af2-561ee6128df0",
+      "created_by_run_generation": 1,
+      "task_title": "D2 repair primary-source citation audit",
+      "display_name": "D2 repair primary-source citation audit",
+      "spec": "You are AGY Worker D2, a bounded citation-correction follow-up in the same Astra Orca run run_698eb3b460ef. Your initial investigation is complete but ROOT REJECTS its unverified literature assertions. Own only reports/astra_v3/workers/D_pseudolabel_research.md and D_evidence/. Original is preserved at D_evidence/initial_report_unverified.md. You are not alone; do not touch src/tests/other reports, commit or train. Use rtk-prefixed commands. Finish within 10 minutes; no status questions, return one completed corrected report or concrete blocker. New live task/dispatch only.\nRepair the report against PRIMARY sources; unknown remains unknown. Required concrete corrections: (1) Ferreira correct paper https://arxiv.org/pdf/2210.04979 and https://www.nature.com/articles/s41467-025-59451-5. Root read PDF p5 lines142-146: HED INITIALIZED IMAGENET WEIGHTS. Thus not strict scratch, though segmentation-mask-free claim; .89 is external LV Dice, other chambers reported through clinical measures, not 3-class MRI Dice. (2) CM-TAPE DOI111892 in your report is unverified/wrong. Secondary metadata suggests 10.1016/j.patcog.2026.114699, primary fulltext unavailable to root. Unless you actually access primary paper, mark entire protocol, CLIP assumption, GT mapping/crop/selection and numeric claims UNKNOWN. Do not treat secondary abstract as primary confirmation. (3) Bai anatomical position correct https://arxiv.org/abs/1907.02757. (4) Remove unsupported LF-LVS GitHub/user URL and all unsupported per-method Dice ranges. Verify CUTS/DFC bibliographic links or mark unverified. (5) Target-dataset-label-free is not the same as no class-name priors: anatomy rules, class text prompts, source supervision do not automatically use target GT. Classify manual masks anywhere vs target masks separately. (6) No universal proof no published method reaches target, no claimed scratch ceiling .78-.84 or SSL achievable .86-.90, no single mathematically viable route. State no verified supporting evidence found in inspected sources. (7) Root independently verified historical C0/C1 negative controls in sibling /Users/alvinluong/Self-Audit-nogt/reports/astra_nogt_baseline_20260918T042050Z; Candidate-C replay C0/C1 is a different namespace. Do not invent historical oracle leakage. (8) Static synthetic moving-circle success is not real physiology evidence; no 10x-50x motion-variance contrast claim without primary support. RV is patient right, not patient left. (9) CNN/MAE features need empirical testing; no automatic sharp anatomical boundary guarantee. (10) Every crop/GT checkpoint-selection field absent from accessible primary source must be UNKNOWN, not assumed standard validation.\nRoot is authoring final synthesis/architecture; you only repair your bounded literature report and provenance matrix. Include a correction log and accessed primary URLs. No need to message interim output. Send worker_done once after revised report is complete.",
+      "status": "ready",
+      "deps": "[]",
+      "result": null,
+      "created_at": "2026-09-20 16:34:22",
+      "completed_at": null
+    },
+    "mutation": {
+      "requestId": "5dc51ac7-76fb-4917-9429-82ec9ce1ed3d",
+      "replayed": false
+    }
+  },
+  "_meta": {
+    "runtimeId": "685fbdf6-0375-42f2-950a-a6e7db3a8ff9"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "id": "d66c2110-1f4f-4ec1-9f65-f1274042c42e",
+  "ok": true,
+  "result": {
+    "task": {
+      "id": "task_eb2f88e0df1e",
+      "run_id": "run_698eb3b460ef",
+      "parent_id": null,
+      "created_by_terminal_handle": "term_fdc735d0-48da-41ba-9e90-9c3676099834",
+      "created_by_pane_key": "8bbf0e06-4421-420a-ba74-4960390c644a:9ff50719-b88d-483a-afe1-9417b2a61523",
+      "created_by_process_incarnation": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit@@e4d79379:4018ff4c-cb6c-47bc-8af2-561ee6128df0",
+      "created_by_run_generation": 1,
+      "task_title": "H independent post-freeze R0 evaluator",
+      "display_name": "H independent post-freeze R0 evaluator",
+      "spec": "You are AGY Worker H, independent post-freeze evaluator, for Astra Self-Audit v3 Orca run run_698eb3b460ef. Original main d4f503b7107eca4e8ac85f37a5dd01ec50479666. Work only in /Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit. You are not alone; never revert others. Ownership ONLY reports/astra_v3/workers/H_postfreeze_evaluation.md and H_evidence/. No source/tests edits, no commit/push, no training, no modifying frozen predictions/config/generator. Use rtk prefix, interpreter /Users/alvinluong/miniforge3/bin/python. No repeated progress questions. Complete bounded task within 15 minutes with reproducible evaluator and JSON metrics, explicit blockers if necessary.\nThe image-only root generator has NOW frozen experiment astra-v3-r0-dimensionless-seeds-20260920-v2. Frozen manifest /private/tmp/astra_v3_r0_dimensionless_20260920_v2/FROZEN.json expected SHA256 c0be95e4f3e6bf63277e576f80f0d89aacc949b48630bf211883e786d141196e. Verify this hash and every config/script/split/image/prediction hash BEFORE opening any manual GT. Log freeze-verification and first GT-read timestamps, list all GT opens/hashes. Verify hashes again after evaluation. Do not send GT arrays to generator/root or train on GT. You alone may read matched manual GT files from /tmp/astra_event_acdc_training/training, by appending _gt to frozen source_image basename. NIfTI ACDC labels BG0 RV1 MYO2 LV3. Validate native array shapes and affine match; fail explicit mismatches. Current data spatial units unknown and header zooms disagree with sform; experiment is STORED GRID dimensionless, not valid physical-distance/orientation evidence. Full cine/motion unavailable; no fabricated temporal evidence.\nEvaluate ALL seven frozen arms without selecting or retuning any. Primary candidate fixed all_available. Report train and dev separately and per patient, each 4 patients, each 2 phases, all native slices. Primary Dice = mean_patient(mean_phase(mean_{RV,MYO,LV}(3D volume Dice))). UNKNOWN255 counts missed anatomy, never omitted from Dice. No smoothing and define both-empty class carefully (null, no spurious 1; warn if encountered). Accepted pixel precision = correct accepted / accepted; all-background dominance must not hide foreground. Report per-class predicted precision TP/predicted_class and GT-class coverage TP/GT_class, total accepted FOV fraction, UNKNOWN fraction, class Dice, confusion matrix GT rows 0..3 x prediction cols0..3,255. Semantic RV/LV swap rate = (GT RV predicted LV + GT LV predicted RV)/(all accepted predictions on GT RV or LV), denominator zero => null; also list numerator/denominator. Harm per patient against appearance_anchor = class-macro Dice delta and lost/gained correct accepted pixels, no causal claim. Confidence calibration is NOT RUN because these hard cues have no calibrated probability. Report gate per split from frozen config (per-class precision>=.95 and coverage>=.05, >=.75 patients with all three predicted classes); null precision must FAIL. Include confidence intervals only if clearly appropriate tiny n, no exaggeration.\nWrite a small independent evaluator with synthetic tests for UNKNOWN-as-FN, absent predictions null precision, patient/phase aggregation, label swaps, and tampered freeze failure before GT. Run these tests and actual evaluation. Validate native geometry arrays but do not claim physical native-space validity. You may inspect frozen generator only for provenance, not tune it. Return complete report with metrics and paths via worker_done once, then idle. Root owns verdict; no semantic improvement from coverage alone.",
+      "status": "ready",
+      "deps": "[]",
+      "result": null,
+      "created_at": "2026-09-20 16:18:57",
+      "completed_at": null
+    },
+    "mutation": {
+      "requestId": "59a90716-72f3-4812-a356-600db7ef431d",
+      "replayed": false
+    }
+  },
+  "_meta": {
+    "runtimeId": "685fbdf6-0375-42f2-950a-a6e7db3a8ff9"
+  }
+}

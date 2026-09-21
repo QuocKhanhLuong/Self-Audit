@@ -1,0 +1,90 @@
+{
+  "patient_id": "patient001",
+  "case_id": "patient001_frame01",
+  "phase": "ED",
+  "t": 0,
+  "t_total": 30,
+  "z": 4,
+  "z_total": 10,
+  "spatial_neighbors": {
+    "z_prev": 3,
+    "z_cur": 4,
+    "z_nxt": 5,
+    "mode": "clamp_boundary"
+  },
+  "temporal_neighbors": {
+    "t_prev": null,
+    "t_cur": 0,
+    "t_nxt": null,
+    "status": "unavailable_static_ed_es"
+  },
+  "native_transform": {
+    "source_file": "/tmp/astra_event_acdc_training/training/patient001/patient001_frame01.nii",
+    "orig_shape_hw": [
+      256,
+      216
+    ],
+    "net_shape_hw": [
+      256,
+      256
+    ],
+    "scale_y": 1.0,
+    "scale_x": 0.84375,
+    "native_orientation": "LPS",
+    "native_spacing_zyx_mm": [
+      10.0,
+      1.5625,
+      1.5625
+    ],
+    "effective_spacing_zyx_mm": [
+      10.0,
+      1.5625,
+      1.318359375
+    ]
+  },
+  "transforms_applied": [
+    {
+      "name": "spatial_triplet_extraction",
+      "z_indices": [
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "name": "percentile_clipping",
+      "percentiles": [
+        0.5,
+        99.5
+      ],
+      "range": [
+        0.0,
+        356.0
+      ]
+    },
+    {
+      "name": "z_score_standardization",
+      "mean": 76.54479528356481,
+      "std": 84.09336903985265
+    },
+    {
+      "name": "bilinear_in_plane_resize",
+      "orig_hw": [
+        256,
+        216
+      ],
+      "net_hw": [
+        256,
+        256
+      ],
+      "align_corners": false
+    }
+  ],
+  "cur_triplet_shape": [
+    3,
+    256,
+    256
+  ],
+  "prev_triplet": null,
+  "nxt_triplet": null
+}
