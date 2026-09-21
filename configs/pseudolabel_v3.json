@@ -1,8 +1,41 @@
 {
-  "schema_version": 1,
-  "teacher": {"width": 24, "appearance_dim": 48, "motion_dim": 16, "fused_dim": 64, "anonymous_prototypes": 12},
-  "reliability": {"min_probability": 0.70, "min_margin": 0.20, "prototype_min_confidence": 0.80},
-  "training": {"lr": 0.001, "weight_decay": 0.0001, "bounded_default_epochs": 1},
-  "deployment": {"student_width": 32, "window_k": 8,
-    "profiles": {"compact": 0, "balanced": 1, "accurate": 2}}
+  "schema_version": 2,
+  "teacher": {
+    "width": 24,
+    "appearance_dim": 48,
+    "motion_dim": 16,
+    "fused_dim": 64,
+    "anonymous_prototypes": 12,
+    "registration_max_displacement": 0.15
+  },
+  "reliability": {
+    "min_probability": 0.70,
+    "min_margin": 0.20,
+    "prototype_min_confidence": 0.80
+  },
+  "loss_weights": {
+    "reconstruction": 1.0,
+    "anonymous_prototype": 0.1,
+    "semantic_seed": 1.0,
+    "motion_photometric": 1.0,
+    "motion_smoothness": 0.05
+  },
+  "consistency": {
+    "enabled": true,
+    "temporal_weight": 0.5,
+    "slice_weight": 0.25,
+    "min_agreement": 0.60
+  },
+  "training": {
+    "lr": 0.001,
+    "weight_decay": 0.0001,
+    "bounded_default_epochs": 1
+  },
+  "deployment": {
+    "student_width": 32,
+    "window_k": 8,
+    "profiles": {"compact": 0, "balanced": 1, "accurate": 2},
+    "entropy_compact": 0.25,
+    "entropy_accurate": 0.55
+  }
 }
