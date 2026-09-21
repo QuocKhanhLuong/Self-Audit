@@ -139,7 +139,8 @@ class CinePseudoTeacher(nn.Module):
         top=dense.topk(2,dim=1).values
         valid=(dense_mass>=.5)&(top[:,0]>=min_prob)&((top[:,0]-top[:,1])>=min_margin)
         labels=dense.argmax(1)
-        return {**base,"guided_semantic_prob":prob,"region_valid":valid_region,
+        return {**base,"raw_semantic_prob":logits.softmax(-1),
+                "semantic_prob":prob,"guided_semantic_prob":prob,"region_valid":valid_region,
                 "soft_label":dense,"valid":valid,
                 "pseudo_label":torch.where(valid,labels,torch.full_like(labels,UNKNOWN))}
 

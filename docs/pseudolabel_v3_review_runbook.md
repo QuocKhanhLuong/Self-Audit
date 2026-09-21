@@ -20,13 +20,16 @@ The exact original system file was reconstructed and verified against Git blob
   canonically reoriented arrays can change the slice axis.
 - M&Ms discovery could open `_gt` files before identifying images.
 - Old consistency averaged unregistered pixels and implicitly wrapped the cycle.
-- Old CI glob excluded `test_pseudolabel_*.py`. A green old run did not cover v3.
+- Old CI ran `test_self_audit_pseudolabel_v3.py`, but excluded
+  `test_pseudolabel_*.py`. A green old run did not cover the complete v3 suite.
 
 ## Repairs and intentional limits
 
 UNKNOWN is masked before CE; empty batches skip AdamW. No foreground seeds means
 student training fails clearly instead of writing a misleading trained checkpoint.
-Raw neural logits are supervised by detached raw evidence. Prototype history cannot
+Raw neural logits are supervised by detached raw evidence. The compatibility key
+`semantic_prob` remains evidence-guided; `raw_semantic_prob` and `semantic_logits`
+exclude that evidence, and only the raw logits enter seed CE. Prototype history cannot
 create or rename independently unsupported seeds. Training and inference each encode
 the teacher once. Dense labels also require class agreement after region mixing.
 
