@@ -5,6 +5,7 @@ from self_audit_pseudolabel.evidence import build_region_evidence
 from self_audit_pseudolabel.evolution import PrototypeBank
 from self_audit_pseudolabel.losses_v3 import prototype_information_loss
 from self_audit_pseudolabel.adaptive import RuntimeBudget,choose_profile
+from self_audit_pseudolabel.consistency import consistency_gate
 
 def test_triplet_z_boundary_replication():
     v=np.arange(3*4*5,dtype=np.float32).reshape(3,4,5); a=triplet_z(v,0)
@@ -33,3 +34,9 @@ def test_controller_respects_cap():
     certain=torch.tensor([[[[8.]], [[-8.]], [[-8.]], [[-8.]]]]); uncertain=torch.zeros(1,4,1,1)
     assert choose_profile(certain,RuntimeBudget(max_profile="accurate"))=="compact"
     assert choose_profile(uncertain,RuntimeBudget(max_profile="balanced"))=="balanced"
+
+def test_consistency_gate_rejects_temporal_class_flip():
+    prob=torch.zeros(3,1,4,2,2); prob[0,:,1]=1; prob[1,:,2]=1; prob[2,:,1]=1
+    valid=torch.ones(3,1,2,2,dtype=torch.bool)
+    _,v=consistency_gate(prob,valid,temporal_weight=1.0,slice_weight=0.0,min_agreement=.5)
+    assert not bool(v[1].any())
