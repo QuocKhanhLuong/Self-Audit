@@ -33,13 +33,35 @@ class AppearanceEncoder(nn.Module):
         return f,self.recon(F.interpolate(f,size=x.shape[-2:],mode="bilinear",align_corners=False))
 
 class MotionBranch(nn.Module):
-    """Cheap temporal descriptor; deliberately not claimed to be registration."""
-    def __init__(self,dim=16):
-        super().__init__(); self.net=nn.Sequential(
-            nn.Conv2d(4,dim,3,padding=1,bias=False),_gn(dim),nn.GELU(),nn.Conv2d(dim,dim,3,stride=4,padding=1))
+    """Lightweight unsupervised pairwise registration + motion descriptor."""
+    def __init__(self,dim=16,max_disp=.15):
+        super().__init__(); self.max_disp=float(max_disp)
+        hidden=max(dim,16)
+        self.flow=nn.Sequential(
+            nn.Conv2d(2,hidden,3,padding=1,bias=False),_gn(hidden),nn.GELU(),
+            nn.Conv2d(hidden,hidden,3,stride=2,padding=1,bias=False),_gn(hidden),nn.GELU(),
+            nn.Conv2d(hidden,hidden,3,stride=2,padding=1,bias=False),_gn(hidden),nn.GELU(),
+            nn.Conv2d(hidden,2,3,padding=1))
+        self.feat=nn.Sequential(nn.Conv2d(6,dim,3,padding=1,bias=False),_gn(dim),nn.GELU())
+    @staticmethod
+    def _grid(h,w,device,dtype):
+        yy,xx=torch.meshgrid(torch.linspace(-1,1,h,device=device,dtype=dtype),
+                             torch.linspace(-1,1,w,device=device,dtype=dtype),indexing="ij")
+        return torch.stack([xx,yy],-1)[None]
+    def _register(self,src,cur):
+        low=torch.tanh(self.flow(torch.cat([src,cur],1)))*self.max_disp
+        flow=F.interpolate(low,size=cur.shape[-2:],mode="bilinear",align_corners=False)
+        grid=self._grid(cur.shape[-2],cur.shape[-1],cur.device,cur.dtype)+flow.permute(0,2,3,1)
+        warped=F.grid_sample(src,grid,mode="bilinear",padding_mode="border",align_corners=True)
+        return low,warped
     def forward(self,prev,cur,nxt):
         p,c,n=prev[:,1:2],cur[:,1:2],nxt[:,1:2]
-        raw=torch.cat([c-p,n-c,(c-p).abs(),(n-c).abs()],1); return self.net(raw)
+        fp,wp=self._register(p,c); fn,wn=self._register(n,c)
+        c_low=F.interpolate(c,size=fp.shape[-2:],mode="bilinear",align_corners=False)
+        wp_low=F.interpolate(wp,size=fp.shape[-2:],mode="bilinear",align_corners=False)
+        wn_low=F.interpolate(wn,size=fp.shape[-2:],mode="bilinear",align_corners=False)
+        descriptor=torch.cat([fp,fn,(c_low-wp_low).abs(),(c_low-wn_low).abs()],1)
+        return self.feat(descriptor),{"flow_prev":fp,"flow_next":fn,"warped_prev":wp,"warped_next":wn}
 
 class RegionPrototypeHead(nn.Module):
     def __init__(self,dim,k=12,temperature=.1):
@@ -66,7 +88,7 @@ class CinePseudoTeacher(nn.Module):
         self.regions=RegionPrototypeHead(fused_dim,k); self.region_dim=fused_dim+3
         self.semantic=nn.Sequential(nn.Linear(self.region_dim,96),nn.GELU(),nn.Linear(96,NUM_CLASSES))
     def forward(self,prev,cur,nxt,*,evidence_logits=None,min_prob=.70,min_margin=.20):
-        app,recon=self.appearance(cur); motion=self.motion(prev,cur,nxt)
+        app,recon=self.appearance(cur); motion,motion_aux=self.motion(prev,cur,nxt)
         fused=self.fuse(torch.cat([app,motion],1)); q=self.regions(fused)
         r=pool_regions(q,fused,cur[:,1:2],motion); logits=self.semantic(r)
         if evidence_logits is not None:
@@ -81,7 +103,7 @@ class CinePseudoTeacher(nn.Module):
         label=dense_prob.argmax(1); pseudo=torch.where(dense_valid,label,torch.full_like(label,UNKNOWN))
         return {"pseudo_label":pseudo,"valid":dense_valid,"soft_label":dense_prob,"region_prob":q,
                 "region_features":r,"region_valid":valid_region,"semantic_prob":prob,"semantic_logits":logits,
-                "reconstruction":recon,"appearance_features":app,"motion_features":motion}
+                "reconstruction":recon,"appearance_features":app,"motion_features":motion,**motion_aux}
 
 @dataclass(frozen=True)
 class ResourceProfile:
