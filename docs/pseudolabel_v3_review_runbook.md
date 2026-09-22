@@ -127,3 +127,40 @@ coverage, external generalization, GPU memory/latency and ACDC >=0.91 are NOT es
 by this audit. This revision fixes software and measurement integrity, not anatomical
 identifiability. No long training, threshold selection using GT, or manual-scribble
 fallback is performed automatically.
+
+
+## One-command full research pipeline and concise console logging
+
+The reviewed v3 entrypoints are also orchestrated by `scripts/run_full_pipeline_v3.py`.
+It runs teacher training/freeze, independent validation scoring, and optionally the
+student. Student training is opt-in with `--train-student`; pseudo-label validation
+does not silently change thresholds or supervision.
+
+Console output is intentionally compact:
+
+```text
+[LOAD] patients discovered=100 train=80 val=20 ...
+[MODEL] teacher params=...
+[EPOCH] 1/3 steps=... loss=... seed=... proto=... recon=... motion=... accepted=... time=... peak_vram=...
+[EXPORT] patients=10/100 entries=...
+[EVAL] patients=20 slices=... fg=... RV=... MYO=... LV=... known=...
+[DONE] ...
+```
+
+Per-step metrics remain in `train_metrics.json`; the console reports epoch aggregates.
+The orchestration log is written to `pipeline.log`, and the final paths/timings plus
+pseudo-label metrics are written to `PIPELINE_SUMMARY.json`.
+
+Example full ACDC teacher + evaluation:
+
+```bash
+python scripts/run_full_pipeline_v3.py \
+  --dataset acdc --root "$PWD/data/ACDC/training" \
+  --split-manifest splits/acdc_patient_split_seed42.json \
+  --config configs/pseudolabel_v3.json \
+  --out "$PWD/runs/pseudolabel_v3/full_$(date +%Y%m%d_%H%M%S)" \
+  --teacher-epochs 3 --batch-size 1 --threads 4 --device cuda
+```
+
+Add `--train-student --student-epochs 10 --profile balanced` only when a full
+end-to-end software run is desired. That does not certify teacher quality.

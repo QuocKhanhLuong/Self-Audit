@@ -12,6 +12,7 @@ def main(argv=None):
     ap.add_argument('--reference-manifest',help='Explicit patient_id,t,path,label_map entries; required for M&Ms')
     ap.add_argument('--split',choices=['train','val','test'],default='val'); ap.add_argument('--out',required=True)
     args=ap.parse_args(argv); root=Path(args.run)
+    print(f"[EVAL] verify freeze={root/'FROZEN.json'} split={args.split}",flush=True)
     payload=verify_frozen(root/'FROZEN.json')  # no nibabel/reference access before this boundary
     cfg=payload['config']; inventory={r['patient_id']:r for r in cfg['export_records'] if r['split']==args.split}
     if not inventory: raise ValueError('requested split is not in this frozen export')
@@ -68,12 +69,23 @@ def main(argv=None):
                      'foreground_mean':float(np.mean(values)) if values else None,
                      'known_fraction':known[pid][0]/max(known[pid][1],1)})
     vals=[r['foreground_mean'] for r in rows if r['foreground_mean'] is not None]
+    class_means={}
+    for key in ('rv','myo','lv'):
+        values=[r[key] for r in rows if r[key] is not None]
+        class_means[key]=float(np.mean(values)) if values else None
+    known_values=[r['known_fraction'] for r in rows]
     result={'split':args.split,'evaluation_kind':'in_sample' if args.split=='train' else 'held_out_development',
         'manifest_id':payload['manifest_id'],'patients':len(rows),'scored_slices':scored,
-        'foreground_mean':float(np.mean(vals)) if vals else None,'patient_rows':rows,
+        'foreground_mean':float(np.mean(vals)) if vals else None,
+        'rv':class_means['rv'],'myo':class_means['myo'],'lv':class_means['lv'],
+        'known_fraction':float(np.mean(known_values)) if known_values else None,'patient_rows':rows,
         'empty_class_policy':'exclude_both_empty','UNKNOWN_policy':'missed_reference_anatomy',
         'teacher_ready':'NOT_AUTOMATICALLY_CERTIFIED','bounded_training':cfg.get('bounded_training',False)}
     out=Path(args.out); out.parent.mkdir(parents=True,exist_ok=True)
     with out.open('x',encoding='utf-8') as f: json.dump(result,f,indent=2,allow_nan=False)
-    print(json.dumps(result,indent=2))
+    def fmt(v): return 'n/a' if v is None else f'{v:.4f}'
+    print(f"[EVAL] patients={len(rows)} slices={scored} fg={fmt(result['foreground_mean'])} "
+          f"RV={fmt(result['rv'])} MYO={fmt(result['myo'])} LV={fmt(result['lv'])} "
+          f"known={fmt(result['known_fraction'])} out={out}",flush=True)
+    return result
 if __name__=='__main__': main()
