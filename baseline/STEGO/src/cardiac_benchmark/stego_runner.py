@@ -11,6 +11,7 @@ import torch
 import torch.nn.functional as F
 
 from shared_benchmark.artifacts import GeneratedSample
+from shared_benchmark.region_graph import build_region_graph
 
 from .config import STEGOConfig
 
@@ -32,10 +33,19 @@ def seed_deterministic(seed: int = 42) -> None:
 
 
 def load_stego_model(config: STEGOConfig, *, device: str | torch.device = "cpu") -> Any:
-    """Load the STEGO DINO featurizer on CPU, then move it once to ``device``."""
+    """Load the STEGO inference module for the requested benchmark profile."""
     if not config.checkpoint_path:
         raise ValueError("STEGO scientific inference requires checkpoint_path")
     _add_stego_src_to_path()
+    runtime_device = torch.device(device)
+    if config.profile == "STEGO-SA224-FAIR":
+        from train_segmentation import LitUnsupervisedSegmenter
+
+        model = LitUnsupervisedSegmenter.load_from_checkpoint(config.checkpoint_path, map_location="cpu", weights_only=False)
+        model = model.to(runtime_device)
+        model.eval()
+        return model
+
     from types import SimpleNamespace
     from modules import DinoFeaturizer
 
@@ -48,9 +58,24 @@ def load_stego_model(config: STEGOConfig, *, device: str | torch.device = "cpu")
         dropout=config.dropout,
     )
     model = DinoFeaturizer(config.dim, cfg)
-    model = model.to(torch.device(device))
+    model = model.to(runtime_device)
     model.eval()
     return model
+
+
+def topology_summary(partition: np.ndarray) -> dict[str, Any]:
+    graph = build_region_graph(partition)
+    non_border = [component for component in graph.components if not component.border_contact]
+    enclosure_pairs = graph.enclosure_pairs()
+    largest = max((component.area_fraction for component in graph.components), default=0.0)
+    return {
+        "component_count": len(graph.components),
+        "border_component_count": sum(component.border_contact for component in graph.components),
+        "non_border_component_count": len(non_border),
+        "enclosure_pair_count": len(enclosure_pairs),
+        "largest_component_fraction": float(largest),
+        "graph_digest": graph.digest,
+    }
 
 
 def run_inference(
@@ -60,6 +85,7 @@ def run_inference(
     target_hw: tuple[int, int] | None = None,
     resolution: int | None = None,
     device: str | torch.device = "cpu",
+    config: STEGOConfig | None = None,
 ) -> np.ndarray:
     """Forward pass to a 2-D anonymous partition on the shared target grid."""
     if target_hw is None:
@@ -72,10 +98,18 @@ def run_inference(
     imagenet_std = torch.tensor([0.229, 0.224, 0.225], device=runtime_device).view(1, 3, 1, 1)
     image_norm = (image_tensor / 255.0 - imagenet_mean) / imagenet_std
     with torch.no_grad():
-        _, code = model(image_norm)
-    partition = code.argmax(1, keepdim=True).float()
-    partition = F.interpolate(partition, size=target_hw, mode="nearest").squeeze(0).squeeze(0).long()
-    return partition.cpu().numpy().astype(np.int32, copy=False)
+        if config is not None and config.profile == "STEGO-SA224-FAIR" and hasattr(model, "cluster_probe") and hasattr(model, "net"):
+            _, code1 = model.net(image_norm)
+            _, code2 = model.net(image_norm.flip(dims=[3]))
+            code = (code1 + code2.flip(dims=[3])) / 2
+            code = F.interpolate(code, size=target_hw, mode="bilinear", align_corners=False)
+            cluster_probs = model.cluster_probe(code, 2, log_probs=True)
+            partition = cluster_probs.argmax(1)
+        else:
+            _, code = model(image_norm)
+            partition = code.argmax(1).float()
+            partition = F.interpolate(partition.unsqueeze(1), size=target_hw, mode="nearest").squeeze(1)
+    return partition.squeeze(0).long().cpu().numpy().astype(np.int32, copy=False)
 
 
 def generate_sample(
@@ -87,7 +121,7 @@ def generate_sample(
     checkpoint_sha256: str,
 ) -> GeneratedSample:
     target_hw = tuple(int(v) for v in sample.provenance["target_shape"])
-    partition = run_inference(model, sample.image, target_hw=target_hw, device=device)
+    partition = run_inference(model, sample.image, target_hw=target_hw, device=device, config=config)
     metadata = {
         "architecture": config.model_type,
         "dino_patch_size": config.dino_patch_size,
@@ -98,7 +132,9 @@ def generate_sample(
         "checkpoint_identity": checkpoint_sha256,
         "normalization": sample.provenance["normalization"],
         "profile": sample.provenance["profile"],
+        "benchmark_tier": sample.provenance.get("benchmark_tier", "compat"),
         "input_channels": sample.provenance["input_channels"],
+        "raw_topology": topology_summary(partition),
     }
     return GeneratedSample(
         partition=partition,

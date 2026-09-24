@@ -27,6 +27,7 @@ from .semantic_contract import (
     array_hash,
     canonical_metadata_hash,
     load_and_validate_spec,
+    semantic_artifact_stage,
     validate_adapter_record,
 )
 from .spatial import SPATIAL_CONTRACT_VERSION, grid_hash
@@ -184,7 +185,14 @@ def adapt_partition(
 ) -> AdapterResult:
     """Resolve one anonymous partition under the immutable v2 contract."""
     spec, spec_hash = load_and_validate_spec(adapter_spec)
-    clean_record, partition_value, image_value, manifest_hash = validate_adapter_record(record, partition, central_image)
+    adapter_version = str(spec["adapter_version"])
+    clean_record, partition_value, image_value, manifest_hash = validate_adapter_record(
+        record,
+        partition,
+        central_image,
+        adapter_version=adapter_version,
+        adapter_config_sha256=spec_hash,
+    )
     graph = build_region_graph(partition_value)
     semantic = np.full(partition_value.shape, VOID, dtype=np.uint8)
     assignments: dict[str, int] = {}
@@ -206,7 +214,7 @@ def adapt_partition(
     trace = _assignment_trace(graph, assignments, assignment_reasons, component_reasons)
     unresolved = _unresolved_reasons(role_reasons, component_reasons)
     scientific_result_hash = sha256_json({
-        "adapter_version": ADAPTER_VERSION,
+        "adapter_version": adapter_version,
         "adapter_config_sha256": spec_hash,
         "sample_id": clean_record["sample_id"],
         "shared_manifest_sha256": manifest_hash,
@@ -216,9 +224,9 @@ def adapt_partition(
         "validity_map_sha256": validity_digest,
     })
     metadata = {
-        "adapter_version": ADAPTER_VERSION,
-        "input_schema_version": ADAPTER_INPUT_SCHEMA_VERSION,
-        "output_schema_version": ADAPTER_OUTPUT_SCHEMA_VERSION,
+        "adapter_version": adapter_version,
+        "input_schema_version": str(spec["input_schema_version"]),
+        "output_schema_version": str(spec["output_schema_version"]),
         "sample_id": clean_record["sample_id"],
         "shared_manifest_sha256": manifest_hash,
         "partition_sha256": partition_digest,
@@ -238,6 +246,7 @@ def adapt_partition(
         "intensity_resolution": "disabled",
         "orientation_resolution": "disabled",
         "region_splitting": False,
+        "semantic_artifact_stage": semantic_artifact_stage(adapter_version),
     }
     # Force a final JSON-serializability check before returning a frozen result.
     metadata["metadata_sha256"] = canonical_metadata_hash(adapter_metadata_payload(metadata))

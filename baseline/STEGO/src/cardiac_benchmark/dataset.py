@@ -10,11 +10,18 @@ import torch
 from torch.utils.data import Dataset
 
 from shared_benchmark.manifest import SharedManifestError
-from shared_benchmark.spatial import grid_hash, read_context_stack, resize_values_to_grid
+from shared_benchmark.spatial import (
+    SELF_AUDIT_COMPAT_224_SPATIAL_CONTRACT_VERSION,
+    grid_hash,
+    read_context_stack,
+    read_self_audit_context_stack,
+    resize_values_to_grid,
+)
 
 
-PROFILES = ("STEGO-2D",)
+PROFILES = ("STEGO-2D", "STEGO-SA224", "STEGO-SA224-FAIR")
 NORMALIZATION_VERSION = "stego.cardiac.central_fixed_affine_v1"
+SA224_NORMALIZATION_VERSION = "stego.cardiac.sa224_self_audit_volume_then_central_fixed_affine_v1"
 
 
 @dataclass(frozen=True)
@@ -27,6 +34,12 @@ def fixed_affine_normalize(plane: np.ndarray) -> np.ndarray:
     finite = np.nan_to_num(plane.astype(np.float32, copy=False), nan=0.0, posinf=0.0, neginf=0.0)
     clipped = np.clip(finite, -3.0, 3.0)
     return ((clipped + 3.0) / 6.0 * 255.0).astype(np.uint8, copy=False)
+
+
+def fixed_affine_tensor(plane: torch.Tensor) -> torch.Tensor:
+    finite = torch.nan_to_num(plane.float(), nan=0.0, posinf=0.0, neginf=0.0)
+    clipped = finite.clamp(-3.0, 3.0)
+    return (clipped + 3.0) / 6.0 * 255.0
 
 
 class STEGOCardiacDataset(Dataset[ImageOnlySample]):
@@ -63,11 +76,19 @@ class STEGOCardiacDataset(Dataset[ImageOnlySample]):
 
     def __getitem__(self, index: int) -> ImageOnlySample:
         record = self.records[index]
-        stack = read_context_stack(record, source_root=self.source_root)
-        central = fixed_affine_normalize(stack[1])
-        central_tensor = torch.from_numpy(central[None]).float()
-        central_on_grid = resize_values_to_grid(central_tensor, self.grid)
-        image = central_on_grid.repeat(3, 1, 1).float()
+        if self.profile in {"STEGO-SA224", "STEGO-SA224-FAIR"}:
+            if self.grid.get("version") != SELF_AUDIT_COMPAT_224_SPATIAL_CONTRACT_VERSION:
+                raise SharedManifestError("STEGO-SA224 requires the Self-Audit compat 224 shared grid")
+            stack = read_self_audit_context_stack(record, source_root=self.source_root)
+            central = resize_values_to_grid(torch.from_numpy(stack[1:2]), self.grid)
+            image = fixed_affine_tensor(central).repeat(3, 1, 1).float()
+            normalization_version = SA224_NORMALIZATION_VERSION
+        else:
+            stack = read_context_stack(record, source_root=self.source_root)
+            central = fixed_affine_normalize(stack[1])
+            central_tensor = torch.from_numpy(central[None]).float()
+            image = resize_values_to_grid(central_tensor, self.grid).repeat(3, 1, 1).float()
+            normalization_version = NORMALIZATION_VERSION
         provenance = {
             "dataset": record["dataset"], "sample_id": record["sample_id"], "patient_id": record["patient_id"],
             "study_id": record["study_id"], "volume_id": record["volume_id"],
@@ -77,7 +98,8 @@ class STEGOCardiacDataset(Dataset[ImageOnlySample]):
             "target_shape": self.grid["target_hw"], "spatial_transform": record["spatial_transform"],
             "manifest_hash": self.manifest_hash, "shared_grid_version": self.grid["version"],
             "shared_grid_hash": grid_hash(self.grid), "profile": self.profile,
-            "normalization": NORMALIZATION_VERSION, "input_channels": 3,
+            "normalization": normalization_version, "input_channels": 3,
+            "benchmark_tier": "fair" if self.profile.endswith("-FAIR") else "compat",
         }
         return ImageOnlySample(image=image, provenance=provenance)
 

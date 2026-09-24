@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+import json
 from pathlib import Path
 
 import sys
@@ -18,6 +19,7 @@ for import_path in (BASELINE_ROOT / "src", BASELINE_ROOT, REPO_ROOT / "src"):
     sys.path.insert(0, str(import_path))
 
 import numpy as np
+import nibabel as nib
 import pytest
 
 import sys
@@ -31,7 +33,8 @@ if str(BASELINE_SRC) in sys.path:
 sys.path.insert(0, str(BASELINE_SRC))
 
 from shared_benchmark.manifest import SharedManifestError, build_shared_manifest
-from shared_benchmark.spatial import build_grid_spec
+from shared_benchmark.self_audit_protocol import discover_self_audit_acdc
+from shared_benchmark.spatial import build_grid_spec, grid_hash, load_self_audit_compat_224_grid_spec
 from self_audit_maskfree.data.discovery import discover_dataset
 
 
@@ -53,6 +56,34 @@ def shared_manifest(root: Path, *, target_hw: tuple[int, int] = (8, 8)) -> dict:
         fixture=True,
         scientific=False,
         local_source_root=root,
+    )
+
+
+def self_audit_manifest(root: Path) -> dict:
+    image_root = root / "images"
+    image_path = image_root / "training" / "patient001" / "patient001_frame01.nii"
+    image_path.parent.mkdir(parents=True, exist_ok=True)
+    volume = np.arange(4 * 5 * 3, dtype=np.int16).reshape(4, 5, 3)
+    nib.save(nib.Nifti1Image(volume, np.eye(4)), str(image_path))
+    selection_path = root / "selection.json"
+    selection_path.write_text(json.dumps({
+        "schema_version": "self_audit.acdc.frame_selection.v1",
+        "seed": 42,
+        "records": [{
+            "patient_id": "patient001",
+            "split": "train",
+            "relative_path": "training/patient001/patient001_frame01.nii",
+            "frame_index": 1,
+            "frame_label": "ED",
+        }],
+    }), encoding="utf-8")
+    upstream = discover_self_audit_acdc(image_root, selection_path)
+    return build_shared_manifest(
+        upstream,
+        load_self_audit_compat_224_grid_spec(REPO_ROOT),
+        fixture=False,
+        scientific=True,
+        local_source_root=image_root,
     )
 
 from cardiac_benchmark.dataset import STEGOCardiacDataset, NORMALIZATION_VERSION
@@ -94,3 +125,34 @@ def test_stego_counts_by_split_uses_shared_records(tmp_path):
     manifest = shared_manifest(tmp_path, target_hw=(8, 8))
     counts = counts_by_split(manifest)
     assert sum(row["samples"] for row in counts.values()) == len(manifest["records"])
+
+
+def test_stego_sa224_uses_self_audit_normalized_contract(tmp_path):
+    manifest = self_audit_manifest(tmp_path)
+    record = manifest["records"][0]
+    ds = STEGOCardiacDataset(manifest, split=record["split"], profile="STEGO-SA224", source_root=tmp_path / "images")
+    sample = ds[0]
+    assert tuple(sample.image.shape) == (3, 224, 224)
+    assert sample.provenance["sample_id"] == record["sample_id"]
+    assert sample.provenance["target_shape"] == [224, 224]
+    assert sample.provenance["shared_grid_version"] == manifest["shared_grid"]["version"]
+    assert sample.provenance["normalization"] == "stego.cardiac.sa224_self_audit_volume_then_central_fixed_affine_v1"
+
+
+def test_stego_sa224_fair_reuses_common_context(tmp_path):
+    manifest = self_audit_manifest(tmp_path)
+    record = manifest["records"][0]
+    ds = STEGOCardiacDataset(manifest, split=record["split"], profile="STEGO-SA224-FAIR", source_root=tmp_path / "images")
+    sample = ds[0]
+    assert tuple(sample.image.shape) == (3, 224, 224)
+    assert sample.provenance["shared_grid_hash"] == grid_hash(manifest["shared_grid"])
+    assert sample.provenance["normalization"] == "stego.cardiac.sa224_self_audit_volume_then_central_fixed_affine_v1"
+    assert sample.provenance["benchmark_tier"] == "fair"
+
+
+def test_stego_sa224_rejects_non_sa224_grid(tmp_path):
+    manifest = shared_manifest(tmp_path, target_hw=(8, 8))
+    record = manifest["records"][0]
+    ds = STEGOCardiacDataset(manifest, split=record["split"], profile="STEGO-SA224", source_root=tmp_path)
+    with pytest.raises(SharedManifestError, match="STEGO-SA224"):
+        ds[0]

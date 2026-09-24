@@ -31,6 +31,8 @@ class STEGOConfig:
     continuous: bool = True
 
     def validate(self) -> None:
+        if self.profile not in {"STEGO-2D", "STEGO-SA224", "STEGO-SA224-FAIR"}:
+            raise ValueError("unsupported STEGO cardiac profile")
         if self.benchmark_seed != 42:
             raise ValueError("benchmark_seed must be 42")
         if self.resolution != 224:

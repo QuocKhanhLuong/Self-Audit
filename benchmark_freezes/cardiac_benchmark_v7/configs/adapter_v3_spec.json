@@ -1,0 +1,99 @@
+{
+  "schema_version": "shared_benchmark.cardiac_adapter_spec.v3",
+  "adapter_version": "cardiac_adapter_v3",
+  "input_schema_version": "shared_benchmark.anonymous_partition.v3",
+  "output_schema_version": "shared_benchmark.cardiac-semantic.v3",
+  "scientific_properties": {
+    "deterministic": true,
+    "learned": false,
+    "gt_free": true,
+    "method_independent": true,
+    "cluster_id_permutation_invariant": true,
+    "operation": "connected_component_naming_and_many_to_one_merging_only",
+    "region_splitting": false,
+    "void_capable": true
+  },
+  "allowed_input": {
+    "required_fields": [
+      "partition", "partition_sha256", "central_image", "central_image_sha256",
+      "sample_id", "shared_manifest_sha256", "shared_grid", "geometry_validity",
+      "adapter_version", "adapter_config_sha256"
+    ],
+    "partition": {
+      "shape": "H,W",
+      "dtype": "integer",
+      "ids": "opaque; equality only; numerical value, order, sign, and cardinality never imply semantics"
+    },
+    "central_image": {
+      "representation": "shared_adapter_central_image.v3: selected central source plane after exactly one Self-Audit full-frame volume 0.5/99.5 percentile clip and population z-score, then whole-FOV bilinear resize to the declared shared target grid with align_corners=False; CUTS-2D and DFC use this plane and CUTS-2.5D uses it as context channel 1; STEGO-SA224 and PICIE-SA224 use the 224x224 compat grid",
+      "shape": "H,W exactly equal to partition",
+      "finite": true
+    },
+    "geometry": "shared-grid and validity metadata only; anatomical orientation is disabled in v3"
+  },
+  "forbidden_input_names": [
+    "gt", "mask", "label", "annotation", "dice", "iou", "metric", "validation",
+    "oracle", "hungarian", "freemask_semantic_output", "freemask_auditor", "candidate_bank",
+    "predictive_evidence", "o_fit", "o_select", "o_verify", "method_semantic_hint"
+  ],
+  "component_graph": {
+    "component_connectivity": 4,
+    "adjacency_connectivity": 4,
+    "canonical_component_key": ["min_row", "min_col", "max_row", "max_col", "area"],
+    "raw_cluster_id_use": "preserved only as opaque provenance and equality relation; excluded from ranking, semantic hashes, and tie breaking",
+    "component_definition": "maximal 4-connected pixels having equal opaque raw cluster ID",
+    "adjacency_definition": "number of unordered horizontal or vertical pixel pairs belonging to distinct components",
+    "border_contact_definition": "component contains a pixel with row in {0,H-1} or col in {0,W-1}",
+    "hole_definition": "a maximal 4-connected component of the complement of A that has no border pixel",
+    "enclosure_definition": "A encloses B iff A and B are distinct non-border components, adjacency(A,B)>0, and every pixel of B lies in the union of A's holes"
+  },
+  "rules": {
+    "background": {
+      "candidate_set": "all border-touching components",
+      "seed": "the unique maximum-area candidate; if absent or tied, no BG assignment and all border candidates receive ambiguous_bg",
+      "merge": "assign BG to the seed and every border-touching component with the same opaque raw-ID equality class as the seed; no distinct raw-ID background merge is allowed",
+      "prohibited": ["largest non-border fallback", "raw-ID numeric ordering", "image intensity", "orientation"]
+    },
+    "lv_myo": {
+      "candidate_pairs": "ordered pairs (A,B) satisfying enclosure_definition after BG assignment",
+      "resolution": "if exactly one pair exists, assign A=MYO and B=LV; if zero, relevant non-BG components remain VOID with missing_enclosed_cavity; if more than one, every member of every candidate pair remains VOID with ambiguous_enclosure",
+      "merge": "additional components may map MYO only when they independently form the same unique resolved enclosure pair; this rule therefore normally yields one MYO component"
+    },
+    "rv": {
+      "candidate_set": "non-BG components that are not the resolved LV, are not MYO, are not fully inside a MYO hole, and have adjacency(MYO,C)>0",
+      "resolution": "if exactly one candidate exists, assign it RV; if zero, RV is unsupported; if more than one, every RV candidate remains VOID with ambiguous_rv",
+      "prohibited": ["left-right position", "absolute intensity", "raw-ID numerical ordering"]
+    }
+  },
+  "intensity_policy": {
+    "mode": "disabled_for_v3_resolution",
+    "reason": "the central image is sealed to the Self-Audit runtime representation but its values do not resolve anatomy",
+    "allowed_future_use": "only versioned relative within-image diagnostics after a separately frozen revision"
+  },
+  "orientation_policy": {
+    "mode": "disabled_for_v3_resolution",
+    "reason": "current manifest orientation validity does not prove a common short-axis patient-direction convention"
+  },
+  "tie_policy": [
+    "topology validity", "unique enclosure and adjacency", "VOID",
+    "no raw-ID, raster-order, method, dataset, patient, intensity, or orientation tie break"
+  ],
+  "cardinality_policy": {
+    "K=1": "only uniquely supported BG may be assigned; otherwise VOID",
+    "K=2": "BG may be assigned; no MYO/LV enclosure plus RV can be inferred",
+    "K=3": "a unique BG/MYO/LV enclosure may be assigned; RV remains VOID if unsupported; DFC MinL3 never receives a manufactured fourth region",
+    "K=4": "roles are assigned only by unique topology, never by K",
+    "K>4": "many-to-one assignment is permitted only by the explicit BG or enclosure rules; all other components are VOID"
+  },
+  "void_policy": {
+    "semantic_encoding": {"BG": 0, "RV": 1, "MYO": 2, "LV": 3, "VOID": 4},
+    "validity_encoding": "boolean; true iff semantic encoding is not VOID",
+    "coverage": "count(validity_map == true) / (H * W)",
+    "unresolved_reasons": ["ambiguous_bg", "missing_enclosed_cavity", "ambiguous_enclosure", "unsupported_rv", "ambiguous_rv", "unsupported_cardinality", "unassigned_component"],
+    "no_void_to_bg_conversion": true
+  },
+  "output_binding": {
+    "required_metadata": ["adapter_version", "adapter_config_sha256", "partition_sha256", "central_image_sha256", "sample_id", "shared_manifest_sha256", "shared_grid_sha256", "component_graph_digest", "assignments", "unresolved_reasons", "coverage", "semantic_map_sha256", "validity_map_sha256", "metadata_sha256"],
+    "semantic_hash_excludes": ["raw_cluster_id_provenance"]
+  }
+}
