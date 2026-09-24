@@ -11,10 +11,13 @@ from torch.utils.data import Dataset
 
 from shared_benchmark.manifest import SharedManifestError
 from shared_benchmark.spatial import (
+    SELF_AUDIT_HISTORICAL_224_NORMALIZATION_VERSION,
+    SELF_AUDIT_HISTORICAL_224_SPATIAL_CONTRACT_VERSION,
     SELF_AUDIT_NORMALIZATION_VERSION,
     SELF_AUDIT_SPATIAL_CONTRACT_VERSION,
     grid_hash,
     read_context_stack,
+    read_self_audit_historical_224_context_stack,
     read_self_audit_context_stack,
     resize_values_to_grid,
 )
@@ -36,7 +39,7 @@ class ImageOnlySample:
 
 
 def _prepare_profile_values(
-    stack: np.ndarray, profile: str, *, scientific_source: bool,
+    stack: np.ndarray, profile: str, *, normalization: str,
 ) -> tuple[np.ndarray, str]:
     """Select CUTS channels without adding a method-specific normalizer.
 
@@ -44,7 +47,6 @@ def _prepare_profile_values(
     v3 records.  The legacy identity branch exists only for old synthetic
     fixtures and is never accepted by the scientific runner.
     """
-    normalization = SELF_AUDIT_NORMALIZATION_VERSION if scientific_source else LEGACY_NORMALIZATION_VERSION
     if profile == "CUTS-2D":
         return stack[1:2], normalization
     if profile == "CUTS-2.5D":
@@ -78,14 +80,18 @@ class ImageOnlyCardiacDataset(Dataset[ImageOnlySample]):
 
     def __getitem__(self, index: int) -> ImageOnlySample:
         record = self.records[index]
-        scientific_source = self.grid.get("version") == SELF_AUDIT_SPATIAL_CONTRACT_VERSION
-        stack = (
-            read_self_audit_context_stack(record, source_root=self.source_root)
-            if scientific_source
-            else read_context_stack(record, source_root=self.source_root)
-        )
+        grid_version = self.grid.get("version")
+        if grid_version == SELF_AUDIT_SPATIAL_CONTRACT_VERSION:
+            stack = read_self_audit_context_stack(record, source_root=self.source_root)
+            normalization = SELF_AUDIT_NORMALIZATION_VERSION
+        elif grid_version == SELF_AUDIT_HISTORICAL_224_SPATIAL_CONTRACT_VERSION:
+            stack = read_self_audit_historical_224_context_stack(record, source_root=self.source_root)
+            normalization = SELF_AUDIT_HISTORICAL_224_NORMALIZATION_VERSION
+        else:
+            stack = read_context_stack(record, source_root=self.source_root)
+            normalization = LEGACY_NORMALIZATION_VERSION
         values, normalization_version = _prepare_profile_values(
-            stack, self.profile, scientific_source=scientific_source,
+            stack, self.profile, normalization=normalization,
         )
         image = resize_values_to_grid(torch.from_numpy(values), self.grid)
         provenance = {

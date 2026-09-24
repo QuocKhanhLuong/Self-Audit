@@ -8,7 +8,12 @@ import numpy as np
 
 from .firewall import FirewallError, validate_image_only_source_locator, validate_image_only_value
 from .provenance import canonical_json_bytes, sha256_bytes, sha256_json
-from .spatial import SELF_AUDIT_SPATIAL_CONTRACT_VERSION, SPATIAL_CONTRACT_VERSION, grid_hash
+from .spatial import (
+    SELF_AUDIT_HISTORICAL_224_SPATIAL_CONTRACT_VERSION,
+    SELF_AUDIT_SPATIAL_CONTRACT_VERSION,
+    SPATIAL_CONTRACT_VERSION,
+    grid_hash,
+)
 
 
 ADAPTER_VERSION = "cardiac_adapter_v2"
@@ -20,7 +25,12 @@ FROZEN_ADAPTER_SPEC_CANONICAL_SHA256 = "9d4f6389f21ed33a2d423ff938526cdf6993ccb4
 # semantic artifacts must bind the Self-Audit-derived grid and adapter v2.
 FROZEN_SHARED_GRID_SHA256 = "2d53b65aa94d6cc151a02444a03b2246034cc5334e089e4d86a8de69ce494fc1"
 FROZEN_SELF_AUDIT_SHARED_GRID_SHA256 = "57858ddf831decee0ce40c0fcc66f68b794e9c94b8f1eebe0a3a146502e535bf"
-SUPPORTED_FROZEN_GRID_SHA256 = frozenset({FROZEN_SHARED_GRID_SHA256, FROZEN_SELF_AUDIT_SHARED_GRID_SHA256})
+FROZEN_SELF_AUDIT_HISTORICAL_224_SHARED_GRID_SHA256 = "6c0d804bbcac3477a0643a8a0061f77cd2821a0f76e005b300fc786c4972157f"
+SUPPORTED_FROZEN_GRID_SHA256 = frozenset({
+    FROZEN_SHARED_GRID_SHA256,
+    FROZEN_SELF_AUDIT_SHARED_GRID_SHA256,
+    FROZEN_SELF_AUDIT_HISTORICAL_224_SHARED_GRID_SHA256,
+})
 
 BG = 0
 RV = 1
@@ -178,7 +188,9 @@ def validate_adapter_record(record: Mapping[str, Any], partition: np.ndarray, ce
         raise AdapterContractError("central_image_sha256 does not match central_image")
     grid = record.get("shared_grid")
     if not isinstance(grid, Mapping) or grid.get("version") not in {
-        SPATIAL_CONTRACT_VERSION, SELF_AUDIT_SPATIAL_CONTRACT_VERSION
+        SPATIAL_CONTRACT_VERSION,
+        SELF_AUDIT_SPATIAL_CONTRACT_VERSION,
+        SELF_AUDIT_HISTORICAL_224_SPATIAL_CONTRACT_VERSION,
     }:
         raise AdapterContractError("record must carry a supported shared-grid contract")
     expected_grid_hash = grid_hash(grid)
@@ -187,15 +199,20 @@ def validate_adapter_record(record: Mapping[str, Any], partition: np.ndarray, ce
     # whenever a scientific Self-Audit grid is carried.
     if grid.get("version") == SELF_AUDIT_SPATIAL_CONTRACT_VERSION and expected_grid_hash != FROZEN_SELF_AUDIT_SHARED_GRID_SHA256:
         raise AdapterContractError("record Self-Audit shared-grid content is not the frozen scientific contract")
+    if (
+        grid.get("version") == SELF_AUDIT_HISTORICAL_224_SPATIAL_CONTRACT_VERSION
+        and expected_grid_hash != FROZEN_SELF_AUDIT_HISTORICAL_224_SHARED_GRID_SHA256
+    ):
+        raise AdapterContractError("record historical-224 shared-grid content is not the frozen scientific contract")
     if list(grid.get("target_hw", [])) != [int(partition_value.shape[0]), int(partition_value.shape[1])]:
         raise AdapterContractError("partition shape must equal the declared shared target grid")
     if grid.get("whole_fov") is not True or grid.get("crop") is not None:
         raise AdapterContractError("adapter requires the whole-FOV shared grid")
-    expected_forward = (
-        "masked_area_normalized_convolution"
-        if grid.get("version") == SPATIAL_CONTRACT_VERSION
-        else "bilinear_align_corners_false"
-    )
+    expected_forward = {
+        SPATIAL_CONTRACT_VERSION: "masked_area_normalized_convolution",
+        SELF_AUDIT_SPATIAL_CONTRACT_VERSION: "bilinear_align_corners_false",
+        SELF_AUDIT_HISTORICAL_224_SPATIAL_CONTRACT_VERSION: "historical_preprocess_224_no_post_loader_resize",
+    }[str(grid.get("version"))]
     if grid.get("forward_values") != expected_forward:
         raise AdapterContractError("record shared-grid interpolation does not match its frozen contract")
     if not isinstance(record.get("geometry_validity"), Mapping):

@@ -373,3 +373,213 @@ network. The 13-sample linear operational extrapolation is about **2.02 h**
 for 376 dev samples and **2.52 h** after the `1.25×T_base` allowance; it is an
 in-progress extrapolation, not a completed scientific result. The job remains
 **RUNNING** in tmux and survives a Codex disconnect.
+
+## DFC v6 full dev completion (2026-09-20)
+
+The full image-only DFC dev run completed with `exit_status=0`: **376/376**
+raw artifacts and **376/376** `semantic-cardiac_adapter_v2` artifacts are
+complete, with zero failed states. No GT evaluator or M&Ms workload was
+launched. The full output occupies 265 MB under
+`.runtime/dfc_acdc_full_v6_20260920` (intentionally gitignored).
+
+Measured across all 376 independent fresh-model optimizations: mean raw DFC
+time **15.861 s**, mean adapter time **3.813 s**, mean end-to-end time
+**19.731 s** (maximum 27.679 s). Maximum per-sample PyTorch CUDA
+allocated/reserved was **376,495,616 / 538,968,064 bytes**. The completed
+runtime implied by the receipt mean is 2.061 h; `1.25×T_base` is 2.576 h,
+which remains below the frozen 72 h budget. This is runtime/completion
+evidence only; it is not a GT-derived scientific metric.
+
+### DFC output integrity audit
+
+A read-only bwrap audit, with only source code, v6 freeze, manifest,
+image-only root, and DFC raw/semantic directories mounted, verified the
+raw-hash/state seal and exact dev sample-set membership for **376/376** raw
+artifacts. It then recomputed and verified semantic v2 maps plus fully sealed
+adapter metadata from raw+central image for manifest positions 0, 188, and
+375; all three passed. No DFC optimization, GT mount, evaluator, or M&Ms was
+used. This is an artifact/provenance integrity PASS, not a Dice or other
+GT-derived quality claim.
+
+## DFC v6 dev reference evaluation completion (2026-09-20)
+
+The separate reference evaluator completed with `exit_status=0` for the exact
+frozen dev cohort: **376 slices, 40 ED/ES volumes, 20 patients**. Before the
+evaluator mounted its GT-only tree, it verified every raw artifact seal and
+recomputed every semantic-v2 result from verified raw output plus the
+image-only central plane. The evaluator then inverse-resized labels with
+nearest-exact to native `H×W×Z`, retained VOID as non-background, and applied
+the pre-frozen fixed `BG/RV/MYO/LV/VOID = 0/1/2/3/4` contract. It did not use
+GT for cluster matching, label mapping, checkpoint selection, or tuning.
+
+The GT reference catalog contains 40 SHA-256-pinned NIfTI files and was exposed
+only at `/gt` in a new read-only bwrap namespace. The evaluated DFC foreground
+patient-macro Dice is **0.0003653** (RV 0.0010959, MYO 0, LV 0); foreground
+patient-macro IoU is **0.0001867** (RV 0.0005602, MYO 0, LV 0). Native-grid
+named-class coverage is mean **0.1998869** (min 0.0345816, max 0.3395678).
+All 20 patient foreground scores were defined; only `patient087` had a
+non-zero foreground score. These are actual GT-derived results under
+`shared_benchmark.cardiac_reference_evaluator.v1`, not a claim that DFC is a
+useful anatomical segmentation baseline. The low outcome is retained rather
+than remapped using GT.
+
+Evidence is retained at
+`.runtime/dfc_acdc_reference_eval_v1_retry1_20260920/evaluation/summary.json`
+(gitignored). Its evaluator-contract payload hash is
+`1ae371c13134157f324fe276542b8f643ee0eab43fc581e6d6644df765a6fd99`, and it
+binds the v6 manifest, grid, baseline config, adapter spec, and implementation
+identities. CUTS generation remains separately **RUNNING**; no M&Ms workload
+was launched.
+
+### DFC result diagnostic (no protocol change)
+
+The near-zero DFC reference score is explained by the sealed semantic output,
+not an evaluator remapping error. Across all 376 verified 256×256 artifacts,
+the conservative topology adapter assigned 4,871,495 BG pixels, only 25,131
+RV, 694 MYO, and 52 LV pixels; 19,744,164/24,641,536 pixels (**80.13%**) are
+VOID. The role trace shows BG resolved in 373 cases (3 ambiguous), but the
+required unique MYO/LV enclosure resolved in only 2 cases and the required
+unique RV candidate in only 1 case. It records 218,480 unassigned components
+and 31,906 ambiguous enclosures. Thus the unlabelled per-image DFC partitions
+are highly fragmented/ambiguous under the frozen no-split/no-merge anatomical
+adapter, so nearly all named foreground predictions are absent. Do not use GT
+to choose a cluster permutation or relax this conclusion; either action would
+change the benchmark contract.
+
+## ACDC source-preprocessing provenance correction (2026-09-20)
+
+The checked-in historical ACDC preprocessor `scripts/preprocess_acdc.py` has
+`preprocess_patient(..., target_size=(224, 224))` and CLI `--size` default 224.
+It volume-z-scores then resizes images with skimage bilinear/anti-aliasing and
+masks with nearest neighbour. The current `configs/self_audit_full.yaml` sets
+the network `image_size` to 256, and the main `VolumeSliceDataset` resizes any
+loaded volume/mask to that network size. The ordinary source sequence is thus
+potentially raw → 224 preprocessed volume → 256 network tensor, not
+automatically raw → 256.
+
+The v6 image-only root mounted by the current CUTS/DFC runs contains raw int16
+NIfTI frames, and the v6 adapter path applies Self-Audit-style percentile
+clip/z-score followed by one direct 256 resize. This workspace has no
+`preprocessed_data/ACDC` directory, so there is no retained 224 artifact or
+run receipt proving that v6's raw→256 values equal the historical
+preprocessing sequence. Therefore the claim that v6 is an end-to-end
+reproduction of historical ACDC preprocessing is **NOT PROVEN**. The completed
+DFC v6 output is preserved, but must not be represented as an exact
+historical-224 input result. The running CUTS job has not been interrupted or
+altered; checkpoint/input provenance must be resolved before it is called
+reusable for a corrected source contract.
+
+If authorized, correction requires a separate frozen version: reproduce the
+image-only 224 preprocessing from raw selected frames, apply the main loader's
+declared 256 network resize, bind the resulting central-image hashes and
+preprocessing chain into a new manifest/freeze, and regenerate raw CUTS and
+DFC outputs. It must not overwrite v6 or alter expected hashes to make the
+existing result pass.
+
+The preserved CUTS final checkpoint is a completed Stage-1 epoch-200 checkpoint
+whose payload binds `manifest_hash=a334cc20…69935aa`,
+`shared_grid_hash=57858ddf…2e535bf`, and input normalization
+`self_audit.volume_percentile_clip_0p5_99p5_zscore.v1`. It is therefore
+internally valid only for the current raw-NIfTI→256 v6 manifest. A corrected
+224→256 manifest changes input pixels and manifest/grid identity, so CUTS must
+restart Stage 1 from epoch 0 for 200 epochs; resuming this checkpoint is both
+scientifically invalid and rejected by the checkpoint identity guards. DFC has
+no reusable training stage: it must repeat its independent per-image MinL3
+optimization on the corrected inputs. No main Self-Audit model retraining is
+implied by this baseline-only correction.
+
+## Baseline-only end-to-end 224 correction (2026-09-21)
+
+This remediation is deliberately limited to the CUTS/DFC baseline boundary and
+the shared-baseline contract. No `src/self_audit` implementation, Self-Audit
+configuration, checkpoint, raw artifact, running tmux job, or M&Ms input was
+modified. The current Self-Audit path remains its checked-in 256x256 network
+grid; this is not a claim that Self-Audit itself should become 224x224.
+
+The active static baseline freeze is
+`benchmark_freezes/cardiac_benchmark_v10_historical_224`:
+
+- freeze ID: `cardiac-benchmark-v10-historical-224-7d94c71760a22174`
+- scientific payload SHA-256:
+  `7d94c71760a22174767cd470963f361442c001cf733db852612592a76372be82`
+- shared-grid SHA-256:
+  `6c0d804bbcac3477a0643a8a0061f77cd2821a0f76e005b300fc786c4972157f`
+- contract: raw selected image frame → historical `preprocess_acdc.py`
+  image normalization (0.5/99.5 clip + population z-score) → per-slice
+  `skimage.resize(order=1, preserve_range=True, anti_aliasing=True,
+  mode=reflect)` to 224x224 → loader volume 0.5/99.5 clip + population
+  z-score → CUTS 2D/2.5D or DFC central plane, still 224x224; no 224→256
+  resize.
+- cohort is unchanged: train=1,526, dev=376, test=0; 80/20 patients;
+  ED+ES and all acquired Z slices; no test split was created.
+
+The v6 256 freeze remains historical and intact. Its checkpoint, raw maps,
+semantic maps, and evaluator outputs are not reused by v10: the v6 manifest,
+grid, normalization identity, and input pixels differ. The preserved v6 CUTS
+epoch-200 checkpoint therefore cannot resume or export a v10 result; v10
+requires a new CUTS Stage-1 run from epoch 0 and a new DFC per-image run.
+Preliminary v7/v8/v9 snapshots are retained as immutable source-binding
+history; v10 is the first snapshot whose runner defaults and complete source
+bindings are consistent.
+
+Static evidence for v10:
+
+- v10 freeze validator: PASS; counts train=1,526/dev=376/test=0.
+- shared protocol, freeze, adapter, manifest, CUTS/DFC consumer tests:
+  44 passed.
+- DFC baseline cardiac tests: 11 passed in its isolated environment.
+- CUTS baseline cardiac tests: 15 passed in its isolated environment (two
+  existing scheduler-order warnings only).
+- `git diff --check`: PASS; no GT file/path was opened by freeze generation or
+  tests.
+
+Runtime status remains **NOT_RUN** for v10: no ACDC training, DFC
+optimization, CUTS generation/PHATE/KMeans, benchmark, or evaluator was
+started. The existing v6 tmux/job state was left untouched. Before runtime,
+CUTS and DFC must use one pinned baseline environment so the historical
+224 resize is numerically shared; the currently inspected environments report
+scikit-image 0.21.0 (Py3.8 CUTS) versus 0.25.2 (Py3.10 DFC), and the Py3.10
+environment still lacks `sewar`. This is a dependency/runtime gate, not a
+reason to alter the cohort or relax the 224 contract.
+
+**Status: CODE_AND_STATIC_PREFLIGHT_PASS — WAITING_FOR_USER_DECISION.**
+`READY_FOR_FULL_RUN` is intentionally not set. No workload was run in this
+correction.
+
+## CUTS v10 full training launch (2026-09-21)
+
+The user authorized the v10 CUTS-2D 200-epoch run. It was launched in the
+existing tmux session `self-audit-runtime`, new window `cuts-v10-200ep`, with
+the image-only bwrap namespace and GPU0. The v6 generation process in window 0
+was not stopped or reconfigured. The v10 process uses the v10 manifest/freeze,
+read-only `/images`, the dedicated Py3.8 baseline environment, and writes only
+to `.runtime/cuts_acdc_200ep_v10_20260921`.
+
+The first completed epoch is evidenced by
+`.runtime/cuts_acdc_200ep_v10_20260921/train.log`:
+
+`epoch_complete`, `epoch=1`, `total_epochs=200`,
+`train_total=1.0172982961915893`, `dev_total=0.9994606185466686`.
+
+`checkpoint_last.pt` exists (3,338,141 bytes), and the training process
+remains alive in the tmux window. This is a stability/resume checkpoint only;
+there is no final epoch-200 checkpoint yet, no v10 generation, no PHATE/KMeans,
+no DFC optimization, and no evaluator. CUTS v6 remains a separate preserved
+process/artifact set. Peak VRAM and total elapsed time will be recorded only
+after the run receipt is written; the current global GPU reading is not a
+per-process peak measurement.
+
+**Current status: RUNNING_CUTS_V10_200_EPOCHS.** The Codex session may end;
+the tmux job is independent and has an epoch-boundary checkpoint for resume.
+
+## CUTS v6 full dev generation completion (verified 2026-09-21)
+
+The preserved v6 full CUTS-2D dev generation is complete, not merely launched:
+the final runner line contains 376 records with `RAW_COMPLETE=376` and
+`SEMANTIC_COMPLETE=376`, and
+`.runtime/cuts_acdc_generation_full_v6_20260920/status.txt` contains
+`exit_status=0`. The raw and semantic artifact trees each contain 1,504 files
+(four sealed files per sample). This is a completed v6 runtime artifact set
+under the 256x256 contract; it is retained for history and must not be mixed
+with the v10 224x224 run. v10 CUTS training remains at the current epoch shown
+in its own log and is still running.

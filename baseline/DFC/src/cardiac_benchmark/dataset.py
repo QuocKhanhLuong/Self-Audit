@@ -8,10 +8,13 @@ import numpy as np
 import torch
 
 from shared_benchmark.spatial import (
+    SELF_AUDIT_HISTORICAL_224_NORMALIZATION_VERSION,
+    SELF_AUDIT_HISTORICAL_224_SPATIAL_CONTRACT_VERSION,
     SELF_AUDIT_NORMALIZATION_VERSION,
     SELF_AUDIT_SPATIAL_CONTRACT_VERSION,
     grid_hash,
     read_context_stack,
+    read_self_audit_historical_224_context_stack,
     read_self_audit_context_stack,
     resize_values_to_grid,
 )
@@ -60,12 +63,16 @@ def load_primary_2d(
 ) -> tuple[torch.Tensor, dict[str, Any]]:
     """Decode the source-normalized context, use only its centre, and resize."""
     try:
-        scientific_source = record.get("shared_grid", {}).get("version") == SELF_AUDIT_SPATIAL_CONTRACT_VERSION
-        stack = (
-            read_self_audit_context_stack(record, source_root=root)
-            if scientific_source
-            else read_context_stack(record, source_root=root)
-        )
+        grid_version = record.get("shared_grid", {}).get("version")
+        if grid_version == SELF_AUDIT_SPATIAL_CONTRACT_VERSION:
+            stack = read_self_audit_context_stack(record, source_root=root)
+            normalization = SELF_AUDIT_NORMALIZATION_VERSION
+        elif grid_version == SELF_AUDIT_HISTORICAL_224_SPATIAL_CONTRACT_VERSION:
+            stack = read_self_audit_historical_224_context_stack(record, source_root=root)
+            normalization = SELF_AUDIT_HISTORICAL_224_NORMALIZATION_VERSION
+        else:
+            stack = read_context_stack(record, source_root=root)
+            normalization = LEGACY_NORMALIZATION_VERSION
         normalized = prepare_central_slice(stack[1])
         shared = apply_shared_grid(normalized, record["shared_grid"])
     except Exception as exc:
@@ -80,5 +87,5 @@ def load_primary_2d(
         "source_shape": record["native_hw"], "target_shape": record["shared_grid"]["target_hw"],
         "spatial_transform": record["spatial_transform"], "shared_grid_version": record["shared_grid"]["version"],
         "shared_grid_hash": grid_hash(record["shared_grid"]),
-        "normalization": NORMALIZATION_VERSION if scientific_source else LEGACY_NORMALIZATION_VERSION,
+        "normalization": normalization,
     }

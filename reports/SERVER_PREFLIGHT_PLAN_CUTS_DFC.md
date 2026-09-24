@@ -116,3 +116,43 @@ The old v1 semantic stage is preserved. v2 writes only to
 raw artifact, reconstruct the image-only central plane, and call the v2
 raw-to-adapter handoff. Do not re-seal old metadata. Static v6 validation and
 synthetic tests passed; this remediation added no runtime workload.
+
+## Baseline-only v10 plan (supersedes the v6 runtime commands above)
+
+The v10 plan is still prospective. It preserves the Self-Audit cohort and
+does not create a test split. The image-only bwrap namespace must expose only
+the v10 source tree, baseline code, v10 manifest/freeze, read-only `/images`,
+and a run-specific writable `/outputs`; no `data/ACDC`, `Info.cfg`, `*_gt`,
+evaluator tree, or M&Ms path may be visible.
+
+Before runtime, resolve the environment gate: CUTS and DFC must share one
+environment and one scikit-image version for the 224 resampling. The inspected
+Py3.8 CUTS env has scikit-image 0.21.0 and `sewar`; the Py3.10 DFC env has
+scikit-image 0.25.2 and lacks `sewar`. This is not solved by changing the
+protocol or using separate numerical preprocessors.
+
+After a separate user authorization, the two stages remain distinct:
+
+1. Limited benchmark: run the authorized CUTS/DFC subset with v10, measure
+   wall time and peak VRAM, report measured values versus extrapolation, then
+   stop. CUTS training in any timing probe must use the explicit v10
+   `input_normalization` value and must not be treated as a scientific
+   checkpoint. DFC remains MinL3, `maxIter=1000`, fresh model/optimizer/BN per
+   image, with `T_budget=1.25×T_base` checked against 72 hours.
+2. Full ACDC: only after the next user decision, start CUTS-2D from epoch 0
+   for 200 epochs and retain the final epoch checkpoint; then run DFC per-image
+   under the same v10 manifest. The v6 checkpoint and all v6 raw/semantic
+   outputs are rejected by manifest/grid/input identity guards.
+
+No stage was run during this static correction. Current result is
+**CODE_AND_STATIC_PREFLIGHT_PASS — WAITING_FOR_USER_DECISION**, not
+`READY_FOR_FULL_RUN`.
+
+## Authorized execution now in progress
+
+CUTS v10 has been authorized and launched in the existing
+`self-audit-runtime:cuts-v10-200ep` window. The first epoch completed with a
+valid epoch-boundary checkpoint, so the job is stable and may continue after
+the Codex session ends. Full completion, final-checkpoint hash, peak VRAM, and
+ETA are still pending. No DFC, generation, PHATE/KMeans, evaluation, or M&Ms
+workload has been started by this launch.

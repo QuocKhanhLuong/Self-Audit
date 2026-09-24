@@ -56,7 +56,7 @@ def test_scientific_runner_rejects_valid_source_checked_8x8_manifest(tmp_path):
         "--manifest", str(manifest_path), "--image-root", str(image_root),
         "--output-root", str(tmp_path / "outputs"), "--split", "test",
     ])
-    with pytest.raises(runner.ArtifactError, match="frozen Self-Audit 256x256 whole-FOV"):
+    with pytest.raises(runner.ArtifactError, match="frozen approved Self-Audit baseline grid"):
         runner.run(args)
 
 

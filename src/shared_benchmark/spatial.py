@@ -23,6 +23,18 @@ from .provenance import sha256_file, sha256_json
 SPATIAL_CONTRACT_VERSION = "shared_benchmark.spatial.v1"
 SELF_AUDIT_SPATIAL_CONTRACT_VERSION = "shared_benchmark.spatial.self_audit.v1"
 SELF_AUDIT_NORMALIZATION_VERSION = "self_audit.volume_percentile_clip_0p5_99p5_zscore.v1"
+# This is deliberately *not* the current Self-Audit network grid.  It is a
+# separately frozen, baseline-only reconstruction of the historical ACDC
+# preprocessing default (224), followed by the loader's second volume
+# normalization, with no subsequent 224->256 network resize.  Keeping a
+# separate version prevents a 224 baseline result from being labelled as a
+# result of the current 256 Self-Audit configuration.
+SELF_AUDIT_HISTORICAL_224_SPATIAL_CONTRACT_VERSION = (
+    "shared_benchmark.spatial.self_audit_historical_224.v1"
+)
+SELF_AUDIT_HISTORICAL_224_NORMALIZATION_VERSION = (
+    "self_audit.preprocess_acdc_224_then_loader_volume_percentile_clip_0p5_99p5_zscore.v1"
+)
 
 
 class SharedSpatialError(ValueError):
@@ -170,6 +182,65 @@ def load_self_audit_grid_spec(repo_root: str | Path) -> dict[str, Any]:
     )
 
 
+def load_self_audit_historical_224_grid_spec(repo_root: str | Path) -> dict[str, Any]:
+    """Return the isolated CUTS/DFC historical-224 input contract.
+
+    ``scripts/preprocess_acdc.py`` historically defaulted to 224x224 and
+    persisted the normalized/resized image array.  The checked-in loader then
+    applied its own volume percentile/z-score operation.  The current
+    Self-Audit runner additionally resizes that loader tensor to its configured
+    256x256 network grid; this baseline-only contract intentionally does not.
+
+    No current Self-Audit configuration or source loader is changed by this
+    function.  The source files below are evidence for a reimplementation,
+    rather than an assertion that a missing historical ``preprocessed_data``
+    artifact is byte-identical to a new execution.
+    """
+    root = Path(repo_root)
+    preprocessor = root / "scripts" / "preprocess_acdc.py"
+    loader = root / "src" / "self_audit" / "data" / "common.py"
+    for path in (preprocessor, loader):
+        if not path.is_file():
+            raise SharedSpatialError(f"historical Self-Audit source is missing: {path}")
+    provenance = {
+        "source": "Self-Audit historical ACDC image preprocessing reimplemented for CUTS/DFC only",
+        "historical_preprocessor": {
+            "path": "scripts/preprocess_acdc.py",
+            "sha256": sha256_file(preprocessor),
+            "target_size_cli_default": 224,
+            "image_normalization": "normalize_zscore: percentile(0.5,99.5), clip, population_zscore",
+            "image_resize": (
+                "skimage.transform.resize(order=1,preserve_range=True,"
+                "anti_aliasing=True,mode=reflect) per HW slice"
+            ),
+            "image_branch_only": True,
+        },
+        "loader_normalization": {
+            "path": "src/self_audit/data/common.py",
+            "sha256": sha256_file(loader),
+            "function": "percentile_clip_and_zscore(lower_percentile=0.5,upper_percentile=99.5)",
+        },
+        "target_size": 224,
+        "depth_axis": 2,
+        "crop": None,
+        "whole_fov": True,
+        "network_resize_after_loader": "none_baseline_only",
+        "numeric_parity_status": (
+            "source-code reproduction; retained historical preprocessed metadata/artifacts unavailable, "
+            "so bytewise parity is not asserted"
+        ),
+    }
+    return build_grid_spec(
+        (224, 224),
+        config_provenance=provenance,
+        version=SELF_AUDIT_HISTORICAL_224_SPATIAL_CONTRACT_VERSION,
+        forward_values="historical_preprocess_224_no_post_loader_resize",
+        forward_masks="not_applicable_image_only",
+        inverse_labels="not_applicable_baseline_partition",
+        inverse_probabilities="not_applicable_baseline_partition",
+    )
+
+
 def resolve_source_path(record: Mapping[str, Any], source_root: str | Path | None = None) -> Path:
     """Resolve only a declared relative image locator under a declared image root."""
     source = record.get("source", {})
@@ -240,6 +311,85 @@ def normalize_self_audit_volume(volume: np.ndarray) -> np.ndarray:
     return ((clipped - mean) / max(std, 1e-6)).astype(np.float32, copy=False)
 
 
+def _normalize_preprocess_acdc_image(volume: np.ndarray) -> np.ndarray:
+    """Reproduce the image branch of ``preprocess_acdc.normalize_zscore``.
+
+    The historical script obtains NIfTI data as float64, normalizes before
+    slice resampling, and writes into a float32 output array.  Do not replace
+    this with :func:`normalize_self_audit_volume`: the latter deliberately
+    repairs non-finite values and uses an epsilon denominator, as the loader
+    does, while the original preprocessing function did neither.
+    """
+    array = np.asarray(volume)
+    if array.ndim != 3:
+        raise SharedSpatialError(f"historical preprocess expects a rank-3 volume, got {array.shape}")
+    if not np.issubdtype(array.dtype, np.number) or not np.isfinite(array).all():
+        raise SharedSpatialError("historical preprocess source must be finite numeric image data")
+    low, high = np.percentile(array, (0.5, 99.5))
+    clipped = np.clip(array, low, high)
+    mean = np.mean(clipped)
+    std = np.std(clipped)
+    return (clipped - mean) / std if float(std) > 0.0 else clipped - mean
+
+
+def _resize_preprocess_acdc_volume_to_224(volume_zhw: np.ndarray) -> np.ndarray:
+    """Reproduce ``preprocess_acdc.py``'s per-slice image resize exactly."""
+    try:
+        from skimage.transform import resize
+    except ImportError as exc:  # pragma: no cover - environment dependent
+        raise SharedSpatialError("scikit-image is required for the historical 224 ACDC baseline contract") from exc
+    volume = np.asarray(volume_zhw)
+    if volume.ndim != 3:
+        raise SharedSpatialError(f"historical preprocess expects [Z,H,W], got {volume.shape}")
+    # The original script allocates float32 and assigns every result into it.
+    resized = np.empty((int(volume.shape[0]), 224, 224), dtype=np.float32)
+    for z in range(int(volume.shape[0])):
+        resized[z] = resize(
+            volume[z], (224, 224), order=1, preserve_range=True,
+            anti_aliasing=True, mode="reflect",
+        )
+    return resized
+
+
+def _read_historical_preprocess_source_frame(
+    source: Path, *, depth_axis: int, frame_index: int | None, frame_axis: int | None,
+) -> tuple[np.ndarray, int | None]:
+    """Read only image data with the dtype semantics of ``nib.get_fdata()``.
+
+    The general shared decoder intentionally converts frames to float32.  That
+    is correct for the current 256 loader contract but differs from the old
+    preprocessing script, whose NIfTI image branch calls ``get_fdata()``
+    before the first normalization.  This isolated helper preserves that
+    difference without modifying the Self-Audit decoder.
+    """
+    name = source.name.lower()
+    if name.endswith((".nii", ".nii.gz")):
+        try:
+            import nibabel as nib
+        except ImportError as exc:  # pragma: no cover - environment dependent
+            raise SharedSpatialError("nibabel is required for NIfTI historical preprocessing") from exc
+        raw = np.asarray(nib.load(str(source)).get_fdata())
+    elif name.endswith(".npy"):
+        raw = np.asarray(np.load(source))
+    else:
+        raise SharedSpatialError(f"unsupported historical preprocess image container: {source.name}")
+    if raw.ndim not in (3, 4):
+        raise SharedSpatialError(f"historical preprocess expected rank-3/4 source, got {raw.shape}")
+    if depth_axis not in (0, 1, 2):
+        raise SharedSpatialError(f"invalid historical preprocess depth_axis: {depth_axis}")
+    actual_frame_axis: int | None = None
+    if raw.ndim == 4:
+        actual_frame_axis = 3 if frame_axis is None else int(frame_axis)
+        if actual_frame_axis < 0 or actual_frame_axis >= 4 or actual_frame_axis == depth_axis:
+            raise SharedSpatialError("historical preprocess frame_axis is invalid")
+        if frame_index is None or not 0 <= int(frame_index) < int(raw.shape[actual_frame_axis]):
+            raise SharedSpatialError("historical preprocess frame_index is invalid")
+        raw = np.take(raw, int(frame_index), axis=actual_frame_axis)
+    if not np.issubdtype(raw.dtype, np.number):
+        raise SharedSpatialError(f"historical preprocess image is non-numeric: {raw.dtype}")
+    return np.asarray(raw), actual_frame_axis
+
+
 def read_self_audit_context_stack(
     record: Mapping[str, Any], *, source_root: str | Path | None = None,
 ) -> np.ndarray:
@@ -280,6 +430,48 @@ def read_self_audit_context_stack(
     return np.ascontiguousarray(normalized[context], dtype=np.float32)
 
 
+def read_self_audit_historical_224_context_stack(
+    record: Mapping[str, Any], *, source_root: str | Path | None = None,
+) -> np.ndarray:
+    """Read one image-only context after the historical 224 preprocessing path.
+
+    The order is fixed and recorded in the v7 baseline freeze: source image
+    normalization -> per-slice skimage bilinear resize to 224 -> loader volume
+    normalization -> endpoint-replicated context.  No core Self-Audit code is
+    called or modified here, and no annotation path is opened.
+    """
+    source = resolve_source_path(record, source_root)
+    source_info = record["source"]
+    declared_depth_axis = int(record["depth_axis"])
+    frame, actual_frame_axis = _read_historical_preprocess_source_frame(
+        source,
+        depth_axis=declared_depth_axis,
+        frame_index=record.get("frame_index"),
+        frame_axis=record.get("frame_axis"),
+    )
+    depth_axis = declared_depth_axis
+    if actual_frame_axis is not None and actual_frame_axis < depth_axis:
+        depth_axis -= 1
+    if frame.ndim != 3 or depth_axis not in (0, 1, 2):
+        raise SharedSpatialError(
+            f"selected historical source frame has invalid shape/axis: {frame.shape}, {depth_axis}"
+        )
+    source_normalized = _normalize_preprocess_acdc_image(np.moveaxis(frame, depth_axis, 0))
+    resized = _resize_preprocess_acdc_volume_to_224(source_normalized)
+    normalized = normalize_self_audit_volume(resized)
+    z = int(record["slice_index"])
+    depth = int(normalized.shape[0])
+    if not 0 <= z < depth:
+        raise SharedSpatialError(f"slice_index {z} outside historical normalized depth extent {depth}")
+    context = [max(0, z - 1), z, min(depth - 1, z + 1)]
+    expected = [int(value) for value in record["context_indices"]]
+    if expected != context:
+        raise SharedSpatialError("record context_indices disagree with canonical endpoint replication")
+    if source_info.get("sha256") is None:
+        raise SharedSpatialError("source image hash is required")
+    return np.ascontiguousarray(normalized[context], dtype=np.float32)
+
+
 def resize_values_to_grid(values: torch.Tensor, grid: Mapping[str, Any]) -> torch.Tensor:
     """Apply the frozen value-resampling primitive to full-FOV method inputs.
 
@@ -292,8 +484,18 @@ def resize_values_to_grid(values: torch.Tensor, grid: Mapping[str, Any]) -> torc
     target = grid.get("target_hw")
     if not isinstance(target, list) or len(target) != 2:
         raise SharedSpatialError("shared grid must declare target_hw")
-    if grid.get("version") not in {SPATIAL_CONTRACT_VERSION, SELF_AUDIT_SPATIAL_CONTRACT_VERSION}:
+    if grid.get("version") not in {
+        SPATIAL_CONTRACT_VERSION,
+        SELF_AUDIT_SPATIAL_CONTRACT_VERSION,
+        SELF_AUDIT_HISTORICAL_224_SPATIAL_CONTRACT_VERSION,
+    }:
         raise SharedSpatialError("unsupported shared spatial contract version")
+    if grid.get("version") == SELF_AUDIT_HISTORICAL_224_SPATIAL_CONTRACT_VERSION:
+        if grid.get("forward_values") != "historical_preprocess_224_no_post_loader_resize":
+            raise SharedSpatialError("historical 224 grid declares an unexpected value transform")
+        if [int(values.shape[-2]), int(values.shape[-1])] != [int(target[0]), int(target[1])]:
+            raise SharedSpatialError("historical 224 values must already match the frozen target grid")
+        return values
     if grid.get("version") == SELF_AUDIT_SPATIAL_CONTRACT_VERSION:
         if grid.get("forward_values") != "bilinear_align_corners_false":
             raise SharedSpatialError("Self-Audit grid must declare bilinear_align_corners_false")

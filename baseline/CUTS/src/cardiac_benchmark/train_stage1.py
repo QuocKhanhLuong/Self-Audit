@@ -22,7 +22,11 @@ from .dataset import ImageOnlyCardiacDataset, collate_image_only
 from .manifest import load_manifest, require_scientific_manifest
 from shared_benchmark.manifest import validate_scientific_manifest
 from .provenance import current_cuts_sha, environment_identity, rng_contract, sha256_file, sha256_json
-from shared_benchmark.spatial import SELF_AUDIT_NORMALIZATION_VERSION
+from shared_benchmark.spatial import (
+    SELF_AUDIT_HISTORICAL_224_NORMALIZATION_VERSION,
+    SELF_AUDIT_HISTORICAL_224_SPATIAL_CONTRACT_VERSION,
+    SELF_AUDIT_NORMALIZATION_VERSION,
+)
 
 
 CHECKPOINT_SCHEMA_VERSION = "cuts.cardiac.stage1.checkpoint.v2"
@@ -46,6 +50,7 @@ class Stage1Config:
     lambda_contrastive_loss: float = 0.001
     benchmark_seed: int = 42
     image_root: str | None = None
+    input_normalization: str = SELF_AUDIT_NORMALIZATION_VERSION
 
     def validate(self) -> None:
         if self.benchmark_seed != 42:
@@ -56,6 +61,11 @@ class Stage1Config:
             raise ValueError("scientific Stage-1 requires the frozen 200 epoch recipe")
         if self.lambda_contrastive_loss != 0.001:
             raise ValueError("primary loss mixture must retain lambda=0.001")
+        if self.input_normalization not in {
+            SELF_AUDIT_NORMALIZATION_VERSION,
+            SELF_AUDIT_HISTORICAL_224_NORMALIZATION_VERSION,
+        }:
+            raise ValueError("CUTS input_normalization is not a supported frozen baseline contract")
 
 
 def scientific_config_payload(config: Stage1Config) -> dict[str, Any]:
@@ -73,7 +83,7 @@ def scientific_config_payload(config: Stage1Config) -> dict[str, Any]:
         "weight_decay": config.weight_decay,
         "lambda_contrastive_loss": config.lambda_contrastive_loss,
         "benchmark_seed": config.benchmark_seed,
-        "input_normalization": SELF_AUDIT_NORMALIZATION_VERSION,
+        "input_normalization": config.input_normalization,
     }
 
 
@@ -192,7 +202,7 @@ def _checkpoint_payload(
         **dict(manifest_provenance),
         "environment": dict(environment),
         "environment_hash": sha256_json(environment),
-        "input_normalization": SELF_AUDIT_NORMALIZATION_VERSION,
+        "input_normalization": config.input_normalization,
     }
     return payload
 
@@ -211,6 +221,13 @@ def build_loaders(config: Stage1Config) -> tuple[DataLoader, DataLoader, dict[st
         manifest = load_manifest(config.manifest_path, check_paths=True)
     if manifest["dataset"].lower() != config.dataset.lower():
         raise ValueError("checkpoint/run dataset identity differs from manifest")
+    observed_normalization = (
+        SELF_AUDIT_HISTORICAL_224_NORMALIZATION_VERSION
+        if manifest.get("shared_grid", {}).get("version") == SELF_AUDIT_HISTORICAL_224_SPATIAL_CONTRACT_VERSION
+        else SELF_AUDIT_NORMALIZATION_VERSION
+    )
+    if config.scientific_run and config.input_normalization != observed_normalization:
+        raise ValueError("CUTS input_normalization does not match the manifest shared-grid contract")
     train_ds = ImageOnlyCardiacDataset(manifest, split="train", profile=config.profile, target_hw=config.target_hw, source_root=config.image_root)
     dev_ds = ImageOnlyCardiacDataset(manifest, split="dev", profile=config.profile, target_hw=config.target_hw, source_root=config.image_root)
     # Preserve CUTS's five-batch extension for training only.
@@ -303,7 +320,7 @@ def train_stage1(
         },
         "cuts_mode": config.profile,
         "benchmark_seed": int(config.benchmark_seed),
-        "input_normalization": SELF_AUDIT_NORMALIZATION_VERSION,
+        "input_normalization": config.input_normalization,
     }
     runtime_device = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
     model = build_model(config).to(runtime_device)
@@ -403,7 +420,7 @@ def load_checkpoint_for_export(config: Stage1Config, checkpoint_path: str | Path
             raise ValueError("scientific CUTS export requires the completed final checkpoint")
         if payload.get("config_hash") != scientific_config_hash(config):
             raise ValueError("scientific CUTS checkpoint config identity mismatch")
-        if payload.get("input_normalization") != SELF_AUDIT_NORMALIZATION_VERSION:
+        if payload.get("input_normalization") != config.input_normalization:
             raise ValueError("scientific CUTS checkpoint normalization identity mismatch")
     model = build_model(config, inference=True).to(device)
     model.load_state_dict(payload["state_dict"])

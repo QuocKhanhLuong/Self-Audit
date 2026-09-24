@@ -1,0 +1,18 @@
+{
+  "schema_version": "shared_benchmark.cardiac_reference_evaluator.v1",
+  "dataset": "acdc",
+  "split": "dev",
+  "baseline": {
+    "name": "DFC",
+    "mode": "DFC-Direct-2D-Default-MinL3",
+    "baseline_config_sha256": "36fefade141b76290640a9feaf269abbe957239a5e085c73ec4f93e6d51a9c58"
+  },
+  "semantic_schema_version": "shared_benchmark.cardiac-semantic.v2",
+  "semantic_class_map": {"0": "BG", "1": "RV", "2": "MYO", "3": "LV", "4": "VOID"},
+  "reference_label_map": {"0": "BG", "1": "RV", "2": "MYO", "3": "LV"},
+  "prediction_inverse": "nearest_exact_256_to_native_per_manifest_spatial_transform",
+  "void_policy": "VOID is never relabelled as BG; full-support foreground Dice/IoU treats VOID as no predicted named class and reports native-grid coverage separately",
+  "aggregation": "per_patient_frame_3d_then_patient_macro_over_defined_ED_ES_frame_scores",
+  "metrics": ["dice", "iou", "coverage"],
+  "forbidden": ["per_case_matching", "hungarian_mapping", "gt_based_mapping", "hyperparameter_selection", "checkpoint_selection"]
+}

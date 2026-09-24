@@ -1,0 +1,37 @@
+{
+  "version": "shared_benchmark.spatial.self_audit_historical_224.v1",
+  "target_hw": [
+    224,
+    224
+  ],
+  "whole_fov": true,
+  "crop": null,
+  "crop_rule": "whole_field_of_view_no_image_informed_crop",
+  "forward_values": "historical_preprocess_224_no_post_loader_resize",
+  "forward_masks": "not_applicable_image_only",
+  "inverse_labels": "not_applicable_baseline_partition",
+  "inverse_probabilities": "not_applicable_baseline_partition",
+  "config_provenance": {
+    "source": "Self-Audit historical ACDC image preprocessing reimplemented for CUTS/DFC only",
+    "historical_preprocessor": {
+      "path": "scripts/preprocess_acdc.py",
+      "sha256": "d35608111c8e7b1bd3f15d7b491d5923d110262872248c2ce1fe4164bbb986b7",
+      "target_size_cli_default": 224,
+      "image_normalization": "normalize_zscore: percentile(0.5,99.5), clip, population_zscore",
+      "image_resize": "skimage.transform.resize(order=1,preserve_range=True,anti_aliasing=True,mode=reflect) per HW slice",
+      "image_branch_only": true
+    },
+    "loader_normalization": {
+      "path": "src/self_audit/data/common.py",
+      "sha256": "e609794c25bc6791d729d07d6573b228f362ea358a014f4d335b70ae4c4f0024",
+      "function": "percentile_clip_and_zscore(lower_percentile=0.5,upper_percentile=99.5)"
+    },
+    "target_size": 224,
+    "depth_axis": 2,
+    "crop": null,
+    "whole_fov": true,
+    "network_resize_after_loader": "none_baseline_only",
+    "numeric_parity_status": "source-code reproduction; retained historical preprocessed metadata/artifacts unavailable, so bytewise parity is not asserted"
+  },
+  "shared_grid_sha256": "6c0d804bbcac3477a0643a8a0061f77cd2821a0f76e005b300fc786c4972157f"
+}

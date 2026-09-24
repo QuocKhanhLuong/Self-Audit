@@ -1,0 +1,274 @@
+{
+  "freeze_schema": "shared_benchmark.cardiac_benchmark_freeze.v8_historical_224",
+  "freeze_id": "cardiac-benchmark-v8-historical-224-620c57fe6ba6791d",
+  "scientific_payload_sha256": "620c57fe6ba6791db54e4bb46f281d7eda8c2c51c8b9286866b322334cebc6a3",
+  "scientific_payload": {
+    "freeze_schema_version": "shared_benchmark.cardiac_benchmark_freeze.v8_historical_224",
+    "parent_freeze": {
+      "freeze_id": "cardiac-benchmark-v6-5a27a40b4f28f211",
+      "scientific_payload_sha256": "5a27a40b4f28f211041fa6a582ef5181eb773a769c19332270e76f74acc540da",
+      "status": "RETAINED_STATIC_PREDECESSOR_NOT_RUNTIME_REUSABLE"
+    },
+    "lineage": {
+      "freeze_id": "cardiac-benchmark-v3-3549ca2a4564c44c",
+      "scientific_payload_sha256": "3549ca2a4564c44cd8bd1d1859bcd20809e216ad5d0bffe78e46cffb0ccee8b2",
+      "adapter_spec_sha256": "34b1faeb7b40f77c2d4d9789a6e1a342e891fcb8ff8db4edd30957b2ae9d114a",
+      "relationship": "v3 raw/checkpoint provenance retained; v4 is required for new semantic artifacts"
+    },
+    "authoritative_self_audit_policy": {
+      "source_manifest_schema": "self_audit.acdc.image_only.v1",
+      "split_policy_version": "self_audit.acdc.patient_split.v1",
+      "split_seed": 42,
+      "cohort": "ACDC/training only",
+      "patient_counts": {
+        "train": 80,
+        "dev": 20,
+        "test": 0
+      },
+      "volume_counts": {
+        "train": 160,
+        "dev": 40,
+        "test": 0
+      },
+      "frame_selection": "Info.cfg ED and ES",
+      "generation_inventory": "selected ED+ES frames x all acquired Z slices",
+      "context_policy": "[max(z-1,0),z,min(z+1,Z-1)]",
+      "independent_test": false
+    },
+    "shared_manifest": {
+      "manifest_sha256": "5919ccf0cdaab8869a2e061a0ee0a71a959fa3439dc734304ea9cfaae26c8ccc",
+      "patient_counts": {
+        "train": 80,
+        "dev": 20,
+        "test": 0
+      },
+      "volume_counts": {
+        "train": 160,
+        "dev": 40,
+        "test": 0
+      },
+      "sample_counts": {
+        "train": 1526,
+        "dev": 376,
+        "test": 0
+      },
+      "projection": "v6 verified image-only source records re-gridded without re-splitting or data access"
+    },
+    "shared_spatial_contract": {
+      "version": "shared_benchmark.spatial.self_audit_historical_224.v1",
+      "target_hw": [
+        224,
+        224
+      ],
+      "whole_fov": true,
+      "crop": null,
+      "resampling": "historical_preprocess_224_no_post_loader_resize",
+      "grid_sha256": "6c0d804bbcac3477a0643a8a0061f77cd2821a0f76e005b300fc786c4972157f",
+      "config_provenance": {
+        "source": "Self-Audit historical ACDC image preprocessing reimplemented for CUTS/DFC only",
+        "historical_preprocessor": {
+          "path": "scripts/preprocess_acdc.py",
+          "sha256": "d35608111c8e7b1bd3f15d7b491d5923d110262872248c2ce1fe4164bbb986b7",
+          "target_size_cli_default": 224,
+          "image_normalization": "normalize_zscore: percentile(0.5,99.5), clip, population_zscore",
+          "image_resize": "skimage.transform.resize(order=1,preserve_range=True,anti_aliasing=True,mode=reflect) per HW slice",
+          "image_branch_only": true
+        },
+        "loader_normalization": {
+          "path": "src/self_audit/data/common.py",
+          "sha256": "e609794c25bc6791d729d07d6573b228f362ea358a014f4d335b70ae4c4f0024",
+          "function": "percentile_clip_and_zscore(lower_percentile=0.5,upper_percentile=99.5)"
+        },
+        "target_size": 224,
+        "depth_axis": 2,
+        "crop": null,
+        "whole_fov": true,
+        "network_resize_after_loader": "none_baseline_only",
+        "numeric_parity_status": "source-code reproduction; retained historical preprocessed metadata/artifacts unavailable, so bytewise parity is not asserted"
+      }
+    },
+    "adapter": {
+      "adapter_version": "cardiac_adapter_v2",
+      "input_schema_version": "shared_benchmark.anonymous_partition.v2",
+      "output_schema_version": "shared_benchmark.cardiac-semantic.v2",
+      "specification_sha256": "be5b46f1c0b7bc71e3c49117b649d43d208b42b4d237c95ea06d43de9b6ea290",
+      "central_image_contract": "Self-Audit historical preprocess image branch: source 0.5/99.5 percentile clip + population z-score, per-slice skimage bilinear resize 224x224 (preserve_range=True, anti_aliasing=True, mode=reflect), then loader 0.5/99.5 percentile clip + population z-score; central plane at 224x224; no post-loader resize",
+      "intensity_resolution": "disabled",
+      "orientation_resolution": "disabled",
+      "topology_policy": "unchanged_from_v1",
+      "metadata_seal": "complete adapter_metadata plus raw-input recomputation on read",
+      "implementation_identity_closure": [
+        "adapter.py",
+        "region_graph.py",
+        "semantic_contract.py",
+        "artifacts.py",
+        "firewall.py",
+        "spatial.py",
+        "provenance.py",
+        "self_audit_maskfree/data/firewall.py"
+      ],
+      "synthetic_fixture_set_sha256": "2695f0ebbf9160a1f4a84c8ad8889577e7dec548aaebc470300cadff16eb2a59"
+    },
+    "semantic_lineage": {
+      "prior_semantic_outputs": "SUPERSEDED_PENDING_REGENERATION_FROM_VERIFIED_RAW_IMAGES_WITH_V7",
+      "v6_runtime_artifacts": "RETAINED_NOT_REUSABLE: input grid/preprocessing identity changed from direct-256 to historical-224",
+      "checkpoint_reuse": "FORBIDDEN: v6 CUTS checkpoints bind the v6 manifest/grid and v6 input normalization",
+      "raw_partition_reuse": "FORBIDDEN: v6 CUTS/DFC raw partitions were generated from a different central-image contract",
+      "semantic_artifact_stage": "semantic-cardiac_adapter_v2-v7-historical-224",
+      "overwrite_policy": "forbidden_by_distinct_stage"
+    },
+    "runner_binding": {
+      "cuts_adapter_default": "benchmark_freezes/cardiac_benchmark_v8_historical_224/configs/adapter_v2_spec.json",
+      "dfc_adapter_default": "benchmark_freezes/cardiac_benchmark_v8_historical_224/configs/adapter_v2_spec.json",
+      "cuts_training_input_normalization": "self_audit.preprocess_acdc_224_then_loader_volume_percentile_clip_0p5_99p5_zscore.v1"
+    },
+    "datasets": {
+      "acdc": {
+        "scientific_manifest_status": "PASS_STATIC",
+        "runtime_status": "NOT_RUN"
+      },
+      "mnms": {
+        "scientific_manifest_status": "DEFERRED",
+        "runtime_status": "NOT_RUN"
+      }
+    },
+    "scientific_readiness": "CODE_AND_STATIC_PREFLIGHT_PASS_WAITING_FOR_USER_DECISION",
+    "bound_repository_files": [
+      {
+        "path": "configs/adapter_v2_spec_source.json",
+        "sha256": "be5b46f1c0b7bc71e3c49117b649d43d208b42b4d237c95ea06d43de9b6ea290"
+      },
+      {
+        "path": "configs/adapter_v1_synthetic_fixtures_source.json",
+        "sha256": "2695f0ebbf9160a1f4a84c8ad8889577e7dec548aaebc470300cadff16eb2a59"
+      },
+      {
+        "path": "scripts/preprocess_acdc.py",
+        "sha256": "d35608111c8e7b1bd3f15d7b491d5923d110262872248c2ce1fe4164bbb986b7"
+      },
+      {
+        "path": "src/self_audit/data/common.py",
+        "sha256": "e609794c25bc6791d729d07d6573b228f362ea358a014f4d335b70ae4c4f0024"
+      },
+      {
+        "path": "src/shared_benchmark/manifest.py",
+        "sha256": "86672ad71c341ac58183f0507ea0950f527cc16c266d8a71cbee272d709fdfcc"
+      },
+      {
+        "path": "src/shared_benchmark/spatial.py",
+        "sha256": "22320a72ed4176e8a7e4299a83694e4c612356470665778d29fb76bde27a5bcf"
+      },
+      {
+        "path": "src/shared_benchmark/semantic_contract.py",
+        "sha256": "70262567d1918d606f5cc829bd8550827f5be5092ad78821deffce43c7d7a557"
+      },
+      {
+        "path": "src/shared_benchmark/artifacts.py",
+        "sha256": "6a16ad0f816fe9958b8eb4062b48503f5387387718b575996dff1a916025d173"
+      },
+      {
+        "path": "src/shared_benchmark/adapter.py",
+        "sha256": "ae55f506bed10867019af4cd916f68ae910a055f3cdce53433d04aaf6dc49599"
+      },
+      {
+        "path": "src/shared_benchmark/region_graph.py",
+        "sha256": "9d87cf2bf13fb6372bf43c1357fb0809a3fa84e22cfded9fa8038c8061314482"
+      },
+      {
+        "path": "src/shared_benchmark/firewall.py",
+        "sha256": "d973bf7e2be8f6f601b0807440e908074a42559bb6c4aa5128d9938c96cd2511"
+      },
+      {
+        "path": "src/shared_benchmark/provenance.py",
+        "sha256": "6844a7b0d06422f39e8e87a2686fe082ca47f0ca9588e49c88c24a39d63760d5"
+      },
+      {
+        "path": "src/self_audit_maskfree/data/firewall.py",
+        "sha256": "92767510e96f4feb816d60e190a6a913cc231d97d0f180c7ffce857ac3ceaca3"
+      },
+      {
+        "path": "scripts/run_cuts_scientific.py",
+        "sha256": "f9bdd83b9aa051d6ba1964df3342b17655e86a39f02f49fb49a19e8dd1531981"
+      },
+      {
+        "path": "scripts/run_dfc_scientific.py",
+        "sha256": "edfe3d8eb05f9cbf8a1074cb9dc2fd6724be0ae2ef68b9dd3b599188197089fd"
+      },
+      {
+        "path": "scripts/regenerate_self_audit_cardiac_benchmark_v8_historical_224_freeze.py",
+        "sha256": "d17f560eef6cab5beca71fd8baed9e25ae0d1132c4b6b4ea389619c02e8e2e8e"
+      },
+      {
+        "path": "scripts/validate_cardiac_benchmark_v8_historical_224_freeze.py",
+        "sha256": "e8a41da61ca5059c16f70cf8d94377c369922f8fa8171c825fdfbf051be6c4c5"
+      },
+      {
+        "path": "baseline/CUTS/src/cardiac_benchmark/manifest.py",
+        "sha256": "046a9d4a91b737b0919e204deae7dd2ea32cccffdca654d2c0f93ee4fc615ed8"
+      },
+      {
+        "path": "baseline/CUTS/src/cardiac_benchmark/dataset.py",
+        "sha256": "bfc8a9d21bb183e7b593fcacf46877a0fc11897c3ac23bc88c24889607d8188d"
+      },
+      {
+        "path": "baseline/CUTS/src/cardiac_benchmark/train_stage1.py",
+        "sha256": "74f843e0ed1dcc5ca0dd3973de282586621584237d66e0838f9a643bc6eebae6"
+      },
+      {
+        "path": "baseline/CUTS/src/cardiac_benchmark/export_latents.py",
+        "sha256": "61fa74e1e11d8c799c27e0390e456665ba04974199a6116ed6d1c0968e08994a"
+      },
+      {
+        "path": "baseline/CUTS/src/cardiac_benchmark/cluster_kmeans.py",
+        "sha256": "03c2f9f6d15c362ed0d4ded674c1a0575a94ff8df96c6eb82830fa4193890b9a"
+      },
+      {
+        "path": "baseline/DFC/src/cardiac_benchmark/dataset.py",
+        "sha256": "5a7bfc6f60672a34af344242eaacb9ba66742e6085ad38aa86c860efcbd3b614"
+      },
+      {
+        "path": "baseline/DFC/src/cardiac_benchmark/config.py",
+        "sha256": "7ddd39d8161ebb3f4fc69e156cb7fc105957b2e6b48cd12368a423ecaf69d9a8"
+      },
+      {
+        "path": "baseline/DFC/src/cardiac_benchmark/dfc_runner.py",
+        "sha256": "8aee1338ac9e4fba7c2fc7ae6b15afe7474c6ac1d8ccf815bf73c8a96ac89fa7"
+      },
+      {
+        "path": "baseline/DFC/config/cardiac/dfc_direct_2d_minl3.yaml",
+        "sha256": "15688e08c97ad2dc6e88fdb8ef35f29886b020091fb5c82440d492be07dc5ec5"
+      }
+    ],
+    "bound_freeze_files": [
+      {
+        "path": "configs/adapter_v2_spec.json",
+        "sha256": "be5b46f1c0b7bc71e3c49117b649d43d208b42b4d237c95ea06d43de9b6ea290"
+      },
+      {
+        "path": "configs/adapter_v1_synthetic_fixtures.json",
+        "sha256": "2695f0ebbf9160a1f4a84c8ad8889577e7dec548aaebc470300cadff16eb2a59"
+      },
+      {
+        "path": "configs/resolved_shared_contract.json",
+        "sha256": "06c5457d8dfde828a51182e6fb4c8a12f6183975d2056eb5b70548a22a7d082a"
+      },
+      {
+        "path": "data/acdc_shared_manifest.json",
+        "sha256": "8079dcb4532f10ef1bc034e9f6719588f6f2bf136bd9f975b572423820d58894"
+      },
+      {
+        "path": "data/acdc_selection_receipt.json",
+        "sha256": "9bd55de920bcccc2da8bf9f94c5f313c30bd7af0bcea53fba52569bb689236e8"
+      },
+      {
+        "path": "data/acdc_patient_split_seed42.json",
+        "sha256": "bc42574017276a6defc668bf533330fd41a64a5e90a75ea1b8958fc9e469265a"
+      }
+    ],
+    "pre_freeze_sources": {
+      "parent_v6_freeze_manifest_sha256": "450f3af2255a15d80822ce50ade3d1a4281e40b53becab9f293bd0551c0004eb",
+      "parent_v6_manifest_sha256": "c05d9c107789a68e0a9004e0a16ca705a700a7e3ac111482fe116ac446baf02f",
+      "generator": "scripts/regenerate_self_audit_cardiac_benchmark_v8_historical_224_freeze.py"
+    }
+  }
+}

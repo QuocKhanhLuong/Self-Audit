@@ -30,8 +30,14 @@ from shared_benchmark.artifacts import (  # noqa: E402
 )
 from shared_benchmark.provenance import sha256_file  # noqa: E402
 from shared_benchmark.semantic_contract import FROZEN_ADAPTER_SPEC_SHA256  # noqa: E402
-from shared_benchmark.semantic_contract import FROZEN_SELF_AUDIT_SHARED_GRID_SHA256  # noqa: E402
-from shared_benchmark.spatial import SELF_AUDIT_SPATIAL_CONTRACT_VERSION  # noqa: E402
+from shared_benchmark.semantic_contract import (  # noqa: E402
+    FROZEN_SELF_AUDIT_HISTORICAL_224_SHARED_GRID_SHA256,
+    FROZEN_SELF_AUDIT_SHARED_GRID_SHA256,
+)
+from shared_benchmark.spatial import (  # noqa: E402
+    SELF_AUDIT_HISTORICAL_224_SPATIAL_CONTRACT_VERSION,
+    SELF_AUDIT_SPATIAL_CONTRACT_VERSION,
+)
 from cardiac_benchmark.config import load_primary_config  # noqa: E402
 from cardiac_benchmark.dataset import load_primary_2d  # noqa: E402
 from cardiac_benchmark.dfc_runner import run_dfc  # noqa: E402
@@ -54,18 +60,31 @@ def _adapter_spec(path: Path) -> dict[str, Any]:
 
 def _require_frozen_grid(manifest: dict[str, Any]) -> None:
     grid = manifest.get("shared_grid")
+    allowed = {
+        SELF_AUDIT_SPATIAL_CONTRACT_VERSION: {
+            "target_hw": [256, 256],
+            "forward_values": "bilinear_align_corners_false",
+            "hash": FROZEN_SELF_AUDIT_SHARED_GRID_SHA256,
+        },
+        SELF_AUDIT_HISTORICAL_224_SPATIAL_CONTRACT_VERSION: {
+            "target_hw": [224, 224],
+            "forward_values": "historical_preprocess_224_no_post_loader_resize",
+            "hash": FROZEN_SELF_AUDIT_HISTORICAL_224_SHARED_GRID_SHA256,
+        },
+    }
+    expected = allowed.get(grid.get("version")) if isinstance(grid, dict) else None
     if (
         manifest.get("schema_version") != "shared_benchmark_manifest.v1"
         or not isinstance(grid, dict)
         or manifest.get("split_policy_version") != "self_audit.acdc.patient_split.v1"
-        or grid.get("version") != SELF_AUDIT_SPATIAL_CONTRACT_VERSION
-        or grid.get("target_hw") != [256, 256]
+        or expected is None
+        or grid.get("target_hw") != expected["target_hw"]
         or grid.get("whole_fov") is not True
         or grid.get("crop") is not None
-        or grid.get("forward_values") != "bilinear_align_corners_false"
-        or manifest.get("shared_grid_hash") != FROZEN_SELF_AUDIT_SHARED_GRID_SHA256
+        or grid.get("forward_values") != expected["forward_values"]
+        or manifest.get("shared_grid_hash") != expected["hash"]
     ):
-        raise ArtifactError("DFC scientific runner requires the frozen Self-Audit 256x256 whole-FOV shared grid")
+        raise ArtifactError("DFC scientific runner requires a frozen approved Self-Audit baseline grid")
 
 
 def _require_expected_config_hash(expected: str | None, computed: str) -> None:
@@ -88,6 +107,11 @@ def _start_execution_receipt(device: str) -> dict[str, Any]:
         receipt["scikit_learn_version"] = sklearn.__version__
     except Exception:
         receipt["scikit_learn_version"] = None
+    try:
+        import skimage
+        receipt["scikit_image_version"] = skimage.__version__
+    except Exception:
+        receipt["scikit_image_version"] = None
     if cuda_active:
         torch.cuda.reset_peak_memory_stats(runtime_device)
     return receipt
@@ -190,7 +214,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--sample-list", type=Path)
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--apply-adapter", action="store_true")
-    parser.add_argument("--adapter-spec", type=Path, default=ROOT / "benchmark_freezes" / "cardiac_benchmark_v6" / "configs" / "adapter_v2_spec.json")
+    parser.add_argument("--adapter-spec", type=Path, default=ROOT / "benchmark_freezes" / "cardiac_benchmark_v10_historical_224" / "configs" / "adapter_v2_spec.json")
     parser.add_argument("--semantic-root", type=Path)
     parser.add_argument("--no-retry-failed", dest="retry_failed", action="store_false")
     parser.set_defaults(retry_failed=True)
