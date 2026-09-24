@@ -74,13 +74,13 @@ def create_cityscapes_colormap():
 
 class DirectoryDataset(Dataset):
     """Adapter for ACDCDataset to replace the original DirectoryDataset."""
-    def __init__(self, root, path, image_set, transform, target_transform):
+    def __init__(self, root, path, image_set, transform, target_transform, split_manifest=None, data_root_override=None):
         super(DirectoryDataset, self).__init__()
         self.split = image_set
         
         # path = cfg.dir_dataset_name (vd: "ACDC"). Resolve absolute path từ __file__
         repo_root = os.path.abspath(join(os.path.dirname(__file__), "../../../"))
-        data_root = join(repo_root, "preprocessed_data", path)
+        data_root = data_root_override or join(repo_root, "preprocessed_data", path)
         assert os.path.isdir(data_root), f"Data root not found: {data_root}"
         
         dataset_key = path.lower()
@@ -90,7 +90,7 @@ class DirectoryDataset(Dataset):
             from self_audit.data.mnms import MNMSDataset as TargetDataset
         else:
             raise ValueError(f"Unknown dataset configuration path: '{path}'. Expected 'ACDC' or 'MNMS'.")
-        self.inner = TargetDataset(data_root=data_root, split=self.split)
+        self.inner = TargetDataset(data_root=data_root, split=self.split, split_manifest=split_manifest)
         
         self.transform = transform
         self.target_transform = target_transform
@@ -464,7 +464,11 @@ class ContrastiveSegDataset(Dataset):
         elif dataset_name == "directory":
             self.n_classes = cfg.dir_dataset_n_classes
             dataset_class = DirectoryDataset
-            extra_args = dict(path=cfg.dir_dataset_name)
+            extra_args = dict(
+                path=cfg.dir_dataset_name,
+                split_manifest=getattr(cfg, "dir_dataset_split_manifest", None),
+                data_root_override=getattr(cfg, "dir_dataset_data_root", None),
+            )
         elif dataset_name == "cityscapes" and crop_type is None:
             self.n_classes = 27
             dataset_class = CityscapesSeg

@@ -43,6 +43,17 @@ consumer used to:
 - optionally hand off to the shared semantic adapter for SA224 profiles
 - provide cross-baseline contract evidence alongside CUTS, DFC, and STEGO
 
+## Fair Variant Entry Points
+
+The fair ACDC variant work is now split into explicit repo-owned entry points:
+
+- `scripts/train_picie_sa224_fair.py` trains a train-only ACDC fair checkpoint
+  with a frozen PiCIE-style augmentation preset and emits a matching
+  checkpoint-contract sidecar.
+- The scientific producer path under `baseline/PICIE/src/cardiac_benchmark/`
+  remains the authoritative inference path and can consume the fair checkpoint
+  once the sidecar contract is supplied.
+
 ## Reporting Policy
 
 - PiCIE changes should be documented in PiCIE-specific reports, not merged into

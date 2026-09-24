@@ -43,6 +43,18 @@ consumer used to:
 - optionally hand off to the shared semantic adapter for SA224 profiles
 - provide cross-baseline contract evidence alongside CUTS, DFC, and PiCIE
 
+## Fair Variant Entry Points
+
+The fair ACDC variant work is now split into explicit repo-owned entry points:
+
+- `scripts/train_stego_sa224_fair.py` trains a train-only ACDC fair checkpoint
+  and emits a matching checkpoint-contract sidecar.
+- `baseline/STEGO/src/train_segmentation.py` now accepts fair-only plumbing
+  flags so the train split can be used without dev-label checkpoint selection.
+- `baseline/STEGO/src/cardiac_benchmark/stego_runner.py` keeps the compat path
+  intact, but `STEGO-SA224-FAIR` now expects a full trained STEGO checkpoint and
+  emits partitions from the trained `cluster_probe`.
+
 ## Reporting Policy
 
 - STEGO changes should be documented in STEGO-specific reports, not merged into

@@ -19,6 +19,7 @@ import torch
 
 from cardiac_benchmark.config import PICIEConfig
 from cardiac_benchmark.picie_runner import run_inference
+from scripts import train_picie_sa224_fair
 
 
 def test_picie_cpu_inference_with_mock_modules_outputs_shared_grid_partition():
@@ -37,3 +38,12 @@ def test_picie_cpu_inference_with_mock_modules_outputs_shared_grid_partition():
     assert partition.shape == (8, 8)
     assert partition.dtype == np.int32
     assert set(np.unique(partition)) == {3}
+
+
+def test_picie_recipe_audit_exposes_known_fidelity_gaps():
+    audit = train_picie_sa224_fair.build_recipe_audit()
+    statuses = {item["item"]: item["status"] for item in audit["items"]}
+    assert statuses["two_view_generation"] == "matched"
+    assert statuses["classifier_update_path"] == "matched"
+    assert statuses["epoch_iteration_semantics"] == "intentional_adaptation"
+    assert audit["known_fidelity_gaps"] == []

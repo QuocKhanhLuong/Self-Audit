@@ -108,6 +108,10 @@ class LitUnsupervisedSegmenter(pl.LightningModule):
         else:
             self.label_cmap = create_pascal_label_colormap()
 
+        self.fair_train_mode = bool(getattr(cfg, "fair_train_mode", False))
+        self.train_linear_probe = bool(getattr(cfg, "train_linear_probe", not self.fair_train_mode))
+        self.enable_validation = bool(getattr(cfg, "enable_validation", not self.fair_train_mode))
+        self._validation_outputs = []
         self.val_steps = 0
         self.save_hyperparameters()
 
@@ -218,12 +222,15 @@ class LitUnsupervisedSegmenter(pl.LightningModule):
 
         detached_code = torch.clone(code.detach())
 
-        linear_logits = self.linear_probe(detached_code)
-        linear_logits = F.interpolate(linear_logits, label.shape[-2:], mode='bilinear', align_corners=False)
-        linear_logits = linear_logits.permute(0, 2, 3, 1).reshape(-1, self.n_classes)
-        linear_loss = self.linear_probe_loss_fn(linear_logits[mask], flat_label[mask]).mean()
-        loss += linear_loss
-        self.log('loss/linear', linear_loss, **log_args)
+        if self.train_linear_probe:
+            linear_logits = self.linear_probe(detached_code)
+            linear_logits = F.interpolate(linear_logits, label.shape[-2:], mode='bilinear', align_corners=False)
+            linear_logits = linear_logits.permute(0, 2, 3, 1).reshape(-1, self.n_classes)
+            linear_loss = self.linear_probe_loss_fn(linear_logits[mask], flat_label[mask]).mean()
+            loss += linear_loss
+            self.log('loss/linear', linear_loss, **log_args)
+        else:
+            self.log('loss/linear', loss.new_tensor(0.0), **log_args)
 
         cluster_loss, cluster_probs = self.cluster_probe(detached_code, None)
         loss += cluster_loss
@@ -258,6 +265,8 @@ class LitUnsupervisedSegmenter(pl.LightningModule):
         self.logger.log_hyperparams(self.cfg, tb_metrics)
 
     def validation_step(self, batch, batch_idx):
+        if not self.enable_validation:
+            return None
         img = batch["img"]
         label = batch["label"]
         self.net.eval()
@@ -274,14 +283,19 @@ class LitUnsupervisedSegmenter(pl.LightningModule):
             cluster_preds = cluster_preds.argmax(1)
             self.cluster_metrics.update(cluster_preds, label)
 
-            return {
+            output = {
                 'img': img[:self.cfg.n_images].detach().cpu(),
                 'linear_preds': linear_preds[:self.cfg.n_images].detach().cpu(),
                 "cluster_preds": cluster_preds[:self.cfg.n_images].detach().cpu(),
                 "label": label[:self.cfg.n_images].detach().cpu()}
+            self._validation_outputs.append(output)
+            return output
 
-    def validation_epoch_end(self, outputs) -> None:
-        super().validation_epoch_end(outputs)
+    def on_validation_epoch_end(self) -> None:
+        outputs = list(self._validation_outputs)
+        self._validation_outputs.clear()
+        if not self.enable_validation or not outputs:
+            return
         with torch.no_grad():
             tb_metrics = {
                 **self.linear_metrics.compute(),
@@ -375,6 +389,7 @@ class LitUnsupervisedSegmenter(pl.LightningModule):
 
             self.linear_metrics.reset()
             self.cluster_metrics.reset()
+            self._validation_outputs.clear()
 
     def configure_optimizers(self):
         main_params = list(self.net.parameters())
@@ -439,21 +454,26 @@ def my_app(cfg: DictConfig) -> None:
         pos_labels=True
     )
 
-    if cfg.dataset_name == "voc":
-        val_loader_crop = None
-    else:
-        val_loader_crop = "center"
+    enable_validation = bool(getattr(cfg, "enable_validation", not getattr(cfg, "fair_train_mode", False)))
 
-    val_dataset = ContrastiveSegDataset(
-        pytorch_data_dir=pytorch_data_dir,
-        dataset_name=cfg.dataset_name,
-        crop_type=None,
-        image_set="val",
-        transform=get_transform(cfg.res, False, val_loader_crop),
-        target_transform=get_transform(cfg.res, True, val_loader_crop),
-        mask=True,
-        cfg=cfg,
-    )
+    if enable_validation:
+        if cfg.dataset_name == "voc":
+            val_loader_crop = None
+        else:
+            val_loader_crop = "center"
+
+        val_dataset = ContrastiveSegDataset(
+            pytorch_data_dir=pytorch_data_dir,
+            dataset_name=cfg.dataset_name,
+            crop_type=None,
+            image_set="val",
+            transform=get_transform(cfg.res, False, val_loader_crop),
+            target_transform=get_transform(cfg.res, True, val_loader_crop),
+            mask=True,
+            cfg=cfg,
+        )
+    else:
+        val_dataset = None
 
     #val_dataset = MaterializedDataset(val_dataset)
     train_loader = DataLoader(train_dataset, cfg.batch_size, shuffle=True, num_workers=cfg.num_workers, pin_memory=True)
@@ -463,7 +483,9 @@ def my_app(cfg: DictConfig) -> None:
     else:
         val_batch_size = cfg.batch_size
 
-    val_loader = DataLoader(val_dataset, val_batch_size, shuffle=False, num_workers=cfg.num_workers, pin_memory=True)
+    val_loader = None
+    if val_dataset is not None:
+        val_loader = DataLoader(val_dataset, val_batch_size, shuffle=False, num_workers=cfg.num_workers, pin_memory=True)
 
     model = LitUnsupervisedSegmenter(train_dataset.n_classes, cfg)
 
@@ -472,35 +494,47 @@ def my_app(cfg: DictConfig) -> None:
         default_hp_metric=False
     )
 
-    if cfg.submitting_to_aml:
-        gpu_args = dict(gpus=1, val_check_interval=250)
-
-        if gpu_args["val_check_interval"] > len(train_loader):
-            gpu_args.pop("val_check_interval")
-
+    if torch.cuda.is_available():
+        device_count = max(torch.cuda.device_count(), 1)
+        trainer_args = dict(accelerator="gpu", devices=device_count)
+        if device_count > 1:
+            trainer_args["strategy"] = "ddp"
     else:
-        gpu_args = dict(gpus=-1, accelerator='ddp', val_check_interval=cfg.val_freq)
-        # gpu_args = dict(gpus=1, accelerator='ddp', val_check_interval=cfg.val_freq)
+        trainer_args = dict(accelerator="cpu", devices=1)
 
-        if gpu_args["val_check_interval"] > len(train_loader) // 4:
-            gpu_args.pop("val_check_interval")
+    if enable_validation:
+        val_check_interval = 250 if cfg.submitting_to_aml else cfg.val_freq
+        max_allowed = len(train_loader) if cfg.submitting_to_aml else max(len(train_loader) // 4, 1)
+        if val_check_interval <= max_allowed:
+            trainer_args["val_check_interval"] = val_check_interval
+
+    checkpoint_kwargs = dict(
+        dirpath=join(checkpoint_dir, name),
+        every_n_train_steps=cfg.checkpoint_freq,
+    )
+    if enable_validation:
+        checkpoint_kwargs.update(
+            save_top_k=2,
+            monitor="test/cluster/mIoU",
+            mode="max",
+        )
+    else:
+        checkpoint_kwargs.update(
+            save_top_k=0,
+            save_last=True,
+        )
 
     trainer = Trainer(
         log_every_n_steps=cfg.scalar_log_freq,
         logger=tb_logger,
         max_steps=cfg.max_steps,
-        callbacks=[
-            ModelCheckpoint(
-                dirpath=join(checkpoint_dir, name),
-                every_n_train_steps=400,
-                save_top_k=2,
-                monitor="test/cluster/mIoU",
-                mode="max",
-            )
-        ],
-        **gpu_args
+        callbacks=[ModelCheckpoint(**checkpoint_kwargs)],
+        **trainer_args
     )
-    trainer.fit(model, train_loader, val_loader)
+    if val_loader is None:
+        trainer.fit(model, train_loader)
+    else:
+        trainer.fit(model, train_loader, val_loader)
 
 
 if __name__ == "__main__":

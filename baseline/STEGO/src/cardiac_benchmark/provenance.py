@@ -58,6 +58,69 @@ def checkpoint_provenance(checkpoint_path: str | Path) -> dict[str, Any]:
     }
 
 
+def classify_prior_checkpoint(checkpoint_path: str | Path | None) -> dict[str, Any]:
+    if checkpoint_path is None:
+        return {
+            "checkpoint_path": None,
+            "checkpoint_sha256": None,
+            "checkpoint_format": "implicit_dino_download",
+            "backbone_prior": "official_dino_vit",
+            "head_state_presence": "none",
+            "fair_status": "matched",
+            "allowed_for_fair_mode": True,
+            "requires_explicit_override": False,
+            "note": (
+                "No local checkpoint supplied; fair STEGO will defer to the official "
+                "DINO teacher-weight loader."
+            ),
+        }
+
+    resolved = Path(checkpoint_path).resolve()
+    checkpoint = torch.load(resolved, map_location="cpu", weights_only=False)
+    if "teacher" in checkpoint:
+        teacher_state = checkpoint["teacher"]
+        return {
+            "checkpoint_path": str(resolved),
+            "checkpoint_sha256": sha256_file(resolved),
+            "checkpoint_format": "dino_teacher",
+            "backbone_prior": "official_dino_teacher",
+            "head_state_presence": "none",
+            "teacher_key_count": len(teacher_state),
+            "fair_status": "matched",
+            "allowed_for_fair_mode": True,
+            "requires_explicit_override": False,
+            "note": "Teacher-format DINO checkpoint is an acceptable B4 backbone prior.",
+        }
+
+    if "state_dict" in checkpoint:
+        state_dict = checkpoint["state_dict"]
+        backbone_key_count = sum(1 for key in state_dict if key.startswith("net.model."))
+        head_key_count = sum(
+            1
+            for key in state_dict
+            if key.startswith("net.cluster1.") or key.startswith("net.cluster2.")
+        )
+        return {
+            "checkpoint_path": str(resolved),
+            "checkpoint_sha256": sha256_file(resolved),
+            "checkpoint_format": "stego_lightning",
+            "backbone_prior": "stego_backbone_from_downstream_checkpoint",
+            "head_state_presence": "downstream_projection_head_present" if head_key_count else "none_detected",
+            "backbone_key_count": backbone_key_count,
+            "head_key_count": head_key_count,
+            "fair_status": "fidelity_gap",
+            "allowed_for_fair_mode": False,
+            "requires_explicit_override": True,
+            "note": (
+                "Lightning STEGO checkpoint contains downstream projection-head state; "
+                "fair B4 should prefer a DINO teacher prior unless an explicit override "
+                "accepts this adaptation."
+            ),
+        }
+
+    raise ValueError(f"Unknown checkpoint format in {resolved}")
+
+
 def rng_contract() -> dict[str, Any]:
     return {
         "benchmark_seed": 42,

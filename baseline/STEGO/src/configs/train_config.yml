@@ -16,6 +16,8 @@ dataset_name: "directory"
 # Used if dataset_name is "directory"
 dir_dataset_name: "ACDC"
 dir_dataset_n_classes: 4
+dir_dataset_split_manifest: ~
+dir_dataset_data_root: ~
 
 has_labels: True
 crop_type: ~
@@ -159,6 +161,10 @@ crf_samples: 1000
 color_space: "rgb"
 
 reset_probe_steps: ~
+
+fair_train_mode: False
+train_linear_probe: True
+enable_validation: True
 
 # Logging params
 n_images: 5
