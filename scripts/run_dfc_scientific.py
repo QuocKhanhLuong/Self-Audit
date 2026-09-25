@@ -28,8 +28,7 @@ from shared_benchmark.artifacts import (  # noqa: E402
     select_manifest_records,
     validate_scientific_execution,
 )
-from shared_benchmark.provenance import sha256_file  # noqa: E402
-from shared_benchmark.semantic_contract import FROZEN_ADAPTER_SPEC_SHA256  # noqa: E402
+from shared_benchmark.semantic_contract import load_and_validate_spec  # noqa: E402
 from shared_benchmark.semantic_contract import FROZEN_SELF_AUDIT_SHARED_GRID_SHA256  # noqa: E402
 from shared_benchmark.spatial import SELF_AUDIT_SPATIAL_CONTRACT_VERSION  # noqa: E402
 from cardiac_benchmark.config import load_primary_config  # noqa: E402
@@ -47,8 +46,7 @@ def _load_json(path: Path) -> dict[str, Any]:
 
 def _adapter_spec(path: Path) -> dict[str, Any]:
     spec = _load_json(path)
-    if spec.get("adapter_version") != "cardiac_adapter_v2" or sha256_file(path) != FROZEN_ADAPTER_SPEC_SHA256:
-        raise ValueError("adapter spec hash is not the frozen cardiac_adapter_v2 contract")
+    load_and_validate_spec(spec)
     return spec
 
 

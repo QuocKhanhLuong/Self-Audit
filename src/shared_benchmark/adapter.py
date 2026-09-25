@@ -200,6 +200,13 @@ def adapt_partition(
             clean_record=clean_record, partition_value=partition_value,
             image_value=image_value, manifest_hash=manifest_hash,
         )
+    if adapter_version == "cardiac_adapter_v5":
+        from .adapter_v5 import adapt_partition_v5
+        return adapt_partition_v5(
+            record, partition, central_image, spec=spec, spec_hash=spec_hash,
+            clean_record=clean_record, partition_value=partition_value,
+            image_value=image_value, manifest_hash=manifest_hash,
+        )
     graph = build_region_graph(partition_value)
     semantic = np.full(partition_value.shape, VOID, dtype=np.uint8)
     assignments: dict[str, int] = {}

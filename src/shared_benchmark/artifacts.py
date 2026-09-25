@@ -33,6 +33,7 @@ from .semantic_contract import (
     FROZEN_ADAPTER_SPEC_SHA256,
     FROZEN_ADAPTER_V3_SPEC_SHA256,
     FROZEN_ADAPTER_V4_SPEC_SHA256,
+    FROZEN_ADAPTER_V5_SPEC_SHA256,
     AdapterContractError,
     adapter_metadata_payload,
     array_hash,
@@ -620,6 +621,7 @@ def _adapter_implementation_files(repo_root: str | Path | None = None) -> list[P
     return [
         root / "src/shared_benchmark/adapter.py",
         root / "src/shared_benchmark/adapter_v4.py",
+        root / "src/shared_benchmark/adapter_v5.py",
         root / "src/shared_benchmark/region_graph.py",
         root / "src/shared_benchmark/semantic_contract.py",
         root / "src/shared_benchmark/artifacts.py",
@@ -698,6 +700,7 @@ def seal_semantic_partition(
         FROZEN_ADAPTER_SPEC_SHA256,
         FROZEN_ADAPTER_V3_SPEC_SHA256,
         FROZEN_ADAPTER_V4_SPEC_SHA256,
+        FROZEN_ADAPTER_V5_SPEC_SHA256,
     }:
         raise ArtifactError("unsupported adapter specification hash")
     try:
