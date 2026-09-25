@@ -1,5 +1,214 @@
 # Cardiac adapter audit and implementation plan
 
+## Kế hoạch hiện hành — cập nhật 2026-09-25
+
+**Trạng thái:** đã thống nhất hướng thiết kế, chưa triển khai. Phần này là kế
+hoạch hiện hành; các mục 1–17 bên dưới được giữ làm lịch sử thiết kế/freeze,
+không phải yêu cầu áp dụng lại logic tuần tự cũ cho phiên bản mới.
+
+Bằng chứng: [audit 2026-09-25](adapter_audit_2026-09-25/REPORT.md),
+[probe tái hiện](adapter_audit_2026-09-25/reproduce.py),
+[kết quả tổng hợp](adapter_audit_2026-09-25/synthetic_results.json).
+Implementation được audit tại `5985e4f`. Adapter v2/v3 hiện tại dùng resolver
+topology cứng; kế hoạch dưới đây đề xuất phiên bản `cardiac_adapter_v4` cho mức A.
+Kiểm tra tên phiên bản chưa bị sử dụng trước khi triển khai.
+
+### Mục tiêu và phạm vi
+
+Chuyển anonymous partition thực tế thành BG/RV/MYO/LV có ích, thay vì chỉ đặt tên
+được cho partition gần lý tưởng. Cải thiện full-image foreground Dice và khả
+năng tìm đúng từng lớp; coverage toàn ảnh không phải tiêu chí thành công độc lập.
+
+- **Mức A — ưu tiên:** ghép component và gán nhãn đồng thời, giữ nguyên đường
+  biên component. Không khóa BG trước; không yêu cầu duy nhất một vòng kín trên
+  toàn ảnh; không để một ứng viên nhiễu phủ quyết tất cả cấu trúc đã có bằng chứng.
+- **Mức B — giai đoạn tiếp theo:** sinh phương án tách component hỗn hợp từ ảnh,
+  sau đó dùng chung bộ chọn cấu hình. Báo riêng là adapter có refinement từ ảnh,
+  không gọi là chỉ đổi tên cluster. Mức A không thể khôi phục biên BG/MYO đã mất.
+- Không đổi training baseline hoặc metric headline để làm tăng điểm. Chạy các
+  ablation trên cùng raw partitions đã đóng băng.
+- Giữ GT ngoài runtime; không dùng tên method, dataset, patient hay giá trị
+  raw ID để chọn nhãn. Cho phép các cấu trúc vắng mặt, không ép đủ bốn lớp.
+- Giữ phiên bản cũ và frozen artifact có thể tái hiện; không sửa spec/hash cũ
+  để hợp thức hóa hành vi mới. Yêu cầu mới chỉ áp dụng qua phiên bản mới.
+
+### Logic đích
+
+```text
+partition + central image + shared provenance
+  -> graph component + đặc trưng hình học
+  -> sinh nhóm ứng viên BG, LV–MYO, RV và phương án vắng mặt
+  -> chấm điểm toàn cấu hình, giải quyết vùng cạnh tranh
+  -> kiểm tra độ tin cậy tuyệt đối và margin
+  -> chốt nhãn từng vùng / VOID + trace các phương án
+```
+
+1. **BG chưa khóa:** diện tích, tỷ lệ chạm biên và kết nối vùng ngoài chỉ là bằng
+   chứng mềm. Cho phép nhiều ID tạo BG. Vùng có cả bằng chứng BG và MYO được giữ
+   ở hai giả thuyết cạnh tranh; không gán phần dư thành BG mặc định.
+2. **Nhóm LV–MYO:** sinh từ một hoặc nhiều component liền kề. Đo tỷ lệ biên LV
+   được nhóm MYO bao quanh, mức/kích thước khe hở, tỷ lệ diện tích và tính liên
+   kết của nhóm. Bao kín là điểm mạnh, không là điều kiện nhị phân bắt buộc.
+   Vòng khác ở xa là phương án cạnh tranh, không phủ quyết toàn ảnh. Chấp nhận
+   khe nhỏ không có nghĩa tô thêm pixel vá vòng trong mức A.
+3. **RV theo giả thuyết:** sinh ứng viên cạnh mỗi cấu hình LV–MYO trước khi chốt
+   MYO; xét chiều dài tiếp giáp chuẩn hóa, hình dạng và tương quan nhóm. Cho phép
+   nhiều mảnh hoặc vắng RV. Không hard-code RV ở trái/phải ảnh. Phương án thiếu
+   MYO chỉ được gán RV khi có bằng chứng độc lập đã được đặc tả/kiểm chứng; nếu
+   chưa có thì VOID, không bịa nhãn để phá phụ thuộc.
+4. **Chọn đồng thời:** `S(H) = tổng unary + tổng relational - penalty`. Đặc tả
+   từng feature, normalization, trọng số và penalty trước khi freeze. Mỗi
+   component tối đa một nhãn; nhiều component có thể cùng lớp. Không có ràng
+   buộc bắt buộc mọi lớp xuất hiện hoặc mọi pixel được gán.
+5. **Giải quyết xung đột cục bộ:** giữ tập cấu hình khả thi gần tối ưu; chốt một
+   vùng khi bằng chứng của nhãn đủ mạnh và ổn định giữa các cấu hình cạnh tranh.
+   Dùng margin theo nhãn/vùng, không chỉ margin toàn ảnh. Bất đồng về RV không
+   xóa LV/MYO đã có đồng thuận. Điểm tuyệt đối thấp vẫn phải VOID dù đứng đầu.
+6. **Bằng chứng ảnh:** topology là ablation đầu tiên; tương phản tương đối trong
+   ảnh là ablation riêng. Ảnh hằng hoặc không có tương phản hữu ích phải cho
+   feature trung tính, không tạo confidence giả. Nonfinite input vẫn bị reject.
+   Orientation tắt khi shared geometry chưa chứng minh hướng giải phẫu.
+
+### Tổ chức implementation dự kiến
+
+| File/module | Trách nhiệm |
+|---|---|
+| `src/shared_benchmark/adapter.py` | Giữ resolver cũ, dispatch theo spec version; không âm thầm đổi default |
+| `src/shared_benchmark/adapter_v4.py` (mới) | Điều phối resolver mức A |
+| `src/shared_benchmark/adapter_candidates.py` (mới) | Nhóm component, feature và tập ứng viên có giới hạn |
+| `src/shared_benchmark/adapter_solver.py` (mới) | Score cấu hình, beam search, confidence và xung đột |
+| `src/shared_benchmark/region_graph.py` | Tái dùng graph; feature mới không đổi digest/hành vi cũ ngoài ý muốn |
+| `src/shared_benchmark/semantic_contract.py` | Schema/spec/hash mới, validation theo version |
+| `src/shared_benchmark/artifacts.py` | Lưu và recompute kết quả đúng phiên bản, bind các dependency mới |
+| `configs/adapter_v4_spec_source.json` (mới) | Feature, score, search budget, threshold, policy đã định nghĩa rõ |
+| `tests/shared_benchmark/test_adapter_v4_*.py` (mới) | Functional, solver, invariance, artifact và firewall |
+| `scripts/evaluate_visualize_shared_benchmark.py` | Diagnostic coverage/class/VOID, giữ nguyên headline metric |
+
+Tên module có thể điều chỉnh khi triển khai; ranh giới trách nhiệm và khả năng
+replay phiên bản cũ là bắt buộc. Không import evaluator/GT vào runtime adapter.
+
+### Các bước triển khai và điều kiện hoàn thành
+
+#### P0 — Chốt dữ liệu và baseline chẩn đoán
+
+- [ ] Tìm raw partition, ảnh, semantic, metadata và manifest đúng run Dice khoảng
+  0.00018. Hiện local chỉ có report STEGO/PiCIE patient004 Dice 0; không xem đó
+  là bằng chứng đã tái hiện đúng run người dùng nói.
+- [ ] Chốt inventory theo method/patient/slice, split phát triển/test, grid,
+  label mapping và aggregation. Thống kê số component, enclosure, lớp bị bỏ,
+  nguyên nhân VOID, BG trên GT foreground và foreground bị VOID trong evaluator.
+- [ ] Tạo diagnostic remapping theo cluster và theo component chỉ ở evaluator.
+  Majority-label mapping là diagnostic, không gọi là trần Dice; chỉ gọi upper
+  bound khi có tối ưu/bound đúng với metric đang báo.
+- [ ] Ghi baseline runtime, full-image Dice theo lớp/volume/patient, foreground
+  precision/recall, coverage gồm BG và diện tích dự đoán riêng mỗi lớp.
+
+**Hoàn thành:** inventory và report có provenance đủ để replay. Thiếu artifact
+thật không chặn P1/P2 synthetic, nhưng chặn kết luận hiệu quả dữ liệu thật.
+
+#### P1 — Đặc tả feature, candidate và hợp đồng mới
+
+- [x] Viết công thức có range/normalization cho border support, enclosure share,
+  gap penalty, adjacency ratio, area relation và group complexity. Các đại lượng
+  khoảng cách dùng tỷ lệ kích thước ảnh, hoặc spacing đã xác minh nếu có.
+- [x] Định nghĩa cách ghép LV/MYO/RV; giới hạn kích thước nhóm, vùng lân cận và
+  số candidate. Không giả định mọi tim nằm giữa ảnh hoặc theo raw K.
+- [x] Định nghĩa missing-class hypothesis, VOID cost, absolute confidence và
+  margin theo vùng; tránh cả nghiệm toàn VOID lẫn nghiệm ép foreground.
+- [x] Định nghĩa top-k/beam budget và giới hạn độ phức tạp. Khi budget bị cắt,
+  ghi `search_truncated`; không dùng khoảng cách giữa vài nghiệm còn lại làm
+  chứng nhận chắc chắn. Khi không chứng minh được độ tin cậy, hạ confidence/VOID.
+- [x] Geometry key dùng để serialize/thực thi ổn định, không được phá hòa ngữ
+  nghĩa. Tại biên pruning có hòa điểm: giữ các phương án tương đương trong budget
+  hoặc đánh dấu không đủ bằng chứng, không lấy ứng viên đầu tiên tùy tiện.
+
+**Hoàn thành:** spec draft có thể tính tay trên fixture nhỏ. Mọi tham số cần
+calibration được liệt kê, không ghi ngưỡng tùy ý thành giá trị đã kiểm chứng.
+
+#### P2 — Mức A: nhóm component và chọn cấu hình chung
+
+- [x] Implement candidate generator và feature, không thay pixel membership.
+- [x] Implement joint scoring và bounded hypothesis search; beam search đầy đủ
+  chỉ cần thêm nếu candidate budget thực tế không còn đủ.
+- [x] Implement quyết định theo vùng: nhãn đồng thuận đủ mạnh được giữ; vùng
+  tranh chấp thành VOID; BG không có quyền ưu tiên do thứ tự xét.
+- [x] Trace gồm nhóm thành viên, các score term, nhãn được chọn, alternative,
+  margin, confidence reason, số candidate, search budget/truncation.
+- [ ] Kiểm tra solver trên bài toán nhỏ bằng exhaustive enumeration để phát
+  hiện sai objective/ràng buộc; báo beam là xấp xỉ, không nhận là tối ưu toàn cục.
+
+**Hoàn thành:** nhóm LV tách cluster được ghép đúng; khe MYO nhỏ và nhiễu RV không
+gây sụp mọi nhãn; không ép nhãn trên trường hợp không thể xác định.
+
+#### P3 — Tích hợp version, provenance và regression
+
+- [x] Dispatch v4 và chọn spec qua entrypoint hiện có; audit các allowlist hash,
+  schema, stage name, implementation dependency hash và recomputation verifier.
+- [x] Giữ nguyên output v2/v3 cho frozen fixtures. V4 dùng artifact stage riêng.
+- [ ] Thêm fixture: ideal; BG/MYO cùng ID tách rời; BG/MYO dính component; MYO
+  hở nhỏ/hở lớn; LV/MYO/RV nhiều mảnh; vòng kín nhiễu ở xa; pixel nhiễu cạnh MYO;
+  BG nhiều ID; lớp vắng; mọi lớp vắng; hai giả thuyết ngang điểm; non-square;
+  tiếp xúc chéo; ảnh hằng; budget hết và input sai.
+- [x] Kiểm tra raw-ID permutation, thứ tự enumerate candidate, repeated execution,
+  firewall, cross-producer equivalence và artifact tamper/recompute.
+- [x] Với mức A, assert mỗi source component mang tối đa một nhãn/VOID. Ca BG/MYO
+  dính không được có test ép thành hoàn hảo bằng cách âm thầm tạo biên mới.
+- [ ] Xử lý chính sách line endings cho các freeze mới để hash byte ổn định trên
+  Windows/Linux; không sửa hash frozen cũ cho khớp checkout CRLF.
+
+**Hoàn thành:** regression phù hợp pass; mọi fail còn lại phải được giải thích,
+không bỏ qua test freeze. Tách lỗi môi trường khỏi thay đổi thuật toán.
+
+#### P4 — Ablation dữ liệu thật và khóa phiên bản mức A
+
+- [ ] So sánh cùng raw input: bản cũ; grouping; soft enclosure; joint conflict
+  resolution; optional relative intensity. Ghi cấu hình từng ablation rõ ràng.
+- [ ] Báo Dice full-image theo lớp/volume/patient, precision/recall, diện tích từng
+  lớp, tỷ lệ class resolve/VOID, false foreground trên lát không có cấu trúc,
+  thời gian/peak memory và số sample search bị cắt. Không đánh tráo Dice bằng
+  valid-only Dice; selective metric chỉ là số phụ kèm coverage.
+- [ ] Chọn weights/threshold bằng tập phát triển tách patient. Nếu dùng GT để
+  chọn config, khai báo calibration có supervision; runtime GT-free không đồng
+  nghĩa quá trình phát triển không dùng supervision. Không tune trên test.
+- [ ] Trước lượt so sánh cuối, ghi tiêu chí định lượng: mức tăng Dice tối thiểu,
+  mức giảm từng lớp chấp nhận được, false-positive và runtime budget. Các mức
+  này hiện chưa chốt; không quyết định sau khi xem test.
+- [ ] Freeze spec/code/config sau calibration, chạy evaluation test một lần theo
+  protocol, báo cả patient/method bị giảm điểm và trường hợp thất bại.
+
+**Hoàn thành:** cải thiện thực sự theo tiêu chí định trước trên dữ liệu tách
+patient, không chỉ trên synthetic hoặc coverage. Chưa hứa mức Dice cụ thể.
+
+#### P5 — Mức B: component hỗn hợp và refinement từ ảnh
+
+- [ ] Từ P0/P4 định lượng phần lỗi còn lại do component trộn nhiều lớp, phân biệt
+  với lỗi gán nhãn. Quyết định có cần triển khai splitting dựa trên bằng chứng.
+- [ ] Sinh phương án giữ nguyên/tách bằng superpixel hoặc watershed/biên ảnh có
+  seed từ giả thuyết, không từ GT. Không tách chỉ để tạo đủ lớp.
+- [ ] Đưa các phương án vào joint solver; phạt thay đổi biên không có bằng chứng.
+  Lưu source-to-child mapping, pixel changes và score cạnh tranh với giữ nguyên.
+- [ ] Tạo contract/version/artifact riêng cho mức B (`region_splitting=true`),
+  áp dụng cùng policy giữa các baseline; báo mức A và mức B riêng.
+- [ ] Ablation, firewall, provenance, runtime và patient holdout như mức A.
+
+**Hoàn thành:** chứng minh splitting cải thiện ca hỗn hợp mà không tạo foreground
+giả quá mức. Nếu không đạt, giữ mức A và ghi rõ giới hạn chưa khắc phục.
+
+### Thứ tự thực hiện và trạng thái bàn giao
+
+`P0 → P1 → P2 → P3 → P4 → P5`; phần synthetic của P1/P2 có thể tiến hành khi
+P0 còn thiếu dữ liệu. P5 phụ thuộc phân tích lỗi còn lại sau P4. Không yêu cầu
+training lại baseline để bắt đầu adapter.
+
+Hiện mới hoàn thành audit và plan; tất cả checkbox implementation còn mở.
+File kế hoạch này là nơi cập nhật tiến độ tiếp theo, tránh tạo nhiều plan cạnh
+tranh. Lịch sử dưới đây có các verdict “chưa có implementation” tại thời điểm
+2026-09-18; chúng không mô tả trạng thái code ngày 2026-09-25.
+
+---
+
+## Lịch sử thiết kế và freeze trước 2026-09-25
+
 ## 1. Scientific purpose and boundary
 
 `cardiac_adapter_v1` is a shared, deterministic, non-learned semantic resolver

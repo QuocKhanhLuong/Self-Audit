@@ -1,0 +1,56 @@
+{
+  "schema_version": "shared_benchmark.cardiac_adapter_spec.v4",
+  "adapter_version": "cardiac_adapter_v4",
+  "input_schema_version": "shared_benchmark.anonymous_partition.v4",
+  "output_schema_version": "shared_benchmark.cardiac-semantic.v4",
+  "scientific_properties": {
+    "deterministic": true,
+    "learned": false,
+    "gt_free": true,
+    "method_independent": true,
+    "cluster_id_permutation_invariant": true,
+    "operation": "connected_component_naming_and_many_to_one_merging_only",
+    "region_splitting": false,
+    "void_capable": true
+  },
+  "component_graph": {
+    "component_connectivity": 4,
+    "adjacency_connectivity": 4,
+    "raw_cluster_id_use": "opaque provenance only; never used for ranking, ties, or semantic output hashes"
+  },
+  "rules": {
+    "background": "all border-touching components are retained as provisional BG; no foreground component may overwrite them in v4",
+    "lv_myo": "score candidate non-border MYO component plus one or more non-border LV components using enclosure boundary support and relative area",
+    "rv": "after a MYO/LV hypothesis wins, choose the strongest non-border component adjacent to MYO; low-score or tied RV remains VOID",
+    "conflicts": "rank complete LV/MYO hypotheses before assignments; retain only labels stable among near-optimal hypotheses"
+  },
+  "solver": {
+    "min_lv_myo_score": 0.72,
+    "hypothesis_margin": 0.025,
+    "min_soft_enclosure_support": 0.75,
+    "max_lv_group_components": 4,
+    "max_neighbor_components": 12,
+    "max_hypotheses": 64,
+    "min_rv_score": 0.26,
+    "rv_margin": 0.04,
+    "score_formula": "lv_myo=0.70*enclosure_support+0.30*sqrt((myo_area+lv_area)/(H*W)); rv=adjacency_to_myo/rv_perimeter+0.10*sqrt(rv_area/(H*W))"
+  },
+  "intensity_policy": {
+    "mode": "disabled_for_v4_resolution",
+    "reason": "v4 validates and binds central_image but does not use intensity until a separately calibrated version"
+  },
+  "orientation_policy": {
+    "mode": "disabled",
+    "reason": "shared geometry does not establish a common short-axis direction"
+  },
+  "void_policy": {
+    "semantic_encoding": {"BG": 0, "RV": 1, "MYO": 2, "LV": 3, "VOID": 4},
+    "validity_encoding": "boolean; true iff semantic encoding is not VOID",
+    "coverage": "count(validity_map == true)/(H*W)",
+    "no_void_to_bg_conversion": true
+  },
+  "output_binding": {
+    "required_metadata": ["adapter_version", "adapter_config_sha256", "partition_sha256", "central_image_sha256", "sample_id", "shared_manifest_sha256", "shared_grid_sha256", "component_graph_digest", "assignments", "unresolved_reasons", "coverage", "semantic_map_sha256", "validity_map_sha256", "metadata_sha256"],
+    "semantic_hash_excludes": ["raw_cluster_id_provenance"]
+  }
+}

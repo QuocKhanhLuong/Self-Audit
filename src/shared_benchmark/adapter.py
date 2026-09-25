@@ -183,7 +183,7 @@ def adapt_partition(
     *,
     adapter_spec: Mapping[str, Any],
 ) -> AdapterResult:
-    """Resolve one anonymous partition under the immutable v2 contract."""
+    """Resolve one anonymous partition under its immutable versioned contract."""
     spec, spec_hash = load_and_validate_spec(adapter_spec)
     adapter_version = str(spec["adapter_version"])
     clean_record, partition_value, image_value, manifest_hash = validate_adapter_record(
@@ -193,6 +193,13 @@ def adapt_partition(
         adapter_version=adapter_version,
         adapter_config_sha256=spec_hash,
     )
+    if adapter_version == "cardiac_adapter_v4":
+        from .adapter_v4 import adapt_partition_v4
+        return adapt_partition_v4(
+            record, partition, central_image, spec=spec, spec_hash=spec_hash,
+            clean_record=clean_record, partition_value=partition_value,
+            image_value=image_value, manifest_hash=manifest_hash,
+        )
     graph = build_region_graph(partition_value)
     semantic = np.full(partition_value.shape, VOID, dtype=np.uint8)
     assignments: dict[str, int] = {}

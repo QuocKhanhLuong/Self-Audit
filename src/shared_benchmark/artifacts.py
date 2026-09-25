@@ -32,6 +32,7 @@ from .semantic_contract import (
     ADAPTER_VERSION,
     FROZEN_ADAPTER_SPEC_SHA256,
     FROZEN_ADAPTER_V3_SPEC_SHA256,
+    FROZEN_ADAPTER_V4_SPEC_SHA256,
     AdapterContractError,
     adapter_metadata_payload,
     array_hash,
@@ -618,6 +619,7 @@ def _adapter_implementation_files(repo_root: str | Path | None = None) -> list[P
     root = Path(repo_root or Path(__file__).resolve().parents[2])
     return [
         root / "src/shared_benchmark/adapter.py",
+        root / "src/shared_benchmark/adapter_v4.py",
         root / "src/shared_benchmark/region_graph.py",
         root / "src/shared_benchmark/semantic_contract.py",
         root / "src/shared_benchmark/artifacts.py",
@@ -692,7 +694,11 @@ def seal_semantic_partition(
     validity = np.asarray(validity_input, dtype=bool)
     if validity.shape != semantic.shape or not np.array_equal(validity, semantic != 4):
         raise ArtifactError("semantic artifact violates semantic/validity contract")
-    if adapter_spec_sha256 not in {FROZEN_ADAPTER_SPEC_SHA256, FROZEN_ADAPTER_V3_SPEC_SHA256}:
+    if adapter_spec_sha256 not in {
+        FROZEN_ADAPTER_SPEC_SHA256,
+        FROZEN_ADAPTER_V3_SPEC_SHA256,
+        FROZEN_ADAPTER_V4_SPEC_SHA256,
+    }:
         raise ArtifactError("unsupported adapter specification hash")
     try:
         adapter_payload = validate_adapter_metadata(result_metadata)
