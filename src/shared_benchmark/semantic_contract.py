@@ -26,6 +26,11 @@ ADAPTER_V3_INPUT_SCHEMA_VERSION = "shared_benchmark.anonymous_partition.v3"
 ADAPTER_V3_OUTPUT_SCHEMA_VERSION = "shared_benchmark.cardiac-semantic.v3"
 FROZEN_ADAPTER_V3_SPEC_SHA256 = "c786dbf0733d380f71f808bff33c7299bdaa92a72d8c876a7fbfc8474faaab0e"
 FROZEN_ADAPTER_V3_SPEC_CANONICAL_SHA256 = "20e973820a648a13a11a8b2af3a2e22ad1cbe3e26a05a975f4c41eafbf67a438"
+ADAPTER_V4_VERSION = "cardiac_adapter_v4"
+ADAPTER_V4_INPUT_SCHEMA_VERSION = "shared_benchmark.anonymous_partition.v4"
+ADAPTER_V4_OUTPUT_SCHEMA_VERSION = "shared_benchmark.cardiac-semantic.v4"
+FROZEN_ADAPTER_V4_SPEC_SHA256 = "d99167fbbddaf4566be63d72b20cc239e28cda436369f1e245d8ab877517e2a1"
+FROZEN_ADAPTER_V4_SPEC_CANONICAL_SHA256 = "b770b4aff60f256bfba827ed885b2638d3e0eb8ab15b8ab3eda8eac97d5777fc"
 # Historical v1/v2/v3 freeze artifacts remain independently verifiable.  New
 # semantic artifacts must bind the Self-Audit-derived grid and adapter v2.
 FROZEN_SHARED_GRID_SHA256 = "2d53b65aa94d6cc151a02444a03b2246034cc5334e089e4d86a8de69ce494fc1"
@@ -49,6 +54,12 @@ _SPEC_BY_VERSION = {
         "output_schema_version": ADAPTER_V3_OUTPUT_SCHEMA_VERSION,
         "file_sha256": FROZEN_ADAPTER_V3_SPEC_SHA256,
         "canonical_sha256": FROZEN_ADAPTER_V3_SPEC_CANONICAL_SHA256,
+    },
+    ADAPTER_V4_VERSION: {
+        "input_schema_version": ADAPTER_V4_INPUT_SCHEMA_VERSION,
+        "output_schema_version": ADAPTER_V4_OUTPUT_SCHEMA_VERSION,
+        "file_sha256": FROZEN_ADAPTER_V4_SPEC_SHA256,
+        "canonical_sha256": FROZEN_ADAPTER_V4_SPEC_CANONICAL_SHA256,
     },
 }
 
@@ -224,6 +235,7 @@ def validate_adapter_record(
     allowed_versions = {
         ADAPTER_VERSION: {SPATIAL_CONTRACT_VERSION, SELF_AUDIT_SPATIAL_CONTRACT_VERSION},
         ADAPTER_V3_VERSION: {SELF_AUDIT_SPATIAL_CONTRACT_VERSION, SELF_AUDIT_COMPAT_224_SPATIAL_CONTRACT_VERSION},
+        ADAPTER_V4_VERSION: {SELF_AUDIT_SPATIAL_CONTRACT_VERSION, SELF_AUDIT_COMPAT_224_SPATIAL_CONTRACT_VERSION},
     }
     if not isinstance(grid, Mapping) or grid.get("version") not in allowed_versions.get(adapter_version, set()):
         raise AdapterContractError("record must carry a supported shared-grid contract")
