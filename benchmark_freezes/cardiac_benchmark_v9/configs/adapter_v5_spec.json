@@ -1,0 +1,19 @@
+{
+  "schema_version": "shared_benchmark.cardiac_adapter_spec.v5",
+  "adapter_version": "cardiac_adapter_v5",
+  "input_schema_version": "shared_benchmark.anonymous_partition.v5",
+  "output_schema_version": "shared_benchmark.cardiac-semantic.v5",
+  "scientific_properties": {"deterministic": true, "learned": false, "gt_free": true, "method_independent": true, "cluster_id_permutation_invariant": true, "operation": "connected_component_naming_and_many_to_one_merging_only", "region_splitting": false, "void_capable": true},
+  "component_graph": {"component_connectivity": 4, "adjacency_connectivity": 4, "raw_cluster_id_use": "opaque provenance only; never used for ranking, ties, or semantic output hashes"},
+  "rules": {
+    "background": "border-touching components are provisional BG; non-border foreground candidates cannot overwrite them",
+    "lv_myo": "rank MYO plus grouped LV hypotheses using enclosure boundary support and relative area",
+    "rv": "rank connected groups of MYO-adjacent components using normalized group boundary contact",
+    "conflicts": "a best-hypothesis label is VOID only when a near-optimal hypothesis assigns that same component a different semantic role; absence from another hypothesis is not a conflict"
+  },
+  "solver": {"min_lv_myo_score": 0.72, "hypothesis_margin": 0.025, "min_soft_enclosure_support": 0.75, "max_lv_group_components": 4, "max_rv_group_components": 4, "max_neighbor_components": 12, "max_hypotheses": 64, "min_rv_score": 0.26, "rv_margin": 0.04, "score_formula": "lv_myo=0.70*enclosure_support+0.30*sqrt((myo_area+lv_area)/(H*W)); rv=group_adjacency_to_myo/rv_group_perimeter+0.10*sqrt(rv_group_area/(H*W))"},
+  "intensity_policy": {"mode": "disabled_for_v5_resolution", "reason": "central_image is bound but intensity is not used until separately calibrated"},
+  "orientation_policy": {"mode": "disabled", "reason": "shared geometry does not establish a common short-axis direction"},
+  "void_policy": {"semantic_encoding": {"BG": 0, "RV": 1, "MYO": 2, "LV": 3, "VOID": 4}, "validity_encoding": "boolean; true iff semantic encoding is not VOID", "coverage": "count(validity_map == true)/(H*W)", "no_void_to_bg_conversion": true},
+  "output_binding": {"required_metadata": ["adapter_version", "adapter_config_sha256", "partition_sha256", "central_image_sha256", "sample_id", "shared_manifest_sha256", "shared_grid_sha256", "component_graph_digest", "assignments", "unresolved_reasons", "coverage", "semantic_map_sha256", "validity_map_sha256", "metadata_sha256"], "semantic_hash_excludes": ["raw_cluster_id_provenance"]}
+}

@@ -1,5 +1,26 @@
 # Cardiac adapter audit and implementation plan
 
+## v5 addendum — 2026-09-25
+
+`cardiac_adapter_v4` remains frozen. The server reapply audit found that its
+global near-optimal consensus voided an otherwise strong LV/MYO hypothesis
+whenever a competing hypothesis merely omitted the same components; it also
+left all inspected RV candidates ambiguous. `cardiac_adapter_v5` is the
+separate follow-up experiment:
+
+- Retain a best-hypothesis foreground label unless a near-optimal hypothesis
+  assigns that exact component a *different* semantic role. Omission is not a
+  conflict.
+- Score a bounded connected group of MYO-adjacent RV components, allowing a
+  fragmented RV to be named as one semantic region without changing pixels.
+- Preserve the image-only / GT-free boundary, frozen spec hashes, raw-ID
+  permutation invariance, and a complete per-sample hypothesis/RV trace.
+
+Implementation and synthetic regressions are complete locally. The next
+decision gate is an adapter-only v5 reapply on the same first 10 sealed CUTS
+and DFC dev samples, followed by the existing isolated Dice evaluator. Do not
+regenerate raw partitions and do not infer success from coverage alone.
+
 ## Kế hoạch hiện hành — cập nhật 2026-09-25
 
 **Trạng thái:** đã thống nhất hướng thiết kế, chưa triển khai. Phần này là kế

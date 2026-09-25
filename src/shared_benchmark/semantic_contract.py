@@ -31,6 +31,11 @@ ADAPTER_V4_INPUT_SCHEMA_VERSION = "shared_benchmark.anonymous_partition.v4"
 ADAPTER_V4_OUTPUT_SCHEMA_VERSION = "shared_benchmark.cardiac-semantic.v4"
 FROZEN_ADAPTER_V4_SPEC_SHA256 = "d99167fbbddaf4566be63d72b20cc239e28cda436369f1e245d8ab877517e2a1"
 FROZEN_ADAPTER_V4_SPEC_CANONICAL_SHA256 = "b770b4aff60f256bfba827ed885b2638d3e0eb8ab15b8ab3eda8eac97d5777fc"
+ADAPTER_V5_VERSION = "cardiac_adapter_v5"
+ADAPTER_V5_INPUT_SCHEMA_VERSION = "shared_benchmark.anonymous_partition.v5"
+ADAPTER_V5_OUTPUT_SCHEMA_VERSION = "shared_benchmark.cardiac-semantic.v5"
+FROZEN_ADAPTER_V5_SPEC_SHA256 = "c7a31033e14c74402289f8c57a05f7cf8286a6eff6baa7fc84d02910e94997fa"
+FROZEN_ADAPTER_V5_SPEC_CANONICAL_SHA256 = "5dc450cb303b25ae8cc3b1a0516d5eaf5678f501f50a10a23dad43fb8ccc2c0f"
 # Historical v1/v2/v3 freeze artifacts remain independently verifiable.  New
 # semantic artifacts must bind the Self-Audit-derived grid and adapter v2.
 FROZEN_SHARED_GRID_SHA256 = "2d53b65aa94d6cc151a02444a03b2246034cc5334e089e4d86a8de69ce494fc1"
@@ -60,6 +65,12 @@ _SPEC_BY_VERSION = {
         "output_schema_version": ADAPTER_V4_OUTPUT_SCHEMA_VERSION,
         "file_sha256": FROZEN_ADAPTER_V4_SPEC_SHA256,
         "canonical_sha256": FROZEN_ADAPTER_V4_SPEC_CANONICAL_SHA256,
+    },
+    ADAPTER_V5_VERSION: {
+        "input_schema_version": ADAPTER_V5_INPUT_SCHEMA_VERSION,
+        "output_schema_version": ADAPTER_V5_OUTPUT_SCHEMA_VERSION,
+        "file_sha256": FROZEN_ADAPTER_V5_SPEC_SHA256,
+        "canonical_sha256": FROZEN_ADAPTER_V5_SPEC_CANONICAL_SHA256,
     },
 }
 
@@ -234,9 +245,10 @@ def validate_adapter_record(
     grid = record.get("shared_grid")
     allowed_versions = {
         ADAPTER_VERSION: {SPATIAL_CONTRACT_VERSION, SELF_AUDIT_SPATIAL_CONTRACT_VERSION},
-        ADAPTER_V3_VERSION: {SELF_AUDIT_SPATIAL_CONTRACT_VERSION, SELF_AUDIT_COMPAT_224_SPATIAL_CONTRACT_VERSION},
-        ADAPTER_V4_VERSION: {SELF_AUDIT_SPATIAL_CONTRACT_VERSION, SELF_AUDIT_COMPAT_224_SPATIAL_CONTRACT_VERSION},
-    }
+            ADAPTER_V3_VERSION: {SELF_AUDIT_SPATIAL_CONTRACT_VERSION, SELF_AUDIT_COMPAT_224_SPATIAL_CONTRACT_VERSION},
+            ADAPTER_V4_VERSION: {SELF_AUDIT_SPATIAL_CONTRACT_VERSION, SELF_AUDIT_COMPAT_224_SPATIAL_CONTRACT_VERSION},
+            ADAPTER_V5_VERSION: {SELF_AUDIT_SPATIAL_CONTRACT_VERSION, SELF_AUDIT_COMPAT_224_SPATIAL_CONTRACT_VERSION},
+        }
     if not isinstance(grid, Mapping) or grid.get("version") not in allowed_versions.get(adapter_version, set()):
         raise AdapterContractError("record must carry a supported shared-grid contract")
     expected_grid_hash = grid_hash(grid)
