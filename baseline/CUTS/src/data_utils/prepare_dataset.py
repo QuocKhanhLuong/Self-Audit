@@ -13,6 +13,7 @@ from retina import Retina
 from brain_tumor import BrainTumor
 from mouse_brain import MouseBrain
 from example_dataset_without_label import ExampleDatasetWithoutLabel
+from acdc_original_style import ACDCOriginalStyle
 
 sys.path.insert(0, import_dir + '/utils/')
 from attribute_hashmap import AttributeHashmap
@@ -38,6 +39,11 @@ def prepare_dataset(config: AttributeHashmap, mode: str = 'train'):
         dataset = MouseBrain(base_path=config.dataset_path)
     elif config.dataset_name == 'example_dataset_without_label':
         dataset = ExampleDatasetWithoutLabel(base_path=config.dataset_path)
+    elif config.dataset_name == 'acdc_original_style':
+        dataset = ACDCOriginalStyle(
+            base_path=config.dataset_path,
+            out_shape=tuple(getattr(config, 'image_size', (224, 224))),
+        )
     else:
         raise Exception(
             'Dataset not found. Check `dataset_name` in config yaml file.')

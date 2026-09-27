@@ -1,0 +1,28 @@
+# ACDC port for the upstream CUTS `main.py` pipeline.  It is deliberately
+# separate from the patient-disjoint Self-Audit cardiac benchmark protocol.
+dataset_name: 'acdc_original_style'
+dataset_path: '$CUTS_ROOT/../../data/ACDC/training/'
+model_save_path: '$CUTS_ROOT/../../.runtime/cuts_acdc_original_style_seed1/acdc_original_style_seed1.pty'
+output_save_path: '$CUTS_ROOT/../../.runtime/cuts_acdc_original_style_seed1/results/'
+log_folder: '$CUTS_ROOT/../../.runtime/cuts_acdc_original_style_seed1/logs'
+model_setting: 'full'
+learning_rate: 1e-3
+weight_decay: 1e-4
+max_epochs: 200
+batch_size: 16
+num_kernels: 16
+sampled_patches_per_image: 8
+patch_size: 5
+num_workers: 8
+lambda_contrastive_loss: 0.001
+random_seed: 1
+train_val_ratio: '7:3'
+
+# This canvas is a project protocol decision, not a paper-provided ACDC size.
+# It is passed explicitly by `prepare_dataset` to avoid a hidden loader default.
+image_size: [224, 224]
+
+# Labels are returned only for the upstream evaluation/export interface;
+# `main.py::train` and validation do not use them in the loss.
+is_binary: false
+no_label: false
