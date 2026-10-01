@@ -84,6 +84,13 @@ Evaluator-only input. This file must not be passed to
 ## Commands
 
 ```bash
+python scripts/preflight_adnet_fewshot.py \
+  --query-manifest query_manifest.json \
+  --support-manifest support_manifest.json \
+  --checkpoint model.pth \
+  --output-root reports/adnet_run \
+  --required-classes 1,2,3
+
 python scripts/run_adnet_fewshot.py \
   --query-manifest query_manifest.json \
   --support-manifest support_manifest.json \
