@@ -1,0 +1,36 @@
+{
+  "schema": "medical-native.protocol.v1",
+  "method": "DSS-US",
+  "dataset": "CAMUS",
+  "profile": "step1_ours_aff",
+  "paper_row": "Ours_Aff",
+  "stage": "I",
+  "implementation": "independent_reimplementation",
+  "scientific": {
+    "segments": 15,
+    "backbone": "dino_vits8",
+    "row_recipe": null
+  },
+  "evidence": {
+    "segments": {
+      "value": 15,
+      "status": "VERIFIED_PAPER",
+      "source": "2408.02043v1 Table 1"
+    },
+    "row_recipe": {
+      "value": null,
+      "status": "UNRESOLVED",
+      "source": "Complete row-specific CAMUS config unavailable"
+    }
+  },
+  "gates": {
+    "producer": [
+      "Exact CAMUS row preprocessing/affinity/spectral/CRF recipe unresolved",
+      "Exact native CAMUS cohort unresolved"
+    ],
+    "native_track_b": [
+      "Step I per-image segment Dice pairing/aggregation unresolved"
+    ]
+  },
+  "native_evaluator_spec_sha256": "c8b3833370ca724b07aeb1cd833a0efa55671fc3035cbe472a10781732805e88"
+}

@@ -1,0 +1,245 @@
+{
+  "DSS_US": {
+    "profiles": {
+      "step1_dss_baseline": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Exact CAMUS row preprocessing/affinity/spectral/CRF recipe unresolved",
+            "Exact native CAMUS cohort unresolved"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Step I per-image segment Dice pairing/aggregation unresolved"
+          ]
+        }
+      },
+      "step1_ours_aff": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Exact CAMUS row preprocessing/affinity/spectral/CRF recipe unresolved",
+            "Exact native CAMUS cohort unresolved"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Step I per-image segment Dice pairing/aggregation unresolved"
+          ]
+        }
+      },
+      "step1_ours_comb": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Exact CAMUS row preprocessing/affinity/spectral/CRF recipe unresolved",
+            "Exact native CAMUS cohort unresolved"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Step I per-image segment Dice pairing/aggregation unresolved"
+          ]
+        }
+      },
+      "step1_ours_proc": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Exact CAMUS row preprocessing/affinity/spectral/CRF recipe unresolved",
+            "Exact native CAMUS cohort unresolved"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Step I per-image segment Dice pairing/aggregation unresolved"
+          ]
+        }
+      },
+      "step2_dss_baseline": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Exact CAMUS row preprocessing/affinity/spectral/CRF recipe unresolved",
+            "Exact native CAMUS cohort unresolved"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Unequal-count majority_vote_exclusive missing in pinned source; row evaluation lock unresolved"
+          ]
+        }
+      },
+      "step2_ours_aff_dss": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Exact CAMUS row preprocessing/affinity/spectral/CRF recipe unresolved",
+            "Exact native CAMUS cohort unresolved"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Unequal-count majority_vote_exclusive missing in pinned source; row evaluation lock unresolved"
+          ]
+        }
+      },
+      "step2_ours_aff_ours": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Exact CAMUS row preprocessing/affinity/spectral/CRF recipe unresolved",
+            "Exact native CAMUS cohort unresolved"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Unequal-count majority_vote_exclusive missing in pinned source; row evaluation lock unresolved"
+          ]
+        }
+      },
+      "step2_ours_comb_dss": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Exact CAMUS row preprocessing/affinity/spectral/CRF recipe unresolved",
+            "Exact native CAMUS cohort unresolved"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Unequal-count majority_vote_exclusive missing in pinned source; row evaluation lock unresolved"
+          ]
+        }
+      },
+      "step2_ours_comb_ours": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Exact CAMUS row preprocessing/affinity/spectral/CRF recipe unresolved",
+            "Exact native CAMUS cohort unresolved"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Unequal-count majority_vote_exclusive missing in pinned source; row evaluation lock unresolved"
+          ]
+        }
+      },
+      "step2_ours_proc_dss": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Exact CAMUS row preprocessing/affinity/spectral/CRF recipe unresolved",
+            "Exact native CAMUS cohort unresolved"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Unequal-count majority_vote_exclusive missing in pinned source; row evaluation lock unresolved"
+          ]
+        }
+      },
+      "step2_ours_proc_ours": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Exact CAMUS row preprocessing/affinity/spectral/CRF recipe unresolved",
+            "Exact native CAMUS cohort unresolved"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Unequal-count majority_vote_exclusive missing in pinned source; row evaluation lock unresolved"
+          ]
+        }
+      }
+    },
+    "statuses": {
+      "NATIVE_REPRODUCTION_STATUS": "BLOCKED_PROTOCOL",
+      "NATIVE_TRACK_A_STATUS": "BLOCKED_ADAPTER",
+      "NATIVE_TRACK_B_STATUS": "BLOCKED_PROTOCOL",
+      "repeat_run_diagnostics": {
+        "same_seed_equal": null,
+        "stochastic_behavior_documented": false,
+        "verification_reliable": true
+      }
+    }
+  },
+  "SGSCN": {
+    "profiles": {
+      "ph2_official_reference": {
+        "producer": {
+          "status": "REFERENCE_READY"
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Overlap tie convention and exact HM/XOR definitions unresolved"
+          ]
+        }
+      },
+      "ph2_paper": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Paper/code architecture and stopping equivalence unresolved"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Overlap tie convention and exact HM/XOR definitions unresolved"
+          ]
+        }
+      },
+      "sysu_us_official_reference": {
+        "producer": {
+          "status": "REFERENCE_READY"
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Overlap tie convention and exact HM/XOR definitions unresolved"
+          ]
+        }
+      },
+      "sysu_us_paper": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Paper/code architecture and stopping equivalence unresolved"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Overlap tie convention and exact HM/XOR definitions unresolved"
+          ]
+        }
+      }
+    },
+    "statuses": {
+      "NATIVE_REPRODUCTION_STATUS": "BLOCKED_PROTOCOL",
+      "NATIVE_TRACK_A_STATUS": "BLOCKED_ADAPTER",
+      "NATIVE_TRACK_B_STATUS": "BLOCKED_PROTOCOL",
+      "repeat_run_diagnostics": {
+        "same_seed_equal": null,
+        "stochastic_behavior_documented": false,
+        "verification_reliable": true
+      }
+    }
+  }
+}

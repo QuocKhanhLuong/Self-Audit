@@ -1,0 +1,16 @@
+{
+  "schema": "medical-native.evaluator.v1",
+  "method": "SGSCN",
+  "source_paper": "https://arxiv.org/pdf/2107.04934",
+  "selection": "original_max_overlap_single_cluster",
+  "selection_measure_interpretation": "intersection_pixel_count_diagnostic_only_pending_exact_evidence",
+  "tie_policy": "UNRESOLVED",
+  "metrics": {
+    "DSC": "paper_supported_binary_dice",
+    "HM": "UNRESOLVED",
+    "XOR": "UNRESOLVED"
+  },
+  "status": "BLOCKED_PROTOCOL",
+  "producer_feedback": false,
+  "require_raw_seal": true
+}
