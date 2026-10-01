@@ -1,0 +1,21 @@
+{
+  "schema": "medical-native.evaluator.v1",
+  "method": "DSS-US",
+  "source_commit": "d4ac44c60df18b921c590796f6994a4c8ac0726c",
+  "step_I": {
+    "evaluator": "original_per_image_segment_dice",
+    "status": "UNRESOLVED/BLOCKED_PROTOCOL",
+    "segment_gt_pairing": null,
+    "background_unmatched_handling": null,
+    "aggregation": null
+  },
+  "step_II": {
+    "evaluator": "original_semantic_matching",
+    "equal_count_branch": "hungarian_max_iou",
+    "unequal_count_branch": "majority_vote_exclusive",
+    "unequal_count_status": "UNRESOLVED/BLOCKED_PROTOCOL",
+    "source_threshold": 0
+  },
+  "producer_feedback": false,
+  "require_raw_seal": true
+}

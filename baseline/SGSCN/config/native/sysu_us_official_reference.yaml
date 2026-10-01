@@ -1,0 +1,47 @@
+{
+  "schema": "medical-native.protocol.v1",
+  "method": "SGSCN",
+  "dataset": "SYSU-US",
+  "profile": "sysu_us_official_reference",
+  "implementation": "isolated_GPL_official_code",
+  "paper_equivalence": "UNRESOLVED",
+  "scientific": {
+    "n_channels": 100,
+    "n_conv": 2,
+    "max_iterations": 50,
+    "min_labels": 3,
+    "learning_rate": 0.05,
+    "momentum": 0.9,
+    "ce_weight": 1,
+    "spatial_weight": 5,
+    "context_loss": true,
+    "context_epsilon": 0.001,
+    "input_encoding": "opencv_bgr_uint8_div255",
+    "update_order": "forward_loss_backward_step_then_stop_using_preupdate_count",
+    "final_mode": "train"
+  },
+  "evidence": {
+    "learning_rate": {
+      "value": 0.05,
+      "status": "VERIFIED_PAPER",
+      "source": "2107.04934 section 3.2"
+    },
+    "architecture": {
+      "value": "official demo",
+      "status": "OFFICIAL_IMPLEMENTATION_DETAIL",
+      "source": "demo_final.py CSNet; paper prose differs"
+    },
+    "stopping": {
+      "value": "maxIter50/minLabels3",
+      "status": "OFFICIAL_IMPLEMENTATION_DETAIL",
+      "source": "demo_final.py; exact paper stability undefined"
+    }
+  },
+  "gates": {
+    "producer": [],
+    "native_track_b": [
+      "Overlap tie convention and exact HM/XOR definitions unresolved"
+    ]
+  },
+  "native_evaluator_spec_sha256": "811d5a6a1c5e59e9265cfeef7859e61f42b1da49174e624c2cafe0837f0a9721"
+}
