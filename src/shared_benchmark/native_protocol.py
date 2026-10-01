@@ -29,6 +29,19 @@ def file_hash(path: Path) -> str:
     return digest.hexdigest()
 
 
+REQUIRED_FIELD_GROUPS = ("paper_unspecified", "implementation_conventions", "required_data")
+
+
+def unresolved_required_fields(config: dict) -> list[tuple[str, str]]:
+    """Declared required fields (``{"value": ...}`` entries) that still have no value."""
+    missing = []
+    for group in REQUIRED_FIELD_GROUPS:
+        for name, entry in sorted(config.get(group, {}).items()):
+            if not isinstance(entry, dict) or entry.get("value") is None:
+                missing.append((group, name))
+    return missing
+
+
 def load_lock(path: Path, *, purpose="producer") -> dict:
     """A scientific edit cannot bypass execution gates by changing a status flag."""
     path = Path(path).resolve()
@@ -48,7 +61,9 @@ def load_lock(path: Path, *, purpose="producer") -> dict:
             raise ProtocolBlocked(["native evaluator specification differs from frozen protocol"])
     if purpose not in config.get("gates", {}):
         raise ProtocolBlocked(["execution purpose has no explicit gate"])
-    blockers = config["gates"][purpose]
+    blockers = list(config["gates"][purpose])
+    if purpose == "producer":
+        blockers += [f"{group} value required: {name}" for group, name in unresolved_required_fields(config)]
     if blockers:
         raise ProtocolBlocked(blockers)
     if purpose == "producer" and not config.get("scientific"):

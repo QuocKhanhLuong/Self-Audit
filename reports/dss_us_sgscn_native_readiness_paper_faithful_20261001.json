@@ -1,0 +1,747 @@
+{
+  "DSS_US": {
+    "profiles": {
+      "step1_dss_baseline": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Exact CAMUS row preprocessing/affinity/spectral/CRF recipe unresolved",
+            "Exact native CAMUS cohort unresolved",
+            "CRF parameter set unresolved (conflicting official defaults vs sweep configs)"
+          ]
+        },
+        "native_track_b": {
+          "status": "EVALUATOR_READY"
+        }
+      },
+      "step1_dss_baseline_paper_faithful": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "End-to-end CAMUS runner is not wired for paper-faithful profiles (algorithm functions only; no dense-CRF backend in self-audit-canonical v1)",
+            "paper_unspecified value required: camus_input_conversion",
+            "paper_unspecified value required: crf_backend",
+            "paper_unspecified value required: crf_parameters",
+            "paper_unspecified value required: dino_input_policy",
+            "paper_unspecified value required: discard_trivial_eigenvector",
+            "paper_unspecified value required: eigenvectors",
+            "paper_unspecified value required: feature_l2_normalization",
+            "paper_unspecified value required: normalize_embedding_rows",
+            "paper_unspecified value required: upscale_method",
+            "implementation_conventions value required: kmeans_algorithm",
+            "implementation_conventions value required: kmeans_max_iter",
+            "implementation_conventions value required: kmeans_n_init",
+            "implementation_conventions value required: kmeans_seed",
+            "implementation_conventions value required: kmeans_tolerance",
+            "required_data value required: camus_cohort_inventory",
+            "required_data value required: dino_checkpoint_sha256"
+          ]
+        },
+        "native_track_b": {
+          "status": "EVALUATOR_READY"
+        }
+      },
+      "step1_ours_aff": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Exact CAMUS row preprocessing/affinity/spectral/CRF recipe unresolved",
+            "Exact native CAMUS cohort unresolved",
+            "CRF parameter set unresolved (conflicting official defaults vs sweep configs)"
+          ]
+        },
+        "native_track_b": {
+          "status": "EVALUATOR_READY"
+        }
+      },
+      "step1_ours_aff_paper_faithful": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "End-to-end CAMUS runner is not wired for paper-faithful profiles (algorithm functions only; no dense-CRF backend in self-audit-canonical v1)",
+            "paper_unspecified value required: c_mi",
+            "paper_unspecified value required: c_pos",
+            "paper_unspecified value required: c_ssd",
+            "paper_unspecified value required: camus_input_conversion",
+            "paper_unspecified value required: crf_backend",
+            "paper_unspecified value required: crf_parameters",
+            "paper_unspecified value required: delta_mi",
+            "paper_unspecified value required: delta_ssd",
+            "paper_unspecified value required: dino_input_policy",
+            "paper_unspecified value required: discard_trivial_eigenvector",
+            "paper_unspecified value required: eigenvectors",
+            "paper_unspecified value required: feature_l2_normalization",
+            "paper_unspecified value required: mi_bins",
+            "paper_unspecified value required: mi_intensity_range",
+            "paper_unspecified value required: normalize_embedding_rows",
+            "paper_unspecified value required: patch_intensity_scale",
+            "paper_unspecified value required: positional_knn_k",
+            "paper_unspecified value required: positional_symmetrization",
+            "paper_unspecified value required: upscale_method",
+            "implementation_conventions value required: kmeans_algorithm",
+            "implementation_conventions value required: kmeans_max_iter",
+            "implementation_conventions value required: kmeans_n_init",
+            "implementation_conventions value required: kmeans_seed",
+            "implementation_conventions value required: kmeans_tolerance",
+            "required_data value required: camus_cohort_inventory",
+            "required_data value required: dino_checkpoint_sha256"
+          ]
+        },
+        "native_track_b": {
+          "status": "EVALUATOR_READY"
+        }
+      },
+      "step1_ours_comb": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Exact CAMUS row preprocessing/affinity/spectral/CRF recipe unresolved",
+            "Exact native CAMUS cohort unresolved",
+            "CRF parameter set unresolved (conflicting official defaults vs sweep configs)"
+          ]
+        },
+        "native_track_b": {
+          "status": "EVALUATOR_READY"
+        }
+      },
+      "step1_ours_comb_paper_faithful": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "End-to-end CAMUS runner is not wired for paper-faithful profiles (algorithm functions only; no dense-CRF backend in self-audit-canonical v1)",
+            "paper_unspecified value required: c_mi",
+            "paper_unspecified value required: c_pos",
+            "paper_unspecified value required: c_ssd",
+            "paper_unspecified value required: camus_input_conversion",
+            "paper_unspecified value required: crf_backend",
+            "paper_unspecified value required: crf_parameters",
+            "paper_unspecified value required: delta_mi",
+            "paper_unspecified value required: delta_ssd",
+            "paper_unspecified value required: dino_input_policy",
+            "paper_unspecified value required: discard_trivial_eigenvector",
+            "paper_unspecified value required: eigenvectors",
+            "paper_unspecified value required: feature_l2_normalization",
+            "paper_unspecified value required: mi_bins",
+            "paper_unspecified value required: mi_intensity_range",
+            "paper_unspecified value required: normalize_embedding_rows",
+            "paper_unspecified value required: patch_intensity_scale",
+            "paper_unspecified value required: positional_knn_k",
+            "paper_unspecified value required: positional_symmetrization",
+            "paper_unspecified value required: preprocessing_method",
+            "paper_unspecified value required: preprocessing_parameters",
+            "paper_unspecified value required: upscale_method",
+            "implementation_conventions value required: kmeans_algorithm",
+            "implementation_conventions value required: kmeans_max_iter",
+            "implementation_conventions value required: kmeans_n_init",
+            "implementation_conventions value required: kmeans_seed",
+            "implementation_conventions value required: kmeans_tolerance",
+            "required_data value required: camus_cohort_inventory",
+            "required_data value required: dino_checkpoint_sha256"
+          ]
+        },
+        "native_track_b": {
+          "status": "EVALUATOR_READY"
+        }
+      },
+      "step1_ours_proc": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Exact CAMUS row preprocessing/affinity/spectral/CRF recipe unresolved",
+            "Exact native CAMUS cohort unresolved",
+            "CRF parameter set unresolved (conflicting official defaults vs sweep configs)"
+          ]
+        },
+        "native_track_b": {
+          "status": "EVALUATOR_READY"
+        }
+      },
+      "step1_ours_proc_paper_faithful": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "End-to-end CAMUS runner is not wired for paper-faithful profiles (algorithm functions only; no dense-CRF backend in self-audit-canonical v1)",
+            "paper_unspecified value required: camus_input_conversion",
+            "paper_unspecified value required: crf_backend",
+            "paper_unspecified value required: crf_parameters",
+            "paper_unspecified value required: dino_input_policy",
+            "paper_unspecified value required: discard_trivial_eigenvector",
+            "paper_unspecified value required: eigenvectors",
+            "paper_unspecified value required: feature_l2_normalization",
+            "paper_unspecified value required: normalize_embedding_rows",
+            "paper_unspecified value required: preprocessing_method",
+            "paper_unspecified value required: preprocessing_parameters",
+            "paper_unspecified value required: upscale_method",
+            "implementation_conventions value required: kmeans_algorithm",
+            "implementation_conventions value required: kmeans_max_iter",
+            "implementation_conventions value required: kmeans_n_init",
+            "implementation_conventions value required: kmeans_seed",
+            "implementation_conventions value required: kmeans_tolerance",
+            "required_data value required: camus_cohort_inventory",
+            "required_data value required: dino_checkpoint_sha256"
+          ]
+        },
+        "native_track_b": {
+          "status": "EVALUATOR_READY"
+        }
+      },
+      "step2_dss_baseline": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Exact CAMUS row preprocessing/affinity/spectral/CRF recipe unresolved",
+            "Exact native CAMUS cohort unresolved",
+            "CRF parameter set unresolved (conflicting official defaults vs sweep configs)",
+            "Number of Step II semantic clusters for CAMUS unresolved (official sweeps 6-15; paper silent)"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Step II evaluated stage unresolved (semantic segmaps vs crf_segmaps; Table 2 has no CRF mark)",
+            "Label-consistency metric computation (ties, std aggregation) unresolved"
+          ]
+        }
+      },
+      "step2_dss_baseline_dss_paper_faithful": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "End-to-end CAMUS runner is not wired for paper-faithful profiles (algorithm functions only; no dense-CRF backend in self-audit-canonical v1)",
+            "paper_unspecified value required: camus_input_conversion",
+            "paper_unspecified value required: crf_backend",
+            "paper_unspecified value required: crf_parameters",
+            "paper_unspecified value required: dino_input_policy",
+            "paper_unspecified value required: discard_trivial_eigenvector",
+            "paper_unspecified value required: dss_step2_definition",
+            "paper_unspecified value required: eigenvectors",
+            "paper_unspecified value required: feature_l2_normalization",
+            "paper_unspecified value required: normalize_embedding_rows",
+            "paper_unspecified value required: phi_image",
+            "paper_unspecified value required: semantic_clusters",
+            "paper_unspecified value required: step2_crf_applied",
+            "paper_unspecified value required: upscale_method",
+            "implementation_conventions value required: kmeans_algorithm",
+            "implementation_conventions value required: kmeans_max_iter",
+            "implementation_conventions value required: kmeans_n_init",
+            "implementation_conventions value required: kmeans_seed",
+            "implementation_conventions value required: kmeans_tolerance",
+            "required_data value required: camus_cohort_inventory",
+            "required_data value required: dino_checkpoint_sha256"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Step II evaluated stage unresolved (semantic segmaps vs crf_segmaps; Table 2 has no CRF mark)",
+            "Label-consistency metric computation (ties, std aggregation) unresolved"
+          ]
+        }
+      },
+      "step2_ours_aff_dss": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Exact CAMUS row preprocessing/affinity/spectral/CRF recipe unresolved",
+            "Exact native CAMUS cohort unresolved",
+            "CRF parameter set unresolved (conflicting official defaults vs sweep configs)",
+            "Number of Step II semantic clusters for CAMUS unresolved (official sweeps 6-15; paper silent)"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Step II evaluated stage unresolved (semantic segmaps vs crf_segmaps; Table 2 has no CRF mark)",
+            "Label-consistency metric computation (ties, std aggregation) unresolved"
+          ]
+        }
+      },
+      "step2_ours_aff_dss_paper_faithful": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "End-to-end CAMUS runner is not wired for paper-faithful profiles (algorithm functions only; no dense-CRF backend in self-audit-canonical v1)",
+            "paper_unspecified value required: c_mi",
+            "paper_unspecified value required: c_pos",
+            "paper_unspecified value required: c_ssd",
+            "paper_unspecified value required: camus_input_conversion",
+            "paper_unspecified value required: crf_backend",
+            "paper_unspecified value required: crf_parameters",
+            "paper_unspecified value required: delta_mi",
+            "paper_unspecified value required: delta_ssd",
+            "paper_unspecified value required: dino_input_policy",
+            "paper_unspecified value required: discard_trivial_eigenvector",
+            "paper_unspecified value required: dss_step2_definition",
+            "paper_unspecified value required: eigenvectors",
+            "paper_unspecified value required: feature_l2_normalization",
+            "paper_unspecified value required: mi_bins",
+            "paper_unspecified value required: mi_intensity_range",
+            "paper_unspecified value required: normalize_embedding_rows",
+            "paper_unspecified value required: patch_intensity_scale",
+            "paper_unspecified value required: phi_image",
+            "paper_unspecified value required: positional_knn_k",
+            "paper_unspecified value required: positional_symmetrization",
+            "paper_unspecified value required: semantic_clusters",
+            "paper_unspecified value required: step2_crf_applied",
+            "paper_unspecified value required: upscale_method",
+            "implementation_conventions value required: kmeans_algorithm",
+            "implementation_conventions value required: kmeans_max_iter",
+            "implementation_conventions value required: kmeans_n_init",
+            "implementation_conventions value required: kmeans_seed",
+            "implementation_conventions value required: kmeans_tolerance",
+            "required_data value required: camus_cohort_inventory",
+            "required_data value required: dino_checkpoint_sha256"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Step II evaluated stage unresolved (semantic segmaps vs crf_segmaps; Table 2 has no CRF mark)",
+            "Label-consistency metric computation (ties, std aggregation) unresolved"
+          ]
+        }
+      },
+      "step2_ours_aff_ours": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Exact CAMUS row preprocessing/affinity/spectral/CRF recipe unresolved",
+            "Exact native CAMUS cohort unresolved",
+            "CRF parameter set unresolved (conflicting official defaults vs sweep configs)",
+            "Number of Step II semantic clusters for CAMUS unresolved (official sweeps 6-15; paper silent)"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Step II evaluated stage unresolved (semantic segmaps vs crf_segmaps; Table 2 has no CRF mark)",
+            "Label-consistency metric computation (ties, std aggregation) unresolved"
+          ]
+        }
+      },
+      "step2_ours_aff_ours_paper_faithful": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "End-to-end CAMUS runner is not wired for paper-faithful profiles (algorithm functions only; no dense-CRF backend in self-audit-canonical v1)",
+            "paper_unspecified value required: c_mask",
+            "paper_unspecified value required: c_mi",
+            "paper_unspecified value required: c_pos",
+            "paper_unspecified value required: c_position_embedding",
+            "paper_unspecified value required: c_ssd",
+            "paper_unspecified value required: camus_input_conversion",
+            "paper_unspecified value required: crf_backend",
+            "paper_unspecified value required: crf_parameters",
+            "paper_unspecified value required: delta_mi",
+            "paper_unspecified value required: delta_ssd",
+            "paper_unspecified value required: dino_input_policy",
+            "paper_unspecified value required: discard_trivial_eigenvector",
+            "paper_unspecified value required: eigenvectors",
+            "paper_unspecified value required: feature_l2_normalization",
+            "paper_unspecified value required: mi_bins",
+            "paper_unspecified value required: mi_intensity_range",
+            "paper_unspecified value required: normalize_embedding_rows",
+            "paper_unspecified value required: patch_intensity_scale",
+            "paper_unspecified value required: phi_image",
+            "paper_unspecified value required: phi_mask",
+            "paper_unspecified value required: phi_position",
+            "paper_unspecified value required: positional_knn_k",
+            "paper_unspecified value required: positional_symmetrization",
+            "paper_unspecified value required: semantic_clusters",
+            "paper_unspecified value required: step2_crf_applied",
+            "paper_unspecified value required: upscale_method",
+            "implementation_conventions value required: kmeans_algorithm",
+            "implementation_conventions value required: kmeans_max_iter",
+            "implementation_conventions value required: kmeans_n_init",
+            "implementation_conventions value required: kmeans_seed",
+            "implementation_conventions value required: kmeans_tolerance",
+            "required_data value required: camus_cohort_inventory",
+            "required_data value required: dino_checkpoint_sha256"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Step II evaluated stage unresolved (semantic segmaps vs crf_segmaps; Table 2 has no CRF mark)",
+            "Label-consistency metric computation (ties, std aggregation) unresolved"
+          ]
+        }
+      },
+      "step2_ours_comb_dss": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Exact CAMUS row preprocessing/affinity/spectral/CRF recipe unresolved",
+            "Exact native CAMUS cohort unresolved",
+            "CRF parameter set unresolved (conflicting official defaults vs sweep configs)",
+            "Number of Step II semantic clusters for CAMUS unresolved (official sweeps 6-15; paper silent)"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Step II evaluated stage unresolved (semantic segmaps vs crf_segmaps; Table 2 has no CRF mark)",
+            "Label-consistency metric computation (ties, std aggregation) unresolved"
+          ]
+        }
+      },
+      "step2_ours_comb_dss_paper_faithful": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "End-to-end CAMUS runner is not wired for paper-faithful profiles (algorithm functions only; no dense-CRF backend in self-audit-canonical v1)",
+            "paper_unspecified value required: c_mi",
+            "paper_unspecified value required: c_pos",
+            "paper_unspecified value required: c_ssd",
+            "paper_unspecified value required: camus_input_conversion",
+            "paper_unspecified value required: crf_backend",
+            "paper_unspecified value required: crf_parameters",
+            "paper_unspecified value required: delta_mi",
+            "paper_unspecified value required: delta_ssd",
+            "paper_unspecified value required: dino_input_policy",
+            "paper_unspecified value required: discard_trivial_eigenvector",
+            "paper_unspecified value required: dss_step2_definition",
+            "paper_unspecified value required: eigenvectors",
+            "paper_unspecified value required: feature_l2_normalization",
+            "paper_unspecified value required: mi_bins",
+            "paper_unspecified value required: mi_intensity_range",
+            "paper_unspecified value required: normalize_embedding_rows",
+            "paper_unspecified value required: patch_intensity_scale",
+            "paper_unspecified value required: phi_image",
+            "paper_unspecified value required: positional_knn_k",
+            "paper_unspecified value required: positional_symmetrization",
+            "paper_unspecified value required: preprocessing_method",
+            "paper_unspecified value required: preprocessing_parameters",
+            "paper_unspecified value required: semantic_clusters",
+            "paper_unspecified value required: step2_crf_applied",
+            "paper_unspecified value required: upscale_method",
+            "implementation_conventions value required: kmeans_algorithm",
+            "implementation_conventions value required: kmeans_max_iter",
+            "implementation_conventions value required: kmeans_n_init",
+            "implementation_conventions value required: kmeans_seed",
+            "implementation_conventions value required: kmeans_tolerance",
+            "required_data value required: camus_cohort_inventory",
+            "required_data value required: dino_checkpoint_sha256"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Step II evaluated stage unresolved (semantic segmaps vs crf_segmaps; Table 2 has no CRF mark)",
+            "Label-consistency metric computation (ties, std aggregation) unresolved"
+          ]
+        }
+      },
+      "step2_ours_comb_ours": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Exact CAMUS row preprocessing/affinity/spectral/CRF recipe unresolved",
+            "Exact native CAMUS cohort unresolved",
+            "CRF parameter set unresolved (conflicting official defaults vs sweep configs)",
+            "Number of Step II semantic clusters for CAMUS unresolved (official sweeps 6-15; paper silent)"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Step II evaluated stage unresolved (semantic segmaps vs crf_segmaps; Table 2 has no CRF mark)",
+            "Label-consistency metric computation (ties, std aggregation) unresolved"
+          ]
+        }
+      },
+      "step2_ours_comb_ours_paper_faithful": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "End-to-end CAMUS runner is not wired for paper-faithful profiles (algorithm functions only; no dense-CRF backend in self-audit-canonical v1)",
+            "paper_unspecified value required: c_mask",
+            "paper_unspecified value required: c_mi",
+            "paper_unspecified value required: c_pos",
+            "paper_unspecified value required: c_position_embedding",
+            "paper_unspecified value required: c_ssd",
+            "paper_unspecified value required: camus_input_conversion",
+            "paper_unspecified value required: crf_backend",
+            "paper_unspecified value required: crf_parameters",
+            "paper_unspecified value required: delta_mi",
+            "paper_unspecified value required: delta_ssd",
+            "paper_unspecified value required: dino_input_policy",
+            "paper_unspecified value required: discard_trivial_eigenvector",
+            "paper_unspecified value required: eigenvectors",
+            "paper_unspecified value required: feature_l2_normalization",
+            "paper_unspecified value required: mi_bins",
+            "paper_unspecified value required: mi_intensity_range",
+            "paper_unspecified value required: normalize_embedding_rows",
+            "paper_unspecified value required: patch_intensity_scale",
+            "paper_unspecified value required: phi_image",
+            "paper_unspecified value required: phi_mask",
+            "paper_unspecified value required: phi_position",
+            "paper_unspecified value required: positional_knn_k",
+            "paper_unspecified value required: positional_symmetrization",
+            "paper_unspecified value required: preprocessing_method",
+            "paper_unspecified value required: preprocessing_parameters",
+            "paper_unspecified value required: semantic_clusters",
+            "paper_unspecified value required: step2_crf_applied",
+            "paper_unspecified value required: upscale_method",
+            "implementation_conventions value required: kmeans_algorithm",
+            "implementation_conventions value required: kmeans_max_iter",
+            "implementation_conventions value required: kmeans_n_init",
+            "implementation_conventions value required: kmeans_seed",
+            "implementation_conventions value required: kmeans_tolerance",
+            "required_data value required: camus_cohort_inventory",
+            "required_data value required: dino_checkpoint_sha256"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Step II evaluated stage unresolved (semantic segmaps vs crf_segmaps; Table 2 has no CRF mark)",
+            "Label-consistency metric computation (ties, std aggregation) unresolved"
+          ]
+        }
+      },
+      "step2_ours_proc_dss": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Exact CAMUS row preprocessing/affinity/spectral/CRF recipe unresolved",
+            "Exact native CAMUS cohort unresolved",
+            "CRF parameter set unresolved (conflicting official defaults vs sweep configs)",
+            "Number of Step II semantic clusters for CAMUS unresolved (official sweeps 6-15; paper silent)"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Step II evaluated stage unresolved (semantic segmaps vs crf_segmaps; Table 2 has no CRF mark)",
+            "Label-consistency metric computation (ties, std aggregation) unresolved"
+          ]
+        }
+      },
+      "step2_ours_proc_dss_paper_faithful": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "End-to-end CAMUS runner is not wired for paper-faithful profiles (algorithm functions only; no dense-CRF backend in self-audit-canonical v1)",
+            "paper_unspecified value required: camus_input_conversion",
+            "paper_unspecified value required: crf_backend",
+            "paper_unspecified value required: crf_parameters",
+            "paper_unspecified value required: dino_input_policy",
+            "paper_unspecified value required: discard_trivial_eigenvector",
+            "paper_unspecified value required: dss_step2_definition",
+            "paper_unspecified value required: eigenvectors",
+            "paper_unspecified value required: feature_l2_normalization",
+            "paper_unspecified value required: normalize_embedding_rows",
+            "paper_unspecified value required: phi_image",
+            "paper_unspecified value required: preprocessing_method",
+            "paper_unspecified value required: preprocessing_parameters",
+            "paper_unspecified value required: semantic_clusters",
+            "paper_unspecified value required: step2_crf_applied",
+            "paper_unspecified value required: upscale_method",
+            "implementation_conventions value required: kmeans_algorithm",
+            "implementation_conventions value required: kmeans_max_iter",
+            "implementation_conventions value required: kmeans_n_init",
+            "implementation_conventions value required: kmeans_seed",
+            "implementation_conventions value required: kmeans_tolerance",
+            "required_data value required: camus_cohort_inventory",
+            "required_data value required: dino_checkpoint_sha256"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Step II evaluated stage unresolved (semantic segmaps vs crf_segmaps; Table 2 has no CRF mark)",
+            "Label-consistency metric computation (ties, std aggregation) unresolved"
+          ]
+        }
+      },
+      "step2_ours_proc_ours": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Exact CAMUS row preprocessing/affinity/spectral/CRF recipe unresolved",
+            "Exact native CAMUS cohort unresolved",
+            "CRF parameter set unresolved (conflicting official defaults vs sweep configs)",
+            "Number of Step II semantic clusters for CAMUS unresolved (official sweeps 6-15; paper silent)"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Step II evaluated stage unresolved (semantic segmaps vs crf_segmaps; Table 2 has no CRF mark)",
+            "Label-consistency metric computation (ties, std aggregation) unresolved"
+          ]
+        }
+      },
+      "step2_ours_proc_ours_paper_faithful": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "End-to-end CAMUS runner is not wired for paper-faithful profiles (algorithm functions only; no dense-CRF backend in self-audit-canonical v1)",
+            "paper_unspecified value required: c_mask",
+            "paper_unspecified value required: c_position_embedding",
+            "paper_unspecified value required: camus_input_conversion",
+            "paper_unspecified value required: crf_backend",
+            "paper_unspecified value required: crf_parameters",
+            "paper_unspecified value required: dino_input_policy",
+            "paper_unspecified value required: discard_trivial_eigenvector",
+            "paper_unspecified value required: eigenvectors",
+            "paper_unspecified value required: feature_l2_normalization",
+            "paper_unspecified value required: normalize_embedding_rows",
+            "paper_unspecified value required: phi_image",
+            "paper_unspecified value required: phi_mask",
+            "paper_unspecified value required: phi_position",
+            "paper_unspecified value required: preprocessing_method",
+            "paper_unspecified value required: preprocessing_parameters",
+            "paper_unspecified value required: semantic_clusters",
+            "paper_unspecified value required: step2_crf_applied",
+            "paper_unspecified value required: upscale_method",
+            "implementation_conventions value required: kmeans_algorithm",
+            "implementation_conventions value required: kmeans_max_iter",
+            "implementation_conventions value required: kmeans_n_init",
+            "implementation_conventions value required: kmeans_seed",
+            "implementation_conventions value required: kmeans_tolerance",
+            "required_data value required: camus_cohort_inventory",
+            "required_data value required: dino_checkpoint_sha256"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Step II evaluated stage unresolved (semantic segmaps vs crf_segmaps; Table 2 has no CRF mark)",
+            "Label-consistency metric computation (ties, std aggregation) unresolved"
+          ]
+        }
+      }
+    },
+    "statuses": {
+      "NATIVE_REPRODUCTION_STATUS": "BLOCKED_PROTOCOL",
+      "NATIVE_TRACK_A_STATUS": "BLOCKED_ADAPTER",
+      "NATIVE_TRACK_B_STATUS": "BLOCKED_PROTOCOL",
+      "repeat_run_diagnostics": {
+        "same_seed_equal": null,
+        "stochastic_behavior_documented": false,
+        "verification_reliable": true
+      }
+    }
+  },
+  "SGSCN": {
+    "profiles": {
+      "ph2_official_reference": {
+        "producer": {
+          "status": "REFERENCE_READY"
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Selection 'largest overlap with the GT segment': overlap measure (intersection vs ratio) and tie policy unresolved",
+            "HM and XOR definitions unresolved: reported HM values above 100% exclude the 1-Jaccard form"
+          ]
+        }
+      },
+      "ph2_paper": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Architecture: paper three 3x3 ReLU+BN layers vs code final 1x1 BN without ReLU; layer-internal order not stated in the paper",
+            "Loss: paper unweighted sum of pixel-summed terms vs code mean-reduced terms with spatial weight 5",
+            "Stopping: paper 'until stable' has no criterion; only the code's maxIter 50 / minLabels 3 rule exists",
+            "PH2 input format/resizing unspecified"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Selection 'largest overlap with the GT segment': overlap measure (intersection vs ratio) and tie policy unresolved",
+            "HM and XOR definitions unresolved: reported HM values above 100% exclude the 1-Jaccard form"
+          ]
+        }
+      },
+      "ph2_paper_faithful": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "paper_unspecified value required: context_density",
+            "paper_unspecified value required: input_encoding",
+            "paper_unspecified value required: layer_order",
+            "paper_unspecified value required: output_normalization",
+            "implementation_conventions value required: final_forward_mode",
+            "implementation_conventions value required: max_iterations",
+            "implementation_conventions value required: relative_loss_tolerance",
+            "implementation_conventions value required: stability_patience"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Selection 'largest overlap with the GT segment': overlap measure (intersection vs ratio) and tie policy unresolved",
+            "HM and XOR definitions unresolved: reported HM values above 100% exclude the 1-Jaccard form"
+          ]
+        }
+      },
+      "sysu_us_official_reference": {
+        "producer": {
+          "status": "REFERENCE_READY"
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Selection 'largest overlap with the GT segment': overlap measure (intersection vs ratio) and tie policy unresolved",
+            "HM and XOR definitions unresolved: reported HM values above 100% exclude the 1-Jaccard form"
+          ]
+        }
+      },
+      "sysu_us_paper": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Architecture: paper three 3x3 ReLU+BN layers vs code final 1x1 BN without ReLU; layer-internal order not stated in the paper",
+            "Loss: paper unweighted sum of pixel-summed terms vs code mean-reduced terms with spatial weight 5",
+            "Stopping: paper 'until stable' has no criterion; only the code's maxIter 50 / minLabels 3 rule exists",
+            "SYSU-US cohort: random 5-per-sequence selection without seed or list"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Selection 'largest overlap with the GT segment': overlap measure (intersection vs ratio) and tie policy unresolved",
+            "HM and XOR definitions unresolved: reported HM values above 100% exclude the 1-Jaccard form"
+          ]
+        }
+      },
+      "sysu_us_paper_faithful": {
+        "producer": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "paper_unspecified value required: cohort_inventory",
+            "paper_unspecified value required: context_density",
+            "paper_unspecified value required: input_encoding",
+            "paper_unspecified value required: layer_order",
+            "paper_unspecified value required: output_normalization",
+            "implementation_conventions value required: final_forward_mode",
+            "implementation_conventions value required: max_iterations",
+            "implementation_conventions value required: relative_loss_tolerance",
+            "implementation_conventions value required: stability_patience"
+          ]
+        },
+        "native_track_b": {
+          "status": "BLOCKED_PROTOCOL",
+          "reasons": [
+            "Selection 'largest overlap with the GT segment': overlap measure (intersection vs ratio) and tie policy unresolved",
+            "HM and XOR definitions unresolved: reported HM values above 100% exclude the 1-Jaccard form"
+          ]
+        }
+      }
+    },
+    "statuses": {
+      "NATIVE_REPRODUCTION_STATUS": "BLOCKED_PROTOCOL",
+      "NATIVE_TRACK_A_STATUS": "BLOCKED_ADAPTER",
+      "NATIVE_TRACK_B_STATUS": "BLOCKED_PROTOCOL",
+      "repeat_run_diagnostics": {
+        "same_seed_equal": null,
+        "stochastic_behavior_documented": false,
+        "verification_reliable": true
+      }
+    }
+  }
+}

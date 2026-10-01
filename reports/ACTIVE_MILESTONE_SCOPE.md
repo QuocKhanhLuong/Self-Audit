@@ -31,7 +31,7 @@ historical contracts remain part of the shared regression suite.
    `tests/shared_benchmark`, `baseline/CUTS/tests`, `tests/native_baselines`,
    `baseline/SGSCN/tests`, `baseline/DSS_US/tests`.
 3. `scripts/native_protocol_readiness.py` matches the committed readiness receipt
-   `dss_us_sgscn_native_readiness_paper_evidence_20261001.json` (no native gate changed).
+   `dss_us_sgscn_native_readiness_paper_faithful_20261001.json` (no native gate changed).
 4. CUTS: the active historical-224 freeze v12 validates the checkout.
 
 ## Native readiness (unchanged)
@@ -44,4 +44,8 @@ historical contracts remain part of the shared regression suite.
 - SGSCN: paper profiles BLOCKED_PROTOCOL (architecture, loss reduction/weight,
   stopping, cohort/input); Track B BLOCKED_PROTOCOL (overlap measure, ties, HM/XOR);
   official-code reference profiles REFERENCE_READY.
+- PAPER_FAITHFUL_REIMPLEMENTATION profiles (separate from paper reproduction and official
+  reference): SGSCN executable after the user supplies the declared paper-unspecified values and
+  stopping conventions; DSS-US blocked (runner not wired, no CRF backend). See
+  `dss_us_sgscn_paper_faithful_20261001.md`.
 - CAMUS, PH2, SYSU-US: BLOCKED_DATA. Native Track A: BLOCKED_ADAPTER.

@@ -1,0 +1,169 @@
+{
+  "schema": "medical-native.protocol.v1",
+  "method": "SGSCN",
+  "dataset": "PH2",
+  "profile": "ph2_paper_faithful",
+  "implementation": "paper_faithful_reimplementation",
+  "profile_class": "PAPER_FAITHFUL_REIMPLEMENTATION",
+  "paper_equivalence": "PAPER_FAITHFUL_WITH_DECLARED_GAPS",
+  "scientific": {
+    "conv_layers": 3,
+    "kernel_size": 3,
+    "stride": 1,
+    "padding": 1,
+    "filters": 100,
+    "activation": "relu",
+    "batch_normalization": true,
+    "output": "zero_mean_unit_variance_map_then_argmax",
+    "loss": "ce_sum + ss_sum + cc_sum (unweighted)",
+    "cross_entropy": "standard_softmax_cross_entropy_summed_over_pixels",
+    "sparse_spatial": "eq2_channel_l1_sum_over_k_1_to_W-1_l_1_to_H-1",
+    "context_consistency": "eq3_eq4_squared_distance_to_density_centre_over_pixel_coordinates",
+    "optimizer": "sgd",
+    "learning_rate": 0.1,
+    "momentum": 0.9,
+    "training_unit": "single_image"
+  },
+  "evidence": {
+    "architecture": {
+      "status": "VERIFIED_PAPER",
+      "source": "arXiv 2107.04934 PDF sha256 222a28c659e3f507dfed519a3e8b8945fa2afcb0a84a7ab428205e807d831051 section 3.2"
+    },
+    "output_normalisation_and_argmax": {
+      "status": "VERIFIED_PAPER",
+      "source": "arXiv 2107.04934 PDF sha256 222a28c659e3f507dfed519a3e8b8945fa2afcb0a84a7ab428205e807d831051 section 2.2"
+    },
+    "cross_entropy": {
+      "status": "VERIFIED_PAPER_TEXT",
+      "source": "arXiv 2107.04934 PDF sha256 222a28c659e3f507dfed519a3e8b8945fa2afcb0a84a7ab428205e807d831051 section 2.3 'as in a standard CNN'; Eq. 1 printed as ln S_hat_(n-1) (typo; ln of a zero-mean map is undefined), so the text's standard cross-entropy with the Eq. 1 pixel sum is used"
+    },
+    "sparse_spatial": {
+      "status": "VERIFIED_PAPER",
+      "source": "arXiv 2107.04934 PDF sha256 222a28c659e3f507dfed519a3e8b8945fa2afcb0a84a7ab428205e807d831051 Eq. 2"
+    },
+    "context_consistency": {
+      "status": "VERIFIED_PAPER",
+      "source": "arXiv 2107.04934 PDF sha256 222a28c659e3f507dfed519a3e8b8945fa2afcb0a84a7ab428205e807d831051 Eqs. 3-4; Eq. 4 '(C^k - C^l)' read as the centre (C^k, C^l) defined by Eq. 3"
+    },
+    "loss_sum": {
+      "status": "VERIFIED_PAPER",
+      "source": "arXiv 2107.04934 PDF sha256 222a28c659e3f507dfed519a3e8b8945fa2afcb0a84a7ab428205e807d831051 section 2.6 and Fig. 1 (L = L_ce + L_ss + L_cc)"
+    },
+    "optimizer": {
+      "status": "VERIFIED_PAPER",
+      "source": "arXiv 2107.04934 PDF sha256 222a28c659e3f507dfed519a3e8b8945fa2afcb0a84a7ab428205e807d831051 section 3.2"
+    },
+    "training_unit": {
+      "status": "VERIFIED_PAPER",
+      "source": "arXiv 2107.04934 PDF sha256 222a28c659e3f507dfed519a3e8b8945fa2afcb0a84a7ab428205e807d831051 abstract and section 2.2 (learns from a single image)"
+    },
+    "cohort": {
+      "status": "VERIFIED_PAPER",
+      "source": "arXiv 2107.04934 PDF sha256 222a28c659e3f507dfed519a3e8b8945fa2afcb0a84a7ab428205e807d831051 section 2.1: all 200 PH2 studies"
+    }
+  },
+  "paper_unspecified": {
+    "layer_order": {
+      "value": null,
+      "status": "PAPER_UNSPECIFIED",
+      "source": "section 3.2 lists ReLU and batch normalisation per layer without an order",
+      "options": [
+        "conv_relu_bn (also OFFICIAL_CODE_FALLBACK)",
+        "conv_bn_relu"
+      ]
+    },
+    "output_normalization": {
+      "value": null,
+      "status": "PAPER_UNSPECIFIED",
+      "source": "section 2.2 'zero mean and unit variance' without the statistic axes",
+      "options": [
+        "final_batchnorm",
+        "per_channel_standardization",
+        "global_standardization"
+      ]
+    },
+    "context_density": {
+      "value": null,
+      "status": "PAPER_UNSPECIFIED",
+      "source": "Eqs. 3-4 treat the signed, zero-mean S_hat as a probability distribution",
+      "options": [
+        "literal_normalized_map",
+        "channel_softmax",
+        "epsilon_shift (OFFICIAL_CODE_FALLBACK)"
+      ]
+    },
+    "input_encoding": {
+      "value": null,
+      "status": "PAPER_UNSPECIFIED",
+      "source": "paper does not state input channels, colour order or intensity scaling",
+      "options": [
+        "rgb_unit_interval",
+        "bgr_unit_interval (OFFICIAL_CODE_FALLBACK)",
+        "grayscale_unit_interval"
+      ]
+    }
+  },
+  "implementation_conventions": {
+    "stopping_rule": {
+      "value": "stable_label_count_and_relative_loss",
+      "status": "IMPLEMENTATION_CONVENTION",
+      "source": "section 2.6 'until the clustering and the loss become stable'; rule: stop when the active label count is unchanged and the relative loss change is within tolerance for `stability_patience` consecutive iterations"
+    },
+    "max_iterations": {
+      "value": null,
+      "status": "IMPLEMENTATION_CONVENTION",
+      "source": "safety cap for the stability rule; the official 50-iteration cap is not inherited"
+    },
+    "stability_patience": {
+      "value": null,
+      "status": "IMPLEMENTATION_CONVENTION",
+      "source": "consecutive stable iterations required"
+    },
+    "relative_loss_tolerance": {
+      "value": null,
+      "status": "IMPLEMENTATION_CONVENTION",
+      "source": "relative loss change counted as stable"
+    },
+    "final_forward_mode": {
+      "value": null,
+      "status": "IMPLEMENTATION_CONVENTION",
+      "source": "batch-normalisation mode of the final forward pass",
+      "options": [
+        "train",
+        "eval"
+      ]
+    },
+    "initialization": {
+      "value": "pytorch_default",
+      "status": "IMPLEMENTATION_CONVENTION",
+      "source": "framework default initialisation; paper silent"
+    },
+    "weight_decay": {
+      "value": 0.0,
+      "status": "IMPLEMENTATION_CONVENTION",
+      "source": "paper describes plain SGD with momentum and no regularisation"
+    }
+  },
+  "gates": {
+    "producer": [],
+    "native_track_b": [
+      "Selection 'largest overlap with the GT segment': overlap measure (intersection vs ratio) and tie policy unresolved",
+      "HM and XOR definitions unresolved: reported HM values above 100% exclude the 1-Jaccard form"
+    ]
+  },
+  "native_evaluator_spec_sha256": "63eaeaa635e4753dc3e747e2de4ea8fd8452ac803450e48404039edb9ca41e7b",
+  "conditional_values": {
+    "standardization_epsilon": {
+      "value": null,
+      "status": "IMPLEMENTATION_CONVENTION",
+      "required_when": "output_normalization in {per_channel_standardization, global_standardization}",
+      "source": "variance stabiliser for the explicit standardisation; paper silent"
+    },
+    "context_epsilon": {
+      "value": null,
+      "status": "OFFICIAL_CODE_FALLBACK",
+      "required_when": "context_density == epsilon_shift",
+      "source": "demo_final.py epsilon = 1e-3 is offered only as a fallback; not part of the paper identity"
+    }
+  }
+}

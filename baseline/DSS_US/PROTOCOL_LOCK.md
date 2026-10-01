@@ -41,3 +41,8 @@ NATIVE_TRACK_A_STATUS is independently BLOCKED_ADAPTER (CAMUS includes LA).
 
 Sources: https://arxiv.org/html/2408.02043v1
 https://github.com/alexaatm/UnsupervisedSegmentor4Ultrasound/tree/d4ac44c60df18b921c590796f6994a4c8ac0726c
+
+PAPER_FAITHFUL_REIMPLEMENTATION profiles (`*_paper_faithful.yaml`, src/dss_us/paper_faithful.py)
+compose the paper equations and row components with every unstated value required. They stay
+blocked: the end-to-end CAMUS runner is not wired and the canonical environment has no dense-CRF
+backend. See reports/dss_us_sgscn_paper_faithful_20261001.md.

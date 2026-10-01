@@ -1,0 +1,194 @@
+{
+  "schema": "medical-native.protocol.v1",
+  "method": "DSS-US",
+  "dataset": "CAMUS",
+  "profile": "step2_ours_proc_dss_paper_faithful",
+  "paper_row": "Ours proc + DSS step2",
+  "stage": "II",
+  "implementation": "paper_faithful_reimplementation",
+  "profile_class": "PAPER_FAITHFUL_REIMPLEMENTATION",
+  "paper_equivalence": "PAPER_FAITHFUL_WITH_DECLARED_GAPS",
+  "scientific": {
+    "backbone": "dino_vits8_last_layer_keys",
+    "patch_size": 8,
+    "step1_segments": 15,
+    "feature_affinity": "eq1_positive_thresholded_gram",
+    "ultrasound_affinity": "eq2_eq3_exp_neg_delta_distance",
+    "positional_affinity": "eq4_knn_one_minus_distance_on_unit_grid",
+    "combination": "eq5_linear",
+    "laplacian": "eq6_normalized",
+    "clustering": "kmeans",
+    "preprocessing": true,
+    "ultrasound_affinities": false,
+    "step1_crf": true,
+    "step2_variant": "dss_step2"
+  },
+  "evidence": {
+    "row_components": {
+      "status": "VERIFIED_PAPER",
+      "source": "arXiv 2408.02043v1 (sha256 15110a55216bb448c5db0330c4b3a492413350a50f4f118930a274ac61f1c198) section 4 and Tables 1-2 (baseline + preprocessing / affinities / combined; DSS vs Ours step2)"
+    },
+    "equations": {
+      "status": "VERIFIED_PAPER",
+      "source": "arXiv 2408.02043v1 (sha256 15110a55216bb448c5db0330c4b3a492413350a50f4f118930a274ac61f1c198) Eqs. 1-6, section 2"
+    },
+    "step1_segments_and_crf": {
+      "status": "VERIFIED_PAPER",
+      "source": "arXiv 2408.02043v1 (sha256 15110a55216bb448c5db0330c4b3a492413350a50f4f118930a274ac61f1c198) section 2.1, Table 1 (*CRF postprocessing)"
+    },
+    "backbone": {
+      "status": "VERIFIED_PAPER",
+      "source": "arXiv 2408.02043v1 (sha256 15110a55216bb448c5db0330c4b3a492413350a50f4f118930a274ac61f1c198) section 2.1 (DINO keys, patch size of the backbone)"
+    }
+  },
+  "paper_unspecified": {
+    "feature_l2_normalization": {
+      "value": null,
+      "status": "PAPER_UNSPECIFIED",
+      "source": "Eq. 1 thresholds f f^T at 0 without stating feature normalisation",
+      "options": [
+        true,
+        false
+      ]
+    },
+    "dino_input_policy": {
+      "value": null,
+      "status": "PAPER_UNSPECIFIED",
+      "source": "input resizing/cropping to the 8-pixel patch grid not stated"
+    },
+    "eigenvectors": {
+      "value": null,
+      "status": "PAPER_UNSPECIFIED",
+      "source": "section 2.1 'only positive eigenvectors (e > 0)': number of eigenvectors used for K-means not stated"
+    },
+    "discard_trivial_eigenvector": {
+      "value": null,
+      "status": "PAPER_UNSPECIFIED",
+      "source": "treatment of the trivial eigenvector not stated",
+      "options": [
+        true,
+        false
+      ]
+    },
+    "normalize_embedding_rows": {
+      "value": null,
+      "status": "PAPER_UNSPECIFIED",
+      "source": "row normalisation of the spectral embedding not stated",
+      "options": [
+        true,
+        false
+      ]
+    },
+    "upscale_method": {
+      "value": null,
+      "status": "PAPER_UNSPECIFIED",
+      "source": "'We upscale and apply CRF' without the interpolation",
+      "options": [
+        "nearest"
+      ]
+    },
+    "crf_backend": {
+      "value": null,
+      "status": "PAPER_UNSPECIFIED",
+      "source": "dense CRF [13] implementation not stated; none in self-audit-canonical v1"
+    },
+    "crf_parameters": {
+      "value": null,
+      "status": "PAPER_UNSPECIFIED",
+      "source": "CRF weights/kernel widths/iterations not stated (official configs conflict)"
+    },
+    "camus_input_conversion": {
+      "value": null,
+      "status": "PAPER_UNSPECIFIED",
+      "source": "CAMUS image format/intensity conversion to 2D images not stated"
+    },
+    "preprocessing_method": {
+      "value": null,
+      "status": "PAPER_UNSPECIFIED",
+      "source": "section 2.1 lists Gaussian blurring, histogram equalisation and MPRNet without the row choice",
+      "options": [
+        "histogram_equalization",
+        "gaussian_blur",
+        "histogram_equalization+gaussian_blur"
+      ]
+    },
+    "preprocessing_parameters": {
+      "value": null,
+      "status": "PAPER_UNSPECIFIED",
+      "source": "blur kernel/sigma not stated"
+    },
+    "semantic_clusters": {
+      "value": null,
+      "status": "PAPER_UNSPECIFIED",
+      "source": "Step II K-means cluster count for CAMUS not stated"
+    },
+    "phi_image": {
+      "value": null,
+      "status": "PAPER_UNSPECIFIED",
+      "source": "section 2.2 phi (crop feature extractor and pooling) not defined"
+    },
+    "step2_crf_applied": {
+      "value": null,
+      "status": "PAPER_UNSPECIFIED",
+      "source": "Table 2 carries no CRF mark",
+      "options": [
+        true,
+        false
+      ]
+    },
+    "dss_step2_definition": {
+      "value": null,
+      "status": "PAPER_UNSPECIFIED",
+      "source": "'DSS step2' refers to [17] (Melas-Kyriazi et al.); its settings are not restated"
+    }
+  },
+  "implementation_conventions": {
+    "kmeans_seed": {
+      "value": null,
+      "status": "IMPLEMENTATION_CONVENTION",
+      "source": "K-means settings not stated"
+    },
+    "kmeans_n_init": {
+      "value": null,
+      "status": "IMPLEMENTATION_CONVENTION",
+      "source": "K-means settings not stated"
+    },
+    "kmeans_max_iter": {
+      "value": null,
+      "status": "IMPLEMENTATION_CONVENTION",
+      "source": "K-means settings not stated"
+    },
+    "kmeans_tolerance": {
+      "value": null,
+      "status": "IMPLEMENTATION_CONVENTION",
+      "source": "K-means settings not stated"
+    },
+    "kmeans_algorithm": {
+      "value": null,
+      "status": "IMPLEMENTATION_CONVENTION",
+      "source": "K-means settings not stated"
+    }
+  },
+  "required_data": {
+    "camus_cohort_inventory": {
+      "value": null,
+      "status": "BLOCKED_DATA",
+      "source": "500 test images, 5 per ES/ED per patient (frames not enumerated)"
+    },
+    "dino_checkpoint_sha256": {
+      "value": null,
+      "status": "BLOCKED_DATA",
+      "source": "dino_deitsmall8_pretrain.pth must be supplied and hashed"
+    }
+  },
+  "gates": {
+    "producer": [
+      "End-to-end CAMUS runner is not wired for paper-faithful profiles (algorithm functions only; no dense-CRF backend in self-audit-canonical v1)"
+    ],
+    "native_track_b": [
+      "Step II evaluated stage unresolved (semantic segmaps vs crf_segmaps; Table 2 has no CRF mark)",
+      "Label-consistency metric computation (ties, std aggregation) unresolved"
+    ]
+  },
+  "native_evaluator_spec_sha256": "3b5babd984eb9c5becfb8e12e55acdfffb91528849d4b822cbc3f04103fc2002"
+}
