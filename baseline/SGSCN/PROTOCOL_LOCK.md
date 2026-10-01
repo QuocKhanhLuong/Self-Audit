@@ -11,7 +11,17 @@ stop on pre-update active labels <= 3 after applying that update; final forward
 in train mode. No softmax, clamping, altered normalization, loss repair, or class
 count floor. PH2 learning rate=0.1; SYSU-US learning rate=0.05 (paper-supported).
 
-Paper profiles remain BLOCKED_PROTOCOL because architecture prose and stability
+Context-loss evidence: the paper (section 2.6) defines the overall loss as the
+unweighted sum of cross-entropy, sparse spatial and context-based consistency
+losses, so context loss is VERIFIED_PAPER with weight 1. In the official demo it
+is enabled only by the non-default --center flag (README usage omits it). The
+*_official_reference profiles therefore record reference_invocation = official
+arithmetic with --center enabled; they are not the demo's default invocation.
+The code spatial weight 5 (--stepsize_ss) is an official implementation detail
+that conflicts with the paper's unweighted sum; this is an explicit paper gate.
+
+Paper profiles remain BLOCKED_PROTOCOL because architecture prose (three 3x3
+convolutions versus the demo's final 1x1), the spatial loss weight and stability
 stopping differ from the released demo. No undocumented stability criterion is
 invented. Separate *_official_reference profiles are executable for verification;
 they are explicitly official-code reference runs, NOT exact paper reproduction.

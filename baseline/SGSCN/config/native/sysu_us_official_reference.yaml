@@ -35,6 +35,31 @@
       "value": "maxIter50/minLabels3",
       "status": "OFFICIAL_IMPLEMENTATION_DETAIL",
       "source": "demo_final.py; exact paper stability undefined"
+    },
+    "context_loss": {
+      "value": true,
+      "status": "VERIFIED_PAPER",
+      "source": "arXiv 2107.04934 PDF sha256 222a28c659e3f507dfed519a3e8b8945fa2afcb0a84a7ab428205e807d831051: section 2.6 overall loss is the sum of cross-entropy, sparse spatial and context-based consistency losses; section 2.5 Eqs. 3-4; Figs. 3-4"
+    },
+    "context_loss_code_invocation": {
+      "value": "demo_final.py --center",
+      "status": "OFFICIAL_IMPLEMENTATION_DETAIL",
+      "source": "592efb6 demo_final.py: --center is store_true with default False; upstream README usage omits it. Enabled here because the paper uses the loss, not because it is the demo default"
+    },
+    "context_weight": {
+      "value": 1,
+      "status": "VERIFIED_PAPER",
+      "source": "arXiv 2107.04934 PDF sha256 222a28c659e3f507dfed519a3e8b8945fa2afcb0a84a7ab428205e807d831051 section 2.6 unweighted sum; demo_final.py adds closs without coefficient"
+    },
+    "context_epsilon": {
+      "value": 0.001,
+      "status": "OFFICIAL_IMPLEMENTATION_DETAIL",
+      "source": "592efb6 demo_final.py epsilon = 1e-3 and src/center.py get_centers default; not stated in paper"
+    },
+    "spatial_weight": {
+      "value": 5,
+      "status": "OFFICIAL_IMPLEMENTATION_DETAIL",
+      "source": "592efb6 demo_final.py --stepsize_ss default 5; DISCREPANCY: arXiv 2107.04934 PDF sha256 222a28c659e3f507dfed519a3e8b8945fa2afcb0a84a7ab428205e807d831051 section 2.6 states an unweighted sum"
     }
   },
   "gates": {
@@ -43,5 +68,6 @@
       "Overlap tie convention and exact HM/XOR definitions unresolved"
     ]
   },
-  "native_evaluator_spec_sha256": "811d5a6a1c5e59e9265cfeef7859e61f42b1da49174e624c2cafe0837f0a9721"
+  "native_evaluator_spec_sha256": "811d5a6a1c5e59e9265cfeef7859e61f42b1da49174e624c2cafe0837f0a9721",
+  "reference_invocation": "official demo_final.py arithmetic with the non-default --center flag enabled (paper context loss) and the paper section 3.2 dataset learning rate; not the demo's default invocation and not exact paper reproduction"
 }

@@ -11,10 +11,30 @@
   },
   "step_II": {
     "evaluator": "original_semantic_matching",
-    "equal_count_branch": "hungarian_max_iou",
-    "unequal_count_branch": "majority_vote_exclusive",
-    "unequal_count_status": "UNRESOLVED/BLOCKED_PROTOCOL",
-    "source_threshold": 0
+    "status": "UNRESOLVED/BLOCKED_PROTOCOL",
+    "source_entrypoint": "evaluation/segm_eval.py::main",
+    "source_default_config": {
+      "file": "configs/eval/defaults.yaml",
+      "eval_per_image": true,
+      "iou_thresh": 0.0,
+      "void_label": 0,
+      "status": "OFFICIAL_IMPLEMENTATION_DETAIL, not proven per paper row"
+    },
+    "source_branches": {
+      "eval_per_image_true": "evaluate_dataset_with_remapping: per-image make_labels_consecutive -> eval_utils.match -> remap_match -> remap_labels",
+      "eval_per_image_false": "evaluate_dataset_with_single_matching: dataset-level hungarian_match or majority_vote_unique",
+      "unselected_by_main": "evaluate_dataset: per-image hungarian_match or majority_vote_unique"
+    },
+    "match_equal_count_branch": "eval_utils.hungarian_match(metric='iou')",
+    "match_unequal_count_branch": "eval_utils.majority_vote_exclusive",
+    "unequal_count_source": "DEFINED at evaluation/eval_utils.py:202, called by eval_utils.match at line 172",
+    "unequal_count_status": "SOURCE_DEFINED; not reimplemented; paper-row applicability UNRESOLVED/BLOCKED_PROTOCOL",
+    "unresolved": [
+      "Which segm_eval branch (eval_per_image) and config values produced each Table 2 row",
+      "Independent equivalence of make_labels_consecutive/remap_match/remap_labels and void_label handling",
+      "majority_vote_exclusive conflict/tie behaviour and unmatched-cluster handling as evaluated in the paper",
+      "Per-image versus dataset aggregation of the reported scores"
+    ]
   },
   "producer_feedback": false,
   "require_raw_seal": true

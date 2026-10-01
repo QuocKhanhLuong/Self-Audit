@@ -21,6 +21,11 @@
       "value": null,
       "status": "UNRESOLVED",
       "source": "Complete row-specific CAMUS config unavailable"
+    },
+    "step2_evaluator": {
+      "value": "segm_eval.py::main -> eval_utils.match (hungarian_match | majority_vote_exclusive)",
+      "status": "OFFICIAL_IMPLEMENTATION_DETAIL",
+      "source": "d4ac44c evaluation/segm_eval.py; evaluation/eval_utils.py:153,202; paper-row correspondence UNRESOLVED"
     }
   },
   "gates": {
@@ -29,8 +34,9 @@
       "Exact native CAMUS cohort unresolved"
     ],
     "native_track_b": [
-      "Unequal-count majority_vote_exclusive missing in pinned source; row evaluation lock unresolved"
+      "Step II segm_eval branch/config per Table 2 row unresolved (eval_per_image, iou_thresh, void_label)",
+      "Unequal-count eval_utils.majority_vote_exclusive is defined in pinned source but its row applicability, label remapping and aggregation are unresolved"
     ]
   },
-  "native_evaluator_spec_sha256": "c8b3833370ca724b07aeb1cd833a0efa55671fc3035cbe472a10781732805e88"
+  "native_evaluator_spec_sha256": "c8cf2c04c19230fc707e29a10db4af91e257904dfb53aa96557dd084e17a010f"
 }
