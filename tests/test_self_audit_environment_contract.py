@@ -86,3 +86,78 @@ def test_variant_detection_from_build_metadata(monkeypatch):
     assert contract._torch_variant("2.4.1") == "cu121"
     monkeypatch.setattr(contract.importlib.metadata, "requires", lambda name: [])
     assert contract._torch_variant("2.4.1") == "unknown"
+
+
+# Official entrypoints of the active milestone (Self-Audit core, shared_benchmark,
+# CUTS, DSS-US, SGSCN). DFC, STEGO and PiCIE are legacy / out of scope.
+CLI_ENTRYPOINTS = [
+    "scripts/train_self_audit.py",
+    "scripts/train_maskfree.py",
+    "src/self_audit/training/train_annotation.py",
+    "src/self_audit/training/train_auditor.py",
+    "src/self_audit/training/finetune_joint.py",
+    "scripts/evaluate_external_mnms.py",
+    "scripts/evaluate_maskfree_epoch.py",
+    "scripts/evaluate_maskfree_reference.py",
+    "scripts/evaluate_cardiac_baseline_reference.py",
+    "scripts/evaluate_visualize_shared_benchmark.py",
+]
+
+
+def _main_block(path: Path):
+    import ast
+
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    for node in tree.body:
+        if isinstance(node, ast.If) and "__main__" in ast.unparse(node.test):
+            return ast.unparse(node)
+    raise AssertionError(f"no __main__ block: {path}")
+
+
+@pytest.mark.parametrize("entrypoint", CLI_ENTRYPOINTS)
+def test_official_cli_entrypoints_enforce_the_canonical_environment_first(entrypoint):
+    block = _main_block(ROOT / entrypoint)
+    enforce = block.index("enforce_official_entrypoint(__file__)")
+    assert enforce < block.index("main()")
+
+
+def test_native_and_cuts_producers_enforce_the_canonical_environment():
+    sgscn = (ROOT / "baseline/SGSCN/scripts/run_native.py").read_text()
+    assert "environment = require_official_environment()" in sgscn
+    assert '"environment_contract": environment' in sgscn
+    cuts = (ROOT / "baseline/CUTS/src/cardiac_benchmark/provenance.py").read_text()
+    assert "environment_contract = _official_environment_contract()" in cuts
+
+
+def _load_dss_runner():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("dss_run_native_contract", ROOT / "baseline/DSS_US/scripts/run_native.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_dss_blocked_profiles_report_blocked_protocol_without_environment_check(monkeypatch, capsys):
+    runner = _load_dss_runner()
+    monkeypatch.setattr(contract, "require_official_environment",
+                        lambda *a, **k: (_ for _ in ()).throw(AssertionError("environment checked before gate")))
+    monkeypatch.setattr(runner.sys, "argv", ["run_native.py", "--config",
+                                              str(ROOT / "baseline/DSS_US/config/native/step1_ours_comb.yaml")])
+    assert runner.main() == 2
+    assert '"BLOCKED_PROTOCOL"' in capsys.readouterr().out
+
+
+def test_dss_executable_profile_requires_canonical_environment_before_running(monkeypatch, capsys):
+    runner = _load_dss_runner()
+    monkeypatch.setattr(runner, "load_lock", lambda path: {"profile": "hypothetically-unblocked"})
+
+    def mismatch(*args, **kwargs):
+        raise contract.EnvironmentMismatch({"environment_id": "self-audit-canonical", "environment_version": "1",
+                                            "problems": ["torch 2.7.0 != 2.4.1"], "official": False})
+
+    monkeypatch.setattr(contract, "require_official_environment", mismatch)
+    monkeypatch.setattr(runner.sys, "argv", ["run_native.py", "--config", "unblocked.yaml"])
+    with pytest.raises(contract.EnvironmentMismatch, match="torch 2.7.0"):
+        runner.main()
+    assert capsys.readouterr().out == ""

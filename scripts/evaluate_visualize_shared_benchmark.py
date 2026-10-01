@@ -579,4 +579,7 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    from environment_contract import enforce_official_entrypoint
+
+    enforce_official_entrypoint(__file__)  # official runs require self-audit-canonical v1
     raise SystemExit(main())

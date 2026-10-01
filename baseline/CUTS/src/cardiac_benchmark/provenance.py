@@ -59,7 +59,21 @@ def rng_contract(*, loader_seed_policy: str) -> dict[str, Any]:
     }
 
 
+def _official_environment_contract() -> dict[str, Any]:
+    """Fail fast unless CUTS runs in self-audit-canonical v1; return its identity."""
+    try:
+        from environment_contract import require_official_environment
+    except ImportError:
+        sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "src"))
+        from environment_contract import require_official_environment
+    report = require_official_environment()
+    keys = ("environment_id", "environment_version", "variant", "lock_sha256",
+            "environment_json_sha256", "official", "problems")
+    return {key: report.get(key) for key in keys}
+
+
 def environment_identity() -> dict[str, Any]:
+    environment_contract = _official_environment_contract()
     import phate
     import scipy
     import sklearn
@@ -82,6 +96,7 @@ def environment_identity() -> dict[str, Any]:
         "torch_threads": torch.get_num_threads(),
         "torch_interop_threads": torch.get_num_interop_threads(),
         "gpu": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
+        "environment_contract": environment_contract,
     }
 
 

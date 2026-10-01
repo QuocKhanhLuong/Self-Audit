@@ -131,3 +131,20 @@ def require_official_environment(
               "results are not official evidence", file=sys.stderr)
         return report
     raise EnvironmentMismatch(report)
+
+
+def enforce_official_entrypoint(entrypoint: str, environment_id: str = CANONICAL_ENVIRONMENT) -> dict[str, Any]:
+    """Fail fast unless an official CLI entrypoint runs in the declared environment.
+
+    Prints a one-line environment identity to stderr so run logs carry it, and
+    returns the full report for callers that persist provenance.
+    """
+    report = require_official_environment(environment_id)
+    report["entrypoint"] = str(entrypoint)
+    print(
+        f"[environment] {report['environment_id']} v{report['environment_version']} "
+        f"variant={report['variant']} python={report['python']['version']} "
+        f"lock_sha256={str(report['lock_sha256'])[:16]} official={report['official']} entrypoint={entrypoint}",
+        file=sys.stderr,
+    )
+    return report
