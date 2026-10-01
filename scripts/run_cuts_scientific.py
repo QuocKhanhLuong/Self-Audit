@@ -31,9 +31,8 @@ from shared_benchmark.artifacts import (  # noqa: E402
     select_manifest_records,
     validate_scientific_execution,
 )
-<<<<<<< HEAD
 from shared_benchmark.provenance import sha256_file  # noqa: E402
-from shared_benchmark.semantic_contract import FROZEN_ADAPTER_SPEC_SHA256  # noqa: E402
+from shared_benchmark.semantic_contract import load_and_validate_spec  # noqa: E402
 from shared_benchmark.semantic_contract import (  # noqa: E402
     FROZEN_SELF_AUDIT_HISTORICAL_224_SHARED_GRID_SHA256,
     FROZEN_SELF_AUDIT_SHARED_GRID_SHA256,
@@ -44,11 +43,6 @@ from shared_benchmark.spatial import (  # noqa: E402
     SELF_AUDIT_NORMALIZATION_VERSION,
     SELF_AUDIT_SPATIAL_CONTRACT_VERSION,
 )
-=======
-from shared_benchmark.semantic_contract import load_and_validate_spec  # noqa: E402
-from shared_benchmark.semantic_contract import FROZEN_SELF_AUDIT_SHARED_GRID_SHA256  # noqa: E402
-from shared_benchmark.spatial import SELF_AUDIT_SPATIAL_CONTRACT_VERSION  # noqa: E402
->>>>>>> a107b734fee92b9a5b578bdef33a115581dabfcb
 from cardiac_benchmark.cluster_kmeans import cluster_latent  # noqa: E402
 from cardiac_benchmark.dataset import ImageOnlyCardiacDataset  # noqa: E402
 from cardiac_benchmark.manifest import load_manifest  # noqa: E402
@@ -268,7 +262,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--num-workers", type=int, default=1)
     parser.add_argument("--config-hash")
     parser.add_argument("--apply-adapter", action="store_true")
-    parser.add_argument("--adapter-spec", type=Path, default=ROOT / "benchmark_freezes" / "cardiac_benchmark_v10_historical_224" / "configs" / "adapter_v2_spec.json")
+    parser.add_argument("--adapter-spec", type=Path, default=ROOT / "benchmark_freezes" / "cardiac_benchmark_v11_historical_224" / "configs" / "adapter_v2_spec.json")
     parser.add_argument("--semantic-root", type=Path)
     parser.add_argument("--no-retry-failed", dest="retry_failed", action="store_false")
     parser.set_defaults(retry_failed=True)
