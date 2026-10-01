@@ -183,7 +183,6 @@ def load_self_audit_grid_spec(repo_root: str | Path) -> dict[str, Any]:
     )
 
 
-<<<<<<< HEAD
 def load_self_audit_historical_224_grid_spec(repo_root: str | Path) -> dict[str, Any]:
     """Return the isolated CUTS/DFC historical-224 input contract.
 
@@ -240,7 +239,9 @@ def load_self_audit_historical_224_grid_spec(repo_root: str | Path) -> dict[str,
         forward_masks="not_applicable_image_only",
         inverse_labels="not_applicable_baseline_partition",
         inverse_probabilities="not_applicable_baseline_partition",
-=======
+    )
+
+
 def load_self_audit_compat_224_grid_spec(repo_root: str | Path) -> dict[str, Any]:
     """Load the 224x224 compat contract for STEGO/PiCIE over Self-Audit data.
 
@@ -274,7 +275,6 @@ def load_self_audit_compat_224_grid_spec(repo_root: str | Path) -> dict[str, Any
         forward_masks="nearest_exact",
         inverse_labels="nearest_exact",
         inverse_probabilities="bilinear_then_renormalize",
->>>>>>> a107b734fee92b9a5b578bdef33a115581dabfcb
     )
 
 
@@ -524,8 +524,8 @@ def resize_values_to_grid(values: torch.Tensor, grid: Mapping[str, Any]) -> torc
     if grid.get("version") not in {
         SPATIAL_CONTRACT_VERSION,
         SELF_AUDIT_SPATIAL_CONTRACT_VERSION,
-<<<<<<< HEAD
         SELF_AUDIT_HISTORICAL_224_SPATIAL_CONTRACT_VERSION,
+        SELF_AUDIT_COMPAT_224_SPATIAL_CONTRACT_VERSION,
     }:
         raise SharedSpatialError("unsupported shared spatial contract version")
     if grid.get("version") == SELF_AUDIT_HISTORICAL_224_SPATIAL_CONTRACT_VERSION:
@@ -534,16 +534,10 @@ def resize_values_to_grid(values: torch.Tensor, grid: Mapping[str, Any]) -> torc
         if [int(values.shape[-2]), int(values.shape[-1])] != [int(target[0]), int(target[1])]:
             raise SharedSpatialError("historical 224 values must already match the frozen target grid")
         return values
-    if grid.get("version") == SELF_AUDIT_SPATIAL_CONTRACT_VERSION:
-=======
-        SELF_AUDIT_COMPAT_224_SPATIAL_CONTRACT_VERSION,
-    }:
-        raise SharedSpatialError("unsupported shared spatial contract version")
     if grid.get("version") in {
         SELF_AUDIT_SPATIAL_CONTRACT_VERSION,
         SELF_AUDIT_COMPAT_224_SPATIAL_CONTRACT_VERSION,
     }:
->>>>>>> a107b734fee92b9a5b578bdef33a115581dabfcb
         if grid.get("forward_values") != "bilinear_align_corners_false":
             raise SharedSpatialError("Self-Audit grid must declare bilinear_align_corners_false")
         resized = F.interpolate(

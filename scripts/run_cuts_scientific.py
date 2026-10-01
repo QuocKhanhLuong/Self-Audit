@@ -31,9 +31,8 @@ from shared_benchmark.artifacts import (  # noqa: E402
     select_manifest_records,
     validate_scientific_execution,
 )
-<<<<<<< HEAD
 from shared_benchmark.provenance import sha256_file  # noqa: E402
-from shared_benchmark.semantic_contract import FROZEN_ADAPTER_SPEC_SHA256  # noqa: E402
+from shared_benchmark.semantic_contract import load_and_validate_spec  # noqa: E402
 from shared_benchmark.semantic_contract import (  # noqa: E402
     FROZEN_SELF_AUDIT_HISTORICAL_224_SHARED_GRID_SHA256,
     FROZEN_SELF_AUDIT_SHARED_GRID_SHA256,
@@ -44,11 +43,6 @@ from shared_benchmark.spatial import (  # noqa: E402
     SELF_AUDIT_NORMALIZATION_VERSION,
     SELF_AUDIT_SPATIAL_CONTRACT_VERSION,
 )
-=======
-from shared_benchmark.semantic_contract import load_and_validate_spec  # noqa: E402
-from shared_benchmark.semantic_contract import FROZEN_SELF_AUDIT_SHARED_GRID_SHA256  # noqa: E402
-from shared_benchmark.spatial import SELF_AUDIT_SPATIAL_CONTRACT_VERSION  # noqa: E402
->>>>>>> a107b734fee92b9a5b578bdef33a115581dabfcb
 from cardiac_benchmark.cluster_kmeans import cluster_latent  # noqa: E402
 from cardiac_benchmark.dataset import ImageOnlyCardiacDataset  # noqa: E402
 from cardiac_benchmark.manifest import load_manifest  # noqa: E402
