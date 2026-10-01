@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -13,9 +14,14 @@ from utils.output_saver import OutputSaver
 from utils.parse import parse_settings
 from utils.seed import seed_everything
 from utils.scheduler import LinearWarmupCosineAnnealingLR
+from utils.artifact_contract import file_sha256, require_empty_output
 
 
 def train(config: AttributeHashmap):
+    if Path(config.model_save_path).exists():
+        raise FileExistsError('Checkpoint already exists; choose a new model_save_path')
+    if getattr(config, 'export_after_train', True):
+        require_empty_output(Path(config.output_save_path) / 'numpy_files')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     train_set, val_set, num_image_channel = \
         prepare_dataset(config=config, mode='train')
@@ -131,7 +137,14 @@ def test(config: AttributeHashmap):
     loss_fn_recon = torch.nn.MSELoss()
     loss_fn_contrastive = NTXentLoss()
     output_saver = OutputSaver(save_path=config.output_save_path,
-                               random_seed=config.random_seed)
+                               random_seed=config.random_seed,
+                               image_only=getattr(config, 'image_only', False),
+                               sample_metadata=getattr(test_set.dataset, 'sample_metadata', None),
+                               provenance={
+                                   'checkpoint_sha256': file_sha256(config.model_save_path),
+                                   'config_sha256': file_sha256(config.config_file_name),
+                                   'split_policy': 'random_slice_train_val_full_dataset_export',
+                               })
 
     test_loss_recon, test_loss_contrastive, test_loss = 0, 0, 0
     model.eval()
@@ -163,7 +176,7 @@ def test(config: AttributeHashmap):
 
             output_saver.save(image_batch=x_test,
                               recon_batch=patch_recon,
-                              label_true_batch=y_test if config.no_label is False else None,
+                              label_true_batch=y_test if config.no_label is False and not getattr(config, 'image_only', False) else None,
                               latent_batch=z)
 
     test_loss_recon = test_loss_recon / len(test_set.dataset)
@@ -196,6 +209,7 @@ if __name__ == '__main__':
 
     if args.mode == 'train':
         train(config=config)
-        test(config=config)
+        if getattr(config, 'export_after_train', True):
+            test(config=config)
     elif args.mode == 'test':
         test(config=config)

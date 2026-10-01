@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import json
 import shutil
 from dataclasses import dataclass
@@ -27,15 +28,23 @@ from shared_benchmark.artifacts import (
     verify_semantic_partition,
 )
 from shared_benchmark.provenance import sha256_json
-from shared_benchmark.semantic_contract import FROZEN_ADAPTER_SPEC_SHA256, adapter_metadata_payload, canonical_metadata_hash
+from shared_benchmark.semantic_contract import (
+    ADAPTER_V3_VERSION,
+    FROZEN_ADAPTER_SPEC_SHA256,
+    FROZEN_ADAPTER_V3_SPEC_SHA256,
+    adapter_metadata_payload,
+    canonical_metadata_hash,
+    semantic_artifact_stage,
+)
 from shared_benchmark.manifest import build_shared_manifest
-from shared_benchmark.spatial import build_grid_spec
+from shared_benchmark.spatial import build_grid_spec, grid_hash, load_self_audit_compat_224_grid_spec
 
 from helpers import discovered_projection, write_image
 
 
 ROOT = Path(__file__).resolve().parents[2]
 SPEC = json.loads((ROOT / "benchmark_freezes/cardiac_benchmark_v6/configs/adapter_v2_spec.json").read_text(encoding="utf-8"))
+SPEC_V3 = json.loads((ROOT / "benchmark_freezes/cardiac_benchmark_v7/configs/adapter_v3_spec.json").read_text(encoding="utf-8"))
 
 
 @pytest.fixture()
@@ -163,6 +172,88 @@ def test_adapter_handoff_requires_raw_complete_and_semantic_binds_raw(fixture_ma
         )
 
 
+def test_adapter_v3_uses_distinct_semantic_stage_and_spec(tmp_path: Path):
+    grid = load_self_audit_compat_224_grid_spec(ROOT)
+    record = {
+        "dataset": "acdc",
+        "patient_id": "patient001",
+        "study_id": "acdc:patient001",
+        "volume_id": "acdc:self_audit:patient001:frame-0001",
+        "sample_id": "acdc:patient-patient001:study-acdc:patient001:volume-acdc:self_audit:patient001:frame-0001:frame-0001:z-0000",
+        "split": "dev",
+        "frame_index": 1,
+        "frame_axis": None,
+        "slice_index": 0,
+        "depth": 1,
+        "depth_axis": 2,
+        "context_indices": [0, 0, 0],
+        "frame_selection_rule": "fixture",
+        "source": {
+            "locator": "images/patient001_frame01.npy",
+            "sha256": "fixture-image-sha",
+            "frame_fingerprint": "fixture-frame-sha",
+            "format": "npy",
+            "dtype": "float32",
+        },
+        "native_shape": [224, 224, 1],
+        "stored_shape": [224, 224, 1],
+        "native_hw": [224, 224],
+        "axis_semantics": {"native_axis_order": "HWZ", "depth_axis": 2, "frame_axis": None},
+        "geometry": {
+            "spacing_mm": None,
+            "spacing_valid": False,
+            "native_affine": None,
+            "affine_valid": False,
+            "orientation": None,
+            "orientation_valid": False,
+            "native_grid_export": True,
+            "export_grid": "native",
+            "spatial_unit": "unknown",
+            "study_grid_compatibility": {"status": "fixture"},
+        },
+        "shared_grid": copy.deepcopy(grid),
+        "spatial_transform": {"forward_resize": {"output_hw": [224, 224]}},
+    }
+    raw = seal_raw_partition(
+        tmp_path / "out",
+        np.zeros((224, 224), dtype=np.int32),
+        record=record,
+        baseline_name="TEST",
+        baseline_mode="SA224",
+        manifest_hash="manifest-v7-fixture",
+        shared_grid_hash=grid_hash(grid),
+        repository={"repository_commit_sha": "commit", "working_tree_sha256": "tree"},
+        baseline_config_hash="cfg-v7",
+        seed=42,
+        baseline_metadata={"required_provenance": "fixture"},
+    )
+    image = np.zeros((224, 224), dtype=np.float32)
+    semantic = run_adapter_after_raw(
+        raw,
+        semantic_root=tmp_path / "semantic",
+        record=record,
+        central_image=image,
+        adapter_spec=SPEC_V3,
+        baseline_name="TEST",
+        baseline_mode="SA224",
+        adapter_version=ADAPTER_V3_VERSION,
+        adapter_spec_sha256=FROZEN_ADAPTER_V3_SPEC_SHA256,
+    )
+    assert semantic.directory.parts[-4] == semantic_artifact_stage(ADAPTER_V3_VERSION)
+    assert semantic.metadata["adapter_version"] == ADAPTER_V3_VERSION
+    assert semantic.metadata["adapter_spec_sha256"] == FROZEN_ADAPTER_V3_SPEC_SHA256
+    checked = verify_semantic_partition(
+        semantic.directory,
+        raw_artifact=raw,
+        record=record,
+        central_image=image,
+        adapter_spec=SPEC_V3,
+        adapter_version=ADAPTER_V3_VERSION,
+        adapter_spec_sha256=FROZEN_ADAPTER_V3_SPEC_SHA256,
+    )
+    assert checked.metadata["adapter_metadata"]["semantic_artifact_stage"] == semantic_artifact_stage(ADAPTER_V3_VERSION)
+
+
 @pytest.mark.parametrize("field", ["assignment_reason", "central_image_sha256", "coverage"])
 def test_semantic_adapter_metadata_tamper_is_rejected_even_after_rehash(fixture_manifest, field):
     """A forged outer/inner hash cannot replace adapter recomputation."""
@@ -229,14 +320,14 @@ def test_semantic_failure_does_not_demote_sealed_raw(fixture_manifest):
     record = manifest["records"][0]
 
     def generate(_record):
-        return GeneratedSample(np.zeros((8, 8), dtype=np.int32), np.zeros((8, 8), dtype=np.float32), {})
+        return GeneratedSample(np.zeros((8, 8), dtype=np.int32), np.zeros((7, 7), dtype=np.float32), {})
 
     rows = run_generation(
         [record], output_root=root / "handoff", baseline_name="TEST", baseline_mode="2d",
         manifest_hash=manifest["manifest_hash"], shared_grid_hash=manifest["shared_grid_hash"],
         repository={"repository_commit_sha": "c", "working_tree_sha256": "t"}, baseline_config_hash="cfg",
         seed_for_record=lambda _r: 42, generate=generate, semantic_root=root / "handoff",
-        adapter_spec={"not": "the frozen spec"},
+        adapter_spec=SPEC,
     )
     assert rows[0]["raw_status"] == RAW_COMPLETE and rows[0]["semantic_status"] == FAILED
     raw_dir = artifact_directory(root / "handoff", baseline_name="TEST", baseline_mode="2d", sample_id=record["sample_id"])

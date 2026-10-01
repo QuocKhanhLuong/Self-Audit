@@ -747,8 +747,8 @@ if __name__ == '__main__':
                         hashmap['labels_diffusion'][i, ...] = guided_relabel(
                             label_pred=hashmap['labels_diffusion'][i, ...],
                             label_true=hashmap['label_true'])
-                # Relabel each of the diffusion labels.
-                if has_diffusion:
+                # Relabel pixel diffusion only when its own artifacts exist.
+                if has_pixel_diffusion:
                     for i in range(hashmap['labels_pixel_diffusion'].shape[0]):
                         hashmap['labels_pixel_diffusion'][i, ...] = guided_relabel(
                             label_pred=hashmap['labels_pixel_diffusion'][i, ...],

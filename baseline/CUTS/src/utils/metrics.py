@@ -145,10 +145,10 @@ def guided_relabel(label_pred: np.array, label_true: np.array) -> np.array:
 
     label_pred_vec = np.array(
         [label_pred.reshape(H * W) == i for i in np.unique(label_pred)],
-        dtype=np.int16)
+        dtype=np.int64)
     label_true_vec = np.array(
         [label_true.reshape(H * W) == i for i in np.unique(label_true)],
-        dtype=np.int16)
+        dtype=np.int64)
 
     # Use matrix multiplication to get intersection matrix.
     intersection_matrix = np.matmul(label_pred_vec, label_true_vec.T)

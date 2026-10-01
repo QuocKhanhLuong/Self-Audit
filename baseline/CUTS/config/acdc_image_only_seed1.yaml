@@ -1,0 +1,24 @@
+# Image-only variant; still RANDOM SLICE split, not a patient-disjoint benchmark.
+dataset_name: 'acdc_original_style'
+dataset_path: '$CUTS_ROOT/../../data/ACDC/training/'
+model_save_path: '$CUTS_ROOT/../../.runtime/cuts_acdc_image_only_seed1/model.pty'
+output_save_path: '$CUTS_ROOT/../../.runtime/cuts_acdc_image_only_seed1/results/'
+log_folder: '$CUTS_ROOT/../../.runtime/cuts_acdc_image_only_seed1/logs'
+model_setting: 'full'
+learning_rate: 1e-3
+weight_decay: 1e-4
+max_epochs: 200
+batch_size: 16
+num_kernels: 16
+sampled_patches_per_image: 8
+patch_size: 5
+num_workers: 8
+lambda_contrastive_loss: 0.001
+random_seed: 1
+train_val_ratio: '7:3'
+image_size: [224, 224]
+is_binary: false
+no_label: true
+image_only: true
+export_after_train: false
+diffusion_random_seed: 0

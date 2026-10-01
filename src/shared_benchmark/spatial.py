@@ -22,6 +22,7 @@ from .provenance import sha256_file, sha256_json
 # instead of silently changing the meaning of the old hash.
 SPATIAL_CONTRACT_VERSION = "shared_benchmark.spatial.v1"
 SELF_AUDIT_SPATIAL_CONTRACT_VERSION = "shared_benchmark.spatial.self_audit.v1"
+SELF_AUDIT_COMPAT_224_SPATIAL_CONTRACT_VERSION = "shared_benchmark.spatial.self_audit_compat_224.v1"
 SELF_AUDIT_NORMALIZATION_VERSION = "self_audit.volume_percentile_clip_0p5_99p5_zscore.v1"
 # This is deliberately *not* the current Self-Audit network grid.  It is a
 # separately frozen, baseline-only reconstruction of the historical ACDC
@@ -182,6 +183,7 @@ def load_self_audit_grid_spec(repo_root: str | Path) -> dict[str, Any]:
     )
 
 
+<<<<<<< HEAD
 def load_self_audit_historical_224_grid_spec(repo_root: str | Path) -> dict[str, Any]:
     """Return the isolated CUTS/DFC historical-224 input contract.
 
@@ -238,6 +240,41 @@ def load_self_audit_historical_224_grid_spec(repo_root: str | Path) -> dict[str,
         forward_masks="not_applicable_image_only",
         inverse_labels="not_applicable_baseline_partition",
         inverse_probabilities="not_applicable_baseline_partition",
+=======
+def load_self_audit_compat_224_grid_spec(repo_root: str | Path) -> dict[str, Any]:
+    """Load the 224x224 compat contract for STEGO/PiCIE over Self-Audit data.
+
+    This contract deliberately combines the Self-Audit source normalization and
+    whole-FOV decoder with the historical 224x224 benchmark grid used by the
+    STEGO/PiCIE cardiac ports. It is separate from both the historical
+    FreeMask v1 grid and the Self-Audit 256x256 contract so merges cannot
+    silently reinterpret STEGO/PiCIE inputs.
+    """
+    root = Path(repo_root)
+    self_audit_grid = load_self_audit_grid_spec(root)
+    pinned_grid = load_pinned_grid_spec(root)
+    target_hw = tuple(int(value) for value in pinned_grid["target_hw"])
+    if target_hw != (224, 224):
+        raise SharedSpatialError(f"STEGO/PiCIE compat grid must remain 224x224, got {target_hw}")
+    provenance = {
+        "source": "Self-Audit normalized ACDC source with STEGO/PiCIE compat 224 benchmark grid",
+        "self_audit_protocol": dict(self_audit_grid["config_provenance"]),
+        "compat_grid": {
+            "source": pinned_grid["config_provenance"]["source"],
+            "config_files": list(pinned_grid["config_provenance"]["config_files"]),
+            "config_sha256": dict(pinned_grid["config_provenance"]["config_sha256"]),
+            "image_size": 224,
+        },
+    }
+    return build_grid_spec(
+        target_hw,
+        config_provenance=provenance,
+        version=SELF_AUDIT_COMPAT_224_SPATIAL_CONTRACT_VERSION,
+        forward_values="bilinear_align_corners_false",
+        forward_masks="nearest_exact",
+        inverse_labels="nearest_exact",
+        inverse_probabilities="bilinear_then_renormalize",
+>>>>>>> a107b734fee92b9a5b578bdef33a115581dabfcb
     )
 
 
@@ -487,6 +524,7 @@ def resize_values_to_grid(values: torch.Tensor, grid: Mapping[str, Any]) -> torc
     if grid.get("version") not in {
         SPATIAL_CONTRACT_VERSION,
         SELF_AUDIT_SPATIAL_CONTRACT_VERSION,
+<<<<<<< HEAD
         SELF_AUDIT_HISTORICAL_224_SPATIAL_CONTRACT_VERSION,
     }:
         raise SharedSpatialError("unsupported shared spatial contract version")
@@ -497,6 +535,15 @@ def resize_values_to_grid(values: torch.Tensor, grid: Mapping[str, Any]) -> torc
             raise SharedSpatialError("historical 224 values must already match the frozen target grid")
         return values
     if grid.get("version") == SELF_AUDIT_SPATIAL_CONTRACT_VERSION:
+=======
+        SELF_AUDIT_COMPAT_224_SPATIAL_CONTRACT_VERSION,
+    }:
+        raise SharedSpatialError("unsupported shared spatial contract version")
+    if grid.get("version") in {
+        SELF_AUDIT_SPATIAL_CONTRACT_VERSION,
+        SELF_AUDIT_COMPAT_224_SPATIAL_CONTRACT_VERSION,
+    }:
+>>>>>>> a107b734fee92b9a5b578bdef33a115581dabfcb
         if grid.get("forward_values") != "bilinear_align_corners_false":
             raise SharedSpatialError("Self-Audit grid must declare bilinear_align_corners_false")
         resized = F.interpolate(

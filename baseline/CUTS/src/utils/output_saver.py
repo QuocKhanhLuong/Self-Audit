@@ -5,6 +5,7 @@ from typing import Tuple
 import numpy as np
 import torch
 from tqdm import tqdm
+from utils.artifact_contract import json_scalar, require_empty_output
 
 warnings.filterwarnings("ignore")
 
@@ -19,10 +20,15 @@ class OutputSaver(object):
         Path to save numpy files and image files.
     """
 
-    def __init__(self, save_path: str = None, random_seed: int = None) -> None:
+    def __init__(self, save_path: str = None, random_seed: int = None,
+                 image_only=False, sample_metadata=None, provenance=None) -> None:
         self.random_seed = random_seed
+        self.image_only = image_only
+        self.sample_metadata = sample_metadata
+        self.provenance = provenance
 
         self.save_path_numpy = '%s/%s/' % (save_path, 'numpy_files')
+        require_empty_output(self.save_path_numpy)
         os.makedirs(self.save_path_numpy, exist_ok=True)
         self.image_idx = 0
 
@@ -80,8 +86,15 @@ class OutputSaver(object):
         with open(
                 '%s/%s' %
             (self.save_path_numpy, 'sample_%s.npz' % str(self.image_idx).zfill(5)),
-                'wb+') as f:
-            np.savez(f, image=image, recon=recon, label=label, latent=latent)
+                'xb') as f:
+            payload = dict(image=image, recon=recon, latent=latent)
+            if not self.image_only:
+                payload['label'] = label
+            if self.sample_metadata is not None:
+                payload['sample_metadata'] = json_scalar(self.sample_metadata(self.image_idx))
+            if self.provenance is not None:
+                payload['provenance'] = json_scalar(self.provenance)
+            np.savez(f, **payload)
         self.image_idx += 1
 
 

@@ -18,8 +18,12 @@ from .manifest import (
     write_shared_manifest,
 )
 from .spatial import (
+<<<<<<< HEAD
     SELF_AUDIT_HISTORICAL_224_NORMALIZATION_VERSION,
     SELF_AUDIT_HISTORICAL_224_SPATIAL_CONTRACT_VERSION,
+=======
+    SELF_AUDIT_COMPAT_224_SPATIAL_CONTRACT_VERSION,
+>>>>>>> a107b734fee92b9a5b578bdef33a115581dabfcb
     SELF_AUDIT_NORMALIZATION_VERSION,
     SELF_AUDIT_SPATIAL_CONTRACT_VERSION,
     SPATIAL_CONTRACT_VERSION,
@@ -27,7 +31,11 @@ from .spatial import (
     build_grid_spec,
     grid_hash,
     load_pinned_grid_spec,
+<<<<<<< HEAD
     load_self_audit_historical_224_grid_spec,
+=======
+    load_self_audit_compat_224_grid_spec,
+>>>>>>> a107b734fee92b9a5b578bdef33a115581dabfcb
     load_self_audit_grid_spec,
     read_context_stack,
     read_self_audit_historical_224_context_stack,
@@ -39,8 +47,12 @@ from .spatial import (
 __all__ = [
     "FirewallError",
     "MANIFEST_SCHEMA_VERSION",
+<<<<<<< HEAD
     "SELF_AUDIT_HISTORICAL_224_NORMALIZATION_VERSION",
     "SELF_AUDIT_HISTORICAL_224_SPATIAL_CONTRACT_VERSION",
+=======
+    "SELF_AUDIT_COMPAT_224_SPATIAL_CONTRACT_VERSION",
+>>>>>>> a107b734fee92b9a5b578bdef33a115581dabfcb
     "SELF_AUDIT_NORMALIZATION_VERSION",
     "SELF_AUDIT_SPATIAL_CONTRACT_VERSION",
     "SPATIAL_CONTRACT_VERSION",
@@ -51,7 +63,11 @@ __all__ = [
     "canonical_json_bytes",
     "grid_hash",
     "load_pinned_grid_spec",
+<<<<<<< HEAD
     "load_self_audit_historical_224_grid_spec",
+=======
+    "load_self_audit_compat_224_grid_spec",
+>>>>>>> a107b734fee92b9a5b578bdef33a115581dabfcb
     "load_self_audit_grid_spec",
     "load_shared_manifest",
     "manifest_hash",

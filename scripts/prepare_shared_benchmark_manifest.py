@@ -38,6 +38,14 @@ def main() -> None:
         help="ACDC defaults to self_audit; choose maskfree only for historical compatibility.",
     )
     parser.add_argument("--selection", help="Self-Audit ED/ES selection receipt (required by --protocol self_audit)")
+    parser.add_argument(
+        "--grid-contract",
+        choices=("legacy224", "self_audit_256", "self_audit_compat_224"),
+        help=(
+            "Shared target-grid contract to project into. "
+            "ACDC Self-Audit defaults to self_audit_256; use self_audit_compat_224 for STEGO/PiCIE compatibility."
+        ),
+    )
     args = parser.parse_args()
     protocol = args.protocol or ("self_audit" if args.dataset == "acdc" else "maskfree")
     if protocol == "self_audit":
@@ -46,12 +54,18 @@ def main() -> None:
         if not args.selection:
             raise SystemExit("--selection is required for the ACDC Self-Audit protocol")
         from shared_benchmark.self_audit_protocol import discover_self_audit_acdc
-        from shared_benchmark.spatial import load_self_audit_grid_spec
+        from shared_benchmark.spatial import load_self_audit_compat_224_grid_spec, load_self_audit_grid_spec
 
         _assert_image_only_root(Path(args.image_root))
         selection_path = Path(args.selection)
         upstream = discover_self_audit_acdc(args.image_root, selection_path, seed=42, depth_axis=2)
-        grid = load_self_audit_grid_spec(ROOT)
+        grid_contract = args.grid_contract or "self_audit_256"
+        if grid_contract == "self_audit_256":
+            grid = load_self_audit_grid_spec(ROOT)
+        elif grid_contract == "self_audit_compat_224":
+            grid = load_self_audit_compat_224_grid_spec(ROOT)
+        else:
+            raise SystemExit("Self-Audit protocol does not support --grid-contract legacy224")
         upstream_file_hash = sha256_file(selection_path)
     else:
         from self_audit_maskfree.data.discovery import discover_dataset
@@ -65,6 +79,9 @@ def main() -> None:
         else:
             upstream = discover_dataset(args.image_root, args.dataset, seed=42, protocol="auto", depth_axis=2)
             upstream_file_hash = None
+        grid_contract = args.grid_contract or "legacy224"
+        if grid_contract != "legacy224":
+            raise SystemExit("maskfree protocol only supports --grid-contract legacy224")
         grid = load_pinned_grid_spec(ROOT)
     if upstream["dataset"] != args.dataset:
         raise SystemExit("dataset argument does not match the selected source protocol manifest")

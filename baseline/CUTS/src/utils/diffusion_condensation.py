@@ -222,7 +222,7 @@ def get_persistent_structures(labels: np.array) -> np.array:
     B, H, W = labels.shape
     min_area = min_area_ratio * H * W
 
-    persistent_label = np.zeros((H, W), dtype=np.int16)
+    persistent_label = np.zeros((H, W), dtype=np.int64)
     persistence_tuple = []  # (persistence, area, label_idx, frame_idx)
 
     for label_idx in np.unique(labels):
@@ -239,6 +239,8 @@ def get_persistent_structures(labels: np.array) -> np.array:
                 if curr_area > max_area:
                     max_area = curr_area
                     best_frame = frame_idx
+        if best_frame is None:
+            continue
         area = np.sum(labels[best_frame, ...] == label_idx)
         if area < min_area:
             continue
