@@ -4,10 +4,20 @@
   "environment_version": "1",
   "kind": "canonical_self_audit",
   "python": {
+    "contract": "CPython 3.10 series (3.10.x)",
     "series": "3.10",
-    "reference_micro": "3.10.21",
-    "linux_instantiation": "3.10.20",
-    "note": "The verified reference interpreter was CPython 3.10.21 (conda-forge, macOS). The newest Linux x86_64 CPython 3.10 build available through uv is 3.10.20, used for Linux instantiation. The validator requires the 3.10 series and records the exact micro version in provenance."
+    "concrete_lock": "3.10.20",
+    "contract_evidence": {
+      "reports/runtime_hardening/2026-09-10/runtime_runbook.md (9a612485b7ead1273082d7dd52879f8e9e7a3e83)": "declared server target: 'confirm Python 3.10, torch 2.4.1, CUDA 12.1'",
+      "reports/runtime_hardening/2026-09-10/reviewer_gates.md (9a612485b7ead1273082d7dd52879f8e9e7a3e83)": "'the declared Python3.10/PyTorch2.4.1 environment'",
+      "reports/maskfree150/software_environment.json (b8fb0ac5338d6f19af4e66d2211b12c41e6f5413)": "target_runtime 'Python 3.10 / PyTorch 2.4.1'",
+      "environment.yaml (095e05f5fe67d66ffaa60ea78a12aa4f6275514b, pre-standardization)": "python=3.10"
+    },
+    "observed_interpreters": {
+      "3.10.21": "incidental interpreter of the macOS arm64 CPU verification venv /private/tmp/self-audit-torch241 (reports/runtime_hardening/2026-09-10/test_results.json: platform macOS-26.2-arm64); recorded as an observation, never declared as a requirement; not an authoritative pin",
+      "3.10.20": "Linux x86_64 RTX 4070 Self-Audit training runs (wandb/run-20260825_*/files/wandb-metadata.json, 1305692914c8f50f11135d00d9035b4059f297a5: train_annotation.py, train_auditor.py, finetune_joint.py)"
+    },
+    "concrete_lock_rationale": "The authoritative contract is series-level (3.10.x). 3.10.20 is chosen as the concrete lock because it is the interpreter recorded by the project's Linux target-platform training runs and is the newest CPython 3.10 Linux x86_64 build available to the reproducible installer (uv python-build-standalone). The validator enforces the 3.10 series and records the exact micro version in provenance."
   },
   "variants": {
     "cpu": {
@@ -42,17 +52,19 @@
   },
   "evidence": {
     "primary_reference": {
-      "description": "Runtime-hardening reference environment: full suite 898 tests verified on Python 3.10.21 / torch 2.4.1 / NumPy 1.26.4; scikit-image 0.24.0 installed into that environment; target server Python 3.10, torch 2.4.1, CUDA 12.1.",
+      "description": "Runtime-hardening reference environment: full suite 898 tests verified with torch 2.4.1 / NumPy 1.26.4 (observed interpreter CPython 3.10.21 on macOS arm64; the Python contract is the declared 3.10 series); scikit-image 0.24.0 installed into that environment; declared server target Python 3.10, torch 2.4.1, CUDA 12.1.",
       "files": {
         "reports/runtime_hardening/2026-09-10/astra_final_report.md": "9a612485b7ead1273082d7dd52879f8e9e7a3e83",
         "reports/runtime_hardening/2026-09-10/runtime_runbook.md": "9a612485b7ead1273082d7dd52879f8e9e7a3e83",
         "reports/candidate_c/runtime_review.md": "35aaba9335e0d8a0aa344356e20e93ae902b950d",
         "tests/test_runtime_amp_resume_review.py": "a6b3a752d2a1732203edc053f0b1889a0f089ebc",
-        "src/self_audit_maskfree/runtime.py": "ccbad25dc8d5fa8bcf1880cfa4965965dd6ed76e"
+        "src/self_audit_maskfree/runtime.py": "ccbad25dc8d5fa8bcf1880cfa4965965dd6ed76e",
+        "reports/runtime_hardening/2026-09-10/test_results.json": "9a612485b7ead1273082d7dd52879f8e9e7a3e83",
+        "wandb/run-20260825_025341-kxchort4/files/wandb-metadata.json": "1305692914c8f50f11135d00d9035b4059f297a5"
       }
     },
     "pins": {
-      "python 3.10": "runtime_review.md / astra_final_report.md (3.10.21); runtime_runbook.md (Python 3.10); environment.yaml python=3.10",
+      "python 3.10": "series-level contract: runtime_runbook.md, reviewer_gates.md, software_environment.json, environment.yaml python=3.10; concrete lock 3.10.20 per python.concrete_lock_rationale",
       "torch 2.4.1": "runtime_review.md, astra_final_report.md, runtime_runbook.md, self_audit_maskfree/runtime.py ('target environment is torch 2.4.1')",
       "CUDA 12.1": "runtime_runbook.md (CUDA 12.1); environment.yaml pytorch-cuda=12.1",
       "numpy 1.26.4": "runtime_review.md, astra_final_report.md; environment.yaml numpy=1.26.4; CUTS candidate numpy=1.26.4",

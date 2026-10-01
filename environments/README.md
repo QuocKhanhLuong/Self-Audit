@@ -14,16 +14,26 @@ Declaration: [`self-audit-canonical/environment.json`](self-audit-canonical/envi
 | `cpu` | `requirements-cpu.lock` | 2.4.1+cpu, torchvision 0.19.1+cpu | tests, CPU validation, native CPU producers |
 | `cu121` | `requirements-cu121.lock` | 2.4.1 (CUDA 12.1 runtime 12.1.105, cuDNN 9.1.0.70), torchvision 0.19.1 | GPU training and scientific runs |
 
-Critical pins (both variants): Python 3.10 (reference 3.10.21; Linux builds use
-3.10.20), NumPy 1.26.4, SciPy 1.15.3, scikit-image 0.24.0, scikit-learn 1.7.2,
+Critical pins (both variants): Python 3.10 series (concrete lock 3.10.20, see
+below), NumPy 1.26.4, SciPy 1.15.3, scikit-image 0.24.0, scikit-learn 1.7.2,
 nibabel 5.4.2, timm 1.0.29, phate 2.0.0 (graphtools 2.1.0, PyGSP 0.6.1,
 tasklogger 1.2.0), sewar 0.4.8, opencv-python 4.10.0.84, pillow 10.4.0,
 PyYAML 6.0.3, matplotlib 3.10.9, tqdm 4.70.0, pytest 9.1.1.
 
-Authoritative reference: the runtime-hardening reference environment (Python
-3.10.21 / torch 2.4.1 / NumPy 1.26.4, 898 tests verified; target CUDA 12.1),
-with CUTS PHATE and native image-I/O pins from their recorded evidence. Every
-pin cites its source file and commit in `environment.json`.
+Authoritative reference: the runtime-hardening reference environment (torch
+2.4.1 / NumPy 1.26.4, 898 tests verified; declared server target Python 3.10,
+torch 2.4.1, CUDA 12.1), with CUTS PHATE and native image-I/O pins from their
+recorded evidence. Every pin cites its source file and commit in `environment.json`.
+
+**Python contract: CPython 3.10 series.** Every declared target in the repository
+(runtime runbook, reviewer gates, mask-free target runtime, the former
+`environment.yaml`) specifies Python 3.10 only at series level. CPython 3.10.21
+appears solely as the incidental interpreter of a macOS arm64 CPU verification
+venv and is not an authoritative pin. The concrete lock is **3.10.20**: it is the
+interpreter recorded by the project's Linux RTX 4070 training runs (tracked wandb
+metadata) and the newest CPython 3.10 Linux x86_64 build available to the
+reproducible installer. The validator enforces the 3.10 series and records the
+exact micro version in provenance.
 
 Consumers: Self-Audit core, `shared_benchmark`, CUTS, DFC, DSS-US, SGSCN and the
 native common infrastructure. DSS-US and SGSCN were verified compatible (all
@@ -59,6 +69,21 @@ support CUDA 12.1). Conda users: `conda env create -f environment.yaml`.
   the unchanged runner.
 - `SELF_AUDIT_ALLOW_UNOFFICIAL_ENVIRONMENT=1` exists only for portability runs:
   it prints a warning and records `official: false`; results are never official.
+
+### Enforcement coverage (2026-10-01)
+
+| Entrypoint | Rejects a non-canonical environment? |
+|---|---|
+| `baseline/SGSCN/scripts/run_native.py` | **yes** (fails before heavy imports; identity in provenance) |
+| `scripts/run_in_official_environment.py` (wrapper) | **yes** (validates before running the target) |
+| `baseline/DSS_US/scripts/run_native.py` | refuses every profile with BLOCKED_PROTOCOL; no producer can execute |
+| `scripts/run_cuts_scientific.py`, `scripts/run_dfc_scientific.py` | **no** when invoked directly: v12-bound sources; official use is only via the wrapper. Self-enforcement requires a new historical-224 freeze. |
+| Self-Audit core trainers/evaluators (`scripts/train_self_audit.py`, `train_maskfree.py`, `src/self_audit/training/*`, `scripts/evaluate_*`, `export_transition_bank.py`) | **no** (not yet wired; not freeze-bound) |
+| STEGO/PiCIE runners (`run_{stego,picie}_scientific.py`, `train_*_sa224_fair.py`) | **no**; their compatibility with this environment has not been assessed |
+
+Until every official entrypoint enforces the contract, run official commands
+through `scripts/run_in_official_environment.py` or after
+`scripts/check_environment.py` exits 0.
 
 ### Regenerate locks
 
