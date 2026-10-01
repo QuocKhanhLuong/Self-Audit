@@ -1,0 +1,26 @@
+# Canonical Self-Audit numerical stack: top-level pins only.
+# Every pin is taken from repository evidence; see environment.json ("evidence").
+# Resolve the full locks with environments/compile_locks.sh; do not edit locks by hand.
+numpy==1.26.4
+scipy==1.15.3
+scikit-image==0.24.0
+scikit-learn==1.7.2
+nibabel==5.4.2
+timm==1.0.29
+PyYAML==6.0.3
+matplotlib==3.10.9
+tqdm==4.70.0
+pytest==9.1.1
+# CUTS (PHATE) stack, as recorded by the CUTS P0 environment evidence.
+phate==2.0.0
+graphtools==2.1.0
+tasklogger==1.2.0
+PyGSP==0.6.1
+sewar==0.4.8
+# Image I/O for the native GT firewall and DSS-US/SGSCN, as verified by the native milestone.
+opencv-python==4.10.0.84
+pillow==10.4.0
+# Non-numerical runtime utilities imported by Self-Audit core; no repository version pin exists,
+# so the resolver's selection at lock time is recorded in the lock files.
+psutil
+wandb

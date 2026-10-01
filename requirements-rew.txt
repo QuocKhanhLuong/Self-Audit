@@ -1,8 +1,5 @@
-# Keep the existing CUDA-compatible PyTorch installation on the rental host.
-torch>=2.4
-timm>=1.0,<2
-numpy>=1.26
-nibabel>=5.2
-PyYAML>=6.0
-tqdm>=4.66
-psutil>=5.9
+# REW runs are Self-Audit core consumers of the canonical environment
+# (self-audit-canonical v1: Python 3.10, torch 2.4.1 + CUDA 12.1, NumPy 1.26.4).
+# Do not keep an arbitrary host PyTorch; install this lock into a fresh environment.
+# See environments/README.md.
+-r environments/self-audit-canonical/requirements-cu121.lock

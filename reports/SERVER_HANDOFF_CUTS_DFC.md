@@ -298,6 +298,15 @@ the runner adapter path and the bound source hashes (spatial.py and both
 runners) differ. Runner `--adapter-spec` defaults point at v12. Wherever the
 sections below say v10 or v11, use the v12 paths for new runs.
 
+Official CUTS/DFC commands run only in the canonical Self-Audit environment
+(`environments/README.md`; GPU: `requirements-cu121.lock`, check with
+`python scripts/check_environment.py --variant cu121`). Launch the unchanged
+freeze-bound runners through the environment gate so the run records its
+environment identity:
+`python scripts/run_in_official_environment.py --variant cu121 --provenance-out <run_dir>/environment.json -- scripts/run_cuts_scientific.py ...`
+(likewise `run_dfc_scientific.py`). The v10 full-run receipts record Python 3.8.20 /
+NumPy 1.24.4, which is not the canonical environment.
+
 v10 and v11 are retained unchanged as immutable historical freezes. Their
 validators check the bound repository files against their original source
 snapshots (`8937fe7` and `35ac4bd`), never against the current checkout;

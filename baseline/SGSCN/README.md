@@ -7,7 +7,7 @@ The PH2/SYSU-US paper profiles intentionally return BLOCKED_PROTOCOL.
 Executable *_official_reference profiles support local verification only;
 they do not establish paper reproduction or select an ACDC protocol.
 
-From repository root, with Python 3.12 and this package's environment:
+From repository root, in the canonical environment (environments/self-audit-canonical):
 ~~~
 python baseline/SGSCN/scripts/run_native.py --config baseline/SGSCN/config/native/ph2_paper.yaml --check-protocol
 python baseline/SGSCN/scripts/run_native.py --config baseline/SGSCN/config/native/ph2_official_reference.yaml --images-manifest /path/to/image_inventory.json --image-root /path/to/image_only_staging --output /new/output/raw --seed 1 --device cpu --threads 2

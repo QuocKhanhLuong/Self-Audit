@@ -1,10 +1,4 @@
-# Independent mask-free pipeline; no pretrained model or supervised teacher.
-# Target: Python 3.10+, PyTorch 2.4.1+ (install appropriate CUDA wheel separately).
-torch>=2.4.1
-numpy>=1.24
-scipy>=1.10
-nibabel>=5.1
-PyYAML>=6.0
-tqdm>=4.66
-# W&B is optional; wandb_mode=disabled does not require it.
-wandb>=0.17
+# The mask-free pipeline is a Self-Audit core consumer of the canonical environment
+# (self-audit-canonical v1). GPU hosts use the CUDA 12.1 lock; CPU-only checks use
+# environments/self-audit-canonical/requirements-cpu.lock. See environments/README.md.
+-r environments/self-audit-canonical/requirements-cu121.lock
