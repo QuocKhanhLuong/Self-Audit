@@ -47,3 +47,8 @@ class DinoKeys:
         qkv = saved[0].reshape(batch, tokens, 3, heads, triple_width // (3 * heads))
         keys = qkv[:, 1:, 1].reshape(batch, tokens - 1, triple_width // 3)
         return keys.cpu().numpy(), (tensor.shape[-2] // 8, tensor.shape[-1] // 8)
+
+    @torch.no_grad()
+    def embedding(self, tensor):
+        """DINO output embedding (normalised [CLS] token) of an image or crop tensor [1,3,H,W]."""
+        return self.model(tensor.to(self.device)).squeeze(0).cpu().numpy()

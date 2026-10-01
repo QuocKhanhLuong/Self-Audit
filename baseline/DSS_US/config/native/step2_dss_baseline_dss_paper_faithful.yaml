@@ -87,16 +87,6 @@
         "nearest"
       ]
     },
-    "crf_backend": {
-      "value": null,
-      "status": "PAPER_UNSPECIFIED",
-      "source": "dense CRF [13] implementation not stated; none in self-audit-canonical v1"
-    },
-    "crf_parameters": {
-      "value": null,
-      "status": "PAPER_UNSPECIFIED",
-      "source": "CRF weights/kernel widths/iterations not stated (official configs conflict)"
-    },
     "camus_input_conversion": {
       "value": null,
       "status": "PAPER_UNSPECIFIED",
@@ -167,13 +157,25 @@
     }
   },
   "gates": {
-    "producer": [
-      "End-to-end CAMUS runner is not wired for paper-faithful profiles (algorithm functions only; no dense-CRF backend in self-audit-canonical v1)"
-    ],
+    "producer": [],
     "native_track_b": [
       "Step II evaluated stage unresolved (semantic segmaps vs crf_segmaps; Table 2 has no CRF mark)",
       "Label-consistency metric computation (ties, std aggregation) unresolved"
     ]
   },
-  "native_evaluator_spec_sha256": "3b5babd984eb9c5becfb8e12e55acdfffb91528849d4b822cbc3f04103fc2002"
+  "native_evaluator_spec_sha256": "3b5babd984eb9c5becfb8e12e55acdfffb91528849d4b822cbc3f04103fc2002",
+  "conditional_values": {
+    "crf_backend": {
+      "value": null,
+      "status": "PAPER_UNSPECIFIED",
+      "source": "dense CRF [13] implementation not stated; none in self-audit-canonical v1",
+      "required_when": "step2_crf_applied == true"
+    },
+    "crf_parameters": {
+      "value": null,
+      "status": "PAPER_UNSPECIFIED",
+      "source": "CRF weights/kernel widths/iterations not stated (official configs conflict)",
+      "required_when": "step2_crf_applied == true"
+    }
+  }
 }

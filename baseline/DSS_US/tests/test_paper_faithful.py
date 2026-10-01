@@ -112,7 +112,12 @@ def test_paper_faithful_profiles_encode_the_paper_rows_and_stay_blocked():
         assert all(entry["value"] is None for entry in config["paper_unspecified"].values())
         with pytest.raises(ProtocolBlocked) as error:
             load_lock(path)
-        assert any("crf_parameters" in reason for reason in error.value.reasons)
+        reasons = " ".join(error.value.reasons)
+        if config["stage"] == "I":  # paper Table 1 CRF; official dependency is source-only
+            assert "simplecrf==0.2.1.1" in reasons and "crf_parameters" in reasons
+        else:  # Step II CRF is conditional (Table 2 carries no CRF mark)
+            assert "crf_parameters" not in config["paper_unspecified"] and "crf_parameters" in config["conditional_values"]
+            assert "semantic_clusters" in reasons
         if config["stage"] == "I":
             assert load_lock(path, purpose="native_track_b")["native_track_b"]["n_classes"] == 4
         else:

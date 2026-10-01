@@ -142,3 +142,160 @@ def step2_semantic(images_and_partitions, settings, *, phi_image, phi_mask=None,
                                             c_mask=float(_require(settings, "c_mask")),
                                             c_position=float(_require(settings, "c_position_embedding")))
     return semantic_cluster(features, inventory, clusters=int(_require(settings, "semantic_clusters")), **_kmeans(settings))
+
+
+# ---------------------------------------------------------------------------
+# Official-pipeline fallbacks (OFFICIAL_CODE_FALLBACK), independently implemented
+# from the documented behaviour of alexaatm/UnsupervisedSegmentor4Ultrasound@d4ac44c
+# (deep-spectral-segmentation/extract). Used only when a profile declares them.
+# ---------------------------------------------------------------------------
+STEP2_OFFICIAL = {"erode": 2, "dilate": 5, "min_crop": 8, "batch_size": 4096, "max_iter": 5000, "n_init": 10}
+
+
+def infer_background_relabel(segmap):
+    """Segment covering the largest share of the image border becomes label 0 (labels swapped)."""
+    segmap = np.array(segmap, copy=True)
+    border = np.concatenate([segmap[:, 0], segmap[:, -1], segmap[0, :], segmap[-1, :]])
+    ids, counts = np.unique(border, return_counts=True)
+    present = np.unique(segmap)
+    totals = np.array([counts[ids == i].sum() if i in ids else 0 for i in present])
+    background = int(present[int(np.argmax(totals))])
+    swapped = segmap.copy()
+    swapped[segmap == background] = 0
+    swapped[segmap == 0] = background
+    return swapped
+
+
+def presegment(keys, gray, grid_hw, settings):
+    """Step I eigensegments at patch resolution (before upscaling and CRF), background relabelled."""
+    weights = step1_affinity(keys, gray, grid_hw, settings)
+    labels, fit = oversegment(weights, grid_hw, dimensions=int(_require(settings, "eigenvectors")),
+                              discard_first=bool(_require(settings, "discard_trivial_eigenvector", {True, False})),
+                              normalize_rows=bool(_require(settings, "normalize_embedding_rows", {True, False})),
+                              clusters=STEP1_SEGMENTS, **_kmeans(settings))
+    return infer_background_relabel(labels), fit
+
+
+def _morph(mask, steps, erode):
+    from skimage.morphology import binary_dilation, binary_erosion
+    operation = binary_erosion if erode else binary_dilation
+    for _ in range(steps):
+        updated = operation(mask)
+        if updated.sum() > 0:  # never erode a mask away completely
+            mask = updated
+    return mask
+
+
+def official_segment_boxes(segmap):
+    """(segment id, (ymin, ymax, xmin, xmax)) at patch resolution; background 0 skipped."""
+    boxes = []
+    for segment_id in sorted(int(s) for s in np.unique(segmap)):
+        if segment_id == 0:
+            continue
+        mask = _morph(segmap == segment_id, STEP2_OFFICIAL["erode"], True)
+        mask = _morph(mask, STEP2_OFFICIAL["dilate"], False)
+        rows, cols = np.nonzero(mask)
+        boxes.append((segment_id, (int(rows.min()), int(rows.max()) + 1, int(cols.min()), int(cols.max()) + 1)))
+    return boxes
+
+
+def _official_pad(crop):
+    import torch.nn.functional as F
+    _, _, height, width = crop.shape
+    target = STEP2_OFFICIAL["min_crop"]
+    pad_h = max(max(0, target - height), target)
+    pad_w = max(max(0, target - width), target)
+    return F.pad(crop, (0, pad_w, 0, pad_h), mode="constant", value=0)
+
+
+def step2_dss_official(items, settings, *, embed):
+    """DSS step2 over the fit cohort. items: [(sample_id, image_tensor [1,3,H,W], segmap at patch grid)].
+
+    Returns {sample_id: semantic map at patch resolution} and the clustering receipt.
+    """
+    from sklearn.cluster import MiniBatchKMeans
+    if _require(settings, "step2_variant", {"dss_step2", "ours_step2"}) != "dss_step2":
+        raise ProtocolSettingError("only DSS step2 is wired in the paper-faithful runner")
+    if _require(settings, "step2_crf_applied", {True, False}):
+        raise ProtocolSettingError("Step II CRF requested but no dense-CRF backend exists in the canonical environment")
+    rows, index = [], []
+    for sample_id, tensor, segmap in items:
+        for segment_id, (top, bottom, left, right) in official_segment_boxes(segmap):
+            crop = tensor[:, :, top * PATCH_SIZE:bottom * PATCH_SIZE, left * PATCH_SIZE:right * PATCH_SIZE]
+            if crop.shape[-2] < STEP2_OFFICIAL["min_crop"] or crop.shape[-1] < STEP2_OFFICIAL["min_crop"]:
+                crop = _official_pad(crop)
+            rows.append(np.asarray(embed(crop), dtype=np.float64))
+            index.append((sample_id, segment_id))
+    if not rows:
+        raise ValueError("no foreground segments in the fit cohort")
+    features = np.stack(rows)
+    features = features / np.linalg.norm(features, axis=1, keepdims=True)
+    clusters = MiniBatchKMeans(n_clusters=int(_require(settings, "semantic_clusters")),
+                               batch_size=STEP2_OFFICIAL["batch_size"], max_iter=STEP2_OFFICIAL["max_iter"],
+                               random_state=int(_require(settings, "kmeans_seed")),
+                               n_init=STEP2_OFFICIAL["n_init"]).fit_predict(features)
+    assignment = {}
+    for (sample_id, segment_id), cluster in zip(index, clusters):
+        assignment.setdefault(sample_id, {})[segment_id] = int(cluster)
+    outputs = {}
+    for sample_id, _tensor, segmap in items:
+        mapping = {0: 0, **assignment.get(sample_id, {})}
+        outputs[sample_id] = np.vectorize(mapping.__getitem__)(segmap).astype(np.int32)
+    return outputs, {"segments": len(index), "clusters": int(_require(settings, "semantic_clusters"))}
+
+
+def official_resize_to_image(labels, image_hw):
+    """Nearest-neighbour resize of a label map to the image grid (cv2.INTER_NEAREST)."""
+    import cv2
+    height, width = image_hw
+    return cv2.resize(np.asarray(labels, dtype=np.uint8 if labels.max() < 256 else np.int32),
+                      dsize=(width, height), interpolation=cv2.INTER_NEAREST).astype(np.int32)
+
+
+def dss_settings(config):
+    settings = dict(config["scientific"])
+    for group in ("paper_unspecified", "implementation_conventions"):
+        settings.update({name: entry.get("value") for name, entry in config.get(group, {}).items()})
+    return settings
+
+
+OFFICIAL_PHI_IMAGE = "dino_vits8_output_embedding_of_imagenet_normalised_bbox_crop"
+OFFICIAL_DSS_STEP2 = "official_bbox_pipeline_v1"
+DINO_INPUT_POLICY = "rgb_totensor_imagenet_crop_to_patch_multiple"
+
+
+def validate_dss_step2_settings(settings):
+    """Pre-flight check for the wired Step II (DSS step2) path; fails before any data access."""
+    _require(settings, "dino_input_policy", {DINO_INPUT_POLICY})
+    _require(settings, "feature_l2_normalization", {True, False})
+    for name in ("eigenvectors", "semantic_clusters"):
+        if int(_require(settings, name)) < 1:
+            raise ProtocolSettingError(f"{name} must be positive")
+    _require(settings, "discard_trivial_eigenvector", {True, False})
+    _require(settings, "normalize_embedding_rows", {True, False})
+    _require(settings, "upscale_method", UPSCALE_METHODS)
+    _kmeans(settings)
+    if _require(settings, "step2_variant", {"dss_step2", "ours_step2"}) != "dss_step2":
+        raise ProtocolSettingError("Ours step2 embeddings (phi_mask, phi_position, C_mask, C_position) are not wired")
+    if _require(settings, "step2_crf_applied", {True, False}):
+        raise ProtocolSettingError("Step II CRF requested but no dense-CRF backend exists in the canonical environment")
+    _require(settings, "phi_image", {OFFICIAL_PHI_IMAGE})
+    _require(settings, "dss_step2_definition", {OFFICIAL_DSS_STEP2})
+    if settings.get("preprocessing"):
+        method = _require(settings, "preprocessing_method",
+                          {"histogram_equalization", "gaussian_blur", "histogram_equalization+gaussian_blur"})
+        parameters = _require(settings, "preprocessing_parameters")
+        if "gaussian_blur" in method and not {"gaussian_kernel", "gaussian_sigma"} <= set(parameters):
+            raise ProtocolSettingError("gaussian_blur requires gaussian_kernel and gaussian_sigma")
+    if settings.get("ultrasound_affinities"):
+        for name in ("c_ssd", "c_mi", "c_pos", "patch_intensity_scale"):
+            _require(settings, name)
+        if settings["c_ssd"]:
+            _require(settings, "delta_ssd")
+        if settings["c_mi"]:
+            for name in ("delta_mi", "mi_bins", "mi_intensity_range"):
+                _require(settings, name)
+        if settings["c_pos"]:
+            _require(settings, "positional_knn_k")
+            _require(settings, "positional_symmetrization", SYMMETRIZATIONS)
+    return settings
