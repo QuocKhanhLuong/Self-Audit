@@ -145,7 +145,8 @@ def test_profiles_are_separate_and_differ_where_the_evidence_says():
         assert faithful["scientific"]["momentum"] == reference["scientific"]["momentum"] == 0.9
         assert faithful["scientific"]["conv_layers"] == 3 and reference["scientific"]["n_conv"] == 2
         assert reference["scientific"]["max_iterations"] == 50 and reference["scientific"]["min_labels"] == 3
-        assert faithful["implementation_conventions"]["max_iterations"]["value"] is None
+        assert faithful["conditional_values"]["max_iterations"]["value"] is None
+        assert faithful["implementation_conventions"]["stopping_rule"]["value"] is None
         assert "min_labels" not in faithful["scientific"]
         with pytest.raises(ProtocolBlocked) as error:
             load_lock(CONFIGS / f"{name}_paper_faithful.yaml")
@@ -157,7 +158,7 @@ def _instantiated_profile(tmp_path):
     config_dir = tmp_path / "config" / "native"
     shutil.copytree(CONFIGS, config_dir)
     values = {name: {"value": value, "source": "unit-test user choice"} for name, value in FILLED.items()
-              if name not in {"stopping_rule", "weight_decay"}}
+              if name != "weight_decay"}
     spec = __import__("importlib").util.spec_from_file_location("instantiate", ROOT / "scripts/instantiate_native_profile.py")
     tool = __import__("importlib").util.module_from_spec(spec)
     spec.loader.exec_module(tool)
@@ -197,9 +198,68 @@ def test_instantiated_profile_runs_end_to_end_with_paper_faithful_provenance(tmp
     assert result.returncode == 0, result.stderr
     raw = verify_raw_run(output)
     assert raw["run"]["provenance"]["implementation_kind"] == "paper_faithful_reimplementation"
-    assert raw["run"]["provenance"]["profile_class"] == "PAPER_FAITHFUL_REIMPLEMENTATION"
+    assert raw["run"]["provenance"]["profile_class"] == "PAPER_FAITHFUL_WITH_DECLARED_CONVENTIONS"
     assert raw["run"]["config"]["profile"] == "ph2_paper_faithful_unit_test"
     blocked = subprocess.run([sys.executable, str(BASE / "scripts/run_native.py"), "--config",
                               str(CONFIGS / "ph2_paper_faithful.yaml"), "--check-protocol"],
                              capture_output=True, text=True, timeout=60)
     assert blocked.returncode == 2 and "layer_order" in blocked.stdout
+
+
+def test_official_stopping_fallback_checks_preupdate_labels_after_the_update():
+    image = np.random.default_rng(2).integers(0, 256, (8, 8, 3), dtype=np.uint8)
+    official = settings(stopping_rule="official_max_iterations_min_labels", max_iterations=5, min_labels=100)
+    _, receipt = pf.predict_paper_faithful(image, official, seed=1)
+    assert receipt["stop_rule"] == "official_max_iterations_min_labels"
+    assert receipt["iterations"] == 1 and receipt["stop_reason"] == "min_labels"  # count <= 100 after one update
+    with pytest.raises(pf.ProtocolSettingError, match="min_labels"):
+        pf.validate_settings(settings(stopping_rule="official_max_iterations_min_labels", min_labels=None))
+
+
+def test_paper_constants_are_locked():
+    with pytest.raises(pf.ProtocolSettingError, match="filters"):
+        pf.validate_settings(settings(filters=64))
+    config = json.loads((CONFIGS / "ph2_paper_faithful_declared_conventions.yaml").read_text())
+    config["scientific"]["learning_rate"] = 0.05
+    with pytest.raises(pf.ProtocolSettingError, match="learning rate"):
+        pf.settings_from_config(config)
+
+
+def test_softmax_density_is_exact_and_free_of_underflow():
+    s_hat = torch.randn(100, 6, 7) * 60  # large logits underflow a naive float32 softmax
+    weights = pf._cluster_weights(s_hat, settings(context_density="channel_softmax"))
+    torch.testing.assert_close(weights.sum(dim=(1, 2)), torch.ones(100), atol=1e-4, rtol=0)
+    reference = torch.softmax(s_hat.double(), 0)
+    reference = reference / reference.sum(dim=(1, 2), keepdim=True)
+    torch.testing.assert_close(weights.double(), reference, atol=1e-6, rtol=1e-4)
+
+
+@pytest.mark.parametrize("name,dataset", [("ph2", "PH2"), ("sysu_us", "SYSU-US")])
+def test_declared_convention_profiles_are_runnable_end_to_end(tmp_path, name, dataset):
+    import cv2
+    path = CONFIGS / f"{name}_paper_faithful_declared_conventions.yaml"
+    config = load_lock(path)
+    assert config["profile_class"] == "PAPER_FAITHFUL_WITH_DECLARED_CONVENTIONS"
+    assert config["paper_equivalence"].startswith("NOT_EXACT_PAPER_REPRODUCTION")
+    for group in ("paper_unspecified", "implementation_conventions"):
+        for field, entry in config[group].items():
+            assert entry["status"].split(" ")[0] in {"IMPLEMENTATION_CONVENTION", "OFFICIAL_CODE_FALLBACK"}, field
+    staging = tmp_path / "images"
+    staging.mkdir()
+    yy, xx = np.mgrid[:24, :28]
+    image = np.where(((yy - 12) ** 2 + (xx - 14) ** 2 < 36)[..., None], 80, 200).astype(np.uint8).repeat(3, axis=2)
+    cv2.imwrite(str(staging / "s1.png"), image)
+    manifest = {"schema": "medical-native.image-only.v1", "dataset": dataset, "records": [
+        {"sample_id": "s1", "role": "image", "image_path": str(staging / "s1.png"),
+         "image_sha256": hashlib.sha256((staging / "s1.png").read_bytes()).hexdigest()}]}
+    (tmp_path / "inventory.json").write_text(json.dumps(manifest))
+    result = subprocess.run([sys.executable, str(BASE / "scripts/run_native.py"), "--config", str(path),
+                             "--images-manifest", str(tmp_path / "inventory.json"), "--image-root", str(staging),
+                             "--output", str(tmp_path / "raw"), "--seed", "1", "--threads", "1"],
+                            capture_output=True, text=True, timeout=180)
+    assert result.returncode == 0, result.stderr
+    raw = verify_raw_run(tmp_path / "raw")
+    provenance = raw["run"]["provenance"]
+    assert provenance["profile_class"] == "PAPER_FAITHFUL_WITH_DECLARED_CONVENTIONS"
+    assert provenance["implementation_kind"] == "paper_faithful_reimplementation"
+    assert raw["run"]["image_manifest_sha256"]  # SYSU-US cohort supplied at runtime is recorded here

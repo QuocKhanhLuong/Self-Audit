@@ -23,6 +23,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from shared_benchmark.native_protocol import value_hash  # noqa: E402
 
 GROUPS = ("paper_unspecified", "implementation_conventions", "conditional_values", "required_data")
+VALUE_STATUSES = {"USER_SUPPLIED", "IMPLEMENTATION_CONVENTION", "OFFICIAL_CODE_FALLBACK", "BLOCKED_DATA_SUPPLIED_AT_RUNTIME"}
 
 
 def instantiate(base_path: Path, values: dict, profile: str) -> Path:
@@ -49,10 +50,16 @@ def instantiate(base_path: Path, values: dict, profile: str) -> Path:
             raise ValueError(f"{name}: supply {{'value': ..., 'source': '...'}}")
         if supplied["value"] is None:
             raise ValueError(f"{name}: value must not be null")
-        entry.update({"value": supplied["value"], "status": f"USER_SUPPLIED ({entry.get('status')})",
-                      "user_source": supplied["source"]})
+        status = supplied.get("status", "USER_SUPPLIED")
+        if status not in VALUE_STATUSES:
+            raise ValueError(f"{name}: status must be one of {sorted(VALUE_STATUSES)}")
+        entry.update({"value": supplied["value"], "status": f"{status} (declared for {entry.get('status')})",
+                      "value_source": supplied["source"]})
     derived["profile"] = profile
     derived["derived_from"] = {"profile": base["profile"], "config_sha256": value_hash(base)}
+    if base.get("profile_class") == "PAPER_FAITHFUL_REIMPLEMENTATION":
+        derived["profile_class"] = "PAPER_FAITHFUL_WITH_DECLARED_CONVENTIONS"
+        derived["paper_equivalence"] = "NOT_EXACT_PAPER_REPRODUCTION (declared conventions/fallbacks)"
     target.write_text(json.dumps(derived, indent=2) + "\n", encoding="utf-8")
     index[target.name] = value_hash(derived)
     index_path.write_text(json.dumps(dict(sorted(index.items())), indent=2) + "\n", encoding="utf-8")

@@ -2,10 +2,10 @@
   "schema": "medical-native.protocol.v1",
   "method": "SGSCN",
   "dataset": "SYSU-US",
-  "profile": "sysu_us_paper_faithful",
+  "profile": "sysu_us_paper_faithful_declared_conventions",
   "implementation": "paper_faithful_reimplementation",
-  "profile_class": "PAPER_FAITHFUL_REIMPLEMENTATION",
-  "paper_equivalence": "PAPER_FAITHFUL_WITH_DECLARED_GAPS",
+  "profile_class": "PAPER_FAITHFUL_WITH_DECLARED_CONVENTIONS",
+  "paper_equivalence": "NOT_EXACT_PAPER_REPRODUCTION (declared conventions/fallbacks)",
   "scientific": {
     "conv_layers": 3,
     "kernel_size": 3,
@@ -60,63 +60,69 @@
   },
   "paper_unspecified": {
     "layer_order": {
-      "value": null,
-      "status": "PAPER_UNSPECIFIED",
+      "value": "conv_relu_bn",
+      "status": "OFFICIAL_CODE_FALLBACK (declared for PAPER_UNSPECIFIED)",
       "source": "section 3.2 lists ReLU and batch normalisation per layer without an order",
       "options": [
         "conv_relu_bn (also OFFICIAL_CODE_FALLBACK)",
         "conv_bn_relu"
-      ]
+      ],
+      "value_source": "osmond332/Spatial_Guided_Self_Supervised_Clustering@592efb6e72ceeef15c8be0630a4673eda5dce6f5 demo_final.py CSNet applies conv -> ReLU -> BN; compatible with the paper's per-layer 'ReLU activation and batch normalisation'"
     },
     "output_normalization": {
-      "value": null,
-      "status": "PAPER_UNSPECIFIED",
+      "value": "final_batchnorm",
+      "status": "OFFICIAL_CODE_FALLBACK (declared for PAPER_UNSPECIFIED)",
       "source": "section 2.2 'zero mean and unit variance' without the statistic axes",
       "options": [
         "final_batchnorm",
         "per_channel_standardization",
         "global_standardization"
-      ]
+      ],
+      "value_source": "osmond332/Spatial_Guided_Self_Supervised_Clustering@592efb6e72ceeef15c8be0630a4673eda5dce6f5 demo_final.py CSNet bn3 normalises the output map; the paper's zero-mean/unit-variance S_hat"
     },
     "context_density": {
-      "value": null,
-      "status": "PAPER_UNSPECIFIED",
+      "value": "channel_softmax",
+      "status": "IMPLEMENTATION_CONVENTION (declared for PAPER_UNSPECIFIED)",
       "source": "Eqs. 3-4 treat the signed, zero-mean S_hat as a probability distribution",
       "options": [
         "literal_normalized_map",
         "channel_softmax",
         "epsilon_shift (OFFICIAL_CODE_FALLBACK)"
-      ]
+      ],
+      "value_source": "paper Eqs. 3-4 transform each cluster into a spatial probability distribution; per-pixel softmax over clusters normalised over pixels is a valid distribution (computed exactly in log space). The official S_hat + 1e-3 shift is not used: on the zero-mean map its weights are signed, so it is not a distribution (OFFICIAL_CODE_FALLBACK rejected as incompatible with the paper)."
     },
     "input_encoding": {
-      "value": null,
-      "status": "PAPER_UNSPECIFIED",
+      "value": "bgr_unit_interval",
+      "status": "OFFICIAL_CODE_FALLBACK (declared for PAPER_UNSPECIFIED)",
       "source": "paper does not state input channels, colour order or intensity scaling",
       "options": [
         "rgb_unit_interval",
         "bgr_unit_interval (OFFICIAL_CODE_FALLBACK)",
         "grayscale_unit_interval"
-      ]
+      ],
+      "value_source": "osmond332/Spatial_Guided_Self_Supervised_Clustering@592efb6e72ceeef15c8be0630a4673eda5dce6f5 demo_final.py cv2.imread BGR / 255"
     }
   },
   "implementation_conventions": {
     "stopping_rule": {
-      "value": null,
-      "status": "IMPLEMENTATION_CONVENTION",
+      "value": "official_max_iterations_min_labels",
+      "status": "OFFICIAL_CODE_FALLBACK (declared for IMPLEMENTATION_CONVENTION)",
       "source": "section 2.6 'until the clustering and the loss become stable' gives no criterion",
       "options": [
         "stable_label_count_and_relative_loss (IMPLEMENTATION_CONVENTION)",
         "official_max_iterations_min_labels (OFFICIAL_CODE_FALLBACK)"
-      ]
+      ],
+      "value_source": "osmond332/Spatial_Guided_Self_Supervised_Clustering@592efb6e72ceeef15c8be0630a4673eda5dce6f5 demo_final.py --maxIter/--minLabels loop; the paper's 'until stable' gives no criterion"
     },
     "final_forward_mode": {
-      "value": null,
-      "status": "IMPLEMENTATION_CONVENTION",
+      "value": "train",
+      "status": "OFFICIAL_CODE_FALLBACK (declared for IMPLEMENTATION_CONVENTION)",
       "source": "batch-normalisation mode of the final forward pass",
       "options": [
         "train",
         "eval"
-      ]
+      ],
+      "value_source": "osmond332/Spatial_Guided_Self_Supervised_Clustering@592efb6e72ceeef15c8be0630a4673eda5dce6f5 demo_final.py final forward with the model left in train mode"
     },
     "initialization": {
       "value": "pytorch_default",
@@ -151,10 +157,11 @@
       "source": "demo_final.py epsilon = 1e-3 is offered only as a fallback; not part of the paper identity"
     },
     "max_iterations": {
-      "value": null,
-      "status": "IMPLEMENTATION_CONVENTION",
+      "value": 50,
+      "status": "OFFICIAL_CODE_FALLBACK (declared for IMPLEMENTATION_CONVENTION)",
       "required_when": "always (iteration cap)",
-      "source": "safety cap / official maxIter"
+      "source": "safety cap / official maxIter",
+      "value_source": "osmond332/Spatial_Guided_Self_Supervised_Clustering@592efb6e72ceeef15c8be0630a4673eda5dce6f5 demo_final.py --maxIter default 50"
     },
     "stability_patience": {
       "value": null,
@@ -169,21 +176,27 @@
       "source": "convention"
     },
     "min_labels": {
-      "value": null,
-      "status": "OFFICIAL_CODE_FALLBACK",
+      "value": 3,
+      "status": "OFFICIAL_CODE_FALLBACK (declared for OFFICIAL_CODE_FALLBACK)",
       "required_when": "stopping_rule == official_max_iterations_min_labels",
-      "source": "demo_final.py --minLabels"
+      "source": "demo_final.py --minLabels",
+      "value_source": "osmond332/Spatial_Guided_Self_Supervised_Clustering@592efb6e72ceeef15c8be0630a4673eda5dce6f5 demo_final.py --minLabels default 3, checked after the update"
     }
   },
   "required_data": {
     "cohort_inventory": {
-      "value": null,
-      "status": "BLOCKED_DATA",
+      "value": "supplied_at_runtime",
+      "status": "BLOCKED_DATA_SUPPLIED_AT_RUNTIME (declared for BLOCKED_DATA)",
       "source": "section 2.1: random 5 images per sequence without seed or list",
       "options": [
         "64-hex image-inventory SHA-256",
         "supplied_at_runtime (inventory hash recorded in provenance)"
-      ]
+      ],
+      "value_source": "paper's random 5-per-sequence sample is unpublished; each run's image-inventory hash is recorded in provenance"
     }
+  },
+  "derived_from": {
+    "profile": "sysu_us_paper_faithful",
+    "config_sha256": "dcd83f07fee0f9d1e11d8987c27ab2d94793f7f4c5233bf313c8346ac81a44e6"
   }
 }

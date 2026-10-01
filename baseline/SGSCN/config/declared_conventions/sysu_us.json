@@ -1,0 +1,47 @@
+{
+  "layer_order": {
+    "value": "conv_relu_bn",
+    "status": "OFFICIAL_CODE_FALLBACK",
+    "source": "osmond332/Spatial_Guided_Self_Supervised_Clustering@592efb6e72ceeef15c8be0630a4673eda5dce6f5 demo_final.py CSNet applies conv -> ReLU -> BN; compatible with the paper's per-layer 'ReLU activation and batch normalisation'"
+  },
+  "output_normalization": {
+    "value": "final_batchnorm",
+    "status": "OFFICIAL_CODE_FALLBACK",
+    "source": "osmond332/Spatial_Guided_Self_Supervised_Clustering@592efb6e72ceeef15c8be0630a4673eda5dce6f5 demo_final.py CSNet bn3 normalises the output map; the paper's zero-mean/unit-variance S_hat"
+  },
+  "context_density": {
+    "value": "channel_softmax",
+    "status": "IMPLEMENTATION_CONVENTION",
+    "source": "paper Eqs. 3-4 transform each cluster into a spatial probability distribution; per-pixel softmax over clusters normalised over pixels is a valid distribution (computed exactly in log space). The official S_hat + 1e-3 shift is not used: on the zero-mean map its weights are signed, so it is not a distribution (OFFICIAL_CODE_FALLBACK rejected as incompatible with the paper)."
+  },
+  "input_encoding": {
+    "value": "bgr_unit_interval",
+    "status": "OFFICIAL_CODE_FALLBACK",
+    "source": "osmond332/Spatial_Guided_Self_Supervised_Clustering@592efb6e72ceeef15c8be0630a4673eda5dce6f5 demo_final.py cv2.imread BGR / 255"
+  },
+  "stopping_rule": {
+    "value": "official_max_iterations_min_labels",
+    "status": "OFFICIAL_CODE_FALLBACK",
+    "source": "osmond332/Spatial_Guided_Self_Supervised_Clustering@592efb6e72ceeef15c8be0630a4673eda5dce6f5 demo_final.py --maxIter/--minLabels loop; the paper's 'until stable' gives no criterion"
+  },
+  "max_iterations": {
+    "value": 50,
+    "status": "OFFICIAL_CODE_FALLBACK",
+    "source": "osmond332/Spatial_Guided_Self_Supervised_Clustering@592efb6e72ceeef15c8be0630a4673eda5dce6f5 demo_final.py --maxIter default 50"
+  },
+  "min_labels": {
+    "value": 3,
+    "status": "OFFICIAL_CODE_FALLBACK",
+    "source": "osmond332/Spatial_Guided_Self_Supervised_Clustering@592efb6e72ceeef15c8be0630a4673eda5dce6f5 demo_final.py --minLabels default 3, checked after the update"
+  },
+  "final_forward_mode": {
+    "value": "train",
+    "status": "OFFICIAL_CODE_FALLBACK",
+    "source": "osmond332/Spatial_Guided_Self_Supervised_Clustering@592efb6e72ceeef15c8be0630a4673eda5dce6f5 demo_final.py final forward with the model left in train mode"
+  },
+  "cohort_inventory": {
+    "value": "supplied_at_runtime",
+    "status": "BLOCKED_DATA_SUPPLIED_AT_RUNTIME",
+    "source": "paper's random 5-per-sequence sample is unpublished; each run's image-inventory hash is recorded in provenance"
+  }
+}

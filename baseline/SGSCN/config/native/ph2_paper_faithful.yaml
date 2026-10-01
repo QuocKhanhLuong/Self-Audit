@@ -105,24 +105,13 @@
   },
   "implementation_conventions": {
     "stopping_rule": {
-      "value": "stable_label_count_and_relative_loss",
-      "status": "IMPLEMENTATION_CONVENTION",
-      "source": "section 2.6 'until the clustering and the loss become stable'; rule: stop when the active label count is unchanged and the relative loss change is within tolerance for `stability_patience` consecutive iterations"
-    },
-    "max_iterations": {
       "value": null,
       "status": "IMPLEMENTATION_CONVENTION",
-      "source": "safety cap for the stability rule; the official 50-iteration cap is not inherited"
-    },
-    "stability_patience": {
-      "value": null,
-      "status": "IMPLEMENTATION_CONVENTION",
-      "source": "consecutive stable iterations required"
-    },
-    "relative_loss_tolerance": {
-      "value": null,
-      "status": "IMPLEMENTATION_CONVENTION",
-      "source": "relative loss change counted as stable"
+      "source": "section 2.6 'until the clustering and the loss become stable' gives no criterion",
+      "options": [
+        "stable_label_count_and_relative_loss (IMPLEMENTATION_CONVENTION)",
+        "official_max_iterations_min_labels (OFFICIAL_CODE_FALLBACK)"
+      ]
     },
     "final_forward_mode": {
       "value": null,
@@ -164,6 +153,30 @@
       "status": "OFFICIAL_CODE_FALLBACK",
       "required_when": "context_density == epsilon_shift",
       "source": "demo_final.py epsilon = 1e-3 is offered only as a fallback; not part of the paper identity"
+    },
+    "max_iterations": {
+      "value": null,
+      "status": "IMPLEMENTATION_CONVENTION",
+      "required_when": "always (iteration cap)",
+      "source": "safety cap / official maxIter"
+    },
+    "stability_patience": {
+      "value": null,
+      "status": "IMPLEMENTATION_CONVENTION",
+      "required_when": "stopping_rule == stable_label_count_and_relative_loss",
+      "source": "convention"
+    },
+    "relative_loss_tolerance": {
+      "value": null,
+      "status": "IMPLEMENTATION_CONVENTION",
+      "required_when": "stopping_rule == stable_label_count_and_relative_loss",
+      "source": "convention"
+    },
+    "min_labels": {
+      "value": null,
+      "status": "OFFICIAL_CODE_FALLBACK",
+      "required_when": "stopping_rule == official_max_iterations_min_labels",
+      "source": "demo_final.py --minLabels"
     }
   }
 }

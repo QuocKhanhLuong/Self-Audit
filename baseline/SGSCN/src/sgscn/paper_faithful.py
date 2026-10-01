@@ -41,6 +41,13 @@ CONTEXT_DENSITIES = {
     "epsilon_shift": "OFFICIAL_CODE_FALLBACK (S_hat + epsilon, as in demo_final.py)",
 }
 INPUT_ENCODINGS = {"rgb_unit_interval", "bgr_unit_interval", "grayscale_unit_interval"}
+STOPPING_RULES = {
+    "stable_label_count_and_relative_loss": "IMPLEMENTATION_CONVENTION (section 2.6 'until stable')",
+    "official_max_iterations_min_labels": "OFFICIAL_CODE_FALLBACK (demo_final.py maxIter/minLabels)",
+}
+# Values the paper states explicitly (section 3.2); locked for every paper-faithful profile.
+PAPER_CONSTANTS = {"conv_layers": 3, "kernel_size": 3, "stride": 1, "padding": 1, "filters": 100, "momentum": 0.9}
+PAPER_LEARNING_RATE = {"PH2": 0.1, "SYSU-US": 0.05}
 
 
 class ProtocolSettingError(ValueError):
@@ -109,16 +116,26 @@ def _density(s_hat, settings):
     return s_hat + float(_require(settings, "context_epsilon"))
 
 
-def context_consistency_sum(s_hat, settings):
-    """Eqs. 3-4 over pixel coordinates (k = column, l = row); squared Euclidean distance."""
+def _cluster_weights(s_hat, settings):
+    """Per-cluster spatial weights density / sum(density) used by Eqs. 3-4."""
+    if _require(settings, "context_density", CONTEXT_DENSITIES) == "channel_softmax":
+        # Exact log-domain evaluation of softmax_c / sum_kl softmax_c (avoids float underflow,
+        # which is not a property of the definition: softmax probabilities are never zero).
+        log_p = torch.log_softmax(s_hat, dim=0)
+        return torch.exp(log_p - torch.logsumexp(log_p.flatten(1), dim=1).view(-1, 1, 1))
     density = _density(s_hat, settings)
-    _, height, width = s_hat.shape
-    k = torch.arange(width, dtype=s_hat.dtype, device=s_hat.device).view(1, 1, width)
-    l = torch.arange(height, dtype=s_hat.dtype, device=s_hat.device).view(1, height, 1)
     mass = density.sum(dim=(1, 2), keepdim=True)
     if torch.any(mass == 0):
         raise FloatingPointError("context density has zero mass for a cluster; Eq. 3 is undefined (no repair applied)")
-    weights = density / mass
+    return density / mass
+
+
+def context_consistency_sum(s_hat, settings):
+    """Eqs. 3-4 over pixel coordinates (k = column, l = row); squared Euclidean distance."""
+    _, height, width = s_hat.shape
+    k = torch.arange(width, dtype=s_hat.dtype, device=s_hat.device).view(1, 1, width)
+    l = torch.arange(height, dtype=s_hat.dtype, device=s_hat.device).view(1, height, 1)
+    weights = _cluster_weights(s_hat, settings)
     centre_k = (weights * k).sum(dim=(1, 2), keepdim=True)
     centre_l = (weights * l).sum(dim=(1, 2), keepdim=True)
     return (((k - centre_k) ** 2 + (l - centre_l) ** 2) * weights).sum()
@@ -151,12 +168,18 @@ def sample_seed(base_seed, sample_id):
 
 def predict_paper_faithful(image_bgr, settings, *, seed, device="cpu"):
     """Per-image training with the declared stability convention; returns (labels, receipt)."""
+    rule = _require(settings, "stopping_rule", STOPPING_RULES)
     max_iterations = int(_require(settings, "max_iterations"))
-    patience = int(_require(settings, "stability_patience"))
-    tolerance = float(_require(settings, "relative_loss_tolerance"))
+    if rule == "stable_label_count_and_relative_loss":
+        patience = int(_require(settings, "stability_patience"))
+        tolerance = float(_require(settings, "relative_loss_tolerance"))
+        if patience < 1 or tolerance < 0:
+            raise ProtocolSettingError("stopping convention values must be positive")
+    else:
+        min_labels = int(_require(settings, "min_labels"))
     final_mode = _require(settings, "final_forward_mode", {"train", "eval"})
-    if max_iterations < 1 or patience < 1 or tolerance < 0:
-        raise ProtocolSettingError("stopping convention values must be positive")
+    if max_iterations < 1:
+        raise ProtocolSettingError("max_iterations must be positive")
     random.seed(seed); np.random.seed(seed); torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
@@ -174,13 +197,18 @@ def predict_paper_faithful(image_bgr, settings, *, seed, device="cpu"):
             raise FloatingPointError(f"nonfinite paper-faithful loss at iteration {index}; no repair applied")
         loss.backward()
         optimizer.step()
-        count, value = int(torch.unique(labels).numel()), float(loss.detach())
+        count, value = int(torch.unique(labels).numel()), float(loss.detach())  # pre-update labels
+        trajectory.append({"iteration": index, "active_labels": count, "loss": value,
+                           **{name: float(term.detach()) for name, term in terms.items()}})
+        if rule == "official_max_iterations_min_labels":
+            if count <= min_labels:  # checked after the update, as in the official code
+                stop_reason = "min_labels"
+                break
+            continue
         if previous is not None and count == previous[0] and abs(value - previous[1]) <= tolerance * abs(previous[1]):
             stable += 1
         else:
             stable = 0
-        trajectory.append({"iteration": index, "active_labels": count, "loss": value,
-                           **{name: float(term.detach()) for name, term in terms.items()}})
         previous = (count, value)
         if stable >= patience:
             stop_reason = "stable"
@@ -191,7 +219,7 @@ def predict_paper_faithful(image_bgr, settings, *, seed, device="cpu"):
     if not torch.isfinite(final).all():
         raise FloatingPointError("nonfinite final output; no repair applied")
     partition = final.argmax(dim=0).cpu().numpy().astype(np.int32)
-    return partition, {"seed": seed, "iterations": len(trajectory), "stop_reason": stop_reason,
+    return partition, {"seed": seed, "iterations": len(trajectory), "stop_rule": rule, "stop_reason": stop_reason,
                        "final_active_labels": int(len(np.unique(partition))), "trajectory": trajectory,
                        "final_forward_mode": final_mode, "seconds": time.perf_counter() - started,
                        "torch_version": torch.__version__, "device": str(device)}
@@ -199,6 +227,8 @@ def predict_paper_faithful(image_bgr, settings, *, seed, device="cpu"):
 
 def settings_from_config(config):
     """Flatten scientific values and declared field values into runtime settings."""
+    if config["scientific"].get("learning_rate") != PAPER_LEARNING_RATE.get(config["dataset"]):
+        raise ProtocolSettingError("paper-specified learning rate changed for this dataset")
     settings = dict(config["scientific"])
     for group in ("paper_unspecified", "implementation_conventions", "conditional_values"):
         settings.update({name: entry.get("value") for name, entry in config.get(group, {}).items()})
@@ -216,9 +246,15 @@ def validate_settings(settings):
     if _require(settings, "context_density", CONTEXT_DENSITIES) == "epsilon_shift":
         _require(settings, "context_epsilon")
     _require(settings, "input_encoding", INPUT_ENCODINGS)
-    for name in ("max_iterations", "stability_patience", "relative_loss_tolerance"):
-        _require(settings, name)
+    rule = _require(settings, "stopping_rule", STOPPING_RULES)
+    _require(settings, "max_iterations")
+    if rule == "stable_label_count_and_relative_loss":
+        _require(settings, "stability_patience")
+        _require(settings, "relative_loss_tolerance")
+    else:
+        _require(settings, "min_labels")
     _require(settings, "final_forward_mode", {"train", "eval"})
-    if settings.get("stopping_rule") != "stable_label_count_and_relative_loss":
-        raise ProtocolSettingError("unsupported stopping convention")
+    for name, value in PAPER_CONSTANTS.items():
+        if settings.get(name) != value:
+            raise ProtocolSettingError(f"paper-specified value changed: {name} must be {value}")
     return settings

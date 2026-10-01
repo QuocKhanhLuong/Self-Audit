@@ -60,8 +60,8 @@ def main():
     inventory = ImageInventory(args.images_manifest, image_root=args.image_root)
     if inventory.document["dataset"] != config["dataset"]:
         raise ValueError("native dataset/profile mismatch")
-    cohort = config.get("paper_unspecified", {}).get("cohort_inventory")
-    if cohort is not None and cohort.get("value") != inventory.sha256:
+    cohort = config.get("required_data", {}).get("cohort_inventory")
+    if cohort is not None and cohort.get("value") != "supplied_at_runtime" and cohort.get("value") != inventory.sha256:
         raise ValueError("image inventory does not match the profile's declared cohort_inventory hash")
     sources = [*sorted((BASE / "src").rglob("*.py")), Path(__file__),
                ROOT / "src/shared_benchmark/native_artifacts.py", ROOT / "src/shared_benchmark/native_protocol.py",
