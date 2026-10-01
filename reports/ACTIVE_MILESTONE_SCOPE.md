@@ -7,7 +7,7 @@
 | Self-Audit core | `self-audit-canonical` v1 | `scripts/train_self_audit.py`, `train_maskfree.py`, `src/self_audit/training/{train_annotation,train_auditor,finetune_joint}.py`, `scripts/evaluate_external_mnms.py`, `evaluate_maskfree_{epoch,reference}.py`: refuse a non-canonical environment before `main()` |
 | shared_benchmark | `self-audit-canonical` v1 | `scripts/evaluate_cardiac_baseline_reference.py`, `scripts/evaluate_visualize_shared_benchmark.py`: refuse before `main()` |
 | CUTS | `self-audit-canonical` v1 | Training: `cardiac_benchmark.train_stage1` refuses and records the contract via `provenance.environment_identity()`. Generation: `scripts/run_cuts_scientific.py` is bound by the active historical-224 freeze v12, so it runs through `scripts/run_in_official_environment.py` |
-| DSS-US | `self-audit-canonical` v1 | `baseline/DSS_US/scripts/run_native.py`: every profile is BLOCKED_PROTOCOL; a profile that ever becomes executable must pass the environment check before any input, model or output access |
+| DSS-US | `self-audit-canonical` v1 | `baseline/DSS_US/scripts/run_native.py`: refuses a non-canonical environment before any input, model or output access; only the declared-conventions Step II DSS-baseline profile is runnable |
 | SGSCN | `self-audit-canonical` v1 | `baseline/SGSCN/scripts/run_native.py`: refuses before heavy imports; identity in `provenance.environment_contract` |
 
 The environment is defined in `environments/self-audit-canonical/environment.json`
@@ -31,21 +31,22 @@ historical contracts remain part of the shared regression suite.
    `tests/shared_benchmark`, `baseline/CUTS/tests`, `tests/native_baselines`,
    `baseline/SGSCN/tests`, `baseline/DSS_US/tests`.
 3. `scripts/native_protocol_readiness.py` matches the committed readiness receipt
-   `dss_us_sgscn_native_readiness_paper_faithful_20261001.json` (no native gate changed).
+   `dss_us_sgscn_native_readiness_paper_faithful_runnable_20261002.json`.
 4. CUTS: the active historical-224 freeze v12 validates the checkout.
 
-## Native readiness (unchanged)
+## Native readiness by profile class (2026-10-02)
 
-- DSS-US: all 11 CAMUS producer profiles BLOCKED_PROTOCOL (row recipes, CAMUS
-  cohort, CRF parameters, Step II clusters); Step I Track B evaluator
-  EVALUATOR_READY; Step II Track B BLOCKED_PROTOCOL (evaluated stage, label
-  consistency); DINO checkpoint not supplied. Evidence:
-  `dss_us_sgscn_paper_protocol_evidence_20261001.md`.
-- SGSCN: paper profiles BLOCKED_PROTOCOL (architecture, loss reduction/weight,
-  stopping, cohort/input); Track B BLOCKED_PROTOCOL (overlap measure, ties, HM/XOR);
-  official-code reference profiles REFERENCE_READY.
-- PAPER_FAITHFUL_REIMPLEMENTATION profiles (separate from paper reproduction and official
-  reference): SGSCN executable after the user supplies the declared paper-unspecified values and
-  stopping conventions; DSS-US blocked (runner not wired, no CRF backend). See
-  `dss_us_sgscn_paper_faithful_20261001.md`.
-- CAMUS, PH2, SYSU-US: BLOCKED_DATA. Native Track A: BLOCKED_ADAPTER.
+Every profile reports its own class, and the classes are never merged. A paper-faithful profile can be RUNNABLE
+while exact PAPER_REPRODUCTION stays BLOCKED_PROTOCOL.
+
+| Class | DSS-US | SGSCN |
+|---|---|---|
+| PAPER_REPRODUCTION | 11 profiles BLOCKED_PROTOCOL | 2 profiles BLOCKED_PROTOCOL |
+| PAPER_FAITHFUL_REIMPLEMENTATION (templates) | 11 BLOCKED_PROTOCOL (required values) | 2 BLOCKED_PROTOCOL (required values) |
+| PAPER_FAITHFUL_WITH_DECLARED_CONVENTIONS | RUNNABLE: `step2_dss_baseline_dss_paper_faithful_declared_conventions` | RUNNABLE: `ph2_` / `sysu_us_paper_faithful_declared_conventions` |
+| OFFICIAL_REFERENCE | none | RUNNABLE: `ph2_` / `sysu_us_official_reference` |
+
+- Track B: DSS-US Step I (per-image remapped Dice) EVALUATOR_READY. DSS-US Step II and all
+  SGSCN paper metrics are BLOCKED_PROTOCOL (overlap measure, ties, HM/XOR are not defined).
+- CAMUS, PH2, SYSU-US and the DINO ViT-S/8 checkpoint: BLOCKED_DATA. Native Track A: BLOCKED_ADAPTER.
+- Details, declared conventions and fallbacks: `dss_us_sgscn_paper_faithful_runnable_20261002.md`.
