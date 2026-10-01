@@ -281,7 +281,25 @@ resume this checkpoint. DFC has no cross-image checkpoint and must repeat its
 per-image MinL3 optimization. This affects CUTS/DFC only, not training the
 main Self-Audit model.
 
-## Active baseline handoff: v10 historical-224 (2026-09-21)
+## Active baseline handoff: v11 historical-224 (2026-10-01)
+
+v11 supersedes v10 as the active CUTS/DFC freeze after the shared_benchmark
+historical_224/compat_224 merge resolution. Use
+[the v11 freeze](../benchmark_freezes/cardiac_benchmark_v11_historical_224/FREEZE_MANIFEST.json)
+with freeze ID `cardiac-benchmark-v11-historical-224-29f2c31fb0c2261d`. Its
+scientific payload is identical to v10 (same manifest, grid hash
+`6c0d804bbcac3477a0643a8a0061f77cd2821a0f76e005b300fc786c4972157f`, adapter-v2
+spec, split and lineage); only the schema/ID, the v11 script paths, the runner
+adapter path and the bound merged source hashes differ. Runner `--adapter-spec`
+defaults now point at the v11 freeze. Wherever the section below says v10, use
+the v11 paths for new runs.
+
+v10 is retained unchanged as an immutable historical freeze. Its validator
+checks the 26 bound repository files against their original source snapshot
+(commit `8937fe7`), never against the current checkout
+(`--against-worktree` reproduces the strict check, which fails after the merge).
+
+## Superseded baseline handoff: v10 historical-224 (2026-09-21)
 
 Only the CUTS/DFC baseline and shared-baseline support were changed. Core
 Self-Audit remains 256x256, and the existing v6 job/artifacts remain untouched.
