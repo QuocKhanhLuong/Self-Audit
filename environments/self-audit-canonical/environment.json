@@ -1,0 +1,97 @@
+{
+  "schema": "self_audit.environment.v1",
+  "environment_id": "self-audit-canonical",
+  "environment_version": "1",
+  "kind": "canonical_self_audit",
+  "python": {
+    "contract": "CPython 3.10 series (3.10.x)",
+    "series": "3.10",
+    "concrete_lock": "3.10.20",
+    "contract_evidence": {
+      "reports/runtime_hardening/2026-09-10/runtime_runbook.md (9a612485b7ead1273082d7dd52879f8e9e7a3e83)": "declared server target: 'confirm Python 3.10, torch 2.4.1, CUDA 12.1'",
+      "reports/runtime_hardening/2026-09-10/reviewer_gates.md (9a612485b7ead1273082d7dd52879f8e9e7a3e83)": "'the declared Python3.10/PyTorch2.4.1 environment'",
+      "reports/maskfree150/software_environment.json (b8fb0ac5338d6f19af4e66d2211b12c41e6f5413)": "target_runtime 'Python 3.10 / PyTorch 2.4.1'",
+      "environment.yaml (095e05f5fe67d66ffaa60ea78a12aa4f6275514b, pre-standardization)": "python=3.10"
+    },
+    "observed_interpreters": {
+      "3.10.21": "incidental interpreter of the macOS arm64 CPU verification venv /private/tmp/self-audit-torch241 (reports/runtime_hardening/2026-09-10/test_results.json: platform macOS-26.2-arm64); recorded as an observation, never declared as a requirement; not an authoritative pin",
+      "3.10.20": "Linux x86_64 RTX 4070 Self-Audit training runs (wandb/run-20260825_*/files/wandb-metadata.json, 1305692914c8f50f11135d00d9035b4059f297a5: train_annotation.py, train_auditor.py, finetune_joint.py)"
+    },
+    "concrete_lock_rationale": "The authoritative contract is series-level (3.10.x). 3.10.20 is chosen as the concrete lock because it is the interpreter recorded by the project's Linux target-platform training runs and is the newest CPython 3.10 Linux x86_64 build available to the reproducible installer (uv python-build-standalone). The validator enforces the 3.10 series and records the exact micro version in provenance."
+  },
+  "variants": {
+    "cpu": {
+      "lock": "requirements-cpu.lock",
+      "torch_build": "2.4.1+cpu",
+      "torchvision_build": "0.19.1+cpu",
+      "purpose": "official tests, CPU validation and native CPU producers"
+    },
+    "cu121": {
+      "lock": "requirements-cu121.lock",
+      "torch_build": "2.4.1 (PyPI Linux wheel built with CUDA 12.1)",
+      "torchvision_build": "0.19.1",
+      "cuda_runtime": "12.1 (nvidia-cuda-runtime-cu12 12.1.105, nvidia-cudnn-cu12 9.1.0.70)",
+      "driver_requirement": "NVIDIA driver supporting CUDA 12.1 or newer (server: 550.54.14 / CUDA 12.4)",
+      "purpose": "official GPU training and scientific runs"
+    }
+  },
+  "critical_packages": {
+    "torch": "2.4.1",
+    "torchvision": "0.19.1",
+    "numpy": "1.26.4",
+    "scipy": "1.15.3",
+    "scikit-image": "0.24.0",
+    "scikit-learn": "1.7.2",
+    "nibabel": "5.4.2",
+    "timm": "1.0.29",
+    "phate": "2.0.0",
+    "graphtools": "2.1.0",
+    "PyGSP": "0.6.1",
+    "opencv-python": "4.10.0.84",
+    "pillow": "10.4.0"
+  },
+  "evidence": {
+    "primary_reference": {
+      "description": "Runtime-hardening reference environment: full suite 898 tests verified with torch 2.4.1 / NumPy 1.26.4 (observed interpreter CPython 3.10.21 on macOS arm64; the Python contract is the declared 3.10 series); scikit-image 0.24.0 installed into that environment; declared server target Python 3.10, torch 2.4.1, CUDA 12.1.",
+      "files": {
+        "reports/runtime_hardening/2026-09-10/astra_final_report.md": "9a612485b7ead1273082d7dd52879f8e9e7a3e83",
+        "reports/runtime_hardening/2026-09-10/runtime_runbook.md": "9a612485b7ead1273082d7dd52879f8e9e7a3e83",
+        "reports/candidate_c/runtime_review.md": "35aaba9335e0d8a0aa344356e20e93ae902b950d",
+        "tests/test_runtime_amp_resume_review.py": "a6b3a752d2a1732203edc053f0b1889a0f089ebc",
+        "src/self_audit_maskfree/runtime.py": "ccbad25dc8d5fa8bcf1880cfa4965965dd6ed76e",
+        "reports/runtime_hardening/2026-09-10/test_results.json": "9a612485b7ead1273082d7dd52879f8e9e7a3e83",
+        "wandb/run-20260825_025341-kxchort4/files/wandb-metadata.json": "1305692914c8f50f11135d00d9035b4059f297a5"
+      }
+    },
+    "pins": {
+      "python 3.10": "series-level contract: runtime_runbook.md, reviewer_gates.md, software_environment.json, environment.yaml python=3.10; concrete lock 3.10.20 per python.concrete_lock_rationale",
+      "torch 2.4.1": "runtime_review.md, astra_final_report.md, runtime_runbook.md, self_audit_maskfree/runtime.py ('target environment is torch 2.4.1')",
+      "CUDA 12.1": "runtime_runbook.md (CUDA 12.1); environment.yaml pytorch-cuda=12.1",
+      "numpy 1.26.4": "runtime_review.md, astra_final_report.md; environment.yaml numpy=1.26.4; CUTS candidate numpy=1.26.4",
+      "scipy 1.15.3, scikit-learn 1.7.2, nibabel 5.4.2, timm 1.0.29, PyYAML 6.0.3, matplotlib 3.10.9, tqdm 4.70.0, pytest 9.1.1": "runtime_review.md reference interpreter package list",
+      "scikit-image 0.24.0": "astra_final_report.md (installed into the reference environment)",
+      "phate 2.0.0, graphtools 2.1.0, tasklogger 1.2.0, PyGSP 0.6.1, sewar 0.4.8": "baseline/CUTS/benchmark/environments/cuts_p0_local_lock.json (2a76c6f26deed51478d61b32d40be7bfec40eae5)",
+      "opencv-python 4.10.0.84, pillow 10.4.0": "baseline/{DSS_US,SGSCN}/environment/requirements.lock at 4cf909cd3ef8664c6e77cd54239371910a76d92a (native milestone verification)",
+      "torchvision 0.19.1": "release paired with torch 2.4.1; the resolver accepts it with torch==2.4.1 (torchvision 0.19.1 metadata requires torch==2.4.1)",
+      "psutil, wandb and all transitive packages": "no repository pin; resolver selection recorded in the locks (not numerically critical)"
+    }
+  },
+  "consumers": [
+    "Self-Audit core (src/self_audit, src/self_audit_maskfree, scripts/train_self_audit.py)",
+    "shared_benchmark (src/shared_benchmark, tests/shared_benchmark)",
+    "CUTS cardiac benchmark (baseline/CUTS/src/cardiac_benchmark, scripts/run_cuts_scientific.py)",
+    "DSS-US native (baseline/DSS_US) - verified compatible",
+    "SGSCN native (baseline/SGSCN) - verified compatible",
+    "native common infrastructure and tests (tests/native_baselines)"
+  ],
+  "regeneration": "environments/compile_locks.sh (uv pip compile, hashes, Linux x86_64, CPython 3.10)",
+  "portability_only_environments": "Other interpreters (for example NumPy 1.24 / Python 3.8, or NumPy 2.x / Python 3.12) may run regression/portability tests only; they are never official experiment environments.",
+  "out_of_scope_legacy": {
+    "components": [
+      "DFC",
+      "STEGO",
+      "PiCIE"
+    ],
+    "note": "Legacy and outside the active milestone (reports/ACTIVE_MILESTONE_SCOPE.md); not canonical-environment consumers, not verified compatible, not enforced. Their code and artifacts are kept for history."
+  }
+}

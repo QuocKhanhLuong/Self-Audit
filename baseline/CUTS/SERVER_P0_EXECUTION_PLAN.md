@@ -101,6 +101,10 @@ Use the committed candidate:
 benchmark/environments/cuts-cardiac-candidate.yaml
 ```
 
+> **Superseded (environment):** do not create this candidate environment. Official
+> CUTS runs use the canonical Self-Audit environment; see `../../environments/README.md`
+> and validate with `python scripts/check_environment.py` before any run.
+
 ```bash
 conda env create -f benchmark/environments/cuts-cardiac-candidate.yaml
 conda activate cuts-cardiac

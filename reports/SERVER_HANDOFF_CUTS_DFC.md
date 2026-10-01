@@ -2,7 +2,11 @@
 
 ## Scope and stop condition
 
-Scope is CUTS and DFC on the original Self-Audit ACDC data protocol. M&Ms is
+Scope update (2026-10-01): only **CUTS** is in the active milestone. DFC is legacy
+and out of scope (`ACTIVE_MILESTONE_SCOPE.md`); DFC sections below are retained for
+history only and are not required for any official CUTS run.
+
+Original scope: CUTS and DFC on the original Self-Audit ACDC data protocol. M&Ms is
 not run. The current state is
 CODE_AND_STATIC_PREFLIGHT_PASS + CUTS_FULL_TRAINING_PASS +
 CUTS_GENERATION_BENCHMARK_10_PASS; full dev generation/evaluation is pending.
@@ -281,7 +285,41 @@ resume this checkpoint. DFC has no cross-image checkpoint and must repeat its
 per-image MinL3 optimization. This affects CUTS/DFC only, not training the
 main Self-Audit model.
 
-## Active baseline handoff: v11 historical-224 (2026-10-01)
+## Active baseline handoff: v12 historical-224 (2026-10-01)
+
+v12 supersedes v11 as the active CUTS/DFC freeze after the historical-224
+exact-parity fix: `_resize_preprocess_acdc_volume_to_224` now keeps the
+persisted `[H,W,Z]` float32 layout of `scripts/preprocess_acdc.py` and moves
+depth to Z only as a view of it, so the loader's float32 reductions run in
+the historical element order (previously up to ~7e-7 off on NumPy 1.24); the
+source frame is normalized in its native layout first, as in the script. Use
+[the v12 freeze](../benchmark_freezes/cardiac_benchmark_v12_historical_224/FREEZE_MANIFEST.json)
+with freeze ID `cardiac-benchmark-v12-historical-224-1d1ecbb72e49d999`. Its
+scientific payload and all frozen data/config files are identical to v11 (same
+manifest, grid hash `6c0d804bbcac3477a0643a8a0061f77cd2821a0f76e005b300fc786c4972157f`,
+adapter-v2 spec, split and lineage); only the schema/ID, the v12 script paths,
+the runner adapter path and the bound source hashes (spatial.py and both
+runners) differ. Runner `--adapter-spec` defaults point at v12. Wherever the
+sections below say v10 or v11, use the v12 paths for new runs.
+
+Official CUTS/DFC commands run only in the canonical Self-Audit environment
+(`environments/README.md`; GPU: `requirements-cu121.lock`, check with
+`python scripts/check_environment.py --variant cu121`). Launch the unchanged
+freeze-bound runners through the environment gate so the run records its
+environment identity:
+`python scripts/run_in_official_environment.py --variant cu121 --provenance-out <run_dir>/environment.json -- scripts/run_cuts_scientific.py ...`
+CUTS training records and enforces the environment contract itself (through
+`cardiac_benchmark.provenance.environment_identity`); sandboxed launches must also
+bind the repository's `environments/` directory. DFC is out of scope. The v10
+full-run receipts record Python 3.8.20 / NumPy 1.24.4, which is not the canonical
+environment.
+
+v10 and v11 are retained unchanged as immutable historical freezes. Their
+validators check the bound repository files against their original source
+snapshots (`8937fe7` and `35ac4bd`), never against the current checkout;
+`--against-worktree` reproduces the strict check, which fails on newer source.
+
+## Superseded baseline handoff: v11 historical-224 (2026-10-01)
 
 v11 supersedes v10 as the active CUTS/DFC freeze after the shared_benchmark
 historical_224/compat_224 merge resolution. Use

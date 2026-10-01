@@ -1,5 +1,7 @@
 # STEGO in This Repo
 
+> **Legacy / out of scope:** STEGO is not part of the current milestone (2026-10-01); see `LEGACY_OUT_OF_SCOPE.md`. Kept for history only.
+
 This directory serves two roles:
 
 1. It preserves a minimal upstream STEGO source snapshot for provenance and

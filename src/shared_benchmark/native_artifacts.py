@@ -8,6 +8,7 @@ from __future__ import annotations
 import importlib.metadata
 import json
 import os
+import pathlib
 from pathlib import Path
 import platform
 import re
@@ -287,12 +288,20 @@ class ProducerAccessGuard:
             self._check(path, event="access")
             return self.original_access(path, *args, **kwargs)
         os.stat, os.lstat, os.access = guarded_stat, guarded_lstat, guarded_access
+        # Python <= 3.10 pathlib binds os.stat into _NormalAccessor at import time, so
+        # Path.stat/exists/is_file would bypass the os.stat patch above.
+        self.pathlib_accessor = getattr(pathlib, "_NormalAccessor", None)
+        if self.pathlib_accessor is not None:
+            self.original_accessor_stat = self.pathlib_accessor.__dict__["stat"]
+            self.pathlib_accessor.stat = staticmethod(guarded_stat)
         self.active = True
         return self
 
     def __exit__(self, exc_type, *args):
         self.active = False
         os.stat, os.lstat, os.access = self.original_stat, self.original_lstat, self.original_access
+        if self.pathlib_accessor is not None:
+            self.pathlib_accessor.stat = self.original_accessor_stat
         # Existence helpers (os.path.exists, pathlib glob) swallow the denial; fail closed anyway.
         if exc_type is None and any(not row["allowed"] for row in self.log):
             raise NativeContractError("GT firewall: denied filesystem access was suppressed by caller")

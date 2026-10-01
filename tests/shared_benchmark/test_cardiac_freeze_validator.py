@@ -44,6 +44,15 @@ def test_cardiac_freeze_validator_rejects_a_bound_artifact_mutation(tmp_path, fr
 HISTORICAL_224_FREEZES = [
     ("cardiac_benchmark_v10_historical_224", "validate_cardiac_benchmark_v10_historical_224_freeze.py"),
     ("cardiac_benchmark_v11_historical_224", "validate_cardiac_benchmark_v11_historical_224_freeze.py"),
+    ("cardiac_benchmark_v12_historical_224", "validate_cardiac_benchmark_v12_historical_224_freeze.py"),
+]
+ACTIVE_HISTORICAL_224 = ("cardiac_benchmark_v12_historical_224", "validate_cardiac_benchmark_v12_historical_224_freeze.py")
+SUPERSEDED_HISTORICAL_224 = [
+    # (label, freeze, validator, immutable source snapshot, freeze ID)
+    ("v10", "cardiac_benchmark_v10_historical_224", "validate_cardiac_benchmark_v10_historical_224_freeze.py",
+     "8937fe7248a6d4f5bb10530fa0b78817af6a40f8", "cardiac-benchmark-v10-historical-224-7d94c71760a22174"),
+    ("v11", "cardiac_benchmark_v11_historical_224", "validate_cardiac_benchmark_v11_historical_224_freeze.py",
+     "35ac4bd375a4a0fdc60a2cc9a5f9aece17b72d0b", "cardiac-benchmark-v11-historical-224-29f2c31fb0c2261d"),
 ]
 
 
@@ -87,52 +96,56 @@ def test_historical_224_freeze_validator_rejects_a_bound_artifact_mutation(
     assert message in result.stderr
 
 
-def test_v11_is_the_active_freeze_for_the_current_checkout():
+def test_v12_is_the_active_freeze_for_the_current_checkout():
     repo_root = Path(__file__).resolve().parents[2]
-    freeze = repo_root / "benchmark_freezes" / "cardiac_benchmark_v11_historical_224"
+    freeze_name, validator = ACTIVE_HISTORICAL_224
     result = subprocess.run(
-        _historical_command(repo_root, "validate_cardiac_benchmark_v11_historical_224_freeze.py", freeze),
+        _historical_command(repo_root, validator, repo_root / "benchmark_freezes" / freeze_name),
         capture_output=True, text=True,
     )
     assert result.returncode == 0, result.stderr
-    assert json.loads(result.stdout)["freeze_id"].startswith("cardiac-benchmark-v11-historical-224-")
+    assert json.loads(result.stdout)["freeze_id"].startswith("cardiac-benchmark-v12-historical-224-")
     for runner in ("run_cuts_scientific.py", "run_dfc_scientific.py"):
         text = (repo_root / "scripts" / runner).read_text()
-        assert '"cardiac_benchmark_v11_historical_224" / "configs" / "adapter_v2_spec.json"' in text
+        assert f'"{freeze_name}" / "configs" / "adapter_v2_spec.json"' in text
 
 
-def test_v11_rejects_a_mutated_bound_repository_source(tmp_path):
+def test_active_freeze_rejects_a_mutated_bound_repository_source(tmp_path):
     repo_root = Path(__file__).resolve().parents[2]
-    freeze = repo_root / "benchmark_freezes" / "cardiac_benchmark_v11_historical_224"
+    freeze_name, validator = ACTIVE_HISTORICAL_224
+    freeze = repo_root / "benchmark_freezes" / freeze_name
     payload = json.loads((freeze / "FREEZE_MANIFEST.json").read_text())["scientific_payload"]
     repo_copy = tmp_path / "repo"
     for binding in payload["bound_repository_files"]:
         destination = repo_copy / binding["path"]
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(repo_root / binding["path"], destination)
-    bound = repo_copy / "scripts" / "run_dfc_scientific.py"
+    bound = repo_copy / "src" / "shared_benchmark" / "spatial.py"
     bound.write_bytes(bound.read_bytes() + b"# tampered\n")
     result = subprocess.run(
-        [sys.executable, str(repo_root / "scripts" / "validate_cardiac_benchmark_v11_historical_224_freeze.py"),
+        [sys.executable, str(repo_root / "scripts" / validator),
          "--freeze-dir", str(freeze), "--repo-root", str(repo_copy)],
         capture_output=True, text=True,
     )
     assert result.returncode != 0
-    assert "repository hash mismatch: scripts/run_dfc_scientific.py" in result.stderr
+    assert "repository hash mismatch: src/shared_benchmark/spatial.py" in result.stderr
 
 
-def test_v10_is_bound_to_its_source_snapshot_not_the_current_checkout():
+@pytest.mark.parametrize(("label", "freeze_name", "validator", "snapshot", "freeze_id"), SUPERSEDED_HISTORICAL_224)
+def test_superseded_freeze_is_bound_to_its_source_snapshot_not_the_current_checkout(
+    label, freeze_name, validator, snapshot, freeze_id,
+):
     repo_root = Path(__file__).resolve().parents[2]
-    freeze = repo_root / "benchmark_freezes" / "cardiac_benchmark_v10_historical_224"
-    validator = "validate_cardiac_benchmark_v10_historical_224_freeze.py"
-    snapshot = subprocess.run(_historical_command(repo_root, validator, freeze), capture_output=True, text=True)
-    assert snapshot.returncode == 0, snapshot.stderr
-    report = json.loads(snapshot.stdout)
-    assert report["freeze_id"] == "cardiac-benchmark-v10-historical-224-7d94c71760a22174"
+    freeze = repo_root / "benchmark_freezes" / freeze_name
+    result = subprocess.run(_historical_command(repo_root, validator, freeze), capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    report = json.loads(result.stdout)
+    assert report["freeze_id"] == freeze_id
     assert report["repository_binding_mode"] == "source_snapshot"
-    assert report["repository_source_snapshot"] == "8937fe7248a6d4f5bb10530fa0b78817af6a40f8"
+    assert report["repository_source_snapshot"] == snapshot
     assert report["validates_current_checkout_sources"] is False
-    # The merged checkout is not silently accepted as v10's source.
+    assert report["status"] == "IMMUTABLE_HISTORICAL_SUPERSEDED"
+    # Newer source is never silently accepted as the superseded freeze's source.
     worktree = subprocess.run(
         _historical_command(repo_root, validator, freeze, "--against-worktree"), capture_output=True, text=True,
     )
@@ -140,15 +153,17 @@ def test_v10_is_bound_to_its_source_snapshot_not_the_current_checkout():
     assert "repository hash mismatch" in worktree.stderr
 
 
-def test_v10_snapshot_validation_fails_closed_without_the_snapshot(tmp_path):
+@pytest.mark.parametrize(("label", "freeze_name", "validator", "snapshot", "freeze_id"), SUPERSEDED_HISTORICAL_224)
+def test_superseded_snapshot_validation_fails_closed_without_the_snapshot(
+    tmp_path, label, freeze_name, validator, snapshot, freeze_id,
+):
     repo_root = Path(__file__).resolve().parents[2]
-    freeze = repo_root / "benchmark_freezes" / "cardiac_benchmark_v10_historical_224"
     not_a_repository = tmp_path / "no_git"
     not_a_repository.mkdir()
     result = subprocess.run(
-        [sys.executable, str(repo_root / "scripts" / "validate_cardiac_benchmark_v10_historical_224_freeze.py"),
-         "--freeze-dir", str(freeze), "--repo-root", str(not_a_repository)],
+        [sys.executable, str(repo_root / "scripts" / validator),
+         "--freeze-dir", str(repo_root / "benchmark_freezes" / freeze_name), "--repo-root", str(not_a_repository)],
         capture_output=True, text=True,
     )
     assert result.returncode != 0
-    assert "v10 source snapshot unavailable" in result.stderr
+    assert f"{label} source snapshot unavailable" in result.stderr

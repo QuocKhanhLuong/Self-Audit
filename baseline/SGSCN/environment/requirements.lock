@@ -1,6 +1,5 @@
-# Local verified Python 3.12 CPU environment; GPU wheel selection is a separate deployment detail.
-torch==2.11.0
-numpy==1.26.4
-opencv-python==4.10.0.84
-pillow==10.4.0
-pytest==8.3.3
+# This package runs in the canonical Self-Audit environment (self-audit-canonical v1).
+# Verified compatible: all package tests pass under Python 3.10 / torch 2.4.1 / NumPy 1.26.4.
+# The former ad-hoc Python 3.12 / torch 2.11.0 pins (commit 4cf909c) are superseded; no
+# upstream-derived isolated environment is required. See environments/README.md.
+-r ../../../environments/self-audit-canonical/requirements-cpu.lock

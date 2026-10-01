@@ -33,6 +33,9 @@ def main():
         return 0
     if args.images_manifest is None or args.image_root is None or args.output is None or args.threads < 1:
         parser.error("--images-manifest, --image-root, --output and positive --threads required")
+    # Official producer runs only in the pinned canonical environment (fail fast, before heavy imports).
+    from environment_contract import require_official_environment
+    environment = require_official_environment()
     # Warm framework/library imports before the allowlist guard, never a GT evaluator.
     import torch
     import cv2
@@ -44,12 +47,14 @@ def main():
     if inventory.document["dataset"] != config["dataset"]:
         raise ValueError("native dataset/profile mismatch")
     sources = [*sorted((BASE / "src").rglob("*.py")), Path(__file__),
-               ROOT / "src/shared_benchmark/native_artifacts.py", ROOT / "src/shared_benchmark/native_protocol.py"]
+               ROOT / "src/shared_benchmark/native_artifacts.py", ROOT / "src/shared_benchmark/native_protocol.py",
+               ROOT / "src/environment_contract.py"]
     provenance = {"base_seed": args.seed, "seed_policy": "sha256_base_seed_and_inventory_sample_id_v1",
                   "code_files": {str(p.relative_to(ROOT)): file_hash(p) for p in sources},
                   "environment": environment_receipt(), "device": args.device, "threads": args.threads,
                   "implementation_kind": "official_code_reference",
-                  "upstream_commit": "592efb6e72ceeef15c8be0630a4673eda5dce6f5"}
+                  "upstream_commit": "592efb6e72ceeef15c8be0630a4673eda5dce6f5",
+                  "environment_contract": environment}
     output = args.output.resolve()
     if output == inventory.image_root or inventory.image_root in output.parents or output in inventory.image_root.parents:
         raise ValueError("output root must not overlap the image-only staging root")

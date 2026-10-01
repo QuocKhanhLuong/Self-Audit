@@ -580,4 +580,7 @@ def main(argv: Sequence[str] | None = None) -> dict[str, Any]:
 
 
 if __name__ == "__main__":  # pragma: no cover
+    from environment_contract import enforce_official_entrypoint
+
+    enforce_official_entrypoint(__file__)  # official runs require self-audit-canonical v1
     main()
