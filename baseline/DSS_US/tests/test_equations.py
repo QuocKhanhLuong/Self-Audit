@@ -90,12 +90,7 @@ def test_key_hook_excludes_cls_and_flattens_heads():
     assert grid == (2, 2) and keys.shape == (1, 4, 4)
 
 
-def test_step1_evaluator_not_guessed_and_step2_unequal_branch_blocked():
-    spec = importlib.util.spec_from_file_location("step1_evaluator", BASE / "evaluation/track_b/step1.py")
-    step1 = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(step1)
-    with pytest.raises(ProtocolBlocked):
-        step1.per_image_segment_dice(np.array([[1]]), np.array([[1]]))
+def test_step2_matching_primitive_covers_both_resolved_branches():
     spec = importlib.util.spec_from_file_location("step2_evaluator", BASE / "evaluation/track_b/step2.py")
     step2 = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(step2)
@@ -103,8 +98,9 @@ def test_step1_evaluator_not_guessed_and_step2_unequal_branch_blocked():
     gt = np.array([[1, 1], [0, 0]])
     reordered, mapping = step2.semantic_match(predicted, gt)
     assert np.array_equal(reordered, gt) and mapping[8] == 1
-    with pytest.raises(ProtocolBlocked):
-        step2.semantic_match(np.array([[0, 1, 2]]), np.array([[0, 1, 1]]))
+    # Unequal counts now use the evidenced exclusive majority vote (no longer a missing branch).
+    reordered, mapping = step2.semantic_match(np.array([[0, 1, 2]]), np.array([[0, 1, 1]]))
+    assert mapping == {0: 0, 1: 1} and reordered.tolist() == [[0, 1, 0]]
 
 
 def test_step2_evidence_records_defined_source_branch_and_stays_blocked():

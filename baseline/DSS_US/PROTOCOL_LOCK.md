@@ -27,6 +27,14 @@ UNRESOLVED/BLOCKED_PROTOCOL:
   substitute another rule. (Erratum 2026-10-01: an earlier revision wrongly said
   majority_vote_exclusive was undefined in the pinned source.)
 
+Evidence audit 2026-10-01 (reports/dss_us_sgscn_paper_protocol_evidence_20261001.md):
+the Step I native evaluator is resolved from the paper and the official per-image
+evaluation path and is implemented independently (evaluation/track_b/matching.py,
+step1.py); Step I Track B is EVALUATOR_READY. Producers stay BLOCKED_PROTOCOL: no
+CAMUS row recipe, cohort list or CRF parameter correspondence exists in the paper or
+anywhere in the official repository history. Step II stays blocked on its evaluated
+stage and the label-consistency computation.
+
 No full paper profile is executable until evidence resolves its gate. Implemented
 equation kernels and synthetic tests do not certify full CAMUS reproduction.
 NATIVE_TRACK_A_STATUS is independently BLOCKED_ADAPTER (CAMUS includes LA).

@@ -18,8 +18,11 @@ class ProtocolTests(unittest.TestCase):
         for path in dss.glob("*.yaml"):
             with self.subTest(path=path), self.assertRaises(ProtocolBlocked):
                 load_lock(path)
-            with self.assertRaises(ProtocolBlocked):
-                load_lock(path, purpose="native_track_b")
+            if path.name.startswith("step2_"):
+                with self.assertRaises(ProtocolBlocked):
+                    load_lock(path, purpose="native_track_b")
+            else:  # Step I evaluator resolved from paper + official evaluation path
+                self.assertEqual(load_lock(path, purpose="native_track_b")["native_track_b"]["n_classes"], 4)
         for name in ("ph2", "sysu_us"):
             with self.assertRaises(ProtocolBlocked):
                 load_lock(ROOT / f"baseline/SGSCN/config/native/{name}_paper.yaml")
@@ -79,6 +82,41 @@ class ProtocolTests(unittest.TestCase):
                 self.assertEqual(config["paper_equivalence"], "UNRESOLVED")
             else:
                 self.assertTrue(any("spatial weight" in gate for gate in config["gates"]["producer"]))
+
+    def test_dss_us_evidence_keeps_producers_blocked_and_resolves_only_step1_evaluator(self):
+        spec = json.loads((ROOT / "baseline/DSS_US/evaluation/track_b/spec.json").read_text())
+        self.assertEqual(spec["step_I"]["status"], "RESOLVED")
+        self.assertEqual(spec["step_I"]["iou_thresh"]["value"], 0.0)
+        self.assertTrue(spec["step_II"]["status"].endswith("BLOCKED_PROTOCOL"))
+        for path in sorted((ROOT / "baseline/DSS_US/config/native").glob("*.yaml")):
+            config = json.loads(path.read_text())
+            producer = " ".join(config["gates"]["producer"])
+            for reason in ("row preprocessing/affinity/spectral/CRF recipe", "CAMUS cohort", "CRF parameter set"):
+                self.assertIn(reason, producer)
+            self.assertEqual(config["evidence"]["camus_cohort"]["status"], "UNRESOLVED")
+            self.assertIn("dino_deitsmall8_pretrain.pth", config["evidence"]["backbone_checkpoint"]["value"])
+            if config["stage"] == "I":
+                self.assertEqual(config["gates"]["native_track_b"], [])
+                self.assertEqual(config["native_track_b"]["evaluated_stage"], "crf_multi_region")
+            else:
+                self.assertEqual(len(config["gates"]["native_track_b"]), 2)
+                self.assertIn("semantic clusters", producer)
+
+    def test_sgscn_paper_gates_record_every_unresolved_discrepancy(self):
+        spec = json.loads((ROOT / "baseline/SGSCN/evaluation/track_b/spec.json").read_text())
+        self.assertEqual(spec["evidence"]["HM"]["type"], "UNRESOLVED")
+        self.assertIn("130.8", spec["evidence"]["HM"]["source"])
+        for name in ("ph2", "sysu_us"):
+            paper = json.loads((ROOT / f"baseline/SGSCN/config/native/{name}_paper.yaml").read_text())
+            gates = " ".join(paper["gates"]["producer"])
+            for reason in ("Architecture", "Loss", "Stopping"):
+                self.assertIn(reason, gates)
+            self.assertIn("SYSU-US cohort" if name == "sysu_us" else "PH2 input format", gates)
+            reference = json.loads((ROOT / f"baseline/SGSCN/config/native/{name}_official_reference.yaml").read_text())
+            self.assertEqual(reference["gates"]["producer"], [])
+            self.assertEqual(reference["scientific"], paper["scientific"])
+            self.assertEqual(reference["scientific"]["spatial_weight"], 5)
+            self.assertEqual(len(reference["gates"]["native_track_b"]), 2)
 
     def test_native_statuses_independent_and_stochastic(self):
         status = native_status(producer_complete=True, track_b_status="COMPLETE",

@@ -3,11 +3,63 @@
   "method": "DSS-US",
   "source_commit": "d4ac44c60df18b921c590796f6994a4c8ac0726c",
   "step_I": {
-    "evaluator": "original_per_image_segment_dice",
-    "status": "UNRESOLVED/BLOCKED_PROTOCOL",
-    "segment_gt_pairing": null,
-    "background_unmatched_handling": null,
-    "aggregation": null
+    "evaluator": "per_image_remapped_dice",
+    "status": "RESOLVED",
+    "evaluated_stage": {
+      "value": "crf_multi_region (CRF-postprocessed Step I oversegmentation)",
+      "type": "PAPER+OFFICIAL_CODE",
+      "source": "Table 1 caption '*CRF postprocessing' on all four rows; configs/sweep/{defaults,aff,num_clusters}.yaml seg_for_eval ['crf_multi_region']"
+    },
+    "eval_per_image": {
+      "value": true,
+      "type": "OFFICIAL_CODE",
+      "source": "configs/eval/defaults.yaml eval_per_image: True; deep-spectral-segmentation/pipeline/pipeline.py::evaluate -> segm_eval.evaluate_dataset_with_remapping"
+    },
+    "label_ranking": {
+      "value": "ascending unique labels mapped to consecutive indices per image (raw and GT)",
+      "type": "OFFICIAL_CODE",
+      "source": "evaluation/eval_utils.py::make_labels_consecutive; segm_eval.py::evaluate_dataset_with_remapping"
+    },
+    "segment_gt_pairing": {
+      "value": "equal counts: Hungarian max-IoU, cost pixel_count - IoU, rows=segments; unequal counts: exclusive majority vote (GT classes ascending, first max-IoU segment, later class wins only on strictly greater IoU, displaced class not revisited)",
+      "type": "OFFICIAL_CODE",
+      "source": "evaluation/eval_utils.py::match (line 153), ::hungarian_match (line 12), ::majority_vote_exclusive (line 202)"
+    },
+    "iou_thresh": {
+      "value": 0.0,
+      "type": "OFFICIAL_CODE",
+      "source": "configs/eval/defaults.yaml iou_thresh: 0.0; majority_vote_exclusive ignores the threshold"
+    },
+    "background_unmatched_handling": {
+      "value": "unmatched segments and segments matched to GT 0 become label 0; label 0 is excluded from scoring",
+      "type": "OFFICIAL_CODE",
+      "source": "eval_utils.py::remap_labels (zero-initialised); segm_eval.py loop over labels 1..n_classes-1"
+    },
+    "void_label": {
+      "value": 0,
+      "type": "OFFICIAL_CODE",
+      "source": "configs/eval/defaults.yaml void_label: 0 (coincides with the excluded background label)"
+    },
+    "per_image_score": {
+      "value": "mean of foreground Dice over labels 1..n_classes-1; a label absent from GT and prediction scores 0",
+      "type": "OFFICIAL_CODE",
+      "source": "segm_eval.py::evaluate_dataset_with_remapping dice_image (2TP/max(2TP+FP+FN,1e-8)), np.mean"
+    },
+    "aggregation": {
+      "value": "arithmetic mean and population std over images",
+      "type": "OFFICIAL_CODE+PAPER",
+      "source": "segm_eval.py eval_result['Dice']/['Dice_std'] (np.mean/np.std); paper Table 1 'DICE, std'"
+    },
+    "grid": {
+      "value": "GT and partition on the native image grid; mismatch refused (official code resizes masks with nearest neighbour only when shapes differ)",
+      "type": "DERIVED_MECHANICALLY",
+      "source": "evaluation/dataset.py::_resize_mask; native raw contract stores native-size partitions"
+    },
+    "camus_n_classes": {
+      "value": 4,
+      "type": "DERIVED_MECHANICALLY",
+      "source": "paper Section 3: 3 labels (LV endocardium, myocardium, left atrium) plus background; GT must be integer labels 0..3"
+    }
   },
   "step_II": {
     "evaluator": "original_semantic_matching",
@@ -28,14 +80,22 @@
     "match_equal_count_branch": "eval_utils.hungarian_match(metric='iou')",
     "match_unequal_count_branch": "eval_utils.majority_vote_exclusive",
     "unequal_count_source": "DEFINED at evaluation/eval_utils.py:202, called by eval_utils.match at line 172",
-    "unequal_count_status": "SOURCE_DEFINED; not reimplemented; paper-row applicability UNRESOLVED/BLOCKED_PROTOCOL",
+    "unequal_count_status": "SOURCE_DEFINED; independently reimplemented as the shared per-image matching primitive (evaluation/track_b/matching.py); full Step II evaluation remains BLOCKED_PROTOCOL",
     "unresolved": [
-      "Which segm_eval branch (eval_per_image) and config values produced each Table 2 row",
-      "Independent equivalence of make_labels_consecutive/remap_match/remap_labels and void_label handling",
-      "majority_vote_exclusive conflict/tie behaviour and unmatched-cluster handling as evaluated in the paper",
-      "Per-image versus dataset aggregation of the reported scores"
-    ]
+      "Evaluated Step II stage: semantic segmaps or crf_segmaps (Table 2 has no CRF mark; no Step II seg_for_eval in any official config)",
+      "Label consistency (LC): computed outside the official code; tie handling and the reported LC std aggregation are not specified",
+      "Number of semantic clusters for CAMUS rows (official sweeps use 6-15; paper silent)"
+    ],
+    "matching_mechanics": {
+      "value": "same per-image remapped matching and Dice as step_I",
+      "type": "OFFICIAL_CODE+PAPER",
+      "source": "paper 'Hungarian matching or majority vote ... only matched masks are evaluated'; pipeline.py::evaluate"
+    }
   },
   "producer_feedback": false,
-  "require_raw_seal": true
+  "require_raw_seal": true,
+  "evidence_sources": {
+    "paper": "arXiv 2408.02043v1 HTML (sha256 15110a55216bb448c5db0330c4b3a492413350a50f4f118930a274ac61f1c198): Section 3 Experimental Setup / Evaluation Methodology; Tables 1-2",
+    "official_code": "alexaatm/UnsupervisedSegmentor4Ultrasound@d4ac44c60df18b921c590796f6994a4c8ac0726c"
+  }
 }

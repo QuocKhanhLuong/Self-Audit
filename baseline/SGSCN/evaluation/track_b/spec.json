@@ -12,5 +12,42 @@
   },
   "status": "BLOCKED_PROTOCOL",
   "producer_feedback": false,
-  "require_raw_seal": true
+  "require_raw_seal": true,
+  "evidence": {
+    "selection": {
+      "value": "only the predicted cluster with the largest overlap with the GT segment is evaluated",
+      "type": "PAPER",
+      "source": "arXiv 2107.04934 PDF sha256 222a28c659e3f507dfed519a3e8b8945fa2afcb0a84a7ab428205e807d831051 section 3.1"
+    },
+    "selection_overlap_measure": {
+      "value": null,
+      "type": "UNRESOLVED",
+      "source": "paper does not define 'overlap'; no official evaluator code exists"
+    },
+    "DSC": {
+      "value": "2|A n B| / (|A| + |B|) for the selected cluster A and GT B",
+      "type": "PAPER",
+      "source": "arXiv 2107.04934 PDF sha256 222a28c659e3f507dfed519a3e8b8945fa2afcb0a84a7ab428205e807d831051 section 3.1 (Dice similarity coefficient)"
+    },
+    "HM": {
+      "value": null,
+      "type": "UNRESOLVED",
+      "source": "arXiv 2107.04934 PDF sha256 222a28c659e3f507dfed519a3e8b8945fa2afcb0a84a7ab428205e807d831051 Tables 1-2 report HM 130.8% and 165.2% (k-means), impossible for the common 1-Jaccard Hammoude form; the normaliser is not given"
+    },
+    "XOR": {
+      "value": null,
+      "type": "UNRESOLVED",
+      "source": "paper names the metric without a formula"
+    },
+    "aggregation": {
+      "value": "mean over images (tables report 'Mean%'; no std)",
+      "type": "PAPER",
+      "source": "arXiv 2107.04934 PDF sha256 222a28c659e3f507dfed519a3e8b8945fa2afcb0a84a7ab428205e807d831051 Tables 1-2"
+    },
+    "official_code_evaluator": {
+      "value": null,
+      "type": "ABSENT",
+      "source": "the pinned repository contains no evaluation code"
+    }
+  }
 }
