@@ -13,21 +13,24 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 from shared_benchmark.native_artifacts import (
     ImageInventory, NativeContractError, ProducerAccessGuard, RawRunWriter, array_hash,
-    verify_raw_run, compare_repeat_runs,
+    verify_raw_run, compare_repeat_runs, write_seal_receipt, verify_seal_receipt,
 )
 
 
 def make_inventory(root):
+    """Image-only staging root `root/images` holding exactly the listed image."""
     import cv2
     image = np.random.default_rng(2).integers(0, 255, (8, 10, 3), dtype=np.uint8)
-    path = root / "image.png"
+    staging = root / "images"
+    staging.mkdir(exist_ok=True)
+    path = staging / "image.png"
     cv2.imwrite(str(path), image)
     manifest = {"schema": "medical-native.image-only.v1", "dataset": "SYNTHETIC",
-                "records": [{"sample_id": "sample1", "role": "image", "image_path": "image.png",
+                "records": [{"sample_id": "sample1", "role": "image", "image_path": "images/image.png",
                              "image_sha256": hashlib.sha256(path.read_bytes()).hexdigest()}]}
     location = root / "inventory.json"
     location.write_text(json.dumps(manifest))
-    return ImageInventory(location), image
+    return ImageInventory(location, image_root=staging), image
 
 
 def make_raw(root, inventory, image, partition=None):
@@ -75,17 +78,17 @@ def test_unknown_metadata_and_sensitive_paths_rejected(tmp_path):
     document["records"][0]["gt_path"] = "never_exists.png"
     inventory.path.write_text(json.dumps(document))
     with pytest.raises(NativeContractError, match="image-only"):
-        ImageInventory(inventory.path)
+        ImageInventory(inventory.path, image_root=inventory.image_root)
     document["records"][0].pop("gt_path")
     document["records"][0]["image_path"] = "patient_gt.png"
     inventory.path.write_text(json.dumps(document))
     with pytest.raises(NativeContractError, match="before probing"):
-        ImageInventory(inventory.path)
+        ImageInventory(inventory.path, image_root=inventory.image_root)
 
 
 def test_changed_input_rejected(tmp_path):
     inventory, _ = make_inventory(tmp_path)
-    (tmp_path / "image.png").write_bytes(b"changed")
+    (tmp_path / "images/image.png").write_bytes(b"changed")
     with pytest.raises(NativeContractError, match="input image hash"):
         inventory.read_bgr(inventory.records[0])
 
@@ -94,9 +97,10 @@ def test_access_guard_blocks_open_stat_and_listing(tmp_path):
     inventory, _ = make_inventory(tmp_path)
     forbidden = tmp_path / "patient_gt.png"
     forbidden.write_bytes(b"do not read")
-    guard = ProducerAccessGuard(images=[tmp_path / "image.png"], output_root=tmp_path / "out")
-    with guard:
-        assert (tmp_path / "image.png").read_bytes()
+    guard = ProducerAccessGuard(images=[tmp_path / "images/image.png"], output_root=tmp_path / "out",
+                                image_root=tmp_path / "images")
+    with pytest.raises(NativeContractError, match="suppressed"), guard:
+        assert (tmp_path / "images/image.png").read_bytes()
         with pytest.raises(NativeContractError):
             forbidden.read_bytes()
         with pytest.raises(NativeContractError):
@@ -117,15 +121,20 @@ def test_repeat_variation_is_reported_not_overwritten(tmp_path):
     assert report["samples"][0]["partition_equivalent_up_to_id_permutation"]
 
 
+def load_evaluator(method):
+    path = ROOT / "baseline" / method / "evaluation/track_b/run.py"
+    spec = importlib.util.spec_from_file_location("gate_" + method, path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def test_native_evaluators_require_seal_before_gt(tmp_path):
     for method in ("DSS_US", "SGSCN"):
-        path = ROOT / "baseline" / method / "evaluation/track_b/run.py"
-        spec = importlib.util.spec_from_file_location("gate_" + method, path)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        with pytest.raises(FileNotFoundError, match="raw_seal"):
-            module.evaluate_native(tmp_path, protocol_path=tmp_path / "missing_protocol.yaml",
-                                   gt_manifest=tmp_path / "not_opened_gt.json")
+        with pytest.raises(FileNotFoundError, match="missing_receipt"):
+            load_evaluator(method).evaluate_native(
+                tmp_path, seal_receipt=tmp_path / "missing_receipt.json",
+                protocol_path=tmp_path / "missing_protocol.yaml", gt_manifest=tmp_path / "not_opened_gt.json")
     assert not (tmp_path / "not_opened_gt.json").exists()
 
 
@@ -142,8 +151,9 @@ def test_trusted_code_root_does_not_allow_annotation_data(tmp_path):
     trusted.mkdir()
     (trusted / "labels.py").write_text("# source code only")
     (trusted / "patient_gt.png").write_bytes(b"must not be read")
-    guard = ProducerAccessGuard(images=[], output_root=tmp_path / "output", trusted_roots=[trusted])
-    with guard:
+    guard = ProducerAccessGuard(images=[], output_root=tmp_path / "output", image_root=tmp_path / "images",
+                                trusted_roots=[trusted])
+    with pytest.raises(NativeContractError, match="suppressed"), guard:
         assert (trusted / "labels.py").read_text()
         with pytest.raises(NativeContractError):
             (trusted / "patient_gt.png").read_bytes()

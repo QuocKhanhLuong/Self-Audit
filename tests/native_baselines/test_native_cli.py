@@ -28,7 +28,9 @@ def test_sgscn_end_to_end_image_only_seal(tmp_path, dataset, profile):
     import cv2
     import numpy as np
     image = np.random.default_rng(42).integers(0, 256, (16, 20, 3), dtype=np.uint8)
-    path = tmp_path / "synthetic_image.png"
+    staging = tmp_path / "images"
+    staging.mkdir()
+    path = staging / "synthetic_image.png"
     cv2.imwrite(str(path), image)
     manifest = {"schema": "medical-native.image-only.v1", "dataset": dataset,
                 "records": [{"sample_id": "synthetic_io_sample", "role": "image",
@@ -39,7 +41,8 @@ def test_sgscn_end_to_end_image_only_seal(tmp_path, dataset, profile):
     result = subprocess.run([
         sys.executable, str(ROOT / "baseline/SGSCN/scripts/run_native.py"),
         "--config", str(ROOT / f"baseline/SGSCN/config/native/{profile}_official_reference.yaml"),
-        "--images-manifest", str(location), "--output", str(output), "--seed", "1", "--threads", "1"],
+        "--images-manifest", str(location), "--image-root", str(staging), "--output", str(output),
+        "--seed", "1", "--threads", "1"],
         capture_output=True, text=True, timeout=60)
     assert result.returncode == 0, result.stderr
     raw = verify_raw_run(output)

@@ -1,5 +1,9 @@
 # Native baseline server handoff
 
+> Superseded for producer/evaluation commands by
+> `dss_us_sgscn_native_fixes_20261001.md`: run_native.py now requires
+> `--image-root` (image-only staging) and evaluators require an external seal receipt.
+
 Prepared after successful publication of implementation commit
 `4cf909cd3ef8664c6e77cd54239371910a76d92a` to
 `origin/codex/dss-us-sgscn-native`. Remote SHA was verified with `git ls-remote`.

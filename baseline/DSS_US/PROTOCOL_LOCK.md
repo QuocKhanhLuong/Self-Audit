@@ -19,8 +19,13 @@ UNRESOLVED/BLOCKED_PROTOCOL:
 - Exact crop/mask/position embeddings, morphology and Step II per-row weights.
 - CRF recipe applicability to each row and exact published implementation parity.
 - Step I per-image segment Dice pairing, unmatched/background and aggregation.
-- Step II source refers to majority_vote_exclusive without defining it in the
-  pinned evaluator utility. Keep that branch blocked; never substitute another rule.
+- Step II: the pinned evaluator defines both match branches (eval_utils.match ->
+  hungarian_match for equal counts, majority_vote_exclusive at eval_utils.py:202
+  otherwise). Unresolved: which segm_eval.py branch/config (eval_per_image,
+  iou_thresh, void_label) produced each Table 2 row, label remapping equivalence,
+  conflict/unmatched handling and aggregation. Keep Step II blocked; never
+  substitute another rule. (Erratum 2026-10-01: an earlier revision wrongly said
+  majority_vote_exclusive was undefined in the pinned source.)
 
 No full paper profile is executable until evidence resolves its gate. Implemented
 equation kernels and synthetic tests do not certify full CAMUS reproduction.

@@ -90,7 +90,7 @@ def test_key_hook_excludes_cls_and_flattens_heads():
     assert grid == (2, 2) and keys.shape == (1, 4, 4)
 
 
-def test_step1_evaluator_not_guessed_and_step2_missing_branch_blocked():
+def test_step1_evaluator_not_guessed_and_step2_unequal_branch_blocked():
     spec = importlib.util.spec_from_file_location("step1_evaluator", BASE / "evaluation/track_b/step1.py")
     step1 = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(step1)
@@ -105,3 +105,28 @@ def test_step1_evaluator_not_guessed_and_step2_missing_branch_blocked():
     assert np.array_equal(reordered, gt) and mapping[8] == 1
     with pytest.raises(ProtocolBlocked):
         step2.semantic_match(np.array([[0, 1, 2]]), np.array([[0, 1, 1]]))
+
+
+def test_step2_evidence_records_defined_source_branch_and_stays_blocked():
+    import json
+    spec = json.loads((BASE / "evaluation/track_b/spec.json").read_text())
+    assert "eval_utils.py:202" in spec["step_II"]["unequal_count_source"]
+    assert spec["step_II"]["status"] == "UNRESOLVED/BLOCKED_PROTOCOL" and spec["step_II"]["unresolved"]
+    for path in sorted((BASE / "config/native").glob("step2_*.yaml")):
+        config = json.loads(path.read_text())
+        gates = config["gates"]["native_track_b"]
+        assert gates and not any("missing" in gate for gate in gates)
+        assert config["evidence"]["step2_evaluator"]["status"] == "OFFICIAL_IMPLEMENTATION_DETAIL"
+
+
+def test_pinned_reference_defines_majority_vote_exclusive():
+    """Ties the ledger claim to the pinned unlicensed source (read as text, never imported)."""
+    import subprocess
+    reference = ROOT / ".scratch/dss-us"
+    if not (reference / ".git").exists():
+        pytest.skip("run scripts/pin_native_references.py for the source-evidence check")
+    head = subprocess.check_output(["git", "-C", str(reference), "rev-parse", "HEAD"], text=True).strip()
+    assert head == "d4ac44c60df18b921c590796f6994a4c8ac0726c"
+    lines = (reference / "evaluation/eval_utils.py").read_text().splitlines()
+    assert lines[201].startswith("def majority_vote_exclusive(")
+    assert "majority_vote_exclusive(" in lines[171]

@@ -1,4 +1,7 @@
-"""Independent source-evidenced semantic matching branch, evaluator-only."""
+"""Independent source-evidenced semantic matching branch, evaluator-only.
+
+Equal-count Hungarian IoU only. Unreachable for native runs while run.py keeps the gate.
+"""
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 from shared_benchmark.native_protocol import ProtocolBlocked
@@ -9,7 +12,8 @@ def semantic_match(partition, gt):
         raise ValueError("native evaluation grid mismatch")
     raw_ids, classes = np.unique(partition), np.unique(gt)
     if len(raw_ids) != len(classes):
-        raise ProtocolBlocked(["Original majority_vote_exclusive source helper missing; no replacement chosen"])
+        raise ProtocolBlocked(["Unequal-count branch is the pinned eval_utils.majority_vote_exclusive; its "
+                               "paper-row applicability, remapping and aggregation are unresolved; not reimplemented"])
     scores = np.empty((len(raw_ids), len(classes)))
     for i, raw_id in enumerate(raw_ids):
         a = partition == raw_id

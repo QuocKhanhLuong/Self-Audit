@@ -66,6 +66,20 @@ class ProtocolTests(unittest.TestCase):
             with self.assertRaisesRegex(ProtocolBlocked, "evaluator specification differs"):
                 load_lock(config_dir / "ph2_official_reference.yaml", purpose="native_track_b")
 
+    def test_sgscn_context_loss_evidence_and_paper_gates(self):
+        for path in sorted((ROOT / "baseline/SGSCN/config/native").glob("*.yaml")):
+            config = json.loads(path.read_text())
+            evidence = config["evidence"]
+            self.assertEqual(evidence["context_loss"]["status"], "VERIFIED_PAPER")
+            self.assertIn("--center", evidence["context_loss_code_invocation"]["value"])
+            self.assertIn("DISCREPANCY", evidence["spatial_weight"]["source"])
+            self.assertEqual(config["scientific"]["spatial_weight"], 5)
+            if path.stem.endswith("_official_reference"):
+                self.assertIn("not exact paper reproduction", config["reference_invocation"])
+                self.assertEqual(config["paper_equivalence"], "UNRESOLVED")
+            else:
+                self.assertTrue(any("spatial weight" in gate for gate in config["gates"]["producer"]))
+
     def test_native_statuses_independent_and_stochastic(self):
         status = native_status(producer_complete=True, track_b_status="COMPLETE",
                                track_a_status="BLOCKED_ADAPTER", same_seed_equal=False,
