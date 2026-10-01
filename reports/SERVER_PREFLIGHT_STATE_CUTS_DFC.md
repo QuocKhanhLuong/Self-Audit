@@ -1,5 +1,7 @@
 # CUTS + DFC — static preflight state (ACDC only)
 
+> **Scope update (2026-10-01):** DFC is legacy and out of the current milestone; only the CUTS parts of this report are active. See `ACTIVE_MILESTONE_SCOPE.md`.
+
 ## Verdict
 
 CODE_AND_STATIC_PREFLIGHT_PASS + CUTS_RUNTIME_TRAINING_PASS +

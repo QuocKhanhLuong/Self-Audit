@@ -1,5 +1,7 @@
 # STEGO / PiCIE Shared-Benchmark Port Provenance
 
+> **Legacy / out of scope:** STEGO and PiCIE are not part of the current milestone (2026-10-01); see `reports/ACTIVE_MILESTONE_SCOPE.md`.
+
 Implementation branch base: `main@817f2ba1427506732ce6bb30bc5980e955710533`.
 
 Reference snapshots are source references only; neither snapshot is merged.

@@ -80,11 +80,18 @@
     "Self-Audit core (src/self_audit, src/self_audit_maskfree, scripts/train_self_audit.py)",
     "shared_benchmark (src/shared_benchmark, tests/shared_benchmark)",
     "CUTS cardiac benchmark (baseline/CUTS/src/cardiac_benchmark, scripts/run_cuts_scientific.py)",
-    "DFC cardiac benchmark (baseline/DFC/src/cardiac_benchmark, scripts/run_dfc_scientific.py)",
     "DSS-US native (baseline/DSS_US) - verified compatible",
     "SGSCN native (baseline/SGSCN) - verified compatible",
     "native common infrastructure and tests (tests/native_baselines)"
   ],
   "regeneration": "environments/compile_locks.sh (uv pip compile, hashes, Linux x86_64, CPython 3.10)",
-  "portability_only_environments": "Other interpreters (for example NumPy 1.24 / Python 3.8, or NumPy 2.x / Python 3.12) may run regression/portability tests only; they are never official experiment environments."
+  "portability_only_environments": "Other interpreters (for example NumPy 1.24 / Python 3.8, or NumPy 2.x / Python 3.12) may run regression/portability tests only; they are never official experiment environments.",
+  "out_of_scope_legacy": {
+    "components": [
+      "DFC",
+      "STEGO",
+      "PiCIE"
+    ],
+    "note": "Legacy and outside the active milestone (reports/ACTIVE_MILESTONE_SCOPE.md); not canonical-environment consumers, not verified compatible, not enforced. Their code and artifacts are kept for history."
+  }
 }

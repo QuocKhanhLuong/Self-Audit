@@ -35,8 +35,10 @@ metadata) and the newest CPython 3.10 Linux x86_64 build available to the
 reproducible installer. The validator enforces the 3.10 series and records the
 exact micro version in provenance.
 
-Consumers: Self-Audit core, `shared_benchmark`, CUTS, DFC, DSS-US, SGSCN and the
-native common infrastructure. DSS-US and SGSCN were verified compatible (all
+Consumers (active milestone): Self-Audit core, `shared_benchmark`, CUTS, DSS-US,
+SGSCN and the native common infrastructure. DFC, STEGO and PiCIE are legacy and
+out of scope (`reports/ACTIVE_MILESTONE_SCOPE.md`): they are not consumers, are not
+verified compatible and do not enforce this environment. DSS-US and SGSCN were verified compatible (all
 package tests pass), so no isolated upstream-reference environment is required;
 their former ad-hoc Python 3.12 / torch 2.11 pins are superseded.
 
@@ -70,20 +72,21 @@ support CUDA 12.1). Conda users: `conda env create -f environment.yaml`.
 - `SELF_AUDIT_ALLOW_UNOFFICIAL_ENVIRONMENT=1` exists only for portability runs:
   it prints a warning and records `official: false`; results are never official.
 
-### Enforcement coverage (2026-10-01)
+### Enforcement coverage (active milestone, 2026-10-01)
 
 | Entrypoint | Rejects a non-canonical environment? |
 |---|---|
-| `baseline/SGSCN/scripts/run_native.py` | **yes** (fails before heavy imports; identity in provenance) |
-| `scripts/run_in_official_environment.py` (wrapper) | **yes** (validates before running the target) |
-| `baseline/DSS_US/scripts/run_native.py` | refuses every profile with BLOCKED_PROTOCOL; no producer can execute |
-| `scripts/run_cuts_scientific.py`, `scripts/run_dfc_scientific.py` | **no** when invoked directly: v12-bound sources; official use is only via the wrapper. Self-enforcement requires a new historical-224 freeze. |
-| Self-Audit core trainers/evaluators (`scripts/train_self_audit.py`, `train_maskfree.py`, `src/self_audit/training/*`, `scripts/evaluate_*`, `export_transition_bank.py`) | **no** (not yet wired; not freeze-bound) |
-| STEGO/PiCIE runners (`run_{stego,picie}_scientific.py`, `train_*_sa224_fair.py`) | **no**; their compatibility with this environment has not been assessed |
+| Self-Audit core: `scripts/train_self_audit.py`, `train_maskfree.py`, `src/self_audit/training/{train_annotation,train_auditor,finetune_joint}.py`, `scripts/evaluate_external_mnms.py`, `evaluate_maskfree_{epoch,reference}.py` | **yes**, before `main()` |
+| shared_benchmark: `scripts/evaluate_cardiac_baseline_reference.py`, `evaluate_visualize_shared_benchmark.py` | **yes**, before `main()` |
+| CUTS training (`cardiac_benchmark.train_stage1`) | **yes**, via `provenance.environment_identity()`; the contract identity is recorded in checkpoints/receipts |
+| CUTS generation (`scripts/run_cuts_scientific.py`) | via `scripts/run_in_official_environment.py` only: the runner is bound by the active freeze v12, so it is not edited |
+| `baseline/SGSCN/scripts/run_native.py` | **yes** (before heavy imports; identity in provenance) |
+| `baseline/DSS_US/scripts/run_native.py` | all profiles BLOCKED_PROTOCOL; an executable profile must pass the check first |
+| DFC, STEGO, PiCIE runners | out of scope (legacy); not enforced |
 
-Until every official entrypoint enforces the contract, run official commands
-through `scripts/run_in_official_environment.py` or after
-`scripts/check_environment.py` exits 0.
+Sandboxed launches (bwrap) must bind the repository's `environments/` directory,
+otherwise the check fails closed. `scripts/check_environment.py` must exit 0
+before any official run.
 
 ### Regenerate locks
 
@@ -101,7 +104,7 @@ Cross-version checks (for example NumPy 1.24 / Python 3.8, NumPy 2.x / Python
 |---|---|---|
 | `.runtime/envs/self-audit-canonical-cpu` | 3.10.20 / 2.4.1+cpu / 1.26.4 | **canonical (conforms)** |
 | `.runtime/cuts_dfc_acdc` | 3.10.20 / 2.12.1+cu126 / 2.2.6 | non-conforming; portability only |
-| `.runtime/cuts_dfc_acdc_py38` | 3.8.20 / 2.1.0+cu121 / 1.24.4 | non-conforming; portability only (recorded by the v10 CUTS/DFC full-run receipts) |
+| `.runtime/cuts_dfc_acdc_py38` | 3.8.20 / 2.1.0+cu121 / 1.24.4 | non-conforming; portability only (recorded by the v10 CUTS/DFC full-run receipts; DFC is out of scope) |
 | `~/miniconda3` base and other conda envs | various | outside this project; not official |
 
 Historical environment records kept for provenance only (never used to create an
