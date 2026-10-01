@@ -124,6 +124,17 @@ def test_historical_224_image_branch_then_loader_normalization_has_no_post_resiz
     assert SELF_AUDIT_HISTORICAL_224_NORMALIZATION_VERSION.endswith("zscore.v1")
 
 
+def test_historical_224_resize_keeps_the_persisted_hwz_float32_layout():
+    # preprocess_acdc.py persists an [H,W,Z] float32 array and the loader
+    # normalizes a Z-first view of it.  Float32 reductions depend on element
+    # order on some NumPy builds, so the layout itself is part of exact parity.
+    from shared_benchmark.spatial import _resize_preprocess_acdc_volume_to_224
+
+    resized = _resize_preprocess_acdc_volume_to_224(np.zeros((3, 5, 4), dtype=np.float64))
+    assert resized.shape == (3, 224, 224) and resized.dtype == np.float32
+    assert np.moveaxis(resized, 0, 2).flags.c_contiguous
+
+
 def test_self_audit_receipt_rejects_test_membership(tmp_path: Path):
     selection = tmp_path / "selection.json"
     selection.write_text(json.dumps({

@@ -378,14 +378,17 @@ def _resize_preprocess_acdc_volume_to_224(volume_zhw: np.ndarray) -> np.ndarray:
     volume = np.asarray(volume_zhw)
     if volume.ndim != 3:
         raise SharedSpatialError(f"historical preprocess expects [Z,H,W], got {volume.shape}")
-    # The original script allocates float32 and assigns every result into it.
-    resized = np.empty((int(volume.shape[0]), 224, 224), dtype=np.float32)
+    # The original script allocates an [H,W,Z] float32 array, assigns each
+    # resized slice into [:, :, z] and persists it; the loader then moves Z to
+    # the front as a view.  Keep that memory layout: the loader's float32
+    # percentile/z-score reductions depend on element order.
+    resized_hwz = np.zeros((224, 224, int(volume.shape[0])), dtype=np.float32)
     for z in range(int(volume.shape[0])):
-        resized[z] = resize(
+        resized_hwz[:, :, z] = resize(
             volume[z], (224, 224), order=1, preserve_range=True,
             anti_aliasing=True, mode="reflect",
         )
-    return resized
+    return np.moveaxis(resized_hwz, 2, 0)
 
 
 def _read_historical_preprocess_source_frame(
@@ -493,7 +496,9 @@ def read_self_audit_historical_224_context_stack(
         raise SharedSpatialError(
             f"selected historical source frame has invalid shape/axis: {frame.shape}, {depth_axis}"
         )
-    source_normalized = _normalize_preprocess_acdc_image(np.moveaxis(frame, depth_axis, 0))
+    # preprocess_acdc.py normalizes the volume in its native layout before
+    # moving to per-slice resize; keep that order so reductions match exactly.
+    source_normalized = np.moveaxis(_normalize_preprocess_acdc_image(frame), depth_axis, 0)
     resized = _resize_preprocess_acdc_volume_to_224(source_normalized)
     normalized = normalize_self_audit_volume(resized)
     z = int(record["slice_index"])
