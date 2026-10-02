@@ -109,6 +109,8 @@ def test_step2_evidence_records_defined_source_branch_and_stays_blocked():
     assert "eval_utils.py:202" in spec["step_II"]["unequal_count_source"]
     assert spec["step_II"]["status"] == "UNRESOLVED/BLOCKED_PROTOCOL" and spec["step_II"]["unresolved"]
     for path in sorted((BASE / "config/native").glob("step2_*.yaml")):
+        if "_paper_faithful" in path.name:
+            continue  # paper-faithful profiles have their own tests
         config = json.loads(path.read_text())
         gates = config["gates"]["native_track_b"]
         assert gates and not any("missing" in gate for gate in gates)

@@ -13,9 +13,10 @@ from shared_benchmark.native_protocol import ProtocolBlocked, load_lock, native_
 
 class ProtocolTests(unittest.TestCase):
     def test_all_paper_profiles_block_before_execution(self):
-        dss = ROOT / "baseline/DSS_US/config/native"
-        self.assertEqual(len(list(dss.glob("*.yaml"))), 11)
-        for path in dss.glob("*.yaml"):
+        dss = [path for path in (ROOT / "baseline/DSS_US/config/native").glob("*.yaml")
+               if not "_paper_faithful" in path.name]  # paper-faithful profiles: own tests
+        self.assertEqual(len(dss), 11)
+        for path in dss:
             with self.subTest(path=path), self.assertRaises(ProtocolBlocked):
                 load_lock(path)
             if path.name.startswith("step2_"):
@@ -71,6 +72,8 @@ class ProtocolTests(unittest.TestCase):
 
     def test_sgscn_context_loss_evidence_and_paper_gates(self):
         for path in sorted((ROOT / "baseline/SGSCN/config/native").glob("*.yaml")):
+            if "_paper_faithful" in path.name:
+                continue  # covered by baseline/SGSCN/tests/test_paper_faithful.py
             config = json.loads(path.read_text())
             evidence = config["evidence"]
             self.assertEqual(evidence["context_loss"]["status"], "VERIFIED_PAPER")
@@ -89,6 +92,8 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual(spec["step_I"]["iou_thresh"]["value"], 0.0)
         self.assertTrue(spec["step_II"]["status"].endswith("BLOCKED_PROTOCOL"))
         for path in sorted((ROOT / "baseline/DSS_US/config/native").glob("*.yaml")):
+            if "_paper_faithful" in path.name:
+                continue  # covered by baseline/DSS_US/tests/test_paper_faithful.py
             config = json.loads(path.read_text())
             producer = " ".join(config["gates"]["producer"])
             for reason in ("row preprocessing/affinity/spectral/CRF recipe", "CAMUS cohort", "CRF parameter set"):

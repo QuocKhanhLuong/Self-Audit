@@ -42,3 +42,9 @@ PH2 complete native scope: 200 studies. SYSU-US: 100 images, 5 per sequence from
 20 sequences. Original sampled filenames/seed are not provided. No GT-based
 sample filtering. Missing either dataset yields PARTIAL reproduction. Native
 Track A adapter unavailability does not affect native reproduction completeness.
+
+PAPER_FAITHFUL_REIMPLEMENTATION profiles (`*_paper_faithful.yaml`, src/sgscn/paper_faithful.py)
+implement the paper text and equations literally and are separate from the official-code
+reference profiles. Every setting the paper leaves open is a required field; they run only
+after the user instantiates a new profile with explicit values
+(scripts/instantiate_native_profile.py). See reports/dss_us_sgscn_paper_faithful_20261001.md.

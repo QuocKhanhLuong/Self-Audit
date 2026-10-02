@@ -28,8 +28,19 @@ def main():
     except ProtocolBlocked as error:
         print(json.dumps({"status": error.status, "reasons": error.reasons}))
         return 2
+    paper_faithful = config["implementation"] == "paper_faithful_reimplementation"
+    if paper_faithful:
+        from sgscn.paper_faithful import ProtocolSettingError, settings_from_config, validate_settings
+        try:
+            settings = validate_settings(settings_from_config(config))
+        except ProtocolSettingError as error:
+            print(json.dumps({"status": "BLOCKED_PROTOCOL", "reasons": [str(error)]}))
+            return 2
+    else:
+        settings = config["scientific"]
     if args.check_protocol:
-        print(json.dumps({"status": "REFERENCE_READY", "paper_equivalence": config["paper_equivalence"]}))
+        status = "PAPER_FAITHFUL_READY" if paper_faithful else "REFERENCE_READY"
+        print(json.dumps({"status": status, "paper_equivalence": config["paper_equivalence"]}))
         return 0
     if args.images_manifest is None or args.image_root is None or args.output is None or args.threads < 1:
         parser.error("--images-manifest, --image-root, --output and positive --threads required")
@@ -40,19 +51,26 @@ def main():
     import torch
     import cv2
     import torch._dynamo  # initialize framework/cache discovery before dataset access guard
-    from sgscn.producer import predict_native, sample_seed
+    if paper_faithful:
+        from sgscn.paper_faithful import predict_paper_faithful as predict_native, sample_seed
+    else:
+        from sgscn.producer import predict_native, sample_seed
     from shared_benchmark.native_artifacts import ImageInventory, RawRunWriter, ProducerAccessGuard, environment_receipt, array_hash
     torch.set_num_threads(args.threads)
     inventory = ImageInventory(args.images_manifest, image_root=args.image_root)
     if inventory.document["dataset"] != config["dataset"]:
         raise ValueError("native dataset/profile mismatch")
+    cohort = config.get("required_data", {}).get("cohort_inventory")
+    if cohort is not None and cohort.get("value") != "supplied_at_runtime" and cohort.get("value") != inventory.sha256:
+        raise ValueError("image inventory does not match the profile's declared cohort_inventory hash")
     sources = [*sorted((BASE / "src").rglob("*.py")), Path(__file__),
                ROOT / "src/shared_benchmark/native_artifacts.py", ROOT / "src/shared_benchmark/native_protocol.py",
                ROOT / "src/environment_contract.py"]
     provenance = {"base_seed": args.seed, "seed_policy": "sha256_base_seed_and_inventory_sample_id_v1",
                   "code_files": {str(p.relative_to(ROOT)): file_hash(p) for p in sources},
                   "environment": environment_receipt(), "device": args.device, "threads": args.threads,
-                  "implementation_kind": "official_code_reference",
+                  "implementation_kind": config["implementation"] if paper_faithful else "official_code_reference",
+                  "profile_class": config.get("profile_class", "OFFICIAL_REFERENCE"),
                   "upstream_commit": "592efb6e72ceeef15c8be0630a4673eda5dce6f5",
                   "environment_contract": environment}
     output = args.output.resolve()
@@ -68,7 +86,7 @@ def main():
         with guard:
             for record in inventory.records:
                 image = inventory.read_bgr(record)
-                partition, receipt = predict_native(image, config["scientific"],
+                partition, receipt = predict_native(image, settings,
                                                     seed=sample_seed(args.seed, record["sample_id"]), device=args.device)
                 receipt["input_native_hw"] = list(image.shape[:2])
                 receipt["decoded_image_sha256"] = array_hash(image)
@@ -79,7 +97,7 @@ def main():
         (writer.root / "FAILED.json").write_text(json.dumps({"status": "RAW_INCOMPLETE", "access_log": guard.log}), encoding="utf-8")
         raise
     print(json.dumps({"status": "RAW_COMPLETE", "seal_sha256": verified["seal"]["seal_sha256"],
-                      "paper_equivalence": "UNRESOLVED", "kind": "official_code_reference"}))
+                      "paper_equivalence": config["paper_equivalence"], "kind": provenance["implementation_kind"]}))
     return 0
 
 

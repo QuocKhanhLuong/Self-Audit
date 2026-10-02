@@ -1,0 +1,92 @@
+{
+  "feature_l2_normalization": {
+    "value": true,
+    "status": "OFFICIAL_CODE_FALLBACK",
+    "source": "alexaatm/UnsupervisedSegmentor4Ultrasound@d4ac44c60df18b921c590796f6994a4c8ac0726c configs/spectral_clustering/defaults.yaml normalize: True (extract._extract_eig F.normalize)"
+  },
+  "dino_input_policy": {
+    "value": "rgb_totensor_imagenet_crop_to_patch_multiple",
+    "status": "OFFICIAL_CODE_FALLBACK",
+    "source": "alexaatm/UnsupervisedSegmentor4Ultrasound@d4ac44c60df18b921c590796f6994a4c8ac0726c extract.extract_features: RGB ToTensor, ImageNet mean/std, images[:, :, :H_pad, :W_pad]"
+  },
+  "eigenvectors": {
+    "value": 14,
+    "status": "OFFICIAL_CODE_FALLBACK",
+    "source": "alexaatm/UnsupervisedSegmentor4Ultrasound@d4ac44c60df18b921c590796f6994a4c8ac0726c spectral_clustering K=15 eigenvectors; multi_region kmeans_eigen uses eigenvectors[1:1+n] (14 non-constant)"
+  },
+  "discard_trivial_eigenvector": {
+    "value": true,
+    "status": "OFFICIAL_CODE_FALLBACK",
+    "source": "alexaatm/UnsupervisedSegmentor4Ultrasound@d4ac44c60df18b921c590796f6994a4c8ac0726c extract._extract_multi_region_segmentations (take non-constant eigenvectors)"
+  },
+  "normalize_embedding_rows": {
+    "value": false,
+    "status": "OFFICIAL_CODE_FALLBACK",
+    "source": "alexaatm/UnsupervisedSegmentor4Ultrasound@d4ac44c60df18b921c590796f6994a4c8ac0726c extract._extract_multi_region_segmentations (eigenvectors used without row normalisation)"
+  },
+  "upscale_method": {
+    "value": "nearest",
+    "status": "OFFICIAL_CODE_FALLBACK",
+    "source": "alexaatm/UnsupervisedSegmentor4Ultrasound@d4ac44c60df18b921c590796f6994a4c8ac0726c cv2.INTER_NEAREST upscaling (extract._extract_crf_segmentations, evaluation/dataset._resize_mask)"
+  },
+  "camus_input_conversion": {
+    "value": "prepared_8bit_image_files_loaded_rgb",
+    "status": "OFFICIAL_CODE_FALLBACK",
+    "source": "alexaatm/UnsupervisedSegmentor4Ultrasound@d4ac44c60df18b921c590796f6994a4c8ac0726c images opened with PIL convert('RGB'); CAMUS frames are prepared as 8-bit 2-D image files"
+  },
+  "semantic_clusters": {
+    "value": 15,
+    "status": "OFFICIAL_CODE_FALLBACK",
+    "source": "alexaatm/UnsupervisedSegmentor4Ultrasound@d4ac44c60df18b921c590796f6994a4c8ac0726c configs/defaults.yaml clusters_num: 15 (bbox.num_clusters)"
+  },
+  "phi_image": {
+    "value": "dino_vits8_output_embedding_of_imagenet_normalised_bbox_crop",
+    "status": "OFFICIAL_CODE_FALLBACK",
+    "source": "alexaatm/UnsupervisedSegmentor4Ultrasound@d4ac44c60df18b921c590796f6994a4c8ac0726c extract.extract_bbox_features: model(image_crop) on the ImageNet-normalised image"
+  },
+  "step2_crf_applied": {
+    "value": false,
+    "status": "IMPLEMENTATION_CONVENTION",
+    "source": "paper Table 2 carries no CRF mark (Table 1 marks CRF for Step I only)"
+  },
+  "dss_step2_definition": {
+    "value": "official_bbox_pipeline_v1",
+    "status": "OFFICIAL_CODE_FALLBACK",
+    "source": "alexaatm/UnsupervisedSegmentor4Ultrasound@d4ac44c60df18b921c590796f6994a4c8ac0726c extract: background inferred by border fraction and skipped; masks eroded 2 / dilated 5 (skimage); bbox on the patch grid scaled by 8; crops under 8 px zero-padded; L2-normalised features; MiniBatchKMeans(batch_size 4096, max_iter 5000, n_init 10, random_state 1); background maps to 0"
+  },
+  "kmeans_seed": {
+    "value": 1,
+    "status": "OFFICIAL_CODE_FALLBACK",
+    "source": "alexaatm/UnsupervisedSegmentor4Ultrasound@d4ac44c60df18b921c590796f6994a4c8ac0726c KMeans(random_state=1) / bbox seed 1"
+  },
+  "kmeans_n_init": {
+    "value": 10,
+    "status": "OFFICIAL_CODE_FALLBACK",
+    "source": "alexaatm/UnsupervisedSegmentor4Ultrasound@d4ac44c60df18b921c590796f6994a4c8ac0726c KMeans default n_init=10 under the pinned scikit-learn 1.3.0 (conda.yaml)"
+  },
+  "kmeans_max_iter": {
+    "value": 300,
+    "status": "OFFICIAL_CODE_FALLBACK",
+    "source": "scikit-learn 1.3.0 KMeans default max_iter"
+  },
+  "kmeans_tolerance": {
+    "value": 0.0001,
+    "status": "OFFICIAL_CODE_FALLBACK",
+    "source": "scikit-learn 1.3.0 KMeans default tol"
+  },
+  "kmeans_algorithm": {
+    "value": "lloyd",
+    "status": "OFFICIAL_CODE_FALLBACK",
+    "source": "scikit-learn 1.3.0 KMeans default algorithm"
+  },
+  "camus_cohort_inventory": {
+    "value": "supplied_at_runtime",
+    "status": "BLOCKED_DATA_SUPPLIED_AT_RUNTIME",
+    "source": "500 test images, 5 per ES/ED per patient; frames not enumerated by the paper; each run's inventory hash is recorded"
+  },
+  "dino_checkpoint_sha256": {
+    "value": "supplied_at_runtime",
+    "status": "BLOCKED_DATA_SUPPLIED_AT_RUNTIME",
+    "source": "dino_deitsmall8_pretrain.pth must be supplied with --dino-checkpoint and --dino-checkpoint-sha256; the hash is verified and recorded"
+  }
+}
