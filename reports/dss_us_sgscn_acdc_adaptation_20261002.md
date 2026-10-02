@@ -176,14 +176,21 @@ every source SHA-256 verified):
 - `.runtime/acdc_images_only`: 450 files, no GT.
 - `data/ACDC`: GT files sit next to the images.
 
-No DINO ViT-S/8 checkpoint exists anywhere on the server.
+**DINO ViT-S/8 checkpoint.** None existed on the server. The user authorised a download from the official source,
+`https://dl.fbaipublicfiles.com/dino/dino_deitsmall8_pretrain/dino_deitsmall8_pretrain.pth`.
+- Stored at `.runtime/checkpoints/dino_deitsmall8_pretrain.pth` (gitignored): 86,728,949 bytes, SHA-256
+  `55c8b267f479b614ec20858947ce361ba804846c193e20be74263a096bb6d75e`.
+- It loads `strict=True` into the pinned DINO source `7c446df5`.
+- It is the public ImageNet self-supervised checkpoint, used frozen. There is no retraining on ACDC: that would
+  change the method, not the plumbing.
 
 | Run | Result |
 |---|---|
 | SGSCN `acdc_ph2_paper_faithful_declared_conventions`, dev `--limit 2`, CPU 4 threads | RAW_COMPLETE in 24 s; seal `b6b370ae…`, receipt `6764d999…`; [224,224] int32; z=0: 6 iterations (min_labels, 3 IDs); z=1: 50 iterations (max_iterations, 6 IDs); 80 firewall entries, 0 denied, no GT path touched |
 | Track A on that run | TRACK_A_SEMANTIC_COMPLETE (index `145f1acc…`), coverage 0.595 / 0.999, 0 denied |
 | Track B | not run: smoke cohort is not a complete volume, and no GT evaluation is part of the smoke |
-| DSS-US, same selection | exit 3 BLOCKED_DATA: DINO ViT-S/8 checkpoint not supplied |
+| DSS-US `acdc_step2_dss_baseline_dss_paper_faithful_declared_conventions`, dev `--limit 2`, CPU 4 threads | RAW_COMPLETE in 10 s; seal `8ff03f2b…`, receipt `98e54ecc…`; [224,224] int32; patch grid 28x28, 15 Step I segments per slice, Step II 28 segments -> 15 clusters (fit cohort = the 2 smoke slices only); 0 denied, no GT path touched |
+| Track A on the DSS-US run | TRACK_A_SEMANTIC_COMPLETE (index `997b70a2…`), coverage 0.323 / 0.409, 0 denied |
 
 Smoke outputs live in the session scratchpad. They are not benchmark results and were used for nothing else.
 
@@ -195,8 +202,9 @@ Smoke outputs live in the session scratchpad. They are not benchmark results and
 | ACDC_TRACK_A_STATUS | ADAPTER_READY | ADAPTER_READY |
 | ACDC_TRACK_B_STATUS | EVALUATOR_READY | EVALUATOR_READY |
 
-- **ACDC_DATA_STATUS:** ACDC images AVAILABLE (`.runtime/acdc_self_audit_images_only`). DSS-US is BLOCKED_DATA
-  until the DINO ViT-S/8 checkpoint and its SHA-256 are supplied.
+- **ACDC_DATA_STATUS:** AVAILABLE: ACDC images at `.runtime/acdc_self_audit_images_only`, DINO checkpoint at
+  `.runtime/checkpoints/` (SHA-256 `55c8b267…`).
 - **ACDC_ENV_STATUS:** CANONICAL.
-- **ACDC_FULL_RUN_STATUS:** NOT_STARTED. SGSCN awaits approval; DSS-US is BLOCKED_DATA (checkpoint).
-- **Verdict:** READY_WITH_BLOCKERS. SGSCN passed its real-data smoke; DSS-US needs the DINO checkpoint.
+- **ACDC_FULL_RUN_STATUS:** NOT_STARTED, awaiting explicit approval (both methods runnable).
+- **Verdict:** READY_FOR_ACDC_FULL_RUN on the technical side: both methods passed real-data smokes with Track A.
+  Still open: which split(s) and which SGSCN profile are primary, and approval to start.

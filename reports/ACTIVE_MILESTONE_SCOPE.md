@@ -65,5 +65,6 @@ any data access), `scripts/run_acdc_native_tracks.py` (Track A / Track B; `enfor
 | ACDC_TRACK_A_STATUS | ADAPTER_READY (cardiac_adapter_v2) | ADAPTER_READY (cardiac_adapter_v2) |
 | ACDC_TRACK_B_STATUS | EVALUATOR_READY (raw_id_majority_vote_v1) | EVALUATOR_READY (raw_id_majority_vote_v1) |
 
-ACDC images AVAILABLE (`.runtime/acdc_self_audit_images_only`, frozen v12 hashes verified); DSS-US BLOCKED_DATA
-(DINO ViT-S/8 checkpoint); ACDC_ENV_STATUS CANONICAL; ACDC_FULL_RUN_STATUS NOT_STARTED. SGSCN smoke (2 dev slices) passed. Details: `dss_us_sgscn_acdc_adaptation_20261002.md`.
+ACDC_DATA_STATUS AVAILABLE (`.runtime/acdc_self_audit_images_only`, frozen v12 hashes verified; DINO ViT-S/8
+`.runtime/checkpoints/dino_deitsmall8_pretrain.pth` SHA-256 55c8b267…); ACDC_ENV_STATUS CANONICAL;
+ACDC_FULL_RUN_STATUS NOT_STARTED (awaiting approval). SGSCN and DSS-US smokes (2 dev slices each) passed. Details: `dss_us_sgscn_acdc_adaptation_20261002.md`.
