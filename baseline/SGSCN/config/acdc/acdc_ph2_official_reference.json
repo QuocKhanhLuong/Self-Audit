@@ -1,0 +1,60 @@
+{
+  "acdc_contract": {
+    "adapter_spec_sha256": "be5b46f1c0b7bc71e3c49117b649d43d208b42b4d237c95ea06d43de9b6ea290",
+    "freeze_dir": "benchmark_freezes/cardiac_benchmark_v12_historical_224",
+    "freeze_id": "cardiac-benchmark-v12-historical-224-1d1ecbb72e49d999",
+    "input_conversion": {
+      "channels": "gray replicated to 3 identical channels (BGR == RGB)",
+      "gt_derived": false,
+      "id": "acdc_historical224_central_plane_minmax_uint8_gray3_v1",
+      "quantization": "uint8 = floor(255 * u + 0.5)",
+      "reason": "both methods' locked input encodings decode 8-bit images (SGSCN bgr_unit_interval = uint8/255; DSS-US RGB ToTensor of an 8-bit image), while the frozen ACDC contract delivers z-scored floats",
+      "scaling": "per-plane min-max in float64: u = (x - min) / (max - min); constant plane -> 0",
+      "source": "read_self_audit_historical_224_context_stack(record)[1] (frozen v12 preprocessing, 224x224 float32)"
+    },
+    "manifest_file_sha256": "8079dcb4532f10ef1bc034e9f6719588f6f2bf136bd9f975b572423820d58894",
+    "manifest_sha256": "5919ccf0cdaab8869a2e061a0ee0a71a959fa3439dc734304ea9cfaae26c8ccc",
+    "shared_grid_sha256": "6c0d804bbcac3477a0643a8a0061f77cd2821a0f76e005b300fc786c4972157f",
+    "tracks_contract_sha256": "b4a0a6f23059f410f76ae8163b4b443f87876988bbe4fdd13d3b347c5a958fe7"
+  },
+  "adaptation_id": "acdc_v12_ph2_official_reference",
+  "method": "SGSCN",
+  "plumbing": {
+    "input": "uint8 3-channel image from the frozen central plane, passed unchanged to the source profile's own input path",
+    "output": "anonymous int32 [224,224] raw IDs exactly as produced; no semantic remapping",
+    "persistence": "seal_raw_partition (cardiac_raw_partition.v1) per sample + native_acdc run seal + external write-once receipt",
+    "seed": {
+      "base_seed": 1,
+      "derivation": "sgscn sample_seed: sha256(base_seed, sample_id)[:4] over the ACDC sample_id"
+    },
+    "spatial": "method runs on the shared 224x224 grid and its output is the raw map (no resize)"
+  },
+  "schema": "native_acdc_adaptation.v1",
+  "source_profile": {
+    "implementation": "isolated_GPL_official_code",
+    "native_dataset": "PH2",
+    "paper_equivalence": "UNRESOLVED",
+    "path": "baseline/SGSCN/config/native/ph2_official_reference.yaml",
+    "profile": "ph2_official_reference",
+    "profile_class": "OFFICIAL_REFERENCE",
+    "sha256": "e88ef5b730ad97a1dc39f3fbcc62b885039c6294d6207fd99aba425f2a3991ec"
+  },
+  "status": "ACDC_PLUMBING_ONLY: the source profile's scientific behaviour is unchanged",
+  "unchanged": [
+    "architecture",
+    "layer_order",
+    "output_normalization",
+    "optimizer",
+    "momentum",
+    "learning_rate",
+    "losses_and_reduction",
+    "context_density",
+    "input_encoding",
+    "stopping_rule",
+    "max_iterations",
+    "min_labels",
+    "final_forward_mode",
+    "initialization",
+    "seed_derivation"
+  ]
+}

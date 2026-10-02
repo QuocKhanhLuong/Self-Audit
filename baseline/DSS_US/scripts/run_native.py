@@ -36,21 +36,27 @@ def check_data(args):
         reasons.append(f"CAMUS image-only inventory not found: {args.images_manifest}")
     if args.image_root is None or not args.image_root.is_dir():
         reasons.append(f"CAMUS image-only staging root not found: {args.image_root}")
-    repository = args.dino_repo
+    reasons += check_dino(args.dino_repo, args.dino_checkpoint, args.dino_checkpoint_sha256)
+    if reasons:
+        raise BlockedData(reasons)
+
+
+def check_dino(repository, checkpoint, checkpoint_sha256):
+    """BLOCKED_DATA reasons for the pinned DINO source and the hash-bound ViT-S/8 checkpoint."""
+    reasons = []
     if not (repository / "hubconf.py").is_file():
         reasons.append(f"pinned DINO source not found at {repository} (run scripts/pin_native_references.py)")
     else:
         head = subprocess.run(["git", "-C", str(repository), "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
         if head != DINO_COMMIT:
             reasons.append(f"DINO source is not pinned to {DINO_COMMIT}")
-    if args.dino_checkpoint is None or not args.dino_checkpoint.is_file():
+    if checkpoint is None or not checkpoint.is_file():
         reasons.append("DINO ViT-S/8 checkpoint dino_deitsmall8_pretrain.pth not supplied (--dino-checkpoint)")
-    elif not args.dino_checkpoint_sha256:
+    elif not checkpoint_sha256:
         reasons.append("--dino-checkpoint-sha256 is required to bind the checkpoint")
-    elif file_hash(args.dino_checkpoint) != args.dino_checkpoint_sha256:
+    elif file_hash(checkpoint) != checkpoint_sha256:
         reasons.append("DINO checkpoint SHA-256 does not match --dino-checkpoint-sha256")
-    if reasons:
-        raise BlockedData(reasons)
+    return reasons
 
 
 def produce(inventory, settings, *, keys_provider, image_records=None):
