@@ -21,3 +21,13 @@ Licensed DINO: facebookresearch/dino@7c446df5b9f45747937fb0d72314eb9f7b66930a,
 Apache-2.0. Checkpoint weights must be separately hash-bound by the caller.
 No official ACDC configuration was found in the inspected pinned reference.
 This does not authorize adaptation before native verification readiness.
+
+## Evidence audit 2026-10-01
+
+| Evidence | Location | Status |
+|---|---|---|
+| Step I evaluator (stage, pairing, threshold, void, aggregation) | Paper Table 1; configs/eval/defaults.yaml; pipeline.py::evaluate; eval_utils.py::match/hungarian_match/majority_vote_exclusive; segm_eval.py::evaluate_dataset_with_remapping | RESOLVED (OFFICIAL_CODE + PAPER); independent reimplementation |
+| DINO backbone and checkpoint identity | Paper 2.1; configs/model/dino_vits8.yaml; extract_utils.get_model; DINO hubconf dino_vits8 | RESOLVED identity; checkpoint file BLOCKED_DATA |
+| CRF parameters | configs/crf/defaults.yaml vs configs/sweep/*.yaml | CONFLICT, UNRESOLVED |
+| CAMUS rows, cohort, Step II clusters | not present in paper or in any file/commit of the official repository | UNRESOLVED |
+| Step II evaluated stage, label consistency | Table 2 (no CRF mark); LC computed outside official code | UNRESOLVED |

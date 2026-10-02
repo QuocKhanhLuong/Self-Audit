@@ -17,7 +17,7 @@ if __name__ == "__main__":
             for purpose in ("producer", "native_track_b"):
                 try:
                     load_lock(path, purpose=purpose)
-                    entry[purpose] = {"status": "REFERENCE_READY"}
+                    entry[purpose] = {"status": "REFERENCE_READY" if purpose == "producer" else "EVALUATOR_READY"}
                 except ProtocolBlocked as error:
                     entry[purpose] = {"status": error.status, "reasons": error.reasons}
             profiles[path.stem] = entry

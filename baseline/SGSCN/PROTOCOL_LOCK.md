@@ -20,6 +20,13 @@ arithmetic with --center enabled; they are not the demo's default invocation.
 The code spatial weight 5 (--stepsize_ss) is an official implementation detail
 that conflicts with the paper's unweighted sum; this is an explicit paper gate.
 
+Evidence audit 2026-10-01 (reports/dss_us_sgscn_paper_protocol_evidence_20261001.md)
+adds: the paper writes Eqs. 1-2 as pixel sums while the code averages them (in addition
+to the spatial weight 5); paper stopping has no criterion; SYSU-US sampling has no seed
+or list; PH2 input format is unspecified. Track B: the overlap measure and ties are
+unspecified, and reported HM values above 100% exclude the 1-Jaccard Hammoude form, so
+HM/XOR cannot be reconstructed.
+
 Paper profiles remain BLOCKED_PROTOCOL because architecture prose (three 3x3
 convolutions versus the demo's final 1x1), the spatial loss weight and stability
 stopping differ from the released demo. No undocumented stability criterion is

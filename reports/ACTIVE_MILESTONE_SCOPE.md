@@ -31,13 +31,17 @@ historical contracts remain part of the shared regression suite.
    `tests/shared_benchmark`, `baseline/CUTS/tests`, `tests/native_baselines`,
    `baseline/SGSCN/tests`, `baseline/DSS_US/tests`.
 3. `scripts/native_protocol_readiness.py` matches the committed readiness receipt
-   (no native gate changed).
+   `dss_us_sgscn_native_readiness_paper_evidence_20261001.json` (no native gate changed).
 4. CUTS: the active historical-224 freeze v12 validates the checkout.
 
 ## Native readiness (unchanged)
 
-- DSS-US: all 11 CAMUS profiles BLOCKED_PROTOCOL (row recipes, CAMUS cohort,
-  Step I/Step II evaluator details, CRF); DINO checkpoint not supplied.
-- SGSCN: paper profiles BLOCKED_PROTOCOL (architecture/stopping, spatial-loss
-  weight; tie/HM/XOR evaluator); official-code reference profiles REFERENCE_READY.
+- DSS-US: all 11 CAMUS producer profiles BLOCKED_PROTOCOL (row recipes, CAMUS
+  cohort, CRF parameters, Step II clusters); Step I Track B evaluator
+  EVALUATOR_READY; Step II Track B BLOCKED_PROTOCOL (evaluated stage, label
+  consistency); DINO checkpoint not supplied. Evidence:
+  `dss_us_sgscn_paper_protocol_evidence_20261001.md`.
+- SGSCN: paper profiles BLOCKED_PROTOCOL (architecture, loss reduction/weight,
+  stopping, cohort/input); Track B BLOCKED_PROTOCOL (overlap measure, ties, HM/XOR);
+  official-code reference profiles REFERENCE_READY.
 - CAMUS, PH2, SYSU-US: BLOCKED_DATA. Native Track A: BLOCKED_ADAPTER.

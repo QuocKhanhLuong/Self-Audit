@@ -60,14 +60,70 @@
       "value": 5,
       "status": "OFFICIAL_IMPLEMENTATION_DETAIL",
       "source": "592efb6 demo_final.py --stepsize_ss default 5; DISCREPANCY: arXiv 2107.04934 PDF sha256 222a28c659e3f507dfed519a3e8b8945fa2afcb0a84a7ab428205e807d831051 section 2.6 states an unweighted sum"
+    },
+    "architecture_paper": {
+      "value": "3 conv layers, each 3x3/stride 1/pad 1/100 filters with ReLU and batch normalisation (order not stated)",
+      "status": "VERIFIED_PAPER",
+      "source": "arXiv 2107.04934 PDF sha256 222a28c659e3f507dfed519a3e8b8945fa2afcb0a84a7ab428205e807d831051 section 3.2"
+    },
+    "architecture_code": {
+      "value": "conv3x3->ReLU->BN, conv3x3->ReLU->BN (nConv=2), conv1x1->BN without ReLU; 100 channels",
+      "status": "OFFICIAL_IMPLEMENTATION_DETAIL",
+      "source": "osmond332/Spatial_Guided_Self_Supervised_Clustering@592efb6e72ceeef15c8be0630a4673eda5dce6f5 demo_final.py::CSNet"
+    },
+    "output_normalisation": {
+      "value": "segmentation map normalised to zero mean and unit variance before argmax = final batch normalisation",
+      "status": "VERIFIED_PAPER+OFFICIAL_CODE",
+      "source": "arXiv 2107.04934 PDF sha256 222a28c659e3f507dfed519a3e8b8945fa2afcb0a84a7ab428205e807d831051 section 2.2; demo_final.py::CSNet bn3"
+    },
+    "loss_reduction_paper": {
+      "value": "Eq. 1 cross-entropy and Eq. 2 sparse spatial L1 written as sums over pixels; overall loss is their unweighted sum with the context loss (section 2.6)",
+      "status": "VERIFIED_PAPER",
+      "source": "arXiv 2107.04934 PDF sha256 222a28c659e3f507dfed519a3e8b8945fa2afcb0a84a7ab428205e807d831051 Eqs. 1-2, section 2.6"
+    },
+    "loss_reduction_code": {
+      "value": "mean cross-entropy (CrossEntropyLoss) + stepsize_ss=5 x mean L1 (L1Loss) + context loss",
+      "status": "OFFICIAL_IMPLEMENTATION_DETAIL",
+      "source": "osmond332/Spatial_Guided_Self_Supervised_Clustering@592efb6e72ceeef15c8be0630a4673eda5dce6f5 demo_final.py (loss_ce, loss_mpy/loss_mpz, args.stepsize_ss)"
+    },
+    "stopping_paper": {
+      "value": "repeat until the clustering and the loss become stable (no criterion given)",
+      "status": "VERIFIED_PAPER",
+      "source": "arXiv 2107.04934 PDF sha256 222a28c659e3f507dfed519a3e8b8945fa2afcb0a84a7ab428205e807d831051 section 2.6"
+    },
+    "stopping_code": {
+      "value": "maxIter 50; stop after the optimizer step when the pre-update label count <= minLabels 3; final forward in train mode",
+      "status": "OFFICIAL_IMPLEMENTATION_DETAIL",
+      "source": "osmond332/Spatial_Guided_Self_Supervised_Clustering@592efb6e72ceeef15c8be0630a4673eda5dce6f5 demo_final.py training loop"
+    },
+    "optimizer": {
+      "value": "SGD, momentum 0.9, learning rate 0.1 (PH2) / 0.05 (SYSU-US)",
+      "status": "VERIFIED_PAPER+OFFICIAL_CODE",
+      "source": "arXiv 2107.04934 PDF sha256 222a28c659e3f507dfed519a3e8b8945fa2afcb0a84a7ab428205e807d831051 section 3.2; demo_final.py optim.SGD(momentum=0.9), --lr"
+    },
+    "seeds_repetition": {
+      "value": "not specified; one run per image; seeds are reproducibility instrumentation only",
+      "status": "UNRESOLVED (paper and code silent)",
+      "source": "arXiv 2107.04934 PDF sha256 222a28c659e3f507dfed519a3e8b8945fa2afcb0a84a7ab428205e807d831051; osmond332/Spatial_Guided_Self_Supervised_Clustering@592efb6e72ceeef15c8be0630a4673eda5dce6f5 demo_final.py (no seeding)"
+    },
+    "cohort": {
+      "value": "all 200 PH2 dermoscopic studies",
+      "status": "VERIFIED_PAPER",
+      "source": "arXiv 2107.04934 PDF sha256 222a28c659e3f507dfed519a3e8b8945fa2afcb0a84a7ab428205e807d831051 section 2.1"
+    },
+    "input_format": {
+      "value": null,
+      "status": "UNRESOLVED",
+      "source": "paper silent on image format/resizing; osmond332/Spatial_Guided_Self_Supervised_Clustering@592efb6e72ceeef15c8be0630a4673eda5dce6f5 demo reads an 8-bit file via cv2.imread and its sample input_images/test/IMD017.jpg is JPEG whereas PH2 is distributed as BMP"
     }
   },
   "gates": {
     "producer": [],
     "native_track_b": [
-      "Overlap tie convention and exact HM/XOR definitions unresolved"
+      "Selection 'largest overlap with the GT segment': overlap measure (intersection vs ratio) and tie policy unresolved",
+      "HM and XOR definitions unresolved: reported HM values above 100% exclude the 1-Jaccard form"
     ]
   },
-  "native_evaluator_spec_sha256": "811d5a6a1c5e59e9265cfeef7859e61f42b1da49174e624c2cafe0837f0a9721",
+  "native_evaluator_spec_sha256": "63eaeaa635e4753dc3e747e2de4ea8fd8452ac803450e48404039edb9ca41e7b",
   "reference_invocation": "official demo_final.py arithmetic with the non-default --center flag enabled (paper context loss) and the paper section 3.2 dataset learning rate; not the demo's default invocation and not exact paper reproduction"
 }

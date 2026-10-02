@@ -21,16 +21,50 @@
       "value": null,
       "status": "UNRESOLVED",
       "source": "Complete row-specific CAMUS config unavailable"
+    },
+    "backbone": {
+      "value": "dino_vits8, keys of the last attention layer, patch size 8",
+      "status": "VERIFIED_PAPER+OFFICIAL_CODE",
+      "source": "paper Section 2.1 ('keys of the last attention layer of the pre-trained DINO'); d4ac44c60df18b921c590796f6994a4c8ac0726c configs/model/dino_vits8.yaml, configs/spectral_clustering/defaults.yaml (which_features: k, patch_size: 8)"
+    },
+    "backbone_checkpoint": {
+      "value": "official DINO ViT-S/8 weights https://dl.fbaipublicfiles.com/dino/dino_deitsmall8_pretrain/dino_deitsmall8_pretrain.pth",
+      "status": "OFFICIAL_CODE",
+      "source": "d4ac44c60df18b921c590796f6994a4c8ac0726c configs/model/dino_vits8.yaml checkpoint '' -> extract_utils.get_model torch.hub dino_vits8 pretrained; facebookresearch/dino@7c446df5 hubconf.py::dino_vits8; SHA-256 must be recorded when the file is supplied (BLOCKED_DATA until then)"
+    },
+    "camus_cohort": {
+      "value": null,
+      "status": "UNRESOLVED",
+      "source": "paper Section 3: 500 test-set images from 50 patients, '5 for each ES and ED'; views/frames are not enumerated and no CAMUS list or config exists anywhere in the official repository or its history"
+    },
+    "row_recipe_search": {
+      "value": null,
+      "status": "UNRESOLVED",
+      "source": "paper gives only formulas (Eqs. 1-6; C_ssd, C_mi, C_pos, delta, KNN k and embedding weights are symbolic); d4ac44c60df18b921c590796f6994a4c8ac0726c contains no dataset or row config for CAMUS (configs/dataset has only README/.gitkeep; no 'camus'/'cardiac' in any file or commit)"
+    },
+    "crf_parameters": {
+      "value": null,
+      "status": "UNRESOLVED",
+      "source": "d4ac44c60df18b921c590796f6994a4c8ac0726c configs/crf/defaults.yaml (w1 10, alpha 80, beta 13, w2 3, gamma 3, it 5) conflicts with configs/sweep/{defaults,aff}.yaml (w1 15, alpha 7, beta 10, w2 5, gamma 5, it 10); no row-to-set correspondence"
+    },
+    "step1_evaluator": {
+      "value": "per_image_remapped_dice on the CRF-postprocessed Step I partition",
+      "status": "OFFICIAL_CODE+PAPER",
+      "source": "evaluation/track_b/spec.json step_I"
     }
   },
   "gates": {
     "producer": [
       "Exact CAMUS row preprocessing/affinity/spectral/CRF recipe unresolved",
-      "Exact native CAMUS cohort unresolved"
+      "Exact native CAMUS cohort unresolved",
+      "CRF parameter set unresolved (conflicting official defaults vs sweep configs)"
     ],
-    "native_track_b": [
-      "Step I per-image segment Dice pairing/aggregation unresolved"
-    ]
+    "native_track_b": []
   },
-  "native_evaluator_spec_sha256": "c8cf2c04c19230fc707e29a10db4af91e257904dfb53aa96557dd084e17a010f"
+  "native_evaluator_spec_sha256": "3b5babd984eb9c5becfb8e12e55acdfffb91528849d4b822cbc3f04103fc2002",
+  "native_track_b": {
+    "evaluator": "per_image_remapped_dice",
+    "evaluated_stage": "crf_multi_region",
+    "n_classes": 4
+  }
 }
