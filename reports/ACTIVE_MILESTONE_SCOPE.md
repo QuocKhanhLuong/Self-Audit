@@ -33,6 +33,7 @@ historical contracts remain part of the shared regression suite.
 3. `scripts/native_protocol_readiness.py` matches the committed readiness receipt
    `dss_us_sgscn_native_readiness_paper_faithful_runnable_20261002.json`.
 4. CUTS: the active historical-224 freeze v12 validates the checkout.
+5. ACDC native adaptation: `scripts/acdc_native_readiness.py` reports the per-method statuses below.
 
 ## Native readiness by profile class (2026-10-02)
 
@@ -50,3 +51,20 @@ while exact PAPER_REPRODUCTION stays BLOCKED_PROTOCOL.
   SGSCN paper metrics are BLOCKED_PROTOCOL (overlap measure, ties, HM/XOR are not defined).
 - CAMUS, PH2, SYSU-US and the DINO ViT-S/8 checkpoint: BLOCKED_DATA. Native Track A: BLOCKED_ADAPTER.
 - Details, declared conventions and fallbacks: `dss_us_sgscn_paper_faithful_runnable_20261002.md`.
+
+## ACDC adaptation of DSS-US / SGSCN (2026-10-02)
+
+Plumbing only, on the frozen v12 historical-224 ACDC contract; source profiles run unchanged.
+Entrypoints: `baseline/{SGSCN,DSS_US}/scripts/run_acdc.py` (canonical environment required before
+any data access), `scripts/run_acdc_native_tracks.py` (Track A / Track B; `enforce_official_entrypoint`),
+`scripts/acdc_native_readiness.py`. Contract binding: `configs/acdc_native_tracks_v1.json`.
+
+| | DSS-US | SGSCN |
+|---|---|---|
+| ACDC_PRODUCER_STATUS | PROTOCOL_READY | PROTOCOL_READY |
+| ACDC_TRACK_A_STATUS | ADAPTER_READY (cardiac_adapter_v2) | ADAPTER_READY (cardiac_adapter_v2) |
+| ACDC_TRACK_B_STATUS | EVALUATOR_READY (raw_id_majority_vote_v1) | EVALUATOR_READY (raw_id_majority_vote_v1) |
+
+ACDC_DATA_STATUS AVAILABLE (`.runtime/acdc_self_audit_images_only`, frozen v12 hashes verified; DINO ViT-S/8
+`.runtime/checkpoints/dino_deitsmall8_pretrain.pth` SHA-256 55c8b267…); ACDC_ENV_STATUS CANONICAL;
+ACDC_FULL_RUN_STATUS NOT_STARTED (awaiting approval). SGSCN and DSS-US smokes (2 dev slices each) passed. Details: `dss_us_sgscn_acdc_adaptation_20261002.md`.

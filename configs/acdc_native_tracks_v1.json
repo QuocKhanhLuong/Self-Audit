@@ -1,0 +1,55 @@
+{
+  "schema_version": "shared_benchmark.acdc_native_tracks.v1",
+  "dataset": "acdc",
+  "methods": ["DSS-US", "SGSCN"],
+  "raw_input": {
+    "artifact_schema": "cardiac_raw_partition.v1",
+    "run_seal_schema": "native_acdc.raw-seal.v1",
+    "receipt_schema": "native_acdc.raw-seal-receipt.v1",
+    "grid": "shared_benchmark.spatial.self_audit_historical_224.v1",
+    "shared_grid_sha256": "6c0d804bbcac3477a0643a8a0061f77cd2821a0f76e005b300fc786c4972157f",
+    "ids": "anonymous; producers store raw IDs unmapped",
+    "consumed_by": ["track_a", "track_b"],
+    "preflight": "the external seal receipt and the run seal verify before any image, semantic or GT read"
+  },
+  "semantic_classes": {"0": "BG", "1": "RV", "2": "MYO", "3": "LV", "4": "VOID"},
+  "track_a": {
+    "name": "gt_free_common_semantic_adapter",
+    "adapter_version": "cardiac_adapter_v2",
+    "adapter_spec": "benchmark_freezes/cardiac_benchmark_v12_historical_224/configs/adapter_v2_spec.json",
+    "adapter_spec_sha256": "be5b46f1c0b7bc71e3c49117b649d43d208b42b4d237c95ea06d43de9b6ea290",
+    "central_image": "read_self_audit_historical_224_context_stack(record)[1]; the producer-recorded central_image_sha256 must match",
+    "inputs": "verified raw partition + image-only central plane + image-only record; no GT, no metric, no Track B output",
+    "firewall": "ProducerAccessGuard over the cohort's source images only",
+    "semantic_seal": "seal_semantic_partition (cardiac_semantic_partition.v2) per sample"
+  },
+  "track_b": {
+    "name": "raw_id_majority_vote_v1",
+    "kind": "GT_ASSISTED_DIAGNOSTIC_ONLY",
+    "unit": "one sample (one 2-D slice) at a time",
+    "mapping_grid": "native acquisition grid: raw map restored with the frozen nearest-exact label inverse (manifest spatial_transform.inverse_resize.mode_labels); GT is never resampled",
+    "valid_reference_pixels": "GT value in {0,1,2,3}",
+    "rule": "every raw ID is assigned, as a whole, to the class with the maximum count of valid GT pixels over all pixels of that raw ID",
+    "tie_order": ["BG", "RV", "MYO", "LV"],
+    "many_to_one": true,
+    "split_raw_id": false,
+    "split_connected_components": false,
+    "hungarian": false,
+    "dice_optimisation": false,
+    "class_quotas": false,
+    "no_valid_reference_pixels": "VOID",
+    "never_fed_back_into": ["producer", "hyperparameters", "seed_selection", "track_a", "model_selection"]
+  },
+  "metrics": {
+    "reuses": "configs/cardiac_reference_evaluator_v1.json",
+    "reuses_sha256": "8fc74dacd1cf4377f0bbab70002b786d8317370bb8d72c1ce7a325429e55b8a5",
+    "implementation": "scripts/evaluate_cardiac_baseline_reference.py: restore_semantic_slice, gt_path_for_record, _load_gt, _patient_scores; self_audit_maskfree.evaluation.metrics: dice_iou_volume, patient_macro",
+    "prediction_inverse": "nearest_exact to native per manifest spatial transform (224 -> native for v12)",
+    "void_policy": "VOID is never relabelled as BG; full-support foreground Dice/IoU treats VOID as no predicted named class and reports native-grid coverage separately",
+    "aggregation": "per_patient_frame_3d_then_patient_macro_over_defined_ED_ES_frame_scores",
+    "metrics": ["dice", "iou", "coverage"],
+    "classes": ["RV", "MYO", "LV"],
+    "complete_volumes_only": true,
+    "note": "the reference evaluator contract file itself binds the DFC baseline and the 256 grid; it is reused by hash for its metric semantics and not modified"
+  }
+}
