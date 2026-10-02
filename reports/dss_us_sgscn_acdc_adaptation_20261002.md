@@ -170,14 +170,22 @@ New ACDC tests cover:
 
 ## 9. Smoke execution
 
-There are no local ACDC images: `datasets_download/ACDC` is empty. There is also no DINO checkpoint.
+Real ACDC images exist in the checkout. Three roots all validate against the frozen v12 contract (1902 records,
+every source SHA-256 verified):
+- `.runtime/acdc_self_audit_images_only`: exactly the 200 manifest NIfTI files, no GT. Used for the smoke run.
+- `.runtime/acdc_images_only`: 450 files, no GT.
+- `data/ACDC`: GT files sit next to the images.
 
-| Method | Command | Result |
-|---|---|---|
-| SGSCN | `run_acdc.py --image-root <empty ACDC> --limit 2` | exit 3 BLOCKED_DATA: 200 source image files absent (e.g. `training/patient001/patient001_frame01.nii`), no output created |
-| DSS-US | same | exit 3 BLOCKED_DATA: same + DINO ViT-S/8 checkpoint not supplied |
+No DINO ViT-S/8 checkpoint exists anywhere on the server.
 
-Nothing was downloaded.
+| Run | Result |
+|---|---|
+| SGSCN `acdc_ph2_paper_faithful_declared_conventions`, dev `--limit 2`, CPU 4 threads | RAW_COMPLETE in 24 s; seal `b6b370ae…`, receipt `6764d999…`; [224,224] int32; z=0: 6 iterations (min_labels, 3 IDs); z=1: 50 iterations (max_iterations, 6 IDs); 80 firewall entries, 0 denied, no GT path touched |
+| Track A on that run | TRACK_A_SEMANTIC_COMPLETE (index `145f1acc…`), coverage 0.595 / 0.999, 0 denied |
+| Track B | not run: smoke cohort is not a complete volume, and no GT evaluation is part of the smoke |
+| DSS-US, same selection | exit 3 BLOCKED_DATA: DINO ViT-S/8 checkpoint not supplied |
+
+Smoke outputs live in the session scratchpad. They are not benchmark results and were used for nothing else.
 
 ## 10. Status
 
@@ -187,8 +195,8 @@ Nothing was downloaded.
 | ACDC_TRACK_A_STATUS | ADAPTER_READY | ADAPTER_READY |
 | ACDC_TRACK_B_STATUS | EVALUATOR_READY | EVALUATOR_READY |
 
-- **ACDC_DATA_STATUS:** BLOCKED_DATA. ACDC training NIfTI is needed for both methods; the DINO ViT-S/8 checkpoint
-  plus its SHA-256 is also needed for DSS-US.
+- **ACDC_DATA_STATUS:** ACDC images AVAILABLE (`.runtime/acdc_self_audit_images_only`). DSS-US is BLOCKED_DATA
+  until the DINO ViT-S/8 checkpoint and its SHA-256 are supplied.
 - **ACDC_ENV_STATUS:** CANONICAL.
-- **ACDC_FULL_RUN_STATUS:** NOT_STARTED (BLOCKED_DATA).
-- **Verdict:** READY_WITH_BLOCKERS. The code is ready for an ACDC smoke run as soon as data is supplied.
+- **ACDC_FULL_RUN_STATUS:** NOT_STARTED. SGSCN awaits approval; DSS-US is BLOCKED_DATA (checkpoint).
+- **Verdict:** READY_WITH_BLOCKERS. SGSCN passed its real-data smoke; DSS-US needs the DINO checkpoint.
