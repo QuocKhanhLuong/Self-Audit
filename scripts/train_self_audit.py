@@ -5,7 +5,7 @@ Executes the approved unified schedule across 130 epochs in a single process
 and shared batch optimization loop, carrying last live weights between intervals
 and resetting optimizers at epochs 100 and 120.
 
-For historical A->B->C triple-config execution, see scripts/train_self_audit_legacy.py.
+For historical A->B->C reproduction, see docs/legacy_reproduction.md.
 """
 
 from __future__ import annotations
@@ -23,8 +23,8 @@ for path in (ROOT, SRC):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-# Re-export legacy helpers for test and lineage backwards-compatibility
-from scripts.train_self_audit_legacy import (  # noqa: E402
+# Re-export calibration helpers for artifact-lineage backwards compatibility
+from scripts.self_audit_post_training import (  # noqa: E402
     SELECTION_BIAS_CAVEAT,
     TAU_PRECEDENCE,
     _diagnostic_at_tau,
@@ -71,7 +71,7 @@ def _parse_args() -> argparse.Namespace:
     if passed_legacy:
         sys.exit(
             f"Error: Legacy multi-config flags {passed_legacy} are not supported by the canonical one-config runner.\n"
-            "For historical A->B->C multi-stage execution, use scripts/train_self_audit_legacy.py."
+            "Use --config for the current runner; historical reproduction is documented in docs/legacy_reproduction.md."
         )
 
     parser = argparse.ArgumentParser(

@@ -1,0 +1,230 @@
+{
+  "run": "run_280e6666cc31",
+  "counts": {
+    "retained": 5,
+    "released": 6
+  },
+  "workers": [
+    {
+      "dispatch_id": "ctx_91b769b5d0cd",
+      "task_id": "task_038800c1c141",
+      "worker_state": "failed",
+      "dispatch_status": "failed",
+      "terminal_state": "retained",
+      "retained_reason": "identity_unproven",
+      "next_action": {
+        "kind": "release",
+        "argv": [
+          "orchestration",
+          "worker-release",
+          "--dispatch",
+          "ctx_91b769b5d0cd"
+        ]
+      }
+    },
+    {
+      "dispatch_id": "ctx_26d97bd3d488",
+      "task_id": "task_1fe3af5fcf94",
+      "worker_state": "failed",
+      "dispatch_status": "failed",
+      "terminal_state": "retained",
+      "retained_reason": "user_takeover",
+      "next_action": {
+        "kind": "none",
+        "argv": []
+      }
+    },
+    {
+      "dispatch_id": "ctx_6a522f1054fe",
+      "task_id": "task_33a37a90ceff",
+      "worker_state": "succeeded",
+      "dispatch_status": "completed",
+      "terminal_state": "retained",
+      "retained_reason": "user_takeover",
+      "next_action": {
+        "kind": "none",
+        "argv": []
+      }
+    },
+    {
+      "dispatch_id": "ctx_d0866eea439a",
+      "task_id": "task_038800c1c141",
+      "worker_state": "succeeded",
+      "dispatch_status": "completed",
+      "terminal_state": "released",
+      "retained_reason": null,
+      "next_action": {
+        "kind": "none",
+        "argv": []
+      }
+    },
+    {
+      "dispatch_id": "ctx_a02e34f9de91",
+      "task_id": "task_1fe3af5fcf94",
+      "worker_state": "succeeded",
+      "dispatch_status": "completed",
+      "terminal_state": "released",
+      "retained_reason": null,
+      "next_action": {
+        "kind": "none",
+        "argv": []
+      }
+    },
+    {
+      "dispatch_id": "ctx_c4ce87ee5379",
+      "task_id": "task_3d734e6ec899",
+      "worker_state": "failed",
+      "dispatch_status": "failed",
+      "terminal_state": "retained",
+      "retained_reason": null,
+      "next_action": {
+        "kind": "none",
+        "argv": []
+      }
+    },
+    {
+      "dispatch_id": "ctx_aa8bf126266a",
+      "task_id": "task_4b9fdce3e664",
+      "worker_state": "failed",
+      "dispatch_status": "failed",
+      "terminal_state": "retained",
+      "retained_reason": null,
+      "next_action": {
+        "kind": "none",
+        "argv": []
+      }
+    },
+    {
+      "dispatch_id": "ctx_5df3a1d10ebd",
+      "task_id": "task_3d734e6ec899",
+      "worker_state": "failed",
+      "dispatch_status": "failed",
+      "terminal_state": "released",
+      "retained_reason": null,
+      "next_action": {
+        "kind": "none",
+        "argv": []
+      }
+    },
+    {
+      "dispatch_id": "ctx_b04cc04931ab",
+      "task_id": "task_4b9fdce3e664",
+      "worker_state": "failed",
+      "dispatch_status": "failed",
+      "terminal_state": "released",
+      "retained_reason": null,
+      "next_action": {
+        "kind": "none",
+        "argv": []
+      }
+    },
+    {
+      "dispatch_id": "ctx_f1c228d7fb98",
+      "task_id": "task_4b9fdce3e664",
+      "worker_state": "stopped",
+      "dispatch_status": "failed",
+      "terminal_state": "released",
+      "retained_reason": null,
+      "next_action": {
+        "kind": "none",
+        "argv": []
+      }
+    },
+    {
+      "dispatch_id": "ctx_f82308c8720f",
+      "task_id": "task_3d734e6ec899",
+      "worker_state": "stopped",
+      "dispatch_status": "failed",
+      "terminal_state": "released",
+      "retained_reason": null,
+      "next_action": {
+        "kind": "none",
+        "argv": []
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task_038800c1c141",
+      "title": "Main baseline and diffusion audit",
+      "status": "completed",
+      "result": {
+        "provenance": "worker_report",
+        "outcome": "succeeded",
+        "messageId": "msg_2bd5aa292038",
+        "reportedBy": "term_3a14b6bf-eeb5-452f-ba47-be23d4fd89d9",
+        "subject": "Completed current-main flow and diffusion audit",
+        "body": "Created the flow audit pinned to c31825a with 45 verified immutable source references, complete model/data/loss/trainer/inference paths, metric provenance and retention tests. Main now has a runnable image-only v3 pipeline with heuristic seeds and incomplete quality gates, while CUTS diffusion is feature clustering and shared supervised namespaces remain live dependencies. Independent no-GT quality and RTX 4080 Super validation remain open, and this worker changed only the report without deleting source or running training.",
+        "completedBy": "term_3a14b6bf-eeb5-452f-ba47-be23d4fd89d9",
+        "filesModified": [
+          "reports/main_baseline_20261002/01_FLOW_AUDIT.md"
+        ],
+        "reportPath": "/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit/reports/main_baseline_20261002/01_FLOW_AUDIT.md",
+        "completedAt": "2026-10-02T04:04:47.106Z"
+      }
+    },
+    {
+      "id": "task_1fe3af5fcf94",
+      "title": "Cleanup reachability inventory",
+      "status": "completed",
+      "result": {
+        "provenance": "worker_report",
+        "outcome": "succeeded",
+        "messageId": "msg_d5e3680329b5",
+        "reportedBy": "term_00d32e6b-4c84-4386-98ee-fc143ff1bb0b",
+        "subject": "Cleanup audit complete: exact allowlist and legacy migration",
+        "body": "Audited pinned main c31825a against checkout 234be0a and wrote the cleanup report with import, caller, config, CI, README, freeze, and Git-history evidence. Seven files are immediately removable, and a concrete five-function helper extraction closes retirement of three legacy executables totaling 1649 lines while preserving active phase modules, hashed configs, and comparison evidence; all 536 audited Python files parsed. No code deletion or training was performed, and the coordinator owns the documented migration, focused behavioral checks, combined-tree validation, and publication.",
+        "completedBy": "term_00d32e6b-4c84-4386-98ee-fc143ff1bb0b",
+        "filesModified": [
+          "reports/main_baseline_20261002/02_CLEANUP_AUDIT.md"
+        ],
+        "reportPath": "/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit/reports/main_baseline_20261002/02_CLEANUP_AUDIT.md",
+        "completedAt": "2026-10-02T04:06:35.959Z"
+      }
+    },
+    {
+      "id": "task_33a37a90ceff",
+      "title": "Primary-source fast lightweight Dice research",
+      "status": "completed",
+      "result": {
+        "provenance": "worker_report",
+        "outcome": "succeeded",
+        "messageId": "msg_b4cdcd93b0c3",
+        "reportedBy": "term_a06eb0fb-8d79-40cb-96c9-84f54e648028",
+        "subject": "Research complete: strict no-GT evidence and RTX protocol",
+        "body": "Created reports/main_baseline_20261002/03_RESEARCH.md against refreshed main c31825a, distinguishing checkout 234be0a and directly checking nine primary research records plus official repositories. The reviewed evidence does not establish strict no-GT named cardiac Dice at or above 0.90; the report explains diffusion types, GT-guided CUTS readout limits, inadmissible supervised comparators, and the seed-first one-pass-student recommendation. Remaining work is independent frozen patient-level teacher and student evaluation plus paired RTX 4080 Super 16GB measurements under explicitly proposed resource gates, with no training or git writes performed in this task.",
+        "completedBy": "term_a06eb0fb-8d79-40cb-96c9-84f54e648028",
+        "filesModified": [
+          "reports/main_baseline_20261002/03_RESEARCH.md"
+        ],
+        "reportPath": "/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit/reports/main_baseline_20261002/03_RESEARCH.md",
+        "completedAt": "2026-10-02T04:02:08.202Z"
+      }
+    },
+    {
+      "id": "task_4b9fdce3e664",
+      "title": "Remove retired runners while preserving live calibration",
+      "status": "completed",
+      "result": {
+        "provenance": "coordinator_recovery",
+        "outcome": "completed_by_coordinator",
+        "worker_execution": "failed_readiness_and_login",
+        "deleted_files": 10,
+        "helper_ast_preserved": 7,
+        "validation": "439 passed; v12 freeze passed unchanged",
+        "reportPath": "reports/main_baseline_20261002/04_CLEANUP_IMPLEMENTATION.md"
+      }
+    },
+    {
+      "id": "task_3d734e6ec899",
+      "title": "Independent evidence review",
+      "status": "failed",
+      "result": {
+        "provenance": "coordinator_recovery",
+        "outcome": "unavailable",
+        "reason": "Two readiness failures then Claude final turn Login expired; no independent review report. Exact stopped dispatch released. Root source review is not independent PASS.",
+        "reportPath": "reports/main_baseline_20261002/06_ORCHESTRATION.md"
+      }
+    }
+  ]
+}

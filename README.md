@@ -1,11 +1,46 @@
 # SpecUMamba — Self-Audit
 
-This repository contains the locked Self-Audit baseline for cardiac semantic
-annotation and counterfactual self-audit.
+This repository contains cardiac segmentation research with distinct training
+contracts. **The current research target is fully no-GT training**, with masks
+used only by an independent evaluator after predictions are frozen. The target
+deployment device is an **RTX 4080 Super 16GB**; Dice >=90% and GPU speed remain
+unverified objectives.
 
-The authoritative contract is [`docs.md`](docs.md). The active implementation
-is isolated under `src/self_audit/`; the former S3R, distillation, and teacher
-namespaces have been removed.
+## Current No-GT Research Flow
+
+`scripts/run_full_pipeline_v3.py` coordinates the v3 path in
+`src/self_audit_pseudolabel/`:
+
+```text
+image-only full cine -> appearance/registration teacher -> anatomical seeds
+-> conservative pseudo-labels (UNKNOWN=255) -> hashed freeze
+-> compact student trained on training-patient pseudo-labels
+```
+
+The frozen teacher has an independent evaluator. Final student evaluation and
+measurement on the target GPU are still required. The runner's optional
+`--train-student` flag does not certify pseudo-label quality. Freeze the recipe
+and checkpoint-selection rules without GT feedback before final evaluation.
+
+The student uses a shared encoder and A0 head, with optional Dynamic Window
+refinement: compact/balanced/accurate execute 0/1/3 internal refinement passes.
+It has **80,462 resident parameters** at the checked-in default configuration.
+No diffusion runs in this student's forward path. CUTS retains PHATE clustering
+and a separate diffusion-condensation route as comparison methods.
+
+See the [main flow, measurements and research decisions](reports/main_baseline_20261002/00_DECISION.md)
+and [primary-source research with the 4080 Super evaluation protocol](reports/main_baseline_20261002/03_RESEARCH.md).
+The separate `src/self_audit_maskfree/` implementation and benchmark baselines
+remain active dependencies. Historical multi-config runners have been retired;
+[reproduction instructions](docs/legacy_reproduction.md) pin their Git revision.
+Mask-supported comparisons such as ADNet few-shot have a separate supervision
+contract; their scores do not establish fully no-GT performance.
+
+## Supervised Reference Baseline
+
+The commands below train the **supervised reference**, not the no-GT v3 path.
+Its authoritative contract is [`docs.md`](docs.md), and its implementation is
+under `src/self_audit/`. Some model components are also reused by v3.
 
 ## Active Repository Layout
 
@@ -57,7 +92,7 @@ Training runs as a contiguous 130-epoch curriculum across a single optimization 
 
 ### Recipe Changes vs. Interface Changes
 
-- **Live Model Weights Across Stages**: The canonical unified runner (`scripts/train_self_audit.py` / `UnifiedTrainer`) and the historical single-process runner (`scripts/train_self_audit_legacy.py`) both carry live model weights across phase/interval boundaries while resetting optimizer/scheduler states. In contrast, the standalone multi-process legacy shell workflow (`scripts/run_full_pipeline_legacy.sh` / separate `train_annotation.py`, `train_auditor.py`, `finetune_joint.py` entrypoints) reloaded saved stage-best checkpoints from disk across disconnected processes.
+- **Live Model Weights Across Stages**: The canonical unified runner (`scripts/train_self_audit.py` / `UnifiedTrainer`) carries live model weights across interval boundaries while resetting optimizer/scheduler states. The retired single-process runner did the same; the retired multi-process shell workflow reloaded saved stage-best checkpoints across processes. These were different recipes; see [historical reproduction](docs/legacy_reproduction.md).
 - **Unified Single-Config Interface**: Historical multi-phase flags (`--config_a`, `--config_b`, `--config_c`, `--epochs_a`, `--epochs_b`, `--epochs_c`, `--start_phase`) and multi-phase checkpoint names (`phase_c_best.pt`) are removed from the canonical CLI. The entire curriculum is governed by `configs/self_audit_full.yaml` executed as a contiguous 130-epoch schedule with a single unified W&B run.
 
 ### Checkpoint Selection & Calibration Lineage

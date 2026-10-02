@@ -4,7 +4,7 @@
 .DESCRIPTION
     Runs the single-process unified training pipeline (Schema Version 1)
     via configs/self_audit_full.yaml across the 130-epoch curriculum.
-    For historical multi-phase (A -> B -> C) execution, see scripts\run_full_pipeline_legacy.ps1.
+    For historical multi-phase (A -> B -> C) execution, see docs/legacy_reproduction.md.
 .EXAMPLE
     .\scripts\run_full_pipeline.ps1 -Device cuda
     .\scripts\run_full_pipeline.ps1 -Smoke -Device cpu
@@ -49,7 +49,7 @@ param (
 $ErrorActionPreference = "Stop"
 
 if ($StartPhase -or $ConfigA -or $ConfigB -or $ConfigC -or $ConfigAnnotation -or $ConfigAuditor -or $ConfigJoint -or $EpochsA -or $EpochsB -or $EpochsC) {
-    Write-Error "Legacy multi-phase parameters are not supported by canonical run_full_pipeline.ps1. Use scripts\run_full_pipeline_legacy.ps1 for historical multi-stage execution."
+    Write-Error "Legacy multi-phase parameters are not supported by canonical run_full_pipeline.ps1. Use -Config for the current runner; see docs/legacy_reproduction.md for history."
     exit 2
 }
 

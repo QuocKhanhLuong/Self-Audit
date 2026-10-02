@@ -12,7 +12,7 @@
 # See reports/candidate_c/joint_from_start_usage.md for what that profile changes.
 #
 # For historical multi-stage (A -> B -> C) execution, see:
-#   scripts/run_full_pipeline_legacy.sh
+#   docs/legacy_reproduction.md
 # ==============================================================================
 
 set -euo pipefail
@@ -70,8 +70,8 @@ Canonical Unified Pipeline Options:
   --no_tqdm                               Disable tqdm progress bars
   -h, --help                              Show this help message
 
-For historical multi-phase (A -> B -> C) pipeline execution, use:
-  bash scripts/run_full_pipeline_legacy.sh
+For historical multi-phase (A -> B -> C) reproduction, see:
+  docs/legacy_reproduction.md
 HELP_EOF
   exit 0
 }
@@ -101,7 +101,7 @@ while [[ $# -gt 0 ]]; do
     --no_tqdm) NO_TQDM=true; shift ;;
     --config_a|--config_b|--config_c|--config_annotation|--config_auditor|--config_joint|--start_phase|--epochs_a|--epochs_b|--epochs_c)
       echo "Error: Legacy multi-phase option '$1' is not supported by canonical run_full_pipeline.sh." >&2
-      echo "Use scripts/run_full_pipeline_legacy.sh for historical multi-phase execution." >&2
+      echo "Use --config for the current runner; see docs/legacy_reproduction.md for history." >&2
       exit 2
       ;;
     -h|--help) show_help ;;

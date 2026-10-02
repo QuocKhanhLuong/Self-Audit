@@ -690,7 +690,7 @@ def test_auditor_gradients_isolate_to_auditor_parameters() -> None:
 
 
 def test_cli_legacy_flags_rejected_in_canonical_runner(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Canonical runner strictly rejects legacy multi-config flags and points to legacy runner."""
+    """Canonical runner strictly rejects legacy multi-config flags and points to historical reproduction documentation."""
     import scripts.train_self_audit as runner
 
     monkeypatch.setattr(sys, "argv", ["train_self_audit.py", "--config_a", "configs/self_audit_annotation.yaml"])
@@ -700,24 +700,6 @@ def test_cli_legacy_flags_rejected_in_canonical_runner(monkeypatch: pytest.Monke
     assert "Legacy multi-config flags" in str(exc_info.value)
 
 
-def test_legacy_runner_accepts_legacy_flags(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Historical runner scripts/train_self_audit_legacy.py continues to accept legacy flags."""
-    import scripts.train_self_audit_legacy as legacy_runner
-
-    monkeypatch.setattr(
-        sys,
-        "argv",
-        [
-            "train_self_audit_legacy.py",
-            "--config_a", "configs/self_audit_annotation.yaml",
-            "--config_b", "configs/self_audit_auditor.yaml",
-            "--config_c", "configs/self_audit_joint.yaml",
-            "--help",
-        ],
-    )
-    with pytest.raises(SystemExit) as exc_info:
-        legacy_runner._parse_args()
-    assert exc_info.value.code == 0
 
 
 
@@ -1296,7 +1278,7 @@ def test_canonical_shell_script_smoke_and_rejection(tmp_path: Path) -> None:
     )
     assert res_reject.returncode == 2
     assert "Legacy multi-phase option" in res_reject.stderr
-    assert "run_full_pipeline_legacy.sh" in res_reject.stderr
+    assert "docs/legacy_reproduction.md" in res_reject.stderr
 
     # 2. Test help output
     res_help = subprocess.run(

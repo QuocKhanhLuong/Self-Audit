@@ -228,7 +228,7 @@ Training runs as a contiguous 130-epoch curriculum across a single optimization 
 - `configs/self_audit_full_mnms.yaml`: Native M&Ms supervision curriculum.
 
 > [!NOTE]
-> Historical separate phase configurations (`configs/self_audit_annotation.yaml`, `configs/self_audit_auditor.yaml`, `configs/self_audit_joint.yaml`) and legacy multi-stage runners (`scripts/train_self_audit_legacy.py` / `scripts/run_full_pipeline_legacy.sh`) are isolated for historical reproduction in [`docs/legacy_reproduction.md`](docs/legacy_reproduction.md).
+> Historical separate phase configurations (`configs/self_audit_annotation.yaml`, `configs/self_audit_auditor.yaml`, `configs/self_audit_joint.yaml`) remain for artifact and benchmark compatibility. Obsolete multi-stage runners have been removed from the current tree; [`docs/legacy_reproduction.md`](docs/legacy_reproduction.md) pins the Git revision needed to reproduce them. This contract describes the supervised reference, not fully no-GT v3 training.
 
 `training._utils.build_model_from_config()` validates the supported model
 keys explicitly. `image_size`, batch size, epochs, and data roots remain

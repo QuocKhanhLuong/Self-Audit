@@ -19,7 +19,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset, Subset
 
-from scripts.train_self_audit_legacy import (
+from scripts.self_audit_post_training import (
     bind_post_training_checkpoint,
     run_post_training_calibration,
 )
@@ -401,7 +401,7 @@ def test_lineage_keeps_producer_and_evaluation_revisions_apart(tmp_path: Path) -
 def test_runner_post_training_branch_binds_best_at_every_consumer(tmp_path: Path, monkeypatch) -> None:
     """The collector, the calibration sweep and both diagnostics see best."""
 
-    import scripts.train_self_audit_legacy as runner
+    import scripts.self_audit_post_training as runner
 
     output_dir = tmp_path / "weights"
     report_dir = tmp_path / "reports"
@@ -1095,7 +1095,7 @@ def _tau_args(**overrides: Any) -> argparse.Namespace:
 
 
 def _resolve_with(model: SelfAuditNet, loader: DataLoader, tmp_path: Path, artifact: Path, **overrides: Any):
-    import scripts.train_self_audit_legacy as runner
+    import scripts.self_audit_post_training as runner
 
     cache = _real_cache(model, loader)
     return runner._resolve_tau_accept(
