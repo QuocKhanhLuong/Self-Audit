@@ -5,7 +5,7 @@ from pathlib import Path
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
-TARGET_NAMES = {"dss_us": "dss-us", "sgscn": "sgscn", "dino": "dino"}
+TARGET_NAMES = {"dss_us": "dss-us", "sgscn": "sgscn", "dino": "dino", "adnet": "adnet"}
 
 
 def _git(target, *args):

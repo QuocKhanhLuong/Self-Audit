@@ -16,7 +16,10 @@ ROOT = BASE.parents[1]
 HERE = Path(__file__).resolve().parent
 sys.path[:0] = [str(BASE / "src"), str(ROOT / "src"), str(BASE / "scripts"), str(ROOT / "tests/native_baselines")]
 import acdc_synthetic  # noqa: E402
-import run_acdc  # noqa: E402
+import importlib.util  # noqa: E402
+_spec = importlib.util.spec_from_file_location("sgscn_run_acdc", BASE / "scripts/run_acdc.py")
+run_acdc = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(run_acdc)
 from sgscn.paper_faithful import PAPER_LEARNING_RATE, sample_seed  # noqa: E402
 from shared_benchmark.acdc_native import verify_acdc_seal_receipt  # noqa: E402
 
