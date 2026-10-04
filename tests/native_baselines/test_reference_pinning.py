@@ -1,5 +1,6 @@
 """Fresh-clone pinning regression, using local repositories only (no network)."""
 import importlib.util
+import json
 from pathlib import Path
 import subprocess
 
@@ -75,3 +76,16 @@ def test_wrong_origin_is_refused(tmp_path, upstream):
     pinning.pin_reference(target, str(source), pinned)
     with pytest.raises(ValueError, match="unexpected origin"):
         pinning.pin_reference(target, str(tmp_path / "elsewhere"), pinned)
+
+
+def test_pin_references_covers_every_declared_reference(tmp_path, monkeypatch):
+    calls = []
+    monkeypatch.setattr(pinning, "pin_reference", lambda target, url, commit: calls.append((target, url, commit)))
+
+    pins = pinning.pin_references(tmp_path)
+
+    declared = json.loads((ROOT / "configs/native_baselines/references.json").read_text())
+    assert pins == declared
+    assert calls == [(tmp_path / pinning.TARGET_NAMES[name], pin["url"], pin["commit"])
+                     for name, pin in declared.items()]
+    assert any(target == tmp_path / "adnet" for target, _, _ in calls)

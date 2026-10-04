@@ -73,7 +73,7 @@ class ProtocolTests(unittest.TestCase):
     def test_sgscn_context_loss_evidence_and_paper_gates(self):
         for path in sorted((ROOT / "baseline/SGSCN/config/native").glob("*.yaml")):
             if "_paper_faithful" in path.name:
-                continue  # covered by baseline/SGSCN/tests/test_paper_faithful.py
+                continue  # covered by baseline/SGSCN/tests/test_sgscn_paper_faithful.py
             config = json.loads(path.read_text())
             evidence = config["evidence"]
             self.assertEqual(evidence["context_loss"]["status"], "VERIFIED_PAPER")
@@ -93,7 +93,7 @@ class ProtocolTests(unittest.TestCase):
         self.assertTrue(spec["step_II"]["status"].endswith("BLOCKED_PROTOCOL"))
         for path in sorted((ROOT / "baseline/DSS_US/config/native").glob("*.yaml")):
             if "_paper_faithful" in path.name:
-                continue  # covered by baseline/DSS_US/tests/test_paper_faithful.py
+                continue  # covered by baseline/DSS_US/tests/test_dss_us_paper_faithful.py
             config = json.loads(path.read_text())
             producer = " ".join(config["gates"]["producer"])
             for reason in ("row preprocessing/affinity/spectral/CRF recipe", "CAMUS cohort", "CRF parameter set"):
