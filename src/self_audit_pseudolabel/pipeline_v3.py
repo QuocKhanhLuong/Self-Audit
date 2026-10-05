@@ -8,10 +8,9 @@ import torch
 from torch.utils.data import Dataset,DataLoader
 from .data_v3 import (discover_acdc_full_cine,discover_mnms_full_cine,CineSliceDataset,
                       PatientBatchSampler,read_patient_splits,select_records,inspect_record)
-from .system_v3 import CinePseudoTeacher,AdaptiveAnnotationStudent,pseudo_supervision_loss,UNKNOWN
+from .system_v3 import CinePseudoTeacher,AdaptiveAnnotationStudent,pseudo_supervision_loss
 from .trainer_v3 import ProgressiveTeacherTrainer,ProgressiveConfig
-from .freeze import sha256_file,export_pseudo_npz,write_freeze_manifest,verify_frozen,safe_path
-from .consistency import consistency_gate
+from .freeze import sha256_file,write_freeze_manifest,verify_frozen,safe_path
 
 def discover(dataset,root):
     return discover_acdc_full_cine(root) if dataset=='acdc' else discover_mnms_full_cine(root)
@@ -47,6 +46,7 @@ def inventory(records,splits):
         rows.append({'patient_id':r.patient_id,'dataset':r.dataset,'path':str(r.image_path.resolve()),
             'image_sha256':sha256_file(r.image_path),'shape':list(im.shape),'affine':g.affine.tolist(),
             'ed_index':r.ed_index,'es_index':r.es_index,'axis_order':'native_XYZT','spatial_unit':im.header.get_xyzt_units()[0],
+            'temporal_unit':im.header.get_xyzt_units()[1],'zooms':[float(v) for v in im.header.get_zooms()],
             'split':next(s for s,ids in splits.items() if r.patient_id in ids)})
     return rows
 
@@ -57,17 +57,22 @@ def load_config(path):
     if set(cfg)!=required: raise ValueError('unexpected configuration sections')
     if cfg['consistency']['slice_weight']!=0: raise ValueError('unregistered cross-slice voting is disabled')
     if cfg['deployment']['profiles']!={'compact':0,'balanced':1,'accurate':2}: raise ValueError('unsupported profile contract')
+    from .adaptive import RuntimeBudget
+    RuntimeBudget.from_config(cfg["deployment"],max_profile="accurate")
+    if type(cfg["training"]["bounded_default_epochs"]) is not int or cfg["training"]["bounded_default_epochs"]<1:
+        raise ValueError("configured default epochs must be a positive integer")
     return cfg
 
 def _common(parser):
     parser.add_argument('--dataset',choices=['acdc','mnms'],required=True)
     parser.add_argument('--root',required=True); parser.add_argument('--out',required=True)
     parser.add_argument('--device',default='cpu'); parser.add_argument('--batch-size',type=int,default=1)
-    parser.add_argument('--epochs',type=int,default=1); parser.add_argument('--seed',type=int,default=42)
+    parser.add_argument('--epochs',type=int,default=None); parser.add_argument('--seed',type=int,default=42)
     parser.add_argument('--threads',type=int,default=4); parser.add_argument('--max-train-batches',type=int,default=0)
 
-def _validate(args):
-    if args.epochs<1 or args.batch_size<1 or args.threads<1 or args.max_train_batches<0: raise ValueError('invalid run budget')
+def _validate(args,cfg):
+    if args.epochs is None: args.epochs=cfg["training"]["bounded_default_epochs"]
+    if type(args.epochs) is not int or args.epochs<1 or args.batch_size<1 or args.threads<1 or args.max_train_batches<0: raise ValueError('invalid run budget')
     torch.set_num_threads(args.threads); torch.manual_seed(args.seed); np.random.seed(args.seed)
     if args.device.startswith('cuda') and not torch.cuda.is_available(): raise RuntimeError('CUDA requested but unavailable; no silent fallback')
 
@@ -75,37 +80,13 @@ def _loader(ds,batch_size,seed):
     keys=[ds.records[ri].patient_id for ri,_,_ in ds.index]
     return DataLoader(ds,batch_sampler=PatientBatchSampler(keys,batch_size,seed),num_workers=0)
 
-def _flush(rows,out_root,record,cfg):
-    tmax,zmax=record['shape'][3],record['shape'][2]
-    if len(rows)!=tmax*zmax: raise ValueError('incomplete patient export')
-    c,h,w=rows[0]['soft'].shape
-    soft=torch.stack([r['soft'] for r in rows]).reshape(tmax,zmax,c,h,w)
-    valid=torch.stack([r['valid'] for r in rows]).reshape(tmax,zmax,h,w)
-    if cfg['enabled']:
-        fp=torch.stack([r['fp'] for r in rows]).reshape(tmax,zmax,2,*rows[0]['fp'].shape[-2:])
-        fn=torch.stack([r['fn'] for r in rows]).reshape_as(fp)
-        soft,valid=consistency_gate(soft,valid,temporal_weight=cfg['temporal_weight'],slice_weight=0,
-                min_agreement=cfg['min_agreement'],flow_prev=fp,flow_next=fn)
-    labels=torch.where(valid,soft.argmax(2),torch.full_like(valid,UNKNOWN,dtype=torch.long))
-    entries=[]
-    for row in rows:
-        t,z=row['t'],row['z']; rel=Path('pseudo')/record['patient_id']/f't{t:03d}_z{z:03d}.npz'
-        meta={'patient_id':record['patient_id'],'t':t,'z':z,'dataset':record['dataset'],'split':record['split'],
-              'image_sha256':record['image_sha256'],'affine':record['affine'],'axis_order':'native_XYZT'}
-        sha=export_pseudo_npz(out_root/rel,pseudo_label=labels[t,z].numpy(),valid=valid[t,z].numpy(),
-                              soft_label=soft[t,z].numpy(),metadata=meta)
-        entries.append({'path':str(rel),'sha256':sha,'patient_id':record['patient_id'],'t':t,'z':z,
-                        'split':record['split'],'valid_fraction':float(valid[t,z].float().mean()),
-                        'valid_foreground':int((valid[t,z]&(labels[t,z]>0)).sum())})
-    return entries
-
 def teacher_main(argv=None):
     ap=argparse.ArgumentParser(description=__doc__); _common(ap)
     ap.add_argument('--split-manifest',required=True)
     ap.add_argument('--export-split',choices=['train','val','train,val'],default='train,val')
     ap.add_argument('--config',default=str(Path(__file__).resolve().parents[2]/'configs/pseudolabel_v3.json'))
     ap.add_argument('--log-patients-every',type=int,default=10)
-    args=ap.parse_args(argv); _validate(args); cfg=load_config(args.config)
+    args=ap.parse_args(argv); cfg=load_config(args.config); _validate(args,cfg)
     if args.log_patients_every<1: raise ValueError('log-patients-every must be positive')
     _log("RUN",f"teacher dataset={args.dataset} device={args.device} epochs={args.epochs} batch={args.batch_size} threads={args.threads}")
     _log("LOAD",f"discover root={Path(args.root).resolve()}")
@@ -154,31 +135,21 @@ def teacher_main(argv=None):
     torch.save({'model':teacher.state_dict(),'prototype_bank':trainer.bank.prototypes.cpu(),
         'prototype_counts':trainer.bank.counts.cpu(),'config':cfg,'producer_patient_ids':splits['train']},out/'teacher.pt')
     _log("CHECKPOINT",f"saved {out/'teacher.pt'} prototype_counts={[int(x) for x in trainer.bank.counts.cpu().tolist()]}")
-    entries=[]; rows=[]; current=None; exported_patients=0; export_total=len(export_records)
-    _log("EXPORT",f"start patients={export_total} samples={len(export_ds)} consistency={'on' if cfg['consistency']['enabled'] else 'off'}")
-    for b in DataLoader(export_ds,batch_size=1,shuffle=False,num_workers=0):
-        pid=b['patient_id'][0]
-        if current is not None and pid!=current:
-            entries+=_flush(rows,out,by_id[current],cfg['consistency']); rows=[]; exported_patients+=1
-            if exported_patients%args.log_patients_every==0 or exported_patients==export_total:
-                _log("EXPORT",f"patients={exported_patients}/{export_total} entries={len(entries)}")
-        current=pid; pred,_,_=trainer.infer_batch(move(b,args.device))
-        rows.append({'t':int(b['t'][0]),'z':int(b['z'][0]),'soft':pred['soft_label'][0].cpu(),
-            'valid':pred['valid'][0].cpu(),'fp':pred['flow_prev'][0].cpu(),'fn':pred['flow_next'][0].cpu()})
-    if current is not None:
-        entries+=_flush(rows,out,by_id[current],cfg['consistency']); exported_patients+=1
-        _log("EXPORT",f"patients={exported_patients}/{export_total} entries={len(entries)}")
+    from .native_export import export_native
+    entries,volumes,export_report=export_native(export_records,by_id,out,
+        lambda b:trainer.infer_batch(move(b,args.device))[0],cfg['consistency'],log_every=args.log_patients_every)
+    (out/'export_report.json').write_text(json.dumps(export_report,indent=2))
     for r in record_inventory:
         if sha256_file(r['path'])!=r['image_sha256']: raise ValueError('image changed during run')
     package=Path(__file__).parent
     sources={p.name:sha256_file(p) for p in package.glob('*.py')}
-    run_config={'dataset':args.dataset,'manual_mask_input':False,'scribble_input':False,
+    run_config={'artifact_role':'teacher_freeze','dataset':args.dataset,'manual_mask_input':False,'scribble_input':False,
         'args':vars(args),'resolved_config':cfg,'trainer_config':asdict(tc),'source_sha256':sources,
         'split_patients':splits,'producer_patient_ids':splits['train'],
         'image_records':record_inventory,'export_records':[by_id[r.patient_id] for r in export_records],
         'supervision':'image_only_with_handwritten_priors','bounded_training':bool(args.max_train_batches),
         'teacher_ready':'NOT_EVALUATED'}
-    payload=write_freeze_manifest(out,entries,run_config); verify_frozen(out/'FROZEN.json')
+    payload=write_freeze_manifest(out,entries,run_config,extra_artifacts=[*volumes,'export_report.json']); verify_frozen(out/'FROZEN.json')
     result={'status':'generation_complete','optimizer_steps':len(history),'exports':len(entries),
         'manifest_id':payload['manifest_id'],'valid_foreground_pixels':sum(e['valid_foreground'] for e in entries),
         'teacher_ready':'NOT_EVALUATED','out':str(out)}
@@ -188,7 +159,7 @@ def teacher_main(argv=None):
 
 class FrozenPseudoDataset(Dataset):
     def __init__(self,root,dataset,manifest):
-        self.payload=verify_frozen(manifest); config=self.payload['config']
+        self.payload=verify_frozen(manifest,expected_role='teacher_freeze'); config=self.payload['config']
         if config.get('dataset')!=dataset: raise ValueError('dataset mismatch')
         splits=config.get('split_patients',{})
         if set(config.get('producer_patient_ids',[]))!=set(splits.get('train',[])):
@@ -211,13 +182,16 @@ class FrozenPseudoDataset(Dataset):
         idx,path,_=self.rows[i]
         with np.load(path,allow_pickle=False) as p:
             return {'image':self.base[idx]['cur'],'target':torch.from_numpy(p['pseudo_label'].astype(np.int64)),
-                    'valid':torch.from_numpy(p['valid'].astype(bool))}
+                    'valid':torch.from_numpy(p['valid'].astype(bool)),
+                    'patient_id':self.rows[i][2],'t':self.base.index[idx][1],'z':self.base.index[idx][2]}
 
 def student_main(argv=None):
     ap=argparse.ArgumentParser(description='Student from frozen TRAINING pseudo-labels only'); _common(ap)
     ap.add_argument('--manifest',required=True); ap.add_argument('--profile',choices=['compact','balanced','accurate'],default='balanced')
     ap.add_argument('--lr',type=float,default=1e-3)
-    args=ap.parse_args(argv); _validate(args)
+    args=ap.parse_args(argv)
+    payload=verify_frozen(args.manifest,expected_role='teacher_freeze')
+    cfg=payload['config']['resolved_config']; _validate(args,cfg)
     out=Path(args.out)
     if out.exists() or out.with_suffix('.json').exists(): raise FileExistsError(out)
     _log("RUN",f"student dataset={args.dataset} device={args.device} epochs={args.epochs} batch={args.batch_size} profile={args.profile}")
@@ -231,7 +205,7 @@ def student_main(argv=None):
     _log("MODEL",f"student params={_parameter_count(model):,} width={model_cfg['student_width']} window_k={model_cfg['window_k']}")
     opt=torch.optim.AdamW(model.parameters(),lr=args.lr,weight_decay=1e-4)
     sampler=PatientBatchSampler([r[2] for r in ds.rows],args.batch_size,args.seed)
-    hist=[]; skipped=0
+    hist=[]; skipped=0; class_pixels=[0]*4; patient_pixels={}; phase_pixels={}
     for epoch in range(args.epochs):
         model.train(); epoch_rows=[]; epoch_skipped=0; started=time.perf_counter(); _reset_peak_vram(args.device)
         for step,b in enumerate(DataLoader(ds,batch_sampler=sampler,num_workers=0)):
@@ -241,18 +215,37 @@ def student_main(argv=None):
             loss=pseudo_supervision_loss(pred,b['target'].to(args.device),b['valid'].to(args.device))
             if not bool(torch.isfinite(loss)): raise FloatingPointError('non-finite student loss')
             opt.zero_grad(set_to_none=True); loss.backward(); opt.step()
+            for i,pid in enumerate(b['patient_id']):
+                counts=torch.bincount(b['target'][i][b['valid'][i]],minlength=4).tolist()
+                if not sum(counts): continue
+                class_pixels=[a+c for a,c in zip(class_pixels,counts)]
+                patient_pixels[pid]=[a+c for a,c in zip(patient_pixels.get(pid,[0]*4),counts)]
+                key=f"{pid}:t{int(b['t'][i])}"
+                phase_pixels[key]=[a+c for a,c in zip(phase_pixels.get(key,[0]*4),counts)]
             row={'epoch':epoch,'step':step,'loss':float(loss.detach().cpu())}
             hist.append(row); epoch_rows.append(row)
         _log("EPOCH",f"{epoch+1}/{args.epochs} steps={len(epoch_rows)} skipped={epoch_skipped} "
              f"loss={_mean(epoch_rows,'loss'):.4f} time={time.perf_counter()-started:.1f}s "
              f"peak_vram={_peak_vram_gb(args.device):.2f}GB")
     if not hist: raise ValueError('NO_VALID_UPDATES: no checkpoint written')
-    verify_frozen(args.manifest)
+    if sum(class_pixels[1:])==0:
+        raise ValueError('NO_OBSERVED_FOREGROUND: bounded updates saw only background; no checkpoint written')
+    verify_frozen(args.manifest,expected_role='teacher_freeze')
+    for record in ds.base.records:
+        source=next(r for r in ds.payload['config']['image_records'] if r['patient_id']==record.patient_id)
+        if sha256_file(record.image_path)!=source['image_sha256']: raise ValueError('image changed during student training')
+    coverage={'class_pixels':class_pixels,'patient_ids':sorted(patient_pixels),
+              'patient_class_pixels':patient_pixels,'patient_frame_class_pixels':phase_pixels,
+              'missing_foreground_classes':[c for c in (1,2,3) if class_pixels[c]==0],
+              'support_status':'MISSING_CLASSES' if any(class_pixels[c]==0 for c in (1,2,3)) else 'ALL_CLASSES_OBSERVED',
+              'quality_status':'NOT_EVALUATED','bounded_training':bool(args.max_train_batches)}
+    from .checkpoint import save_student_checkpoint
     out.parent.mkdir(parents=True,exist_ok=True)
-    torch.save({'model':model.state_dict(),'args':vars(args),'model_config':model_cfg,
-                'manifest_id':ds.payload['manifest_id'],'profile_trained':args.profile},out)
+    digest=save_student_checkpoint(out,model,args=vars(args),model_config=model_cfg,
+                                   manifest_id=ds.payload['manifest_id'],coverage=coverage)
     result={'status':'training_complete','optimizer_steps':len(hist),'skipped_empty_batches':skipped,
-            'trained_patient_ids':ds.payload['config']['split_patients']['train'],'history':hist}
+            'declared_train_patient_ids':ds.payload['config']['split_patients']['train'],
+            'trained_patient_ids':sorted(patient_pixels),'coverage':coverage,'checkpoint_sha256':digest,'history':hist}
     out.with_suffix('.json').write_text(json.dumps(result,indent=2))
     _log("DONE",f"student steps={len(hist)} skipped={skipped} checkpoint={out}")
     return result

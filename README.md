@@ -17,10 +17,13 @@ image-only full cine -> appearance/registration teacher -> anatomical seeds
 -> compact student trained on training-patient pseudo-labels
 ```
 
-The frozen teacher has an independent evaluator. Final student evaluation and
-measurement on the target GPU are still required. The runner's optional
-`--train-student` flag does not certify pseudo-label quality. Freeze the recipe
-and checkpoint-selection rules without GT feedback before final evaluation.
+The frozen teacher and student have an independent native-grid evaluator. With
+`--train-student`, the runner trains the student, freezes native validation predictions,
+and evaluates them separately. Checkpoint-only test export is also available.
+No real-data quality or target-GPU result is established by these entrypoints.
+Freeze the recipe and checkpoint-selection rules without GT feedback before final evaluation.
+See the [05-Oct checkup fixes and verification](docs/pseudolabel_v3_checkup_20261005.md)
+and [v3 runbook](docs/pseudolabel_v3_review_runbook.md).
 
 The student uses a shared encoder and A0 head, with optional Dynamic Window
 refinement: compact/balanced/accurate execute 0/1/3 internal refinement passes.

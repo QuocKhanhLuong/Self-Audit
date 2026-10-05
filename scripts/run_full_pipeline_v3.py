@@ -83,6 +83,14 @@ def main(argv=None):
         "--batch-size",str(sb),"--threads",str(args.threads),"--seed",str(args.seed),"--device",args.device]
     if args.student_max_train_batches:
         student_cmd+=["--max-train-batches",str(args.student_max_train_batches)]
+    student_predictions=run/"student_predictions_val"
+    student_evaluation=run/"student_evaluation_val.json"
+    infer_cmd=[py,str(repo/"scripts/infer_student_v3.py"),"--source-freeze",str(teacher/"FROZEN.json"),
+        "--checkpoint",str(student),"--root",args.root,"--out",str(student_predictions),
+        "--split","val","--device",args.device,"--threads",str(args.threads)]
+    student_eval_cmd=list(eval_cmd)
+    student_eval_cmd[student_eval_cmd.index("--run")+1]=str(student_predictions)
+    student_eval_cmd[student_eval_cmd.index("--out")+1]=str(student_evaluation)
     with log_path.open("x",encoding="utf-8") as fh:
         try:
             import torch
@@ -94,7 +102,9 @@ def main(argv=None):
         if args.dry_run:
             log("DRYRUN","teacher: "+" ".join(teacher_cmd),fh)
             log("DRYRUN","eval: "+" ".join(eval_cmd),fh)
-            if args.train_student: log("DRYRUN","student: "+" ".join(student_cmd),fh)
+            if args.train_student:
+                for name,cmd in [("student",student_cmd),("student-inference",infer_cmd),("student-eval",student_eval_cmd)]:
+                    log("DRYRUN",name+": "+" ".join(cmd),fh)
             return 0
         times={}
         times["teacher"]=run_stage("teacher",teacher_cmd,env,fh)
@@ -103,7 +113,11 @@ def main(argv=None):
         log("METRIC",f"pseudo fg={scores.get('foreground_mean')} RV={scores.get('rv')} MYO={scores.get('myo')} LV={scores.get('lv')} known={scores.get('known_fraction')}",fh)
         if args.train_student:
             times["student"]=run_stage("student",student_cmd,env,fh)
+            times["student_inference"]=run_stage("student-inference",infer_cmd,env,fh)
+            times["student_evaluation"]=run_stage("student-eval",student_eval_cmd,env,fh)
         summary={"status":"complete","dataset":args.dataset,"teacher_dir":str(teacher),
+                 "student_evaluation":str(student_evaluation) if args.train_student else None,
+                 "student_predictions":str(student_predictions) if args.train_student else None,
                  "evaluation":str(evaluation),"student":str(student) if args.train_student else None,
                  "times_seconds":times,"pseudo_metrics":{k:scores.get(k) for k in ("foreground_mean","rv","myo","lv","known_fraction")}}
         (run/"PIPELINE_SUMMARY.json").write_text(json.dumps(summary,indent=2),encoding="utf-8")

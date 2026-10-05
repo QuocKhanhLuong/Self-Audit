@@ -19,4 +19,6 @@ def test_full_pipeline_dry_run_builds_all_stages(tmp_path):
     assert "evaluate_pseudolabel_frozen.py" in text
     assert "[DRYRUN] student:" in text
     assert "train_student_v3.py" in text
+    assert "[DRYRUN] student-inference:" in text and "infer_student_v3.py" in text
+    assert "[DRYRUN] student-eval:" in text and "student_evaluation_val.json" in text
     assert (out/"pipeline.log").exists()

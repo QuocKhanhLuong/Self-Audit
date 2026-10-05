@@ -25,9 +25,10 @@ class CineGeometry:
 
 def is_reference_path(path):
     p=Path(path)
-    blocked={"label","labels","mask","masks","seg","segs","segmentations","scribbles","references"}
+    blocked={"gt","ground_truth","ground-truth","label","labels","mask","masks","seg","segs",
+             "segmentation","segmentations","scribble","scribbles","reference","references"}
     stem=p.name.lower().split(".nii")[0]
-    return any(part.lower() in blocked for part in p.parts) or bool(re.search(r"(?:^|_)(gt|mask|label|seg|scribble)(?:_|$)",stem))
+    return any(part.lower() in blocked for part in p.parts) or bool(re.search(r"(?:^|[_ .-])(gt|ground_truth|masks?|labels?|segs?|segmentations?|scribbles?|references?)(?:[_ .-]|$)",stem))
 
 def parse_acdc_info(path):
     vals={}
@@ -59,6 +60,9 @@ def discover_mnms_full_cine(root):
     records=[]; root=Path(root)
     for path in sorted(root.rglob("*.nii"))+sorted(root.rglob("*.nii.gz")):
         if is_reference_path(path): continue  # BEFORE even reading the NIfTI header.
+        # Recognized image-only M&Ms naming contract; never inspect unknown headers.
+        if not re.fullmatch(r"[A-Za-z0-9.-]+(?:_sa|_4d)\.nii(?:\.gz)?",path.name,re.I):
+            raise ValueError(f"unrecognized image layout (expected ID_sa/ID_4d): {path}")
         shape=nib.load(str(path)).shape
         if len(shape)==4 and shape[-1]>1:
             stem=path.name.split(".nii")[0]
@@ -122,14 +126,18 @@ def select_records(records,splits,split):
 
 class CineSliceDataset(Dataset):
     def __init__(self,records,cache_records=2):
-        self.records=list(records); self.cache_records=max(int(cache_records),1); self._cache=OrderedDict(); self.index=[]
+        self.records=list(records); self.cache_records=max(int(cache_records),1); self._cache=OrderedDict(); self.index=[]; self.cache_hits=0; self.cache_misses=0; self.load_seconds=0.0
         for ri,r in enumerate(_unique(self.records)):
             im,_=inspect_record(r)
             for t in range(im.shape[3]):
                 for z in range(im.shape[2]): self.index.append((ri,t,z))
     def _get_record(self,ri):
-        if ri in self._cache: value=self._cache.pop(ri)
-        else: value=load_cine(self.records[ri])
+        if ri in self._cache:
+            self.cache_hits+=1; value=self._cache.pop(ri)
+        else:
+            import time
+            started=time.perf_counter(); value=load_cine(self.records[ri])
+            self.load_seconds+=time.perf_counter()-started; self.cache_misses+=1
         self._cache[ri]=value
         while len(self._cache)>self.cache_records: self._cache.popitem(last=False)
         return value
@@ -152,9 +160,11 @@ class PatientBatchSampler(Sampler):
         for i,p in enumerate(patient_keys): self.groups.setdefault(p,[]).append(i)
     def __iter__(self):
         rng=np.random.default_rng(self.seed+self.epoch); batches=[]
-        for group in self.groups.values():
+        groups=list(self.groups.values())
+        for gi in rng.permutation(len(groups)):
+            group=groups[int(gi)]
             ids=rng.permutation(group).tolist()
             batches.extend(ids[i:i+self.batch_size] for i in range(0,len(ids),self.batch_size))
-        rng.shuffle(batches); self.epoch+=1
+        self.epoch+=1
         yield from batches
     def __len__(self): return sum((len(g)+self.batch_size-1)//self.batch_size for g in self.groups.values())

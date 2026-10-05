@@ -72,7 +72,7 @@ def test_dynamic_window_profiles_and_unknown_masking():
     assert float(pseudo_supervision_loss(compact,target,valid).detach())==0.0
 
 def test_adaptive_runtime_encodes_once_and_respects_cap():
-    model=AdaptiveAnnotationStudent(width=32,window_k=4).eval(); _,cur,_=_cine(); calls={"n":0}
+    model=AdaptiveAnnotationStudent(width=32,window_k=4).eval(); model.mark_profile_trained("balanced"); _,cur,_=_cine(); calls={"n":0}
     handle=model.encoder.register_forward_hook(lambda *_: calls.__setitem__("n",calls["n"]+1))
     try:
         with torch.no_grad(): out=AdaptiveRuntime(model,RuntimeBudget(max_profile="balanced"))(cur)

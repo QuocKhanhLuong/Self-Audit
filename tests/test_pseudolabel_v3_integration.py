@@ -32,7 +32,7 @@ def test_unknown_pixels_are_not_supervised():
     assert float(loss.detach())==0.0
 
 def test_adaptive_runtime_encodes_once():
-    model=AdaptiveAnnotationStudent(width=32,window_k=4).eval(); _,cur,_=_cine()
+    model=AdaptiveAnnotationStudent(width=32,window_k=4).eval(); model.mark_profile_trained("balanced"); _,cur,_=_cine()
     calls={"n":0}
     def hook(*_): calls["n"]+=1
     handle=model.encoder.register_forward_hook(hook)

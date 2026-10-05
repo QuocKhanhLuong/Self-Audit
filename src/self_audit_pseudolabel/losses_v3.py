@@ -22,18 +22,17 @@ def registration_loss(outputs,cur_25d):
         return value
     return photo,.5*(smooth(outputs["flow_prev"])+smooth(outputs["flow_next"]))
 
-def seed_cross_entropy(semantic_prob,evidence_logits,valid_region):
-    if not bool(valid_region.any()): return semantic_prob.sum()*0.0
+def seed_cross_entropy(semantic_logits,evidence_logits,valid_region):
+    if not bool(valid_region.any()): return semantic_logits.sum()*0.0
     target=evidence_logits.detach().argmax(-1)
-    return F.nll_loss(semantic_prob.clamp_min(1e-8).log()[valid_region],target[valid_region])
+    return F.cross_entropy(semantic_logits[valid_region],target[valid_region])
 
 def teacher_loss(outputs,cur_25d,evidence_logits,valid_region,*,w_recon=1.,w_proto=.1,w_seed=1.,w_motion=1.,w_motion_smooth=.05):
     photo,smooth=registration_loss(outputs,cur_25d)
-    # Explicitly recover raw probabilities, even if the caller also returns guided ones.
-    raw_prob=outputs["semantic_logits"].softmax(-1)
+    # Stable raw-logit CE keeps gradients even for confidently wrong heads.
     terms={"reconstruction":reconstruction_loss(outputs["reconstruction"],cur_25d),
            "prototype":prototype_information_loss(outputs["region_prob"]),
-           "semantic_seed":seed_cross_entropy(raw_prob,evidence_logits,valid_region),
+           "semantic_seed":seed_cross_entropy(outputs["semantic_logits"],evidence_logits,valid_region),
            "motion_photo":photo,"motion_smooth":smooth}
     terms["total"]=(w_recon*terms["reconstruction"]+w_proto*terms["prototype"]+w_seed*terms["semantic_seed"]
                     +w_motion*photo+w_motion_smooth*smooth)

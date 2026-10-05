@@ -3,6 +3,7 @@ from importlib import import_module
 _EXPORTS={
  'AdaptiveAnnotationStudent':'system_v3','CinePseudoTeacher':'system_v3','PROFILES':'system_v3',
  'ResourceProfile':'system_v3','UNKNOWN':'system_v3','pseudo_supervision_loss':'system_v3',
+ 'load_student_checkpoint':'checkpoint',
  'AdaptiveRuntime':'adaptive','RuntimeBudget':'adaptive','choose_profile':'adaptive',
  'EvidenceConfig':'evidence','build_region_evidence':'evidence',
  'PrototypeBank':'evolution','accepted_region_mask':'evolution',

@@ -1,6 +1,8 @@
 # Self-Audit v3 integrity review and runbook
 
-Audited base: `103ce77ce59cc99c8935dee507dd0ba5f487ec6a`.
+Latest checkup base: `e513bc0a4d34ed3a39de2b3fc3c10a362d9216ed` (05-Oct-2026).
+See [repair coverage and validation](pseudolabel_v3_checkup_20261005.md).
+The original integrity audit below used `103ce77ce59cc99c8935dee507dd0ba5f487ec6a`.
 This revision changes the scientific recipe and artifact schema; start a fresh run.
 Do not reinterpret old freezes or the old C0/C1 results using the new protocol.
 
@@ -100,7 +102,7 @@ python scripts/train_student_v3.py \
   --epochs 1 --max-train-batches 20 --batch-size 1 --threads 4 --device cuda
 ```
 
-`NO_FOREGROUND_SEEDS` and `NO_VALID_UPDATES` are valid scientific stop outcomes.
+`NO_FOREGROUND_SEEDS`, `NO_OBSERVED_FOREGROUND`, and `NO_VALID_UPDATES` are valid scientific stop outcomes.
 Do not lower thresholds just to make these checks pass. Nonzero seeds do not certify
 teacher quality; the training command's coverage guard is NOT a Dice-0.91 gate.
 The checkpoint is not a deployment-ready medical model. No UI is added by this patch.
@@ -114,10 +116,75 @@ evaluated at every feature-grid query: this is not sparse hard-region-only execu
 The loader supports image-only 4D `*_sa.nii.gz` and rejects mask/scribble names before
 header reads. Supply a patient-ID train/val manifest matching the actual release.
 Multiple scans with ambiguous patient identity fail closed. Evaluation requires an
-explicit `--reference-manifest`, e.g. `{"references":[{"patient_id":"ABC","t":0,
-"path":"/references/ABC_mask.nii.gz","reference_frame_index":0,
-"label_map":{"0":0,"1":3,"2":2,"3":1}}]}`. Verify the mapping and phase indices for
-your release; the example is not a silently assumed universal M&Ms schema.
+explicit `--reference-manifest`. It must cover ED and ES for every selected patient:
+
+```json
+{"protocol":{"required_phases":["ED","ES"],"phase_indices":"zero_based"},
+ "references":[
+  {"patient_id":"ABC","phase":"ED","t":0,"path":"/references/ABC_mask.nii.gz",
+   "reference_frame_index":0,"label_map":{"0":0,"1":3,"2":2,"3":1}},
+  {"patient_id":"ABC","phase":"ES","t":12,"path":"/references/ABC_mask.nii.gz",
+   "reference_frame_index":12,"label_map":{"0":0,"1":3,"2":2,"3":1}}]}
+```
+
+Verify mapping and actual frame indices for your release; these are illustrative.
+Indices must be JSON integers, never negative, boolean, fractional, or string values.
+Known spatial units must match the frozen input. Unknown units require an explicit
+`--allow-unknown-spatial-units` evaluation choice, which is recorded; it permits only
+both-unknown grids and never a known-unit mismatch.
+The main Dice remains patient-macro over phase-pooled counts. `frame_rows`,
+`phase_metrics`, and `phase_macro` expose separate ED/ES estimates and reference hashes.
+
+## Checkpoint-only native student inference and final test export
+
+Student checkpoints record actual optimizer-supervised class/patient/frame coverage,
+the source teacher manifest, preprocessing, source/dependency hashes, package versions,
+and trained profile cap. Load with `load_student_checkpoint`; missing/legacy metadata,
+changed dependencies/configuration/environment, or excessive profiles fail closed.
+State dictionaries retain the trained-profile cap. A newly initialized model cannot
+be used through `AdaptiveRuntime` as a trained inference model.
+
+```bash
+python scripts/infer_student_v3.py \
+  --source-freeze "$RUN/FROZEN.json" --checkpoint "$RUN/student_balanced.pt" \
+  --root "$ACDC_ROOT" --split test --profile adaptive \
+  --out "$RUN/student_test" --threads 4 --device cuda
+python scripts/evaluate_pseudolabel_frozen.py \
+  --run "$RUN/student_test" --references "$ACDC_ROOT" --split test \
+  --out "$RUN/student_test_evaluation.json"
+```
+
+The original teacher freeze must lock a nonempty test patient list. Test images need
+not have been exported during training. The inference command never fits a model,
+updates a bank, reads references, or selects thresholds. Output includes complete
+native XYZT `native/<patient>.nii.gz`, per-slice probabilities, frozen identities and
+hashes, and `export_report.json`. Student output is dense argmax over four classes;
+it does not inherit the teacher's UNKNOWN mask or invent an accuracy threshold.
+The `test_untouched` field remains `NOT_CERTIFIED_BY_CODE`: historical protocol
+isolation cannot be proven by calling an export command.
+
+For a matching frozen **teacher** test prediction, without retraining:
+
+```bash
+python scripts/export_teacher_v3.py \
+  --source-freeze "$RUN/FROZEN.json" --root "$ACDC_ROOT" --split test \
+  --out "$RUN/teacher_test" --threads 4 --device cuda
+```
+
+Default adaptive routing uses each sample's maximum pixel entropy, so batch peers or
+large confident background do not dilute a small uncertain area. It encodes once,
+then refines each sample within its trained profile cap. This conservative policy can
+spend more compute and has no demonstrated speed/quality advantage. Explicit fixed
+profiles above the cap are rejected. Deployment thresholds come from the frozen
+config; standalone training CLI `--epochs` overrides `training.bounded_default_epochs`.
+The full pipeline runner passes its own explicit teacher/student epoch budgets.
+
+Patient batches now stay consecutive within a shuffled patient order. Export stages
+soft labels/flows in temporary disk-backed arrays and applies the unchanged temporal
+rejection to at most three slices at a time. Full input-cine preprocessing and OS
+mapped-page residency still consume host memory. `export_report.json` records cache
+hits/misses, load/export time, scratch bytes, process peak RSS, and per-class support
+by patient/frame/ED/ES/orientation. Real full-cine and target-GPU benchmarks remain required.
 
 ## Unresolved scientific questions
 
@@ -133,7 +200,8 @@ fallback is performed automatically.
 
 The reviewed v3 entrypoints are also orchestrated by `scripts/run_full_pipeline_v3.py`.
 It runs teacher training/freeze, independent validation scoring, and optionally the
-student. Student training is opt-in with `--train-student`; pseudo-label validation
+student followed by native prediction freeze and independent student validation.
+Student training is opt-in with `--train-student`; pseudo-label validation
 does not silently change thresholds or supervision.
 
 Console output is intentionally compact:

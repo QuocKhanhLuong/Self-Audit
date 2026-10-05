@@ -37,6 +37,7 @@ def _holes(mask):
     return binary_fill_holes(mask)&(~mask)
 
 def build_region_evidence(region_prob,image,motion_features,*,patient_left_axis:Sequence[str|None]|None=None,config=None):
+    from scipy.ndimage import label as components
     cfg=config or EvidenceConfig(); b,k,h,w=region_prob.shape
     hard=region_prob.detach().argmax(1).cpu().numpy()
     img=F.interpolate(image.detach(),(h,w),mode="bilinear",align_corners=False)[:,0].cpu().numpy()
@@ -54,35 +55,58 @@ def build_region_evidence(region_prob,image,motion_features,*,patient_left_axis:
                           "border":float(border.sum())/max(float(n),1.0),
                           "motion":float(mot[bi][mask].mean()),
                           "boundary":float(grad[rim].mean()) if np.any(rim) else 0.0,
-                          "holes":_holes(mask)})
+                          "holes":_holes(mask), "connected":components(mask)[1]==1})
         mv=[s["motion"] for s in stats if s is not None]; mlo=min(mv) if mv else 0.; mhi=max(mv) if mv else 1.; den=max(mhi-mlo,1e-6)
         for rid,s in enumerate(stats):
             if s is None: continue
             mn=(s["motion"]-mlo)/den
             logits[bi,rid,BG]+=cfg.border_weight*s["border"]+cfg.low_motion_bg_weight*(1-mn)
-            logits[bi,rid,MYO]+=cfg.boundary_weight*np.tanh(s["boundary"])
+            if not s["border"] and s["connected"]:
+                logits[bi,rid,MYO]+=cfg.boundary_weight*np.tanh(s["boundary"])
+        # A semantic vote applies to an entire anonymous region. Disconnected
+        # regions cannot be certified by a single component that happens to fit.
+        # Exterior regions may surround every organ, but cannot be cardiac walls.
         enclosures=[]
         for outer,so in enumerate(stats):
-            if so is None or not np.any(so["holes"]): continue
+            if so is None or so["border"] or not so["connected"]: continue
+            holes=so["holes"]
+            if components(holes)[1]!=1: continue
             for inner,si in enumerate(stats):
-                if inner==outer or si is None: continue
-                inside=float((si["mask"]&so["holes"]).sum())/max(float(si["n"]),1.)
-                if inside>=0.80:
-                    logits[bi,outer,MYO]+=cfg.enclosure_weight*inside; logits[bi,inner,LV]+=cfg.enclosure_weight*inside
-                    enclosures.append((outer,inner,inside))
-        if enclosures:
-            outer,inner,_=max(enclosures,key=lambda x:x[2])
+                if inner==outer or si is None or si["border"] or not si["connected"]: continue
+                if np.any(si["holes"]) or not _adjacent(so["mask"],si["mask"]): continue
+                overlap=float((si["mask"]&holes).sum())
+                inside=overlap/si["n"]
+                coverage=overlap/float(holes.sum())
+                if inside>=.80 and coverage>=.80:
+                    enclosures.append((outer,inner,min(inside,coverage)))
+        # Aggregate physical pair votes symmetrically, bounded by one enclosure
+        # weight per class. No max/argmax tie can select an arbitrary region ID.
+        votes=np.zeros((k,4),dtype=np.float32)
+        axis=axes[bi] if bi<len(axes) else None
+        for outer,inner,strength in enclosures:
+            pair=np.zeros_like(votes)
+            pair[outer,MYO]=cfg.enclosure_weight*strength
+            pair[inner,LV]=cfg.enclosure_weight*strength
             candidates=[inner]
             for rid,s in enumerate(stats):
-                if s is None or rid in (outer,inner): continue
+                if s is None or rid in (outer,inner) or s["border"] or not s["connected"]: continue
+                if np.any(s["holes"]): continue
                 if _adjacent(s["mask"],stats[outer]["mask"]):
-                    logits[bi,rid,RV]+=cfg.adjacency_weight; candidates.append(rid)
-            axis=axes[bi] if bi<len(axes) else None
+                    pair[rid,RV]=cfg.adjacency_weight
+                    candidates.append(rid)
             if axis in {"+x","-x","+y","-y"} and len(candidates)>=2:
                 def proj(rid):
                     val=stats[rid]["cx"] if axis.endswith("x") else stats[rid]["cy"]
                     return val if axis.startswith("+") else -val
-                order=sorted(candidates,key=proj,reverse=True)
-                logits[bi,order[0],LV]+=cfg.orientation_weight; logits[bi,order[-1],RV]+=cfg.orientation_weight
-        diags.append({"enclosures":enclosures})
+                values=np.asarray([proj(rid) for rid in candidates])
+                # A tied physical projection supplies no orientation evidence.
+                high=np.flatnonzero(np.isclose(values,values.max(),rtol=0,atol=1e-6))
+                low=np.flatnonzero(np.isclose(values,values.min(),rtol=0,atol=1e-6))
+                if len(high)==len(low)==1 and high[0]!=low[0]:
+                    pair[candidates[int(high[0])],LV]+=cfg.orientation_weight
+                    pair[candidates[int(low[0])],RV]+=cfg.orientation_weight
+            votes=np.maximum(votes,pair)
+        logits[bi]+=votes
+        diags.append({"enclosures":enclosures,"patient_left_axis":axis,
+                      "rv_support_policy":"cardinal_orientation_required_at_default_gate"})
     return torch.from_numpy(logits).to(region_prob.device,region_prob.dtype),diags

@@ -145,11 +145,13 @@ def _nifti_fixture(tmp_path):
     rng=np.random.default_rng(17)
     for pid,h in [('patient001',16),('patient002',20)]:
         p=data/pid;p.mkdir();array=rng.random((h,16,2,3),dtype=np.float32)
-        nib.save(nib.Nifti1Image(array,np.diag([1.,1.,5.,1.])),p/f'{pid}_4d.nii.gz')
+        image=nib.Nifti1Image(array,np.diag([1.,1.,5.,1.]));image.header.set_xyzt_units('mm')
+        nib.save(image,p/f'{pid}_4d.nii.gz')
         (p/'Info.cfg').write_text('ED: 1\nES: 3\n')
         for frame in (1,3):
             truth=np.zeros((h,16,2),np.uint8);truth[3:10,3:10,:]=3
-            nib.save(nib.Nifti1Image(truth,np.diag([1.,1.,5.,1.])),p/f'{pid}_frame{frame:02d}_gt.nii.gz')
+            image=nib.Nifti1Image(truth,np.diag([1.,1.,5.,1.]));image.header.set_xyzt_units('mm')
+            nib.save(image,p/f'{pid}_frame{frame:02d}_gt.nii.gz')
     split=tmp_path/'split.json';split.write_text(json.dumps({'train_patients':['patient001'],'val_patients':['patient002']}))
     return data,split
 
@@ -211,7 +213,8 @@ def test_student_refuses_background_only_freeze(tmp_path):
                 sha=export_pseudo_npz(run/path,pseudo_label=label,valid=np.ones_like(label),soft_label=soft,metadata=meta)
                 entries.append({**meta,'path':path,'sha256':sha,'split':r['split'],'valid_foreground':0})
     cfg={'dataset':'acdc','image_records':records,'export_records':records,'split_patients':splits,'producer_patient_ids':splits['train']}
-    write_freeze_manifest(run,entries,cfg)
+    from pseudolabel_v3_fixtures import seal_test_teacher
+    seal_test_teacher(run,entries,cfg)
     with pytest.raises(ValueError,match='NO_FOREGROUND_SEEDS'):
         student_main(['--dataset','acdc','--root',str(data),'--manifest',str(run/'FROZEN.json'),'--out',str(tmp_path/'student.pt')])
     assert not (tmp_path/'student.pt').exists()
@@ -257,7 +260,8 @@ def test_mixed_validity_student_training_end_to_end(tmp_path):
                 entries.append({**meta,'path':name,'sha256':sha,'split':r['split'],'valid_foreground':49})
     cfg={'dataset':'acdc','image_records':records,'export_records':records,'split_patients':splits,
          'producer_patient_ids':splits['train'],'resolved_config':{'deployment':{'student_width':32,'window_k':4}}}
-    write_freeze_manifest(run,entries,cfg)
+    from pseudolabel_v3_fixtures import seal_test_teacher
+    seal_test_teacher(run,entries,cfg)
     out=tmp_path/'student.pt'
     student_main(['--dataset','acdc','--root',str(data),'--manifest',str(run/'FROZEN.json'),'--out',str(out),
                   '--profile','balanced','--max-train-batches','2','--threads','1','--batch-size','2'])

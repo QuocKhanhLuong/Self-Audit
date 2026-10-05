@@ -161,13 +161,20 @@ class AdaptiveAnnotationStudent(nn.Module):
     def __init__(self,width=32,window_k=8):
         from self_audit.models.annotation_expert import AnnotationExpert
         super().__init__(); self.encoder=DeploymentEncoder(width); self.a0_head=nn.Conv2d(width,NUM_CLASSES,1)
+        self.register_buffer("trained_profile_cap",torch.tensor(-1,dtype=torch.long))
+        self.register_buffer("runtime_thresholds",torch.tensor([.25,.55],dtype=torch.float64))
         self.refiner=AnnotationExpert(feature_channels=width,num_classes=NUM_CLASSES,audit_channels=3,
             window_k=window_k,max_turns=2,audit_conditioning="feature_only",offset_mode="structured")
+    def mark_profile_trained(self,profile):
+        """Called only after successful supervised optimizer updates."""
+        self.trained_profile_cap.fill_(max(int(self.trained_profile_cap),PROFILES[profile].turns))
     def encode(self,x): return self.encoder(x)
     def initial_logits(self,feat,output_hw):
         return F.interpolate(self.a0_head(feat),output_hw,mode="bilinear",align_corners=False)
     def refine_from_features(self,feat,a0,*,profile="balanced",return_metadata=False):
         if profile not in PROFILES: raise ValueError(f"profile must be one of {sorted(PROFILES)}")
+        if not self.training and PROFILES[profile].turns>int(self.trained_profile_cap):
+            raise ValueError("requested profile exceeds trained checkpoint coverage")
         logits=a0; stages=[a0]; metadata=[]
         for turn in range(PROFILES[profile].turns):
             out=self.refiner(feat,logits,previous_audit_evidence=None,turn_index=turn,return_metadata=return_metadata)

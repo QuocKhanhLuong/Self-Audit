@@ -28,6 +28,7 @@ def test_teacher_shapes_and_abstention_contract():
 
 def test_student_resource_profiles_change_compute_not_output_contract():
     student = AdaptiveAnnotationStudent(width=32, window_k=4).eval()
+    student.mark_profile_trained("accurate")  # synthetic compute-contract fixture
     _, cur, _ = _cine()
     with torch.no_grad():
         compact = student(cur, profile="compact")
