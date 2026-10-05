@@ -14,6 +14,11 @@ PREPROCESSING = {"axes": "native_XYZT_to_TZYX", "normalization": "cine_p1_p99_cl
 
 def source_identity():
     package = Path(__file__).resolve().parent
+    from self_audit.models import annotation_expert, dynamic_window
+    for module in (annotation_expert,dynamic_window):
+        expected=package.parent/"self_audit/models"/f"{module.__name__.rsplit('.',1)[-1]}.py"
+        if Path(module.__file__).resolve()!=expected.resolve():
+            raise ValueError("imported student dependency path differs from recorded source")
     files = list(package.glob("*.py"))
     files += [package.parent / "self_audit/models" / f for f in
               ("annotation_expert.py", "dynamic_window.py")]
@@ -33,7 +38,10 @@ def git_identity():
     return result.stdout.strip() if result.returncode == 0 else None
 
 
-def save_student_checkpoint(path, model, *, args, model_config, manifest_id, coverage):
+def save_student_checkpoint(path, model, *, args, model_config, manifest_id, coverage, source_at_start=None):
+    actual_source=source_identity()
+    if source_at_start is not None and source_at_start!=actual_source:
+        raise ValueError("student source changed during training; no checkpoint written")
     profile = args["profile"]
     if sum(coverage["class_pixels"][1:]) == 0:
         raise ValueError("NO_OBSERVED_FOREGROUND: no checkpoint written")
@@ -42,7 +50,7 @@ def save_student_checkpoint(path, model, *, args, model_config, manifest_id, cov
     model.runtime_thresholds.copy_(torch.tensor([budget.entropy_compact, budget.entropy_accurate],dtype=torch.float64,device=model.runtime_thresholds.device))
     payload = {"checkpoint_schema": 1, "model": model.state_dict(), "args": args,
                "model_config": model_config, "manifest_id": manifest_id, "profile_trained": profile,
-               "coverage": coverage, "source_sha256": source_identity(), "commit": git_identity(),
+               "coverage": coverage, "source_sha256": actual_source, "commit": git_identity(),
                "environment": environment_identity(), "preprocessing": PREPROCESSING}
     with Path(path).open("xb") as handle:
         torch.save(payload, handle)

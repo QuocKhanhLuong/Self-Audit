@@ -30,7 +30,7 @@ was added to training. Independent reference evaluation remains after complete f
 | R02 | Default one-neighbor disagreement remains accepted; two valid disagreeing neighbors reject the center. Matrix regression documents this exact policy. No warp/threshold change. |
 | R03 | Missing classes are explicitly reported for frozen exports and actual student updates. No arbitrary class minimum or GT-tuned quality threshold was introduced; positive support never certifies quality. |
 | R04 | Teacher/student role schemas require artifacts, locked split consistency, native shape/metadata, complete export cohorts, and recomputed pixel statistics. Generic hash validity is insufficient for consumers. Hashes do not prove authenticity against deliberate re-signing. |
-| R05 | Student checkpoint pins preprocessing, model config, source files plus AnnotationExpert/DynamicWindow dependencies, environment versions, source manifest, observed coverage, and trained profile. Loader has no silent override. Checkpoint SHA is recorded in receipt and prediction freeze. |
+| R05 | Student checkpoint pins preprocessing, model config, source files plus the actually imported AnnotationExpert/DynamicWindow dependencies, training-source drift guard, environment versions, source manifest, observed coverage, and trained profile. Loader has no silent override. Checkpoint SHA is recorded in receipt and prediction freeze. |
 | R06 | New `infer_student_v3.py` and `export_teacher_v3.py` export native XYZT volumes and complete frozen per-slice predictions without optimizer/reference access. Runner with `--train-student` adds student native freeze and independent validation. Final test history remains `NOT_CERTIFIED_BY_CODE`. |
 | R07 | ED+ES required for every evaluated patient; result has frame/class/phase rows, phase-macro estimates, phase-pooled patient metrics, reference hashes, frame mapping, and explicit estimand. UNKNOWN remains penalized against reference anatomy. |
 | R08 | Consecutive patient batches reduce cache churn; export uses temporary disk-backed arrays and at most three temporal slices per gate. Cache/load/export/scratch/peak-RSS instrumentation added. Full-cine normalization, mapped pages, disk capacity, real-patient throughput, and target-GPU memory remain unmeasured. |
@@ -48,10 +48,10 @@ python -m compileall -q src scripts tests
 git diff --check
 ```
 
-- **194 passed, 0 failed, 0 skipped**, 6.79 seconds; one existing tensor-to-scalar
+- **196 passed, 0 failed, 0 skipped**, 6.97 seconds; one existing tensor-to-scalar
   warning in `tests/test_self_audit_core.py`.
 - Compile and whitespace checks passed.
-- Includes **60 new checkup cases** plus existing regressions, native NIfTI integration,
+- Includes **62 new checkup cases** plus existing regressions, native NIfTI integration,
   synthetic bounded optimizer updates, student/test export, and independent scoring.
 - Local stack: macOS arm64, Python 3.11.16, PyTorch 2.14.0, NumPy 2.4.6,
   SciPy 1.17.1, nibabel 5.4.2. This is a portability receipt.

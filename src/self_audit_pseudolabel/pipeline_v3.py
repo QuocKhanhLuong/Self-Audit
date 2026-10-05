@@ -200,6 +200,8 @@ def student_main(argv=None):
     fg=sum(e.get('valid_foreground',0) for e in ds.payload['entries'] if e['split']=='train')
     _log("LOAD",f"frozen train samples={len(ds)} valid_foreground_pixels={fg} manifest={ds.payload['manifest_id'][:12]}")
     if fg==0: raise ValueError('NO_FOREGROUND_SEEDS: teacher not ready; student training refused')
+    from .checkpoint import save_student_checkpoint,source_identity
+    source_at_start=source_identity()
     model_cfg=ds.payload['config']['resolved_config']['deployment']
     model=AdaptiveAnnotationStudent(width=model_cfg['student_width'],window_k=model_cfg['window_k']).to(args.device)
     _log("MODEL",f"student params={_parameter_count(model):,} width={model_cfg['student_width']} window_k={model_cfg['window_k']}")
@@ -239,10 +241,9 @@ def student_main(argv=None):
               'missing_foreground_classes':[c for c in (1,2,3) if class_pixels[c]==0],
               'support_status':'MISSING_CLASSES' if any(class_pixels[c]==0 for c in (1,2,3)) else 'ALL_CLASSES_OBSERVED',
               'quality_status':'NOT_EVALUATED','bounded_training':bool(args.max_train_batches)}
-    from .checkpoint import save_student_checkpoint
     out.parent.mkdir(parents=True,exist_ok=True)
     digest=save_student_checkpoint(out,model,args=vars(args),model_config=model_cfg,
-                                   manifest_id=ds.payload['manifest_id'],coverage=coverage)
+                                   manifest_id=ds.payload['manifest_id'],coverage=coverage,source_at_start=source_at_start)
     result={'status':'training_complete','optimizer_steps':len(hist),'skipped_empty_batches':skipped,
             'declared_train_patient_ids':ds.payload['config']['split_patients']['train'],
             'trained_patient_ids':sorted(patient_pixels),'coverage':coverage,'checkpoint_sha256':digest,'history':hist}

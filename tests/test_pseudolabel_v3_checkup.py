@@ -443,3 +443,19 @@ def test_observed_patient_coverage_excludes_unseen_declared_patients(frozen,tmp_
         '--out',str(tmp_path/'student.pt'),'--profile','compact','--threads','1','--max-train-batches','1'])
     assert result['declared_train_patient_ids']==['patient001','patient002']
     assert result['trained_patient_ids']==['patient001']
+
+
+def test_source_identity_checks_actually_imported_dependencies(tmp_path,monkeypatch):
+    from self_audit_pseudolabel.checkpoint import source_identity
+    from self_audit.models import dynamic_window
+    monkeypatch.setattr(dynamic_window,'__file__',str(tmp_path/'other_dynamic_window.py'))
+    with pytest.raises(ValueError,match='imported student dependency'):source_identity()
+
+
+def test_checkpoint_refuses_source_drift_during_training(tmp_path):
+    from self_audit_pseudolabel.checkpoint import save_student_checkpoint
+    path=tmp_path/'student.pt';model=AdaptiveAnnotationStudent(width=32,window_k=4)
+    with pytest.raises(ValueError,match='source changed during training'):
+        save_student_checkpoint(path,model,args={'profile':'compact'},model_config={},manifest_id='test',
+                                coverage={'class_pixels':[0,1,0,0]},source_at_start={'old':'source'})
+    assert not path.exists()
