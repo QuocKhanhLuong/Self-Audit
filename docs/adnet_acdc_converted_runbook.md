@@ -6,6 +6,20 @@ producer.
 
 ## 1. Freeze Environment
 
+Fetch and audit the upstream ADNet source:
+
+```bash
+python scripts/setup_adnet_source.py \
+  --adnet-root baseline/ADNet \
+  --source-index reports/ADNET_SOURCE_INDEX_2026-10-01.json \
+  --receipt reports/adnet_training/acdc_converted/fold0/adnet_source_setup_receipt.json
+```
+
+The setup receipt must report `status=READY` and an audit status of `READY`.
+It clones ADNet when missing, pins the source to commit
+`c6bba85040c12ad1d2f351cdd8f72850daaaf3fb`, and verifies indexed source file
+hashes before the producer can run.
+
 ```bash
 python scripts/capture_adnet_environment.py \
   --output reports/adnet_training/acdc_converted/fold0/environment_receipt.json \

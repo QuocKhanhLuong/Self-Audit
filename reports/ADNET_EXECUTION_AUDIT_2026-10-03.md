@@ -34,6 +34,10 @@ Canonical labels:
 - `scripts/capture_adnet_environment.py`
   - Captures Python, PyTorch, CUDA, GPU/driver, repo identity, ADNet identity,
     and optional artifact hashes.
+- `scripts/setup_adnet_source.py`
+  - Clones/pins upstream ADNet when missing.
+  - Verifies the checkout against `reports/ADNET_SOURCE_INDEX_2026-10-01.json`
+    by commit and per-file SHA-256 before GPU execution.
 - `docs/adnet_acdc_converted_runbook.md`
   - Contains the GPU command sequence and acceptance gates.
 
@@ -45,12 +49,22 @@ reports/adnet_assets/acdc_converted/fold0/conversion_receipt.json
 reports/adnet_manifests/acdc_converted/fold0/query_manifest.json
 reports/adnet_manifests/acdc_converted/fold0/support_manifest.json
 reports/adnet_manifests/acdc_converted/fold0/gt_manifest.json
+reports/adnet_training/acdc_converted/fold0/adnet_source_setup_receipt.json
 reports/adnet_training/acdc_converted/fold0/model.pth
 reports/adnet_training/acdc_converted/fold0/environment_receipt.json
 reports/adnet_run/acdc_converted/fold0/evaluation.json
 ```
 
 ## Execution Commands
+
+Setup ADNet source:
+
+```bash
+python scripts/setup_adnet_source.py \
+  --adnet-root baseline/ADNet \
+  --source-index reports/ADNET_SOURCE_INDEX_2026-10-01.json \
+  --receipt reports/adnet_training/acdc_converted/fold0/adnet_source_setup_receipt.json
+```
 
 Convert ACDC:
 
@@ -127,6 +141,9 @@ python scripts/evaluate_adnet_fewshot.py \
 ## Acceptance Gates
 
 - Converted images and masks load as numeric `[Z,H,W]`.
+- ADNet source setup receipt reports `status=READY`.
+- ADNet source audit verifies commit
+  `c6bba85040c12ad1d2f351cdd8f72850daaaf3fb` and indexed file hashes.
 - Query images are non-constant and finite.
 - GT masks contain only labels `0,1,2,3`.
 - Support masks are binary and non-empty on declared support slices.
