@@ -41,10 +41,10 @@ class ProgressiveTeacherTrainer:
         valid &= guided.argmax(-1)==raw.argmax(-1)
         return raw.detach(),guided,valid,diag
 
-    def train_batch(self,batch):
+    def train_batch(self,batch,*,collect_metrics=False):
         self.teacher.train()
         base=self.teacher(batch["prev"],batch["cur"],batch["nxt"])
-        raw,_,valid,diag=self.build_evidence(batch,base)
+        raw,guided,valid,diag=self.build_evidence(batch,base)
         losses=teacher_loss(base,batch["cur"],raw,valid,w_recon=self.cfg.w_recon,
                             w_proto=self.cfg.w_proto,w_seed=self.cfg.w_seed,w_motion=self.cfg.w_motion,
                             w_motion_smooth=self.cfg.w_motion_smooth)
@@ -53,6 +53,19 @@ class ProgressiveTeacherTrainer:
         # Raw evidence supplies class identity, NOT the network prediction being trained.
         self.bank.update(base["region_features"].detach(),raw.softmax(-1),valid,
                          min_confidence=self.cfg.prototype_min_confidence)
+        self.last_metrics = {}
+        if collect_metrics:
+            # Reuse the pre-update encoding and evidence; no extra forward or GT.
+            # Diagnostic decode only: these pixels are NOT the region-loss targets.
+            from .progress_v3 import coverage_metrics
+            with torch.no_grad():
+                decoded = self.teacher.decode_evidence(base,batch["cur"].shape[-2:],
+                    evidence_logits=guided,evidence_valid=valid,
+                    min_prob=self.cfg.min_prob,min_margin=self.cfg.min_margin)
+                self.last_metrics = coverage_metrics(decoded["pseudo_label"],decoded["valid"],prefix="decoded")
+                self.last_metrics["candidate_regions"] = valid.numel()
+                for c,name in enumerate(("bg","rv","myo","lv")):
+                    self.last_metrics[f"accepted_{name}_regions"] = int((valid & (raw.argmax(-1)==c)).sum())
         return {k:float(v.detach().cpu()) for k,v in losses.items()},int(valid.sum()),diag
 
     @torch.no_grad()

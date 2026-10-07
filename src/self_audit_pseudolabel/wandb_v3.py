@@ -119,7 +119,7 @@ class WandbV3Tracker:
         for row in rows:
             self.log({stage: row})
 
-    def log_json(self, stage: str, path: str | Path) -> None:
+    def log_json(self, stage: str, path: str | Path, *, include_history: bool = True) -> None:
         try:
             payload = json.loads(Path(path).read_text(encoding="utf-8"))
         except Exception as exc:
@@ -127,12 +127,14 @@ class WandbV3Tracker:
             return
         if isinstance(payload, list):
             rows = [row for row in payload if isinstance(row, Mapping)]
-            self.log_history(stage, rows)
+            if include_history:
+                self.log_history(stage, rows)
         elif isinstance(payload, Mapping):
             history = payload.get("history")
             if isinstance(history, list):
                 rows = [row for row in history if isinstance(row, Mapping)]
-                self.log_history(stage, rows)
+                if include_history:
+                    self.log_history(stage, rows)
                 payload = {key: value for key, value in payload.items() if key != "history"}
             self.log({stage: payload})
         else:

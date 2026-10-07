@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """One-command Self-Audit v3 research pipeline: teacher -> freeze -> pseudo eval -> optional student."""
 from __future__ import annotations
-import argparse,json,os,subprocess,sys,time
+import argparse,codecs,json,os,subprocess,sys,time
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -10,6 +10,7 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from self_audit_pseudolabel.wandb_v3 import WandbV3Tracker
+from self_audit_pseudolabel.progress_v3 import add_progress_arguments,EVENT_PREFIX,EVENT_SCHEMA
 
 def log(tag,msg,fh=None):
     line=f"[{tag}] {msg}"
@@ -17,14 +18,41 @@ def log(tag,msg,fh=None):
     if fh is not None:
         fh.write(line+"\n");fh.flush()
 
-def run_stage(name,cmd,env,fh):
+def _stream_event(line, name, tracker):
+    if tracker is None or not line.startswith(EVENT_PREFIX):
+        return
+    try:
+        event=json.loads(line[len(EVENT_PREFIX):])
+    except (ValueError,TypeError):
+        return
+    if (isinstance(event,dict) and event.get('schema')==EVENT_SCHEMA
+            and event.get('stage')==name and isinstance(event.get('metrics'),dict)):
+        tracker.log({name:event['metrics']})
+
+
+def run_stage(name,cmd,env,fh,tracker=None):
     log("STAGE",f"{name} start",fh)
     log("CMD"," ".join(str(x) for x in cmd),fh)
     started=time.perf_counter()
-    proc=subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,bufsize=1,env=env)
+    child_env=dict(env); child_env['PYTHONUNBUFFERED']='1'
+    proc=subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,env=child_env)
     assert proc.stdout is not None
-    for line in proc.stdout:
-        print(line,end="",flush=True);fh.write(line);fh.flush()
+    decoder=codecs.getincrementaldecoder('utf-8')(errors='replace')
+    pending=''
+    # read1 forwards available bytes, including tqdm carriage returns, without
+    # waiting for a newline (or an entire epoch). Parse only complete records.
+    while True:
+        chunk=proc.stdout.read1(65536)
+        text=decoder.decode(chunk,final=not chunk)
+        if text:
+            print(text,end='',flush=True)
+            fh.write(text.replace('\r','\n'));fh.flush()
+            pending+=text.replace('\r','\n')
+            lines=pending.split('\n');pending=lines.pop()
+            for line in lines: _stream_event(line,name,tracker)
+        if not chunk: break
+    if pending: _stream_event(pending,name,tracker)
+    proc.stdout.close()
     code=proc.wait()
     elapsed=time.perf_counter()-started
     if code!=0:
@@ -55,6 +83,7 @@ def build_parser():
     p.add_argument("--reference-manifest",help="required for M&Ms evaluation")
     p.add_argument("--train-student",action="store_true",help="continue to student after frozen pseudo-label evaluation")
     p.add_argument("--dry-run",action="store_true")
+    add_progress_arguments(p)
     w=p.add_mutually_exclusive_group()
     w.add_argument("--wandb",dest="wandb",action="store_true",default=False,help="enable W&B tracking")
     w.add_argument("--no-wandb",dest="wandb",action="store_false",help="disable W&B tracking")
@@ -72,6 +101,7 @@ def main(argv=None):
     args=build_parser().parse_args(argv)
     if min(args.teacher_epochs,args.student_epochs,args.batch_size,args.threads)<1:
         raise ValueError("epochs, batch size and threads must be positive")
+    if args.log_every<0: raise ValueError("log-every must be nonnegative")
     run=Path(args.out).resolve()
     if run.exists(): raise FileExistsError(run)
     run.mkdir(parents=True)
@@ -113,6 +143,10 @@ def main(argv=None):
     student_eval_cmd=list(eval_cmd)
     student_eval_cmd[student_eval_cmd.index("--run")+1]=str(student_predictions)
     student_eval_cmd[student_eval_cmd.index("--out")+1]=str(student_evaluation)
+    for cmd in (teacher_cmd,student_cmd):
+        cmd += ['--log-every',str(args.log_every)]
+    if args.no_progress:
+        for cmd in (teacher_cmd,student_cmd,infer_cmd): cmd.append('--no-progress')
     with log_path.open("x",encoding="utf-8") as fh:
         try:
             import torch
@@ -144,7 +178,7 @@ def main(argv=None):
 
         def tracked_stage(name,cmd):
             tracker.log({"pipeline":{"stage":name,"status":"started"}})
-            elapsed=run_stage(name,cmd,env,fh)
+            elapsed=run_stage(name,cmd,env,fh,tracker=tracker)
             tracker.log({"pipeline":{"stage":name,"status":"completed","elapsed_seconds":elapsed}})
             return elapsed
 
@@ -152,14 +186,14 @@ def main(argv=None):
             tracker.log({"pipeline":{"status":"started","dataset":args.dataset,"device":args.device}})
             times={}
             times["teacher"]=tracked_stage("teacher",teacher_cmd)
-            _log_stage_metrics(tracker,"teacher",teacher/"train_metrics.json")
+            _log_stage_metrics(tracker,"teacher_summary",teacher/"run_summary.json")
             times["evaluation"]=tracked_stage("pseudo-eval",eval_cmd)
             _log_stage_metrics(tracker,"evaluation",evaluation)
             scores=json.loads(evaluation.read_text())
             log("METRIC",f"pseudo fg={scores.get('foreground_mean')} RV={scores.get('rv')} MYO={scores.get('myo')} LV={scores.get('lv')} known={scores.get('known_fraction')}",fh)
             if args.train_student:
                 times["student"]=tracked_stage("student",student_cmd)
-                _log_stage_metrics(tracker,"student",student.with_suffix(".json"))
+                tracker.log_json("student_summary",student.with_suffix(".json"),include_history=False)
                 times["student_inference"]=tracked_stage("student-inference",infer_cmd)
                 times["student_evaluation"]=tracked_stage("student-eval",student_eval_cmd)
                 _log_stage_metrics(tracker,"student_evaluation",student_evaluation)

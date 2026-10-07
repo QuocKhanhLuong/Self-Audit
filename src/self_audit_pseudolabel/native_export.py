@@ -1,5 +1,6 @@
 """Disk-backed cine export; temporal rejection holds at most three slices in RAM."""
 from __future__ import annotations
+from contextlib import ExitStack
 import resource
 import sys
 import tempfile
@@ -11,9 +12,10 @@ from torch.utils.data import DataLoader
 from .data_v3 import CineSliceDataset
 from .freeze import export_pseudo_npz
 from .consistency import consistency_gate
+from .progress_v3 import progress_bar
 
 
-def export_native(records, inventory, root, predict, consistency, *, log_every=10):
+def export_native(records, inventory, root, predict, consistency, *, log_every=10, progress=True):
     import nibabel as nib
     root = Path(root)
     entries = []; volumes = []; patient_reports = []
@@ -24,7 +26,10 @@ def export_native(records, inventory, root, predict, consistency, *, log_every=1
         info = inventory[record.patient_id]; x,y,zmax,tmax = info['shape']
         ds = CineSliceDataset([record],cache_records=1)
         started = time.perf_counter()
-        with tempfile.TemporaryDirectory(prefix='.cine-',dir=root) as scratch:
+        with tempfile.TemporaryDirectory(prefix='.cine-',dir=root) as scratch, ExitStack() as cleanup:
+            bar=progress_bar(total=2*len(ds),desc=f'export {patient_index+1}/{len(records)} predict/write',
+                             enabled=progress,unit='slice-pass')
+            if bar is not None: cleanup.callback(bar.close)
             arrays = {}
             seen = set()
             for b in DataLoader(ds,batch_size=1,shuffle=False,num_workers=0):
@@ -41,6 +46,7 @@ def export_native(records, inventory, root, predict, consistency, *, log_every=1
                         arrays[name] = np.lib.format.open_memmap(Path(scratch)/f'{name}.npy', mode='w+',
                             dtype=value.dtype,shape=(tmax,zmax,*value.shape))
                     arrays[name][t,z] = value
+                if bar is not None: bar.update(1)
             if seen!={(t,z) for t in range(tmax) for z in range(zmax)}:
                 raise ValueError('incomplete patient export')
             native = np.lib.format.open_memmap(Path(scratch)/'native.npy',mode='w+',
@@ -70,6 +76,8 @@ def export_native(records, inventory, root, predict, consistency, *, log_every=1
                     counts = [a+b for a,b in zip(counts,pixels)]
                     frame_counts[str(t)] = [a+b for a,b in zip(frame_counts[str(t)],pixels)]
                     native[:,:,z,t] = label.T
+                    if bar is not None: bar.update(1)
+            if bar is not None: bar.set_description(f'export {patient_index+1}/{len(records)} save NIfTI')
             path = Path('native')/f'{record.patient_id}.nii.gz'
             (root/path).parent.mkdir(parents=True,exist_ok=True)
             image = nib.Nifti1Image(native,np.asarray(info['affine']))

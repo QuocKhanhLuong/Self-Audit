@@ -31,6 +31,15 @@ It has **80,462 resident parameters** at the checked-in default configuration.
 No diffusion runs in this student's forward path. CUTS retains PHATE clustering
 and a separate diffusion-condensation route as comparison methods.
 
+### Live training progress
+
+The v3 runner now shows per-batch tqdm/ETA and flushes sampled teacher/student
+metrics while training (default `--log-every 50`). W&B receives those records
+live in the same parent-owned run. Use `--no-progress` for a plain log, or
+`--log-every 0 --no-progress` for epoch-only output. Coverage is pseudo-label
+support, never training accuracy. See [metric definitions, log files, ETA scope
+and safe update instructions](docs/pseudolabel_v3_live_progress.md).
+
 ### W&B tracking for v3
 
 The v3 orchestrator owns one optional W&B run for the teacher, frozen evaluation,

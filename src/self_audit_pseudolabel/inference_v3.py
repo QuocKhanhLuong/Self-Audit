@@ -19,6 +19,7 @@ def _arguments(argv, student):
     parser.add_argument('--split',choices=['train','val','test'],default='val')
     parser.add_argument('--device',default='cpu')
     parser.add_argument('--threads',type=int,default=4)
+    parser.add_argument('--no-progress',action='store_true',help='disable native export progress bars')
     if student:
         parser.add_argument('--checkpoint',required=True)
         parser.add_argument('--profile',choices=['adaptive','compact','balanced','accurate'],default='adaptive')
@@ -60,7 +61,7 @@ def _seal(args, source, payload, records, current, images, predict, *, student, 
         for name in ('teacher.pt','train_metrics.json'):
             shutil.copyfile(source.parent/name,out/name)
         consistency = cfg['resolved_config']['consistency']
-    entries,volumes,report = export_native(records,{r['patient_id']:r for r in current},out,predict,consistency)
+    entries,volumes,report = export_native(records,{r['patient_id']:r for r in current},out,predict,consistency,progress=not args.no_progress)
     for row in current:
         if sha256_file(row['path'])!=row['image_sha256']: raise ValueError('image changed during inference')
     verify_frozen(source,expected_role='teacher_freeze')
