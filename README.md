@@ -31,6 +31,41 @@ It has **80,462 resident parameters** at the checked-in default configuration.
 No diffusion runs in this student's forward path. CUTS retains PHATE clustering
 and a separate diffusion-condensation route as comparison methods.
 
+### W&B tracking for v3
+
+The v3 orchestrator owns one optional W&B run for the teacher, frozen evaluation,
+and optional student stages. W&B is disabled unless `--wandb` is passed. Supply
+the key through the environment; never put it in source, YAML, Git history, or a
+command-line argument:
+
+```bash
+read -r -s -p "W&B API key: " WANDB_API_KEY
+printf '\n'
+export WANDB_API_KEY
+wandb login
+```
+
+Online full ACDC teacher + evaluation + student tracking:
+
+```bash
+python scripts/run_full_pipeline_v3.py \
+  --dataset acdc \
+  --root "$PWD/data/ACDC/training" \
+  --split-manifest splits/acdc_patient_split_seed42.json \
+  --config configs/pseudolabel_v3.json \
+  --out "$PWD/runs/pseudolabel_v3/full_$(date +%Y%m%d_%H%M%S)" \
+  --teacher-epochs 3 --student-epochs 10 --batch-size 1 --threads 4 \
+  --profile balanced --train-student --device cuda \
+  --wandb --wandb-mode online \
+  --wandb-project self-audit-v3 \
+  --wandb-run-name pseudolabel-v3-acdc
+```
+
+When the server has no outbound network, use `--wandb-mode offline`; the run
+is written below the run directory and can be synced later with
+`wandb sync <offline-run-directory>`. W&B telemetry is best-effort and cannot
+change the v3 freeze artifacts or evaluation result.
+
 See the [main flow, measurements and research decisions](reports/main_baseline_20261002/00_DECISION.md)
 and [primary-source research with the 4080 Super evaluation protocol](reports/main_baseline_20261002/03_RESEARCH.md).
 The separate `src/self_audit_maskfree/` implementation and benchmark baselines

@@ -4,6 +4,13 @@ from __future__ import annotations
 import argparse,json,os,subprocess,sys,time
 from pathlib import Path
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+SRC_ROOT = REPO_ROOT / "src"
+if str(SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(SRC_ROOT))
+
+from self_audit_pseudolabel.wandb_v3 import WandbV3Tracker
+
 def log(tag,msg,fh=None):
     line=f"[{tag}] {msg}"
     print(line,flush=True)
@@ -26,7 +33,8 @@ def run_stage(name,cmd,env,fh):
     log("STAGE",f"{name} done time={elapsed:.1f}s",fh)
     return elapsed
 
-def main(argv=None):
+
+def build_parser():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument("--dataset",choices=["acdc","mnms"],required=True)
     p.add_argument("--root",required=True)
@@ -47,7 +55,21 @@ def main(argv=None):
     p.add_argument("--reference-manifest",help="required for M&Ms evaluation")
     p.add_argument("--train-student",action="store_true",help="continue to student after frozen pseudo-label evaluation")
     p.add_argument("--dry-run",action="store_true")
-    args=p.parse_args(argv)
+    w=p.add_mutually_exclusive_group()
+    w.add_argument("--wandb",dest="wandb",action="store_true",default=False,help="enable W&B tracking")
+    w.add_argument("--no-wandb",dest="wandb",action="store_false",help="disable W&B tracking")
+    p.add_argument("--wandb-mode",choices=["online","offline","disabled"],default="disabled")
+    p.add_argument("--wandb-project",default="self-audit-v3")
+    p.add_argument("--wandb-entity",default=None)
+    p.add_argument("--wandb-run-name",default=None)
+    return p
+
+
+def _log_stage_metrics(tracker, stage, path):
+    tracker.log_json(stage, path)
+
+def main(argv=None):
+    args=build_parser().parse_args(argv)
     if min(args.teacher_epochs,args.student_epochs,args.batch_size,args.threads)<1:
         raise ValueError("epochs, batch size and threads must be positive")
     run=Path(args.out).resolve()
@@ -55,7 +77,7 @@ def main(argv=None):
     run.mkdir(parents=True)
     log_path=run/"pipeline.log"
     env=os.environ.copy()
-    repo=Path(__file__).resolve().parents[1]
+    repo=REPO_ROOT
     env["PYTHONPATH"]=str(repo/"src")+(os.pathsep+env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
     py=sys.executable
     teacher=run/"teacher"
@@ -106,22 +128,54 @@ def main(argv=None):
                 for name,cmd in [("student",student_cmd),("student-inference",infer_cmd),("student-eval",student_eval_cmd)]:
                     log("DRYRUN",name+": "+" ".join(cmd),fh)
             return 0
-        times={}
-        times["teacher"]=run_stage("teacher",teacher_cmd,env,fh)
-        times["evaluation"]=run_stage("pseudo-eval",eval_cmd,env,fh)
-        scores=json.loads(evaluation.read_text())
-        log("METRIC",f"pseudo fg={scores.get('foreground_mean')} RV={scores.get('rv')} MYO={scores.get('myo')} LV={scores.get('lv')} known={scores.get('known_fraction')}",fh)
-        if args.train_student:
-            times["student"]=run_stage("student",student_cmd,env,fh)
-            times["student_inference"]=run_stage("student-inference",infer_cmd,env,fh)
-            times["student_evaluation"]=run_stage("student-eval",student_eval_cmd,env,fh)
-        summary={"status":"complete","dataset":args.dataset,"teacher_dir":str(teacher),
-                 "student_evaluation":str(student_evaluation) if args.train_student else None,
-                 "student_predictions":str(student_predictions) if args.train_student else None,
-                 "evaluation":str(evaluation),"student":str(student) if args.train_student else None,
-                 "times_seconds":times,"pseudo_metrics":{k:scores.get(k) for k in ("foreground_mean","rv","myo","lv","known_fraction")}}
-        (run/"PIPELINE_SUMMARY.json").write_text(json.dumps(summary,indent=2),encoding="utf-8")
-        log("DONE",f"pipeline out={run} summary={run/'PIPELINE_SUMMARY.json'}",fh)
+        tracker=WandbV3Tracker(
+            enabled=args.wandb,
+            mode=args.wandb_mode,
+            project=args.wandb_project,
+            entity=args.wandb_entity,
+            run_name=args.wandb_run_name or run.name,
+            run_dir=run/"wandb",
+            config={"dataset":args.dataset,"seed":args.seed,"device":args.device,
+                    "teacher_epochs":args.teacher_epochs,"student_epochs":args.student_epochs,
+                    "profile":args.profile,"train_student":args.train_student},
+        )
+        for warning in tracker.warnings:
+            log("WANDB",warning,fh)
+
+        def tracked_stage(name,cmd):
+            tracker.log({"pipeline":{"stage":name,"status":"started"}})
+            elapsed=run_stage(name,cmd,env,fh)
+            tracker.log({"pipeline":{"stage":name,"status":"completed","elapsed_seconds":elapsed}})
+            return elapsed
+
+        try:
+            tracker.log({"pipeline":{"status":"started","dataset":args.dataset,"device":args.device}})
+            times={}
+            times["teacher"]=tracked_stage("teacher",teacher_cmd)
+            _log_stage_metrics(tracker,"teacher",teacher/"train_metrics.json")
+            times["evaluation"]=tracked_stage("pseudo-eval",eval_cmd)
+            _log_stage_metrics(tracker,"evaluation",evaluation)
+            scores=json.loads(evaluation.read_text())
+            log("METRIC",f"pseudo fg={scores.get('foreground_mean')} RV={scores.get('rv')} MYO={scores.get('myo')} LV={scores.get('lv')} known={scores.get('known_fraction')}",fh)
+            if args.train_student:
+                times["student"]=tracked_stage("student",student_cmd)
+                _log_stage_metrics(tracker,"student",student.with_suffix(".json"))
+                times["student_inference"]=tracked_stage("student-inference",infer_cmd)
+                times["student_evaluation"]=tracked_stage("student-eval",student_eval_cmd)
+                _log_stage_metrics(tracker,"student_evaluation",student_evaluation)
+            summary={"status":"complete","dataset":args.dataset,"teacher_dir":str(teacher),
+                     "student_evaluation":str(student_evaluation) if args.train_student else None,
+                     "student_predictions":str(student_predictions) if args.train_student else None,
+                     "evaluation":str(evaluation),"student":str(student) if args.train_student else None,
+                     "times_seconds":times,"pseudo_metrics":{k:scores.get(k) for k in ("foreground_mean","rv","myo","lv","known_fraction")}}
+            (run/"PIPELINE_SUMMARY.json").write_text(json.dumps(summary,indent=2),encoding="utf-8")
+            tracker.set_summary(summary)
+            tracker.log({"pipeline":{"status":"complete","times_seconds":times,"pseudo_metrics":summary["pseudo_metrics"]}})
+            log("DONE",f"pipeline out={run} summary={run/'PIPELINE_SUMMARY.json'}",fh)
+        finally:
+            tracker.finish()
+            for warning in tracker.warnings:
+                log("WANDB",warning,fh)
     return 0
 
 if __name__=="__main__":

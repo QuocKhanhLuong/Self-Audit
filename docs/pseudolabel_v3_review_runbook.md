@@ -232,3 +232,35 @@ python scripts/run_full_pipeline_v3.py \
 
 Add `--train-student --student-epochs 10 --profile balanced` only when a full
 end-to-end software run is desired. That does not certify teacher quality.
+
+### Optional W&B tracking
+
+The parent v3 runner can create one W&B run for all stages. It is opt-in and
+does not alter the image-only training or freeze contract. Authenticate with
+`WANDB_API_KEY` (do not pass the key as a CLI argument):
+
+```bash
+read -r -s -p "W&B API key: " WANDB_API_KEY
+printf '\n'
+export WANDB_API_KEY
+wandb login
+```
+
+Use these flags for online tracking:
+
+```bash
+python scripts/run_full_pipeline_v3.py \
+  --dataset acdc --root "$PWD/data/ACDC/training" \
+  --split-manifest splits/acdc_patient_split_seed42.json \
+  --config configs/pseudolabel_v3.json \
+  --out "$PWD/runs/pseudolabel_v3/full_$(date +%Y%m%d_%H%M%S)" \
+  --teacher-epochs 3 --student-epochs 10 --batch-size 1 --threads 4 \
+  --profile balanced --train-student --device cuda \
+  --wandb --wandb-mode online --wandb-project self-audit-v3 \
+  --wandb-run-name pseudolabel-v3-acdc
+```
+
+For an isolated server, replace `online` with `offline`. After copying the
+resulting offline run directory to an Internet-connected machine, upload it
+with `wandb sync <offline-run-directory>`. Missing W&B, failed initialization,
+or logging errors are recorded as warnings and do not abort the pipeline.
