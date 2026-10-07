@@ -81,6 +81,8 @@ def build_parser():
     p.add_argument("--student-max-train-batches",type=int,default=0)
     p.add_argument("--references",help="ACDC reference root; defaults to --root")
     p.add_argument("--reference-manifest",help="required for M&Ms evaluation")
+    p.add_argument("--allow-unknown-spatial-units",action="store_true",
+                   help="allow evaluator inputs whose image and reference grids both declare unknown spatial units")
     p.add_argument("--train-student",action="store_true",help="continue to student after frozen pseudo-label evaluation")
     p.add_argument("--dry-run",action="store_true")
     add_progress_arguments(p)
@@ -128,6 +130,8 @@ def main(argv=None):
         eval_cmd+=["--references",args.references or args.root]
     else:
         raise ValueError("M&Ms requires --reference-manifest for independent evaluation")
+    if args.allow_unknown_spatial_units:
+        eval_cmd.append("--allow-unknown-spatial-units")
     sb=args.student_batch_size or args.batch_size
     student_cmd=[py,str(repo/"scripts/train_student_v3.py"),
         "--dataset",args.dataset,"--root",args.root,"--manifest",str(teacher/"FROZEN.json"),

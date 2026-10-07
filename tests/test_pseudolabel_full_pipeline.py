@@ -22,3 +22,18 @@ def test_full_pipeline_dry_run_builds_all_stages(tmp_path):
     assert "[DRYRUN] student-inference:" in text and "infer_student_v3.py" in text
     assert "[DRYRUN] student-eval:" in text and "student_evaluation_val.json" in text
     assert (out/"pipeline.log").exists()
+
+
+def test_full_pipeline_forwards_unknown_spatial_unit_opt_in_to_evaluators(tmp_path):
+    out=tmp_path/"run"
+    cp=subprocess.run([
+        sys.executable,str(ROOT/"scripts/run_full_pipeline_v3.py"),
+        "--dataset","acdc","--root",str(tmp_path/"data"),
+        "--split-manifest",str(tmp_path/"split.json"),
+        "--out",str(out),"--device","cpu","--train-student","--dry-run",
+        "--allow-unknown-spatial-units",
+    ],capture_output=True,text=True,check=True)
+    commands = [line for line in cp.stdout.splitlines() if line.startswith("[DRYRUN]")]
+    assert "--allow-unknown-spatial-units" in commands[1]
+    assert "--allow-unknown-spatial-units" in commands[4]
+    assert all("--allow-unknown-spatial-units" not in commands[i] for i in (0,2,3))
