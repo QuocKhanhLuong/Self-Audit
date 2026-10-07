@@ -180,15 +180,18 @@ def main(argv=None):
         for warning in tracker.warnings:
             log("WANDB",warning,fh)
 
+        times={}; scores={}; completed=[]; current_stage=None; exit_code=0
         def tracked_stage(name,cmd):
+            nonlocal current_stage
+            current_stage=name
             tracker.log({"pipeline":{"stage":name,"status":"started"}})
             elapsed=run_stage(name,cmd,env,fh,tracker=tracker)
+            completed.append(name)
             tracker.log({"pipeline":{"stage":name,"status":"completed","elapsed_seconds":elapsed}})
             return elapsed
 
         try:
             tracker.log({"pipeline":{"status":"started","dataset":args.dataset,"device":args.device}})
-            times={}
             times["teacher"]=tracked_stage("teacher",teacher_cmd)
             _log_stage_metrics(tracker,"teacher_summary",teacher/"run_summary.json")
             times["evaluation"]=tracked_stage("pseudo-eval",eval_cmd)
@@ -210,8 +213,30 @@ def main(argv=None):
             tracker.set_summary(summary)
             tracker.log({"pipeline":{"status":"complete","times_seconds":times,"pseudo_metrics":summary["pseudo_metrics"]}})
             log("DONE",f"pipeline out={run} summary={run/'PIPELINE_SUMMARY.json'}",fh)
+        except (Exception,KeyboardInterrupt) as exc:
+            exit_code=130 if isinstance(exc,KeyboardInterrupt) else 1
+            # Preserve completed independent evaluation even if student support
+            # is absent. A scientific stop must never look like pipeline success.
+            summary={"status":"interrupted" if exit_code==130 else "failed",
+                     "dataset":args.dataset,"failed_stage":current_stage,
+                     "error_type":type(exc).__name__,"return_code":getattr(exc,'returncode',exit_code),
+                     "completed_stages":completed,"times_seconds":times,
+                     "teacher_dir":str(teacher) if 'teacher' in completed else None,
+                     "evaluation":str(evaluation) if 'pseudo-eval' in completed else None,
+                     "student":str(student) if 'student' in completed else None,
+                     "student_predictions":str(student_predictions) if 'student-inference' in completed else None,
+                     "student_evaluation":str(student_evaluation) if 'student-eval' in completed else None,
+                     "pipeline_log":str(log_path),
+                     "pseudo_metrics":{k:scores.get(k) for k in ("foreground_mean","rv","myo","lv","known_fraction")}}
+            try:
+                (run/"PIPELINE_SUMMARY.json").write_text(json.dumps(summary,indent=2),encoding="utf-8")
+            except OSError as write_error:
+                log("ERROR",f"could not preserve failure summary: {write_error}",fh)
+            tracker.set_summary(summary)
+            tracker.log({"pipeline":{"status":summary['status'],"failed_stage":current_stage}})
+            raise
         finally:
-            tracker.finish()
+            tracker.finish(exit_code=exit_code)
             for warning in tracker.warnings:
                 log("WANDB",warning,fh)
     return 0
