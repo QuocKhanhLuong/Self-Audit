@@ -10,6 +10,7 @@ from .data_v3 import (discover_acdc_full_cine,discover_mnms_full_cine,CineSliceD
                       PatientBatchSampler,read_patient_splits,select_records,inspect_record)
 from .system_v3 import CinePseudoTeacher,AdaptiveAnnotationStudent,pseudo_supervision_loss
 from .trainer_v3 import ProgressiveTeacherTrainer,ProgressiveConfig
+from .evidence import EvidenceConfig
 from .progress_v3 import TrainingProgress,add_progress_arguments,coverage_metrics
 from .freeze import sha256_file,write_freeze_manifest,verify_frozen,safe_path
 
@@ -113,9 +114,12 @@ def teacher_main(argv=None):
     tc=ProgressiveConfig(min_prob=rel['min_probability'],min_margin=rel['min_margin'],
         prototype_min_confidence=rel['prototype_min_confidence'],w_recon=weights['reconstruction'],
         w_proto=weights['anonymous_prototype'],w_seed=weights['semantic_seed'],
-        w_motion=weights['motion_photometric'],w_motion_smooth=weights['motion_smoothness'])
+        w_motion=weights['motion_photometric'],w_motion_smooth=weights['motion_smoothness'],
+        w_region_spatial=weights.get('region_spatial_smoothness',.05))
+    ec=EvidenceConfig(min_region_pixels=int(rel.get('min_region_pixels',4)),
+        max_components_per_prototype=int(rel.get('max_components_per_prototype',4)))
     opt=torch.optim.AdamW(teacher.parameters(),lr=cfg['training']['lr'],weight_decay=cfg['training']['weight_decay'])
-    trainer=ProgressiveTeacherTrainer(teacher,opt,tc)
+    trainer=ProgressiveTeacherTrainer(teacher,opt,tc,ec)
     out=Path(args.out); out.mkdir(parents=True,exist_ok=False); shutil.copyfile(args.split_manifest,out/'split.json')
     history=[]; loader=_loader(train_ds,args.batch_size,args.seed)
     _log("TRAIN",f"start batches_per_epoch={len(loader)} bounded={bool(args.max_train_batches)}")
@@ -124,6 +128,7 @@ def teacher_main(argv=None):
                           batches_per_epoch=batches,log_every=args.log_every,enabled=not args.no_progress) as progress:
         for epoch in range(args.epochs):
             started=time.perf_counter(); epoch_rows=[]; accepted_total=0
+            trainer.reset_epoch_support()
             progress.start_epoch(epoch)
             _reset_peak_vram(args.device)
             for step,b in enumerate(loader):
@@ -140,10 +145,28 @@ def teacher_main(argv=None):
                 f"loss={_mean(epoch_rows,'total'):.4f} seed={_mean(epoch_rows,'semantic_seed'):.4f} "
                 f"proto={_mean(epoch_rows,'prototype'):.4f} recon={_mean(epoch_rows,'reconstruction'):.4f} "
                 f"motion={_mean(epoch_rows,'motion_photo'):.4f}/{_mean(epoch_rows,'motion_smooth'):.4f} "
-                f"accepted={accepted_total} time={elapsed:.1f}s peak_vram={_peak_vram_gb(args.device):.2f}GB")
+                f"spatial={_mean(epoch_rows,'region_spatial'):.4f} accepted={accepted_total} "
+                f"accepted_classes={trainer.epoch_accepted_evidence_counts} "
+                f"decodable_classes={trainer.epoch_decodable_evidence_counts} "
+                f"time={elapsed:.1f}s peak_vram={_peak_vram_gb(args.device):.2f}GB")
     (out/'train_metrics.json').write_text(json.dumps(history,indent=2))
+    support={'raw_class_regions':trainer.raw_evidence_counts,
+        'accepted_class_regions':trainer.accepted_evidence_counts,
+        'decodable_class_regions':trainer.decodable_evidence_counts,
+        'final_epoch_raw_class_regions':trainer.epoch_raw_evidence_counts,
+        'final_epoch_accepted_class_regions':trainer.epoch_accepted_evidence_counts,
+        'final_epoch_decodable_class_regions':trainer.epoch_decodable_evidence_counts,
+        'foreground_bootstrap_ready':bool(sum(trainer.epoch_decodable_evidence_counts[1:])),
+        'bounded_training':bool(args.max_train_batches)}
+    (out/'teacher_support.json').write_text(json.dumps(support,indent=2))
+    if not args.max_train_batches and not support['foreground_bootstrap_ready']:
+        failure={'status':'teacher_not_ready','reason':'NO_FOREGROUND_BOOTSTRAP',
+            'optimizer_steps':len(history),'support':support,'out':str(out)}
+        (out/'run_summary.json').write_text(json.dumps(failure,indent=2))
+        raise ValueError('NO_FOREGROUND_BOOTSTRAP: final epoch produced no decodable RV/MYO/LV regions; export refused')
     torch.save({'model':teacher.state_dict(),'prototype_bank':trainer.bank.prototypes.cpu(),
-        'prototype_counts':trainer.bank.counts.cpu(),'config':cfg,'producer_patient_ids':splits['train']},out/'teacher.pt')
+        'prototype_counts':trainer.bank.counts.cpu(),'evidence_support':support,
+        'config':cfg,'producer_patient_ids':splits['train']},out/'teacher.pt')
     _log("CHECKPOINT",f"saved {out/'teacher.pt'} prototype_counts={[int(x) for x in trainer.bank.counts.cpu().tolist()]}")
     from .native_export import export_native
     entries,volumes,export_report=export_native(export_records,by_id,out,
@@ -159,7 +182,7 @@ def teacher_main(argv=None):
         'image_records':record_inventory,'export_records':[by_id[r.patient_id] for r in export_records],
         'supervision':'image_only_with_handwritten_priors','bounded_training':bool(args.max_train_batches),
         'teacher_ready':'NOT_EVALUATED'}
-    payload=write_freeze_manifest(out,entries,run_config,extra_artifacts=[*volumes,'export_report.json']); verify_frozen(out/'FROZEN.json')
+    payload=write_freeze_manifest(out,entries,run_config,extra_artifacts=[*volumes,'export_report.json','teacher_support.json']); verify_frozen(out/'FROZEN.json')
     result={'status':'generation_complete','optimizer_steps':len(history),'exports':len(entries),
         'manifest_id':payload['manifest_id'],'valid_foreground_pixels':sum(e['valid_foreground'] for e in entries),
         'teacher_ready':'NOT_EVALUATED','out':str(out)}

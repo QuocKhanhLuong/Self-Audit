@@ -16,6 +16,52 @@ class EvidenceConfig:
     orientation_weight: float=2.0
     boundary_weight: float=0.75
     min_region_pixels: int=4
+    max_components_per_prototype: int=4
+
+@torch.no_grad()
+def split_connected_region_components(region_prob,*,min_region_pixels=4,max_components_per_prototype=4):
+    """Turn reused anonymous prototype IDs into bounded connected region slots.
+
+    A prototype is an appearance identity and may occur in several disconnected
+    places.  Anatomical topology, however, is meaningful per connected region.
+    Large components become independent candidate slots; omitted tiny/excess
+    fragments are collected in one explicitly non-candidate residual slot so
+    dense decoding still covers every low-resolution pixel.
+    """
+    from scipy.ndimage import label as label_components
+    if region_prob.ndim!=4 or not bool(torch.isfinite(region_prob).all()):
+        raise ValueError("region_prob must be finite [B,K,H,W]")
+    if type(min_region_pixels) is not int or min_region_pixels<1:
+        raise ValueError("min_region_pixels must be a positive integer")
+    if type(max_components_per_prototype) is not int or max_components_per_prototype<1:
+        raise ValueError("max_components_per_prototype must be a positive integer")
+    b,k,h,w=region_prob.shape
+    hard=region_prob.detach().argmax(1).cpu().numpy()
+    sample_components=[]
+    for bi in range(b):
+        selected=[]
+        for prototype in range(k):
+            labelled,count=label_components(hard[bi]==prototype)
+            parts=[]
+            for component_id in range(1,count+1):
+                mask=labelled==component_id; size=int(mask.sum())
+                if size<min_region_pixels: continue
+                yy,xx=np.nonzero(mask)
+                parts.append((-size,int(yy.min()),int(xx.min()),mask))
+            parts.sort(key=lambda row:row[:3])
+            selected.extend(row[3] for row in parts[:max_components_per_prototype])
+        covered=np.zeros((h,w),dtype=bool)
+        for mask in selected: covered|=mask
+        sample_components.append([*selected,~covered])
+    slots=max(len(rows) for rows in sample_components)
+    assignments=np.zeros((b,slots,h,w),dtype=np.float32)
+    candidates=np.zeros((b,slots),dtype=bool)
+    for bi,rows in enumerate(sample_components):
+        for slot,mask in enumerate(rows):
+            assignments[bi,slot]=mask
+            candidates[bi,slot]=slot<len(rows)-1
+    return (torch.from_numpy(assignments).to(region_prob.device,region_prob.dtype),
+            torch.from_numpy(candidates).to(region_prob.device))
 
 def _boundary_gradient(image):
     image=image.astype(np.float32,copy=False)

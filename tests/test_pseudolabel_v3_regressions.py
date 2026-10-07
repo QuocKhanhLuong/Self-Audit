@@ -69,6 +69,74 @@ def test_teacher_train_and_infer_encode_once_each():
     counts=trainer.bank.counts.clone();trainer.infer_batch(batch)
     hook.remove();assert len(calls)==2 and torch.equal(counts,trainer.bank.counts)
 
+def test_fragmented_prototype_is_split_before_anatomical_evidence():
+    """A remote fragment must not invalidate an otherwise valid MYO/LV ring."""
+    from self_audit_pseudolabel import evidence as evidence_module
+    from self_audit_pseudolabel.evolution import accepted_region_mask
+
+    h=w=32
+    yy,xx=torch.meshgrid(torch.arange(h),torch.arange(w),indexing='ij')
+    radius=((yy-16)**2+(xx-16)**2).float().sqrt()
+    labels=torch.zeros(h,w,dtype=torch.long)
+    labels[(radius>=7)&(radius<=9)]=1
+    labels[radius<7]=2
+    labels[2:5,2:5]=1  # same anonymous prototype, disconnected from the cardiac ring
+    regions=torch.nn.functional.one_hot(labels,4).permute(2,0,1)[None].float()
+
+    components,candidates=evidence_module.split_connected_region_components(
+        regions,min_region_pixels=4,max_components_per_prototype=4)
+    zeros=torch.zeros(1,1,h,w)
+    raw,_=evidence_module.build_region_evidence(
+        components,zeros,zeros,patient_left_axis=['-x'])
+    valid=accepted_region_mask(raw.softmax(-1),min_prob=.7,min_margin=.2)&candidates
+    accepted=set(raw.argmax(-1)[valid].tolist())
+
+    assert 2 in accepted and 3 in accepted
+
+def _forced_evidence(base,class_ids):
+    raw=torch.zeros_like(base['semantic_logits'])
+    valid=torch.zeros(raw.shape[:2],dtype=torch.bool,device=raw.device)
+    for region,class_id in enumerate(class_ids):
+        raw[:,region,class_id]=10
+        valid[:,region]=True
+    return raw,raw.detach(),valid,[{'enclosures':[]}]
+
+def test_bg_only_evidence_cannot_bootstrap_semantic_head_or_bank(monkeypatch):
+    model=teacher();trainer=ProgressiveTeacherTrainer(model,torch.optim.AdamW(model.parameters(),lr=1e-3,weight_decay=.1))
+    x=ctx();batch={'prev':x,'cur':x,'nxt':x,'patient_left_axis':['-x']}
+    before={name:value.detach().clone() for name,value in model.semantic.named_parameters()}
+    monkeypatch.setattr(trainer,'build_evidence',lambda batch,base:_forced_evidence(base,[0]))
+
+    losses,accepted,_=trainer.train_batch(batch)
+
+    assert accepted==0 and losses['semantic_seed']==0
+    assert int(trainer.bank.counts.sum())==0
+    assert all(torch.equal(value,before[name]) for name,value in model.semantic.named_parameters())
+
+def test_foreground_evidence_unlocks_semantic_bootstrap_and_bank(monkeypatch):
+    from self_audit_pseudolabel.evidence import EvidenceConfig
+    model=teacher();trainer=ProgressiveTeacherTrainer(model,torch.optim.AdamW(model.parameters(),lr=1e-3),
+        evidence_config=EvidenceConfig(min_region_pixels=1))
+    x=ctx();batch={'prev':x,'cur':x,'nxt':x,'patient_left_axis':['-x']}
+    monkeypatch.setattr(trainer,'build_evidence',lambda batch,base:_forced_evidence(base,[0,3]))
+
+    losses,accepted,_=trainer.train_batch(batch)
+
+    assert accepted==2 and losses['semantic_seed']>0
+    assert trainer.bank.counts[0]>0 and trainer.bank.counts[3]>0
+
+def test_region_spatial_loss_penalizes_fragmentation():
+    from self_audit_pseudolabel.losses_v3 import region_spatial_smoothness_loss
+
+    contiguous=torch.zeros(1,2,8,8)
+    contiguous[:,0,:,:4]=1;contiguous[:,1,:,4:]=1
+    fragmented=torch.zeros_like(contiguous)
+    yy,xx=torch.meshgrid(torch.arange(8),torch.arange(8),indexing='ij')
+    checker=(yy+xx)%2
+    fragmented[:,0]=checker;fragmented[:,1]=1-checker
+
+    assert region_spatial_smoothness_loss(fragmented)>region_spatial_smoothness_loss(contiguous)>0
+
 def test_registration_singleton_smoothness_is_finite():
     x=ctx(4);out=teacher()(x,x,x)
     photo,smooth=registration_loss(out,x)
@@ -176,6 +244,16 @@ def test_mnms_4d_reference_excluded_before_nib_load(tmp_path,monkeypatch):
         return load(path,*a,**k)
     monkeypatch.setattr(nib,'load',guard)
     records=discover_mnms_full_cine(tmp_path);assert len(records)==1 and records[0].patient_id=='ABC'
+
+def test_unbounded_teacher_stops_before_export_without_foreground(tmp_path):
+    data,split=_nifti_fixture(tmp_path)
+    from self_audit_pseudolabel.pipeline_v3 import teacher_main
+    out=tmp_path/'collapsed_teacher'
+    with pytest.raises(ValueError,match='NO_FOREGROUND_BOOTSTRAP'):
+        teacher_main(['--dataset','acdc','--root',str(data),'--split-manifest',str(split),
+            '--out',str(out),'--epochs','1','--threads','1','--batch-size','2','--no-progress'])
+    assert (out/'train_metrics.json').exists()
+    assert not (out/'FROZEN.json').exists()
 
 def test_split_teacher_export_evaluator_end_to_end(tmp_path,monkeypatch):
     data,split=_nifti_fixture(tmp_path)
