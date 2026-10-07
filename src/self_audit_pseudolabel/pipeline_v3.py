@@ -51,17 +51,44 @@ def inventory(records,splits):
             'split':next(s for s,ids in splits.items() if r.patient_id in ids)})
     return rows
 
+def bootstrap_recipe(cfg):
+    """An explicit experimental section; its absence preserves the legacy recipe."""
+    section=cfg.get('bootstrap')
+    if section is None: return None,None,None
+    if not isinstance(section,dict) or type(section.get('enabled')) is not bool:
+        raise ValueError('bootstrap requires an explicit boolean enabled switch')
+    if not section['enabled']:
+        if set(section)!={'enabled'}: raise ValueError('disabled bootstrap must not hide unused settings')
+        return None,None,None
+    if set(section)!={'enabled','readiness','losses','regions'}:
+        raise ValueError('bootstrap requires readiness, losses and region settings')
+    from .bootstrap_v3 import BootstrapConfig
+    from .losses_v3 import BootstrapLossConfig
+    readiness=BootstrapConfig(**section['readiness'])
+    losses=BootstrapLossConfig(**section['losses'])
+    regions=dict(section['regions'])
+    if set(regions)!={'mode','min_region_pixels','max_components','min_probability'} or regions['mode'] not in {'prototype','components'}:
+        raise ValueError('invalid bootstrap region recipe')
+    for key in ('min_region_pixels','max_components'):
+        if type(regions[key]) is not int or regions[key]<1: raise ValueError(f'invalid {key}')
+    value=regions['min_probability']
+    if isinstance(value,bool) or not isinstance(value,(int,float)) or not np.isfinite(value) or not .5<value<=1:
+        raise ValueError('component min_probability must be in (.5,1]')
+    return readiness,losses,regions
+
+
 def load_config(path):
     cfg=json.loads(Path(path).read_text())
     if cfg.get('schema_version')!=3: raise ValueError('use reviewed schema_version 3 config')
     required={'schema_version','teacher','reliability','loss_weights','consistency','training','deployment'}
-    if set(cfg)!=required: raise ValueError('unexpected configuration sections')
+    if set(cfg) not in (required,required|{'bootstrap'}): raise ValueError('unexpected configuration sections')
     if cfg['consistency']['slice_weight']!=0: raise ValueError('unregistered cross-slice voting is disabled')
     if cfg['deployment']['profiles']!={'compact':0,'balanced':1,'accurate':2}: raise ValueError('unsupported profile contract')
     from .adaptive import RuntimeBudget
     RuntimeBudget.from_config(cfg["deployment"],max_profile="accurate")
     if type(cfg["training"]["bounded_default_epochs"]) is not int or cfg["training"]["bounded_default_epochs"]<1:
         raise ValueError("configured default epochs must be a positive integer")
+    bootstrap_recipe(cfg)
     return cfg
 
 def _common(parser):
@@ -115,7 +142,13 @@ def teacher_main(argv=None):
         w_proto=weights['anonymous_prototype'],w_seed=weights['semantic_seed'],
         w_motion=weights['motion_photometric'],w_motion_smooth=weights['motion_smoothness'])
     opt=torch.optim.AdamW(teacher.parameters(),lr=cfg['training']['lr'],weight_decay=cfg['training']['weight_decay'])
-    trainer=ProgressiveTeacherTrainer(teacher,opt,tc)
+    bc,bl,regions=bootstrap_recipe(cfg)
+    trainer=ProgressiveTeacherTrainer(teacher,opt,tc,bootstrap_config=bc,bootstrap_losses=bl,
+                                     component_config=regions,train_patient_ids=splits['train'])
+    if trainer.bootstrap is not None:
+        _log('BOOTSTRAP','experimental image-only anonymous warmup; semantic loss/bank and exported labels remain off until repeated TRAIN support passes the declared gate')
+        if args.epochs<bc.min_observations_per_sample:
+            _log('WARN','WARMUP_ONLY_BUDGET: one visit per sample per epoch cannot supply the configured repeated observations within this epoch budget')
     out=Path(args.out); out.mkdir(parents=True,exist_ok=False); shutil.copyfile(args.split_manifest,out/'split.json')
     history=[]; loader=_loader(train_ds,args.batch_size,args.seed)
     _log("TRAIN",f"start batches_per_epoch={len(loader)} bounded={bool(args.max_train_batches)}")
@@ -129,7 +162,7 @@ def teacher_main(argv=None):
             for step,b in enumerate(loader):
                 if args.max_train_batches and step>=args.max_train_batches: break
                 losses,accepted,_=trainer.train_batch(move(b,args.device),collect_metrics=progress.should_log(step))
-                row={'epoch':epoch,'step':step,'accepted_regions':accepted,**losses}
+                row={'epoch':epoch,'step':step,'accepted_regions':accepted,**losses,**trainer.last_seed_metrics}
                 history.append(row); epoch_rows.append(row); accepted_total+=int(accepted)
                 progress.update(step,batch_samples=b['cur'].shape[0],
                     metrics={**row,**trainer.last_metrics,'learning_rate':opt.param_groups[0]['lr']})
@@ -141,20 +174,33 @@ def teacher_main(argv=None):
                 f"proto={_mean(epoch_rows,'prototype'):.4f} recon={_mean(epoch_rows,'reconstruction'):.4f} "
                 f"motion={_mean(epoch_rows,'motion_photo'):.4f}/{_mean(epoch_rows,'motion_smooth'):.4f} "
                 f"accepted={accepted_total} time={elapsed:.1f}s peak_vram={_peak_vram_gb(args.device):.2f}GB")
+            accepted_classes=[sum(r[f'accepted_{name}_regions'] for r in epoch_rows) for name in ('bg','rv','myo','lv')]
+            _log("SEEDS",f"epoch={epoch+1} accepted_bg_rv_myo_lv={accepted_classes} enclosure_pairs={sum(r['enclosure_pairs'] for r in epoch_rows)}")
+            if sum(accepted_classes[1:])==0:
+                if trainer.bootstrap is not None and not trainer.bootstrap.ready:
+                    _log('WARN','BOOTSTRAP_PENDING: named semantic supervision remains disabled; anonymous image losses do not certify anatomy.')
+                else:
+                    _log("WARN","NO_FOREGROUND_SEEDS in this epoch; loss/accepted totals may reflect background only. No foreground training support is established.")
+            if trainer.bootstrap is not None: _log('BOOTSTRAP',json.dumps(trainer.bootstrap_summary(),sort_keys=True))
     (out/'train_metrics.json').write_text(json.dumps(history,indent=2))
+    bootstrap_summary=trainer.bootstrap_summary()
     torch.save({'model':teacher.state_dict(),'prototype_bank':trainer.bank.prototypes.cpu(),
-        'prototype_counts':trainer.bank.counts.cpu(),'config':cfg,'producer_patient_ids':splits['train']},out/'teacher.pt')
+        'prototype_counts':trainer.bank.counts.cpu(),'config':cfg,'producer_patient_ids':splits['train'],
+        'evidence_config':asdict(trainer.evidence_config),
+        'bootstrap_state':trainer.bootstrap.state_dict() if trainer.bootstrap is not None else None},out/'teacher.pt')
     _log("CHECKPOINT",f"saved {out/'teacher.pt'} prototype_counts={[int(x) for x in trainer.bank.counts.cpu().tolist()]}")
     from .native_export import export_native
     entries,volumes,export_report=export_native(export_records,by_id,out,
         lambda b:trainer.infer_batch(move(b,args.device))[0],cfg['consistency'],log_every=args.log_patients_every,progress=not args.no_progress)
     (out/'export_report.json').write_text(json.dumps(export_report,indent=2))
+    if trainer.bootstrap_summary()!=bootstrap_summary: raise ValueError('export must not advance bootstrap state')
     for r in record_inventory:
         if sha256_file(r['path'])!=r['image_sha256']: raise ValueError('image changed during run')
     package=Path(__file__).parent
     sources={p.name:sha256_file(p) for p in package.glob('*.py')}
     run_config={'artifact_role':'teacher_freeze','dataset':args.dataset,'manual_mask_input':False,'scribble_input':False,
         'args':vars(args),'resolved_config':cfg,'trainer_config':asdict(tc),'source_sha256':sources,
+        'evidence_config':asdict(trainer.evidence_config),'bootstrap_summary':bootstrap_summary,
         'split_patients':splits,'producer_patient_ids':splits['train'],
         'image_records':record_inventory,'export_records':[by_id[r.patient_id] for r in export_records],
         'supervision':'image_only_with_handwritten_priors','bounded_training':bool(args.max_train_batches),
@@ -163,6 +209,16 @@ def teacher_main(argv=None):
     result={'status':'generation_complete','optimizer_steps':len(history),'exports':len(entries),
         'manifest_id':payload['manifest_id'],'valid_foreground_pixels':sum(e['valid_foreground'] for e in entries),
         'teacher_ready':'NOT_EVALUATED','out':str(out)}
+    result['bootstrap']=bootstrap_summary
+    result['split_support']={}
+    for split in args.export_split.split(','):
+        selected=[e for e in entries if e['split']==split]
+        counts=[sum(e['class_pixels'][c] for e in selected) for c in range(4)]
+        result['split_support'][split]={'class_pixels':counts,'valid_foreground_pixels':sum(counts[1:]),
+            'missing_foreground_classes':[c for c in (1,2,3) if counts[c]==0],
+            'support_status':'FOREGROUND_OBSERVED' if sum(counts[1:]) else 'NO_FOREGROUND_SEEDS'}
+    if result['split_support'].get('train',{}).get('support_status')=='NO_FOREGROUND_SEEDS':
+        _log("WARN","Frozen training split has zero foreground. Independent evaluation remains valid; student training will be refused. See export_report.json for seed/decode/consistency support.")
     (out/'run_summary.json').write_text(json.dumps(result,indent=2))
     _log("DONE",f"teacher steps={len(history)} exports={len(entries)} valid_fg={result['valid_foreground_pixels']} manifest={payload['manifest_id'][:12]} out={out}")
     return result
@@ -210,7 +266,7 @@ def student_main(argv=None):
     # Do not manufacture a successful training run from zero foreground supervision.
     fg=sum(e.get('valid_foreground',0) for e in ds.payload['entries'] if e['split']=='train')
     _log("LOAD",f"frozen train samples={len(ds)} valid_foreground_pixels={fg} manifest={ds.payload['manifest_id'][:12]}")
-    if fg==0: raise ValueError('NO_FOREGROUND_SEEDS: teacher not ready; student training refused')
+    if fg==0: raise ValueError('NO_FOREGROUND_SEEDS: frozen TRAIN split has zero valid foreground; student training refused. This is not an evaluator failure. Inspect teacher export_report.json and train_metrics.json; do not lower gates to force training.')
     from .checkpoint import save_student_checkpoint,source_identity
     source_at_start=source_identity()
     model_cfg=ds.payload['config']['resolved_config']['deployment']

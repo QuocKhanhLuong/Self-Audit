@@ -31,6 +31,19 @@ It has **80,462 resident parameters** at the checked-in default configuration.
 No diffusion runs in this student's forward path. CUTS retains PHATE clustering
 and a separate diffusion-condensation route as comparison methods.
 
+### Experimental image-only bootstrap
+
+An opt-in [two-stage image-only bootstrap prototype](docs/pseudolabel_v3_bootstrap_experimental.md)
+is available with `--config configs/pseudolabel_v3_bootstrap_experimental.json`.
+It learns anonymous image regions before permitting named anatomical supervision,
+uses component-local support, and remains UNKNOWN until repeated training-only
+evidence passes its gate. This is an experimental recipe; real ACDC/M&Ms recovery
+and GPU performance are unverified. The original configuration is unchanged for
+matched comparison and legacy reproducibility. Start with
+`scripts/run_bootstrap_pilot_v3.py` for a capped, four-TRAIN-patient support check
+before another full-cohort run; the pilot never evaluates references or trains
+a student.
+
 ### Live training progress
 
 The v3 runner now shows per-batch tqdm/ETA and flushes sampled teacher/student

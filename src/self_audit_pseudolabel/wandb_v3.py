@@ -152,14 +152,14 @@ class WandbV3Tracker:
         except Exception as exc:
             self._warn("summary", exc)
 
-    def finish(self) -> None:
+    def finish(self, *, exit_code: int = 0) -> None:
         if self._finished:
             return
         self._finished = True
         if self._wandb is None or self._run is None:
             return
         try:
-            self._wandb.finish()
+            self._wandb.finish(exit_code=exit_code)
         except Exception as exc:
             self._warn("finish", exc)
         finally:

@@ -116,8 +116,22 @@ def teacher_export_main(argv=None):
     teacher = CinePseudoTeacher(**kw).to(args.device)
     teacher.motion.max_disp = float(maxdisp)
     teacher.load_state_dict(checkpoint['model'],strict=True)
-    trainer = ProgressiveTeacherTrainer(teacher,None,ProgressiveConfig(**cfg['trainer_config']))
+    from .pipeline_v3 import bootstrap_recipe
+    from .evidence import EvidenceConfig
+    bc,bl,regions=bootstrap_recipe(cfg['resolved_config'])
+    if checkpoint.get('evidence_config',{})!=cfg.get('evidence_config',{}):
+        raise ValueError('teacher evidence configuration mismatch')
+    trainer = ProgressiveTeacherTrainer(teacher,None,ProgressiveConfig(**cfg['trainer_config']),
+        EvidenceConfig(**cfg.get('evidence_config',{})),bootstrap_config=bc,bootstrap_losses=bl,
+        component_config=regions,train_patient_ids=cfg['producer_patient_ids'])
     trainer.bank.prototypes.copy_(checkpoint['prototype_bank'])
     trainer.bank.counts.copy_(checkpoint['prototype_counts'])
+    if trainer.bootstrap is not None:
+        if checkpoint.get('bootstrap_state') is None: raise ValueError('bootstrap checkpoint state missing')
+        trainer.bootstrap.load_state_dict(checkpoint['bootstrap_state'])
+        if trainer.bootstrap_summary()!=cfg.get('bootstrap_summary'):
+            raise ValueError('teacher bootstrap summary/state mismatch')
+    elif checkpoint.get('bootstrap_state') is not None:
+        raise ValueError('unexpected bootstrap state in legacy checkpoint')
     return _seal(args,source,payload,records,current,images,
                  lambda batch:trainer.infer_batch(move(batch,args.device))[0],student=False)

@@ -32,6 +32,7 @@ def export_native(records, inventory, root, predict, consistency, *, log_every=1
             if bar is not None: cleanup.callback(bar.close)
             arrays = {}
             seen = set()
+            seed_counts = {}; pre_consistency_counts = [0]*4
             for b in DataLoader(ds,batch_size=1,shuffle=False,num_workers=0):
                 t,z = int(b['t'][0]),int(b['z'][0])
                 if (t,z) in seen: raise ValueError('duplicate patient export sample')
@@ -46,6 +47,12 @@ def export_native(records, inventory, root, predict, consistency, *, log_every=1
                         arrays[name] = np.lib.format.open_memmap(Path(scratch)/f'{name}.npy', mode='w+',
                             dtype=value.dtype,shape=(tmax,zmax,*value.shape))
                     arrays[name][t,z] = value
+                pre_label=arrays['soft'][t,z].argmax(0)
+                pre_valid=arrays['valid'][t,z].astype(bool)
+                pre_consistency_counts=[a+int((pre_valid&(pre_label==c)).sum())
+                                        for c,a in enumerate(pre_consistency_counts)]
+                for name,value in prediction.get('seed_diagnostics',{}).items():
+                    seed_counts[name]=seed_counts.get(name,0)+int(value)
                 if bar is not None: bar.update(1)
             if seen!={(t,z) for t in range(tmax) for z in range(zmax)}:
                 raise ValueError('incomplete patient export')
@@ -88,6 +95,9 @@ def export_native(records, inventory, root, predict, consistency, *, log_every=1
             staged_bytes = sum(p.stat().st_size for p in Path(scratch).iterdir())
             patient_reports.append({'patient_id':record.patient_id,'split':info['split'],
                 'patient_left_axis':ds[0]['patient_left_axis'],'class_pixels':counts,
+                'pre_consistency_class_pixels':pre_consistency_counts,
+                'consistency_rejected_class_pixels':[a-b for a,b in zip(pre_consistency_counts,counts)],
+                'seed_region_counts':seed_counts,
                 'frame_class_pixels':frame_counts,
                 'phase_class_pixels':{phase:frame_counts.get(str(info[field]-1)) for phase,field in [('ED','ed_index'),('ES','es_index')] if type(info.get(field)) is int},
                 'missing_foreground_classes':[c for c in (1,2,3) if counts[c]==0],

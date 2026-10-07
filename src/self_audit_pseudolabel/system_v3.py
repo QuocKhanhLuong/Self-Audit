@@ -98,6 +98,7 @@ class CinePseudoTeacher(nn.Module):
         r=pool_regions(q,fused,cur[:,1:2],motion); logits=self.semantic(r)
         base={"region_prob":q,"region_features":r,"semantic_logits":logits,
               "semantic_prob":logits.softmax(-1),"reconstruction":recon,
+              "fused_features":fused,
               "appearance_features":app,"motion_features":motion,**motion_aux}
         return self.decode_evidence(base,cur.shape[-2:],evidence_logits=evidence_logits,
                                     min_prob=min_prob,min_margin=min_margin)
