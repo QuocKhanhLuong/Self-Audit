@@ -1,0 +1,49 @@
+{
+  "schema": "self_audit.cqa.verification.v1",
+  "date": "2026-10-08",
+  "implementation_base": "f4c38e040e1faf7391396915a57976ebda9441f6",
+  "status": "FOCUSED_CPU_TESTS_PASSED_REAL_DATA_UNVERIFIED",
+  "environment": {
+    "python": "3.13.5",
+    "torch": "2.10.0+cpu",
+    "numpy": "2.3.5",
+    "scipy": "1.17.0",
+    "pytest": "9.0.2",
+    "cuda_available": false,
+    "canonical_repository_environment": false
+  },
+  "test_command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONPATH=src python -m pytest -q tests/test_pseudolabel_cqa_v3.py",
+  "tests": {
+    "passed": 44,
+    "failed": 0,
+    "scope": "CQA unit/mechanism and adapter tests using existing teacher pooling and decoding; not the full repository suite"
+  },
+  "mechanism_fixture": {
+    "source": "manufactured fixed connected partition, not learned segmentation",
+    "enclosure_pairs_before": 0,
+    "enclosure_pairs_after": 1,
+    "merge_relations": 2,
+    "open_void_seam_filled": false
+  },
+  "not_executed": [
+    "full repository regression suite",
+    "canonical-environment execution",
+    "full teacher training/checkpoint/export roundtrip",
+    "ACDC/M&Ms training or evaluation",
+    "target GPU benchmark"
+  ],
+  "claims_not_established": [
+    "anatomical accuracy improvement",
+    "real-data bootstrap recovery",
+    "causal or independent statistical certification",
+    "publication-level novelty",
+    "SOTA"
+  ],
+  "sha256": {
+    "src/self_audit_pseudolabel/cqa_v3.py": "732f9e0b88b42c7e7d4a2a7e20bba51a7b029ae29b6bfc4a51edfebf92899507",
+    "src/self_audit_pseudolabel/losses_v3.py": "edef44575f137a87b2277a60e528929f2b54e62f14e2ba8f197c4dba67034805",
+    "src/self_audit_pseudolabel/trainer_v3.py": "802968e024cd90d8cc0e43d4aed43c3d77afff17c98080a3ecf7b194551c1eb2",
+    "tests/test_pseudolabel_cqa_v3.py": "733321aac3db02ac2ef2351dca965d028a3d726e8e91465b0842d4651f9d9a1d",
+    "configs/pseudolabel_v3_cqa_experimental.json": "607af5dbc04d3980858150bbca70cc0d04b52c27eedb8f189d00966224e5e619"
+  }
+}

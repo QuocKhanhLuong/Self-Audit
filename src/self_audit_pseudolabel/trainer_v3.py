@@ -41,6 +41,12 @@ class ProgressiveTeacherTrainer:
         self.bootstrap_losses=bootstrap_losses or BootstrapLossConfig()
         self.component_config=component_config or {'mode':'components','min_region_pixels':4,
                                                    'max_components':256,'min_probability':.70}
+        self.cqa_config=None
+        if self.bootstrap_losses.counterfactual_audit is not None:
+            from .cqa_v3 import CQAConfig
+            self.cqa_config=CQAConfig(**self.bootstrap_losses.counterfactual_audit)
+            if self.cqa_config.enabled and (self.bootstrap is None or self.component_config['mode']!='components'):
+                raise ValueError('CQA requires explicit bootstrap with confidence-gated components')
 
     def reset_epoch_support(self):
         self.epoch_raw_evidence_counts=[0]*4
@@ -62,6 +68,9 @@ class ProgressiveTeacherTrainer:
             from .components_v3 import component_regions
             base=component_regions(base,batch['cur'],self.teacher,
                                    **{k:v for k,v in self.component_config.items() if k!='mode'})
+            if self.cqa_config is not None and self.cqa_config.enabled:
+                from .cqa_v3 import audit_components
+                base=audit_components(base,batch,self.teacher,self.cqa_config)
         return base
 
     def _decode(self,base,output_hw,guided,valid):
@@ -107,6 +116,7 @@ class ProgressiveTeacherTrainer:
         if 'component_candidate' in base: valid &= base['component_candidate']
         classes=raw.argmax(-1)
         self.seed_metrics=region_class_counts(valid,classes,'raw_seed')
+        self.seed_metrics.update(base.get('cqa_metrics',{}))
         self.seed_metrics['enclosure_pairs']=sum(len(d['enclosures']) for d in diag)
         if self.bootstrap is not None:
             from .bootstrap_v3 import assess_bootstrap_candidates
@@ -164,6 +174,11 @@ class ProgressiveTeacherTrainer:
             losses['region_reconstruction']=region_reconstruction_loss(q,image)
             losses['total']=(losses['total']+self.bootstrap_losses.spatial_weight*losses['spatial_continuity']
                              +self.bootstrap_losses.region_reconstruction_weight*losses['region_reconstruction'])
+            if self.cqa_config is not None and self.cqa_config.enabled:
+                from .cqa_v3 import relation_distillation_loss
+                losses['cqa_relation']=relation_distillation_loss(q,base['cqa_atomic_ids'],base['cqa_relations'],
+                    require_both=self.cqa_config.require_both_targets)
+                losses['total']=losses['total']+self.cqa_config.distill_weight*losses['cqa_relation']
         if not bool(torch.isfinite(losses["total"])): raise FloatingPointError("non-finite teacher loss")
         self.optimizer.zero_grad(set_to_none=True); losses["total"].backward()
         if not bool(valid.any()):

@@ -11,8 +11,14 @@ class BootstrapLossConfig:
     spatial_weight: float=.3
     region_reconstruction_weight: float=1.0
     edge_scale: float=.25
+    counterfactual_audit: dict | None=None
 
     def __post_init__(self):
+        if self.counterfactual_audit is not None:
+            if not isinstance(self.counterfactual_audit,dict):
+                raise ValueError("counterfactual_audit must be an explicit settings object")
+            from .cqa_v3 import CQAConfig
+            CQAConfig(**self.counterfactual_audit)
         for name in ('spatial_weight','region_reconstruction_weight','edge_scale'):
             value=getattr(self,name)
             if isinstance(value,bool) or not isinstance(value,(int,float)) or not math.isfinite(value):
