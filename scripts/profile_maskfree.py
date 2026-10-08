@@ -9,8 +9,8 @@ unchanged, adding process-local accounting around the existing
 opens a mask or a reference evaluator input.
 
 The default protocol is five discarded warm-up batches followed by twenty
-measured batches.  A bounded run remains a partial 150-epoch run: ``total_epochs``
-is kept at 150, while ``max_steps`` stops after the requested batch count.  All
+measured batches.  A bounded run remains partial: ``total_epochs``
+keeps the explicitly selected horizon (150 by default, or 50), while ``max_steps`` stops after the requested batch count.  All
 timing reports label this software evidence as neither CUDA/5070-Ti nor clinical
 evidence.
 """
@@ -51,7 +51,8 @@ SYNTHETIC_TRAIN_UNITS_MIN = 256
 PARTIAL_EPOCH_MAX_BATCHES = SYNTHETIC_DEPTH // 8
 TIMING_MODES = ("ordinary", "instrumented")
 IMAGE_SIZE_CHOICES = (128, 224)
-BATCH_SIZE_CHOICES = (8, 16, 32)
+BATCH_SIZE_CHOICES = (8, 16, 32, 64)
+EPOCH_CHOICES = (50, 150)
 SCIENTIFIC_REQUIREMENTS = {
     "total_epochs": 150,
     "seed": 42,
@@ -82,13 +83,18 @@ def _selected_image_size(args: argparse.Namespace) -> int:
     return int(image_size)
 
 
-def _scientific_requirements(image_size: int, batch_size: int = 8) -> dict[str, Any]:
+def _scientific_requirements(
+    image_size: int, batch_size: int = 8, total_epochs: int = 150,
+) -> dict[str, Any]:
     """Return the fixed profiler contract with the selected spatial resolution."""
     requirements = dict(SCIENTIFIC_REQUIREMENTS)
     if isinstance(batch_size, bool) or batch_size not in BATCH_SIZE_CHOICES:
         raise ValueError(f"batch-size must be one of {BATCH_SIZE_CHOICES}")
     requirements["image_size"] = int(image_size)
     requirements["batch_size"] = int(batch_size)
+    if isinstance(total_epochs, bool) or total_epochs not in EPOCH_CHOICES:
+        raise ValueError(f"total-epochs must be one of {EPOCH_CHOICES}")
+    requirements["total_epochs"] = int(total_epochs)
     return requirements
 
 
@@ -2133,6 +2139,7 @@ def _prepare_config(args: argparse.Namespace, output: Path) -> tuple[Any, dict[s
 
     requested_image_size = _selected_image_size(args)
     requested_batch_size = getattr(args, "batch_size", 8)
+    requested_total_epochs = getattr(args, "total_epochs", 150)
     supports_audit_device = any(
         field.name == "audit_device" for field in dataclasses.fields(MaskfreeConfig)
     )
@@ -2162,7 +2169,7 @@ def _prepare_config(args: argparse.Namespace, output: Path) -> tuple[Any, dict[s
             dataset="acdc",
             data_root=fixture["root"],
             output_dir=str(output / "trainer_workspace"),
-            total_epochs=150,
+            total_epochs=requested_total_epochs,
             seed=args.seed,
             batch_size=requested_batch_size,
             accumulation_steps=1,
@@ -2230,7 +2237,8 @@ def _prepare_config(args: argparse.Namespace, output: Path) -> tuple[Any, dict[s
     if runtime_overrides:
         config = config.replace(**runtime_overrides)
 
-    scientific_requirements = _scientific_requirements(requested_image_size, requested_batch_size)
+    scientific_requirements = _scientific_requirements(
+        requested_image_size, requested_batch_size, requested_total_epochs)
     values = {name: getattr(config, name) for name in scientific_requirements}
     mismatches = {
         name: {"expected": expected, "actual": values[name]}
@@ -2239,7 +2247,7 @@ def _prepare_config(args: argparse.Namespace, output: Path) -> tuple[Any, dict[s
     }
     if mismatches:
         raise ValueError(
-            "profiling requires the scientific150 FP32 contract; mismatches: "
+            "profiling requires the explicitly selected FP32 contract; mismatches: "
             + json.dumps(mismatches, sort_keys=True)
         )
     return config, {
@@ -2788,6 +2796,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--batch-size", type=int, choices=BATCH_SIZE_CHOICES, default=8,
                         help="explicit profile contract; must match the supplied YAML (default 8)")
+    parser.add_argument("--total-epochs", type=int, choices=EPOCH_CHOICES, default=150,
+                        help="schedule horizon; must match the config, never silently rewritten")
     parser.add_argument("--device", choices=("cpu", "cuda"), default=None)
     parser.add_argument(
         "--audit-device",
