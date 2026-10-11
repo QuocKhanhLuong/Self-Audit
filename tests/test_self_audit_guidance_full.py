@@ -264,3 +264,116 @@ def test_blocked_real_preflight_never_proceeds_to_bank(tmp_path,monkeypatch):
     assert sequence==['preflight']
     assert read_json(tmp_path/'run/RUN_STATUS.json')['failed_stage']=='preflight'
     assert not (tmp_path/'run/bank').exists()
+
+
+def test_official_acdc_ids_from_image_only_names_and_no_resplit(tmp_path):
+    from self_audit_guidance.full import external_acdc_patients
+    test_root=tmp_path/'testing';test_root.mkdir()
+    for pid in ('patient101','patient102'):
+        folder=test_root/pid;folder.mkdir()
+        (folder/(pid+'_4d.nii.gz')).write_bytes(b'raw-name-only-contract')
+        # A labelled-looking filename may coexist but must not be opened.
+        (folder/(pid+'_frame01_gt.nii.gz')).write_bytes(b'NEVER_READ')
+    assert external_acdc_patients(test_root)==['patient101','patient102']
+    (test_root/'patient103').mkdir()
+    with pytest.raises(ValueError,match='expected one raw full-cine image'):
+        external_acdc_patients(test_root)
+
+
+def test_official_acdc_pipeline_uses_original_80_20_split_and_scores_val_only(tmp_path,monkeypatch):
+    """Orchestrator contract: external TEST has no GT; only VAL evaluator runs."""
+    from self_audit_guidance import full
+    source=tmp_path/'split.json';cfg=tmp_path/'cfg.json';out=tmp_path/'run'
+    original=dict(train=['patient001','patient002'],val=['patient003','patient004'])
+    write_json(source,original);original_hash=digest(source)
+    write_json(cfg,GuidanceConfig().dictionary())
+    test_root=tmp_path/'testing';test_root.mkdir()
+    for pid in ('patient101','patient102'):
+        folder=test_root/pid;folder.mkdir()
+        (folder/(pid+'_4d.nii.gz')).write_bytes(b'FAKE_NOT_READ')
+    split_expected=dict(**original,test=['patient101','patient102'])
+    images={pid:dict(image_sha256='made-up-hash-'+pid) for pid in sum((split_expected[k] for k in ('train','val','test')),[])}
+    stages=[]
+    def value(cmd,key):return Path(cmd[cmd.index('--'+key)+1])
+    def fake_stage(name,cmd,_):
+        stages.append(name);dest=value(cmd,'out')
+        if name=='preflight':
+            assert value(cmd,'test-root')==test_root
+            assert read_splits(value(cmd,'split-manifest'))==split_expected
+            write_json(dest,dict(status='PASS_EXECUTION_ONLY_QUALITY_UNVERIFIED',
+                                 checks=dict(native_cine_inventory=dict(images=images))))
+            return 0
+        dest.mkdir()
+        if name=='prepare':
+            assert value(cmd,'root')==tmp_path/'training'
+            assert read_splits(value(cmd,'split-manifest'))==split_expected
+            freeze(dest,dict(role='guidance_bank',patients=original['train'],
+                image_records={p:images[p] for p in original['train']},status='CONTRACT_FIXTURE'))
+        elif name=='train':
+            freeze(dest,dict(role='student',bank_manifest_sha256=digest(out/'bank/FROZEN.json'),
+                status='REPRESENTATION_ONLY'))
+        elif name.startswith('export_'):
+            s=name.split('_')[1]
+            assert value(cmd,'root')==(test_root if s=='test' else tmp_path/'training')
+            assert read_splits(value(cmd,'split-manifest'))==split_expected
+            freeze(dest,dict(role='student_predictions',patients=split_expected[s],
+                images={p:images[p] for p in split_expected[s]},
+                student_manifest_sha256=digest(out/'student/FROZEN.json')))
+        elif name=='evaluate_val':
+            assert (out/'predictions_val/FROZEN.json').is_file()
+            assert (out/'predictions_test/FROZEN.json').is_file()
+            assert (out/'PREDICTIONS_LOCKED.json').is_file()
+            assert value(cmd,'reference-root')==tmp_path/'training'
+            write_json(dest/'METRICS.json',dict(summary={'val_only':True}))
+            freeze(dest,dict(role='independent_evaluation',
+                prediction_manifest_sha256=digest(out/'predictions_val/FROZEN.json')))
+        else:raise AssertionError('GT leakage into official testing: '+name)
+        return 2 if name in ('prepare','train') else 0
+    monkeypatch.setattr(full,'run_stage',fake_stage)
+    result=run_full(tmp_path/'training',source,out,cfg,device='cpu',epochs=1,
+                    test_root=test_root,evaluation='acdc')
+    assert stages==['preflight','prepare','train','export_val','export_test','evaluate_val']
+    assert result['status']=='COMPLETED_VAL_SCORED_OFFICIAL_TEST_UNSCORED_NO_SEMANTIC_SUPPORT'
+    assert result['split_counts']=={'train':2,'val':2,'test':2}
+    assert result['stages']['evaluate_test']=='NOT_SCORED_OFFICIAL_ACDC_TEST_GT_UNAVAILABLE'
+    assert digest(source)==original_hash and read_splits(source)['test']==[]
+    assert read_splits(out/'EFFECTIVE_SPLIT.json')==split_expected
+    assert not (out/'evaluation_test').exists()
+    assert (out/'PREDICTIONS_LOCKED.json').exists()
+    with pytest.raises(ValueError,match='resume recipe'):
+        run_full(tmp_path/'training',source,out,cfg,device='cpu',epochs=2,
+                 test_root=test_root,evaluation='acdc',resume=True)
+
+
+def test_official_test_duplicate_patient_unsafe_and_missing_root(tmp_path):
+    from self_audit_guidance.full import external_acdc_patients
+    with pytest.raises(FileNotFoundError):external_acdc_patients(tmp_path/'missing')
+    source=tmp_path/'split.json';cfg=tmp_path/'cfg.json';testing=tmp_path/'testing'
+    write_json(source,dict(train=['patient001'],val=['patient002']))
+    write_json(cfg,GuidanceConfig().dictionary())
+    testing.mkdir();d=testing/'patient001';d.mkdir();(d/'patient001_4d.nii.gz').write_bytes(b'fake')
+    with pytest.raises(ValueError,match='leakage'):
+        run_full(tmp_path/'training',source,tmp_path/'run',cfg,device='cpu',test_root=testing)
+    assert not (tmp_path/'run').exists()
+
+
+@requires_nib
+def test_genuine_native_inventory_with_external_unlabeled_test(tmp_path,monkeypatch):
+    import nibabel as nib
+    base,_,_=native_fixture(tmp_path)
+    testing=tmp_path/'testing';testing.mkdir()
+    original=nib.load(base/'patient004/patient004_4d.nii.gz')
+    path=testing/'patient101';path.mkdir()
+    nib.save(original,path/'patient101_4d.nii.gz')
+    p=tmp_path/'official.json';write_json(p,dict(train=['patient001','patient002'],val=['patient003'],test=['patient101']))
+    real=nib.load;opened=[]
+    def forbid_gt(path,*args,**kwargs):
+        assert '_gt' not in str(path)
+        opened.append(str(path))
+        return real(path,*args,**kwargs)
+    monkeypatch.setattr(nib,'load',forbid_gt)
+    cfg=GuidanceConfig(grid=8,feature_dim=4,clusters=(2,),temporal=False)
+    result=inventory(base,'acdc',p,cfg,batch_size=2,test_root=testing)
+    assert result['split_counts']=={'train':2,'val':1,'test':1}
+    assert len(opened)==4
+    assert result['images']['patient101']['raw_image']==str(path/'patient101_4d.nii.gz')

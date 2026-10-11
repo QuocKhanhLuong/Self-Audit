@@ -1,6 +1,6 @@
 # Stable SSL guidance: native-data full pipeline and preflight
 
-This opt-in research pipeline is on `feat/stable-ssl-guidance` (draft PR #33).
+This pipeline is available on `main` after PR #33.
 Legacy v3/CQA code and split files remain unchanged. Runnable software and a
 successful preflight do not establish that the anatomical readout is accurate.
 
@@ -28,6 +28,50 @@ checkpoint outputs UNKNOWN, is scored honestly, and is not reported as successfu
 segmentation. Upstream CineMA supervision/preprocessing lineage remains
 SSL-declared, not independently certified in its entirety.
 
+## Official ACDC/training + ACDC/testing (recommended)
+
+**Keep the original 80 TRAIN / 20 VAL manifest. Do not repartition it.**
+Pass the separate unlabeled testing folder using `--test-root`. The runner
+discovers official TEST IDs from raw cine filenames, checks patient disjointness,
+and writes `EFFECTIVE_SPLIT.json` inside the run. The original split is untouched.
+VAL is evaluated only **after both VAL and TEST predictions have been frozen**;
+official TEST is export-only, because public GT is unavailable.
+
+Run from the actual project directory containing `scripts/`, `src/`, `splits/`
+(it need not be `/workspace/Self-Audit`):
+
+```bash
+pwd
+ls -d scripts src splits
+find . -type d \( -path '*/ACDC/training' -o -path '*/ACDC/testing' \)
+export ACDC_TRAIN="$PWD/data/ACDC/training"
+export ACDC_TEST="$PWD/data/ACDC/testing"
+# Adjust both variables above to the real directories on your server.
+test -d "$ACDC_TRAIN/patient001" && test -d "$ACDC_TEST/patient101"
+
+RUN="$PWD/runs/stable_guidance/official_$(date +%Y%m%d_%H%M%S)"
+ARGS=(
+  --dataset acdc --root "$ACDC_TRAIN" --test-root "$ACDC_TEST"
+  --split-manifest splits/acdc_patient_split_seed42.json
+  --config configs/stable_guidance_experimental.json
+  --out "$RUN" --device cuda --epochs 50 --batch-size 8
+  --tile-batch 1 --width 32 --lr 0.0003 --threads 4 --seed 42
+  --evaluation acdc --reference-root "$ACDC_TRAIN"
+)
+python scripts/run_stable_guidance_full.py "${ARGS[@]}" --preflight-only
+# Inspect RUN_STATUS.json and PREFLIGHT_*.json before continuing.
+python scripts/run_stable_guidance_full.py "${ARGS[@]}" --resume
+```
+
+`--resume` re-runs mandatory preflight and reuses only completed frozen stages;
+in-epoch training resume is not implemented. If semantic support is absent,
+feature-only training is recorded as such, not successful segmentation.
+
+Only use the 80/10/10 split instructions below for an exploratory internal
+holdout when an external testing directory is not available. Those
+previously-used VAL patients are not a pristine official TEST cohort.
+
+---
 ## 1. Checkout and isolated environment
 
 Do not change source in a checkout used by an active run. Python 3.11 and git
@@ -60,8 +104,9 @@ cannot be substituted by renaming a file.
 ## 2. Three disjoint patient splits
 
 The original `splits/acdc_patient_split_seed42.json` contains 80 TRAIN and 20
-validation patients, with NO test split. The full runner rejects it rather than
-reusing validation as test. Create a separate manifest once:
+validation patients, with NO test split. The full runner now accepts this
+manifest with `--test-root` for official unlabeled ACDC/testing. To create an
+EXPLORATORY internal 80/10/10 holdout instead, create a separate manifest once:
 
 ```bash
 python scripts/make_stable_guidance_split.py \
@@ -141,7 +186,9 @@ is used to turn an import/checkpoint/CUDA failure into a pass.
 
 ## Independent reference scoring
 
-Both val and test prediction sets are frozen BEFORE any GT is opened. The ACDC
+Both val and test prediction sets are frozen BEFORE any GT is opened. With
+`--test-root`, official TEST is NEVER evaluated; only the held-out VAL masks
+are opened. Without `--test-root`, a locally labeled test may be scored. The ACDC
 adapter requires exactly two `patientXXX_frameYY_gt.nii[.gz]` files per held-out
 patient; filename indices are converted from 1-based to 0-based. Info.cfg is
 never opened. The model predicts the entire cine; only annotated frames are scored.
@@ -189,7 +236,8 @@ predictions_val/        # NPZ TZYX + native NIfTI XYZT
 predictions_test/
 PREDICTIONS_LOCKED.json
 evaluation_val/METRICS.json
-evaluation_test/METRICS.json
+evaluation_test/METRICS.json  # local labeled test only; absent for official --test-root
+EFFECTIVE_SPLIT.json        # generated only for --test-root
 RUN_STATUS.json
 ```
 

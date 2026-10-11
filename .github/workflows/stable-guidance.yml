@@ -1,7 +1,14 @@
 name: stable-guidance-native-preflight
 on:
   push:
-    branches: [feat/stable-ssl-guidance]
+    branches: [main, feat/stable-ssl-guidance]
+    paths:
+      - 'src/self_audit_guidance/**'
+      - 'tests/test_self_audit*guidance*.py'
+      - 'scripts/*stable_guidance*'
+      - '.github/workflows/stable-guidance.yml'
+  pull_request:
+    branches: [main]
     paths:
       - 'src/self_audit_guidance/**'
       - 'tests/test_self_audit*guidance*.py'

@@ -38,6 +38,7 @@ def derive_split(source,out,seed=42):
     print('[SPLIT]',{s:len(result[s]) for s in ('train','val','test')},flush=True)
     return result
 
+
 def external_acdc_patients(test_root):
     """Discover official ACDC TEST IDs from image-only directory/file names.
 
