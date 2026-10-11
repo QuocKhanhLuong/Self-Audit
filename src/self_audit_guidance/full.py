@@ -6,11 +6,12 @@ in separate evaluator processes, AFTER both prediction sets have been frozen.
 from __future__ import annotations
 import argparse
 import os
+import re
 import subprocess
 import sys
 import time
 from pathlib import Path
-from .io import read_json,write_json,read_splits,digest,verify
+from .io import read_json,write_json,read_splits,digest,verify,discover
 from .teacher import WEIGHT_SHA256,HF_REVISION
 from .core import GuidanceConfig
 
@@ -36,6 +37,20 @@ def derive_split(source,out,seed=42):
     out.parent.mkdir(parents=True,exist_ok=True);write_json(out,result)
     print('[SPLIT]',{s:len(result[s]) for s in ('train','val','test')},flush=True)
     return result
+
+
+def external_acdc_patients(test_root):
+    """Discover official ACDC TEST IDs from image-only directory/file names.
+
+    No GT/Info.cfg/ED/ES inspection; fail if a study is missing its 4-D cine.
+    """
+    root=Path(test_root).resolve()
+    if not root.is_dir():raise FileNotFoundError(f'official ACDC test directory not found: {root}')
+    candidates=sorted(p for p in root.iterdir() if p.is_dir() and re.fullmatch(r'patient[0-9]+',p.name))
+    if not candidates:raise ValueError(f'no ACDC patient directories in test root: {root}')
+    ids=[p.name for p in candidates]
+    discover(root,'acdc',ids)  # only raw *4d NIfTI file names; never open masks
+    return ids
 
 
 def stage_command(stage,**kwargs):
@@ -78,16 +93,30 @@ def existing_stage(path,role,resume):
 def run_full(root,split_manifest,out,config,*,dataset='acdc',epochs=50,batch_size=8,
              tile_batch=1,width=32,lr=3e-4,device='cuda',threads=4,seed=42,
              checkpoint=None,teacher_config=None,offline=False,resume=False,preflight_only=False,
-             evaluation='acdc',reference_root=None,reference_manifest=None):
+             evaluation='acdc',reference_root=None,reference_manifest=None,test_root=None):
     if min(epochs,batch_size,tile_batch,threads)<1:raise ValueError('positive execution budgets required')
     cfg=GuidanceConfig(**read_json(config));splits=read_splits(split_manifest)
+    # The official ACDC testing cohort is separate from the local 80/20 TRAIN/VAL
+    # split. Only directory and raw cine filenames define its test identities.
+    official_test=test_root is not None
+    if official_test:
+        if dataset!='acdc':raise ValueError('--test-root currently supports official ACDC only')
+        if Path(test_root).resolve()==Path(root).resolve():
+            raise ValueError('--test-root must be separate from the TRAIN/VAL root')
+        test_ids=external_acdc_patients(test_root)
+        if splits['test'] and splits['test']!=test_ids:
+            raise ValueError('provided TEST split disagrees with official testing directory')
+        if set(test_ids)&(set(splits['train'])|set(splits['val'])):
+            raise ValueError('patient leakage: official test overlaps TRAIN or VAL')
+        splits['test']=test_ids
     if any(not splits[s] for s in ('train','val','test')):
-        raise ValueError('full pipeline requires disjoint nonempty train/val/test; old 80/20 split has no test')
+        raise ValueError('full pipeline requires disjoint nonempty train/val/test; use --test-root for a separate official ACDC/testing directory')
     if evaluation not in ('acdc','manifest','none'):raise ValueError('invalid evaluation mode')
     if dataset!='acdc' and evaluation=='acdc':raise ValueError('M&Ms requires an explicit reference manifest or evaluation=none')
     if evaluation=='manifest' and not reference_manifest:raise ValueError('reference manifest required')
     if evaluation=='none' and (reference_root or reference_manifest):raise ValueError('unused reference inputs refused')
     root=str(Path(root).resolve());config=str(Path(config).resolve());split_manifest=str(Path(split_manifest).resolve())
+    test_root=str(Path(test_root).resolve()) if official_test else None
     checkpoint=str(Path(checkpoint).resolve()) if checkpoint else None
     teacher_config=str(Path(teacher_config).resolve()) if teacher_config else None
     reference_root=str(Path(reference_root or root).resolve()) if evaluation=='acdc' else None
@@ -95,6 +124,7 @@ def run_full(root,split_manifest,out,config,*,dataset='acdc',epochs=50,batch_siz
     # Paths only: no reference file is opened/fingerprinted before the frozen predictions.
     recipe=dict(schema='self_audit.full_guidance_recipe.v1',root=root,dataset=dataset,
         split_manifest=split_manifest,split_sha256=digest(split_manifest),splits=splits,
+        official_acdc_test_unlabeled=official_test,test_root=test_root,
         config_sha256=digest(config),config=cfg.dictionary(),expected_teacher_sha256=WEIGHT_SHA256,
         expected_model_revision=HF_REVISION,epochs=epochs,batch_size=batch_size,tile_batch=tile_batch,
         width=width,lr=lr,seed=seed,device=device,threads=threads,
@@ -110,16 +140,30 @@ def run_full(root,split_manifest,out,config,*,dataset='acdc',epochs=50,batch_siz
             raise ValueError('resume recipe/source/split mismatch; do not reinterpret old artifacts')
     else:
         out.mkdir(parents=True,exist_ok=False);write_json(out/'RECIPE.json',recipe)
+    # Every stage uses the SAME effective patient split. The user's original
+    # 80/20 manifest is never rewritten or repartitioned.
+    effective_split_manifest=split_manifest
+    if official_test:
+        effective=out/'EFFECTIVE_SPLIT.json'
+        payload=dict(train=splits['train'],val=splits['val'],test=splits['test'],
+                     provenance=dict(source_split=split_manifest,source_sha256=digest(split_manifest),
+                        test_root=test_root,test_status='official_acdc_unlabeled_export_only',
+                        identity_source='raw_full_cine_filenames_only'))
+        if effective.exists():
+            if read_json(effective)!=payload:raise ValueError('effective split changed across resume')
+        else:write_json(effective,payload)
+        effective_split_manifest=str(effective)
     status=dict(schema='self_audit.full_guidance_run.v1',status='RUNNING',
                 split_counts={s:len(v) for s,v in splits.items()},stages={},gt_used_for_training=False,
-                gt_used_for_checkpoint_selection=False,quality_certified=False)
+                gt_used_for_checkpoint_selection=False,quality_certified=False,
+                official_test_unlabeled=official_test,test_root=test_root)
     def save():write_json(out/'RUN_STATUS.json',status)
     save()
     current='preflight'
     try:
         preflight_path=out/f'PREFLIGHT_{time.time_ns()}.json'
         run_stage('preflight',stage_command('preflight',root=root,dataset=dataset,
-            split_manifest=split_manifest,out=preflight_path,config=config,device=device,
+            split_manifest=effective_split_manifest,test_root=test_root,out=preflight_path,config=config,device=device,
             batch_size=batch_size,tile_batch=tile_batch,width=width,threads=threads,
             checkpoint=checkpoint,teacher_config=teacher_config,offline=offline),out)
         pf=read_json(preflight_path)
@@ -131,7 +175,7 @@ def run_full(root,split_manifest,out,config,*,dataset='acdc',epochs=50,batch_siz
         bm=existing_stage(bank,'guidance_bank',resume)
         if bm is None:
             run_stage('prepare',stage_command('prepare',root=root,dataset=dataset,
-                split_manifest=split_manifest,config=config,out=bank,patients=0,seed=seed,device=device,
+                split_manifest=effective_split_manifest,config=config,out=bank,patients=0,seed=seed,device=device,
                 tile_batch=tile_batch,checkpoint=checkpoint,teacher_config=teacher_config,offline=offline),out)
             bm=verify(bank,'guidance_bank')
         if bm['patients']!=splits['train']:raise ValueError('full run did not use ALL TRAIN patients')
@@ -154,8 +198,9 @@ def run_full(root,split_manifest,out,config,*,dataset='acdc',epochs=50,batch_siz
             current=f'export_{split}';pred=out/f'predictions_{split}'
             pm=existing_stage(pred,'student_predictions',resume)
             if pm is None:
-                run_stage(current,stage_command('export',student=student,root=root,dataset=dataset,
-                    split_manifest=split_manifest,split=split,out=pred,device=device,batch_size=batch_size),out)
+                image_root=test_root if split=='test' and official_test else root
+                run_stage(current,stage_command('export',student=student,root=image_root,dataset=dataset,
+                    split_manifest=effective_split_manifest,split=split,out=pred,device=device,batch_size=batch_size),out)
                 pm=verify(pred,'student_predictions')
             if pm['patients']!=splits[split] or pm['student_manifest_sha256']!=digest(student/'FROZEN.json'):
                 raise ValueError('export cohort/checkpoint lineage mismatch')
@@ -170,8 +215,10 @@ def run_full(root,split_manifest,out,config,*,dataset='acdc',epochs=50,batch_siz
         if lock_path.exists():
             if read_json(lock_path)!=lock:raise ValueError('frozen prediction-pair receipt changed')
         else:write_json(lock_path,lock)
+        if official_test:
+            status['stages']['evaluate_test']='NOT_SCORED_OFFICIAL_ACDC_TEST_GT_UNAVAILABLE';save()
         if evaluation!='none':
-            for split in ('val','test'):
+            for split in (('val',) if official_test else ('val','test')):
                 current=f'evaluate_{split}';dest=out/f'evaluation_{split}'
                 ev=existing_stage(dest,'independent_evaluation',resume)
                 if ev is None:
@@ -180,7 +227,8 @@ def run_full(root,split_manifest,out,config,*,dataset='acdc',epochs=50,batch_siz
                     ev=verify(dest,'independent_evaluation')
                 if ev['prediction_manifest_sha256']!=prediction_hashes[split]:raise ValueError('evaluation lineage mismatch')
                 status['stages'][current]=read_json(dest/'METRICS.json')['summary'];save()
-        status['status']=('COMPLETED_UNSCORED' if evaluation=='none' else 'COMPLETED_SCORED')
+        status['status']=('COMPLETED_VAL_SCORED_OFFICIAL_TEST_UNSCORED' if official_test and evaluation!='none'
+                          else 'COMPLETED_UNSCORED' if evaluation=='none' else 'COMPLETED_SCORED')
         if sm['status']=='REPRESENTATION_ONLY':status['status']+='_NO_SEMANTIC_SUPPORT'
         elif sm['status'].startswith('PARTIAL'):status['status']+='_PARTIAL_SEMANTIC_SUPPORT'
         save();print('[FULL]',status['status'],flush=True);return status
@@ -201,5 +249,6 @@ def main(argv=None):
     p.add_argument('--resume',action='store_true');p.add_argument('--preflight-only',action='store_true')
     p.add_argument('--evaluation',choices=['acdc','manifest','none'],default='acdc')
     p.add_argument('--reference-root');p.add_argument('--reference-manifest')
+    p.add_argument('--test-root',help='separate unlabeled official ACDC/testing directory; preserve existing TRAIN/VAL split')
     r=run_full(**vars(p.parse_args(argv)))
     return 2 if 'NO_SEMANTIC' in r['status'] or 'PARTIAL_SEMANTIC' in r['status'] else 0

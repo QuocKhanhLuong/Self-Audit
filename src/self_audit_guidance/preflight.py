@@ -46,13 +46,18 @@ def check_dependencies():
     if failures: raise RuntimeError(f'REAL_DEPENDENCY_IMPORT_FAILED: {failures}')
 
 
-def inventory(root,dataset,split_manifest,cfg,batch_size=8):
+def inventory(root,dataset,split_manifest,cfg,batch_size=8,test_root=None):
     """Read all native voxel arrays, once, to detect corrupt/NaN cine before a run."""
     splits=read_splits(split_manifest)
     if any(not splits[s] for s in ('train','val','test')):
         raise ValueError('FULL_PIPELINE_REQUIRES_NONEMPTY_TRAIN_VAL_TEST: do not reuse validation as test')
-    all_ids=[p for s in ('train','val','test') for p in splits[s]]
-    records=discover(root,dataset,all_ids); details={}; hashes={}; cache_bytes=0
+    # TRAIN/VAL are from the local labeled ACDC training root; official TEST
+    # is from a separate image-only root. Never open GT before frozen export.
+    records=discover(root,dataset,splits['train']+splits['val'])
+    test_records=discover(test_root if test_root is not None else root,dataset,splits['test'])
+    if set(records)&set(test_records):raise ValueError('patient IDs overlap TRAIN/VAL and TEST')
+    records.update(test_records)
+    details={}; hashes={}; cache_bytes=0
     for pid,path in records.items():
         cine,meta=read_cine(path)
         partition=next(s for s in splits if pid in splits[s])
@@ -72,7 +77,8 @@ def inventory(root,dataset,split_manifest,cfg,batch_size=8):
     train_samples=sum(details[p]['samples'] for p in splits['train'])
     steps=sum(math.ceil(details[p]['samples']/batch_size) for p in splits['train'])
     return dict(splits=splits,images=details,source_split_sha256=digest(split_manifest),
-                split_counts={s:len(v) for s,v in splits.items()},train_samples=train_samples,
+                split_counts={s:len(v) for s,v in splits.items()},
+                test_root=str(Path(test_root).resolve()) if test_root is not None else None,train_samples=train_samples,
                 train_steps_per_epoch=steps,uncompressed_bank_bytes_estimate=cache_bytes)
 
 
@@ -129,7 +135,8 @@ def probe_student(cine,features,device='cpu',batch_size=8,width=32,lr=3e-4,steps
 
 
 def run_preflight(root,dataset,split_manifest,out,config=None,device='cuda',batch_size=8,
-                  tile_batch=1,width=32,checkpoint=None,teacher_config=None,offline=False,threads=4):
+                  tile_batch=1,width=32,checkpoint=None,teacher_config=None,offline=False,threads=4,
+                  test_root=None):
     report_path=Path(out)
     if report_path.exists(): raise FileExistsError(report_path)
     report_path.parent.mkdir(parents=True,exist_ok=True)
@@ -145,7 +152,7 @@ def run_preflight(root,dataset,split_manifest,out,config=None,device='cuda',batc
         if min(batch_size,tile_batch,threads)<1: raise ValueError('positive batch/thread budgets required')
         d=validate_device(device);torch.set_num_threads(threads);torch.manual_seed(42)
         stage='dependencies';check_dependencies();record(stage,{'passed':True})
-        stage='native_cine_inventory';data=inventory(root,dataset,split_manifest,cfg,batch_size);record(stage,data)
+        stage='native_cine_inventory';data=inventory(root,dataset,split_manifest,cfg,batch_size,test_root);record(stage,data)
         free=shutil.disk_usage(report_path.parent).free
         record('storage',dict(free_bytes=free,uncompressed_bank_bytes_estimate=data['uncompressed_bank_bytes_estimate']))
         if free<data['uncompressed_bank_bytes_estimate']*1.25:
@@ -188,6 +195,7 @@ def main(argv=None):
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--root',required=True);p.add_argument('--dataset',choices=['acdc','mnms'],default='acdc')
     p.add_argument('--split-manifest',required=True);p.add_argument('--out',required=True);p.add_argument('--config')
+    p.add_argument('--test-root',help='separate image-only ACDC/testing root for official TEST')
     p.add_argument('--device',default='cuda');p.add_argument('--batch-size',type=int,default=8)
     p.add_argument('--tile-batch',type=int,default=1);p.add_argument('--width',type=int,default=32)
     p.add_argument('--threads',type=int,default=4);p.add_argument('--checkpoint');p.add_argument('--teacher-config')
