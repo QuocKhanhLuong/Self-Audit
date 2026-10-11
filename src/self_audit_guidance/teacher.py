@@ -15,6 +15,7 @@ from .io import digest
 WEIGHT_SHA256='a841b7e9300d60ea8feb73e3a7d8c60ddedc1d1d49ec1049ebfcfa337c5d5590'
 WEIGHT_FILE='pretrained/cinema.safetensors'
 SOURCE_COMMIT='c10daa1d93f0ea28d8b9ad9206b0f673d25805c1'
+HF_REVISION='e0466ed5bd7687a32121434875bf2168aed41c03'
 
 
 def validate_device(device):
@@ -49,8 +50,8 @@ class FrozenCineMA:
             raise RuntimeError('Install the documented isolated CineMA environment; do not substitute a segmentation model') from e
         if (checkpoint is None)!=(config is None):raise ValueError('supply both MAE checkpoint and config, or neither')
         if checkpoint is None:
-            checkpoint=hf_hub_download('mathpluscode/CineMA',WEIGHT_FILE,cache_dir=cache_dir,local_files_only=offline)
-            config=hf_hub_download('mathpluscode/CineMA','pretrained/config.yaml',cache_dir=cache_dir,local_files_only=offline)
+            checkpoint=hf_hub_download('mathpluscode/CineMA',WEIGHT_FILE,cache_dir=cache_dir,local_files_only=offline,revision=HF_REVISION)
+            config=hf_hub_download('mathpluscode/CineMA','pretrained/config.yaml',cache_dir=cache_dir,local_files_only=offline,revision=HF_REVISION)
         checkpoint,config=Path(checkpoint),Path(config)
         if digest(checkpoint)!=WEIGHT_SHA256:raise ValueError('checkpoint is not the pinned official MAE; finetuned/unknown weights refused')
         cfg=OmegaConf.load(config)
@@ -66,7 +67,7 @@ class FrozenCineMA:
         self.provenance=dict(provider='CineMA-MAE',checkpoint_sha256=WEIGHT_SHA256,
             config_sha256=digest(config),adapter_source_sha256=digest(__file__),
             cinema_mae_source_sha256=digest(source.__file__),
-            checkpoint_filename=WEIGHT_FILE,upstream_lineage='SSL_DECLARED_PREPROCESSING_NOT_FULLY_AUDITED',
+            checkpoint_filename=WEIGHT_FILE,model_revision=HF_REVISION,source_commit_expected=SOURCE_COMMIT,upstream_lineage='SSL_DECLARED_PREPROCESSING_NOT_FULLY_AUDITED',
             frozen=True,segmentation_finetune=False)
 
     @torch.inference_mode()

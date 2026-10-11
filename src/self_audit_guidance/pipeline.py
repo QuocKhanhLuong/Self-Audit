@@ -9,7 +9,7 @@ import numpy as np
 import torch
 from torch.nn import functional as F
 from .core import GuidanceConfig,make_bank
-from .io import read_splits,read_cine,discover,digest,write_json,read_json,freeze,verify
+from .io import read_splits,read_cine,discover,digest,write_json,read_json,freeze,verify,write_native_labels
 from .teacher import FrozenCineMA,validate_device
 from .student import train_student,load_student,predict_cine
 
@@ -82,11 +82,13 @@ def export(student,root,dataset,split_manifest,split,out,device='cuda',batch_siz
         cine,meta=read_cine(path);labels=predict_cine(model,ck,cine,str(d),batch_size)
         # Native TZYX stored with exact XYZ T shape and affine in the frozen manifest.
         np.savez_compressed(out/(pid+'.npz'),labels=labels)
+        write_native_labels(out/(pid+'.nii.gz'),labels,meta)
         inventory[pid]=meta;counts[pid]=[int((labels==c).sum()) for c in range(4)]
         print(f'[EXPORT] {pid} class_pixels={counts[pid]}',flush=True)
     freeze(out,dict(role='student_predictions',split=split,patients=ids,images=inventory,class_pixels=counts,
         student_manifest_sha256=digest(Path(student)/'FROZEN.json'),student_status=ck['status'],
-        labels_axis_order='TZYX',unknown=255,quality_evaluated=False,gt_read=False))
+        labels_axis_order='TZYX',native_nifti_axis_order='XYZT',locked_splits=splits,
+        train_patients=ck['train_patients'],checkpoint_sha256=digest(Path(student)/'last.pt'),unknown=255,quality_evaluated=False,gt_read=False))
     return ck['status']
 
 

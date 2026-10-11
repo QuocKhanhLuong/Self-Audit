@@ -37,7 +37,8 @@ def read_splits(path):
         if not isinstance(ids,list) or any(not isinstance(x,str) for x in ids):raise ValueError('patient split lists required')
         ids=[re.sub(r'_(ED|ES)$','',x) for x in ids]
         if any(not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*',x) or '..' in x for x in ids):raise ValueError('unsafe patient ID')
-        ids=sorted(set(ids))
+        if len(ids)!=len(set(ids)):raise ValueError('duplicate patient identity or ED/ES aliases within a split')
+        ids=sorted(ids)
         if seen.intersection(ids):raise ValueError('patient leakage between splits')
         seen.update(ids);out[name]=ids
     if not out['train']:raise ValueError('empty TRAIN split')
@@ -79,6 +80,7 @@ def read_cine(path):
     lo,hi=np.percentile(a,[1,99]);a=np.clip(a,lo,hi)
     mean,std=float(a.mean()),float(a.std());a=(a-mean)/max(std,1e-6)
     spacing=np.linalg.norm(affine[:3,:3],axis=0)
+    if not np.isfinite(spacing).all() or (spacing<=0).any():raise ValueError('invalid voxel spacing')
     projection=-affine[0,:2]/spacing[:2];axis=int(np.argmax(np.abs(projection)))
     left=(('+' if projection[axis]>0 else '-')+('x' if axis==0 else 'y')) if abs(projection[axis])>=.9 else ''
     return a.transpose(3,2,1,0).copy(),dict(image_sha256=before,shape_xyzt=list(nii.shape),
@@ -121,3 +123,18 @@ def load_bank_patient(folder,pid):
     if np.any((d['reliability']<0)|(d['reliability']>1)):raise ValueError('invalid reliability')
     if np.any(~np.isin(d['labels'],[0,1,2,3,255])):raise ValueError('invalid bank class')
     return d
+
+
+def write_native_labels(path,labels,meta):
+    """Write the complete predicted TZYX grid as native XYZT NIfTI, no resampling."""
+    import nibabel as nib
+    a=np.asarray(labels)
+    expected=tuple(reversed(meta['shape_xyzt']))
+    if a.shape!=expected or not np.isin(a,[0,1,2,3,255]).all():
+        raise ValueError('invalid native prediction shape or labels')
+    nii=nib.Nifti1Image(a.transpose(3,2,1,0).astype(np.uint8),np.asarray(meta['affine']))
+    # sform is authoritative, including oblique/sheared acquisition geometry.
+    nii.set_sform(np.asarray(meta['affine']),code=1)
+    nii.header.set_xyzt_units(meta.get('spatial_unit','unknown'),'unknown')
+    nii.header.set_data_dtype(np.uint8)
+    nib.save(nii,str(path))

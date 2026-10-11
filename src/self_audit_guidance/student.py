@@ -1,6 +1,6 @@
 """Student learns frozen features even when all semantic labels abstain."""
 from __future__ import annotations
-import math
+import math,time,json
 from pathlib import Path
 import numpy as np
 import torch
@@ -81,6 +81,8 @@ def train_student(bank,out,epochs=10,batch_size=8,device='cuda',width=32,lr=3e-4
     history=[];successful_semantic=0
     rng=np.random.default_rng(seed)
     for epoch in range(epochs):
+        started=time.perf_counter()
+        if d.type=='cuda':torch.cuda.reset_peak_memory_stats(d)
         order=rng.permutation(m['patients']);epoch_steps=0;sum_feat=0.;sum_sem=0.
         for pid in order:
             data=load_bank_patient(bank,str(pid));image=data['image']
@@ -102,7 +104,12 @@ def train_student(bank,out,epochs=10,batch_size=8,device='cuda',width=32,lr=3e-4
                 torch.nn.utils.clip_grad_norm_(model.parameters(),5.0)
                 opt.step();successful_semantic+=int(active);epoch_steps+=1
                 sum_feat+=float(fl.detach());sum_sem+=float(sl.detach())
-        row=dict(epoch=epoch+1,steps=epoch_steps,feature_loss=sum_feat/max(epoch_steps,1),semantic_loss=sum_sem/max(epoch_steps,1))
+                if epoch_steps==1 or epoch_steps%25==0:
+                    metric=dict(epoch=epoch+1,step=epoch_steps,patient_id=str(pid),batch_samples=len(current),
+                        feature_loss=float(fl.detach()),semantic_loss=float(sl.detach()),semantic_updates=successful_semantic)
+                    print('[GUIDANCE_METRIC]',json.dumps(metric),flush=True)
+        row=dict(epoch=epoch+1,steps=epoch_steps,elapsed_seconds=time.perf_counter()-started,
+                 peak_allocated_bytes=torch.cuda.max_memory_allocated(d) if d.type=='cuda' else None,feature_loss=sum_feat/max(epoch_steps,1),semantic_loss=sum_sem/max(epoch_steps,1))
         history.append(row);print('[STUDENT]',row,flush=True)
     if digest(bank/'FROZEN.json')!=bank_manifest_sha:raise ValueError('bank manifest changed during training')
     verify(bank,'guidance_bank')
