@@ -1,0 +1,38 @@
+{
+  "status": "FOCUSED_CPU_CONTRACT_TESTS_ONLY",
+  "date": "2026-10-11",
+  "base_commit": "9e84fbfc0b819016004aaa0289f4b024f4e004c8",
+  "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONPATH=src python -m pytest -q tests/test_self_audit_stable_guidance.py",
+  "tests": {
+    "passed": 47,
+    "failed": 0
+  },
+  "environment": {
+    "python": "3.13.5",
+    "torch": "2.10.0+cpu",
+    "numpy": "2.3.5",
+    "scipy": "1.17.0",
+    "pytest": "9.0.2",
+    "cuda_available": false,
+    "canonical_environment": false
+  },
+  "scope": "Synthetic-provider prepare/train/reload/UNKNOWN inference plus solver, graph, readout, tiling and gradient contracts",
+  "not_executed": [
+    "real CineMA import/checkpoint inference",
+    "native nibabel NIfTI loading",
+    "full existing repository regression suite",
+    "ACDC/M&Ms real-data accuracy",
+    "CUDA benchmark"
+  ],
+  "source_sha256": {
+    "src/self_audit_guidance/core.py": "1b44186c6bc9492b00710859abc0e4638593ee1f15d0797b3a3c1dbb92566ed0",
+    "src/self_audit_guidance/__init__.py": "1c840d42867f0e07dfc13c656c82ad85b0b9abe36fb0870fc87b338df5609e38",
+    "src/self_audit_guidance/teacher.py": "2c3089c9cf752e6e69822f7a965f503f74511d46d59da8519c8112ebb52ed1fd",
+    "src/self_audit_guidance/pipeline.py": "2e277facd2745040161db830b967823acfd65e19c35373ed5054908ca4d96cc1",
+    "src/self_audit_guidance/student.py": "9e5d6df91e55e9d55d405ed6e70390ecc1057b4a3d3964e1ba64bcb5de57bfb4",
+    "src/self_audit_guidance/io.py": "cbf2c31f906b06b31a5ff9d2d65d7c878fdaf496789ef8c3c7314b2d7ad53c0e",
+    "scripts/run_stable_guidance.py": "1d2589897a27b4d9c0d87a092d3134f4c8125cabaa4bd75840b363f8f52842d6",
+    "tests/test_self_audit_stable_guidance.py": "003658cb695f223a3d68af9cb96ade33856ca758fb618d9a763fbeb0586815c4",
+    "configs/stable_guidance_experimental.json": "9dffc8217993c0aba8e174d67d63978319e54f8088d546f161486a59011ba01c"
+  }
+}
