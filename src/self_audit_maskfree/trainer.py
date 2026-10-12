@@ -1064,6 +1064,18 @@ class MaskfreeTrainer:
         }
         return record, batch_cursor >= len(batches), permutation
 
+    def _candidate_features_to_cpu(self, features: torch.Tensor) -> torch.Tensor:
+        """Transfer only the channels the canonical candidate generator consumes.
+
+        Custom generators keep the full feature interface.  Slicing is a view
+        before the device copy; no extra full-sized CUDA clone is allocated.
+        The bank identity already hashes exactly these consumed channels.
+        """
+        detached = features.detach()
+        if self.components.generate_bank is hypotheses_module.generate_bank:
+            detached = detached[:, :hypotheses_module.MAX_FEATURE_CHANNELS]
+        return detached.cpu()
+
     # -- one batch ------------------------------------------------------
     def _train_batch(
         self,
@@ -1124,7 +1136,9 @@ class MaskfreeTrainer:
         # The per-unit path below only indexes this CPU tensor and never calls
         # ``.cpu()`` again.
         with self.timing.stage("features.to_cpu", batch_units=len(units)):
-            features_cpu = features.detach().cpu()
+            features_cpu = self._candidate_features_to_cpu(features)
+        # Neither bank generation nor the students need the GPU feature map.
+        del features
 
         probs_initial: list[torch.Tensor] = []
         probs_audited: list[torch.Tensor] = []
