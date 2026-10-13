@@ -190,7 +190,7 @@ def _cluster(f,k,steps,max_points):
     return labels.reshape(f.shape[:-1])
 
 
-def anatomical_anchors(image,features,left_axis,cfg):
+def anatomical_anchors(image,features,left_axis,cfg,*,left_vector_yx=None):
     """Experimental multiscale component hypotheses plus soft conflicting votes.
 
     Priors: an internally supported wall surrounds a cavity; an adjacent cavity
@@ -199,6 +199,12 @@ def anatomical_anchors(image,features,left_axis,cfg):
     No missing pixel is filled. These priors do not identify the heart uniquely.
     """
     validate_cine(image,features)
+    # Opt-in continuous world-left covector on BANK pixel coordinates.
+    # None preserves the historical cardinal rule; zero means geometry abstains.
+    if left_vector_yx is not None:
+        left_vector_yx=np.asarray(left_vector_yx,dtype=np.float64)
+        if left_vector_yx.shape!=(2,) or not np.isfinite(left_vector_yx).all():
+            raise ValueError('finite world-left bank covector required')
     votes=np.zeros((*image.shape,4),np.float32); masses=np.zeros(image.shape,np.float32)
     diag={'wall_cavity_hypotheses':0,'rv_hypotheses':0,'slices_with_hypotheses':0,
           'no_orientation_slices':0,'candidate_cap_slices':0,'hypotheses_before_anatomy':0}
@@ -242,15 +248,21 @@ def anatomical_anchors(image,features,left_axis,cfg):
                         votes[t,z,wall,2]+=score;votes[t,z,cavity,3]+=score
                         masses[t,z,wall]+=score;masses[t,z,cavity]+=score
                         diag['wall_cavity_hypotheses']+=1;found=True
-                        if left_axis not in ('+x','-x','+y','-y'):
-                            diag['no_orientation_slices']+=1;continue
-                        dim=1 if left_axis.endswith('x') else 0
-                        sign=1 if left_axis[0]=='+' else -1
-                        lvpos=sign*np.nonzero(cavity)[dim].mean()
+                        if left_vector_yx is None:
+                            if left_axis not in ('+x','-x','+y','-y'):
+                                diag['no_orientation_slices']+=1;continue
+                            dim=1 if left_axis.endswith('x') else 0
+                            sign=1 if left_axis[0]=='+' else -1
+                            left_position=lambda mask: sign*np.nonzero(mask)[dim].mean()
+                        else:
+                            if not np.any(left_vector_yx):
+                                diag['no_orientation_slices']+=1;continue
+                            left_position=lambda mask: float(left_vector_yx @ np.argwhere(mask).mean(0))
+                        lvpos=left_position(cavity)
                         for ri,(rv,rh,rb,rn) in enumerate(stats):
                             if ri in (wi,ci) or rb or rh.any():continue
                             if not (ndi.binary_dilation(wall)&rv).any():continue
-                            if sign*np.nonzero(rv)[dim].mean()>=lvpos:continue
+                            if left_position(rv)>=lvpos:continue
                             # Require input support for blood-pool appearance; orientation alone is not a label.
                             gap=abs(float(np.median(im[rv])-np.median(im[cavity])))
                             if gap>max(contrast*.5,.1):continue
@@ -268,11 +280,16 @@ def anatomical_anchors(image,features,left_axis,cfg):
     strength=1-np.exp(-masses)
     r0=strength[...,None]*r0+(1-strength[...,None])*.25
     diag['anchor_supported_pixels']=int(supported.sum())
+    if left_vector_yx is not None:
+        diag.update(orientation_policy='world_left_v2',
+            raw_vote_mass_per_class=votes.sum(axis=(0,1,2,3),dtype=np.float64).tolist(),
+            conflicting_vote_pixels=int(((votes>0).sum(-1)>1).sum()),
+            evidence_independence='not_asserted_multiscale_votes_can_repeat')
     return r0,strength,diag
 
 
-def make_bank(image,features,left_axis,cfg):
-    r0,strength,anatomy=anatomical_anchors(image,features,left_axis,cfg)
+def make_bank(image,features,left_axis,cfg,*,left_vector_yx=None):
+    r0,strength,anatomy=anatomical_anchors(image,features,left_axis,cfg,left_vector_yx=left_vector_yx)
     p,graph=build_graph(image,features,cfg)
     q,receipt=anchored_solve(p,r0.reshape(-1,4),cfg.alpha,cfg.tolerance,cfg.max_iterations)
     # Reliability cannot appear just because a random semantic head is confident.

@@ -22,8 +22,9 @@ def choose_patients(splits,count,seed):
 
 
 def prepare(root,dataset,split_manifest,out,config=None,patients=4,seed=42,device='cuda',
-            tile_batch=1,checkpoint=None,teacher_config=None,offline=False,teacher=None,reader=None):
+            tile_batch=1,checkpoint=None,teacher_config=None,offline=False,teacher=None,reader=None,orientation_policy='cardinal_v1'):
     """teacher/reader injection is for explicit contract tests, never a CLI fallback."""
+    if orientation_policy not in ('cardinal_v1','world_left_v2'):raise ValueError('unknown orientation policy')
     cfg=GuidanceConfig(**(read_json(config) if config else {}));validate_device(device)
     splits=read_splits(split_manifest);split_sha=digest(split_manifest)
     ids=choose_patients(splits,patients,seed);records=discover(root,dataset,ids)
@@ -45,7 +46,12 @@ def prepare(root,dataset,split_manifest,out,config=None,patients=4,seed=42,devic
         if features.shape!=expected or not np.isfinite(features).all():raise ValueError('teacher feature shape/finiteness mismatch')
         small=F.interpolate(torch.from_numpy(cine.copy()).flatten(0,1)[:,None],(cfg.grid,cfg.grid),mode='bilinear',align_corners=False)
         small=small[:,0].reshape(*cine.shape[:2],cfg.grid,cfg.grid).numpy()
-        bank,report=make_bank(small,features,meta['patient_left_axis'],cfg)
+        geometry_args={}
+        if orientation_policy=='world_left_v2':
+            from .experimental_geometry import header_geometry
+            meta['world_left_geometry']=header_geometry(meta,cine.shape[-2:],small.shape[-2:])
+            geometry_args['left_vector_yx']=meta['world_left_geometry']['left_vector_yx']
+        bank,report=make_bank(small,features,meta['patient_left_axis'],cfg,**geometry_args)
         np.savez_compressed(out/(pid+'.npz'),image=cine.astype(np.float32),features=features.astype(np.float16),**bank)
         reports[pid]=report;inputs[pid]=meta
         print(f'[BANK] {pid} {report["status"]} classes={report["class_pixels"]} residual={report["solver"]["residual"]:.3g}',flush=True)
@@ -63,7 +69,8 @@ def prepare(root,dataset,split_manifest,out,config=None,patients=4,seed=42,devic
         image_records=inputs,patient_reports=reports,status=report['status'],seed=seed,
         source_sha256={p.name:digest(p) for p in Path(__file__).parent.glob('*.py')},
         supervision='no_manual_annotations_in_target_pipeline_declared_anatomy_priors_upstream_SSL_lineage_pending',
-        evidence_policy='fixed_teacher_fixed_graph_fixed_anchor_no_student_feedback'))
+        evidence_policy='fixed_teacher_fixed_graph_fixed_anchor_no_student_feedback',
+        **({'orientation_policy':orientation_policy} if orientation_policy!='cardinal_v1' else {})))
     print('[GUIDANCE]',report['status'],flush=True)
     return report
 
@@ -96,11 +103,13 @@ def main(argv=None):
     p=argparse.ArgumentParser(description=__doc__);sub=p.add_subparsers(dest='stage',required=True)
     a=sub.add_parser('prepare');a.add_argument('--root',required=True);a.add_argument('--dataset',choices=['acdc','mnms'],default='acdc')
     a.add_argument('--split-manifest',required=True);a.add_argument('--config');a.add_argument('--out',required=True)
+    a.add_argument('--orientation-policy',choices=['cardinal_v1','world_left_v2'],default='cardinal_v1')
     a.add_argument('--patients',type=int,default=4);a.add_argument('--seed',type=int,default=42);a.add_argument('--device',default='cuda')
     a.add_argument('--tile-batch',type=int,default=1);a.add_argument('--checkpoint');a.add_argument('--teacher-config');a.add_argument('--offline',action='store_true')
     a=sub.add_parser('train');a.add_argument('--bank',required=True);a.add_argument('--out',required=True)
     a.add_argument('--epochs',type=int,default=10);a.add_argument('--batch-size',type=int,default=8);a.add_argument('--device',default='cuda')
     a.add_argument('--width',type=int,default=32);a.add_argument('--lr',type=float,default=3e-4);a.add_argument('--seed',type=int,default=42);a.add_argument('--threads',type=int,default=4)
+    a.add_argument('--diagnostics',action='store_true',help='log entropy/KL with the unchanged training objective')
     a=sub.add_parser('export');a.add_argument('--student',required=True);a.add_argument('--root',required=True)
     a.add_argument('--dataset',choices=['acdc','mnms'],default='acdc');a.add_argument('--split-manifest',required=True)
     a.add_argument('--split',choices=['val','test'],required=True);a.add_argument('--out',required=True)

@@ -63,7 +63,9 @@ def contexts(image,indices):
     return np.stack([np.stack([image[t,max(0,z-1)],image[t,z],image[t,min(image.shape[1]-1,z+1)]]) for t,z in indices])
 
 
-def train_student(bank,out,epochs=10,batch_size=8,device='cuda',width=32,lr=3e-4,seed=42,threads=4):
+def train_student(bank,out,epochs=10,batch_size=8,device='cuda',width=32,lr=3e-4,seed=42,threads=4,diagnostics=False):
+    if diagnostics:
+        from .experimental_diagnostics import semantic_terms,scalar_terms,epoch_terms
     if type(epochs) is not int or type(batch_size) is not int or min(epochs,batch_size,threads)<1 or not math.isfinite(lr) or lr<=0:
         raise ValueError('invalid training budget')
     d=validate_device(device);torch.set_num_threads(threads);torch.manual_seed(seed)
@@ -81,6 +83,7 @@ def train_student(bank,out,epochs=10,batch_size=8,device='cuda',width=32,lr=3e-4
     history=[];successful_semantic=0
     rng=np.random.default_rng(seed)
     for epoch in range(epochs):
+        diagnostic_rows=[]
         started=time.perf_counter()
         if d.type=='cuda':torch.cuda.reset_peak_memory_stats(d)
         order=rng.permutation(m['patients']);epoch_steps=0;sum_feat=0.;sum_sem=0.
@@ -96,6 +99,8 @@ def train_student(bank,out,epochs=10,batch_size=8,device='cuda',width=32,lr=3e-4
                 rel=torch.from_numpy(data['reliability'][t,z]).to(d)
                 rel=rel*torch.tensor(allowed_classes,device=d)[q.argmax(1)]
                 result=model(x);fl,sl,active=guidance_loss(result,feat,q,rel,semantic_enabled)
+                if diagnostics:
+                    diagnostic_rows.append(scalar_terms(semantic_terms(result['logits'],q,rel,semantic_enabled)))
                 loss=fl+sl
                 if not torch.isfinite(loss):raise FloatingPointError('nonfinite student loss')
                 opt.zero_grad(set_to_none=True);loss.backward()
@@ -110,6 +115,7 @@ def train_student(bank,out,epochs=10,batch_size=8,device='cuda',width=32,lr=3e-4
                     print('[GUIDANCE_METRIC]',json.dumps(metric),flush=True)
         row=dict(epoch=epoch+1,steps=epoch_steps,elapsed_seconds=time.perf_counter()-started,
                  peak_allocated_bytes=torch.cuda.max_memory_allocated(d) if d.type=='cuda' else None,feature_loss=sum_feat/max(epoch_steps,1),semantic_loss=sum_sem/max(epoch_steps,1))
+        if diagnostics:row['semantic_diagnostics']=epoch_terms(diagnostic_rows)
         history.append(row);print('[STUDENT]',row,flush=True)
     if digest(bank/'FROZEN.json')!=bank_manifest_sha:raise ValueError('bank manifest changed during training')
     verify(bank,'guidance_bank')
@@ -122,7 +128,8 @@ def train_student(bank,out,epochs=10,batch_size=8,device='cuda',width=32,lr=3e-4
     write_json(out/'REPORT.json',dict(status=status,semantic_updates=successful_semantic,class_patients=class_patients,
                                     batch_size=batch_size,epochs=epochs))
     freeze(out,dict(role='student',status=status,bank_manifest_sha256=bank_manifest_sha,
-        teacher=m['teacher'],training=dict(epochs=epochs,batch_size=batch_size,lr=lr,width=width,seed=seed),
+        teacher=m['teacher'],training=dict(epochs=epochs,batch_size=batch_size,lr=lr,width=width,seed=seed,
+            **({'diagnostics':True} if diagnostics else {})),
         source_sha256={p.name:digest(p) for p in Path(__file__).parent.glob('*.py')}))
     return payload
 

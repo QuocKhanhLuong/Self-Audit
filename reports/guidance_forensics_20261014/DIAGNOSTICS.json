@@ -1,0 +1,321 @@
+{
+  "schema": "self_audit.guidance_forensics.v1",
+  "source_branch": "QuocKhanhLuong/guidance-forensics-20261014",
+  "source_commit": "e4d3269ce244d3d4ca0afdb1c92615f049116911",
+  "training_source_commit": "d5a45f31481f0a702a1f9d5d418889fe704e9105",
+  "run_name": "stable_guidance_acdc_4070_20261013_222918",
+  "expected_checkpoint_sha256": "516e569c9141e2d8edb00b598df5cf12c8a9a4741cf1ae0cca8cbf23d6d03353",
+  "status": "SOFTWARE_REPAIRS_VERIFIED_REAL_RUN_ATTRIBUTION_BLOCKED",
+  "original_artifacts_located": false,
+  "resolved_run_config": null,
+  "checks": [
+    {
+      "check": "published_class_mean_dice",
+      "status": "PASS_SUMMARY_CONSISTENCY_ONLY",
+      "value": 0.04684410386540689,
+      "reported": 0.04684410386540689,
+      "absolute_error": 0.0
+    },
+    {
+      "check": "published_class_mean_iou",
+      "status": "PASS_SUMMARY_CONSISTENCY_ONLY",
+      "value": 0.02634977587763915,
+      "reported": 0.02634977587763915,
+      "absolute_error": 0.0
+    },
+    {
+      "check": "published_class_mean_precision",
+      "status": "PASS_SUMMARY_CONSISTENCY_ONLY",
+      "value": 0.1962348916297042,
+      "reported": 0.1962348916297042,
+      "absolute_error": 0.0
+    },
+    {
+      "check": "published_class_mean_recall",
+      "status": "PASS_SUMMARY_CONSISTENCY_ONLY",
+      "value": 0.03273158840066868,
+      "reported": 0.03273158840066868,
+      "absolute_error": 0.0
+    },
+    {
+      "check": "csv_RV_dice",
+      "status": "PASS_ROUNDING_CONSISTENCY",
+      "value": 0.117627,
+      "reported": 0.11762732795388743,
+      "absolute_error": 3.2795388743567244e-07
+    },
+    {
+      "check": "csv_RV_iou",
+      "status": "PASS_ROUNDING_CONSISTENCY",
+      "value": 0.059175,
+      "reported": 0.05917463298993571,
+      "absolute_error": 3.6701006429079586e-07
+    },
+    {
+      "check": "csv_RV_precision",
+      "status": "PASS_ROUNDING_CONSISTENCY",
+      "value": 3.392469,
+      "reported": 3.3924690861225457,
+      "absolute_error": 8.612254553952425e-08
+    },
+    {
+      "check": "csv_RV_recall",
+      "status": "PASS_ROUNDING_CONSISTENCY",
+      "value": 0.065435,
+      "reported": 0.06543466729365105,
+      "absolute_error": 3.327063489433346e-07
+    },
+    {
+      "check": "csv_MYO_dice",
+      "status": "PASS_ROUNDING_CONSISTENCY",
+      "value": 6.117321,
+      "reported": 6.117320507232874,
+      "absolute_error": 4.927671257703992e-07
+    },
+    {
+      "check": "csv_MYO_iou",
+      "status": "PASS_ROUNDING_CONSISTENCY",
+      "value": 3.37668,
+      "reported": 3.3766797181040955,
+      "absolute_error": 2.818959043970892e-07
+    },
+    {
+      "check": "csv_MYO_precision",
+      "status": "PASS_ROUNDING_CONSISTENCY",
+      "value": 11.636822,
+      "reported": 11.63682246746807,
+      "absolute_error": 4.6746806958708476e-07
+    },
+    {
+      "check": "csv_MYO_recall",
+      "status": "PASS_ROUNDING_CONSISTENCY",
+      "value": 4.987301,
+      "reported": 4.987301461691105,
+      "absolute_error": 4.6169110490268395e-07
+    },
+    {
+      "check": "csv_LV_dice",
+      "status": "PASS_ROUNDING_CONSISTENCY",
+      "value": 7.818283,
+      "reported": 7.818283324435307,
+      "absolute_error": 3.244353070641637e-07
+    },
+    {
+      "check": "csv_LV_iou",
+      "status": "PASS_ROUNDING_CONSISTENCY",
+      "value": 4.469078,
+      "reported": 4.469078412197715,
+      "absolute_error": 4.121977150717271e-07
+    },
+    {
+      "check": "csv_LV_precision",
+      "status": "PASS_ROUNDING_CONSISTENCY",
+      "value": 43.841176,
+      "reported": 43.84117593532065,
+      "absolute_error": 6.467934809961662e-08
+    },
+    {
+      "check": "csv_LV_recall",
+      "status": "PASS_ROUNDING_CONSISTENCY",
+      "value": 4.76674,
+      "reported": 4.766740391215846,
+      "absolute_error": 3.912158454966175e-07
+    },
+    {
+      "check": "csv_Foreground macro_dice",
+      "status": "PASS_ROUNDING_CONSISTENCY",
+      "value": 4.68441,
+      "reported": 4.684410386540689,
+      "absolute_error": 3.865406892344936e-07
+    },
+    {
+      "check": "csv_Foreground macro_iou",
+      "status": "PASS_ROUNDING_CONSISTENCY",
+      "value": 2.634978,
+      "reported": 2.634977587763915,
+      "absolute_error": 4.1223608482354734e-07
+    },
+    {
+      "check": "csv_Foreground macro_precision",
+      "status": "PASS_ROUNDING_CONSISTENCY",
+      "value": 19.623489,
+      "reported": 19.62348916297042,
+      "absolute_error": 1.6297041938173606e-07
+    },
+    {
+      "check": "csv_Foreground macro_recall",
+      "status": "PASS_ROUNDING_CONSISTENCY",
+      "value": 3.273159,
+      "reported": 3.2731588400668676,
+      "absolute_error": 1.5993313251527752e-07
+    },
+    {
+      "check": "coverage_plus_unknown",
+      "status": "PASS_SUMMARY_CONSISTENCY_ONLY",
+      "value": 1.0,
+      "reported": 1,
+      "absolute_error": 0.0
+    },
+    {
+      "check": "run_recipe_config",
+      "status": "BLOCKED_ORIGINAL_ARTIFACTS_INACCESSIBLE",
+      "value": null,
+      "reported": null,
+      "absolute_error": null
+    },
+    {
+      "check": "effective_split_and_duplicate_bytes",
+      "status": "BLOCKED_ORIGINAL_ARTIFACTS_INACCESSIBLE",
+      "value": null,
+      "reported": null,
+      "absolute_error": null
+    },
+    {
+      "check": "checkpoint_identity",
+      "status": "BLOCKED_ORIGINAL_ARTIFACTS_INACCESSIBLE",
+      "value": null,
+      "reported": null,
+      "absolute_error": null
+    },
+    {
+      "check": "bank_npz_support_and_permissions",
+      "status": "BLOCKED_ORIGINAL_ARTIFACTS_INACCESSIBLE",
+      "value": null,
+      "reported": null,
+      "absolute_error": null
+    },
+    {
+      "check": "training_history_and_semantic_updates",
+      "status": "BLOCKED_ORIGINAL_ARTIFACTS_INACCESSIBLE",
+      "value": null,
+      "reported": null,
+      "absolute_error": null
+    },
+    {
+      "check": "same_batch_ce_entropy_kl",
+      "status": "BLOCKED_ORIGINAL_ARTIFACTS_INACCESSIBLE",
+      "value": null,
+      "reported": null,
+      "absolute_error": null
+    },
+    {
+      "check": "real_checkpoint_encoder_gradients",
+      "status": "BLOCKED_ORIGINAL_ARTIFACTS_INACCESSIBLE",
+      "value": null,
+      "reported": null,
+      "absolute_error": null
+    },
+    {
+      "check": "native_vs_projected_checkpoint",
+      "status": "BLOCKED_ORIGINAL_ARTIFACTS_INACCESSIBLE",
+      "value": null,
+      "reported": null,
+      "absolute_error": null
+    },
+    {
+      "check": "counts_reduction",
+      "status": "BLOCKED_ORIGINAL_ARTIFACTS_INACCESSIBLE",
+      "value": null,
+      "reported": null,
+      "absolute_error": null
+    },
+    {
+      "check": "aligned_and_recovered_strata",
+      "status": "BLOCKED_ORIGINAL_ARTIFACTS_INACCESSIBLE",
+      "value": null,
+      "reported": null,
+      "absolute_error": null
+    },
+    {
+      "check": "frame_cine_voxel_equality",
+      "status": "BLOCKED_ORIGINAL_ARTIFACTS_INACCESSIBLE",
+      "value": null,
+      "reported": null,
+      "absolute_error": null
+    },
+    {
+      "check": "stagewise_exposed_val",
+      "status": "BLOCKED_ORIGINAL_ARTIFACTS_INACCESSIBLE",
+      "value": null,
+      "reported": null,
+      "absolute_error": null
+    },
+    {
+      "check": "matched_real_train_pilot",
+      "status": "BLOCKED_ORIGINAL_ARTIFACTS_INACCESSIBLE",
+      "value": null,
+      "reported": null,
+      "absolute_error": null
+    },
+    {
+      "check": "remote_4070_ssh",
+      "status": "BLOCKED_AUTHENTICATION",
+      "value": 255,
+      "reported": null,
+      "absolute_error": null
+    }
+  ],
+  "source_artifacts": {
+    "reports/stable_guidance_20261014/summary.json": "d241c85185f9d6e03f822ab20c3eaa1f8a3fcf2c657f724cd37958932e2544ed",
+    "reports/stable_guidance_20261014/metrics.csv": "d2f93225978b59baa30280985a5df9c07072099b585f36e455417fe73e11e8e9",
+    "src/self_audit_guidance/evaluate.py": "44cfff418bc1510d61c4f3b9b6296d1ece9421b14739398d3900d2d7028315d6"
+  },
+  "reported_evaluator_sha256": "44cfff418bc1510d61c4f3b9b6296d1ece9421b14739398d3900d2d7028315d6",
+  "evaluator_hash_matches": true,
+  "artifact_search": {
+    "local_last_pt_hashed": 99,
+    "matching_checkpoint_paths": [],
+    "orca_configured_remote_environments": 0,
+    "orca_run_identity_search": "only_current_session",
+    "downloads_zip": "SelfAudit_ACDC_Run_e4d3269_Review_and_Prompt.zip",
+    "zip_sha256": "db1ae6f653859b387927f6117b6f91adc5711a6af0e42393cf622da5b41b599a",
+    "zip_contains": "review_prompt_and_mathematical_probes_only",
+    "ssh_alias": "4070",
+    "ssh_exit_code": 255,
+    "ssh_error": "Permission denied (publickey,password)",
+    "wandb_web": "unavailable_via_web_tool",
+    "wandb_graphql_http": 200,
+    "wandb_graphql_project": null,
+    "wandb_env_credential_available": false
+  },
+  "environment": {
+    "python": "3.11.16",
+    "platform": "macOS-26.2-arm64-arm-64bit",
+    "torch": "2.14.0",
+    "numpy": "2.4.6",
+    "scipy": "1.17.1",
+    "nibabel": "5.4.2",
+    "cuda_available": false
+  },
+  "mathematical_checks": "math_checks/DIAGNOSTICS.json",
+  "reference_informed_development": true,
+  "raw_reference_masks_read": false,
+  "official_test_scored": false,
+  "full_run_decision": "NO_GO",
+  "verification": {
+    "source_commit": "e4d3269ce244d3d4ca0afdb1c92615f049116911",
+    "branch": "QuocKhanhLuong/guidance-forensics-20261014",
+    "tests": {
+      "tests": 120,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "pytest_exit_code": 0,
+    "pytest_elapsed_seconds": 1.66,
+    "compileall_exit_code": 0,
+    "git_diff_check_exit_code": 0,
+    "real_patient_checks": "BLOCKED_4070_SSH_AUTHENTICATION",
+    "real_training_executed": false,
+    "synthetic_optimizer_comparison": true,
+    "synthetic_diagnostics_on_off_weights_bit_identical": true,
+    "geometry_default": "cardinal_v1",
+    "geometry_opt_in": "world_left_v2",
+    "original_audit_worktree_status": "CLEAN",
+    "model_weights_or_patient_arrays_in_evidence": false,
+    "publication_at_analysis_completion": "LOCAL_UNCOMMITTED_NOT_PUSHED"
+  },
+  "source_hashes_file": "SOURCE_HASHES.json",
+  "publication_at_analysis_completion": "LOCAL_UNCOMMITTED_NOT_PUSHED",
+  "delivery_scope": "User-authorized experimental-branch publication; no main merge"
+}

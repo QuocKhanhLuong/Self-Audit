@@ -1,0 +1,61 @@
+{
+  "scope": "Exact principal commands and outcomes; source reads and inline inventory/summary calculation scripts are described in RUN_FORENSICS.md, not represented as training.",
+  "working_directory": "/Users/alvinluong/orca/workspaces/Self-Audit/guidance-forensics-20261014",
+  "commands": [
+    {
+      "command": "rtk proxy git fetch origin --prune",
+      "exit_code": 0,
+      "result": "Remote refs refreshed before isolation."
+    },
+    {
+      "command": "rtk proxy orca worktree create --repo path:/Users/alvinluong/Self-Audit --name guidance-forensics-20261014 --base-branch origin/main --parent-worktree path:/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit --setup skip --json",
+      "exit_code": 0,
+      "result": "Created isolated worktree; no agent training job launched."
+    },
+    {
+      "command": "rtk proxy git diff d5a45f31481f0a702a1f9d5d418889fe704e9105 e4d3269ce244d3d4ca0afdb1c92615f049116911 -- src/self_audit_guidance/io.py src/self_audit_guidance/core.py src/self_audit_guidance/student.py",
+      "exit_code": 0,
+      "result": "Empty source diff."
+    },
+    {
+      "command": "rtk proxy ssh -o BatchMode=yes -o ConnectTimeout=10 4070 'pwd'",
+      "exit_code": 255,
+      "result": "Permission denied (publickey,password)."
+    },
+    {
+      "command": "rtk proxy ssh-add -l",
+      "exit_code": 1,
+      "result": "The agent has no identities; verbose SSH separately confirmed default key offered and rejected."
+    },
+    {
+      "command": "rtk proxy env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -m pytest -q tests/test_guidance_forensics.py --junitxml=/tmp/self-audit-guidance-forensics-tests.xml",
+      "exit_code": 0,
+      "result": "Initial 35 passed; one requires_grad scalar warning corrected in test."
+    },
+    {
+      "command": "rtk proxy python scripts/diagnose_stable_guidance.py probes --out reports/guidance_forensics_20261014/math_checks",
+      "exit_code": 0,
+      "result": "Manufactured mathematical checks only."
+    },
+    {
+      "command": "rtk proxy env PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -m pytest -q tests/test_self_audit_stable_guidance.py tests/test_self_audit_guidance_full.py tests/test_guidance_final_metrics.py tests/test_guidance_wandb_runner.py tests/test_guidance_forensics.py --junitxml=reports/guidance_forensics_20261014/tests.xml",
+      "exit_code": 0,
+      "result": "Final tree: 120 passed, zero failures/errors/skips, 1.66 seconds."
+    },
+    {
+      "command": "rtk proxy python -m compileall -q src/self_audit_guidance scripts/diagnose_stable_guidance.py tests/test_guidance_forensics.py",
+      "exit_code": 0,
+      "result": "Compilation passed."
+    },
+    {
+      "command": "rtk proxy git diff --check",
+      "exit_code": 0,
+      "result": "Whitespace check passed."
+    },
+    {
+      "command": "rtk proxy git status --short --branch",
+      "exit_code": 0,
+      "result": "New worktree: local modified/untracked allowlisted paths. Original audit worktree separately checked clean."
+    }
+  ]
+}
