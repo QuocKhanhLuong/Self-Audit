@@ -1,0 +1,196 @@
+{
+  "kind": "mathematical_sanity_checks_not_segmentation_evidence",
+  "training_run": false,
+  "datasets_read": false,
+  "optimizer_steps": 0,
+  "exact_bounds": {
+    "distance_1": "59/80",
+    "distance_2": "907/1600",
+    "spatial_cap": "81/116",
+    "spatial_float": 0.6982758620689655,
+    "temporal_self_loop_only": 0.7106299212598425,
+    "temporal_return_cap": "22313/32000",
+    "temporal_return_float": 0.69728125
+  },
+  "harmonic": [
+    {
+      "path_length": 1,
+      "farthest_anchor_distance": 2,
+      "hitting": [
+        "4/5",
+        "1/10",
+        "1/10"
+      ],
+      "q": [
+        "767/75000",
+        "15467/75000",
+        "767/75000",
+        "19333/25000"
+      ],
+      "correct_probability": 0.77332,
+      "reliability": 0.5430449647142249,
+      "added_nodes": 2,
+      "imperfect_good_anchor": true,
+      "corrupt_anchor": true,
+      "cross_class_edge": true
+    },
+    {
+      "path_length": 3,
+      "farthest_anchor_distance": 4,
+      "hitting": [
+        "4/5",
+        "1/10",
+        "1/10"
+      ],
+      "q": [
+        "767/75000",
+        "15467/75000",
+        "767/75000",
+        "19333/25000"
+      ],
+      "correct_probability": 0.77332,
+      "reliability": 0.5430449647142249,
+      "added_nodes": 4,
+      "imperfect_good_anchor": true,
+      "corrupt_anchor": true,
+      "cross_class_edge": true
+    },
+    {
+      "path_length": 7,
+      "farthest_anchor_distance": 8,
+      "hitting": [
+        "4/5",
+        "1/10",
+        "1/10"
+      ],
+      "q": [
+        "767/75000",
+        "15467/75000",
+        "767/75000",
+        "19333/25000"
+      ],
+      "correct_probability": 0.77332,
+      "reliability": 0.5430449647142249,
+      "added_nodes": 8,
+      "imperfect_good_anchor": true,
+      "corrupt_anchor": true,
+      "cross_class_edge": true
+    }
+  ],
+  "evidence_states": {
+    "uniform_collision": true,
+    "duplicate_votes": [
+      {
+        "identical_votes": 1,
+        "mass": 0.4,
+        "strength": 0.3296799539643607,
+        "maximum": 0.4972599654732705,
+        "reliability": 0.03349508122414259,
+        "accepted": false
+      },
+      {
+        "identical_votes": 2,
+        "mass": 0.8,
+        "strength": 0.5506710358827784,
+        "maximum": 0.6630032769120838,
+        "reliability": 0.1497707075657915,
+        "accepted": false
+      },
+      {
+        "identical_votes": 3,
+        "mass": 1.2000000000000002,
+        "strength": 0.698805788087798,
+        "maximum": 0.7741043410658486,
+        "reliability": 0.3043914992592272,
+        "accepted": true
+      }
+    ]
+  },
+  "actual_solver_chain": {
+    "q": [
+      [
+        0.14437499999999998,
+        0.14437499999999998,
+        0.14437499999999998,
+        0.566875
+      ],
+      [
+        0.0875,
+        0.0875,
+        0.0875,
+        0.7375
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "receipt": {
+      "converged": true,
+      "iterations": 2,
+      "residual": 0.0,
+      "error_bound": 0.0
+    }
+  },
+  "actual_soft_ce": {
+    "active": true,
+    "hard_rejected_pixel_has_gradient": true,
+    "gradient": [
+      [
+        [
+          [
+            0.04999999701976776,
+            0.13333332538604736
+          ]
+        ],
+        [
+          [
+            0.03333332762122154,
+            0.13333332538604736
+          ]
+        ],
+        [
+          [
+            0.03333332762122154,
+            0.09999999403953552
+          ]
+        ],
+        [
+          [
+            -0.11666667461395264,
+            -0.36666664481163025
+          ]
+        ]
+      ]
+    ],
+    "feature_loss": 5.960464477539063e-08,
+    "semantic_loss": 1.3862944841384888
+  },
+  "actual_export": {
+    "representation_status_veto": true,
+    "permitted_class_export": true,
+    "unpermitted_class_veto": true,
+    "bank_reliability_argument_absent": true
+  },
+  "loss_grid_nullspace": {
+    "base_semantic_loss": 0.940447986125946,
+    "perturbed_semantic_loss": 0.940447986125946,
+    "changed_native_pixels": 2,
+    "total_native_pixels": 4,
+    "coarse_target_equal": true,
+    "network_realizability_claimed": false
+  },
+  "kl_coordinate_check": {
+    "kl": 0.028299912454739895,
+    "coordinate_difference": 0.09999999999999998,
+    "lower_bound": 0.01999999999999999
+  },
+  "environment": {
+    "python": "3.11.16",
+    "numpy": "2.4.6",
+    "torch": "2.14.0",
+    "device": "cpu"
+  }
+}

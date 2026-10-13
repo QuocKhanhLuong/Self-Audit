@@ -1,0 +1,139 @@
+{
+  "date_utc": "2026-10-13T16:12:26.789237+00:00",
+  "remote_url": "https://github.com/QuocKhanhLuong/Self-Audit",
+  "remote_head": "d5a45f31481f0a702a1f9d5d418889fe704e9105",
+  "remote_commit_date": "2026-10-11T16:48:33+07:00",
+  "local_branch": "QuocKhanhLuong/astra-pseudolabel-v3-audit",
+  "local_head": "5cb8414278361dd18cba77b3f70cf0d9f3721a42",
+  "source_snapshot": "/tmp/self-audit-scientific-20261012-d5a45f3",
+  "source_files": [
+    {
+      "path": "src/self_audit_guidance/core.py",
+      "read_scope": "full, lines 1-290",
+      "sha256": "1b44186c6bc9492b00710859abc0e4638593ee1f15d0797b3a3c1dbb92566ed0",
+      "matches_remote_git_blob": true
+    },
+    {
+      "path": "src/self_audit_guidance/student.py",
+      "read_scope": "full, lines 1-152",
+      "sha256": "87c33df231348baa87193e84a80970ee825206d1f2eb01e2f349d3ebb3ce4888",
+      "matches_remote_git_blob": true
+    },
+    {
+      "path": "configs/stable_guidance_experimental.json",
+      "read_scope": "full",
+      "sha256": "9dffc8217993c0aba8e174d67d63978319e54f8088d546f161486a59011ba01c",
+      "matches_remote_git_blob": true
+    },
+    {
+      "path": "src/self_audit_guidance/io.py",
+      "read_scope": "image contract and bank schema, lines 1-140",
+      "sha256": "42c73e38a59463ec409fa1915d425f1e549f510be68d5c2c6fbd135eb5204b5d",
+      "matches_remote_git_blob": true
+    },
+    {
+      "path": "src/self_audit_guidance/pipeline.py",
+      "read_scope": "prepare, freeze and held-out export; lines 25-92",
+      "sha256": "62b4f5fdd45089d1e3297004d61b643cb9e8e82f7d20a6598db6fd5b30ee181d",
+      "matches_remote_git_blob": true
+    },
+    {
+      "path": "src/self_audit_pseudolabel/trainer_v3.py",
+      "read_scope": "build_evidence 104-139 and train_batch 160-216",
+      "sha256": "802968e024cd90d8cc0e43d4aed43c3d77afff17c98080a3ecf7b194551c1eb2",
+      "matches_remote_git_blob": true
+    },
+    {
+      "path": "docs/stable_guidance.md",
+      "read_scope": "information and learning contracts, lines 1-76; later comparison/limits section inspected",
+      "sha256": "e1e8ef5ef7ffb3225ecff94fd9094c2b70c00abc3737ceef1aa3ee7ff4038383",
+      "matches_remote_git_blob": true
+    },
+    {
+      "path": "docs/stable_guidance_full.md",
+      "read_scope": "execution and reference-isolation contract, lines 1-38; remaining setup not analyzed",
+      "sha256": "976cec90811b3246594067834a3e58e9e6d2a8503261e23395048ef691c4893f",
+      "matches_remote_git_blob": true
+    }
+  ],
+  "literature": [
+    {
+      "local_pdf": "/tmp/self-audit-theory-continuation-literature/zhu2003.pdf",
+      "sha256": "fe5394f834acb2afe704c4d95f16ea0ec176de12870b9d411289fd7cbad4b201",
+      "scope": "Sections 2-3 harmonic and random-walk derivation; rendered equation page"
+    },
+    {
+      "local_pdf": "/tmp/self-audit-theory-continuation-literature/scott2013.pdf",
+      "sha256": "62392ce362baa3251dee91096bf63b2cb65e028d63de19f413cb4013d6acc758",
+      "scope": "Contamination assumptions, Proposition 3 and Appendix C.2 proof"
+    },
+    {
+      "local_pdf": "/tmp/self-audit-theory-continuation-literature/ju2026.pdf",
+      "sha256": "4e94bd8f90bb8636c91177ba474f1aa031ce31221b518dd23cb2978e401b6fa9",
+      "scope": "Equations 3-5, Theorem 3.1 and Appendix A proof"
+    },
+    {
+      "local_pdf": "/tmp/self-audit-theory-continuation-literature/gosch2026.pdf",
+      "sha256": "0a532c6ca19490d3bceab71c724503012f4b7b84e4f3567870c7a133a0090119",
+      "scope": "Sections 2-3, Theorem 3.1 and Appendix C.1 proof"
+    },
+    {
+      "local_pdf": "/tmp/self-audit-theory-continuation-literature/wu2024.pdf",
+      "sha256": "a67faecaf0515b78bf1fc556fa7fdb6932e769d49f684b9ba676fa5775539c36",
+      "scope": "Screened metadata and theorem locations only; not a transferred result"
+    }
+  ],
+  "previous_reports_preserved": true,
+  "previous_report_file_count": 9,
+  "production_files_changed": false,
+  "tracked_diff_empty": true,
+  "staged_diff_empty": true,
+  "training_run": false,
+  "datasets_read": false,
+  "target_masks_read": false,
+  "gpu_experiments": false,
+  "commit_or_push": false,
+  "publication_status": "local_uncommitted_not_published",
+  "math_check_environment": {
+    "python": "3.11.16",
+    "numpy": "2.4.6",
+    "torch": "2.14.0",
+    "device": "cpu"
+  },
+  "orchestration": {
+    "skill": "/Users/alvinluong/.agents/skills/orchestration/SKILL.md",
+    "run": "run_4a9c8c6618d2",
+    "task": "task_9a0ff574e706",
+    "dispatch": "ctx_12adf3cffd77",
+    "outcome": "succeeded",
+    "reviewed": "harmonic construction, transfer/support and weighted-KL proofs; core/student information flow",
+    "not_independently_reviewed": "A-C rederivation; N1.4 perturbation extension; N2 compression; N3.5 grid nullspace",
+    "placement_note": "Orca current placement resolved to ForFed; explicit immutable Self-Audit paths supplied. Reviewer reports initial ForFed Git metadata read only; no source or files changed.",
+    "terminal_released": true,
+    "reclaimable_workers": 0
+  },
+  "limitations": [
+    "No full IEEE floating-point proof",
+    "No real-patient accuracy or coverage measurements",
+    "No complete upstream representation ancestry audit",
+    "No demonstrated anatomical-generator realization of every abstract vote history",
+    "No transfer of population guarantees from finite training losses",
+    "Grady author PDF inaccessible: web Internal Error; direct fetch CERTIFICATE_VERIFY_FAILED"
+  ],
+  "output_root": "/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit/reports/theory_continuation_20261013",
+  "remote_rechecked_at_end": true,
+  "date_completed_utc": "2026-10-13T16:16:57.770935+00:00",
+  "outputs": [
+    "/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit/reports/theory_continuation_20261013/CONTINUATION_REPORT.md",
+    "/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit/reports/theory_continuation_20261013/HUMAN_DECISION_BRIEF.md",
+    "/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit/reports/theory_continuation_20261013/INDEPENDENT_REVIEW.md",
+    "/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit/reports/theory_continuation_20261013/MATH_CHECKS.json",
+    "/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit/reports/theory_continuation_20261013/PREVIOUS_REPORT_HASHES.json",
+    "/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit/reports/theory_continuation_20261013/PROPOSITIONS.md",
+    "/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit/reports/theory_continuation_20261013/PROVENANCE.json",
+    "/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit/reports/theory_continuation_20261013/REVIEW_RECEIPT.json",
+    "/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit/reports/theory_continuation_20261013/REVIEW_RELEASE.json",
+    "/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit/reports/theory_continuation_20261013/math_checks.py",
+    "/Users/alvinluong/orca/workspaces/Self-Audit/astra-pseudolabel-v3-audit/reports/theory_continuation_20261013/SHA256.json"
+  ]
+}
