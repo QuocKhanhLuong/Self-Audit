@@ -163,6 +163,58 @@ stages. IN-EPOCH TRAINING RESUME IS NOT IMPLEMENTED. An incomplete stage directo
 is refused, not overwritten or accepted as a completed model; preserve its logs
 and use a fresh run or recover deliberately.
 
+### W&B tracking
+
+`scripts/run_stable_guidance_wandb.py` runs the same full CLI and forwards its
+existing progress records to one W&B run. Pass all full-pipeline arguments after
+`--`; use a separate tracking directory outside the scientific output directory:
+
+```bash
+python scripts/run_stable_guidance_wandb.py \
+  --tracking-dir "${RUN}_tracking" \
+  --wandb-project self-audit-stable-guidance \
+  --wandb-run-name "$(basename "$RUN")" \
+  --wandb-mode online \
+  -- "${ARGS[@]}"
+```
+
+Authenticate with the existing W&B login or `WANDB_API_KEY` in the environment;
+never put a key in the command or configuration. Add `--wandb-entity ENTITY` when
+needed. Online initialization must succeed before the pipeline starts. Subsequent
+telemetry errors are recorded locally without changing the scientific recipe.
+
+The tracker logs preflight, teacher/bank progress, sampled batch feature/semantic
+losses, epoch means, export counts and final evaluation summaries. Batch curves
+use a global optimizer-step axis derived from the real preflight inventory;
+epoch curves use the epoch axis. Pseudo-label support is not segmentation
+accuracy. `WANDB_RUN.json` records the URL, latest event and telemetry-error count.
+Signals are forwarded to the full pipeline and its stage subprocesses. The
+tracker does not change model code, optimization or checkpoint selection.
+
+Final evaluation is logged as scalar history and summary keys `val/dice`,
+`val/iou`, `val/precision`, `val/recall`, `val/coverage`, and per-class keys such
+as `val/LV/dice`. The first four use frame means within patients, patient means
+within classes, then the mean of RV/MYO/LV. Undefined precision (no predicted
+positive) or recall (no reference positive) remains null; defined-patient counts
+are included. UNKNOWN predictions continue to count as foreground false negatives.
+These are final-checkpoint points, not per-epoch validation curves. This pipeline
+has no transition auditor and exports hard labels only, so AUROC is unavailable;
+it is never filled with zero or inferred from hard labels.
+
+An already-running older tracker can be supplemented without editing its source
+or restarting training:
+
+```bash
+python scripts/publish_guidance_metrics.py --job /path/to/job --wait
+```
+
+This waits for the original W&B owner to finish and for both prediction cohorts
+to be locked, verifies the frozen evaluation artifacts, derives metrics from
+their TP/FP/FN counts, then resumes the same W&B run solely to publish the final
+metrics. `JOB/EXIT_CODE`, `JOB/tracking/WANDB_RUN.json`, and `JOB/run/` must follow
+the local launcher layout. It never opens reference masks or changes the chosen
+checkpoint. Publication status is in `tracking/METRICS_PUBLISHER.json`.
+
 ## Preflight scope
 
 1. Real imports: nibabel, CineMA/torchvision/timm, safetensors and HF Hub.
@@ -205,6 +257,35 @@ Dice=null and is excluded, not awarded Dice=1. Empty surfaces have null HD95 and
 an explicit failure reason. HD95 is the 95th percentile of pooled bidirectional
 native surface distances under the full affine, including voxel spacing.
 Accepted-pixel accuracy is secondary and never replaces full-volume Dice.
+
+If the strict evaluator rejects ACDC frame/cine affine differences, do not
+resize predictions or overwrite either header. An opt-in recovery evaluator
+can prove array correspondence using the original unlabeled 3-D frame:
+
+```bash
+python scripts/evaluate_stable_guidance.py \
+  --predictions "$RUN/predictions_val" \
+  --out "$RUN/evaluation_val_verified_grid" \
+  --reference-root "$ACDC_TRAIN" \
+  --allow-verified-acdc-frame-grid
+```
+
+This requires the original frame image and GT to have identical shape/affine,
+and exact voxel equality between that frame image and the indexed frozen-source
+cine frame. The source cine hash must still match the export. No axis changes,
+resampling, threshold changes or checkpoint selection are performed. Each proof
+is recorded in `geometry_verification`; native-mm distances use the frozen cine
+affine and remain unavailable if its spatial units are unknown. Keep the failed
+strict evaluation status and label the new result as a verified-grid recovery.
+The default evaluator still rejects unexplained geometry differences.
+
+The completed RTX 4070 run of 13–14 October 2026 is recorded in
+[`summary.json`](../reports/stable_guidance_20261014/summary.json) and
+[`metrics.csv`](../reports/stable_guidance_20261014/metrics.csv). It trained for
+50 epochs and scored 18 validation patients after verified-grid recovery for
+14 of 36 labeled frames. Foreground macro Dice was 4.68%, recall 3.27%, and
+UNKNOWN coverage 99.39%; this run did not establish useful segmentation quality.
+The 50 official unlabeled test patients were exported without a test score.
 
 For M&Ms/other layouts, use `--evaluation manifest --reference-manifest FILE`:
 

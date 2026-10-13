@@ -5,14 +5,18 @@ on:
     paths:
       - 'src/self_audit_guidance/**'
       - 'tests/test_self_audit*guidance*.py'
+      - 'tests/test_guidance*.py'
       - 'scripts/*stable_guidance*'
+      - 'scripts/publish_guidance_metrics.py'
       - '.github/workflows/stable-guidance.yml'
   pull_request:
     branches: [main]
     paths:
       - 'src/self_audit_guidance/**'
       - 'tests/test_self_audit*guidance*.py'
+      - 'tests/test_guidance*.py'
       - 'scripts/*stable_guidance*'
+      - 'scripts/publish_guidance_metrics.py'
       - '.github/workflows/stable-guidance.yml'
   workflow_dispatch:
 permissions:
@@ -37,7 +41,7 @@ jobs:
           MKL_NUM_THREADS: '1'
         run: |
           mkdir -p native-preflight-results
-          python -m pytest -q tests/test_self_audit_stable_guidance.py tests/test_self_audit_guidance_full.py --junitxml=native-preflight-results/tests.xml
+          python -m pytest -q tests/test_self_audit_stable_guidance.py tests/test_self_audit_guidance_full.py tests/test_guidance_final_metrics.py tests/test_guidance_wandb_runner.py --junitxml=native-preflight-results/tests.xml
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -130,7 +130,42 @@ def resolve_references(pred_manifest, reference_root=None, reference_manifest=No
     return sorted(entries, key=lambda e: (e['patient_id'], e['frame_index']))
 
 
-def evaluate(predictions, out, reference_root=None, reference_manifest=None):
+def verified_acdc_frame_grid(meta, reference, reference_path, frame_index):
+    """Prove index correspondence using the original unlabeled 3-D frame.
+
+    Some ACDC frame images and masks have placeholder affines while the cine
+    has physical geometry. Accept only exact frame/cine voxel identity and a
+    matching frame/mask grid; never resample, reorder, or edit predictions/GT.
+    The frozen cine affine remains the physical metric geometry.
+    """
+    import nibabel as nib
+    reference_path = Path(reference_path)
+    frame_path = reference_path.with_name(reference_path.name.replace('_gt.nii', '.nii'))
+    raw_path = Path(meta['raw_image'])
+    if frame_path == reference_path or not frame_path.is_file():
+        raise ValueError('geometry mismatch: original ACDC frame image is required for verification')
+    raw_before, frame_before = digest(raw_path), digest(frame_path)
+    if raw_before != meta['image_sha256']:
+        raise ValueError('geometry verification: original cine changed since frozen export')
+    cine, frame = nib.load(raw_path), nib.load(frame_path)
+    if (tuple(cine.shape) != tuple(meta['shape_xyzt'])
+        or tuple(frame.shape) != tuple(reference.shape)
+        or tuple(frame.shape) != tuple(cine.shape[:3])
+        or not np.allclose(cine.affine, meta['affine'], rtol=0, atol=1e-5)
+        or not np.allclose(frame.affine, reference.affine, rtol=0, atol=1e-5)):
+        raise ValueError('geometry mismatch: frame/cine/reference correspondence not established')
+    if not np.array_equal(np.asarray(cine.dataobj[..., frame_index]), np.asarray(frame.dataobj)):
+        raise ValueError('geometry mismatch: frame voxels differ from the indexed cine frame')
+    if digest(raw_path) != raw_before or digest(frame_path) != frame_before:
+        raise ValueError('geometry verification inputs changed during evaluation')
+    return dict(policy='exact_frame_cine_voxel_identity_no_resampling', frame_image=str(frame_path),
+                frame_image_sha256=frame_before, cine_sha256=raw_before,
+                frame_index=frame_index, physical_geometry='frozen_cine_affine',
+                frame_affine=frame.affine.tolist(), reference_affine=reference.affine.tolist())
+
+
+def evaluate(predictions, out, reference_root=None, reference_manifest=None,
+             allow_verified_acdc_frame_grid=False):
     """References first become visible here, after checking the frozen artifact."""
     folder = Path(predictions); m = verify(folder, 'student_predictions')
     if m.get('split') not in ('val','test'):
@@ -141,6 +176,8 @@ def evaluate(predictions, out, reference_root=None, reference_manifest=None):
     out = Path(out)
     if out.exists():
         raise FileExistsError(out)
+    if allow_verified_acdc_frame_grid and reference_root is None:
+        raise ValueError('verified ACDC frame geometry requires the explicit ACDC reference root')
     entries = resolve_references(m, reference_root, reference_manifest)
     import nibabel as nib
     rows = []
@@ -154,8 +191,13 @@ def evaluate(predictions, out, reference_root=None, reference_manifest=None):
             raise ValueError('native prediction shape does not match frozen image')
         for e in [r for r in entries if r['patient_id'] == pid]:
             before = digest(e['path']); ref = nib.load(e['path'])
-            if ref.shape != tuple(meta['shape_xyzt'][:3]) or not np.allclose(ref.affine, meta['affine'], rtol=0, atol=1e-5):
-                raise ValueError(f'{pid}: reference/native geometry mismatch; no resizing is permitted')
+            geometry_proof = None
+            if ref.shape != tuple(meta['shape_xyzt'][:3]):
+                raise ValueError(f'{pid}: reference/native geometry shape mismatch; no resizing is permitted')
+            if not np.allclose(ref.affine, meta['affine'], rtol=0, atol=1e-5):
+                if not allow_verified_acdc_frame_grid:
+                    raise ValueError(f'{pid}: reference/native geometry mismatch; no resizing is permitted')
+                geometry_proof = verified_acdc_frame_grid(meta, ref, e['path'], e['frame_index'])
             values = np.asarray(ref.dataobj)
             if not np.isfinite(values).all() or not np.isin(values,[0,1,2,3]).all():
                 raise ValueError('invalid reference labels')
@@ -163,7 +205,8 @@ def evaluate(predictions, out, reference_root=None, reference_manifest=None):
                 raise ValueError('reference changed during evaluation')
             prediction = labels[e['frame_index']].transpose(2,1,0)
             metrics = score_volume(prediction, values, np.asarray(meta['affine']), meta.get('spatial_unit','unknown'))
-            rows.append({**e, 'reference_sha256': before, 'metrics': metrics})
+            rows.append({**e, 'reference_sha256': before, 'metrics': metrics,
+                         'geometry_verification': geometry_proof})
     verify(folder,'student_predictions')
     if digest(folder/'FROZEN.json') != frozen_sha:
         raise ValueError('predictions changed during scoring')
@@ -171,6 +214,8 @@ def evaluate(predictions, out, reference_root=None, reference_manifest=None):
                   status='SCORED_FROZEN_PREDICTIONS_NOT_CLINICALLY_VALIDATED',
                   student_status=m['student_status'], prediction_manifest_sha256=frozen_sha,
                   selection_feedback=False, unknown_is_not_background=True,
+                  allow_verified_acdc_frame_grid=allow_verified_acdc_frame_grid,
+                  verified_frame_geometry_count=sum(r['geometry_verification'] is not None for r in rows),
                   summary=aggregate_scores(rows), frames=rows)
     out.mkdir(parents=True,exist_ok=False); write_json(out/'METRICS.json',report)
     freeze(out,dict(role='independent_evaluation', split=m['split'],
@@ -184,5 +229,7 @@ def main(argv=None):
     p.add_argument('--predictions',required=True); p.add_argument('--out',required=True)
     g=p.add_mutually_exclusive_group(required=True)
     g.add_argument('--reference-root'); g.add_argument('--reference-manifest')
+    p.add_argument('--allow-verified-acdc-frame-grid', action='store_true',
+                   help='allow affine mismatch only after exact original-frame/cine voxel correspondence is proven')
     evaluate(**vars(p.parse_args(argv)))
     return 0

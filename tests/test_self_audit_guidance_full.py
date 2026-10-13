@@ -200,6 +200,34 @@ def test_annotation_geometry_mismatch_refused(tmp_path):
 
 
 @requires_nib
+@pytest.mark.parametrize('corrupt_frame',[False,True])
+def test_acdc_placeholder_affine_requires_exact_frame_voxel_proof(tmp_path,corrupt_frame):
+    import nibabel as nib
+    root,split,affine=native_fixture(tmp_path)
+    pid='patient003';raw=root/pid/f'{pid}_4d.nii.gz'
+    cine=nib.load(raw);im,meta=read_cine(raw)
+    out=tmp_path/'pred';out.mkdir();np.savez_compressed(out/f'{pid}.npz',labels=np.zeros(im.shape,np.uint8))
+    freeze(out,dict(role='student_predictions',split='val',patients=[pid],images={pid:meta},
+                    train_patients=['patient001'],student_status='TEST_FIXTURE'))
+    for t in (1,3):
+        path=root/pid/f'{pid}_frame{t:02d}_gt.nii.gz';ref=nib.load(path)
+        nib.save(nib.Nifti1Image(np.asarray(ref.dataobj),np.eye(4)),path)
+        voxels=np.asarray(cine.dataobj[...,t-1]).copy()
+        if corrupt_frame:voxels[0,0,0]+=1
+        nib.save(nib.Nifti1Image(voxels,np.eye(4)),root/pid/f'{pid}_frame{t:02d}.nii.gz')
+    with pytest.raises(ValueError,match='geometry'):
+        evaluate(out,tmp_path/'strict',reference_root=root)
+    if corrupt_frame:
+        with pytest.raises(ValueError,match='frame voxels differ'):
+            evaluate(out,tmp_path/'verified',reference_root=root,allow_verified_acdc_frame_grid=True)
+    else:
+        result=evaluate(out,tmp_path/'verified',reference_root=root,allow_verified_acdc_frame_grid=True)
+        assert result['verified_frame_geometry_count']==2
+        assert result['summary']['patient_count']==1
+        assert result['frames'][0]['geometry_verification']['physical_geometry']=='frozen_cine_affine'
+
+
+@requires_nib
 def test_corrupt_native_file_fails_before_training(tmp_path):
     path=tmp_path/'broken_4d.nii.gz';path.write_bytes(b'not-a-nifti')
     with pytest.raises(Exception):read_cine(path)
