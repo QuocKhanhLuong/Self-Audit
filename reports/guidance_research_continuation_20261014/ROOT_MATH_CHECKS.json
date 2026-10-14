@@ -1,0 +1,48 @@
+{
+  "kind": "MATHEMATICAL_SANITY_CHECK_NOT_SEGMENTATION_EVIDENCE",
+  "source_sha": "b937e3b746608725e43d3bc3cef8861666d152dc",
+  "soft_mass_counterexample": {
+    "q": [
+      0.4,
+      0.2,
+      0.2,
+      0.2
+    ],
+    "p": [
+      0.25,
+      0.25,
+      0.25,
+      0.25
+    ],
+    "entropy": 1.3321790402101223,
+    "weight": 0.039035952556318754,
+    "other_pixel_q": [
+      0.1,
+      0.1,
+      0.7,
+      0.1
+    ],
+    "other_pixel_weight": 0.3216101752764803,
+    "batch_active": true,
+    "batch_denominator": 0.36064612783279903,
+    "rv_target_mass": 0.007807190511263751,
+    "rv_logit_gradient": 0.005411946717810928,
+    "max_finite_difference_error": 2.1244611972393024e-12,
+    "teacher_match_kl": 0.0,
+    "first_pixel_teacher_match_accepted": false,
+    "interpretation": "Positive RV target mass can accompany suppression of RV logit; it is not evidence of a named RV-favoring region."
+  },
+  "baseline_selected_batch_overlap": {
+    "native_accepted": 215428,
+    "projected_accepted": 121350,
+    "reconstructed_label_disagreement": 119330,
+    "accepted_support_intersection_lower": 108724,
+    "accepted_support_intersection_upper": 121350,
+    "native_only_lower": 94078,
+    "native_only_upper": 106704,
+    "native_only_fraction_lower": 0.4367027498746681,
+    "native_only_fraction_upper": 0.4953116586516145,
+    "scope": "80 selected TRAIN batches, original checkpoint, support membership only, no anatomical scoring"
+  },
+  "checks_passed": true
+}

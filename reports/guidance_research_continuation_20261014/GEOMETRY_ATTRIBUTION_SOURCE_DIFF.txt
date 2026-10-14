@@ -1,0 +1,592 @@
+--- d5a45f31481f0a702a1f9d5d418889fe704e9105:src/self_audit_guidance/core.py
++++ executed_source/src/self_audit_guidance/core.py
+@@ -190,7 +190,7 @@
+     return labels.reshape(f.shape[:-1])
+ 
+ 
+-def anatomical_anchors(image,features,left_axis,cfg):
++def anatomical_anchors(image,features,left_axis,cfg,*,left_vector_yx=None):
+     """Experimental multiscale component hypotheses plus soft conflicting votes.
+ 
+     Priors: an internally supported wall surrounds a cavity; an adjacent cavity
+@@ -199,6 +199,12 @@
+     No missing pixel is filled. These priors do not identify the heart uniquely.
+     """
+     validate_cine(image,features)
++    # Opt-in continuous world-left covector on BANK pixel coordinates.
++    # None preserves the historical cardinal rule; zero means geometry abstains.
++    if left_vector_yx is not None:
++        left_vector_yx=np.asarray(left_vector_yx,dtype=np.float64)
++        if left_vector_yx.shape!=(2,) or not np.isfinite(left_vector_yx).all():
++            raise ValueError('finite world-left bank covector required')
+     votes=np.zeros((*image.shape,4),np.float32); masses=np.zeros(image.shape,np.float32)
+     diag={'wall_cavity_hypotheses':0,'rv_hypotheses':0,'slices_with_hypotheses':0,
+           'no_orientation_slices':0,'candidate_cap_slices':0,'hypotheses_before_anatomy':0}
+@@ -242,15 +248,21 @@
+                         votes[t,z,wall,2]+=score;votes[t,z,cavity,3]+=score
+                         masses[t,z,wall]+=score;masses[t,z,cavity]+=score
+                         diag['wall_cavity_hypotheses']+=1;found=True
+-                        if left_axis not in ('+x','-x','+y','-y'):
+-                            diag['no_orientation_slices']+=1;continue
+-                        dim=1 if left_axis.endswith('x') else 0
+-                        sign=1 if left_axis[0]=='+' else -1
+-                        lvpos=sign*np.nonzero(cavity)[dim].mean()
++                        if left_vector_yx is None:
++                            if left_axis not in ('+x','-x','+y','-y'):
++                                diag['no_orientation_slices']+=1;continue
++                            dim=1 if left_axis.endswith('x') else 0
++                            sign=1 if left_axis[0]=='+' else -1
++                            left_position=lambda mask: sign*np.nonzero(mask)[dim].mean()
++                        else:
++                            if not np.any(left_vector_yx):
++                                diag['no_orientation_slices']+=1;continue
++                            left_position=lambda mask: float(left_vector_yx @ np.argwhere(mask).mean(0))
++                        lvpos=left_position(cavity)
+                         for ri,(rv,rh,rb,rn) in enumerate(stats):
+                             if ri in (wi,ci) or rb or rh.any():continue
+                             if not (ndi.binary_dilation(wall)&rv).any():continue
+-                            if sign*np.nonzero(rv)[dim].mean()>=lvpos:continue
++                            if left_position(rv)>=lvpos:continue
+                             # Require input support for blood-pool appearance; orientation alone is not a label.
+                             gap=abs(float(np.median(im[rv])-np.median(im[cavity])))
+                             if gap>max(contrast*.5,.1):continue
+@@ -268,11 +280,16 @@
+     strength=1-np.exp(-masses)
+     r0=strength[...,None]*r0+(1-strength[...,None])*.25
+     diag['anchor_supported_pixels']=int(supported.sum())
++    if left_vector_yx is not None:
++        diag.update(orientation_policy='world_left_v2',
++            raw_vote_mass_per_class=votes.sum(axis=(0,1,2,3),dtype=np.float64).tolist(),
++            conflicting_vote_pixels=int(((votes>0).sum(-1)>1).sum()),
++            evidence_independence='not_asserted_multiscale_votes_can_repeat')
+     return r0,strength,diag
+ 
+ 
+-def make_bank(image,features,left_axis,cfg):
+-    r0,strength,anatomy=anatomical_anchors(image,features,left_axis,cfg)
++def make_bank(image,features,left_axis,cfg,*,left_vector_yx=None):
++    r0,strength,anatomy=anatomical_anchors(image,features,left_axis,cfg,left_vector_yx=left_vector_yx)
+     p,graph=build_graph(image,features,cfg)
+     q,receipt=anchored_solve(p,r0.reshape(-1,4),cfg.alpha,cfg.tolerance,cfg.max_iterations)
+     # Reliability cannot appear just because a random semantic head is confident.
+--- d5a45f31481f0a702a1f9d5d418889fe704e9105:src/self_audit_guidance/evaluate.py
++++ executed_source/src/self_audit_guidance/evaluate.py
+@@ -130,7 +130,42 @@
+     return sorted(entries, key=lambda e: (e['patient_id'], e['frame_index']))
+ 
+ 
+-def evaluate(predictions, out, reference_root=None, reference_manifest=None):
++def verified_acdc_frame_grid(meta, reference, reference_path, frame_index):
++    """Prove index correspondence using the original unlabeled 3-D frame.
++
++    Some ACDC frame images and masks have placeholder affines while the cine
++    has physical geometry. Accept only exact frame/cine voxel identity and a
++    matching frame/mask grid; never resample, reorder, or edit predictions/GT.
++    The frozen cine affine remains the physical metric geometry.
++    """
++    import nibabel as nib
++    reference_path = Path(reference_path)
++    frame_path = reference_path.with_name(reference_path.name.replace('_gt.nii', '.nii'))
++    raw_path = Path(meta['raw_image'])
++    if frame_path == reference_path or not frame_path.is_file():
++        raise ValueError('geometry mismatch: original ACDC frame image is required for verification')
++    raw_before, frame_before = digest(raw_path), digest(frame_path)
++    if raw_before != meta['image_sha256']:
++        raise ValueError('geometry verification: original cine changed since frozen export')
++    cine, frame = nib.load(raw_path), nib.load(frame_path)
++    if (tuple(cine.shape) != tuple(meta['shape_xyzt'])
++        or tuple(frame.shape) != tuple(reference.shape)
++        or tuple(frame.shape) != tuple(cine.shape[:3])
++        or not np.allclose(cine.affine, meta['affine'], rtol=0, atol=1e-5)
++        or not np.allclose(frame.affine, reference.affine, rtol=0, atol=1e-5)):
++        raise ValueError('geometry mismatch: frame/cine/reference correspondence not established')
++    if not np.array_equal(np.asarray(cine.dataobj[..., frame_index]), np.asarray(frame.dataobj)):
++        raise ValueError('geometry mismatch: frame voxels differ from the indexed cine frame')
++    if digest(raw_path) != raw_before or digest(frame_path) != frame_before:
++        raise ValueError('geometry verification inputs changed during evaluation')
++    return dict(policy='exact_frame_cine_voxel_identity_no_resampling', frame_image=str(frame_path),
++                frame_image_sha256=frame_before, cine_sha256=raw_before,
++                frame_index=frame_index, physical_geometry='frozen_cine_affine',
++                frame_affine=frame.affine.tolist(), reference_affine=reference.affine.tolist())
++
++
++def evaluate(predictions, out, reference_root=None, reference_manifest=None,
++             allow_verified_acdc_frame_grid=False):
+     """References first become visible here, after checking the frozen artifact."""
+     folder = Path(predictions); m = verify(folder, 'student_predictions')
+     if m.get('split') not in ('val','test'):
+@@ -141,6 +176,8 @@
+     out = Path(out)
+     if out.exists():
+         raise FileExistsError(out)
++    if allow_verified_acdc_frame_grid and reference_root is None:
++        raise ValueError('verified ACDC frame geometry requires the explicit ACDC reference root')
+     entries = resolve_references(m, reference_root, reference_manifest)
+     import nibabel as nib
+     rows = []
+@@ -154,8 +191,13 @@
+             raise ValueError('native prediction shape does not match frozen image')
+         for e in [r for r in entries if r['patient_id'] == pid]:
+             before = digest(e['path']); ref = nib.load(e['path'])
+-            if ref.shape != tuple(meta['shape_xyzt'][:3]) or not np.allclose(ref.affine, meta['affine'], rtol=0, atol=1e-5):
+-                raise ValueError(f'{pid}: reference/native geometry mismatch; no resizing is permitted')
++            geometry_proof = None
++            if ref.shape != tuple(meta['shape_xyzt'][:3]):
++                raise ValueError(f'{pid}: reference/native geometry shape mismatch; no resizing is permitted')
++            if not np.allclose(ref.affine, meta['affine'], rtol=0, atol=1e-5):
++                if not allow_verified_acdc_frame_grid:
++                    raise ValueError(f'{pid}: reference/native geometry mismatch; no resizing is permitted')
++                geometry_proof = verified_acdc_frame_grid(meta, ref, e['path'], e['frame_index'])
+             values = np.asarray(ref.dataobj)
+             if not np.isfinite(values).all() or not np.isin(values,[0,1,2,3]).all():
+                 raise ValueError('invalid reference labels')
+@@ -163,7 +205,8 @@
+                 raise ValueError('reference changed during evaluation')
+             prediction = labels[e['frame_index']].transpose(2,1,0)
+             metrics = score_volume(prediction, values, np.asarray(meta['affine']), meta.get('spatial_unit','unknown'))
+-            rows.append({**e, 'reference_sha256': before, 'metrics': metrics})
++            rows.append({**e, 'reference_sha256': before, 'metrics': metrics,
++                         'geometry_verification': geometry_proof})
+     verify(folder,'student_predictions')
+     if digest(folder/'FROZEN.json') != frozen_sha:
+         raise ValueError('predictions changed during scoring')
+@@ -171,6 +214,8 @@
+                   status='SCORED_FROZEN_PREDICTIONS_NOT_CLINICALLY_VALIDATED',
+                   student_status=m['student_status'], prediction_manifest_sha256=frozen_sha,
+                   selection_feedback=False, unknown_is_not_background=True,
++                  allow_verified_acdc_frame_grid=allow_verified_acdc_frame_grid,
++                  verified_frame_geometry_count=sum(r['geometry_verification'] is not None for r in rows),
+                   summary=aggregate_scores(rows), frames=rows)
+     out.mkdir(parents=True,exist_ok=False); write_json(out/'METRICS.json',report)
+     freeze(out,dict(role='independent_evaluation', split=m['split'],
+@@ -184,5 +229,7 @@
+     p.add_argument('--predictions',required=True); p.add_argument('--out',required=True)
+     g=p.add_mutually_exclusive_group(required=True)
+     g.add_argument('--reference-root'); g.add_argument('--reference-manifest')
++    p.add_argument('--allow-verified-acdc-frame-grid', action='store_true',
++                   help='allow affine mismatch only after exact original-frame/cine voxel correspondence is proven')
+     evaluate(**vars(p.parse_args(argv)))
+     return 0
+--- d5a45f31481f0a702a1f9d5d418889fe704e9105:src/self_audit_guidance/full.py
++++ executed_source/src/self_audit_guidance/full.py
+@@ -93,8 +93,11 @@
+ def run_full(root,split_manifest,out,config,*,dataset='acdc',epochs=50,batch_size=8,
+              tile_batch=1,width=32,lr=3e-4,device='cuda',threads=4,seed=42,
+              checkpoint=None,teacher_config=None,offline=False,resume=False,preflight_only=False,
+-             evaluation='acdc',reference_root=None,reference_manifest=None,test_root=None):
++             evaluation='acdc',reference_root=None,reference_manifest=None,test_root=None,
++             orientation_policy='cardinal_v1',diagnostics=False,allow_verified_acdc_frame_grid=False):
+     if min(epochs,batch_size,tile_batch,threads)<1:raise ValueError('positive execution budgets required')
++    if orientation_policy not in ('cardinal_v1','world_left_v2'):raise ValueError('unknown orientation policy')
++    if allow_verified_acdc_frame_grid and evaluation!='acdc':raise ValueError('verified frame grid requires ACDC evaluation')
+     cfg=GuidanceConfig(**read_json(config));splits=read_splits(split_manifest)
+     # The official ACDC testing cohort is separate from the local 80/20 TRAIN/VAL
+     # split. Only directory and raw cine filenames define its test identities.
+@@ -133,6 +136,9 @@
+         checkpoint_selection='fixed_last_epoch_no_reference_feedback',
+         evaluation=evaluation,reference_root=reference_root,reference_manifest=reference_manifest,
+         source_sha256={p.name:digest(p) for p in Path(__file__).parent.glob('*.py')})
++    if orientation_policy!='cardinal_v1':recipe['orientation_policy']=orientation_policy
++    if diagnostics:recipe['diagnostics']=True
++    if allow_verified_acdc_frame_grid:recipe['allow_verified_acdc_frame_grid']=True
+     out=Path(out).resolve()
+     if out.exists():
+         if not resume:raise FileExistsError(out)
+@@ -176,9 +182,11 @@
+         if bm is None:
+             run_stage('prepare',stage_command('prepare',root=root,dataset=dataset,
+                 split_manifest=effective_split_manifest,config=config,out=bank,patients=0,seed=seed,device=device,
+-                tile_batch=tile_batch,checkpoint=checkpoint,teacher_config=teacher_config,offline=offline),out)
++                tile_batch=tile_batch,checkpoint=checkpoint,teacher_config=teacher_config,offline=offline,
++                orientation_policy=orientation_policy),out)
+             bm=verify(bank,'guidance_bank')
+         if bm['patients']!=splits['train']:raise ValueError('full run did not use ALL TRAIN patients')
++        if bm.get('orientation_policy','cardinal_v1')!=orientation_policy:raise ValueError('bank orientation policy mismatch')
+         # Binding input identity across resume, preflight, feature bank and export.
+         for pid,meta in bm['image_records'].items():
+             if meta['image_sha256']!=pf['checks']['native_cine_inventory']['images'][pid]['image_sha256']:
+@@ -188,9 +196,11 @@
+         sm=existing_stage(student,'student',resume)
+         if sm is None:
+             run_stage('train',stage_command('train',bank=bank,out=student,epochs=epochs,
+-                batch_size=batch_size,device=device,width=width,lr=lr,seed=seed,threads=threads),out)
++                batch_size=batch_size,device=device,width=width,lr=lr,seed=seed,threads=threads,
++                diagnostics=diagnostics),out)
+             sm=verify(student,'student')
+         if sm['bank_manifest_sha256']!=digest(bank/'FROZEN.json'):raise ValueError('student bank lineage mismatch')
++        if diagnostics and not sm.get('training',{}).get('diagnostics'):raise ValueError('student diagnostic logging was not enabled')
+         status['stages']['student']=sm['status'];save()
+         # Freeze BOTH cohorts before opening ANY reference mask.
+         prediction_hashes={}
+@@ -223,7 +233,8 @@
+                 ev=existing_stage(dest,'independent_evaluation',resume)
+                 if ev is None:
+                     run_stage(current,stage_command('evaluate',predictions=out/f'predictions_{split}',out=dest,
+-                        reference_root=reference_root,reference_manifest=reference_manifest),out)
++                        reference_root=reference_root,reference_manifest=reference_manifest,
++                        allow_verified_acdc_frame_grid=allow_verified_acdc_frame_grid),out)
+                     ev=verify(dest,'independent_evaluation')
+                 if ev['prediction_manifest_sha256']!=prediction_hashes[split]:raise ValueError('evaluation lineage mismatch')
+                 status['stages'][current]=read_json(dest/'METRICS.json')['summary'];save()
+@@ -250,5 +261,8 @@
+     p.add_argument('--evaluation',choices=['acdc','manifest','none'],default='acdc')
+     p.add_argument('--reference-root');p.add_argument('--reference-manifest')
+     p.add_argument('--test-root',help='separate unlabeled official ACDC/testing directory; preserve existing TRAIN/VAL split')
++    p.add_argument('--orientation-policy',choices=['cardinal_v1','world_left_v2'],default='cardinal_v1')
++    p.add_argument('--diagnostics',action='store_true')
++    p.add_argument('--allow-verified-acdc-frame-grid',action='store_true')
+     r=run_full(**vars(p.parse_args(argv)))
+     return 2 if 'NO_SEMANTIC' in r['status'] or 'PARTIAL_SEMANTIC' in r['status'] else 0
+--- d5a45f31481f0a702a1f9d5d418889fe704e9105:src/self_audit_guidance/pipeline.py
++++ executed_source/src/self_audit_guidance/pipeline.py
+@@ -22,8 +22,9 @@
+ 
+ 
+ def prepare(root,dataset,split_manifest,out,config=None,patients=4,seed=42,device='cuda',
+-            tile_batch=1,checkpoint=None,teacher_config=None,offline=False,teacher=None,reader=None):
++            tile_batch=1,checkpoint=None,teacher_config=None,offline=False,teacher=None,reader=None,orientation_policy='cardinal_v1'):
+     """teacher/reader injection is for explicit contract tests, never a CLI fallback."""
++    if orientation_policy not in ('cardinal_v1','world_left_v2'):raise ValueError('unknown orientation policy')
+     cfg=GuidanceConfig(**(read_json(config) if config else {}));validate_device(device)
+     splits=read_splits(split_manifest);split_sha=digest(split_manifest)
+     ids=choose_patients(splits,patients,seed);records=discover(root,dataset,ids)
+@@ -45,7 +46,12 @@
+         if features.shape!=expected or not np.isfinite(features).all():raise ValueError('teacher feature shape/finiteness mismatch')
+         small=F.interpolate(torch.from_numpy(cine.copy()).flatten(0,1)[:,None],(cfg.grid,cfg.grid),mode='bilinear',align_corners=False)
+         small=small[:,0].reshape(*cine.shape[:2],cfg.grid,cfg.grid).numpy()
+-        bank,report=make_bank(small,features,meta['patient_left_axis'],cfg)
++        geometry_args={}
++        if orientation_policy=='world_left_v2':
++            from .experimental_geometry import header_geometry
++            meta['world_left_geometry']=header_geometry(meta,cine.shape[-2:],small.shape[-2:])
++            geometry_args['left_vector_yx']=meta['world_left_geometry']['left_vector_yx']
++        bank,report=make_bank(small,features,meta['patient_left_axis'],cfg,**geometry_args)
+         np.savez_compressed(out/(pid+'.npz'),image=cine.astype(np.float32),features=features.astype(np.float16),**bank)
+         reports[pid]=report;inputs[pid]=meta
+         print(f'[BANK] {pid} {report["status"]} classes={report["class_pixels"]} residual={report["solver"]["residual"]:.3g}',flush=True)
+@@ -63,7 +69,8 @@
+         image_records=inputs,patient_reports=reports,status=report['status'],seed=seed,
+         source_sha256={p.name:digest(p) for p in Path(__file__).parent.glob('*.py')},
+         supervision='no_manual_annotations_in_target_pipeline_declared_anatomy_priors_upstream_SSL_lineage_pending',
+-        evidence_policy='fixed_teacher_fixed_graph_fixed_anchor_no_student_feedback'))
++        evidence_policy='fixed_teacher_fixed_graph_fixed_anchor_no_student_feedback',
++        **({'orientation_policy':orientation_policy} if orientation_policy!='cardinal_v1' else {})))
+     print('[GUIDANCE]',report['status'],flush=True)
+     return report
+ 
+@@ -96,11 +103,13 @@
+     p=argparse.ArgumentParser(description=__doc__);sub=p.add_subparsers(dest='stage',required=True)
+     a=sub.add_parser('prepare');a.add_argument('--root',required=True);a.add_argument('--dataset',choices=['acdc','mnms'],default='acdc')
+     a.add_argument('--split-manifest',required=True);a.add_argument('--config');a.add_argument('--out',required=True)
++    a.add_argument('--orientation-policy',choices=['cardinal_v1','world_left_v2'],default='cardinal_v1')
+     a.add_argument('--patients',type=int,default=4);a.add_argument('--seed',type=int,default=42);a.add_argument('--device',default='cuda')
+     a.add_argument('--tile-batch',type=int,default=1);a.add_argument('--checkpoint');a.add_argument('--teacher-config');a.add_argument('--offline',action='store_true')
+     a=sub.add_parser('train');a.add_argument('--bank',required=True);a.add_argument('--out',required=True)
+     a.add_argument('--epochs',type=int,default=10);a.add_argument('--batch-size',type=int,default=8);a.add_argument('--device',default='cuda')
+     a.add_argument('--width',type=int,default=32);a.add_argument('--lr',type=float,default=3e-4);a.add_argument('--seed',type=int,default=42);a.add_argument('--threads',type=int,default=4)
++    a.add_argument('--diagnostics',action='store_true',help='log entropy/KL with the unchanged training objective')
+     a=sub.add_parser('export');a.add_argument('--student',required=True);a.add_argument('--root',required=True)
+     a.add_argument('--dataset',choices=['acdc','mnms'],default='acdc');a.add_argument('--split-manifest',required=True)
+     a.add_argument('--split',choices=['val','test'],required=True);a.add_argument('--out',required=True)
+--- d5a45f31481f0a702a1f9d5d418889fe704e9105:src/self_audit_guidance/student.py
++++ executed_source/src/self_audit_guidance/student.py
+@@ -63,7 +63,9 @@
+     return np.stack([np.stack([image[t,max(0,z-1)],image[t,z],image[t,min(image.shape[1]-1,z+1)]]) for t,z in indices])
+ 
+ 
+-def train_student(bank,out,epochs=10,batch_size=8,device='cuda',width=32,lr=3e-4,seed=42,threads=4):
++def train_student(bank,out,epochs=10,batch_size=8,device='cuda',width=32,lr=3e-4,seed=42,threads=4,diagnostics=False):
++    if diagnostics:
++        from .experimental_diagnostics import semantic_terms,scalar_terms,epoch_terms
+     if type(epochs) is not int or type(batch_size) is not int or min(epochs,batch_size,threads)<1 or not math.isfinite(lr) or lr<=0:
+         raise ValueError('invalid training budget')
+     d=validate_device(device);torch.set_num_threads(threads);torch.manual_seed(seed)
+@@ -81,6 +83,7 @@
+     history=[];successful_semantic=0
+     rng=np.random.default_rng(seed)
+     for epoch in range(epochs):
++        diagnostic_rows=[]
+         started=time.perf_counter()
+         if d.type=='cuda':torch.cuda.reset_peak_memory_stats(d)
+         order=rng.permutation(m['patients']);epoch_steps=0;sum_feat=0.;sum_sem=0.
+@@ -96,6 +99,8 @@
+                 rel=torch.from_numpy(data['reliability'][t,z]).to(d)
+                 rel=rel*torch.tensor(allowed_classes,device=d)[q.argmax(1)]
+                 result=model(x);fl,sl,active=guidance_loss(result,feat,q,rel,semantic_enabled)
++                if diagnostics:
++                    diagnostic_rows.append(scalar_terms(semantic_terms(result['logits'],q,rel,semantic_enabled)))
+                 loss=fl+sl
+                 if not torch.isfinite(loss):raise FloatingPointError('nonfinite student loss')
+                 opt.zero_grad(set_to_none=True);loss.backward()
+@@ -110,6 +115,7 @@
+                     print('[GUIDANCE_METRIC]',json.dumps(metric),flush=True)
+         row=dict(epoch=epoch+1,steps=epoch_steps,elapsed_seconds=time.perf_counter()-started,
+                  peak_allocated_bytes=torch.cuda.max_memory_allocated(d) if d.type=='cuda' else None,feature_loss=sum_feat/max(epoch_steps,1),semantic_loss=sum_sem/max(epoch_steps,1))
++        if diagnostics:row['semantic_diagnostics']=epoch_terms(diagnostic_rows)
+         history.append(row);print('[STUDENT]',row,flush=True)
+     if digest(bank/'FROZEN.json')!=bank_manifest_sha:raise ValueError('bank manifest changed during training')
+     verify(bank,'guidance_bank')
+@@ -122,7 +128,8 @@
+     write_json(out/'REPORT.json',dict(status=status,semantic_updates=successful_semantic,class_patients=class_patients,
+                                     batch_size=batch_size,epochs=epochs))
+     freeze(out,dict(role='student',status=status,bank_manifest_sha256=bank_manifest_sha,
+-        teacher=m['teacher'],training=dict(epochs=epochs,batch_size=batch_size,lr=lr,width=width,seed=seed),
++        teacher=m['teacher'],training=dict(epochs=epochs,batch_size=batch_size,lr=lr,width=width,seed=seed,
++            **({'diagnostics':True} if diagnostics else {})),
+         source_sha256={p.name:digest(p) for p in Path(__file__).parent.glob('*.py')}))
+     return payload
+ 
+--- d5a45f31481f0a702a1f9d5d418889fe704e9105:tests/test_self_audit_guidance_full.py
++++ executed_source/tests/test_self_audit_guidance_full.py.txt
+@@ -200,6 +200,34 @@
+ 
+ 
+ @requires_nib
++@pytest.mark.parametrize('corrupt_frame',[False,True])
++def test_acdc_placeholder_affine_requires_exact_frame_voxel_proof(tmp_path,corrupt_frame):
++    import nibabel as nib
++    root,split,affine=native_fixture(tmp_path)
++    pid='patient003';raw=root/pid/f'{pid}_4d.nii.gz'
++    cine=nib.load(raw);im,meta=read_cine(raw)
++    out=tmp_path/'pred';out.mkdir();np.savez_compressed(out/f'{pid}.npz',labels=np.zeros(im.shape,np.uint8))
++    freeze(out,dict(role='student_predictions',split='val',patients=[pid],images={pid:meta},
++                    train_patients=['patient001'],student_status='TEST_FIXTURE'))
++    for t in (1,3):
++        path=root/pid/f'{pid}_frame{t:02d}_gt.nii.gz';ref=nib.load(path)
++        nib.save(nib.Nifti1Image(np.asarray(ref.dataobj),np.eye(4)),path)
++        voxels=np.asarray(cine.dataobj[...,t-1]).copy()
++        if corrupt_frame:voxels[0,0,0]+=1
++        nib.save(nib.Nifti1Image(voxels,np.eye(4)),root/pid/f'{pid}_frame{t:02d}.nii.gz')
++    with pytest.raises(ValueError,match='geometry'):
++        evaluate(out,tmp_path/'strict',reference_root=root)
++    if corrupt_frame:
++        with pytest.raises(ValueError,match='frame voxels differ'):
++            evaluate(out,tmp_path/'verified',reference_root=root,allow_verified_acdc_frame_grid=True)
++    else:
++        result=evaluate(out,tmp_path/'verified',reference_root=root,allow_verified_acdc_frame_grid=True)
++        assert result['verified_frame_geometry_count']==2
++        assert result['summary']['patient_count']==1
++        assert result['frames'][0]['geometry_verification']['physical_geometry']=='frozen_cine_affine'
++
++
++@requires_nib
+ def test_corrupt_native_file_fails_before_training(tmp_path):
+     path=tmp_path/'broken_4d.nii.gz';path.write_bytes(b'not-a-nifti')
+     with pytest.raises(Exception):read_cine(path)
+@@ -213,7 +241,8 @@
+     with pytest.raises(ValueError,match='nonfinite'):read_cine(path)
+ 
+ 
+-def test_orchestrator_freezes_both_cohorts_before_evaluator(tmp_path,monkeypatch):
++@pytest.mark.parametrize('experimental',[False,True])
++def test_orchestrator_freezes_both_cohorts_before_evaluator(tmp_path,monkeypatch,experimental):
+     """Subprocess-order contract only; no pretended NIfTI/teacher execution."""
+     from self_audit_guidance import full
+     split=tmp_path/'split.json';cfg=tmp_path/'cfg.json';out=tmp_path/'run'
+@@ -223,15 +252,19 @@
+     def value(cmd,key):return Path(cmd[cmd.index('--'+key)+1])
+     def fake_stage(name,cmd,root):
+         sequence.append(name);dest=value(cmd,'out')
++        assert ('--diagnostics' in cmd)==(experimental and name=='train')
++        assert ('--allow-verified-acdc-frame-grid' in cmd)==(experimental and name.startswith('evaluate_'))
+         if name=='preflight':
+             write_json(dest,dict(status='PASS_EXECUTION_ONLY_QUALITY_UNVERIFIED',
+                 checks=dict(native_cine_inventory=dict(images=images))))
+             return 0
+         dest.mkdir()
+         if name=='prepare':
+-            freeze(dest,dict(role='guidance_bank',patients=['p1'],image_records={'p1':images['p1']},status='CONTRACT_FIXTURE'))
++            policy=str(value(cmd,'orientation-policy'))
++            assert policy==('world_left_v2' if experimental else 'cardinal_v1')
++            freeze(dest,dict(role='guidance_bank',patients=['p1'],image_records={'p1':images['p1']},status='CONTRACT_FIXTURE',orientation_policy=policy))
+         elif name=='train':
+-            freeze(dest,dict(role='student',bank_manifest_sha256=digest(out/'bank/FROZEN.json'),status='REPRESENTATION_ONLY'))
++            freeze(dest,dict(role='student',bank_manifest_sha256=digest(out/'bank/FROZEN.json'),status='REPRESENTATION_ONLY',training={'diagnostics':experimental}))
+         elif name.startswith('export_'):
+             cohort=name.split('_')[1];ids=splits[cohort]
+             freeze(dest,dict(role='student_predictions',patients=ids,images={p:images[p] for p in ids},
+@@ -244,7 +277,12 @@
+             freeze(dest,dict(role='independent_evaluation',prediction_manifest_sha256=digest(out/f'predictions_{cohort}/FROZEN.json')))
+         return 2 if name in ('prepare','train') else 0
+     monkeypatch.setattr(full,'run_stage',fake_stage)
+-    result=run_full(tmp_path/'raw',split,out,cfg,epochs=1,device='cpu')
++    options=dict(orientation_policy='world_left_v2',diagnostics=True,allow_verified_acdc_frame_grid=True) if experimental else {}
++    result=run_full(tmp_path/'raw',split,out,cfg,epochs=1,device='cpu',**options)
++    recipe=read_json(out/'RECIPE.json')
++    assert recipe.get('orientation_policy','cardinal_v1')==('world_left_v2' if experimental else 'cardinal_v1')
++    assert recipe.get('diagnostics',False)==experimental
++    assert recipe.get('allow_verified_acdc_frame_grid',False)==experimental
+     assert sequence==['preflight','prepare','train','export_val','export_test','evaluate_val','evaluate_test']
+     assert result['status']=='COMPLETED_SCORED_NO_SEMANTIC_SUPPORT'
+     with pytest.raises(ValueError,match='resume recipe'):
+--- 7d1c6a04064cda473d1eccfbed818392c37b1a37:scripts/run_stable_guidance_wandb.py
++++ executed_source/scripts/run_stable_guidance_wandb.py
+@@ -45,7 +45,15 @@
+             return values
+         if line.startswith("[STUDENT] "):
+             row = ast.literal_eval(line.partition("] ")[2])
+-            return {f"epoch/{k}": v for k, v in row.items()}
++            diagnostics = row.pop("semantic_diagnostics", {})
++            values = {f"epoch/{k}": v for k, v in row.items()}
++            for key, value in diagnostics.items():
++                if isinstance(value, list):
++                    values.update({f"epoch/semantic/{key}/{label}": v
++                                   for label, v in zip(("BG", "RV", "MYO", "LV"), value)})
++                elif value is not None:
++                    values[f"epoch/semantic/{key}"] = value
++            return values
+         if line.startswith("[PREFLIGHT/DATA] "):
+             self.inventory_patients += 1
+             return {"preflight/inventoried_patients": self.inventory_patients}
+@@ -104,11 +112,13 @@
+     repo = Path(__file__).resolve().parents[1]
+     command = [sys.executable, "-u", str(repo / "scripts/run_stable_guidance_full.py"), *forwarded]
+     # An explicitly requested online run must initialize before consuming GPU time.
++    launch_path = tracking.parent / "LAUNCH_MANIFEST.json"
++    launch = json.loads(launch_path.read_text()) if launch_path.exists() else {}
+     import wandb
+     run = wandb.init(project=args.wandb_project, entity=args.wandb_entity,
+                      name=args.wandb_run_name, mode=args.wandb_mode, dir=str(tracking),
+                      config={"pipeline": "stable_ssl_guidance_full", "command": command,
+-                             "gt_used_for_training": False,
++                             "gt_used_for_training": False, "launch": launch,
+                              "checkpoint_selection": "fixed_last_epoch_no_reference_feedback"},
+                      tags=["self-audit", "stable-ssl-guidance"])
+     run.define_metric("train/global_step")
+--- 7d1c6a04064cda473d1eccfbed818392c37b1a37:src/self_audit_guidance/full.py
++++ executed_source/src/self_audit_guidance/full.py
+@@ -93,8 +93,11 @@
+ def run_full(root,split_manifest,out,config,*,dataset='acdc',epochs=50,batch_size=8,
+              tile_batch=1,width=32,lr=3e-4,device='cuda',threads=4,seed=42,
+              checkpoint=None,teacher_config=None,offline=False,resume=False,preflight_only=False,
+-             evaluation='acdc',reference_root=None,reference_manifest=None,test_root=None):
++             evaluation='acdc',reference_root=None,reference_manifest=None,test_root=None,
++             orientation_policy='cardinal_v1',diagnostics=False,allow_verified_acdc_frame_grid=False):
+     if min(epochs,batch_size,tile_batch,threads)<1:raise ValueError('positive execution budgets required')
++    if orientation_policy not in ('cardinal_v1','world_left_v2'):raise ValueError('unknown orientation policy')
++    if allow_verified_acdc_frame_grid and evaluation!='acdc':raise ValueError('verified frame grid requires ACDC evaluation')
+     cfg=GuidanceConfig(**read_json(config));splits=read_splits(split_manifest)
+     # The official ACDC testing cohort is separate from the local 80/20 TRAIN/VAL
+     # split. Only directory and raw cine filenames define its test identities.
+@@ -133,6 +136,9 @@
+         checkpoint_selection='fixed_last_epoch_no_reference_feedback',
+         evaluation=evaluation,reference_root=reference_root,reference_manifest=reference_manifest,
+         source_sha256={p.name:digest(p) for p in Path(__file__).parent.glob('*.py')})
++    if orientation_policy!='cardinal_v1':recipe['orientation_policy']=orientation_policy
++    if diagnostics:recipe['diagnostics']=True
++    if allow_verified_acdc_frame_grid:recipe['allow_verified_acdc_frame_grid']=True
+     out=Path(out).resolve()
+     if out.exists():
+         if not resume:raise FileExistsError(out)
+@@ -176,9 +182,11 @@
+         if bm is None:
+             run_stage('prepare',stage_command('prepare',root=root,dataset=dataset,
+                 split_manifest=effective_split_manifest,config=config,out=bank,patients=0,seed=seed,device=device,
+-                tile_batch=tile_batch,checkpoint=checkpoint,teacher_config=teacher_config,offline=offline),out)
++                tile_batch=tile_batch,checkpoint=checkpoint,teacher_config=teacher_config,offline=offline,
++                orientation_policy=orientation_policy),out)
+             bm=verify(bank,'guidance_bank')
+         if bm['patients']!=splits['train']:raise ValueError('full run did not use ALL TRAIN patients')
++        if bm.get('orientation_policy','cardinal_v1')!=orientation_policy:raise ValueError('bank orientation policy mismatch')
+         # Binding input identity across resume, preflight, feature bank and export.
+         for pid,meta in bm['image_records'].items():
+             if meta['image_sha256']!=pf['checks']['native_cine_inventory']['images'][pid]['image_sha256']:
+@@ -188,9 +196,11 @@
+         sm=existing_stage(student,'student',resume)
+         if sm is None:
+             run_stage('train',stage_command('train',bank=bank,out=student,epochs=epochs,
+-                batch_size=batch_size,device=device,width=width,lr=lr,seed=seed,threads=threads),out)
++                batch_size=batch_size,device=device,width=width,lr=lr,seed=seed,threads=threads,
++                diagnostics=diagnostics),out)
+             sm=verify(student,'student')
+         if sm['bank_manifest_sha256']!=digest(bank/'FROZEN.json'):raise ValueError('student bank lineage mismatch')
++        if diagnostics and not sm.get('training',{}).get('diagnostics'):raise ValueError('student diagnostic logging was not enabled')
+         status['stages']['student']=sm['status'];save()
+         # Freeze BOTH cohorts before opening ANY reference mask.
+         prediction_hashes={}
+@@ -223,7 +233,8 @@
+                 ev=existing_stage(dest,'independent_evaluation',resume)
+                 if ev is None:
+                     run_stage(current,stage_command('evaluate',predictions=out/f'predictions_{split}',out=dest,
+-                        reference_root=reference_root,reference_manifest=reference_manifest),out)
++                        reference_root=reference_root,reference_manifest=reference_manifest,
++                        allow_verified_acdc_frame_grid=allow_verified_acdc_frame_grid),out)
+                     ev=verify(dest,'independent_evaluation')
+                 if ev['prediction_manifest_sha256']!=prediction_hashes[split]:raise ValueError('evaluation lineage mismatch')
+                 status['stages'][current]=read_json(dest/'METRICS.json')['summary'];save()
+@@ -250,5 +261,8 @@
+     p.add_argument('--evaluation',choices=['acdc','manifest','none'],default='acdc')
+     p.add_argument('--reference-root');p.add_argument('--reference-manifest')
+     p.add_argument('--test-root',help='separate unlabeled official ACDC/testing directory; preserve existing TRAIN/VAL split')
++    p.add_argument('--orientation-policy',choices=['cardinal_v1','world_left_v2'],default='cardinal_v1')
++    p.add_argument('--diagnostics',action='store_true')
++    p.add_argument('--allow-verified-acdc-frame-grid',action='store_true')
+     r=run_full(**vars(p.parse_args(argv)))
+     return 2 if 'NO_SEMANTIC' in r['status'] or 'PARTIAL_SEMANTIC' in r['status'] else 0
+--- 7d1c6a04064cda473d1eccfbed818392c37b1a37:tests/test_guidance_wandb_runner.py
++++ executed_source/tests/test_guidance_wandb_runner.py.txt
+@@ -39,3 +39,16 @@
+     assert p.observe("[PREFLIGHT/DATA] patient001 split=train")["preflight/inventoried_patients"] == 1
+     assert p.observe("[PREFLIGHT] PASS_EXECUTION_ONLY_QUALITY_UNVERIFIED report=/x")["preflight/status"].startswith("PASS_")
+     assert p.observe("[SSL] frame=5/20 tiles=4 frozen_features=[10, 48, 48, 64]")["teacher/frame"] == 5
++
++
++def test_semantic_diagnostics_are_chartable_epoch_scalars(tmp_path):
++    p = module.Progress(tmp_path)
++    row = {'epoch': 1, 'semantic_loss': 1.1, 'semantic_diagnostics': {
++        'ce': 1.1, 'entropy': 1.0, 'kl': .1, 'active_fraction': .9,
++        'active_batch_ce': None, 'per_class_target_mass': [10., 2., 3., 4.]}}
++    result = p.observe('[STUDENT] '+repr(row))
++    assert result['epoch/epoch'] == 1
++    assert result['epoch/semantic/kl'] == .1
++    assert result['epoch/semantic/per_class_target_mass/RV'] == 2.
++    assert 'epoch/semantic/active_batch_ce' not in result
++    assert all(not isinstance(value,(dict,list)) for value in result.values())
+--- 7d1c6a04064cda473d1eccfbed818392c37b1a37:tests/test_self_audit_guidance_full.py
++++ executed_source/tests/test_self_audit_guidance_full.py.txt
+@@ -241,7 +241,8 @@
+     with pytest.raises(ValueError,match='nonfinite'):read_cine(path)
+ 
+ 
+-def test_orchestrator_freezes_both_cohorts_before_evaluator(tmp_path,monkeypatch):
++@pytest.mark.parametrize('experimental',[False,True])
++def test_orchestrator_freezes_both_cohorts_before_evaluator(tmp_path,monkeypatch,experimental):
+     """Subprocess-order contract only; no pretended NIfTI/teacher execution."""
+     from self_audit_guidance import full
+     split=tmp_path/'split.json';cfg=tmp_path/'cfg.json';out=tmp_path/'run'
+@@ -251,15 +252,19 @@
+     def value(cmd,key):return Path(cmd[cmd.index('--'+key)+1])
+     def fake_stage(name,cmd,root):
+         sequence.append(name);dest=value(cmd,'out')
++        assert ('--diagnostics' in cmd)==(experimental and name=='train')
++        assert ('--allow-verified-acdc-frame-grid' in cmd)==(experimental and name.startswith('evaluate_'))
+         if name=='preflight':
+             write_json(dest,dict(status='PASS_EXECUTION_ONLY_QUALITY_UNVERIFIED',
+                 checks=dict(native_cine_inventory=dict(images=images))))
+             return 0
+         dest.mkdir()
+         if name=='prepare':
+-            freeze(dest,dict(role='guidance_bank',patients=['p1'],image_records={'p1':images['p1']},status='CONTRACT_FIXTURE'))
++            policy=str(value(cmd,'orientation-policy'))
++            assert policy==('world_left_v2' if experimental else 'cardinal_v1')
++            freeze(dest,dict(role='guidance_bank',patients=['p1'],image_records={'p1':images['p1']},status='CONTRACT_FIXTURE',orientation_policy=policy))
+         elif name=='train':
+-            freeze(dest,dict(role='student',bank_manifest_sha256=digest(out/'bank/FROZEN.json'),status='REPRESENTATION_ONLY'))
++            freeze(dest,dict(role='student',bank_manifest_sha256=digest(out/'bank/FROZEN.json'),status='REPRESENTATION_ONLY',training={'diagnostics':experimental}))
+         elif name.startswith('export_'):
+             cohort=name.split('_')[1];ids=splits[cohort]
+             freeze(dest,dict(role='student_predictions',patients=ids,images={p:images[p] for p in ids},
+@@ -272,7 +277,12 @@
+             freeze(dest,dict(role='independent_evaluation',prediction_manifest_sha256=digest(out/f'predictions_{cohort}/FROZEN.json')))
+         return 2 if name in ('prepare','train') else 0
+     monkeypatch.setattr(full,'run_stage',fake_stage)
+-    result=run_full(tmp_path/'raw',split,out,cfg,epochs=1,device='cpu')
++    options=dict(orientation_policy='world_left_v2',diagnostics=True,allow_verified_acdc_frame_grid=True) if experimental else {}
++    result=run_full(tmp_path/'raw',split,out,cfg,epochs=1,device='cpu',**options)
++    recipe=read_json(out/'RECIPE.json')
++    assert recipe.get('orientation_policy','cardinal_v1')==('world_left_v2' if experimental else 'cardinal_v1')
++    assert recipe.get('diagnostics',False)==experimental
++    assert recipe.get('allow_verified_acdc_frame_grid',False)==experimental
+     assert sequence==['preflight','prepare','train','export_val','export_test','evaluate_val','evaluate_test']
+     assert result['status']=='COMPLETED_SCORED_NO_SEMANTIC_SUPPORT'
+     with pytest.raises(ValueError,match='resume recipe'):

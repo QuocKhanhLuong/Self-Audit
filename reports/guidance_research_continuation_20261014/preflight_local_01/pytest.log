@@ -1,0 +1,257 @@
+.....................FFFFFFFFFFFF...................                     [100%]
+=================================== FAILURES ===================================
+_________ test_two_step_cpu_paired_pilot_invariants_and_frozen_outputs _________
+
+artifact_fixture = {'root': PosixPath('/private/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-1149/test_two...rs/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-1149/test_two_step_cpu_paired_pilot0/signals'), ...}
+
+    def test_two_step_cpu_paired_pilot_invariants_and_frozen_outputs(artifact_fixture):
+        f = artifact_fixture
+        output = f["root"] / "paired"
+        original_hash = f["rt"].io.digest(f["checkpoint"])
+>       report = pilot.run_pilot(f["bank"], f["signals"], f["checkpoint"], f["sha"], f["plan"], output)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: run_pilot() missing 1 required keyword-only argument: 'expected_plan_sha'
+
+experiments/guidance_signal_20261014/tests/test_pilot.py:165: TypeError
+____________ test_step_bound_rejected_before_optimizer_or_output[0] ____________
+
+artifact_fixture = {'root': PosixPath('/private/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-1149/test_ste...rs/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-1149/test_step_bound_rejected_befor0/signals'), ...}
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11d8774d0>, steps = 0
+
+    @pytest.mark.parametrize("steps", [0, 129, -1, True])
+    def test_step_bound_rejected_before_optimizer_or_output(artifact_fixture, monkeypatch, steps):
+        f = artifact_fixture
+        plan = copy.deepcopy(f["plan"]); plan["steps"] = steps
+        monkeypatch.setattr(torch.optim, "AdamW", lambda *a, **k: pytest.fail("optimizer created"))
+        output = f["root"] / "rejected"
+        with pytest.raises(ValueError, match="integer|1..128"):
+>           pilot.run_pilot(f["bank"], f["signals"], f["checkpoint"], f["sha"], plan, output)
+E           TypeError: run_pilot() missing 1 required keyword-only argument: 'expected_plan_sha'
+
+experiments/guidance_signal_20261014/tests/test_pilot.py:201: TypeError
+___________ test_step_bound_rejected_before_optimizer_or_output[129] ___________
+
+artifact_fixture = {'root': PosixPath('/private/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-1149/test_ste...rs/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-1149/test_step_bound_rejected_befor1/signals'), ...}
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11cf731d0>
+steps = 129
+
+    @pytest.mark.parametrize("steps", [0, 129, -1, True])
+    def test_step_bound_rejected_before_optimizer_or_output(artifact_fixture, monkeypatch, steps):
+        f = artifact_fixture
+        plan = copy.deepcopy(f["plan"]); plan["steps"] = steps
+        monkeypatch.setattr(torch.optim, "AdamW", lambda *a, **k: pytest.fail("optimizer created"))
+        output = f["root"] / "rejected"
+        with pytest.raises(ValueError, match="integer|1..128"):
+>           pilot.run_pilot(f["bank"], f["signals"], f["checkpoint"], f["sha"], plan, output)
+E           TypeError: run_pilot() missing 1 required keyword-only argument: 'expected_plan_sha'
+
+experiments/guidance_signal_20261014/tests/test_pilot.py:201: TypeError
+___________ test_step_bound_rejected_before_optimizer_or_output[-1] ____________
+
+artifact_fixture = {'root': PosixPath('/private/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-1149/test_ste...rs/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-1149/test_step_bound_rejected_befor2/signals'), ...}
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11d8f37d0>
+steps = -1
+
+    @pytest.mark.parametrize("steps", [0, 129, -1, True])
+    def test_step_bound_rejected_before_optimizer_or_output(artifact_fixture, monkeypatch, steps):
+        f = artifact_fixture
+        plan = copy.deepcopy(f["plan"]); plan["steps"] = steps
+        monkeypatch.setattr(torch.optim, "AdamW", lambda *a, **k: pytest.fail("optimizer created"))
+        output = f["root"] / "rejected"
+        with pytest.raises(ValueError, match="integer|1..128"):
+>           pilot.run_pilot(f["bank"], f["signals"], f["checkpoint"], f["sha"], plan, output)
+E           TypeError: run_pilot() missing 1 required keyword-only argument: 'expected_plan_sha'
+
+experiments/guidance_signal_20261014/tests/test_pilot.py:201: TypeError
+__________ test_step_bound_rejected_before_optimizer_or_output[True] ___________
+
+artifact_fixture = {'root': PosixPath('/private/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-1149/test_ste...rs/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-1149/test_step_bound_rejected_befor3/signals'), ...}
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11d93b9d0>
+steps = True
+
+    @pytest.mark.parametrize("steps", [0, 129, -1, True])
+    def test_step_bound_rejected_before_optimizer_or_output(artifact_fixture, monkeypatch, steps):
+        f = artifact_fixture
+        plan = copy.deepcopy(f["plan"]); plan["steps"] = steps
+        monkeypatch.setattr(torch.optim, "AdamW", lambda *a, **k: pytest.fail("optimizer created"))
+        output = f["root"] / "rejected"
+        with pytest.raises(ValueError, match="integer|1..128"):
+>           pilot.run_pilot(f["bank"], f["signals"], f["checkpoint"], f["sha"], plan, output)
+E           TypeError: run_pilot() missing 1 required keyword-only argument: 'expected_plan_sha'
+
+experiments/guidance_signal_20261014/tests/test_pilot.py:201: TypeError
+_____ test_safety_rejects_nontrain_wrong_identity_or_policy[test_patient] ______
+
+artifact_fixture = {'root': PosixPath('/private/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-1149/test_saf...rs/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-1149/test_safety_rejects_nontrain_w0/signals'), ...}
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11d888b90>
+mutation = 'test_patient'
+
+    @pytest.mark.parametrize("mutation", ["test_patient", "val_patient", "wrong_sha", "wrong_model", "policy", "epochs"])
+    def test_safety_rejects_nontrain_wrong_identity_or_policy(artifact_fixture, monkeypatch, mutation):
+        f = artifact_fixture
+        plan = copy.deepcopy(f["plan"])
+        if mutation == "test_patient": plan["patient_ids"] = ["test_d"]
+        if mutation == "val_patient": plan["patient_ids"] = ["val_c"]
+        if mutation == "wrong_sha": plan["checkpoint_sha256"] = "0" * 64
+        if mutation == "wrong_model": plan["model_state_sha256"] = "0" * 64
+        if mutation == "policy": plan["policy"]["allowed_classes"] = [True] * 4
+        if mutation == "epochs": plan["epochs"] = 1
+        monkeypatch.setattr(torch.optim, "AdamW", lambda *a, **k: pytest.fail("optimizer created"))
+        monkeypatch.setattr(f["rt"].io, "load_bank_patient", lambda *a: pytest.fail("patient arrays opened"))
+        output = f["root"] / "rejected"
+        with pytest.raises(ValueError):
+>           pilot.run_pilot(f["bank"], f["signals"], f["checkpoint"], f["sha"], plan, output)
+E           TypeError: run_pilot() missing 1 required keyword-only argument: 'expected_plan_sha'
+
+experiments/guidance_signal_20261014/tests/test_pilot.py:219: TypeError
+______ test_safety_rejects_nontrain_wrong_identity_or_policy[val_patient] ______
+
+artifact_fixture = {'root': PosixPath('/private/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-1149/test_saf...rs/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-1149/test_safety_rejects_nontrain_w1/signals'), ...}
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11da54c90>
+mutation = 'val_patient'
+
+    @pytest.mark.parametrize("mutation", ["test_patient", "val_patient", "wrong_sha", "wrong_model", "policy", "epochs"])
+    def test_safety_rejects_nontrain_wrong_identity_or_policy(artifact_fixture, monkeypatch, mutation):
+        f = artifact_fixture
+        plan = copy.deepcopy(f["plan"])
+        if mutation == "test_patient": plan["patient_ids"] = ["test_d"]
+        if mutation == "val_patient": plan["patient_ids"] = ["val_c"]
+        if mutation == "wrong_sha": plan["checkpoint_sha256"] = "0" * 64
+        if mutation == "wrong_model": plan["model_state_sha256"] = "0" * 64
+        if mutation == "policy": plan["policy"]["allowed_classes"] = [True] * 4
+        if mutation == "epochs": plan["epochs"] = 1
+        monkeypatch.setattr(torch.optim, "AdamW", lambda *a, **k: pytest.fail("optimizer created"))
+        monkeypatch.setattr(f["rt"].io, "load_bank_patient", lambda *a: pytest.fail("patient arrays opened"))
+        output = f["root"] / "rejected"
+        with pytest.raises(ValueError):
+>           pilot.run_pilot(f["bank"], f["signals"], f["checkpoint"], f["sha"], plan, output)
+E           TypeError: run_pilot() missing 1 required keyword-only argument: 'expected_plan_sha'
+
+experiments/guidance_signal_20261014/tests/test_pilot.py:219: TypeError
+_______ test_safety_rejects_nontrain_wrong_identity_or_policy[wrong_sha] _______
+
+artifact_fixture = {'root': PosixPath('/private/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-1149/test_saf...rs/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-1149/test_safety_rejects_nontrain_w2/signals'), ...}
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11da55e10>
+mutation = 'wrong_sha'
+
+    @pytest.mark.parametrize("mutation", ["test_patient", "val_patient", "wrong_sha", "wrong_model", "policy", "epochs"])
+    def test_safety_rejects_nontrain_wrong_identity_or_policy(artifact_fixture, monkeypatch, mutation):
+        f = artifact_fixture
+        plan = copy.deepcopy(f["plan"])
+        if mutation == "test_patient": plan["patient_ids"] = ["test_d"]
+        if mutation == "val_patient": plan["patient_ids"] = ["val_c"]
+        if mutation == "wrong_sha": plan["checkpoint_sha256"] = "0" * 64
+        if mutation == "wrong_model": plan["model_state_sha256"] = "0" * 64
+        if mutation == "policy": plan["policy"]["allowed_classes"] = [True] * 4
+        if mutation == "epochs": plan["epochs"] = 1
+        monkeypatch.setattr(torch.optim, "AdamW", lambda *a, **k: pytest.fail("optimizer created"))
+        monkeypatch.setattr(f["rt"].io, "load_bank_patient", lambda *a: pytest.fail("patient arrays opened"))
+        output = f["root"] / "rejected"
+        with pytest.raises(ValueError):
+>           pilot.run_pilot(f["bank"], f["signals"], f["checkpoint"], f["sha"], plan, output)
+E           TypeError: run_pilot() missing 1 required keyword-only argument: 'expected_plan_sha'
+
+experiments/guidance_signal_20261014/tests/test_pilot.py:219: TypeError
+______ test_safety_rejects_nontrain_wrong_identity_or_policy[wrong_model] ______
+
+artifact_fixture = {'root': PosixPath('/private/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-1149/test_saf...rs/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-1149/test_safety_rejects_nontrain_w3/signals'), ...}
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1080c4150>
+mutation = 'wrong_model'
+
+    @pytest.mark.parametrize("mutation", ["test_patient", "val_patient", "wrong_sha", "wrong_model", "policy", "epochs"])
+    def test_safety_rejects_nontrain_wrong_identity_or_policy(artifact_fixture, monkeypatch, mutation):
+        f = artifact_fixture
+        plan = copy.deepcopy(f["plan"])
+        if mutation == "test_patient": plan["patient_ids"] = ["test_d"]
+        if mutation == "val_patient": plan["patient_ids"] = ["val_c"]
+        if mutation == "wrong_sha": plan["checkpoint_sha256"] = "0" * 64
+        if mutation == "wrong_model": plan["model_state_sha256"] = "0" * 64
+        if mutation == "policy": plan["policy"]["allowed_classes"] = [True] * 4
+        if mutation == "epochs": plan["epochs"] = 1
+        monkeypatch.setattr(torch.optim, "AdamW", lambda *a, **k: pytest.fail("optimizer created"))
+        monkeypatch.setattr(f["rt"].io, "load_bank_patient", lambda *a: pytest.fail("patient arrays opened"))
+        output = f["root"] / "rejected"
+        with pytest.raises(ValueError):
+>           pilot.run_pilot(f["bank"], f["signals"], f["checkpoint"], f["sha"], plan, output)
+E           TypeError: run_pilot() missing 1 required keyword-only argument: 'expected_plan_sha'
+
+experiments/guidance_signal_20261014/tests/test_pilot.py:219: TypeError
+________ test_safety_rejects_nontrain_wrong_identity_or_policy[policy] _________
+
+artifact_fixture = {'root': PosixPath('/private/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-1149/test_saf...rs/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-1149/test_safety_rejects_nontrain_w4/signals'), ...}
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11d92cbd0>
+mutation = 'policy'
+
+    @pytest.mark.parametrize("mutation", ["test_patient", "val_patient", "wrong_sha", "wrong_model", "policy", "epochs"])
+    def test_safety_rejects_nontrain_wrong_identity_or_policy(artifact_fixture, monkeypatch, mutation):
+        f = artifact_fixture
+        plan = copy.deepcopy(f["plan"])
+        if mutation == "test_patient": plan["patient_ids"] = ["test_d"]
+        if mutation == "val_patient": plan["patient_ids"] = ["val_c"]
+        if mutation == "wrong_sha": plan["checkpoint_sha256"] = "0" * 64
+        if mutation == "wrong_model": plan["model_state_sha256"] = "0" * 64
+        if mutation == "policy": plan["policy"]["allowed_classes"] = [True] * 4
+        if mutation == "epochs": plan["epochs"] = 1
+        monkeypatch.setattr(torch.optim, "AdamW", lambda *a, **k: pytest.fail("optimizer created"))
+        monkeypatch.setattr(f["rt"].io, "load_bank_patient", lambda *a: pytest.fail("patient arrays opened"))
+        output = f["root"] / "rejected"
+        with pytest.raises(ValueError):
+>           pilot.run_pilot(f["bank"], f["signals"], f["checkpoint"], f["sha"], plan, output)
+E           TypeError: run_pilot() missing 1 required keyword-only argument: 'expected_plan_sha'
+
+experiments/guidance_signal_20261014/tests/test_pilot.py:219: TypeError
+________ test_safety_rejects_nontrain_wrong_identity_or_policy[epochs] _________
+
+artifact_fixture = {'root': PosixPath('/private/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-1149/test_saf...rs/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-1149/test_safety_rejects_nontrain_w5/signals'), ...}
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11d89c590>
+mutation = 'epochs'
+
+    @pytest.mark.parametrize("mutation", ["test_patient", "val_patient", "wrong_sha", "wrong_model", "policy", "epochs"])
+    def test_safety_rejects_nontrain_wrong_identity_or_policy(artifact_fixture, monkeypatch, mutation):
+        f = artifact_fixture
+        plan = copy.deepcopy(f["plan"])
+        if mutation == "test_patient": plan["patient_ids"] = ["test_d"]
+        if mutation == "val_patient": plan["patient_ids"] = ["val_c"]
+        if mutation == "wrong_sha": plan["checkpoint_sha256"] = "0" * 64
+        if mutation == "wrong_model": plan["model_state_sha256"] = "0" * 64
+        if mutation == "policy": plan["policy"]["allowed_classes"] = [True] * 4
+        if mutation == "epochs": plan["epochs"] = 1
+        monkeypatch.setattr(torch.optim, "AdamW", lambda *a, **k: pytest.fail("optimizer created"))
+        monkeypatch.setattr(f["rt"].io, "load_bank_patient", lambda *a: pytest.fail("patient arrays opened"))
+        output = f["root"] / "rejected"
+        with pytest.raises(ValueError):
+>           pilot.run_pilot(f["bank"], f["signals"], f["checkpoint"], f["sha"], plan, output)
+E           TypeError: run_pilot() missing 1 required keyword-only argument: 'expected_plan_sha'
+
+experiments/guidance_signal_20261014/tests/test_pilot.py:219: TypeError
+____________ test_signal_validation_failure_stops_before_optimizer _____________
+
+artifact_fixture = {'root': PosixPath('/private/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-1149/test_sig...rs/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-1149/test_signal_validation_failure0/signals'), ...}
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11d861d90>
+
+    def test_signal_validation_failure_stops_before_optimizer(artifact_fixture, monkeypatch):
+        f = artifact_fixture
+        rt, _, loader = pilot._dependencies()
+        def fail(*args):
+            raise ValueError("FAIL_REPRODUCTION")
+        monkeypatch.setattr(pilot, "_dependencies", lambda: (rt, fail, loader))
+        monkeypatch.setattr(torch.optim, "AdamW", lambda *a, **k: pytest.fail("optimizer created"))
+        with pytest.raises(ValueError, match="FAIL_REPRODUCTION"):
+>           pilot.run_pilot(f["bank"], f["signals"], f["checkpoint"], f["sha"], f["plan"], f["root"] / "reject")
+E           TypeError: run_pilot() missing 1 required keyword-only argument: 'expected_plan_sha'
+
+experiments/guidance_signal_20261014/tests/test_pilot.py:231: TypeError
+=========================== short test summary info ============================
+FAILED ../../../../../../dev/test_pilot.py::test_two_step_cpu_paired_pilot_invariants_and_frozen_outputs
+FAILED ../../../../../../dev/test_pilot.py::test_step_bound_rejected_before_optimizer_or_output[0]
+FAILED ../../../../../../dev/test_pilot.py::test_step_bound_rejected_before_optimizer_or_output[129]
+FAILED ../../../../../../dev/test_pilot.py::test_step_bound_rejected_before_optimizer_or_output[-1]
+FAILED ../../../../../../dev/test_pilot.py::test_step_bound_rejected_before_optimizer_or_output[True]
+FAILED ../../../../../../dev/test_pilot.py::test_safety_rejects_nontrain_wrong_identity_or_policy[test_patient]
+FAILED ../../../../../../dev/test_pilot.py::test_safety_rejects_nontrain_wrong_identity_or_policy[val_patient]
+FAILED ../../../../../../dev/test_pilot.py::test_safety_rejects_nontrain_wrong_identity_or_policy[wrong_sha]
+FAILED ../../../../../../dev/test_pilot.py::test_safety_rejects_nontrain_wrong_identity_or_policy[wrong_model]
+FAILED ../../../../../../dev/test_pilot.py::test_safety_rejects_nontrain_wrong_identity_or_policy[policy]
+FAILED ../../../../../../dev/test_pilot.py::test_safety_rejects_nontrain_wrong_identity_or_policy[epochs]
+FAILED ../../../../../../dev/test_pilot.py::test_signal_validation_failure_stops_before_optimizer
+12 failed, 40 passed in 1.45s

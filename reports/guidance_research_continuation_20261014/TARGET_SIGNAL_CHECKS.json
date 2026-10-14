@@ -1,0 +1,283 @@
+{
+  "status": "PASS_SYNTHETIC_AND_SOURCE_IDENTITY_ONLY",
+  "snapshot_sha": "b937e3b746608725e43d3bc3cef8861666d152dc",
+  "source_hash_matches": {
+    "run_evidence/run/RECIPE.json": {
+      "__init__.py": true,
+      "core.py": true,
+      "evaluate.py": true,
+      "experimental_diagnostics.py": true,
+      "experimental_geometry.py": true,
+      "full.py": true,
+      "io.py": true,
+      "pipeline.py": true,
+      "preflight.py": true,
+      "student.py": true,
+      "teacher.py": true
+    },
+    "run_evidence/run/student/FROZEN.json": {
+      "__init__.py": true,
+      "core.py": true,
+      "evaluate.py": true,
+      "experimental_diagnostics.py": true,
+      "experimental_geometry.py": true,
+      "full.py": true,
+      "io.py": true,
+      "pipeline.py": true,
+      "preflight.py": true,
+      "student.py": true,
+      "teacher.py": true
+    }
+  },
+  "launcher_patch_sha256": "ecbcd639fbaa010ac3f7fca9ac5ba3272278806ce92eecc8171c4833f70815ee",
+  "checks": {
+    "mixture_simplex_ordering": {
+      "P": [
+        [
+          0.02,
+          0.97,
+          0.01
+        ],
+        [
+          0.02,
+          0.97,
+          0.01
+        ],
+        [
+          0.02,
+          0.97,
+          0.01
+        ]
+      ],
+      "K": [
+        [
+          0.363,
+          0.6305,
+          0.006500000000000001
+        ],
+        [
+          0.013000000000000001,
+          0.9804999999999999,
+          0.006500000000000001
+        ],
+        [
+          0.013000000000000001,
+          0.6305,
+          0.3565
+        ]
+      ],
+      "s": [
+        0.0,
+        0.8,
+        0.6
+      ],
+      "h": [
+        0.5083,
+        0.7883,
+        0.7182999999999999
+      ],
+      "M": [
+        [
+          0.005083,
+          0.489307,
+          0.008827,
+          0.005083
+        ],
+        [
+          0.007883000000000001,
+          0.760907,
+          0.011627,
+          0.007883000000000001
+        ],
+        [
+          0.007183,
+          0.491407,
+          0.21252699999999997,
+          0.007183
+        ]
+      ],
+      "Q": [
+        [
+          0.12800799999999998,
+          0.612232,
+          0.13175199999999998,
+          0.12800799999999998
+        ],
+        [
+          0.06080799999999999,
+          0.813832,
+          0.06455199999999998,
+          0.06080799999999999
+        ],
+        [
+          0.077608,
+          0.5618319999999999,
+          0.282952,
+          0.077608
+        ]
+      ],
+      "Z": [
+        [
+          0.01,
+          0.9626342710997443,
+          0.017365728900255756,
+          0.01
+        ],
+        [
+          0.010000000000000002,
+          0.9652505391348472,
+          0.014749460865152862,
+          0.010000000000000002
+        ],
+        [
+          0.01,
+          0.6841250174021997,
+          0.2958749825978003,
+          0.01
+        ]
+      ],
+      "five_channel_embedding_checked": true,
+      "scope": "general_family_synthetic_only"
+    },
+    "loss_gradient": {
+      "max_finite_difference_error": 4.339101300487869e-11,
+      "active_inactive_zero_weight_and_floor_checked": true,
+      "nonunit_row_mass_checked": true
+    },
+    "common_mask_original_denominator": {
+      "original_full_Q_loss": 2.0066091662854237,
+      "paired_masked_Q_loss": 0.7957924998366102,
+      "paired_masked_Z_loss": 0.9157832340369719,
+      "full_original_denominator": 0.7000000000000001,
+      "excluded_weight_mass": 0.4,
+      "excluded_weight_fraction": 0.5714285714285714,
+      "original_activation_held_fixed": true,
+      "masked_Q_is_not_full_baseline": true
+    },
+    "wrong_name_and_positive_fixture": {
+      "P": [
+        [
+          1.0
+        ]
+      ],
+      "alpha": 0.35,
+      "mass": 0.10536051565782631,
+      "h": 0.1,
+      "V_wrong": [
+        0.01,
+        0.01,
+        0.97,
+        0.01
+      ],
+      "Q_wrong": [
+        0.226,
+        0.226,
+        0.322,
+        0.226
+      ],
+      "Z_wrong": [
+        0.01,
+        0.01,
+        0.97,
+        0.01
+      ],
+      "truth": "RV",
+      "original_reliability": 0.0009426143304158363,
+      "original_permission_assumed": true,
+      "original_batch_active": true,
+      "p_equals_Q_gradient_Q": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "gradient_Z": [
+        0.216,
+        0.216,
+        -0.6479999999999999,
+        0.216
+      ],
+      "correct_world_V": [
+        0.01,
+        0.97,
+        0.01,
+        0.01
+      ],
+      "scope": "synthetic_general_family_not_measured_anatomy"
+    },
+    "conditional_margin": {
+      "bad_route_fraction": 0.007672634271099765,
+      "good_source_error": 0.03,
+      "lower_Z_true": 0.9625575447570333,
+      "student_same_grid_sup_error_budget": 0.02,
+      "neutral_node_Q": [
+        0.12800799999999998,
+        0.612232,
+        0.13175199999999998,
+        0.12800799999999998
+      ],
+      "neutral_node_Z": [
+        0.01,
+        0.9626342710997443,
+        0.017365728900255756,
+        0.01
+      ],
+      "source_zero_is_truly_neutral": true
+    },
+    "nonidentifiability_zero_tiny_and_conflict": {
+      "same_R0": [
+        [
+          0.4,
+          0.2,
+          0.2,
+          0.2
+        ],
+        [
+          0.4,
+          0.2,
+          0.2,
+          0.2
+        ]
+      ],
+      "distinct_strengths": [
+        0.2,
+        0.6
+      ],
+      "tiny_h": 1e-09,
+      "float32_Q_loses_contrast": [
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ],
+      "zero_h_M": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "zero_h_Z": "undefined_keep_Q",
+      "conflicting_Z": [
+        0.0,
+        0.5,
+        0.5,
+        0.0
+      ]
+    },
+    "ratio_error_bound": {
+      "trials": 1000,
+      "passed": true
+    },
+    "correlated_vote_ess": {
+      "ten_equal_duplicate_event_naive_ess": 9.999999999999996,
+      "one_fully_correlated_group_ess": 1.0,
+      "not_independent_patient_count": true
+    }
+  },
+  "live_Q_reproduction": "BLOCKED_NOT_RUN",
+  "limits": [
+    "No real tensor or gradient rerun",
+    "No anatomy correctness evidence",
+    "No production imports or edits, dataset/weights/GT access, training, GPU, or TEST scoring"
+  ]
+}

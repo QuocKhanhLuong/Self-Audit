@@ -1,0 +1,1170 @@
+{
+  "status": "PASS_INDEPENDENT_ARITHMETIC_AND_CONDITIONAL_COUNTEREXAMPLES_ONLY",
+  "source_sha": "b937e3b746608725e43d3bc3cef8861666d152dc",
+  "manifest_files_verified": 102,
+  "source_measurement_status": "Published historical measurements, not replayed",
+  "metric_runs": [
+    {
+      "class_macro": {
+        "BG": {
+          "dice": 0.0001798174395973007,
+          "recall": 8.998585356379418e-05,
+          "precision": 1.0
+        },
+        "RV": {
+          "dice": 0.0011762732795388743,
+          "recall": 0.0006543466729365105,
+          "precision": 0.03392469086122546
+        },
+        "MYO": {
+          "dice": 0.06117320507232873,
+          "recall": 0.049873014616911064,
+          "precision": 0.1163682246746807
+        },
+        "LV": {
+          "dice": 0.07818283324435307,
+          "recall": 0.047667403912158464,
+          "precision": 0.4384117593532065
+        }
+      },
+      "patient_dice": {
+        "patient004": 0.0029035422116463405,
+        "patient005": 0.015149436407111007,
+        "patient012": 0.08451432827619802,
+        "patient014": 0.0025209483353579353,
+        "patient015": 0.001471097265489789,
+        "patient018": 0.11311368289847246,
+        "patient028": 0.05917228869632472,
+        "patient029": 0.015160397051360614,
+        "patient030": 0.07301354800003126,
+        "patient032": 0.0004321287743747637,
+        "patient036": 0.21086576114943606,
+        "patient065": 0.001520973422990714,
+        "patient070": 0.00036320711885952963,
+        "patient082": 0.0038922965899429915,
+        "patient087": 0.0010414814137666042,
+        "patient089": 0.12367805657870903,
+        "patient095": 0.012688371700138881,
+        "patient098": 0.12169232368711334
+      },
+      "coverage": 0.0061475814792040645,
+      "totals": {
+        "BG": {
+          "tp": 1431,
+          "fp": 0,
+          "fn": 17011230
+        },
+        "RV": {
+          "tp": 114,
+          "fp": 15479,
+          "fn": 230167
+        },
+        "MYO": {
+          "tp": 11683,
+          "fp": 59382,
+          "fn": 232363
+        },
+        "LV": {
+          "tp": 8896,
+          "fp": 9144,
+          "fn": 238260
+        }
+      },
+      "foreground_dice": 0.04684410386540689,
+      "foreground_precision": 0.1962348916297042
+    },
+    {
+      "class_macro": {
+        "BG": {
+          "dice": 0.0004401112501136748,
+          "recall": 0.00022041872407553806,
+          "precision": 1.0
+        },
+        "RV": {
+          "dice": 0.0,
+          "recall": 0.0,
+          "precision": null
+        },
+        "MYO": {
+          "dice": 0.06829655402509476,
+          "recall": 0.04791535567336333,
+          "precision": 0.17060717781834966
+        },
+        "LV": {
+          "dice": 0.08375908044554642,
+          "recall": 0.05176501824260724,
+          "precision": 0.4110749137290271
+        }
+      },
+      "patient_dice": {
+        "patient004": 0.0020159060508265323,
+        "patient005": 0.010299135837062748,
+        "patient012": 0.11013980112237598,
+        "patient014": 0.0005053323412698413,
+        "patient015": 5.4182921543129604e-05,
+        "patient018": 0.10222216336645219,
+        "patient028": 0.09381242771654112,
+        "patient029": 0.009424195840287483,
+        "patient030": 0.06453121893376543,
+        "patient032": 0.004093416294770534,
+        "patient036": 0.20575268229468335,
+        "patient065": 0.0004008016032064128,
+        "patient070": 0.0,
+        "patient082": 0.000709168285607302,
+        "patient087": 0.0,
+        "patient089": 0.052778876089329116,
+        "patient095": 0.011651694189909394,
+        "patient098": 0.24394280393621648
+      },
+      "coverage": 0.0036684568822642327,
+      "totals": {
+        "BG": {
+          "tp": 3633,
+          "fp": 0,
+          "fn": 17009028
+        },
+        "RV": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 230281
+        },
+        "MYO": {
+          "tp": 11666,
+          "fp": 28263,
+          "fn": 232380
+        },
+        "LV": {
+          "tp": 10329,
+          "fp": 10628,
+          "fn": 236827
+        }
+      },
+      "foreground_dice": 0.050685211490213725,
+      "foreground_precision": 0.2908410457736884
+    }
+  ],
+  "paired": {
+    "mean_pp": 0.3841107624806832,
+    "median_pp": -0.12685430818654803,
+    "positive": 4,
+    "negative": 14,
+    "excluding_patient098_pp": -0.31241495883870674,
+    "deltas_pp": {
+      "patient004": -0.08876361608198083,
+      "patient005": -0.4850300570048259,
+      "patient012": 2.562547284617796,
+      "patient014": -0.2015615994088094,
+      "patient015": -0.14169143439466594,
+      "patient018": -1.0891519532020264,
+      "patient028": 3.4640139020216405,
+      "patient029": -0.5736201211073131,
+      "patient030": -0.8482329066265837,
+      "patient032": 0.36612875203957707,
+      "patient036": -0.5113078854752706,
+      "patient065": -0.11201718197843011,
+      "patient070": -0.03632071188595296,
+      "patient082": -0.318312830433569,
+      "patient087": -0.10414814137666042,
+      "patient089": -7.089918048937991,
+      "patient095": -0.10366775102294869,
+      "patient098": 12.225048024910313
+    },
+    "precision_omit_baseline_rv_pp": 8.11551003842394,
+    "precision_remaining_change_pp": 1.3451053759744813
+  },
+  "geometry": {
+    "uncoded": {
+      "patients": 28,
+      "old": [
+        366263,
+        4322,
+        29611,
+        3066
+      ],
+      "new": [
+        366455,
+        0,
+        29664,
+        3066
+      ],
+      "patient_count_identity": false
+    },
+    "coded": {
+      "patients": 52,
+      "old": [
+        428926,
+        877,
+        32101,
+        3711
+      ],
+      "new": [
+        428926,
+        877,
+        32101,
+        3711
+      ],
+      "patient_count_identity": true
+    }
+  },
+  "overlap": {
+    "pixels": 35335936,
+    "native": 215428,
+    "projected": 121350,
+    "disagreement": 119330,
+    "intersection_low": 108724,
+    "intersection_high": 121350,
+    "native_only_low": 94078,
+    "native_only_high": 106704,
+    "max_rounding_residual": 0.00018310546875,
+    "all_80_float32_counts_unique": true,
+    "all_80_endpoints_feasible": true,
+    "native_only_fractions": [
+      0.4367027498746681,
+      0.4953116586516145
+    ],
+    "pooled_disagreement": 0.0033770153987147814
+  },
+  "overlap_rows": [
+    {
+      "patient": "patient001",
+      "pixels": 442368,
+      "native": 5220,
+      "projected": 2680,
+      "disagreement": 3102,
+      "rounding_residual": 9.1552734375e-05,
+      "intersection_low": 2399,
+      "intersection_high": 2680
+    },
+    {
+      "patient": "patient002",
+      "pixels": 475136,
+      "native": 740,
+      "projected": 157,
+      "disagreement": 621,
+      "rounding_residual": 1.33514404296875e-05,
+      "intersection_low": 138,
+      "intersection_high": 157
+    },
+    {
+      "patient": "patient003",
+      "pixels": 524288,
+      "native": 622,
+      "projected": 93,
+      "disagreement": 539,
+      "rounding_residual": 0.0,
+      "intersection_low": 88,
+      "intersection_high": 93
+    },
+    {
+      "patient": "patient006",
+      "pixels": 475136,
+      "native": 2500,
+      "projected": 1496,
+      "disagreement": 1708,
+      "rounding_residual": 3.814697265625e-05,
+      "intersection_low": 1144,
+      "intersection_high": 1496
+    },
+    {
+      "patient": "patient007",
+      "pixels": 397824,
+      "native": 1194,
+      "projected": 652,
+      "disagreement": 690,
+      "rounding_residual": 1.0728836059570312e-06,
+      "intersection_low": 578,
+      "intersection_high": 652
+    },
+    {
+      "patient": "patient008",
+      "pixels": 409600,
+      "native": 566,
+      "projected": 238,
+      "disagreement": 344,
+      "rounding_residual": 5.7220458984375e-06,
+      "intersection_low": 230,
+      "intersection_high": 238
+    },
+    {
+      "patient": "patient009",
+      "pixels": 425984,
+      "native": 1367,
+      "projected": 311,
+      "disagreement": 1126,
+      "rounding_residual": 3.0517578125e-05,
+      "intersection_low": 276,
+      "intersection_high": 311
+    },
+    {
+      "patient": "patient010",
+      "pixels": 425984,
+      "native": 3995,
+      "projected": 2088,
+      "disagreement": 2491,
+      "rounding_residual": 3.0517578125e-05,
+      "intersection_low": 1796,
+      "intersection_high": 2088
+    },
+    {
+      "patient": "patient011",
+      "pixels": 442368,
+      "native": 171,
+      "projected": 50,
+      "disagreement": 131,
+      "rounding_residual": 2.384185791015625e-06,
+      "intersection_low": 45,
+      "intersection_high": 50
+    },
+    {
+      "patient": "patient013",
+      "pixels": 442368,
+      "native": 5046,
+      "projected": 2280,
+      "disagreement": 3166,
+      "rounding_residual": 7.62939453125e-05,
+      "intersection_low": 2080,
+      "intersection_high": 2280
+    },
+    {
+      "patient": "patient016",
+      "pixels": 393216,
+      "native": 4726,
+      "projected": 3022,
+      "disagreement": 2102,
+      "rounding_residual": 6.103515625e-05,
+      "intersection_low": 2823,
+      "intersection_high": 3022
+    },
+    {
+      "patient": "patient017",
+      "pixels": 442368,
+      "native": 2929,
+      "projected": 920,
+      "disagreement": 2155,
+      "rounding_residual": 8.392333984375e-05,
+      "intersection_low": 847,
+      "intersection_high": 920
+    },
+    {
+      "patient": "patient019",
+      "pixels": 442368,
+      "native": 6729,
+      "projected": 4385,
+      "disagreement": 3360,
+      "rounding_residual": 4.57763671875e-05,
+      "intersection_low": 3877,
+      "intersection_high": 4385
+    },
+    {
+      "patient": "patient020",
+      "pixels": 425984,
+      "native": 689,
+      "projected": 348,
+      "disagreement": 383,
+      "rounding_residual": 1.9073486328125e-06,
+      "intersection_low": 327,
+      "intersection_high": 348
+    },
+    {
+      "patient": "patient021",
+      "pixels": 491520,
+      "native": 513,
+      "projected": 86,
+      "disagreement": 429,
+      "rounding_residual": 5.7220458984375e-06,
+      "intersection_low": 85,
+      "intersection_high": 86
+    },
+    {
+      "patient": "patient022",
+      "pixels": 409600,
+      "native": 506,
+      "projected": 46,
+      "disagreement": 472,
+      "rounding_residual": 2.09808349609375e-05,
+      "intersection_low": 40,
+      "intersection_high": 46
+    },
+    {
+      "patient": "patient023",
+      "pixels": 442368,
+      "native": 1176,
+      "projected": 442,
+      "disagreement": 942,
+      "rounding_residual": 1.1444091796875e-05,
+      "intersection_low": 338,
+      "intersection_high": 442
+    },
+    {
+      "patient": "patient024",
+      "pixels": 425984,
+      "native": 613,
+      "projected": 118,
+      "disagreement": 501,
+      "rounding_residual": 2.288818359375e-05,
+      "intersection_low": 115,
+      "intersection_high": 118
+    },
+    {
+      "patient": "patient025",
+      "pixels": 524288,
+      "native": 1159,
+      "projected": 420,
+      "disagreement": 871,
+      "rounding_residual": 0.0,
+      "intersection_low": 354,
+      "intersection_high": 420
+    },
+    {
+      "patient": "patient026",
+      "pixels": 442368,
+      "native": 4110,
+      "projected": 1835,
+      "disagreement": 2567,
+      "rounding_residual": 7.62939453125e-06,
+      "intersection_low": 1689,
+      "intersection_high": 1835
+    },
+    {
+      "patient": "patient027",
+      "pixels": 442368,
+      "native": 4210,
+      "projected": 1912,
+      "disagreement": 2584,
+      "rounding_residual": 3.0517578125e-05,
+      "intersection_low": 1769,
+      "intersection_high": 1912
+    },
+    {
+      "patient": "patient031",
+      "pixels": 442368,
+      "native": 1540,
+      "projected": 325,
+      "disagreement": 1265,
+      "rounding_residual": 1.52587890625e-05,
+      "intersection_low": 300,
+      "intersection_high": 325
+    },
+    {
+      "patient": "patient033",
+      "pixels": 442368,
+      "native": 34776,
+      "projected": 32677,
+      "disagreement": 11739,
+      "rounding_residual": 0.00018310546875,
+      "intersection_low": 27857,
+      "intersection_high": 32677
+    },
+    {
+      "patient": "patient034",
+      "pixels": 458752,
+      "native": 1577,
+      "projected": 327,
+      "disagreement": 1318,
+      "rounding_residual": 4.57763671875e-05,
+      "intersection_low": 293,
+      "intersection_high": 327
+    },
+    {
+      "patient": "patient035",
+      "pixels": 425984,
+      "native": 216,
+      "projected": 21,
+      "disagreement": 195,
+      "rounding_residual": 0.0,
+      "intersection_low": 21,
+      "intersection_high": 21
+    },
+    {
+      "patient": "patient037",
+      "pixels": 442368,
+      "native": 10777,
+      "projected": 6601,
+      "disagreement": 5146,
+      "rounding_residual": 6.103515625e-05,
+      "intersection_low": 6116,
+      "intersection_high": 6601
+    },
+    {
+      "patient": "patient038",
+      "pixels": 847872,
+      "native": 2612,
+      "projected": 1677,
+      "disagreement": 1169,
+      "rounding_residual": 3.3855438232421875e-05,
+      "intersection_low": 1560,
+      "intersection_high": 1677
+    },
+    {
+      "patient": "patient039",
+      "pixels": 425984,
+      "native": 906,
+      "projected": 331,
+      "disagreement": 599,
+      "rounding_residual": 3.814697265625e-06,
+      "intersection_low": 319,
+      "intersection_high": 331
+    },
+    {
+      "patient": "patient040",
+      "pixels": 425984,
+      "native": 1077,
+      "projected": 565,
+      "disagreement": 572,
+      "rounding_residual": 0.0,
+      "intersection_low": 535,
+      "intersection_high": 565
+    },
+    {
+      "patient": "patient041",
+      "pixels": 275968,
+      "native": 8,
+      "projected": 0,
+      "disagreement": 8,
+      "rounding_residual": 6.426125764846802e-08,
+      "intersection_low": 0,
+      "intersection_high": 0
+    },
+    {
+      "patient": "patient042",
+      "pixels": 475136,
+      "native": 7490,
+      "projected": 4868,
+      "disagreement": 3060,
+      "rounding_residual": 3.0517578125e-05,
+      "intersection_low": 4649,
+      "intersection_high": 4868
+    },
+    {
+      "patient": "patient043",
+      "pixels": 311808,
+      "native": 48,
+      "projected": 0,
+      "disagreement": 48,
+      "rounding_residual": 8.270144462585449e-07,
+      "intersection_low": 0,
+      "intersection_high": 0
+    },
+    {
+      "patient": "patient044",
+      "pixels": 442368,
+      "native": 3550,
+      "projected": 1398,
+      "disagreement": 2420,
+      "rounding_residual": 3.814697265625e-05,
+      "intersection_low": 1264,
+      "intersection_high": 1398
+    },
+    {
+      "patient": "patient045",
+      "pixels": 425984,
+      "native": 505,
+      "projected": 27,
+      "disagreement": 480,
+      "rounding_residual": 3.814697265625e-06,
+      "intersection_low": 26,
+      "intersection_high": 27
+    },
+    {
+      "patient": "patient046",
+      "pixels": 442368,
+      "native": 2631,
+      "projected": 930,
+      "disagreement": 1971,
+      "rounding_residual": 0.0,
+      "intersection_low": 795,
+      "intersection_high": 930
+    },
+    {
+      "patient": "patient047",
+      "pixels": 425984,
+      "native": 167,
+      "projected": 28,
+      "disagreement": 139,
+      "rounding_residual": 2.86102294921875e-06,
+      "intersection_low": 28,
+      "intersection_high": 28
+    },
+    {
+      "patient": "patient048",
+      "pixels": 425984,
+      "native": 1528,
+      "projected": 846,
+      "disagreement": 748,
+      "rounding_residual": 2.288818359375e-05,
+      "intersection_low": 813,
+      "intersection_high": 846
+    },
+    {
+      "patient": "patient049",
+      "pixels": 442368,
+      "native": 302,
+      "projected": 57,
+      "disagreement": 253,
+      "rounding_residual": 1.239776611328125e-05,
+      "intersection_low": 53,
+      "intersection_high": 57
+    },
+    {
+      "patient": "patient050",
+      "pixels": 507904,
+      "native": 1747,
+      "projected": 663,
+      "disagreement": 1126,
+      "rounding_residual": 4.9591064453125e-05,
+      "intersection_low": 642,
+      "intersection_high": 663
+    },
+    {
+      "patient": "patient051",
+      "pixels": 458752,
+      "native": 1659,
+      "projected": 646,
+      "disagreement": 1157,
+      "rounding_residual": 4.57763671875e-05,
+      "intersection_low": 574,
+      "intersection_high": 646
+    },
+    {
+      "patient": "patient052",
+      "pixels": 442368,
+      "native": 5730,
+      "projected": 3671,
+      "disagreement": 2903,
+      "rounding_residual": 5.340576171875e-05,
+      "intersection_low": 3249,
+      "intersection_high": 3671
+    },
+    {
+      "patient": "patient053",
+      "pixels": 442368,
+      "native": 3667,
+      "projected": 1853,
+      "disagreement": 2240,
+      "rounding_residual": 9.918212890625e-05,
+      "intersection_low": 1640,
+      "intersection_high": 1853
+    },
+    {
+      "patient": "patient054",
+      "pixels": 442368,
+      "native": 5518,
+      "projected": 3112,
+      "disagreement": 3026,
+      "rounding_residual": 7.62939453125e-06,
+      "intersection_low": 2802,
+      "intersection_high": 3112
+    },
+    {
+      "patient": "patient056",
+      "pixels": 442368,
+      "native": 3855,
+      "projected": 2243,
+      "disagreement": 1994,
+      "rounding_residual": 1.52587890625e-05,
+      "intersection_low": 2052,
+      "intersection_high": 2243
+    },
+    {
+      "patient": "patient057",
+      "pixels": 1753088,
+      "native": 586,
+      "projected": 18,
+      "disagreement": 568,
+      "rounding_residual": 1.0013580322265625e-05,
+      "intersection_low": 18,
+      "intersection_high": 18
+    },
+    {
+      "patient": "patient058",
+      "pixels": 442368,
+      "native": 9192,
+      "projected": 6467,
+      "disagreement": 3727,
+      "rounding_residual": 0.0001068115234375,
+      "intersection_low": 5966,
+      "intersection_high": 6467
+    },
+    {
+      "patient": "patient059",
+      "pixels": 442368,
+      "native": 862,
+      "projected": 402,
+      "disagreement": 544,
+      "rounding_residual": 1.52587890625e-05,
+      "intersection_low": 360,
+      "intersection_high": 402
+    },
+    {
+      "patient": "patient060",
+      "pixels": 442368,
+      "native": 718,
+      "projected": 201,
+      "disagreement": 551,
+      "rounding_residual": 9.5367431640625e-06,
+      "intersection_low": 184,
+      "intersection_high": 201
+    },
+    {
+      "patient": "patient061",
+      "pixels": 442368,
+      "native": 1071,
+      "projected": 264,
+      "disagreement": 811,
+      "rounding_residual": 3.814697265625e-06,
+      "intersection_low": 262,
+      "intersection_high": 264
+    },
+    {
+      "patient": "patient062",
+      "pixels": 442368,
+      "native": 2333,
+      "projected": 653,
+      "disagreement": 1908,
+      "rounding_residual": 6.866455078125e-05,
+      "intersection_low": 539,
+      "intersection_high": 653
+    },
+    {
+      "patient": "patient063",
+      "pixels": 360448,
+      "native": 930,
+      "projected": 293,
+      "disagreement": 697,
+      "rounding_residual": 3.814697265625e-06,
+      "intersection_low": 263,
+      "intersection_high": 293
+    },
+    {
+      "patient": "patient064",
+      "pixels": 442368,
+      "native": 4664,
+      "projected": 1870,
+      "disagreement": 3146,
+      "rounding_residual": 5.340576171875e-05,
+      "intersection_low": 1694,
+      "intersection_high": 1870
+    },
+    {
+      "patient": "patient066",
+      "pixels": 491520,
+      "native": 1415,
+      "projected": 284,
+      "disagreement": 1285,
+      "rounding_residual": 3.814697265625e-05,
+      "intersection_low": 207,
+      "intersection_high": 284
+    },
+    {
+      "patient": "patient067",
+      "pixels": 442368,
+      "native": 3372,
+      "projected": 1165,
+      "disagreement": 2493,
+      "rounding_residual": 6.866455078125e-05,
+      "intersection_low": 1022,
+      "intersection_high": 1165
+    },
+    {
+      "patient": "patient068",
+      "pixels": 425984,
+      "native": 431,
+      "projected": 83,
+      "disagreement": 390,
+      "rounding_residual": 0.0,
+      "intersection_low": 62,
+      "intersection_high": 83
+    },
+    {
+      "patient": "patient069",
+      "pixels": 442368,
+      "native": 1676,
+      "projected": 752,
+      "disagreement": 990,
+      "rounding_residual": 3.4332275390625e-05,
+      "intersection_low": 719,
+      "intersection_high": 752
+    },
+    {
+      "patient": "patient071",
+      "pixels": 393216,
+      "native": 5979,
+      "projected": 2906,
+      "disagreement": 3455,
+      "rounding_residual": 0.0001220703125,
+      "intersection_low": 2715,
+      "intersection_high": 2906
+    },
+    {
+      "patient": "patient072",
+      "pixels": 442368,
+      "native": 4659,
+      "projected": 2484,
+      "disagreement": 2527,
+      "rounding_residual": 6.103515625e-05,
+      "intersection_low": 2308,
+      "intersection_high": 2484
+    },
+    {
+      "patient": "patient073",
+      "pixels": 425984,
+      "native": 724,
+      "projected": 331,
+      "disagreement": 475,
+      "rounding_residual": 2.288818359375e-05,
+      "intersection_low": 290,
+      "intersection_high": 331
+    },
+    {
+      "patient": "patient074",
+      "pixels": 524288,
+      "native": 156,
+      "projected": 48,
+      "disagreement": 124,
+      "rounding_residual": 0.0,
+      "intersection_low": 40,
+      "intersection_high": 48
+    },
+    {
+      "patient": "patient075",
+      "pixels": 301056,
+      "native": 251,
+      "projected": 81,
+      "disagreement": 180,
+      "rounding_residual": 1.7881393432617188e-06,
+      "intersection_low": 76,
+      "intersection_high": 81
+    },
+    {
+      "patient": "patient077",
+      "pixels": 438272,
+      "native": 4020,
+      "projected": 2444,
+      "disagreement": 2142,
+      "rounding_residual": 4.57763671875e-05,
+      "intersection_low": 2161,
+      "intersection_high": 2444
+    },
+    {
+      "patient": "patient078",
+      "pixels": 442368,
+      "native": 1229,
+      "projected": 458,
+      "disagreement": 851,
+      "rounding_residual": 1.9073486328125e-06,
+      "intersection_low": 418,
+      "intersection_high": 458
+    },
+    {
+      "patient": "patient079",
+      "pixels": 442368,
+      "native": 3296,
+      "projected": 1882,
+      "disagreement": 1664,
+      "rounding_residual": 3.814697265625e-05,
+      "intersection_low": 1757,
+      "intersection_high": 1882
+    },
+    {
+      "patient": "patient080",
+      "pixels": 442368,
+      "native": 6454,
+      "projected": 3447,
+      "disagreement": 3371,
+      "rounding_residual": 1.52587890625e-05,
+      "intersection_low": 3265,
+      "intersection_high": 3447
+    },
+    {
+      "patient": "patient081",
+      "pixels": 275968,
+      "native": 2986,
+      "projected": 2051,
+      "disagreement": 1229,
+      "rounding_residual": 4.482269287109375e-05,
+      "intersection_low": 1904,
+      "intersection_high": 2051
+    },
+    {
+      "patient": "patient083",
+      "pixels": 425984,
+      "native": 1438,
+      "projected": 554,
+      "disagreement": 908,
+      "rounding_residual": 7.62939453125e-06,
+      "intersection_low": 542,
+      "intersection_high": 554
+    },
+    {
+      "patient": "patient084",
+      "pixels": 425984,
+      "native": 2777,
+      "projected": 947,
+      "disagreement": 1972,
+      "rounding_residual": 1.52587890625e-05,
+      "intersection_low": 876,
+      "intersection_high": 947
+    },
+    {
+      "patient": "patient085",
+      "pixels": 423936,
+      "native": 3085,
+      "projected": 1020,
+      "disagreement": 2209,
+      "rounding_residual": 4.9591064453125e-05,
+      "intersection_low": 948,
+      "intersection_high": 1020
+    },
+    {
+      "patient": "patient086",
+      "pixels": 393216,
+      "native": 932,
+      "projected": 202,
+      "disagreement": 754,
+      "rounding_residual": 1.52587890625e-05,
+      "intersection_low": 190,
+      "intersection_high": 202
+    },
+    {
+      "patient": "patient088",
+      "pixels": 275968,
+      "native": 419,
+      "projected": 155,
+      "disagreement": 294,
+      "rounding_residual": 8.761882781982422e-06,
+      "intersection_low": 140,
+      "intersection_high": 155
+    },
+    {
+      "patient": "patient090",
+      "pixels": 275968,
+      "native": 1003,
+      "projected": 522,
+      "disagreement": 543,
+      "rounding_residual": 7.748603820800781e-06,
+      "intersection_low": 491,
+      "intersection_high": 522
+    },
+    {
+      "patient": "patient091",
+      "pixels": 322560,
+      "native": 909,
+      "projected": 257,
+      "disagreement": 696,
+      "rounding_residual": 3.361701965332031e-05,
+      "intersection_low": 235,
+      "intersection_high": 257
+    },
+    {
+      "patient": "patient092",
+      "pixels": 289536,
+      "native": 984,
+      "projected": 232,
+      "disagreement": 786,
+      "rounding_residual": 2.753734588623047e-05,
+      "intersection_low": 215,
+      "intersection_high": 232
+    },
+    {
+      "patient": "patient093",
+      "pixels": 322560,
+      "native": 2903,
+      "projected": 1361,
+      "disagreement": 1696,
+      "rounding_residual": 4.9114227294921875e-05,
+      "intersection_low": 1284,
+      "intersection_high": 1361
+    },
+    {
+      "patient": "patient094",
+      "pixels": 289536,
+      "native": 925,
+      "projected": 314,
+      "disagreement": 705,
+      "rounding_residual": 2.110004425048828e-05,
+      "intersection_low": 267,
+      "intersection_high": 314
+    },
+    {
+      "patient": "patient096",
+      "pixels": 289536,
+      "native": 418,
+      "projected": 76,
+      "disagreement": 358,
+      "rounding_residual": 1.9073486328125e-06,
+      "intersection_low": 68,
+      "intersection_high": 76
+    },
+    {
+      "patient": "patient097",
+      "pixels": 442368,
+      "native": 905,
+      "projected": 281,
+      "disagreement": 674,
+      "rounding_residual": 3.814697265625e-06,
+      "intersection_low": 256,
+      "intersection_high": 281
+    },
+    {
+      "patient": "patient099",
+      "pixels": 275968,
+      "native": 32,
+      "projected": 3,
+      "disagreement": 29,
+      "rounding_residual": 4.470348358154297e-08,
+      "intersection_low": 3,
+      "intersection_high": 3
+    },
+    {
+      "patient": "patient100",
+      "pixels": 525312,
+      "native": 1027,
+      "projected": 397,
+      "disagreement": 718,
+      "rounding_residual": 1.2993812561035156e-05,
+      "intersection_low": 353,
+      "intersection_high": 397
+    }
+  ],
+  "epochs": {
+    "steps": 127650,
+    "eligible": 110461,
+    "max_ce_identity_residual": 3.681814020328744e-09,
+    "last_active_batch_mean_kl": 0.037581032530280556,
+    "last_entropy_fraction": 0.967940190933075,
+    "patient024": {
+      "active": true,
+      "ce": 1.459484155930113e-05,
+      "denominator": 9.99999993922529e-09,
+      "entropy": 1.3532328921428416e-05,
+      "kl": 1.0625117283780128e-06,
+      "per_class_ce": [
+        2.3134286948334193e-06,
+        4.192751930531813e-06,
+        3.848336291412124e-06,
+        4.240324869897449e-06
+      ],
+      "per_class_target_mass": [
+        2.440380017477376e-14,
+        2.4403761211258188e-14,
+        2.4403801868839656e-14,
+        2.4403761211258188e-14
+      ],
+      "positive_weight_pixels": 2,
+      "target_entropy_before_activation": 1.3532328921428416e-05,
+      "weight_sum": 9.761512616019569e-14
+    }
+  },
+  "active_soft_mass_counterexample": {
+    "targets": [
+      [
+        0.4,
+        0.2,
+        0.2,
+        0.2
+      ],
+      [
+        0.1,
+        0.2,
+        0.5,
+        0.2
+      ]
+    ],
+    "weights": [
+      0.039035952556318754,
+      0.1195179762781593
+    ],
+    "active": true,
+    "rv_mass": 0.031710785766895615,
+    "first_pixel_rv_logit_gradient": 0.012309992203684282,
+    "finite_difference": 0.01230999220336315,
+    "teacher_match_kl": 0,
+    "teacher_match_accepted_pixels": 0,
+    "root_bg_only_single_pixel_active": false
+  },
+  "route_corruption_counterexample": {
+    "correct_anchors": 99,
+    "wrong_anchors": 1,
+    "target_initial_uniform": true,
+    "target_routes_to_wrong_anchor": true,
+    "target_true_class": 0,
+    "target_distribution": [
+      0.0875,
+      0.7374999999999999,
+      0.0875,
+      0.0875
+    ],
+    "propagated_strength": 0.65,
+    "reliability": 0.24487184184356292,
+    "route_weighted_bad_fraction": 1,
+    "accepted_label": 1,
+    "scope": "Stochastic-matrix theorem counterexample, not an executed repository graph"
+  },
+  "theory": {
+    "kappa": 0.022582421084357485,
+    "conditional_active_kl_over_kappa": 1.6641719853639783,
+    "warning": "Illustration only: online batch KL is not final/native divergence; even substituting it gives an upper bound capped at one.",
+    "neutral_wrong_source_fixture": {
+      "q": [
+        [
+          0.7181083333333332,
+          0.09826833333333333,
+          0.09181166666666667,
+          0.09181166666666667
+        ],
+        [
+          0.9788583333333332,
+          0.011351666666666666,
+          0.004895,
+          0.004895
+        ],
+        [
+          0.6311916666666666,
+          0.3590183333333333,
+          0.004895,
+          0.004895
+        ]
+      ],
+      "h": 0.6369999999999999,
+      "b": 0.010204081632653064,
+      "lower": 0.7180974999999999,
+      "reliability": 0.22148761052815352,
+      "margin": 0.61984,
+      "spatial_only_neutral_ceiling": 0.6982758620689655,
+      "general_stochastic_family_only": true,
+      "actual_bank_graph_realizability": "NOT_ESTABLISHED"
+    }
+  },
+  "inputs_sha256": {
+    "stable_guidance_world_v2_20261014/MANIFEST.json": "d7a891fd887a44aebd26e65288b13c0c313b896a69ca244b42a22f13b1e3a41e",
+    "stable_guidance_world_v2_20261014/baseline_forensics/train_all/DIAGNOSTICS.json": "845a15b7b81e79b5d919ceebae9d22edad7e7d3a37a24459000fde22de2976f7",
+    "stable_guidance_world_v2_20261014/run_evidence/run/bank/FROZEN.json": "953a3aca04c2d0f27ade1c824c52d8f9cf9bb010932dd83a85e478d27c5239f5",
+    "stable_guidance_world_v2_20261014/run_evidence/run/student/training.json": "0f52c32d37ff03c36ba5cd19d88145a38d3ec63a94762423f6b5b92dd6b29b3a",
+    "stable_guidance_world_v2_20261014/baseline_forensics/val_counts/DIAGNOSTICS.json": "b5c5fcf23335d89b969877ed2e4f5efd47c0d95652f2206b1d9507d0c99548b9",
+    "stable_guidance_world_v2_20261014/run_evidence/post_training/val_counts/DIAGNOSTICS.json": "f62bcc8ab7d974840cdf4e3cafe2fa57fd4fe9fc5794a4038c6472c8abe724fa"
+  },
+  "reviewed_drafts_sha256": {
+    "GEOMETRY_ATTRIBUTION_VAL_STRATA.json": "b97bbcbd9ab48df4a42b027d8634730a7445d2ea0606ed2bdbe4497824623903",
+    "PROVENANCE_METRICS.md": "0e4bacb90116327c237c7b49b22dd60f2795f778c62099e94fc93512d94da4d5",
+    "STAGEWISE_AVAILABILITY.json": "4c4f83c81e69653872b447041bf0facfb06acbfc091e5f5e875596f6c5f1b7eb",
+    "TARGET_SIGNAL_AUDIT.md": "af522f9b8ade02c899ef8bc7fe51f2575ed04fd051810e2b0295b2d2cf2415ac",
+    "ORCHESTRATION.json": "b972c2ebbff0650b6582a4363f4d8284e25a8835c6ac98480250480ef47d4dca",
+    "GEOMETRY_ATTRIBUTION.md": "e635ba450402fad7dcb0dbcefe9ab4b9d2dbd42072744e546d38f2851b8b5ee8",
+    "THEORY_PRIOR_ART_CHECKS.json": "e8953d7722e83ce02dd4a5daf70b742db83a79a57c263e5059851f6e7eb5ceb3",
+    "PROBLEM_FORMULATION.md": "a7fc7d03f246176870e048ac4fdf9741f0895b29000b6a8aad6399dacef1c005",
+    "RESEARCH_UPDATE.md": "7a140107d74ad4a85d7b95bda58ee04363afc1ee567a36d32501db5493535803",
+    "THEORY_PRIOR_ART.md": "d9855c2185898755d37d9d76a9b7616176c69356ff903f9f16782062ebb66cd9",
+    "PROVENANCE_METRICS_checks.json": "5cc1c7f2873c36f8171b56449c93f3f0137b0ba1b3407f34acb984c457646ea0",
+    "LEARNING_MECHANISM_CHECKS.json": "57d2f6cccd3bd5a0306e5c143a0a823ca2b3f6f1f165d1367969dd1d3f864844",
+    "LEARNING_MECHANISM.md": "03a89417dddd7acea20779fe308e62a0357e9f130a109eea622233d4267ed8ca",
+    "GEOMETRY_ATTRIBUTION_CHECKS.json": "086b528bcac61665dca02d5c830c4ad4d690081c90777dfbf267c2752b74ae0a",
+    "ROOT_MATH_CHECKS.json": "a9652daf070da4f8cc3b29efae2b354f7bfb2e225e90fc94b6c88e274e7560cb",
+    "TARGET_SIGNAL_CHECKS.json": "524448c7cd1a8d405e99dc28ecd25f388526dffcca76607faf76134d0a847eaa"
+  },
+  "script_sha256": "c96e695e2dfd3a3851d82957c612363d8716bc6bb5dc435b45d3f5e7a3666785",
+  "no_training": true,
+  "no_model_execution": true,
+  "no_reference_arrays_read": true,
+  "official_test_scored": false,
+  "val_exposed_development": true
+}
