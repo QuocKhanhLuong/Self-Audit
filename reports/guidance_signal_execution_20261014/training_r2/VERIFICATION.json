@@ -1,0 +1,78 @@
+{
+  "status": "VERIFIED_COMPLETED_Q64_Z64",
+  "frozen_payload_hashes": "PASS",
+  "same_initial_checkpoint": "PASS",
+  "same_schedule": "PASS",
+  "changed_weights_both_arms": "PASS",
+  "cuda_deterministic_policy": {
+    "cublas_workspace_config": ":4096:8",
+    "cudnn_benchmark": false,
+    "cudnn_deterministic": true,
+    "deterministic_warn_only": false,
+    "scope": "deterministic_policy_not_cross_device_bitwise_equivalence",
+    "torch_deterministic_algorithms": true
+  },
+  "protocol_revision": "TRAIN_support_tolerance_r2_user_approved",
+  "max_excluded_fraction": 1.3718879278030748e-06,
+  "allowed_fraction": 2e-06,
+  "training_elapsed_seconds": 52.075626842997735,
+  "anatomical_accuracy": "NOT_EVALUATED",
+  "arms": {
+    "Q": {
+      "steps": 64,
+      "active_fraction": 1.0,
+      "mean_feature_loss": 0.1762544538360089,
+      "mean_semantic": {
+        "ce": 1.1457472993060946,
+        "entropy": 1.1086134938523173,
+        "kl": 0.03713380757835694
+      },
+      "fixed_before": {
+        "ce": 1.2194138765335083,
+        "entropy": 1.185278296470642,
+        "kl": 0.03413574770092964
+      },
+      "fixed_after": {
+        "ce": 1.199983835220337,
+        "entropy": 1.185278296470642,
+        "kl": 0.014705544337630272
+      },
+      "elapsed_seconds": 13.10358663299121,
+      "peak_reserved_mib": 4568.0,
+      "actual_patient_step_counts": {
+        "patient017": 22,
+        "patient013": 38,
+        "patient002": 4
+      },
+      "final_model_hash": "7d3505023e1c1664aa9a60fecb0475a2e44fdff2fe11a2af8906da62bdc50c1e"
+    },
+    "Z": {
+      "steps": 64,
+      "active_fraction": 1.0,
+      "mean_feature_loss": 0.1881989403627813,
+      "mean_semantic": {
+        "ce": 0.42673860723152757,
+        "entropy": 0.023087664381364448,
+        "kl": 0.4036509352736175
+      },
+      "fixed_before": {
+        "ce": 0.5904207229614258,
+        "entropy": 0.021195854991674423,
+        "kl": 0.5692248940467834
+      },
+      "fixed_after": {
+        "ce": 0.27178215980529785,
+        "entropy": 0.021195854991674423,
+        "kl": 0.25058630108833313
+      },
+      "elapsed_seconds": 12.630878374999156,
+      "peak_reserved_mib": 4568.0,
+      "actual_patient_step_counts": {
+        "patient017": 22,
+        "patient013": 38,
+        "patient002": 4
+      },
+      "final_model_hash": "d756aaa4e2338d15a0e4e753b128cfc8dae92556d3081cb62e3b26013db32f13"
+    }
+  }
+}

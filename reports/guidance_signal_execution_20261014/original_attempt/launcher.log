@@ -1,0 +1,197 @@
+wandb: Currently logged in as: nthne (nthne-hanoi-university-of-science-and-technology) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: creating run
+wandb: Tracking run with wandb version 0.19.11
+wandb: Run data is saved locally in ${REPO_ROOT}/runs/guidance_signal_4070_20261014_164424/tracking/wandb/run-20261014_165311-kqlli5f5
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run guidance_signal_4070_20261014_164424
+wandb: ⭐️ View project at https://wandb.ai/nthne-hanoi-university-of-science-and-technology/self-audit-stable-guidance
+wandb: 🚀 View run at https://wandb.ai/nthne-hanoi-university-of-science-and-technology/self-audit-stable-guidance/runs/kqlli5f5
+2026-10-14 16:53:14 W&B https://wandb.ai/nthne-hanoi-university-of-science-and-technology/self-audit-stable-guidance/runs/kqlli5f5
+2026-10-14 16:53:14 COMMAND ${PYTHON_ENV}/bin/python -B -m experiments.guidance_signal_20261014.prepare --bank ${REPO_ROOT}/runs/stable_guidance_world_v2_acdc_4070_20261014_024155/run/bank --recipe ${REPO_ROOT}/runs/stable_guidance_world_v2_acdc_4070_20261014_024155/run/RECIPE.json --expected-bank-sha 04fb2d30df6c0e0ed235dcf851a491895661b7fd4763e6b89ce95ca6811accae --patients patient001 patient002 patient013 patient017 --output ${REPO_ROOT}/runs/guidance_signal_4070_20261014_164424/signals_train4
+{"status": "PASS_REPRODUCTION", "patients": ["patient001", "patient002", "patient013", "patient017"]}
+2026-10-14 16:55:32 prepare completed successfully
+2026-10-14 16:55:32 COMMAND ${PYTHON_ENV}/bin/python -B -m experiments.guidance_signal_20261014.pilot --bank ${REPO_ROOT}/runs/stable_guidance_world_v2_acdc_4070_20261014_024155/run/bank --signals ${REPO_ROOT}/runs/guidance_signal_4070_20261014_164424/signals_train4 --checkpoint ${REPO_ROOT}/runs/stable_guidance_world_v2_acdc_4070_20261014_024155/run/student/last.pt --expected-checkpoint-sha 90bc16bb9f89963b452355376673e3ba9aa24b38870e4595237d75e402ce873e --plan ${REPO_ROOT}/runs/guidance_signal_4070_20261014_164424/pilot_plan.json --write-plan-only --patient-ids patient001 patient002 patient013 patient017 --steps 64 --seed 42
+{"status": "PLAN_WRITTEN_NO_OPTIMIZER", "plan": "${REPO_ROOT}/runs/guidance_signal_4070_20261014_164424/pilot_plan.json", "plan_sha256": "24e85b5ee8f30bf99d99d7eae8a33c3e7ada15aa29d66a4ce0102365b66f1b3f"}
+2026-10-14 16:55:50 plan completed successfully
+2026-10-14 16:55:50 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=98%; need 8192 MiB
+2026-10-14 16:56:50 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=94%; need 8192 MiB
+2026-10-14 16:57:50 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 16:58:50 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 16:59:51 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=98%; need 8192 MiB
+2026-10-14 17:00:51 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=98%; need 8192 MiB
+2026-10-14 17:01:51 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 17:02:52 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:03:52 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 17:04:52 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=98%; need 8192 MiB
+2026-10-14 17:05:52 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=0%; need 8192 MiB
+2026-10-14 17:06:53 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:07:53 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=98%; need 8192 MiB
+2026-10-14 17:08:53 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:09:53 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:10:54 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:11:54 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:12:54 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=0%; need 8192 MiB
+2026-10-14 17:13:54 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=98%; need 8192 MiB
+2026-10-14 17:14:55 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 17:15:55 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:16:55 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=94%; need 8192 MiB
+2026-10-14 17:17:55 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=91%; need 8192 MiB
+2026-10-14 17:18:56 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:19:56 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=0%; need 8192 MiB
+2026-10-14 17:20:56 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=93%; need 8192 MiB
+2026-10-14 17:21:56 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:22:57 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=93%; need 8192 MiB
+2026-10-14 17:23:57 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 17:24:57 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:25:57 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:26:58 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:27:58 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=98%; need 8192 MiB
+2026-10-14 17:28:58 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:29:58 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:30:58 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=98%; need 8192 MiB
+2026-10-14 17:31:59 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=91%; need 8192 MiB
+2026-10-14 17:32:59 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:33:59 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:34:59 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=93%; need 8192 MiB
+2026-10-14 17:35:59 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:37:00 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:38:00 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=94%; need 8192 MiB
+2026-10-14 17:39:00 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 17:40:00 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:41:01 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:42:01 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 17:43:01 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:44:01 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:45:02 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 17:46:02 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:47:02 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=93%; need 8192 MiB
+2026-10-14 17:48:02 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 17:49:03 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:50:03 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 17:51:03 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=98%; need 8192 MiB
+2026-10-14 17:52:03 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:53:04 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:54:04 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:55:04 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 17:56:04 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=92%; need 8192 MiB
+2026-10-14 17:57:05 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=0%; need 8192 MiB
+2026-10-14 17:58:05 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 17:59:05 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=0%; need 8192 MiB
+2026-10-14 18:00:05 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 18:01:06 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 18:02:06 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 18:03:06 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 18:04:06 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=98%; need 8192 MiB
+2026-10-14 18:05:07 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=92%; need 8192 MiB
+2026-10-14 18:06:07 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=98%; need 8192 MiB
+2026-10-14 18:07:07 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 18:08:08 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 18:09:08 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 18:10:08 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=98%; need 8192 MiB
+2026-10-14 18:11:09 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 18:12:09 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 18:13:09 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 18:14:09 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 18:15:10 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 18:16:10 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=91%; need 8192 MiB
+2026-10-14 18:17:10 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 18:18:11 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=98%; need 8192 MiB
+2026-10-14 18:19:11 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 18:20:11 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 18:21:11 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 18:22:12 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=93%; need 8192 MiB
+2026-10-14 18:23:12 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 18:24:12 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 18:25:12 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=94%; need 8192 MiB
+2026-10-14 18:26:13 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 18:27:13 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 18:28:13 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 18:29:13 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 18:30:13 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 18:31:14 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=95%; need 8192 MiB
+2026-10-14 18:32:14 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 18:33:14 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 18:34:14 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=0%; need 8192 MiB
+2026-10-14 18:35:15 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 18:36:15 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=98%; need 8192 MiB
+2026-10-14 18:37:15 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 18:38:15 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 18:39:16 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 18:40:16 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 18:41:16 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=94%; need 8192 MiB
+2026-10-14 18:42:16 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 18:43:17 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 18:44:17 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 18:45:17 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=92%; need 8192 MiB
+2026-10-14 18:46:17 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 18:47:18 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 18:48:18 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 18:49:18 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 18:50:18 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 18:51:18 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 18:52:19 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=93%; need 8192 MiB
+2026-10-14 18:53:19 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 18:54:19 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=93%; need 8192 MiB
+2026-10-14 18:55:19 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 18:56:20 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=92%; need 8192 MiB
+2026-10-14 18:57:20 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=94%; need 8192 MiB
+2026-10-14 18:58:20 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 18:59:20 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=94%; need 8192 MiB
+2026-10-14 19:00:21 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 19:01:21 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 19:02:21 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 19:03:21 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 19:04:22 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=98%; need 8192 MiB
+2026-10-14 19:05:22 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 19:06:22 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=100%; need 8192 MiB
+2026-10-14 19:07:22 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=76%; need 8192 MiB
+2026-10-14 19:08:23 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 19:09:23 GPU QUEUE: RTX 4070 free=3413 MiB, utilization=99%; need 8192 MiB
+2026-10-14 19:10:23 GPU QUEUE: RTX 4070 free=11871 MiB, utilization=0%; need 8192 MiB
+2026-10-14 19:10:38 GPU VRAM gate passed for paired_train
+2026-10-14 19:10:38 COMMAND ${PYTHON_ENV}/bin/python -B -m experiments.guidance_signal_20261014.pilot --bank ${REPO_ROOT}/runs/stable_guidance_world_v2_acdc_4070_20261014_024155/run/bank --signals ${REPO_ROOT}/runs/guidance_signal_4070_20261014_164424/signals_train4 --checkpoint ${REPO_ROOT}/runs/stable_guidance_world_v2_acdc_4070_20261014_024155/run/student/last.pt --expected-checkpoint-sha 90bc16bb9f89963b452355376673e3ba9aa24b38870e4595237d75e402ce873e --plan ${REPO_ROOT}/runs/guidance_signal_4070_20261014_164424/pilot_plan.json --expected-plan-sha 24e85b5ee8f30bf99d99d7eae8a33c3e7ada15aa29d66a4ce0102365b66f1b3f --device cuda --output ${REPO_ROOT}/runs/guidance_signal_4070_20261014_164424/pilot_Q_Z_64
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "${REPO_ROOT}/.worktrees/guidance-signal-4bfc1f9/experiments/guidance_signal_20261014/pilot.py", line 592, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "${REPO_ROOT}/.worktrees/guidance-signal-4bfc1f9/experiments/guidance_signal_20261014/pilot.py", line 585, in main
+    report = run_pilot(args.bank, args.signals, args.checkpoint, args.expected_checkpoint_sha,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${REPO_ROOT}/.worktrees/guidance-signal-4bfc1f9/experiments/guidance_signal_20261014/pilot.py", line 407, in run_pilot
+    schedule_mass.append(_check_mass_values(float(total[ti, zi].sum()), float(excluded[ti, zi].sum())))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${REPO_ROOT}/.worktrees/guidance-signal-4bfc1f9/experiments/guidance_signal_20261014/pilot.py", line 124, in _check_mass_values
+    raise ValueError("substantial original weight lies outside valid h support")
+ValueError: substantial original weight lies outside valid h support
+Traceback (most recent call last):
+  File "${REPO_ROOT}/runs/guidance_signal_4070_20261014_164424/worker.py", line 221, in <module>
+    main()
+  File "${REPO_ROOT}/runs/guidance_signal_4070_20261014_164424/worker.py", line 198, in main
+    command('paired_train', 'pilot', [*common, '--expected-plan-sha', expected, '--device', 'cuda',
+  File "${REPO_ROOT}/runs/guidance_signal_4070_20261014_164424/worker.py", line 124, in command
+    raise RuntimeError(f'{stage} exited {proc.returncode}; see {log_path}')
+RuntimeError: paired_train exited 1; see ${REPO_ROOT}/runs/guidance_signal_4070_20261014_164424/logs/paired_train.log
+wandb: uploading wandb-summary.json
+wandb:                                                                                
+wandb: 
+wandb: Run history:
+wandb:                queue/free_mib ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: queue/gpu_utilization_percent ██████▇█▁████▇████▇█▇█▇█████▁███████████
+wandb: 
+wandb: Run summary:
+wandb:                     job/stage paired_train
+wandb:                    job/status FAILED
+wandb:          job/training_started True
+wandb:        preflight/passed_tests 86
+wandb:                queue/free_mib 11871
+wandb: queue/gpu_utilization_percent 0
+wandb:                         scope Technical TRAIN cont...
+wandb:       telemetry/step_delivery Each completed arm p...
+wandb:  trained_arms/accuracy_status NOT_EVALUATED_NO_REV...
+wandb: 
+wandb: 🚀 View run guidance_signal_4070_20261014_164424 at: https://wandb.ai/nthne-hanoi-university-of-science-and-technology/self-audit-stable-guidance/runs/kqlli5f5
+wandb: ⭐️ View project at: https://wandb.ai/nthne-hanoi-university-of-science-and-technology/self-audit-stable-guidance
+wandb: Synced 4 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ${REPO_ROOT}/runs/guidance_signal_4070_20261014_164424/tracking/wandb/run-20261014_165311-kqlli5f5/logs

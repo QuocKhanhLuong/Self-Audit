@@ -1,5 +1,25 @@
 # World-left-v2 attribution: isolated code and execution-host handoff
 
+## Execution-host protocol amendment r2
+
+This isolated checkout includes a user-approved TRAIN-support amendment: the
+denominator-relative excluded-weight limit is **2e-6**, replacing the original
+**1e-6** limit described in the published procedure below. The original fixed
+schedule had one failing batch (step 10: 1.3718879278030748e-6); the original run
+stopped before any optimizer update. This is a disclosed protocol change based
+on TRAIN support, not reproduction under the original tolerance. The amendment
+preserves the checkpoint, patient subset, seed, schedule, 64 steps per arm,
+min_h, Z validity/error bounds, weights, denominator, model, and objectives.
+Each new plan pins the amended limit and receives a new canonical digest.
+The execution host retains failed receipts and the approval in the run's
+PROTOCOL_AMENDMENT.json. Step logs report completed optimizer updates.
+
+The completed Q64/Z64 pilot, fixed VAL18 evaluation, failed attempts, source
+snapshots and W&B links are published in the
+[execution report](../../reports/guidance_signal_execution_20261014/README.txt).
+The original handoff status and procedure below describe the pre-execution
+package; the report records what actually ran and the disclosed amendments.
+
 **Status: opt-in experimental code, packaged for Git publication.** See [publication scope](../../reports/guidance_research_continuation_20261014/PUBLICATION.md). Base repository `b937e3b746608725e43d3bc3cef8861666d152dc`. The current task implements and checks software locally; a separate Codex on the 4070 runs original-artifact diagnostics. No remote connection, real-data pilot or new full training run is triggered by this package.
 
 Use a separate clean checkout/worktree of the Git commit containing this directory. For the historical ZIP overlay, use its recorded base and copy the experimental/report directories as described in that archive. The hash-pinned published `reports/stable_guidance_world_v2_20261014/` must remain unchanged. Importing top-level production `src` is deliberately avoided: `runtime.py` loads the eleven verified executed-source modules under a private package name. The earlier experimental changes are not assumed merged into production.

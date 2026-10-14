@@ -1,0 +1,3286 @@
+{
+  "allow_verified_acdc_frame_grid": true,
+  "frames": [
+    {
+      "frame_index": 0,
+      "geometry_verification": {
+        "cine_sha256": "64c3e1d1d9a8c4669ad468fe51fcecfab0e863e13f92519dbdc37f11c5ef576c",
+        "frame_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "frame_image": "${REPO_ROOT}/data/ACDC/training/patient004/patient004_frame01.nii",
+        "frame_image_sha256": "44e9f14bc23f3e07f29d86e090b4c706e9a951c4362ed064591522578ce4329f",
+        "frame_index": 0,
+        "physical_geometry": "frozen_cine_affine",
+        "policy": "exact_frame_cine_voxel_identity_no_resampling",
+        "reference_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ]
+      },
+      "metrics": {
+        "accuracy_accepted_pixels": 0.844421807650862,
+        "accuracy_all_pixels": 0.844421807650862,
+        "classes": {
+          "BG": {
+            "dice": 0.9225104840429312,
+            "fn": 78563,
+            "fp": 3202,
+            "hd95_mm": null,
+            "iou": 0.8561665523246609,
+            "predicted_pixels": 489907,
+            "reference_pixels": 565268,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 486705
+          },
+          "LV": {
+            "dice": 0.47702573879885607,
+            "fn": 7700,
+            "fp": 6015,
+            "hd95_mm": 118.1060230616141,
+            "iou": 0.31321982974461693,
+            "predicted_pixels": 12270,
+            "reference_pixels": 13955,
+            "surface_status": "MEASURED",
+            "tp": 6255
+          },
+          "MYO": {
+            "dice": 0.1697438040962799,
+            "fn": 687,
+            "fp": 80752,
+            "hd95_mm": 145.08813847297964,
+            "iou": 0.09274319326233234,
+            "predicted_pixels": 89077,
+            "reference_pixels": 9012,
+            "surface_status": "MEASURED",
+            "tp": 8325
+          },
+          "RV": {
+            "dice": 0.056041192671536344,
+            "fn": 5451,
+            "fp": 2432,
+            "hd95_mm": 126.00461298984025,
+            "iou": 0.028828384871257853,
+            "predicted_pixels": 2666,
+            "reference_pixels": 5685,
+            "surface_status": "MEASURED",
+            "tp": 234
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 593920,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient004/patient004_frame01_gt.nii",
+      "patient_id": "patient004",
+      "reference_sha256": "5df66dae7b3dc3458c2257a772c1f663c999a556db50369326486058f0ed1be4"
+    },
+    {
+      "frame_index": 14,
+      "geometry_verification": {
+        "cine_sha256": "64c3e1d1d9a8c4669ad468fe51fcecfab0e863e13f92519dbdc37f11c5ef576c",
+        "frame_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "frame_image": "${REPO_ROOT}/data/ACDC/training/patient004/patient004_frame15.nii",
+        "frame_image_sha256": "ac59ffb6b32bfdfe57510717cb3c016a19fbe2173b7e4799b436af6e9fa32dd5",
+        "frame_index": 14,
+        "physical_geometry": "frozen_cine_affine",
+        "policy": "exact_frame_cine_voxel_identity_no_resampling",
+        "reference_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ]
+      },
+      "metrics": {
+        "accuracy_accepted_pixels": 0.8434587149784483,
+        "accuracy_all_pixels": 0.8434587149784483,
+        "classes": {
+          "BG": {
+            "dice": 0.9206193901296503,
+            "fn": 80523,
+            "fp": 3529,
+            "hd95_mm": null,
+            "iou": 0.852914515705661,
+            "predicted_pixels": 490927,
+            "reference_pixels": 567921,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 487398
+          },
+          "LV": {
+            "dice": 0.4355733159354102,
+            "fn": 6775,
+            "fp": 7067,
+            "hd95_mm": 121.47902042102648,
+            "iou": 0.27842360423291457,
+            "predicted_pixels": 12408,
+            "reference_pixels": 12116,
+            "surface_status": "MEASURED",
+            "tp": 5341
+          },
+          "MYO": {
+            "dice": 0.16795164374267563,
+            "fn": 1191,
+            "fp": 79749,
+            "hd95_mm": 144.53189589119276,
+            "iou": 0.09167424165909167,
+            "predicted_pixels": 87918,
+            "reference_pixels": 9360,
+            "surface_status": "MEASURED",
+            "tp": 8169
+          },
+          "RV": {
+            "dice": 0.010848400556328233,
+            "fn": 4484,
+            "fp": 2628,
+            "hd95_mm": 129.60329151602843,
+            "iou": 0.005453782687735981,
+            "predicted_pixels": 2667,
+            "reference_pixels": 4523,
+            "surface_status": "MEASURED",
+            "tp": 39
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 593920,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient004/patient004_frame15_gt.nii",
+      "patient_id": "patient004",
+      "reference_sha256": "cfc1349ef33efa329f4872f6e010306a48734f03ad3b513eecad317cd9a66d53"
+    },
+    {
+      "frame_index": 0,
+      "geometry_verification": {
+        "cine_sha256": "6ca2f6b6570a0c94de58388036da49d1570aa76e31ff6abac3cc28fca623f054",
+        "frame_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "frame_image": "${REPO_ROOT}/data/ACDC/training/patient005/patient005_frame01.nii",
+        "frame_image_sha256": "09a5b9e0ca825935228a9094a52b2f7ec2585a91ea64c8f7619beb896ab00284",
+        "frame_index": 0,
+        "physical_geometry": "frozen_cine_affine",
+        "policy": "exact_frame_cine_voxel_identity_no_resampling",
+        "reference_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ]
+      },
+      "metrics": {
+        "accuracy_accepted_pixels": 0.8183955439814815,
+        "accuracy_all_pixels": 0.8183955439814815,
+        "classes": {
+          "BG": {
+            "dice": 0.9085613785306003,
+            "fn": 85513,
+            "fp": 1831,
+            "hd95_mm": null,
+            "iou": 0.8324438595616193,
+            "predicted_pixels": 435769,
+            "reference_pixels": 519451,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 433938
+          },
+          "LV": {
+            "dice": 0.5405520298788449,
+            "fn": 5804,
+            "fp": 9327,
+            "hd95_mm": 104.54045741787142,
+            "iou": 0.3703811584553928,
+            "predicted_pixels": 18228,
+            "reference_pixels": 14705,
+            "surface_status": "MEASURED",
+            "tp": 8901
+          },
+          "MYO": {
+            "dice": 0.1695896602603612,
+            "fn": 1104,
+            "fp": 87818,
+            "hd95_mm": 114.09119860992156,
+            "iou": 0.09265117038427788,
+            "predicted_pixels": 96898,
+            "reference_pixels": 10184,
+            "surface_status": "MEASURED",
+            "tp": 9080
+          },
+          "RV": {
+            "dice": 0.11623771642489471,
+            "fn": 7999,
+            "fp": 1444,
+            "hd95_mm": 130.80168949963314,
+            "iou": 0.061705087440381556,
+            "predicted_pixels": 2065,
+            "reference_pixels": 8620,
+            "surface_status": "MEASURED",
+            "tp": 621
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 552960,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient005/patient005_frame01_gt.nii",
+      "patient_id": "patient005",
+      "reference_sha256": "09bb6dec25a5be3ac43f38f3ffe683bc1ec8dd89944d48c177d3625c0cfce33d"
+    },
+    {
+      "frame_index": 12,
+      "geometry_verification": {
+        "cine_sha256": "6ca2f6b6570a0c94de58388036da49d1570aa76e31ff6abac3cc28fca623f054",
+        "frame_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "frame_image": "${REPO_ROOT}/data/ACDC/training/patient005/patient005_frame13.nii",
+        "frame_image_sha256": "03cdc9b19864162f8a337ee977002ea189321c1c48789a1c30d1a813c5971f74",
+        "frame_index": 12,
+        "physical_geometry": "frozen_cine_affine",
+        "policy": "exact_frame_cine_voxel_identity_no_resampling",
+        "reference_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ]
+      },
+      "metrics": {
+        "accuracy_accepted_pixels": 0.8155309606481481,
+        "accuracy_all_pixels": 0.8155309606481481,
+        "classes": {
+          "BG": {
+            "dice": 0.903078769655035,
+            "fn": 91230,
+            "fp": 2116,
+            "hd95_mm": null,
+            "iou": 0.8232849767809037,
+            "predicted_pixels": 436999,
+            "reference_pixels": 526113,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 434883
+          },
+          "LV": {
+            "dice": 0.45070527373553165,
+            "fn": 5277,
+            "fp": 9482,
+            "hd95_mm": 114.52184352847702,
+            "iou": 0.29090996444700684,
+            "predicted_pixels": 15537,
+            "reference_pixels": 11332,
+            "surface_status": "MEASURED",
+            "tp": 6055
+          },
+          "MYO": {
+            "dice": 0.18007812145983815,
+            "fn": 1810,
+            "fp": 88661,
+            "hd95_mm": 118.32454619330817,
+            "iou": 0.09894827002370377,
+            "predicted_pixels": 98596,
+            "reference_pixels": 11745,
+            "surface_status": "MEASURED",
+            "tp": 9935
+          },
+          "RV": {
+            "dice": 0.02965344765987853,
+            "fn": 3687,
+            "fp": 1745,
+            "hd95_mm": 137.1960418753034,
+            "iou": 0.015049864007252946,
+            "predicted_pixels": 1828,
+            "reference_pixels": 3770,
+            "surface_status": "MEASURED",
+            "tp": 83
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 552960,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient005/patient005_frame13_gt.nii",
+      "patient_id": "patient005",
+      "reference_sha256": "24400992788b67046b72225cfa89adca7ff78d24c2994240f4fd0e2fe567870b"
+    },
+    {
+      "frame_index": 0,
+      "geometry_verification": null,
+      "metrics": {
+        "accuracy_accepted_pixels": 0.8449728260869566,
+        "accuracy_all_pixels": 0.8449728260869566,
+        "classes": {
+          "BG": {
+            "dice": 0.9213223315502359,
+            "fn": 64884,
+            "fp": 508,
+            "hd95_mm": null,
+            "iou": 0.8541220037254749,
+            "predicted_pixels": 383381,
+            "reference_pixels": 447757,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 382873
+          },
+          "LV": {
+            "dice": 0.6666933932007697,
+            "fn": 4329,
+            "fp": 3985,
+            "hd95_mm": null,
+            "iou": 0.5000300679535751,
+            "predicted_pixels": 12300,
+            "reference_pixels": 12644,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 8315
+          },
+          "MYO": {
+            "dice": 0.18030747110545817,
+            "fn": 32,
+            "fp": 59258,
+            "hd95_mm": null,
+            "iou": 0.09908677880597469,
+            "predicted_pixels": 65779,
+            "reference_pixels": 6553,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 6521
+          },
+          "RV": {
+            "dice": 0.04492902092785014,
+            "fn": 3779,
+            "fp": 9273,
+            "hd95_mm": null,
+            "iou": 0.02298076203308631,
+            "predicted_pixels": 9580,
+            "reference_pixels": 4086,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 307
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 471040,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient012/patient012_frame01_gt.nii",
+      "patient_id": "patient012",
+      "reference_sha256": "4d7e5feaf88c2732b88305e4784bd5bbbb490283f752f93deac21e0f855b7355"
+    },
+    {
+      "frame_index": 12,
+      "geometry_verification": null,
+      "metrics": {
+        "accuracy_accepted_pixels": 0.8347868546195653,
+        "accuracy_all_pixels": 0.8347868546195653,
+        "classes": {
+          "BG": {
+            "dice": 0.9140344790457846,
+            "fn": 71560,
+            "fp": 296,
+            "hd95_mm": null,
+            "iou": 0.8416790969962301,
+            "predicted_pixels": 382303,
+            "reference_pixels": 453567,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 382007
+          },
+          "LV": {
+            "dice": 0.5514994144900972,
+            "fn": 4139,
+            "fp": 4670,
+            "hd95_mm": null,
+            "iou": 0.38073813708260107,
+            "predicted_pixels": 10086,
+            "reference_pixels": 9555,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 5416
+          },
+          "MYO": {
+            "dice": 0.15479984401683541,
+            "fn": 46,
+            "fp": 62809,
+            "hd95_mm": null,
+            "iou": 0.08389325326842635,
+            "predicted_pixels": 68565,
+            "reference_pixels": 5802,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 5756
+          },
+          "RV": {
+            "dice": 0.006392394689395181,
+            "fn": 2077,
+            "fp": 10047,
+            "hd95_mm": null,
+            "iou": 0.0032064457781797256,
+            "predicted_pixels": 10086,
+            "reference_pixels": 2116,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 39
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 471040,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient012/patient012_frame13_gt.nii",
+      "patient_id": "patient012",
+      "reference_sha256": "e13510033c012d893fa41d1484481984510db8ba61ab62bdee1b99bd47cdbb2a"
+    },
+    {
+      "frame_index": 0,
+      "geometry_verification": null,
+      "metrics": {
+        "accuracy_accepted_pixels": 0.7874692563657407,
+        "accuracy_all_pixels": 0.7874692563657407,
+        "classes": {
+          "BG": {
+            "dice": 0.8995753952147314,
+            "fn": 86100,
+            "fp": 9404,
+            "hd95_mm": null,
+            "iou": 0.8174802628938582,
+            "predicted_pixels": 437153,
+            "reference_pixels": 513849,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 427749
+          },
+          "LV": {
+            "dice": 0.21145206731135308,
+            "fn": 15099,
+            "fp": 5613,
+            "hd95_mm": null,
+            "iou": 0.11822555238622334,
+            "predicted_pixels": 8390,
+            "reference_pixels": 17876,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 2777
+          },
+          "MYO": {
+            "dice": 0.08441139580720301,
+            "fn": 3654,
+            "fp": 98544,
+            "hd95_mm": null,
+            "iou": 0.04406551366115107,
+            "predicted_pixels": 103255,
+            "reference_pixels": 8365,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 4711
+          },
+          "RV": {
+            "dice": 0.02372005636449037,
+            "fn": 12668,
+            "fp": 3960,
+            "hd95_mm": null,
+            "iou": 0.012002376708259061,
+            "predicted_pixels": 4162,
+            "reference_pixels": 12870,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 202
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 552960,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient014/patient014_frame01_gt.nii",
+      "patient_id": "patient014",
+      "reference_sha256": "f72b8bbd8f9ba23b16841aec28d2bbcb509ebf95641e80bcb6e775dbe4fb00ff"
+    },
+    {
+      "frame_index": 12,
+      "geometry_verification": null,
+      "metrics": {
+        "accuracy_accepted_pixels": 0.7847312644675926,
+        "accuracy_all_pixels": 0.7847312644675926,
+        "classes": {
+          "BG": {
+            "dice": 0.8952047733067358,
+            "fn": 92094,
+            "fp": 7825,
+            "hd95_mm": null,
+            "iou": 0.810290225443996,
+            "predicted_pixels": 434600,
+            "reference_pixels": 518869,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 426775
+          },
+          "LV": {
+            "dice": 0.1490763467252293,
+            "fn": 13606,
+            "fp": 6155,
+            "hd95_mm": null,
+            "iou": 0.08054159687325517,
+            "predicted_pixels": 7886,
+            "reference_pixels": 15337,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 1731
+          },
+          "MYO": {
+            "dice": 0.09204776662688977,
+            "fn": 3695,
+            "fp": 102066,
+            "hd95_mm": null,
+            "iou": 0.04824427206133799,
+            "predicted_pixels": 107427,
+            "reference_pixels": 9056,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 5361
+          },
+          "RV": {
+            "dice": 0.009101608473911338,
+            "fn": 9640,
+            "fp": 2989,
+            "hd95_mm": null,
+            "iou": 0.004571608733349097,
+            "predicted_pixels": 3047,
+            "reference_pixels": 9698,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 58
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 552960,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient014/patient014_frame13_gt.nii",
+      "patient_id": "patient014",
+      "reference_sha256": "12abb14bc581049a7cf14a6f3e349284dea8bd6cbb6bc655c55b21b38a78b904"
+    },
+    {
+      "frame_index": 0,
+      "geometry_verification": null,
+      "metrics": {
+        "accuracy_accepted_pixels": 0.885304140946502,
+        "accuracy_all_pixels": 0.885304140946502,
+        "classes": {
+          "BG": {
+            "dice": 0.9473189794870844,
+            "fn": 40452,
+            "fp": 7889,
+            "hd95_mm": null,
+            "iou": 0.8999107621656428,
+            "predicted_pixels": 442527,
+            "reference_pixels": 475090,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 434638
+          },
+          "LV": {
+            "dice": 0.24345701241077744,
+            "fn": 8529,
+            "fp": 3236,
+            "hd95_mm": null,
+            "iou": 0.13860008786059452,
+            "predicted_pixels": 5129,
+            "reference_pixels": 10422,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 1893
+          },
+          "MYO": {
+            "dice": 0.14511278195488722,
+            "fn": 2090,
+            "fp": 45664,
+            "hd95_mm": null,
+            "iou": 0.07823267126064046,
+            "predicted_pixels": 49717,
+            "reference_pixels": 6143,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 4053
+          },
+          "RV": {
+            "dice": 0.0,
+            "fn": 6009,
+            "fp": 291,
+            "hd95_mm": null,
+            "iou": 0.0,
+            "predicted_pixels": 291,
+            "reference_pixels": 6009,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 0
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 497664,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient015/patient015_frame01_gt.nii",
+      "patient_id": "patient015",
+      "reference_sha256": "4a60b2384e2a6d9b1ad53f84e53f5f043a1a0cfadf41c2108c2a107d2e70bc85"
+    },
+    {
+      "frame_index": 9,
+      "geometry_verification": null,
+      "metrics": {
+        "accuracy_accepted_pixels": 0.8950536908436214,
+        "accuracy_all_pixels": 0.8950536908436214,
+        "classes": {
+          "BG": {
+            "dice": 0.9508718351375914,
+            "fn": 41008,
+            "fp": 4292,
+            "hd95_mm": null,
+            "iou": 0.9063447793933705,
+            "predicted_pixels": 442681,
+            "reference_pixels": 479397,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 438389
+          },
+          "LV": {
+            "dice": 0.21770543866613737,
+            "fn": 6369,
+            "fp": 3484,
+            "hd95_mm": null,
+            "iou": 0.12214896650035638,
+            "predicted_pixels": 4855,
+            "reference_pixels": 7740,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 1371
+          },
+          "MYO": {
+            "dice": 0.19896242288278182,
+            "fn": 1655,
+            "fp": 44049,
+            "hd95_mm": null,
+            "iou": 0.11047100038925652,
+            "predicted_pixels": 49725,
+            "reference_pixels": 7331,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 5676
+          },
+          "RV": {
+            "dice": 0.0,
+            "fn": 3196,
+            "fp": 403,
+            "hd95_mm": null,
+            "iou": 0.0,
+            "predicted_pixels": 403,
+            "reference_pixels": 3196,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 0
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 497664,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient015/patient015_frame10_gt.nii",
+      "patient_id": "patient015",
+      "reference_sha256": "90d6e4fa9b0c79a758e583fa77fccec7143a159d31ce81d45b0b30933ada2f9a"
+    },
+    {
+      "frame_index": 0,
+      "geometry_verification": null,
+      "metrics": {
+        "accuracy_accepted_pixels": 0.7457252785011574,
+        "accuracy_all_pixels": 0.7457252785011574,
+        "classes": {
+          "BG": {
+            "dice": 0.857104630112524,
+            "fn": 103944,
+            "fp": 722,
+            "hd95_mm": null,
+            "iou": 0.7499414668176584,
+            "predicted_pixels": 314622,
+            "reference_pixels": 417844,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 313900
+          },
+          "LV": {
+            "dice": 0.5653614337604279,
+            "fn": 3501,
+            "fp": 7388,
+            "hd95_mm": null,
+            "iou": 0.394079350063992,
+            "predicted_pixels": 14470,
+            "reference_pixels": 10583,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 7082
+          },
+          "MYO": {
+            "dice": 0.08938049812553357,
+            "fn": 107,
+            "fp": 98025,
+            "hd95_mm": null,
+            "iou": 0.04678089909468858,
+            "predicted_pixels": 102841,
+            "reference_pixels": 4923,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 4816
+          },
+          "RV": {
+            "dice": 0.4201922582635069,
+            "fn": 4931,
+            "fp": 6348,
+            "hd95_mm": null,
+            "iou": 0.2659768319666797,
+            "predicted_pixels": 10435,
+            "reference_pixels": 9018,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 4087
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 442368,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient018/patient018_frame01_gt.nii",
+      "patient_id": "patient018",
+      "reference_sha256": "1c0dadacf78507b7b2f7ecb8143ced1ab80f824d8ad13c17305e84b30d953bbe"
+    },
+    {
+      "frame_index": 9,
+      "geometry_verification": null,
+      "metrics": {
+        "accuracy_accepted_pixels": 0.7393798828125,
+        "accuracy_all_pixels": 0.7393798828125,
+        "classes": {
+          "BG": {
+            "dice": 0.8521531510339829,
+            "fn": 108258,
+            "fp": 477,
+            "hd95_mm": null,
+            "iou": 0.7423927258254046,
+            "predicted_pixels": 313838,
+            "reference_pixels": 421619,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 313361
+          },
+          "LV": {
+            "dice": 0.510279488394126,
+            "fn": 2789,
+            "fp": 7549,
+            "hd95_mm": null,
+            "iou": 0.3425337064360214,
+            "predicted_pixels": 12935,
+            "reference_pixels": 8175,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 5386
+          },
+          "MYO": {
+            "dice": 0.09054523623264868,
+            "fn": 71,
+            "fp": 99909,
+            "hd95_mm": null,
+            "iou": 0.04741941938127042,
+            "predicted_pixels": 104886,
+            "reference_pixels": 5048,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 4977
+          },
+          "RV": {
+            "dice": 0.3678639978064162,
+            "fn": 4172,
+            "fp": 7355,
+            "hd95_mm": null,
+            "iou": 0.22538807875814798,
+            "predicted_pixels": 10709,
+            "reference_pixels": 7526,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 3354
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 442368,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient018/patient018_frame10_gt.nii",
+      "patient_id": "patient018",
+      "reference_sha256": "66fb9a382d4aa3364ad6014ebc08a4e72e3f5b08d3336d5880e6f775ce06c752"
+    },
+    {
+      "frame_index": 0,
+      "geometry_verification": {
+        "cine_sha256": "ba4e10324e81d9ddc9b27d81676d24843e6d4c27b65c0a0a71defe95b687a070",
+        "frame_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "frame_image": "${REPO_ROOT}/data/ACDC/training/patient028/patient028_frame01.nii",
+        "frame_image_sha256": "2f0ad220391572027ccc0142689db3330dfba5b4d4f4ca014da77c8a8183fb14",
+        "frame_index": 0,
+        "physical_geometry": "frozen_cine_affine",
+        "policy": "exact_frame_cine_voxel_identity_no_resampling",
+        "reference_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ]
+      },
+      "metrics": {
+        "accuracy_accepted_pixels": 0.7925188337053571,
+        "accuracy_all_pixels": 0.7925188337053571,
+        "classes": {
+          "BG": {
+            "dice": 0.8860066819061017,
+            "fn": 113167,
+            "fp": 282,
+            "hd95_mm": null,
+            "iou": 0.795342905128108,
+            "predicted_pixels": 441170,
+            "reference_pixels": 554055,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 440888
+          },
+          "LV": {
+            "dice": 0.3535129814199582,
+            "fn": 2126,
+            "fp": 8382,
+            "hd95_mm": 131.55507698773926,
+            "iou": 0.21470742097003215,
+            "predicted_pixels": 11255,
+            "reference_pixels": 4999,
+            "surface_status": "MEASURED",
+            "tp": 2873
+          },
+          "MYO": {
+            "dice": 0.12738634690572395,
+            "fn": 8,
+            "fp": 106676,
+            "hd95_mm": 128.97590920209512,
+            "iou": 0.06802596290763599,
+            "predicted_pixels": 114463,
+            "reference_pixels": 7795,
+            "surface_status": "MEASURED",
+            "tp": 7787
+          },
+          "RV": {
+            "dice": 0.44342996271779656,
+            "fn": 3677,
+            "fp": 3638,
+            "hd95_mm": 138.46752933637353,
+            "iou": 0.2848763319972627,
+            "predicted_pixels": 6552,
+            "reference_pixels": 6591,
+            "surface_status": "MEASURED",
+            "tp": 2914
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 573440,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient028/patient028_frame01_gt.nii",
+      "patient_id": "patient028",
+      "reference_sha256": "15fdb2c8e7ecc9fb85f18bda6bbae984808e6e09090f33c1b68f0592b725f256"
+    },
+    {
+      "frame_index": 8,
+      "geometry_verification": {
+        "cine_sha256": "ba4e10324e81d9ddc9b27d81676d24843e6d4c27b65c0a0a71defe95b687a070",
+        "frame_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "frame_image": "${REPO_ROOT}/data/ACDC/training/patient028/patient028_frame09.nii",
+        "frame_image_sha256": "79cab2a248548b850d1ed53993e5a2943f5476d27bca2ca72a382c202222ba58",
+        "frame_index": 8,
+        "physical_geometry": "frozen_cine_affine",
+        "policy": "exact_frame_cine_voxel_identity_no_resampling",
+        "reference_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ]
+      },
+      "metrics": {
+        "accuracy_accepted_pixels": 0.7805559430803571,
+        "accuracy_all_pixels": 0.7805559430803571,
+        "classes": {
+          "BG": {
+            "dice": 0.8763940771682224,
+            "fn": 122280,
+            "fp": 1175,
+            "hd95_mm": null,
+            "iou": 0.7799834972029006,
+            "predicted_pixels": 438837,
+            "reference_pixels": 559942,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 437662
+          },
+          "LV": {
+            "dice": 0.09173675539755484,
+            "fn": 1030,
+            "fp": 9445,
+            "hd95_mm": 151.04486347191684,
+            "iou": 0.04807342784442021,
+            "predicted_pixels": 9974,
+            "reference_pixels": 1559,
+            "surface_status": "MEASURED",
+            "tp": 529
+          },
+          "MYO": {
+            "dice": 0.12971375064810445,
+            "fn": 836,
+            "fp": 111625,
+            "hd95_mm": 138.23162942307766,
+            "iou": 0.06935502557057976,
+            "predicted_pixels": 120006,
+            "reference_pixels": 9217,
+            "surface_status": "MEASURED",
+            "tp": 8381
+          },
+          "RV": {
+            "dice": 0.28046289993192647,
+            "fn": 1692,
+            "fp": 3593,
+            "hd95_mm": 155.73627606199764,
+            "iou": 0.16310372129849565,
+            "predicted_pixels": 4623,
+            "reference_pixels": 2722,
+            "surface_status": "MEASURED",
+            "tp": 1030
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 573440,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient028/patient028_frame09_gt.nii",
+      "patient_id": "patient028",
+      "reference_sha256": "c9e8da4a5b81cfdbcb6b0ae2b30b2eba39fbdb23bfb531dc707e3831d848dd3b"
+    },
+    {
+      "frame_index": 0,
+      "geometry_verification": {
+        "cine_sha256": "acf83e2715f94e930373a7a079f757be11bcf8d66cbec8fb423f49435dff83d9",
+        "frame_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "frame_image": "${REPO_ROOT}/data/ACDC/training/patient029/patient029_frame01.nii",
+        "frame_image_sha256": "7fc81d60d52c9801d1d2e55ea12ab773bd33ab80be0d5f72ecd3c718edb43842",
+        "frame_index": 0,
+        "physical_geometry": "frozen_cine_affine",
+        "policy": "exact_frame_cine_voxel_identity_no_resampling",
+        "reference_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ]
+      },
+      "metrics": {
+        "accuracy_accepted_pixels": 0.8339714281486742,
+        "accuracy_all_pixels": 0.8339714281486742,
+        "classes": {
+          "BG": {
+            "dice": 0.9135678857051506,
+            "fn": 81240,
+            "fp": 940,
+            "hd95_mm": null,
+            "iou": 0.8408881454117392,
+            "predicted_pixels": 435252,
+            "reference_pixels": 515552,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 434312
+          },
+          "LV": {
+            "dice": 0.46564924721237344,
+            "fn": 3874,
+            "fp": 6525,
+            "hd95_mm": 107.05601047994836,
+            "iou": 0.30348292029470864,
+            "predicted_pixels": 11056,
+            "reference_pixels": 8405,
+            "surface_status": "MEASURED",
+            "tp": 4531
+          },
+          "MYO": {
+            "dice": 0.21236672893723746,
+            "fn": 239,
+            "fp": 76074,
+            "hd95_mm": 105.21110022403322,
+            "iou": 0.11879770441449868,
+            "predicted_pixels": 86362,
+            "reference_pixels": 10527,
+            "surface_status": "MEASURED",
+            "tp": 10288
+          },
+          "RV": {
+            "dice": 0.2500352360817477,
+            "fn": 4414,
+            "fp": 6228,
+            "hd95_mm": 167.23728905794403,
+            "iou": 0.14288015463917525,
+            "predicted_pixels": 8002,
+            "reference_pixels": 6188,
+            "surface_status": "MEASURED",
+            "tp": 1774
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 540672,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient029/patient029_frame01_gt.nii",
+      "patient_id": "patient029",
+      "reference_sha256": "c4d46293d82335fabd7bf70c2dd65a4f7a30105d4e0da16ea3bd3af320298760"
+    },
+    {
+      "frame_index": 11,
+      "geometry_verification": {
+        "cine_sha256": "acf83e2715f94e930373a7a079f757be11bcf8d66cbec8fb423f49435dff83d9",
+        "frame_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "frame_image": "${REPO_ROOT}/data/ACDC/training/patient029/patient029_frame12.nii",
+        "frame_image_sha256": "b6965266f5231f473ff861daa90b56ee9244aa7b971f5776c14b73247f0a79bc",
+        "frame_index": 11,
+        "physical_geometry": "frozen_cine_affine",
+        "policy": "exact_frame_cine_voxel_identity_no_resampling",
+        "reference_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ]
+      },
+      "metrics": {
+        "accuracy_accepted_pixels": 0.8191565311316288,
+        "accuracy_all_pixels": 0.8191565311316288,
+        "classes": {
+          "BG": {
+            "dice": 0.9020522855092539,
+            "fn": 93512,
+            "fp": 394,
+            "hd95_mm": null,
+            "iou": 0.821580366354373,
+            "predicted_pixels": 432809,
+            "reference_pixels": 525927,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 432415
+          },
+          "LV": {
+            "dice": 0.0006385016494625945,
+            "fn": 1521,
+            "fp": 7870,
+            "hd95_mm": 120.00038571879797,
+            "iou": 0.0003193527783691718,
+            "predicted_pixels": 7873,
+            "reference_pixels": 1524,
+            "surface_status": "MEASURED",
+            "tp": 3
+          },
+          "MYO": {
+            "dice": 0.1962744736407847,
+            "fn": 291,
+            "fp": 82508,
+            "hd95_mm": 111.125507778385,
+            "iou": 0.10881615344046325,
+            "predicted_pixels": 92618,
+            "reference_pixels": 10401,
+            "surface_status": "MEASURED",
+            "tp": 10110
+          },
+          "RV": {
+            "dice": 0.07201726844583987,
+            "fn": 2453,
+            "fp": 7005,
+            "hd95_mm": 168.19944459265156,
+            "iou": 0.03735368956743002,
+            "predicted_pixels": 7372,
+            "reference_pixels": 2820,
+            "surface_status": "MEASURED",
+            "tp": 367
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 540672,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient029/patient029_frame12_gt.nii",
+      "patient_id": "patient029",
+      "reference_sha256": "6833153d20499effe11fc3b746bbc35e844b6e20ace9bc8c96987ee8f774b17c"
+    },
+    {
+      "frame_index": 0,
+      "geometry_verification": {
+        "cine_sha256": "3e0267979dfaf04619a5585582d667e25014fe689d69b054ee21a94244527386",
+        "frame_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "frame_image": "${REPO_ROOT}/data/ACDC/training/patient030/patient030_frame01.nii",
+        "frame_image_sha256": "f3a94a5d8f8470c84ad103d24ef437286b7397b3efb1953dfda59636b431931a",
+        "frame_index": 0,
+        "physical_geometry": "frozen_cine_affine",
+        "policy": "exact_frame_cine_voxel_identity_no_resampling",
+        "reference_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ]
+      },
+      "metrics": {
+        "accuracy_accepted_pixels": 0.7845033998842592,
+        "accuracy_all_pixels": 0.7845033998842592,
+        "classes": {
+          "BG": {
+            "dice": 0.8803686743062192,
+            "fn": 115117,
+            "fp": 168,
+            "hd95_mm": null,
+            "iou": 0.7863022890688575,
+            "predicted_pixels": 424360,
+            "reference_pixels": 539309,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 424192
+          },
+          "LV": {
+            "dice": 0.42045996755415593,
+            "fn": 1445,
+            "fp": 4628,
+            "hd95_mm": 144.87452609142656,
+            "iou": 0.26619139681005316,
+            "predicted_pixels": 6831,
+            "reference_pixels": 3648,
+            "surface_status": "MEASURED",
+            "tp": 2203
+          },
+          "MYO": {
+            "dice": 0.11026198038825373,
+            "fn": 119,
+            "fp": 102684,
+            "hd95_mm": 129.2390885312742,
+            "iou": 0.05834775997728376,
+            "predicted_pixels": 109054,
+            "reference_pixels": 6489,
+            "surface_status": "MEASURED",
+            "tp": 6370
+          },
+          "RV": {
+            "dice": 0.12742621233594184,
+            "fn": 2480,
+            "fp": 11681,
+            "hd95_mm": 133.51654823918682,
+            "iou": 0.06804870023033893,
+            "predicted_pixels": 12715,
+            "reference_pixels": 3514,
+            "surface_status": "MEASURED",
+            "tp": 1034
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 552960,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient030/patient030_frame01_gt.nii",
+      "patient_id": "patient030",
+      "reference_sha256": "1967cfc36ad5b7764a7d11fd52231fab91848c19b863cda50b7d27821ee48285"
+    },
+    {
+      "frame_index": 11,
+      "geometry_verification": {
+        "cine_sha256": "3e0267979dfaf04619a5585582d667e25014fe689d69b054ee21a94244527386",
+        "frame_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "frame_image": "${REPO_ROOT}/data/ACDC/training/patient030/patient030_frame12.nii",
+        "frame_image_sha256": "132774f1477d17b241108ee854328ac31d8c39e63c8d59e7fd2721bed89b11a0",
+        "frame_index": 11,
+        "physical_geometry": "frozen_cine_affine",
+        "policy": "exact_frame_cine_voxel_identity_no_resampling",
+        "reference_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ]
+      },
+      "metrics": {
+        "accuracy_accepted_pixels": 0.7742711950231481,
+        "accuracy_all_pixels": 0.7742711950231481,
+        "classes": {
+          "BG": {
+            "dice": 0.8716131825158299,
+            "fn": 123086,
+            "fp": 882,
+            "hd95_mm": null,
+            "iou": 0.77244183378459,
+            "predicted_pixels": 421689,
+            "reference_pixels": 543893,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 420807
+          },
+          "LV": {
+            "dice": 0.10991710162726435,
+            "fn": 569,
+            "fp": 5229,
+            "hd95_mm": 157.80714022909652,
+            "iou": 0.058154645873944116,
+            "predicted_pixels": 5587,
+            "reference_pixels": 927,
+            "surface_status": "MEASURED",
+            "tp": 358
+          },
+          "MYO": {
+            "dice": 0.11283052263309816,
+            "fn": 825,
+            "fp": 106440,
+            "hd95_mm": 132.35433543863425,
+            "iou": 0.05978822993180583,
+            "predicted_pixels": 113261,
+            "reference_pixels": 7646,
+            "surface_status": "MEASURED",
+            "tp": 6821
+          },
+          "RV": {
+            "dice": 0.023999380661144227,
+            "fn": 339,
+            "fp": 12268,
+            "hd95_mm": 145.8251572956961,
+            "iou": 0.012145431750509325,
+            "predicted_pixels": 12423,
+            "reference_pixels": 494,
+            "surface_status": "MEASURED",
+            "tp": 155
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 552960,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient030/patient030_frame12_gt.nii",
+      "patient_id": "patient030",
+      "reference_sha256": "5bedd81e534524d0af4e26a8957f7d6809ac0c1cfc2809eaa82fe9d5d4a29242"
+    },
+    {
+      "frame_index": 0,
+      "geometry_verification": {
+        "cine_sha256": "f3f7bf4b7543ab49ba9419178c51d4d711b04261369f69a4a182940eedcc7fe5",
+        "frame_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "frame_image": "${REPO_ROOT}/data/ACDC/training/patient032/patient032_frame01.nii",
+        "frame_image_sha256": "27152c2ca387eaf151bb4c491b47ed90a4cfcc7c2f4dbaa1e546ac1f9918b493",
+        "frame_index": 0,
+        "physical_geometry": "frozen_cine_affine",
+        "policy": "exact_frame_cine_voxel_identity_no_resampling",
+        "reference_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ]
+      },
+      "metrics": {
+        "accuracy_accepted_pixels": 0.7724251302083334,
+        "accuracy_all_pixels": 0.7724251302083334,
+        "classes": {
+          "BG": {
+            "dice": 0.8738449301916003,
+            "fn": 131976,
+            "fp": 1257,
+            "hd95_mm": null,
+            "iou": 0.7759543544391923,
+            "predicted_pixels": 462693,
+            "reference_pixels": 593412,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 461436
+          },
+          "LV": {
+            "dice": 0.46162912519643795,
+            "fn": 2628,
+            "fp": 5594,
+            "hd95_mm": 142.90990927850098,
+            "iou": 0.3000766153060356,
+            "predicted_pixels": 9119,
+            "reference_pixels": 6153,
+            "surface_status": "MEASURED",
+            "tp": 3525
+          },
+          "MYO": {
+            "dice": 0.10688651794374394,
+            "fn": 37,
+            "fp": 128875,
+            "hd95_mm": 138.79081589207263,
+            "iou": 0.05646070294087509,
+            "predicted_pixels": 136589,
+            "reference_pixels": 7751,
+            "surface_status": "MEASURED",
+            "tp": 7714
+          },
+          "RV": {
+            "dice": 0.290911870366124,
+            "fn": 5181,
+            "fp": 4096,
+            "hd95_mm": 176.50518934713642,
+            "iou": 0.17021466905187835,
+            "predicted_pixels": 5999,
+            "reference_pixels": 7084,
+            "surface_status": "MEASURED",
+            "tp": 1903
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 614400,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient032/patient032_frame01_gt.nii",
+      "patient_id": "patient032",
+      "reference_sha256": "019a0bc115e0183760d13d3a6c5fa8913089b1b4eb1c9bf505ed753f725e13d3"
+    },
+    {
+      "frame_index": 11,
+      "geometry_verification": {
+        "cine_sha256": "f3f7bf4b7543ab49ba9419178c51d4d711b04261369f69a4a182940eedcc7fe5",
+        "frame_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "frame_image": "${REPO_ROOT}/data/ACDC/training/patient032/patient032_frame12.nii",
+        "frame_image_sha256": "b7169636e1e191ee3254326f4eeacf14a67a13996741d80af7b5bdc7ae9daa69",
+        "frame_index": 11,
+        "physical_geometry": "frozen_cine_affine",
+        "policy": "exact_frame_cine_voxel_identity_no_resampling",
+        "reference_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ]
+      },
+      "metrics": {
+        "accuracy_accepted_pixels": 0.7653662109375,
+        "accuracy_all_pixels": 0.7653662109375,
+        "classes": {
+          "BG": {
+            "dice": 0.8666320374895222,
+            "fn": 140249,
+            "fp": 1993,
+            "hd95_mm": null,
+            "iou": 0.7646519631363854,
+            "predicted_pixels": 464141,
+            "reference_pixels": 602397,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 462148
+          },
+          "LV": {
+            "dice": 0.08491062039957939,
+            "fn": 911,
+            "fp": 6051,
+            "hd95_mm": 159.6348983814316,
+            "iou": 0.04433768016472203,
+            "predicted_pixels": 6374,
+            "reference_pixels": 1234,
+            "surface_status": "MEASURED",
+            "tp": 323
+          },
+          "MYO": {
+            "dice": 0.09798807243482632,
+            "fn": 1586,
+            "fp": 131210,
+            "hd95_mm": 142.87385852644374,
+            "iou": 0.05151811669249834,
+            "predicted_pixels": 138423,
+            "reference_pixels": 8799,
+            "surface_status": "MEASURED",
+            "tp": 7213
+          },
+          "RV": {
+            "dice": 0.1498923573735199,
+            "fn": 1413,
+            "fp": 4905,
+            "hd95_mm": 186.12666184594013,
+            "iou": 0.08101818181818182,
+            "predicted_pixels": 5462,
+            "reference_pixels": 1970,
+            "surface_status": "MEASURED",
+            "tp": 557
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 614400,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient032/patient032_frame12_gt.nii",
+      "patient_id": "patient032",
+      "reference_sha256": "afec9ad3ee3ef5140b6bdddf0411a2cd50d250cfa8cc20e488d370ef393018bc"
+    },
+    {
+      "frame_index": 0,
+      "geometry_verification": null,
+      "metrics": {
+        "accuracy_accepted_pixels": 0.8002387152777778,
+        "accuracy_all_pixels": 0.8002387152777778,
+        "classes": {
+          "BG": {
+            "dice": 0.8925512888914399,
+            "fn": 81711,
+            "fp": 658,
+            "hd95_mm": null,
+            "iou": 0.8059527090857262,
+            "predicted_pixels": 342768,
+            "reference_pixels": 423821,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 342110
+          },
+          "LV": {
+            "dice": 0.4841249682499365,
+            "fn": 3063,
+            "fp": 5061,
+            "hd95_mm": null,
+            "iou": 0.31936997319034854,
+            "predicted_pixels": 8873,
+            "reference_pixels": 6875,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 3812
+          },
+          "MYO": {
+            "dice": 0.12938315990827484,
+            "fn": 81,
+            "fp": 75472,
+            "hd95_mm": null,
+            "iou": 0.06916604038587111,
+            "predicted_pixels": 81086,
+            "reference_pixels": 5695,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 5614
+          },
+          "RV": {
+            "dice": 0.3155333589448073,
+            "fn": 3513,
+            "fp": 7177,
+            "hd95_mm": null,
+            "iou": 0.18731944655618063,
+            "predicted_pixels": 9641,
+            "reference_pixels": 5977,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 2464
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 442368,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient036/patient036_frame01_gt.nii",
+      "patient_id": "patient036",
+      "reference_sha256": "e384db486b90d2fed90955316b9c4b239f7204df26e8b2870eb30dfa05c6bb6d"
+    },
+    {
+      "frame_index": 11,
+      "geometry_verification": null,
+      "metrics": {
+        "accuracy_accepted_pixels": 0.7937034324363426,
+        "accuracy_all_pixels": 0.7937034324363426,
+        "classes": {
+          "BG": {
+            "dice": 0.8847973985630331,
+            "fn": 88274,
+            "fp": 507,
+            "hd95_mm": null,
+            "iou": 0.7933961034729915,
+            "predicted_pixels": 341442,
+            "reference_pixels": 429209,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 340935
+          },
+          "LV": {
+            "dice": 0.27354920100925145,
+            "fn": 1490,
+            "fp": 5420,
+            "hd95_mm": null,
+            "iou": 0.15844598709048838,
+            "predicted_pixels": 6721,
+            "reference_pixels": 2791,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 1301
+          },
+          "MYO": {
+            "dice": 0.16522050758554782,
+            "fn": 205,
+            "fp": 76664,
+            "hd95_mm": null,
+            "iou": 0.090049244755907,
+            "predicted_pixels": 84271,
+            "reference_pixels": 7812,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 7607
+          },
+          "RV": {
+            "dice": 0.20272217774219375,
+            "fn": 1290,
+            "fp": 8668,
+            "hd95_mm": null,
+            "iou": 0.11279401282965075,
+            "predicted_pixels": 9934,
+            "reference_pixels": 2556,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 1266
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 442368,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient036/patient036_frame12_gt.nii",
+      "patient_id": "patient036",
+      "reference_sha256": "2ae8e4f833109b6c8ec90a8487f5a24c8e6deb8a40a39d788ee14f30c0ec8eb4"
+    },
+    {
+      "frame_index": 0,
+      "geometry_verification": {
+        "cine_sha256": "759985bc3aa008b75d1f6af9961d8cc75e1eda6f96492d2e2a3828553b8acece",
+        "frame_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "frame_image": "${REPO_ROOT}/data/ACDC/training/patient065/patient065_frame01.nii",
+        "frame_image_sha256": "bf86e22fa991f66511f0d73242a72086d8e76be2308b4c2f0560965ca3edd5d7",
+        "frame_index": 0,
+        "physical_geometry": "frozen_cine_affine",
+        "policy": "exact_frame_cine_voxel_identity_no_resampling",
+        "reference_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ]
+      },
+      "metrics": {
+        "accuracy_accepted_pixels": 0.7887675382653061,
+        "accuracy_all_pixels": 0.7887675382653061,
+        "classes": {
+          "BG": {
+            "dice": 0.8843682756259781,
+            "fn": 75255,
+            "fp": 407,
+            "hd95_mm": null,
+            "iou": 0.7927062813870723,
+            "predicted_pixels": 289744,
+            "reference_pixels": 364592,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 289337
+          },
+          "LV": {
+            "dice": 0.5515436944008373,
+            "fn": 983,
+            "fp": 4159,
+            "hd95_mm": 133.567632534002,
+            "iou": 0.38078034682080925,
+            "predicted_pixels": 7321,
+            "reference_pixels": 4145,
+            "surface_status": "MEASURED",
+            "tp": 3162
+          },
+          "MYO": {
+            "dice": 0.064,
+            "fn": 55,
+            "fp": 72134,
+            "hd95_mm": 179.3586665037405,
+            "iou": 0.03305785123966942,
+            "predicted_pixels": 74602,
+            "reference_pixels": 2523,
+            "surface_status": "MEASURED",
+            "tp": 2468
+          },
+          "RV": {
+            "dice": 0.3834036857819417,
+            "fn": 3198,
+            "fp": 2791,
+            "hd95_mm": 134.35145116731465,
+            "iou": 0.23716723984205834,
+            "predicted_pixels": 4653,
+            "reference_pixels": 5060,
+            "surface_status": "MEASURED",
+            "tp": 1862
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 376320,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient065/patient065_frame01_gt.nii",
+      "patient_id": "patient065",
+      "reference_sha256": "a4b74dc9a38e46dbf476ab3093f29c0bc5698a13624615e64442df8443c6894d"
+    },
+    {
+      "frame_index": 13,
+      "geometry_verification": {
+        "cine_sha256": "759985bc3aa008b75d1f6af9961d8cc75e1eda6f96492d2e2a3828553b8acece",
+        "frame_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "frame_image": "${REPO_ROOT}/data/ACDC/training/patient065/patient065_frame14.nii",
+        "frame_image_sha256": "e7ac9ef78214dd94d6028bc5202672f84b5e2bb04836f28ac7360f462d91e9d1",
+        "frame_index": 13,
+        "physical_geometry": "frozen_cine_affine",
+        "policy": "exact_frame_cine_voxel_identity_no_resampling",
+        "reference_affine": [
+          [
+            -1.0,
+            -0.0,
+            0.0,
+            0.0
+          ],
+          [
+            -0.0,
+            -1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ]
+      },
+      "metrics": {
+        "accuracy_accepted_pixels": 0.7785049957482993,
+        "accuracy_all_pixels": 0.7785049957482993,
+        "classes": {
+          "BG": {
+            "dice": 0.8763239308462238,
+            "fn": 81549,
+            "fp": 3,
+            "hd95_mm": null,
+            "iou": 0.7798723803971107,
+            "predicted_pixels": 288927,
+            "reference_pixels": 370473,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 288924
+          },
+          "LV": {
+            "dice": 0.31072961373390556,
+            "fn": 322,
+            "fp": 4496,
+            "hd95_mm": 178.9825727218222,
+            "iou": 0.1839430894308943,
+            "predicted_pixels": 5582,
+            "reference_pixels": 1408,
+            "surface_status": "MEASURED",
+            "tp": 1086
+          },
+          "MYO": {
+            "dice": 0.05913978494623656,
+            "fn": 76,
+            "fp": 75524,
+            "hd95_mm": 186.19231489242514,
+            "iou": 0.030470914127423823,
+            "predicted_pixels": 77900,
+            "reference_pixels": 2452,
+            "surface_status": "MEASURED",
+            "tp": 2376
+          },
+          "RV": {
+            "dice": 0.1970159376059681,
+            "fn": 1406,
+            "fp": 3330,
+            "hd95_mm": 178.55867281611597,
+            "iou": 0.10927214594696258,
+            "predicted_pixels": 3911,
+            "reference_pixels": 1987,
+            "surface_status": "MEASURED",
+            "tp": 581
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 376320,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient065/patient065_frame14_gt.nii",
+      "patient_id": "patient065",
+      "reference_sha256": "9216e1642cd3c8db4ad5e40710db86336fff7ba50f8a9693ae0c063992b409be"
+    },
+    {
+      "frame_index": 0,
+      "geometry_verification": null,
+      "metrics": {
+        "accuracy_accepted_pixels": 0.8637977013221154,
+        "accuracy_all_pixels": 0.8637977013221154,
+        "classes": {
+          "BG": {
+            "dice": 0.9342267008375748,
+            "fn": 35949,
+            "fp": 2522,
+            "hd95_mm": null,
+            "iou": 0.8765716889058575,
+            "predicted_pixels": 275738,
+            "reference_pixels": 309165,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 273216
+          },
+          "LV": {
+            "dice": 0.2235202492211838,
+            "fn": 3093,
+            "fp": 895,
+            "hd95_mm": null,
+            "iou": 0.12582200789127576,
+            "predicted_pixels": 1469,
+            "reference_pixels": 3667,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 574
+          },
+          "MYO": {
+            "dice": 0.10085315946452106,
+            "fn": 502,
+            "fp": 38387,
+            "hd95_mm": null,
+            "iou": 0.05310445580715851,
+            "predicted_pixels": 40568,
+            "reference_pixels": 2683,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 2181
+          },
+          "RV": {
+            "dice": 0.0007034822370735139,
+            "fn": 3971,
+            "fp": 1711,
+            "hd95_mm": null,
+            "iou": 0.0003518648838845883,
+            "predicted_pixels": 1713,
+            "reference_pixels": 3973,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 2
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 319488,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient070/patient070_frame01_gt.nii",
+      "patient_id": "patient070",
+      "reference_sha256": "f5136b2a17c7d9ed1e1ec63a178aff86278232e4d5a0c00821fccec23cccc787"
+    },
+    {
+      "frame_index": 9,
+      "geometry_verification": null,
+      "metrics": {
+        "accuracy_accepted_pixels": 0.8756479116586539,
+        "accuracy_all_pixels": 0.8756479116586539,
+        "classes": {
+          "BG": {
+            "dice": 0.9356686849904908,
+            "fn": 37167,
+            "fp": 752,
+            "hd95_mm": null,
+            "iou": 0.8791141177520754,
+            "predicted_pixels": 276509,
+            "reference_pixels": 312924,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 275757
+          },
+          "LV": {
+            "dice": 0.37535211267605634,
+            "fn": 845,
+            "fp": 929,
+            "hd95_mm": null,
+            "iou": 0.23103597745990465,
+            "predicted_pixels": 1462,
+            "reference_pixels": 1378,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 533
+          },
+          "MYO": {
+            "dice": 0.15769973860665984,
+            "fn": 207,
+            "fp": 36850,
+            "hd95_mm": null,
+            "iou": 0.08559936830676602,
+            "predicted_pixels": 40319,
+            "reference_pixels": 3676,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 3469
+          },
+          "RV": {
+            "dice": 0.0,
+            "fn": 1510,
+            "fp": 1198,
+            "hd95_mm": null,
+            "iou": 0.0,
+            "predicted_pixels": 1198,
+            "reference_pixels": 1510,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 0
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 319488,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient070/patient070_frame10_gt.nii",
+      "patient_id": "patient070",
+      "reference_sha256": "95b8904e77bffc9a4e8904e202640b5e787756954b50caed19957edbe4933f48"
+    },
+    {
+      "frame_index": 0,
+      "geometry_verification": null,
+      "metrics": {
+        "accuracy_accepted_pixels": 0.8577769886363636,
+        "accuracy_all_pixels": 0.8577769886363636,
+        "classes": {
+          "BG": {
+            "dice": 0.9374550884700765,
+            "fn": 55329,
+            "fp": 7078,
+            "hd95_mm": null,
+            "iou": 0.8822733780920994,
+            "predicted_pixels": 474772,
+            "reference_pixels": 523023,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 467694
+          },
+          "LV": {
+            "dice": 0.22887996312635808,
+            "fn": 7300,
+            "fp": 4411,
+            "hd95_mm": null,
+            "iou": 0.1292289389545691,
+            "predicted_pixels": 6149,
+            "reference_pixels": 9038,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 1738
+          },
+          "MYO": {
+            "dice": 0.10381062206040503,
+            "fn": 2592,
+            "fp": 66575,
+            "hd95_mm": null,
+            "iou": 0.05474696951061184,
+            "predicted_pixels": 70581,
+            "reference_pixels": 6598,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 4006
+          },
+          "RV": {
+            "dice": 0.0,
+            "fn": 13277,
+            "fp": 434,
+            "hd95_mm": null,
+            "iou": 0.0,
+            "predicted_pixels": 434,
+            "reference_pixels": 13277,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 0
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 551936,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient082/patient082_frame01_gt.nii",
+      "patient_id": "patient082",
+      "reference_sha256": "31f45f636cc44458949c66d47802cbc01f176b9e7b584cf5d7a3666406e9e38d"
+    },
+    {
+      "frame_index": 6,
+      "geometry_verification": null,
+      "metrics": {
+        "accuracy_accepted_pixels": 0.8613643610853432,
+        "accuracy_all_pixels": 0.8613643610853432,
+        "classes": {
+          "BG": {
+            "dice": 0.9317850464327596,
+            "fn": 62410,
+            "fp": 6462,
+            "hd95_mm": null,
+            "iou": 0.8722823466579632,
+            "predicted_pixels": 476842,
+            "reference_pixels": 532790,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 470380
+          },
+          "LV": {
+            "dice": 0.20586189766517635,
+            "fn": 3033,
+            "fp": 4960,
+            "hd95_mm": null,
+            "iou": 0.11474138885812382,
+            "predicted_pixels": 5996,
+            "reference_pixels": 4069,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 1036
+          },
+          "MYO": {
+            "dice": 0.10457413867440128,
+            "fn": 3776,
+            "fp": 64759,
+            "hd95_mm": null,
+            "iou": 0.05517184333512552,
+            "predicted_pixels": 68761,
+            "reference_pixels": 7778,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 4002
+          },
+          "RV": {
+            "dice": 0.0,
+            "fn": 7299,
+            "fp": 337,
+            "hd95_mm": null,
+            "iou": 0.0,
+            "predicted_pixels": 337,
+            "reference_pixels": 7299,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 0
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 551936,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient082/patient082_frame07_gt.nii",
+      "patient_id": "patient082",
+      "reference_sha256": "230ef5a0f30ea18a30f81f5580593f5c1c9fff4940540316781b40132f0d7451"
+    },
+    {
+      "frame_index": 0,
+      "geometry_verification": null,
+      "metrics": {
+        "accuracy_accepted_pixels": 0.8565302309782609,
+        "accuracy_all_pixels": 0.8565302309782609,
+        "classes": {
+          "BG": {
+            "dice": 0.9344882592972323,
+            "fn": 33189,
+            "fp": 11411,
+            "hd95_mm": null,
+            "iou": 0.8770323438021268,
+            "predicted_pixels": 329508,
+            "reference_pixels": 351286,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 318097
+          },
+          "LV": {
+            "dice": 0.2502770185417744,
+            "fn": 6537,
+            "fp": 3612,
+            "hd95_mm": null,
+            "iou": 0.1430380815671705,
+            "predicted_pixels": 5306,
+            "reference_pixels": 8231,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 1694
+          },
+          "MYO": {
+            "dice": 0.12720529914896353,
+            "fn": 2288,
+            "fp": 38427,
+            "hd95_mm": null,
+            "iou": 0.0679227141614395,
+            "predicted_pixels": 41394,
+            "reference_pixels": 5255,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 2967
+          },
+          "RV": {
+            "dice": 0.001576789656259855,
+            "fn": 12050,
+            "fp": 614,
+            "hd95_mm": null,
+            "iou": 0.0007890168849613382,
+            "predicted_pixels": 624,
+            "reference_pixels": 12060,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 10
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 376832,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient087/patient087_frame01_gt.nii",
+      "patient_id": "patient087",
+      "reference_sha256": "7a170b577fd9e3b881d1d3e700823fea0fe02ad8729eb262ec763b6bde726af3"
+    },
+    {
+      "frame_index": 9,
+      "geometry_verification": null,
+      "metrics": {
+        "accuracy_accepted_pixels": 0.8667337168817935,
+        "accuracy_all_pixels": 0.8667337168817935,
+        "classes": {
+          "BG": {
+            "dice": 0.9347729513772064,
+            "fn": 35422,
+            "fp": 9361,
+            "hd95_mm": null,
+            "iou": 0.8775339985834494,
+            "predicted_pixels": 330255,
+            "reference_pixels": 356316,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 320894
+          },
+          "LV": {
+            "dice": 0.2718036414847601,
+            "fn": 3061,
+            "fp": 4178,
+            "hd95_mm": null,
+            "iou": 0.15727590221187426,
+            "predicted_pixels": 5529,
+            "reference_pixels": 4412,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 1351
+          },
+          "MYO": {
+            "dice": 0.1831715346067557,
+            "fn": 2770,
+            "fp": 36187,
+            "hd95_mm": null,
+            "iou": 0.1008193883439123,
+            "predicted_pixels": 40555,
+            "reference_pixels": 7138,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 4368
+          },
+          "RV": {
+            "dice": 0.0,
+            "fn": 8966,
+            "fp": 493,
+            "hd95_mm": null,
+            "iou": 0.0,
+            "predicted_pixels": 493,
+            "reference_pixels": 8966,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 0
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 376832,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient087/patient087_frame10_gt.nii",
+      "patient_id": "patient087",
+      "reference_sha256": "e4926e8e30197977cd11a48ddab3b5a43c8455b8107d78319a02b78afa95f26e"
+    },
+    {
+      "frame_index": 0,
+      "geometry_verification": null,
+      "metrics": {
+        "accuracy_accepted_pixels": 0.8502012310606061,
+        "accuracy_all_pixels": 0.8502012310606061,
+        "classes": {
+          "BG": {
+            "dice": 0.9236895358704876,
+            "fn": 62768,
+            "fp": 358,
+            "hd95_mm": null,
+            "iou": 0.8581999029597283,
+            "predicted_pixels": 382408,
+            "reference_pixels": 444818,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 382050
+          },
+          "LV": {
+            "dice": 0.5244922341696535,
+            "fn": 1427,
+            "fp": 2553,
+            "hd95_mm": null,
+            "iou": 0.3554655870445344,
+            "predicted_pixels": 4748,
+            "reference_pixels": 3622,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 2195
+          },
+          "MYO": {
+            "dice": 0.07697366360817963,
+            "fn": 138,
+            "fp": 58812,
+            "hd95_mm": null,
+            "iou": 0.04002735799895779,
+            "predicted_pixels": 61270,
+            "reference_pixels": 2596,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 2458
+          },
+          "RV": {
+            "dice": 0.17830057266676985,
+            "fn": 4004,
+            "fp": 6614,
+            "hd95_mm": null,
+            "iou": 0.09787595581988105,
+            "predicted_pixels": 7766,
+            "reference_pixels": 5156,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 1152
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 456192,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient089/patient089_frame01_gt.nii",
+      "patient_id": "patient089",
+      "reference_sha256": "610860bfe47ac10fe596601f27836c76b5a93a5555e6a3323029f34597a4e106"
+    },
+    {
+      "frame_index": 9,
+      "geometry_verification": null,
+      "metrics": {
+        "accuracy_accepted_pixels": 0.8479938271604939,
+        "accuracy_all_pixels": 0.8479938271604939,
+        "classes": {
+          "BG": {
+            "dice": 0.9205706090005167,
+            "fn": 65417,
+            "fp": 375,
+            "hd95_mm": null,
+            "iou": 0.8528307795548596,
+            "predicted_pixels": 381633,
+            "reference_pixels": 446675,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 381258
+          },
+          "LV": {
+            "dice": 0.3668639053254438,
+            "fn": 447,
+            "fp": 2656,
+            "hd95_mm": null,
+            "iou": 0.2246376811594203,
+            "predicted_pixels": 3555,
+            "reference_pixels": 1346,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 899
+          },
+          "MYO": {
+            "dice": 0.10310243784551248,
+            "fn": 124,
+            "fp": 59256,
+            "hd95_mm": null,
+            "iou": 0.05435319223480324,
+            "predicted_pixels": 62669,
+            "reference_pixels": 3537,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 3413
+          },
+          "RV": {
+            "dice": 0.1970853573907009,
+            "fn": 3356,
+            "fp": 7057,
+            "hd95_mm": null,
+            "iou": 0.10931485758275597,
+            "predicted_pixels": 8335,
+            "reference_pixels": 4634,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 1278
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 456192,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient089/patient089_frame10_gt.nii",
+      "patient_id": "patient089",
+      "reference_sha256": "ed57159721b889f4dfa10cccff84cb5be76d3727608ee6f3e920d9ac39c67997"
+    },
+    {
+      "frame_index": 0,
+      "geometry_verification": null,
+      "metrics": {
+        "accuracy_accepted_pixels": 0.8073802437641724,
+        "accuracy_all_pixels": 0.8073802437641724,
+        "classes": {
+          "BG": {
+            "dice": 0.9053225831284738,
+            "fn": 90956,
+            "fp": 1283,
+            "hd95_mm": null,
+            "iou": 0.827022252560751,
+            "predicted_pixels": 442286,
+            "reference_pixels": 531959,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 441003
+          },
+          "LV": {
+            "dice": 0.5229674796747967,
+            "fn": 4978,
+            "fp": 4410,
+            "hd95_mm": null,
+            "iou": 0.35406632723269577,
+            "predicted_pixels": 9556,
+            "reference_pixels": 10124,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 5146
+          },
+          "MYO": {
+            "dice": 0.08794114908278239,
+            "fn": 325,
+            "fp": 97621,
+            "hd95_mm": null,
+            "iou": 0.04599290918299762,
+            "predicted_pixels": 102343,
+            "reference_pixels": 5047,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 4722
+          },
+          "RV": {
+            "dice": 0.35297522155905225,
+            "fn": 12471,
+            "fp": 5416,
+            "hd95_mm": null,
+            "iou": 0.2143108143723096,
+            "predicted_pixels": 10295,
+            "reference_pixels": 17350,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 4879
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 564480,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient095/patient095_frame01_gt.nii",
+      "patient_id": "patient095",
+      "reference_sha256": "e65604d515fe9921265393cfb98afdd7a97ec8933c6824935932a14edfdf5cb0"
+    },
+    {
+      "frame_index": 11,
+      "geometry_verification": null,
+      "metrics": {
+        "accuracy_accepted_pixels": 0.8056512188208617,
+        "accuracy_all_pixels": 0.8056512188208617,
+        "classes": {
+          "BG": {
+            "dice": 0.8967240888685453,
+            "fn": 99532,
+            "fp": 2451,
+            "hd95_mm": null,
+            "iou": 0.8127831667682457,
+            "predicted_pixels": 445200,
+            "reference_pixels": 542281,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 442749
+          },
+          "LV": {
+            "dice": 0.3686502177068215,
+            "fn": 2233,
+            "fp": 5597,
+            "hd95_mm": null,
+            "iou": 0.22597864768683273,
+            "predicted_pixels": 7883,
+            "reference_pixels": 4519,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 2286
+          },
+          "MYO": {
+            "dice": 0.10677837442716973,
+            "fn": 881,
+            "fp": 94432,
+            "hd95_mm": null,
+            "iou": 0.0564003564003564,
+            "predicted_pixels": 100129,
+            "reference_pixels": 6578,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 5697
+          },
+          "RV": {
+            "dice": 0.3613768439874832,
+            "fn": 7060,
+            "fp": 7226,
+            "hd95_mm": null,
+            "iou": 0.22053688345700567,
+            "predicted_pixels": 11268,
+            "reference_pixels": 11102,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 4042
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 564480,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient095/patient095_frame12_gt.nii",
+      "patient_id": "patient095",
+      "reference_sha256": "c434f401eea28608b490b429810e91cc1a39ae1efb925938fc90bc423ee7f7a5"
+    },
+    {
+      "frame_index": 0,
+      "geometry_verification": null,
+      "metrics": {
+        "accuracy_accepted_pixels": 0.7934389467592593,
+        "accuracy_all_pixels": 0.7934389467592593,
+        "classes": {
+          "BG": {
+            "dice": 0.8940125978760981,
+            "fn": 69675,
+            "fp": 238,
+            "hd95_mm": null,
+            "iou": 0.8083388618706377,
+            "predicted_pixels": 295099,
+            "reference_pixels": 364536,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 294861
+          },
+          "LV": {
+            "dice": 0.540815790855163,
+            "fn": 855,
+            "fp": 7892,
+            "hd95_mm": null,
+            "iou": 0.3706288674629443,
+            "predicted_pixels": 13043,
+            "reference_pixels": 6006,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 5151
+          },
+          "MYO": {
+            "dice": 0.13752053582711993,
+            "fn": 551,
+            "fp": 67697,
+            "hd95_mm": null,
+            "iou": 0.07383734342981992,
+            "predicted_pixels": 73138,
+            "reference_pixels": 5992,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 5441
+          },
+          "RV": {
+            "dice": 0.2039191671769749,
+            "fn": 8873,
+            "fp": 4127,
+            "hd95_mm": null,
+            "iou": 0.11353562904875554,
+            "predicted_pixels": 5792,
+            "reference_pixels": 10538,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 1665
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 387072,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient098/patient098_frame01_gt.nii",
+      "patient_id": "patient098",
+      "reference_sha256": "59652d0ce7b373693ad909655a88abb8905959ebf0e8d5777d4ef23abef7d576"
+    },
+    {
+      "frame_index": 8,
+      "geometry_verification": null,
+      "metrics": {
+        "accuracy_accepted_pixels": 0.7880885209986772,
+        "accuracy_all_pixels": 0.7880885209986772,
+        "classes": {
+          "BG": {
+            "dice": 0.8914763092044184,
+            "fn": 71331,
+            "fp": 792,
+            "hd95_mm": null,
+            "iou": 0.804201404630884,
+            "predicted_pixels": 297022,
+            "reference_pixels": 367561,
+            "surface_status": "NOT_REQUESTED_BG",
+            "tp": 296230
+          },
+          "LV": {
+            "dice": 0.2995872420262664,
+            "fn": 640,
+            "fp": 8693,
+            "hd95_mm": null,
+            "iou": 0.17618501191632094,
+            "predicted_pixels": 10689,
+            "reference_pixels": 2636,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 1996
+          },
+          "MYO": {
+            "dice": 0.13874138515421985,
+            "fn": 1013,
+            "fp": 67594,
+            "hd95_mm": null,
+            "iou": 0.07454170207599854,
+            "predicted_pixels": 73120,
+            "reference_pixels": 6539,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 5526
+          },
+          "RV": {
+            "dice": 0.15624057428967847,
+            "fn": 9041,
+            "fp": 4946,
+            "hd95_mm": null,
+            "iou": 0.08474021724905118,
+            "predicted_pixels": 6241,
+            "reference_pixels": 10336,
+            "surface_status": "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE",
+            "tp": 1295
+          }
+        },
+        "coverage": 1.0,
+        "pixels": 387072,
+        "unknown_pixels": 0
+      },
+      "path": "${REPO_ROOT}/data/ACDC/training/patient098/patient098_frame09_gt.nii",
+      "patient_id": "patient098",
+      "reference_sha256": "101403cd7387c3d2ccd59364a46260ed56df6fd6571ed1f50c4a5da190f9c6de"
+    }
+  ],
+  "prediction_manifest_sha256": "c83bc676232daa3110474a18cb093a1715c07cb87612290907824c006d27b8e6",
+  "schema": "self_audit.guidance_evaluation.v1",
+  "selection_feedback": false,
+  "split": "val",
+  "status": "SCORED_FROZEN_PREDICTIONS_NOT_CLINICALLY_VALIDATED",
+  "student_status": "USER_REQUESTED_FROZEN_PILOT_DIAGNOSTIC_EVALUATION",
+  "summary": {
+    "both_empty_class_policy": "excluded_not_one",
+    "coverage_patient_macro": 1.0,
+    "hd95_definition": "95th_percentile_of_pooled_bidirectional_native_surface_distances",
+    "hd95_empty_policy": "null_and_report_failure_count",
+    "labeled_frames": 36,
+    "macro_foreground_dice": 0.2105890506038222,
+    "patient_count": 18,
+    "patient_macro_dice": {
+      "BG": 0.9039185750366485,
+      "LV": 0.35574595787865915,
+      "MYO": 0.12952095918860876,
+      "RV": 0.1465002347441987
+    },
+    "per_patient": {
+      "patient004": {
+        "coverage": 1.0,
+        "dice": {
+          "BG": 0.9215649370862908,
+          "LV": 0.45629952736713314,
+          "MYO": 0.16884772391947778,
+          "RV": 0.033444796613932286
+        },
+        "hd95_mm": {
+          "LV": 119.79252174132029,
+          "MYO": 144.8100171820862,
+          "RV": 127.80395225293435
+        },
+        "n_labeled_frames": 2
+      },
+      "patient005": {
+        "coverage": 1.0,
+        "dice": {
+          "BG": 0.9058200740928176,
+          "LV": 0.4956286518071883,
+          "MYO": 0.17483389086009968,
+          "RV": 0.07294558204238662
+        },
+        "hd95_mm": {
+          "LV": 109.53115047317422,
+          "MYO": 116.20787240161486,
+          "RV": 133.99886568746825
+        },
+        "n_labeled_frames": 2
+      },
+      "patient012": {
+        "coverage": 1.0,
+        "dice": {
+          "BG": 0.9176784052980103,
+          "LV": 0.6090964038454334,
+          "MYO": 0.1675536575611468,
+          "RV": 0.02566070780862266
+        },
+        "hd95_mm": {
+          "LV": null,
+          "MYO": null,
+          "RV": null
+        },
+        "n_labeled_frames": 2
+      },
+      "patient014": {
+        "coverage": 1.0,
+        "dice": {
+          "BG": 0.8973900842607336,
+          "LV": 0.18026420701829118,
+          "MYO": 0.08822958121704638,
+          "RV": 0.016410832419200855
+        },
+        "hd95_mm": {
+          "LV": null,
+          "MYO": null,
+          "RV": null
+        },
+        "n_labeled_frames": 2
+      },
+      "patient015": {
+        "coverage": 1.0,
+        "dice": {
+          "BG": 0.9490954073123379,
+          "LV": 0.2305812255384574,
+          "MYO": 0.17203760241883453,
+          "RV": 0.0
+        },
+        "hd95_mm": {
+          "LV": null,
+          "MYO": null,
+          "RV": null
+        },
+        "n_labeled_frames": 2
+      },
+      "patient018": {
+        "coverage": 1.0,
+        "dice": {
+          "BG": 0.8546288905732535,
+          "LV": 0.537820461077277,
+          "MYO": 0.08996286717909113,
+          "RV": 0.39402812803496157
+        },
+        "hd95_mm": {
+          "LV": null,
+          "MYO": null,
+          "RV": null
+        },
+        "n_labeled_frames": 2
+      },
+      "patient028": {
+        "coverage": 1.0,
+        "dice": {
+          "BG": 0.881200379537162,
+          "LV": 0.2226248684087565,
+          "MYO": 0.1285500487769142,
+          "RV": 0.3619464313248615
+        },
+        "hd95_mm": {
+          "LV": 141.29997022982803,
+          "MYO": 133.6037693125864,
+          "RV": 147.1019026991856
+        },
+        "n_labeled_frames": 2
+      },
+      "patient029": {
+        "coverage": 1.0,
+        "dice": {
+          "BG": 0.9078100856072022,
+          "LV": 0.23314387443091802,
+          "MYO": 0.20432060128901108,
+          "RV": 0.1610262522637938
+        },
+        "hd95_mm": {
+          "LV": 113.52819809937316,
+          "MYO": 108.16830400120911,
+          "RV": 167.71836682529778
+        },
+        "n_labeled_frames": 2
+      },
+      "patient030": {
+        "coverage": 1.0,
+        "dice": {
+          "BG": 0.8759909284110245,
+          "LV": 0.2651885345907101,
+          "MYO": 0.11154625151067595,
+          "RV": 0.07571279649854304
+        },
+        "hd95_mm": {
+          "LV": 151.34083316026152,
+          "MYO": 130.79671198495424,
+          "RV": 139.67085276744146
+        },
+        "n_labeled_frames": 2
+      },
+      "patient032": {
+        "coverage": 1.0,
+        "dice": {
+          "BG": 0.8702384838405612,
+          "LV": 0.2732698727980087,
+          "MYO": 0.10243729518928513,
+          "RV": 0.22040211386982195
+        },
+        "hd95_mm": {
+          "LV": 151.2724038299663,
+          "MYO": 140.83233720925818,
+          "RV": 181.31592559653828
+        },
+        "n_labeled_frames": 2
+      },
+      "patient036": {
+        "coverage": 1.0,
+        "dice": {
+          "BG": 0.8886743437272364,
+          "LV": 0.378837084629594,
+          "MYO": 0.14730183374691133,
+          "RV": 0.2591277683435005
+        },
+        "hd95_mm": {
+          "LV": null,
+          "MYO": null,
+          "RV": null
+        },
+        "n_labeled_frames": 2
+      },
+      "patient065": {
+        "coverage": 1.0,
+        "dice": {
+          "BG": 0.880346103236101,
+          "LV": 0.43113665406737145,
+          "MYO": 0.06156989247311828,
+          "RV": 0.29020981169395493
+        },
+        "hd95_mm": {
+          "LV": 156.2751026279121,
+          "MYO": 182.77549069808282,
+          "RV": 156.4550619917153
+        },
+        "n_labeled_frames": 2
+      },
+      "patient070": {
+        "coverage": 1.0,
+        "dice": {
+          "BG": 0.9349476929140328,
+          "LV": 0.29943618094862007,
+          "MYO": 0.12927644903559043,
+          "RV": 0.00035174111853675694
+        },
+        "hd95_mm": {
+          "LV": null,
+          "MYO": null,
+          "RV": null
+        },
+        "n_labeled_frames": 2
+      },
+      "patient082": {
+        "coverage": 1.0,
+        "dice": {
+          "BG": 0.934620067451418,
+          "LV": 0.21737093039576721,
+          "MYO": 0.10419238036740316,
+          "RV": 0.0
+        },
+        "hd95_mm": {
+          "LV": null,
+          "MYO": null,
+          "RV": null
+        },
+        "n_labeled_frames": 2
+      },
+      "patient087": {
+        "coverage": 1.0,
+        "dice": {
+          "BG": 0.9346306053372193,
+          "LV": 0.26104033001326726,
+          "MYO": 0.15518841687785961,
+          "RV": 0.0007883948281299275
+        },
+        "hd95_mm": {
+          "LV": null,
+          "MYO": null,
+          "RV": null
+        },
+        "n_labeled_frames": 2
+      },
+      "patient089": {
+        "coverage": 1.0,
+        "dice": {
+          "BG": 0.9221300724355022,
+          "LV": 0.44567806974754864,
+          "MYO": 0.09003805072684606,
+          "RV": 0.1876929650287354
+        },
+        "hd95_mm": {
+          "LV": null,
+          "MYO": null,
+          "RV": null
+        },
+        "n_labeled_frames": 2
+      },
+      "patient095": {
+        "coverage": 1.0,
+        "dice": {
+          "BG": 0.9010233359985096,
+          "LV": 0.4458088486908091,
+          "MYO": 0.09735976175497606,
+          "RV": 0.3571760327732677
+        },
+        "hd95_mm": {
+          "LV": null,
+          "MYO": null,
+          "RV": null
+        },
+        "n_labeled_frames": 2
+      },
+      "patient098": {
+        "coverage": 1.0,
+        "dice": {
+          "BG": 0.8927444535402582,
+          "LV": 0.4202015164407147,
+          "MYO": 0.1381309604906699,
+          "RV": 0.18007987073332668
+        },
+        "hd95_mm": {
+          "LV": null,
+          "MYO": null,
+          "RV": null
+        },
+        "n_labeled_frames": 2
+      }
+    }
+  },
+  "unknown_is_not_background": true,
+  "verified_frame_geometry_count": 14
+}

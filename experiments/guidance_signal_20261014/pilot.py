@@ -22,8 +22,9 @@ import torch
 from torch.nn import functional as F
 
 MAX_STEPS = 128
-# Fixed numerical guard, never fitted to VAL. Apply to each batch AND patient.
-EXCLUDED_WEIGHT_RTOL = 1e-6
+# User-approved r2 TRAIN-support amendment; original protocol used 1e-6.
+# Apply to each batch AND patient. This is not original-protocol reproduction.
+EXCLUDED_WEIGHT_RTOL = 2e-6
 CLASSES = ("BG", "RV", "MYO", "LV")
 PLAN_SCHEMA = "guidance_signal.paired_pilot.v1"
 CUBLAS_WORKSPACE_CONFIG = ":4096:8"
@@ -157,7 +158,7 @@ def semantic_terms(logits, q, z, weights, valid, semantic_enabled=True):
     for name, target, mask in (("full_Q", q, torch.ones_like(valid)), ("Q", q, valid), ("Z", z, valid)):
         target = target.permute(0, 2, 3, 1)[mask]
         logp = lp.permute(0, 2, 3, 1)[mask]
-        weight = w[mask, None]
+        weight = w[mask].unsqueeze(-1)
         ce_class = -(weight * target * logp).sum(0) / denominator
         entropy = -(weight * torch.special.xlogy(target, target)).sum() / denominator
         kl = (weight * (torch.special.xlogy(target, target) - target * logp)).sum() / denominator
@@ -486,6 +487,12 @@ def run_pilot(bank, signals, checkpoint, expected_checkpoint_sha, plan, output, 
             optimizer.step()
             record.update(optimizer_step=number, preclip_total_gradient_norm=float(norm))
             rows.append(record)
+            print("[PILOT_STEP] " + json.dumps(dict(
+                arm=arm, optimizer_step=number, feature_loss=record["feature_loss"],
+                ce=record["semantic"][arm]["ce"],
+                entropy=record["semantic"][arm]["entropy"],
+                kl=record["semantic"][arm]["kl"],
+                preclip_gradient_norm=float(norm)), allow_nan=False), flush=True)
         optimizer.zero_grad(set_to_none=True)
         final_hash = state_hash(model.state_dict())
         probe_loss, after = forward(fixed, with_gradients=True)

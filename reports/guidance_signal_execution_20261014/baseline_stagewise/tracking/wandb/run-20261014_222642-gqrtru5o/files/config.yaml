@@ -1,0 +1,60 @@
+_wandb:
+    value:
+        cli_version: 0.19.11
+        m:
+            - "1": pilot/Q/step
+              "6":
+                - 3
+              "7": []
+            - "1": pilot/Z/step
+              "6":
+                - 3
+              "7": []
+        python_version: 3.11.16
+        t:
+            "1":
+                - 55
+            "2":
+                - 55
+            "3":
+                - 2
+                - 7
+                - 13
+                - 15
+                - 16
+                - 23
+                - 55
+                - 62
+            "4": 3.11.16
+            "5": 0.19.11
+            "8":
+                - 2
+                - 5
+            "12": 0.19.11
+            "13": linux-x86_64
+execution_order:
+    value:
+        - verify_existing_preflight
+        - wait_for_4070
+        - original_checkpoint_stagewise_generate
+        - original_checkpoint_stagewise_score
+expected_bank_sha:
+    value: 04fb2d30df6c0e0ed235dcf851a491895661b7fd4763e6b89ce95ca6811accae
+expected_checkpoint_sha:
+    value: 90bc16bb9f89963b452355376673e3ba9aa24b38870e4595237d75e402ce873e
+git_commit:
+    value: 4bfc1f95de0282668b90948206245a2996c70b19
+local_patch_sha256:
+    value: d02d290a77bc9d3d49f67a801086a1c630ca371d0e11d45763154f80f0060973
+patient_ids:
+    value:
+        - patient001
+        - patient002
+        - patient013
+        - patient017
+runbook:
+    value: experiments/guidance_signal_20261014/README.md
+seed:
+    value: 42
+steps_per_arm:
+    value: 64

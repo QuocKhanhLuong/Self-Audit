@@ -1,0 +1,28 @@
+{
+  "status": "PASS",
+  "tests_passed": 114,
+  "test_seconds": 98.74,
+  "command": "python -B -m pytest -q -p no:cacheprovider -c /dev/null --rootdir=. --confcutdir=. experiments/guidance_signal_20261014/tests run_configs/tests/test_pilot_evaluation.py",
+  "tested_source_sha256": {
+    "experiments/guidance_signal_20261014/__init__.py": "40e1df2e3c6fbcb1acc6c656374b0d7bbae4d7152f2124efb79bf6e2f6931587",
+    "experiments/guidance_signal_20261014/evidence.py": "077bdd2f1b3bfffa044cdda21c86af0351a6a67b1c1d9ad5781df680f57d54d5",
+    "experiments/guidance_signal_20261014/pilot.py": "5f406a5fd6cebcb4ae5d45c67b12743b1328837b31ccdc7a015840c44c15d61f",
+    "experiments/guidance_signal_20261014/preflight.py": "5ce81403d90a1c6c5a5dd80cc871bfacc1412ce880e036adb199a426ddc802a4",
+    "experiments/guidance_signal_20261014/prepare.py": "119f458fe1cc17727f5db5c71ba13699fcc3c0fbeaeb051e6013e27f62768992",
+    "experiments/guidance_signal_20261014/runtime.py": "8d93f08baeb20eadbf69ea93ba0e8d3f10305e723de2365445f65fb029212ce3",
+    "experiments/guidance_signal_20261014/stagewise.py": "cea2b78d8c745a235527a1af988f6c7031383c41499785b79a153f71c04925a1",
+    "experiments/guidance_signal_20261014/stagewise_table.py": "703fc14109f0c55cb5f8a6d5252737614dc4d236e7002a4232022def19ee7035",
+    "experiments/guidance_signal_20261014/tests/conftest.py": "a11e331fd08762a169f49d1334f6d86b3ead54b7be2db01672f4129ff791df5a",
+    "experiments/guidance_signal_20261014/tests/test_evidence.py": "3c336f2963e10cdd67f24b6763a0fabaea09db8e8211df357c4b85c0f1965eae",
+    "experiments/guidance_signal_20261014/tests/test_pilot.py": "6cd521bfabd19cbe20560f1c6ff974e503e5cf10231897c904509fe9e7baaeb2",
+    "experiments/guidance_signal_20261014/tests/test_preflight.py": "de6fbf93415ee3c8bf9d400e02d03cd428a96feb1a6fe5814eb6b52776eb9a19",
+    "experiments/guidance_signal_20261014/tests/test_stagewise.py": "3b56c015e656657033c50dc9433f62e0fa71ba3defc8d875f4abcad33c709130",
+    "run_configs/evaluate_guidance_pilot.py": "d65bc37a8e1bce3987d87c190861b311be93502693bc1cb20ed991706648f4a5",
+    "run_configs/tests/test_pilot_evaluation.py": "fdee338e92dfdfeba99315107a9b3863ac02c1c3fc42363dcadd1e96c6223ffa"
+  },
+  "copied_evidence_files": 223,
+  "original_and_published_hashes_verified": true,
+  "private_arrays_weights_source_ledgers_and_binary_wandb_events_excluded": true,
+  "prior_pinned_world_v2_report_unchanged": true,
+  "source_change_after_execution": "Evaluator test import points to repository root instead of host worktree; executed test snapshot preserved and matches evaluation protocol digest."
+}

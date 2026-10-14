@@ -1,0 +1,1228 @@
+{
+  "allowed_classes": [
+    true,
+    true,
+    true,
+    true
+  ],
+  "checkpoint_sha256": "e6273113c911c28b28d10238f3d237657bcf0c546885cc33890066dcaae0129c",
+  "config": {
+    "alpha": 0.35,
+    "clusters": [
+      4,
+      8,
+      12
+    ],
+    "feature_dim": 64,
+    "grid": 48,
+    "kmeans_steps": 15,
+    "match_cosine": 0.85,
+    "match_margin": 0.02,
+    "match_photo": 0.5,
+    "match_radius": 2,
+    "max_fit_points": 4096,
+    "max_iterations": 500,
+    "max_nodes": 1500000,
+    "max_region_candidates": 96,
+    "min_contrast": 0.25,
+    "min_enclosure": 0.65,
+    "min_margin": 0.2,
+    "min_probability": 0.7,
+    "min_region_pixels": 6,
+    "min_reliability": 0.05,
+    "spatial_scale": 0.35,
+    "temporal": true,
+    "tolerance": 1e-06
+  },
+  "files": {
+    "patient004.npz": "43459fab019f9babfb65b83012b866ee1fb82ec0fd73516228f3cb468b065043",
+    "patient005.npz": "cb6c5b44af0d3f2c1523d12f2e0c93e3ace0a0e942467b2feea629a3bb000179",
+    "patient012.npz": "745b0b40074de4220761405b81b96d3439fe735fe80ba6a1aec1e8ef4969b2c9",
+    "patient014.npz": "76f6a252090a9c0de5906976bc465f4270f8683e8caca6df7a5f26fe15745f66",
+    "patient015.npz": "41bce18b460b974c4427df3ab8af2eccaa479a30773a37f4e9514983fe84be00",
+    "patient018.npz": "c7e7a8dca379509d99cce4a50a237ba23fe30fb9d3bc0a6c275655600928ad62",
+    "patient028.npz": "3f868d7e17a5db9ae16865aac457f68e60dfb268876e95aa46222a32caf828c8",
+    "patient029.npz": "186de5854a7d1f97b7a9d8c3039ea7937e6bc244b2001dbd79e466331e447605",
+    "patient030.npz": "e043dd8d92338e7ac19d2acdba756110a73cc6c8464b54b90c316fbca7c11408",
+    "patient032.npz": "90ab3f55b6f432999152b417d359781020ccebf9aa4a9e5821712e0dfdfe0c3b",
+    "patient036.npz": "fa16c0b979cdfb0f8beb8e537b7e96b0388f9e7ef8f615e79f8f5ccf93c16609",
+    "patient065.npz": "a279de3be20082d3586fc859a659b89db3cc7d613f5712a3e35c171a95551976",
+    "patient070.npz": "3d03b30a6c59abb044f6da8be581990bbd70306e3d6f4196f2716684ecfe16be",
+    "patient082.npz": "c8313b6e6a3507cfa2dfb26aed8c1748b1416e8f7ffbb05023d09c93dfdacea6",
+    "patient087.npz": "83652039c3eec455a65ae6b399697def61080b758c1924169206e308fbbb0acf",
+    "patient089.npz": "42d12872189840358a991cfc08bc608ffdc2cc38c09fac6369fc5689be82bbff",
+    "patient095.npz": "c0dc2e831198a1aab31197b7487d7d8a642c6f18b0bd8ebe7da36af5faab0478",
+    "patient098.npz": "abc39d820533394236b022e9350726abfcc4676c303f785f35f814150224a7d6"
+  },
+  "gt_read": false,
+  "images": {
+    "patient004": {
+      "affine": [
+        [
+          -1.3671875,
+          0.0,
+          0.0,
+          157.91015625
+        ],
+        [
+          0.0,
+          1.3671875,
+          0.0,
+          -174.31640625
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "image_sha256": "64c3e1d1d9a8c4669ad468fe51fcecfab0e863e13f92519dbdc37f11c5ef576c",
+      "normalization": {
+        "hi": 931.0,
+        "lo": 0.0,
+        "mean": 208.2013702392578,
+        "std": 231.4750518798828
+      },
+      "patient_left_axis": "+x",
+      "preprocessing": "native_TZYX_image_percentiles_no_ROI_no_ED_ES",
+      "raw_image": "${REPO_ROOT}/data/ACDC/training/patient004/patient004_4d.nii",
+      "shape_xyzt": [
+        232,
+        256,
+        10,
+        28
+      ],
+      "spacing_xyz": [
+        1.3671875,
+        1.3671875,
+        10.0
+      ],
+      "spatial_unit": "mm"
+    },
+    "patient005": {
+      "affine": [
+        [
+          -1.40625,
+          0.0,
+          0.0,
+          179.296875
+        ],
+        [
+          0.0,
+          1.40625,
+          0.0,
+          -151.171875
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "image_sha256": "6ca2f6b6570a0c94de58388036da49d1570aa76e31ff6abac3cc28fca623f054",
+      "normalization": {
+        "hi": 329.0,
+        "lo": 0.0,
+        "mean": 70.16934967041016,
+        "std": 72.03441619873047
+      },
+      "patient_left_axis": "+x",
+      "preprocessing": "native_TZYX_image_percentiles_no_ROI_no_ED_ES",
+      "raw_image": "${REPO_ROOT}/data/ACDC/training/patient005/patient005_4d.nii",
+      "shape_xyzt": [
+        256,
+        216,
+        10,
+        30
+      ],
+      "spacing_xyz": [
+        1.40625,
+        1.40625,
+        10.0
+      ],
+      "spatial_unit": "mm"
+    },
+    "patient012": {
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "image_sha256": "4efa1926d9e325e3dc741421a1044cb24b064993e8a535605bc52fc9338cf9a1",
+      "normalization": {
+        "hi": 153.0,
+        "lo": 8.0,
+        "mean": 48.577091217041016,
+        "std": 40.385215759277344
+      },
+      "patient_left_axis": "+x",
+      "preprocessing": "native_TZYX_image_percentiles_no_ROI_no_ED_ES",
+      "raw_image": "${REPO_ROOT}/data/ACDC/training/patient012/patient012_4d.nii",
+      "shape_xyzt": [
+        184,
+        256,
+        10,
+        30
+      ],
+      "spacing_xyz": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "spatial_unit": "unknown"
+    },
+    "patient014": {
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "image_sha256": "71877150dfb01d4929b269cad2f281b85cf381691346f402488f3aef9e5637fe",
+      "normalization": {
+        "hi": 170.0,
+        "lo": 17.0,
+        "mean": 57.29380798339844,
+        "std": 35.701133728027344
+      },
+      "patient_left_axis": "+x",
+      "preprocessing": "native_TZYX_image_percentiles_no_ROI_no_ED_ES",
+      "raw_image": "${REPO_ROOT}/data/ACDC/training/patient014/patient014_4d.nii",
+      "shape_xyzt": [
+        256,
+        216,
+        10,
+        30
+      ],
+      "spacing_xyz": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "spatial_unit": "unknown"
+    },
+    "patient015": {
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "image_sha256": "ef57f73182de2be7d859fc25b8e9be7c8f2aaf0b230e5d9a3ed267b881057500",
+      "normalization": {
+        "hi": 144.0,
+        "lo": 8.0,
+        "mean": 50.06308364868164,
+        "std": 38.25910949707031
+      },
+      "patient_left_axis": "+x",
+      "preprocessing": "native_TZYX_image_percentiles_no_ROI_no_ED_ES",
+      "raw_image": "${REPO_ROOT}/data/ACDC/training/patient015/patient015_4d.nii",
+      "shape_xyzt": [
+        256,
+        216,
+        9,
+        21
+      ],
+      "spacing_xyz": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "spatial_unit": "unknown"
+    },
+    "patient018": {
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "image_sha256": "5c3e33cd656c7060ac75e353a7ae430e89979789afc6bf6fb52e7983406c78fd",
+      "normalization": {
+        "hi": 159.0,
+        "lo": 22.0,
+        "mean": 57.41923904418945,
+        "std": 30.722881317138672
+      },
+      "patient_left_axis": "+x",
+      "preprocessing": "native_TZYX_image_percentiles_no_ROI_no_ED_ES",
+      "raw_image": "${REPO_ROOT}/data/ACDC/training/patient018/patient018_4d.nii",
+      "shape_xyzt": [
+        216,
+        256,
+        8,
+        13
+      ],
+      "spacing_xyz": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "spatial_unit": "unknown"
+    },
+    "patient028": {
+      "affine": [
+        [
+          -1.5625,
+          0.0,
+          0.0,
+          174.21875
+        ],
+        [
+          0.0,
+          1.5625,
+          0.0,
+          -199.21875
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "image_sha256": "ba4e10324e81d9ddc9b27d81676d24843e6d4c27b65c0a0a71defe95b687a070",
+      "normalization": {
+        "hi": 235.0,
+        "lo": 0.0,
+        "mean": 42.91545104980469,
+        "std": 46.357940673828125
+      },
+      "patient_left_axis": "+x",
+      "preprocessing": "native_TZYX_image_percentiles_no_ROI_no_ED_ES",
+      "raw_image": "${REPO_ROOT}/data/ACDC/training/patient028/patient028_4d.nii",
+      "shape_xyzt": [
+        224,
+        256,
+        10,
+        28
+      ],
+      "spacing_xyz": [
+        1.5625,
+        1.5625,
+        10.0
+      ],
+      "spatial_unit": "mm"
+    },
+    "patient029": {
+      "affine": [
+        [
+          -1.3671875,
+          0.0,
+          0.0,
+          130.56640625
+        ],
+        [
+          0.0,
+          1.3671875,
+          0.0,
+          -174.31640625
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -50.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "image_sha256": "acf83e2715f94e930373a7a079f757be11bcf8d66cbec8fb423f49435dff83d9",
+      "normalization": {
+        "hi": 323.0,
+        "lo": 0.0,
+        "mean": 58.40878677368164,
+        "std": 69.87168884277344
+      },
+      "patient_left_axis": "+x",
+      "preprocessing": "native_TZYX_image_percentiles_no_ROI_no_ED_ES",
+      "raw_image": "${REPO_ROOT}/data/ACDC/training/patient029/patient029_4d.nii",
+      "shape_xyzt": [
+        192,
+        256,
+        11,
+        30
+      ],
+      "spacing_xyz": [
+        1.3671875,
+        1.3671875,
+        10.0
+      ],
+      "spatial_unit": "mm"
+    },
+    "patient030": {
+      "affine": [
+        [
+          -1.4453125,
+          0.0,
+          0.0,
+          155.37109375
+        ],
+        [
+          0.0,
+          1.4453125,
+          0.0,
+          -184.27734375
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "image_sha256": "3e0267979dfaf04619a5585582d667e25014fe689d69b054ee21a94244527386",
+      "normalization": {
+        "hi": 312.0,
+        "lo": 0.0,
+        "mean": 76.7922592163086,
+        "std": 80.60123443603516
+      },
+      "patient_left_axis": "+x",
+      "preprocessing": "native_TZYX_image_percentiles_no_ROI_no_ED_ES",
+      "raw_image": "${REPO_ROOT}/data/ACDC/training/patient030/patient030_4d.nii",
+      "shape_xyzt": [
+        216,
+        256,
+        10,
+        35
+      ],
+      "spacing_xyz": [
+        1.4453125,
+        1.4453125,
+        10.0
+      ],
+      "spatial_unit": "mm"
+    },
+    "patient032": {
+      "affine": [
+        [
+          -1.5625,
+          0.0,
+          0.0,
+          186.71875
+        ],
+        [
+          0.0,
+          1.5625,
+          0.0,
+          -199.21875
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "image_sha256": "f3f7bf4b7543ab49ba9419178c51d4d711b04261369f69a4a182940eedcc7fe5",
+      "normalization": {
+        "hi": 313.0,
+        "lo": 0.0,
+        "mean": 93.88785552978516,
+        "std": 86.57573699951172
+      },
+      "patient_left_axis": "+x",
+      "preprocessing": "native_TZYX_image_percentiles_no_ROI_no_ED_ES",
+      "raw_image": "${REPO_ROOT}/data/ACDC/training/patient032/patient032_4d.nii",
+      "shape_xyzt": [
+        240,
+        256,
+        10,
+        30
+      ],
+      "spacing_xyz": [
+        1.5625,
+        1.5625,
+        10.0
+      ],
+      "spatial_unit": "mm"
+    },
+    "patient036": {
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "image_sha256": "547f9ad57cdf48a2c71a459683f9f20327e49cb313b54d2b1ca2aa73c4b43c74",
+      "normalization": {
+        "hi": 139.0,
+        "lo": 9.0,
+        "mean": 51.206825256347656,
+        "std": 36.92445373535156
+      },
+      "patient_left_axis": "+x",
+      "preprocessing": "native_TZYX_image_percentiles_no_ROI_no_ED_ES",
+      "raw_image": "${REPO_ROOT}/data/ACDC/training/patient036/patient036_4d.nii",
+      "shape_xyzt": [
+        216,
+        256,
+        8,
+        35
+      ],
+      "spacing_xyz": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "spatial_unit": "unknown"
+    },
+    "patient065": {
+      "affine": [
+        [
+          -1.875,
+          0.0,
+          0.0,
+          195.9375
+        ],
+        [
+          0.0,
+          1.875,
+          0.0,
+          -209.0625
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -35.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "image_sha256": "759985bc3aa008b75d1f6af9961d8cc75e1eda6f96492d2e2a3828553b8acece",
+      "normalization": {
+        "hi": 260.0,
+        "lo": 0.0,
+        "mean": 69.43468475341797,
+        "std": 69.61782836914062
+      },
+      "patient_left_axis": "+x",
+      "preprocessing": "native_TZYX_image_percentiles_no_ROI_no_ED_ES",
+      "raw_image": "${REPO_ROOT}/data/ACDC/training/patient065/patient065_4d.nii",
+      "shape_xyzt": [
+        210,
+        224,
+        8,
+        30
+      ],
+      "spacing_xyz": [
+        1.875,
+        1.875,
+        10.0
+      ],
+      "spatial_unit": "mm"
+    },
+    "patient070": {
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "image_sha256": "057275cab8927f8d01a910f00646ea3a3e8fa96b440425778b55647288b6c836",
+      "normalization": {
+        "hi": 204.0,
+        "lo": 5.0,
+        "mean": 54.418399810791016,
+        "std": 48.275997161865234
+      },
+      "patient_left_axis": "+x",
+      "preprocessing": "native_TZYX_image_percentiles_no_ROI_no_ED_ES",
+      "raw_image": "${REPO_ROOT}/data/ACDC/training/patient070/patient070_4d.nii",
+      "shape_xyzt": [
+        208,
+        256,
+        6,
+        28
+      ],
+      "spacing_xyz": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "spatial_unit": "unknown"
+    },
+    "patient082": {
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "image_sha256": "f7df5fdb0a5840371d7b9ed5e741fd262797d2143a86e9d406933ef90d4b7236",
+      "normalization": {
+        "hi": 232.0,
+        "lo": 10.0,
+        "mean": 52.624603271484375,
+        "std": 45.56354522705078
+      },
+      "patient_left_axis": "+x",
+      "preprocessing": "native_TZYX_image_percentiles_no_ROI_no_ED_ES",
+      "raw_image": "${REPO_ROOT}/data/ACDC/training/patient082/patient082_4d.nii",
+      "shape_xyzt": [
+        224,
+        154,
+        16,
+        17
+      ],
+      "spacing_xyz": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "spatial_unit": "unknown"
+    },
+    "patient087": {
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "image_sha256": "6739809a950671235328a274f34fb3d5e62ee3a25654ed73710b3d86876263fd",
+      "normalization": {
+        "hi": 206.0,
+        "lo": 13.0,
+        "mean": 52.14667892456055,
+        "std": 39.17970657348633
+      },
+      "patient_left_axis": "+x",
+      "preprocessing": "native_TZYX_image_percentiles_no_ROI_no_ED_ES",
+      "raw_image": "${REPO_ROOT}/data/ACDC/training/patient087/patient087_4d.nii",
+      "shape_xyzt": [
+        256,
+        184,
+        8,
+        28
+      ],
+      "spacing_xyz": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "spatial_unit": "unknown"
+    },
+    "patient089": {
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "image_sha256": "695ddf3e54711114df72a5c9b5bf5c2e7e2cdcb6c4420363942bb51876b2d728",
+      "normalization": {
+        "hi": 163.0,
+        "lo": 15.0,
+        "mean": 49.892478942871094,
+        "std": 35.85060501098633
+      },
+      "patient_left_axis": "+x",
+      "preprocessing": "native_TZYX_image_percentiles_no_ROI_no_ED_ES",
+      "raw_image": "${REPO_ROOT}/data/ACDC/training/patient089/patient089_4d.nii",
+      "shape_xyzt": [
+        264,
+        288,
+        6,
+        30
+      ],
+      "spacing_xyz": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "spatial_unit": "unknown"
+    },
+    "patient095": {
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "image_sha256": "0d890435d3e28a214f39c28e7984d5af9fe6739380b573d8de87bef1ed46a273",
+      "normalization": {
+        "hi": 144.0,
+        "lo": 12.0,
+        "mean": 53.95499038696289,
+        "std": 35.8856201171875
+      },
+      "patient_left_axis": "+x",
+      "preprocessing": "native_TZYX_image_percentiles_no_ROI_no_ED_ES",
+      "raw_image": "${REPO_ROOT}/data/ACDC/training/patient095/patient095_4d.nii",
+      "shape_xyzt": [
+        180,
+        224,
+        14,
+        30
+      ],
+      "spacing_xyz": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "spatial_unit": "unknown"
+    },
+    "patient098": {
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "image_sha256": "3fd92a6ca1101d4e84832d792624200959a785b8f25f1ea368624b9d6f6ce97b",
+      "normalization": {
+        "hi": 139.0,
+        "lo": 23.0,
+        "mean": 51.88423538208008,
+        "std": 28.569683074951172
+      },
+      "patient_left_axis": "+x",
+      "preprocessing": "native_TZYX_image_percentiles_no_ROI_no_ED_ES",
+      "raw_image": "${REPO_ROOT}/data/ACDC/training/patient098/patient098_4d.nii",
+      "shape_xyzt": [
+        216,
+        256,
+        7,
+        22
+      ],
+      "spacing_xyz": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "spatial_unit": "unknown"
+    }
+  },
+  "labels_axis_order": "TZYX",
+  "locked_splits": {
+    "test": [
+      "patient101",
+      "patient102",
+      "patient103",
+      "patient104",
+      "patient105",
+      "patient106",
+      "patient107",
+      "patient108",
+      "patient109",
+      "patient110",
+      "patient111",
+      "patient112",
+      "patient113",
+      "patient114",
+      "patient115",
+      "patient116",
+      "patient117",
+      "patient118",
+      "patient119",
+      "patient120",
+      "patient121",
+      "patient122",
+      "patient123",
+      "patient124",
+      "patient125",
+      "patient126",
+      "patient127",
+      "patient128",
+      "patient129",
+      "patient130",
+      "patient131",
+      "patient132",
+      "patient133",
+      "patient134",
+      "patient135",
+      "patient136",
+      "patient137",
+      "patient138",
+      "patient139",
+      "patient140",
+      "patient141",
+      "patient142",
+      "patient143",
+      "patient144",
+      "patient145",
+      "patient146",
+      "patient147",
+      "patient148",
+      "patient149",
+      "patient150"
+    ],
+    "train": [
+      "patient001",
+      "patient002",
+      "patient003",
+      "patient006",
+      "patient007",
+      "patient008",
+      "patient009",
+      "patient010",
+      "patient011",
+      "patient013",
+      "patient016",
+      "patient017",
+      "patient019",
+      "patient020",
+      "patient021",
+      "patient022",
+      "patient023",
+      "patient024",
+      "patient025",
+      "patient026",
+      "patient027",
+      "patient031",
+      "patient033",
+      "patient034",
+      "patient035",
+      "patient037",
+      "patient038",
+      "patient039",
+      "patient040",
+      "patient041",
+      "patient042",
+      "patient043",
+      "patient044",
+      "patient045",
+      "patient046",
+      "patient047",
+      "patient048",
+      "patient049",
+      "patient050",
+      "patient051",
+      "patient052",
+      "patient053",
+      "patient054",
+      "patient056",
+      "patient057",
+      "patient058",
+      "patient059",
+      "patient060",
+      "patient061",
+      "patient062",
+      "patient063",
+      "patient064",
+      "patient066",
+      "patient067",
+      "patient068",
+      "patient069",
+      "patient071",
+      "patient072",
+      "patient073",
+      "patient074",
+      "patient075",
+      "patient077",
+      "patient078",
+      "patient079",
+      "patient080",
+      "patient081",
+      "patient083",
+      "patient084",
+      "patient085",
+      "patient086",
+      "patient088",
+      "patient090",
+      "patient091",
+      "patient092",
+      "patient093",
+      "patient094",
+      "patient096",
+      "patient097",
+      "patient099",
+      "patient100"
+    ],
+    "val": [
+      "patient004",
+      "patient005",
+      "patient012",
+      "patient014",
+      "patient015",
+      "patient018",
+      "patient028",
+      "patient029",
+      "patient030",
+      "patient032",
+      "patient036",
+      "patient065",
+      "patient070",
+      "patient082",
+      "patient087",
+      "patient089",
+      "patient095",
+      "patient098"
+    ]
+  },
+  "model": "Q",
+  "patients": [
+    "patient004",
+    "patient005",
+    "patient012",
+    "patient014",
+    "patient015",
+    "patient018",
+    "patient028",
+    "patient029",
+    "patient030",
+    "patient032",
+    "patient036",
+    "patient065",
+    "patient070",
+    "patient082",
+    "patient087",
+    "patient089",
+    "patient095",
+    "patient098"
+  ],
+  "prediction_kind": "gated",
+  "private_weights_promoted": false,
+  "quality_evaluated": false,
+  "role": "student_predictions",
+  "schema": "self_audit.stable_guidance.v1",
+  "split": "val",
+  "student_status": "USER_REQUESTED_FROZEN_PILOT_DIAGNOSTIC_EVALUATION",
+  "train_patients": [
+    "patient001",
+    "patient002",
+    "patient003",
+    "patient006",
+    "patient007",
+    "patient008",
+    "patient009",
+    "patient010",
+    "patient011",
+    "patient013",
+    "patient016",
+    "patient017",
+    "patient019",
+    "patient020",
+    "patient021",
+    "patient022",
+    "patient023",
+    "patient024",
+    "patient025",
+    "patient026",
+    "patient027",
+    "patient031",
+    "patient033",
+    "patient034",
+    "patient035",
+    "patient037",
+    "patient038",
+    "patient039",
+    "patient040",
+    "patient041",
+    "patient042",
+    "patient043",
+    "patient044",
+    "patient045",
+    "patient046",
+    "patient047",
+    "patient048",
+    "patient049",
+    "patient050",
+    "patient051",
+    "patient052",
+    "patient053",
+    "patient054",
+    "patient056",
+    "patient057",
+    "patient058",
+    "patient059",
+    "patient060",
+    "patient061",
+    "patient062",
+    "patient063",
+    "patient064",
+    "patient066",
+    "patient067",
+    "patient068",
+    "patient069",
+    "patient071",
+    "patient072",
+    "patient073",
+    "patient074",
+    "patient075",
+    "patient077",
+    "patient078",
+    "patient079",
+    "patient080",
+    "patient081",
+    "patient083",
+    "patient084",
+    "patient085",
+    "patient086",
+    "patient088",
+    "patient090",
+    "patient091",
+    "patient092",
+    "patient093",
+    "patient094",
+    "patient096",
+    "patient097",
+    "patient099",
+    "patient100"
+  ],
+  "unknown": 255
+}

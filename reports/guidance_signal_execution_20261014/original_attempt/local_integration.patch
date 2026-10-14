@@ -1,0 +1,80 @@
+diff --git a/experiments/guidance_signal_20261014/pilot.py b/experiments/guidance_signal_20261014/pilot.py
+index 554ab26..e9aafef 100644
+--- a/experiments/guidance_signal_20261014/pilot.py
++++ b/experiments/guidance_signal_20261014/pilot.py
+@@ -157,7 +157,7 @@ def semantic_terms(logits, q, z, weights, valid, semantic_enabled=True):
+     for name, target, mask in (("full_Q", q, torch.ones_like(valid)), ("Q", q, valid), ("Z", z, valid)):
+         target = target.permute(0, 2, 3, 1)[mask]
+         logp = lp.permute(0, 2, 3, 1)[mask]
+-        weight = w[mask, None]
++        weight = w[mask].unsqueeze(-1)
+         ce_class = -(weight * target * logp).sum(0) / denominator
+         entropy = -(weight * torch.special.xlogy(target, target)).sum() / denominator
+         kl = (weight * (torch.special.xlogy(target, target) - target * logp)).sum() / denominator
+diff --git a/experiments/guidance_signal_20261014/preflight.py b/experiments/guidance_signal_20261014/preflight.py
+index 3f6c414..fa0c040 100644
+--- a/experiments/guidance_signal_20261014/preflight.py
++++ b/experiments/guidance_signal_20261014/preflight.py
+@@ -71,7 +71,10 @@ def assert_original_bindings(runtime, bank, checkpoint, recipe, bank_sha, checkp
+         raise ValueError("student freeze is not bound to original bank")
+     if resolved.get("config") != bank_manifest["config"]:
+         raise ValueError("recipe and bank configuration differ")
+-    if student_manifest.get("locked_splits") != split:
++    # The pinned executed student freeze binds the bank manifest but stores
++    # locked_splits in its hash-bound checkpoint payload, checked below.
++    # If another compatible freeze repeats the field, it must also agree.
++    if "locked_splits" in student_manifest and student_manifest["locked_splits"] != split:
+         raise ValueError("student and bank locked split differ")
+     if student_manifest.get("teacher") != bank_manifest.get("teacher"):
+         raise ValueError("student and bank teacher identities differ")
+@@ -91,6 +94,7 @@ def assert_original_bindings(runtime, bank, checkpoint, recipe, bank_sha, checkp
+     return {"status":"PASS_ORIGINAL_ARTIFACT_BINDINGS",
+             "bank_manifest_sha256":bank_sha,"checkpoint_sha256":checkpoint_sha,
+             "recipe_sha256":digest(recipe),"patients":len(bank_manifest["patients"]),
++            "split_binding_source":"hash_bound_checkpoint_and_original_bank",
+             "class_patients":permission_counts,"allowed_classes":ck["allowed_classes"],
+             "training_run":False,"model_forward_run":False,"target_masks_read":False}
+ 
+@@ -125,6 +129,7 @@ def main(argv=None):
+             assert_original_bindings(runtime,*fields)
+             if all(fields) else {"status":"NOT_REQUESTED_SOFTWARE_ONLY"})
+         command=[sys.executable,"-B","-m","pytest","-q","-p","no:cacheprovider","-c","/dev/null",
++                 "--rootdir="+str(REPO),"--confcutdir="+str(REPO),
+                  str(HERE/"tests"),"--junitxml="+str(out/"junit.xml")]
+         env=os.environ.copy()
+         env["PYTHONDONTWRITEBYTECODE"]="1"
+diff --git a/experiments/guidance_signal_20261014/tests/test_preflight.py b/experiments/guidance_signal_20261014/tests/test_preflight.py
+index 1115e6f..7ffde87 100644
+--- a/experiments/guidance_signal_20261014/tests/test_preflight.py
++++ b/experiments/guidance_signal_20261014/tests/test_preflight.py
+@@ -58,7 +58,8 @@ def test_original_recipe_mutation_rejected_before_tensor_load(tmp_path,monkeypat
+         pf.assert_original_bindings(rt,bank,ck,recipe,digest(bank/'FROZEN.json'),digest(ck/'last.pt'))
+ 
+ 
+-def test_positive_synthetic_original_binding_and_permission_mismatch(tmp_path,monkeypatch):
+${EMAIL}('manifest_has_split',[False,True])
++def test_positive_synthetic_original_binding_and_permission_mismatch(tmp_path,monkeypatch,manifest_has_split):
+     """Only synthetic pins are injected here; CLI has no override for them."""
+     import torch
+     from experiments.guidance_signal_20261014 import preflight as pf
+@@ -70,6 +71,8 @@ def test_positive_synthetic_original_binding_and_permission_mismatch(tmp_path,mo
+         'patient_reports':{'a':{'class_pixels':[1,1,0,1]},'b':{'class_pixels':[1,0,0,1]}}}
+     (bank/'FROZEN.json').write_text(json.dumps(bm));bank_sha=digest(bank/'FROZEN.json')
+     sm={'source_sha256':source,'locked_splits':split,'teacher':bm['teacher'],'bank_manifest_sha256':bank_sha}
++    if not manifest_has_split:
++        sm.pop('locked_splits')
+     (student/'FROZEN.json').write_text(json.dumps(sm))
+     recipe=tmp_path/'RECIPE.json';recipe.write_text(json.dumps({'schema':'self_audit.full_guidance_recipe.v1',
+         'source_sha256':source,'splits':split,'config':bm['config']}))
+@@ -84,6 +87,11 @@ def test_positive_synthetic_original_binding_and_permission_mismatch(tmp_path,mo
+     result=pf.assert_original_bindings(rt,bank,student,recipe,bank_sha,digest(student/'last.pt'))
+     assert result['status']=='PASS_ORIGINAL_ARTIFACT_BINDINGS'
+     assert result['class_patients']==[2,1,0,2] and result['training_run'] is False
++    wrong_split={**ck,'locked_splits':{'train':['c'],'val':['a','b'],'test':['d']}}
++    torch.save(wrong_split,student/'last.pt')
++    monkeypatch.setattr(pf,'ORIGINAL_CHECKPOINT_SHA256',digest(student/'last.pt'))
++    with pytest.raises(ValueError,match='checkpoint binding differs: locked_splits'):
++        pf.assert_original_bindings(rt,bank,student,recipe,bank_sha,digest(student/'last.pt'))
+     ck['allowed_classes']=[True]*4;torch.save(ck,student/'last.pt')
+     monkeypatch.setattr(pf,'ORIGINAL_CHECKPOINT_SHA256',digest(student/'last.pt'))
+     with pytest.raises(ValueError,match='permissions differ'):

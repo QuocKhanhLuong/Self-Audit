@@ -1,0 +1,119 @@
+{
+  "status": "COMPLETED_Q64_Z64_AND_FIXED_VAL18_EVALUATION",
+  "base_commit": "4bfc1f95de0282668b90948206245a2996c70b19",
+  "task_scope": "Paired technical continuation pilot, not a full training run",
+  "optimizer_steps": {
+    "Q": 64,
+    "Z": 64
+  },
+  "seed": 42,
+  "batch_size": 8,
+  "protocol_revision": "TRAIN_support_tolerance_r2_user_approved",
+  "excluded_weight_rtol_original": 1e-06,
+  "excluded_weight_rtol_applied": 2e-06,
+  "max_excluded_fraction": 1.3718879278030748e-06,
+  "plan_sha256": "e4619a97d2ea6f0cfcc1d11c1b3cca850a60f1804ee59af9a6a6dd9fd7894ce5",
+  "validation_patients": 18,
+  "labeled_frames": 36,
+  "test_scored": false,
+  "validation_previously_exposed": true,
+  "primary": "native_gated_original_probability_0.7_margin_0.2_permissions",
+  "secondary": "native_raw_argmax",
+  "aggregation": "mean frames within patient, then patients, then foreground RV/MYO/LV",
+  "precision_zero_division": 0,
+  "auroc": "one-vs-rest ungated native probabilities, frame/patient/foreground macro",
+  "metrics": [
+    {
+      "model": "Baseline",
+      "mode": "gated",
+      "dice": 0.05068521149021373,
+      "iou": 0.02901769046038556,
+      "precision": 0.17550964152919216,
+      "recall": 0.03322679130532352,
+      "auroc": 0.7899784932410197,
+      "coverage": 0.0036684568822642327,
+      "unknown_fraction": 0.9963315431177358
+    },
+    {
+      "model": "Baseline",
+      "mode": "raw",
+      "dice": 0.17188086433166963,
+      "iou": 0.10300156381213449,
+      "precision": 0.17309787570575172,
+      "recall": 0.40252318105056695,
+      "auroc": 0.7899784932410197,
+      "coverage": 1.0,
+      "unknown_fraction": 0.0
+    },
+    {
+      "model": "Q",
+      "mode": "gated",
+      "dice": 0.01183998034659918,
+      "iou": 0.006131835946660953,
+      "precision": 0.17247795995273085,
+      "recall": 0.006877907257394369,
+      "auroc": 0.8573344041818153,
+      "coverage": 0.0011553970961471092,
+      "unknown_fraction": 0.9988446029038529
+    },
+    {
+      "model": "Q",
+      "mode": "raw",
+      "dice": 0.2105890506038222,
+      "iou": 0.12795568033604363,
+      "precision": 0.18208678717164917,
+      "recall": 0.5004507985309611,
+      "auroc": 0.8573344041818153,
+      "coverage": 1.0,
+      "unknown_fraction": 0.0
+    },
+    {
+      "model": "Z",
+      "mode": "gated",
+      "dice": 0.11407764669259622,
+      "iou": 0.06609474184458146,
+      "precision": 0.24522768931999064,
+      "recall": 0.21212800523625183,
+      "auroc": 0.8815865471910542,
+      "coverage": 0.6203576374191762,
+      "unknown_fraction": 0.37964236258082384
+    },
+    {
+      "model": "Z",
+      "mode": "raw",
+      "dice": 0.21501710506794502,
+      "iou": 0.12949541275719142,
+      "precision": 0.2371259385347246,
+      "recall": 0.46519672606132195,
+      "auroc": 0.8815865471910542,
+      "coverage": 1.0,
+      "unknown_fraction": 0.0
+    }
+  ],
+  "conclusion": "Z improves gated Dice, but absolute accuracy remains poor and RV is nearly absent; raw Q/Z Dice are close. A small single-seed pilot does not establish superiority or generalization.",
+  "wandb": {
+    "original_attempt": {
+      "id": "kqlli5f5",
+      "url": "https://wandb.ai/nthne-hanoi-university-of-science-and-technology/self-audit-stable-guidance/runs/kqlli5f5",
+      "project": "self-audit-stable-guidance"
+    },
+    "baseline_stagewise": {
+      "id": "gqrtru5o",
+      "url": "https://wandb.ai/nthne-hanoi-university-of-science-and-technology/self-audit-stable-guidance/runs/gqrtru5o",
+      "project": "self-audit-stable-guidance"
+    },
+    "training_r2": {
+      "id": "t5tmy3bj",
+      "url": "https://wandb.ai/nthne-hanoi-university-of-science-and-technology/self-audit-stable-guidance/runs/t5tmy3bj",
+      "project": "self-audit-stable-guidance"
+    },
+    "evaluation_failed_backend": {
+      "id": "se93uktm",
+      "url": "https://wandb.ai/nthne-hanoi-university-of-science-and-technology/self-audit-stable-guidance/runs/se93uktm"
+    },
+    "evaluation": {
+      "id": "zfgxvxqg",
+      "url": "https://wandb.ai/nthne-hanoi-university-of-science-and-technology/self-audit-stable-guidance/runs/zfgxvxqg"
+    }
+  }
+}

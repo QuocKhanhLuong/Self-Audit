@@ -1,0 +1,27 @@
+2026-10-14 22:26:42,956 INFO    MainThread:1827315 [wandb_setup.py:_flush():70] Current SDK version is 0.19.11
+2026-10-14 22:26:42,956 INFO    MainThread:1827315 [wandb_setup.py:_flush():70] Configure stats pid to 1827315
+2026-10-14 22:26:42,956 INFO    MainThread:1827315 [wandb_setup.py:_flush():70] Loading settings from ${AGENT_HOME}/.config/wandb/settings
+2026-10-14 22:26:42,956 INFO    MainThread:1827315 [wandb_setup.py:_flush():70] Loading settings from ${REPO_ROOT}/.worktrees/guidance-signal-4bfc1f9/wandb/settings
+2026-10-14 22:26:42,956 INFO    MainThread:1827315 [wandb_setup.py:_flush():70] Loading settings from environment variables
+2026-10-14 22:26:42,956 INFO    MainThread:1827315 [wandb_init.py:setup_run_log_directory():724] Logging user logs to ${REPO_ROOT}/runs/guidance_signal_recovery_4070_20261014_222636/tracking/wandb/run-20261014_222642-gqrtru5o/logs/debug.log
+2026-10-14 22:26:42,956 INFO    MainThread:1827315 [wandb_init.py:setup_run_log_directory():725] Logging internal logs to ${REPO_ROOT}/runs/guidance_signal_recovery_4070_20261014_222636/tracking/wandb/run-20261014_222642-gqrtru5o/logs/debug-internal.log
+2026-10-14 22:26:42,956 INFO    MainThread:1827315 [wandb_init.py:init():852] calling init triggers
+2026-10-14 22:26:42,956 INFO    MainThread:1827315 [wandb_init.py:init():857] wandb.init called with sweep_config: {}
+config: {'git_commit': '4bfc1f95de0282668b90948206245a2996c70b19', 'local_patch_sha256': 'd02d290a77bc9d3d49f67a801086a1c630ca371d0e11d45763154f80f0060973', 'steps_per_arm': 64, 'seed': 42, 'patient_ids': ['patient001', 'patient002', 'patient013', 'patient017'], 'expected_bank_sha': '04fb2d30df6c0e0ed235dcf851a491895661b7fd4763e6b89ce95ca6811accae', 'expected_checkpoint_sha': '90bc16bb9f89963b452355376673e3ba9aa24b38870e4595237d75e402ce873e', 'execution_order': ['verify_existing_preflight', 'wait_for_4070', 'original_checkpoint_stagewise_generate', 'original_checkpoint_stagewise_score'], 'runbook': 'experiments/guidance_signal_20261014/README.md', '_wandb': {}}
+2026-10-14 22:26:42,956 INFO    MainThread:1827315 [wandb_init.py:init():893] starting backend
+2026-10-14 22:26:42,956 INFO    MainThread:1827315 [wandb_init.py:init():897] sending inform_init request
+2026-10-14 22:26:42,973 INFO    MainThread:1827315 [backend.py:_multiprocessing_setup():101] multiprocessing start_methods=fork,spawn,forkserver, using: spawn
+2026-10-14 22:26:42,973 INFO    MainThread:1827315 [wandb_init.py:init():907] backend started and connected
+2026-10-14 22:26:42,974 INFO    MainThread:1827315 [wandb_init.py:init():1005] updated telemetry
+2026-10-14 22:26:42,974 INFO    MainThread:1827315 [wandb_init.py:init():1029] communicating run to backend with 90.0 second timeout
+2026-10-14 22:26:44,075 INFO    MainThread:1827315 [wandb_init.py:init():1104] starting run threads in backend
+2026-10-14 22:26:44,285 INFO    MainThread:1827315 [wandb_run.py:_console_start():2573] atexit reg
+2026-10-14 22:26:44,285 INFO    MainThread:1827315 [wandb_run.py:_redirect():2421] redirect: off
+2026-10-14 22:26:44,287 INFO    MainThread:1827315 [wandb_init.py:init():1150] run started, returning control to user process
+2026-10-14 22:33:44,596 INFO    MainThread:1827315 [wandb_run.py:_finish():2321] finishing run nthne-hanoi-university-of-science-and-technology/self-audit-stable-guidance/gqrtru5o
+2026-10-14 22:33:44,596 INFO    MainThread:1827315 [wandb_run.py:_atexit_cleanup():2538] got exitcode: 0
+2026-10-14 22:33:44,596 INFO    MainThread:1827315 [wandb_run.py:_restore():2520] restore
+2026-10-14 22:33:44,596 INFO    MainThread:1827315 [wandb_run.py:_restore():2526] restore done
+2026-10-14 22:33:48,225 INFO    MainThread:1827315 [wandb_run.py:_footer_history_summary_info():4188] rendering history
+2026-10-14 22:33:48,240 INFO    MainThread:1827315 [wandb_run.py:_footer_history_summary_info():4220] rendering summary
+2026-10-14 22:33:48,254 INFO    MainThread:1827315 [wandb_run.py:_footer_sync_info():4149] logging synced files

@@ -1,0 +1,15 @@
+{
+  "status": "PROPOSED_NOT_APPLIED",
+  "original_threshold": 1e-06,
+  "proposed_threshold": 2e-06,
+  "measured_failed_batch": 10,
+  "measured_fraction": 1.3718879278030748e-06,
+  "failed_batches": 1,
+  "scheduled_batches": 64,
+  "original_optimizer_updates": 0,
+  "change": "Raise only excluded-weight tolerance to 2e-6 in a separate recorded pilot revision; no change to min_h, validity, data, checkpoint, schedule, steps, weights, denominator, model or loss.",
+  "reason": "One batch narrowly exceeds the original numerical bound; this is a protocol amendment based on observed TRAIN support, not a bug fix or original-protocol reproduction.",
+  "affected_source": "experiments/guidance_signal_20261014/pilot.py",
+  "requires_new_plan_hash": true,
+  "original_plan_sha256": "24e85b5ee8f30bf99d99d7eae8a33c3e7ada15aa29d66a4ce0102365b66f1b3f"
+}

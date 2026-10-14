@@ -1,0 +1,290 @@
+"""Explicit diagnostic adapter for frozen pilot weights; no checkpoint promotion."""
+from __future__ import annotations
+import argparse
+import contextlib
+import csv
+import hashlib
+import json
+from pathlib import Path
+import sys
+import time
+
+import numpy as np
+import torch
+from scipy.stats import rankdata
+
+CLASSES = ('BG', 'RV', 'MYO', 'LV')
+MODELS = ('Baseline', 'Q', 'Z')
+
+
+def mean(values):
+    values = [float(v) for v in values if v is not None]
+    return sum(values)/len(values) if values else None
+
+
+def binary_auc(target, probability):
+    y = np.asarray(target, dtype=bool).ravel()
+    p = np.asarray(probability).ravel()
+    if y.shape != p.shape or not np.isfinite(p).all():
+        raise ValueError('AUROC requires aligned finite probabilities')
+    npos = int(y.sum()); nneg = y.size-npos
+    if not npos or not nneg:
+        return None
+    ranks = rankdata(p, method='average')
+    return float((ranks[y].sum()-npos*(npos+1)/2)/(npos*nneg))
+
+
+def gate_torch(probability, ck):
+    top = probability.topk(2, 1).values
+    winner = probability.argmax(1)
+    valid = (top[:, 0] >= ck['config']['min_probability']) & (
+        top[:, 0]-top[:, 1] >= ck['config']['min_margin'])
+    valid &= torch.tensor(ck['allowed_classes'], device=probability.device)[winner]
+    if ck['status'] == 'REPRESENTATION_ONLY':
+        valid[:] = False
+    return winner.to(torch.uint8), torch.where(valid, winner, 255).to(torch.uint8)
+
+
+def configure_export_backend(seed):
+    # Reproduce the archived exporter defaults, not the pilot's backward-pass policy.
+    torch.use_deterministic_algorithms(False)
+    torch.backends.cudnn.deterministic=False
+    torch.backends.cudnn.benchmark=False
+    torch.backends.cudnn.allow_tf32=True
+    torch.backends.cuda.matmul.allow_tf32=False
+    torch.manual_seed(seed)
+    return dict(policy='archived_export_defaults',torch_deterministic_algorithms=False,
+                cudnn_deterministic=False,cudnn_benchmark=False,cudnn_allow_tf32=True,
+                matmul_allow_tf32=False,baseline_full_cine_exact_equality_required=True)
+
+
+@torch.inference_mode()
+def predict_with_probabilities(rt, model, ck, cine, device, batch_size, destination):
+    t, z, h, w = cine.shape
+    soft = np.lib.format.open_memmap(destination, mode='w+', dtype=np.float32, shape=(t,z,h,w,4))
+    raw = np.empty((t,z,h,w), np.uint8); gated = np.empty_like(raw)
+    indices = list(np.ndindex((t,z)))
+    for start in range(0, len(indices), batch_size):
+        batch = indices[start:start+batch_size]
+        x = torch.from_numpy(rt.student.contexts(cine, batch)).to(device)
+        p = model(x)['logits'].float().softmax(1)
+        r,g = gate_torch(p,ck)
+        pn,rn,gn = p.permute(0,2,3,1).cpu().numpy(),r.cpu().numpy(),g.cpu().numpy()
+        for i,(ti,zi) in enumerate(batch):
+            soft[ti,zi],raw[ti,zi],gated[ti,zi] = pn[i],rn[i],gn[i]
+    soft.flush();del soft
+    Path(destination).chmod(0o600)
+    return raw,gated
+
+
+def validate_payload(payload, arm, plan, trace, plan_sha, state_hash):
+    if payload['arm'] != arm or payload['plan_sha256'] != plan_sha:
+        raise ValueError('arm/plan identity mismatch')
+    if payload['original_checkpoint_sha256'] != plan['checkpoint_sha256']:
+        raise ValueError('original checkpoint binding mismatch')
+    if payload['policy'] != plan['policy'] or payload['optimizer_steps'] != plan['steps']:
+        raise ValueError('pilot policy/step budget mismatch')
+    if payload['initial_model_state_sha256'] != plan['model_state_sha256']:
+        raise ValueError('pilot initialization mismatch')
+    if payload['final_model_state_sha256'] != trace['final_model_state_sha256']:
+        raise ValueError('pilot final state/trace mismatch')
+    if payload['ordered_patient_tz_schedule_sha256'] != trace['ordered_patient_tz_schedule_sha256']:
+        raise ValueError('pilot schedule/trace mismatch')
+    if state_hash(payload['model']) != payload['final_model_state_sha256']:
+        raise ValueError('pilot tensor state hash mismatch')
+
+
+def runtime(protocol):
+    sys.path.insert(0,protocol['source'])
+    from experiments.guidance_signal_20261014.runtime import load_runtime
+    return load_runtime()
+
+
+def load_inputs(protocol,rt):
+    from experiments.guidance_signal_20261014.pilot import json_hash,state_hash
+    original=Path(protocol['original_run']);train=Path(protocol['training_job']);pilot=train/'pilot_Q_Z_64'
+    rt.io.verify(original/'student','student');rt.io.verify(pilot,'paired_technical_pilot')
+    assert rt.io.digest(original/'student/last.pt') == protocol['expected_checkpoint_sha']
+    base=torch.load(original/'student/last.pt',map_location='cpu',weights_only=True)
+    plan=rt.io.read_json(train/'pilot_plan.json');plan_sha=json_hash(plan)
+    assert plan_sha==rt.io.read_json(train/'PLAN_BINDING.json')['plan_sha256']
+    assert plan['checkpoint_sha256']==protocol['expected_checkpoint_sha']
+    assert state_hash(base['model'])==plan['model_state_sha256']
+    assert plan['policy']['config']==base['config'] and plan['policy']['allowed_classes']==base['allowed_classes']
+    states={'Baseline':base['model']};hashes={'Baseline':protocol['expected_checkpoint_sha']}
+    locks={str(original/'student/last.pt'):hashes['Baseline'],str(train/'pilot_plan.json'):rt.io.digest(train/'pilot_plan.json')}
+    for arm in ('Q','Z'):
+        rt.io.verify(pilot/arm,'private_technical_pilot')
+        trace=rt.io.read_json(pilot/arm/'TRACE.json')
+        payload=torch.load(pilot/arm/'private_last.pt',map_location='cpu',weights_only=True)
+        validate_payload(payload,arm,plan,trace,plan_sha,state_hash)
+        assert trace['ordered_patient_tz_schedule_sha256']==rt.io.read_json(pilot/'REPORT.json')['ordered_patient_tz_schedule_sha256']
+        states[arm]=payload['model'];hashes[arm]=rt.io.digest(pilot/arm/'private_last.pt')
+        locks[str(pilot/arm/'private_last.pt')]=hashes[arm]
+    recipe=rt.io.read_json(original/'RECIPE.json')
+    assert rt.io.digest(original/'RECIPE.json')==plan['recipe_sha256']
+    assert recipe['splits']==base['locked_splits']
+    assert set(plan['patient_ids'])<=set(base['train_patients'])
+    patients=recipe['splits']['val']
+    assert len(patients)==18 and len(set(patients))==18
+    assert not set(patients)&set(base['train_patients'])
+    old=rt.io.verify(original/'predictions_val','student_predictions')
+    assert old['patients']==patients and old['checkpoint_sha256']==hashes['Baseline']
+    locks[str(original/'predictions_val/FROZEN.json')]=rt.io.digest(original/'predictions_val/FROZEN.json')
+    return base,plan,states,hashes,locks,old,recipe
+
+
+def generation(job,device):
+    protocol=json.loads((job/'PROTOCOL.json').read_text());rt=runtime(protocol)
+    base,plan,states,hashes,locks,old,recipe=load_inputs(protocol,rt)
+    determinism=configure_export_backend(plan['seed']);torch.set_num_threads(4)
+    if device=='cuda' and not torch.cuda.is_available():raise RuntimeError('CUDA unavailable')
+    out=job/'generated'
+    if out.exists():raise FileExistsError(out)
+    out.mkdir(mode=0o700)
+    for arm in MODELS:
+        for kind in ('gated','raw','probabilities'):(out/arm/kind).mkdir(parents=True,mode=0o700)
+    locks[str(Path(__file__).resolve())]=rt.io.digest(__file__)
+    locks[str(job/'PROTOCOL.json')]=rt.io.digest(job/'PROTOCOL.json')
+    records=rt.io.discover(protocol['image_root'],'acdc',recipe['splits']['val'])
+    inventory={};baseline_equal={}
+    model=rt.student.GuidanceStudent(base['feature_dim'],base['width']).eval().to(device)
+    for number,pid in enumerate(recipe['splits']['val'],1):
+        cine,meta=rt.io.read_cine(records[pid])
+        for key in ('image_sha256','shape_xyzt','affine','normalization'):
+            if meta[key]!=old['images'][pid][key]:raise ValueError('image/preprocessing mismatch: '+pid+':'+key)
+        inventory[pid]=meta;locks[str(Path(records[pid]).resolve())]=meta['image_sha256']
+        for arm in MODELS:
+            model.load_state_dict(states[arm],strict=True)
+            raw,gated=predict_with_probabilities(rt,model,base,cine,device,plan['batch_size'],out/arm/'probabilities'/(pid+'.npy'))
+            exact=rt.student.predict_cine(model,base,cine,device,plan['batch_size'])
+            if not np.array_equal(gated,exact):raise ValueError('adapter differs from pinned predict_cine: '+arm+':'+pid)
+            if arm=='Baseline':
+                with np.load(Path(protocol['original_run'])/'predictions_val'/(pid+'.npz'),allow_pickle=False) as f:
+                    if not np.array_equal(exact,f['labels']):raise ValueError('original baseline prediction mismatch: '+pid)
+                baseline_equal[pid]=True
+            for kind,array in [('raw',raw),('gated',gated)]:
+                path=out/arm/kind/(pid+'.npz');np.savez_compressed(path,labels=array);path.chmod(0o600)
+            print('[GENERATE]',json.dumps(dict(patient=pid,completed_patients=number,total_patients=18,model=arm)),flush=True)
+    manifests={}
+    for path,digest in locks.items():
+        if rt.io.digest(path)!=digest:raise ValueError('input/source changed during generation: '+path)
+    for arm in MODELS:
+        for kind in ('gated','raw'):
+            rt.io.freeze(out/arm/kind,dict(role='student_predictions',split='val',patients=recipe['splits']['val'],
+                images=inventory,student_status='USER_REQUESTED_FROZEN_PILOT_DIAGNOSTIC_EVALUATION' if arm!='Baseline' else base['status'],
+                train_patients=base['train_patients'],locked_splits=base['locked_splits'],checkpoint_sha256=hashes[arm],
+                config=base['config'],allowed_classes=base['allowed_classes'],unknown=255,labels_axis_order='TZYX',
+                model=arm,prediction_kind=kind,quality_evaluated=False,gt_read=False,private_weights_promoted=False))
+        rt.io.freeze(out/arm/'probabilities',dict(role='private_prediction_probabilities',split='val',
+            patients=recipe['splits']['val'],checkpoint_sha256=hashes[arm],dtype='float32',axes='TZYXC',
+            probabilities='native softmax before gates; full cine',gt_read=False))
+        for kind in ('gated','raw','probabilities'):
+            manifests[arm+'/'+kind]=rt.io.digest(out/arm/kind/'FROZEN.json')
+    rt.io.write_json(out/'GENERATION.json',dict(status='ALL_PREDICTIONS_FROZEN_NO_REFERENCES_READ',
+        baseline_exact_matches=baseline_equal,adapter_matches_pinned_predict_cine=True,input_locks=locks,
+        executed_source_sha256=rt.source_sha256,determinism=determinism))
+    rt.io.freeze(out,dict(role='paired_pilot_prediction_complete',split='val',patients=recipe['splits']['val'],
+                        children=manifests,protocol_sha256=rt.io.digest(job/'PROTOCOL.json'),gt_read=False))
+    print('[GENERATE_COMPLETE]',flush=True)
+
+
+def verify_generation(job,rt):
+    out=job/'generated';m=rt.io.verify(out,'paired_pilot_prediction_complete')
+    if m['protocol_sha256']!=rt.io.digest(job/'PROTOCOL.json'):raise ValueError('evaluation protocol changed')
+    for child,digest in m['children'].items():
+        rt.io.verify(out/child)
+        if rt.io.digest(out/child/'FROZEN.json')!=digest:raise ValueError('generation child manifest changed')
+    if set(m['children'])!={arm+'/'+kind for arm in MODELS for kind in ('gated','raw','probabilities')}:
+        raise ValueError('incomplete all-model prediction freeze')
+    return m
+
+
+def aggregate(frames,aucs):
+    patients=sorted({f['patient_id'] for f in frames});classes={};per_patient={}
+    for pid in patients:
+        per_patient[pid]={}
+        for name in CLASSES:
+            scans=[f for f in frames if f['patient_id']==pid]
+            rows=[f['metrics']['classes'][name] for f in scans]
+            per_patient[pid][name]=dict(dice=mean(r['dice'] for r in rows),iou=mean(r['iou'] for r in rows),
+                precision=mean(r['tp']/(r['tp']+r['fp']) if r['tp']+r['fp'] else 0.0 for r in rows),
+                recall=mean(r['tp']/(r['tp']+r['fn']) if r['tp']+r['fn'] else None for r in rows),
+                auroc=mean(aucs[(pid,f['frame_index'],name)] for f in scans))
+    for name in CLASSES:
+        rows=[f['metrics']['classes'][name] for f in frames]
+        classes[name]={key:mean(per_patient[pid][name][key] for pid in patients) for key in ('dice','iou','precision','recall','auroc')}
+        classes[name]['frames_without_predictions']=sum(r['predicted_pixels']==0 for r in rows)
+        classes[name]['counts']={key:sum(r[key] for r in rows) for key in ('tp','fp','fn','predicted_pixels','reference_pixels')}
+    overall={key:mean(classes[name][key] for name in CLASSES[1:]) for key in ('dice','iou','precision','recall','auroc')}
+    overall['coverage']=mean(mean(f['metrics']['coverage'] for f in frames if f['patient_id']==pid) for pid in patients)
+    overall['unknown_fraction']=1-overall['coverage']
+    return dict(overall=overall,classes=classes,per_patient=per_patient,patient_count=len(patients),labeled_frames=len(frames))
+
+
+def scoring(job):
+    protocol=json.loads((job/'PROTOCOL.json').read_text());rt=runtime(protocol)
+    complete=verify_generation(job,rt);frozen_sha=rt.io.digest(job/'generated/FROZEN.json')
+    scored=job/'scored'
+    if scored.exists():raise FileExistsError(scored)
+    scored.mkdir()
+    baseline_path=Path(protocol['diagnostics_job'])/'stage_scores/native_gated'
+    rt.io.verify(baseline_path,'independent_evaluation')
+    old=rt.io.read_json(baseline_path/'METRICS.json')
+    identities={(f['patient_id'],f['frame_index']):f['reference_sha256'] for f in old['frames']}
+    results={};csv_rows=[];class_rows=[]
+    import nibabel as nib
+    for arm in MODELS:
+        reports={}
+        for kind in ('gated','raw'):
+            # Original evaluator validates native geometry/UNKNOWN and freezes counts.
+            with (scored/(arm+'_'+kind+'_evaluator.log')).open('w') as log,contextlib.redirect_stdout(log):
+                reports[kind]=rt.evaluate.evaluate(job/'generated'/arm/kind,scored/(arm+'_'+kind),
+                    reference_root=protocol['reference_root'],allow_verified_acdc_frame_grid=True)
+            frames=reports[kind]['frames']
+            actual={(f['patient_id'],f['frame_index']):f['reference_sha256'] for f in frames}
+            if actual!=identities or len(frames)!=36:raise ValueError('original VAL36 reference identity mismatch')
+        if arm=='Baseline':
+            assert reports['gated']['summary']['macro_foreground_dice']==old['summary']['macro_foreground_dice']
+        aucs={}
+        for pid in complete['patients']:
+            prob=np.load(job/'generated'/arm/'probabilities'/(pid+'.npy'),mmap_mode='r',allow_pickle=False)
+            for f in [f for f in reports['gated']['frames'] if f['patient_id']==pid]:
+                refpath=Path(f['path'])
+                if rt.io.digest(refpath)!=f['reference_sha256']:raise ValueError('reference changed before AUROC')
+                ref=np.asarray(nib.load(refpath).dataobj).transpose(2,1,0)
+                p=prob[f['frame_index']]
+                if p.shape!=(*ref.shape,4) or not np.isfinite(p).all() or not np.allclose(p.sum(-1),1,atol=2e-5,rtol=0):
+                    raise ValueError('AUROC probability grid/simplex mismatch')
+                for c,name in enumerate(CLASSES):aucs[(pid,f['frame_index'],name)]=binary_auc(ref==c,p[...,c])
+                if rt.io.digest(refpath)!=f['reference_sha256']:raise ValueError('reference changed during AUROC')
+            del prob
+        results[arm]={}
+        for kind in ('gated','raw'):
+            result=aggregate(reports[kind]['frames'],aucs)
+            assert abs(result['overall']['dice']-reports[kind]['summary']['macro_foreground_dice'])<1e-12
+            results[arm][kind]=result
+            csv_rows.append(dict(model=arm,mode=kind,**result['overall']))
+            for name,values in result['classes'].items():
+                class_rows.append(dict(model=arm,mode=kind,class_name=name,**{k:v for k,v in values.items() if k!='counts'},**values['counts']))
+        print('[SCORED]',arm,json.dumps(results[arm]['gated']['overall']),flush=True)
+    verify_generation(job,rt)
+    if rt.io.digest(job/'generated/FROZEN.json')!=frozen_sha:raise ValueError('prediction freeze changed during scoring')
+    report=dict(status='SCORED_FIXED_PILOT_CHECKPOINTS_VAL18',protocol=protocol,results=results,
+                generation_manifest_sha256=frozen_sha,reference_count=len(identities),test_scored=False,
+                model_or_threshold_selection_performed=False,precision_convention='zero_division=0, fixed foreground classes',
+                auroc_convention='one-vs-rest, all voxels, ungated probabilities, frame/patient/class macro')
+    rt.io.write_json(scored/'MAIN_METRICS.json',report)
+    for filename,rows in [('MAIN_METRICS.csv',csv_rows),('CLASS_METRICS.csv',class_rows)]:
+        with (scored/filename).open('w',newline='') as f:
+            writer=csv.DictWriter(f,fieldnames=list(rows[0]));writer.writeheader();writer.writerows(rows)
+    rt.io.freeze(scored,dict(role='paired_pilot_evaluation',split='val',generation_manifest_sha256=frozen_sha))
+    print('[EVALUATION_COMPLETE]',flush=True)
+
+
+if __name__=='__main__':
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('mode',choices=['GENERATE','SCORE']);parser.add_argument('--job',type=Path,required=True)
+    parser.add_argument('--device',default='cuda',choices=['cpu','cuda'])
+    args=parser.parse_args()
+    (generation(args.job,args.device) if args.mode=='GENERATE' else scoring(args.job))

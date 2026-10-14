@@ -1,0 +1,356 @@
+{
+  "status": "TECHNICAL_PAIRED_TRAIN_COMPLETED",
+  "protocol_revision": "TRAIN_support_tolerance_r2_user_approved",
+  "excluded_weight_rtol": 2e-06,
+  "steps_per_arm": 64,
+  "original_checkpoint_diagnostics": "${REPO_ROOT}/runs/guidance_signal_recovery_4070_20261014_222636",
+  "anatomical_accuracy_of_trained_arms": "NOT_EVALUATED",
+  "arms": {
+    "Q": {
+      "optimizer_steps": 64,
+      "mean_semantic": {
+        "ce": 1.1457472993060946,
+        "entropy": 1.1086134938523173,
+        "kl": 0.03713380757835694
+      },
+      "mean_feature_loss": 0.1762544538360089,
+      "fixed_batch_before": {
+        "RV_above_uniform_definition": "sum_w_max_target_RV_minus_uniform_0.25_0",
+        "RV_above_uniform_positive_mass": 0.11095458269119263,
+        "ce": 1.2194138765335083,
+        "entropy": 1.185278296470642,
+        "kl": 0.03413574770092964,
+        "per_class_ce": [
+          0.25596725940704346,
+          0.31187620759010315,
+          0.3378097116947174,
+          0.31376075744628906
+        ],
+        "per_class_target_mass": [
+          45.62574768066406,
+          15.875417709350586,
+          25.958717346191406,
+          17.008432388305664
+        ],
+        "positive_RV_contrast_definition": "sum_w_max_target_RV_minus_max_other_classes_0",
+        "positive_RV_contrast_mass": 0.13173533976078033,
+        "strata_by_original_Q_argmax": {
+          "BG": {
+            "ce": 1.2047690153121948,
+            "contribution_original_denominator": {
+              "ce": 0.8813174366950989,
+              "entropy": 0.8717473149299622,
+              "kl": 0.009570090100169182
+            },
+            "entropy": 1.1916866302490234,
+            "kl": 0.013082400895655155,
+            "pixels": 1684,
+            "status": "MEASURED_TEACHER_FIDELITY_ONLY",
+            "weight_sum": 76.42108154296875,
+            "weighted_denominator": 76.42108154296875
+          },
+          "LV": {
+            "ce": 1.2665460109710693,
+            "contribution_original_denominator": {
+              "ce": 0.03693045675754547,
+              "entropy": 0.033645063638687134,
+              "kl": 0.0032853942830115557
+            },
+            "entropy": 1.1538721323013306,
+            "kl": 0.11267402768135071,
+            "pixels": 42,
+            "status": "MEASURED_TEACHER_FIDELITY_ONLY",
+            "weight_sum": 3.0461292266845703,
+            "weighted_denominator": 3.0461292266845703
+          },
+          "MYO": {
+            "ce": 1.251880168914795,
+            "contribution_original_denominator": {
+              "ce": 0.2930595278739929,
+              "entropy": 0.2732037901878357,
+              "kl": 0.019855709746479988
+            },
+            "entropy": 1.16706120967865,
+            "kl": 0.08481884002685547,
+            "pixels": 720,
+            "status": "MEASURED_TEACHER_FIDELITY_ONLY",
+            "weight_sum": 24.455564498901367,
+            "weighted_denominator": 24.455564498901367
+          },
+          "RV": {
+            "ce": 1.5523852109909058,
+            "contribution_original_denominator": {
+              "ce": 0.008106621913611889,
+              "entropy": 0.006682063452899456,
+              "kl": 0.0014245585771277547
+            },
+            "entropy": 1.279587984085083,
+            "kl": 0.27279719710350037,
+            "pixels": 41,
+            "status": "MEASURED_TEACHER_FIDELITY_ONLY",
+            "weight_sum": 0.545538067817688,
+            "weighted_denominator": 0.545538067817688
+          }
+        },
+        "strata_definition": "original_Q_winner; conditional_class_weight_mean_including_original_batch_activation",
+        "target_entropy_before_activation": 1.185278296470642
+      },
+      "fixed_batch_after": {
+        "RV_above_uniform_definition": "sum_w_max_target_RV_minus_uniform_0.25_0",
+        "RV_above_uniform_positive_mass": 0.11095458269119263,
+        "ce": 1.199983835220337,
+        "entropy": 1.185278296470642,
+        "kl": 0.014705544337630272,
+        "per_class_ce": [
+          0.28714519739151,
+          0.3038395345211029,
+          0.3033401370048523,
+          0.3056589365005493
+        ],
+        "per_class_target_mass": [
+          45.62574768066406,
+          15.875417709350586,
+          25.958717346191406,
+          17.008432388305664
+        ],
+        "positive_RV_contrast_definition": "sum_w_max_target_RV_minus_max_other_classes_0",
+        "positive_RV_contrast_mass": 0.13173533976078033,
+        "strata_by_original_Q_argmax": {
+          "BG": {
+            "ce": 1.1988208293914795,
+            "contribution_original_denominator": {
+              "ce": 0.8769661784172058,
+              "entropy": 0.8717473149299622,
+              "kl": 0.005218883045017719
+            },
+            "entropy": 1.1916866302490234,
+            "kl": 0.007134261541068554,
+            "pixels": 1684,
+            "status": "MEASURED_TEACHER_FIDELITY_ONLY",
+            "weight_sum": 76.42108154296875,
+            "weighted_denominator": 76.42108154296875
+          },
+          "LV": {
+            "ce": 1.1830968856811523,
+            "contribution_original_denominator": {
+              "ce": 0.0344972126185894,
+              "entropy": 0.033645063638687134,
+              "kl": 0.0008521497366018593
+            },
+            "entropy": 1.1538721323013306,
+            "kl": 0.02922484464943409,
+            "pixels": 42,
+            "status": "MEASURED_TEACHER_FIDELITY_ONLY",
+            "weight_sum": 3.0461292266845703,
+            "weighted_denominator": 3.0461292266845703
+          },
+          "MYO": {
+            "ce": 1.1987422704696655,
+            "contribution_original_denominator": {
+              "ce": 0.28062015771865845,
+              "entropy": 0.2732037901878357,
+              "kl": 0.007416368927806616
+            },
+            "entropy": 1.16706120967865,
+            "kl": 0.03168095275759697,
+            "pixels": 720,
+            "status": "MEASURED_TEACHER_FIDELITY_ONLY",
+            "weight_sum": 24.455564498901367,
+            "weighted_denominator": 24.455564498901367
+          },
+          "RV": {
+            "ce": 1.512857437133789,
+            "contribution_original_denominator": {
+              "ce": 0.007900206372141838,
+              "entropy": 0.006682063452899456,
+              "kl": 0.0012181435013189912
+            },
+            "entropy": 1.279587984085083,
+            "kl": 0.23326952755451202,
+            "pixels": 41,
+            "status": "MEASURED_TEACHER_FIDELITY_ONLY",
+            "weight_sum": 0.545538067817688,
+            "weighted_denominator": 0.545538067817688
+          }
+        },
+        "strata_definition": "original_Q_winner; conditional_class_weight_mean_including_original_batch_activation",
+        "target_entropy_before_activation": 1.185278296470642
+      },
+      "elapsed_seconds": 13.10358663299121,
+      "peak_cuda_reserved_bytes": 4789895168
+    },
+    "Z": {
+      "optimizer_steps": 64,
+      "mean_semantic": {
+        "ce": 0.42673860723152757,
+        "entropy": 0.023087664381364448,
+        "kl": 0.4036509352736175
+      },
+      "mean_feature_loss": 0.1881989403627813,
+      "fixed_batch_before": {
+        "RV_above_uniform_definition": "sum_w_max_target_RV_minus_uniform_0.25_0",
+        "RV_above_uniform_positive_mass": 0.3413795530796051,
+        "ce": 0.5904207229614258,
+        "entropy": 0.021195854991674423,
+        "kl": 0.5692248940467834,
+        "per_class_ce": [
+          0.36585330963134766,
+          0.010050669312477112,
+          0.18856041133403778,
+          0.02595634013414383
+        ],
+        "per_class_target_mass": [
+          76.42609405517578,
+          0.565613865852356,
+          24.42610740661621,
+          3.0504956245422363
+        ],
+        "positive_RV_contrast_definition": "sum_w_max_target_RV_minus_max_other_classes_0",
+        "positive_RV_contrast_mass": 0.41038182377815247,
+        "strata_by_original_Q_argmax": {
+          "BG": {
+            "ce": 0.5028682351112366,
+            "contribution_original_denominator": {
+              "ce": 0.36786016821861267,
+              "entropy": 0.007587489206343889,
+              "kl": 0.36027267575263977
+            },
+            "entropy": 0.010372167453169823,
+            "kl": 0.4924960434436798,
+            "pixels": 1684,
+            "status": "MEASURED_TEACHER_FIDELITY_ONLY",
+            "weight_sum": 76.42108154296875,
+            "weighted_denominator": 76.42108154296875
+          },
+          "LV": {
+            "ce": 0.8829820156097412,
+            "contribution_original_denominator": {
+              "ce": 0.025746341794729233,
+              "entropy": 0.0013168754521757364,
+              "kl": 0.02442946657538414
+            },
+            "entropy": 0.04516281560063362,
+            "kl": 0.8378191590309143,
+            "pixels": 42,
+            "status": "MEASURED_TEACHER_FIDELITY_ONLY",
+            "weight_sum": 3.0461292266845703,
+            "weighted_denominator": 3.0461292266845703
+          },
+          "MYO": {
+            "ce": 0.8029431104660034,
+            "contribution_original_denominator": {
+              "ce": 0.18796536326408386,
+              "entropy": 0.010751296766102314,
+              "kl": 0.17721407115459442
+            },
+            "entropy": 0.04592696577310562,
+            "kl": 0.757016122341156,
+            "pixels": 720,
+            "status": "MEASURED_TEACHER_FIDELITY_ONLY",
+            "weight_sum": 24.455564498901367,
+            "weighted_denominator": 24.455564498901367
+          },
+          "RV": {
+            "ce": 1.6945246458053589,
+            "contribution_original_denominator": {
+              "ce": 0.008848880417644978,
+              "entropy": 0.0015401928685605526,
+              "kl": 0.007308687083423138
+            },
+            "entropy": 0.29494068026542664,
+            "kl": 1.3995838165283203,
+            "pixels": 41,
+            "status": "MEASURED_TEACHER_FIDELITY_ONLY",
+            "weight_sum": 0.545538067817688,
+            "weighted_denominator": 0.545538067817688
+          }
+        },
+        "strata_definition": "original_Q_winner; conditional_class_weight_mean_including_original_batch_activation",
+        "target_entropy_before_activation": 0.021195854991674423
+      },
+      "fixed_batch_after": {
+        "RV_above_uniform_definition": "sum_w_max_target_RV_minus_uniform_0.25_0",
+        "RV_above_uniform_positive_mass": 0.3413795530796051,
+        "ce": 0.27178215980529785,
+        "entropy": 0.021195854991674423,
+        "kl": 0.25058630108833313,
+        "per_class_ce": [
+          0.15300621092319489,
+          0.012097916565835476,
+          0.08611927926540375,
+          0.02055874839425087
+        ],
+        "per_class_target_mass": [
+          76.42609405517578,
+          0.565613865852356,
+          24.42610740661621,
+          3.0504956245422363
+        ],
+        "positive_RV_contrast_definition": "sum_w_max_target_RV_minus_max_other_classes_0",
+        "positive_RV_contrast_mass": 0.41038182377815247,
+        "strata_by_original_Q_argmax": {
+          "BG": {
+            "ce": 0.21166817843914032,
+            "contribution_original_denominator": {
+              "ce": 0.154840350151062,
+              "entropy": 0.007587489206343889,
+              "kl": 0.14725284278392792
+            },
+            "entropy": 0.010372167453169823,
+            "kl": 0.20129600167274475,
+            "pixels": 1684,
+            "status": "MEASURED_TEACHER_FIDELITY_ONLY",
+            "weight_sum": 76.42108154296875,
+            "weighted_denominator": 76.42108154296875
+          },
+          "LV": {
+            "ce": 0.7089411616325378,
+            "contribution_original_denominator": {
+              "ce": 0.02067158930003643,
+              "entropy": 0.0013168754521757364,
+              "kl": 0.01935471221804619
+            },
+            "entropy": 0.04516281560063362,
+            "kl": 0.6637782454490662,
+            "pixels": 42,
+            "status": "MEASURED_TEACHER_FIDELITY_ONLY",
+            "weight_sum": 3.0461292266845703,
+            "weighted_denominator": 3.0461292266845703
+          },
+          "MYO": {
+            "ce": 0.36688098311424255,
+            "contribution_original_denominator": {
+              "ce": 0.085885189473629,
+              "entropy": 0.010751296766102314,
+              "kl": 0.07513389736413956
+            },
+            "entropy": 0.04592696577310562,
+            "kl": 0.3209540545940399,
+            "pixels": 720,
+            "status": "MEASURED_TEACHER_FIDELITY_ONLY",
+            "weight_sum": 24.455564498901367,
+            "weighted_denominator": 24.455564498901367
+          },
+          "RV": {
+            "ce": 1.9886910915374756,
+            "contribution_original_denominator": {
+              "ce": 0.010385029949247837,
+              "entropy": 0.0015401928685605526,
+              "kl": 0.008844837546348572
+            },
+            "entropy": 0.29494068026542664,
+            "kl": 1.6937503814697266,
+            "pixels": 41,
+            "status": "MEASURED_TEACHER_FIDELITY_ONLY",
+            "weight_sum": 0.545538067817688,
+            "weighted_denominator": 0.545538067817688
+          }
+        },
+        "strata_definition": "original_Q_winner; conditional_class_weight_mean_including_original_batch_activation",
+        "target_entropy_before_activation": 0.021195854991674423
+      },
+      "elapsed_seconds": 12.630878374999156,
+      "peak_cuda_reserved_bytes": 4789895168
+    }
+  }
+}

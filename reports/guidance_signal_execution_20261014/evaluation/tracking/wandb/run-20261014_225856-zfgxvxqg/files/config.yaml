@@ -1,0 +1,106 @@
+_wandb:
+    value:
+        cli_version: 0.19.11
+        m: []
+        python_version: 3.11.16
+        t:
+            "1":
+                - 55
+            "2":
+                - 55
+            "3":
+                - 2
+                - 13
+                - 15
+                - 16
+                - 23
+                - 55
+                - 62
+            "4": 3.11.16
+            "5": 0.19.11
+            "8":
+                - 2
+                - 5
+            "12": 0.19.11
+            "13": linux-x86_64
+adapter_sha256:
+    value: d65bc37a8e1bce3987d87c190861b311be93502693bc1cb20ed991706648f4a5
+adapter_source:
+    value: ${REPO_ROOT}/run_configs/evaluate_guidance_pilot.py
+aggregation:
+    value: mean_labeled_frames_within_patient_then_patients_then_foreground_RV_MYO_LV
+auroc:
+    value: one_vs_rest_on_all_native_voxels_using_ungated_float32_probabilities; tie-aware; absent positive/negative is undefined
+backend_correction:
+    value: Initial evaluation used the pilot training deterministic flags and produced one threshold-boundary pixel difference. Original default export flags reproduced exactly on the diagnostic patient; preserve full-cohort exact-match gate.
+checkpoint_role:
+    value: private_technical_pilot_weights_remain_unchanged; explicit diagnostic evaluation adapter only
+diagnostics_job:
+    value: ${REPO_ROOT}/runs/guidance_signal_recovery_4070_20261014_222636
+expected_checkpoint_sha:
+    value: 90bc16bb9f89963b452355376673e3ba9aa24b38870e4595237d75e402ce873e
+gpu_min_free_mib:
+    value: 8192
+gpu_uuid:
+    value: ${GPU_UUID}
+image_root:
+    value: ${REPO_ROOT}/data/ACDC/training
+inference_backend:
+    value: original archived export defaults; enforce exact original baseline labels for every VAL cine
+job:
+    value: ${REPO_ROOT}/runs/guidance_pilot_eval_retry_4070_20261014_225852
+metrics:
+    value:
+        - dice
+        - iou
+        - precision
+        - recall
+        - auroc
+        - coverage
+models:
+    value:
+        - Baseline
+        - Q
+        - Z
+original_run:
+    value: ${REPO_ROOT}/runs/stable_guidance_world_v2_acdc_4070_20261014_024155/run
+precision_zero_division:
+    value: 0
+primary_prediction:
+    value: native_gated_original_thresholds_and_permissions
+prior_failed_job:
+    value: ${REPO_ROOT}/runs/guidance_pilot_eval_4070_20261014_225146
+python:
+    value: ${PYTHON_ENV}/bin/python
+reference_access:
+    value: only_after_all_models_all_val_cines_frozen
+reference_root:
+    value: ${REPO_ROOT}/data/ACDC/training
+schema:
+    value: self_audit.paired_pilot_evaluation.v1
+secondary_prediction:
+    value: native_raw_argmax
+selection:
+    value: all_three_fixed_checkpoints_no_threshold_search_no_TEST
+source:
+    value: ${REPO_ROOT}/.worktrees/guidance-signal-r2-4bfc1f9
+split:
+    value: locked_original_VAL18
+training_job:
+    value: ${REPO_ROOT}/runs/guidance_signal_r2_4070_20261014_223742
+training_wandb_id:
+    value: t5tmy3bj
+unit_tests:
+    value: run_configs/tests/test_pilot_evaluation.py
+unit_tests_sha256:
+    value: 20220afe48178a9aacf6367d8839c491495bdf38b3bc57a290508d40b05dcf90
+unknown:
+    value: 255
+unknown_policy:
+    value: counts_as_foreground_false_negative_not_background
+validation_disclosure:
+    value: VAL previously exposed to development; not pristine independent generalization
+wandb_entity:
+    value: nthne-hanoi-university-of-science-and-technology
+wandb_project:
+    value: self-audit-stable-guidance

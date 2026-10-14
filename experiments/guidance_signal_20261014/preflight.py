@@ -71,7 +71,10 @@ def assert_original_bindings(runtime, bank, checkpoint, recipe, bank_sha, checkp
         raise ValueError("student freeze is not bound to original bank")
     if resolved.get("config") != bank_manifest["config"]:
         raise ValueError("recipe and bank configuration differ")
-    if student_manifest.get("locked_splits") != split:
+    # The pinned executed student freeze binds the bank manifest but stores
+    # locked_splits in its hash-bound checkpoint payload, checked below.
+    # If another compatible freeze repeats the field, it must also agree.
+    if "locked_splits" in student_manifest and student_manifest["locked_splits"] != split:
         raise ValueError("student and bank locked split differ")
     if student_manifest.get("teacher") != bank_manifest.get("teacher"):
         raise ValueError("student and bank teacher identities differ")
@@ -91,6 +94,7 @@ def assert_original_bindings(runtime, bank, checkpoint, recipe, bank_sha, checkp
     return {"status":"PASS_ORIGINAL_ARTIFACT_BINDINGS",
             "bank_manifest_sha256":bank_sha,"checkpoint_sha256":checkpoint_sha,
             "recipe_sha256":digest(recipe),"patients":len(bank_manifest["patients"]),
+            "split_binding_source":"hash_bound_checkpoint_and_original_bank",
             "class_patients":permission_counts,"allowed_classes":ck["allowed_classes"],
             "training_run":False,"model_forward_run":False,"target_masks_read":False}
 
@@ -125,6 +129,7 @@ def main(argv=None):
             assert_original_bindings(runtime,*fields)
             if all(fields) else {"status":"NOT_REQUESTED_SOFTWARE_ONLY"})
         command=[sys.executable,"-B","-m","pytest","-q","-p","no:cacheprovider","-c","/dev/null",
+                 "--rootdir="+str(REPO),"--confcutdir="+str(REPO),
                  str(HERE/"tests"),"--junitxml="+str(out/"junit.xml")]
         env=os.environ.copy()
         env["PYTHONDONTWRITEBYTECODE"]="1"

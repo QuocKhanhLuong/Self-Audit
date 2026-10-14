@@ -1,0 +1,58 @@
+import hashlib
+import json
+from pathlib import Path
+import sys
+import numpy as np
+
+JOB=Path(__file__).resolve().parents[1]
+M=json.loads((JOB/'LAUNCH_MANIFEST.json').read_text())
+sys.path.insert(0,M['source'])
+from experiments.guidance_signal_20261014.pilot import make_schedule,json_hash,EXCLUDED_WEIGHT_RTOL
+from experiments.guidance_signal_20261014.runtime import load_runtime
+
+rt=load_runtime()
+bank=Path(M['original_run'])/'bank'
+bm=rt.io.verify(bank,'guidance_bank')
+assert rt.io.digest(bank/'FROZEN.json')==M['expected_bank_sha']
+plan=json.loads((JOB/'pilot_plan.json').read_text())
+assert json_hash(plan)==json.loads((JOB/'PLAN_BINDING.json').read_text())['plan_sha256']
+signals=JOB/'signals_train4'
+assert rt.io.digest(signals/'FROZEN.json')==plan['signal_manifest_sha256']
+rt.io.verify(signals)
+allowed=np.array(plan['policy']['allowed_classes'])
+data={};shapes={};patients={}
+for pid in plan['patient_ids']:
+    with np.load(bank/(pid+'.npz'),allow_pickle=False) as f:
+        q=f['q'];w=f['reliability']*allowed[q.argmax(-1)]
+    with np.load(signals/(pid+'.npz'),allow_pickle=False) as f:
+        valid=f['valid'];h=f['h'];bound=f['z_error_bound']
+    total=w.sum(axis=(-1,-2),dtype=np.float64)
+    excluded=np.where(valid,0,w).sum(axis=(-1,-2),dtype=np.float64)
+    active=((q.argmax(-1)!=0)&(w>0)).any(axis=(-1,-2))
+    shapes[pid]=q.shape[:2]
+    data[pid]=(total,excluded,active)
+    bad=(~valid)&(w>0)
+    patients[pid]=dict(total_weight=float(total.sum()),excluded_weight=float(excluded.sum()),
+        excluded_fraction=float(excluded.sum()/max(total.sum(),1e-8)),
+        positive_excluded_pixels=int(bad.sum()),
+        max_excluded_weight=float(w[bad].max()) if bad.any() else None,
+        h_excluded_range=[float(h[bad].min()),float(h[bad].max())] if bad.any() else None,
+        q_excluded_max_deviation_from_uniform=float(np.max(np.abs(q[bad]-.25))) if bad.any() else None,
+        invalid_due_low_h=int((bad&(h<=1e-6)).sum()),
+        invalid_due_bound=int((bad&(bound>1e-3)).sum()))
+schedule=make_schedule(plan['patient_ids'],shapes,plan['steps'],plan['batch_size'],plan['seed'])
+rows=[]
+for number,item in enumerate(schedule,1):
+    ti,zi=np.asarray(item['indices_tz']).T
+    total,excluded,active=data[item['patient_id']]
+    t,e=float(total[ti,zi].sum()),float(excluded[ti,zi].sum())
+    ratio=e/max(t,1e-8)
+    rows.append(dict(step=number,patient_id=item['patient_id'],total_weight=t,excluded_weight=e,
+                     excluded_objective_fraction=ratio,semantic_active=bool(active[ti,zi].any()),
+                     gate_pass=ratio<=EXCLUDED_WEIGHT_RTOL))
+failed=[row for row in rows if not row['gate_pass']]
+report=dict(status='MEASURED_ORIGINAL_SUPPORT_GATE_FAILURE',plan_sha256=json_hash(plan),
+    threshold=EXCLUDED_WEIGHT_RTOL,patient_summaries=patients,batches=rows,
+    failed_batches=failed,optimizer_steps_executed=0,reference_masks_read=False)
+(Path(__file__).parent/'REPORT.json').write_text(json.dumps(report,indent=2)+'\n')
+print(json.dumps(dict(patients=patients,failed_batch_count=len(failed),failed_batches=failed),indent=2))

@@ -1,0 +1,45 @@
+from pathlib import Path
+import json
+import sys
+import nibabel as nib
+import numpy as np
+from sklearn.metrics import roc_auc_score
+
+JOB=Path(__file__).resolve().parent
+P=json.loads((JOB/'PROTOCOL.json').read_text());sys.path.insert(0,P['source'])
+from experiments.guidance_signal_20261014.runtime import load_runtime
+rt=load_runtime();rt.io.verify(JOB/'scored','paired_pilot_evaluation')
+report=rt.io.read_json(JOB/'scored/MAIN_METRICS.json')
+generation=rt.io.read_json(JOB/'generated/GENERATION.json')
+assert len(generation['baseline_exact_matches'])==18 and all(generation['baseline_exact_matches'].values())
+for path,expected in generation['input_locks'].items():
+    assert rt.io.digest(path)==expected, path
+old=rt.io.read_json(Path(P['diagnostics_job'])/'stage_scores/native_gated/METRICS.json')
+new=rt.io.read_json(JOB/'scored/Baseline_gated/METRICS.json')
+previous={(f['patient_id'],f['frame_index']):f for f in old['frames']}
+for frame in new['frames']:
+    ref=previous[(frame['patient_id'],frame['frame_index'])]
+    assert frame['reference_sha256']==ref['reference_sha256']
+    assert frame['metrics']==ref['metrics']
+aucs={}
+for arm in ['Baseline','Q','Z']:
+    r=rt.io.read_json(JOB/'scored'/(arm+'_gated')/'METRICS.json')
+    frame=sorted(r['frames'],key=lambda x:(x['patient_id'],x['frame_index']))[0]
+    reference=np.asarray(nib.load(frame['path']).dataobj).transpose(2,1,0)
+    probability=np.load(JOB/'generated'/arm/'probabilities'/(frame['patient_id']+'.npy'),mmap_mode='r')[frame['frame_index']]
+    from scipy.stats import rankdata
+    for c,name in enumerate(['BG','RV','MYO','LV']):
+        y=(reference==c).ravel();scores=probability[...,c].ravel()
+        expected=float(roc_auc_score(y,scores))
+        npos=int(y.sum());nneg=y.size-npos
+        actual=float((rankdata(scores,method='average')[y].sum()-npos*(npos+1)/2)/(npos*nneg))
+        assert abs(actual-expected)<1e-12
+        aucs[arm+'/'+name]={'independent_sklearn':expected,'rank_statistic':actual,'absolute_error':abs(actual-expected)}
+    assert report['results'][arm]['gated']['patient_count']==18
+    assert report['results'][arm]['gated']['labeled_frames']==36
+receipt=dict(status='PASS',baseline_full_cine_exact_matches=18,baseline_original_metrics_exact=True,
+             generation_inputs_and_checkpoints_unchanged=True,independent_auroc_checks=aucs,
+             all_models_patients=18,all_models_labeled_frames=36,test_excluded=True)
+(JOB/'VERIFICATION.json').write_text(json.dumps(receipt,indent=2)+'\n')
+print(json.dumps({'status':'PASS','baseline_exact_patients':18,'original_metrics_exact':True,
+                  'sklearn_auroc_checks':len(aucs),'max_auc_error':max(v['absolute_error'] for v in aucs.values())}))

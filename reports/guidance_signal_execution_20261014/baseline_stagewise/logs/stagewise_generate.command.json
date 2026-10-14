@@ -1,0 +1,29 @@
+{
+  "command": [
+    "${PYTHON_ENV}/bin/python",
+    "-B",
+    "-m",
+    "experiments.guidance_signal_20261014.stagewise",
+    "GENERATE",
+    "--run",
+    "${REPO_ROOT}/runs/stable_guidance_world_v2_acdc_4070_20261014_024155/run",
+    "--root",
+    "${REPO_ROOT}/data/ACDC/training",
+    "--teacher-checkpoint",
+    "${AGENT_HOME}/.cache/huggingface/hub/models--mathpluscode--CineMA/blobs/a841b7e9300d60ea8feb73e3a7d8c60ddedc1d1d49ec1049ebfcfa337c5d5590",
+    "--teacher-config",
+    "${AGENT_HOME}/.cache/huggingface/hub/models--mathpluscode--CineMA/blobs/8a465e51889187cf1056fc4feaef9a0182feabe4",
+    "--expected-checkpoint-sha256",
+    "90bc16bb9f89963b452355376673e3ba9aa24b38870e4595237d75e402ce873e",
+    "--device",
+    "cuda",
+    "--out",
+    "${REPO_ROOT}/runs/guidance_signal_recovery_4070_20261014_222636/stages_frozen"
+  ],
+  "cwd": "${REPO_ROOT}/.worktrees/guidance-signal-4bfc1f9",
+  "started_at": 1791991634.3990166,
+  "gpu": true,
+  "pid": 1827747,
+  "exit_code": 0,
+  "finished_at": 1791991982.521671
+}

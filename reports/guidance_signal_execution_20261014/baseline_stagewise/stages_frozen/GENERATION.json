@@ -1,0 +1,818 @@
+{
+  "allowed_classes": [
+    true,
+    true,
+    true,
+    true
+  ],
+  "checkpoint_sha256": "90bc16bb9f89963b452355376673e3ba9aa24b38870e4595237d75e402ce873e",
+  "coarse_native_mapping": "nearest_floor_yx: native[y,x]=coarse[floor(y*Gh/H),floor(x*Gw/W)]; T/Z unchanged; UNKNOWN=255 preserved",
+  "config": {
+    "alpha": 0.35,
+    "clusters": [
+      4,
+      8,
+      12
+    ],
+    "feature_dim": 64,
+    "grid": 48,
+    "kmeans_steps": 15,
+    "match_cosine": 0.85,
+    "match_margin": 0.02,
+    "match_photo": 0.5,
+    "match_radius": 2,
+    "max_fit_points": 4096,
+    "max_iterations": 500,
+    "max_nodes": 1500000,
+    "max_region_candidates": 96,
+    "min_contrast": 0.25,
+    "min_enclosure": 0.65,
+    "min_margin": 0.2,
+    "min_probability": 0.7,
+    "min_region_pixels": 6,
+    "min_reliability": 0.05,
+    "spatial_scale": 0.35,
+    "temporal": true,
+    "tolerance": 1e-06
+  },
+  "experiment_source_sha256": {
+    "runtime.py": "8d93f08baeb20eadbf69ea93ba0e8d3f10305e723de2365445f65fb029212ce3",
+    "stagewise.py": "cea2b78d8c745a235527a1af988f6c7031383c41499785b79a153f71c04925a1",
+    "stagewise_table.py": "703fc14109f0c55cb5f8a6d5252737614dc4d236e7002a4232022def19ee7035"
+  },
+  "geometry_policy": "world_left_v2",
+  "gt_read": false,
+  "input_locks": {
+    "${AGENT_HOME}/.cache/huggingface/hub/models--mathpluscode--CineMA/blobs/8a465e51889187cf1056fc4feaef9a0182feabe4": "3147bbd6d0350f9fe30d14989db0f6d53ecef2ed32900d843a3fc3155a3e0a32",
+    "${AGENT_HOME}/.cache/huggingface/hub/models--mathpluscode--CineMA/blobs/a841b7e9300d60ea8feb73e3a7d8c60ddedc1d1d49ec1049ebfcfa337c5d5590": "a841b7e9300d60ea8feb73e3a7d8c60ddedc1d1d49ec1049ebfcfa337c5d5590",
+    "${REPO_ROOT}/.worktrees/guidance-signal-4bfc1f9/experiments/guidance_signal_20261014/runtime.py": "8d93f08baeb20eadbf69ea93ba0e8d3f10305e723de2365445f65fb029212ce3",
+    "${REPO_ROOT}/.worktrees/guidance-signal-4bfc1f9/experiments/guidance_signal_20261014/stagewise.py": "cea2b78d8c745a235527a1af988f6c7031383c41499785b79a153f71c04925a1",
+    "${REPO_ROOT}/.worktrees/guidance-signal-4bfc1f9/experiments/guidance_signal_20261014/stagewise_table.py": "703fc14109f0c55cb5f8a6d5252737614dc4d236e7002a4232022def19ee7035",
+    "${REPO_ROOT}/data/ACDC/training/patient004/patient004_4d.nii": "64c3e1d1d9a8c4669ad468fe51fcecfab0e863e13f92519dbdc37f11c5ef576c",
+    "${REPO_ROOT}/data/ACDC/training/patient005/patient005_4d.nii": "6ca2f6b6570a0c94de58388036da49d1570aa76e31ff6abac3cc28fca623f054",
+    "${REPO_ROOT}/data/ACDC/training/patient012/patient012_4d.nii": "4efa1926d9e325e3dc741421a1044cb24b064993e8a535605bc52fc9338cf9a1",
+    "${REPO_ROOT}/data/ACDC/training/patient014/patient014_4d.nii": "71877150dfb01d4929b269cad2f281b85cf381691346f402488f3aef9e5637fe",
+    "${REPO_ROOT}/data/ACDC/training/patient015/patient015_4d.nii": "ef57f73182de2be7d859fc25b8e9be7c8f2aaf0b230e5d9a3ed267b881057500",
+    "${REPO_ROOT}/data/ACDC/training/patient018/patient018_4d.nii": "5c3e33cd656c7060ac75e353a7ae430e89979789afc6bf6fb52e7983406c78fd",
+    "${REPO_ROOT}/data/ACDC/training/patient028/patient028_4d.nii": "ba4e10324e81d9ddc9b27d81676d24843e6d4c27b65c0a0a71defe95b687a070",
+    "${REPO_ROOT}/data/ACDC/training/patient029/patient029_4d.nii": "acf83e2715f94e930373a7a079f757be11bcf8d66cbec8fb423f49435dff83d9",
+    "${REPO_ROOT}/data/ACDC/training/patient030/patient030_4d.nii": "3e0267979dfaf04619a5585582d667e25014fe689d69b054ee21a94244527386",
+    "${REPO_ROOT}/data/ACDC/training/patient032/patient032_4d.nii": "f3f7bf4b7543ab49ba9419178c51d4d711b04261369f69a4a182940eedcc7fe5",
+    "${REPO_ROOT}/data/ACDC/training/patient036/patient036_4d.nii": "547f9ad57cdf48a2c71a459683f9f20327e49cb313b54d2b1ca2aa73c4b43c74",
+    "${REPO_ROOT}/data/ACDC/training/patient065/patient065_4d.nii": "759985bc3aa008b75d1f6af9961d8cc75e1eda6f96492d2e2a3828553b8acece",
+    "${REPO_ROOT}/data/ACDC/training/patient070/patient070_4d.nii": "057275cab8927f8d01a910f00646ea3a3e8fa96b440425778b55647288b6c836",
+    "${REPO_ROOT}/data/ACDC/training/patient082/patient082_4d.nii": "f7df5fdb0a5840371d7b9ed5e741fd262797d2143a86e9d406933ef90d4b7236",
+    "${REPO_ROOT}/data/ACDC/training/patient087/patient087_4d.nii": "6739809a950671235328a274f34fb3d5e62ee3a25654ed73710b3d86876263fd",
+    "${REPO_ROOT}/data/ACDC/training/patient089/patient089_4d.nii": "695ddf3e54711114df72a5c9b5bf5c2e7e2cdcb6c4420363942bb51876b2d728",
+    "${REPO_ROOT}/data/ACDC/training/patient095/patient095_4d.nii": "0d890435d3e28a214f39c28e7984d5af9fe6739380b573d8de87bef1ed46a273",
+    "${REPO_ROOT}/data/ACDC/training/patient098/patient098_4d.nii": "3fd92a6ca1101d4e84832d792624200959a785b8f25f1ea368624b9d6f6ce97b",
+    "${REPO_ROOT}/runs/stable_guidance_world_v2_acdc_4070_20261014_024155/run/RECIPE.json": "bed149d73bb0527c1dbcea8ff72e9b28e093149974dcb0c5893fd43d53a6092b",
+    "${REPO_ROOT}/runs/stable_guidance_world_v2_acdc_4070_20261014_024155/run/bank/FROZEN.json": "04fb2d30df6c0e0ed235dcf851a491895661b7fd4763e6b89ce95ca6811accae",
+    "${REPO_ROOT}/runs/stable_guidance_world_v2_acdc_4070_20261014_024155/run/predictions_val/FROZEN.json": "9f5a38185ba159db70b5c17b949739af87c00a8343d823bb66865e4f27ca6e40",
+    "${REPO_ROOT}/runs/stable_guidance_world_v2_acdc_4070_20261014_024155/run/student/FROZEN.json": "85340cf5f4502d974638edd08eaca030d4642c530b5bf1680d2c21b18e09971e",
+    "${REPO_ROOT}/runs/stable_guidance_world_v2_acdc_4070_20261014_024155/run/student/last.pt": "90bc16bb9f89963b452355376673e3ba9aa24b38870e4595237d75e402ce873e"
+  },
+  "patient_reports": {
+    "patient004": {
+      "anatomy": {
+        "anchor_supported_pixels": 145011,
+        "candidate_cap_slices": 0,
+        "conflicting_vote_pixels": 177,
+        "evidence_independence": "not_asserted_multiscale_votes_can_repeat",
+        "hypotheses_before_anatomy": 88,
+        "no_orientation_slices": 88,
+        "orientation_policy": "world_left_v2",
+        "raw_vote_mass_per_class": [
+          69184.5,
+          0.0,
+          6739.545985817909,
+          649.1374223828316
+        ],
+        "rv_hypotheses": 0,
+        "slices_with_hypotheses": 88,
+        "wall_cavity_hypotheses": 88
+      },
+      "class_pixels": [
+        3838,
+        0,
+        204,
+        10
+      ],
+      "graph": {
+        "nodes": 645120,
+        "spatial_edges": 1234680,
+        "temporal_edges": 6857
+      },
+      "solver": {
+        "converged": true,
+        "error_bound": 7.342213091478455e-07,
+        "iterations": 23,
+        "residual": 2.569774582017459e-07
+      },
+      "status": "SUPPORT_NOT_ACCURACY"
+    },
+    "patient005": {
+      "anatomy": {
+        "anchor_supported_pixels": 69299,
+        "candidate_cap_slices": 0,
+        "conflicting_vote_pixels": 413,
+        "evidence_independence": "not_asserted_multiscale_votes_can_repeat",
+        "hypotheses_before_anatomy": 54,
+        "no_orientation_slices": 40,
+        "orientation_policy": "world_left_v2",
+        "raw_vote_mass_per_class": [
+          32386.5,
+          0.0,
+          4146.286154508591,
+          251.17153868079185
+        ],
+        "rv_hypotheses": 0,
+        "slices_with_hypotheses": 40,
+        "wall_cavity_hypotheses": 40
+      },
+      "class_pixels": [
+        2049,
+        0,
+        212,
+        0
+      ],
+      "graph": {
+        "nodes": 691200,
+        "spatial_edges": 1302964,
+        "temporal_edges": 3027
+      },
+      "solver": {
+        "converged": true,
+        "error_bound": 6.75506487254499e-07,
+        "iterations": 23,
+        "residual": 2.3642727053907464e-07
+      },
+      "status": "SUPPORT_NOT_ACCURACY"
+    },
+    "patient012": {
+      "anatomy": {
+        "anchor_supported_pixels": 54798,
+        "candidate_cap_slices": 0,
+        "conflicting_vote_pixels": 220,
+        "evidence_independence": "not_asserted_multiscale_votes_can_repeat",
+        "hypotheses_before_anatomy": 32,
+        "no_orientation_slices": 0,
+        "orientation_policy": "world_left_v2",
+        "raw_vote_mass_per_class": [
+          24919.0,
+          526.2944911718369,
+          4989.655514061451,
+          702.880199611187
+        ],
+        "rv_hypotheses": 16,
+        "slices_with_hypotheses": 32,
+        "wall_cavity_hypotheses": 32
+      },
+      "class_pixels": [
+        2687,
+        0,
+        144,
+        0
+      ],
+      "graph": {
+        "nodes": 691200,
+        "spatial_edges": 1320693,
+        "temporal_edges": 4720
+      },
+      "solver": {
+        "converged": true,
+        "error_bound": 7.880922879367957e-07,
+        "iterations": 23,
+        "residual": 2.7583230077787846e-07
+      },
+      "status": "SUPPORT_NOT_ACCURACY"
+    },
+    "patient014": {
+      "anatomy": {
+        "anchor_supported_pixels": 57268,
+        "candidate_cap_slices": 0,
+        "conflicting_vote_pixels": 173,
+        "evidence_independence": "not_asserted_multiscale_votes_can_repeat",
+        "hypotheses_before_anatomy": 54,
+        "no_orientation_slices": 0,
+        "orientation_policy": "world_left_v2",
+        "raw_vote_mass_per_class": [
+          31829.5,
+          208.65017712116241,
+          2630.8131348490715,
+          336.8776168227196
+        ],
+        "rv_hypotheses": 19,
+        "slices_with_hypotheses": 47,
+        "wall_cavity_hypotheses": 54
+      },
+      "class_pixels": [
+        10105,
+        0,
+        566,
+        48
+      ],
+      "graph": {
+        "nodes": 691200,
+        "spatial_edges": 1303587,
+        "temporal_edges": 1992
+      },
+      "solver": {
+        "converged": true,
+        "error_bound": 8.091094959107791e-07,
+        "iterations": 23,
+        "residual": 2.8318832356877266e-07
+      },
+      "status": "SUPPORT_NOT_ACCURACY"
+    },
+    "patient015": {
+      "anatomy": {
+        "anchor_supported_pixels": 41302,
+        "candidate_cap_slices": 0,
+        "conflicting_vote_pixels": 372,
+        "evidence_independence": "not_asserted_multiscale_votes_can_repeat",
+        "hypotheses_before_anatomy": 29,
+        "no_orientation_slices": 0,
+        "orientation_policy": "world_left_v2",
+        "raw_vote_mass_per_class": [
+          18728.5,
+          243.6678428053856,
+          3850.6576428711414,
+          217.0607758462429
+        ],
+        "rv_hypotheses": 27,
+        "slices_with_hypotheses": 27,
+        "wall_cavity_hypotheses": 28
+      },
+      "class_pixels": [
+        2065,
+        0,
+        231,
+        10
+      ],
+      "graph": {
+        "nodes": 435456,
+        "spatial_edges": 830719,
+        "temporal_edges": 872
+      },
+      "solver": {
+        "converged": true,
+        "error_bound": 8.909879646777443e-07,
+        "iterations": 23,
+        "residual": 3.118457876372105e-07
+      },
+      "status": "SUPPORT_NOT_ACCURACY"
+    },
+    "patient018": {
+      "anatomy": {
+        "anchor_supported_pixels": 21775,
+        "candidate_cap_slices": 0,
+        "conflicting_vote_pixels": 0,
+        "evidence_independence": "not_asserted_multiscale_votes_can_repeat",
+        "hypotheses_before_anatomy": 13,
+        "no_orientation_slices": 0,
+        "orientation_policy": "world_left_v2",
+        "raw_vote_mass_per_class": [
+          9578.0,
+          516.4365074634552,
+          1339.021987259388,
+          72.81660205125809
+        ],
+        "rv_hypotheses": 15,
+        "slices_with_hypotheses": 13,
+        "wall_cavity_hypotheses": 13
+      },
+      "class_pixels": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "graph": {
+        "nodes": 239616,
+        "spatial_edges": 456851,
+        "temporal_edges": 460
+      },
+      "solver": {
+        "converged": true,
+        "error_bound": 9.133499965864799e-07,
+        "iterations": 22,
+        "residual": 3.1967249880526794e-07
+      },
+      "status": "NO_FOREGROUND_SUPPORT"
+    },
+    "patient028": {
+      "anatomy": {
+        "anchor_supported_pixels": 181977,
+        "candidate_cap_slices": 0,
+        "conflicting_vote_pixels": 852,
+        "evidence_independence": "not_asserted_multiscale_votes_can_repeat",
+        "hypotheses_before_anatomy": 112,
+        "no_orientation_slices": 112,
+        "orientation_policy": "world_left_v2",
+        "raw_vote_mass_per_class": [
+          89740.5,
+          0.0,
+          9738.005641490221,
+          722.5839351117611
+        ],
+        "rv_hypotheses": 0,
+        "slices_with_hypotheses": 112,
+        "wall_cavity_hypotheses": 112
+      },
+      "class_pixels": [
+        11810,
+        0,
+        540,
+        16
+      ],
+      "graph": {
+        "nodes": 645120,
+        "spatial_edges": 1209678,
+        "temporal_edges": 4279
+      },
+      "solver": {
+        "converged": true,
+        "error_bound": 6.938214469620618e-07,
+        "iterations": 23,
+        "residual": 2.4283750643672164e-07
+      },
+      "status": "SUPPORT_NOT_ACCURACY"
+    },
+    "patient029": {
+      "anatomy": {
+        "anchor_supported_pixels": 89491,
+        "candidate_cap_slices": 0,
+        "conflicting_vote_pixels": 342,
+        "evidence_independence": "not_asserted_multiscale_votes_can_repeat",
+        "hypotheses_before_anatomy": 63,
+        "no_orientation_slices": 63,
+        "orientation_policy": "world_left_v2",
+        "raw_vote_mass_per_class": [
+          47995.0,
+          0.0,
+          9265.101357102394,
+          540.3952178955078
+        ],
+        "rv_hypotheses": 0,
+        "slices_with_hypotheses": 63,
+        "wall_cavity_hypotheses": 63
+      },
+      "class_pixels": [
+        16823,
+        0,
+        2510,
+        67
+      ],
+      "graph": {
+        "nodes": 760320,
+        "spatial_edges": 1426554,
+        "temporal_edges": 2760
+      },
+      "solver": {
+        "converged": true,
+        "error_bound": 9.226690887510968e-07,
+        "iterations": 23,
+        "residual": 3.2293418106288385e-07
+      },
+      "status": "SUPPORT_NOT_ACCURACY"
+    },
+    "patient030": {
+      "anatomy": {
+        "anchor_supported_pixels": 76729,
+        "candidate_cap_slices": 0,
+        "conflicting_vote_pixels": 0,
+        "evidence_independence": "not_asserted_multiscale_votes_can_repeat",
+        "hypotheses_before_anatomy": 49,
+        "no_orientation_slices": 49,
+        "orientation_policy": "world_left_v2",
+        "raw_vote_mass_per_class": [
+          33472.5,
+          0.0,
+          5142.715672791004,
+          303.11275643110275
+        ],
+        "rv_hypotheses": 0,
+        "slices_with_hypotheses": 47,
+        "wall_cavity_hypotheses": 49
+      },
+      "class_pixels": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "graph": {
+        "nodes": 806400,
+        "spatial_edges": 1514547,
+        "temporal_edges": 6019
+      },
+      "solver": {
+        "converged": true,
+        "error_bound": 9.208260484275652e-07,
+        "iterations": 22,
+        "residual": 3.222891169496478e-07
+      },
+      "status": "NO_FOREGROUND_SUPPORT"
+    },
+    "patient032": {
+      "anatomy": {
+        "anchor_supported_pixels": 127047,
+        "candidate_cap_slices": 0,
+        "conflicting_vote_pixels": 6752,
+        "evidence_independence": "not_asserted_multiscale_votes_can_repeat",
+        "hypotheses_before_anatomy": 124,
+        "no_orientation_slices": 124,
+        "orientation_policy": "world_left_v2",
+        "raw_vote_mass_per_class": [
+          77021.5,
+          0.0,
+          11682.731147408485,
+          1111.7910568416119
+        ],
+        "rv_hypotheses": 0,
+        "slices_with_hypotheses": 121,
+        "wall_cavity_hypotheses": 124
+      },
+      "class_pixels": [
+        27942,
+        0,
+        19,
+        22
+      ],
+      "graph": {
+        "nodes": 691200,
+        "spatial_edges": 1324638,
+        "temporal_edges": 8225
+      },
+      "solver": {
+        "converged": true,
+        "error_bound": 8.865018162408843e-07,
+        "iterations": 23,
+        "residual": 3.102756356843095e-07
+      },
+      "status": "SUPPORT_NOT_ACCURACY"
+    },
+    "patient036": {
+      "anatomy": {
+        "anchor_supported_pixels": 282253,
+        "candidate_cap_slices": 0,
+        "conflicting_vote_pixels": 2503,
+        "evidence_independence": "not_asserted_multiscale_votes_can_repeat",
+        "hypotheses_before_anatomy": 228,
+        "no_orientation_slices": 0,
+        "orientation_policy": "world_left_v2",
+        "raw_vote_mass_per_class": [
+          156204.5,
+          9344.798529535532,
+          24416.403030842543,
+          2343.7416812479496
+        ],
+        "rv_hypotheses": 224,
+        "slices_with_hypotheses": 203,
+        "wall_cavity_hypotheses": 228
+      },
+      "class_pixels": [
+        63248,
+        848,
+        5086,
+        788
+      ],
+      "graph": {
+        "nodes": 645120,
+        "spatial_edges": 1234905,
+        "temporal_edges": 1858
+      },
+      "solver": {
+        "converged": true,
+        "error_bound": 9.927456469581233e-07,
+        "iterations": 23,
+        "residual": 3.4746097643534313e-07
+      },
+      "status": "SUPPORT_NOT_ACCURACY"
+    },
+    "patient065": {
+      "anatomy": {
+        "anchor_supported_pixels": 199625,
+        "candidate_cap_slices": 0,
+        "conflicting_vote_pixels": 867,
+        "evidence_independence": "not_asserted_multiscale_votes_can_repeat",
+        "hypotheses_before_anatomy": 167,
+        "no_orientation_slices": 167,
+        "orientation_policy": "world_left_v2",
+        "raw_vote_mass_per_class": [
+          98299.5,
+          0.0,
+          20346.103357076645,
+          2547.3972683548927
+        ],
+        "rv_hypotheses": 0,
+        "slices_with_hypotheses": 150,
+        "wall_cavity_hypotheses": 167
+      },
+      "class_pixels": [
+        23768,
+        0,
+        1391,
+        65
+      ],
+      "graph": {
+        "nodes": 552960,
+        "spatial_edges": 1057003,
+        "temporal_edges": 883
+      },
+      "solver": {
+        "converged": true,
+        "error_bound": 7.686890360744262e-07,
+        "iterations": 23,
+        "residual": 2.6904116262604916e-07
+      },
+      "status": "SUPPORT_NOT_ACCURACY"
+    },
+    "patient070": {
+      "anatomy": {
+        "anchor_supported_pixels": 51743,
+        "candidate_cap_slices": 0,
+        "conflicting_vote_pixels": 278,
+        "evidence_independence": "not_asserted_multiscale_votes_can_repeat",
+        "hypotheses_before_anatomy": 39,
+        "no_orientation_slices": 0,
+        "orientation_policy": "world_left_v2",
+        "raw_vote_mass_per_class": [
+          26680.0,
+          75.2632811665535,
+          1575.4956908524036,
+          149.154467523098
+        ],
+        "rv_hypotheses": 10,
+        "slices_with_hypotheses": 39,
+        "wall_cavity_hypotheses": 39
+      },
+      "class_pixels": [
+        3909,
+        0,
+        68,
+        8
+      ],
+      "graph": {
+        "nodes": 387072,
+        "spatial_edges": 739541,
+        "temporal_edges": 2968
+      },
+      "solver": {
+        "converged": true,
+        "error_bound": 7.536239676753098e-07,
+        "iterations": 23,
+        "residual": 2.6376838868635843e-07
+      },
+      "status": "SUPPORT_NOT_ACCURACY"
+    },
+    "patient082": {
+      "anatomy": {
+        "anchor_supported_pixels": 117450,
+        "candidate_cap_slices": 0,
+        "conflicting_vote_pixels": 514,
+        "evidence_independence": "not_asserted_multiscale_votes_can_repeat",
+        "hypotheses_before_anatomy": 73,
+        "no_orientation_slices": 0,
+        "orientation_policy": "world_left_v2",
+        "raw_vote_mass_per_class": [
+          58637.0,
+          364.9160304069519,
+          5721.815724223852,
+          652.3441812992096
+        ],
+        "rv_hypotheses": 44,
+        "slices_with_hypotheses": 72,
+        "wall_cavity_hypotheses": 72
+      },
+      "class_pixels": [
+        9814,
+        16,
+        576,
+        63
+      ],
+      "graph": {
+        "nodes": 626688,
+        "spatial_edges": 1183010,
+        "temporal_edges": 110
+      },
+      "solver": {
+        "converged": true,
+        "error_bound": 8.226803704936003e-07,
+        "iterations": 23,
+        "residual": 2.879381296727601e-07
+      },
+      "status": "SUPPORT_NOT_ACCURACY"
+    },
+    "patient087": {
+      "anatomy": {
+        "anchor_supported_pixels": 158751,
+        "candidate_cap_slices": 0,
+        "conflicting_vote_pixels": 292,
+        "evidence_independence": "not_asserted_multiscale_votes_can_repeat",
+        "hypotheses_before_anatomy": 99,
+        "no_orientation_slices": 0,
+        "orientation_policy": "world_left_v2",
+        "raw_vote_mass_per_class": [
+          73656.0,
+          231.2209266424179,
+          8463.808226853609,
+          1114.1795192360878
+        ],
+        "rv_hypotheses": 34,
+        "slices_with_hypotheses": 92,
+        "wall_cavity_hypotheses": 99
+      },
+      "class_pixels": [
+        4189,
+        0,
+        56,
+        18
+      ],
+      "graph": {
+        "nodes": 516096,
+        "spatial_edges": 968603,
+        "temporal_edges": 701
+      },
+      "solver": {
+        "converged": true,
+        "error_bound": 9.30451414328713e-07,
+        "iterations": 23,
+        "residual": 3.2565799501504955e-07
+      },
+      "status": "SUPPORT_NOT_ACCURACY"
+    },
+    "patient089": {
+      "anatomy": {
+        "anchor_supported_pixels": 22301,
+        "candidate_cap_slices": 0,
+        "conflicting_vote_pixels": 0,
+        "evidence_independence": "not_asserted_multiscale_votes_can_repeat",
+        "hypotheses_before_anatomy": 19,
+        "no_orientation_slices": 0,
+        "orientation_policy": "world_left_v2",
+        "raw_vote_mass_per_class": [
+          9975.5,
+          190.66545635461807,
+          905.9253576099873,
+          68.43602600693703
+        ],
+        "rv_hypotheses": 29,
+        "slices_with_hypotheses": 19,
+        "wall_cavity_hypotheses": 19
+      },
+      "class_pixels": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "graph": {
+        "nodes": 414720,
+        "spatial_edges": 781362,
+        "temporal_edges": 10148
+      },
+      "solver": {
+        "converged": true,
+        "error_bound": 7.24201140326183e-07,
+        "iterations": 22,
+        "residual": 2.53470399114164e-07
+      },
+      "status": "NO_FOREGROUND_SUPPORT"
+    },
+    "patient095": {
+      "anatomy": {
+        "anchor_supported_pixels": 163499,
+        "candidate_cap_slices": 0,
+        "conflicting_vote_pixels": 1427,
+        "evidence_independence": "not_asserted_multiscale_votes_can_repeat",
+        "hypotheses_before_anatomy": 147,
+        "no_orientation_slices": 0,
+        "orientation_policy": "world_left_v2",
+        "raw_vote_mass_per_class": [
+          94191.0,
+          1216.2959088981152,
+          11032.068169087172,
+          1044.7601727843285
+        ],
+        "rv_hypotheses": 106,
+        "slices_with_hypotheses": 139,
+        "wall_cavity_hypotheses": 147
+      },
+      "class_pixels": [
+        32589,
+        7,
+        1574,
+        171
+      ],
+      "graph": {
+        "nodes": 967680,
+        "spatial_edges": 1854904,
+        "temporal_edges": 1871
+      },
+      "solver": {
+        "converged": true,
+        "error_bound": 9.379253221705345e-07,
+        "iterations": 23,
+        "residual": 3.2827386275968706e-07
+      },
+      "status": "SUPPORT_NOT_ACCURACY"
+    },
+    "patient098": {
+      "anatomy": {
+        "anchor_supported_pixels": 29599,
+        "candidate_cap_slices": 0,
+        "conflicting_vote_pixels": 332,
+        "evidence_independence": "not_asserted_multiscale_votes_can_repeat",
+        "hypotheses_before_anatomy": 22,
+        "no_orientation_slices": 0,
+        "orientation_policy": "world_left_v2",
+        "raw_vote_mass_per_class": [
+          16289.0,
+          121.15528938174248,
+          1990.9563137888908,
+          129.57023453712463
+        ],
+        "rv_hypotheses": 15,
+        "slices_with_hypotheses": 21,
+        "wall_cavity_hypotheses": 22
+      },
+      "class_pixels": [
+        4114,
+        2,
+        474,
+        8
+      ],
+      "graph": {
+        "nodes": 354816,
+        "spatial_edges": 676293,
+        "temporal_edges": 2021
+      },
+      "solver": {
+        "converged": true,
+        "error_bound": 8.583917430828235e-07,
+        "iterations": 23,
+        "residual": 3.004371100789882e-07
+      },
+      "status": "SUPPORT_NOT_ACCURACY"
+    }
+  },
+  "patient_specific_teacher_inference": "DIAGNOSTIC_ONLY_NO_TRAINING_OR_PERMISSION_FEEDBACK",
+  "patients": [
+    "patient004",
+    "patient005",
+    "patient012",
+    "patient014",
+    "patient015",
+    "patient018",
+    "patient028",
+    "patient029",
+    "patient030",
+    "patient032",
+    "patient036",
+    "patient065",
+    "patient070",
+    "patient082",
+    "patient087",
+    "patient089",
+    "patient095",
+    "patient098"
+  ],
+  "private_arrays": false,
+  "projection_control": "student common-grid softmax probabilities bilinear to native H/W, align_corners=False, then original student gates",
+  "r0_definition": "Original core.make_bank R0: fixed CineMA features plus anatomy-prior votes, not a pretrained semantic head or trained stage; raw=np.argmax (lowest class wins ties); diagnostic R0 gate uses original probability/margin thresholds and the same Q-derived propagated reliability as make_bank, without student permissions.",
+  "scalar_scope": "all cine frames; scoring selects original reference frame indices later",
+  "schema": "self_audit.stagewise_diagnostics.v1",
+  "source_commit": "b937e3b746608725e43d3bc3cef8861666d152dc",
+  "source_sha256": {
+    "__init__.py": "1c840d42867f0e07dfc13c656c82ad85b0b9abe36fb0870fc87b338df5609e38",
+    "core.py": "08a0e3ed1987e446d0367c6b15b102c95ffbc083cf6077c7f1985e6adb346c63",
+    "evaluate.py": "44cfff418bc1510d61c4f3b9b6296d1ece9421b14739398d3900d2d7028315d6",
+    "experimental_diagnostics.py": "2aaa412959199105c1ce572e10df5b58d70f247838d113bd28a8ae9146977bc4",
+    "experimental_geometry.py": "93355bcffabd5471950bbef62dbd94aedf13c2d3989aecd594bdbce373df056b",
+    "full.py": "8f9036fb717c4edab731649a4ccb861ef40784b2d0f5d3c78c7651af3cccdf91",
+    "io.py": "42c73e38a59463ec409fa1915d425f1e549f510be68d5c2c6fbd135eb5204b5d",
+    "pipeline.py": "0f23f07bb3f77fd6c7724b7170a75c543b211fa36ec1c704fd84f5bcf23e2029",
+    "preflight.py": "bf81ecacbb194e5ae6f3bbc6a5386e4703f9e95fc3618cf2329518234430584b",
+    "student.py": "d216bdc7ca8e9b01b368457aed2b91065e8124a2d3be2a9875d1f6284b3387fa",
+    "teacher.py": "8a7b88548223c30ef570f90d977c71a14f2ca6ec219bf216e0f16efafdada273"
+  },
+  "split": "val",
+  "status": "GENERATED_NOT_SCORED",
+  "teacher": {
+    "adapter_source_sha256": "8a7b88548223c30ef570f90d977c71a14f2ca6ec219bf216e0f16efafdada273",
+    "checkpoint_filename": "pretrained/cinema.safetensors",
+    "checkpoint_sha256": "a841b7e9300d60ea8feb73e3a7d8c60ddedc1d1d49ec1049ebfcfa337c5d5590",
+    "cinema_mae_source_sha256": "9baffc51ed27a2e4d7d2c164b5d3dc69ba013381a3b5b3f501b41c8e2ef6c71d",
+    "config_sha256": "3147bbd6d0350f9fe30d14989db0f6d53ecef2ed32900d843a3fc3155a3e0a32",
+    "frozen": true,
+    "model_revision": "e0466ed5bd7687a32121434875bf2168aed41c03",
+    "provider": "CineMA-MAE",
+    "segmentation_finetune": false,
+    "source_commit_expected": "c10daa1d93f0ea28d8b9ad9206b0f673d25805c1",
+    "upstream_lineage": "SSL_DECLARED_PREPROCESSING_NOT_FULLY_AUDITED"
+  },
+  "test_excluded": true,
+  "train_permissions_updated": false
+}

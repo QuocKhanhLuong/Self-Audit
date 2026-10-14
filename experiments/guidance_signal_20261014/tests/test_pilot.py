@@ -19,14 +19,17 @@ def paired_tensors():
     return q, z, weights, valid
 
 
-def test_ce_forward_kl_gradients_and_detached_targets():
+@pytest.mark.parametrize("seed", [0, 1, 2, 3])
+def test_ce_forward_kl_gradients_and_detached_targets(seed):
     q, z, weights, valid = paired_tensors()
     q.requires_grad_(); z.requires_grad_(); weights.requires_grad_()
-    logits = torch.randn(1, 4, 2, 2, requires_grad=True)
+    logits = torch.randn(1, 4, 2, 2, generator=torch.Generator().manual_seed(seed), requires_grad=True)
     terms = pilot.semantic_terms(logits, q, z, weights, valid)
     for arm in ("Q", "Z", "full_Q"):
         ce, kl, entropy = [terms[arm][key] for key in ("ce", "kl", "entropy")]
-        assert torch.allclose(ce - entropy, kl, atol=3e-7, rtol=0)
+        # Separate float32 reductions/subtraction need a scale-aware ULP budget.
+        # This assertion tolerance affects synthetic diagnostics only, not support gates.
+        assert torch.allclose(ce - entropy, kl, atol=3e-7, rtol=4*torch.finfo(logits.dtype).eps)
         ce_grad = torch.autograd.grad(ce, logits, retain_graph=True)[0]
         kl_grad = torch.autograd.grad(kl, logits, retain_graph=True)[0]
         assert torch.allclose(ce_grad, kl_grad, atol=1e-7, rtol=0)
@@ -273,6 +276,23 @@ def test_schedule_is_reproducible_and_state_hash_is_order_independent():
 def test_tiny_fully_excluded_objective_is_rejected(total_weight):
     with pytest.raises(ValueError, match="substantial original weight"):
         pilot.check_excluded_mass(torch.tensor([total_weight]), torch.tensor([False]))
+
+
+@pytest.mark.parametrize("total,excluded,passes", [
+    (1.0, 1.5e-6, True),
+    (1.0, 2e-6, True),
+    (1.0, 2.001e-6, False),
+    (3.5107733410522866e-8, 4.816387563842499e-14, True),
+    (1e-9, 2.01e-14, False),
+])
+def test_approved_r2_mass_bound_and_clamped_denominator(total, excluded, passes):
+    assert pilot.EXCLUDED_WEIGHT_RTOL == 2e-6
+    if passes:
+        result = pilot._check_mass_values(total, excluded)
+        assert result["excluded_objective_weight_fraction"] <= 2e-6
+    else:
+        with pytest.raises(ValueError, match="substantial original weight"):
+            pilot._check_mass_values(total, excluded)
 
 
 @pytest.mark.parametrize("key,new_value", [("steps", 1), ("seed", 999), ("patient_ids", ["train_a"])])

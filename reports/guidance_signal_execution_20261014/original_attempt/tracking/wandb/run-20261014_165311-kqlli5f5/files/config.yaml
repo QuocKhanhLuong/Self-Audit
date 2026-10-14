@@ -1,0 +1,123 @@
+_wandb:
+    value:
+        cli_version: 0.19.11
+        m:
+            - "1": pilot/Q/step
+              "6":
+                - 3
+              "7": []
+            - "1": pilot/Z/step
+              "6":
+                - 3
+              "7": []
+        python_version: 3.11.16
+        t:
+            "1":
+                - 55
+            "2":
+                - 55
+            "3":
+                - 2
+                - 7
+                - 13
+                - 15
+                - 16
+                - 23
+                - 55
+                - 62
+            "4": 3.11.16
+            "5": 0.19.11
+            "8":
+                - 2
+                - 5
+            "12": 0.19.11
+            "13": linux-x86_64
+batch_size:
+    value: 8
+execution_order:
+    value:
+        - preflight
+        - prepare_train4
+        - freeze_plan
+        - wait_for_4070
+        - paired_train_64_each
+        - original_checkpoint_stagewise_generate
+        - original_checkpoint_stagewise_score
+expected_bank_sha:
+    value: 04fb2d30df6c0e0ed235dcf851a491895661b7fd4763e6b89ce95ca6811accae
+expected_checkpoint_sha:
+    value: 90bc16bb9f89963b452355376673e3ba9aa24b38870e4595237d75e402ce873e
+git_commit:
+    value: 4bfc1f95de0282668b90948206245a2996c70b19
+local_patch_sha256:
+    value: d02d290a77bc9d3d49f67a801086a1c630ca371d0e11d45763154f80f0060973
+patient_ids:
+    value:
+        - patient001
+        - patient002
+        - patient013
+        - patient017
+plan_sha256:
+    value: 24e85b5ee8f30bf99d99d7eae8a33c3e7ada15aa29d66a4ce0102365b66f1b3f
+policy:
+    value:
+        activation: original_Q_argmax_foreground_and_positive_original_weight
+        allowed_classes:
+            - true
+            - true
+            - true
+            - true
+        betas:
+            - 0.9
+            - 0.999
+        clip_grad_norm: 5
+        config:
+            alpha: 0.35
+            clusters:
+                - 4
+                - 8
+                - 12
+            feature_dim: 64
+            grid: 48
+            kmeans_steps: 15
+            match_cosine: 0.85
+            match_margin: 0.02
+            match_photo: 0.5
+            match_radius: 2
+            max_fit_points: 4096
+            max_iterations: 500
+            max_nodes: 1500000
+            max_region_candidates: 96
+            min_contrast: 0.25
+            min_enclosure: 0.65
+            min_margin: 0.2
+            min_probability: 0.7
+            min_region_pixels: 6
+            min_reliability: 0.05
+            spatial_scale: 0.35
+            temporal: true
+            tolerance: 1e-06
+        context: original_z_minus_1_z_z_plus_1_clamped
+        cublas_workspace_config: :4096:8
+        cudnn_benchmark: false
+        cudnn_deterministic: true
+        denominator: original_full_weight_sum_clamp_min_1e-8
+        deterministic_algorithms: true
+        deterministic_warn_only: false
+        eps: 1e-08
+        excluded_weight_guard: excluded_weight_divided_by_max_total_weight_1e-8
+        excluded_weight_rtol: 1e-06
+        feature_dim: 64
+        feature_loss: original_frozen_feature_cosine
+        lr: 0.0003
+        optimizer: fresh_AdamW_not_original_optimizer_resume
+        permissions: original_Q_hard_labels_at_least_two_train_patients
+        target_change: Q_to_Z_on_common_valid_h_only
+        weight_decay: 0.0001
+        width: 32
+runbook:
+    value: experiments/guidance_signal_20261014/README.md
+seed:
+    value: 42
+steps_per_arm:
+    value: 64

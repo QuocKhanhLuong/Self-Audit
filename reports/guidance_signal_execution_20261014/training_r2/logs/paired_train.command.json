@@ -1,0 +1,30 @@
+{
+  "command": [
+    "${PYTHON_ENV}/bin/python",
+    "-B",
+    "-m",
+    "experiments.guidance_signal_20261014.pilot",
+    "--bank",
+    "${REPO_ROOT}/runs/stable_guidance_world_v2_acdc_4070_20261014_024155/run/bank",
+    "--signals",
+    "${REPO_ROOT}/runs/guidance_signal_4070_20261014_164424/signals_train4",
+    "--checkpoint",
+    "${REPO_ROOT}/runs/stable_guidance_world_v2_acdc_4070_20261014_024155/run/student/last.pt",
+    "--expected-checkpoint-sha",
+    "90bc16bb9f89963b452355376673e3ba9aa24b38870e4595237d75e402ce873e",
+    "--plan",
+    "${REPO_ROOT}/runs/guidance_signal_r2_4070_20261014_223742/pilot_plan.json",
+    "--expected-plan-sha",
+    "e4619a97d2ea6f0cfcc1d11c1b3cca850a60f1804ee59af9a6a6dd9fd7894ce5",
+    "--device",
+    "cuda",
+    "--output",
+    "${REPO_ROOT}/runs/guidance_signal_r2_4070_20261014_223742/pilot_Q_Z_64"
+  ],
+  "cwd": "${REPO_ROOT}/.worktrees/guidance-signal-r2-4bfc1f9",
+  "started_at": 1791992531.5079424,
+  "gpu": true,
+  "pid": 1837467,
+  "exit_code": 0,
+  "finished_at": 1791992585.7338777
+}

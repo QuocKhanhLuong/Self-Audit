@@ -1,0 +1,240 @@
+#!/usr/bin/env python3
+"""Host orchestration only; numerical contracts live in the pinned experiment."""
+import fcntl
+import hashlib
+import json
+import math
+import os
+from pathlib import Path
+import shlex
+import subprocess
+import sys
+import time
+import traceback
+
+JOB = Path(__file__).resolve().parent
+M = json.loads((JOB / 'LAUNCH_MANIFEST.json').read_text())
+SOURCE, ORIGINAL = Path(M['source']), Path(M['original_run'])
+PYTHON = M['python']
+ENV = os.environ.copy()
+ENV.update(OMP_NUM_THREADS='4', MKL_NUM_THREADS='4', OPENBLAS_NUM_THREADS='4',
+           PYTHONDONTWRITEBYTECODE='1', PYTHONUNBUFFERED='1', HF_HUB_OFFLINE='1',
+           TRANSFORMERS_OFFLINE='1', CUBLAS_WORKSPACE_CONFIG=':4096:8',
+           WANDB_DISABLE_CODE='true', WANDB_DISABLE_GIT='true', WANDB_CONSOLE='off')
+os.environ.update(ENV)
+STATE = dict(status='STARTING', stage='initialization', training_started=False,
+             completed_optimizer_steps={'Q': 0, 'Z': 0}, job=str(JOB), git_commit=M['git_commit'])
+RUN = None
+PUBLISHED = set()
+
+
+def write(path, value):
+    path = Path(path)
+    tmp = path.with_suffix(path.suffix + '.tmp')
+    tmp.write_text(json.dumps(value, indent=2, allow_nan=False) + '\n')
+    os.replace(tmp, path)
+
+
+def state(**fields):
+    STATE.update(fields, updated_at=time.time())
+    write(JOB / 'STATUS.json', STATE)
+    if RUN is not None:
+        RUN.summary['job/status'] = STATE['status']
+        RUN.summary['job/stage'] = STATE['stage']
+        RUN.summary['job/training_started'] = STATE['training_started']
+
+
+def log(message):
+    print(time.strftime('%Y-%m-%d %H:%M:%S'), message, flush=True)
+
+
+def consume(line):
+    print(line, end='', flush=True)
+    if line.startswith('[PILOT_STEP] '):
+        event = json.loads(line.partition('] ')[2])
+        arm = event.pop('arm')
+        STATE['completed_optimizer_steps'][arm] = event['optimizer_step']
+        state(training_started=True)
+        RUN.log({'live/' + arm + '/' + key: value for key, value in event.items()})
+
+
+def scalars(value, prefix=''):
+    result = {}
+    if isinstance(value, dict):
+        for key, item in value.items():
+            result.update(scalars(item, prefix + '/' + key if prefix else key))
+    elif isinstance(value, (int, float)) and math.isfinite(value):
+        result[prefix] = value
+    return result
+
+
+def publish_arms():
+    for arm in ('Q', 'Z'):
+        path = JOB / 'pilot_Q_Z_64' / arm / 'TRACE.json'
+        if arm in PUBLISHED or not path.exists():
+            continue
+        try:
+            trace = json.loads(path.read_text())
+        except json.JSONDecodeError:
+            continue
+        prefix = 'pilot/' + arm
+        for row in trace['steps']:
+            metrics = {prefix + '/step': row['optimizer_step'],
+                       prefix + '/feature_loss': row['feature_loss'],
+                       prefix + '/preclip_gradient_norm': row['preclip_total_gradient_norm'],
+                       prefix + '/total_loss': row['feature_loss'] + row['semantic'][arm]['ce']}
+            metrics.update(scalars(row['semantic'], prefix + '/semantic'))
+            RUN.log(metrics)
+        RUN.summary.update(scalars({key: value for key, value in trace.items()
+                                    if key not in ('steps', 'fixed_train_batch_no_updates')}, prefix))
+        RUN.summary.update(scalars(trace['fixed_train_batch_no_updates'], prefix + '/fixed_batch'))
+        STATE['completed_optimizer_steps'][arm] = trace['optimizer_steps']
+        state()
+        PUBLISHED.add(arm)
+        log(f'{arm}: {trace["optimizer_steps"]} optimizer steps complete; scalar metrics synced')
+
+
+def command(stage, module, args, gpu=False):
+    cmd = [PYTHON, '-B', '-m', 'experiments.guidance_signal_20261014.' + module, *map(str, args)]
+    env = ENV.copy()
+    env['CUDA_VISIBLE_DEVICES'] = M['gpu_uuid'] if gpu else ''
+    state(status='RUNNING', stage=stage)
+    log('COMMAND ' + shlex.join(cmd))
+    receipt = dict(command=cmd, cwd=str(SOURCE), started_at=time.time(), gpu=gpu)
+    log_path = JOB / 'logs' / (stage + '.log')
+    with log_path.open('x') as output:
+        proc = subprocess.Popen(cmd, cwd=SOURCE, env=env, stdout=output, stderr=subprocess.STDOUT)
+        state(child_pid=proc.pid)
+        receipt['pid'] = proc.pid
+        try:
+            with log_path.open() as stream:
+                while proc.poll() is None:
+                    for line in stream.readlines():
+                        consume(line)
+                    if stage == 'paired_train':
+                        publish_arms()
+                    elif stage == 'prepare':
+                        STATE['prepared_patients'] = sorted(p.stem for p in (Path(M['signals'])).glob('patient*.npz'))
+                    state()
+                    time.sleep(3)
+                for line in stream.readlines():
+                    consume(line)
+        except BaseException:
+            proc.terminate()
+            try:
+                proc.wait(timeout=30)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait()
+            raise
+    receipt.update(exit_code=proc.returncode, finished_at=time.time())
+    write(JOB / 'logs' / (stage + '.command.json'), receipt)
+    state(child_pid=None)
+    if proc.returncode:
+        raise RuntimeError(f'{stage} exited {proc.returncode}; see {log_path}')
+    if stage == 'paired_train':
+        publish_arms()
+    log(stage + ' completed successfully')
+
+
+def wait_for_gpu(next_stage):
+    state(status='WAITING_FOR_GPU', stage=next_stage, gpu_ready_observations=0)
+    consecutive, last_log = 0, 0
+    while True:
+        result = subprocess.run(['nvidia-smi', '-i', M['gpu_uuid'],
+            '--query-gpu=memory.free,utilization.gpu', '--format=csv,noheader,nounits'],
+            check=True, capture_output=True, text=True)
+        free, util = [int(part.strip()) for part in result.stdout.strip().split(',')]
+        consecutive = consecutive + 1 if free >= M['gpu_min_free_mib'] else 0
+        state(gpu_free_mib=free, gpu_utilization_percent=util, gpu_ready_observations=consecutive)
+        if time.time() - last_log > 60:
+            log(f'GPU QUEUE: RTX 4070 free={free} MiB, utilization={util}%; need {M["gpu_min_free_mib"]} MiB')
+            RUN.log({'queue/free_mib': free, 'queue/gpu_utilization_percent': util})
+            last_log = time.time()
+        if consecutive >= 3:
+            log('GPU VRAM gate passed for ' + next_stage)
+            return
+        time.sleep(15)
+
+
+def main():
+    global RUN
+    lock = (JOB / 'worker.lock').open('w')
+    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    state(worker_pid=os.getpid())
+    preflight = json.loads((JOB / M['preflight'] / 'PREFLIGHT.json').read_text())
+    if preflight['status'] != 'PASS_SOFTWARE_AND_ORIGINAL_IDENTITIES':
+        raise ValueError('preflight has not passed')
+    for relative, expected in M['experimental_source_sha256'].items():
+        if hashlib.sha256((SOURCE / relative).read_bytes()).hexdigest() != expected:
+            raise ValueError('source changed after preflight: ' + relative)
+    import wandb
+    RUN = wandb.init(project=M['wandb_project'], entity=M['wandb_entity'], name=M['name'],
+                     job_type='paired-technical-training', mode='online', dir=str(JOB/'tracking'),
+                     config={key: M[key] for key in ('git_commit', 'local_patch_sha256', 'steps_per_arm',
+                             'seed', 'patient_ids', 'expected_bank_sha', 'expected_checkpoint_sha',
+                             'execution_order', 'runbook', 'protocol_revision', 'excluded_weight_rtol', 'user_authorization')},
+                     tags=['rtx4070', 'guidance-signal', 'Q-vs-Z', '64-steps-per-arm', 'support-r2-user-approved'],
+                     settings=wandb.Settings(disable_git=True, console='off'))
+    write(JOB / 'tracking/WANDB_RUN.json', {'id': RUN.id, 'url': RUN.url, 'project': RUN.project})
+    state(wandb_url=RUN.url)
+    log('W&B ' + RUN.url)
+    for arm in ('Q', 'Z'):
+        RUN.define_metric('live/' + arm + '/optimizer_step')
+        RUN.define_metric('live/' + arm + '/*', step_metric='live/' + arm + '/optimizer_step')
+        RUN.define_metric('pilot/' + arm + '/step')
+        RUN.define_metric('pilot/' + arm + '/*', step_metric='pilot/' + arm + '/step')
+    RUN.summary['trained_arms/accuracy_status'] = 'NOT_EVALUATED_NO_REVIEWED_EXPORT_PROTOCOL'
+    RUN.summary['preflight/passed_tests'] = 94
+    RUN.summary['scope'] = 'User-approved support-tolerance r2; technical TRAIN continuation, no new-arm anatomical evaluation'
+    RUN.summary['prior_diagnostics/url'] = 'https://wandb.ai/nthne-hanoi-university-of-science-and-technology/self-audit-stable-guidance/runs/gqrtru5o'
+    RUN.summary['telemetry/step_delivery'] = 'Live scalar progress each optimizer step; full diagnostic traces after each completed arm'
+    common = ['--bank', ORIGINAL/'bank', '--signals', Path(M['signals']),
+              '--checkpoint', ORIGINAL/'student/last.pt', '--expected-checkpoint-sha',
+              M['expected_checkpoint_sha'], '--plan', JOB/'pilot_plan.json']
+    command('plan', 'pilot', [*common, '--write-plan-only', '--patient-ids', *M['patient_ids'],
+                            '--steps', M['steps_per_arm'], '--seed', M['seed']])
+    emitted = [json.loads(line) for line in (JOB/'logs/plan.log').read_text().splitlines()
+               if line.startswith('{')][-1]
+    expected = emitted['plan_sha256']
+    plan = json.loads((JOB/'pilot_plan.json').read_text())
+    actual = hashlib.sha256(json.dumps(plan, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()).hexdigest()
+    if expected != actual:
+        raise ValueError('emitted canonical plan digest does not match plan')
+    previous_plan = json.loads((Path(M['prior_job'])/'pilot_plan.json').read_text())
+    previous_plan['policy']['excluded_weight_rtol'] = M['excluded_weight_rtol']
+    if plan != previous_plan:
+        raise ValueError('amended plan changed more than the approved excluded-weight tolerance')
+    write(JOB/'PLAN_BINDING.json', dict(plan_sha256=expected, command_receipt='logs/plan.command.json'))
+    RUN.config.update({'plan_sha256': expected, 'batch_size': plan['batch_size'], 'policy': plan['policy']})
+    wait_for_gpu('paired_train')
+    state(training_process_started=True)
+    command('paired_train', 'pilot', [*common, '--expected-plan-sha', expected, '--device', 'cuda',
+                                    '--output', JOB/'pilot_Q_Z_64'], gpu=True)
+    state(training_completed=True)
+    RUN.summary['pilot/report_status'] = json.loads((JOB/'pilot_Q_Z_64/REPORT.json').read_text())['status']
+    traces = {arm: json.loads((JOB/'pilot_Q_Z_64'/arm/'TRACE.json').read_text()) for arm in ('Q','Z')}
+    result = dict(status='TECHNICAL_PAIRED_TRAIN_COMPLETED', protocol_revision=M['protocol_revision'],
+                  excluded_weight_rtol=M['excluded_weight_rtol'], steps_per_arm=M['steps_per_arm'],
+                  original_checkpoint_diagnostics=M['diagnostics_job'], anatomical_accuracy_of_trained_arms='NOT_EVALUATED',
+                  arms={arm: dict(optimizer_steps=t['optimizer_steps'], mean_semantic=t['mean_semantic'],
+                       mean_feature_loss=sum(row['feature_loss'] for row in t['steps'])/len(t['steps']),
+                       fixed_batch_before=t['fixed_train_batch_no_updates']['before']['semantic'][arm],
+                       fixed_batch_after=t['fixed_train_batch_no_updates']['after']['semantic'][arm],
+                       elapsed_seconds=t['elapsed_seconds'], peak_cuda_reserved_bytes=t['peak_cuda_reserved_bytes'])
+                        for arm,t in traces.items()})
+    write(JOB/'RESULTS.json', result)
+    state(status='FINISHED', stage='complete', finished_at=time.time())
+    log('FINISHED: paired 64-step technical training under user-approved support protocol r2')
+    RUN.finish(exit_code=0)
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except BaseException as exc:
+        state(status='FAILED', error=type(exc).__name__ + ': ' + str(exc))
+        traceback.print_exc()
+        if RUN is not None:
+            RUN.finish(exit_code=1)
+        raise SystemExit(1)

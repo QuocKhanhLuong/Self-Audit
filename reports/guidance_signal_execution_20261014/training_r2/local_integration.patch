@@ -1,0 +1,178 @@
+diff --git a/experiments/guidance_signal_20261014/README.md b/experiments/guidance_signal_20261014/README.md
+index 6f3eafe..3ddee87 100644
+--- a/experiments/guidance_signal_20261014/README.md
++++ b/experiments/guidance_signal_20261014/README.md
+@@ -1,5 +1,19 @@
+ # World-left-v2 attribution: isolated code and execution-host handoff
+ 
++## Execution-host protocol amendment r2
++
++This isolated checkout includes a user-approved TRAIN-support amendment: the
++denominator-relative excluded-weight limit is **2e-6**, replacing the original
++**1e-6** limit described in the published procedure below. The original fixed
++schedule had one failing batch (step 10: 1.3718879278030748e-6); the original run
++stopped before any optimizer update. This is a disclosed protocol change based
++on TRAIN support, not reproduction under the original tolerance. The amendment
++preserves the checkpoint, patient subset, seed, schedule, 64 steps per arm,
++min_h, Z validity/error bounds, weights, denominator, model, and objectives.
++Each new plan pins the amended limit and receives a new canonical digest.
++The execution host retains failed receipts and the approval in the run's
++PROTOCOL_AMENDMENT.json. Step logs report completed optimizer updates.
++
+ **Status: opt-in experimental code, packaged for Git publication.** See [publication scope](../../reports/guidance_research_continuation_20261014/PUBLICATION.md). Base repository `b937e3b746608725e43d3bc3cef8861666d152dc`. The current task implements and checks software locally; a separate Codex on the 4070 runs original-artifact diagnostics. No remote connection, real-data pilot or new full training run is triggered by this package.
+ 
+ Use a separate clean checkout/worktree of the Git commit containing this directory. For the historical ZIP overlay, use its recorded base and copy the experimental/report directories as described in that archive. The hash-pinned published `reports/stable_guidance_world_v2_20261014/` must remain unchanged. Importing top-level production `src` is deliberately avoided: `runtime.py` loads the eleven verified executed-source modules under a private package name. The earlier experimental changes are not assumed merged into production.
+diff --git a/experiments/guidance_signal_20261014/pilot.py b/experiments/guidance_signal_20261014/pilot.py
+index 554ab26..334c9a3 100644
+--- a/experiments/guidance_signal_20261014/pilot.py
++++ b/experiments/guidance_signal_20261014/pilot.py
+@@ -22,8 +22,9 @@ import torch
+ from torch.nn import functional as F
+ 
+ MAX_STEPS = 128
+-# Fixed numerical guard, never fitted to VAL. Apply to each batch AND patient.
+-EXCLUDED_WEIGHT_RTOL = 1e-6
++# User-approved r2 TRAIN-support amendment; original protocol used 1e-6.
++# Apply to each batch AND patient. This is not original-protocol reproduction.
++EXCLUDED_WEIGHT_RTOL = 2e-6
+ CLASSES = ("BG", "RV", "MYO", "LV")
+ PLAN_SCHEMA = "guidance_signal.paired_pilot.v1"
+ CUBLAS_WORKSPACE_CONFIG = ":4096:8"
+@@ -157,7 +158,7 @@ def semantic_terms(logits, q, z, weights, valid, semantic_enabled=True):
+     for name, target, mask in (("full_Q", q, torch.ones_like(valid)), ("Q", q, valid), ("Z", z, valid)):
+         target = target.permute(0, 2, 3, 1)[mask]
+         logp = lp.permute(0, 2, 3, 1)[mask]
+-        weight = w[mask, None]
++        weight = w[mask].unsqueeze(-1)
+         ce_class = -(weight * target * logp).sum(0) / denominator
+         entropy = -(weight * torch.special.xlogy(target, target)).sum() / denominator
+         kl = (weight * (torch.special.xlogy(target, target) - target * logp)).sum() / denominator
+@@ -486,6 +487,12 @@ def run_pilot(bank, signals, checkpoint, expected_checkpoint_sha, plan, output,
+             optimizer.step()
+             record.update(optimizer_step=number, preclip_total_gradient_norm=float(norm))
+             rows.append(record)
++            print("[PILOT_STEP] " + json.dumps(dict(
++                arm=arm, optimizer_step=number, feature_loss=record["feature_loss"],
++                ce=record["semantic"][arm]["ce"],
++                entropy=record["semantic"][arm]["entropy"],
++                kl=record["semantic"][arm]["kl"],
++                preclip_gradient_norm=float(norm)), allow_nan=False), flush=True)
+         optimizer.zero_grad(set_to_none=True)
+         final_hash = state_hash(model.state_dict())
+         probe_loss, after = forward(fixed, with_gradients=True)
+diff --git a/experiments/guidance_signal_20261014/preflight.py b/experiments/guidance_signal_20261014/preflight.py
+index 3f6c414..fa0c040 100644
+--- a/experiments/guidance_signal_20261014/preflight.py
++++ b/experiments/guidance_signal_20261014/preflight.py
+@@ -71,7 +71,10 @@ def assert_original_bindings(runtime, bank, checkpoint, recipe, bank_sha, checkp
+         raise ValueError("student freeze is not bound to original bank")
+     if resolved.get("config") != bank_manifest["config"]:
+         raise ValueError("recipe and bank configuration differ")
+-    if student_manifest.get("locked_splits") != split:
++    # The pinned executed student freeze binds the bank manifest but stores
++    # locked_splits in its hash-bound checkpoint payload, checked below.
++    # If another compatible freeze repeats the field, it must also agree.
++    if "locked_splits" in student_manifest and student_manifest["locked_splits"] != split:
+         raise ValueError("student and bank locked split differ")
+     if student_manifest.get("teacher") != bank_manifest.get("teacher"):
+         raise ValueError("student and bank teacher identities differ")
+@@ -91,6 +94,7 @@ def assert_original_bindings(runtime, bank, checkpoint, recipe, bank_sha, checkp
+     return {"status":"PASS_ORIGINAL_ARTIFACT_BINDINGS",
+             "bank_manifest_sha256":bank_sha,"checkpoint_sha256":checkpoint_sha,
+             "recipe_sha256":digest(recipe),"patients":len(bank_manifest["patients"]),
++            "split_binding_source":"hash_bound_checkpoint_and_original_bank",
+             "class_patients":permission_counts,"allowed_classes":ck["allowed_classes"],
+             "training_run":False,"model_forward_run":False,"target_masks_read":False}
+ 
+@@ -125,6 +129,7 @@ def main(argv=None):
+             assert_original_bindings(runtime,*fields)
+             if all(fields) else {"status":"NOT_REQUESTED_SOFTWARE_ONLY"})
+         command=[sys.executable,"-B","-m","pytest","-q","-p","no:cacheprovider","-c","/dev/null",
++                 "--rootdir="+str(REPO),"--confcutdir="+str(REPO),
+                  str(HERE/"tests"),"--junitxml="+str(out/"junit.xml")]
+         env=os.environ.copy()
+         env["PYTHONDONTWRITEBYTECODE"]="1"
+diff --git a/experiments/guidance_signal_20261014/tests/test_pilot.py b/experiments/guidance_signal_20261014/tests/test_pilot.py
+index 5b76342..a5708a0 100644
+--- a/experiments/guidance_signal_20261014/tests/test_pilot.py
++++ b/experiments/guidance_signal_20261014/tests/test_pilot.py
+@@ -19,14 +19,17 @@ def paired_tensors():
+     return q, z, weights, valid
+ 
+ 
+-def test_ce_forward_kl_gradients_and_detached_targets():
+${EMAIL}("seed", [0, 1, 2, 3])
++def test_ce_forward_kl_gradients_and_detached_targets(seed):
+     q, z, weights, valid = paired_tensors()
+     q.requires_grad_(); z.requires_grad_(); weights.requires_grad_()
+-    logits = torch.randn(1, 4, 2, 2, requires_grad=True)
++    logits = torch.randn(1, 4, 2, 2, generator=torch.Generator().manual_seed(seed), requires_grad=True)
+     terms = pilot.semantic_terms(logits, q, z, weights, valid)
+     for arm in ("Q", "Z", "full_Q"):
+         ce, kl, entropy = [terms[arm][key] for key in ("ce", "kl", "entropy")]
+-        assert torch.allclose(ce - entropy, kl, atol=3e-7, rtol=0)
++        # Separate float32 reductions/subtraction need a scale-aware ULP budget.
++        # This assertion tolerance affects synthetic diagnostics only, not support gates.
++        assert torch.allclose(ce - entropy, kl, atol=3e-7, rtol=4*torch.finfo(logits.dtype).eps)
+         ce_grad = torch.autograd.grad(ce, logits, retain_graph=True)[0]
+         kl_grad = torch.autograd.grad(kl, logits, retain_graph=True)[0]
+         assert torch.allclose(ce_grad, kl_grad, atol=1e-7, rtol=0)
+@@ -275,6 +278,23 @@ def test_tiny_fully_excluded_objective_is_rejected(total_weight):
+         pilot.check_excluded_mass(torch.tensor([total_weight]), torch.tensor([False]))
+ 
+ 
+${EMAIL}("total,excluded,passes", [
++    (1.0, 1.5e-6, True),
++    (1.0, 2e-6, True),
++    (1.0, 2.001e-6, False),
++    (3.5107733410522866e-8, 4.816387563842499e-14, True),
++    (1e-9, 2.01e-14, False),
++])
++def test_approved_r2_mass_bound_and_clamped_denominator(total, excluded, passes):
++    assert pilot.EXCLUDED_WEIGHT_RTOL == 2e-6
++    if passes:
++        result = pilot._check_mass_values(total, excluded)
++        assert result["excluded_objective_weight_fraction"] <= 2e-6
++    else:
++        with pytest.raises(ValueError, match="substantial original weight"):
++            pilot._check_mass_values(total, excluded)
++
++
+ @pytest.mark.parametrize("key,new_value", [("steps", 1), ("seed", 999), ("patient_ids", ["train_a"])])
+ def test_mutated_plan_rejected_against_independent_plan_hash_before_any_load(artifact_fixture, monkeypatch, key, new_value):
+     f = artifact_fixture
+diff --git a/experiments/guidance_signal_20261014/tests/test_preflight.py b/experiments/guidance_signal_20261014/tests/test_preflight.py
+index 1115e6f..7ffde87 100644
+--- a/experiments/guidance_signal_20261014/tests/test_preflight.py
++++ b/experiments/guidance_signal_20261014/tests/test_preflight.py
+@@ -58,7 +58,8 @@ def test_original_recipe_mutation_rejected_before_tensor_load(tmp_path,monkeypat
+         pf.assert_original_bindings(rt,bank,ck,recipe,digest(bank/'FROZEN.json'),digest(ck/'last.pt'))
+ 
+ 
+-def test_positive_synthetic_original_binding_and_permission_mismatch(tmp_path,monkeypatch):
+${EMAIL}('manifest_has_split',[False,True])
++def test_positive_synthetic_original_binding_and_permission_mismatch(tmp_path,monkeypatch,manifest_has_split):
+     """Only synthetic pins are injected here; CLI has no override for them."""
+     import torch
+     from experiments.guidance_signal_20261014 import preflight as pf
+@@ -70,6 +71,8 @@ def test_positive_synthetic_original_binding_and_permission_mismatch(tmp_path,mo
+         'patient_reports':{'a':{'class_pixels':[1,1,0,1]},'b':{'class_pixels':[1,0,0,1]}}}
+     (bank/'FROZEN.json').write_text(json.dumps(bm));bank_sha=digest(bank/'FROZEN.json')
+     sm={'source_sha256':source,'locked_splits':split,'teacher':bm['teacher'],'bank_manifest_sha256':bank_sha}
++    if not manifest_has_split:
++        sm.pop('locked_splits')
+     (student/'FROZEN.json').write_text(json.dumps(sm))
+     recipe=tmp_path/'RECIPE.json';recipe.write_text(json.dumps({'schema':'self_audit.full_guidance_recipe.v1',
+         'source_sha256':source,'splits':split,'config':bm['config']}))
+@@ -84,6 +87,11 @@ def test_positive_synthetic_original_binding_and_permission_mismatch(tmp_path,mo
+     result=pf.assert_original_bindings(rt,bank,student,recipe,bank_sha,digest(student/'last.pt'))
+     assert result['status']=='PASS_ORIGINAL_ARTIFACT_BINDINGS'
+     assert result['class_patients']==[2,1,0,2] and result['training_run'] is False
++    wrong_split={**ck,'locked_splits':{'train':['c'],'val':['a','b'],'test':['d']}}
++    torch.save(wrong_split,student/'last.pt')
++    monkeypatch.setattr(pf,'ORIGINAL_CHECKPOINT_SHA256',digest(student/'last.pt'))
++    with pytest.raises(ValueError,match='checkpoint binding differs: locked_splits'):
++        pf.assert_original_bindings(rt,bank,student,recipe,bank_sha,digest(student/'last.pt'))
+     ck['allowed_classes']=[True]*4;torch.save(ck,student/'last.pt')
+     monkeypatch.setattr(pf,'ORIGINAL_CHECKPOINT_SHA256',digest(student/'last.pt'))
+     with pytest.raises(ValueError,match='permissions differ'):

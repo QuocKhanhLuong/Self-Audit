@@ -1,3 +1,6 @@
 # Preserve the isolated GPL snapshot byte-for-byte on every platform.
 baseline/SGSCN/upstream/** -text
 baseline/SGSCN/LICENSE -text
+
+# Keep executed-source snapshots and logs byte-for-byte, including patch context.
+reports/guidance_signal_execution_20261014/** -text -whitespace

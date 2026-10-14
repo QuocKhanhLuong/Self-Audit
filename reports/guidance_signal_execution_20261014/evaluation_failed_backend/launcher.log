@@ -1,0 +1,49 @@
+wandb: Currently logged in as: nthne (nthne-hanoi-university-of-science-and-technology) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.19.11
+wandb: Run data is saved locally in ${REPO_ROOT}/runs/guidance_pilot_eval_4070_20261014_225146/tracking/wandb/run-20261014_225430-se93uktm
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run guidance_pilot_eval_4070_20261014_225146
+wandb: ⭐️ View project at https://wandb.ai/nthne-hanoi-university-of-science-and-technology/self-audit-stable-guidance
+wandb: 🚀 View run at https://wandb.ai/nthne-hanoi-university-of-science-and-technology/self-audit-stable-guidance/runs/se93uktm
+[COMMAND] ["${PYTHON_ENV}/bin/python", "-B", "${REPO_ROOT}/run_configs/evaluate_guidance_pilot.py", "GENERATE", "--job", "${REPO_ROOT}/runs/guidance_pilot_eval_4070_20261014_225146", "--device", "cuda"]
+[GENERATE] {"patient": "patient004", "completed_patients": 1, "total_patients": 18, "model": "Baseline"}
+[GENERATE] {"patient": "patient004", "completed_patients": 1, "total_patients": 18, "model": "Q"}
+[GENERATE] {"patient": "patient004", "completed_patients": 1, "total_patients": 18, "model": "Z"}
+[GENERATE] {"patient": "patient005", "completed_patients": 2, "total_patients": 18, "model": "Baseline"}
+[GENERATE] {"patient": "patient005", "completed_patients": 2, "total_patients": 18, "model": "Q"}
+[GENERATE] {"patient": "patient005", "completed_patients": 2, "total_patients": 18, "model": "Z"}
+Traceback (most recent call last):
+  File "${REPO_ROOT}/run_configs/evaluate_guidance_pilot.py", line 278, in <module>
+    (generation(args.job,args.device) if args.mode=='GENERATE' else scoring(args.job))
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${REPO_ROOT}/run_configs/evaluate_guidance_pilot.py", line 152, in generation
+    if not np.array_equal(exact,f['labels']):raise ValueError('original baseline prediction mismatch: '+pid)
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: original baseline prediction mismatch: patient012
+Traceback (most recent call last):
+  File "${REPO_ROOT}/runs/guidance_pilot_eval_4070_20261014_225146/worker.py", line 106, in <module>
+    try:main()
+        ^^^^^^
+  File "${REPO_ROOT}/runs/guidance_pilot_eval_4070_20261014_225146/worker.py", line 75, in main
+    command('GENERATE',gpu=True)
+  File "${REPO_ROOT}/runs/guidance_pilot_eval_4070_20261014_225146/worker.py", line 56, in command
+    if proc.returncode:raise RuntimeError(mode+' failed: see '+str(path))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: GENERATE failed: see ${REPO_ROOT}/runs/guidance_pilot_eval_4070_20261014_225146/logs/generate.log
+wandb: uploading config.yaml
+wandb:                                                                                
+wandb: 
+wandb: Run history:
+wandb: generation/completed_exports ▁▂▄▅▇█
+wandb:     generation/patient_index ▁▁▁███
+wandb: 
+wandb: Run summary:
+wandb: generation/completed_exports 6
+wandb:     generation/patient_index 2
+wandb:                    job/stage generate
+wandb:                   job/status FAILED
+wandb: 
+wandb: 🚀 View run guidance_pilot_eval_4070_20261014_225146 at: https://wandb.ai/nthne-hanoi-university-of-science-and-technology/self-audit-stable-guidance/runs/se93uktm
+wandb: ⭐️ View project at: https://wandb.ai/nthne-hanoi-university-of-science-and-technology/self-audit-stable-guidance
+wandb: Synced 4 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ${REPO_ROOT}/runs/guidance_pilot_eval_4070_20261014_225146/tracking/wandb/run-20261014_225430-se93uktm/logs

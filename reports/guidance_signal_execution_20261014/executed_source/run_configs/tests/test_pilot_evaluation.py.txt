@@ -1,0 +1,96 @@
+import copy
+import importlib.util
+from pathlib import Path
+import sys
+from types import SimpleNamespace
+import numpy as np
+import pytest
+import torch
+
+ROOT=Path(__file__).resolve().parents[2]
+sys.path.insert(0,str(ROOT/'.worktrees/guidance-signal-r2-4bfc1f9'))
+from experiments.guidance_signal_20261014.runtime import load_runtime
+from experiments.guidance_signal_20261014.pilot import state_hash
+spec=importlib.util.spec_from_file_location('pilot_eval',ROOT/'run_configs/evaluate_guidance_pilot.py')
+ev=importlib.util.module_from_spec(spec);spec.loader.exec_module(ev)
+
+
+@pytest.mark.parametrize('target,scores,expected',[
+    ([0,0,1,1],[.1,.2,.8,.9],1.0),
+    ([0,0,1,1],[.9,.8,.2,.1],0.0),
+    ([0,0,1,1],[.5,.5,.5,.5],.5),
+    ([0,1,0,1],[.1,.2,.2,.8],.875),
+    ([0,0],[.1,.2],None),
+    ([1,1],[.1,.2],None),
+])
+def test_auc_ties_and_missing_classes(target,scores,expected):
+    assert ev.binary_auc(target,scores)==expected
+
+
+def test_export_backend_uses_archived_flags_instead_of_pilot_backward_policy():
+    torch.use_deterministic_algorithms(True)
+    torch.backends.cudnn.deterministic=True
+    result=ev.configure_export_backend(42)
+    assert not torch.are_deterministic_algorithms_enabled()
+    assert not torch.backends.cudnn.deterministic and not torch.backends.cudnn.benchmark
+    assert result['baseline_full_cine_exact_equality_required']
+
+
+@pytest.mark.parametrize('status',['PARTIAL_SEMANTIC_TRAINED_NOT_QUALITY_CERTIFIED','REPRESENTATION_ONLY'])
+def test_export_matches_original_predict_on_nonsquare_native_grid(tmp_path,status):
+    rt=load_runtime()
+    class Toy(torch.nn.Module):
+        def forward(self,x):
+            return {'logits':torch.stack([x[:,0],-x[:,1],x[:,2]*.3,torch.ones_like(x[:,1])],1)}
+    model=Toy().eval()
+    cine=np.random.default_rng(123).normal(size=(2,3,7,11)).astype(np.float32)*4
+    ck={'status':status,'config':{'min_probability':.7,'min_margin':.2},'allowed_classes':[True,False,True,True]}
+    raw,gated=ev.predict_with_probabilities(rt,model,ck,cine,'cpu',2,tmp_path/'prob.npy')
+    expected=rt.student.predict_cine(model,ck,cine,'cpu',2)
+    assert np.array_equal(gated,expected)
+    prob=np.load(tmp_path/'prob.npy',allow_pickle=False)
+    assert prob.shape==(*cine.shape,4) and prob.dtype==np.float32
+    assert np.allclose(prob.sum(-1),1) and np.array_equal(prob.argmax(-1),raw)
+    assert not (gated==1).any()  # original permission veto preserved
+    assert (gated==255).any()
+    if status=='REPRESENTATION_ONLY':assert (gated==255).all()
+
+
+def test_aggregation_preserves_unknown_false_negatives_and_fixed_classes():
+    rt=load_runtime()
+    reference=np.array([[[0,1,2,3]]],dtype=np.uint8)
+    prediction=np.array([[[0,255,2,3]]],dtype=np.uint8)
+    rows=[dict(patient_id='p',frame_index=i,metrics=rt.evaluate.score_volume(prediction,reference)) for i in (0,1)]
+    auc={(pid,i,c):.5 for pid in ['p'] for i in [0,1] for c in ev.CLASSES}
+    result=ev.aggregate(rows,auc)
+    assert result['overall']['dice']==pytest.approx(2/3)
+    assert result['overall']['precision']==pytest.approx(2/3)
+    assert result['overall']['recall']==pytest.approx(2/3)
+    assert result['overall']['coverage']==.75
+    assert result['classes']['RV']['frames_without_predictions']==2
+    assert result['classes']['RV']['counts']['fn']==2
+
+
+def fixture_payload():
+    model={'weight':torch.arange(3,dtype=torch.float32)};final=state_hash(model)
+    plan={'checkpoint_sha256':'base','model_state_sha256':'initial','policy':{'fixed':True},'steps':64}
+    trace={'final_model_state_sha256':final,'ordered_patient_tz_schedule_sha256':'schedule'}
+    payload=dict(model=model,arm='Q',plan_sha256='plan',original_checkpoint_sha256='base',
+                 policy=plan['policy'].copy(),optimizer_steps=64,initial_model_state_sha256='initial',
+                 final_model_state_sha256=final,ordered_patient_tz_schedule_sha256='schedule')
+    return payload,plan,trace
+
+
+def test_private_payload_binding_accepts_exact_frozen_state():
+    payload,plan,trace=fixture_payload();ev.validate_payload(payload,'Q',plan,trace,'plan',state_hash)
+
+
+@pytest.mark.parametrize('field,value',[
+    ('arm','Z'),('plan_sha256','wrong'),('original_checkpoint_sha256','wrong'),
+    ('policy',{'fixed':False}),('optimizer_steps',63),('initial_model_state_sha256','wrong'),
+    ('final_model_state_sha256','wrong'),('ordered_patient_tz_schedule_sha256','wrong'),
+    ('model',{'weight':torch.ones(3)}),
+])
+def test_private_payload_binding_rejects_mutation(field,value):
+    payload,plan,trace=fixture_payload();payload[field]=value
+    with pytest.raises(ValueError):ev.validate_payload(payload,'Q',plan,trace,'plan',state_hash)

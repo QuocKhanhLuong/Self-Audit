@@ -58,7 +58,8 @@ def test_original_recipe_mutation_rejected_before_tensor_load(tmp_path,monkeypat
         pf.assert_original_bindings(rt,bank,ck,recipe,digest(bank/'FROZEN.json'),digest(ck/'last.pt'))
 
 
-def test_positive_synthetic_original_binding_and_permission_mismatch(tmp_path,monkeypatch):
+@pytest.mark.parametrize('manifest_has_split',[False,True])
+def test_positive_synthetic_original_binding_and_permission_mismatch(tmp_path,monkeypatch,manifest_has_split):
     """Only synthetic pins are injected here; CLI has no override for them."""
     import torch
     from experiments.guidance_signal_20261014 import preflight as pf
@@ -70,6 +71,8 @@ def test_positive_synthetic_original_binding_and_permission_mismatch(tmp_path,mo
         'patient_reports':{'a':{'class_pixels':[1,1,0,1]},'b':{'class_pixels':[1,0,0,1]}}}
     (bank/'FROZEN.json').write_text(json.dumps(bm));bank_sha=digest(bank/'FROZEN.json')
     sm={'source_sha256':source,'locked_splits':split,'teacher':bm['teacher'],'bank_manifest_sha256':bank_sha}
+    if not manifest_has_split:
+        sm.pop('locked_splits')
     (student/'FROZEN.json').write_text(json.dumps(sm))
     recipe=tmp_path/'RECIPE.json';recipe.write_text(json.dumps({'schema':'self_audit.full_guidance_recipe.v1',
         'source_sha256':source,'splits':split,'config':bm['config']}))
@@ -84,6 +87,11 @@ def test_positive_synthetic_original_binding_and_permission_mismatch(tmp_path,mo
     result=pf.assert_original_bindings(rt,bank,student,recipe,bank_sha,digest(student/'last.pt'))
     assert result['status']=='PASS_ORIGINAL_ARTIFACT_BINDINGS'
     assert result['class_patients']==[2,1,0,2] and result['training_run'] is False
+    wrong_split={**ck,'locked_splits':{'train':['c'],'val':['a','b'],'test':['d']}}
+    torch.save(wrong_split,student/'last.pt')
+    monkeypatch.setattr(pf,'ORIGINAL_CHECKPOINT_SHA256',digest(student/'last.pt'))
+    with pytest.raises(ValueError,match='checkpoint binding differs: locked_splits'):
+        pf.assert_original_bindings(rt,bank,student,recipe,bank_sha,digest(student/'last.pt'))
     ck['allowed_classes']=[True]*4;torch.save(ck,student/'last.pt')
     monkeypatch.setattr(pf,'ORIGINAL_CHECKPOINT_SHA256',digest(student/'last.pt'))
     with pytest.raises(ValueError,match='permissions differ'):

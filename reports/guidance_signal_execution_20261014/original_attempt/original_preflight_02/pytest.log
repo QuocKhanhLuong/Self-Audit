@@ -1,0 +1,18 @@
+ERROR: found no collectors for ${REPO_ROOT}/.worktrees/guidance-signal-4bfc1f9/experiments/guidance_signal_20261014/tests
+
+
+==================================== ERRORS ====================================
+________________________ ERROR collecting test session _________________________
+../../../LQK-stable-guidance/.venv-stable-guidance/lib/python3.11/site-packages/_pytest/runner.py:341: in from_call
+    result: TResult | None = func()
+../../../LQK-stable-guidance/.venv-stable-guidance/lib/python3.11/site-packages/_pytest/runner.py:389: in collect
+    return list(collector.collect())
+../../../LQK-stable-guidance/.venv-stable-guidance/lib/python3.11/site-packages/_pytest/main.py:523: in collect
+    for direntry in scandir(self.path):
+../../../LQK-stable-guidance/.venv-stable-guidance/lib/python3.11/site-packages/_pytest/pathlib.py:963: in scandir
+    scandir_iter = os.scandir(path)
+E   PermissionError: [Errno 13] Permission denied: '${USER_HOME}'
+- generated xml file: ${REPO_ROOT}/runs/guidance_signal_4070_20261014_164424/original_preflight_02/junit.xml -
+=========================== short test summary info ============================
+ERROR ../../../../../../../dev::home::linhdang - PermissionError: [Errno 13] ...
+1 error in 0.07s

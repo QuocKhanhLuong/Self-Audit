@@ -1,0 +1,11 @@
+--- a/experiments/guidance_signal_20261014/pilot.py
++++ b/experiments/guidance_signal_20261014/pilot.py
+@@ -23,7 +23,7 @@
+ 
+ MAX_STEPS = 128
+ # Fixed numerical guard, never fitted to VAL. Apply to each batch AND patient.
+-EXCLUDED_WEIGHT_RTOL = 1e-6
++EXCLUDED_WEIGHT_RTOL = 2e-6
+ CLASSES = ("BG", "RV", "MYO", "LV")
+ PLAN_SCHEMA = "guidance_signal.paired_pilot.v1"
+ CUBLAS_WORKSPACE_CONFIG = ":4096:8"

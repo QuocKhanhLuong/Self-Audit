@@ -1,0 +1,110 @@
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import time
+import traceback
+
+JOB=Path(__file__).resolve().parent
+P=json.loads((JOB/'PROTOCOL.json').read_text())
+ENV=os.environ.copy()
+ENV.update(OMP_NUM_THREADS='4',MKL_NUM_THREADS='4',OPENBLAS_NUM_THREADS='4',PYTHONDONTWRITEBYTECODE='1',
+           PYTHONUNBUFFERED='1',CUBLAS_WORKSPACE_CONFIG=':4096:8',HF_HUB_OFFLINE='1',TRANSFORMERS_OFFLINE='1',
+           WANDB_DISABLE_CODE='true',WANDB_DISABLE_GIT='true',WANDB_CONSOLE='off')
+os.environ.update(ENV)
+STATE=dict(status='STARTING',stage='initialization',job=str(JOB),completed_exports=0,total_exports=54)
+RUN=None
+
+
+def write(path,data):
+    tmp=path.with_suffix(path.suffix+'.tmp');tmp.write_text(json.dumps(data,indent=2,allow_nan=False)+'\n');os.replace(tmp,path)
+
+
+def state(**fields):
+    STATE.update(fields,updated_at=time.time());write(JOB/'STATUS.json',STATE)
+    if RUN:
+        RUN.summary['job/status']=STATE['status'];RUN.summary['job/stage']=STATE['stage']
+
+
+def consume(line):
+    print(line,end='',flush=True)
+    if line.startswith('[GENERATE] '):
+        event=json.loads(line.partition('] ')[2]);STATE['completed_exports']+=1
+        state(current_patient=event['patient'],current_model=event['model'])
+        RUN.log({'generation/completed_exports':STATE['completed_exports'],'generation/patient_index':event['completed_patients']})
+
+
+def command(mode,gpu=False):
+    stage=mode.lower();state(status='RUNNING',stage=stage)
+    cmd=[P['python'],'-B',P['adapter_source'],mode,'--job',str(JOB),'--device','cuda' if gpu else 'cpu']
+    env=ENV.copy();env['CUDA_VISIBLE_DEVICES']=P['gpu_uuid'] if gpu else ''
+    receipt=dict(command=cmd,started_at=time.time(),gpu=gpu)
+    write(JOB/'logs'/(stage+'.command.json'),receipt)
+    print('[COMMAND]',json.dumps(cmd),flush=True)
+    path=JOB/'logs'/(stage+'.log')
+    with path.open('x') as output:
+        proc=subprocess.Popen(cmd,cwd=P['source'],env=env,stdout=output,stderr=subprocess.STDOUT)
+        state(child_pid=proc.pid)
+        with path.open() as stream:
+            while proc.poll() is None:
+                for line in stream.readlines():consume(line)
+                state();time.sleep(3)
+            for line in stream.readlines():consume(line)
+    receipt.update(exit_code=proc.returncode,finished_at=time.time());write(JOB/'logs'/(stage+'.command.json'),receipt)
+    state(child_pid=None)
+    if proc.returncode:raise RuntimeError(mode+' failed: see '+str(path))
+
+
+def main():
+    global RUN
+    if hashlib.sha256(Path(P['adapter_source']).read_bytes()).hexdigest()!=P['adapter_sha256']:
+        raise ValueError('adapter differs from frozen evaluation protocol')
+    import wandb
+    RUN=wandb.init(project=P['wandb_project'],entity=P['wandb_entity'],name=JOB.name,job_type='pilot-main-metrics',
+        mode='online',dir=str(JOB/'tracking'),config=P,tags=['rtx4070','pilot-Q-Z','VAL18','fixed-threshold-evaluation'],
+        settings=wandb.Settings(disable_git=True,console='off'))
+    state(worker_pid=os.getpid(),wandb_url=RUN.url)
+    write(JOB/'tracking/WANDB_RUN.json',dict(id=RUN.id,url=RUN.url))
+    state(status='WAITING_FOR_GPU',stage='generate')
+    while True:
+        free=int(subprocess.check_output(['nvidia-smi','-i',P['gpu_uuid'],'--query-gpu=memory.free','--format=csv,noheader,nounits'],text=True).strip())
+        state(gpu_free_mib=free)
+        if free>=P['gpu_min_free_mib']:break
+        time.sleep(15)
+    command('GENERATE',gpu=True)
+    command('SCORE')
+    report=json.loads((JOB/'scored/MAIN_METRICS.json').read_text());metrics={};table=[]
+    for arm,results in report['results'].items():
+        for mode,result in results.items():
+            prefix=('val' if mode=='gated' else 'val_raw')+'/'+arm
+            for name,value in result['overall'].items():
+                if value is not None:metrics[prefix+'/'+name]=value
+            for cls,values in result['classes'].items():
+                for name,value in values.items():
+                    if isinstance(value,(int,float)):metrics[prefix+'/'+cls+'/'+name]=value
+            table.append([arm,mode,*[result['overall'][k] for k in ['dice','iou','precision','recall','auroc','coverage']]])
+    RUN.log(metrics);RUN.summary.update(metrics)
+    RUN.log({'main_metrics':wandb.Table(columns=['model','mode','dice','iou','precision','recall','auroc','coverage'],data=table)})
+    RUN.summary['baseline_predictions_exact_match']=True
+    RUN.summary['evaluation/precision_zero_division']=0
+    RUN.summary['evaluation/auroc_uses_ungated_probabilities']=True
+    write(JOB/'tracking/FINAL_METRICS.json',metrics)
+    prior=wandb.Api(timeout=30).run(P['wandb_entity']+'/'+P['wandb_project']+'/'+P['training_wandb_id'])
+    for key,value in metrics.items():prior.summary[key]=value
+    prior.summary['evaluation/url']=RUN.url
+    prior.summary['evaluation/precision_zero_division']=0
+    prior.summary['evaluation/cohort']='locked VAL18 / 36 labeled frames'
+    prior.summary['evaluation/trained_arm_accuracy_status']='MEASURED_ON_DEVELOPMENT_VAL_WITH_FIXED_ORIGINAL_GATES'
+    prior.summary['trained_arms/accuracy_status']='MEASURED_ON_DEVELOPMENT_VAL_WITH_FIXED_ORIGINAL_GATES'
+    prior.summary.update()
+    state(status='FINISHED',stage='complete',finished_at=time.time())
+    RUN.finish(exit_code=0)
+
+
+if __name__=='__main__':
+    try:main()
+    except BaseException as exc:
+        traceback.print_exc();state(status='FAILED',error=type(exc).__name__+': '+str(exc))
+        if RUN:RUN.finish(exit_code=1)
+        raise SystemExit(1)
