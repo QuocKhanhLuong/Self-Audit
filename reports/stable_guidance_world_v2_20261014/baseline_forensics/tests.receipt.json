@@ -1,0 +1,27 @@
+{
+  "command": [
+    "${PYTHON_ENV}/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/test_self_audit_stable_guidance.py",
+    "tests/test_self_audit_guidance_full.py",
+    "tests/test_guidance_final_metrics.py",
+    "tests/test_guidance_wandb_runner.py",
+    "tests/test_guidance_forensics.py",
+    "--junitxml=${REPO_ROOT}/reports/local_runtime/guidance_forensics_20261014_023934/tests.xml"
+  ],
+  "cwd": "${REPO_ROOT}/.worktrees/guidance-forensics-7d1c6a0",
+  "environment_overrides": {
+    "PYTHONPATH": "${REPO_ROOT}/.worktrees/guidance-forensics-7d1c6a0/src",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "started_at": "2026-10-14T02:39:41.769489+07:00",
+  "status": "FINISHED",
+  "exit_code": 0,
+  "elapsed_seconds": 3.0105232530040666,
+  "finished_at": "2026-10-14T02:39:44.780102+07:00"
+}

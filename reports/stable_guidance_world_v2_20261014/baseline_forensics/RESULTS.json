@@ -1,0 +1,150 @@
+{
+  "status": "BOUNDED_TRAIN_FIDELITY_AUDIT",
+  "patients_inspected": 80,
+  "all_train_patients_inspected": true,
+  "checkpoint_sha256": "516e569c9141e2d8edb00b598df5cf12c8a9a4741cf1ae0cca8cbf23d6d03353",
+  "blockers": [],
+  "allowed_classes": [
+    true,
+    true,
+    true,
+    true
+  ],
+  "semantic_updates_recorded": 110604,
+  "historical_active_fraction": "REPLAYED_FROM_FIXED_BANK_AND_SEED_COUNTER_MATCHED_NOT_GRADIENT_HISTORY",
+  "geometry": {
+    "world_valid_patients": 52,
+    "world_reasons": {
+      "NO_CODED_WORLD_GEOMETRY": 28,
+      "CODED_WORLD_LEFT": 52
+    },
+    "legacy_axes": {
+      "+x": 80
+    },
+    "legacy_no_orientation_hypotheses": 0,
+    "wall_cavity_hypotheses": 5741,
+    "rv_hypotheses": 4135
+  },
+  "bank": {
+    "pixels": 46575360,
+    "unknown_pixels": 45706483,
+    "classes": {
+      "BG": {
+        "r0_argmax_informative": 6882154,
+        "q_argmax": 44614861,
+        "hard_accepted": 795189,
+        "soft_weight_pixels": 8454581,
+        "soft_weight_on_unknown": 7659392,
+        "target_mass": 338048.1381225586
+      },
+      "RV": {
+        "r0_argmax_informative": 95391,
+        "q_argmax": 173642,
+        "hard_accepted": 5199,
+        "soft_weight_pixels": 133999,
+        "soft_weight_on_unknown": 128800,
+        "target_mass": 84381.5655593872
+      },
+      "MYO": {
+        "r0_argmax_informative": 904973,
+        "q_argmax": 1692285,
+        "hard_accepted": 61712,
+        "soft_weight_pixels": 1285209,
+        "soft_weight_on_unknown": 1223497,
+        "target_mass": 132990.9760055542
+      },
+      "LV": {
+        "r0_argmax_informative": 86706,
+        "q_argmax": 94572,
+        "hard_accepted": 6777,
+        "soft_weight_pixels": 90158,
+        "soft_weight_on_unknown": 83381,
+        "target_mass": 85815.27713012695
+      }
+    }
+  },
+  "schedule": {
+    "epochs": 50,
+    "steps": 127650,
+    "active_steps": 110604,
+    "active_fraction": 0.8664629847238543
+  },
+  "selected_batches": {
+    "count": 80,
+    "active": 80,
+    "selection": "first eligible fixed lexicographic TZ block per patient; not random population sampling",
+    "equal_batch_means": {
+      "ce": 1.1783750294601987,
+      "entropy": 1.1245324611923138,
+      "kl": 0.05384257347745915
+    },
+    "active_batch_means": {
+      "ce": 1.1783750294601987,
+      "entropy": 1.1245324611923138,
+      "kl": 0.05384257347745915
+    },
+    "fidelity_means_not_accuracy": {
+      "coarse_argmax_agreement": 0.8291286893188954,
+      "native_projected_argmax_disagreement": 0.027838691161014138,
+      "native_projected_gated_disagreement": 0.0034496642272415557
+    },
+    "gradient_means": {
+      "feature_norm": 0.4432472925167531,
+      "semantic_norm": 0.24356692715498127,
+      "cosine": 0.19605287132435478
+    },
+    "native_gate_counts": {
+      "pixels": 35335936,
+      "accepted": 215428,
+      "probability_rejected": 35120508,
+      "margin_rejected": 6121882,
+      "permission_rejected": 0
+    }
+  },
+  "validation": {
+    "overall": {
+      "patient_count": 18,
+      "frames": 36,
+      "foreground": {
+        "dice": 0.04684410386540689,
+        "iou": 0.02634977587763915,
+        "precision": 0.1962348916297042,
+        "recall": 0.03273158840066868
+      },
+      "coverage": 0.006147581479204063
+    },
+    "aligned": {
+      "patient_count": 11,
+      "frames": 22,
+      "foreground": {
+        "dice": 0.06144014136486225,
+        "iou": 0.034981769353057336,
+        "precision": 0.1922632416220819,
+        "recall": 0.04402629659755905
+      },
+      "coverage": 0.007726368719608722
+    },
+    "verified_recovery": {
+      "patient_count": 7,
+      "frames": 14,
+      "foreground": {
+        "dice": 0.023907473509119922,
+        "iou": 0.012785214701982005,
+        "precision": 0.19888651333112728,
+        "recall": 0.01498276123412666
+      },
+      "coverage": 0.0036666301014253123
+    }
+  },
+  "source_commit": "7d1c6a04064cda473d1eccfbed818392c37b1a37",
+  "tests_passed": 120,
+  "model_updates": 0,
+  "interpretation": {
+    "checkpoint_and_schedule": "Original artifact checks passed. Replayed semantic eligibility exactly matches the recorded 110604 updates.",
+    "geometry": "All 80 original TRAIN patients used legacy +x and zero skipped-orientation hypotheses. The previously demonstrated oblique rejection is not observed in this cohort. 28 lack coded sform/qform; world_left_v2 deliberately refuses their RV side prior.",
+    "fit": "On 80 fixed selected batches, mean CE=1.178375 equals target entropy=1.124532 plus KL=0.053843. CE near one alone does not establish failed optimization.",
+    "abstention": "On selected TRAIN batches 215428/35335936 native pixels survive gates. Probability rejections account for all rejected pixels in these batches, but lowering thresholds is not justified by accuracy evidence.",
+    "limitations": "TRAIN bank support and final-checkpoint fidelity are not anatomical accuracy. No frozen VAL teacher outputs or ungated GT scores were produced. First failing anatomical stage remains unlocalized.",
+    "new_run": "User subsequently explicitly requested a full new-code run; launched separately with world_left_v2 and diagnostics. No original artifacts or checkpoint modified."
+  }
+}

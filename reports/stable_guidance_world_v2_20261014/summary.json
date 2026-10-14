@@ -1,0 +1,226 @@
+{
+  "schema": "stable_guidance.world_v2_result_publication.v1",
+  "run_name": "stable_guidance_world_v2_acdc_4070_20261014_024155",
+  "base_source_commit": "7d1c6a04064cda473d1eccfbed818392c37b1a37",
+  "local_launcher_patch_sha256": "ecbcd639fbaa010ac3f7fca9ac5ba3272278806ce92eecc8171c4833f70815ee",
+  "wandb_url": "https://wandb.ai/nthne-hanoi-university-of-science-and-technology/self-audit-stable-guidance/runs/syevfplp",
+  "status": "COMPLETED_VAL_SCORED_OFFICIAL_TEST_UNSCORED",
+  "started_at": "2026-10-14T02:44:11+07:00",
+  "finished_at": "2026-10-14T05:07:16+07:00",
+  "exit_code": 0,
+  "gpu": "NVIDIA GeForce RTX 4070",
+  "architecture": "GuidanceStudent, frozen CineMA teacher, fixed graph and soft guidance; geometry world_left_v2 and diagnostic logging enabled; no new student architecture in linked commit.",
+  "orientation_policy": "world_left_v2",
+  "training_diagnostics_enabled": true,
+  "gt_used_for_training": false,
+  "checkpoint_selection": "fixed_last_epoch_no_reference_feedback",
+  "checkpoint_sha256": "90bc16bb9f89963b452355376673e3ba9aa24b38870e4595237d75e402ce873e",
+  "splits": {
+    "train": 80,
+    "val": 18,
+    "official_test_unlabeled": 50
+  },
+  "validation_frames": 36,
+  "training": {
+    "epochs": 50,
+    "optimizer_steps": 127650,
+    "semantic_updates": 110461,
+    "seconds": 7082.043100747047,
+    "first_epoch": {
+      "elapsed_seconds": 141.70245806399907,
+      "epoch": 1,
+      "feature_loss": 0.3279867165062038,
+      "peak_allocated_bytes": 6262733824,
+      "semantic_diagnostics": {
+        "active_batch_ce": 1.2096562847616759,
+        "active_batches": 2207,
+        "active_fraction": 0.8644731688209949,
+        "aggregation": "equal_batch_mean_including_inactive_zero",
+        "batches": 2553,
+        "ce": 1.0457154016721577,
+        "entropy": 0.9819362678588549,
+        "kl": 0.06377913362812251,
+        "per_class_ce": [
+          0.2898276658457094,
+          0.2419676899417156,
+          0.2693363600426908,
+          0.24458368708309292
+        ],
+        "per_class_target_mass": [
+          337656.67960694747,
+          81770.88741783689,
+          132625.53462815032,
+          85458.24676366203
+        ]
+      },
+      "semantic_loss": 1.0457154046601524,
+      "steps": 2553
+    },
+    "last_epoch": {
+      "elapsed_seconds": 140.99569323600736,
+      "epoch": 50,
+      "feature_loss": 0.19433502276540035,
+      "peak_allocated_bytes": 6262733824,
+      "semantic_diagnostics": {
+        "active_batch_ce": 1.1722163560959165,
+        "active_batches": 2208,
+        "active_fraction": 0.8648648648648649,
+        "aggregation": "equal_batch_mean_including_inactive_zero",
+        "batches": 2553,
+        "ce": 1.013808740407279,
+        "entropy": 0.981306225759442,
+        "kl": 0.032502514620783185,
+        "per_class_ce": [
+          0.2773639301629282,
+          0.24017557239974432,
+          0.2552311594683911,
+          0.2410380782170702
+        ],
+        "per_class_target_mass": [
+          337656.6798072499,
+          81770.88727018608,
+          132625.5345492641,
+          85458.24680346268
+        ]
+      },
+      "semantic_loss": 1.0138087410555086,
+      "steps": 2553
+    }
+  },
+  "bank": {
+    "patients": 80,
+    "class_order": [
+      "BG",
+      "RV",
+      "MYO",
+      "LV"
+    ],
+    "class_patients": [
+      62,
+      14,
+      55,
+      47
+    ],
+    "class_pixels": [
+      795381,
+      877,
+      61765,
+      6777
+    ],
+    "rv_geometry_comparison": {
+      "NO_CODED_WORLD_GEOMETRY": {
+        "patients": 28,
+        "old_rv_pixels": 4322,
+        "new_rv_pixels": 0
+      },
+      "CODED_WORLD_LEFT": {
+        "patients": 52,
+        "old_rv_pixels": 877,
+        "new_rv_pixels": 877
+      }
+    }
+  },
+  "metrics": {
+    "val/patient_count": 18,
+    "val/labeled_frames": 36,
+    "val/BG/dice": 0.0004401112501136749,
+    "val/BG/dice_defined_patients": 18,
+    "val/RV/dice": 0.0,
+    "val/RV/dice_defined_patients": 18,
+    "val/MYO/dice": 0.06829655402509476,
+    "val/MYO/dice_defined_patients": 18,
+    "val/LV/dice": 0.08375908044554642,
+    "val/LV/dice_defined_patients": 18,
+    "val/dice": 0.05068521149021373,
+    "val/BG/iou": 0.00022041872407553806,
+    "val/BG/iou_defined_patients": 18,
+    "val/RV/iou": 0.0,
+    "val/RV/iou_defined_patients": 18,
+    "val/MYO/iou": 0.03878859053246436,
+    "val/MYO/iou_defined_patients": 18,
+    "val/LV/iou": 0.04826448084869231,
+    "val/LV/iou_defined_patients": 18,
+    "val/iou": 0.02901769046038556,
+    "val/BG/precision": 1.0,
+    "val/BG/precision_defined_patients": 11,
+    "val/RV/precision": null,
+    "val/RV/precision_defined_patients": 0,
+    "val/MYO/precision": 0.1706071778183496,
+    "val/MYO/precision_defined_patients": 17,
+    "val/LV/precision": 0.41107491372902705,
+    "val/LV/precision_defined_patients": 16,
+    "val/precision": 0.2908410457736883,
+    "val/BG/recall": 0.00022041872407553806,
+    "val/BG/recall_defined_patients": 18,
+    "val/RV/recall": 0.0,
+    "val/RV/recall_defined_patients": 18,
+    "val/MYO/recall": 0.04791535567336333,
+    "val/MYO/recall_defined_patients": 18,
+    "val/LV/recall": 0.051765018242607236,
+    "val/LV/recall_defined_patients": 18,
+    "val/recall": 0.03322679130532352,
+    "val/coverage": 0.0036684568822642327
+  },
+  "unknown_fraction": 0.9963315431177358,
+  "baseline_run": "stable_guidance_acdc_4070_20261013_222918",
+  "comparison": [
+    {
+      "metric": "dice",
+      "baseline_percent": 4.684410386540689,
+      "new_percent": 5.0685211490213735,
+      "delta_percentage_points": 0.38411076248068415,
+      "directly_comparable_class_set": true,
+      "note": ""
+    },
+    {
+      "metric": "iou",
+      "baseline_percent": 2.634977587763915,
+      "new_percent": 2.901769046038556,
+      "delta_percentage_points": 0.2667914582746407,
+      "directly_comparable_class_set": true,
+      "note": ""
+    },
+    {
+      "metric": "precision",
+      "baseline_percent": 19.62348916297042,
+      "new_percent": 29.08410457736883,
+      "delta_percentage_points": 9.46061541439841,
+      "directly_comparable_class_set": false,
+      "note": "RV precision is undefined in the new run; the new foreground macro excludes RV. Defined patient sets also differ. This delta does not establish improved precision."
+    },
+    {
+      "metric": "recall",
+      "baseline_percent": 3.2731588400668676,
+      "new_percent": 3.322679130532352,
+      "delta_percentage_points": 0.04952029046548442,
+      "directly_comparable_class_set": true,
+      "note": ""
+    },
+    {
+      "metric": "coverage",
+      "baseline_percent": 0.6147581479204063,
+      "new_percent": 0.36684568822642327,
+      "delta_percentage_points": -0.247912459693983,
+      "directly_comparable_class_set": true,
+      "note": ""
+    }
+  ],
+  "rv_val_frames_with_predictions": 0,
+  "hd95_foreground_frame_status": {
+    "MISSING_PREDICTION": 42,
+    "MEASURED": 26,
+    "SPATIAL_UNIT_OR_AFFINE_UNAVAILABLE": 40
+  },
+  "hd95_overall": null,
+  "hd95_note": "Incomplete physical geometry and missing predictions; no whole-cohort HD95.",
+  "auroc_status": "unavailable: hard-label exports; no transition auditor",
+  "aggregation": "frame within patient, patient within class, mean of defined foreground classes",
+  "precision_caveat": "New RV precision is null (zero predicted RV pixels). New macro precision includes MYO/LV only, unlike the baseline. Do not interpret the macro increase as a like-for-like improvement.",
+  "conclusion": "Training and evaluation completed. Foreground Dice rose by 0.384 percentage points but remains 5.069%; coverage fell to 0.367% and RV disappeared from all 36 validation frames. The geometry policy removed 4322 accepted RV bank pixels from 28 uncoded-header patients; the 52 coded-header patients retained 877 RV pixels. This identifies the support change, not the accuracy of removed pseudo-labels or the complete cause of downstream RV failure.",
+  "validation": {
+    "pinned_commit_tests_passed": 120,
+    "executed_launcher_tests_passed": 122,
+    "wandb_final_metrics_match_local": true,
+    "baseline_audit_patients": 80
+  }
+}
