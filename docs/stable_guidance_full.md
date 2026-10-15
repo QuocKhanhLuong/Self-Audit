@@ -79,9 +79,9 @@ must be installed. In a clean checkout:
 
 ```bash
 cd /workspace/Self-Audit
-git fetch origin feat/stable-ssl-guidance
-git switch feat/stable-ssl-guidance
-git pull --ff-only origin feat/stable-ssl-guidance
+git fetch origin
+git switch main
+git pull --ff-only origin main
 
 bash scripts/setup_stable_guidance.sh
 source .venv-stable-guidance/bin/activate
@@ -327,9 +327,13 @@ ends with `COMPLETED_SCORED_NO_SEMANTIC_SUPPORT` and exit 2, not an accuracy cla
 Partial support is also explicit. Keep these diagnostic outcomes; do not force
 nonzero predictions or weaken gates just to obtain an exit code 0.
 
-## Verification actually performed
+## Historical verification at the integration commit
 
 Code commit: `7638907167bab166a50ddfdd0ea15b5241b88218`.
+
+The receipts below describe that commit and its environments. They are not a
+test receipt for every later checkout. Real-data results are linked separately
+in the independent reference scoring section above.
 
 - Local CPU: 65 passed, 6 native-IO tests skipped because genuine nibabel was
   unavailable. A real local production preflight was attempted and BLOCKED at

@@ -4,6 +4,12 @@ Implementation date: 2026-10-11. Based on Self-Audit commit
 `9e84fbfc0b819016004aaa0289f4b024f4e004c8`. This is a separate opt-in package;
 it does not change v3/CQA configuration, training or artifact schemas.
 
+For the current end-to-end command, mandatory native-data preflight, frozen
+held-out exports and separate reference scoring, use the
+[full pipeline runbook](stable_guidance_full.md). This page describes the method
+and individual prepare/train/export stages; its verification section records
+the original implementation environment.
+
 ## What is implemented
 
 1. **Frozen CineMA MAE adapter:** only the official `pretrained/cinema.safetensors`
@@ -159,7 +165,7 @@ may export only classes permitted by its TRAIN support and returns exit 2 to
 prevent claiming complete four-class readiness. Export probabilities/softmax
 confidence are not calibrated by hidden references. No Dice is computed here.
 
-## Tests actually run
+## Historical implementation verification (2026-10-11)
 
 See `reports/stable_guidance_20261011/VERIFICATION.json`. Focused CPU tests cover
 linear-solve agreement and contraction receipts, nonconvergence, flat/uniform
@@ -169,10 +175,10 @@ integrity, split isolation and prepare/train/reload/UNKNOWN inference roundtrip.
 The provider and image-reader in the roundtrip are **explicit synthetic mocks**.
 There is no mock/provider option in the production CLI.
 
-Not executed here: actual CineMA import/checkpoint inference, native nibabel
+Not executed in that initial verification: actual CineMA import/checkpoint inference, native nibabel
 NIfTI loading, full existing repository regression suite, real ACDC/M&Ms training,
-segmentation accuracy or CUDA performance. The local environment cannot resolve
-external download hosts and has neither nibabel nor CineMA installed. Adapter
+segmentation accuracy or CUDA performance. The initial local environment could not resolve
+external download hosts and had neither nibabel nor CineMA installed. Adapter
 API/geometry were inspected against pinned upstream source, not tested on the
 503 MB checkpoint. Synthetic tests are not evidence of anatomical recovery.
 

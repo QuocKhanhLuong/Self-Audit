@@ -6,6 +6,23 @@ used only by an independent evaluator after predictions are frozen. The target
 deployment device is an **RTX 4080 Super 16GB**; Dice >=90% and GPU speed remain
 unverified objectives.
 
+## Documentation and entrypoints
+
+Choose the runbook for the experiment being reproduced; these pipelines have
+different supervision and artifact contracts.
+
+| Track | Entrypoint | Documentation |
+| --- | --- | --- |
+| Frozen SSL guidance, native data | `scripts/run_stable_guidance_full.py` | [Full runbook](docs/stable_guidance_full.md), [method and limitations](docs/stable_guidance.md) |
+| No-GT pseudo-label v3 | `scripts/run_full_pipeline_v3.py` | [v3 runbook](docs/pseudolabel_v3_review_runbook.md) |
+| Supervised Self-Audit reference | `scripts/train_self_audit.py` | [Training contract](docs.md) |
+| Baselines and ablations | Per-method runners | [Baseline implementations](baseline/) |
+
+The [documentation index](docs/README.md) separates runnable instructions from
+historical verification and research reports. Baseline code, configurations,
+benchmark freezes and recorded experiment evidence are retained for ablation
+and reproduction.
+
 ## Current No-GT Research Flow
 
 `scripts/run_full_pipeline_v3.py` coordinates the v3 path in
