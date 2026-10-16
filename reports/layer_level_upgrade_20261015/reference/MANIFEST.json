@@ -1,0 +1,91 @@
+{
+  "date": "2026-10-15",
+  "reviewed_project_commit": "4d58f3aebe4f205b58b3184c8971b1d838109d82",
+  "status": "IMPLEMENTED_PROTOTYPE_OPERATOR_TESTED_NO_PATIENT_TRAINING",
+  "tests_passed": 47,
+  "failures_and_errors": 0,
+  "full_size_random_model_parameters": 32890558,
+  "pretrained_weights_loaded": false,
+  "patient_data_read": false,
+  "pushed_to_git": false,
+  "limitations": [
+    "Official DINOv3 checkpoint/runtime was not executed; wrapper matches inspected source API.",
+    "Reference gradient guard uses actual additive selected-parameter steps, not AdamW.",
+    "Image-energy solver supplies detached proposals, not automatic semantic authorization.",
+    "No end-to-end artifact-compatible ACDC training or domain-generalization claim."
+  ],
+  "files": {
+    "ASTRA_INTEGRATION.md": {
+      "sha256": "519036bb667e47824da2831668440e603676f8e0cfa291fe3f04e6b4bc621ede",
+      "bytes": 5758
+    },
+    "FULL_MODEL_CHECK.json": {
+      "sha256": "d8958db6afd34327f49416dc590cdc7ffcaa4f067a2ed2cf64cf5d5d29703f53",
+      "bytes": 1294
+    },
+    "PROBE_RESULTS.json": {
+      "sha256": "e95f1107347fd063b5b33667e5e561874a0b5e8a9cf18e9fa03190f19c1ec526",
+      "bytes": 2565
+    },
+    "README.md": {
+      "sha256": "12d4a169387f5dfecf3d9451aea0731484594ad99e36957ff92d5b2328f74603",
+      "bytes": 8456
+    },
+    "TEST_LOG.txt": {
+      "sha256": "b3663f67dfe4c42f2da42c20b45f20732bc563fefc3c2db577f117036d6def1f",
+      "bytes": 99
+    },
+    "TEST_RESULTS.xml": {
+      "sha256": "d5a38a1b3a9200911256b69230b98f6d4a1e84eb2ea8466e4acb71672fded416",
+      "bytes": 5407
+    },
+    "THEORY.md": {
+      "sha256": "3c4738849b5ebb680305a45b1c2429f32b6fffa869074a8e766478bfe483e40c",
+      "bytes": 20965
+    },
+    "layer_upgrade/__init__.py": {
+      "sha256": "c643fcfb13325f9cac5a19ec377bc299d4f014b7e329fb3c168a12f5cca9e816",
+      "bytes": 378
+    },
+    "layer_upgrade/guarded.py": {
+      "sha256": "819e00082de59abc6c9f7b8909ad6dec1ac327e0f4b448c42b745b62ea19fd37",
+      "bytes": 6203
+    },
+    "layer_upgrade/layers.py": {
+      "sha256": "eebab8a56ef78962cf6f18c2c7e562232a2f4f69102d38914ffeb234fc3ab198",
+      "bytes": 2928
+    },
+    "layer_upgrade/losses.py": {
+      "sha256": "2c1cc50aa2b195997251430f076e39a5425dcd361efb459a065695d8b92fb4ed",
+      "bytes": 3271
+    },
+    "layer_upgrade/model.py": {
+      "sha256": "7e2e9e3d1d41f1eba34bf322d3cf33ffe69341b39d72322ff6a1c6b94a16c31d",
+      "bytes": 6418
+    },
+    "layer_upgrade/refine.py": {
+      "sha256": "ce45602e3de1f062a09018dc7012c59294820e57164a62768eebbe78236c662e",
+      "bytes": 6071
+    },
+    "probe_report.py": {
+      "sha256": "ea388e1f23648bf23b7e5b8d0696854bf2ca3d30a88cc2b578dfbfff11c4066e",
+      "bytes": 2133
+    },
+    "pytest.ini": {
+      "sha256": "6a96ba0e2d5a8296fb90f474da9d2f0173d3e41eba18965513f711104155f913",
+      "bytes": 41
+    },
+    "requirements.txt": {
+      "sha256": "3e2b0a6d97a6b422f58f37ea921b891879202552f868f730f72f7aed02216072",
+      "bytes": 31
+    },
+    "tests/test_operators.py": {
+      "sha256": "1867a3f43c3a0282b4d191e5752cd1702dc9b406d7deddffabe94696219e14ff",
+      "bytes": 10954
+    },
+    "verify_full_model.py": {
+      "sha256": "329a9f44f533fc4234912762a13a94d87c60c17f9542adb708185cf1a0c2e90e",
+      "bytes": 2587
+    }
+  }
+}
