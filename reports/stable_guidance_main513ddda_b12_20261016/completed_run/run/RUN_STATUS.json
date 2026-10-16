@@ -1,0 +1,24 @@
+{
+  "error": "RuntimeError: evaluate_val failed with exit 1; see ${REPO_ROOT}/runs/stable_guidance_main513ddda_b12_acdc_4070_20261015_213121/run/logs/evaluate_val_1792087030642008353.log",
+  "failed_stage": "evaluate_val",
+  "gt_used_for_checkpoint_selection": false,
+  "gt_used_for_training": false,
+  "official_test_unlabeled": true,
+  "quality_certified": false,
+  "schema": "self_audit.full_guidance_run.v1",
+  "split_counts": {
+    "test": 50,
+    "train": 80,
+    "val": 18
+  },
+  "stages": {
+    "bank": "SUPPORT_NOT_ACCURACY",
+    "evaluate_test": "NOT_SCORED_OFFICIAL_ACDC_TEST_GT_UNAVAILABLE",
+    "export_test": "FROZEN",
+    "export_val": "FROZEN",
+    "preflight": "${REPO_ROOT}/runs/stable_guidance_main513ddda_b12_acdc_4070_20261015_213121/run/PREFLIGHT_1792076893086814121.json",
+    "student": "SEMANTIC_TRAINED_NOT_QUALITY_CERTIFIED"
+  },
+  "status": "BLOCKED",
+  "test_root": "${REPO_ROOT}/data/ACDC/testing"
+}

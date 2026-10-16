@@ -1,0 +1,120 @@
+{
+  "run_name": "stable_guidance_main513ddda_b12_acdc_4070_20261015_213121",
+  "source_commit": "513ddda8cec3a166f13cfe68fe6379cab014a1a7",
+  "training_status": "COMPLETED_50_EPOCHS",
+  "evaluation_status": "RECOVERED_VERIFIED_GRID",
+  "original_pipeline_status": "BLOCKED_at_evaluate_val",
+  "architecture": "GuidanceStudent with frozen CineMA MAE and fixed guidance bank",
+  "orientation_policy": "cardinal_v1_as_current_main",
+  "training": {
+    "batch_size": 12,
+    "epochs": 50,
+    "lr": 0.0003,
+    "seed": 42,
+    "width": 32,
+    "optimizer_steps": 85700,
+    "semantic_updates": 79221
+  },
+  "split_counts": {
+    "train": 80,
+    "val": 18,
+    "test": 50
+  },
+  "metrics": {
+    "val/patient_count": 18,
+    "val/labeled_frames": 36,
+    "val/BG/dice": 3.508009332269824e-05,
+    "val/BG/dice_defined_patients": 18,
+    "val/RV/dice": 6.287972413284342e-05,
+    "val/RV/dice_defined_patients": 18,
+    "val/MYO/dice": 0.044445869829351295,
+    "val/MYO/dice_defined_patients": 18,
+    "val/LV/dice": 0.05118042102542896,
+    "val/LV/dice_defined_patients": 18,
+    "val/dice": 0.03189639019297103,
+    "val/BG/iou": 1.7541949044083867e-05,
+    "val/BG/iou_defined_patients": 18,
+    "val/RV/iou": 3.146707816579274e-05,
+    "val/RV/iou_defined_patients": 18,
+    "val/MYO/iou": 0.02508475757392387,
+    "val/MYO/iou_defined_patients": 18,
+    "val/LV/iou": 0.028990304411321426,
+    "val/LV/iou_defined_patients": 18,
+    "val/iou": 0.018035509687803698,
+    "val/BG/precision": 1.0,
+    "val/BG/precision_defined_patients": 5,
+    "val/RV/precision": 0.00028320098117288626,
+    "val/RV/precision_defined_patients": 11,
+    "val/MYO/precision": 0.10389301517044422,
+    "val/MYO/precision_defined_patients": 16,
+    "val/LV/precision": 0.4615588304047016,
+    "val/LV/precision_defined_patients": 14,
+    "val/precision": 0.18857834885210623,
+    "val/BG/recall": 1.7541949044083867e-05,
+    "val/BG/recall_defined_patients": 18,
+    "val/RV/recall": 4.2255044025235586e-05,
+    "val/RV/recall_defined_patients": 18,
+    "val/MYO/recall": 0.045593334772016825,
+    "val/MYO/recall_defined_patients": 18,
+    "val/LV/recall": 0.02985228678427439,
+    "val/LV/recall_defined_patients": 18,
+    "val/recall": 0.025162625533438815,
+    "val/coverage": 0.004960203525929164,
+    "evaluation/epoch": 50,
+    "val/unknown_fraction": 0.9950397964740708
+  },
+  "aggregation": "frame_mean_then_patient_mean_then_foreground_class_mean",
+  "undefined_precision_recall": "null excluded from macro, with defined-patient counts",
+  "auroc_status": "Unavailable in this full pipeline: native exports contain hard labels only.",
+  "test_status": "official_unlabeled_test_export_only",
+  "semantic_convergence": {
+    "first_epoch": {
+      "epoch": 1,
+      "steps": 1714,
+      "active_steps": 1587,
+      "feature_loss": 0.361055637297928,
+      "semantic_ce": 1.123137170385431,
+      "target_entropy_floor": 1.0460158188232396,
+      "online_kl_estimate": 0.07712135156219135,
+      "uniform_prediction_ce": 1.2811782646631173
+    },
+    "last_epoch": {
+      "epoch": 50,
+      "steps": 1714,
+      "active_steps": 1584,
+      "feature_loss": 0.20962972253943546,
+      "semantic_ce": 1.0851725878060428,
+      "target_entropy_floor": 1.0463194437544572,
+      "online_kl_estimate": 0.038853144051585575,
+      "uniform_prediction_ce": 1.2787004697811981
+    },
+    "means": {
+      "epochs_1_10": {
+        "semantic_ce": 1.1096733703730441,
+        "target_entropy_floor": 1.0432113663847236,
+        "online_kl_estimate": 0.06646200398832044,
+        "feature_loss": 0.2911630948529499
+      },
+      "epochs_31_40": {
+        "semantic_ce": 1.0868212520854346,
+        "target_entropy_floor": 1.0428122219245437,
+        "online_kl_estimate": 0.044009030160891235,
+        "feature_loss": 0.21901987750722202
+      },
+      "epochs_41_50": {
+        "semantic_ce": 1.0832072531794266,
+        "target_entropy_floor": 1.0432575003792832,
+        "online_kl_estimate": 0.039949752800143436,
+        "feature_loss": 0.21070784215436097
+      }
+    },
+    "relative_reductions_percent": {
+      "semantic_ce": 3.380226706089673,
+      "online_kl_estimate": 49.62076874358971,
+      "feature_loss": 41.939773019952106
+    }
+  },
+  "peak_training_allocated_gib": 8.746554374694824,
+  "wandb_url": "https://wandb.ai/nthne-hanoi-university-of-science-and-technology/self-audit-stable-guidance/runs/k37v8mka",
+  "interpretation": "Student fits the soft guidance targets more closely, but gated VAL segmentation remains poor. 99.504% of voxels abstain. Training loss alone does not certify segmentation quality or full convergence."
+}

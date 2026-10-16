@@ -1,0 +1,181 @@
+{
+  "status": "COMPLETED",
+  "source_commit": "513ddda8cec3a166f13cfe68fe6379cab014a1a7",
+  "parent_job": "${REPO_ROOT}/runs/stable_guidance_main513ddda_acdc_4070_20261015_210312",
+  "started_at": 1792074244.5977342,
+  "teacher": [
+    {
+      "tile_batch": 1,
+      "status": "PASS",
+      "seconds": [
+        2.611786908993963,
+        2.523024689988233,
+        2.5215984960086644
+      ],
+      "median_seconds": 2.523024689988233,
+      "peak_allocated_gib": 0.6178956031799316,
+      "peak_reserved_gib": 0.701171875,
+      "max_abs_feature_difference": 0.0
+    },
+    {
+      "tile_batch": 2,
+      "status": "PASS",
+      "seconds": [
+        2.544906489987625,
+        2.483081646001665,
+        2.4855862600088585
+      ],
+      "median_seconds": 2.4855862600088585,
+      "peak_allocated_gib": 0.7316670417785645,
+      "peak_reserved_gib": 0.857421875,
+      "max_abs_feature_difference": 0.00048828125
+    },
+    {
+      "tile_batch": 4,
+      "status": "PASS",
+      "seconds": [
+        2.602074074005941,
+        2.4576626810012385,
+        2.463576551002916
+      ],
+      "median_seconds": 2.463576551002916,
+      "peak_allocated_gib": 0.9604992866516113,
+      "peak_reserved_gib": 1.193359375,
+      "max_abs_feature_difference": 0.00048828125
+    },
+    {
+      "tile_batch": 8,
+      "status": "PASS",
+      "seconds": [
+        2.4230555719987024,
+        2.419964656000957,
+        2.428910182992695
+      ],
+      "median_seconds": 2.4230555719987024,
+      "peak_allocated_gib": 1.4198651313781738,
+      "peak_reserved_gib": 1.82421875,
+      "max_abs_feature_difference": 0.00048828125
+    }
+  ],
+  "student": [
+    {
+      "status": "PASS",
+      "patient": "patient057",
+      "batch_size": 8,
+      "semantic_active": false,
+      "seconds": [
+        0.606929638015572,
+        0.16278814000543207,
+        0.16282473501632921,
+        0.16283932302030735,
+        0.1627872699755244
+      ],
+      "median_step_seconds": 0.16282473501632921,
+      "samples_per_second": 49.13258418137578,
+      "peak_allocated_gib": 6.340731143951416,
+      "peak_reserved_gib": 7.998046875
+    },
+    {
+      "status": "PASS",
+      "patient": "patient057",
+      "batch_size": 10,
+      "semantic_active": false,
+      "seconds": [
+        0.2413437039940618,
+        0.20242069897358306,
+        0.20245443901512772,
+        0.2022966519871261,
+        0.20243506599217653
+      ],
+      "median_step_seconds": 0.20243506599217653,
+      "samples_per_second": 49.39855627772744,
+      "peak_allocated_gib": 7.795864105224609,
+      "peak_reserved_gib": 9.85546875
+    },
+    {
+      "status": "PASS",
+      "patient": "patient057",
+      "batch_size": 12,
+      "semantic_active": false,
+      "seconds": [
+        0.8490020600147545,
+        0.23831818500184454,
+        0.23695392298395745,
+        0.2383461389981676,
+        0.23797352900146507
+      ],
+      "median_step_seconds": 0.23797352900146507,
+      "samples_per_second": 50.42577655738392,
+      "peak_allocated_gib": 7.758700370788574,
+      "peak_reserved_gib": 10.08203125
+    },
+    {
+      "status": "PASS",
+      "patient": "patient003",
+      "batch_size": 8,
+      "semantic_active": false,
+      "seconds": [
+        0.15728182200109586,
+        0.04620693699689582,
+        0.045778643019730225,
+        0.045756456995150074,
+        0.04588804300874472
+      ],
+      "median_step_seconds": 0.045778643019730225,
+      "samples_per_second": 174.7539785430526,
+      "peak_allocated_gib": 2.253756046295166,
+      "peak_reserved_gib": 2.849609375
+    },
+    {
+      "status": "PASS",
+      "patient": "patient003",
+      "batch_size": 10,
+      "semantic_active": false,
+      "seconds": [
+        0.060382844996638596,
+        0.05755621098796837,
+        0.057254515995737165,
+        0.05714020598679781,
+        0.0571648089971859
+      ],
+      "median_step_seconds": 0.0571648089971859,
+      "samples_per_second": 174.93279826216647,
+      "peak_allocated_gib": 2.6904873847961426,
+      "peak_reserved_gib": 3.4140625
+    },
+    {
+      "status": "PASS",
+      "patient": "patient003",
+      "batch_size": 12,
+      "semantic_active": false,
+      "seconds": [
+        0.07041535701137036,
+        0.06765951597481035,
+        0.06772818497847766,
+        0.0677439580031205,
+        0.06792346699512564
+      ],
+      "median_step_seconds": 0.0677439580031205,
+      "samples_per_second": 177.13756848171232,
+      "peak_allocated_gib": 3.126242160797119,
+      "peak_reserved_gib": 3.884765625
+    }
+  ],
+  "gt_read": false,
+  "probe_weights_discarded": true,
+  "paused_pid": 2707552,
+  "device": "NVIDIA GeForce RTX 4070",
+  "teacher_parameters": 125670400,
+  "teacher_trainable_parameters": 0,
+  "max_train_patient": "patient057",
+  "native_probe_shape": [
+    2,
+    8,
+    512,
+    428
+  ],
+  "coexisting_prepare_mib": 930,
+  "note": "Paused original prepare retains its CUDA allocations; measured peak fields refer only to this probe process. No scientific output is changed.",
+  "finished_at": 1792074286.025347,
+  "original_prepare_resumed": true
+}

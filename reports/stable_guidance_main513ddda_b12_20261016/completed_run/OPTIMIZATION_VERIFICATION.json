@@ -1,0 +1,33 @@
+{
+  "status": "READY_WAITING_FOR_4070",
+  "verified_at": 1792075045.8517876,
+  "new_job": "${REPO_ROOT}/runs/stable_guidance_main513ddda_b12_acdc_4070_20261015_213121",
+  "source_commit": "513ddda8cec3a166f13cfe68fe6379cab014a1a7",
+  "source_unchanged": true,
+  "changed_recipe_fields": [
+    "batch_size"
+  ],
+  "student_batch_size": 12,
+  "teacher_tile_batch": 1,
+  "epochs": 50,
+  "learning_rate": 0.0003,
+  "complete_bank_reused": true,
+  "bank_patients": 80,
+  "old_partial_training_last_logged_step": 825,
+  "old_completed_epochs": 0,
+  "new_student_initialization": "fresh seed42; no interrupted weights available",
+  "benchmark_max_native_train_shape": [
+    2,
+    8,
+    512,
+    428
+  ],
+  "student_peak_allocated_gib": 7.758700370788574,
+  "student_peak_reserved_gib": 10.08203125,
+  "student_microbenchmark_speedup": 1.0263204632435827,
+  "benchmark_scope": "Five optimizer steps on actual TRAIN tensors, two native shapes, feature-active/semantic-inactive; not full-run speed or accuracy.",
+  "cuda_full_preflight_status": "pending_gpu_availability",
+  "gpu_blocking_pid_observed": 2724716,
+  "gpu_blocking_source": "${OTHER_GPU_JOB_ROOT}",
+  "automatic_start_when_free": true
+}

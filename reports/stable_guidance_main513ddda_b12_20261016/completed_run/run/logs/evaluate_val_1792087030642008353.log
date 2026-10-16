@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "${REPO_ROOT}/runs/stable_guidance_main513ddda_b12_acdc_4070_20261015_213121/source/scripts/evaluate_stable_guidance.py", line 8, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "${REPO_ROOT}/runs/stable_guidance_main513ddda_b12_acdc_4070_20261015_213121/source/src/self_audit_guidance/evaluate.py", line 234, in main
+    evaluate(**vars(p.parse_args(argv)))
+  File "${REPO_ROOT}/runs/stable_guidance_main513ddda_b12_acdc_4070_20261015_213121/source/src/self_audit_guidance/evaluate.py", line 199, in evaluate
+    raise ValueError(f'{pid}: reference/native geometry mismatch; no resizing is permitted')
+ValueError: patient004: reference/native geometry mismatch; no resizing is permitted

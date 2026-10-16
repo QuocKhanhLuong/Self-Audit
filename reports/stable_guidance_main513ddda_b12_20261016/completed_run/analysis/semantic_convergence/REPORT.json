@@ -1,0 +1,63 @@
+{
+  "job": "${REPO_ROOT}/runs/stable_guidance_main513ddda_b12_acdc_4070_20261015_213121",
+  "bank_manifest_sha256": "f5a7b51328cc877ebdc4e70cbf7f90bebfe6da672597082beb5ae270f3e98665",
+  "training_sha256": "4de36eaa66b76e72ea93d665d981db727d9c7f0094091e75d586641d659a1836",
+  "source_student_sha256": "87c33df231348baa87193e84a80970ee825206d1f2eb01e2f349d3ebb3ce4888",
+  "bank_patients_hash_verified": 80,
+  "training": {
+    "batch_size": 12,
+    "epochs": 50,
+    "lr": 0.0003,
+    "seed": 42,
+    "width": 32
+  },
+  "optimizer_steps": 85700,
+  "active_semantic_steps": 79221,
+  "method": "Replay numpy patient and slice permutations, reliability weights, class mask, foreground batch gate, denominator clamp, and all-step epoch mean. Entropy uses float64; logs use float32 CUDA reductions.",
+  "interpretation": "CE-H is an estimated online training KL averaged across changing within-epoch models, not a fixed-checkpoint validation KL. No GT read; no model, bank or export modified.",
+  "first_epoch": {
+    "epoch": 1,
+    "steps": 1714,
+    "active_steps": 1587,
+    "feature_loss": 0.361055637297928,
+    "semantic_ce": 1.123137170385431,
+    "target_entropy_floor": 1.0460158188232396,
+    "online_kl_estimate": 0.07712135156219135,
+    "uniform_prediction_ce": 1.2811782646631173
+  },
+  "last_epoch": {
+    "epoch": 50,
+    "steps": 1714,
+    "active_steps": 1584,
+    "feature_loss": 0.20962972253943546,
+    "semantic_ce": 1.0851725878060428,
+    "target_entropy_floor": 1.0463194437544572,
+    "online_kl_estimate": 0.038853144051585575,
+    "uniform_prediction_ce": 1.2787004697811981
+  },
+  "means": {
+    "epochs_1_10": {
+      "semantic_ce": 1.1096733703730441,
+      "target_entropy_floor": 1.0432113663847236,
+      "online_kl_estimate": 0.06646200398832044,
+      "feature_loss": 0.2911630948529499
+    },
+    "epochs_31_40": {
+      "semantic_ce": 1.0868212520854346,
+      "target_entropy_floor": 1.0428122219245437,
+      "online_kl_estimate": 0.044009030160891235,
+      "feature_loss": 0.21901987750722202
+    },
+    "epochs_41_50": {
+      "semantic_ce": 1.0832072531794266,
+      "target_entropy_floor": 1.0432575003792832,
+      "online_kl_estimate": 0.039949752800143436,
+      "feature_loss": 0.21070784215436097
+    }
+  },
+  "relative_reductions_percent": {
+    "semantic_ce": 3.380226706089673,
+    "online_kl_estimate": 49.62076874358971,
+    "feature_loss": 41.939773019952106
+  }
+}
