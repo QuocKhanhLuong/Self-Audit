@@ -1,0 +1,144 @@
+{
+  "status": "PASS_PUBLISHED_TEXT_ONLY",
+  "scope": "Local hashes, pinned Git source bytes, saved-count and saved-epoch arithmetic only. No tensors, patient images, checkpoints, GT masks, training, GPU, or network read.",
+  "audit_head": "92a60744efef85558d7c0226c84b7c49d47217ec",
+  "executed_source_commit": "513ddda8cec3a166f13cfe68fe6379cab014a1a7",
+  "manifest_files": 118,
+  "archived_source_files": 24,
+  "exact_source_matches": 24,
+  "issues": [],
+  "class_metrics": {
+    "BG": {
+      "pooled_counts": {
+        "tp": 294,
+        "fp": 0,
+        "fn": 17012367,
+        "predicted_pixels": 294,
+        "reference_pixels": 17012661
+      },
+      "dice": {
+        "macro": 3.508009332269824e-05,
+        "defined_patients": 18
+      },
+      "iou": {
+        "macro": 1.7541949044083867e-05,
+        "defined_patients": 18
+      },
+      "precision": {
+        "macro": 1.0,
+        "defined_patients": 5
+      },
+      "recall": {
+        "macro": 1.7541949044083867e-05,
+        "defined_patients": 18
+      }
+    },
+    "RV": {
+      "pooled_counts": {
+        "tp": 14,
+        "fp": 21435,
+        "fn": 230267,
+        "predicted_pixels": 21449,
+        "reference_pixels": 230281
+      },
+      "dice": {
+        "macro": 6.287972413284342e-05,
+        "defined_patients": 18
+      },
+      "iou": {
+        "macro": 3.146707816579275e-05,
+        "defined_patients": 18
+      },
+      "precision": {
+        "macro": 0.0002832009811728862,
+        "defined_patients": 11
+      },
+      "recall": {
+        "macro": 4.225504402523559e-05,
+        "defined_patients": 18
+      }
+    },
+    "MYO": {
+      "pooled_counts": {
+        "tp": 9512,
+        "fp": 39621,
+        "fn": 234534,
+        "predicted_pixels": 49133,
+        "reference_pixels": 244046
+      },
+      "dice": {
+        "macro": 0.0444458698293513,
+        "defined_patients": 18
+      },
+      "iou": {
+        "macro": 0.02508475757392387,
+        "defined_patients": 18
+      },
+      "precision": {
+        "macro": 0.10389301517044423,
+        "defined_patients": 16
+      },
+      "recall": {
+        "macro": 0.04559333477201682,
+        "defined_patients": 18
+      }
+    },
+    "LV": {
+      "pooled_counts": {
+        "tp": 7680,
+        "fp": 5396,
+        "fn": 239476,
+        "predicted_pixels": 13076,
+        "reference_pixels": 247156
+      },
+      "dice": {
+        "macro": 0.05118042102542897,
+        "defined_patients": 18
+      },
+      "iou": {
+        "macro": 0.028990304411321423,
+        "defined_patients": 18
+      },
+      "precision": {
+        "macro": 0.4615588304047016,
+        "defined_patients": 14
+      },
+      "recall": {
+        "macro": 0.02985228678427439,
+        "defined_patients": 18
+      }
+    }
+  },
+  "evaluation": {
+    "frames": 36,
+    "patients": 18,
+    "macro_coverage": 0.004960203525929163,
+    "pooled_coverage": 0.00473391893062336,
+    "pixels": 17734144,
+    "unknown_pixels": 17650192,
+    "verified_grid_frames_reported": 14
+  },
+  "training": {
+    "epochs": 50,
+    "steps": 85700,
+    "active_steps": 79221,
+    "active_fraction": 0.9243990665110852,
+    "first_active_step_kl": 0.08329300351455322,
+    "last_active_step_kl": 0.042041849055819244,
+    "late_window_kl_reduction_percent": 9.223737369143592,
+    "epoch50_entropy_over_ce": 0.9641963458272225,
+    "epoch50_entropy_over_uniform_ce": 0.8182678183683594
+  },
+  "gate_algebra": {
+    "probability_threshold": 0.7,
+    "margin_threshold": 0.2,
+    "implied_margin_lower_bound": 0.3999999999999999,
+    "margin_gate_redundant_for_probability_simplex": true
+  },
+  "not_reproduced": [
+    "80 original bank binary SHA checks and entropy/RNG replay",
+    "original checkpoint or native prediction authenticity",
+    "14 frame/cine voxel identities",
+    "GPU training or model convergence"
+  ]
+}

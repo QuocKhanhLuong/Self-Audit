@@ -1,0 +1,132 @@
+{
+  "status": "PASS_CPU_MANUFACTURED_AND_PUBLISHED_TEXT_ONLY",
+  "evidence_commit": "92a60744efef85558d7c0226c84b7c49d47217ec",
+  "executed_source_commit": "513ddda8cec3a166f13cfe68fe6379cab014a1a7",
+  "student_source_sha256": "87c33df231348baa87193e84a80970ee825206d1f2eb01e2f349d3ebb3ce4888",
+  "patient_arrays_read": false,
+  "checkpoints_loaded": false,
+  "teacher_instantiated": false,
+  "cuda_used": false,
+  "patient_training": false,
+  "manufactured_optimizer_steps": 1,
+  "torch_version": "2.14.0",
+  "seed": 42,
+  "parameter_count": 351268,
+  "parameters_by_top_level": {
+    "enc0": 10208,
+    "enc1": 55552,
+    "enc2": 221696,
+    "project": 8256,
+    "decode": 55424,
+    "head": 132
+  },
+  "manufactured_gradient_groups": {
+    "enc0": {
+      "feature_grad_norm": 0.6614632862335698,
+      "semantic_grad_norm": 1.184405044199953,
+      "cosine": 0.019939821425329483
+    },
+    "enc1": {
+      "feature_grad_norm": 0.9674860585978781,
+      "semantic_grad_norm": 2.0035804507392054,
+      "cosine": 0.0889374951124098
+    },
+    "enc2": {
+      "feature_grad_norm": 1.1522222857906828,
+      "semantic_grad_norm": 4.509534335259414,
+      "cosine": -0.04922202003404841
+    },
+    "project": {
+      "feature_grad_norm": 0.3301410444760819,
+      "semantic_grad_norm": 0.0,
+      "cosine": null
+    },
+    "decode": {
+      "feature_grad_norm": 0.0,
+      "semantic_grad_norm": 7.706318225366274,
+      "cosine": null
+    },
+    "head": {
+      "feature_grad_norm": 0.0,
+      "semantic_grad_norm": 1.3768897303513283,
+      "cosine": null
+    }
+  },
+  "frozen_targets_no_gradient": true,
+  "feature_only_step": {
+    "parameter_max_change": {
+      "enc0": 0.0003000497817993164,
+      "enc1": 0.0003000497817993164,
+      "enc2": 0.0003000497817993164,
+      "project": 0.0003000088036060333,
+      "decode": 0.0,
+      "head": 0.0
+    },
+    "logit_max_change": 0.351678729057312,
+    "preclip_norm": 1.6763536930084229
+  },
+  "batch_regrouping_counterexample": {
+    "separate_active": [
+      true,
+      false,
+      false
+    ],
+    "together_active": true,
+    "separate_all_step_mean_ce": 0.4620981216430664,
+    "together_ce": 1.3862943649291992,
+    "separate_bias_gradient": [
+      0.05000000074505806,
+      -0.15000000596046448,
+      0.05000000074505806,
+      0.05000000074505806
+    ],
+    "together_bias_gradient": [
+      -0.25,
+      -0.05000000819563866,
+      0.15000000596046448,
+      0.15000000596046448
+    ],
+    "interpretation": "Same example set, different foreground gate and batch normalization. Not an observed B8/B12 causal effect."
+  },
+  "native_coarse_nullspace_counterexample": {
+    "coarse_logit_max_difference": 0.0,
+    "uniform_native_coverage": 0.0,
+    "perturbed_native_coverage": 0.5,
+    "scope": "Manufactured output tensors, not proof that trained model realizes this perturbation."
+  },
+  "published_train_inventory": {
+    "patients": 80,
+    "samples_per_epoch": 20215,
+    "steps_per_epoch": {
+      "8": 2553,
+      "12": 1714
+    },
+    "hypothetical_50_epoch_b8_updates": 127650,
+    "observed_b12_updates": 85700,
+    "partial_batches": {
+      "8": {
+        "partial_batches": 57,
+        "partial_samples": 247
+      },
+      "12": {
+        "partial_batches": 54,
+        "partial_samples": 295
+      }
+    },
+    "native_height_range": [
+      154,
+      512
+    ],
+    "native_width_range": [
+      154,
+      428
+    ],
+    "reported_epoch_elapsed_seconds_sum": 9749.572876454098,
+    "late_online_kl_relative_decrease": 0.09223737369143592
+  },
+  "limitations": [
+    "Synthetic gradients do not establish real-data gradient conflict or capacity insufficiency.",
+    "B8 update count is arithmetic for the published inventory, not a completed B8 run.",
+    "No patient/model convergence or segmentation-quality experiment was executed."
+  ]
+}

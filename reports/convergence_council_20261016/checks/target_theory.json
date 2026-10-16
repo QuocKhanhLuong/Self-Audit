@@ -1,0 +1,136 @@
+{
+  "status": "PASS_TEXT_RECEIPTS_AND_SYNTHETIC_ALGEBRA_ONLY",
+  "executed_source_commit": "513ddda8cec3a166f13cfe68fe6379cab014a1a7",
+  "source_hashes": {
+    "core.py": "1b44186c6bc9492b00710859abc0e4638593ee1f15d0797b3a3c1dbb92566ed0",
+    "student.py": "87c33df231348baa87193e84a80970ee825206d1f2eb01e2f349d3ebb3ce4888"
+  },
+  "aggregate": {
+    "nodes": 46575360,
+    "class_pixels": [
+      795189,
+      5199,
+      61712,
+      6777
+    ],
+    "class_patients": [
+      62,
+      26,
+      55,
+      47
+    ],
+    "allowed_classes": [
+      true,
+      true,
+      true,
+      true
+    ],
+    "hard_coverage": 0.018655293270948416,
+    "hard_foreground_coverage": 0.0015821241102591584,
+    "anchor_supported_pixels": 7969224,
+    "no_foreground_patients": 25,
+    "all_bank_solvers_converged": true
+  },
+  "entropy_gate_bound": {
+    "effective_training_measure_mass": 0.9223874132678612,
+    "normalized_weighted_entropy": 1.1343600624899313,
+    "max_entropy_given_qmax_at_least_point7": 0.9404479886553263,
+    "approximate_lower_bound_weighted_mass_qmax_below_point7": 0.43493024909609873,
+    "scope": "Derived from published float64 audit of float32 targets; approximate normalization. Not voxel coverage."
+  },
+  "wrong_source": {
+    "graph": [
+      [
+        0.5,
+        0.5
+      ],
+      [
+        0.5,
+        0.5
+      ]
+    ],
+    "kernel": [
+      [
+        0.675,
+        0.325
+      ],
+      [
+        0.325,
+        0.675
+      ]
+    ],
+    "strengths": [
+      0.0,
+      0.9
+    ],
+    "h": [
+      0.29250000000000004,
+      0.6075
+    ],
+    "q": [
+      [
+        0.176875,
+        0.46937500000000004,
+        0.176875,
+        0.176875
+      ],
+      [
+        0.09812499999999999,
+        0.7056250000000001,
+        0.09812499999999999,
+        0.09812499999999999
+      ]
+    ],
+    "z": [
+      [
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ]
+    ],
+    "reliability": [
+      0.023646745391154227,
+      0.2002079430552663
+    ],
+    "fixed_point_residual": 5.551115123125783e-17,
+    "q_export_accept": [
+      false,
+      true
+    ],
+    "z_export_accept": [
+      true,
+      true
+    ],
+    "gradient_at_p_equals_q_for_z": [
+      0.176875,
+      -0.5306249999999999,
+      0.176875,
+      0.176875
+    ],
+    "scope": "Synthetic algebra in stochastic graph family; no claim of anatomical-anchor realizability."
+  },
+  "perfect_fit_abstention": {
+    "q": [
+      0.15,
+      0.55,
+      0.15,
+      0.15
+    ],
+    "kl": 0.0,
+    "accepted": false
+  },
+  "hypothetical_disallowed_channel": {
+    "gradient": -0.09000000000000001,
+    "current_run_applicable": false
+  },
+  "patient_arrays_read": false,
+  "gpu_used": false,
+  "training_run": false
+}

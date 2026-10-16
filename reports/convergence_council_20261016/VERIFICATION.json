@@ -1,0 +1,57 @@
+{
+  "schema": "self_audit.convergence_council_verification.v1",
+  "status": "PASS_TEXT_ARITHMETIC_AND_CPU_SYNTHETIC_ONLY",
+  "evidence_commit": "92a60744efef85558d7c0226c84b7c49d47217ec",
+  "executed_source_commit": "513ddda8cec3a166f13cfe68fe6379cab014a1a7",
+  "python": "3.11.16",
+  "platform": "macOS-26.2-arm64-arm-64bit",
+  "probe_results": {
+    "geometry": "PASS_METADATA_AND_PURE_CPU_MATH_ONLY",
+    "target_theory": "PASS_TEXT_RECEIPTS_AND_SYNTHETIC_ALGEBRA_ONLY",
+    "optimization": "PASS_CPU_MANUFACTURED_AND_PUBLISHED_TEXT_ONLY",
+    "published_evidence": "PASS_PUBLISHED_TEXT_ONLY"
+  },
+  "probe_commands": [
+    "rtk proxy env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /Users/alvinluong/miniforge3/bin/python reports/convergence_council_20261016/probes/published_evidence.py",
+    "rtk proxy env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /Users/alvinluong/miniforge3/bin/python reports/convergence_council_20261016/probes/target_theory.py",
+    "rtk proxy env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /Users/alvinluong/miniforge3/bin/python reports/convergence_council_20261016/probes/geometry.py",
+    "rtk proxy env PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /Users/alvinluong/miniforge3/bin/python reports/convergence_council_20261016/probes/optimization.py"
+  ],
+  "plot": "figures/PLOT_RECEIPT.json",
+  "figure_visually_inspected": true,
+  "original_local_files_preserved": 236,
+  "tracked_historical_paths_modified": [],
+  "code_and_receipt_sha256": {
+    "COUNCIL.json": "11f099cc8518a8faaf3e221689065d1ec27b4c863ffc8c20d0f037d319a3290a",
+    "checks/geometry.json": "53bffd8e4194f539c6b950bfba7c33c17baadf3cedf3ffb4dfe258a408ad2099",
+    "checks/optimization.json": "f6dac9771d8bbaa93bfe82e1fc1716c472409d08b283888a16823bef33a04fb8",
+    "checks/published_evidence.json": "5d37e0d905c387411096ab24d32940ea62454b9e5d19c1fac87d5741adbeb71d",
+    "checks/target_theory.json": "50892f0803312a1d2ae64a4649aaee332d4e211f8713c94d30683b9ba722eba0",
+    "figures/PLOT_RECEIPT.json": "6718f9019e4bb584f3489734fb8c4c171ade8e8d29b58f20145117add12c423e",
+    "figures/convergence.png": "6811d35f9debc7ee1d2c2ce1b5b97c945e8f88c13f50dc6fbd45d66a3a3cae2b",
+    "figures/convergence.svg": "567d4dedddfba375bf44f239d66437826bafcb40bb1facd6aa15c7cecc29af29",
+    "probes/geometry.py": "2fdbbb8b1d89ec40da99144f2174460cc9b8541bdb7345a91071d86407897b93",
+    "probes/optimization.py": "edf72a0e136964cd1f9d1d252dfc5f15a948d0510c49466c33e0aa42616e4bac",
+    "probes/plot_convergence.py": "2426e456fd280a9bbcdc702dc68c64fbe4c577087c5dfd87c3c03f10444504c3",
+    "probes/published_evidence.py": "a4a87c036a60826775cfd9476b766cbe78b3c5c343c5fee0782afae28ec5e882",
+    "probes/target_theory.py": "d1c95829b1bf73c9b045790467d115ff9cee13c61d333673d2cd0716d5444792"
+  },
+  "patient_arrays_read": false,
+  "patient_checkpoints_loaded": false,
+  "patient_training_launched": false,
+  "gpu_used": false,
+  "manufactured_optimizer_steps": 1,
+  "proposed_patient_experiments": "NOT_RUN",
+  "main_merged": false,
+  "limitations": [
+    "Publication checks authenticate arithmetic and bytes relative to pinned Git, not independently observed remote training or binary arrays.",
+    "One historical seed; no scientific improvement or causal attribution established."
+  ],
+  "final_synthesis_review": {
+    "agent": "/root/astra_run_evidence",
+    "verdict": "PASS_AFTER_NOTATION_CORRECTION",
+    "finding": "Protocol capital H (entropy) changed to lower h (source mass) for unsupported zero-mass condition.",
+    "other_blockers": [],
+    "correction_locally_verified": true
+  }
+}

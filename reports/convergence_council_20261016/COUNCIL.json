@@ -1,0 +1,78 @@
+{
+  "schema": "self_audit.convergence_council.v1",
+  "evidence_commit": "92a60744efef85558d7c0226c84b7c49d47217ec",
+  "executed_source_commit": "513ddda8cec3a166f13cfe68fe6379cab014a1a7",
+  "date": "2026-10-16",
+  "language": "Vietnamese",
+  "workflow": "Separate first-round executions, direct named peer objections/replies, appended revised positions, root synthesis. Shared evidence/assigned roles; not blinded.",
+  "agents": [
+    {
+      "agent": "/root/astra_run_evidence",
+      "requested_model": "gpt-6-astra",
+      "fork_turns": "none",
+      "resolved_model": null,
+      "model_provenance_note": "spawn_agent accepts the requested model; response exposes task_name/status, not an independent resolved-runtime identifier.",
+      "role": "Published provenance and convergence/metric arithmetic",
+      "report": "agents/01_run_evidence.md",
+      "status": "COMPLETED_WITH_PEER_REVIEW"
+    },
+    {
+      "agent": "/root/astra_target_theory",
+      "requested_model": "gpt-6-astra",
+      "fork_turns": "none",
+      "resolved_model": null,
+      "model_provenance_note": "spawn_agent accepts the requested model; response exposes task_name/status, not an independent resolved-runtime identifier.",
+      "role": "Target decomposition, entropy bound and semantic identifiability",
+      "report": "agents/02_target_theory.md",
+      "status": "COMPLETED_WITH_PEER_REVIEW"
+    },
+    {
+      "agent": "/root/astra_geometry",
+      "requested_model": "gpt-6-astra",
+      "fork_turns": "none",
+      "resolved_model": null,
+      "model_provenance_note": "spawn_agent accepts the requested model; response exposes task_name/status, not an independent resolved-runtime identifier.",
+      "role": "Native/teacher geometry and source priors",
+      "report": "agents/03_geometry_sources.md",
+      "status": "COMPLETED_WITH_PEER_REVIEW"
+    },
+    {
+      "agent": "/root/astra_optimization",
+      "requested_model": "gpt-6-astra",
+      "fork_turns": "none",
+      "resolved_model": null,
+      "model_provenance_note": "spawn_agent accepts the requested model; response exposes task_name/status, not an independent resolved-runtime identifier.",
+      "role": "Gradient paths, budget confounds and matched controls",
+      "report": "agents/04_optimization.md",
+      "status": "COMPLETED_WITH_PEER_REVIEW"
+    }
+  ],
+  "cross_review_pairs": [
+    [
+      "astra_run_evidence",
+      "astra_target_theory"
+    ],
+    [
+      "astra_run_evidence",
+      "astra_optimization"
+    ],
+    [
+      "astra_target_theory",
+      "astra_geometry"
+    ],
+    [
+      "astra_geometry",
+      "astra_optimization"
+    ],
+    [
+      "astra_optimization",
+      "astra_target_theory"
+    ]
+  ],
+  "consensus_limit": "Agreement prioritizes diagnostics; no causal winner or demonstrated anatomy improvement.",
+  "patient_training_launched": false,
+  "patient_arrays_read": false,
+  "gpu_used": false,
+  "baseline_changes": false,
+  "main_merge": false
+}

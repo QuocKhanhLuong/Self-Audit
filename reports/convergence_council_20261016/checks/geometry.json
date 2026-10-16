@@ -1,0 +1,920 @@
+{
+  "anatomy_sums": {
+    "anchor_supported_pixels": 7969224,
+    "candidate_cap_slices": 0,
+    "hypotheses_before_anatomy": 5820,
+    "no_orientation_slices": 0,
+    "rv_hypotheses": 4135,
+    "slices_with_hypotheses": 5503,
+    "wall_cavity_hypotheses": 5741
+  },
+  "bank_hard_counts": [
+    795189,
+    5199,
+    61712,
+    6777
+  ],
+  "bank_nodes": 46575360,
+  "class_order": [
+    "BG",
+    "RV",
+    "MYO",
+    "LV"
+  ],
+  "class_patients": [
+    62,
+    26,
+    55,
+    47
+  ],
+  "current_train_affines_axis_aligned": true,
+  "hard_accepted_fraction": 0.018655293270948416,
+  "header_strata_sha_matched_80": {
+    "sform0_qform0": {
+      "current_hard_class_counts": [
+        366263,
+        4322,
+        29611,
+        3066
+      ],
+      "patients": [
+        "patient001",
+        "patient002",
+        "patient003",
+        "patient006",
+        "patient007",
+        "patient008",
+        "patient021",
+        "patient022",
+        "patient023",
+        "patient024",
+        "patient025",
+        "patient026",
+        "patient027",
+        "patient031",
+        "patient033",
+        "patient042",
+        "patient044",
+        "patient049",
+        "patient050",
+        "patient061",
+        "patient062",
+        "patient063",
+        "patient064",
+        "patient066",
+        "patient067",
+        "patient071",
+        "patient072",
+        "patient073"
+      ]
+    },
+    "sform2_qform0": {
+      "current_hard_class_counts": [
+        428926,
+        877,
+        32101,
+        3711
+      ],
+      "patients": [
+        "patient009",
+        "patient010",
+        "patient011",
+        "patient013",
+        "patient016",
+        "patient017",
+        "patient019",
+        "patient020",
+        "patient034",
+        "patient035",
+        "patient037",
+        "patient038",
+        "patient039",
+        "patient040",
+        "patient041",
+        "patient043",
+        "patient045",
+        "patient046",
+        "patient047",
+        "patient048",
+        "patient051",
+        "patient052",
+        "patient053",
+        "patient054",
+        "patient056",
+        "patient057",
+        "patient058",
+        "patient059",
+        "patient060",
+        "patient068",
+        "patient069",
+        "patient074",
+        "patient075",
+        "patient077",
+        "patient078",
+        "patient079",
+        "patient080",
+        "patient081",
+        "patient083",
+        "patient084",
+        "patient085",
+        "patient086",
+        "patient088",
+        "patient090",
+        "patient091",
+        "patient092",
+        "patient093",
+        "patient094",
+        "patient096",
+        "patient097",
+        "patient099",
+        "patient100"
+      ]
+    }
+  },
+  "input_sha256": {
+    "reports/stable_guidance_main513ddda_b12_20261016/completed_run/evaluation_recovery/RECOVERY_STATUS.json": "3ea61555a72cda2e9412b3035230734bb3f60bb32836571064829f7a27c993f7",
+    "reports/stable_guidance_main513ddda_b12_20261016/completed_run/run/bank/FROZEN.json": "6d0e5a53673009beee7415c112c2626bd26fa63424af01c3682281487b73300c",
+    "reports/stable_guidance_main513ddda_b12_20261016/completed_run/run/bank/REPORT.json": "66557ec9086c2b94e77580e422b070eab06d078ba6bb9c6d78df36b88f0dfae8",
+    "reports/stable_guidance_main513ddda_b12_20261016/completed_run/run/evaluation_val_verified_grid/METRICS.json": "185322cb54c8f999432fb0ff8086c60dea3278e1ae207d6b3744a85bc68400cd",
+    "reports/stable_guidance_main513ddda_b12_20261016/completed_run/run/predictions_test/FROZEN.json": "8f4c86cf6375cbba32504929074a5ce12c130b1296474e043dcb0927e14af219",
+    "reports/stable_guidance_main513ddda_b12_20261016/completed_run/run/predictions_val/FROZEN.json": "342403cfa51bfe52998d5d292a554b2632578bfaa63014facfd69d661c082864",
+    "reports/stable_guidance_main513ddda_b12_20261016/completed_run/source/src/self_audit_guidance/core.py": "1b44186c6bc9492b00710859abc0e4638593ee1f15d0797b3a3c1dbb92566ed0",
+    "reports/stable_guidance_main513ddda_b12_20261016/completed_run/source/src/self_audit_guidance/evaluate.py": "44cfff418bc1510d61c4f3b9b6296d1ece9421b14739398d3900d2d7028315d6",
+    "reports/stable_guidance_main513ddda_b12_20261016/completed_run/source/src/self_audit_guidance/io.py": "42c73e38a59463ec409fa1915d425f1e549f510be68d5c2c6fbd135eb5204b5d",
+    "reports/stable_guidance_main513ddda_b12_20261016/completed_run/source/src/self_audit_guidance/pipeline.py": "62b4f5fdd45089d1e3297004d61b643cb9e8e82f7d20a6598db6fd5b30ee181d",
+    "reports/stable_guidance_main513ddda_b12_20261016/completed_run/source/src/self_audit_guidance/student.py": "87c33df231348baa87193e84a80970ee825206d1f2eb01e2f349d3ebb3ce4888",
+    "reports/stable_guidance_main513ddda_b12_20261016/completed_run/source/src/self_audit_guidance/teacher.py": "8a7b88548223c30ef570f90d977c71a14f2ca6ec219bf216e0f16efafdada273",
+    "reports/stable_guidance_world_v2_20261014/run_evidence/run/bank/FROZEN.json": "953a3aca04c2d0f27ade1c824c52d8f9cf9bb010932dd83a85e478d27c5239f5"
+  },
+  "native_semantic_interpolation_fraction_summary": {
+    "max": 0.26716141001855287,
+    "mean_patient": 0.1683397139514103,
+    "min": 0.04205607476635514
+  },
+  "native_semantic_interpolation_support": {
+    "patient001": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        256,
+        216
+      ],
+      "native_sites": 55296
+    },
+    "patient002": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.15517241379310345,
+      "native_hw": [
+        256,
+        232
+      ],
+      "native_sites": 59392
+    },
+    "patient003": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.140625,
+      "native_hw": [
+        256,
+        256
+      ],
+      "native_sites": 65536
+    },
+    "patient006": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.15517241379310345,
+      "native_hw": [
+        256,
+        232
+      ],
+      "native_sites": 59392
+    },
+    "patient007": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.18532818532818532,
+      "native_hw": [
+        224,
+        222
+      ],
+      "native_sites": 49728
+    },
+    "patient008": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.18,
+      "native_hw": [
+        256,
+        200
+      ],
+      "native_sites": 51200
+    },
+    "patient009": {
+      "directly_sampled_native_logit_sites": 7680,
+      "fraction": 0.14423076923076922,
+      "native_hw": [
+        256,
+        208
+      ],
+      "native_sites": 53248
+    },
+    "patient010": {
+      "directly_sampled_native_logit_sites": 7680,
+      "fraction": 0.14423076923076922,
+      "native_hw": [
+        256,
+        208
+      ],
+      "native_sites": 53248
+    },
+    "patient011": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        256,
+        216
+      ],
+      "native_sites": 55296
+    },
+    "patient013": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        256,
+        216
+      ],
+      "native_sites": 55296
+    },
+    "patient016": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.1875,
+      "native_hw": [
+        256,
+        192
+      ],
+      "native_sites": 49152
+    },
+    "patient017": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        256,
+        216
+      ],
+      "native_sites": 55296
+    },
+    "patient019": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        256,
+        216
+      ],
+      "native_sites": 55296
+    },
+    "patient020": {
+      "directly_sampled_native_logit_sites": 7680,
+      "fraction": 0.14423076923076922,
+      "native_hw": [
+        256,
+        208
+      ],
+      "native_sites": 53248
+    },
+    "patient021": {
+      "directly_sampled_native_logit_sites": 4608,
+      "fraction": 0.075,
+      "native_hw": [
+        256,
+        240
+      ],
+      "native_sites": 61440
+    },
+    "patient022": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.18,
+      "native_hw": [
+        256,
+        200
+      ],
+      "native_sites": 51200
+    },
+    "patient023": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        256,
+        216
+      ],
+      "native_sites": 55296
+    },
+    "patient024": {
+      "directly_sampled_native_logit_sites": 7680,
+      "fraction": 0.14423076923076922,
+      "native_hw": [
+        256,
+        208
+      ],
+      "native_sites": 53248
+    },
+    "patient025": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.140625,
+      "native_hw": [
+        256,
+        256
+      ],
+      "native_sites": 65536
+    },
+    "patient026": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        256,
+        216
+      ],
+      "native_sites": 55296
+    },
+    "patient027": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        256,
+        216
+      ],
+      "native_sites": 55296
+    },
+    "patient031": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        256,
+        216
+      ],
+      "native_sites": 55296
+    },
+    "patient033": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        256,
+        216
+      ],
+      "native_sites": 55296
+    },
+    "patient034": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16071428571428573,
+      "native_hw": [
+        256,
+        224
+      ],
+      "native_sites": 57344
+    },
+    "patient035": {
+      "directly_sampled_native_logit_sites": 7680,
+      "fraction": 0.14423076923076922,
+      "native_hw": [
+        256,
+        208
+      ],
+      "native_sites": 53248
+    },
+    "patient037": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        256,
+        216
+      ],
+      "native_sites": 55296
+    },
+    "patient038": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.08695652173913043,
+      "native_hw": [
+        384,
+        276
+      ],
+      "native_sites": 105984
+    },
+    "patient039": {
+      "directly_sampled_native_logit_sites": 7680,
+      "fraction": 0.14423076923076922,
+      "native_hw": [
+        256,
+        208
+      ],
+      "native_sites": 53248
+    },
+    "patient040": {
+      "directly_sampled_native_logit_sites": 7680,
+      "fraction": 0.14423076923076922,
+      "native_hw": [
+        256,
+        208
+      ],
+      "native_sites": 53248
+    },
+    "patient041": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.26716141001855287,
+      "native_hw": [
+        224,
+        154
+      ],
+      "native_sites": 34496
+    },
+    "patient042": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.15517241379310345,
+      "native_hw": [
+        256,
+        232
+      ],
+      "native_sites": 59392
+    },
+    "patient043": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.23645320197044334,
+      "native_hw": [
+        224,
+        174
+      ],
+      "native_sites": 38976
+    },
+    "patient044": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        216,
+        256
+      ],
+      "native_sites": 55296
+    },
+    "patient045": {
+      "directly_sampled_native_logit_sites": 7680,
+      "fraction": 0.14423076923076922,
+      "native_hw": [
+        256,
+        208
+      ],
+      "native_sites": 53248
+    },
+    "patient046": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        216,
+        256
+      ],
+      "native_sites": 55296
+    },
+    "patient047": {
+      "directly_sampled_native_logit_sites": 7680,
+      "fraction": 0.14423076923076922,
+      "native_hw": [
+        208,
+        256
+      ],
+      "native_sites": 53248
+    },
+    "patient048": {
+      "directly_sampled_native_logit_sites": 7680,
+      "fraction": 0.14423076923076922,
+      "native_hw": [
+        256,
+        208
+      ],
+      "native_sites": 53248
+    },
+    "patient049": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        216,
+        256
+      ],
+      "native_sites": 55296
+    },
+    "patient050": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.14516129032258066,
+      "native_hw": [
+        256,
+        248
+      ],
+      "native_sites": 63488
+    },
+    "patient051": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16071428571428573,
+      "native_hw": [
+        256,
+        224
+      ],
+      "native_sites": 57344
+    },
+    "patient052": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        256,
+        216
+      ],
+      "native_sites": 55296
+    },
+    "patient053": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        256,
+        216
+      ],
+      "native_sites": 55296
+    },
+    "patient054": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        256,
+        216
+      ],
+      "native_sites": 55296
+    },
+    "patient056": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        256,
+        216
+      ],
+      "native_sites": 55296
+    },
+    "patient057": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.04205607476635514,
+      "native_hw": [
+        512,
+        428
+      ],
+      "native_sites": 219136
+    },
+    "patient058": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        256,
+        216
+      ],
+      "native_sites": 55296
+    },
+    "patient059": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        216,
+        256
+      ],
+      "native_sites": 55296
+    },
+    "patient060": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        256,
+        216
+      ],
+      "native_sites": 55296
+    },
+    "patient061": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        256,
+        216
+      ],
+      "native_sites": 55296
+    },
+    "patient062": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        216,
+        256
+      ],
+      "native_sites": 55296
+    },
+    "patient063": {
+      "directly_sampled_native_logit_sites": 7680,
+      "fraction": 0.17045454545454544,
+      "native_hw": [
+        176,
+        256
+      ],
+      "native_sites": 45056
+    },
+    "patient064": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        256,
+        216
+      ],
+      "native_sites": 55296
+    },
+    "patient066": {
+      "directly_sampled_native_logit_sites": 4608,
+      "fraction": 0.075,
+      "native_hw": [
+        256,
+        240
+      ],
+      "native_sites": 61440
+    },
+    "patient067": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        216,
+        256
+      ],
+      "native_sites": 55296
+    },
+    "patient068": {
+      "directly_sampled_native_logit_sites": 7680,
+      "fraction": 0.14423076923076922,
+      "native_hw": [
+        208,
+        256
+      ],
+      "native_sites": 53248
+    },
+    "patient069": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        256,
+        216
+      ],
+      "native_sites": 55296
+    },
+    "patient071": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.1875,
+      "native_hw": [
+        256,
+        192
+      ],
+      "native_sites": 49152
+    },
+    "patient072": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        256,
+        216
+      ],
+      "native_sites": 55296
+    },
+    "patient073": {
+      "directly_sampled_native_logit_sites": 7680,
+      "fraction": 0.14423076923076922,
+      "native_hw": [
+        256,
+        208
+      ],
+      "native_sites": 53248
+    },
+    "patient074": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.140625,
+      "native_hw": [
+        256,
+        256
+      ],
+      "native_sites": 65536
+    },
+    "patient075": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.24489795918367346,
+      "native_hw": [
+        224,
+        168
+      ],
+      "native_sites": 37632
+    },
+    "patient077": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16822429906542055,
+      "native_hw": [
+        256,
+        214
+      ],
+      "native_sites": 54784
+    },
+    "patient078": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        256,
+        216
+      ],
+      "native_sites": 55296
+    },
+    "patient079": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        256,
+        216
+      ],
+      "native_sites": 55296
+    },
+    "patient080": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        256,
+        216
+      ],
+      "native_sites": 55296
+    },
+    "patient081": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.26716141001855287,
+      "native_hw": [
+        224,
+        154
+      ],
+      "native_sites": 34496
+    },
+    "patient083": {
+      "directly_sampled_native_logit_sites": 7680,
+      "fraction": 0.14423076923076922,
+      "native_hw": [
+        256,
+        208
+      ],
+      "native_sites": 53248
+    },
+    "patient084": {
+      "directly_sampled_native_logit_sites": 7680,
+      "fraction": 0.14423076923076922,
+      "native_hw": [
+        256,
+        208
+      ],
+      "native_sites": 53248
+    },
+    "patient085": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.17391304347826086,
+      "native_hw": [
+        288,
+        184
+      ],
+      "native_sites": 52992
+    },
+    "patient086": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.1875,
+      "native_hw": [
+        256,
+        192
+      ],
+      "native_sites": 49152
+    },
+    "patient088": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.26716141001855287,
+      "native_hw": [
+        154,
+        224
+      ],
+      "native_sites": 34496
+    },
+    "patient090": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.26716141001855287,
+      "native_hw": [
+        224,
+        154
+      ],
+      "native_sites": 34496
+    },
+    "patient091": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.22857142857142856,
+      "native_hw": [
+        224,
+        180
+      ],
+      "native_sites": 40320
+    },
+    "patient092": {
+      "directly_sampled_native_logit_sites": 7680,
+      "fraction": 0.21220159151193635,
+      "native_hw": [
+        208,
+        174
+      ],
+      "native_sites": 36192
+    },
+    "patient093": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.22857142857142856,
+      "native_hw": [
+        224,
+        180
+      ],
+      "native_sites": 40320
+    },
+    "patient094": {
+      "directly_sampled_native_logit_sites": 7680,
+      "fraction": 0.21220159151193635,
+      "native_hw": [
+        174,
+        208
+      ],
+      "native_sites": 36192
+    },
+    "patient096": {
+      "directly_sampled_native_logit_sites": 7680,
+      "fraction": 0.21220159151193635,
+      "native_hw": [
+        208,
+        174
+      ],
+      "native_sites": 36192
+    },
+    "patient097": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.16666666666666666,
+      "native_hw": [
+        256,
+        216
+      ],
+      "native_sites": 55296
+    },
+    "patient099": {
+      "directly_sampled_native_logit_sites": 9216,
+      "fraction": 0.26716141001855287,
+      "native_hw": [
+        224,
+        154
+      ],
+      "native_sites": 34496
+    },
+    "patient100": {
+      "directly_sampled_native_logit_sites": 7680,
+      "fraction": 0.11695906432748537,
+      "native_hw": [
+        304,
+        216
+      ],
+      "native_sites": 65664
+    }
+  },
+  "orientation": {
+    "test": {
+      "+x": 50
+    },
+    "train": {
+      "+x": 80
+    },
+    "val": {
+      "+x": 18
+    }
+  },
+  "rv_frames_with_prediction": 22,
+  "rv_frames_with_tp": 3,
+  "rv_val_saved_counts": {
+    "fn": 230267,
+    "fp": 21435,
+    "predicted_pixels": 21449,
+    "reference_pixels": 230281,
+    "tp": 14
+  },
+  "scope": "Published JSON/source; no real arrays or model execution; historical headers joined by recorded raw-image SHA only",
+  "source_commit": "513ddda8cec3a166f13cfe68fe6379cab014a1a7",
+  "status": "PASS_METADATA_AND_PURE_CPU_MATH_ONLY",
+  "synthetic_native_gate_counterexample": {
+    "claim": "Native gate is not determined by interpolated-logit loss; no real-model effect measured",
+    "coarse_loss_identical": true,
+    "coarse_probability": 0.7112345942275937,
+    "native_probabilities": [
+      0.9479149938275155,
+      0.25
+    ]
+  },
+  "synthetic_oblique_cardinal_counterexample": {
+    "cardinal_left_delta": 1.0,
+    "centroid_delta_yx": [
+      10.0,
+      1.0
+    ],
+    "claim": "Possible cardinal side error; current metadata has no such oblique affine",
+    "degrees": 20,
+    "exact_world_left_delta": -2.4805088124707786,
+    "old_rule_accepts": true
+  },
+  "verified_frame_geometry_count": 14
+}
