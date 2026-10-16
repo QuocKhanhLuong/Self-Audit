@@ -1,5 +1,10 @@
 # Layer-guided student runbook
 
+**For actual student training, use the [2026-10-16 RTX 4070 handoff](../../docs/prompts/ASTRA_TRAIN_4070_LATEST.md).**
+This page retains the original exact-reference and representation-only
+scaffolding procedure. Its `integration/` schemas and admission rules are
+unchanged; the later `training_v1/` policy is documented separately.
+
 This is opt-in scaffolding for exact software reproduction and local preflight.
 Existing baseline/training entrypoints are unchanged. No patient training,
 download, push or merge is part of these commands. The task's execution boundary

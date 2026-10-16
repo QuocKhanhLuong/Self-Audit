@@ -1,5 +1,11 @@
 # Layer-guided student v1
 
+**Current training handoff (2026-10-16):**
+[RTX 4070 runbook](../../docs/prompts/ASTRA_TRAIN_4070_LATEST.md) and
+[training_v1 policy/code](training_v1/README.md). This adds an explicit training
+entrypoint with a new artifact schema. The original reproduction below remains
+the record of the exact-reference/scaffolding delivery.
+
 Opt-in reproduction of the published layer-level prototype, plus integration
 scaffolding. The historical student, baseline ablations, configs, splits and
 frozen evidence are unchanged. This directory is not imported by the existing

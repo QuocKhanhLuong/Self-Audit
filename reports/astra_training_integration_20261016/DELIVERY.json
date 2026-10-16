@@ -1,0 +1,103 @@
+{
+  "schema": "astra.training_integration_delivery.v1",
+  "status": "PASS_CPU_SOFTWARE_ONLY",
+  "execution_base_commit": "ae71ad789175476295048db66ec5a24d741ce910",
+  "execution_source_note": "Tests executed on this base plus the new implementation bound by these hashes; delivery commit contains this snapshot.",
+  "reference_commit": "f4b0fe7d9e49ee398354e20ff0981c818840f5d4",
+  "original_tests": 47,
+  "experiment_tests": 125,
+  "new_training_tests": 37,
+  "test_counts_by_module": {
+    "tests.test_bank": 2,
+    "tests.test_entrypoints": 2,
+    "tests.test_integration": 18,
+    "tests.test_operators": 47,
+    "tests.test_parity": 17,
+    "tests.test_reference_deviations": 2,
+    "tests.test_training_checkpoint": 8,
+    "tests.test_training_config": 11,
+    "tests.test_training_data": 12,
+    "tests.test_training_end_to_end": 1,
+    "tests.test_training_runner": 5
+  },
+  "implementation_sha256": {
+    "experiments/layer_guided_student_v1/training_v1/__init__.py": "ed4d6391266aba2670d17a6dbdb571fa758b855a3972e632282f58dce9b5c4d8",
+    "experiments/layer_guided_student_v1/training_v1/checkpoint.py": "730f14ff543082d913c8d059298f954fb56a2f7e47fc740b887c2c22a49cfcf7",
+    "experiments/layer_guided_student_v1/training_v1/config.py": "997300e893e7a920ac6e60b78751701fc805baa929affdb51c56105839824f6c",
+    "experiments/layer_guided_student_v1/training_v1/data.py": "6c4e99bd82d181da68050de9eb0765a076c562d441d560e5430cfa5d600a4723",
+    "experiments/layer_guided_student_v1/training_v1/runner.py": "45570824a608ca2f4694e987374ea0bf098079f2892a88a2773a2b9066bbcf11",
+    "scripts/train_astra_student.py": "aee03c24284d179cf3d00f2d6b2536205137c885e3c74ec1faa994fa2cf9be40"
+  },
+  "differential_parity": {
+    "module": "tests.test_parity",
+    "tests": 17,
+    "independent_reference_import": true,
+    "outputs_input_parameter_gradients": "EXACT rtol=0 atol=0",
+    "native_shapes": [
+      [
+        32,
+        32
+      ],
+      [
+        47,
+        53
+      ],
+      [
+        64,
+        96
+      ],
+      [
+        65,
+        97
+      ]
+    ],
+    "encoder": "manufactured TinyEncoder",
+    "official_dinov3": "NOT_RUN"
+  },
+  "training_end_to_end": {
+    "steps": 5,
+    "data": "manufactured bank",
+    "constructor": "mocked small encoder only",
+    "real_components": [
+      "bank adapter",
+      "AdamW loop",
+      "checkpoint writer",
+      "checkpoint loader",
+      "native prediction"
+    ],
+    "checks": [
+      "coarse head changed",
+      "semantic updates positive",
+      "actual vs planned patients",
+      "partial epoch status",
+      "exact same-input logits after reload",
+      "zero native detail output head"
+    ],
+    "test": "tests.test_training_end_to_end.test_bank_to_updates_to_real_checkpoint_to_native_prediction"
+  },
+  "protected_paths": [
+    "baseline",
+    "src",
+    "configs",
+    "run_configs",
+    "splits",
+    "benchmark_freezes",
+    "checkpoints",
+    "runs",
+    "reports/layer_level_upgrade_20261015"
+  ],
+  "protected_diff_from_training_base": [],
+  "original_worktree": {
+    "head": "92a60744efef85558d7c0226c84b7c49d47217ec",
+    "preexisting_file_fingerprints": 236,
+    "changed": []
+  },
+  "not_run": [
+    "official DINO source/weight load",
+    "real patient training",
+    "RTX 4070 or other GPU execution",
+    "VAL/TEST evaluation",
+    "scientific convergence/accuracy comparison"
+  ],
+  "python": "3.11.16"
+}
