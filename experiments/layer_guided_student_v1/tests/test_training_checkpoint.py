@@ -183,11 +183,13 @@ def test_semantic_optimizer_step_roundtrips_logits_and_same_preprocess_predictio
     )
     for left, right in zip(first[:2], second[:2]):
         np.testing.assert_array_equal(left, right)
-    # CPU convolution reduction order can differ with the batch dimension.
-    # Fixed-state/same-input roundtrip above remains bitwise exact; confidence
-    # and entropy across batch sizes obey float32 numerical parity.
+    # Fixed-input checkpoint roundtrip above stays bitwise exact. Across different
+    # batch sizes CPU convolution reductions can differ: Linux/torch2.10 observed
+    # 7.15e-7 max absolute confidence error with identical dense/gated labels.
+    # This portable continuous-value budget is NOT an anatomical/gating guarantee
+    # for arbitrary inputs; model, gates and reference parity tolerances are unchanged.
     for left, right in zip(first[2:4], second[2:4]):
-        np.testing.assert_allclose(left, right, rtol=1e-6, atol=1e-7)
+        np.testing.assert_allclose(left, right, rtol=5e-6, atol=1e-6)
     assert first[0].shape == (2, 3, 9, 11)
     assert first[1].shape == first[0].shape
     assert first[2].shape == first[0].shape

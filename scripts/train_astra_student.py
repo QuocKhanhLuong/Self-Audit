@@ -11,6 +11,7 @@ def main(argv=None):
     spec = importlib.util.spec_from_file_location("_self_audit_canonical_train", ROOT / "train.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    module.__doc__ += " Defaults to the bounded 32-update pilot."
     return module.main(argv)
 
 if __name__ == "__main__":
