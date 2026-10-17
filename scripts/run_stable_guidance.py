@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
-"""Standalone opt-in stable guidance. Does not alter the v3/CQA runner."""
-
-from pathlib import Path
+"""Retired training command: intentionally no argument translation or fallback."""
 import sys
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from self_audit_guidance.pipeline import main
-
-if __name__ == "__main__":
-    raise SystemExit(main())
+print("LEGACY_ENTRYPOINT_DISABLED: this trainer was removed. Use python train.py --describe, then docs/RUNBOOK.md. Historical reproduction belongs in archive/pre-cleanup-20261017, never this checkout.", file=sys.stderr)
+raise SystemExit(2)

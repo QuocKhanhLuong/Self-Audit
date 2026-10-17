@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
-"""Image-only teacher: explicit patient split, native export, verified freeze."""
-from self_audit_pseudolabel.pipeline_v3 import teacher_main
-if __name__=='__main__': teacher_main()
+"""Retired training command: intentionally no argument translation or fallback."""
+import sys
+print("LEGACY_ENTRYPOINT_DISABLED: this trainer was removed. Use python train.py --describe, then docs/RUNBOOK.md. Historical reproduction belongs in archive/pre-cleanup-20261017, never this checkout.", file=sys.stderr)
+raise SystemExit(2)

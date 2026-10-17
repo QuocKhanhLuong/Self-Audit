@@ -1,34 +1,21 @@
-# Layer-guided student v1
+# Canonical layer-guided student implementation
 
-**Current training handoff (2026-10-16):**
-[RTX 4070 runbook](../../docs/prompts/ASTRA_TRAIN_4070_LATEST.md) and
-[training_v1 policy/code](training_v1/README.md). This adds an explicit training
-entrypoint with a new artifact schema. The original reproduction below remains
-the record of the exact-reference/scaffolding delivery.
+This directory is the current implementation, not an alternate legacy trainer.
+Its path is retained to preserve source/checkpoint identities during cleanup.
 
-Opt-in reproduction of the published layer-level prototype, plus integration
-scaffolding. The historical student, baseline ablations, configs, splits and
-frozen evidence are unchanged. This directory is not imported by the existing
-training entrypoints.
+Use the repository-root `train.py`. Read [CURRENT](../../docs/CURRENT.md),
+[RUNBOOK](../../docs/RUNBOOK.md), and [ASTRA_NEXT](../../docs/prompts/ASTRA_NEXT.md).
 
-Start with [RUNBOOK.md](RUNBOOK.md) for executable commands and contracts, or
-[DECISION_BRIEF.md](DECISION_BRIEF.md) for the Vietnamese delivery decision.
+The six layer modules and the training/integration implementation are retained
+from c4973553a743648a04c603c6b4634240933b8b80. Historical review receipts and
+superseded handoffs remain in that commit, rather than competing with current docs.
 
-| Artifact | Purpose |
-| --- | --- |
-| [FUNCTION_MAP.md](FUNCTION_MAP.md) | Exact source-to-port symbol map and integration boundaries |
-| [PARITY_REPORT.json](PARITY_REPORT.json) | Final CPU test, hash and random full-model receipt |
-| [REFERENCE_DEVIATIONS.md](REFERENCE_DEVIATIONS.md) | Preserved counterexamples and limits of claims |
-| [INDEPENDENT_REVIEW.md](INDEPENDENT_REVIEW.md) | Separate reviewer findings and final disposition |
-| [recipe.json](recipe.json) | Explicit split-head architecture, guard off, admission off |
-| [integration/](integration/) | Local approved-backbone loader, geometry, bank and isolated steps |
-| [receipts/](receipts/) | Raw verification logs and machine-readable outputs |
+Active policy: full frozen Q/reliability and feature cosine, coarse-only AdamW.
+Native detail, gradient guard, refiner and semantic self-learning are not enabled.
+`integration/` provides internal constructors and verification utilities, not a
+second patient trainer. `training_v1/` contains the actual optimizer loop.
 
-The six files in `layer_upgrade/`, `tests/test_operators.py`, the two probe
-scripts and `pytest.ini` intentionally preserve reference bytes, including
-formatting. Cleanup applies to the integration code and documentation; changing
-the reference operators requires another version.
-
-No official DINOv3 weights or patient arrays were used. The complete random
-torchvision model smoke is software evidence only. No anatomical performance
-claim is made.
+Tests include the unchanged reference operators and differential parity checks.
+Use `python scripts/verify_current.py --out /new/path/outside/checkout` from the
+repository root. Known reference limitations remain documented in
+[REFERENCE_DEVIATIONS](REFERENCE_DEVIATIONS.md); they are not safety guarantees.
