@@ -1,0 +1,51 @@
+{
+  "status": "EXECUTED_MANUFACTURED_ONLY",
+  "python": "3.11.16",
+  "script_sha256": "d49ae6017bdf72306d27a6d012d0dc282847f6b524e325297740c15872dc1027",
+  "wrong_graph": {
+    "truth_foreground_probability": [
+      0.9,
+      0.3,
+      0.7,
+      0.1
+    ],
+    "observations": [
+      0.6,
+      0.39999999999999997
+    ],
+    "unique_wrong_graph_solution": [
+      0.6,
+      0.6,
+      0.39999999999999997,
+      0.39999999999999997
+    ],
+    "H_V_determinant": 1.0,
+    "teacher_residual": 0.0,
+    "graph_residual": 0.0,
+    "foreground_channel_unnormalized_L2_error": 0.6,
+    "full_binary_vector_unnormalized_L2_error": 0.848528137423857,
+    "hard_error_count": 2,
+    "pixel_count": 4
+  },
+  "learned_observation_bypass": {
+    "definition": "F_b(p)=b; b=q; frozen b",
+    "first_p": [
+      0.9,
+      0.3,
+      0.7,
+      0.1
+    ],
+    "second_p": [
+      0.2,
+      0.8,
+      0.8,
+      0.2
+    ],
+    "observation_difference": [
+      0.0,
+      0.0
+    ],
+    "derivative_wrt_p": "zero everywhere"
+  },
+  "limits": "Counterexamples only. No patient anatomy, real teacher model, or learned upsampler was evaluated."
+}

@@ -1,0 +1,17 @@
+{
+  "round": 1,
+  "author": "R6",
+  "reviewer": "R5",
+  "claims": [
+    "R6-C1",
+    "R6-C2",
+    "R6-C3",
+    "R6-C4"
+  ],
+  "objection": "C3 direct-energy and one-step detached probability proposal can have exactly identical parameter gradients; C4 equicorrelation must be PSD; C2 binary/no-abstention scope needs to be explicit.",
+  "evidence": "For t=sg[b_theta0 - tau P grad E(b_theta0)], P=I-11^T/C, b interior simplex and feasible tau, gradient of ||b_theta-t||^2/(2 tau) at theta0 equals J_b^T grad E(b). Equicorrelation eigenvalues 1-rho and 1+(m-1)rho imply rho in [-1/(m-1),1].",
+  "author_response": "R6 accepted and appended exact local identity, control origin/steps/projection/tether/refresh/loss-scale/actual-displacement, PSD range and common-bias MSE, binary abstention distinction.",
+  "modification": "Narrowed proposed direct-energy vs detached-proposal comparison; no novelty from first-order rescaling.",
+  "remaining_disagreement": "None on stated revisions; patient benefit unresolved.",
+  "verdict": "NARROW"
+}

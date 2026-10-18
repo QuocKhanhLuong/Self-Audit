@@ -1,0 +1,95 @@
+{
+  "status": "MANUFACTURED_CPU_ONLY",
+  "seed": 20261018,
+  "torch": "2.14.0",
+  "python": "3.11.16",
+  "split": {
+    "DU_error": 0.0,
+    "DP_error": 0.0,
+    "P_idempotence_error": 0.0,
+    "rank_P": 15
+  },
+  "resized_rank": {
+    "teacher_rank": 4,
+    "resized_rank": 4,
+    "resized_rows": 16
+  },
+  "probability_mismatch": {
+    "mean_logit_error": 0.0,
+    "softmax_mean_logits": [
+      0.8807970779778823,
+      0.11920292202211755
+    ],
+    "mean_softmax_logits": [
+      0.7410068950189542,
+      0.2589931049810458
+    ]
+  },
+  "jensen": {
+    "constant_q_uniform_gap": 0.22872054319590496,
+    "gauge_gap": 0.0,
+    "nonuniform_weight_detail_gradient_at_zero": -0.24000000000000002
+  },
+  "padding": {
+    "padded_mean": 0.0,
+    "first_valid_pixel_mean": 1.5
+  },
+  "capacity_limit": {
+    "cell_size": 16,
+    "bound_b": 1.0,
+    "max_projected_detail_limit": 1.875,
+    "within_class_range_limit": 2.0,
+    "strict_finite_tanh": true
+  },
+  "joint_observation": {
+    "rank_without_region_identification": 3,
+    "rank_with_region_identification": 4,
+    "permutation_observation_difference": 0.0,
+    "sigma_min_good": 0.7071067811865477,
+    "noise_norm": 0.022912878474779203,
+    "recovery_error": 0.03181980515339433,
+    "noise_over_sigma_bound": 0.0324037034920393
+  },
+  "uniqueness_without_stability": [
+    {
+      "epsilon": 1.0,
+      "sigma_min": 0.6180339887498949,
+      "solution_perturbation": 0.001
+    },
+    {
+      "epsilon": 0.1,
+      "sigma_min": 0.07062223501223977,
+      "solution_perturbation": 0.01
+    },
+    {
+      "epsilon": 0.01,
+      "sigma_min": 0.007070979422965448,
+      "solution_perturbation": 0.1
+    },
+    {
+      "epsilon": 0.001,
+      "sigma_min": 0.0007071066927981943,
+      "solution_perturbation": 1.0
+    }
+  ],
+  "hard_soft_trust_scalar": {
+    "truth": 0.8,
+    "teacher": 0.6,
+    "hard_error": 0.20000000000000007,
+    "equal_precision_soft_error": 0.10000000000000009,
+    "oracle_valid_radius_trust_error": 0.0
+  },
+  "shared_gradient": {
+    "detail_parameter_gradient_is_none": true,
+    "nonzero_head_detail_before": 0.5,
+    "nonzero_head_detail_after": 0.6,
+    "zero_head_detail_after": 0.0
+  },
+  "finite_precision_DP_residual": {
+    "torch.float64": 6.661338147750939e-16,
+    "torch.float32": 7.152557373046875e-07,
+    "torch.float16": 0.001220703125,
+    "torch.bfloat16": 0.015625
+  },
+  "script_sha256": "627c5d800b2ad46609a10e3e0e2b36f2e1fd0618db405c99cd347be4322b584c"
+}

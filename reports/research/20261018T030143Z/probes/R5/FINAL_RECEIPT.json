@@ -1,0 +1,74 @@
+{
+  "sealed_utc": "2026-10-18T03:41:38.826551+00:00",
+  "agent": "R5",
+  "pinned_sha": "f00e4faa52204f8e6863f76a493684b68ed3a132",
+  "status": "PHASE_I_REVIEW_COMPLETE_NOT_APPROVED",
+  "initial_prefix_bytes": 34071,
+  "initial_prefix_unchanged": true,
+  "reviews": {
+    "outgoing": {
+      "round1_R6": 7,
+      "round2_R4": 5,
+      "round3_R1": 5
+    },
+    "incoming": [
+      "R6 mathematics",
+      "R2 setting/prior art",
+      "R3 actual-setting falsification"
+    ],
+    "all_closed": true
+  },
+  "executed": [
+    "manufactured CPU float64 run_probes.py",
+    "manufactured CPU float64 round3_canaries.py"
+  ],
+  "not_verified": [
+    "anatomical truth or named source correctness",
+    "patient training/evaluation",
+    "production AdamW transaction or GradScaler/AMP/CUDA/dataloader/distributed state",
+    "population generalization",
+    "performance advantage beyond matched controls"
+  ],
+  "artifacts": {
+    "DOSSIERS/R5.md": {
+      "bytes": 59371,
+      "sha256": "07a0ce4f981972686aac8854af55949d8c87b45f4099147ad06fcafc0efecc78"
+    },
+    "probes/R5/independent_initial.md": {
+      "bytes": 34071,
+      "sha256": "99aad2dd38213b9b83e00ff7eea627997177d5c24aaac33b718756060bda5038"
+    },
+    "probes/R5/run_probes.py": {
+      "bytes": 7618,
+      "sha256": "845587733d2a8ffa9ef44d5916f6391d5be48832e65da4d8098b8cacc4894356"
+    },
+    "probes/R5/RESULTS.json": {
+      "bytes": 5399,
+      "sha256": "aa5c524c472ca3a26afe9c6781aec781266af861b5bee10b07531e2a87a94a64"
+    },
+    "probes/R5/round3_canaries.py": {
+      "bytes": 8873,
+      "sha256": "9d4cac418d198853e1738e37897cd145dff519fdb98fe82e33e9b9ef93181d64"
+    },
+    "probes/R5/round3_canaries.json": {
+      "bytes": 2173,
+      "sha256": "769a1363b3657262055b2bd91864bd66281c9644ba98d31e3172162360c2cd8f"
+    },
+    "probes/R5/round1_review_R6_complete.json": {
+      "bytes": 6449,
+      "sha256": "280aaba1da04b3f22fec17dad1004dd0ee85913d64f205ce424bad4d332dded8"
+    },
+    "probes/R5/review_round2.jsonl": {
+      "bytes": 4637,
+      "sha256": "488cbfa73eeb884cc9ff49fb3574d8109301df6224a5e1e979ad758aeee94030"
+    },
+    "probes/R5/review_round3.jsonl": {
+      "bytes": 5849,
+      "sha256": "4c67848e52d271176f94813ca6b4e2db7fd76e18ef58f4e955c6982d2edbb9bf"
+    },
+    "probes/R5/sources/MANIFEST.json": {
+      "bytes": 1179,
+      "sha256": "ea4ef9994fe9046efe3660a8266591641036664b460a72fe5198d79fd82c31b3"
+    }
+  }
+}

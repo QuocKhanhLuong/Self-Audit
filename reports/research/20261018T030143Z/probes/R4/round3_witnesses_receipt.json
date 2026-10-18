@@ -1,0 +1,67 @@
+{
+  "checks": {
+    "deterministic_same_input_target": {
+      "conditional_residual_squared": 0.0,
+      "meaning": "No conditional-averaging residual in this explicitly deterministic law."
+    },
+    "exact_source_duplication": {
+      "distinct_lineages": 2,
+      "lineage_weighted_target": [
+        0.5499999999999999,
+        0.44999999999999996
+      ],
+      "meaning": "Duplicated observations do not supply another independent lineage.",
+      "record_counts": [
+        2,
+        3
+      ]
+    },
+    "frozen_proposal_geometry_receipt": {
+      "changed_geometry_sha256": "4c796df5a7155bc7ceaadbff7bc93944a84446154bd7ca943bec3b56cc3ae277",
+      "copy_sha256": "84ac3504d72f2ded46a2cf713a5a137860df8996253d3f504c77f2cc8938c31a",
+      "meaning": "A checksum is a transfer identity check, not a correctness proof.",
+      "original_sha256": "84ac3504d72f2ded46a2cf713a5a137860df8996253d3f504c77f2cc8938c31a"
+    },
+    "identical_visible_input_hidden_proposals": {
+      "H_states": [
+        "h0",
+        "h1"
+      ],
+      "V": "same_visible_input",
+      "best_deterministic_prediction": [
+        0.5,
+        0.5
+      ],
+      "candidate_transfer_mse": 0.5,
+      "meaning": "A larger deterministic same-V student cannot distinguish H.",
+      "minimum_transfer_mse": 0.32000000000000006,
+      "minimum_transfer_rms": 0.5656854249492381,
+      "targets": [
+        [
+          0.1,
+          0.9
+        ],
+        [
+          0.9,
+          0.1
+        ]
+      ]
+    },
+    "joint_named_channel_permutation": {
+      "distance_squared_after": 0.10000000000000002,
+      "distance_squared_before": 0.10000000000000002,
+      "entropy_after": 1.2798542258336676,
+      "entropy_before": 1.2798542258336676,
+      "meaning": "Label-blind diagnostics cannot choose the biological naming."
+    },
+    "support_measure_mismatch": {
+      "empty_support_rms": null,
+      "full_grid_rms": 0.8,
+      "meaning": "Weighted agreement does not bound the missing row.",
+      "weighted_rms": 0.0,
+      "zero_weight_row_objective_unchanged": true
+    }
+  },
+  "passed_checks": 6,
+  "status": "MANUFACTURED_ARRAY_WITNESSES_ONLY"
+}

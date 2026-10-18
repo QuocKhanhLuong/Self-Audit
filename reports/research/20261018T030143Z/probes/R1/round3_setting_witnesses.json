@@ -1,0 +1,233 @@
+{
+  "status": "MANUFACTURED_ARITHMETIC_NOT_PATIENT_EVIDENCE",
+  "scope": "Counterexamples to overbroad safety/transfer claims; not contradiction to R3 conditional mixed localized theorem.",
+  "bg_collateral": {
+    "base_logits": [
+      0.2,
+      -2.0,
+      0.0,
+      0.1
+    ],
+    "plus_logits": [
+      0.2,
+      -1.8,
+      -0.2,
+      0.30000000000000004
+    ],
+    "minus_logits": [
+      0.2,
+      -2.2,
+      0.2,
+      -0.1
+    ],
+    "base_prob": [
+      0.3528119232651059,
+      0.039092675405663115,
+      0.2888579716297313,
+      0.31923742969949953
+    ],
+    "plus_prob": [
+      0.3435450676285182,
+      0.04649376903204677,
+      0.23028514554806517,
+      0.37967601779136995
+    ],
+    "base_class": "BG",
+    "plus_class": "LV",
+    "conditional_t_before": 0.21551952317975515,
+    "conditional_t_after": 0.615519523179755,
+    "rv_lv_log_odds_before": -2.1,
+    "rv_lv_log_odds_after": -2.1,
+    "zero_mean_cell_s": [
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      -0.2,
+      -0.2,
+      -0.2,
+      -0.2,
+      -0.2,
+      -0.2,
+      -0.2,
+      -0.2
+    ]
+  },
+  "indistinguishable_gating": {
+    "observed_x": [
+      0.25,
+      0.25,
+      0.25,
+      0.25,
+      0.25,
+      0.25,
+      0.25,
+      0.25,
+      0.75,
+      0.75,
+      0.75,
+      0.75,
+      0.75,
+      0.75,
+      0.75,
+      0.75
+    ],
+    "centered_x": [
+      -0.25,
+      -0.25,
+      -0.25,
+      -0.25,
+      -0.25,
+      -0.25,
+      -0.25,
+      -0.25,
+      0.25,
+      0.25,
+      0.25,
+      0.25,
+      0.25,
+      0.25,
+      0.25,
+      0.25
+    ],
+    "world_a_binary_truth": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "world_b_binary_truth": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "shared_observations": "Same Q, metadata, gates, estimated means .25/.75 and confidence. Only latent anatomy changes; no input-only gate can accept one world but reject the other.",
+    "predicted_from_sign": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "world_a_errors": 0,
+    "world_b_errors": 8
+  },
+  "reachability": {
+    "B": 1.0,
+    "necessary_for_sign_change": "abs(t0)<2*B under strict abs(s)<B",
+    "finite_examples": [
+      {
+        "t0": -3.0,
+        "s": -0.999,
+        "t_final": -4.998,
+        "sign_preserved": true
+      },
+      {
+        "t0": -3.0,
+        "s": 0.0,
+        "t_final": -3.0,
+        "sign_preserved": true
+      },
+      {
+        "t0": -3.0,
+        "s": 0.999,
+        "t_final": -1.002,
+        "sign_preserved": true
+      },
+      {
+        "t0": -2.0,
+        "s": -0.999,
+        "t_final": -3.998,
+        "sign_preserved": true
+      },
+      {
+        "t0": -2.0,
+        "s": 0.0,
+        "t_final": -2.0,
+        "sign_preserved": true
+      },
+      {
+        "t0": -2.0,
+        "s": 0.999,
+        "t_final": -0.0020000000000000018,
+        "sign_preserved": true
+      },
+      {
+        "t0": 2.0,
+        "s": -0.999,
+        "t_final": 0.0020000000000000018,
+        "sign_preserved": true
+      },
+      {
+        "t0": 2.0,
+        "s": 0.0,
+        "t_final": 2.0,
+        "sign_preserved": true
+      },
+      {
+        "t0": 2.0,
+        "s": 0.999,
+        "t_final": 3.998,
+        "sign_preserved": true
+      },
+      {
+        "t0": 3.0,
+        "s": -0.999,
+        "t_final": 1.002,
+        "sign_preserved": true
+      },
+      {
+        "t0": 3.0,
+        "s": 0.0,
+        "t_final": 3.0,
+        "sign_preserved": true
+      },
+      {
+        "t0": 3.0,
+        "s": 0.999,
+        "t_final": 4.998,
+        "sign_preserved": true
+      }
+    ]
+  }
+}

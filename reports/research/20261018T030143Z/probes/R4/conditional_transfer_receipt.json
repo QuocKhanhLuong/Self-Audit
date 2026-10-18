@@ -1,0 +1,63 @@
+{
+  "checks": {
+    "coarse_nullspace": {
+      "identical_coarse_probability": 0.5,
+      "native_a": [
+        1.0,
+        0.0
+      ],
+      "native_b": [
+        0.0,
+        1.0
+      ]
+    },
+    "erased_cue": {
+      "full_view_brier": 0.0,
+      "masked_best_brier": 0.5,
+      "masked_minimum_ce": 0.6931471805599453
+    },
+    "hardening_error_amplification": {
+      "after_brier": 2.0,
+      "before_brier": 0.72,
+      "hard_target_ce_after": 0.0,
+      "self_ce_before": 0.6730116670092565
+    },
+    "history_common_bias": {
+      "copies": 100,
+      "eta": 0.2,
+      "history_mean": 0.8,
+      "squared_bias": 0.3600000000000001
+    },
+    "noisy_biased_feedback": {
+      "formula": 0.028368000000000025,
+      "initial_scalar_squared_error": 0.04000000000000003,
+      "truth_parameters_manufactured_and_latent_in_real_setting": true,
+      "updated_mean_scalar_squared_error": 0.028368000000000053
+    },
+    "nuisance_denoising": {
+      "conditional_target_variance": 0.08000000000000002,
+      "improvement": 0.07999999999999996,
+      "student_brier": 0.42000000000000004,
+      "teacher_brier": 0.5
+    },
+    "privileged_information_loss": {
+      "same_observed_targets_as_nuisance_case": true,
+      "student_brier": 0.42,
+      "student_worsening": 0.08000000000000002,
+      "teacher_brier": 0.33999999999999997
+    },
+    "q_z_decomposition": {
+      "effective_h": 0.5666666666666668,
+      "q_optimum": 0.35333333333333333,
+      "unweighted_z_mean": 0.55,
+      "wh_weighted_z_optimum": 0.24117647058823533
+    },
+    "selection_bias": {
+      "unweighted_optimum": 0.5,
+      "weighted_optimum": 0.5999999999999999,
+      "weighted_optimum_excess_brier": 0.019999999999999907
+    }
+  },
+  "passed_checks": 9,
+  "status": "MANUFACTURED_ENUMERATION_ONLY"
+}

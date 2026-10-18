@@ -1,0 +1,66 @@
+{
+  "scope": "MANUFACTURED_ARITHMETIC_NOT_PATIENT_EVIDENCE",
+  "two_world_min_risk_sum": 1.0,
+  "two_world_minimax_hamming": 0.5,
+  "same_Q_different_support": {
+    "Q": [
+      0.4,
+      0.2,
+      0.2,
+      0.2
+    ],
+    "h_first": 0.2,
+    "Z_first": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "h_second": 1,
+    "Z_second": [
+      0.4,
+      0.2,
+      0.2,
+      0.2
+    ]
+  },
+  "robust_pooling": {
+    "target": [
+      0.08000000000000002,
+      0.2,
+      0.0,
+      0.7200000000000001
+    ],
+    "perturbed_student": [
+      0.08000000000000002,
+      0.30000000000000004,
+      0.0,
+      0.6200000000000001
+    ],
+    "L": 0.7200000000000001,
+    "lower_margin": 0.44000000000000017,
+    "required_transfer": 0.2
+  },
+  "duplicate_wrong_source": {
+    "naive_target": [
+      0.0038461538461538464,
+      0.9615384615384616,
+      0.0,
+      0.03461538461538462
+    ],
+    "naive_argmax": 1,
+    "lineage_weight_capped_argmax": 3
+  },
+  "inverse_support_sensitivity": {
+    "actual_error": 0.05555555555555536,
+    "bound": 0.05555555555555559,
+    "invalid_small_support_inverse": [
+      1.3500000000000012,
+      -0.050000000000000044,
+      -0.15000000000000013,
+      -0.15000000000000013
+    ]
+  },
+  "deterministic_partial_label_wrong_inclusion": 1.0,
+  "assertions": "PASS"
+}

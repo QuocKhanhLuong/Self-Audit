@@ -1,0 +1,32 @@
+{
+  "scope": "MANUFACTURED_ARITHMETIC_COUNTEREXAMPLE_TO_DISPLAYED_COROLLARY_ONLY",
+  "source": "https://arxiv.org/html/2602.20328v2#A1",
+  "lambda": [
+    100,
+    2,
+    1
+  ],
+  "mu": [
+    0,
+    0.49,
+    0.99
+  ],
+  "alpha": 1,
+  "epsilon": 0.01,
+  "p": 2,
+  "q": 3,
+  "corollary_displayed_bound": 0.01990049751243781,
+  "p_over_q": 0.6666666666666666,
+  "actual_top_energy_coverage": 0.9902912621359223,
+  "graph_realization": "weighted triangle w12=.33,w13=.33,w23=.08 has Laplacian spectrum 0,.49,.99",
+  "main_coverage_inequality_not_refuted": true,
+  "predictability_counterexample": {
+    "Q": "[[1,0,-.9],[0,.1,0],[-.9,0,1]]; one observed range coordinate, two null coordinates",
+    "small_mu": 0.1,
+    "small_mu_R_squared": 0,
+    "large_mu": 1,
+    "large_mu_R_squared": 0.81,
+    "conditions": "SPD Gaussian precision, noiseless range measurement; c_j differs across modes",
+    "graph_form": "Graph Laplacian with edge weight .9 between coordinates 1 and 3, plus .1 I; isolated coordinate 2."
+  }
+}

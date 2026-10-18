@@ -1,0 +1,69 @@
+{
+  "status": "MANUFACTURED_CPU_EXECUTED",
+  "python": "3.11.16",
+  "torch": "2.14.0",
+  "dtype": "float64",
+  "production_imports": false,
+  "script_sha256": "9d4cac418d198853e1738e37897cd145dff519fdb98fe82e33e9b9ef93181d64",
+  "protection_scope": {
+    "batch_semantics": "INACTIVE",
+    "fixed_positive_support_proxy_panel": "CHECKED",
+    "named_RV_without_lineage": "UNPROTECTED",
+    "zero_support_panel_group": "INACTIVE",
+    "panel_KL_before": 0.0,
+    "panel_KL_after_feature_only_step": 0.0009677797342075405,
+    "batch_active_only_acceptance": "vacuous",
+    "fixed_panel_hard_guard_accepts": false,
+    "diffuse_Q": [
+      0.7,
+      0.1,
+      0.1,
+      0.1
+    ],
+    "named_RV_group_created": false
+  },
+  "transaction": {
+    "rejected_stage_mutated_buffer": true,
+    "rejected_stage_consumed_model_rng": true,
+    "after_rejection_vs_same_exposure_skip_control_max_gap": 0.0,
+    "subsequent_accepted_update_max_gap": 0.0,
+    "cursor": 3,
+    "attempts": 3,
+    "accepted_positive_updates": 2,
+    "scheduler_clock": "accepted_positive_updates",
+    "bad_closure_buffer_detected": true,
+    "bad_closure_rng_detected": true,
+    "deterministic_closure_update_state_max_gap": 0.0,
+    "deterministic_panel_value": 0.7204730568590811,
+    "verified_state": [
+      "parameters",
+      "AdamW moments/step/groups",
+      "registered buffer",
+      "explicit CPU model RNG",
+      "StepLR state",
+      "mode",
+      "grad=None policy",
+      "retained exposure/augmentation RNG"
+    ],
+    "not_verified": [
+      "production implementation",
+      "GradScaler/AMP",
+      "CUDA RNG",
+      "worker prefetch/dataloader queues",
+      "distributed state",
+      "arbitrary external mutable state"
+    ]
+  },
+  "outside_panel_and_stall": {
+    "panel_KL_before": 0.0,
+    "panel_KL_after": 0.0,
+    "guard_accepts_outside_panel_change": true,
+    "outside_probability_before": 0.5,
+    "outside_probability_after": 0.9525741268224334,
+    "stall_fixture_attempt_budget": 16,
+    "accepted_nonzero_displacements": 0,
+    "stop": true,
+    "automatic_relaxations": 0,
+    "scope": "finite-panel retention only; outside anatomical validity unobserved"
+  }
+}
