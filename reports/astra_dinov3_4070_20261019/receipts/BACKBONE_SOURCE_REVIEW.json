@@ -1,0 +1,27 @@
+{
+  "reviewed_at_utc": "2026-10-16T16:07:18.601736+00:00",
+  "decision": "USE_USER_SELECTED_PUBLIC_MIRROR_FOR_REQUESTED_ASTRA_TRAINING",
+  "authorization_basis": "The user requested training using the pinned Astra runbook, requested finding weights on Hugging Face, and then explicitly supplied https://huggingface.co/jaychempan/dinov3 alongside the runbook after the source/checksum limitations and approval request were presented. This is recorded as contextual operator authorization for this source, not an independent Meta certificate.",
+  "user_supplied_runbook": "https://github.com/QuocKhanhLuong/Self-Audit/blob/c4973553a743648a04c603c6b4634240933b8b80/docs/prompts/ASTRA_TRAIN_4070_LATEST.md",
+  "user_supplied_mirror": "https://huggingface.co/jaychempan/dinov3",
+  "mirror_revision": "44126792d766b593994f73c1019d7788a2a715e6",
+  "checks": [
+    "Full downloaded SHA256 matches pinned mirror LFS metadata.",
+    "Same full SHA256 independently listed by fancongyi/Dinov3.",
+    "First eight SHA256 digits match the official ConvNeXt-Tiny filename/hash in the pinned official DINOv3 source.",
+    "Safe CPU weights-only load: 182 float32 tensors, all finite, original native keys.",
+    "Clean official source checkout pinned to 6876159a11b4df116f30f667f8c9888617df0751."
+  ],
+  "limitations": [
+    "Official Meta Hugging Face download returned HTTP 403 for the available token.",
+    "Full SHA256 is from mirror metadata; official source publishes the eight-hex prefix, not an independently verified full digest here.",
+    "No terms were accepted on behalf of the user.",
+    "Mirror MIT tag is not used as a license grant; original DINOv3 terms apply.",
+    "GPU constructor/load and patient training have not yet run."
+  ],
+  "evidence_sha256": {
+    "DINO_CANDIDATE.json": "9ab93e93c84adf7f13a95a7ce7610d9225297105570c169b89fc5f5d73f1ed08",
+    "DINO_SOURCE.json": "c25171aff45faf4710f7403fa3fc69c4464388c703db6b492b964fc46cb7fb70",
+    "HF_DISCOVERY.json": "1fd3287173db80993922d5a24f2e0bfff6fe59f7a23acedd54627e11247aa6c7"
+  }
+}

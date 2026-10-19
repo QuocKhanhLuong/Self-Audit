@@ -1,0 +1,99 @@
+{
+  "kind": "mathematical_tensor_checks_not_patient_evidence",
+  "patient_arrays_read": false,
+  "pretrained_weights_loaded": false,
+  "coarse_detail": {
+    "max_identity_error": 4.440892098500626e-16,
+    "detail_gradient_max": 0.0,
+    "coarse_gradient_norm": 0.16513061352683336
+  },
+  "selected_parameter_guard": {
+    "accepted": true,
+    "step_size": 0.2,
+    "projection": {
+      "status": "KKT_VERIFIED",
+      "active": [
+        1
+      ],
+      "min_normalized_inner_product": 0.0,
+      "correction_norm": 0.7071067811865476
+    },
+    "guard_before": [
+      0.5,
+      0.5
+    ],
+    "guard_after": [
+      0.405,
+      0.5
+    ],
+    "objective_before": 0.5,
+    "objective_after": 0.405,
+    "direction_norm": 0.7071067811865476,
+    "scope": "fixed_proxy_losses_selected_parameters_no_optimizer_state",
+    "tolerance": 1e-12
+  },
+  "image_refinement": {
+    "initial": [
+      [
+        0.05,
+        0.8,
+        0.1,
+        0.05
+      ],
+      [
+        0.7,
+        0.2,
+        0.05,
+        0.05
+      ]
+    ],
+    "final": [
+      [
+        0.9999999995628661,
+        3.996618368998011e-10,
+        2.483158923769629e-11,
+        1.2640245630568922e-11
+      ],
+      [
+        9.23266854633594e-11,
+        0.999999999901072,
+        3.312478563990254e-12,
+        3.2888246663112367e-12
+      ]
+    ],
+    "receipt": {
+      "L_bound": 0.7,
+      "eta": 0.7142857142857143,
+      "trace": [
+        {
+          "step": 1,
+          "energy_before": -2.8930000000000002,
+          "energy_after": -23.156975588589948,
+          "kl_new_to_old": 4.56755854467655,
+          "guaranteed_drop_bound": 3.197290981273585,
+          "inequality_slack": 17.06668460731636
+        },
+        {
+          "step": 2,
+          "energy_before": -23.156975588589948,
+          "energy_after": -23.199984143101357,
+          "kl_new_to_old": 0.003876085943410755,
+          "guaranteed_drop_bound": 0.0027132601603875282,
+          "inequality_slack": 0.04029529435102208
+        },
+        {
+          "step": 3,
+          "energy_before": -23.199984143101357,
+          "energy_after": -23.199999994081285,
+          "kl_new_to_old": 1.4293742277035098e-06,
+          "guaranteed_drop_bound": 1.0005619593924568e-06,
+          "inequality_slack": 1.485041796834153e-05
+        }
+      ],
+      "guarantee": "frozen_image_proxy_energy_only_not_Dice",
+      "student_parameters_updated": false,
+      "detached": true
+    },
+    "interpretation": "deliberately informative manufactured unary corrects wrong anchors; no real-image validation"
+  }
+}

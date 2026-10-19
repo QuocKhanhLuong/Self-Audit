@@ -1,0 +1,675 @@
+{
+  "status": "DOWNLOADED_HASH_VERIFIED_CANDIDATE_NOT_APPROVED",
+  "repository": "jaychempan/dinov3",
+  "revision": "44126792d766b593994f73c1019d7788a2a715e6",
+  "filename": "dinov3_convnext_tiny_pretrain_lvd1689m-21b726bb.pth",
+  "path": "/home/linhdang/workspace/quockhanh_workspace/SpecMamba/runs/astra_dinov3_c4973553_4070_20261016_214836/candidate_weights/dinov3_convnext_tiny_pretrain_lvd1689m-21b726bb.pth",
+  "size": 112235916,
+  "sha256": "21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54",
+  "hf_lfs_sha256_match": true,
+  "official_source_hash_prefix_match": true,
+  "source_kind": "PUBLIC_COMMUNITY_MIRROR",
+  "official_hf_access": "403_GatedRepoError",
+  "external_review": "PENDING",
+  "license_basis": "Original Meta DINOv3 license; mirror MIT tag is not relied on",
+  "model_loaded": false,
+  "tensor_review": {
+    "safe_loader": "torch.load(weights_only=True,map_location=cpu)",
+    "tensor_count": 182,
+    "parameter_elements": 27821664,
+    "all_finite": true,
+    "dtypes": [
+      "torch.float32"
+    ],
+    "shapes": {
+      "downsample_layers.0.0.weight": [
+        96,
+        3,
+        4,
+        4
+      ],
+      "downsample_layers.0.0.bias": [
+        96
+      ],
+      "downsample_layers.0.1.weight": [
+        96
+      ],
+      "downsample_layers.0.1.bias": [
+        96
+      ],
+      "downsample_layers.1.0.weight": [
+        96
+      ],
+      "downsample_layers.1.0.bias": [
+        96
+      ],
+      "downsample_layers.1.1.weight": [
+        192,
+        96,
+        2,
+        2
+      ],
+      "downsample_layers.1.1.bias": [
+        192
+      ],
+      "downsample_layers.2.0.weight": [
+        192
+      ],
+      "downsample_layers.2.0.bias": [
+        192
+      ],
+      "downsample_layers.2.1.weight": [
+        384,
+        192,
+        2,
+        2
+      ],
+      "downsample_layers.2.1.bias": [
+        384
+      ],
+      "downsample_layers.3.0.weight": [
+        384
+      ],
+      "downsample_layers.3.0.bias": [
+        384
+      ],
+      "downsample_layers.3.1.weight": [
+        768,
+        384,
+        2,
+        2
+      ],
+      "downsample_layers.3.1.bias": [
+        768
+      ],
+      "stages.0.0.dwconv.weight": [
+        96,
+        1,
+        7,
+        7
+      ],
+      "stages.0.0.dwconv.bias": [
+        96
+      ],
+      "stages.0.0.norm.weight": [
+        96
+      ],
+      "stages.0.0.norm.bias": [
+        96
+      ],
+      "stages.0.0.pwconv1.weight": [
+        384,
+        96
+      ],
+      "stages.0.0.pwconv1.bias": [
+        384
+      ],
+      "stages.0.0.pwconv2.weight": [
+        96,
+        384
+      ],
+      "stages.0.0.pwconv2.bias": [
+        96
+      ],
+      "stages.0.0.gamma": [
+        96
+      ],
+      "stages.0.1.dwconv.weight": [
+        96,
+        1,
+        7,
+        7
+      ],
+      "stages.0.1.dwconv.bias": [
+        96
+      ],
+      "stages.0.1.norm.weight": [
+        96
+      ],
+      "stages.0.1.norm.bias": [
+        96
+      ],
+      "stages.0.1.pwconv1.weight": [
+        384,
+        96
+      ],
+      "stages.0.1.pwconv1.bias": [
+        384
+      ],
+      "stages.0.1.pwconv2.weight": [
+        96,
+        384
+      ],
+      "stages.0.1.pwconv2.bias": [
+        96
+      ],
+      "stages.0.1.gamma": [
+        96
+      ],
+      "stages.0.2.dwconv.weight": [
+        96,
+        1,
+        7,
+        7
+      ],
+      "stages.0.2.dwconv.bias": [
+        96
+      ],
+      "stages.0.2.norm.weight": [
+        96
+      ],
+      "stages.0.2.norm.bias": [
+        96
+      ],
+      "stages.0.2.pwconv1.weight": [
+        384,
+        96
+      ],
+      "stages.0.2.pwconv1.bias": [
+        384
+      ],
+      "stages.0.2.pwconv2.weight": [
+        96,
+        384
+      ],
+      "stages.0.2.pwconv2.bias": [
+        96
+      ],
+      "stages.0.2.gamma": [
+        96
+      ],
+      "stages.1.0.dwconv.weight": [
+        192,
+        1,
+        7,
+        7
+      ],
+      "stages.1.0.dwconv.bias": [
+        192
+      ],
+      "stages.1.0.norm.weight": [
+        192
+      ],
+      "stages.1.0.norm.bias": [
+        192
+      ],
+      "stages.1.0.pwconv1.weight": [
+        768,
+        192
+      ],
+      "stages.1.0.pwconv1.bias": [
+        768
+      ],
+      "stages.1.0.pwconv2.weight": [
+        192,
+        768
+      ],
+      "stages.1.0.pwconv2.bias": [
+        192
+      ],
+      "stages.1.0.gamma": [
+        192
+      ],
+      "stages.1.1.dwconv.weight": [
+        192,
+        1,
+        7,
+        7
+      ],
+      "stages.1.1.dwconv.bias": [
+        192
+      ],
+      "stages.1.1.norm.weight": [
+        192
+      ],
+      "stages.1.1.norm.bias": [
+        192
+      ],
+      "stages.1.1.pwconv1.weight": [
+        768,
+        192
+      ],
+      "stages.1.1.pwconv1.bias": [
+        768
+      ],
+      "stages.1.1.pwconv2.weight": [
+        192,
+        768
+      ],
+      "stages.1.1.pwconv2.bias": [
+        192
+      ],
+      "stages.1.1.gamma": [
+        192
+      ],
+      "stages.1.2.dwconv.weight": [
+        192,
+        1,
+        7,
+        7
+      ],
+      "stages.1.2.dwconv.bias": [
+        192
+      ],
+      "stages.1.2.norm.weight": [
+        192
+      ],
+      "stages.1.2.norm.bias": [
+        192
+      ],
+      "stages.1.2.pwconv1.weight": [
+        768,
+        192
+      ],
+      "stages.1.2.pwconv1.bias": [
+        768
+      ],
+      "stages.1.2.pwconv2.weight": [
+        192,
+        768
+      ],
+      "stages.1.2.pwconv2.bias": [
+        192
+      ],
+      "stages.1.2.gamma": [
+        192
+      ],
+      "stages.2.0.dwconv.weight": [
+        384,
+        1,
+        7,
+        7
+      ],
+      "stages.2.0.dwconv.bias": [
+        384
+      ],
+      "stages.2.0.norm.weight": [
+        384
+      ],
+      "stages.2.0.norm.bias": [
+        384
+      ],
+      "stages.2.0.pwconv1.weight": [
+        1536,
+        384
+      ],
+      "stages.2.0.pwconv1.bias": [
+        1536
+      ],
+      "stages.2.0.pwconv2.weight": [
+        384,
+        1536
+      ],
+      "stages.2.0.pwconv2.bias": [
+        384
+      ],
+      "stages.2.0.gamma": [
+        384
+      ],
+      "stages.2.1.dwconv.weight": [
+        384,
+        1,
+        7,
+        7
+      ],
+      "stages.2.1.dwconv.bias": [
+        384
+      ],
+      "stages.2.1.norm.weight": [
+        384
+      ],
+      "stages.2.1.norm.bias": [
+        384
+      ],
+      "stages.2.1.pwconv1.weight": [
+        1536,
+        384
+      ],
+      "stages.2.1.pwconv1.bias": [
+        1536
+      ],
+      "stages.2.1.pwconv2.weight": [
+        384,
+        1536
+      ],
+      "stages.2.1.pwconv2.bias": [
+        384
+      ],
+      "stages.2.1.gamma": [
+        384
+      ],
+      "stages.2.2.dwconv.weight": [
+        384,
+        1,
+        7,
+        7
+      ],
+      "stages.2.2.dwconv.bias": [
+        384
+      ],
+      "stages.2.2.norm.weight": [
+        384
+      ],
+      "stages.2.2.norm.bias": [
+        384
+      ],
+      "stages.2.2.pwconv1.weight": [
+        1536,
+        384
+      ],
+      "stages.2.2.pwconv1.bias": [
+        1536
+      ],
+      "stages.2.2.pwconv2.weight": [
+        384,
+        1536
+      ],
+      "stages.2.2.pwconv2.bias": [
+        384
+      ],
+      "stages.2.2.gamma": [
+        384
+      ],
+      "stages.2.3.dwconv.weight": [
+        384,
+        1,
+        7,
+        7
+      ],
+      "stages.2.3.dwconv.bias": [
+        384
+      ],
+      "stages.2.3.norm.weight": [
+        384
+      ],
+      "stages.2.3.norm.bias": [
+        384
+      ],
+      "stages.2.3.pwconv1.weight": [
+        1536,
+        384
+      ],
+      "stages.2.3.pwconv1.bias": [
+        1536
+      ],
+      "stages.2.3.pwconv2.weight": [
+        384,
+        1536
+      ],
+      "stages.2.3.pwconv2.bias": [
+        384
+      ],
+      "stages.2.3.gamma": [
+        384
+      ],
+      "stages.2.4.dwconv.weight": [
+        384,
+        1,
+        7,
+        7
+      ],
+      "stages.2.4.dwconv.bias": [
+        384
+      ],
+      "stages.2.4.norm.weight": [
+        384
+      ],
+      "stages.2.4.norm.bias": [
+        384
+      ],
+      "stages.2.4.pwconv1.weight": [
+        1536,
+        384
+      ],
+      "stages.2.4.pwconv1.bias": [
+        1536
+      ],
+      "stages.2.4.pwconv2.weight": [
+        384,
+        1536
+      ],
+      "stages.2.4.pwconv2.bias": [
+        384
+      ],
+      "stages.2.4.gamma": [
+        384
+      ],
+      "stages.2.5.dwconv.weight": [
+        384,
+        1,
+        7,
+        7
+      ],
+      "stages.2.5.dwconv.bias": [
+        384
+      ],
+      "stages.2.5.norm.weight": [
+        384
+      ],
+      "stages.2.5.norm.bias": [
+        384
+      ],
+      "stages.2.5.pwconv1.weight": [
+        1536,
+        384
+      ],
+      "stages.2.5.pwconv1.bias": [
+        1536
+      ],
+      "stages.2.5.pwconv2.weight": [
+        384,
+        1536
+      ],
+      "stages.2.5.pwconv2.bias": [
+        384
+      ],
+      "stages.2.5.gamma": [
+        384
+      ],
+      "stages.2.6.dwconv.weight": [
+        384,
+        1,
+        7,
+        7
+      ],
+      "stages.2.6.dwconv.bias": [
+        384
+      ],
+      "stages.2.6.norm.weight": [
+        384
+      ],
+      "stages.2.6.norm.bias": [
+        384
+      ],
+      "stages.2.6.pwconv1.weight": [
+        1536,
+        384
+      ],
+      "stages.2.6.pwconv1.bias": [
+        1536
+      ],
+      "stages.2.6.pwconv2.weight": [
+        384,
+        1536
+      ],
+      "stages.2.6.pwconv2.bias": [
+        384
+      ],
+      "stages.2.6.gamma": [
+        384
+      ],
+      "stages.2.7.dwconv.weight": [
+        384,
+        1,
+        7,
+        7
+      ],
+      "stages.2.7.dwconv.bias": [
+        384
+      ],
+      "stages.2.7.norm.weight": [
+        384
+      ],
+      "stages.2.7.norm.bias": [
+        384
+      ],
+      "stages.2.7.pwconv1.weight": [
+        1536,
+        384
+      ],
+      "stages.2.7.pwconv1.bias": [
+        1536
+      ],
+      "stages.2.7.pwconv2.weight": [
+        384,
+        1536
+      ],
+      "stages.2.7.pwconv2.bias": [
+        384
+      ],
+      "stages.2.7.gamma": [
+        384
+      ],
+      "stages.2.8.dwconv.weight": [
+        384,
+        1,
+        7,
+        7
+      ],
+      "stages.2.8.dwconv.bias": [
+        384
+      ],
+      "stages.2.8.norm.weight": [
+        384
+      ],
+      "stages.2.8.norm.bias": [
+        384
+      ],
+      "stages.2.8.pwconv1.weight": [
+        1536,
+        384
+      ],
+      "stages.2.8.pwconv1.bias": [
+        1536
+      ],
+      "stages.2.8.pwconv2.weight": [
+        384,
+        1536
+      ],
+      "stages.2.8.pwconv2.bias": [
+        384
+      ],
+      "stages.2.8.gamma": [
+        384
+      ],
+      "stages.3.0.dwconv.weight": [
+        768,
+        1,
+        7,
+        7
+      ],
+      "stages.3.0.dwconv.bias": [
+        768
+      ],
+      "stages.3.0.norm.weight": [
+        768
+      ],
+      "stages.3.0.norm.bias": [
+        768
+      ],
+      "stages.3.0.pwconv1.weight": [
+        3072,
+        768
+      ],
+      "stages.3.0.pwconv1.bias": [
+        3072
+      ],
+      "stages.3.0.pwconv2.weight": [
+        768,
+        3072
+      ],
+      "stages.3.0.pwconv2.bias": [
+        768
+      ],
+      "stages.3.0.gamma": [
+        768
+      ],
+      "stages.3.1.dwconv.weight": [
+        768,
+        1,
+        7,
+        7
+      ],
+      "stages.3.1.dwconv.bias": [
+        768
+      ],
+      "stages.3.1.norm.weight": [
+        768
+      ],
+      "stages.3.1.norm.bias": [
+        768
+      ],
+      "stages.3.1.pwconv1.weight": [
+        3072,
+        768
+      ],
+      "stages.3.1.pwconv1.bias": [
+        3072
+      ],
+      "stages.3.1.pwconv2.weight": [
+        768,
+        3072
+      ],
+      "stages.3.1.pwconv2.bias": [
+        768
+      ],
+      "stages.3.1.gamma": [
+        768
+      ],
+      "stages.3.2.dwconv.weight": [
+        768,
+        1,
+        7,
+        7
+      ],
+      "stages.3.2.dwconv.bias": [
+        768
+      ],
+      "stages.3.2.norm.weight": [
+        768
+      ],
+      "stages.3.2.norm.bias": [
+        768
+      ],
+      "stages.3.2.pwconv1.weight": [
+        3072,
+        768
+      ],
+      "stages.3.2.pwconv1.bias": [
+        3072
+      ],
+      "stages.3.2.pwconv2.weight": [
+        768,
+        3072
+      ],
+      "stages.3.2.pwconv2.bias": [
+        768
+      ],
+      "stages.3.2.gamma": [
+        768
+      ],
+      "norm.weight": [
+        768
+      ],
+      "norm.bias": [
+        768
+      ],
+      "norms.3.weight": [
+        768
+      ],
+      "norms.3.bias": [
+        768
+      ]
+    }
+  }
+}

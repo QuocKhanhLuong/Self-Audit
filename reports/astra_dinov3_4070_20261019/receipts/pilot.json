@@ -1,0 +1,22 @@
+{
+  "schema": "layer_guided.training_recipe.v1",
+  "architecture": "layer_guided_convnext_tiny_v1",
+  "seed": 42,
+  "detail_bound": 1.0,
+  "preprocessing": "layer_guided.per_cine_minmax.v1",
+  "semantic_policy": "frozen_historical_q_reliability_v1",
+  "feature_objective": "full_native_feature_cosine_v1",
+  "optimizer": "adamw",
+  "learning_rate": 0.0003,
+  "weight_decay": 0.0001,
+  "feature_weight": 1.0,
+  "semantic_weight": 1.0,
+  "gradient_clip_norm": 5.0,
+  "epochs": 50,
+  "batch_size": 1,
+  "max_steps": 32,
+  "threads": 4,
+  "guard": "off",
+  "refiner": "off",
+  "ontology": ["BG", "RV", "MYO", "LV"]
+}
