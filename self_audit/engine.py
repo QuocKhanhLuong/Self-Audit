@@ -20,7 +20,7 @@ DEFAULT = {"schema": SCHEMA, "method": "joint_guard", "update_scope": "head", "s
            "seed": 42, "body_lr": 3e-5, "head_lr": 3e-3, "pseudo_lr": 1e-3,
            "weight_decay": 1e-4, "ema_decay": .99, "pseudo_threshold": .7,
            "ridge": 1e-6, "risk_budget": 0., "guard_tolerance": 1e-8,
-           "backtracks": 8, "save_every": 1000, "threads": 2, "batch_size": 1,
+           "backtracks": 8, "save_every": 1000, "threads": 2, "batch_size": 1, "crop_size": 0,
            "model": {"backbone": "dinov3_convnext_tiny", "source_repo": "",
                      "source_commit": "", "weights": "", "weights_sha256": ""}}
 
@@ -30,11 +30,13 @@ def validate_config(c):
     c = copy.deepcopy(c)
     if "batch_size" not in c:
         c["batch_size"] = 1
+    if "crop_size" not in c:
+        c["crop_size"] = 0
     if set(c) != set(DEFAULT) or c.get("schema") != SCHEMA or c.get("method") not in METHODS:
         raise ValueError("not an exact v2 recipe; legacy configs and unknown fields are rejected")
     if c["update_scope"] not in {"head", "decoder"}:
         raise ValueError("update_scope must be head or decoder")
-    for k in ("steps", "warmup_steps", "seed", "backtracks", "save_every", "threads", "batch_size"):
+    for k in ("steps", "warmup_steps", "seed", "backtracks", "save_every", "threads", "batch_size", "crop_size"):
         if type(c[k]) is not int or c[k] < (1 if k in {"steps", "backtracks", "save_every", "threads", "batch_size"} else 0):
             raise ValueError(f"invalid {k}")
     if c["warmup_steps"] > c["steps"]:
@@ -139,6 +141,7 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
                 "supervision": "dense TRAIN subset; audit included; never no-GT",
                 "pseudo_update_scope": "full" if c["method"] == "ema_full" else c["update_scope"],
                 "batch_size": c["batch_size"], "batch_protocol": "one_patient_per_role; native_grid; equal_slice_audit_mass",
+                "crop_size": c["crop_size"], "crop_policy": "image_geometry_random; edge_pad; ignore_padding_in_all_losses; no_resize",
                 "native_supervised_loss": "CE+present_foreground_Dice", "prediction_model": "student"})
     start = time.monotonic(); counts = {"supervised_updates": 0, "pseudo_accepted": 0, "ema_updates": 0}
     seen_l, seen_u, seen_a = set(), set(), set()
@@ -148,17 +151,19 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
             # Round robin coverage; a separate RNG controls only data/augmentations.
             li, ui = step % len(data.lids), step % len(data.uids)
             ai = (li + 1 + int(rng.integers(len(data.lids) - 1))) % len(data.lids)
-            xs, ys, sm = data.sample_batch(li, rng, c["batch_size"], labeled=True)
-            xa, ya, am = data.sample_batch(ai, rng, c["batch_size"], labeled=True)
-            xu, um = data.sample_batch(ui, rng, c["batch_size"], labeled=False)
+            xs, ys, sm = data.sample_batch(li, rng, c["batch_size"], labeled=True, crop_size=c["crop_size"])
+            xa, ya, am = data.sample_batch(ai, rng, c["batch_size"], labeled=True, crop_size=c["crop_size"])
+            xu, um, uvalid = data.sample_batch(ui, rng, c["batch_size"], labeled=False, crop_size=c["crop_size"], return_valid=True)
             assert sm["patient"] != am["patient"]
             xs, ys = aligned_flip(xs, ys, rng)
             xs, ys, xa, ya, xu = (a.to(device) for a in (xs, ys, xa, ya, xu))
+            uvalid = uvalid.to(device)
             strong = strong_intensity(xu, rng)  # Generated for every arm, preserving data RNG schedule.
             seen_l.add(sm["patient"]); seen_a.add(am["patient"]); seen_u.add(um["patient"])
             sloss, grad_norm = supervised_step(model, opts, xs, ys)
             counts["supervised_updates"] += 1
             row = {"step": step+1, "supervised": sm, "audit": am, "unlabeled": um,
+                   "batch_size": c["batch_size"], "crop_size": c["crop_size"], "unlabeled_valid_pixels": int(uvalid.sum()),
                    "supervised_loss": sloss, "gradient_norm": grad_norm, "warmup": step < c["warmup_steps"]}
             if step >= c["warmup_steps"] and c["method"] != "supervised":
                 if c["method"] == "supervised_extra":
@@ -169,7 +174,7 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
                     with torch.no_grad():
                         q = teacher(xu).softmax(1).detach()
                     if c["method"] == "ema_full":
-                        conf, py = q.max(1); valid = conf >= c["pseudo_threshold"]
+                        conf, py = q.max(1); valid = (conf >= c["pseudo_threshold"]) & uvalid
                         row["accepted_pixels"] = int(valid.sum())
                         if valid.any():
                             for opt in opts: opt.zero_grad(set_to_none=True)
@@ -182,12 +187,12 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
                     elif c["update_scope"] == "decoder":
                         row["proposal"], row["control"] = decoder_transaction(model, strong, q, xa, ya,
                             method=c["method"], threshold=c["pseudo_threshold"], step_size=c["pseudo_lr"],
-                            ridge=c["ridge"], budget=c["risk_budget"], backtracks=c["backtracks"], tolerance=c["guard_tolerance"])
+                            ridge=c["ridge"], budget=c["risk_budget"], backtracks=c["backtracks"], tolerance=c["guard_tolerance"], valid_mask=uvalid)
                         counts["pseudo_accepted"] += int(row["control"]["scale"] > 0)
                     else:
                         with torch.no_grad():
                             uf, af = model.features(strong).detach(), model.features(xa).detach()
-                        directions, ids, info = make_candidates(model.head, uf, q, c["pseudo_threshold"], c["pseudo_lr"])
+                        directions, ids, info = make_candidates(model.head, uf, q, c["pseudo_threshold"], c["pseudo_lr"], valid_mask=uvalid)
                         row["proposal"] = info
                         row["control"] = controlled_head_step(model.head, af, ya, directions, ids,
                             method="ema_head" if c["method"] == "ema_block" else c["method"], ridge=c["ridge"], budget=c["risk_budget"],

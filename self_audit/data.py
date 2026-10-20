@@ -4,6 +4,7 @@ import hashlib
 import json
 import numpy as np
 import torch
+from torch.nn import functional as F
 from .model import digest
 
 
@@ -15,6 +16,29 @@ def label_subset(patient_ids, count, seed):
     if len(set(patient_ids)) != len(patient_ids) or not 2 <= count < len(patient_ids):
         raise ValueError("need unique TRAIN IDs and 2 <= label budget < TRAIN patients")
     return sorted(sorted(patient_ids, key=lambda p: hashlib.sha256(f"{seed}:{p}".encode()).hexdigest())[:count])
+
+
+def crop_native(x, labels, rng, size):
+    """Shared image/label random crop; geometry-only padding validity for U.
+
+    Labels are optional and never determine crop coordinates. No resizing.
+    """
+    h, w = x.shape[-2:]
+    valid = torch.ones((len(x), h, w), dtype=torch.bool, device=x.device)
+    if not size:
+        return x, labels, valid, None
+    ph, pw = max(0, size-h), max(0, size-w)
+    padding = (pw//2, pw-pw//2, ph//2, ph-ph//2)
+    if ph or pw:
+        x = F.pad(x, padding, mode='replicate')
+        valid = F.pad(valid, padding, value=False)
+        if labels is not None:
+            labels = F.pad(labels, padding, value=255)
+    top = int(rng.integers(x.shape[-2]-size+1))
+    left = int(rng.integers(x.shape[-1]-size+1))
+    spatial = (..., slice(top, top+size), slice(left, left+size))
+    info = {'original_hw': [h,w], 'pad_lrtb': list(padding), 'top': top, 'left': left, 'size': size}
+    return x[spatial], labels[spatial] if labels is not None else None, valid[spatial], info
 
 
 class TrainingData:
@@ -97,8 +121,8 @@ class TrainingData:
         t, z = int(rng.integers(len(cine))), int(rng.integers(cine.shape[1]))
         return self.context(cine, t, z), {"patient": r["id"], "frame": t, "slice": z}
 
-    def sample_batch(self, index, rng, batch_size, *, labeled):
-        """Native slices from one patient: no resizing, padding, or U mask access.
+    def sample_batch(self, index, rng, batch_size, *, labeled, crop_size=0, return_valid=False):
+        """Slices from one patient: optional fixed crop; no resizing or U mask access.
 
         A transaction uses different supervised/audit patients. For batch>1 the
         audit measure gives equal mass to sampled slices of that audit patient.
@@ -107,13 +131,23 @@ class TrainingData:
         if type(batch_size) is not int or batch_size < 1:
             raise ValueError("positive integer batch_size required")
         sampler = self.sample_labeled if labeled else self.sample_unlabeled
-        samples = [sampler(index, rng) for _ in range(batch_size)]
+        samples, validity = [], []
+        for _ in range(batch_size):
+            item = sampler(index, rng)
+            x, y, valid, crop = crop_native(item[0], item[1] if labeled else None, rng, crop_size)
+            meta = dict(item[-1])
+            if crop is not None:
+                meta['crop'] = crop
+            samples.append((x,y,meta) if labeled else (x,meta))
+            validity.append(valid)
         images = torch.cat([s[0] for s in samples])
         metadata = dict(samples[0][-1])
         if batch_size > 1:
             metadata["samples"] = [s[-1] for s in samples]
         if labeled:
             return images, torch.cat([s[1] for s in samples]), metadata
+        if return_valid:
+            return images, metadata, torch.cat(validity)
         return images, metadata
 
 

@@ -121,12 +121,17 @@ def test_native_patient_batches_do_not_read_u_labels(tmp_path):
                                    'sign', 'independent_guard', 'joint_no_class', 'joint_no_guard', 'joint_guard'])
 def test_matched_native_batch_transactions(tmp_path, method):
     m, sha = synthetic_fixture(tmp_path/'data')
-    c = recipe(method, 'decoder'); c.update(batch_size=2, steps=2, warmup_steps=0)
+    c = recipe(method, 'decoder'); c.update(batch_size=2, crop_size=40, steps=2, warmup_steps=0)
     report = train(c, m, sha, tmp_path/'run', device='cpu', synthetic=True)
     assert report['ema_updates'] == 2 and report['label_reads_outside_budget'] == []
     rows = [json.loads(s) for s in (tmp_path/'run/steps.jsonl').read_text().splitlines()]
     for row in rows:
         assert len(row['audit']['samples']) == 2
+        assert row['crop_size'] == 40 and row['unlabeled_valid_pixels'] == 2048
+        if 'proposal' in row:
+            assert row['proposal']['accepted_pixels'] <= 2048
+        if 'accepted_pixels' in row:
+            assert row['accepted_pixels'] <= 2048
         assert row['supervised']['patient'] != row['audit']['patient']
         if row.get('control', {}).get('guarded'):
             assert np.all(np.array(row['control']['after']) <= np.array(row['control']['before']) + 1e-8)
@@ -145,3 +150,24 @@ def test_legacy_batch_recipe_and_invalid_batch_sizes():
     for invalid in [0, -1, True, 1.5]:
         with pytest.raises(ValueError, match='batch_size'):
             validate_config({**c, 'batch_size': invalid})
+
+
+def test_crop_alignment_geometry_only_and_padding_ignore():
+    from self_audit.data import crop_native
+    y=(torch.arange(35).reshape(1,5,7)%4).long()
+    x=(y[:,None].float()/3).repeat(1,3,1,1)
+    a,labels,valid,meta=crop_native(x,y,np.random.default_rng(7),9)
+    assert a.shape==(1,3,9,9) and labels.shape==valid.shape==(1,9,9)
+    assert int(valid.sum())==35 and (labels[~valid]==255).all()
+    torch.testing.assert_close(a[:,1][valid]*3,labels[valid].float())
+    b,other,valid2,meta2=crop_native(x,torch.zeros_like(y),np.random.default_rng(7),9)
+    assert meta==meta2 and torch.equal(a,b) and torch.equal(valid,valid2)
+    xlarge=torch.rand(1,3,40,50);yl=torch.randint(0,4,(1,40,50))
+    c,cl,cv,cm=crop_native(xlarge,yl,np.random.default_rng(4),16)
+    assert torch.equal(c,xlarge[...,cm['top']:cm['top']+16,cm['left']:cm['left']+16])
+    assert cv.all()
+    config=recipe();config.pop('crop_size')
+    assert validate_config(config)['crop_size']==0
+    for value in [-1,True,2.5]:
+        with pytest.raises(ValueError,match='crop_size'):
+            validate_config({**config,'crop_size':value})

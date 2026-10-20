@@ -1,0 +1,51 @@
+{
+  "diagnostic_only": true,
+  "fresh_optimizer_not_resume": true,
+  "method": "ema_full",
+  "batch_size": 52,
+  "crop_size": 256,
+  "supervised_patient": "patient026",
+  "audit_patient": "patient011",
+  "unlabeled_patient": "patient057",
+  "U_shape": [
+    52,
+    3,
+    256,
+    256
+  ],
+  "L_shape": [
+    52,
+    3,
+    256,
+    256
+  ],
+  "audit_shape": [
+    52,
+    3,
+    256,
+    256
+  ],
+  "training_source_sha256": "6e12885e44b725c132a01437dc6179cbf524b94c51dd5a5f5254701eb78cf442",
+  "checkpoint_manifest_sha256": "cb1841c6256b333ef7650be546fee9fa9f5f42f2057ea1a0928642805ae91ba8",
+  "backbone": {
+    "pretrained": true,
+    "weights_sha256": "21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54",
+    "source_commit": "6876159a11b4df116f30f667f8c9888617df0751",
+    "lineage": "user_supplied_hash_pinned;not_independent_upstream_certification"
+  },
+  "status": "PASS",
+  "supervised_loss": 0.0900147557258606,
+  "gradient_norm": 4.243843078613281,
+  "teacher_max_confidence": 0.9999998807907104,
+  "teacher_argmax_classes": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "accepted_pixels": 3379079,
+  "seconds": 2.077159272041172,
+  "peak_allocated_bytes": 19893022208,
+  "peak_reserved_bytes": 24433917952,
+  "device_total_bytes": 25153044480
+}

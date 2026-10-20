@@ -1,0 +1,153 @@
+{
+  "diagnostic_only": true,
+  "fresh_optimizer_not_resume": true,
+  "method": "joint_guard",
+  "batch_size": 12,
+  "supervised_patient": "patient026",
+  "audit_patient": "patient011",
+  "unlabeled_patient": "patient057",
+  "U_shape": [
+    12,
+    3,
+    512,
+    428
+  ],
+  "L_shape": [
+    12,
+    3,
+    256,
+    216
+  ],
+  "audit_shape": [
+    12,
+    3,
+    256,
+    216
+  ],
+  "training_source_sha256": "adb6f136cafbd8b46ad5956ba1553649203741df78b9a1f5e2b5ee18b2614fdb",
+  "checkpoint_manifest_sha256": "cb1841c6256b333ef7650be546fee9fa9f5f42f2057ea1a0928642805ae91ba8",
+  "backbone": {
+    "pretrained": true,
+    "weights_sha256": "21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54",
+    "source_commit": "6876159a11b4df116f30f667f8c9888617df0751",
+    "lineage": "user_supplied_hash_pinned;not_independent_upstream_certification"
+  },
+  "status": "PASS",
+  "supervised_loss": 0.08640317618846893,
+  "gradient_norm": 4.497063636779785,
+  "teacher_max_confidence": 1.0,
+  "teacher_argmax_classes": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "proposal": {
+    "accepted_pixels": 2619018,
+    "class_pixels": [
+      2555188,
+      16997,
+      36340,
+      10493
+    ],
+    "scope": "decoder"
+  },
+  "control": {
+    "method": "joint_guard",
+    "before": [
+      0.02877736107316959,
+      0.023739490624237518,
+      0.013824475322523282
+    ],
+    "positive_pixels": [
+      [
+        271,
+        859,
+        1870,
+        357,
+        1486,
+        859,
+        1812,
+        1486,
+        1011,
+        357,
+        271,
+        1011
+      ],
+      [
+        458,
+        768,
+        912,
+        529,
+        857,
+        768,
+        874,
+        857,
+        880,
+        529,
+        458,
+        880
+      ],
+      [
+        605,
+        1471,
+        1238,
+        887,
+        1624,
+        1471,
+        1481,
+        1624,
+        1461,
+        887,
+        605,
+        1461
+      ]
+    ],
+    "scope": "observed_TRAIN_one_vs_rest_Brier",
+    "optimizer_steps_in_transaction": 0,
+    "ema_updates_in_transaction": 0,
+    "update_scope": "decoder",
+    "source_ids": [
+      "pseudo_class_0",
+      "pseudo_class_1",
+      "pseudo_class_2",
+      "pseudo_class_3"
+    ],
+    "alpha": [
+      0.0,
+      1.0,
+      0.9999999999999993,
+      0.9999999999999989
+    ],
+    "scale": 1.0,
+    "after": [
+      0.019186514203440707,
+      0.023224645623786302,
+      0.013251836561150457
+    ],
+    "status": "NUMERICAL_FEASIBLE",
+    "guarded": true,
+    "trials": [
+      {
+        "scale": 1.0,
+        "risks": [
+          0.019186514203440707,
+          0.023224645623786302,
+          0.013251836561150457
+        ],
+        "accepted": true
+      }
+    ],
+    "jvp_count": 4,
+    "realized_max_regression": -0.0005148450004512153,
+    "linearized_after": [
+      0.021376490171841924,
+      0.022240187442084145,
+      0.01356050014918652
+    ]
+  },
+  "seconds": 2.506473573972471,
+  "peak_allocated_bytes": 19269472256,
+  "peak_reserved_bytes": 21973958656,
+  "device_total_bytes": 25153044480
+}

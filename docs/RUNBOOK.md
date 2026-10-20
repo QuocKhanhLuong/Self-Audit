@@ -122,3 +122,20 @@ prepared separately for the new budget/seed; no masks or ED/ES identities are
 borrowed from another label subset. Keep the prior image cache immutable and
 available for every dependent run. The first cache may use `--evaluation` to
 include VAL images/references in a separate development manifest.
+
+## Fixed training crops for the 24-GB run
+
+`crop_size: 256` selects independent random coordinates using image geometry
+only, after frame/slice sampling. Supervised/audit image and reference use the
+same crop; U's EMA and strong views share a crop. Small images use centered edge
+padding; labels use IGNORE=255. An image-only validity mask excludes padded U
+pixels from the confidence gate and the shared accepted-pixel denominator,
+including at a zero threshold. No foreground bounding box or U GT is consulted.
+`crop_size: 0` preserves legacy native slices. VAL/TEST remain full native cines.
+
+The crop/batch setting is a declared new experimental factor: use the same fixed
+batch52/crop256 recipe in all matched arms. Previous native batch16 checkpoints
+remain in their pinned worktree. Stopped runs retain checkpoints/logs and are not
+claimed as resumed. Full-transaction VRAM probes are separate diagnostics: they
+may load a pinned v2 checkpoint to exercise realistic four-class proposals, but
+full experiments initialize afresh from the original pretrained model.

@@ -12,7 +12,7 @@ from .control import audit_weights, risks, response_moments, solve_allocation, s
 
 
 def decoder_transaction(model, strong, teacher_probs, audit_x, labels, *, method,
-                        threshold, step_size, ridge=1e-6, budget=0., backtracks=8, tolerance=1e-8):
+                        threshold, step_size, ridge=1e-6, budget=0., backtracks=8, tolerance=1e-8, valid_mask=None):
     if method not in {"ema_block", "sign", "independent_guard", "joint_no_class", "joint_no_guard", "joint_guard"}:
         raise ValueError("unknown allocation method")
     if not 0 <= threshold <= 1 or step_size < 0 or budget < 0 or tolerance < 0 or backtracks < 1:
@@ -22,7 +22,12 @@ def decoder_transaction(model, strong, teacher_probs, audit_x, labels, *, method
     selected = {n: p for n, p in model.named_parameters() if not n.startswith(("encoder.", "input_adapter."))}
     params = tuple(selected.values()); names = tuple(selected)
     conf, py = teacher_probs.detach().max(1)
-    accepted = conf >= threshold; denominator = accepted.sum()
+    accepted = conf >= threshold
+    if valid_mask is not None:
+        if valid_mask.dtype != torch.bool or valid_mask.shape != accepted.shape:
+            raise ValueError("image geometry validity must be boolean BHW")
+        accepted = accepted & valid_mask
+    denominator = accepted.sum()
     weights, targets, positives = audit_weights(labels)
     with torch.no_grad():
         p = model(audit_x).softmax(1)

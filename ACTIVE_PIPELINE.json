@@ -16,5 +16,8 @@
   "guard": "extra pseudo displacement only; no hidden AdamW transformation",
   "legacy_archive": "archive/pre-semisupervised-20261020",
   "legacy_commit": "924265f7df604d3dca84dda49578b1a0cf28d821",
-  "patient_training_this_delivery": true
+  "patient_training_this_delivery": true,
+  "training_input_policy": "random_crop_256_image_geometry_only; edge_pad; exclude_padding; no_resize",
+  "training_batch_size": 52,
+  "evaluation_input_policy": "full_native_cine_no_training_crop"
 }

@@ -105,3 +105,19 @@ def test_rejection_is_exact_and_no_optimizer_state_changes():
     assert r['scale']==0
     for p,b in zip(h.parameters(),before):torch.testing.assert_close(p,b,rtol=0,atol=0)
     for k,v in state.items():torch.testing.assert_close(opt.state[h.weight][k],v,rtol=0,atol=0)
+
+
+def test_padding_excluded_from_shared_pseudo_denominator_even_at_zero_threshold():
+    from self_audit.control import make_candidates
+    torch.manual_seed(123)
+    head=torch.nn.Conv2d(2,4,1)
+    f=torch.randn(1,2,3,4);q=torch.randn(1,4,3,4).softmax(1)
+    valid=torch.zeros(1,3,4,dtype=torch.bool);valid[:,:2,:2]=True
+    directions,ids,info=make_candidates(head,f,q,0.,.01,valid_mask=valid)
+    assert info['accepted_pixels']==4 and sum(info['class_pixels'])==4
+    loss=(torch.nn.functional.cross_entropy(head(f),q.argmax(1),reduction='none')*valid).sum()/valid.sum()
+    grads=torch.autograd.grad(loss,tuple(head.parameters()))
+    for i,g in enumerate(grads):
+        torch.testing.assert_close(sum(d[i] for d in directions),-.01*g)
+    ds,ids,info=make_candidates(head,f,q,0.,.01,valid_mask=torch.zeros_like(valid))
+    assert not ds and info['accepted_pixels']==0

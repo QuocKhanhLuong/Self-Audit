@@ -33,3 +33,15 @@ rclone check KhanhDrive:Dataset/ACDC /workspace/self-audit-v2/data/raw/ACDC --ch
 python scripts/check_repo.py
 python -m pytest -q
 # PASS; 56 passed, 1 warning. No patient accuracy inferred from these tests.
+
+# User requested near-24GB usage, then explicitly fixed 256/224 crops.
+# Own native B16 run stopped at step1515; preserved step1000 checkpoint/logs;
+# no other existing GPU session was interrupted and no exact resume was claimed.
+git worktree add -b experiments/acdc-v2-vram24 /root/Self-Audit-vram24 970f142
+# Full-transaction crop256 capacity probes: logs/transaction_C*.json.
+# Actual pilot command and fresh full-run commands: configs/PILOT_QUEUE.sh, PRIORITY_QUEUE.sh.
+# New 72-step C256/B52 real pilot completed and covered all 72 U patients.
+# Fresh C256/B52 supervised 10,000-step run started 2026-10-20 08:54:24 UTC.
+python scripts/check_repo.py
+python -m pytest -q
+# PASS; 58 passed, 1 warning.

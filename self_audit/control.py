@@ -129,7 +129,7 @@ def response_moments(p, dp, weights, targets):
     return tuple(x.detach().cpu().numpy() for x in (A, b, e))
 
 
-def make_candidates(head, features, teacher_probs, threshold, step_size):
+def make_candidates(head, features, teacher_probs, threshold, step_size, valid_mask=None):
     """Per-class hard pseudo-CE with ONE shared accepted-pixel denominator.
 
     Summing the returned directions equals one plain head-only SGD pseudo-step.
@@ -140,6 +140,10 @@ def make_candidates(head, features, teacher_probs, threshold, step_size):
     teacher_probs = teacher_probs.detach()
     conf, y = teacher_probs.max(1)
     valid = conf >= threshold
+    if valid_mask is not None:
+        if valid_mask.dtype != torch.bool or valid_mask.shape != valid.shape:
+            raise ValueError("image geometry validity must be boolean BHW")
+        valid = valid & valid_mask
     denom = valid.sum()
     if not denom or step_size == 0:
         return [], [], {"accepted_pixels": int(denom), "class_pixels": [0] * 4}
