@@ -1,0 +1,16 @@
+{
+  "status": "FAIL",
+  "root": "/workspace/self-audit-v2/data/raw/ACDC",
+  "split_sha256": "bc42574017276a6defc668bf533330fd41a64a5e90a75ea1b8958fc9e469265a",
+  "train_expected": 80,
+  "val_expected": 20,
+  "training_folders_observed": 8,
+  "training_cines_verified": 8,
+  "official_test_folders_observed": 0,
+  "mask_arrays_opened": 0,
+  "transport_integrity": "requires separate successful rclone check",
+  "errors": [
+    "training directory or locked split does not cover exactly patient001..100",
+    "official testing directory does not cover exactly patient101..150"
+  ]
+}

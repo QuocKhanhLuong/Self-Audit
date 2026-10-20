@@ -1,0 +1,18 @@
+# UTC 2026-10-20; compact command receipts, no raw session logs
+# Initial requested branch already existed in /tmp/self-audit-acdc-v2; preserved.
+git fetch origin main
+git worktree add -b experiments/acdc-v2-20261020-run2 /root/Self-Audit-acdc-v2-run2 origin/main
+rclone lsd KhanhDrive:
+rclone lsf KhanhDrive:Dataset
+rclone lsf KhanhDrive:Dataset/ACDC --max-depth 1 --contimeout 15s --timeout 30s --retries 1 --low-level-retries 1
+# resolved MANDATORY_CITATION.md, training/, testing/
+rclone copy KhanhDrive:Dataset/ACDC /workspace/self-audit-v2/data/raw/ACDC --immutable --transfers 8 --checkers 8 --contimeout 15s --timeout 60s --retries 2 --stats 15s --log-level INFO --log-file /workspace/self-audit-v2/logs/acdc-download.log
+# Transfer completion NOT yet established; raw log remains local.
+python -m pip install -r requirements.txt
+python scripts/check_repo.py
+python -m pytest -q
+# PASS; 43 passed, 1 warning
+python experiments/plan.py --out results/configs --steps 10000
+# 81 planned jobs, none launched
+python scripts/verify_acdc_download.py --root /workspace/self-audit-v2/data/raw/ACDC --split splits/acdc_patient_split_seed42.json --out /workspace/self-audit-v2/logs/LOCAL_PARTIAL_INVENTORY.json
+# exit 1 as expected for an incomplete copy; 8 cines verified, zero mask arrays opened

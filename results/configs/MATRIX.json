@@ -1,0 +1,742 @@
+{
+  "jobs": [
+    {
+      "name": "L4_S42_supervised",
+      "label_budget": 4,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L4_S42_supervised.json",
+      "train_manifest_pattern": "CACHE/L4_S42/train.json",
+      "command_template": "python train.py --config results/configs/L4_S42_supervised.json --model-config BACKBONE.json --data CACHE/L4_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S42_supervised --device cuda --allow-full-run"
+    },
+    {
+      "name": "L4_S42_supervised_extra",
+      "label_budget": 4,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L4_S42_supervised_extra.json",
+      "train_manifest_pattern": "CACHE/L4_S42/train.json",
+      "command_template": "python train.py --config results/configs/L4_S42_supervised_extra.json --model-config BACKBONE.json --data CACHE/L4_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S42_supervised_extra --device cuda --allow-full-run"
+    },
+    {
+      "name": "L4_S42_ema_full",
+      "label_budget": 4,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L4_S42_ema_full.json",
+      "train_manifest_pattern": "CACHE/L4_S42/train.json",
+      "command_template": "python train.py --config results/configs/L4_S42_ema_full.json --model-config BACKBONE.json --data CACHE/L4_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S42_ema_full --device cuda --allow-full-run"
+    },
+    {
+      "name": "L4_S42_ema_block",
+      "label_budget": 4,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L4_S42_ema_block.json",
+      "train_manifest_pattern": "CACHE/L4_S42/train.json",
+      "command_template": "python train.py --config results/configs/L4_S42_ema_block.json --model-config BACKBONE.json --data CACHE/L4_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S42_ema_block --device cuda --allow-full-run"
+    },
+    {
+      "name": "L4_S42_sign",
+      "label_budget": 4,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L4_S42_sign.json",
+      "train_manifest_pattern": "CACHE/L4_S42/train.json",
+      "command_template": "python train.py --config results/configs/L4_S42_sign.json --model-config BACKBONE.json --data CACHE/L4_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S42_sign --device cuda --allow-full-run"
+    },
+    {
+      "name": "L4_S42_independent_guard",
+      "label_budget": 4,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L4_S42_independent_guard.json",
+      "train_manifest_pattern": "CACHE/L4_S42/train.json",
+      "command_template": "python train.py --config results/configs/L4_S42_independent_guard.json --model-config BACKBONE.json --data CACHE/L4_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S42_independent_guard --device cuda --allow-full-run"
+    },
+    {
+      "name": "L4_S42_joint_no_class",
+      "label_budget": 4,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L4_S42_joint_no_class.json",
+      "train_manifest_pattern": "CACHE/L4_S42/train.json",
+      "command_template": "python train.py --config results/configs/L4_S42_joint_no_class.json --model-config BACKBONE.json --data CACHE/L4_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S42_joint_no_class --device cuda --allow-full-run"
+    },
+    {
+      "name": "L4_S42_joint_no_guard",
+      "label_budget": 4,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L4_S42_joint_no_guard.json",
+      "train_manifest_pattern": "CACHE/L4_S42/train.json",
+      "command_template": "python train.py --config results/configs/L4_S42_joint_no_guard.json --model-config BACKBONE.json --data CACHE/L4_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S42_joint_no_guard --device cuda --allow-full-run"
+    },
+    {
+      "name": "L4_S42_joint_guard",
+      "label_budget": 4,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L4_S42_joint_guard.json",
+      "train_manifest_pattern": "CACHE/L4_S42/train.json",
+      "command_template": "python train.py --config results/configs/L4_S42_joint_guard.json --model-config BACKBONE.json --data CACHE/L4_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S42_joint_guard --device cuda --allow-full-run"
+    },
+    {
+      "name": "L4_S123_supervised",
+      "label_budget": 4,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L4_S123_supervised.json",
+      "train_manifest_pattern": "CACHE/L4_S123/train.json",
+      "command_template": "python train.py --config results/configs/L4_S123_supervised.json --model-config BACKBONE.json --data CACHE/L4_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S123_supervised --device cuda --allow-full-run"
+    },
+    {
+      "name": "L4_S123_supervised_extra",
+      "label_budget": 4,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L4_S123_supervised_extra.json",
+      "train_manifest_pattern": "CACHE/L4_S123/train.json",
+      "command_template": "python train.py --config results/configs/L4_S123_supervised_extra.json --model-config BACKBONE.json --data CACHE/L4_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S123_supervised_extra --device cuda --allow-full-run"
+    },
+    {
+      "name": "L4_S123_ema_full",
+      "label_budget": 4,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L4_S123_ema_full.json",
+      "train_manifest_pattern": "CACHE/L4_S123/train.json",
+      "command_template": "python train.py --config results/configs/L4_S123_ema_full.json --model-config BACKBONE.json --data CACHE/L4_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S123_ema_full --device cuda --allow-full-run"
+    },
+    {
+      "name": "L4_S123_ema_block",
+      "label_budget": 4,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L4_S123_ema_block.json",
+      "train_manifest_pattern": "CACHE/L4_S123/train.json",
+      "command_template": "python train.py --config results/configs/L4_S123_ema_block.json --model-config BACKBONE.json --data CACHE/L4_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S123_ema_block --device cuda --allow-full-run"
+    },
+    {
+      "name": "L4_S123_sign",
+      "label_budget": 4,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L4_S123_sign.json",
+      "train_manifest_pattern": "CACHE/L4_S123/train.json",
+      "command_template": "python train.py --config results/configs/L4_S123_sign.json --model-config BACKBONE.json --data CACHE/L4_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S123_sign --device cuda --allow-full-run"
+    },
+    {
+      "name": "L4_S123_independent_guard",
+      "label_budget": 4,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L4_S123_independent_guard.json",
+      "train_manifest_pattern": "CACHE/L4_S123/train.json",
+      "command_template": "python train.py --config results/configs/L4_S123_independent_guard.json --model-config BACKBONE.json --data CACHE/L4_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S123_independent_guard --device cuda --allow-full-run"
+    },
+    {
+      "name": "L4_S123_joint_no_class",
+      "label_budget": 4,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L4_S123_joint_no_class.json",
+      "train_manifest_pattern": "CACHE/L4_S123/train.json",
+      "command_template": "python train.py --config results/configs/L4_S123_joint_no_class.json --model-config BACKBONE.json --data CACHE/L4_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S123_joint_no_class --device cuda --allow-full-run"
+    },
+    {
+      "name": "L4_S123_joint_no_guard",
+      "label_budget": 4,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L4_S123_joint_no_guard.json",
+      "train_manifest_pattern": "CACHE/L4_S123/train.json",
+      "command_template": "python train.py --config results/configs/L4_S123_joint_no_guard.json --model-config BACKBONE.json --data CACHE/L4_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S123_joint_no_guard --device cuda --allow-full-run"
+    },
+    {
+      "name": "L4_S123_joint_guard",
+      "label_budget": 4,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L4_S123_joint_guard.json",
+      "train_manifest_pattern": "CACHE/L4_S123/train.json",
+      "command_template": "python train.py --config results/configs/L4_S123_joint_guard.json --model-config BACKBONE.json --data CACHE/L4_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S123_joint_guard --device cuda --allow-full-run"
+    },
+    {
+      "name": "L4_S2026_supervised",
+      "label_budget": 4,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L4_S2026_supervised.json",
+      "train_manifest_pattern": "CACHE/L4_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L4_S2026_supervised.json --model-config BACKBONE.json --data CACHE/L4_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S2026_supervised --device cuda --allow-full-run"
+    },
+    {
+      "name": "L4_S2026_supervised_extra",
+      "label_budget": 4,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L4_S2026_supervised_extra.json",
+      "train_manifest_pattern": "CACHE/L4_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L4_S2026_supervised_extra.json --model-config BACKBONE.json --data CACHE/L4_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S2026_supervised_extra --device cuda --allow-full-run"
+    },
+    {
+      "name": "L4_S2026_ema_full",
+      "label_budget": 4,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L4_S2026_ema_full.json",
+      "train_manifest_pattern": "CACHE/L4_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L4_S2026_ema_full.json --model-config BACKBONE.json --data CACHE/L4_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S2026_ema_full --device cuda --allow-full-run"
+    },
+    {
+      "name": "L4_S2026_ema_block",
+      "label_budget": 4,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L4_S2026_ema_block.json",
+      "train_manifest_pattern": "CACHE/L4_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L4_S2026_ema_block.json --model-config BACKBONE.json --data CACHE/L4_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S2026_ema_block --device cuda --allow-full-run"
+    },
+    {
+      "name": "L4_S2026_sign",
+      "label_budget": 4,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L4_S2026_sign.json",
+      "train_manifest_pattern": "CACHE/L4_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L4_S2026_sign.json --model-config BACKBONE.json --data CACHE/L4_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S2026_sign --device cuda --allow-full-run"
+    },
+    {
+      "name": "L4_S2026_independent_guard",
+      "label_budget": 4,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L4_S2026_independent_guard.json",
+      "train_manifest_pattern": "CACHE/L4_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L4_S2026_independent_guard.json --model-config BACKBONE.json --data CACHE/L4_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S2026_independent_guard --device cuda --allow-full-run"
+    },
+    {
+      "name": "L4_S2026_joint_no_class",
+      "label_budget": 4,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L4_S2026_joint_no_class.json",
+      "train_manifest_pattern": "CACHE/L4_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L4_S2026_joint_no_class.json --model-config BACKBONE.json --data CACHE/L4_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S2026_joint_no_class --device cuda --allow-full-run"
+    },
+    {
+      "name": "L4_S2026_joint_no_guard",
+      "label_budget": 4,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L4_S2026_joint_no_guard.json",
+      "train_manifest_pattern": "CACHE/L4_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L4_S2026_joint_no_guard.json --model-config BACKBONE.json --data CACHE/L4_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S2026_joint_no_guard --device cuda --allow-full-run"
+    },
+    {
+      "name": "L4_S2026_joint_guard",
+      "label_budget": 4,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L4_S2026_joint_guard.json",
+      "train_manifest_pattern": "CACHE/L4_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L4_S2026_joint_guard.json --model-config BACKBONE.json --data CACHE/L4_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L4_S2026_joint_guard --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S42_supervised",
+      "label_budget": 8,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L8_S42_supervised.json",
+      "train_manifest_pattern": "CACHE/L8_S42/train.json",
+      "command_template": "python train.py --config results/configs/L8_S42_supervised.json --model-config BACKBONE.json --data CACHE/L8_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S42_supervised --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S42_supervised_extra",
+      "label_budget": 8,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L8_S42_supervised_extra.json",
+      "train_manifest_pattern": "CACHE/L8_S42/train.json",
+      "command_template": "python train.py --config results/configs/L8_S42_supervised_extra.json --model-config BACKBONE.json --data CACHE/L8_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S42_supervised_extra --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S42_ema_full",
+      "label_budget": 8,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L8_S42_ema_full.json",
+      "train_manifest_pattern": "CACHE/L8_S42/train.json",
+      "command_template": "python train.py --config results/configs/L8_S42_ema_full.json --model-config BACKBONE.json --data CACHE/L8_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S42_ema_full --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S42_ema_block",
+      "label_budget": 8,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L8_S42_ema_block.json",
+      "train_manifest_pattern": "CACHE/L8_S42/train.json",
+      "command_template": "python train.py --config results/configs/L8_S42_ema_block.json --model-config BACKBONE.json --data CACHE/L8_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S42_ema_block --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S42_sign",
+      "label_budget": 8,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L8_S42_sign.json",
+      "train_manifest_pattern": "CACHE/L8_S42/train.json",
+      "command_template": "python train.py --config results/configs/L8_S42_sign.json --model-config BACKBONE.json --data CACHE/L8_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S42_sign --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S42_independent_guard",
+      "label_budget": 8,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L8_S42_independent_guard.json",
+      "train_manifest_pattern": "CACHE/L8_S42/train.json",
+      "command_template": "python train.py --config results/configs/L8_S42_independent_guard.json --model-config BACKBONE.json --data CACHE/L8_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S42_independent_guard --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S42_joint_no_class",
+      "label_budget": 8,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L8_S42_joint_no_class.json",
+      "train_manifest_pattern": "CACHE/L8_S42/train.json",
+      "command_template": "python train.py --config results/configs/L8_S42_joint_no_class.json --model-config BACKBONE.json --data CACHE/L8_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S42_joint_no_class --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S42_joint_no_guard",
+      "label_budget": 8,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L8_S42_joint_no_guard.json",
+      "train_manifest_pattern": "CACHE/L8_S42/train.json",
+      "command_template": "python train.py --config results/configs/L8_S42_joint_no_guard.json --model-config BACKBONE.json --data CACHE/L8_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S42_joint_no_guard --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S42_joint_guard",
+      "label_budget": 8,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L8_S42_joint_guard.json",
+      "train_manifest_pattern": "CACHE/L8_S42/train.json",
+      "command_template": "python train.py --config results/configs/L8_S42_joint_guard.json --model-config BACKBONE.json --data CACHE/L8_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S42_joint_guard --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S123_supervised",
+      "label_budget": 8,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L8_S123_supervised.json",
+      "train_manifest_pattern": "CACHE/L8_S123/train.json",
+      "command_template": "python train.py --config results/configs/L8_S123_supervised.json --model-config BACKBONE.json --data CACHE/L8_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S123_supervised --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S123_supervised_extra",
+      "label_budget": 8,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L8_S123_supervised_extra.json",
+      "train_manifest_pattern": "CACHE/L8_S123/train.json",
+      "command_template": "python train.py --config results/configs/L8_S123_supervised_extra.json --model-config BACKBONE.json --data CACHE/L8_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S123_supervised_extra --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S123_ema_full",
+      "label_budget": 8,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L8_S123_ema_full.json",
+      "train_manifest_pattern": "CACHE/L8_S123/train.json",
+      "command_template": "python train.py --config results/configs/L8_S123_ema_full.json --model-config BACKBONE.json --data CACHE/L8_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S123_ema_full --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S123_ema_block",
+      "label_budget": 8,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L8_S123_ema_block.json",
+      "train_manifest_pattern": "CACHE/L8_S123/train.json",
+      "command_template": "python train.py --config results/configs/L8_S123_ema_block.json --model-config BACKBONE.json --data CACHE/L8_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S123_ema_block --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S123_sign",
+      "label_budget": 8,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L8_S123_sign.json",
+      "train_manifest_pattern": "CACHE/L8_S123/train.json",
+      "command_template": "python train.py --config results/configs/L8_S123_sign.json --model-config BACKBONE.json --data CACHE/L8_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S123_sign --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S123_independent_guard",
+      "label_budget": 8,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L8_S123_independent_guard.json",
+      "train_manifest_pattern": "CACHE/L8_S123/train.json",
+      "command_template": "python train.py --config results/configs/L8_S123_independent_guard.json --model-config BACKBONE.json --data CACHE/L8_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S123_independent_guard --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S123_joint_no_class",
+      "label_budget": 8,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L8_S123_joint_no_class.json",
+      "train_manifest_pattern": "CACHE/L8_S123/train.json",
+      "command_template": "python train.py --config results/configs/L8_S123_joint_no_class.json --model-config BACKBONE.json --data CACHE/L8_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S123_joint_no_class --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S123_joint_no_guard",
+      "label_budget": 8,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L8_S123_joint_no_guard.json",
+      "train_manifest_pattern": "CACHE/L8_S123/train.json",
+      "command_template": "python train.py --config results/configs/L8_S123_joint_no_guard.json --model-config BACKBONE.json --data CACHE/L8_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S123_joint_no_guard --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S123_joint_guard",
+      "label_budget": 8,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L8_S123_joint_guard.json",
+      "train_manifest_pattern": "CACHE/L8_S123/train.json",
+      "command_template": "python train.py --config results/configs/L8_S123_joint_guard.json --model-config BACKBONE.json --data CACHE/L8_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S123_joint_guard --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S2026_supervised",
+      "label_budget": 8,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L8_S2026_supervised.json",
+      "train_manifest_pattern": "CACHE/L8_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L8_S2026_supervised.json --model-config BACKBONE.json --data CACHE/L8_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S2026_supervised --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S2026_supervised_extra",
+      "label_budget": 8,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L8_S2026_supervised_extra.json",
+      "train_manifest_pattern": "CACHE/L8_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L8_S2026_supervised_extra.json --model-config BACKBONE.json --data CACHE/L8_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S2026_supervised_extra --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S2026_ema_full",
+      "label_budget": 8,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L8_S2026_ema_full.json",
+      "train_manifest_pattern": "CACHE/L8_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L8_S2026_ema_full.json --model-config BACKBONE.json --data CACHE/L8_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S2026_ema_full --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S2026_ema_block",
+      "label_budget": 8,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L8_S2026_ema_block.json",
+      "train_manifest_pattern": "CACHE/L8_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L8_S2026_ema_block.json --model-config BACKBONE.json --data CACHE/L8_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S2026_ema_block --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S2026_sign",
+      "label_budget": 8,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L8_S2026_sign.json",
+      "train_manifest_pattern": "CACHE/L8_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L8_S2026_sign.json --model-config BACKBONE.json --data CACHE/L8_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S2026_sign --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S2026_independent_guard",
+      "label_budget": 8,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L8_S2026_independent_guard.json",
+      "train_manifest_pattern": "CACHE/L8_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L8_S2026_independent_guard.json --model-config BACKBONE.json --data CACHE/L8_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S2026_independent_guard --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S2026_joint_no_class",
+      "label_budget": 8,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L8_S2026_joint_no_class.json",
+      "train_manifest_pattern": "CACHE/L8_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L8_S2026_joint_no_class.json --model-config BACKBONE.json --data CACHE/L8_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S2026_joint_no_class --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S2026_joint_no_guard",
+      "label_budget": 8,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L8_S2026_joint_no_guard.json",
+      "train_manifest_pattern": "CACHE/L8_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L8_S2026_joint_no_guard.json --model-config BACKBONE.json --data CACHE/L8_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S2026_joint_no_guard --device cuda --allow-full-run"
+    },
+    {
+      "name": "L8_S2026_joint_guard",
+      "label_budget": 8,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L8_S2026_joint_guard.json",
+      "train_manifest_pattern": "CACHE/L8_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L8_S2026_joint_guard.json --model-config BACKBONE.json --data CACHE/L8_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L8_S2026_joint_guard --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S42_supervised",
+      "label_budget": 16,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L16_S42_supervised.json",
+      "train_manifest_pattern": "CACHE/L16_S42/train.json",
+      "command_template": "python train.py --config results/configs/L16_S42_supervised.json --model-config BACKBONE.json --data CACHE/L16_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S42_supervised --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S42_supervised_extra",
+      "label_budget": 16,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L16_S42_supervised_extra.json",
+      "train_manifest_pattern": "CACHE/L16_S42/train.json",
+      "command_template": "python train.py --config results/configs/L16_S42_supervised_extra.json --model-config BACKBONE.json --data CACHE/L16_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S42_supervised_extra --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S42_ema_full",
+      "label_budget": 16,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L16_S42_ema_full.json",
+      "train_manifest_pattern": "CACHE/L16_S42/train.json",
+      "command_template": "python train.py --config results/configs/L16_S42_ema_full.json --model-config BACKBONE.json --data CACHE/L16_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S42_ema_full --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S42_ema_block",
+      "label_budget": 16,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L16_S42_ema_block.json",
+      "train_manifest_pattern": "CACHE/L16_S42/train.json",
+      "command_template": "python train.py --config results/configs/L16_S42_ema_block.json --model-config BACKBONE.json --data CACHE/L16_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S42_ema_block --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S42_sign",
+      "label_budget": 16,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L16_S42_sign.json",
+      "train_manifest_pattern": "CACHE/L16_S42/train.json",
+      "command_template": "python train.py --config results/configs/L16_S42_sign.json --model-config BACKBONE.json --data CACHE/L16_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S42_sign --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S42_independent_guard",
+      "label_budget": 16,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L16_S42_independent_guard.json",
+      "train_manifest_pattern": "CACHE/L16_S42/train.json",
+      "command_template": "python train.py --config results/configs/L16_S42_independent_guard.json --model-config BACKBONE.json --data CACHE/L16_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S42_independent_guard --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S42_joint_no_class",
+      "label_budget": 16,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L16_S42_joint_no_class.json",
+      "train_manifest_pattern": "CACHE/L16_S42/train.json",
+      "command_template": "python train.py --config results/configs/L16_S42_joint_no_class.json --model-config BACKBONE.json --data CACHE/L16_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S42_joint_no_class --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S42_joint_no_guard",
+      "label_budget": 16,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L16_S42_joint_no_guard.json",
+      "train_manifest_pattern": "CACHE/L16_S42/train.json",
+      "command_template": "python train.py --config results/configs/L16_S42_joint_no_guard.json --model-config BACKBONE.json --data CACHE/L16_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S42_joint_no_guard --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S42_joint_guard",
+      "label_budget": 16,
+      "label_seed": 42,
+      "training_seed": 42,
+      "config": "results/configs/L16_S42_joint_guard.json",
+      "train_manifest_pattern": "CACHE/L16_S42/train.json",
+      "command_template": "python train.py --config results/configs/L16_S42_joint_guard.json --model-config BACKBONE.json --data CACHE/L16_S42/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S42_joint_guard --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S123_supervised",
+      "label_budget": 16,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L16_S123_supervised.json",
+      "train_manifest_pattern": "CACHE/L16_S123/train.json",
+      "command_template": "python train.py --config results/configs/L16_S123_supervised.json --model-config BACKBONE.json --data CACHE/L16_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S123_supervised --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S123_supervised_extra",
+      "label_budget": 16,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L16_S123_supervised_extra.json",
+      "train_manifest_pattern": "CACHE/L16_S123/train.json",
+      "command_template": "python train.py --config results/configs/L16_S123_supervised_extra.json --model-config BACKBONE.json --data CACHE/L16_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S123_supervised_extra --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S123_ema_full",
+      "label_budget": 16,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L16_S123_ema_full.json",
+      "train_manifest_pattern": "CACHE/L16_S123/train.json",
+      "command_template": "python train.py --config results/configs/L16_S123_ema_full.json --model-config BACKBONE.json --data CACHE/L16_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S123_ema_full --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S123_ema_block",
+      "label_budget": 16,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L16_S123_ema_block.json",
+      "train_manifest_pattern": "CACHE/L16_S123/train.json",
+      "command_template": "python train.py --config results/configs/L16_S123_ema_block.json --model-config BACKBONE.json --data CACHE/L16_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S123_ema_block --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S123_sign",
+      "label_budget": 16,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L16_S123_sign.json",
+      "train_manifest_pattern": "CACHE/L16_S123/train.json",
+      "command_template": "python train.py --config results/configs/L16_S123_sign.json --model-config BACKBONE.json --data CACHE/L16_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S123_sign --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S123_independent_guard",
+      "label_budget": 16,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L16_S123_independent_guard.json",
+      "train_manifest_pattern": "CACHE/L16_S123/train.json",
+      "command_template": "python train.py --config results/configs/L16_S123_independent_guard.json --model-config BACKBONE.json --data CACHE/L16_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S123_independent_guard --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S123_joint_no_class",
+      "label_budget": 16,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L16_S123_joint_no_class.json",
+      "train_manifest_pattern": "CACHE/L16_S123/train.json",
+      "command_template": "python train.py --config results/configs/L16_S123_joint_no_class.json --model-config BACKBONE.json --data CACHE/L16_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S123_joint_no_class --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S123_joint_no_guard",
+      "label_budget": 16,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L16_S123_joint_no_guard.json",
+      "train_manifest_pattern": "CACHE/L16_S123/train.json",
+      "command_template": "python train.py --config results/configs/L16_S123_joint_no_guard.json --model-config BACKBONE.json --data CACHE/L16_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S123_joint_no_guard --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S123_joint_guard",
+      "label_budget": 16,
+      "label_seed": 123,
+      "training_seed": 42,
+      "config": "results/configs/L16_S123_joint_guard.json",
+      "train_manifest_pattern": "CACHE/L16_S123/train.json",
+      "command_template": "python train.py --config results/configs/L16_S123_joint_guard.json --model-config BACKBONE.json --data CACHE/L16_S123/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S123_joint_guard --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S2026_supervised",
+      "label_budget": 16,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L16_S2026_supervised.json",
+      "train_manifest_pattern": "CACHE/L16_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L16_S2026_supervised.json --model-config BACKBONE.json --data CACHE/L16_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S2026_supervised --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S2026_supervised_extra",
+      "label_budget": 16,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L16_S2026_supervised_extra.json",
+      "train_manifest_pattern": "CACHE/L16_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L16_S2026_supervised_extra.json --model-config BACKBONE.json --data CACHE/L16_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S2026_supervised_extra --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S2026_ema_full",
+      "label_budget": 16,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L16_S2026_ema_full.json",
+      "train_manifest_pattern": "CACHE/L16_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L16_S2026_ema_full.json --model-config BACKBONE.json --data CACHE/L16_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S2026_ema_full --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S2026_ema_block",
+      "label_budget": 16,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L16_S2026_ema_block.json",
+      "train_manifest_pattern": "CACHE/L16_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L16_S2026_ema_block.json --model-config BACKBONE.json --data CACHE/L16_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S2026_ema_block --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S2026_sign",
+      "label_budget": 16,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L16_S2026_sign.json",
+      "train_manifest_pattern": "CACHE/L16_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L16_S2026_sign.json --model-config BACKBONE.json --data CACHE/L16_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S2026_sign --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S2026_independent_guard",
+      "label_budget": 16,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L16_S2026_independent_guard.json",
+      "train_manifest_pattern": "CACHE/L16_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L16_S2026_independent_guard.json --model-config BACKBONE.json --data CACHE/L16_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S2026_independent_guard --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S2026_joint_no_class",
+      "label_budget": 16,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L16_S2026_joint_no_class.json",
+      "train_manifest_pattern": "CACHE/L16_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L16_S2026_joint_no_class.json --model-config BACKBONE.json --data CACHE/L16_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S2026_joint_no_class --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S2026_joint_no_guard",
+      "label_budget": 16,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L16_S2026_joint_no_guard.json",
+      "train_manifest_pattern": "CACHE/L16_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L16_S2026_joint_no_guard.json --model-config BACKBONE.json --data CACHE/L16_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S2026_joint_no_guard --device cuda --allow-full-run"
+    },
+    {
+      "name": "L16_S2026_joint_guard",
+      "label_budget": 16,
+      "label_seed": 2026,
+      "training_seed": 42,
+      "config": "results/configs/L16_S2026_joint_guard.json",
+      "train_manifest_pattern": "CACHE/L16_S2026/train.json",
+      "command_template": "python train.py --config results/configs/L16_S2026_joint_guard.json --model-config BACKBONE.json --data CACHE/L16_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S2026_joint_guard --device cuda --allow-full-run"
+    }
+  ],
+  "status": "PLANNED_NOT_RUN",
+  "patient_metrics": "NONE",
+  "protocol": "nested patient label subsets; audit labels included; fixed seed; no VAL selection",
+  "required_external_baselines": [
+    "BCP official matched protocol",
+    "HCO exact algorithm after full-text review; sign control is NOT HCO"
+  ],
+  "additional_ablation": "head versus decoder scope; same initialization and pseudo grouping",
+  "compute_controls": "supervised_extra is label-use control, not an exact wall-time match; report runtime/JVP/trial overhead and learning curves"
+}
