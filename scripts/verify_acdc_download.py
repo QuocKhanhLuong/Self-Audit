@@ -23,13 +23,15 @@ def sha(path):
 
 def verify(root, split_path):
     split = json.loads(split_path.read_text())
-    train, val = split['train_patients'], split['val_patients']
-    errors, records, hashes = [], [], {}
+    train, val = split.get('train_patients', split.get('train')), split.get('val_patients', split.get('val'))
+    excluded = split.get('excluded_patients', [])
+    active = set(train + val)
+    errors, records, hashes, voxel_hashes, quarantined = [], [], {}, {}, []
     if len(set(train + val)) != len(train + val):
         errors.append('locked split contains overlapping or duplicate IDs')
     expected = {f'patient{i:03d}' for i in range(1, 101)}
     actual = {p.name for p in (root / 'training').glob('patient*') if p.is_dir()}
-    if actual != expected or set(train + val) != expected:
+    if actual != expected or set(train + val + excluded) != expected or active & set(excluded):
         errors.append('training directory or locked split does not cover exactly patient001..100')
     for pid in sorted(actual):
         folder = root / 'training' / pid
@@ -45,8 +47,20 @@ def verify(root, split_path):
                 raise ValueError('invalid finite 4D image/affine')
             digest = sha(path)
             if digest in hashes:
-                errors.append(f'duplicate cine content: {hashes[digest]}, {pid}; split review required')
+                message = f'duplicate cine content: {hashes[digest]}, {pid}'
+                if pid in active and hashes[digest] in active:
+                    errors.append(message + '; split review required')
+                else:
+                    quarantined.append(message)
             hashes[digest] = pid
+            voxel_digest = hashlib.sha256(str(a.shape).encode() + np.asarray(a, dtype='<f4').tobytes()).hexdigest()
+            if voxel_digest in voxel_hashes:
+                message = f'duplicate cine voxels: {voxel_hashes[voxel_digest]}, {pid}'
+                if pid in active and voxel_hashes[voxel_digest] in active:
+                    errors.append(message + '; split review required')
+                else:
+                    quarantined.append(message)
+            voxel_hashes[voxel_digest] = pid
             # Image frames only: no discovery or opening of U reference arrays.
             frames = list(folder.glob(f'{pid}_frame*.nii*'))
             frames = [p for p in frames if '_gt' not in p.name]
@@ -57,13 +71,13 @@ def verify(root, split_path):
                 t = int(fp.name.split('_frame')[1].split('.')[0]) - 1
                 if frame.shape != a.shape[:3] or not 0 <= t < a.shape[3] or not np.array_equal(np.asarray(frame.dataobj), a[..., t]):
                     errors.append(f'{pid}: image frame/cine exact voxel bridge failed')
-            records.append({'patient': pid, 'role': 'TRAIN' if pid in train else 'VAL', 'cine_sha256': digest, 'shape_xyzt': list(image.shape), 'affine': image.affine.tolist(), 'spacing_header': [float(x) for x in image.header.get_zooms()], 'geometry_status': 'image_header_only_not_HD95_certification'})
+            records.append({'patient': pid, 'role': 'TRAIN' if pid in train else ('VAL' if pid in val else 'QUARANTINED'), 'cine_sha256': digest, 'cine_voxel_sha256': voxel_digest, 'shape_xyzt': list(image.shape), 'affine': image.affine.tolist(), 'spacing_header': [float(x) for x in image.header.get_zooms()], 'geometry_status': 'image_header_only_not_HD95_certification'})
         except Exception as exc:
             errors.append(f'{pid}: {type(exc).__name__}: {exc}')
     test_ids = sorted(p.name for p in (root / 'testing').glob('patient*') if p.is_dir())
     if set(test_ids) != {f'patient{i:03d}' for i in range(101, 151)}:
         errors.append('official testing directory does not cover exactly patient101..150')
-    return {'status': 'PASS' if not errors else 'FAIL', 'root': str(root), 'split_sha256': sha(split_path), 'train_expected': len(train), 'val_expected': len(val), 'training_folders_observed': len(actual), 'training_cines_verified': len(records), 'official_test_folders_observed': len(test_ids), 'mask_arrays_opened': 0, 'transport_integrity': 'requires separate successful rclone check', 'patients': records, 'errors': errors}
+    return {'status': 'PASS' if not errors else 'FAIL', 'root': str(root), 'split_sha256': sha(split_path), 'train_expected': len(train), 'val_expected': len(val), 'excluded_patients': excluded, 'quarantined_duplicates': quarantined, 'training_folders_observed': len(actual), 'training_cines_verified': len(records), 'official_test_folders_observed': len(test_ids), 'mask_arrays_opened': 0, 'transport_integrity': 'requires separate successful rclone check', 'patients': records, 'errors': errors}
 
 
 if __name__ == '__main__':

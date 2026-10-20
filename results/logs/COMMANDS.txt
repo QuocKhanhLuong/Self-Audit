@@ -16,3 +16,20 @@ python experiments/plan.py --out results/configs --steps 10000
 # 81 planned jobs, none launched
 python scripts/verify_acdc_download.py --root /workspace/self-audit-v2/data/raw/ACDC --split splits/acdc_patient_split_seed42.json --out /workspace/self-audit-v2/logs/LOCAL_PARTIAL_INVENTORY.json
 # exit 1 as expected for an incomplete copy; 8 cines verified, zero mask arrays opened
+
+# Follow-up execution (supersedes earlier pending transport/weight status)
+# User authorized the mirror; download SHA256 matched mirror LFS oid and official short hash.
+curl -fL --retry 2 --connect-timeout 15 --max-time 180 -o /workspace/self-audit-v2/weights/dinov3_convnext_tiny_pretrain_lvd1689m-21b726bb.pth.partial https://huggingface.co/jaychempan/dinov3/resolve/main/dinov3_convnext_tiny_pretrain_lvd1689m-21b726bb.pth
+# SHA256 21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54; renamed only after verification.
+git clone https://github.com/facebookresearch/dinov3.git /workspace/self-audit-v2/external/dinov3
+# source commit 6876159a11b4df116f30f667f8c9888617df0751, tracked source clean.
+rclone check KhanhDrive:Dataset/ACDC /workspace/self-audit-v2/data/raw/ACDC --checkers 2 --tpslimit 2 --contimeout 15s --timeout 60s --retries 2 --combined /workspace/self-audit-v2/logs/rclone-check.txt
+# All 1053 checksum comparisons matched; compact receipt TRANSPORT.json.
+# Restored reviewed split metadata only, as directed by docs/RUNBOOK.md; original split preserved.
+# Exact executed preparation and pilot commands: configs/PREPARE_REVIEWED.sh and configs/PILOT_QUEUE.sh.
+# All nine caches complete; head/decoder 32-step patient pilots complete with pinned final hashes.
+# Full queue commands: configs/PRIORITY_QUEUE.sh. Supervised 10,000-step baseline is RUNNING.
+# TEST inference commands: configs/TEST_INFERENCE_QUEUE.sh, waiting until all priority training ends.
+python scripts/check_repo.py
+python -m pytest -q
+# PASS; 56 passed, 1 warning. No patient accuracy inferred from these tests.

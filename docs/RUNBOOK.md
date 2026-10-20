@@ -94,3 +94,31 @@ python experiments/plan.py --out /ABS/plans/semi_v2 --steps 10000
 The resulting MATRIX.json contains templates. Resolve and verify hashes, review
 the annotation/compute budget, and execute selected commands yourself/Astra. The
 planner has no automatic execution path.
+
+## Native slice batches (declared experimental factor)
+
+Optional `batch_size` defaults to 1 for existing v2 recipes. At larger batch sizes,
+all samples for each role come from its scheduled patient, preserving native
+spatial dimensions without resizing or padding. Supervised and audit patients
+remain different. Audit Brier weights give each sampled slice equal mass within
+that patient; CE uses all valid batch pixels, Dice uses the batch-wide present
+classes, and pseudo candidates retain the shared accepted-pixel denominator.
+This is a different batch protocol from the original single-slice setting. All
+matched arms must use the same batch size, schedules and sampling policy.
+Metadata records every sampled frame/slice. Larger batches do not increase the
+number of distinct patients visited per transaction.
+
+`scripts/profile_acdc_gpu.py` measures gradients and one decoder JVP on a repeated
+real TRAIN slice, with zero optimizer/EMA updates. It is a memory diagnostic,
+not a transaction throughput benchmark or patient efficacy result. A successful
+32-step actual training pilot with checkpoint saving remains necessary. Full
+transaction memory includes optimizer states, multiple class directions and
+functional trials, and can exceed this diagnostic substantially.
+
+For repeated label subsets, `prepare_acdc.py --image-cache /ABS/PRIOR_CACHE`
+can reuse normalized images from a completed cache. Each reused image is compared
+exactly against normalization recomputed from the raw cine and hashed. Masks are
+prepared separately for the new budget/seed; no masks or ED/ES identities are
+borrowed from another label subset. Keep the prior image cache immutable and
+available for every dependent run. The first cache may use `--evaluation` to
+include VAL images/references in a separate development manifest.

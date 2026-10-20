@@ -1,0 +1,48 @@
+{
+  "status": "PASS",
+  "diagnostic_only": true,
+  "optimizer_steps": 0,
+  "ema_updates": 0,
+  "patient": "patient007",
+  "declared_L8_S42_ids": [
+    "patient007",
+    "patient010",
+    "patient011",
+    "patient024",
+    "patient026",
+    "patient041",
+    "patient077",
+    "patient099"
+  ],
+  "mask_read_patients": [
+    "patient007"
+  ],
+  "batch_size": 24,
+  "input_shape": [
+    24,
+    3,
+    224,
+    222
+  ],
+  "protocol": "repeated_same_real_slice_memory_probe",
+  "backbone": {
+    "pretrained": true,
+    "weights_sha256": "21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54",
+    "source_commit": "6876159a11b4df116f30f667f8c9888617df0751",
+    "lineage": "user_supplied_hash_pinned;not_independent_upstream_certification"
+  },
+  "training_source_sha256": "eafdf56a5679fa9cee7344e4a8cb365f843651203bd185c418d8e07977570628",
+  "cine_sha256": "b009681b3647e172a27d015701b56574368e73fb124053c3647590512631a568",
+  "mask_sha256": "112cc112be8adee5f37a3ed4f3efa8089636ea6d3fe7ce8f00c2c21331328142",
+  "decoder_jvp_requested": true,
+  "loss": 2.3635153770446777,
+  "encoder_gradient_norm": 15.660462379455566,
+  "detail_gradient_norm": 0.23251016438007355,
+  "supervised_seconds": 1.1227344810031354,
+  "supervised_peak_bytes": 6940979200,
+  "decoder_jvp_finite": true,
+  "decoder_jvp_norm": 206.74856567382812,
+  "elapsed_seconds": 1.3770002339733765,
+  "peak_allocated_bytes": 6940979200,
+  "peak_reserved_bytes": 8984199168
+}

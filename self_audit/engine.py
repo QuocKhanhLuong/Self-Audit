@@ -20,18 +20,22 @@ DEFAULT = {"schema": SCHEMA, "method": "joint_guard", "update_scope": "head", "s
            "seed": 42, "body_lr": 3e-5, "head_lr": 3e-3, "pseudo_lr": 1e-3,
            "weight_decay": 1e-4, "ema_decay": .99, "pseudo_threshold": .7,
            "ridge": 1e-6, "risk_budget": 0., "guard_tolerance": 1e-8,
-           "backtracks": 8, "save_every": 1000, "threads": 2,
+           "backtracks": 8, "save_every": 1000, "threads": 2, "batch_size": 1,
            "model": {"backbone": "dinov3_convnext_tiny", "source_repo": "",
                      "source_commit": "", "weights": "", "weights_sha256": ""}}
 
 
 def validate_config(c):
+    # Existing pinned v2 recipes retain their original single-slice behavior.
+    c = copy.deepcopy(c)
+    if "batch_size" not in c:
+        c["batch_size"] = 1
     if set(c) != set(DEFAULT) or c.get("schema") != SCHEMA or c.get("method") not in METHODS:
         raise ValueError("not an exact v2 recipe; legacy configs and unknown fields are rejected")
     if c["update_scope"] not in {"head", "decoder"}:
         raise ValueError("update_scope must be head or decoder")
-    for k in ("steps", "warmup_steps", "seed", "backtracks", "save_every", "threads"):
-        if type(c[k]) is not int or c[k] < (1 if k in {"steps", "backtracks", "save_every", "threads"} else 0):
+    for k in ("steps", "warmup_steps", "seed", "backtracks", "save_every", "threads", "batch_size"):
+        if type(c[k]) is not int or c[k] < (1 if k in {"steps", "backtracks", "save_every", "threads", "batch_size"} else 0):
             raise ValueError(f"invalid {k}")
     if c["warmup_steps"] > c["steps"]:
         raise ValueError("warmup exceeds total budget")
@@ -134,6 +138,7 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
                 "backbone": provenance, "synthetic": synthetic, "label_budget": len(data.lids),
                 "supervision": "dense TRAIN subset; audit included; never no-GT",
                 "pseudo_update_scope": "full" if c["method"] == "ema_full" else c["update_scope"],
+                "batch_size": c["batch_size"], "batch_protocol": "one_patient_per_role; native_grid; equal_slice_audit_mass",
                 "native_supervised_loss": "CE+present_foreground_Dice", "prediction_model": "student"})
     start = time.monotonic(); counts = {"supervised_updates": 0, "pseudo_accepted": 0, "ema_updates": 0}
     seen_l, seen_u, seen_a = set(), set(), set()
@@ -143,9 +148,9 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
             # Round robin coverage; a separate RNG controls only data/augmentations.
             li, ui = step % len(data.lids), step % len(data.uids)
             ai = (li + 1 + int(rng.integers(len(data.lids) - 1))) % len(data.lids)
-            xs, ys, sm = data.sample_labeled(li, rng)
-            xa, ya, am = data.sample_labeled(ai, rng)
-            xu, um = data.sample_unlabeled(ui, rng)
+            xs, ys, sm = data.sample_batch(li, rng, c["batch_size"], labeled=True)
+            xa, ya, am = data.sample_batch(ai, rng, c["batch_size"], labeled=True)
+            xu, um = data.sample_batch(ui, rng, c["batch_size"], labeled=False)
             assert sm["patient"] != am["patient"]
             xs, ys = aligned_flip(xs, ys, rng)
             xs, ys, xa, ya, xu = (a.to(device) for a in (xs, ys, xa, ya, xu))

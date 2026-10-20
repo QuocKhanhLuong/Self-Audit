@@ -39,7 +39,7 @@ def read_patient_split(path):
     return result
 
 
-def prepare(root, split_path, out, budget, seed, evaluation=False):
+def prepare(root, split_path, out, budget, seed, evaluation=False, image_cache=None):
     import nibabel as nib  # Optional preparation dependency; never silently installed.
     root, out = Path(root).resolve(), Path(out).resolve()
     split = read_patient_split(split_path)
@@ -59,8 +59,17 @@ def prepare(root, split_path, out, budget, seed, evaluation=False):
         if raw.ndim != 4 or not np.isfinite(raw).all(): raise ValueError("invalid raw cine")
         lo, hi = np.percentile(raw, [.5, 99.5])
         arr = np.clip((raw-lo)/max(float(hi-lo), 1e-6), 0, 1).transpose(3, 2, 1, 0).astype(np.float32)
-        ip = out / f"{pid}.npy"; np.save(ip, arr)
-        r = {"id": pid, "image": ip.name, "image_sha256": digest(ip)}
+        if image_cache is None:
+            ip = out / f"{pid}.npy"; np.save(ip, arr)
+            image_ref = ip.name
+        else:
+            # Reuse only identical image-only normalization; never reuse masks.
+            ip = Path(image_cache).resolve() / f"{pid}.npy"
+            cached = np.load(ip, mmap_mode="r", allow_pickle=False)
+            if cached.dtype != arr.dtype or not np.array_equal(cached, arr):
+                raise ValueError("shared image cache differs from normalized raw cine")
+            image_ref = str(ip)
+        r = {"id": pid, "image": image_ref, "image_sha256": digest(ip)}
         role = "evaluation" if pid in split["val"] else ("labeled" if pid in labeled_ids else "unlabeled")
         if role != "unlabeled":
             r["masks"] = {}
@@ -90,7 +99,8 @@ def prepare(root, split_path, out, budget, seed, evaluation=False):
     write_json(out / "PREPARATION.json", {"source_split_sha256": digest(split_path), "raw_images": source_images,
                "read_mask_patient_ids": labeled_ids + (split["val"] if evaluation else []),
                "unlabeled_mask_reads": 0, "normalization": "per_cine_image_only_percentiles_0.5_99.5",
-               "train_manifest_sha256": digest(out/"train.json"), "evaluation_authorized": evaluation})
+               "train_manifest_sha256": digest(out/"train.json"), "evaluation_authorized": evaluation,
+               "shared_image_cache": str(Path(image_cache).resolve()) if image_cache else None})
     return digest(out / "train.json")
 
 
@@ -99,4 +109,5 @@ if __name__ == "__main__":
     p.add_argument("--root", required=True); p.add_argument("--split", required=True)
     p.add_argument("--out", required=True); p.add_argument("--labels", type=int, default=8)
     p.add_argument("--seed", type=int, default=42); p.add_argument("--evaluation", action="store_true")
-    a = p.parse_args(); print(prepare(a.root, a.split, a.out, a.labels, a.seed, a.evaluation))
+    p.add_argument("--image-cache", help="Reuse identical normalized image arrays from a prior cache; masks remain separate")
+    a = p.parse_args(); print(prepare(a.root, a.split, a.out, a.labels, a.seed, a.evaluation, a.image_cache))

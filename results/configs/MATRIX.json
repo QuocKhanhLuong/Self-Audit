@@ -730,13 +730,22 @@
       "command_template": "python train.py --config results/configs/L16_S2026_joint_guard.json --model-config BACKBONE.json --data CACHE/L16_S2026/train.json --data-sha256 VERIFIED_SHA --out RUNS/L16_S2026_joint_guard --device cuda --allow-full-run"
     }
   ],
-  "status": "PLANNED_NOT_RUN",
-  "patient_metrics": "NONE",
+  "status": "PARTIALLY_RUNNING_L8_S42",
+  "patient_metrics": "NONE_YET",
   "protocol": "nested patient label subsets; audit labels included; fixed seed; no VAL selection",
   "required_external_baselines": [
     "BCP official matched protocol",
     "HCO exact algorithm after full-text review; sign control is NOT HCO"
   ],
   "additional_ablation": "head versus decoder scope; same initialization and pseudo grouping",
-  "compute_controls": "supervised_extra is label-use control, not an exact wall-time match; report runtime/JVP/trial overhead and learning curves"
+  "compute_controls": "supervised_extra is label-use control, not an exact wall-time match; report runtime/JVP/trial overhead and learning curves",
+  "batch_protocol": {
+    "batch_size": 16,
+    "scope": "one patient per role; independent slice draws; native grids; supervised/audit patient-disjoint",
+    "factor": "new batch-size experimental factor; no pooled comparison to prior batch1 runs",
+    "audit_mass": "equal sampled-slice mass within the audit patient"
+  },
+  "execution_queue": "nine L8/S42 arms; remaining 72 matrix rows unexecuted",
+  "split_file": "splits/acdc_reviewed_locked_train80_val18.json",
+  "split_sha256": "b826eaf494760079aa559b0c0c12f7444951d779ebbb5ed291c0398f20bf835f"
 }

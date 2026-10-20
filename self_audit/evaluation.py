@@ -21,6 +21,7 @@ def class_metrics(cm):
         tp=int(cm[k,k]); gt=int(cm[k].sum()); pred=int(cm[:,k].sum())
         rows.append({"class":name,"TP":tp,"FP":pred-tp,"FN":gt-tp,"reference_present":bool(gt),
                      "dice":2*tp/(gt+pred) if gt else None,
+                     "iou":tp/(gt+pred-tp) if gt else None,
                      "precision":tp/pred if pred else None,"recall":tp/gt if gt else None,
                      "prediction_count":pred,"reference_count":gt})
     return rows

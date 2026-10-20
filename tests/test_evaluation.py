@@ -34,3 +34,11 @@ def test_full_freeze_then_score(tmp_path):
 def test_mask_not_treated_as_background():
     cm=confusion_matrix(np.array([255,1]),np.array([2,1]))
     assert cm.sum()==1 and cm[1,1]==1
+
+
+def test_iou_counts_false_positives_false_negatives_and_absent_reference():
+    cm = confusion_matrix(np.array([1,1,0,2,3]), np.array([1,255,1,2,3]))
+    rv = class_metrics(cm)[1]
+    assert rv['iou'] == pytest.approx(1/3)
+    absent = class_metrics(confusion_matrix(np.array([0,0]), np.array([2,2])))[2]
+    assert absent['iou'] is None and absent['FP'] == 2

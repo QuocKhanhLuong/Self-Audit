@@ -1,0 +1,4518 @@
+{
+  "status": "FAIL",
+  "root": "/workspace/self-audit-v2/data/raw/ACDC",
+  "split_sha256": "bc42574017276a6defc668bf533330fd41a64a5e90a75ea1b8958fc9e469265a",
+  "train_expected": 80,
+  "val_expected": 20,
+  "training_folders_observed": 100,
+  "training_cines_verified": 100,
+  "official_test_folders_observed": 50,
+  "mask_arrays_opened": 0,
+  "transport_integrity": "requires separate successful rclone check",
+  "patients": [
+    {
+      "patient": "patient001",
+      "role": "TRAIN",
+      "cine_sha256": "262f856a7f31a10837a53902d0750877aade6f094e4f999a317b9de1b7047d17",
+      "cine_voxel_sha256": "3422dbcde2b94df0f7ac024e29f85012db994c211c83909bf8c4780d318b0147",
+      "shape_xyzt": [
+        216,
+        256,
+        10,
+        30
+      ],
+      "affine": [
+        [
+          -1.5625,
+          0.0,
+          0.0,
+          167.96875
+        ],
+        [
+          0.0,
+          1.5625,
+          0.0,
+          -199.21875
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient002",
+      "role": "TRAIN",
+      "cine_sha256": "671d6a03f1c150ef0ecdb23f782c5104e74ceadf48f608e6a5abfed3a6228296",
+      "cine_voxel_sha256": "af2f52e87dac1f3d0ebf22060314d27159b76f6e6b6d4a79d24c039ba625e65f",
+      "shape_xyzt": [
+        232,
+        256,
+        10,
+        30
+      ],
+      "affine": [
+        [
+          -1.3671875,
+          0.0,
+          0.0,
+          157.91015625
+        ],
+        [
+          0.0,
+          1.3671875,
+          0.0,
+          -174.31640625
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.3671875,
+        1.3671875,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient003",
+      "role": "TRAIN",
+      "cine_sha256": "719fbaa5947e8565ee9092062e586d659f3407fac1c22a6155675050aede05d2",
+      "cine_voxel_sha256": "bb81fcd571e59ed9dcaa95a8810c25d9544c370d014914d55fcb7b296907b6a2",
+      "shape_xyzt": [
+        256,
+        256,
+        10,
+        30
+      ],
+      "affine": [
+        [
+          -1.5625,
+          0.0,
+          0.0,
+          199.21875
+        ],
+        [
+          0.0,
+          1.5625,
+          0.0,
+          -199.21875
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient004",
+      "role": "VAL",
+      "cine_sha256": "64c3e1d1d9a8c4669ad468fe51fcecfab0e863e13f92519dbdc37f11c5ef576c",
+      "cine_voxel_sha256": "c40f92aebd665af3bd88b7e33ad51c7c0cacda4d0a8ded7260188ef7532e3a6b",
+      "shape_xyzt": [
+        232,
+        256,
+        10,
+        28
+      ],
+      "affine": [
+        [
+          -1.3671875,
+          0.0,
+          0.0,
+          157.91015625
+        ],
+        [
+          0.0,
+          1.3671875,
+          0.0,
+          -174.31640625
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.3671875,
+        1.3671875,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient005",
+      "role": "VAL",
+      "cine_sha256": "6ca2f6b6570a0c94de58388036da49d1570aa76e31ff6abac3cc28fca623f054",
+      "cine_voxel_sha256": "8f43c93e7f6e9e1c85d2846bfb5065b4a6b8201fb334012622e0d83f317a7a0d",
+      "shape_xyzt": [
+        256,
+        216,
+        10,
+        30
+      ],
+      "affine": [
+        [
+          -1.40625,
+          0.0,
+          0.0,
+          179.296875
+        ],
+        [
+          0.0,
+          1.40625,
+          0.0,
+          -151.171875
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.40625,
+        1.40625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient006",
+      "role": "TRAIN",
+      "cine_sha256": "145176464fd9f866f3e9f9245de0adc0d9225fd245d8b2120d4132db00b7cc60",
+      "cine_voxel_sha256": "7c6a19880f197355c634a7e501344e7da2dc17c7a2b998de82e6d9370778e286",
+      "shape_xyzt": [
+        232,
+        256,
+        11,
+        28
+      ],
+      "affine": [
+        [
+          -1.7578125,
+          0.0,
+          0.0,
+          203.02734375
+        ],
+        [
+          0.0,
+          1.7578125,
+          0.0,
+          -224.12109375
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -50.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.7578125,
+        1.7578125,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient007",
+      "role": "TRAIN",
+      "cine_sha256": "b009681b3647e172a27d015701b56574368e73fb124053c3647590512631a568",
+      "cine_voxel_sha256": "92687fd8c1f5ff20ffbf856b39339e4942332a1728abb7796781d9149684dfdd",
+      "shape_xyzt": [
+        222,
+        224,
+        10,
+        16
+      ],
+      "affine": [
+        [
+          -1.875,
+          0.0,
+          0.0,
+          207.1875
+        ],
+        [
+          0.0,
+          1.875,
+          0.0,
+          -209.0625
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.875,
+        1.875,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient008",
+      "role": "TRAIN",
+      "cine_sha256": "33d8729a21f350df24a100aa31b48b30a53244132f3b56af6f1e3d154b29fac4",
+      "cine_voxel_sha256": "ad9615a63d1cd18c58475f8cf69bb466a117f0e074fb86ac4936a5e9d8204c99",
+      "shape_xyzt": [
+        200,
+        256,
+        10,
+        28
+      ],
+      "affine": [
+        [
+          -1.5625,
+          0.0,
+          0.0,
+          155.46875
+        ],
+        [
+          0.0,
+          1.5625,
+          0.0,
+          -199.21875
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient009",
+      "role": "TRAIN",
+      "cine_sha256": "81eef484ed24ed3c647b2a77fbbb6a6b2edff4e2d9e20061bafaf7514e9d36d5",
+      "cine_voxel_sha256": "0835e3f0d87bcd4a2d7de77ae6416f114160b6410d99ec155009aa28e79bc6b7",
+      "shape_xyzt": [
+        208,
+        256,
+        10,
+        35
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.3671900033950806,
+        1.3671900033950806,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient010",
+      "role": "TRAIN",
+      "cine_sha256": "7eb2362719652d907145af4b11f30d50feeb201ddbcaa853f81b73c95a900884",
+      "cine_voxel_sha256": "dc66fe93aff43e6765dbc9aaad9ae0d28bb7d4f4916363ce8a520324b0bbf178",
+      "shape_xyzt": [
+        208,
+        256,
+        10,
+        28
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient011",
+      "role": "TRAIN",
+      "cine_sha256": "6664ab45067777d903db03974b488647163eb5a417a9a79ea0fe88cf35748d3c",
+      "cine_voxel_sha256": "735eca4405fc0b6b66bba8d1f44f91ad772d813dbc0928db3cc02657389e24f7",
+      "shape_xyzt": [
+        216,
+        256,
+        9,
+        15
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.4843800067901611,
+        1.4843800067901611,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient012",
+      "role": "VAL",
+      "cine_sha256": "4efa1926d9e325e3dc741421a1044cb24b064993e8a535605bc52fc9338cf9a1",
+      "cine_voxel_sha256": "6acfc5d55bf7f96e22282273b4018ac56e1f49f022499417d2140547e5722baf",
+      "shape_xyzt": [
+        184,
+        256,
+        10,
+        30
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient013",
+      "role": "TRAIN",
+      "cine_sha256": "3779446792b7a7370a27bc0cdd0154b8e2000bad27b7fee9128164eeca00e075",
+      "cine_voxel_sha256": "c9f96858d940319859a4534f2dd9e684f0ff32977268126d6054a05360a879ef",
+      "shape_xyzt": [
+        216,
+        256,
+        10,
+        30
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.4453099966049194,
+        1.4453099966049194,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient014",
+      "role": "VAL",
+      "cine_sha256": "71877150dfb01d4929b269cad2f281b85cf381691346f402488f3aef9e5637fe",
+      "cine_voxel_sha256": "6a138555cf5a0383713c0e291a5af2d2590f803f9d36dc4cbc974521394f7ced",
+      "shape_xyzt": [
+        256,
+        216,
+        10,
+        30
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.3671900033950806,
+        1.3671900033950806,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient015",
+      "role": "VAL",
+      "cine_sha256": "ef57f73182de2be7d859fc25b8e9be7c8f2aaf0b230e5d9a3ed267b881057500",
+      "cine_voxel_sha256": "993b5aabff032f4f922cabcd718246619a35b6f5be573436e59c18f283cb05e8",
+      "shape_xyzt": [
+        256,
+        216,
+        9,
+        21
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.3671900033950806,
+        1.3671900033950806,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient016",
+      "role": "TRAIN",
+      "cine_sha256": "1e8969689ce901dac712ec05971c367a8496df722bc452595b8ffd53317e796d",
+      "cine_voxel_sha256": "db508de8d337e5a6f2b1db4b9935da659b55cf44a2aa13bcf3d529a55e7d2a14",
+      "shape_xyzt": [
+        192,
+        256,
+        10,
+        30
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.4453099966049194,
+        1.4453099966049194,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient017",
+      "role": "TRAIN",
+      "cine_sha256": "5b38bb94498a1bff8193f81e828988e395f0e4a7c299eb4fce4e84b57f8e90c9",
+      "cine_voxel_sha256": "a01ba41bd67a4ee4325fc37fdf35072772701838afbd3b51c37b5c7a48acd34f",
+      "shape_xyzt": [
+        216,
+        256,
+        9,
+        19
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient018",
+      "role": "VAL",
+      "cine_sha256": "5c3e33cd656c7060ac75e353a7ae430e89979789afc6bf6fb52e7983406c78fd",
+      "cine_voxel_sha256": "3e1e509717a7b2bb8ecd3f78dace82db8024db445d8db690c86359dd42480de2",
+      "shape_xyzt": [
+        216,
+        256,
+        8,
+        13
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.3671900033950806,
+        1.3671900033950806,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient019",
+      "role": "TRAIN",
+      "cine_sha256": "86732ec1734a59e6c230c8690c4deba78b5a6047c78f5d0747a3830e4385a2c4",
+      "cine_voxel_sha256": "b7efa4d4d2d3d6eefd48187ca0262d4886fce24102ca3411e685a96d2a2cee40",
+      "shape_xyzt": [
+        216,
+        256,
+        11,
+        30
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.4453099966049194,
+        1.4453099966049194,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient020",
+      "role": "TRAIN",
+      "cine_sha256": "d2b663360eff8b1b34f43d1a042c8b9907c19477077f3d13000d5df329dff4ca",
+      "cine_voxel_sha256": "a96bc5c35e9b3a8184151ccb44f022809816f9dc72fd128ab61b7359d5c33df0",
+      "shape_xyzt": [
+        208,
+        256,
+        8,
+        20
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.7578099966049194,
+        1.7578099966049194,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient021",
+      "role": "TRAIN",
+      "cine_sha256": "8f0d0ff61f22cd8cace5d4b7af686a08b10311695f7f1c710c79f47d2ca7fd9b",
+      "cine_voxel_sha256": "20f88ea686af4b235c0bb2d6c398647c366b5280911eaa61e86a8364feece06b",
+      "shape_xyzt": [
+        240,
+        256,
+        10,
+        30
+      ],
+      "affine": [
+        [
+          -1.6796875,
+          0.0,
+          0.0,
+          200.72265625
+        ],
+        [
+          0.0,
+          1.6796875,
+          0.0,
+          -214.16015625
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.6796875,
+        1.6796875,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient022",
+      "role": "TRAIN",
+      "cine_sha256": "6b5f2dcf556dd173f5dfd58280db595211ba25bb6b7980a0e5145aa12420ebc2",
+      "cine_voxel_sha256": "0b2e962050f2b251bb6f51c595f3379f159e6818d987a2a38e750333dff9d656",
+      "shape_xyzt": [
+        200,
+        256,
+        7,
+        28
+      ],
+      "affine": [
+        [
+          -1.40625,
+          0.0,
+          0.0,
+          139.921875
+        ],
+        [
+          0.0,
+          1.40625,
+          0.0,
+          -179.296875
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -30.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.40625,
+        1.40625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient023",
+      "role": "TRAIN",
+      "cine_sha256": "4fb5ca12b41f1ce087d9f4565414e29a9a295f7884d10b0dfb3a79069679819a",
+      "cine_voxel_sha256": "0c6dca624e8b497364ef7fdfe90ddf8b5da88c5e533f754050e1deb218bf132f",
+      "shape_xyzt": [
+        216,
+        256,
+        9,
+        25
+      ],
+      "affine": [
+        [
+          -1.4453125,
+          0.0,
+          0.0,
+          155.37109375
+        ],
+        [
+          0.0,
+          1.4453125,
+          0.0,
+          -184.27734375
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -40.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.4453125,
+        1.4453125,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient024",
+      "role": "TRAIN",
+      "cine_sha256": "15efa5e6dd9023639b1accb7215dff50ce3d76ccbb7573a5c9fd34624006b0ad",
+      "cine_voxel_sha256": "e797b3ffa1730a1c844cb5b7481f3356d3c17156c874571759b6410d41134ac5",
+      "shape_xyzt": [
+        208,
+        256,
+        8,
+        28
+      ],
+      "affine": [
+        [
+          -1.5625,
+          0.0,
+          0.0,
+          161.71875
+        ],
+        [
+          0.0,
+          1.5625,
+          0.0,
+          -199.21875
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -35.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient025",
+      "role": "TRAIN",
+      "cine_sha256": "b8fb01258af61ed930ac27977d854d0ea3700985e6f854f731f74f012987ddda",
+      "cine_voxel_sha256": "c7c629aab2105272651c6cf8ce8dc6005f4324f27fb6331c473d8960915e58bd",
+      "shape_xyzt": [
+        256,
+        256,
+        9,
+        25
+      ],
+      "affine": [
+        [
+          -1.3671875,
+          0.0,
+          0.0,
+          174.31640625
+        ],
+        [
+          0.0,
+          1.3671875,
+          0.0,
+          -174.31640625
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -40.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.3671875,
+        1.3671875,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient026",
+      "role": "TRAIN",
+      "cine_sha256": "80ff797ae70753cd95b8307aecac6b47f6b52d44c54cefb12e689a5a20e0db5f",
+      "cine_voxel_sha256": "7bd1a59ee4239e67d5fa2c25b5bef2e7b027ae7f900f007765231d0cee39fc1f",
+      "shape_xyzt": [
+        216,
+        256,
+        10,
+        28
+      ],
+      "affine": [
+        [
+          -1.3671875,
+          0.0,
+          0.0,
+          146.97265625
+        ],
+        [
+          0.0,
+          1.3671875,
+          0.0,
+          -174.31640625
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.3671875,
+        1.3671875,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient027",
+      "role": "TRAIN",
+      "cine_sha256": "3b1f1ae81255028ac61aeb6fbdff16de5fb35d7099013780204370f4c6dd49f2",
+      "cine_voxel_sha256": "a973ec1cb06cd9f258738f3356b5eef3aa8bcd0cadb9a15f5e848e272e48292e",
+      "shape_xyzt": [
+        216,
+        256,
+        10,
+        30
+      ],
+      "affine": [
+        [
+          -1.3671875,
+          0.0,
+          0.0,
+          146.97265625
+        ],
+        [
+          0.0,
+          1.3671875,
+          0.0,
+          -174.31640625
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.3671875,
+        1.3671875,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient028",
+      "role": "VAL",
+      "cine_sha256": "ba4e10324e81d9ddc9b27d81676d24843e6d4c27b65c0a0a71defe95b687a070",
+      "cine_voxel_sha256": "98e6f99a42c0063f1acdaf0d1181cabee9404170f8e0eb1ee5d663bf430766d7",
+      "shape_xyzt": [
+        224,
+        256,
+        10,
+        28
+      ],
+      "affine": [
+        [
+          -1.5625,
+          0.0,
+          0.0,
+          174.21875
+        ],
+        [
+          0.0,
+          1.5625,
+          0.0,
+          -199.21875
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient029",
+      "role": "VAL",
+      "cine_sha256": "acf83e2715f94e930373a7a079f757be11bcf8d66cbec8fb423f49435dff83d9",
+      "cine_voxel_sha256": "38758f6d8f70dd63a83011ab05967eb967e65050fda607315589146447789fd8",
+      "shape_xyzt": [
+        192,
+        256,
+        11,
+        30
+      ],
+      "affine": [
+        [
+          -1.3671875,
+          0.0,
+          0.0,
+          130.56640625
+        ],
+        [
+          0.0,
+          1.3671875,
+          0.0,
+          -174.31640625
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -50.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.3671875,
+        1.3671875,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient030",
+      "role": "VAL",
+      "cine_sha256": "3e0267979dfaf04619a5585582d667e25014fe689d69b054ee21a94244527386",
+      "cine_voxel_sha256": "c01091434a5e0d605b1af9b6a47d63d8765cbde8ab70a7ce62b19d49d084bfea",
+      "shape_xyzt": [
+        216,
+        256,
+        10,
+        35
+      ],
+      "affine": [
+        [
+          -1.4453125,
+          0.0,
+          0.0,
+          155.37109375
+        ],
+        [
+          0.0,
+          1.4453125,
+          0.0,
+          -184.27734375
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.4453125,
+        1.4453125,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient031",
+      "role": "TRAIN",
+      "cine_sha256": "6bfd15ae619b926bd10517d56071d9f880d6539575e06d72682c1c3685a8d5e4",
+      "cine_voxel_sha256": "f8c70a9c092ad67313b1008d929567f60271000c817dccc33a0430b6770154b6",
+      "shape_xyzt": [
+        216,
+        256,
+        10,
+        30
+      ],
+      "affine": [
+        [
+          -1.484375,
+          0.0,
+          0.0,
+          159.5703125
+        ],
+        [
+          0.0,
+          1.484375,
+          0.0,
+          -189.2578125
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.484375,
+        1.484375,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient032",
+      "role": "VAL",
+      "cine_sha256": "f3f7bf4b7543ab49ba9419178c51d4d711b04261369f69a4a182940eedcc7fe5",
+      "cine_voxel_sha256": "70784e89f337e315053de446bc414e14551c93767582694c48fe21444b0f571d",
+      "shape_xyzt": [
+        240,
+        256,
+        10,
+        30
+      ],
+      "affine": [
+        [
+          -1.5625,
+          0.0,
+          0.0,
+          186.71875
+        ],
+        [
+          0.0,
+          1.5625,
+          0.0,
+          -199.21875
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient033",
+      "role": "TRAIN",
+      "cine_sha256": "0cac08267460d7a2bdd7b84f510cb5fbebe652a232d7b1e606b768a12fae4dad",
+      "cine_voxel_sha256": "fda789531e44ec1ddc2df725239fdd9140b05bd5cfce6a4f09cf5deb5631e1be",
+      "shape_xyzt": [
+        216,
+        256,
+        10,
+        30
+      ],
+      "affine": [
+        [
+          -1.5625,
+          0.0,
+          0.0,
+          167.96875
+        ],
+        [
+          0.0,
+          1.5625,
+          0.0,
+          -199.21875
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient034",
+      "role": "TRAIN",
+      "cine_sha256": "b7654332a4163a21eb8db2b50483cb06104734e48e97eda5932c17590cd38d9c",
+      "cine_voxel_sha256": "332238014661c1e6b487481838ad3ede3d57b0f5107f419a93edf2456f70b4cd",
+      "shape_xyzt": [
+        224,
+        256,
+        10,
+        30
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient035",
+      "role": "TRAIN",
+      "cine_sha256": "96d2559d33e87b5f199fcd833dcd84a89b71ee93a5e5fabe49b1891fd35fcd21",
+      "cine_voxel_sha256": "d14631caf7aa036361d587b85290270c9e8c86e5163b3458130c8c61ced699dc",
+      "shape_xyzt": [
+        208,
+        256,
+        13,
+        28
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.6796900033950806,
+        1.6796900033950806,
+        5.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient036",
+      "role": "VAL",
+      "cine_sha256": "547f9ad57cdf48a2c71a459683f9f20327e49cb313b54d2b1ca2aa73c4b43c74",
+      "cine_voxel_sha256": "b291587d2d37ae5ba0c70d9d89cf51083a0c404be0e19ddf11aff93af2aa7557",
+      "shape_xyzt": [
+        216,
+        256,
+        8,
+        35
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.4453099966049194,
+        1.4453099966049194,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient037",
+      "role": "TRAIN",
+      "cine_sha256": "99829af9ce86ff5f43bd7a351d02fabf6a00d5101bf0a3d9810684d20e65ce98",
+      "cine_voxel_sha256": "4f25b6032a6e2657f7ae11249d24f0a1572067ffd99e038127fcc47daefea31e",
+      "shape_xyzt": [
+        216,
+        256,
+        7,
+        30
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.875,
+        1.875,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient038",
+      "role": "TRAIN",
+      "cine_sha256": "69614d2e9302829443f907e96e73e0b1c0f59754ca12ec7a68de187f08eb4eb7",
+      "cine_voxel_sha256": "21755d958e8c028eaeff8556c49609e78f78cde284795b2e4c65d67912f59bef",
+      "shape_xyzt": [
+        276,
+        384,
+        8,
+        24
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        0.8333330154418945,
+        0.8333330154418945,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient039",
+      "role": "TRAIN",
+      "cine_sha256": "46b38419bfd3e863a65c5770ff668c728a32e1a86e4a2039d4a20ed80c2c2af1",
+      "cine_voxel_sha256": "65a1a3206372cf9dd2365790cf95e8ef5096df57808646031d4accdfc431461d",
+      "shape_xyzt": [
+        208,
+        256,
+        9,
+        28
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.6406199932098389,
+        1.6406199932098389,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient040",
+      "role": "TRAIN",
+      "cine_sha256": "7c60eb5188bab9b211607f8c39ccb953a5568d15c686bd17d40ad6d6da32950d",
+      "cine_voxel_sha256": "a80696d9b590c393fca6bd4da05ed8e2ebe7d8837e5100584453d561c90ddba1",
+      "shape_xyzt": [
+        208,
+        256,
+        10,
+        35
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.4843800067901611,
+        1.4843800067901611,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient041",
+      "role": "TRAIN",
+      "cine_sha256": "8355e06503d51c4acdbad4c8bfb4f2ee9b8343957eb2be4e1af685febcf801a6",
+      "cine_voxel_sha256": "0a51c6282cc52e637b6ea812f5e2a1b68cdb77441d80c132ca15f155afd6d540",
+      "shape_xyzt": [
+        154,
+        224,
+        6,
+        17
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.7857099771499634,
+        1.7857099771499634,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient042",
+      "role": "TRAIN",
+      "cine_sha256": "1a452f18a0d542780ec97b534b40e787fe9774f9029c52fa9bcd8a19ae6e5a48",
+      "cine_voxel_sha256": "0072edd34c9cf8d109db59a4125341931f4ae4ef4951d4f6151f16672b44ee40",
+      "shape_xyzt": [
+        232,
+        256,
+        9,
+        35
+      ],
+      "affine": [
+        [
+          -1.7578125,
+          0.0,
+          0.0,
+          203.02734375
+        ],
+        [
+          0.0,
+          1.7578125,
+          0.0,
+          -224.12109375
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -40.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.7578125,
+        1.7578125,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient043",
+      "role": "TRAIN",
+      "cine_sha256": "7d7d8ce7ef82da3713146da9940b677b42d5d106a2e9855110ab5c3a6974f686",
+      "cine_voxel_sha256": "3908540b8b90b57848b2cb3c7059d1ac0033949ca5a53c148d6cffa9897cd453",
+      "shape_xyzt": [
+        174,
+        224,
+        12,
+        13
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.9196399450302124,
+        1.9196399450302124,
+        6.5,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient044",
+      "role": "TRAIN",
+      "cine_sha256": "f5c38236c05d9380ffbb6172f507ae3bf37dee59a69dfad1250ebb511534f6da",
+      "cine_voxel_sha256": "ba26be515eb1b8db115324b6a85784ab997dd9ef8f68587bea8d79ea27145925",
+      "shape_xyzt": [
+        256,
+        216,
+        9,
+        30
+      ],
+      "affine": [
+        [
+          -1.3671875,
+          0.0,
+          0.0,
+          174.31640625
+        ],
+        [
+          0.0,
+          1.3671875,
+          0.0,
+          -146.97265625
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -40.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.3671875,
+        1.3671875,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient045",
+      "role": "TRAIN",
+      "cine_sha256": "14a833549ae6f90005dd857971859494c13d83e038fd84196c394ed9ce8fce62",
+      "cine_voxel_sha256": "0b699483523175d7fac7150cebc0c42f51474dcfc6ac85af7b442a7281fa159e",
+      "shape_xyzt": [
+        208,
+        256,
+        8,
+        35
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient046",
+      "role": "TRAIN",
+      "cine_sha256": "4a314786be0497ab26a17c6b267f68b9e573717d09b665f3234a145abd08a196",
+      "cine_voxel_sha256": "ee27170f5ade6538cac20b79b28ee2709a63119a18cefcd93a44537c74357e0e",
+      "shape_xyzt": [
+        256,
+        216,
+        9,
+        30
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient047",
+      "role": "TRAIN",
+      "cine_sha256": "a2fc5477a9ac94f9070ee0f18db5cc90083e1c2bae81efd77551d0b574ce1ced",
+      "cine_voxel_sha256": "22f8666d330b4bfd88c7551454a4d2e2b9f069ae940855bd470a2eb4cde57791",
+      "shape_xyzt": [
+        256,
+        208,
+        9,
+        22
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.6796900033950806,
+        1.6796900033950806,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient048",
+      "role": "TRAIN",
+      "cine_sha256": "2616f7d68f08990f27a0c108e05da5273394db5478876ced95f3ddb5c4099d04",
+      "cine_voxel_sha256": "948abd52dda3f22aa0a1fc55dddf603cec19646b43b9181a8a70eeecfac19179",
+      "shape_xyzt": [
+        208,
+        256,
+        8,
+        28
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient049",
+      "role": "TRAIN",
+      "cine_sha256": "48318d426c43d30338b2f747d60fb95fbb48a0454a88f812c867354bddcad8f0",
+      "cine_voxel_sha256": "4cefb800f440bb311bab2484ec0e86d8feb92a86448a310c69d36c6d29d9a348",
+      "shape_xyzt": [
+        256,
+        216,
+        7,
+        35
+      ],
+      "affine": [
+        [
+          -1.3671875,
+          0.0,
+          0.0,
+          174.31640625
+        ],
+        [
+          0.0,
+          1.3671875,
+          0.0,
+          -146.97265625
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -30.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.3671875,
+        1.3671875,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient050",
+      "role": "TRAIN",
+      "cine_sha256": "4d6ef50b1a590180863e1637a6b97c7c903b809103a4a5454ecd17d18e1202d0",
+      "cine_voxel_sha256": "e70670e93aee420ae737d1aecba231b6ac6b0b21718f0144699cdcbae3eb31fd",
+      "shape_xyzt": [
+        248,
+        256,
+        10,
+        30
+      ],
+      "affine": [
+        [
+          -1.3671875,
+          0.0,
+          0.0,
+          168.84765625
+        ],
+        [
+          0.0,
+          1.3671875,
+          0.0,
+          -174.31640625
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.3671875,
+        1.3671875,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient051",
+      "role": "TRAIN",
+      "cine_sha256": "78424248aa059ea9336f3d9f982794f48a84419cb2ddc2569dd415cdef33ea9c",
+      "cine_voxel_sha256": "30eea193a6781a3d71673b3f12f6f5ccca29d94c931925dda21d317130a64dbd",
+      "shape_xyzt": [
+        224,
+        256,
+        10,
+        30
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.6406199932098389,
+        1.6406199932098389,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient052",
+      "role": "TRAIN",
+      "cine_sha256": "87271d169c31b6d4488538b721c7d771e886b4c6d4e7ce988732c499485a8af5",
+      "cine_voxel_sha256": "4d4532b8207633a13d628a5dfeb7b5fd2f490ae897296e2d7b9c84fb89566b47",
+      "shape_xyzt": [
+        216,
+        256,
+        8,
+        20
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.4843800067901611,
+        1.4843800067901611,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient053",
+      "role": "TRAIN",
+      "cine_sha256": "347b24a8cc61acf10c46a6f4ae2a246e7b419ac71772fecd3665017b9362c8ee",
+      "cine_voxel_sha256": "8f97266df34317aece7dce0a4457dd8c84b0185597ad1c87889c19fe95d307dd",
+      "shape_xyzt": [
+        216,
+        256,
+        7,
+        30
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.3671900033950806,
+        1.3671900033950806,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient054",
+      "role": "TRAIN",
+      "cine_sha256": "a055c76cdf508c0b9ce1dc785fb1706173f9e56f4d49e8dee04424a3d026d18e",
+      "cine_voxel_sha256": "6a1e44099fc48a96eddbb1f0cece398d10ca39e0aecc9d7360a76ecbc99505f8",
+      "shape_xyzt": [
+        216,
+        256,
+        8,
+        30
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.4843800067901611,
+        1.4843800067901611,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient055",
+      "role": "VAL",
+      "cine_sha256": "ae245957fee700499974cbd7341c9397cc34d333915c10ed7d7285f29a1b8a47",
+      "cine_voxel_sha256": "9002cf4c58036e2459a1751bec65692c539f72e9667da4ce5078e3b056749d56",
+      "shape_xyzt": [
+        256,
+        216,
+        9,
+        25
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.4843800067901611,
+        1.4843800067901611,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient056",
+      "role": "TRAIN",
+      "cine_sha256": "a5733abffce81c0f9e90b9bf8afebed1d28ebf588180f58a3470d1fb395327a7",
+      "cine_voxel_sha256": "371d51c505513e159f7423ad9b0b539c199014c427725b25a39256e06e44caa1",
+      "shape_xyzt": [
+        216,
+        256,
+        9,
+        30
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.3671900033950806,
+        1.3671900033950806,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient057",
+      "role": "TRAIN",
+      "cine_sha256": "162a508524ad73d1b5d3bd82b8146373ebeb5c2ddf09320110f0f43e476fc972",
+      "cine_voxel_sha256": "d00c27905c81568d3e392437c8ac419c1ffd02e60fff46ca5c5171a1920e39db",
+      "shape_xyzt": [
+        428,
+        512,
+        8,
+        25
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        0.703125,
+        0.703125,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient058",
+      "role": "TRAIN",
+      "cine_sha256": "c0835e2dc7654dddd62c04bdf8b2bd7c11f74efc95b7eaec0f78dc4abbb53d5e",
+      "cine_voxel_sha256": "7185bc8dfcf265732afb3c2bac9e2641fea99cdc22d3e889cee5c0ef56cfac8a",
+      "shape_xyzt": [
+        216,
+        256,
+        9,
+        30
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.40625,
+        1.40625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient059",
+      "role": "TRAIN",
+      "cine_sha256": "bd54172d89b382ec06e2f5c5242429055e3a4b766e186825b0648b84858379cb",
+      "cine_voxel_sha256": "0472a136207ba5a8c8aec02654c97c6d5f915f66e74cdfc36b4df3e4dda82bad",
+      "shape_xyzt": [
+        256,
+        216,
+        9,
+        30
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.3671900033950806,
+        1.3671900033950806,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient060",
+      "role": "TRAIN",
+      "cine_sha256": "7220af02d9b4ac4b7f2c52bcb357326e8977d0a83b21078003efa0f218df1f5b",
+      "cine_voxel_sha256": "071571b0fd78f01c879a5960cfde0542ada41f0918c1f783e940313feb3fe009",
+      "shape_xyzt": [
+        216,
+        256,
+        9,
+        30
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient061",
+      "role": "TRAIN",
+      "cine_sha256": "2ebf49f26ed8731abb763d874646a89f2529d9ee88b346eaee387cf7ac3c698c",
+      "cine_voxel_sha256": "4a63b64fedd9c63b73d40a788fd8e188befc59cba2e1d3a99efd55c69331bf55",
+      "shape_xyzt": [
+        216,
+        256,
+        9,
+        30
+      ],
+      "affine": [
+        [
+          -1.3671875,
+          0.0,
+          0.0,
+          146.97265625
+        ],
+        [
+          0.0,
+          1.3671875,
+          0.0,
+          -174.31640625
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -40.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.3671875,
+        1.3671875,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient062",
+      "role": "TRAIN",
+      "cine_sha256": "32d200bfed66bba4dd1e7481638baac75b6415019d7d8367de16364b15fc751b",
+      "cine_voxel_sha256": "19896824f8500607c709d279d5bcba03bf56c51eff6d6a250db602f3b781e5f8",
+      "shape_xyzt": [
+        256,
+        216,
+        10,
+        30
+      ],
+      "affine": [
+        [
+          -1.3671875,
+          0.0,
+          0.0,
+          174.31640625
+        ],
+        [
+          0.0,
+          1.3671875,
+          0.0,
+          -146.97265625
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.3671875,
+        1.3671875,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient063",
+      "role": "TRAIN",
+      "cine_sha256": "6295ffb04ca7c3233837fff8ce29f919257653b9d200c01711672aacaeea8f88",
+      "cine_voxel_sha256": "6b9afa21e5e83fc737034ed9347ad9b65fabc0158028f7d5b7d6d094d78d2ca1",
+      "shape_xyzt": [
+        256,
+        176,
+        8,
+        35
+      ],
+      "affine": [
+        [
+          -1.3671875,
+          0.0,
+          0.0,
+          174.31640625
+        ],
+        [
+          0.0,
+          1.3671875,
+          0.0,
+          -119.62890625
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -35.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.3671875,
+        1.3671875,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient064",
+      "role": "TRAIN",
+      "cine_sha256": "0515d959892b9e6466da45e816f21a8eb59bcf1d4e28b0a91b55ee4f887fb75d",
+      "cine_voxel_sha256": "298605eaeb0e3dfd13adaa621c3250b6720e7572b803db23712c1bba91b59078",
+      "shape_xyzt": [
+        216,
+        256,
+        10,
+        35
+      ],
+      "affine": [
+        [
+          -1.4453125,
+          0.0,
+          0.0,
+          155.37109375
+        ],
+        [
+          0.0,
+          1.4453125,
+          0.0,
+          -184.27734375
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.4453125,
+        1.4453125,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient065",
+      "role": "VAL",
+      "cine_sha256": "759985bc3aa008b75d1f6af9961d8cc75e1eda6f96492d2e2a3828553b8acece",
+      "cine_voxel_sha256": "b417bcd9c010a622a7408c096af80d2633612fead91d717b9b61d7be56814a9e",
+      "shape_xyzt": [
+        210,
+        224,
+        8,
+        30
+      ],
+      "affine": [
+        [
+          -1.875,
+          0.0,
+          0.0,
+          195.9375
+        ],
+        [
+          0.0,
+          1.875,
+          0.0,
+          -209.0625
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -35.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.875,
+        1.875,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient066",
+      "role": "TRAIN",
+      "cine_sha256": "4fa9ad78c8367841fd63b8b07f92cb85fc0b13086abd1310b414ee3746bd9939",
+      "cine_voxel_sha256": "d4873623a297bb419b8b0ccd87161de84c58490a398a29158a767ce0a6c140e7",
+      "shape_xyzt": [
+        240,
+        256,
+        9,
+        30
+      ],
+      "affine": [
+        [
+          -1.3671875,
+          0.0,
+          0.0,
+          163.37890625
+        ],
+        [
+          0.0,
+          1.3671875,
+          0.0,
+          -174.31640625
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -40.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.3671875,
+        1.3671875,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient067",
+      "role": "TRAIN",
+      "cine_sha256": "fe8f997a17aa8ec7ae2ebb04941a65e461aca410541c3fa775922480b5c669f5",
+      "cine_voxel_sha256": "621a90f656e39237ecf0aa2734b38a0807a82132534687772a8bcd0015a8d380",
+      "shape_xyzt": [
+        256,
+        216,
+        10,
+        30
+      ],
+      "affine": [
+        [
+          -1.3671875,
+          0.0,
+          0.0,
+          174.31640625
+        ],
+        [
+          0.0,
+          1.3671875,
+          0.0,
+          -146.97265625
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.3671875,
+        1.3671875,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient068",
+      "role": "TRAIN",
+      "cine_sha256": "d47ade69f7b99369d26de173bd6c55fc90bc68185e248c1d287a335d971f6417",
+      "cine_voxel_sha256": "911768b7aa2effb0b25521cb1612b0c21575cdbf1bbbb5f0b3b41f21436730a1",
+      "shape_xyzt": [
+        256,
+        208,
+        7,
+        28
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient069",
+      "role": "TRAIN",
+      "cine_sha256": "dbeba857c6dff9a1a1df4c5597dfc02ecc1108da4c2653d30003042dfa9255df",
+      "cine_voxel_sha256": "852e9308d89618bf9cb3a10ae4133faede5f8dbb4744a1e9508242653582a2c6",
+      "shape_xyzt": [
+        216,
+        256,
+        7,
+        30
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient070",
+      "role": "VAL",
+      "cine_sha256": "057275cab8927f8d01a910f00646ea3a3e8fa96b440425778b55647288b6c836",
+      "cine_voxel_sha256": "77ad058089ba73b267d6556bf6005af4923e004e54b1970b87ec4ac634f19423",
+      "shape_xyzt": [
+        208,
+        256,
+        6,
+        28
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient071",
+      "role": "TRAIN",
+      "cine_sha256": "eb67d9406972cdeeadfaf348ca86b6c31fee066c5b47386e1fd40654e6440703",
+      "cine_voxel_sha256": "823ba08b9519d735d0bc94e1b57de3a1c4f760a72a5e089b5065f28a785e1e19",
+      "shape_xyzt": [
+        192,
+        256,
+        10,
+        30
+      ],
+      "affine": [
+        [
+          -1.5625,
+          0.0,
+          0.0,
+          149.21875
+        ],
+        [
+          0.0,
+          1.5625,
+          0.0,
+          -199.21875
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient072",
+      "role": "TRAIN",
+      "cine_sha256": "6e3481b05a38e6ad03088f22ab899c42818d7cb7d42626124952d8a87b82553f",
+      "cine_voxel_sha256": "de23a02c3fb0123c6d0ac599d5afc60ede78406f40bfb260da2bbbee384328fb",
+      "shape_xyzt": [
+        216,
+        256,
+        8,
+        30
+      ],
+      "affine": [
+        [
+          -1.5625,
+          0.0,
+          0.0,
+          167.96875
+        ],
+        [
+          0.0,
+          1.5625,
+          0.0,
+          -199.21875
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -35.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient073",
+      "role": "TRAIN",
+      "cine_sha256": "daacc8685018bde7e8cdebf9d46576a10518fad59401520892b75e793d40508d",
+      "cine_voxel_sha256": "faa45bc59c5b6c05087548c352fb53ffbad1cc8e94fbfed03adb793087be4d98",
+      "shape_xyzt": [
+        208,
+        256,
+        7,
+        35
+      ],
+      "affine": [
+        [
+          -1.640625,
+          0.0,
+          0.0,
+          169.8046875
+        ],
+        [
+          0.0,
+          1.640625,
+          0.0,
+          -209.1796875
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -30.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.640625,
+        1.640625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient074",
+      "role": "TRAIN",
+      "cine_sha256": "69487c77380cf665520ffbe6ce3abc0eba5a121dc2270e564079be765c296a52",
+      "cine_voxel_sha256": "51e97413efd7d093d4da8e892a760c396f6e46daa6d86cb181d0dd33f9e0cfd0",
+      "shape_xyzt": [
+        256,
+        256,
+        8,
+        30
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient075",
+      "role": "TRAIN",
+      "cine_sha256": "4333f734a23438fd0b8d17500b185dac8c59688f3d33d7385d862a928b17893c",
+      "cine_voxel_sha256": "d1ac5646f8d42491a6d8affdddb0a21d038dbc407a72f0ccc0b43330c19f79f4",
+      "shape_xyzt": [
+        168,
+        224,
+        14,
+        14
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.7857099771499634,
+        1.7857099771499634,
+        5.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient076",
+      "role": "VAL",
+      "cine_sha256": "69487c77380cf665520ffbe6ce3abc0eba5a121dc2270e564079be765c296a52",
+      "cine_voxel_sha256": "51e97413efd7d093d4da8e892a760c396f6e46daa6d86cb181d0dd33f9e0cfd0",
+      "shape_xyzt": [
+        256,
+        256,
+        8,
+        30
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient077",
+      "role": "TRAIN",
+      "cine_sha256": "cf916871be3822429ac1a9ae17d723c94664b93c9951fdedba933a4be7193384",
+      "cine_voxel_sha256": "91c52ec43e25a366bd3e10d07abe2fd35f212a544463a6312d9c3119e8188ec1",
+      "shape_xyzt": [
+        214,
+        256,
+        8,
+        25
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.40625,
+        1.40625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient078",
+      "role": "TRAIN",
+      "cine_sha256": "0908ad845d0bad6dbc457e126b3569b93dd4ccd54099900b55eb9170ec6a98f3",
+      "cine_voxel_sha256": "25a2d0796386cada54affe3311079f4e9edf044452196159e6ba0e518da5b7b6",
+      "shape_xyzt": [
+        216,
+        256,
+        8,
+        30
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.3671900033950806,
+        1.3671900033950806,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient079",
+      "role": "TRAIN",
+      "cine_sha256": "a346bb2625688b79efdd70f583f74ad4da6302473a8e0bd2c832cb8e4caa7052",
+      "cine_voxel_sha256": "fa010735684c53ef0b5ab2bbc9ce0b6408cf249970a6073faf1de5641a15333c",
+      "shape_xyzt": [
+        216,
+        256,
+        9,
+        30
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.3671900033950806,
+        1.3671900033950806,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient080",
+      "role": "TRAIN",
+      "cine_sha256": "9bb088ef46a367e6ab7758339d1ee8694ad97b187e0054f3e009c38ae92d5e41",
+      "cine_voxel_sha256": "a8cd8367511f4c3cc4c32b0ae3b001cf64c20f3323558d5a711165302d1ec351",
+      "shape_xyzt": [
+        216,
+        256,
+        6,
+        21
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.7578099966049194,
+        1.7578099966049194,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient081",
+      "role": "TRAIN",
+      "cine_sha256": "75d8a85366b66df88accbe9c67fb15649edeb6176850c1dc21d1cdd01aefafe4",
+      "cine_voxel_sha256": "41ce5521a6364cf0e758f377120fc61f5d1c10bc1b82d1e3581a277b3ffe1182",
+      "shape_xyzt": [
+        154,
+        224,
+        17,
+        16
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.6517900228500366,
+        1.6517900228500366,
+        5.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient082",
+      "role": "VAL",
+      "cine_sha256": "f7df5fdb0a5840371d7b9ed5e741fd262797d2143a86e9d406933ef90d4b7236",
+      "cine_voxel_sha256": "04303630fff4d5d7ac62954e8d843d3e67f2439e9e5d009c131007bf2cf3cb34",
+      "shape_xyzt": [
+        224,
+        154,
+        16,
+        17
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.7857099771499634,
+        1.7857099771499634,
+        5.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient083",
+      "role": "TRAIN",
+      "cine_sha256": "0dc52ff43b4a53c6a4a71268982824142e04411fdf8c6d87297b4d82240b6ffa",
+      "cine_voxel_sha256": "e0ac097c17e13325fe3c9fefc2b4fbeb3410fe7e1e8965e04dacbc4aeb060d79",
+      "shape_xyzt": [
+        208,
+        256,
+        6,
+        17
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient084",
+      "role": "TRAIN",
+      "cine_sha256": "d9be342673878c01aad056e4043ded6cbc96dfea6b9eaf7a8c2d2e371570fde6",
+      "cine_voxel_sha256": "53c314378bdb269cc2a4060eec8eb77ac3c35c81946b866ffb3a5e96020472ec",
+      "shape_xyzt": [
+        208,
+        256,
+        12,
+        35
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.3671900033950806,
+        1.3671900033950806,
+        5.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient085",
+      "role": "TRAIN",
+      "cine_sha256": "acd152bf422243be64089601c71c7d86b1b39e166b89f0027b7c25aaafde22e8",
+      "cine_voxel_sha256": "7a8a65c7bf8351cb06bdc83b4cd873cb9aa7a003eaaee06707de636f201bb8e1",
+      "shape_xyzt": [
+        184,
+        288,
+        15,
+        30
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.2152800559997559,
+        1.2152800559997559,
+        5.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient086",
+      "role": "TRAIN",
+      "cine_sha256": "32506debbfd65f58ed3cfdc6c90c834d1de34f2d4870d8cad6b1cb5821763b85",
+      "cine_voxel_sha256": "37bb6f598993df4ea3189a5983a651d25548dae9b6b2cfd6c276c6449d251234",
+      "shape_xyzt": [
+        192,
+        256,
+        7,
+        19
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient087",
+      "role": "VAL",
+      "cine_sha256": "6739809a950671235328a274f34fb3d5e62ee3a25654ed73710b3d86876263fd",
+      "cine_voxel_sha256": "b143f552670d2cf84e3602912ba2bdde431674ee657c2428efd7951a2893aec6",
+      "shape_xyzt": [
+        256,
+        184,
+        8,
+        28
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.4453099966049194,
+        1.4453099966049194,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient088",
+      "role": "TRAIN",
+      "cine_sha256": "0abdbba843f0c3b22ad9509430dcd7e71ea9d0947a4f272f4a0b9cf55cbb96e8",
+      "cine_voxel_sha256": "afe305d933d7b56fe07b021207f6ae534db43783c23d063c20802e2442dca78c",
+      "shape_xyzt": [
+        224,
+        154,
+        16,
+        25
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.6517900228500366,
+        1.6517900228500366,
+        5.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient089",
+      "role": "VAL",
+      "cine_sha256": "695ddf3e54711114df72a5c9b5bf5c2e7e2cdcb6c4420363942bb51876b2d728",
+      "cine_voxel_sha256": "9a198c1aa500505def3d7c8d6d79fd1bbbdd28b2ee6be170be5e49226fadcbde",
+      "shape_xyzt": [
+        264,
+        288,
+        6,
+        30
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.4583300352096558,
+        1.4583300352096558,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient090",
+      "role": "TRAIN",
+      "cine_sha256": "1a986cf00048b195d7fd1f4802d3f0c729dc1f0c2bb814f70db035b5d118b446",
+      "cine_voxel_sha256": "18cfab71738ea3a12c003348d9501ad1c8839d142ccea98ede41361b939a0929",
+      "shape_xyzt": [
+        154,
+        224,
+        7,
+        12
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.7857099771499634,
+        1.7857099771499634,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient091",
+      "role": "TRAIN",
+      "cine_sha256": "6231158587db6758ebdbf3a61d94f3dc1c309c5cff19382522d267102f4c3c24",
+      "cine_voxel_sha256": "0061a0d5763c993b9854cecab7b82030d21ab8328bf291ae93f3d0d3740c5561",
+      "shape_xyzt": [
+        180,
+        224,
+        8,
+        16
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient092",
+      "role": "TRAIN",
+      "cine_sha256": "8d8576b7c6feb7f409a3f5d8d64f5c26c354b06c4e8432dc300c08989d5ecaac",
+      "cine_voxel_sha256": "b1c10b3cc1bf7c0c8d98d5acd20d5cffc10e2431557de5e6e9911a6bda361a02",
+      "shape_xyzt": [
+        174,
+        208,
+        15,
+        15
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.6826900243759155,
+        1.6826900243759155,
+        5.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient093",
+      "role": "TRAIN",
+      "cine_sha256": "a55037ab2a500511ef809204a12408c2fa74391965a24f4076d88b2ac7ab8559",
+      "cine_voxel_sha256": "01e80694499f01755622453a220bcc54543387db7833c60da4938f8e98c8f3ae",
+      "shape_xyzt": [
+        180,
+        224,
+        10,
+        30
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        7.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient094",
+      "role": "TRAIN",
+      "cine_sha256": "67e21e6006d24817881e28ed43ab810dc5cd7c165d05215c04e5884db9de98e6",
+      "cine_voxel_sha256": "d8265c7e29e1e503caeb4d87c7dcc70c909aa9ffd76b068b13d99a43020e5a24",
+      "shape_xyzt": [
+        208,
+        174,
+        10,
+        14
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.6826900243759155,
+        1.6826900243759155,
+        5.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient095",
+      "role": "VAL",
+      "cine_sha256": "0d890435d3e28a214f39c28e7984d5af9fe6739380b573d8de87bef1ed46a273",
+      "cine_voxel_sha256": "84b8ad7bceb7771b4b2ad79518e053addc57e2b2a6ea56935524913d32a2a9dc",
+      "shape_xyzt": [
+        180,
+        224,
+        14,
+        30
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.5625,
+        1.5625,
+        5.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient096",
+      "role": "TRAIN",
+      "cine_sha256": "f45d1c1dd8df8a174d1decb204390a9babc4ee0a55297ce9f6b78be3ebc60859",
+      "cine_voxel_sha256": "a8bf00758058a2ba19a4d3afd41d09e2871025ce625bd97bde3535f342036af3",
+      "shape_xyzt": [
+        174,
+        208,
+        18,
+        15
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.6826900243759155,
+        1.6826900243759155,
+        5.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient097",
+      "role": "TRAIN",
+      "cine_sha256": "e70a08e2a2585ef83fa9478ccd28a5c772210d8db65fa2b94149641bc8321062",
+      "cine_voxel_sha256": "1ddda18dd537c4b322b0310ec525ad484eefb9435105f374958f7e5a997d744b",
+      "shape_xyzt": [
+        216,
+        256,
+        8,
+        30
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.4843800067901611,
+        1.4843800067901611,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient098",
+      "role": "VAL",
+      "cine_sha256": "3fd92a6ca1101d4e84832d792624200959a785b8f25f1ea368624b9d6f6ce97b",
+      "cine_voxel_sha256": "2105370bef64699199933fdb9582de3e23b641ab40a1f7cdf0fcb33d1e2c7f81",
+      "shape_xyzt": [
+        216,
+        256,
+        7,
+        22
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.25,
+        1.25,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient099",
+      "role": "TRAIN",
+      "cine_sha256": "977516f48fc496c93aab2aab982f50c2fc1c86371b8a95900461bf788cd5fb7f",
+      "cine_voxel_sha256": "c4174160def3952c1581fd2fca1911eb0aea51502be36478b6a5b0bf78183ceb",
+      "shape_xyzt": [
+        154,
+        224,
+        16,
+        19
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.7857099771499634,
+        1.7857099771499634,
+        5.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    },
+    {
+      "patient": "patient100",
+      "role": "TRAIN",
+      "cine_sha256": "808f30e98345ec05620c717c0ff381b941f99a5a476c95da84c43482c7bf74d1",
+      "cine_voxel_sha256": "f45ca9413b2134b0100f673b82c11a3047951e6e9af650c39c338e5d8b9bd6a5",
+      "shape_xyzt": [
+        216,
+        304,
+        8,
+        34
+      ],
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "spacing_header": [
+        1.315790057182312,
+        1.315790057182312,
+        10.0,
+        1.0
+      ],
+      "geometry_status": "image_header_only_not_HD95_certification"
+    }
+  ],
+  "errors": [
+    "duplicate cine content: patient074, patient076; split review required",
+    "duplicate cine voxels: patient074, patient076; split review required"
+  ]
+}

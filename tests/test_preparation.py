@@ -33,3 +33,13 @@ def test_preparation_opens_only_budgeted_masks_with_mock_reader(tmp_path,monkeyp
     assert mask_ids==lids and len(lids)==2
     assert not any('patient004' in p for p in reads)
     assert all(set(r)=={'id','image','image_sha256'} for r in m['unlabeled'])
+    reused = tmp_path/'reused'
+    reads.clear()
+    prepare(root,split,reused,2,123,False,image_cache=out)
+    rm=json.loads((reused/'train.json').read_text())
+    assert not list(reused.glob('patient???.npy'))
+    assert {r['image_sha256'] for r in rm['labeled']+rm['unlabeled']} == {r['image_sha256'] for r in m['labeled']+m['unlabeled']}
+    assert {Path(p).parent.name for p in reads if '_gt' in p} == {r['id'] for r in rm['labeled']}
+    np.save(out/'patient001.npy',np.zeros((2,2,6,5),dtype=np.float32))
+    with pytest.raises(ValueError,match='shared image cache differs'):
+        prepare(root,split,tmp_path/'bad_shared',2,123,False,image_cache=out)

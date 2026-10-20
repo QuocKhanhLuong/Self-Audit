@@ -97,6 +97,25 @@ class TrainingData:
         t, z = int(rng.integers(len(cine))), int(rng.integers(cine.shape[1]))
         return self.context(cine, t, z), {"patient": r["id"], "frame": t, "slice": z}
 
+    def sample_batch(self, index, rng, batch_size, *, labeled):
+        """Native slices from one patient: no resizing, padding, or U mask access.
+
+        A transaction uses different supervised/audit patients. For batch>1 the
+        audit measure gives equal mass to sampled slices of that audit patient.
+        This is a declared batch protocol, not the single-slice experiment.
+        """
+        if type(batch_size) is not int or batch_size < 1:
+            raise ValueError("positive integer batch_size required")
+        sampler = self.sample_labeled if labeled else self.sample_unlabeled
+        samples = [sampler(index, rng) for _ in range(batch_size)]
+        images = torch.cat([s[0] for s in samples])
+        metadata = dict(samples[0][-1])
+        if batch_size > 1:
+            metadata["samples"] = [s[-1] for s in samples]
+        if labeled:
+            return images, torch.cat([s[1] for s in samples]), metadata
+        return images, metadata
+
 
 def synthetic_fixture(folder, seed=11, n_labeled=3, n_unlabeled=3, size=32):
     """Manufactured objects only. Never evidence of cardiac accuracy."""

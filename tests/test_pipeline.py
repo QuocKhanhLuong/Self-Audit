@@ -98,3 +98,50 @@ def test_annotation_leak_fails(tmp_path):
     m,sha=synthetic_fixture(tmp_path/'data');obj=json.loads(m.read_text())
     obj['label_budget']=2;write_json(m,obj)
     with pytest.raises(ValueError,match='budget'):TrainingData(m,digest(m),synthetic=True)
+
+
+def test_native_patient_batches_do_not_read_u_labels(tmp_path):
+    m, sha = synthetic_fixture(tmp_path/'data')
+    data = TrainingData(m, sha, synthetic=True)
+    x, meta = data.sample_batch(0, np.random.default_rng(1), 4, labeled=False)
+    assert x.shape == (4, 3, 32, 32) and data.label_reads == set()
+    assert len(meta['samples']) == 4
+    assert {s['patient'] for s in meta['samples']} == {data.uids[0]}
+    x, y, meta = data.sample_batch(1, np.random.default_rng(1), 4, labeled=True)
+    assert x.shape == (4, 3, 32, 32) and y.shape == (4, 32, 32)
+    assert data.label_reads == {data.lids[1]}
+    old_rng, new_rng = np.random.default_rng(8), np.random.default_rng(8)
+    old = data.sample_labeled(0, old_rng)
+    new = data.sample_batch(0, new_rng, 1, labeled=True)
+    torch.testing.assert_close(old[0], new[0]); torch.testing.assert_close(old[1], new[1])
+    assert old[2] == new[2] and old_rng.bit_generator.state == new_rng.bit_generator.state
+
+
+@pytest.mark.parametrize('method', ['supervised', 'supervised_extra', 'ema_full', 'ema_block',
+                                   'sign', 'independent_guard', 'joint_no_class', 'joint_no_guard', 'joint_guard'])
+def test_matched_native_batch_transactions(tmp_path, method):
+    m, sha = synthetic_fixture(tmp_path/'data')
+    c = recipe(method, 'decoder'); c.update(batch_size=2, steps=2, warmup_steps=0)
+    report = train(c, m, sha, tmp_path/'run', device='cpu', synthetic=True)
+    assert report['ema_updates'] == 2 and report['label_reads_outside_budget'] == []
+    rows = [json.loads(s) for s in (tmp_path/'run/steps.jsonl').read_text().splitlines()]
+    for row in rows:
+        assert len(row['audit']['samples']) == 2
+        assert row['supervised']['patient'] != row['audit']['patient']
+        if row.get('control', {}).get('guarded'):
+            assert np.all(np.array(row['control']['after']) <= np.array(row['control']['before']) + 1e-8)
+    control = tmp_path/'reference'
+    c['method'] = 'supervised'
+    train(c, m, sha, control, device='cpu', synthetic=True)
+    reference = [json.loads(s) for s in (control/'steps.jsonl').read_text().splitlines()]
+    for row, ref in zip(rows, reference):
+        for role in ['supervised', 'audit', 'unlabeled']:
+            assert row[role] == ref[role]
+
+
+def test_legacy_batch_recipe_and_invalid_batch_sizes():
+    c = recipe(); del c['batch_size']
+    assert validate_config(c)['batch_size'] == 1
+    for invalid in [0, -1, True, 1.5]:
+        with pytest.raises(ValueError, match='batch_size'):
+            validate_config({**c, 'batch_size': invalid})
