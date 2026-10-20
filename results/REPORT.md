@@ -69,11 +69,12 @@ Four-class joint-guard crop256 probe results:
 | 48 | 20.62 | 21.02 |
 | 52 | 22.32 | 22.79 |
 
-Batch52 also passed full-EMA and a small-image/padding case. Batch54 passed a
-probe with fewer candidate groups; that lower-memory case does not certify the
-four-candidate worst case. Batch52 was selected to use nearly all available VRAM
-while retaining a small margin. This is not a proof of the absolute maximum
-batch on every future state or a throughput comparison.
+Batch52 also passed full-EMA and a small-image/padding case. Batch54 passed
+a four-candidate probe too (21.96 GiB allocated, 22.55 GiB reserved); observed
+peaks were not monotonic across these individual minibatch/process probes.
+Batch52 was retained after its successful 72-step actual training pilot, using
+nearly all available VRAM with a small margin. This is not a proof of the
+absolute maximum batch on every future state or a throughput comparison.
 
 Capacity probes load the hash-pinned native-v2 step1000 checkpoint only to
 exercise realistic learned four-class EMA candidates, with fresh optimizer
