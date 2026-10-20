@@ -1,58 +1,35 @@
-# Cleanup and migration — 2026-10-17
+# Migration — 2026-10-20
 
-## Recoverability
+Before any deletion, the complete previous main was retained as
+`archive/pre-semisupervised-20261020` at
+`924265f7df604d3dca84dda49578b1a0cf28d821`.
+No history is rewritten; other research branches are not removed.
 
-Before cleanup, the main snapshot was retained as branch
-`archive/pre-cleanup-20261017` at `92a60744efef85558d7c0226c84b7c49d47217ec`.
-The imported new-model trainer was already published at
-`c4973553a743648a04c603c6b4634240933b8b80` on
-`codex/astra-student-training-20261016`.
-No history is force-rewritten and no research branch is deleted.
+This is an explicit supervision/architecture change authorized by the user's
+request. Old no-GT results are not relabeled semi-supervised successes. The exact
+D/U reference and original tests remain unchanged in the archive, not replaced
+under the same paths with different mathematics.
 
-Historical reproduction belongs in a separate worktree:
+Removed from the active tree: frozen-Q/CineMA bank trainers/adapters, legacy
+coarse/detail policy, dormant guard/refiner code, obsolete prompts/runbooks,
+old experiment entrypoints, copied report bundles and their old tests. Current
+research/provenance remains recoverable via the archive and its pinned commits.
+Existing split/checkpoint metadata is retained without changing its contents.
+
+New canonical package: self_audit/. Entry: train.py. Checkpoint/data schemas are
+v2. Historical --bank / --phase coarse commands fail rather than train a different
+model silently. Common old script names remain error-only stubs.
+
+No untracked dataset, run, checkpoint, credentials, dependency environment or
+active GPU process is touched by Git publication. A live checkout may retain
+old untracked directories after pull; check_repo stops there. Create a fresh
+worktree instead of deleting those directories blindly.
 
 ```bash
-git fetch origin archive/pre-cleanup-20261017
-git worktree add --detach ../Self-Audit-historical origin/archive/pre-cleanup-20261017
+git fetch origin archive/pre-semisupervised-20261020
+git worktree add --detach ../Self-Audit-historical origin/archive/pre-semisupervised-20261020
 ```
 
-Do not cherry-pick old launchers into the new worktree. Do not update code under
-an active server process. The cleanup only changes tracked repository content;
-untracked datasets, local runs, credentials and GPU processes are untouched.
-
-## Removed from active tree
-
-Old small-student/self-audit/pseudolabel trainers and their scripts; unrelated
-baseline implementations and copied external code; historical run_configs,
-configs/environment variants; stale model docs and prompt chains; old report
-bundles and W&B logs; scratch/agent runtime state and legacy CI workflows.
-All of these remain recoverable from Git history and the archive branch.
-
-Six common old command names remain as tiny error-only stubs. They contain no
-trainer, import no old code and exit 2 even when passed --help. This is intentional:
-old shell commands fail visibly instead of silently selecting a new algorithm.
-
-## Retained deliberately
-
-- Current new-model source, tests, source hashes, bank and checkpoint contracts.
-- One immutable 19-file reference oracle and its materializer for exact parity.
-- Current layer theory and tests, including guard/refiner utilities not yet enabled.
-- The minimal historical io.py used to read existing banks/NIfTI consistently.
-- Existing split/checkpoint metadata; the bank still controls the training split.
-
-The internal experiment directory and the six reference layer modules retain
-their paths/bytes. This prevents accidental source-identity changes merely for
-cosmetic packaging. No attempt is made to reinterpret an old CNN checkpoint as
-a checkpoint for the new architecture. No new clinical-quality result is claimed.
-
-## What changed operationally
-
-The supported entrypoint is now train.py. It checks model identity, rejects legacy
-recipes, requires an explicit coarse phase, defaults to a 32-update pilot and
-requires --allow-full-run above 128 updates or for an uncapped epoch budget.
-The Astra-named launcher is only an alias to that implementation. Fresh docs,
-AGENTS.md, layout tests and CI all refer to the same command.
-
-Remaining work: verified official-weight GPU pilot; separately versioned native
-image-detail supervision; Z comparison on matched evidence; then self-learning.
-None of those is silently enabled by this cleanup.
+The remote package is tested with manufactured CPU data. Real DINOv3 loading,
+NIfTI patient preparation, GPU profile and patient evaluation are not claimed
+completed in this delivery. Do not launch a million-step run as a smoke test.

@@ -1,0 +1,138 @@
+{
+  "synthetic": true,
+  "arms": [
+    {
+      "scope": "head",
+      "method": "supervised",
+      "max_observed_audit_regression": null,
+      "patient_quality": "NOT_MEASURED",
+      "steps": 24,
+      "supervised_updates": 24,
+      "pseudo_accepted": 0,
+      "ema_updates": 24,
+      "elapsed_seconds": 0.4684964670000227,
+      "label_budget": 3
+    },
+    {
+      "scope": "head",
+      "method": "supervised_extra",
+      "max_observed_audit_regression": null,
+      "patient_quality": "NOT_MEASURED",
+      "steps": 24,
+      "supervised_updates": 40,
+      "pseudo_accepted": 0,
+      "ema_updates": 24,
+      "elapsed_seconds": 0.6563599230000818,
+      "label_budget": 3
+    },
+    {
+      "scope": "head",
+      "method": "ema_full",
+      "max_observed_audit_regression": null,
+      "patient_quality": "NOT_MEASURED",
+      "steps": 24,
+      "supervised_updates": 24,
+      "pseudo_accepted": 16,
+      "ema_updates": 24,
+      "elapsed_seconds": 0.721662527000035,
+      "label_budget": 3
+    },
+    {
+      "scope": "head",
+      "method": "ema_block",
+      "max_observed_audit_regression": 0.0007326080013578817,
+      "patient_quality": "NOT_MEASURED",
+      "steps": 24,
+      "supervised_updates": 24,
+      "pseudo_accepted": 16,
+      "ema_updates": 24,
+      "elapsed_seconds": 0.5796004359999642,
+      "label_budget": 3
+    },
+    {
+      "scope": "head",
+      "method": "sign",
+      "max_observed_audit_regression": 0.00033013878003605723,
+      "patient_quality": "NOT_MEASURED",
+      "steps": 24,
+      "supervised_updates": 24,
+      "pseudo_accepted": 16,
+      "ema_updates": 24,
+      "elapsed_seconds": 0.5089408819999335,
+      "label_budget": 3
+    },
+    {
+      "scope": "head",
+      "method": "independent_guard",
+      "max_observed_audit_regression": 0.0,
+      "patient_quality": "NOT_MEASURED",
+      "steps": 24,
+      "supervised_updates": 24,
+      "pseudo_accepted": 0,
+      "ema_updates": 24,
+      "elapsed_seconds": 0.6108893779999107,
+      "label_budget": 3
+    },
+    {
+      "scope": "head",
+      "method": "joint_no_class",
+      "max_observed_audit_regression": 0.0,
+      "patient_quality": "NOT_MEASURED",
+      "steps": 24,
+      "supervised_updates": 24,
+      "pseudo_accepted": 0,
+      "ema_updates": 24,
+      "elapsed_seconds": 0.6420557100000224,
+      "label_budget": 3
+    },
+    {
+      "scope": "head",
+      "method": "joint_no_guard",
+      "max_observed_audit_regression": 2.152577905072811e-08,
+      "patient_quality": "NOT_MEASURED",
+      "steps": 24,
+      "supervised_updates": 24,
+      "pseudo_accepted": 9,
+      "ema_updates": 24,
+      "elapsed_seconds": 0.6013357339998038,
+      "label_budget": 3
+    },
+    {
+      "scope": "head",
+      "method": "joint_guard",
+      "max_observed_audit_regression": 6.139436153906885e-09,
+      "patient_quality": "NOT_MEASURED",
+      "steps": 24,
+      "supervised_updates": 24,
+      "pseudo_accepted": 9,
+      "ema_updates": 24,
+      "elapsed_seconds": 0.5638022059999912,
+      "label_budget": 3
+    },
+    {
+      "scope": "decoder",
+      "method": "ema_block",
+      "max_observed_audit_regression": 0.027284230528938858,
+      "patient_quality": "NOT_MEASURED",
+      "steps": 24,
+      "supervised_updates": 24,
+      "pseudo_accepted": 16,
+      "ema_updates": 24,
+      "elapsed_seconds": 1.9563605840000946,
+      "label_budget": 3
+    },
+    {
+      "scope": "decoder",
+      "method": "joint_guard",
+      "max_observed_audit_regression": 5.02379465805447e-09,
+      "patient_quality": "NOT_MEASURED",
+      "steps": 24,
+      "supervised_updates": 24,
+      "pseudo_accepted": 9,
+      "ema_updates": 24,
+      "elapsed_seconds": 1.6842081370000415,
+      "label_budget": 3
+    }
+  ],
+  "real_patient_metrics": null
+}

@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-20",
+  "base": "924265f7df604d3dca84dda49578b1a0cf28d821",
+  "tests": 43,
+  "test_result": "PASS",
+  "python": "3.13.5",
+  "torch": "2.10.0+cpu",
+  "numpy": "2.3.5",
+  "scipy": "1.17.0",
+  "cuda_available": false,
+  "synthetic_end_to_end_arms": 11,
+  "synthetic_steps_per_arm": 24,
+  "manufactured_qcqp_seeds": 50,
+  "planned_patient_configs": 81,
+  "executed_patient_configs": 0,
+  "official_dinov3_loaded": false,
+  "nifti_reader": "Mock-interface tests only locally; nibabel unavailable in local environment",
+  "initial_failures": "Two overstrong test expectations corrected: an independently safe source need not exist, and reversed CE is not automatically harmful for another weighted risk. Production guard checks were not weakened.",
+  "limitations": [
+    "No medical efficacy or external generalization measured",
+    "No exact HCO/BCP reproduction implemented",
+    "No exact resume",
+    "Boundary metrics not implemented",
+    "Decoder JVP GPU memory/throughput unmeasured"
+  ],
+  "novelty": "research candidate, not established novelty or SOTA"
+}

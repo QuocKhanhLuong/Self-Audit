@@ -1,14 +1,8 @@
-name: canonical-student
-on:
-  push:
-  pull_request:
-  workflow_dispatch:
-permissions:
-  contents: read
+name: semi-supervised-v2
+on: [push, pull_request]
 jobs:
-  cpu-tests:
+  cpu-contracts:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
     env:
       OMP_NUM_THREADS: '2'
       MKL_NUM_THREADS: '2'
@@ -18,13 +12,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install CPU test environment
-        run: |
-          python -m pip install torch==2.10.0 torchvision==0.25.0 --index-url https://download.pytorch.org/whl/cpu
-          python -m pip install -r requirements.txt
-      - name: Verify single canonical model
-        run: |
-          python scripts/check_repo.py
-          python train.py --describe
-      - name: Run operator, parity, integration and routing tests
-        run: python -m pytest -q
+      - run: python -m pip install torch==2.10.0 --index-url https://download.pytorch.org/whl/cpu
+      - run: python -m pip install -r requirements.txt
+      - run: python scripts/check_repo.py && python train.py --describe
+      - run: python -m pytest -q
+      - run: python experiments/run_mechanisms.py --out /tmp/self-audit-mechanisms

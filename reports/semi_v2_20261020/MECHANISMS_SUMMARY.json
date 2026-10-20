@@ -1,0 +1,178 @@
+{
+  "scope": "manufactured finite vectors/tensors only; no patient or pretrained evidence",
+  "joint_compensation": {
+    "zero": {
+      "alpha": [
+        0,
+        0
+      ],
+      "risk": [
+        0.32000000000000006,
+        0.005000000000000001
+      ]
+    },
+    "all": {
+      "alpha": [
+        1,
+        1
+      ],
+      "risk": [
+        0.011250000000000003,
+        0.011250000000000003
+      ]
+    },
+    "independent": {
+      "alpha": [
+        0,
+        1
+      ],
+      "risk": [
+        0.21125000000000002,
+        0.0032
+      ]
+    },
+    "joint": {
+      "alpha": [
+        0.28571428571428564,
+        0.9999999999999999
+      ],
+      "risk": [
+        0.12859693877551026,
+        0.005000000000000001
+      ]
+    }
+  },
+  "tensor_shared_head_compensation": {
+    "independent_guard": {
+      "method": "independent_guard",
+      "source_ids": [
+        "pseudo_class_0",
+        "pseudo_class_1",
+        "pseudo_class_2",
+        "pseudo_class_3"
+      ],
+      "before": [
+        0.15625000000000003,
+        0.15625,
+        0.15625
+      ],
+      "positive_pixels": [
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "scope": "observed_TRAIN_one_vs_rest_Brier",
+      "optimizer_steps_in_transaction": 0,
+      "ema_updates_in_transaction": 0,
+      "alpha": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": 0.0,
+      "after": [
+        0.15625000000000003,
+        0.15625,
+        0.15625
+      ],
+      "status": "INDEPENDENT_SCALARS",
+      "guarded": true,
+      "trials": [],
+      "realized_max_regression": 0.0,
+      "linearized_after": [
+        0.15625000000000003,
+        0.15625,
+        0.15625
+      ]
+    },
+    "joint_guard": {
+      "method": "joint_guard",
+      "source_ids": [
+        "pseudo_class_0",
+        "pseudo_class_1",
+        "pseudo_class_2",
+        "pseudo_class_3"
+      ],
+      "before": [
+        0.15625000000000003,
+        0.15625,
+        0.15625
+      ],
+      "positive_pixels": [
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "scope": "observed_TRAIN_one_vs_rest_Brier",
+      "optimizer_steps_in_transaction": 0,
+      "ema_updates_in_transaction": 0,
+      "alpha": [
+        1.1469569108597739e-17,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "scale": 1.0,
+      "after": [
+        0.06797461339353494,
+        0.06797461339353494,
+        0.06797461339353494
+      ],
+      "status": "NUMERICAL_FEASIBLE",
+      "guarded": true,
+      "trials": [
+        {
+          "scale": 1.0,
+          "risks": [
+            0.06797461339353494,
+            0.06797461339353494,
+            0.06797461339353494
+          ],
+          "accepted": true
+        }
+      ],
+      "realized_max_regression": -0.08827538660646506,
+      "linearized_after": [
+        0.08105468750000003,
+        0.0810546875,
+        0.08105468749999999
+      ]
+    }
+  },
+  "limitations": [
+    "Zero audit regression is not unseen-patient improvement.",
+    "A wrong or unrepresentative audit label can favor a wrong update.",
+    "Class budgets can reject all unlabeled steps; reject-all is not efficacy.",
+    "SLSQP feasibility is checked; no exact optimizer certificate is claimed."
+  ],
+  "randomized_summary": {
+    "count": 50,
+    "seed_range": [
+      0,
+      49
+    ],
+    "statuses": {
+      "NUMERICAL_FEASIBLE": 50
+    },
+    "max_local_regression": 1.1832756996454918e-12,
+    "all_mean_risks_nonincreasing": true
+  },
+  "full_local_report": {
+    "name": "MECHANISMS.json",
+    "sha256": "b56ef766cdef6e10263613f6fa379f47dbcba4f245833eaecf69ba06d0575d09",
+    "availability": "downloadable delivery archive; regenerate via experiments/run_mechanisms.py"
+  }
+}

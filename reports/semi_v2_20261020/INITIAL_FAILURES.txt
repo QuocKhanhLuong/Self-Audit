@@ -1,0 +1,31 @@
+..................F.F.................                                   [100%]
+=================================== FAILURES ===================================
+__________________ test_finite_step_guard[independent_guard] ___________________
+
+method = 'independent_guard'
+
+    @pytest.mark.parametrize('method',['joint_guard','independent_guard','joint_no_class'])
+    def test_finite_step_guard(method):
+        h,f,y,q=fixture();ds,ids,_=make_candidates(h,f,q,.7,4.)
+        report=controlled_head_step(h,f,y,ds,ids,method=method)
+>       assert report['scale']>0
+E       assert 0.0 > 0
+
+tests/test_control.py:93: AssertionError
+____________ test_rejection_is_exact_and_no_optimizer_state_changes ____________
+
+    def test_rejection_is_exact_and_no_optimizer_state_changes():
+        h,f,y,q=fixture();opt=torch.optim.AdamW(h.parameters())
+        F.cross_entropy(h(f),y).backward();opt.step()
+        before=[p.detach().clone() for p in h.parameters()]
+        state={k:v.clone() for k,v in opt.state[h.weight].items() if isinstance(v,torch.Tensor)}
+        ds,ids,_=make_candidates(h,f,q,.7,.2);ds=[tuple(-x for x in d) for d in ds]
+        r=controlled_head_step(h,f,y,ds,ids,method='joint_guard')
+>       assert r['scale']==0
+E       assert 1.0 == 0
+
+tests/test_control.py:105: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_control.py::test_finite_step_guard[independent_guard] - assert 0.0 > 0
+FAILED tests/test_control.py::test_rejection_is_exact_and_no_optimizer_state_changes - assert 1.0 == 0
+2 failed, 36 passed, 18 warnings in 6.16s

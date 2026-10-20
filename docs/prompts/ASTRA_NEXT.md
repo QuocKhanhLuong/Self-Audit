@@ -1,50 +1,44 @@
-# Astra: continue only the canonical student
+# Astra: independently validate and evaluate semi-supervised v2
 
-Read ACTIVE_PIPELINE.json, docs/CURRENT.md and docs/RUNBOOK.md before editing.
-The sole current trainer is train.py, backed by experiments/layer_guided_student_v1.
-Do not restore small GuidanceStudent, historical full-pipeline wrappers, or stale
-instructions from the archive. Do not add a second default trainer.
+Read ACTIVE_PIPELINE, METHOD, NOVELTY, EXPERIMENTS and RUNBOOK. Re-pin current
+main in a fresh worktree. Do not restore old no-GT trainers or pretend this is
+an unchanged supervision setting. Every audit label is inside the dense L budget.
 
-First run scripts/check_repo.py and the current tests. Verify official local
-DINOv3 weights and input-bank provenance. A coarse-only pilot is execution evidence,
-not evidence that native detail or self-learning has been completed.
+First audit the integrated timeline, not individual module names. Verify the
+supervised reference, fixed teacher/candidates, common U denominator, unique
+sources, actual probability responses, local feasibility, functional nonlinear
+trials, direct commit and exactly one EMA update. No post-audit AdamW transform.
+Check that rejected decoder trials leave ALL live state untouched. Distinguish
+local squared-risk evidence from anatomy/generalization.
 
-Next implement native-detail training as a NEW policy/version, not a silent
-extension of frozen_historical_q_reliability_v1. Preserve the existing reference
-and the coarse-only baseline. Write the policy, observation operator, valid
-support, sources of supervision and active gradient paths before training.
+Run current tests and manufactured experiments. Preserve failure logs. Then,
+only within the user's approved data/compute budget, profile official-weight
+loading and a bounded native labeled pilot. Existing masks on U are inaccessible.
+Use the known patient split and explicit duplicate-content resolution, never a
+random slice split. No GT-based label-subset cherry-picking. Checkpoints use final
+step selection unless a separately declared selection scheme is authorized.
 
-Mandatory requirements:
+The proposed novelty is joint class-response allocation plus realized-step audit,
+not DINO, EMA, QP, reweighting or gradient alignment. Read full HCO/GradMatch/meta-
+reweighting algorithms and add exact matched comparators before novelty claims.
+Do not label the provided sign arm as HCO. A simpler or cheaper matched baseline
+winning is a valid reason to narrow/abandon the method claim.
 
-1. Preserve the existing exact D/U decomposition; identify teacher observation
-   resolution separately from student stride 4. Merely resizing a 48x48 target
-   does not introduce native anatomical information.
-2. Demonstrate the current zero-detail invariant. Add a positive test showing
-   a declared native, within-cell-varying image signal produces a finite nonzero
-   detail gradient and changes detail weights. Keep a constant/replicated-target
-   negative control; do not claim upsampled labels supply independent fine detail.
-3. Use one image-derived evidence mechanism first. Specify which assumptions
-   connect its cost to anatomy. A descending image energy is not a Dice guarantee.
-   Keep padding invalid; do not manufacture background for unsupported pixels.
-4. Test proposal quality and student-to-proposal transfer separately. Stop-gradient
-   the candidate target and track coordinate transforms under augmentations.
-5. Keep source/label provenance, class/source loss contributions, class permissions,
-   target entropy/KL and native/coarse diagnostics explicit. Do not substitute
-   total loss decrease for RV learning. Never create named ground truth from
-   confidence, pixel coordinates or unverified metadata.
-6. Do not project gradients then pass them through AdamW while claiming the
-   additive-step guard theorem. A guarded update must check actual displacement
-   and rollback optimizer state where applicable.
-7. Compare the new policy with the same pretrained initialization, same bank,
-   patient schedule and compute accounting. Version full-Q versus Z separately.
-   Ensure a bounded pilot actually visits all patients declared in its design.
-8. Keep the canonical CLI fail-closed: --describe must identify actual active
-   architecture/phase; unsupported phases must error; official-weight or data
-   failures never fall back to random initialization or the old model.
+Execute comparisons in stages: supervised -> full EMA -> same-block EMA -> sign/
+independent -> joint without one mechanism -> full joint guard. Keep initialization,
+label budget, patient schedule, pseudo denominator and scope fixed. Head versus
+decoder is separate. Report actual overhead and extra-label-use controls; reject-
+all, lower LR, confidence changes and added supervised compute are alternative
+explanations. Do not choose a winning method from a single synthetic run.
 
-Deliver code, tests, a new schema/recipe and updated CURRENT/RUNBOOK in the same
-change. Report actual commands, exit codes, hashes and missing capabilities.
-Use a separate worktree; do not erase frozen data, kill jobs, fabricate receipts,
-read references in training or tune on official TEST. Do not launch a full run,
-merge or claim GPU/patient success without the corresponding explicit task and
-execution evidence. Source-level cleanup must not weaken provenance checks.
+Before any long training, report which hypotheses have positive evidence and
+which are blocked. For patient evaluation freeze full predictions first, then
+read development masks. Publish classwise/patient counts and failed cases, not
+only the macro. The existing VAL cohort is exposed; external frozen evaluation
+must not fit parameters/statistics on its target cohort.
+
+Deliver reproducible code/receipts in one new report directory, update only
+current docs, and give a Vietnamese decision brief. Do not create another default
+trainer, silently merge an untested design, delete data, or claim DINO/GPU/Dice
+success from a tiny CPU constructor. Record exact backend versions and source /
+weight hashes. No resume is implemented; never call a restart an exact resume.
