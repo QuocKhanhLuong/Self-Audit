@@ -115,3 +115,13 @@ development manifest. It fails closed on copy/check/inventory/preparation errors
 or insufficient disk, preserving existing outputs. It launches no training.
 Continuation log: `/workspace/self-audit-v2/logs/data-preparation.log`. These are
 pending background actions, not completed data preparation evidence.
+
+## Official weight access follow-up
+
+User supplied `dinov3_convnext_tiny_pretrain_lvd1689m-21b726bb.pth`.
+The official Hugging Face resolve request returned HTTP 401 `GatedRepo`; no
+authentication token is configured. The official source was cloned separately
+to `/workspace/self-audit-v2/external/dinov3`, clean at commit
+`6876159a11b4df116f30f667f8c9888617df0751`. Its ConvNeXt-Tiny hub definition
+confirms the filename suffix `21b726bb`; this is not a full downloaded weight
+SHA256. Weight bytes remain unavailable. No patient pilot has started.
