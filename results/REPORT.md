@@ -1,6 +1,6 @@
 # ACDC measured results — stop after EMA-block
 
-EMA-block is still training; it will be scored and pushed, then all further runs stop.
+EMA-block completed and scored; remaining matrix runs cancelled by user.
 
 Protocol: dense labeled TRAIN budget8 (audit included), subset seed42, initialization seed42, random crop256, ordinary batch52, FP32, 10,000 steps, fixed final student checkpoint. EMA is not independent truth.
 
@@ -11,8 +11,9 @@ All scores below are patient-macro Dice on development-exposed VAL18 (%). No ind
 | supervised | 60.75 | 77.13 | 88.54 | 2.58 | 0 |
 | supervised_extra | 64.19 | 77.17 | 87.46 | 4.03 | 0 |
 | ema_full | 73.62 | 80.67 | 91.42 | 4.39 | 9000 |
+| ema_block | 52.26 | 80.29 | 87.83 | 13.47 | 9000 |
 
-Completed and scored: 3/4 retained methods. Each result uses one label-subset seed and one initialization seed; across-seed standard deviations are unavailable. Timed hours cover the training loop/final save and exclude startup/data hashing; they are not billed reservation cost or optimized latency. EMA-block includes diagnostic audit/JVP work and is not an optimized baseline latency measurement.
+Completed and scored: 4/4 retained methods. Each result uses one label-subset seed and one initialization seed; across-seed standard deviations are unavailable. Timed hours cover the training loop/final save and exclude startup/data hashing; they are not billed reservation cost or optimized latency. EMA-block includes diagnostic audit/JVP work and is not an optimized baseline latency measurement.
 
 ## Scope and missing evidence
 

@@ -1,0 +1,12 @@
+{
+  "check_repo": {
+    "returncode": 0,
+    "CUDA_VISIBLE_DEVICES": "",
+    "output_tail": "{\"status\": \"PASS\", \"architecture\": \"dinov3_convnext_tiny_native_decoder_v2\", \"supervision\": \"semi_supervised; dense TRAIN subset incl audit; not no-GT\"}\n"
+  },
+  "pytest": {
+    "returncode": 0,
+    "CUDA_VISIBLE_DEVICES": "",
+    "output_tail": "..........................................................               [100%]\n=============================== warnings summary ===============================\ntests/test_pipeline.py::test_decoder_jvp_transaction\n  /venv/main/lib/python3.12/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.\n    warnings.warn(\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n58 passed, 1 warning in 12.01s\n"
+  }
+}
