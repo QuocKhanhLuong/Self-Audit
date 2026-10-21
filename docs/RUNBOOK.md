@@ -139,3 +139,28 @@ remain in their pinned worktree. Stopped runs retain checkpoints/logs and are no
 claimed as resumed. Full-transaction VRAM probes are separate diagnostics: they
 may load a pinned v2 checkpoint to exercise realistic four-class proposals, but
 full experiments initialize afresh from the original pretrained model.
+
+## Package and upload final checkpoints
+
+After the four retained runs have finished, use the already configured rclone
+remote; no authentication/remote setup or sharing change is performed:
+
+```bash
+python scripts/package_final_checkpoints.py --root /workspace/self-audit-v2
+python scripts/upload_checkpoint_archive.py --root /workspace/self-audit-v2 \
+  --drive-root KhanhDrive:Self-Audit-v2-artifacts
+```
+
+The packager creates a new timestamped ZIP containing the four step10000 final
+student/teacher/optimizer checkpoint payloads, original hashed manifests,
+pretrained DINO weights, pinned current-v2 source and official DINO Git bundle,
+configs and compact evaluation receipts. It requires matching checkpoint/source
+hashes, tests ZIP CRC, and writes SHA256/MD5 receipts. Raw patient images, masks,
+full prediction arrays, credentials, raw logs, intermediate/pilot checkpoints and
+incomplete runs are excluded. They are not deleted locally. Exact resume remains
+unsupported; the restore note describes absolute paths in the original manifests.
+
+The uploader checks the archive SHA256, uses immutable rclone copies, retries
+quota failures, compares four uploaded files, verifies remote MD5/size, and uploads
+EXPORT_RECEIPT.json. Drive view URLs use existing permissions; files are not made
+public. ZIPs and large checkpoint artifacts remain outside Git.
