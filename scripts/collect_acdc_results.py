@@ -25,6 +25,7 @@ def write_csv(path, fields, rows):
 
 def collect(root, results, suffix='_B16_10000'):
     jobs=read(results/'configs/MATRIX.json')['jobs']
+    policy=read(root/'EXECUTION_POLICY.json') or {}
     statuses=[];ablation=[];patient_rows=[];groups={}
     for job in jobs:
         name=job['name'];cfg=read(results/'configs'/(name+'.json'))
@@ -36,6 +37,8 @@ def collect(root, results, suffix='_B16_10000'):
         elif report:status='TRAINED_NOT_SCORED';reason='frozen evaluation pending'
         elif startup:status='RUNNING';reason='training final checkpoint not yet complete'
         elif job['label_budget']==8 and job['label_seed']==42:status='QUEUED';reason='await prior queue stage and successful pilots/data verification'
+        if policy.get('cancel_all_unstarted') and status in {'NOT_STARTED','QUEUED'}:
+            status='NOT_RUN_USER_STOP';reason='user requested stop after EMA-block; no further training scheduled'
         if report and metrics:
             manifest=run/'final/MANIFEST.json'
             assert digest(manifest)==report['final_manifest_sha256']==recipe['checkpoint_sha256']
@@ -70,5 +73,5 @@ if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--root',type=Path,required=True);p.add_argument('--results',type=Path,required=True);p.add_argument('--suffix',default='_B16_10000');p.add_argument('--watch',action='store_true');a=p.parse_args()
     while True:
         collect(a.root,a.results,a.suffix)
-        if not a.watch:break
+        if not a.watch or (a.root/'FINALIZED.json').exists():break
         time.sleep(30)

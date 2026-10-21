@@ -4,8 +4,14 @@ import argparse
 import json
 import time
 from pathlib import Path
-p=argparse.ArgumentParser();p.add_argument('--runs',type=Path,required=True);a=p.parse_args();last=None
+p=argparse.ArgumentParser();p.add_argument('--runs',type=Path,required=True);p.add_argument('--status',type=Path);a=p.parse_args();last=None;last_status=None
 while True:
+    if a.status and a.status.exists():
+        try:
+            state=json.loads(a.status.read_text());key=state.get('stage')
+            if key!=last_status:
+                print('FINALIZATION | '+key+' | '+state.get('commit',state.get('error','')),flush=True);last_status=key
+        except (ValueError,FileNotFoundError):pass
     logs=list(a.runs.glob('*/steps.jsonl'))
     if logs:
         f=max(logs,key=lambda p:p.stat().st_mtime_ns)

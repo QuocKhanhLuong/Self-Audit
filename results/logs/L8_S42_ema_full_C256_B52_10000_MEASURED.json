@@ -1,0 +1,34 @@
+{
+  "run": "L8_S42_ema_full_C256_B52_10000",
+  "method": "ema_full",
+  "steps": 10000,
+  "elapsed_seconds": 15792.446245906991,
+  "checkpoint_manifest_sha256": "9eec782e0d1aa20f99d47fb398197d4a5441812b3e9f3517c3e9fbba454c284a",
+  "checkpoint_payload_sha256": "edbce7e5da09e33ec46586b71fc5807102fe5b8849aee6eed7ad768257b2e89d",
+  "training_data_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+  "source_sha256": "6e12885e44b725c132a01437dc6179cbf524b94c51dd5a5f5254701eb78cf442",
+  "weights_sha256": "21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54",
+  "evaluation_recipe_sha256": "2ba790a0f5dc038c3a9f06eed117c87ff9cf11c14e0234321089761a4e716782",
+  "metrics_sha256": "64deebc7a87159e366a6baf1741813d4460f2e1f1ed47e4060644d701e3b6027",
+  "macro_patient": {
+    "BG": {
+      "dice": 0.995515661923791,
+      "present_patients": 18
+    },
+    "RV": {
+      "dice": 0.7362486449593036,
+      "present_patients": 18
+    },
+    "MYO": {
+      "dice": 0.8067370324768901,
+      "present_patients": 18
+    },
+    "LV": {
+      "dice": 0.9141556089599521,
+      "present_patients": 18
+    }
+  },
+  "pseudo_accepted": 9000,
+  "label_budget": 8,
+  "prediction_model": "student"
+}

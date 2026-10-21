@@ -1,0 +1,16 @@
+{
+  "initial_concurrent_pytest": {
+    "returncode": 1,
+    "passed": 36,
+    "failed": 22,
+    "failure": "CUDA primary context out of memory during CPU optimizer tests while patient training occupies nearly all VRAM"
+  },
+  "rerun_policy": "CUDA_VISIBLE_DEVICES empty for CPU software tests; active patient trainer environment unchanged",
+  "isolated_cpu_pytest": {
+    "returncode": 0,
+    "CUDA_VISIBLE_DEVICES": "",
+    "passed": 58,
+    "summary": "58 passed, 1 warning in 13.18s"
+  },
+  "check_repo": "PASS"
+}
