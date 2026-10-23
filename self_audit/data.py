@@ -145,7 +145,9 @@ class TrainingData:
         if batch_size > 1:
             metadata["samples"] = [s[-1] for s in samples]
         if labeled:
-            return images, torch.cat([s[1] for s in samples]), metadata
+            result = (images, torch.cat([s[1] for s in samples]), metadata)
+            # The mask comes only from image geometry, never anatomy labels.
+            return (*result, torch.cat(validity)) if return_valid else result
         if return_valid:
             return images, metadata, torch.cat(validity)
         return images, metadata

@@ -1,0 +1,47 @@
+{
+  "schema": "self_audit.window_pilot_verification.v1",
+  "status": "PASS",
+  "base_commit": "8960b6baac4c6600553d900c303f192c2fcfa4f0",
+  "branch": "feat/native-window-meta-dice-pilot-20261023",
+  "source_sha256": "3c7fa85f00d54a6e087af3cd6c7045351fb72d532f1069bf09d95f9cd72359b7",
+  "python": "3.11.16",
+  "torch": "2.14.0",
+  "device": "cpu",
+  "cuda_available": false,
+  "pretrained_weights": "NOT_USED; TinyEncoder manufactured checks only",
+  "checks": [
+    {
+      "command": "python scripts/check_window_hypergradient.py --out reports/window_pilot/hypergradient_cpu.json",
+      "exit_code": 0,
+      "result": "PASS; cold/warm center and radius FD, actual optimizer parity"
+    },
+    {
+      "command": "python -m pytest -q",
+      "exit_code": 0,
+      "passed": 81,
+      "warnings": 1,
+      "warning": "Existing TorchScript deprecation in decoder JVP test",
+      "elapsed_seconds": 8.6
+    },
+    {
+      "command": "python scripts/check_repo.py",
+      "exit_code": 0,
+      "result": "PASS"
+    },
+    {
+      "command": "python scripts/run_window_smoke.py --out /tmp/self-audit-window-matched-smoke-20261023-01",
+      "exit_code": 0,
+      "result": "PASS; gate first, 3 steps per arm, all manufactured"
+    }
+  ],
+  "patient_training": "NOT RUN",
+  "cuda_training_or_benchmark": "NOT RUN",
+  "long_training": "NOT RUN",
+  "patient_dice_improvement": "NOT EVALUATED",
+  "raw_smoke_outputs": "/private/tmp/self-audit-window-matched-smoke-20261023-01",
+  "receipts": {
+    "baseline_parity.json": "4814ad93eec57d3724395bb1144130a3d9e915512e27f9fae37c3a11687b4895",
+    "hypergradient_cpu.json": "86b4fbf80f51d58d4704af39fe79ba5df7f4802a39bb2ae6b6a681ff04f4ba1e",
+    "matched_smoke_cpu.json": "2a5abc0ad9c0ab7f476008d3bffa6b44ec261de34af9ba22cd9e42315acecc48"
+  }
+}

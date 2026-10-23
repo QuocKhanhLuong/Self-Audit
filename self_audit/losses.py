@@ -27,7 +27,9 @@ def strong_intensity(x, rng):
     return (x.pow(gamma) + noise).clamp(0, 1)
 
 
-def aligned_flip(x, y, rng):
+def aligned_flip(x, y, rng, valid_mask=None):
     if rng.random() < .5:
-        return x.flip(-1), y.flip(-1)
-    return x, y
+        x, y = x.flip(-1), y.flip(-1)
+        if valid_mask is not None:
+            valid_mask = valid_mask.flip(-1)
+    return (x, y, valid_mask) if valid_mask is not None else (x, y)

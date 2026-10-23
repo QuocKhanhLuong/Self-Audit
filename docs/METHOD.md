@@ -140,3 +140,12 @@ A small labeled subset may not represent anatomical diversity. Experiments must
 use nested patient budgets and repeated subset seeds; compare extra labeled-only
 optimization at reported compute, and retain standard stronger SSL baselines.
 Final quality is evaluated from frozen predictions outside TRAIN, separately.
+
+## Opt-in adaptive-window pilot
+
+The separate [window pilot](WINDOW_PILOT.md) adds fixed or adaptive semantic
+support at the final decoder fusion, with an optional update-mediated meta-Dice
+geometry rule on top of full EMA. It does not alter the canonical defaults or
+the guarded policy described above. The new method has no finite-step Dice
+guarantee. Its current evidence is CPU/manufactured numerical and software
+verification only; patient and CUDA experiments are not part of this delivery.

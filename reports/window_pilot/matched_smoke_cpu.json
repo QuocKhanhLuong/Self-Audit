@@ -1,0 +1,262 @@
+{
+  "schema": "self_audit.window_smoke.v1",
+  "status": "PASS",
+  "synthetic": true,
+  "device": "cpu",
+  "patient_accuracy": "NOT_EVALUATED",
+  "source_sha256": "3c7fa85f00d54a6e087af3cd6c7045351fb72d532f1069bf09d95f9cd72359b7",
+  "arms": {
+    "baseline": {
+      "schema": "self_audit.semi_v2",
+      "status": "COMPLETED",
+      "synthetic": true,
+      "quality": "NOT_EVALUATED",
+      "steps": 3,
+      "supervised_updates": 3,
+      "pseudo_accepted": 2,
+      "ema_updates": 3,
+      "geometry_updates": 0,
+      "elapsed_seconds": 0.13490966707468033,
+      "seen_supervised": [
+        "synthetic_000",
+        "synthetic_001",
+        "synthetic_002"
+      ],
+      "seen_audit": [
+        "synthetic_000",
+        "synthetic_001"
+      ],
+      "seen_unlabeled": [
+        "synthetic_003",
+        "synthetic_004",
+        "synthetic_005"
+      ],
+      "final_manifest_sha256": "60531e1b66a3783a018135f46dd799a79c1da886a6d783a0f379797dc2e74d45",
+      "label_budget": 3,
+      "label_reads_outside_budget": [],
+      "guard_scope": "extra pseudo step vs supervised-only state on current TRAIN audit slice only"
+    },
+    "fixed": {
+      "schema": "self_audit.semi_v2",
+      "status": "COMPLETED",
+      "synthetic": true,
+      "quality": "NOT_EVALUATED",
+      "steps": 3,
+      "supervised_updates": 3,
+      "pseudo_accepted": 2,
+      "ema_updates": 3,
+      "geometry_updates": 0,
+      "elapsed_seconds": 0.1328109591268003,
+      "seen_supervised": [
+        "synthetic_000",
+        "synthetic_001",
+        "synthetic_002"
+      ],
+      "seen_audit": [
+        "synthetic_000",
+        "synthetic_001"
+      ],
+      "seen_unlabeled": [
+        "synthetic_003",
+        "synthetic_004",
+        "synthetic_005"
+      ],
+      "final_manifest_sha256": "61bdc59fc218f536dcbb52d37b56b9baf9cfccbd5830035bde936fffe19ab3d0",
+      "label_budget": 3,
+      "label_reads_outside_budget": [],
+      "guard_scope": "extra pseudo step vs supervised-only state on current TRAIN audit slice only"
+    },
+    "meta": {
+      "schema": "self_audit.semi_v2",
+      "status": "COMPLETED",
+      "synthetic": true,
+      "quality": "NOT_EVALUATED",
+      "steps": 3,
+      "supervised_updates": 3,
+      "pseudo_accepted": 2,
+      "ema_updates": 3,
+      "geometry_updates": 2,
+      "elapsed_seconds": 0.3687238749116659,
+      "seen_supervised": [
+        "synthetic_000",
+        "synthetic_001",
+        "synthetic_002"
+      ],
+      "seen_audit": [
+        "synthetic_000",
+        "synthetic_001"
+      ],
+      "seen_unlabeled": [
+        "synthetic_003",
+        "synthetic_004",
+        "synthetic_005"
+      ],
+      "final_manifest_sha256": "b24dd5c2ea80ddbb0a24a29073b806747767bd7e888166c504282473afe4fc70",
+      "label_budget": 3,
+      "label_reads_outside_budget": [],
+      "guard_scope": "none; meta-Dice is not a finite-step Dice guarantee"
+    }
+  },
+  "protocol": {
+    "steps": 3,
+    "warmup_steps": 1,
+    "batch_size": 1,
+    "crop_size": 40,
+    "source_image_size": 32,
+    "pseudo_threshold": 0.25,
+    "seed": 42
+  },
+  "hypergradient": {
+    "schema": "self_audit.window_hypergradient.v1",
+    "status": "PASS",
+    "source_sha256": "3c7fa85f00d54a6e087af3cd6c7045351fb72d532f1069bf09d95f9cd72359b7",
+    "torch": "2.14.0",
+    "device": "cpu",
+    "dtype": "float64",
+    "model": "NativeStudent(TinyEncoder); not pretrained DINOv3",
+    "synthetic": true,
+    "patient_training": false,
+    "patient_accuracy": "NOT_EVALUATED",
+    "cases": [
+      {
+        "optimizer_state": "cold",
+        "checks": [
+          {
+            "direction": "center_x",
+            "analytic": 6.679590455927285e-06,
+            "finite_difference": 6.6799360487479476e-06,
+            "absolute_error": 3.4559282066229456e-10,
+            "relative_error": 5.173862423790144e-05
+          },
+          {
+            "direction": "radius_x",
+            "analytic": -2.557471132908777e-06,
+            "finite_difference": -2.5574842243969442e-06,
+            "absolute_error": 1.3091488167269914e-11,
+            "relative_error": 5.118919231897691e-06
+          }
+        ],
+        "optimizer_max_absolute_error": 2.7755575615628914e-17,
+        "meta": {
+          "status": "ok",
+          "accepted_pixels": 1024,
+          "outer_foreground": [
+            1,
+            2,
+            3
+          ],
+          "outer_foreground_pixels": 768,
+          "inner_pseudo_loss": 1.437286353534219,
+          "outer_dice_loss": 0.7719825655943432,
+          "reference_outer_dice_loss": 0.7513627713950205,
+          "predicted_dice_loss_reduction": -0.020619794199322694,
+          "inner_grad_norm": 2.128682978234852,
+          "clip_scale": 1.0,
+          "virtual_parameter_delta_norm": 0.912255137593738,
+          "geometry_grad_norm": 1.330388416074147e-05,
+          "ordinary_parameter_updates": 98,
+          "ordinary_parameter_count": 98,
+          "geometry_parameter_count": 2,
+          "geometry_nonzero_gradient_count": 2
+        }
+      },
+      {
+        "optimizer_state": "warm",
+        "checks": [
+          {
+            "direction": "center_x",
+            "analytic": -5.294740196866569e-06,
+            "finite_difference": -5.294738536498755e-06,
+            "absolute_error": 1.6603678135618423e-12,
+            "relative_error": 3.135881557596441e-07
+          },
+          {
+            "direction": "radius_x",
+            "analytic": 5.21350238163725e-07,
+            "finite_difference": 5.213504628009957e-07,
+            "absolute_error": 2.2463727070910658e-13,
+            "relative_error": 4.30875933806635e-07
+          }
+        ],
+        "optimizer_max_absolute_error": 2.7755575615628914e-17,
+        "meta": {
+          "status": "ok",
+          "accepted_pixels": 1024,
+          "outer_foreground": [
+            1,
+            2,
+            3
+          ],
+          "outer_foreground_pixels": 768,
+          "inner_pseudo_loss": 1.4574766412896287,
+          "outer_dice_loss": 0.74851893355173,
+          "reference_outer_dice_loss": 0.7601811577405068,
+          "predicted_dice_loss_reduction": 0.011662224188776715,
+          "inner_grad_norm": 1.463447460514971,
+          "clip_scale": 1.0,
+          "virtual_parameter_delta_norm": 0.625212131122748,
+          "geometry_grad_norm": 1.0647325086276191e-05,
+          "ordinary_parameter_updates": 98,
+          "ordinary_parameter_count": 98,
+          "geometry_parameter_count": 2,
+          "geometry_nonzero_gradient_count": 2
+        }
+      }
+    ]
+  },
+  "meta_diagnostics": [
+    {
+      "status": "ok",
+      "accepted_pixels": 1024,
+      "outer_foreground": [
+        1,
+        2,
+        3
+      ],
+      "outer_foreground_pixels": 265,
+      "inner_pseudo_loss": 1.4577763080596924,
+      "outer_dice_loss": 0.860125720500946,
+      "reference_outer_dice_loss": 0.8019616603851318,
+      "predicted_dice_loss_reduction": -0.05816406011581421,
+      "inner_grad_norm": 13.454833984375,
+      "clip_scale": 0.37161362171173096,
+      "virtual_parameter_delta_norm": 0.19930149614810944,
+      "geometry_grad_norm": 1.1074545909650624e-05,
+      "ordinary_parameter_updates": 98,
+      "ordinary_parameter_count": 98,
+      "geometry_parameter_count": 2,
+      "geometry_nonzero_gradient_count": 2,
+      "geometry_gradient_norm": 1.1074545909650624e-05,
+      "geometry_update_norm": 1.1062651239512888e-08,
+      "committed_outer_dice_loss": 0.860125720500946,
+      "actual_dice_loss_reduction": -0.05816406011581421
+    },
+    {
+      "status": "ok",
+      "accepted_pixels": 1024,
+      "outer_foreground": [
+        1,
+        2,
+        3
+      ],
+      "outer_foreground_pixels": 265,
+      "inner_pseudo_loss": 1.2702913284301758,
+      "outer_dice_loss": 0.8565409779548645,
+      "reference_outer_dice_loss": 0.8093971610069275,
+      "predicted_dice_loss_reduction": -0.04714381694793701,
+      "inner_grad_norm": 7.244143009185791,
+      "clip_scale": 0.6902126669883728,
+      "virtual_parameter_delta_norm": 0.1369086503982544,
+      "geometry_grad_norm": 1.604119097464718e-05,
+      "ordinary_parameter_updates": 98,
+      "ordinary_parameter_count": 98,
+      "geometry_parameter_count": 2,
+      "geometry_nonzero_gradient_count": 2,
+      "geometry_gradient_norm": 1.604119097464718e-05,
+      "geometry_update_norm": 1.6007348335733695e-08,
+      "committed_outer_dice_loss": 0.8565409183502197,
+      "actual_dice_loss_reduction": -0.047143757343292236
+    }
+  ],
+  "matched_role_schedule": true
+}

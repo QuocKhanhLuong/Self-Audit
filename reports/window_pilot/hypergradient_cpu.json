@@ -1,0 +1,98 @@
+{
+  "schema": "self_audit.window_hypergradient.v1",
+  "status": "PASS",
+  "source_sha256": "3c7fa85f00d54a6e087af3cd6c7045351fb72d532f1069bf09d95f9cd72359b7",
+  "torch": "2.14.0",
+  "device": "cpu",
+  "dtype": "float64",
+  "model": "NativeStudent(TinyEncoder); not pretrained DINOv3",
+  "synthetic": true,
+  "patient_training": false,
+  "patient_accuracy": "NOT_EVALUATED",
+  "cases": [
+    {
+      "optimizer_state": "cold",
+      "checks": [
+        {
+          "direction": "center_x",
+          "analytic": 6.679590455927285e-06,
+          "finite_difference": 6.6799360487479476e-06,
+          "absolute_error": 3.4559282066229456e-10,
+          "relative_error": 5.173862423790144e-05
+        },
+        {
+          "direction": "radius_x",
+          "analytic": -2.557471132908777e-06,
+          "finite_difference": -2.5574842243969442e-06,
+          "absolute_error": 1.3091488167269914e-11,
+          "relative_error": 5.118919231897691e-06
+        }
+      ],
+      "optimizer_max_absolute_error": 2.7755575615628914e-17,
+      "meta": {
+        "status": "ok",
+        "accepted_pixels": 1024,
+        "outer_foreground": [
+          1,
+          2,
+          3
+        ],
+        "outer_foreground_pixels": 768,
+        "inner_pseudo_loss": 1.437286353534219,
+        "outer_dice_loss": 0.7719825655943432,
+        "reference_outer_dice_loss": 0.7513627713950205,
+        "predicted_dice_loss_reduction": -0.020619794199322694,
+        "inner_grad_norm": 2.128682978234852,
+        "clip_scale": 1.0,
+        "virtual_parameter_delta_norm": 0.912255137593738,
+        "geometry_grad_norm": 1.330388416074147e-05,
+        "ordinary_parameter_updates": 98,
+        "ordinary_parameter_count": 98,
+        "geometry_parameter_count": 2,
+        "geometry_nonzero_gradient_count": 2
+      }
+    },
+    {
+      "optimizer_state": "warm",
+      "checks": [
+        {
+          "direction": "center_x",
+          "analytic": -5.294740196866569e-06,
+          "finite_difference": -5.294738536498755e-06,
+          "absolute_error": 1.6603678135618423e-12,
+          "relative_error": 3.135881557596441e-07
+        },
+        {
+          "direction": "radius_x",
+          "analytic": 5.21350238163725e-07,
+          "finite_difference": 5.213504628009957e-07,
+          "absolute_error": 2.2463727070910658e-13,
+          "relative_error": 4.30875933806635e-07
+        }
+      ],
+      "optimizer_max_absolute_error": 2.7755575615628914e-17,
+      "meta": {
+        "status": "ok",
+        "accepted_pixels": 1024,
+        "outer_foreground": [
+          1,
+          2,
+          3
+        ],
+        "outer_foreground_pixels": 768,
+        "inner_pseudo_loss": 1.4574766412896287,
+        "outer_dice_loss": 0.74851893355173,
+        "reference_outer_dice_loss": 0.7601811577405068,
+        "predicted_dice_loss_reduction": 0.011662224188776715,
+        "inner_grad_norm": 1.463447460514971,
+        "clip_scale": 1.0,
+        "virtual_parameter_delta_norm": 0.625212131122748,
+        "geometry_grad_norm": 1.0647325086276191e-05,
+        "ordinary_parameter_updates": 98,
+        "ordinary_parameter_count": 98,
+        "geometry_parameter_count": 2,
+        "geometry_nonzero_gradient_count": 2
+      }
+    }
+  ]
+}

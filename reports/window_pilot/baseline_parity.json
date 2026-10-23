@@ -1,0 +1,57 @@
+{
+  "status": "PASS",
+  "base_sha": "8960b6baac4c6600553d900c303f192c2fcfa4f0",
+  "current_head_sha": "8960b6baac4c6600553d900c303f192c2fcfa4f0",
+  "current_worktree_dirty": true,
+  "base_source_digest": "6e12885e44b725c132a01437dc6179cbf524b94c51dd5a5f5254701eb78cf442",
+  "current_source_digest": "3c7fa85f00d54a6e087af3cd6c7045351fb72d532f1069bf09d95f9cd72359b7",
+  "torch_version": "2.14.0",
+  "python_version": "3.11.16",
+  "device": "cpu",
+  "synthetic": {
+    "seed": 11,
+    "n_labeled": 3,
+    "n_unlabeled": 3,
+    "size": 32,
+    "manifest_sha256": "420e65930f3f57c6088ca8dc082ccac96e910d724c903d9185efaa3c4d9a56bd"
+  },
+  "protocol": {
+    "method": "ema_full",
+    "training_seed": 42,
+    "steps": 3,
+    "warmup_steps": 1,
+    "batch_size": 1,
+    "crop_size": 40,
+    "pseudo_threshold": 0.25,
+    "ema_decay": 0.9,
+    "body_lr": 0.001,
+    "head_lr": 0.03,
+    "save_every": 100
+  },
+  "weights_exact_equal": true,
+  "weights_differences": [],
+  "role_metadata_exact_equal": true,
+  "counts_exact_equal": true,
+  "old_counts": {
+    "supervised_updates": 3,
+    "pseudo_accepted": 2,
+    "ema_updates": 3
+  },
+  "new_counts": {
+    "supervised_updates": 3,
+    "pseudo_accepted": 2,
+    "ema_updates": 3
+  },
+  "old_label_reads_outside_budget": [],
+  "new_label_reads_outside_budget": [],
+  "comparison": {
+    "base": "standalone git archive at base_sha",
+    "current": "final dirty pilot worktree with window.mode=none and method=ema_full; radius-bound initialization validation enabled",
+    "config_fields": "same fields accepted by base; current validation supplied only disabled window/meta defaults",
+    "final_student": "bitwise exact",
+    "final_teacher": "bitwise exact",
+    "optimizer_states": "bitwise exact",
+    "step_role_metadata": "exact equal",
+    "difference_note": "checkpoint manifest identity may differ because source, normalized config defaults, or payload serialization differ; tensor student/teacher/optimizer comparisons are the parity evidence"
+  }
+}
