@@ -1,0 +1,54 @@
+{
+  "scope": "CPU manufactured and tracked-count replay only; no patient data or GPU",
+  "python": "3.11.16 | packaged by conda-forge | (main, Aug 21 2026, 22:39:01) [Clang 19.1.7 ]",
+  "executable": "/Users/alvinluong/miniforge3/bin/python",
+  "source_files": {
+    "self_audit/__init__.py": "1ae542cceedefe1274a0ef07292460fffbb09e678bfc5198755caa9b51a32911",
+    "self_audit/control.py": "6bedb4165e85b4cc1e507d73858e491a4b7e668601604f216a4472280b723068",
+    "self_audit/data.py": "9b1ebe02166909d90c5175f72059c462042a8690828c27f2040b948eed94e1ec",
+    "self_audit/decoder_control.py": "b23713c4ca09ea47ee1eee073bfc0b0e31771556d928f19f024bece07b879159",
+    "self_audit/engine.py": "a2c3a7f1370ede64732976203847508368508b0499d6c50db288eceaaef82c95",
+    "self_audit/evaluation.py": "943f2638ce5212cc4879d710d2524889a4c6a84e07b1865d38bab8ba1bc36c19",
+    "self_audit/losses.py": "b4bc8ae600728692c774f410eb86ae0b95e0152eec8ecc5064fc2d80157501c6",
+    "self_audit/model.py": "02baf8a7931c21003fd86bdbeb0f9ec6d02f35e80ddac69d95f88527f5cce18c",
+    "train.py": "3d0cc4fa64bb1b6482bbe8dd1f82a7d7691ad25137d87f5dc43011aa0585abb5"
+  },
+  "commands": [
+    {
+      "probe": "A_source_probes.py",
+      "sha256": "6eabfbbfd8662b0d4cd0ce2f1d743697b44c1b6e9dc8c8c3adc97756558db3e9",
+      "exit_code": 0,
+      "seconds": 1.9430242087692022,
+      "log": "A_source_probes.py.log"
+    },
+    {
+      "probe": "B_counterexamples.py",
+      "sha256": "4d41482151ff376bf656bb09f5edcd15e15a36c7afa4f0d425b8bf36b843c75f",
+      "exit_code": 0,
+      "seconds": 0.9506847918964922,
+      "log": "B_counterexamples.py.log"
+    },
+    {
+      "probe": "C_recompute.py",
+      "sha256": "3e8fe131afc50d08e4e8917c331956857c67d9155060d95d5dcff94099410a55",
+      "exit_code": 0,
+      "seconds": 0.6727449172176421,
+      "log": "C_recompute.py.log"
+    },
+    {
+      "probe": "C_historical_recompute.py",
+      "sha256": "87c9c2e069f7eddd8d8a583817df7bb50733ede71d663a5210733943a3d95ab3",
+      "exit_code": 0,
+      "seconds": 0.042982584331184626,
+      "log": "C_historical_recompute.py.log"
+    },
+    {
+      "probe": "F_adversarial_probe.py",
+      "sha256": "067cdd4e2fd50a08f19e291728a4bc1e719fd49fdf1708c6ac5b67ca3934cb09",
+      "exit_code": 0,
+      "seconds": 1.3692533751018345,
+      "log": "F_adversarial_probe.py.log"
+    }
+  ],
+  "status": "PASS"
+}

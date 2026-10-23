@@ -1,0 +1,26 @@
+{
+  "scope": "Local arithmetic from archived Git-tracked frame confusion, not image/prediction replay",
+  "revision": "924265f7df604d3dca84dda49578b1a0cf28d821",
+  "metrics_path": "reports/dinov3_full50_val_20261019/METRICS.json",
+  "metrics_sha256": "b4cf169ec33c8dddd20f99e1b3b857d3033a4266fa694f0c8d73e947fa2dec3a",
+  "checks_passed": {
+    "frame_dice_from_counts": 288,
+    "coverage_from_counts": 72,
+    "pooled_confusion": 2,
+    "macro_dice": 8
+  },
+  "patients": 18,
+  "frames": 36,
+  "macro_raw_dice": {
+    "BG": 0.9196463225690974,
+    "RV": 0.18355750589296357,
+    "MYO": 0.14912858140718727,
+    "LV": 0.36062262018257923
+  },
+  "macro_foreground_raw_dice": 0.23110290249424337,
+  "gated_dice_all_classes": 0,
+  "coverage": 0,
+  "foreground_coverage": 0,
+  "AUROC_AP": "Reported only; cannot reconstruct pixel rankings from confusion counts",
+  "protocol_comparability_to_v2": "Not matched: historical frozen-Q supervision, architecture, objective, optimizer, budget, preprocessing, hardware and schedule differ"
+}

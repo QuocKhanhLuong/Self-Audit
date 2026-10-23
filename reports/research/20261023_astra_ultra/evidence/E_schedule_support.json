@@ -1,0 +1,41 @@
+{
+  "status": "DERIVED_FROM_VERIFIED_SOURCE_INDEX_FORMULAS",
+  "not_patient_execution": true,
+  "formulas": [
+    "li=step%len(data.lids)",
+    "ui=step%len(data.uids)",
+    "ai=(li+1+rng.integers(len(data.lids)-1))%len(data.lids)"
+  ],
+  "rows": [
+    {
+      "labeled_patients": 4,
+      "unlabeled_patients": 76,
+      "steps": 10000,
+      "unique_supervised_partners_per_U": [
+        1
+      ],
+      "all_U_in_fixed_one_L_pairing": true,
+      "audit_impossibility": "current supervised L is excluded, so fixed supervised partner never audits this U"
+    },
+    {
+      "labeled_patients": 8,
+      "unlabeled_patients": 72,
+      "steps": 10000,
+      "unique_supervised_partners_per_U": [
+        1
+      ],
+      "all_U_in_fixed_one_L_pairing": true,
+      "audit_impossibility": "current supervised L is excluded, so fixed supervised partner never audits this U"
+    },
+    {
+      "labeled_patients": 16,
+      "unlabeled_patients": 64,
+      "steps": 10000,
+      "unique_supervised_partners_per_U": [
+        1
+      ],
+      "all_U_in_fixed_one_L_pairing": true,
+      "audit_impossibility": "current supervised L is excluded, so fixed supervised partner never audits this U"
+    }
+  ]
+}

@@ -1,0 +1,813 @@
+{
+  "scope": "manufactured finite vectors/tensors only; no patient or pretrained evidence",
+  "joint_compensation": {
+    "zero": {
+      "alpha": [
+        0,
+        0
+      ],
+      "risk": [
+        0.32000000000000006,
+        0.005000000000000001
+      ]
+    },
+    "all": {
+      "alpha": [
+        1,
+        1
+      ],
+      "risk": [
+        0.011250000000000003,
+        0.011250000000000003
+      ]
+    },
+    "independent": {
+      "alpha": [
+        0,
+        1
+      ],
+      "risk": [
+        0.21125000000000002,
+        0.0032
+      ]
+    },
+    "joint": {
+      "alpha": [
+        0.2857142857142856,
+        1.0
+      ],
+      "risk": [
+        0.12859693877551026,
+        0.005000000000000001
+      ]
+    }
+  },
+  "tensor_shared_head_compensation": {
+    "independent_guard": {
+      "method": "independent_guard",
+      "source_ids": [
+        "pseudo_class_0",
+        "pseudo_class_1",
+        "pseudo_class_2",
+        "pseudo_class_3"
+      ],
+      "before": [
+        0.15625,
+        0.15625,
+        0.15625
+      ],
+      "positive_pixels": [
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "scope": "observed_TRAIN_one_vs_rest_Brier",
+      "optimizer_steps_in_transaction": 0,
+      "ema_updates_in_transaction": 0,
+      "alpha": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": 0.0,
+      "after": [
+        0.15625,
+        0.15625,
+        0.15625
+      ],
+      "status": "INDEPENDENT_SCALARS",
+      "guarded": true,
+      "trials": [],
+      "realized_max_regression": 0.0,
+      "linearized_after": [
+        0.15625,
+        0.15625,
+        0.15625
+      ]
+    },
+    "joint_guard": {
+      "method": "joint_guard",
+      "source_ids": [
+        "pseudo_class_0",
+        "pseudo_class_1",
+        "pseudo_class_2",
+        "pseudo_class_3"
+      ],
+      "before": [
+        0.15625,
+        0.15625,
+        0.15625
+      ],
+      "positive_pixels": [
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "scope": "observed_TRAIN_one_vs_rest_Brier",
+      "optimizer_steps_in_transaction": 0,
+      "ema_updates_in_transaction": 0,
+      "alpha": [
+        9.485269609655266e-17,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "scale": 1.0,
+      "after": [
+        0.06797461339353494,
+        0.06797461339353494,
+        0.06797461339353494
+      ],
+      "status": "NUMERICAL_FEASIBLE",
+      "guarded": true,
+      "trials": [
+        {
+          "scale": 1.0,
+          "risks": [
+            0.06797461339353494,
+            0.06797461339353494,
+            0.06797461339353494
+          ],
+          "accepted": true
+        }
+      ],
+      "realized_max_regression": -0.08827538660646506,
+      "linearized_after": [
+        0.0810546875,
+        0.0810546875,
+        0.08105468749999999
+      ]
+    }
+  },
+  "randomized_local_problems": [
+    {
+      "seed": 0,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 0.0,
+      "baseline_mean": 0.9933062004624826,
+      "new_mean": 0.9933062004624826,
+      "alpha": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 1,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 0.0,
+      "baseline_mean": 0.6897631057242369,
+      "new_mean": 0.6897631057242369,
+      "alpha": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 2,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": -0.09796230411310325,
+      "baseline_mean": 1.0273521741765725,
+      "new_mean": 0.8829150581779794,
+      "alpha": [
+        2.5294509719116065e-17,
+        0.32595516861694696,
+        1.0,
+        2.498001805406602e-16
+      ]
+    },
+    {
+      "seed": 3,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": -0.0386616240295648,
+      "baseline_mean": 0.5886533221251049,
+      "new_mean": 0.5207524342364662,
+      "alpha": [
+        0.31537046864248414,
+        0.4260648127779724,
+        0.15426752461110121,
+        0.0
+      ]
+    },
+    {
+      "seed": 4,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": -0.011030510097398416,
+      "baseline_mean": 0.7541279277622431,
+      "new_mean": 0.6857184303044218,
+      "alpha": [
+        0.5354290951721324,
+        0.19366437153173457,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 5,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 4.107825191113079e-15,
+      "baseline_mean": 0.8524817986629273,
+      "new_mean": 0.8351665906887611,
+      "alpha": [
+        0.011979565208851205,
+        1.0890203291351688e-17,
+        0.283226489258404,
+        0.07181442932580877
+      ]
+    },
+    {
+      "seed": 6,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 0.0,
+      "baseline_mean": 0.7042228835262406,
+      "new_mean": 0.7042228835262406,
+      "alpha": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 7,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": -0.0864417628632379,
+      "baseline_mean": 0.7342184994183238,
+      "new_mean": 0.5550149308766544,
+      "alpha": [
+        0.0,
+        1.0,
+        0.0,
+        0.6862359521237941
+      ]
+    },
+    {
+      "seed": 8,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 3.3306690738754696e-16,
+      "baseline_mean": 0.9324948359062697,
+      "new_mean": 0.9147531894560353,
+      "alpha": [
+        1.2232920592709946e-16,
+        0.18712533783301774,
+        1.433866738853925e-17,
+        0.0
+      ]
+    },
+    {
+      "seed": 9,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 2.3370194668359545e-14,
+      "baseline_mean": 0.47459625760349483,
+      "new_mean": 0.4725091542615119,
+      "alpha": [
+        0.027163757805228183,
+        0.07276297553326769,
+        4.4924719877873694e-17,
+        0.022816460103337703
+      ]
+    },
+    {
+      "seed": 10,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 0.0,
+      "baseline_mean": 0.4884371137302283,
+      "new_mean": 0.4884371137302283,
+      "alpha": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 11,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 0.0,
+      "baseline_mean": 0.6831058898547576,
+      "new_mean": 0.6772893815967467,
+      "alpha": [
+        0.0,
+        0.09409458487337921,
+        0.0,
+        0.1848717879957849
+      ]
+    },
+    {
+      "seed": 12,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 0.0,
+      "baseline_mean": 0.5717100703455626,
+      "new_mean": 0.5655216036979095,
+      "alpha": [
+        4.980781703219915e-18,
+        0.02360717715561291,
+        0.11906120353954656,
+        6.938893903904535e-18
+      ]
+    },
+    {
+      "seed": 13,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 6.517009154549669e-14,
+      "baseline_mean": 0.9064589713483232,
+      "new_mean": 0.869614904722695,
+      "alpha": [
+        0.05152475385203643,
+        0.38756052007204195,
+        0.0,
+        0.08741034126408195
+      ]
+    },
+    {
+      "seed": 14,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 5.551115123125783e-16,
+      "baseline_mean": 0.6454172327982336,
+      "new_mean": 0.6263177289199687,
+      "alpha": [
+        0.19654094933219557,
+        0.007730684719149605,
+        0.13921802003410041,
+        7.632783294297445e-17
+      ]
+    },
+    {
+      "seed": 15,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 0.0,
+      "baseline_mean": 0.9634178105126558,
+      "new_mean": 0.9634178105126558,
+      "alpha": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 16,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 2.375877272697835e-14,
+      "baseline_mean": 0.6538148113446219,
+      "new_mean": 0.6427453471855785,
+      "alpha": [
+        0.010289515180504603,
+        0.0,
+        0.0559259291041247,
+        0.22195226207099636
+      ]
+    },
+    {
+      "seed": 17,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 0.0,
+      "baseline_mean": 0.44620232778159513,
+      "new_mean": 0.44620232778159513,
+      "alpha": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 18,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 0.0,
+      "baseline_mean": 0.6716264509577682,
+      "new_mean": 0.6716264509577682,
+      "alpha": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 19,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 0.0,
+      "baseline_mean": 0.40622851281773337,
+      "new_mean": 0.40622851281773337,
+      "alpha": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 20,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 1.1435297153639112e-14,
+      "baseline_mean": 0.6671275100147782,
+      "new_mean": 0.6247652431981234,
+      "alpha": [
+        2.144646512796356e-17,
+        0.44178980240563615,
+        0.031824835099068104,
+        0.0
+      ]
+    },
+    {
+      "seed": 21,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": -0.04336348364454823,
+      "baseline_mean": 0.7231070847345071,
+      "new_mean": 0.6674870816401247,
+      "alpha": [
+        0.36174815471469585,
+        0.0,
+        0.5225179697376495,
+        0.2477934635496573
+      ]
+    },
+    {
+      "seed": 22,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 7.499556531342932e-14,
+      "baseline_mean": 0.5327890179091203,
+      "new_mean": 0.52789925705863,
+      "alpha": [
+        0.005798214609568051,
+        0.1351202211108474,
+        0.0,
+        0.03714624594777339
+      ]
+    },
+    {
+      "seed": 23,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": -0.02095364196490057,
+      "baseline_mean": 0.6771372924774727,
+      "new_mean": 0.6487599001843817,
+      "alpha": [
+        0.2828440099432154,
+        0.11380757603637323,
+        0.0,
+        0.28732688968608766
+      ]
+    },
+    {
+      "seed": 24,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": -0.07431324701413211,
+      "baseline_mean": 0.8473012227798709,
+      "new_mean": 0.7236231066622115,
+      "alpha": [
+        0.23211654513260915,
+        0.15150515251557153,
+        0.05832912921709145,
+        0.8797812316485695
+      ]
+    },
+    {
+      "seed": 25,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 0.0,
+      "baseline_mean": 0.8482119250604345,
+      "new_mean": 0.8482119250604345,
+      "alpha": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 26,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 0.0,
+      "baseline_mean": 0.7486056742260295,
+      "new_mean": 0.7322716601526328,
+      "alpha": [
+        0.0014791295929984544,
+        3.2743520264558887e-17,
+        0.19035594609616643,
+        0.0
+      ]
+    },
+    {
+      "seed": 27,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 0.0,
+      "baseline_mean": 0.773952598371074,
+      "new_mean": 0.773952598371074,
+      "alpha": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 28,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 1.3911094498553211e-13,
+      "baseline_mean": 0.734970643377134,
+      "new_mean": 0.7348120390748306,
+      "alpha": [
+        2.7883393598473706e-16,
+        0.0,
+        0.003424667967594791,
+        0.012959448749245065
+      ]
+    },
+    {
+      "seed": 29,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": -0.022509571833121744,
+      "baseline_mean": 0.577769335898761,
+      "new_mean": 0.5107969026157397,
+      "alpha": [
+        0.0,
+        0.06545332752744815,
+        0.10461925826052533,
+        0.5308541385289267
+      ]
+    },
+    {
+      "seed": 30,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": -0.00020576825080853567,
+      "baseline_mean": 0.9757426932631518,
+      "new_mean": 0.961892602785842,
+      "alpha": [
+        0.2729014442595697,
+        0.0,
+        1.734723475976807e-18,
+        0.0
+      ]
+    },
+    {
+      "seed": 31,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": -0.027270496411709533,
+      "baseline_mean": 0.6014905804514811,
+      "new_mean": 0.5543412076507302,
+      "alpha": [
+        0.08195595768311936,
+        0.4592302136574964,
+        0.2537586542463722,
+        3.851859888774472e-34
+      ]
+    },
+    {
+      "seed": 32,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 0.0,
+      "baseline_mean": 0.43239049661781376,
+      "new_mean": 0.43239049661781376,
+      "alpha": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 33,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 0.0,
+      "baseline_mean": 0.8418433639494186,
+      "new_mean": 0.8418433639494186,
+      "alpha": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 34,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 1.1832756996454918e-12,
+      "baseline_mean": 0.62368914245058,
+      "new_mean": 0.6186293801039238,
+      "alpha": [
+        0.0,
+        0.05124284798846992,
+        0.11484403884245482,
+        0.0
+      ]
+    },
+    {
+      "seed": 35,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 3.885780586188048e-14,
+      "baseline_mean": 0.8460707150967455,
+      "new_mean": 0.8448806958386749,
+      "alpha": [
+        5.8168865081982444e-15,
+        0.010401470811036574,
+        3.407658661560886e-16,
+        9.955155591825936e-16
+      ]
+    },
+    {
+      "seed": 36,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 1.9872992140790302e-14,
+      "baseline_mean": 0.6629077176919431,
+      "new_mean": 0.6621289640670952,
+      "alpha": [
+        0.05034703431092872,
+        0.03713246674259985,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 37,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 2.3647750424515834e-13,
+      "baseline_mean": 0.8056460312192616,
+      "new_mean": 0.7804572303578982,
+      "alpha": [
+        0.3455459757008811,
+        0.0,
+        0.12486474743305735,
+        0.21392726036578147
+      ]
+    },
+    {
+      "seed": 38,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 1.1257661469699087e-13,
+      "baseline_mean": 0.6407747781271882,
+      "new_mean": 0.6087461233468018,
+      "alpha": [
+        0.0,
+        0.0,
+        0.11847085496377585,
+        0.35355104810344773
+      ]
+    },
+    {
+      "seed": 39,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 0.0,
+      "baseline_mean": 0.8915139177240957,
+      "new_mean": 0.8915139177240957,
+      "alpha": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 40,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 1.1546319456101628e-14,
+      "baseline_mean": 1.2247691977845503,
+      "new_mean": 1.152921854826757,
+      "alpha": [
+        0.0707805543064687,
+        0.054801851602767626,
+        0.4935786135799413,
+        0.3867136031899962
+      ]
+    },
+    {
+      "seed": 41,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 8.790745908981989e-13,
+      "baseline_mean": 0.9669318571319873,
+      "new_mean": 0.8722643991750726,
+      "alpha": [
+        0.5032368405175941,
+        0.0,
+        3.6774258982965504e-17,
+        0.4633831465669034
+      ]
+    },
+    {
+      "seed": 42,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 0.0,
+      "baseline_mean": 0.6650678450706355,
+      "new_mean": 0.6650678450706355,
+      "alpha": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 43,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": -0.008524907506761825,
+      "baseline_mean": 0.8000817004254571,
+      "new_mean": 0.7523365898865887,
+      "alpha": [
+        0.40364651444901695,
+        0.23453093154239502,
+        0.2530672836155485,
+        0.22393505067889333
+      ]
+    },
+    {
+      "seed": 44,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 3.3306690738754696e-16,
+      "baseline_mean": 0.8315764517922654,
+      "new_mean": 0.7728756461090374,
+      "alpha": [
+        1.8714779059900012e-17,
+        0.37586041870534165,
+        0.2566168368674171,
+        0.27842935296117605
+      ]
+    },
+    {
+      "seed": 45,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 0.0,
+      "baseline_mean": 0.6893259764000564,
+      "new_mean": 0.6893259764000564,
+      "alpha": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 46,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 0.0,
+      "baseline_mean": 0.7156938497563324,
+      "new_mean": 0.7156938497563324,
+      "alpha": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 47,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 0.0,
+      "baseline_mean": 0.7241512759793168,
+      "new_mean": 0.7241512759793168,
+      "alpha": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 48,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": -0.07084547085967219,
+      "baseline_mean": 0.720601088763031,
+      "new_mean": 0.629051078298694,
+      "alpha": [
+        0.5455531124676681,
+        0.05599917312614504,
+        3.694292975741654e-18,
+        0.49598669893834263
+      ]
+    },
+    {
+      "seed": 49,
+      "status": "NUMERICAL_FEASIBLE",
+      "max_local_regression": 0.0,
+      "baseline_mean": 0.8754039961379826,
+      "new_mean": 0.8754039961379826,
+      "alpha": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  "limitations": [
+    "Zero audit regression is not unseen-patient improvement.",
+    "A wrong or unrepresentative audit label can favor a wrong update.",
+    "Class budgets can reject all unlabeled steps; reject-all is not efficacy.",
+    "SLSQP feasibility is checked; no exact optimizer certificate is claimed."
+  ]
+}

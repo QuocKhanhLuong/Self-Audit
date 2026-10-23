@@ -1,0 +1,29 @@
+{
+  "schema": "self_audit.semi_v2",
+  "method": "joint_guard",
+  "update_scope": "decoder",
+  "steps": 10000,
+  "warmup_steps": 1000,
+  "seed": 42,
+  "body_lr": 3e-05,
+  "head_lr": 0.003,
+  "pseudo_lr": 0.001,
+  "weight_decay": 0.0001,
+  "ema_decay": 0.99,
+  "pseudo_threshold": 0.7,
+  "ridge": 1e-06,
+  "risk_budget": 0.0,
+  "guard_tolerance": 1e-08,
+  "backtracks": 8,
+  "save_every": 1000,
+  "threads": 2,
+  "model": {
+    "backbone": "dinov3_convnext_tiny",
+    "source_repo": "",
+    "source_commit": "",
+    "weights": "",
+    "weights_sha256": ""
+  },
+  "batch_size": 52,
+  "crop_size": 256
+}

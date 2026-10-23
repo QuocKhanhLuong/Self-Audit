@@ -1,0 +1,399 @@
+{
+  "artifact": "/private/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/self-audit-research-replay-9g_64322/reports/research/20261023_astra_ultra/evidence/C_recomputation.json",
+  "checks_passed": {
+    "confusion_derived_fields": 2016,
+    "presence_and_missing_hd95": 576,
+    "patient_dice_to_summary": 16,
+    "patient_dice_to_main": 12,
+    "wall_hours": 4,
+    "paired_reference_marginals": 72,
+    "executed_source_receipt_matches_git_tree": 4
+  },
+  "source_digests": {
+    "637f38ced217fe1db2347a87924695533056d8f0": "3cca8cf4925ab7e98515ee3d731e2d4d0336f72129238d9efdc457c2af9735cf",
+    "970f142a76f417c516db1c9f18f60a1dfb38d342": "858d8b31f473ef2362a3f8e977f540d3e9c93afe36f602ef916d4ce09356c30a",
+    "7940ec2": "6e12885e44b725c132a01437dc6179cbf524b94c51dd5a5f5254701eb78cf442",
+    "8960b6baac4c6600553d900c303f192c2fcfa4f0": "6e12885e44b725c132a01437dc6179cbf524b94c51dd5a5f5254701eb78cf442"
+  },
+  "summary": {
+    "supervised": {
+      "macro_patient_dice": {
+        "BG": 0.9938193144306001,
+        "RV": 0.607509653477326,
+        "MYO": 0.7713153087331219,
+        "LV": 0.8853554021339838
+      },
+      "macro_foreground_dice": 0.7547267881148105,
+      "pooled_confusion": [
+        [
+          16977046,
+          10997,
+          22574,
+          2044,
+          0
+        ],
+        [
+          115989,
+          109045,
+          3661,
+          1586,
+          0
+        ],
+        [
+          49659,
+          3624,
+          184996,
+          5767,
+          0
+        ],
+        [
+          9563,
+          2504,
+          23031,
+          212058,
+          0
+        ]
+      ],
+      "pooled_class_metrics": {
+        "BG": {
+          "TP": 16977046,
+          "FP": 175211,
+          "FN": 35615,
+          "dice": 0.9938291671005913
+        },
+        "RV": {
+          "TP": 109045,
+          "FP": 17125,
+          "FN": 121236,
+          "dice": 0.6118372511228752
+        },
+        "MYO": {
+          "TP": 184996,
+          "FP": 49266,
+          "FN": 59050,
+          "dice": 0.7735434071769655
+        },
+        "LV": {
+          "TP": 212058,
+          "FP": 9397,
+          "FN": 35098,
+          "dice": 0.9050491772493603
+        }
+      },
+      "bg_to_myo_fp": 22574,
+      "wall_hours": 2.5816474799719353,
+      "peak_vram_GiB": 18.43502378463745,
+      "pseudo_accepted": 0
+    },
+    "supervised_extra": {
+      "macro_patient_dice": {
+        "BG": 0.9942149528234219,
+        "RV": 0.6419209423503803,
+        "MYO": 0.7717380955598023,
+        "LV": 0.8746437851163295
+      },
+      "macro_foreground_dice": 0.762767607675504,
+      "pooled_confusion": [
+        [
+          16977130,
+          8161,
+          23313,
+          4057,
+          0
+        ],
+        [
+          103829,
+          117706,
+          3903,
+          4843,
+          0
+        ],
+        [
+          49861,
+          3289,
+          183516,
+          7380,
+          0
+        ],
+        [
+          8514,
+          1185,
+          19909,
+          217548,
+          0
+        ]
+      ],
+      "pooled_class_metrics": {
+        "BG": {
+          "TP": 16977130,
+          "FP": 162204,
+          "FN": 35531,
+          "dice": 0.9942101478991198
+        },
+        "RV": {
+          "TP": 117706,
+          "FP": 12635,
+          "FN": 112575,
+          "dice": 0.6527943386704084
+        },
+        "MYO": {
+          "TP": 183516,
+          "FP": 47125,
+          "FN": 60530,
+          "dice": 0.7732084510424764
+        },
+        "LV": {
+          "TP": 217548,
+          "FP": 16280,
+          "FN": 29608,
+          "dice": 0.904595579062921
+        }
+      },
+      "bg_to_myo_fp": 23313,
+      "wall_hours": 4.034098685062232,
+      "peak_vram_GiB": 18.43502378463745,
+      "pseudo_accepted": 0
+    },
+    "ema_full": {
+      "macro_patient_dice": {
+        "BG": 0.995515661923791,
+        "RV": 0.7362486449593038,
+        "MYO": 0.8067370324768901,
+        "LV": 0.914155608959952
+      },
+      "macro_foreground_dice": 0.8190470954653819,
+      "pooled_confusion": [
+        [
+          16972795,
+          12949,
+          25081,
+          1836,
+          0
+        ],
+        [
+          73348,
+          151578,
+          5238,
+          117,
+          0
+        ],
+        [
+          32984,
+          4199,
+          197435,
+          9428,
+          0
+        ],
+        [
+          3259,
+          288,
+          13240,
+          230369,
+          0
+        ]
+      ],
+      "pooled_class_metrics": {
+        "BG": {
+          "TP": 16972795,
+          "FP": 109591,
+          "FN": 39866,
+          "dice": 0.9956164600682322
+        },
+        "RV": {
+          "TP": 151578,
+          "FP": 17436,
+          "FN": 78703,
+          "dice": 0.759228139596038
+        },
+        "MYO": {
+          "TP": 197435,
+          "FP": 43559,
+          "FN": 46611,
+          "dice": 0.8140978063664852
+        },
+        "LV": {
+          "TP": 230369,
+          "FP": 11381,
+          "FN": 16787,
+          "dice": 0.942385652865786
+        }
+      },
+      "bg_to_myo_fp": 25081,
+      "wall_hours": 4.386790623863053,
+      "peak_vram_GiB": 18.52730941772461,
+      "pseudo_accepted": 9000
+    },
+    "ema_block": {
+      "macro_patient_dice": {
+        "BG": 0.9924017691027318,
+        "RV": 0.5225914842816486,
+        "MYO": 0.802877188063311,
+        "LV": 0.8783058287258296
+      },
+      "macro_foreground_dice": 0.7345915003569298,
+      "pooled_confusion": [
+        [
+          16883943,
+          100452,
+          23601,
+          4665,
+          0
+        ],
+        [
+          94906,
+          121749,
+          5207,
+          8419,
+          0
+        ],
+        [
+          34746,
+          3853,
+          194482,
+          10965,
+          0
+        ],
+        [
+          4680,
+          761,
+          15214,
+          226501,
+          0
+        ]
+      ],
+      "pooled_class_metrics": {
+        "BG": {
+          "TP": 16883943,
+          "FP": 134332,
+          "FN": 128718,
+          "dice": 0.9922702684404566
+        },
+        "RV": {
+          "TP": 121749,
+          "FP": 105066,
+          "FN": 108532,
+          "dice": 0.532706477413935
+        },
+        "MYO": {
+          "TP": 194482,
+          "FP": 44022,
+          "FN": 49564,
+          "dice": 0.8060594757019998
+        },
+        "LV": {
+          "TP": 226501,
+          "FP": 24049,
+          "FN": 20655,
+          "dice": 0.9101799054060027
+        }
+      },
+      "bg_to_myo_fp": 23601,
+      "wall_hours": 13.472404758974443,
+      "peak_vram_GiB": 22.32072925567627,
+      "pseudo_accepted": 9000
+    }
+  },
+  "paired_descriptive_comparisons": {
+    "ema_full_minus_supervised": {
+      "RV": {
+        "mean_delta_percentage_points": 12.873899148197772,
+        "patients_better": 17,
+        "patients_worse": 1,
+        "min_delta": -1.8625396931711724,
+        "max_delta": 43.832522302288595
+      },
+      "MYO": {
+        "mean_delta_percentage_points": 3.5421723743768134,
+        "patients_better": 12,
+        "patients_worse": 6,
+        "min_delta": -6.403915451298747,
+        "max_delta": 15.921148135917274
+      },
+      "LV": {
+        "mean_delta_percentage_points": 2.8800206825968226,
+        "patients_better": 16,
+        "patients_worse": 2,
+        "min_delta": -4.727008574948266,
+        "max_delta": 9.04075005621021
+      },
+      "foreground_macro_delta_percentage_points": 6.432030735057137,
+      "wall_time_ratio": 1.699221391725698
+    },
+    "ema_block_minus_supervised": {
+      "RV": {
+        "mean_delta_percentage_points": -8.491816919567743,
+        "patients_better": 5,
+        "patients_worse": 13,
+        "min_delta": -44.08561145094057,
+        "max_delta": 9.434150432531874
+      },
+      "MYO": {
+        "mean_delta_percentage_points": 3.1561879330189013,
+        "patients_better": 14,
+        "patients_worse": 4,
+        "min_delta": -1.6796817230749772,
+        "max_delta": 14.026144164872157
+      },
+      "LV": {
+        "mean_delta_percentage_points": -0.7049573408154177,
+        "patients_better": 9,
+        "patients_worse": 9,
+        "min_delta": -11.508313653664048,
+        "max_delta": 5.712029928235851
+      },
+      "foreground_macro_delta_percentage_points": -2.013528775788076,
+      "wall_time_ratio": 5.218529974944875
+    },
+    "ema_full_minus_ema_block": {
+      "RV": {
+        "mean_delta_percentage_points": 21.365716067765515,
+        "patients_better": 18,
+        "patients_worse": 0,
+        "min_delta": 2.1913880682155495,
+        "max_delta": 42.2230717577694
+      },
+      "MYO": {
+        "mean_delta_percentage_points": 0.38598444135791166,
+        "patients_better": 9,
+        "patients_worse": 9,
+        "min_delta": -4.861690393965357,
+        "max_delta": 6.0253204445143815
+      },
+      "LV": {
+        "mean_delta_percentage_points": 3.5849780234122406,
+        "patients_better": 15,
+        "patients_worse": 3,
+        "min_delta": -1.3933241566124854,
+        "max_delta": 14.332314007025326
+      },
+      "foreground_macro_delta_percentage_points": 8.445559510845213,
+      "wall_time_ratio": 0.32561303659919044
+    },
+    "supervised_extra_minus_supervised": {
+      "RV": {
+        "mean_delta_percentage_points": 3.4411288873054326,
+        "patients_better": 13,
+        "patients_worse": 5,
+        "min_delta": -8.71388388223821,
+        "max_delta": 20.394547635232186
+      },
+      "MYO": {
+        "mean_delta_percentage_points": 0.042278682668036235,
+        "patients_better": 9,
+        "patients_worse": 9,
+        "min_delta": -3.194569554588167,
+        "max_delta": 4.813512761700423
+      },
+      "LV": {
+        "mean_delta_percentage_points": -1.0711617017654274,
+        "patients_better": 10,
+        "patients_worse": 8,
+        "min_delta": -7.095338260993822,
+        "max_delta": 2.341894380858267
+      },
+      "foreground_macro_delta_percentage_points": 0.8040819560693468,
+      "wall_time_ratio": 1.5626063265252954
+    }
+  },
+  "tracked_payloads": []
+}

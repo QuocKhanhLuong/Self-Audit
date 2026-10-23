@@ -1,0 +1,20 @@
+{
+  "main": {
+    "missing_config_keys": [],
+    "unknown_config_keys": [
+      "batch_size",
+      "crop_size"
+    ],
+    "supports_batch52_crop256_recipe": false
+  },
+  "experiment": {
+    "missing_config_keys": [],
+    "unknown_config_keys": [],
+    "supports_batch52_crop256_recipe": true
+  },
+  "notes": [
+    "Static exact-schema check only; no imports, models, images, masks or weights opened.",
+    "A model-config with populated source and weight provenance is still required.",
+    "Main accepts only native single-slice recipes; experiment accepts batch_size/crop_size."
+  ]
+}

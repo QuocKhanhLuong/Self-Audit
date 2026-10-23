@@ -1,0 +1,483 @@
+{
+  "scope": "EXECUTED_MANUFACTURED_CPU_ONLY",
+  "python": "3.11.16",
+  "torch": "2.14.0",
+  "scipy": "1.17.1",
+  "numpy": "2.4.6",
+  "source_commit": "637f38ced217fe1db2347a87924695533056d8f0",
+  "script_sha256": "6eabfbbfd8662b0d4cd0ce2f1d743697b44c1b6e9dc8c8c3adc97756558db3e9",
+  "scalar_scale_sweep": [
+    {
+      "response": 0.001,
+      "numerical": 1.0,
+      "exact": 1.0,
+      "status": "NUMERICAL_FEASIBLE",
+      "objective_gap": 0.0,
+      "exact_improvement": 0.0009990000000000276,
+      "equivalent_normalized_probe": {
+        "alpha": 1.0,
+        "success": true,
+        "scale": 0.001
+      }
+    },
+    {
+      "response": 0.0001,
+      "numerical": 1.0,
+      "exact": 1.0,
+      "status": "NUMERICAL_FEASIBLE",
+      "objective_gap": 0.0,
+      "exact_improvement": 9.9495000000005e-05,
+      "equivalent_normalized_probe": {
+        "alpha": 1.0,
+        "success": true,
+        "scale": 0.0001
+      }
+    },
+    {
+      "response": 1e-05,
+      "numerical": 0.9999999999999993,
+      "exact": 1.0,
+      "status": "NUMERICAL_FEASIBLE",
+      "objective_gap": 0.0,
+      "exact_improvement": 9.499949999991486e-06,
+      "equivalent_normalized_probe": {
+        "alpha": 1.0,
+        "success": true,
+        "scale": 1e-05
+      }
+    },
+    {
+      "response": 1e-06,
+      "numerical": 1e-06,
+      "exact": 0.999999000001,
+      "status": "NUMERICAL_FEASIBLE",
+      "objective_gap": 4.999984999920493e-07,
+      "exact_improvement": 4.999994999699275e-07,
+      "equivalent_normalized_probe": {
+        "alpha": 1.0,
+        "success": true,
+        "scale": 1e-06
+      }
+    },
+    {
+      "response": 1e-07,
+      "numerical": 0.0,
+      "exact": 0.099999999,
+      "status": "NUMERICAL_FEASIBLE",
+      "objective_gap": 4.999999914101494e-09,
+      "exact_improvement": 4.999999914101494e-09,
+      "equivalent_normalized_probe": {
+        "alpha": 0.1,
+        "success": true,
+        "scale": 1e-06
+      }
+    },
+    {
+      "response": 1e-08,
+      "numerical": 0.0,
+      "exact": 0.009999999999,
+      "status": "NUMERICAL_FEASIBLE",
+      "objective_gap": 5.000000413701855e-11,
+      "exact_improvement": 5.000000413701855e-11,
+      "equivalent_normalized_probe": {
+        "alpha": 0.01,
+        "success": true,
+        "scale": 1e-06
+      }
+    },
+    {
+      "response": 1e-09,
+      "numerical": 0.0,
+      "exact": 0.0009999999999990002,
+      "status": "NUMERICAL_FEASIBLE",
+      "objective_gap": 4.999889391399392e-13,
+      "exact_improvement": 4.999889391399392e-13,
+      "equivalent_normalized_probe": {
+        "alpha": 0.001,
+        "success": true,
+        "scale": 1e-06
+      }
+    }
+  ],
+  "head_scale_sweep": [
+    {
+      "pseudo_lr": 0.001,
+      "exact_scalar_alpha": 1.0,
+      "maximum_alignment": 0.00028125000000000003,
+      "report": {
+        "method": "joint_guard",
+        "source_ids": [
+          "pseudo_class_1"
+        ],
+        "before": [
+          0.28125,
+          0.03125,
+          0.03125
+        ],
+        "positive_pixels": [
+          [
+            4
+          ],
+          [
+            0
+          ],
+          [
+            0
+          ]
+        ],
+        "scope": "observed_TRAIN_one_vs_rest_Brier",
+        "optimizer_steps_in_transaction": 0,
+        "ema_updates_in_transaction": 0,
+        "alpha": [
+          0.9999999999999998
+        ],
+        "scale": 1.0,
+        "after": [
+          0.28096867978131446,
+          0.031218742197923824,
+          0.031218742197923824
+        ],
+        "status": "NUMERICAL_FEASIBLE",
+        "guarded": true,
+        "trials": [
+          {
+            "scale": 1.0,
+            "risks": [
+              0.28096867978131446,
+              0.031218742197923824,
+              0.031218742197923824
+            ],
+            "accepted": true
+          }
+        ],
+        "realized_max_regression": -3.125780207617612e-05,
+        "linearized_after": [
+          0.2809688203125,
+          0.0312187578125,
+          0.0312187578125
+        ]
+      },
+      "equivalent_normalized_probe": {
+        "alpha": 0.9999999999999997,
+        "success": true,
+        "scale": 0.00028125000000000003
+      }
+    },
+    {
+      "pseudo_lr": 0.0001,
+      "exact_scalar_alpha": 1.0,
+      "maximum_alignment": 2.8125000000000003e-05,
+      "report": {
+        "method": "joint_guard",
+        "source_ids": [
+          "pseudo_class_1"
+        ],
+        "before": [
+          0.28125,
+          0.03125,
+          0.03125
+        ],
+        "positive_pixels": [
+          [
+            4
+          ],
+          [
+            0
+          ],
+          [
+            0
+          ]
+        ],
+        "scope": "observed_TRAIN_one_vs_rest_Brier",
+        "optimizer_steps_in_transaction": 0,
+        "ema_updates_in_transaction": 0,
+        "alpha": [
+          1.0
+        ],
+        "scale": 1.0,
+        "after": [
+          0.28122187429696877,
+          0.031246874921885416,
+          0.031246874921885416
+        ],
+        "status": "NUMERICAL_FEASIBLE",
+        "guarded": true,
+        "trials": [
+          {
+            "scale": 1.0,
+            "risks": [
+              0.28122187429696877,
+              0.031246874921885416,
+              0.031246874921885416
+            ],
+            "accepted": true
+          }
+        ],
+        "realized_max_regression": -3.1250781145839013e-06,
+        "linearized_after": [
+          0.281221875703125,
+          0.031246875078125,
+          0.031246875078125
+        ]
+      },
+      "equivalent_normalized_probe": {
+        "alpha": 0.9999999999999998,
+        "success": true,
+        "scale": 2.8125000000000003e-05
+      }
+    },
+    {
+      "pseudo_lr": 1e-05,
+      "exact_scalar_alpha": 1.0,
+      "maximum_alignment": 2.8125000000000006e-06,
+      "report": {
+        "method": "joint_guard",
+        "source_ids": [
+          "pseudo_class_1"
+        ],
+        "before": [
+          0.28125,
+          0.03125,
+          0.03125
+        ],
+        "positive_pixels": [
+          [
+            4
+          ],
+          [
+            0
+          ],
+          [
+            0
+          ]
+        ],
+        "scope": "observed_TRAIN_one_vs_rest_Brier",
+        "optimizer_steps_in_transaction": 0,
+        "ema_updates_in_transaction": 0,
+        "alpha": [
+          1.0
+        ],
+        "scale": 1.0,
+        "after": [
+          0.28124718749296884,
+          0.031249687499218762,
+          0.031249687499218762
+        ],
+        "status": "NUMERICAL_FEASIBLE",
+        "guarded": true,
+        "trials": [
+          {
+            "scale": 1.0,
+            "risks": [
+              0.28124718749296884,
+              0.031249687499218762,
+              0.031249687499218762
+            ],
+            "accepted": true
+          }
+        ],
+        "realized_max_regression": -3.125007812382341e-07,
+        "linearized_after": [
+          0.28124718750703126,
+          0.03124968750078125,
+          0.03124968750078125
+        ]
+      },
+      "equivalent_normalized_probe": {
+        "alpha": 1.0,
+        "success": true,
+        "scale": 2.8125000000000006e-06
+      }
+    },
+    {
+      "pseudo_lr": 1e-06,
+      "exact_scalar_alpha": 0.11458332676866359,
+      "maximum_alignment": 2.8125e-07,
+      "report": {
+        "method": "joint_guard",
+        "source_ids": [
+          "pseudo_class_1"
+        ],
+        "before": [
+          0.28125,
+          0.03125,
+          0.03125
+        ],
+        "positive_pixels": [
+          [
+            4
+          ],
+          [
+            0
+          ],
+          [
+            0
+          ]
+        ],
+        "scope": "observed_TRAIN_one_vs_rest_Brier",
+        "optimizer_steps_in_transaction": 0,
+        "ema_updates_in_transaction": 0,
+        "alpha": [
+          0.0
+        ],
+        "scale": 0.0,
+        "after": [
+          0.28125,
+          0.03125,
+          0.03125
+        ],
+        "status": "NUMERICAL_FEASIBLE",
+        "guarded": true,
+        "trials": [],
+        "realized_max_regression": 0.0,
+        "linearized_after": [
+          0.28125,
+          0.03125,
+          0.03125
+        ]
+      },
+      "equivalent_normalized_probe": {
+        "alpha": 0.11458333333333334,
+        "success": true,
+        "scale": 1e-06
+      }
+    }
+  ],
+  "decoder_plain": {
+    "production_encoder_forward_calls": 7,
+    "production_jvp_count": 4,
+    "production_trials": 1,
+    "production_seconds": 0.1361622498370707,
+    "direct_sgd_seconds": 0.004970457870513201,
+    "maximum_parameter_error": 7.450580596923828e-09,
+    "caveat": "One tiny CPU fixture; direct SGD omits audit diagnostics, no GPU speedup claim."
+  },
+  "rejection_atomicity": {
+    "report": {
+      "method": "joint_guard",
+      "source_ids": [
+        "harmful_bg"
+      ],
+      "before": [
+        0.15609371164003732,
+        0.15609371164003732,
+        0.15609371101946623
+      ],
+      "positive_pixels": [
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "scope": "observed_TRAIN_one_vs_rest_Brier",
+      "optimizer_steps_in_transaction": 0,
+      "ema_updates_in_transaction": 0,
+      "alpha": [
+        0.0
+      ],
+      "scale": 0.0,
+      "after": [
+        0.15609371164003732,
+        0.15609371164003732,
+        0.15609371101946623
+      ],
+      "status": "NUMERICAL_FEASIBLE",
+      "guarded": true,
+      "trials": [],
+      "realized_max_regression": 0.0,
+      "linearized_after": [
+        0.15609371164003732,
+        0.15609371164003732,
+        0.15609371101946623
+      ]
+    },
+    "parameters_unchanged": true,
+    "optimizer_unchanged": true,
+    "torch_rng_unchanged": true,
+    "caveat": "Zero allocation path; this probe does not force failed nonzero trial evaluations."
+  },
+  "decoder_forced_rejection": {
+    "report": {
+      "method": "joint_guard",
+      "before": [
+        0.28125,
+        0.03125,
+        0.03125
+      ],
+      "positive_pixels": [
+        [
+          1024
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ],
+      "scope": "observed_TRAIN_one_vs_rest_Brier",
+      "optimizer_steps_in_transaction": 0,
+      "ema_updates_in_transaction": 0,
+      "update_scope": "decoder",
+      "source_ids": [
+        "pseudo_class_0"
+      ],
+      "alpha": [
+        1.0
+      ],
+      "scale": 0.0,
+      "after": [
+        0.28125,
+        0.03125,
+        0.03125
+      ],
+      "status": "FAULT_INJECTION_ALPHA_ONE",
+      "guarded": true,
+      "trials": [
+        {
+          "scale": 1.0,
+          "risks": [
+            0.4982311434358717,
+            7.63774719225639e-06,
+            7.63774719225639e-06
+          ],
+          "accepted": false
+        },
+        {
+          "scale": 0.5,
+          "risks": [
+            0.47409679557623197,
+            0.0005951652756285504,
+            0.0005951652756285504
+          ],
+          "accepted": false
+        },
+        {
+          "scale": 0.25,
+          "risks": [
+            0.4037964936988696,
+            0.005787770519496425,
+            0.005787770519496425
+          ],
+          "accepted": false
+        }
+      ],
+      "jvp_count": 1,
+      "realized_max_regression": 0.0,
+      "linearized_after": [
+        0.28125,
+        0.03125,
+        0.03125
+      ]
+    },
+    "parameters_and_buffers_unchanged": true,
+    "optimizer_state_untouched": true,
+    "torch_rng_unchanged": true,
+    "caveat": "Fault injection forces a harmful nonzero local allocation; verifies actual trial rejection only."
+  }
+}

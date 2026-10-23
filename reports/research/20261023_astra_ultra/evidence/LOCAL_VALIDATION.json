@@ -1,0 +1,47 @@
+{
+  "python": "3.11.16 | packaged by conda-forge | (main, Aug 21 2026, 22:39:01) [Clang 19.1.7 ]",
+  "executable": "/Users/alvinluong/miniforge3/bin/python",
+  "platform": "macOS-26.2-arm64-arm-64bit",
+  "torch": "2.14.0",
+  "numpy": "2.4.6",
+  "scipy": "1.17.1",
+  "pytest": "9.1.1",
+  "cuda_available": false,
+  "scope": "CPU software and manufactured evidence only",
+  "commands": [
+    {
+      "name": "check_repo",
+      "command": [
+        "/Users/alvinluong/miniforge3/bin/python",
+        "scripts/check_repo.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.02132687484845519,
+      "log": "reports/research/20261023_astra_ultra/evidence/check_repo.log"
+    },
+    {
+      "name": "pytest",
+      "command": [
+        "/Users/alvinluong/miniforge3/bin/python",
+        "-m",
+        "pytest",
+        "-q"
+      ],
+      "exit_code": 0,
+      "seconds": 4.057447708211839,
+      "log": "reports/research/20261023_astra_ultra/evidence/pytest.log"
+    },
+    {
+      "name": "mechanisms",
+      "command": [
+        "/Users/alvinluong/miniforge3/bin/python",
+        "experiments/run_mechanisms.py",
+        "--out",
+        "reports/research/20261023_astra_ultra/evidence/mechanisms"
+      ],
+      "exit_code": 0,
+      "seconds": 0.8804615419358015,
+      "log": "reports/research/20261023_astra_ultra/evidence/mechanisms.log"
+    }
+  ]
+}

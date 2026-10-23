@@ -1,0 +1,141 @@
+{
+  "kind": "SYNTHETIC_CPU_ONLY",
+  "guard_and_dice": {
+    "rv_dice_before": 0.6666666666666666,
+    "rv_dice_after": 0.0,
+    "guard_report": {
+      "method": "joint_guard",
+      "source_ids": [
+        "constructed_direction"
+      ],
+      "before": [
+        0.1517625,
+        0.0012500000000000005,
+        0.0012500000000000005
+      ],
+      "positive_pixels": [
+        [
+          2
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ],
+      "scope": "observed_TRAIN_one_vs_rest_Brier",
+      "optimizer_steps_in_transaction": 0,
+      "ema_updates_in_transaction": 0,
+      "alpha": [
+        1.0
+      ],
+      "scale": 1.0,
+      "after": [
+        0.08865,
+        0.0008000000000000004,
+        0.0008000000000000004
+      ],
+      "status": "NUMERICAL_FEASIBLE",
+      "guarded": true,
+      "trials": [
+        {
+          "scale": 1.0,
+          "risks": [
+            0.08865,
+            0.0008000000000000004,
+            0.0008000000000000004
+          ],
+          "accepted": true
+        }
+      ],
+      "realized_max_regression": -0.0004500000000000001,
+      "linearized_after": [
+        0.12927285937793062,
+        0.0009621458748675156,
+        0.0009621458748675156
+      ]
+    }
+  },
+  "empty_class_aggregation": {
+    "present_frame": {
+      "class": "RV",
+      "TP": 2,
+      "FP": 0,
+      "FN": 0,
+      "reference_present": true,
+      "dice": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "prediction_count": 2,
+      "reference_count": 2
+    },
+    "absent_frame": {
+      "class": "RV",
+      "TP": 0,
+      "FP": 2,
+      "FN": 0,
+      "reference_present": false,
+      "dice": null,
+      "precision": 0.0,
+      "recall": null,
+      "prediction_count": 2,
+      "reference_count": 0
+    },
+    "reported_mean_available_frame_dice": 1.0,
+    "pooled_dice": 0.6666666666666666
+  },
+  "patient_pairing": {
+    "4": {
+      "unlabeled_count": 76,
+      "supervised_partners_per_unlabeled": [
+        1
+      ],
+      "never_eligible_audit_partner_per_unlabeled": 1,
+      "possible_partner_count": 4
+    },
+    "8": {
+      "unlabeled_count": 72,
+      "supervised_partners_per_unlabeled": [
+        1
+      ],
+      "never_eligible_audit_partner_per_unlabeled": 1,
+      "possible_partner_count": 8
+    },
+    "16": {
+      "unlabeled_count": 64,
+      "supervised_partners_per_unlabeled": [
+        1
+      ],
+      "never_eligible_audit_partner_per_unlabeled": 1,
+      "possible_partner_count": 16
+    }
+  },
+  "source_sha256": "6e12885e44b725c132a01437dc6179cbf524b94c51dd5a5f5254701eb78cf442",
+  "committed_patient_csv_reaggregation": {
+    "supervised": {
+      "RV": 0.6075096534773261,
+      "MYO": 0.771315308733122,
+      "LV": 0.8853554021339838,
+      "foreground_macro": 0.7547267881148105
+    },
+    "supervised_extra": {
+      "RV": 0.6419209423503802,
+      "MYO": 0.7717380955598023,
+      "LV": 0.8746437851163295,
+      "foreground_macro": 0.762767607675504
+    },
+    "ema_full": {
+      "RV": 0.7362486449593036,
+      "MYO": 0.8067370324768901,
+      "LV": 0.9141556089599521,
+      "foreground_macro": 0.819047095465382
+    },
+    "ema_block": {
+      "RV": 0.5225914842816486,
+      "MYO": 0.8028771880633109,
+      "LV": 0.8783058287258295,
+      "foreground_macro": 0.7345915003569297
+    }
+  }
+}

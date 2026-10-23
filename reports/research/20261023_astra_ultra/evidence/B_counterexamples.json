@@ -1,0 +1,550 @@
+{
+  "scope": "CPU float64 manufactured analysis; no patient data, pretrained weights or GPU",
+  "probe_sha256": "4d41482151ff376bf656bb09f5edcd15e15a36c7afa4f0d425b8bf36b843c75f",
+  "python": "3.11.16",
+  "torch": "2.14.0",
+  "numpy": "2.4.6",
+  "scipy": "1.17.1",
+  "source_sha256": {
+    "self_audit/control.py": "6bedb4165e85b4cc1e507d73858e491a4b7e668601604f216a4472280b723068",
+    "self_audit/decoder_control.py": "b23713c4ca09ea47ee1eee073bfc0b0e31771556d928f19f024bece07b879159"
+  },
+  "brier_down_dice_down": {
+    "scope": "manually constructed affine-head displacement, not a generated pseudo-gradient",
+    "dice_before": 1.0,
+    "dice_after": 0.6666666666666666,
+    "probabilities_before": [
+      [
+        [
+          [
+            0.46,
+            0.46,
+            0.8799999999999998,
+            0.8799999999999998
+          ]
+        ],
+        [
+          [
+            0.52,
+            0.52,
+            0.1,
+            0.1
+          ]
+        ],
+        [
+          [
+            0.010000000000000004,
+            0.010000000000000004,
+            0.010000000000000002,
+            0.010000000000000002
+          ]
+        ],
+        [
+          [
+            0.010000000000000004,
+            0.010000000000000004,
+            0.010000000000000002,
+            0.010000000000000002
+          ]
+        ]
+      ]
+    ],
+    "probabilities_after": [
+      [
+        [
+          [
+            0.18999999999999995,
+            0.51,
+            0.8900000000000001,
+            0.8900000000000001
+          ]
+        ],
+        [
+          [
+            0.7999999999999998,
+            0.48000000000000004,
+            0.10000000000000006,
+            0.10000000000000006
+          ]
+        ],
+        [
+          [
+            0.005000000000000001,
+            0.005000000000000001,
+            0.005000000000000001,
+            0.005000000000000001
+          ]
+        ],
+        [
+          [
+            0.005000000000000001,
+            0.005000000000000001,
+            0.005000000000000001,
+            0.005000000000000001
+          ]
+        ]
+      ]
+    ],
+    "control": {
+      "method": "joint_guard",
+      "source_ids": [
+        "manufactured_direction"
+      ],
+      "before": [
+        0.0601,
+        5.000000000000003e-05,
+        5.000000000000003e-05
+      ],
+      "positive_pixels": [
+        [
+          2
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ],
+      "scope": "observed_TRAIN_one_vs_rest_Brier",
+      "optimizer_steps_in_transaction": 0,
+      "ema_updates_in_transaction": 0,
+      "alpha": [
+        1.0
+      ],
+      "scale": 1.0,
+      "after": [
+        0.04130000000000002,
+        1.2500000000000006e-05,
+        1.2500000000000006e-05
+      ],
+      "status": "NUMERICAL_FEASIBLE",
+      "guarded": true,
+      "trials": [
+        {
+          "scale": 1.0,
+          "risks": [
+            0.04130000000000002,
+            1.2500000000000006e-05,
+            1.2500000000000006e-05
+          ],
+          "accepted": true
+        }
+      ],
+      "realized_max_regression": -3.7500000000000024e-05,
+      "linearized_after": [
+        0.038944676936350876,
+        6.821967680716693e-06,
+        6.821967680716693e-06
+      ]
+    }
+  },
+  "tangent_boundary": {
+    "scope": "exact softmax head; correct-class derivative zero and adverse second derivative",
+    "head_bitwise_unchanged": true,
+    "control": {
+      "method": "joint_guard",
+      "source_ids": [
+        "manufactured_direction"
+      ],
+      "before": [
+        0.28125,
+        0.03125,
+        0.03125
+      ],
+      "positive_pixels": [
+        [
+          1
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ],
+      "scope": "observed_TRAIN_one_vs_rest_Brier",
+      "optimizer_steps_in_transaction": 0,
+      "ema_updates_in_transaction": 0,
+      "alpha": [
+        0.9999999999999997
+      ],
+      "scale": 0.0,
+      "after": [
+        0.28125,
+        0.03125,
+        0.03125
+      ],
+      "status": "NUMERICAL_FEASIBLE",
+      "guarded": true,
+      "trials": [
+        {
+          "scale": 1.0,
+          "risks": [
+            0.317776269376124,
+            0.0075638877370727475,
+            0.0075638877370727475
+          ],
+          "accepted": false
+        },
+        {
+          "scale": 0.5,
+          "risks": [
+            0.2905221818522896,
+            0.0171402660843921,
+            0.0171402660843921
+          ],
+          "accepted": false
+        },
+        {
+          "scale": 0.25,
+          "risks": [
+            0.28352453831584307,
+            0.023751809801012328,
+            0.023751809801012328
+          ],
+          "accepted": false
+        },
+        {
+          "scale": 0.125,
+          "risks": [
+            0.2818099114241601,
+            0.027413649078071322,
+            0.027413649078071322
+          ],
+          "accepted": false
+        },
+        {
+          "scale": 0.0625,
+          "risks": [
+            0.28138870792845355,
+            0.029313244948950247,
+            0.029313244948950247
+          ],
+          "accepted": false
+        },
+        {
+          "scale": 0.03125,
+          "risks": [
+            0.2812845079025094,
+            0.030277391209871878,
+            0.030277391209871878
+          ],
+          "accepted": false
+        },
+        {
+          "scale": 0.015625,
+          "risks": [
+            0.28125860522277507,
+            0.03076268980576593,
+            0.03076268980576593
+          ],
+          "accepted": false
+        },
+        {
+          "scale": 0.0078125,
+          "risks": [
+            0.2812521485488588,
+            0.03100609996648815,
+            0.03100609996648815
+          ],
+          "accepted": false
+        },
+        {
+          "scale": 0.00390625,
+          "risks": [
+            0.2812505367902802,
+            0.031127989563770258,
+            0.031127989563770258
+          ],
+          "accepted": false
+        },
+        {
+          "scale": 0.001953125,
+          "risks": [
+            0.2812501341540585,
+            0.03118897977886505,
+            0.03118897977886505
+          ],
+          "accepted": false
+        },
+        {
+          "scale": 0.0009765625,
+          "risks": [
+            0.28125003353306666,
+            0.031219486151409563,
+            0.031219486151409563
+          ],
+          "accepted": false
+        },
+        {
+          "scale": 0.00048828125,
+          "risks": [
+            0.2812500083825851,
+            0.031234742142790612,
+            0.031234742142790612
+          ],
+          "accepted": false
+        }
+      ],
+      "realized_max_regression": 0.0,
+      "linearized_after": [
+        0.28125,
+        0.03125,
+        0.03125
+      ]
+    }
+  },
+  "physical_small_scale": [
+    {
+      "magnitude": 0.01,
+      "A": [
+        [
+          [
+            5.625e-05
+          ]
+        ],
+        [
+          [
+            6.249999999999998e-06
+          ]
+        ],
+        [
+          [
+            6.249999999999998e-06
+          ]
+        ]
+      ],
+      "b": [
+        [
+          0.005625
+        ],
+        [
+          0.0006249999999999999
+        ],
+        [
+          0.0006249999999999999
+        ]
+      ],
+      "e": [
+        0.28125,
+        0.03125,
+        0.03125
+      ],
+      "joint_alpha": [
+        0.9999999999999999
+      ],
+      "scalar_alpha": 1.0,
+      "joint_status": "NUMERICAL_FEASIBLE",
+      "objective_at_zero": 0.11458333333333333,
+      "joint_objective_gain": 0.0022797083333333246,
+      "exact_scalar_objective_gain": 0.0022797083333333246,
+      "retained_gain_fraction": 1.0
+    },
+    {
+      "magnitude": 0.001,
+      "A": [
+        [
+          [
+            5.625e-07
+          ]
+        ],
+        [
+          [
+            6.25e-08
+          ]
+        ],
+        [
+          [
+            6.25e-08
+          ]
+        ]
+      ],
+      "b": [
+        [
+          0.0005625000000000001
+        ],
+        [
+          6.25e-05
+        ],
+        [
+          6.25e-05
+        ]
+      ],
+      "e": [
+        0.28125,
+        0.03125,
+        0.03125
+      ],
+      "joint_alpha": [
+        1.0
+      ],
+      "scalar_alpha": 1.0,
+      "joint_status": "NUMERICAL_FEASIBLE",
+      "objective_at_zero": 0.11458333333333333,
+      "joint_objective_gain": 0.00022855208333331933,
+      "exact_scalar_objective_gain": 0.00022855208333331933,
+      "retained_gain_fraction": 1.0
+    },
+    {
+      "magnitude": 0.0001,
+      "A": [
+        [
+          [
+            5.625000000000001e-09
+          ]
+        ],
+        [
+          [
+            6.250000000000002e-10
+          ]
+        ],
+        [
+          [
+            6.250000000000002e-10
+          ]
+        ]
+      ],
+      "b": [
+        [
+          5.6250000000000005e-05
+        ],
+        [
+          6.250000000000001e-06
+        ],
+        [
+          6.250000000000001e-06
+        ]
+      ],
+      "e": [
+        0.28125,
+        0.03125,
+        0.03125
+      ],
+      "joint_alpha": [
+        1.0
+      ],
+      "scalar_alpha": 1.0,
+      "joint_status": "NUMERICAL_FEASIBLE",
+      "objective_at_zero": 0.11458333333333333,
+      "joint_objective_gain": 2.2415520833332647e-05,
+      "exact_scalar_objective_gain": 2.2415520833332647e-05,
+      "retained_gain_fraction": 1.0
+    },
+    {
+      "magnitude": 1e-05,
+      "A": [
+        [
+          [
+            5.625000000000001e-11
+          ]
+        ],
+        [
+          [
+            6.2500000000000035e-12
+          ]
+        ],
+        [
+          [
+            6.2500000000000035e-12
+          ]
+        ]
+      ],
+      "b": [
+        [
+          5.625000000000001e-06
+        ],
+        [
+          6.250000000000002e-07
+        ],
+        [
+          6.250000000000002e-07
+        ]
+      ],
+      "e": [
+        0.28125,
+        0.03125,
+        0.03125
+      ],
+      "joint_alpha": [
+        1.0
+      ],
+      "scalar_alpha": 1.0,
+      "joint_status": "NUMERICAL_FEASIBLE",
+      "objective_at_zero": 0.11458333333333333,
+      "joint_objective_gain": 1.7916552083191428e-06,
+      "exact_scalar_objective_gain": 1.7916552083191428e-06,
+      "retained_gain_fraction": 1.0
+    },
+    {
+      "magnitude": 1e-06,
+      "A": [
+        [
+          [
+            5.625000000000001e-13
+          ]
+        ],
+        [
+          [
+            6.250000000000002e-14
+          ]
+        ],
+        [
+          [
+            6.250000000000002e-14
+          ]
+        ]
+      ],
+      "b": [
+        [
+          5.625e-07
+        ],
+        [
+          6.250000000000001e-08
+        ],
+        [
+          6.250000000000001e-08
+        ]
+      ],
+      "e": [
+        0.28125,
+        0.03125,
+        0.03125
+      ],
+      "joint_alpha": [
+        0.0
+      ],
+      "scalar_alpha": 0.2291666141493176,
+      "joint_status": "NUMERICAL_FEASIBLE",
+      "objective_at_zero": 0.11458333333333333,
+      "joint_objective_gain": 0.0,
+      "exact_scalar_objective_gain": 2.625867454031372e-08,
+      "retained_gain_fraction": 0.0
+    }
+  ],
+  "moment_contract_gap": {
+    "scope": "standalone API malformed input only; internal response_moments is consistent",
+    "A": [
+      [
+        [
+          0.0
+        ]
+      ]
+    ],
+    "b": [
+      [
+        1.0
+      ]
+    ],
+    "e": [
+      0.5
+    ],
+    "alpha": [
+      1.0
+    ],
+    "status": "NUMERICAL_FEASIBLE",
+    "local_risks": [
+      -0.5
+    ]
+  }
+}
