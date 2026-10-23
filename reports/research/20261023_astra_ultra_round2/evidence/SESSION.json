@@ -1,0 +1,31 @@
+{
+  "created_utc": "2026-10-23T16:33:59.705032+00:00",
+  "refs": {
+    "HEAD": "ccfde9bb99b6050e00ad94fbd6d57fcf9afc8b3f",
+    "origin/main": "637f38ced217fe1db2347a87924695533056d8f0",
+    "origin/experiments/acdc-v2-vram24": "8960b6baac4c6600553d900c303f192c2fcfa4f0",
+    "origin/research/astra-ultra-continuation-20261023": "ccfde9bb99b6050e00ad94fbd6d57fcf9afc8b3f"
+  },
+  "scope": "Second bounded research round; isolated probes/reports only; no patient/GPU execution or active pipeline changes",
+  "parent_report": "reports/research/20261023_astra_ultra",
+  "questions": [
+    "Numerical qualification without changing the QCQP",
+    "Joint-versus-scalar value before and after finite guarding",
+    "Realizable pseudo-gradient counterexamples and audit-transfer limits"
+  ],
+  "workers": {
+    "requested_model": "gpt-6-astra",
+    "requested_reasoning_effort": "ultra",
+    "mode": "resumed_existing_six_workers",
+    "tasks": [
+      "astra_source",
+      "astra_theory",
+      "astra_empirical",
+      "astra_prior_art",
+      "astra_design",
+      "astra_adversarial"
+    ],
+    "backend_identity_independently_exposed": false
+  },
+  "delivery_branch": "research/astra-ultra-continuation-20261023"
+}

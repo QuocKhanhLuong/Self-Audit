@@ -1,0 +1,52 @@
+{
+  "status": "VERIFIED_SYNTHETIC_CPU_AND_INDEPENDENT_NUMERICAL_REVIEW",
+  "canonical_source_sha": "637f38ced217fe1db2347a87924695533056d8f0",
+  "parent_head_sha": "ccfde9bb99b6050e00ad94fbd6d57fcf9afc8b3f",
+  "checks": {
+    "discovery_trials_retained": 292,
+    "discovery_guard_calls": 64,
+    "selected_first_success_trial": 292,
+    "fixed_postprocessing_replays": 5,
+    "A_cases_independently_checked": 114,
+    "A_retained_points_exact_rational_checked": 1078,
+    "A_boolean_disagreements": 0,
+    "A_normalized_raw_tolerance_only": 17,
+    "A_normalized_raw_declared_rejections": 1,
+    "A_rounded_gram_negative_minors": 17,
+    "A_rounded_gram_cases_with_negative_minors": 8,
+    "A_review_of_F": "ACCEPT_AFFINE_INTERFACE_MANUFACTURED_EXISTENCE",
+    "F_review_of_A": "ACCEPT_MANUFACTURED_NUMERICAL_SCOPE",
+    "decision_brief_A_F_read_only_review": "ACCEPT_NO_MATERIAL_INACCURACIES"
+  },
+  "executed_commands": [
+    "rtk proxy python reports/research/20261023_astra_ultra_round2/probes/F_realizable_search.py",
+    "rtk proxy python reports/research/20261023_astra_ultra_round2/probes/F_realizable_replay.py",
+    "rtk proxy python reports/research/20261023_astra_ultra_round2/probes/F_review_A.py"
+  ],
+  "reviewed_A": {
+    "workers/A_numerics.md": "7c951a903ceed22de332a7b75f1f91e8a96a8c20df70ace85608257c466b398d",
+    "probes/A_solver_qualification.py": "009a113dc9c1a54b2e3ccf0054f0d5c83dee6f3d2076b7aff45aca7d95b86a2b",
+    "evidence/A_solver_qualification.json": "5dab6c4badf431633445f29bba19cb761a77d9fb9b0ec08106b90386e09b68bb",
+    "reviews/A_reviews_F.md": "66a48b1c9b9a9b389c62f53c89678808b90c6e4660663521c4e8673369d31b14"
+  },
+  "files": {
+    "workers/F_realizable.md": "67c7e678eecd1ea439f0e1900eefb50a83e8e9c7cb3d653ac529decb6af5ac93",
+    "reviews/F_reviews_A.md": "a5f4159ba36de42551f394b0a34ff84a3b9f42d06d21d01ff6fae15628589e8c",
+    "probes/F_realizable_replay.py": "2ee70ed7448a123d43ba8247782b891dac0cd933eb91fb0fced00b87f0b0e21a",
+    "probes/F_realizable_search.py": "77f031117afed8687a0b05c6145c9e96b4805953264c025085861b9c33ad5eb7",
+    "probes/F_review_A.py": "2e6cc8da421993468c8a0f74bf42a4f7331b0f676b8b2a5d01fe634e30e5c5a4",
+    "evidence/F_A_rational_validation.json": "3907e9aee84e34a56ae13ea2a40d9b6d0a0f25bcf9d8eaac02aa0f7f418067c5",
+    "evidence/F_A_rounded_gram_check.json": "2cb59469e79f57632fea71efd59613b28c1e67e365d0be92f9bd724e146ae3e6",
+    "evidence/F_realizable_replay.json": "79385fab32bb7d9ed58f5320ce4c9b0a8710a88f444526a88bbf74f737ccd22f",
+    "evidence/F_search_result.json": "ae5cefcd1bcfd7f827ebb1f49c8c7c2464e8e575fa1f176d91be0e251dc52843",
+    "evidence/F_search_trials.jsonl": "1e751ee0a32a6b243035628e3e5d6f084df55ce2056edb8d735f3aad51802220"
+  },
+  "limitations": [
+    "Selected existence fixture; no prevalence or typical default-LR claim.",
+    "Copied teacher is a stipulated instantaneous input; no full EMA trajectory or native feature realization demonstrated.",
+    "Feature lifting preserves the same large effective displacement.",
+    "Exact rational checks apply to represented floats, not pre-rounding moments or actual model risk.",
+    "No global multivariate optimality or finite-endpoint dominance certificate.",
+    "No patient/GPU job, weight/data download, production/config/baseline/round1 edit or Git mutation by F."
+  ]
+}

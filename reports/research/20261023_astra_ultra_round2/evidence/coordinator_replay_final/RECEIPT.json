@@ -1,0 +1,78 @@
+{
+  "scope": "Manufactured CPU and saved-count arithmetic only; fixed F fixture replay, no repeated discovery or patient/GPU work",
+  "python": "3.11.16 | packaged by conda-forge | (main, Aug 21 2026, 22:39:01) [Clang 19.1.7 ]",
+  "executable": "/Users/alvinluong/miniforge3/bin/python",
+  "parent_head": "ccfde9bb99b6050e00ad94fbd6d57fcf9afc8b3f",
+  "sources": {
+    "self_audit/__init__.py": "1ae542cceedefe1274a0ef07292460fffbb09e678bfc5198755caa9b51a32911",
+    "self_audit/control.py": "6bedb4165e85b4cc1e507d73858e491a4b7e668601604f216a4472280b723068",
+    "self_audit/data.py": "9b1ebe02166909d90c5175f72059c462042a8690828c27f2040b948eed94e1ec",
+    "self_audit/decoder_control.py": "b23713c4ca09ea47ee1eee073bfc0b0e31771556d928f19f024bece07b879159",
+    "self_audit/engine.py": "a2c3a7f1370ede64732976203847508368508b0499d6c50db288eceaaef82c95",
+    "self_audit/evaluation.py": "943f2638ce5212cc4879d710d2524889a4c6a84e07b1865d38bab8ba1bc36c19",
+    "self_audit/losses.py": "b4bc8ae600728692c774f410eb86ae0b95e0152eec8ecc5064fc2d80157501c6",
+    "self_audit/model.py": "02baf8a7931c21003fd86bdbeb0f9ec6d02f35e80ddac69d95f88527f5cce18c",
+    "train.py": "3d0cc4fa64bb1b6482bbe8dd1f82a7d7691ad25137d87f5dc43011aa0585abb5"
+  },
+  "commands": [
+    {
+      "name": "A_solver_qualification.py",
+      "sha256": "009a113dc9c1a54b2e3ccf0054f0d5c83dee6f3d2076b7aff45aca7d95b86a2b",
+      "exit_code": 0,
+      "seconds": 1.8464526659809053,
+      "log": "A_solver_qualification.py.log"
+    },
+    {
+      "name": "E_identification.py",
+      "sha256": "c02f06b18fa8d34dc73a7a723dc85192db476a38f634efcb71ca7248c6766666",
+      "exit_code": 0,
+      "seconds": 0.040059959050267935,
+      "log": "E_identification.py.log"
+    },
+    {
+      "name": "A_moment_audit.py",
+      "sha256": "409ef0354d7beacb1fed7d7fb96c8b29c16cd89c09cce954244af4bf3d4bcecc",
+      "exit_code": 0,
+      "seconds": 0.046675791032612324,
+      "log": "A_moment_audit.py.log"
+    },
+    {
+      "name": "A_review_F.py",
+      "sha256": "f4fe8280fd31d9dca8596197e8971469cafc327aa99eff1c175779b87bd5ad03",
+      "exit_code": 0,
+      "seconds": 0.957935499958694,
+      "log": "A_review_F.py.log"
+    },
+    {
+      "name": "B_review_E.py",
+      "sha256": "5c8f0dd36d2d04c7f2239dc83ba498697983f5ae4920db453f2c132838cbfd95",
+      "exit_code": 0,
+      "seconds": 0.028211666271090508,
+      "log": "B_review_E.py.log"
+    },
+    {
+      "name": "E_review_C.py",
+      "sha256": "b602431725b31f37dfd964497f49ff3612304702a2467db6d9498d4190086f96",
+      "exit_code": 0,
+      "seconds": 0.041158958338201046,
+      "log": "E_review_C.py.log"
+    },
+    {
+      "name": "F_review_A.py",
+      "sha256": "e716197ab5a90f0bf0e0cc98a4e7a150144343aebce73cbd9e13388306e88b58",
+      "exit_code": 0,
+      "seconds": 0.9796421672217548,
+      "log": "F_review_A.py.log"
+    }
+  ],
+  "phase": "post_review_changed_and_new_probes",
+  "unchanged_primary_probes_already_passed": [
+    "B_geometry.py",
+    "C_endpoint_headroom.py",
+    "C_endpoint_nonidentifiability.py",
+    "F_realizable_replay.py"
+  ],
+  "initial_receipt_sha256": "095a8b6ca410d2f2d017c52fbd880f9052922898c3511fb5c291776bed182eee",
+  "evidence_copy_scope": "All top-level A/B/C/E/F JSON receipts copied from isolated workspace; only commands listed below were rerun in this phase. Other copied receipts are dependencies, not additional execution claims.",
+  "status": "PASS"
+}

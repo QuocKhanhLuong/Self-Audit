@@ -1,0 +1,1122 @@
+{
+  "status": "PASS",
+  "scope": "E affine toy only; no source softmax/CE or patient claim",
+  "reviewed_probe_sha256": "c02f06b18fa8d34dc73a7a723dc85192db476a38f634efcb71ca7248c6766666",
+  "review_probe_sha256": "5c8f0dd36d2d04c7f2239dc83ba498697983f5ae4920db453f2c132838cbfd95",
+  "branches": [
+    {
+      "method": "P",
+      "frozen_teacher_intervention": false,
+      "step": 0,
+      "all_box_corners": [
+        {
+          "alpha": [
+            0.0,
+            0.0
+          ],
+          "theta": [
+            0.5,
+            0.5
+          ],
+          "probabilities": {
+            "A": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ]
+          }
+        },
+        {
+          "alpha": [
+            0.0,
+            1.0
+          ],
+          "theta": [
+            0.35,
+            0.85
+          ],
+          "probabilities": {
+            "A": [
+              0.63,
+              0.35,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.13,
+              0.85,
+              0.01,
+              0.01
+            ]
+          }
+        },
+        {
+          "alpha": [
+            1.0,
+            0.0
+          ],
+          "theta": [
+            0.85,
+            0.15000000000000002
+          ],
+          "probabilities": {
+            "A": [
+              0.13,
+              0.85,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.83,
+              0.15000000000000002,
+              0.01,
+              0.01
+            ]
+          }
+        },
+        {
+          "alpha": [
+            1.0,
+            1.0
+          ],
+          "theta": [
+            0.7,
+            0.5
+          ],
+          "probabilities": {
+            "A": [
+              0.28,
+              0.7,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ]
+          }
+        }
+      ],
+      "candidate_info": {
+        "map": "HANDCRAFTED_INITIAL",
+        "pseudo_class": null
+      },
+      "parameter_vs_probability_ema_max_error": {
+        "A": 0.0,
+        "B": 0.0
+      }
+    },
+    {
+      "method": "P",
+      "frozen_teacher_intervention": false,
+      "step": 1,
+      "all_box_corners": [
+        {
+          "alpha": [
+            0.0
+          ],
+          "theta": [
+            0.7,
+            0.5
+          ],
+          "probabilities": {
+            "A": [
+              0.28,
+              0.7,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ]
+          }
+        },
+        {
+          "alpha": [
+            1.0
+          ],
+          "theta": [
+            0.75,
+            0.55
+          ],
+          "probabilities": {
+            "A": [
+              0.22999999999999998,
+              0.75,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.42999999999999994,
+              0.55,
+              0.01,
+              0.01
+            ]
+          }
+        }
+      ],
+      "candidate_info": {
+        "map": "EMA_ARGMAX_RESPONSE",
+        "pseudo_class": 1,
+        "teacher_B": [
+          0.48,
+          0.5,
+          0.01,
+          0.01
+        ]
+      },
+      "parameter_vs_probability_ema_max_error": {
+        "A": 5.551115123125783e-17,
+        "B": 0.0
+      }
+    },
+    {
+      "method": "P",
+      "frozen_teacher_intervention": true,
+      "step": 0,
+      "all_box_corners": [
+        {
+          "alpha": [
+            0.0,
+            0.0
+          ],
+          "theta": [
+            0.5,
+            0.5
+          ],
+          "probabilities": {
+            "A": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ]
+          }
+        },
+        {
+          "alpha": [
+            0.0,
+            1.0
+          ],
+          "theta": [
+            0.35,
+            0.85
+          ],
+          "probabilities": {
+            "A": [
+              0.63,
+              0.35,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.13,
+              0.85,
+              0.01,
+              0.01
+            ]
+          }
+        },
+        {
+          "alpha": [
+            1.0,
+            0.0
+          ],
+          "theta": [
+            0.85,
+            0.15000000000000002
+          ],
+          "probabilities": {
+            "A": [
+              0.13,
+              0.85,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.83,
+              0.15000000000000002,
+              0.01,
+              0.01
+            ]
+          }
+        },
+        {
+          "alpha": [
+            1.0,
+            1.0
+          ],
+          "theta": [
+            0.7,
+            0.5
+          ],
+          "probabilities": {
+            "A": [
+              0.28,
+              0.7,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ]
+          }
+        }
+      ],
+      "candidate_info": {
+        "map": "HANDCRAFTED_INITIAL",
+        "pseudo_class": null
+      },
+      "parameter_vs_probability_ema_max_error": {
+        "A": 0.0,
+        "B": 0.0
+      }
+    },
+    {
+      "method": "P",
+      "frozen_teacher_intervention": true,
+      "step": 1,
+      "all_box_corners": [
+        {
+          "alpha": [
+            0.0
+          ],
+          "theta": [
+            0.7,
+            0.5
+          ],
+          "probabilities": {
+            "A": [
+              0.28,
+              0.7,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ]
+          }
+        },
+        {
+          "alpha": [
+            1.0
+          ],
+          "theta": [
+            0.75,
+            0.55
+          ],
+          "probabilities": {
+            "A": [
+              0.22999999999999998,
+              0.75,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.42999999999999994,
+              0.55,
+              0.01,
+              0.01
+            ]
+          }
+        }
+      ],
+      "candidate_info": {
+        "map": "EMA_ARGMAX_RESPONSE",
+        "pseudo_class": 1,
+        "teacher_B": [
+          0.48,
+          0.5,
+          0.01,
+          0.01
+        ]
+      },
+      "parameter_vs_probability_ema_max_error": {
+        "A": 5.551115123125783e-17,
+        "B": 0.0
+      }
+    },
+    {
+      "method": "S",
+      "frozen_teacher_intervention": false,
+      "step": 0,
+      "all_box_corners": [
+        {
+          "alpha": [
+            0.0,
+            0.0
+          ],
+          "theta": [
+            0.5,
+            0.5
+          ],
+          "probabilities": {
+            "A": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ]
+          }
+        },
+        {
+          "alpha": [
+            0.0,
+            1.0
+          ],
+          "theta": [
+            0.35,
+            0.85
+          ],
+          "probabilities": {
+            "A": [
+              0.63,
+              0.35,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.13,
+              0.85,
+              0.01,
+              0.01
+            ]
+          }
+        },
+        {
+          "alpha": [
+            1.0,
+            0.0
+          ],
+          "theta": [
+            0.85,
+            0.15000000000000002
+          ],
+          "probabilities": {
+            "A": [
+              0.13,
+              0.85,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.83,
+              0.15000000000000002,
+              0.01,
+              0.01
+            ]
+          }
+        },
+        {
+          "alpha": [
+            1.0,
+            1.0
+          ],
+          "theta": [
+            0.7,
+            0.5
+          ],
+          "probabilities": {
+            "A": [
+              0.28,
+              0.7,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ]
+          }
+        }
+      ],
+      "candidate_info": {
+        "map": "HANDCRAFTED_INITIAL",
+        "pseudo_class": null
+      },
+      "parameter_vs_probability_ema_max_error": {
+        "A": 0.0,
+        "B": 0.0
+      }
+    },
+    {
+      "method": "S",
+      "frozen_teacher_intervention": false,
+      "step": 1,
+      "all_box_corners": [
+        {
+          "alpha": [
+            0.0
+          ],
+          "theta": [
+            0.7,
+            0.5
+          ],
+          "probabilities": {
+            "A": [
+              0.28,
+              0.7,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ]
+          }
+        },
+        {
+          "alpha": [
+            1.0
+          ],
+          "theta": [
+            0.75,
+            0.55
+          ],
+          "probabilities": {
+            "A": [
+              0.22999999999999998,
+              0.75,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.42999999999999994,
+              0.55,
+              0.01,
+              0.01
+            ]
+          }
+        }
+      ],
+      "candidate_info": {
+        "map": "EMA_ARGMAX_RESPONSE",
+        "pseudo_class": 1,
+        "teacher_B": [
+          0.48,
+          0.5,
+          0.01,
+          0.01
+        ]
+      },
+      "parameter_vs_probability_ema_max_error": {
+        "A": 5.551115123125783e-17,
+        "B": 0.0
+      }
+    },
+    {
+      "method": "S",
+      "frozen_teacher_intervention": true,
+      "step": 0,
+      "all_box_corners": [
+        {
+          "alpha": [
+            0.0,
+            0.0
+          ],
+          "theta": [
+            0.5,
+            0.5
+          ],
+          "probabilities": {
+            "A": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ]
+          }
+        },
+        {
+          "alpha": [
+            0.0,
+            1.0
+          ],
+          "theta": [
+            0.35,
+            0.85
+          ],
+          "probabilities": {
+            "A": [
+              0.63,
+              0.35,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.13,
+              0.85,
+              0.01,
+              0.01
+            ]
+          }
+        },
+        {
+          "alpha": [
+            1.0,
+            0.0
+          ],
+          "theta": [
+            0.85,
+            0.15000000000000002
+          ],
+          "probabilities": {
+            "A": [
+              0.13,
+              0.85,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.83,
+              0.15000000000000002,
+              0.01,
+              0.01
+            ]
+          }
+        },
+        {
+          "alpha": [
+            1.0,
+            1.0
+          ],
+          "theta": [
+            0.7,
+            0.5
+          ],
+          "probabilities": {
+            "A": [
+              0.28,
+              0.7,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ]
+          }
+        }
+      ],
+      "candidate_info": {
+        "map": "HANDCRAFTED_INITIAL",
+        "pseudo_class": null
+      },
+      "parameter_vs_probability_ema_max_error": {
+        "A": 0.0,
+        "B": 0.0
+      }
+    },
+    {
+      "method": "S",
+      "frozen_teacher_intervention": true,
+      "step": 1,
+      "all_box_corners": [
+        {
+          "alpha": [
+            0.0
+          ],
+          "theta": [
+            0.7,
+            0.5
+          ],
+          "probabilities": {
+            "A": [
+              0.28,
+              0.7,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ]
+          }
+        },
+        {
+          "alpha": [
+            1.0
+          ],
+          "theta": [
+            0.75,
+            0.55
+          ],
+          "probabilities": {
+            "A": [
+              0.22999999999999998,
+              0.75,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.42999999999999994,
+              0.55,
+              0.01,
+              0.01
+            ]
+          }
+        }
+      ],
+      "candidate_info": {
+        "map": "EMA_ARGMAX_RESPONSE",
+        "pseudo_class": 1,
+        "teacher_B": [
+          0.48,
+          0.5,
+          0.01,
+          0.01
+        ]
+      },
+      "parameter_vs_probability_ema_max_error": {
+        "A": 5.551115123125783e-17,
+        "B": 0.0
+      }
+    },
+    {
+      "method": "J",
+      "frozen_teacher_intervention": false,
+      "step": 0,
+      "all_box_corners": [
+        {
+          "alpha": [
+            0.0,
+            0.0
+          ],
+          "theta": [
+            0.5,
+            0.5
+          ],
+          "probabilities": {
+            "A": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ]
+          }
+        },
+        {
+          "alpha": [
+            0.0,
+            1.0
+          ],
+          "theta": [
+            0.35,
+            0.85
+          ],
+          "probabilities": {
+            "A": [
+              0.63,
+              0.35,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.13,
+              0.85,
+              0.01,
+              0.01
+            ]
+          }
+        },
+        {
+          "alpha": [
+            1.0,
+            0.0
+          ],
+          "theta": [
+            0.85,
+            0.15000000000000002
+          ],
+          "probabilities": {
+            "A": [
+              0.13,
+              0.85,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.83,
+              0.15000000000000002,
+              0.01,
+              0.01
+            ]
+          }
+        },
+        {
+          "alpha": [
+            1.0,
+            1.0
+          ],
+          "theta": [
+            0.7,
+            0.5
+          ],
+          "probabilities": {
+            "A": [
+              0.28,
+              0.7,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ]
+          }
+        }
+      ],
+      "candidate_info": {
+        "map": "HANDCRAFTED_INITIAL",
+        "pseudo_class": null
+      },
+      "parameter_vs_probability_ema_max_error": {
+        "A": 5.551115123125783e-17,
+        "B": 0.0
+      }
+    },
+    {
+      "method": "J",
+      "frozen_teacher_intervention": false,
+      "step": 1,
+      "all_box_corners": [
+        {
+          "alpha": [
+            0.0
+          ],
+          "theta": [
+            0.85,
+            0.15000000000000002
+          ],
+          "probabilities": {
+            "A": [
+              0.13,
+              0.85,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.83,
+              0.15000000000000002,
+              0.01,
+              0.01
+            ]
+          }
+        },
+        {
+          "alpha": [
+            1.0
+          ],
+          "theta": [
+            0.9,
+            0.10000000000000002
+          ],
+          "probabilities": {
+            "A": [
+              0.07999999999999996,
+              0.9,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.88,
+              0.10000000000000002,
+              0.01,
+              0.01
+            ]
+          }
+        }
+      ],
+      "candidate_info": {
+        "map": "EMA_ARGMAX_RESPONSE",
+        "pseudo_class": 0,
+        "teacher_B": [
+          0.655,
+          0.325,
+          0.01,
+          0.01
+        ]
+      },
+      "parameter_vs_probability_ema_max_error": {
+        "A": 5.551115123125783e-17,
+        "B": 1.1102230246251565e-16
+      }
+    },
+    {
+      "method": "J",
+      "frozen_teacher_intervention": true,
+      "step": 0,
+      "all_box_corners": [
+        {
+          "alpha": [
+            0.0,
+            0.0
+          ],
+          "theta": [
+            0.5,
+            0.5
+          ],
+          "probabilities": {
+            "A": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ]
+          }
+        },
+        {
+          "alpha": [
+            0.0,
+            1.0
+          ],
+          "theta": [
+            0.35,
+            0.85
+          ],
+          "probabilities": {
+            "A": [
+              0.63,
+              0.35,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.13,
+              0.85,
+              0.01,
+              0.01
+            ]
+          }
+        },
+        {
+          "alpha": [
+            1.0,
+            0.0
+          ],
+          "theta": [
+            0.85,
+            0.15000000000000002
+          ],
+          "probabilities": {
+            "A": [
+              0.13,
+              0.85,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.83,
+              0.15000000000000002,
+              0.01,
+              0.01
+            ]
+          }
+        },
+        {
+          "alpha": [
+            1.0,
+            1.0
+          ],
+          "theta": [
+            0.7,
+            0.5
+          ],
+          "probabilities": {
+            "A": [
+              0.28,
+              0.7,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ]
+          }
+        }
+      ],
+      "candidate_info": {
+        "map": "HANDCRAFTED_INITIAL",
+        "pseudo_class": null
+      },
+      "parameter_vs_probability_ema_max_error": {
+        "A": 5.551115123125783e-17,
+        "B": 0.0
+      }
+    },
+    {
+      "method": "J",
+      "frozen_teacher_intervention": true,
+      "step": 1,
+      "all_box_corners": [
+        {
+          "alpha": [
+            0.0
+          ],
+          "theta": [
+            0.85,
+            0.15000000000000002
+          ],
+          "probabilities": {
+            "A": [
+              0.13,
+              0.85,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.83,
+              0.15000000000000002,
+              0.01,
+              0.01
+            ]
+          }
+        },
+        {
+          "alpha": [
+            1.0
+          ],
+          "theta": [
+            0.9,
+            0.2
+          ],
+          "probabilities": {
+            "A": [
+              0.07999999999999996,
+              0.9,
+              0.01,
+              0.01
+            ],
+            "B": [
+              0.78,
+              0.2,
+              0.01,
+              0.01
+            ]
+          }
+        }
+      ],
+      "candidate_info": {
+        "map": "EMA_ARGMAX_RESPONSE",
+        "pseudo_class": 1,
+        "teacher_B": [
+          0.48,
+          0.5,
+          0.01,
+          0.01
+        ]
+      },
+      "parameter_vs_probability_ema_max_error": {
+        "A": 5.551115123125783e-17,
+        "B": 0.0
+      }
+    }
+  ],
+  "teacher_argmax_decisions": {
+    "initial": {
+      "probabilities": [
+        0.48,
+        0.5,
+        0.01,
+        0.01
+      ],
+      "argmax": 1,
+      "margin": 0.020000000000000018
+    },
+    "after_J": {
+      "probabilities": [
+        0.655,
+        0.325,
+        0.01,
+        0.01
+      ],
+      "argmax": 0,
+      "margin": 0.33
+    },
+    "after_S": {
+      "probabilities": [
+        0.48,
+        0.5,
+        0.01,
+        0.01
+      ],
+      "argmax": 1,
+      "margin": 0.020000000000000018
+    }
+  },
+  "exact_tie_policy": "Python max over class indices chooses first index, BG=0",
+  "exact_tie_check": {
+    "map": "EMA_ARGMAX_RESPONSE",
+    "pseudo_class": 0,
+    "teacher_B": [
+      0.49,
+      0.49,
+      0.01,
+      0.01
+    ]
+  },
+  "final_J_B_risk": 0.405,
+  "final_S_B_risk": 0.10124999999999998,
+  "note": "All coefficient-box corners are simplex-valid, hence all affine interpolants are valid."
+}

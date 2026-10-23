@@ -1,0 +1,4918 @@
+{
+  "kind": "ACTUAL_CE_GENERATOR_AND_ACTUAL_FINITE_GUARD_SYNTHETIC_CPU",
+  "parent_head": "ccfde9bb99b6050e00ad94fbd6d57fcf9afc8b3f",
+  "canonical_sha": "637f38ced217fe1db2347a87924695533056d8f0",
+  "source_sha256": "3cca8cf4925ab7e98515ee3d731e2d4d0336f72129238d9efdc457c2af9735cf",
+  "torch": "2.14.0",
+  "numpy": "2.4.6",
+  "discovery_trials": 292,
+  "postprocessing_variants": 5,
+  "postprocessing_selection": "all five reported; predetermined rounding3, exact removal/lifting, and two fixed float32 checks; no optimization/search",
+  "rejected_U_removal_max_candidate_error": 4.440892098500626e-16,
+  "default_lr_lifting_max_audit_logit_effect_error": 1.3322676295501878e-15,
+  "limitations": [
+    "Affine features/head/audit labels independently manufactured; not patient data or native backbone features.",
+    "Teacher q is produced by an identical finite affine teacher copy, not an observed EMA training trajectory.",
+    "First success in a selected bounded search is existence evidence only, not prevalence.",
+    "Default pseudo_lr lifting uses large finite features; no activation-distribution realism claim."
+  ],
+  "variants": {
+    "exact_accepted_U_only": {
+      "dtype": "torch.float64",
+      "feature_dim": 2,
+      "weight": [
+        [
+          [
+            [
+              -0.9737067625786239
+            ]
+          ],
+          [
+            [
+              0.4747919438122347
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -1.1339924013223697
+            ]
+          ],
+          [
+            [
+              1.223607805269719
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              0.7751946902604421
+            ]
+          ],
+          [
+            [
+              -1.7875909832035444
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              0.7418120664860047
+            ]
+          ],
+          [
+            [
+              0.17007629067912006
+            ]
+          ]
+        ]
+      ],
+      "bias": [
+        0.29158481705141676,
+        0.2628504308501728,
+        -0.3593929125460212,
+        -0.007323713677208076
+      ],
+      "U_features": [
+        [
+          [
+            [
+              2.407309640395668,
+              -2.5266673444648213
+            ]
+          ],
+          [
+            [
+              -0.6452581746007102,
+              2.179699934383162
+            ]
+          ]
+        ]
+      ],
+      "audit_features": [
+        [
+          [
+            [
+              -0.5767593637133815,
+              0.6535466847423004,
+              0.17456344448017957,
+              0.3774903538959272,
+              0.03730698069413428,
+              0.901659142456175
+            ]
+          ],
+          [
+            [
+              -1.159692117730548,
+              -0.23251689966319353,
+              1.2305945677914258,
+              -0.20025191966114958,
+              0.005402341811590529,
+              -0.015440674145408608
+            ]
+          ]
+        ]
+      ],
+      "labels": [
+        [
+          [
+            0,
+            1,
+            1,
+            2,
+            3,
+            0
+          ]
+        ]
+      ],
+      "teacher_probs": [
+        [
+          [
+            [
+              0.0047895865893966315,
+              0.11824815051886979
+            ]
+          ],
+          [
+            [
+              0.0019516457582987054,
+              0.8811548475632852
+            ]
+          ],
+          [
+            [
+              0.724465959863023,
+              5.362095386789979e-06
+            ]
+          ],
+          [
+            [
+              0.26879280778928166,
+              0.0005916398224582013
+            ]
+          ]
+        ]
+      ],
+      "max_abs_feature": 2.5266673444648213,
+      "step_size": 9.603135192124833,
+      "settings": {
+        "budget": 0.0,
+        "tolerance": 1e-08,
+        "backtracks": 8,
+        "threshold": 0.7,
+        "ridge": 1e-06
+      },
+      "source_ids": [
+        "pseudo_class_1",
+        "pseudo_class_2"
+      ],
+      "proposal": {
+        "accepted_pixels": 2,
+        "class_pixels": [
+          0,
+          1,
+          1,
+          0
+        ]
+      },
+      "directions": [
+        [
+          [
+            [
+              [
+                [
+                  1.4345823107441658
+                ]
+              ],
+              [
+                [
+                  -1.237582373258016
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  -1.4418251165475777
+                ]
+              ],
+              [
+                [
+                  1.2438305813448587
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  6.505274845025396e-05
+                ]
+              ],
+              [
+                [
+                  -5.611956470609188e-05
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  0.007177753054961408
+                ]
+              ],
+              [
+                [
+                  -0.006192088522136575
+                ]
+              ]
+            ]
+          ],
+          [
+            -0.5677764878257163,
+            0.570643032889228,
+            -2.574646345620655e-05,
+            -0.0028407986000554197
+          ]
+        ],
+        [
+          [
+            [
+              [
+                [
+                  -0.05536216066755838
+                ]
+              ],
+              [
+                [
+                  0.014839340205703036
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  -0.022558800017582106
+                ]
+              ],
+              [
+                [
+                  0.006046687919271996
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  3.1848593849863858
+                ]
+              ],
+              [
+                [
+                  -0.8536735443715018
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  -3.106938424301244
+                ]
+              ],
+              [
+                [
+                  0.8327875162465267
+                ]
+              ]
+            ]
+          ],
+          [
+            -0.02299752376618198,
+            -0.009370959032039732,
+            1.32299531873387,
+            -1.290626835935648
+          ]
+        ]
+      ],
+      "aggregate_gradient_max_error": 2.220446049250313e-16,
+      "before": {
+        "predictions": [
+          [
+            [
+              2,
+              2,
+              1,
+              2,
+              0,
+              3
+            ]
+          ]
+        ],
+        "rv": {
+          "class": "RV",
+          "TP": 1,
+          "FP": 0,
+          "FN": 1,
+          "reference_present": true,
+          "dice": 0.6666666666666666,
+          "precision": 1.0,
+          "recall": 0.5,
+          "prediction_count": 1,
+          "reference_count": 2
+        },
+        "classes": [
+          {
+            "class": "BG",
+            "TP": 0,
+            "FP": 1,
+            "FN": 2,
+            "reference_present": true,
+            "dice": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "prediction_count": 1,
+            "reference_count": 2
+          },
+          {
+            "class": "RV",
+            "TP": 1,
+            "FP": 0,
+            "FN": 1,
+            "reference_present": true,
+            "dice": 0.6666666666666666,
+            "precision": 1.0,
+            "recall": 0.5,
+            "prediction_count": 1,
+            "reference_count": 2
+          },
+          {
+            "class": "MYO",
+            "TP": 1,
+            "FP": 2,
+            "FN": 0,
+            "reference_present": true,
+            "dice": 0.5,
+            "precision": 0.3333333333333333,
+            "recall": 1.0,
+            "prediction_count": 3,
+            "reference_count": 1
+          },
+          {
+            "class": "LV",
+            "TP": 0,
+            "FP": 1,
+            "FN": 1,
+            "reference_present": true,
+            "dice": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "prediction_count": 1,
+            "reference_count": 1
+          }
+        ],
+        "probabilities": [
+          [
+            [
+              [
+                0.224115977141149,
+                0.14397322041903507,
+                0.24355288752570106,
+                0.2048636477186876,
+                0.30219917228695975,
+                0.12587035854620138
+              ]
+            ],
+            [
+              [
+                0.10023121605515825,
+                0.10585036400286602,
+                0.5783090695442081,
+                0.16128163820218763,
+                0.29307176497551124,
+                0.10463026575629987
+              ]
+            ],
+            [
+              [
+                0.5876657312459568,
+                0.39848927875127105,
+                0.010650155659737355,
+                0.32525414054813045,
+                0.16619015555338193,
+                0.32902062837280344
+              ]
+            ],
+            [
+              [
+                0.0879870755577359,
+                0.35168713682682795,
+                0.16748788727035344,
+                0.30860057353099424,
+                0.23853890718414714,
+                0.4404787473246953
+              ]
+            ]
+          ]
+        ]
+      },
+      "joint": {
+        "report": {
+          "method": "joint_guard",
+          "source_ids": [
+            "pseudo_class_1",
+            "pseudo_class_2"
+          ],
+          "before": [
+            0.13047189001225812,
+            0.14582708793555163,
+            0.16739242901234486
+          ],
+          "positive_pixels": [
+            [
+              2
+            ],
+            [
+              1
+            ],
+            [
+              1
+            ]
+          ],
+          "scope": "observed_TRAIN_one_vs_rest_Brier",
+          "optimizer_steps_in_transaction": 0,
+          "ema_updates_in_transaction": 0,
+          "alpha": [
+            0.4267516590851448,
+            0.12358790704661758
+          ],
+          "scale": 0.5,
+          "after": [
+            0.12296486633818864,
+            0.13640706026259508,
+            0.16655264750262666
+          ],
+          "status": "NUMERICAL_FEASIBLE",
+          "guarded": true,
+          "trials": [
+            {
+              "scale": 1.0,
+              "risks": [
+                0.12213966127272968,
+                0.12933735355299675,
+                0.1685872657542446
+              ],
+              "accepted": false
+            },
+            {
+              "scale": 0.5,
+              "risks": [
+                0.12296486633818864,
+                0.13640706026259508,
+                0.16655264750262666
+              ],
+              "accepted": true
+            }
+          ],
+          "realized_max_regression": -0.000839781509718196,
+          "linearized_after": [
+            0.12183465610162006,
+            0.13667485699698229,
+            0.1662753947736547
+          ]
+        },
+        "metrics": {
+          "predictions": [
+            [
+              [
+                2,
+                2,
+                1,
+                2,
+                1,
+                2
+              ]
+            ]
+          ],
+          "rv": {
+            "class": "RV",
+            "TP": 1,
+            "FP": 1,
+            "FN": 1,
+            "reference_present": true,
+            "dice": 0.5,
+            "precision": 0.5,
+            "recall": 0.5,
+            "prediction_count": 2,
+            "reference_count": 2
+          },
+          "classes": [
+            {
+              "class": "BG",
+              "TP": 0,
+              "FP": 0,
+              "FN": 2,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 2
+            },
+            {
+              "class": "RV",
+              "TP": 1,
+              "FP": 1,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.5,
+              "precision": 0.5,
+              "recall": 0.5,
+              "prediction_count": 2,
+              "reference_count": 2
+            },
+            {
+              "class": "MYO",
+              "TP": 1,
+              "FP": 3,
+              "FN": 0,
+              "reference_present": true,
+              "dice": 0.4,
+              "precision": 0.25,
+              "recall": 1.0,
+              "prediction_count": 4,
+              "reference_count": 1
+            },
+            {
+              "class": "LV",
+              "TP": 0,
+              "FP": 0,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 1
+            }
+          ],
+          "probabilities": [
+            [
+              [
+                [
+                  0.22236722608778536,
+                  0.1589942101864278,
+                  0.13780292480097242,
+                  0.21112839869682307,
+                  0.2706016060967482,
+                  0.1461998437154798
+                ]
+              ],
+              [
+                [
+                  0.09779011872303071,
+                  0.08843268451928961,
+                  0.7194343886286353,
+                  0.15143950498158307,
+                  0.3282474708145328,
+                  0.08860339977763902
+                ]
+              ],
+              [
+                [
+                  0.5956869070865894,
+                  0.47968643852459525,
+                  0.009400917307516729,
+                  0.3787791184827639,
+                  0.1820351092906096,
+                  0.4247318662958757
+                ]
+              ],
+              [
+                [
+                  0.0841557481025943,
+                  0.2728866667696872,
+                  0.13336176926287568,
+                  0.25865297783882996,
+                  0.21911581379810938,
+                  0.34046489021100557
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      "aggregate_scalar": {
+        "report": {
+          "method": "independent_guard",
+          "source_ids": [
+            "aggregate_same_ce"
+          ],
+          "before": [
+            0.13047189001225812,
+            0.14582708793555163,
+            0.16739242901234486
+          ],
+          "positive_pixels": [
+            [
+              2
+            ],
+            [
+              1
+            ],
+            [
+              1
+            ]
+          ],
+          "scope": "observed_TRAIN_one_vs_rest_Brier",
+          "optimizer_steps_in_transaction": 0,
+          "ema_updates_in_transaction": 0,
+          "alpha": [
+            0.10725863504828556
+          ],
+          "scale": 0.5,
+          "after": [
+            0.12796994263739575,
+            0.13754313176115002,
+            0.16664578051086443
+          ],
+          "status": "INDEPENDENT_SCALARS",
+          "guarded": true,
+          "trials": [
+            {
+              "scale": 1.0,
+              "risks": [
+                0.1264496691996249,
+                0.1313062309467737,
+                0.16760069169219846
+              ],
+              "accepted": false
+            },
+            {
+              "scale": 0.5,
+              "risks": [
+                0.12796994263739575,
+                0.13754313176115002,
+                0.16664578051086443
+              ],
+              "accepted": true
+            }
+          ],
+          "realized_max_regression": -0.0007466485014804292,
+          "linearized_after": [
+            0.12766871237091756,
+            0.13769896896051886,
+            0.166592155804156
+          ]
+        },
+        "metrics": {
+          "predictions": [
+            [
+              [
+                2,
+                2,
+                1,
+                2,
+                1,
+                2
+              ]
+            ]
+          ],
+          "rv": {
+            "class": "RV",
+            "TP": 1,
+            "FP": 1,
+            "FN": 1,
+            "reference_present": true,
+            "dice": 0.5,
+            "precision": 0.5,
+            "recall": 0.5,
+            "prediction_count": 2,
+            "reference_count": 2
+          },
+          "classes": [
+            {
+              "class": "BG",
+              "TP": 0,
+              "FP": 0,
+              "FN": 2,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 2
+            },
+            {
+              "class": "RV",
+              "TP": 1,
+              "FP": 1,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.5,
+              "precision": 0.5,
+              "recall": 0.5,
+              "prediction_count": 2,
+              "reference_count": 2
+            },
+            {
+              "class": "MYO",
+              "TP": 1,
+              "FP": 3,
+              "FN": 0,
+              "reference_present": true,
+              "dice": 0.4,
+              "precision": 0.25,
+              "recall": 1.0,
+              "prediction_count": 4,
+              "reference_count": 1
+            },
+            {
+              "class": "LV",
+              "TP": 0,
+              "FP": 0,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 1
+            }
+          ],
+          "probabilities": [
+            [
+              [
+                [
+                  0.22157707140949237,
+                  0.14495667175694119,
+                  0.21399929064892326,
+                  0.20477174194040118,
+                  0.29481575242532787,
+                  0.13092359529208336
+                ]
+              ],
+              [
+                [
+                  0.09869607175134881,
+                  0.09949608889852694,
+                  0.6196113180506855,
+                  0.15764804566216076,
+                  0.302624353998595,
+                  0.1006880090013006
+                ]
+              ],
+              [
+                [
+                  0.5950200010971218,
+                  0.4714476347954636,
+                  0.010806023781112936,
+                  0.37218222570966714,
+                  0.18032294168019983,
+                  0.4136931702876536
+                ]
+              ],
+              [
+                [
+                  0.08470685574203692,
+                  0.2840996045490683,
+                  0.15558336751927848,
+                  0.265397986687771,
+                  0.22223695189587733,
+                  0.3546952254189624
+                ]
+              ]
+            ]
+          ]
+        },
+        "ridge": 2e-06
+      },
+      "plain": {
+        "report": {
+          "method": "ema_head",
+          "source_ids": [
+            "pseudo_class_1",
+            "pseudo_class_2"
+          ],
+          "before": [
+            0.13047189001225812,
+            0.14582708793555163,
+            0.16739242901234486
+          ],
+          "positive_pixels": [
+            [
+              2
+            ],
+            [
+              1
+            ],
+            [
+              1
+            ]
+          ],
+          "scope": "observed_TRAIN_one_vs_rest_Brier",
+          "optimizer_steps_in_transaction": 0,
+          "ema_updates_in_transaction": 0,
+          "alpha": [
+            1.0,
+            1.0
+          ],
+          "scale": 1.0,
+          "after": [
+            0.13203992287299968,
+            0.13536897288743,
+            0.229954016969815
+          ],
+          "status": "PLAIN",
+          "guarded": false,
+          "trials": [
+            {
+              "scale": 1.0,
+              "risks": [
+                0.13203992287299968,
+                0.13536897288743,
+                0.229954016969815
+              ],
+              "accepted": true
+            }
+          ],
+          "realized_max_regression": 0.06256158795747013,
+          "linearized_after": [
+            0.15441401832191914,
+            0.36788681070135043,
+            0.41579689255218855
+          ]
+        },
+        "metrics": {
+          "predictions": [
+            [
+              [
+                2,
+                2,
+                1,
+                2,
+                2,
+                2
+              ]
+            ]
+          ],
+          "rv": {
+            "class": "RV",
+            "TP": 1,
+            "FP": 0,
+            "FN": 1,
+            "reference_present": true,
+            "dice": 0.6666666666666666,
+            "precision": 1.0,
+            "recall": 0.5,
+            "prediction_count": 1,
+            "reference_count": 2
+          },
+          "classes": [
+            {
+              "class": "BG",
+              "TP": 0,
+              "FP": 0,
+              "FN": 2,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 2
+            },
+            {
+              "class": "RV",
+              "TP": 1,
+              "FP": 0,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.6666666666666666,
+              "precision": 1.0,
+              "recall": 0.5,
+              "prediction_count": 1,
+              "reference_count": 2
+            },
+            {
+              "class": "MYO",
+              "TP": 1,
+              "FP": 4,
+              "FN": 0,
+              "reference_present": true,
+              "dice": 0.3333333333333333,
+              "precision": 0.2,
+              "recall": 1.0,
+              "prediction_count": 5,
+              "reference_count": 1
+            },
+            {
+              "class": "LV",
+              "TP": 0,
+              "FP": 0,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 1
+            }
+          ],
+          "probabilities": [
+            [
+              [
+                [
+                  0.17412498436090793,
+                  0.01745606212659503,
+                  0.010053045138690039,
+                  0.04679014177551227,
+                  0.12304432407625995,
+                  0.010991915761511645
+                ]
+              ],
+              [
+                [
+                  0.07222111320229684,
+                  0.0035636246244100736,
+                  0.9640081959035766,
+                  0.024287117611979964,
+                  0.3441899179471795,
+                  0.0021430842059387005
+                ]
+              ],
+              [
+                [
+                  0.7120248437108805,
+                  0.9782781721330651,
+                  0.0064312914830257145,
+                  0.9246531153216645,
+                  0.49161381591606773,
+                  0.9865397239603361
+                ]
+              ],
+              [
+                [
+                  0.04162905872591479,
+                  0.0007021411159297322,
+                  0.019507467474707732,
+                  0.004269625290843303,
+                  0.041151942060492726,
+                  0.00032527607221341645
+                ]
+              ]
+            ]
+          ]
+        }
+      }
+    },
+    "rounded3_accepted_U_only": {
+      "dtype": "torch.float64",
+      "feature_dim": 2,
+      "weight": [
+        [
+          [
+            [
+              -0.974
+            ]
+          ],
+          [
+            [
+              0.475
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -1.134
+            ]
+          ],
+          [
+            [
+              1.224
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              0.775
+            ]
+          ],
+          [
+            [
+              -1.788
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              0.742
+            ]
+          ],
+          [
+            [
+              0.17
+            ]
+          ]
+        ]
+      ],
+      "bias": [
+        0.292,
+        0.263,
+        -0.359,
+        -0.007
+      ],
+      "U_features": [
+        [
+          [
+            [
+              2.407,
+              -2.527
+            ]
+          ],
+          [
+            [
+              -0.645,
+              2.18
+            ]
+          ]
+        ]
+      ],
+      "audit_features": [
+        [
+          [
+            [
+              -0.577,
+              0.654,
+              0.175,
+              0.377,
+              0.037,
+              0.902
+            ]
+          ],
+          [
+            [
+              -1.16,
+              -0.233,
+              1.231,
+              -0.2,
+              0.005,
+              -0.015
+            ]
+          ]
+        ]
+      ],
+      "labels": [
+        [
+          [
+            0,
+            1,
+            1,
+            2,
+            3,
+            0
+          ]
+        ]
+      ],
+      "teacher_probs": [
+        [
+          [
+            [
+              0.004790535619947016,
+              0.11828042781948687
+            ]
+          ],
+          [
+            [
+              0.0019530987729826992,
+              0.8811239531270579
+            ]
+          ],
+          [
+            [
+              0.7242381144091606,
+              5.34814938095859e-06
+            ]
+          ],
+          [
+            [
+              0.26901825119790956,
+              0.0005902709040741398
+            ]
+          ]
+        ]
+      ],
+      "max_abs_feature": 2.527,
+      "step_size": 9.603,
+      "settings": {
+        "budget": 0.0,
+        "tolerance": 1e-08,
+        "backtracks": 8,
+        "threshold": 0.7,
+        "ridge": 1e-06
+      },
+      "source_ids": [
+        "pseudo_class_1",
+        "pseudo_class_2"
+      ],
+      "proposal": {
+        "accepted_pixels": 2,
+        "class_pixels": [
+          0,
+          1,
+          1,
+          0
+        ]
+      },
+      "directions": [
+        [
+          [
+            [
+              [
+                [
+                  1.4351426192408978
+                ]
+              ],
+              [
+                [
+                  -1.2380731737020805
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  -1.44236949780571
+                ]
+              ],
+              [
+                [
+                  1.2443076791517402
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  6.489118489150385e-05
+                ]
+              ],
+              [
+                [
+                  -5.598052357082644e-05
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  0.007161987379919581
+                ]
+              ],
+              [
+                [
+                  -0.006178524926088122
+                ]
+              ]
+            ]
+          ],
+          [
+            -0.5679234741752662,
+            0.5707833390604313,
+            -2.5679139252672675e-05,
+            -0.0028341857459119827
+          ]
+        ],
+        [
+          [
+            [
+              [
+                [
+                  -0.05536522856747564
+                ]
+              ],
+              [
+                [
+                  0.014836133122568256
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  -0.022572373646652762
+                ]
+              ],
+              [
+                [
+                  0.006048683424217296
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  3.187038159650247
+                ]
+              ],
+              [
+                [
+                  -0.8540255974135478
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  -3.1091005574361184
+                ]
+              ],
+              [
+                [
+                  0.8331407808667621
+                ]
+              ]
+            ]
+          ],
+          [
+            -0.023001756779175587,
+            -0.009377803758476426,
+            1.324070693664415,
+            -1.291691133126763
+          ]
+        ]
+      ],
+      "aggregate_gradient_max_error": 2.220446049250313e-16,
+      "before": {
+        "predictions": [
+          [
+            [
+              2,
+              2,
+              1,
+              2,
+              0,
+              3
+            ]
+          ]
+        ],
+        "rv": {
+          "class": "RV",
+          "TP": 1,
+          "FP": 0,
+          "FN": 1,
+          "reference_present": true,
+          "dice": 0.6666666666666666,
+          "precision": 1.0,
+          "recall": 0.5,
+          "prediction_count": 1,
+          "reference_count": 2
+        },
+        "classes": [
+          {
+            "class": "BG",
+            "TP": 0,
+            "FP": 1,
+            "FN": 2,
+            "reference_present": true,
+            "dice": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "prediction_count": 1,
+            "reference_count": 2
+          },
+          {
+            "class": "RV",
+            "TP": 1,
+            "FP": 0,
+            "FN": 1,
+            "reference_present": true,
+            "dice": 0.6666666666666666,
+            "precision": 1.0,
+            "recall": 0.5,
+            "prediction_count": 1,
+            "reference_count": 2
+          },
+          {
+            "class": "MYO",
+            "TP": 1,
+            "FP": 2,
+            "FN": 0,
+            "reference_present": true,
+            "dice": 0.5,
+            "precision": 0.3333333333333333,
+            "recall": 1.0,
+            "prediction_count": 3,
+            "reference_count": 1
+          },
+          {
+            "class": "LV",
+            "TP": 0,
+            "FP": 1,
+            "FN": 1,
+            "reference_present": true,
+            "dice": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "prediction_count": 1,
+            "reference_count": 1
+          }
+        ],
+        "probabilities": [
+          [
+            [
+              [
+                0.22402163305201472,
+                0.14380139296317043,
+                0.24350987367900176,
+                0.20499592283212953,
+                0.30226087077719965,
+                0.12583611723871854
+              ]
+            ],
+            [
+              [
+                0.10010529913353414,
+                0.10566525569219215,
+                0.5783484204987451,
+                0.161397471605041,
+                0.2929832543591036,
+                0.10462948586353614
+              ]
+            ],
+            [
+              [
+                0.5879545349037706,
+                0.39883912179065967,
+                0.010638499937856915,
+                0.32504482318648426,
+                0.16628255086141194,
+                0.32882424671961097
+              ]
+            ],
+            [
+              [
+                0.0879185329106806,
+                0.3516942295539777,
+                0.16750320588439618,
+                0.3085617823763453,
+                0.2384733240022848,
+                0.4407101501781345
+              ]
+            ]
+          ]
+        ]
+      },
+      "joint": {
+        "report": {
+          "method": "joint_guard",
+          "source_ids": [
+            "pseudo_class_1",
+            "pseudo_class_2"
+          ],
+          "before": [
+            0.13050663188412895,
+            0.14592370416770506,
+            0.16742630124031146
+          ],
+          "positive_pixels": [
+            [
+              2
+            ],
+            [
+              1
+            ],
+            [
+              1
+            ]
+          ],
+          "scope": "observed_TRAIN_one_vs_rest_Brier",
+          "optimizer_steps_in_transaction": 0,
+          "ema_updates_in_transaction": 0,
+          "alpha": [
+            0.4264018107484825,
+            0.12385989160017911
+          ],
+          "scale": 0.5,
+          "after": [
+            0.12300715598201488,
+            0.13649537584982982,
+            0.1665798751595983
+          ],
+          "status": "NUMERICAL_FEASIBLE",
+          "guarded": true,
+          "trials": [
+            {
+              "scale": 1.0,
+              "risks": [
+                0.12218377994335966,
+                0.12942740999114022,
+                0.16862037078008799
+              ],
+              "accepted": false
+            },
+            {
+              "scale": 0.5,
+              "risks": [
+                0.12300715598201488,
+                0.13649537584982982,
+                0.1665798751595983
+              ],
+              "accepted": true
+            }
+          ],
+          "realized_max_regression": -0.0008464260807131696,
+          "linearized_after": [
+            0.12187735290616421,
+            0.13676529693454872,
+            0.16630254421892907
+          ]
+        },
+        "metrics": {
+          "predictions": [
+            [
+              [
+                2,
+                2,
+                1,
+                2,
+                1,
+                2
+              ]
+            ]
+          ],
+          "rv": {
+            "class": "RV",
+            "TP": 1,
+            "FP": 1,
+            "FN": 1,
+            "reference_present": true,
+            "dice": 0.5,
+            "precision": 0.5,
+            "recall": 0.5,
+            "prediction_count": 2,
+            "reference_count": 2
+          },
+          "classes": [
+            {
+              "class": "BG",
+              "TP": 0,
+              "FP": 0,
+              "FN": 2,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 2
+            },
+            {
+              "class": "RV",
+              "TP": 1,
+              "FP": 1,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.5,
+              "precision": 0.5,
+              "recall": 0.5,
+              "prediction_count": 2,
+              "reference_count": 2
+            },
+            {
+              "class": "MYO",
+              "TP": 1,
+              "FP": 3,
+              "FN": 0,
+              "reference_present": true,
+              "dice": 0.4,
+              "precision": 0.25,
+              "recall": 1.0,
+              "prediction_count": 4,
+              "reference_count": 1
+            },
+            {
+              "class": "LV",
+              "TP": 0,
+              "FP": 0,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 1
+            }
+          ],
+          "probabilities": [
+            [
+              [
+                [
+                  0.22226995441697364,
+                  0.15879695175114708,
+                  0.13782478331224882,
+                  0.21121682518850596,
+                  0.2706809911091057,
+                  0.14615607344331796
+                ]
+              ],
+              [
+                [
+                  0.09766142848988689,
+                  0.08823518729301034,
+                  0.719420431482567,
+                  0.15158136247089324,
+                  0.328127618710994,
+                  0.08861242332760863
+                ]
+              ],
+              [
+                [
+                  0.5959855321604511,
+                  0.4803506472338311,
+                  0.009394107714599103,
+                  0.37867810921571254,
+                  0.18218073864207862,
+                  0.4248405436435215
+                ]
+              ],
+              [
+                [
+                  0.08408308493268839,
+                  0.2726172137220115,
+                  0.13336067749058506,
+                  0.2585237031248883,
+                  0.21901065153782165,
+                  0.34039095958555193
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      "aggregate_scalar": {
+        "report": {
+          "method": "independent_guard",
+          "source_ids": [
+            "aggregate_same_ce"
+          ],
+          "before": [
+            0.13050663188412895,
+            0.14592370416770506,
+            0.16742630124031146
+          ],
+          "positive_pixels": [
+            [
+              2
+            ],
+            [
+              1
+            ],
+            [
+              1
+            ]
+          ],
+          "scope": "observed_TRAIN_one_vs_rest_Brier",
+          "optimizer_steps_in_transaction": 0,
+          "ema_updates_in_transaction": 0,
+          "alpha": [
+            0.10756317119893005
+          ],
+          "scale": 0.5,
+          "after": [
+            0.12800014569637325,
+            0.13762863220976393,
+            0.16667394520788142
+          ],
+          "status": "INDEPENDENT_SCALARS",
+          "guarded": true,
+          "trials": [
+            {
+              "scale": 1.0,
+              "risks": [
+                0.12648079433934778,
+                0.13139241023845144,
+                0.1676356796385891
+              ],
+              "accepted": false
+            },
+            {
+              "scale": 0.5,
+              "risks": [
+                0.12800014569637325,
+                0.13762863220976393,
+                0.16667394520788142
+              ],
+              "accepted": true
+            }
+          ],
+          "realized_max_regression": -0.0007523560324300405,
+          "linearized_after": [
+            0.12769707977687506,
+            0.1377857503154316,
+            0.16661995994449658
+          ]
+        },
+        "metrics": {
+          "predictions": [
+            [
+              [
+                2,
+                2,
+                1,
+                2,
+                1,
+                2
+              ]
+            ]
+          ],
+          "rv": {
+            "class": "RV",
+            "TP": 1,
+            "FP": 1,
+            "FN": 1,
+            "reference_present": true,
+            "dice": 0.5,
+            "precision": 0.5,
+            "recall": 0.5,
+            "prediction_count": 2,
+            "reference_count": 2
+          },
+          "classes": [
+            {
+              "class": "BG",
+              "TP": 0,
+              "FP": 0,
+              "FN": 2,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 2
+            },
+            {
+              "class": "RV",
+              "TP": 1,
+              "FP": 1,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.5,
+              "precision": 0.5,
+              "recall": 0.5,
+              "prediction_count": 2,
+              "reference_count": 2
+            },
+            {
+              "class": "MYO",
+              "TP": 1,
+              "FP": 3,
+              "FN": 0,
+              "reference_present": true,
+              "dice": 0.4,
+              "precision": 0.25,
+              "recall": 1.0,
+              "prediction_count": 4,
+              "reference_count": 1
+            },
+            {
+              "class": "LV",
+              "TP": 0,
+              "FP": 0,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 1
+            }
+          ],
+          "probabilities": [
+            [
+              [
+                [
+                  0.22147770738838174,
+                  0.14477525183776502,
+                  0.213873984951737,
+                  0.2048967081481775,
+                  0.2948510257706444,
+                  0.13090853516895623
+                ]
+              ],
+              [
+                [
+                  0.09856677069765876,
+                  0.09928009537204138,
+                  0.619783903613415,
+                  0.15775999448970746,
+                  0.3025582485295169,
+                  0.10067750569348809
+                ]
+              ],
+              [
+                [
+                  0.5953228262613938,
+                  0.4721237391564182,
+                  0.01079571456042335,
+                  0.3720927268681825,
+                  0.18046810660927542,
+                  0.41381100569850243
+                ]
+              ],
+              [
+                [
+                  0.08463269565256569,
+                  0.28382091363377543,
+                  0.15554639687442465,
+                  0.2652505704939325,
+                  0.22212261909056322,
+                  0.3546029534390532
+                ]
+              ]
+            ]
+          ]
+        },
+        "ridge": 2e-06
+      },
+      "plain": {
+        "report": {
+          "method": "ema_head",
+          "source_ids": [
+            "pseudo_class_1",
+            "pseudo_class_2"
+          ],
+          "before": [
+            0.13050663188412895,
+            0.14592370416770506,
+            0.16742630124031146
+          ],
+          "positive_pixels": [
+            [
+              2
+            ],
+            [
+              1
+            ],
+            [
+              1
+            ]
+          ],
+          "scope": "observed_TRAIN_one_vs_rest_Brier",
+          "optimizer_steps_in_transaction": 0,
+          "ema_updates_in_transaction": 0,
+          "alpha": [
+            1.0,
+            1.0
+          ],
+          "scale": 1.0,
+          "after": [
+            0.13203629252008484,
+            0.13541464251220897,
+            0.22997796226263076
+          ],
+          "status": "PLAIN",
+          "guarded": false,
+          "trials": [
+            {
+              "scale": 1.0,
+              "risks": [
+                0.13203629252008484,
+                0.13541464251220897,
+                0.22997796226263076
+              ],
+              "accepted": true
+            }
+          ],
+          "realized_max_regression": 0.0625516610223193,
+          "linearized_after": [
+            0.15453275045065212,
+            0.3684917784451434,
+            0.41621416012064494
+          ]
+        },
+        "metrics": {
+          "predictions": [
+            [
+              [
+                2,
+                2,
+                1,
+                2,
+                2,
+                2
+              ]
+            ]
+          ],
+          "rv": {
+            "class": "RV",
+            "TP": 1,
+            "FP": 0,
+            "FN": 1,
+            "reference_present": true,
+            "dice": 0.6666666666666666,
+            "precision": 1.0,
+            "recall": 0.5,
+            "prediction_count": 1,
+            "reference_count": 2
+          },
+          "classes": [
+            {
+              "class": "BG",
+              "TP": 0,
+              "FP": 0,
+              "FN": 2,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 2
+            },
+            {
+              "class": "RV",
+              "TP": 1,
+              "FP": 0,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.6666666666666666,
+              "precision": 1.0,
+              "recall": 0.5,
+              "prediction_count": 1,
+              "reference_count": 2
+            },
+            {
+              "class": "MYO",
+              "TP": 1,
+              "FP": 4,
+              "FN": 0,
+              "reference_present": true,
+              "dice": 0.3333333333333333,
+              "precision": 0.2,
+              "recall": 1.0,
+              "prediction_count": 5,
+              "reference_count": 1
+            },
+            {
+              "class": "LV",
+              "TP": 0,
+              "FP": 0,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 1
+            }
+          ],
+          "probabilities": [
+            [
+              [
+                [
+                  0.17407988704718688,
+                  0.01737174570829043,
+                  0.01004064131263293,
+                  0.04679995116383158,
+                  0.12300847453047761,
+                  0.010957935801789428
+                ]
+              ],
+              [
+                [
+                  0.0721220445818751,
+                  0.0035332749277628165,
+                  0.9640646557607165,
+                  0.02433498637078916,
+                  0.3439589683456749,
+                  0.0021357097249423904
+                ]
+              ],
+              [
+                [
+                  0.7121897065545117,
+                  0.9783995074742102,
+                  0.006434316365548538,
+                  0.9245952611534327,
+                  0.4919309316633173,
+                  0.9865831240900963
+                ]
+              ],
+              [
+                [
+                  0.04160836181642636,
+                  0.0006954718897363915,
+                  0.019460386561102067,
+                  0.004269801311946467,
+                  0.041101625460530054,
+                  0.0003232303831717939
+                ]
+              ]
+            ]
+          ]
+        }
+      }
+    },
+    "default_lr_lifted_rounded3": {
+      "dtype": "torch.float64",
+      "feature_dim": 3,
+      "weight": [
+        [
+          [
+            [
+              -0.00993929297957731
+            ]
+          ],
+          [
+            [
+              0.0048471911348041295
+            ]
+          ],
+          [
+            [
+              0.0
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -0.01157203104603765
+            ]
+          ],
+          [
+            [
+              0.01249044620842159
+            ]
+          ],
+          [
+            [
+              0.0
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              0.007908575009417265
+            ]
+          ],
+          [
+            [
+              -0.018245847892694286
+            ]
+          ],
+          [
+            [
+              0.0
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              0.00757182278320982
+            ]
+          ],
+          [
+            [
+              0.0017347841956141098
+            ]
+          ],
+          [
+            [
+              0.0
+            ]
+          ]
+        ]
+      ],
+      "bias": [
+        0.292,
+        0.263,
+        -0.359,
+        -0.007
+      ],
+      "U_features": [
+        [
+          [
+            [
+              235.87371906806405,
+              -247.63310680722805
+            ]
+          ],
+          [
+            [
+              -63.206709098006364,
+              213.6288772614789
+            ]
+          ],
+          [
+            [
+              97.98979538707079,
+              97.98979538707079
+            ]
+          ]
+        ]
+      ],
+      "audit_features": [
+        [
+          [
+            [
+              -56.54305604581344,
+              64.08866317844367,
+              17.14910711961413,
+              36.944076480540154,
+              3.6258112195755587,
+              88.39139783938255
+            ]
+          ],
+          [
+            [
+              -113.67408147858508,
+              -22.832811193543385,
+              120.63171922425711,
+              -19.598979565273293,
+              0.4899744891318323,
+              -1.4699234673954968
+            ]
+          ],
+          [
+            [
+              97.98979538707079,
+              97.98979538707079,
+              97.98979538707079,
+              97.98979538707079,
+              97.98979538707079,
+              97.98979538707079
+            ]
+          ]
+        ]
+      ],
+      "labels": [
+        [
+          [
+            0,
+            1,
+            1,
+            2,
+            3,
+            0
+          ]
+        ]
+      ],
+      "teacher_probs": [
+        [
+          [
+            [
+              0.004790535619947017,
+              0.11828042781948687
+            ]
+          ],
+          [
+            [
+              0.0019530987729826994,
+              0.8811239531270579
+            ]
+          ],
+          [
+            [
+              0.7242381144091607,
+              5.34814938095859e-06
+            ]
+          ],
+          [
+            [
+              0.26901825119790956,
+              0.0005902709040741398
+            ]
+          ]
+        ]
+      ],
+      "max_abs_feature": 247.63310680722805,
+      "step_size": 0.001,
+      "settings": {
+        "budget": 0.0,
+        "tolerance": 1e-08,
+        "backtracks": 8,
+        "threshold": 0.7,
+        "ridge": 1e-06
+      },
+      "source_ids": [
+        "pseudo_class_1",
+        "pseudo_class_2"
+      ],
+      "proposal": {
+        "accepted_pixels": 2,
+        "class_pixels": [
+          0,
+          1,
+          1,
+          0
+        ]
+      },
+      "directions": [
+        [
+          [
+            [
+              [
+                [
+                  0.014645074907713811
+                ]
+              ],
+              [
+                [
+                  -0.012634057498542187
+                ]
+              ],
+              [
+                [
+                  -0.005795137460163357
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  -0.014718822406054155
+                ]
+              ],
+              [
+                [
+                  0.012697678213374775
+                ]
+              ],
+              [
+                [
+                  0.005824319754751715
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  6.621894234379647e-07
+                ]
+              ],
+              [
+                [
+                  -5.712595738404286e-07
+                ]
+              ],
+              [
+                [
+                  -2.6203203176981084e-07
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  7.308530891689529e-05
+                ]
+              ],
+              [
+                [
+                  -6.304945525873831e-05
+                ]
+              ],
+              [
+                [
+                  -2.8920262556583128e-05
+                ]
+              ]
+            ]
+          ],
+          [
+            -5.914021390974344e-05,
+            5.9438023436471035e-05,
+            -2.6740746904792954e-09,
+            -2.9513545203707e-07
+          ]
+        ],
+        [
+          [
+            [
+              [
+                [
+                  -0.0005649807265024686
+                ]
+              ],
+              [
+                [
+                  0.0001513969956768144
+                ]
+              ],
+              [
+                [
+                  -0.0002347118025965413
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  -0.00023034233564535103
+                ]
+              ],
+              [
+                [
+                  6.172447299179536e-05
+                ]
+              ],
+              [
+                [
+                  -9.56918745676569e-05
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  0.03252249076576662
+                ]
+              ],
+              [
+                [
+                  -0.008715000641428945
+                ]
+              ],
+              [
+                [
+                  0.013510925372299582
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  -0.03172716770361881
+                ]
+              ],
+              [
+                [
+                  0.008501879172760338
+                ]
+              ],
+              [
+                [
+                  -0.013180521695135387
+                ]
+              ]
+            ]
+          ],
+          [
+            -2.395267809973509e-06,
+            -9.765493864913501e-07,
+            0.00013788094279541962,
+            -0.00013450912559895482
+          ]
+        ]
+      ],
+      "aggregate_gradient_max_error": 6.938893903907228e-18,
+      "before": {
+        "predictions": [
+          [
+            [
+              2,
+              2,
+              1,
+              2,
+              0,
+              3
+            ]
+          ]
+        ],
+        "rv": {
+          "class": "RV",
+          "TP": 1,
+          "FP": 0,
+          "FN": 1,
+          "reference_present": true,
+          "dice": 0.6666666666666666,
+          "precision": 1.0,
+          "recall": 0.5,
+          "prediction_count": 1,
+          "reference_count": 2
+        },
+        "classes": [
+          {
+            "class": "BG",
+            "TP": 0,
+            "FP": 1,
+            "FN": 2,
+            "reference_present": true,
+            "dice": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "prediction_count": 1,
+            "reference_count": 2
+          },
+          {
+            "class": "RV",
+            "TP": 1,
+            "FP": 0,
+            "FN": 1,
+            "reference_present": true,
+            "dice": 0.6666666666666666,
+            "precision": 1.0,
+            "recall": 0.5,
+            "prediction_count": 1,
+            "reference_count": 2
+          },
+          {
+            "class": "MYO",
+            "TP": 1,
+            "FP": 2,
+            "FN": 0,
+            "reference_present": true,
+            "dice": 0.5,
+            "precision": 0.3333333333333333,
+            "recall": 1.0,
+            "prediction_count": 3,
+            "reference_count": 1
+          },
+          {
+            "class": "LV",
+            "TP": 0,
+            "FP": 1,
+            "FN": 1,
+            "reference_present": true,
+            "dice": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "prediction_count": 1,
+            "reference_count": 1
+          }
+        ],
+        "probabilities": [
+          [
+            [
+              [
+                0.22402163305201467,
+                0.14380139296317043,
+                0.24350987367900176,
+                0.2049959228321295,
+                0.30226087077719965,
+                0.12583611723871854
+              ]
+            ],
+            [
+              [
+                0.10010529913353412,
+                0.10566525569219216,
+                0.5783484204987451,
+                0.16139747160504098,
+                0.2929832543591036,
+                0.10462948586353611
+              ]
+            ],
+            [
+              [
+                0.5879545349037707,
+                0.3988391217906597,
+                0.010638499937856915,
+                0.32504482318648426,
+                0.16628255086141194,
+                0.32882424671961097
+              ]
+            ],
+            [
+              [
+                0.0879185329106806,
+                0.3516942295539777,
+                0.16750320588439618,
+                0.3085617823763453,
+                0.2384733240022848,
+                0.4407101501781345
+              ]
+            ]
+          ]
+        ]
+      },
+      "joint": {
+        "report": {
+          "method": "joint_guard",
+          "source_ids": [
+            "pseudo_class_1",
+            "pseudo_class_2"
+          ],
+          "before": [
+            0.13050663188412895,
+            0.14592370416770506,
+            0.16742630124031146
+          ],
+          "positive_pixels": [
+            [
+              2
+            ],
+            [
+              1
+            ],
+            [
+              1
+            ]
+          ],
+          "scope": "observed_TRAIN_one_vs_rest_Brier",
+          "optimizer_steps_in_transaction": 0,
+          "ema_updates_in_transaction": 0,
+          "alpha": [
+            0.42640181074848227,
+            0.12385989160017946
+          ],
+          "scale": 0.5,
+          "after": [
+            0.1230071559820149,
+            0.1364953758498298,
+            0.1665798751595983
+          ],
+          "status": "NUMERICAL_FEASIBLE",
+          "guarded": true,
+          "trials": [
+            {
+              "scale": 1.0,
+              "risks": [
+                0.12218377994335969,
+                0.12942740999114022,
+                0.16862037078008799
+              ],
+              "accepted": false
+            },
+            {
+              "scale": 0.5,
+              "risks": [
+                0.1230071559820149,
+                0.1364953758498298,
+                0.1665798751595983
+              ],
+              "accepted": true
+            }
+          ],
+          "realized_max_regression": -0.0008464260807131696,
+          "linearized_after": [
+            0.12187735290616421,
+            0.1367652969345487,
+            0.16630254421892907
+          ]
+        },
+        "metrics": {
+          "predictions": [
+            [
+              [
+                2,
+                2,
+                1,
+                2,
+                1,
+                2
+              ]
+            ]
+          ],
+          "rv": {
+            "class": "RV",
+            "TP": 1,
+            "FP": 1,
+            "FN": 1,
+            "reference_present": true,
+            "dice": 0.5,
+            "precision": 0.5,
+            "recall": 0.5,
+            "prediction_count": 2,
+            "reference_count": 2
+          },
+          "classes": [
+            {
+              "class": "BG",
+              "TP": 0,
+              "FP": 0,
+              "FN": 2,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 2
+            },
+            {
+              "class": "RV",
+              "TP": 1,
+              "FP": 1,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.5,
+              "precision": 0.5,
+              "recall": 0.5,
+              "prediction_count": 2,
+              "reference_count": 2
+            },
+            {
+              "class": "MYO",
+              "TP": 1,
+              "FP": 3,
+              "FN": 0,
+              "reference_present": true,
+              "dice": 0.4,
+              "precision": 0.25,
+              "recall": 1.0,
+              "prediction_count": 4,
+              "reference_count": 1
+            },
+            {
+              "class": "LV",
+              "TP": 0,
+              "FP": 0,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 1
+            }
+          ],
+          "probabilities": [
+            [
+              [
+                [
+                  0.22226995441697356,
+                  0.15879695175114705,
+                  0.13782478331224887,
+                  0.21121682518850593,
+                  0.27068099110910576,
+                  0.1461560734433179
+                ]
+              ],
+              [
+                [
+                  0.09766142848988689,
+                  0.08823518729301032,
+                  0.719420431482567,
+                  0.1515813624708932,
+                  0.328127618710994,
+                  0.08861242332760859
+                ]
+              ],
+              [
+                [
+                  0.5959855321604511,
+                  0.48035064723383136,
+                  0.009394107714599103,
+                  0.37867810921571277,
+                  0.18218073864207868,
+                  0.42484054364352175
+                ]
+              ],
+              [
+                [
+                  0.08408308493268836,
+                  0.2726172137220113,
+                  0.13336067749058508,
+                  0.25852370312488815,
+                  0.2190106515378216,
+                  0.34039095958555166
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      "aggregate_scalar": {
+        "report": {
+          "method": "independent_guard",
+          "source_ids": [
+            "aggregate_same_ce"
+          ],
+          "before": [
+            0.13050663188412895,
+            0.14592370416770506,
+            0.16742630124031146
+          ],
+          "positive_pixels": [
+            [
+              2
+            ],
+            [
+              1
+            ],
+            [
+              1
+            ]
+          ],
+          "scope": "observed_TRAIN_one_vs_rest_Brier",
+          "optimizer_steps_in_transaction": 0,
+          "ema_updates_in_transaction": 0,
+          "alpha": [
+            0.10756317119893012
+          ],
+          "scale": 0.5,
+          "after": [
+            0.12800014569637327,
+            0.1376286322097639,
+            0.16667394520788142
+          ],
+          "status": "INDEPENDENT_SCALARS",
+          "guarded": true,
+          "trials": [
+            {
+              "scale": 1.0,
+              "risks": [
+                0.12648079433934778,
+                0.13139241023845147,
+                0.1676356796385891
+              ],
+              "accepted": false
+            },
+            {
+              "scale": 0.5,
+              "risks": [
+                0.12800014569637327,
+                0.1376286322097639,
+                0.16667394520788142
+              ],
+              "accepted": true
+            }
+          ],
+          "realized_max_regression": -0.0007523560324300405,
+          "linearized_after": [
+            0.12769707977687506,
+            0.13778575031543158,
+            0.16661995994449658
+          ]
+        },
+        "metrics": {
+          "predictions": [
+            [
+              [
+                2,
+                2,
+                1,
+                2,
+                1,
+                2
+              ]
+            ]
+          ],
+          "rv": {
+            "class": "RV",
+            "TP": 1,
+            "FP": 1,
+            "FN": 1,
+            "reference_present": true,
+            "dice": 0.5,
+            "precision": 0.5,
+            "recall": 0.5,
+            "prediction_count": 2,
+            "reference_count": 2
+          },
+          "classes": [
+            {
+              "class": "BG",
+              "TP": 0,
+              "FP": 0,
+              "FN": 2,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 2
+            },
+            {
+              "class": "RV",
+              "TP": 1,
+              "FP": 1,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.5,
+              "precision": 0.5,
+              "recall": 0.5,
+              "prediction_count": 2,
+              "reference_count": 2
+            },
+            {
+              "class": "MYO",
+              "TP": 1,
+              "FP": 3,
+              "FN": 0,
+              "reference_present": true,
+              "dice": 0.4,
+              "precision": 0.25,
+              "recall": 1.0,
+              "prediction_count": 4,
+              "reference_count": 1
+            },
+            {
+              "class": "LV",
+              "TP": 0,
+              "FP": 0,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 1
+            }
+          ],
+          "probabilities": [
+            [
+              [
+                [
+                  0.22147770738838166,
+                  0.144775251837765,
+                  0.21387398495173704,
+                  0.20489670814817754,
+                  0.2948510257706444,
+                  0.13090853516895623
+                ]
+              ],
+              [
+                [
+                  0.09856677069765876,
+                  0.09928009537204131,
+                  0.6197839036134151,
+                  0.15775999448970748,
+                  0.3025582485295169,
+                  0.10067750569348807
+                ]
+              ],
+              [
+                [
+                  0.5953228262613939,
+                  0.4721237391564183,
+                  0.010795714560423351,
+                  0.3720927268681826,
+                  0.18046810660927542,
+                  0.4138110056985025
+                ]
+              ],
+              [
+                [
+                  0.08463269565256569,
+                  0.28382091363377543,
+                  0.1555463968744247,
+                  0.2652505704939325,
+                  0.2221226190905632,
+                  0.3546029534390531
+                ]
+              ]
+            ]
+          ]
+        },
+        "ridge": 2e-06
+      },
+      "plain": {
+        "report": {
+          "method": "ema_head",
+          "source_ids": [
+            "pseudo_class_1",
+            "pseudo_class_2"
+          ],
+          "before": [
+            0.13050663188412895,
+            0.14592370416770506,
+            0.16742630124031146
+          ],
+          "positive_pixels": [
+            [
+              2
+            ],
+            [
+              1
+            ],
+            [
+              1
+            ]
+          ],
+          "scope": "observed_TRAIN_one_vs_rest_Brier",
+          "optimizer_steps_in_transaction": 0,
+          "ema_updates_in_transaction": 0,
+          "alpha": [
+            1.0,
+            1.0
+          ],
+          "scale": 1.0,
+          "after": [
+            0.13203629252008484,
+            0.13541464251220897,
+            0.22997796226263076
+          ],
+          "status": "PLAIN",
+          "guarded": false,
+          "trials": [
+            {
+              "scale": 1.0,
+              "risks": [
+                0.13203629252008484,
+                0.13541464251220897,
+                0.22997796226263076
+              ],
+              "accepted": true
+            }
+          ],
+          "realized_max_regression": 0.0625516610223193,
+          "linearized_after": [
+            0.15453275045065212,
+            0.36849177844514336,
+            0.4162141601206449
+          ]
+        },
+        "metrics": {
+          "predictions": [
+            [
+              [
+                2,
+                2,
+                1,
+                2,
+                2,
+                2
+              ]
+            ]
+          ],
+          "rv": {
+            "class": "RV",
+            "TP": 1,
+            "FP": 0,
+            "FN": 1,
+            "reference_present": true,
+            "dice": 0.6666666666666666,
+            "precision": 1.0,
+            "recall": 0.5,
+            "prediction_count": 1,
+            "reference_count": 2
+          },
+          "classes": [
+            {
+              "class": "BG",
+              "TP": 0,
+              "FP": 0,
+              "FN": 2,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 2
+            },
+            {
+              "class": "RV",
+              "TP": 1,
+              "FP": 0,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.6666666666666666,
+              "precision": 1.0,
+              "recall": 0.5,
+              "prediction_count": 1,
+              "reference_count": 2
+            },
+            {
+              "class": "MYO",
+              "TP": 1,
+              "FP": 4,
+              "FN": 0,
+              "reference_present": true,
+              "dice": 0.3333333333333333,
+              "precision": 0.2,
+              "recall": 1.0,
+              "prediction_count": 5,
+              "reference_count": 1
+            },
+            {
+              "class": "LV",
+              "TP": 0,
+              "FP": 0,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 1
+            }
+          ],
+          "probabilities": [
+            [
+              [
+                [
+                  0.1740798870471868,
+                  0.01737174570829043,
+                  0.010040641312632938,
+                  0.04679995116383163,
+                  0.12300847453047764,
+                  0.010957935801789448
+                ]
+              ],
+              [
+                [
+                  0.07212204458187503,
+                  0.003533274927762813,
+                  0.9640646557607165,
+                  0.024334986370789173,
+                  0.34395896834567496,
+                  0.0021357097249423904
+                ]
+              ],
+              [
+                [
+                  0.7121897065545117,
+                  0.9783995074742102,
+                  0.006434316365548538,
+                  0.9245952611534327,
+                  0.4919309316633172,
+                  0.9865831240900963
+                ]
+              ],
+              [
+                [
+                  0.04160836181642636,
+                  0.0006954718897363909,
+                  0.019460386561102074,
+                  0.0042698013119464705,
+                  0.04110162546053008,
+                  0.0003232303831717939
+                ]
+              ]
+            ]
+          ]
+        }
+      }
+    },
+    "rounded3_float32": {
+      "dtype": "torch.float32",
+      "feature_dim": 2,
+      "weight": [
+        [
+          [
+            [
+              -0.9739999771118164
+            ]
+          ],
+          [
+            [
+              0.4749999940395355
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -1.1339999437332153
+            ]
+          ],
+          [
+            [
+              1.2239999771118164
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              0.7749999761581421
+            ]
+          ],
+          [
+            [
+              -1.7879999876022339
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              0.7419999837875366
+            ]
+          ],
+          [
+            [
+              0.17000000178813934
+            ]
+          ]
+        ]
+      ],
+      "bias": [
+        0.2919999957084656,
+        0.2630000114440918,
+        -0.35899999737739563,
+        -0.007000000216066837
+      ],
+      "U_features": [
+        [
+          [
+            [
+              2.4070000648498535,
+              -2.5269999504089355
+            ]
+          ],
+          [
+            [
+              -0.6449999809265137,
+              2.180000066757202
+            ]
+          ]
+        ]
+      ],
+      "audit_features": [
+        [
+          [
+            [
+              -0.5770000219345093,
+              0.6539999842643738,
+              0.17499999701976776,
+              0.37700000405311584,
+              0.03700000047683716,
+              0.9020000100135803
+            ]
+          ],
+          [
+            [
+              -1.159999966621399,
+              -0.2329999953508377,
+              1.2309999465942383,
+              -0.20000000298023224,
+              0.004999999888241291,
+              -0.014999999664723873
+            ]
+          ]
+        ]
+      ],
+      "labels": [
+        [
+          [
+            0,
+            1,
+            1,
+            2,
+            3,
+            0
+          ]
+        ]
+      ],
+      "teacher_probs": [
+        [
+          [
+            [
+              0.0047905356623232365,
+              0.11828043311834335
+            ]
+          ],
+          [
+            [
+              0.0019530990393832326,
+              0.8811239004135132
+            ]
+          ],
+          [
+            [
+              0.7242380976676941,
+              5.34814807906514e-06
+            ]
+          ],
+          [
+            [
+              0.269018292427063,
+              0.0005902708508074284
+            ]
+          ]
+        ]
+      ],
+      "max_abs_feature": 2.5269999504089355,
+      "step_size": 9.603,
+      "settings": {
+        "budget": 0.0,
+        "tolerance": 1e-08,
+        "backtracks": 8,
+        "threshold": 0.7,
+        "ridge": 1e-06
+      },
+      "source_ids": [
+        "pseudo_class_1",
+        "pseudo_class_2"
+      ],
+      "proposal": {
+        "accepted_pixels": 2,
+        "class_pixels": [
+          0,
+          1,
+          1,
+          0
+        ]
+      },
+      "directions": [
+        [
+          [
+            [
+              [
+                [
+                  1.4351426362991333
+                ]
+              ],
+              [
+                [
+                  -1.2380731105804443
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  -1.442370057106018
+                ]
+              ],
+              [
+                [
+                  1.2443082332611084
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  6.489114457508549e-05
+                ]
+              ],
+              [
+                [
+                  -5.598049028776586e-05
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  0.007161987945437431
+                ]
+              ],
+              [
+                [
+                  -0.006178525276482105
+                ]
+              ]
+            ]
+          ],
+          [
+            -0.5679234266281128,
+            0.5707835555076599,
+            -2.5679122700239532e-05,
+            -0.0028341859579086304
+          ]
+        ],
+        [
+          [
+            [
+              [
+                [
+                  -0.05536522716283798
+                ]
+              ],
+              [
+                [
+                  0.014836132526397705
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  -0.02257237397134304
+                ]
+              ],
+              [
+                [
+                  0.006048684008419514
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  3.1870384216308594
+                ]
+              ],
+              [
+                [
+                  -0.8540256023406982
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  -3.1091010570526123
+                ]
+              ],
+              [
+                [
+                  0.8331408500671387
+                ]
+              ]
+            ]
+          ],
+          [
+            -0.02300175651907921,
+            -0.009377804584801197,
+            1.324070692062378,
+            -1.2916913032531738
+          ]
+        ]
+      ],
+      "aggregate_gradient_max_error": 2.384185791015625e-07,
+      "before": {
+        "predictions": [
+          [
+            [
+              2,
+              2,
+              1,
+              2,
+              0,
+              3
+            ]
+          ]
+        ],
+        "rv": {
+          "class": "RV",
+          "TP": 1,
+          "FP": 0,
+          "FN": 1,
+          "reference_present": true,
+          "dice": 0.6666666666666666,
+          "precision": 1.0,
+          "recall": 0.5,
+          "prediction_count": 1,
+          "reference_count": 2
+        },
+        "classes": [
+          {
+            "class": "BG",
+            "TP": 0,
+            "FP": 1,
+            "FN": 2,
+            "reference_present": true,
+            "dice": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "prediction_count": 1,
+            "reference_count": 2
+          },
+          {
+            "class": "RV",
+            "TP": 1,
+            "FP": 0,
+            "FN": 1,
+            "reference_present": true,
+            "dice": 0.6666666666666666,
+            "precision": 1.0,
+            "recall": 0.5,
+            "prediction_count": 1,
+            "reference_count": 2
+          },
+          {
+            "class": "MYO",
+            "TP": 1,
+            "FP": 2,
+            "FN": 0,
+            "reference_present": true,
+            "dice": 0.5,
+            "precision": 0.3333333333333333,
+            "recall": 1.0,
+            "prediction_count": 3,
+            "reference_count": 1
+          },
+          {
+            "class": "LV",
+            "TP": 0,
+            "FP": 1,
+            "FN": 1,
+            "reference_present": true,
+            "dice": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "prediction_count": 1,
+            "reference_count": 1
+          }
+        ],
+        "probabilities": [
+          [
+            [
+              [
+                0.22402164340019226,
+                0.14380140602588654,
+                0.24350987374782562,
+                0.20499591529369354,
+                0.3022608757019043,
+                0.1258361041545868
+              ]
+            ],
+            [
+              [
+                0.10010530054569244,
+                0.10566527396440506,
+                0.5783483982086182,
+                0.16139747202396393,
+                0.2929832637310028,
+                0.1046295017004013
+              ]
+            ],
+            [
+              [
+                0.5879545211791992,
+                0.39883914589881897,
+                0.01063849963247776,
+                0.32504481077194214,
+                0.1662825495004654,
+                0.3288242518901825
+              ]
+            ],
+            [
+              [
+                0.08791853487491608,
+                0.3516942262649536,
+                0.167503222823143,
+                0.308561772108078,
+                0.2384733408689499,
+                0.4407101273536682
+              ]
+            ]
+          ]
+        ]
+      },
+      "joint": {
+        "report": {
+          "method": "joint_guard",
+          "source_ids": [
+            "pseudo_class_1",
+            "pseudo_class_2"
+          ],
+          "before": [
+            0.13050663072490098,
+            0.14592370865898605,
+            0.16742629368069262
+          ],
+          "positive_pixels": [
+            [
+              2
+            ],
+            [
+              1
+            ],
+            [
+              1
+            ]
+          ],
+          "scope": "observed_TRAIN_one_vs_rest_Brier",
+          "optimizer_steps_in_transaction": 0,
+          "ema_updates_in_transaction": 0,
+          "alpha": [
+            0.4264016905857342,
+            0.1238597619434444
+          ],
+          "scale": 0.5,
+          "after": [
+            0.12300715501233886,
+            0.13649538570434083,
+            0.16657987586385256
+          ],
+          "status": "NUMERICAL_FEASIBLE",
+          "guarded": true,
+          "trials": [
+            {
+              "scale": 1.0,
+              "risks": [
+                0.12218377949226454,
+                0.1294274274418428,
+                0.168620362613336
+              ],
+              "accepted": false
+            },
+            {
+              "scale": 0.5,
+              "risks": [
+                0.12300715501233886,
+                0.13649538570434083,
+                0.16657987586385256
+              ],
+              "accepted": true
+            }
+          ],
+          "realized_max_regression": -0.000846417816840056,
+          "linearized_after": [
+            0.12187735243105552,
+            0.13676531066179742,
+            0.16630253859912644
+          ]
+        },
+        "metrics": {
+          "predictions": [
+            [
+              [
+                2,
+                2,
+                1,
+                2,
+                1,
+                2
+              ]
+            ]
+          ],
+          "rv": {
+            "class": "RV",
+            "TP": 1,
+            "FP": 1,
+            "FN": 1,
+            "reference_present": true,
+            "dice": 0.5,
+            "precision": 0.5,
+            "recall": 0.5,
+            "prediction_count": 2,
+            "reference_count": 2
+          },
+          "classes": [
+            {
+              "class": "BG",
+              "TP": 0,
+              "FP": 0,
+              "FN": 2,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 2
+            },
+            {
+              "class": "RV",
+              "TP": 1,
+              "FP": 1,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.5,
+              "precision": 0.5,
+              "recall": 0.5,
+              "prediction_count": 2,
+              "reference_count": 2
+            },
+            {
+              "class": "MYO",
+              "TP": 1,
+              "FP": 3,
+              "FN": 0,
+              "reference_present": true,
+              "dice": 0.4,
+              "precision": 0.25,
+              "recall": 1.0,
+              "prediction_count": 4,
+              "reference_count": 1
+            },
+            {
+              "class": "LV",
+              "TP": 0,
+              "FP": 0,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 1
+            }
+          ],
+          "probabilities": [
+            [
+              [
+                [
+                  0.22226998209953308,
+                  0.15879696607589722,
+                  0.13782478868961334,
+                  0.21121682226657867,
+                  0.2706809937953949,
+                  0.14615605771541595
+                ]
+              ],
+              [
+                [
+                  0.09766145050525665,
+                  0.08823519945144653,
+                  0.7194204330444336,
+                  0.15158137679100037,
+                  0.3281276524066925,
+                  0.08861242234706879
+                ]
+              ],
+              [
+                [
+                  0.5959855318069458,
+                  0.4803505837917328,
+                  0.009394108317792416,
+                  0.3786780536174774,
+                  0.182180717587471,
+                  0.42484045028686523
+                ]
+              ],
+              [
+                [
+                  0.08408310264348984,
+                  0.27261731028556824,
+                  0.13336068391799927,
+                  0.25852373242378235,
+                  0.21901066601276398,
+                  0.34039103984832764
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      "aggregate_scalar": {
+        "report": {
+          "method": "independent_guard",
+          "source_ids": [
+            "aggregate_same_ce"
+          ],
+          "before": [
+            0.13050663072490098,
+            0.14592370865898605,
+            0.16742629368069262
+          ],
+          "positive_pixels": [
+            [
+              2
+            ],
+            [
+              1
+            ],
+            [
+              1
+            ]
+          ],
+          "scope": "observed_TRAIN_one_vs_rest_Brier",
+          "optimizer_steps_in_transaction": 0,
+          "ema_updates_in_transaction": 0,
+          "alpha": [
+            0.10756309807671414
+          ],
+          "scale": 0.5,
+          "after": [
+            0.12800014492129405,
+            0.13762863319859645,
+            0.1666739410251266
+          ],
+          "status": "INDEPENDENT_SCALARS",
+          "guarded": true,
+          "trials": [
+            {
+              "scale": 1.0,
+              "risks": [
+                0.12648079596169928,
+                0.13139241409011765,
+                0.1676356800572774
+              ],
+              "accepted": false
+            },
+            {
+              "scale": 0.5,
+              "risks": [
+                0.12800014492129405,
+                0.13762863319859645,
+                0.1666739410251266
+              ],
+              "accepted": true
+            }
+          ],
+          "realized_max_regression": -0.0007523526555660298,
+          "linearized_after": [
+            0.12769708000032565,
+            0.13778576047941943,
+            0.16661995320987796
+          ]
+        },
+        "metrics": {
+          "predictions": [
+            [
+              [
+                2,
+                2,
+                1,
+                2,
+                1,
+                2
+              ]
+            ]
+          ],
+          "rv": {
+            "class": "RV",
+            "TP": 1,
+            "FP": 1,
+            "FN": 1,
+            "reference_present": true,
+            "dice": 0.5,
+            "precision": 0.5,
+            "recall": 0.5,
+            "prediction_count": 2,
+            "reference_count": 2
+          },
+          "classes": [
+            {
+              "class": "BG",
+              "TP": 0,
+              "FP": 0,
+              "FN": 2,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 2
+            },
+            {
+              "class": "RV",
+              "TP": 1,
+              "FP": 1,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.5,
+              "precision": 0.5,
+              "recall": 0.5,
+              "prediction_count": 2,
+              "reference_count": 2
+            },
+            {
+              "class": "MYO",
+              "TP": 1,
+              "FP": 3,
+              "FN": 0,
+              "reference_present": true,
+              "dice": 0.4,
+              "precision": 0.25,
+              "recall": 1.0,
+              "prediction_count": 4,
+              "reference_count": 1
+            },
+            {
+              "class": "LV",
+              "TP": 0,
+              "FP": 0,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 1
+            }
+          ],
+          "probabilities": [
+            [
+              [
+                [
+                  0.2214777022600174,
+                  0.14477525651454926,
+                  0.2138739973306656,
+                  0.2048967033624649,
+                  0.29485103487968445,
+                  0.1309085339307785
+                ]
+              ],
+              [
+                [
+                  0.09856679290533066,
+                  0.09928011149168015,
+                  0.619783878326416,
+                  0.15776000916957855,
+                  0.3025582432746887,
+                  0.10067751258611679
+                ]
+              ],
+              [
+                [
+                  0.5953227877616882,
+                  0.4721236526966095,
+                  0.0107957161962986,
+                  0.37209269404411316,
+                  0.1804680973291397,
+                  0.41381093859672546
+                ]
+              ],
+              [
+                [
+                  0.08463270217180252,
+                  0.2838209271430969,
+                  0.1555464118719101,
+                  0.2652505934238434,
+                  0.22212263941764832,
+                  0.35460302233695984
+                ]
+              ]
+            ]
+          ]
+        },
+        "ridge": 2e-06
+      },
+      "plain": {
+        "report": {
+          "method": "ema_head",
+          "source_ids": [
+            "pseudo_class_1",
+            "pseudo_class_2"
+          ],
+          "before": [
+            0.13050663072490098,
+            0.14592370865898605,
+            0.16742629368069262
+          ],
+          "positive_pixels": [
+            [
+              2
+            ],
+            [
+              1
+            ],
+            [
+              1
+            ]
+          ],
+          "scope": "observed_TRAIN_one_vs_rest_Brier",
+          "optimizer_steps_in_transaction": 0,
+          "ema_updates_in_transaction": 0,
+          "alpha": [
+            1.0,
+            1.0
+          ],
+          "scale": 1.0,
+          "after": [
+            0.13203629325623295,
+            0.13541463867132558,
+            0.22997796870324538
+          ],
+          "status": "PLAIN",
+          "guarded": false,
+          "trials": [
+            {
+              "scale": 1.0,
+              "risks": [
+                0.13203629325623295,
+                0.13541463867132558,
+                0.22997796870324538
+              ],
+              "accepted": true
+            }
+          ],
+          "realized_max_regression": 0.06255167502255277,
+          "linearized_after": [
+            0.15453276975728292,
+            0.3684918360307054,
+            0.4162142474547293
+          ]
+        },
+        "metrics": {
+          "predictions": [
+            [
+              [
+                2,
+                2,
+                1,
+                2,
+                2,
+                2
+              ]
+            ]
+          ],
+          "rv": {
+            "class": "RV",
+            "TP": 1,
+            "FP": 0,
+            "FN": 1,
+            "reference_present": true,
+            "dice": 0.6666666666666666,
+            "precision": 1.0,
+            "recall": 0.5,
+            "prediction_count": 1,
+            "reference_count": 2
+          },
+          "classes": [
+            {
+              "class": "BG",
+              "TP": 0,
+              "FP": 0,
+              "FN": 2,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 2
+            },
+            {
+              "class": "RV",
+              "TP": 1,
+              "FP": 0,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.6666666666666666,
+              "precision": 1.0,
+              "recall": 0.5,
+              "prediction_count": 1,
+              "reference_count": 2
+            },
+            {
+              "class": "MYO",
+              "TP": 1,
+              "FP": 4,
+              "FN": 0,
+              "reference_present": true,
+              "dice": 0.3333333333333333,
+              "precision": 0.2,
+              "recall": 1.0,
+              "prediction_count": 5,
+              "reference_count": 1
+            },
+            {
+              "class": "LV",
+              "TP": 0,
+              "FP": 0,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 1
+            }
+          ],
+          "probabilities": [
+            [
+              [
+                [
+                  0.17407992482185364,
+                  0.01737174205482006,
+                  0.01004063617438078,
+                  0.04679993912577629,
+                  0.12300845980644226,
+                  0.010957932099699974
+                ]
+              ],
+              [
+                [
+                  0.07212206721305847,
+                  0.0035332744009792805,
+                  0.9640647768974304,
+                  0.024334976449608803,
+                  0.3439590036869049,
+                  0.002135709160938859
+                ]
+              ],
+              [
+                [
+                  0.7121896743774414,
+                  0.9783994555473328,
+                  0.006434316281229258,
+                  0.924595296382904,
+                  0.49193093180656433,
+                  0.9865831732749939
+                ]
+              ],
+              [
+                [
+                  0.041608382016420364,
+                  0.0006954713026061654,
+                  0.019460374489426613,
+                  0.004269798286259174,
+                  0.0411016121506691,
+                  0.00032323002233169973
+                ]
+              ]
+            ]
+          ]
+        }
+      }
+    },
+    "default_lr_lifted_float32": {
+      "dtype": "torch.float32",
+      "feature_dim": 3,
+      "weight": [
+        [
+          [
+            [
+              -0.009939293377101421
+            ]
+          ],
+          [
+            [
+              0.004847191274166107
+            ]
+          ],
+          [
+            [
+              0.0
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -0.011572031304240227
+            ]
+          ],
+          [
+            [
+              0.012490445747971535
+            ]
+          ],
+          [
+            [
+              0.0
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              0.007908575236797333
+            ]
+          ],
+          [
+            [
+              -0.018245847895741463
+            ]
+          ],
+          [
+            [
+              0.0
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              0.007571822963654995
+            ]
+          ],
+          [
+            [
+              0.0017347842222079635
+            ]
+          ],
+          [
+            [
+              0.0
+            ]
+          ]
+        ]
+      ],
+      "bias": [
+        0.2919999957084656,
+        0.2630000114440918,
+        -0.35899999737739563,
+        -0.007000000216066837
+      ],
+      "U_features": [
+        [
+          [
+            [
+              235.87371826171875,
+              -247.6331024169922
+            ]
+          ],
+          [
+            [
+              -63.20671081542969,
+              213.62887573242188
+            ]
+          ],
+          [
+            [
+              97.98979187011719,
+              97.98979187011719
+            ]
+          ]
+        ]
+      ],
+      "audit_features": [
+        [
+          [
+            [
+              -56.54305648803711,
+              64.08866119384766,
+              17.149106979370117,
+              36.94407653808594,
+              3.6258113384246826,
+              88.39139556884766
+            ]
+          ],
+          [
+            [
+              -113.67407989501953,
+              -22.83281135559082,
+              120.63172149658203,
+              -19.598979949951172,
+              0.4899744987487793,
+              -1.469923496246338
+            ]
+          ],
+          [
+            [
+              97.98979187011719,
+              97.98979187011719,
+              97.98979187011719,
+              97.98979187011719,
+              97.98979187011719,
+              97.98979187011719
+            ]
+          ]
+        ]
+      ],
+      "labels": [
+        [
+          [
+            0,
+            1,
+            1,
+            2,
+            3,
+            0
+          ]
+        ]
+      ],
+      "teacher_probs": [
+        [
+          [
+            [
+              0.0047905342653393745,
+              0.11828043311834335
+            ]
+          ],
+          [
+            [
+              0.0019530991557985544,
+              0.8811239004135132
+            ]
+          ],
+          [
+            [
+              0.7242381572723389,
+              5.34814807906514e-06
+            ]
+          ],
+          [
+            [
+              0.2690182626247406,
+              0.0005902708508074284
+            ]
+          ]
+        ]
+      ],
+      "max_abs_feature": 247.6331024169922,
+      "step_size": 0.001,
+      "settings": {
+        "budget": 0.0,
+        "tolerance": 1e-08,
+        "backtracks": 8,
+        "threshold": 0.7,
+        "ridge": 1e-06
+      },
+      "source_ids": [
+        "pseudo_class_1",
+        "pseudo_class_2"
+      ],
+      "proposal": {
+        "accepted_pixels": 2,
+        "class_pixels": [
+          0,
+          1,
+          1,
+          0
+        ]
+      },
+      "directions": [
+        [
+          [
+            [
+              [
+                [
+                  0.014645075425505638
+                ]
+              ],
+              [
+                [
+                  -0.01263405755162239
+                ]
+              ],
+              [
+                [
+                  -0.005795137025415897
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  -0.014718828722834587
+                ]
+              ],
+              [
+                [
+                  0.012697683647274971
+                ]
+              ],
+              [
+                [
+                  0.00582432234659791
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  6.621890520364104e-07
+                ]
+              ],
+              [
+                [
+                  -5.712592496820434e-07
+                ]
+              ],
+              [
+                [
+                  -2.6203187530882133e-07
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  7.308532076422125e-05
+                ]
+              ],
+              [
+                [
+                  -6.3049461459741e-05
+                ]
+              ],
+              [
+                [
+                  -2.8920267141074874e-05
+                ]
+              ]
+            ]
+          ],
+          [
+            -5.914021676289849e-05,
+            5.9438050811877474e-05,
+            -2.6740731851049304e-09,
+            -2.951354929336958e-07
+          ]
+        ],
+        [
+          [
+            [
+              [
+                [
+                  -0.0005649804952554405
+                ]
+              ],
+              [
+                [
+                  0.00015139693277888
+                ]
+              ],
+              [
+                [
+                  -0.00023471168242394924
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  -0.0002303423680132255
+                ]
+              ],
+              [
+                [
+                  6.172448047436774e-05
+                ]
+              ],
+              [
+                [
+                  -9.569188841851428e-05
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  0.03252248466014862
+                ]
+              ],
+              [
+                [
+                  -0.008715000003576279
+                ]
+              ],
+              [
+                [
+                  0.013510922901332378
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  -0.03172716498374939
+                ]
+              ],
+              [
+                [
+                  0.008501878939568996
+                ]
+              ],
+              [
+                [
+                  -0.013180520385503769
+                ]
+              ]
+            ]
+          ],
+          [
+            -2.395266847088351e-06,
+            -9.765494723978918e-07,
+            0.0001378809247398749,
+            -0.00013450912956614047
+          ]
+        ]
+      ],
+      "aggregate_gradient_max_error": 3.725290298461914e-09,
+      "before": {
+        "predictions": [
+          [
+            [
+              2,
+              2,
+              1,
+              2,
+              0,
+              3
+            ]
+          ]
+        ],
+        "rv": {
+          "class": "RV",
+          "TP": 1,
+          "FP": 0,
+          "FN": 1,
+          "reference_present": true,
+          "dice": 0.6666666666666666,
+          "precision": 1.0,
+          "recall": 0.5,
+          "prediction_count": 1,
+          "reference_count": 2
+        },
+        "classes": [
+          {
+            "class": "BG",
+            "TP": 0,
+            "FP": 1,
+            "FN": 2,
+            "reference_present": true,
+            "dice": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "prediction_count": 1,
+            "reference_count": 2
+          },
+          {
+            "class": "RV",
+            "TP": 1,
+            "FP": 0,
+            "FN": 1,
+            "reference_present": true,
+            "dice": 0.6666666666666666,
+            "precision": 1.0,
+            "recall": 0.5,
+            "prediction_count": 1,
+            "reference_count": 2
+          },
+          {
+            "class": "MYO",
+            "TP": 1,
+            "FP": 2,
+            "FN": 0,
+            "reference_present": true,
+            "dice": 0.5,
+            "precision": 0.3333333333333333,
+            "recall": 1.0,
+            "prediction_count": 3,
+            "reference_count": 1
+          },
+          {
+            "class": "LV",
+            "TP": 0,
+            "FP": 1,
+            "FN": 1,
+            "reference_present": true,
+            "dice": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "prediction_count": 1,
+            "reference_count": 1
+          }
+        ],
+        "probabilities": [
+          [
+            [
+              [
+                0.22402162849903107,
+                0.14380139112472534,
+                0.24350987374782562,
+                0.20499593019485474,
+                0.3022608757019043,
+                0.1258361041545868
+              ]
+            ],
+            [
+              [
+                0.10010530799627304,
+                0.10566526651382446,
+                0.5783483982086182,
+                0.16139748692512512,
+                0.2929832637310028,
+                0.10462947934865952
+              ]
+            ],
+            [
+              [
+                0.5879545211791992,
+                0.3988390862941742,
+                0.01063849963247776,
+                0.3250448405742645,
+                0.1662825495004654,
+                0.3288242518901825
+              ]
+            ],
+            [
+              [
+                0.08791853487491608,
+                0.3516942262649536,
+                0.167503222823143,
+                0.3085618019104004,
+                0.2384733408689499,
+                0.4407101273536682
+              ]
+            ]
+          ]
+        ]
+      },
+      "joint": {
+        "report": {
+          "method": "joint_guard",
+          "source_ids": [
+            "pseudo_class_1",
+            "pseudo_class_2"
+          ],
+          "before": [
+            0.13050663249225436,
+            0.1459236962241038,
+            0.1674262946002784
+          ],
+          "positive_pixels": [
+            [
+              2
+            ],
+            [
+              1
+            ],
+            [
+              1
+            ]
+          ],
+          "scope": "observed_TRAIN_one_vs_rest_Brier",
+          "optimizer_steps_in_transaction": 0,
+          "ema_updates_in_transaction": 0,
+          "alpha": [
+            0.426401649101929,
+            0.12385983741737737
+          ],
+          "scale": 0.5,
+          "after": [
+            0.12300715510653827,
+            0.13649537941157303,
+            0.16657987986981063
+          ],
+          "status": "NUMERICAL_FEASIBLE",
+          "guarded": true,
+          "trials": [
+            {
+              "scale": 1.0,
+              "risks": [
+                0.12218377813201334,
+                0.12942741243640243,
+                0.16862036057766508
+              ],
+              "accepted": false
+            },
+            {
+              "scale": 0.5,
+              "risks": [
+                0.12300715510653827,
+                0.13649537941157303,
+                0.16657987986981063
+              ],
+              "accepted": true
+            }
+          ],
+          "realized_max_regression": -0.0008464147304677871,
+          "linearized_after": [
+            0.12187735291388371,
+            0.13676529306197993,
+            0.16630253890882177
+          ]
+        },
+        "metrics": {
+          "predictions": [
+            [
+              [
+                2,
+                2,
+                1,
+                2,
+                1,
+                2
+              ]
+            ]
+          ],
+          "rv": {
+            "class": "RV",
+            "TP": 1,
+            "FP": 1,
+            "FN": 1,
+            "reference_present": true,
+            "dice": 0.5,
+            "precision": 0.5,
+            "recall": 0.5,
+            "prediction_count": 2,
+            "reference_count": 2
+          },
+          "classes": [
+            {
+              "class": "BG",
+              "TP": 0,
+              "FP": 0,
+              "FN": 2,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 2
+            },
+            {
+              "class": "RV",
+              "TP": 1,
+              "FP": 1,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.5,
+              "precision": 0.5,
+              "recall": 0.5,
+              "prediction_count": 2,
+              "reference_count": 2
+            },
+            {
+              "class": "MYO",
+              "TP": 1,
+              "FP": 3,
+              "FN": 0,
+              "reference_present": true,
+              "dice": 0.4,
+              "precision": 0.25,
+              "recall": 1.0,
+              "prediction_count": 4,
+              "reference_count": 1
+            },
+            {
+              "class": "LV",
+              "TP": 0,
+              "FP": 0,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 1
+            }
+          ],
+          "probabilities": [
+            [
+              [
+                [
+                  0.2222699671983719,
+                  0.15879693627357483,
+                  0.13782481849193573,
+                  0.21121682226657867,
+                  0.2706809937953949,
+                  0.14615607261657715
+                ]
+              ],
+              [
+                [
+                  0.09766143560409546,
+                  0.08823519200086594,
+                  0.7194204330444336,
+                  0.15158136188983917,
+                  0.3281276226043701,
+                  0.08861242979764938
+                ]
+              ],
+              [
+                [
+                  0.5959855318069458,
+                  0.4803506135940552,
+                  0.009394104592502117,
+                  0.3786780834197998,
+                  0.1821807324886322,
+                  0.4248404800891876
+                ]
+              ],
+              [
+                [
+                  0.08408308029174805,
+                  0.27261725068092346,
+                  0.13336068391799927,
+                  0.25852373242378235,
+                  0.21901065111160278,
+                  0.34039103984832764
+                ]
+              ]
+            ]
+          ]
+        }
+      },
+      "aggregate_scalar": {
+        "report": {
+          "method": "independent_guard",
+          "source_ids": [
+            "aggregate_same_ce"
+          ],
+          "before": [
+            0.13050663249225436,
+            0.1459236962241038,
+            0.1674262946002784
+          ],
+          "positive_pixels": [
+            [
+              2
+            ],
+            [
+              1
+            ],
+            [
+              1
+            ]
+          ],
+          "scope": "observed_TRAIN_one_vs_rest_Brier",
+          "optimizer_steps_in_transaction": 0,
+          "ema_updates_in_transaction": 0,
+          "alpha": [
+            0.10756313495864668
+          ],
+          "scale": 0.5,
+          "after": [
+            0.1280001475015089,
+            0.13762863724592564,
+            0.16667394497345697
+          ],
+          "status": "INDEPENDENT_SCALARS",
+          "guarded": true,
+          "trials": [
+            {
+              "scale": 1.0,
+              "risks": [
+                0.1264807918521899,
+                0.13139241437609123,
+                0.1676356787879443
+              ],
+              "accepted": false
+            },
+            {
+              "scale": 0.5,
+              "risks": [
+                0.1280001475015089,
+                0.13762863724592564,
+                0.16667394497345697
+              ],
+              "accepted": true
+            }
+          ],
+          "realized_max_regression": -0.0007523496268214414,
+          "linearized_after": [
+            0.12769708073891078,
+            0.13778574585725384,
+            0.16661995406898267
+          ]
+        },
+        "metrics": {
+          "predictions": [
+            [
+              [
+                2,
+                2,
+                1,
+                2,
+                1,
+                2
+              ]
+            ]
+          ],
+          "rv": {
+            "class": "RV",
+            "TP": 1,
+            "FP": 1,
+            "FN": 1,
+            "reference_present": true,
+            "dice": 0.5,
+            "precision": 0.5,
+            "recall": 0.5,
+            "prediction_count": 2,
+            "reference_count": 2
+          },
+          "classes": [
+            {
+              "class": "BG",
+              "TP": 0,
+              "FP": 0,
+              "FN": 2,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 2
+            },
+            {
+              "class": "RV",
+              "TP": 1,
+              "FP": 1,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.5,
+              "precision": 0.5,
+              "recall": 0.5,
+              "prediction_count": 2,
+              "reference_count": 2
+            },
+            {
+              "class": "MYO",
+              "TP": 1,
+              "FP": 3,
+              "FN": 0,
+              "reference_present": true,
+              "dice": 0.4,
+              "precision": 0.25,
+              "recall": 1.0,
+              "prediction_count": 4,
+              "reference_count": 1
+            },
+            {
+              "class": "LV",
+              "TP": 0,
+              "FP": 0,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 1
+            }
+          ],
+          "probabilities": [
+            [
+              [
+                [
+                  0.2214777022600174,
+                  0.14477525651454926,
+                  0.2138739973306656,
+                  0.2048967033624649,
+                  0.29485103487968445,
+                  0.1309085339307785
+                ]
+              ],
+              [
+                [
+                  0.09856679290533066,
+                  0.09928009659051895,
+                  0.619783878326416,
+                  0.15775997936725616,
+                  0.3025582432746887,
+                  0.1006774976849556
+                ]
+              ],
+              [
+                [
+                  0.5953227877616882,
+                  0.4721237123012543,
+                  0.0107957161962986,
+                  0.37209269404411316,
+                  0.1804680973291397,
+                  0.41381096839904785
+                ]
+              ],
+              [
+                [
+                  0.08463270217180252,
+                  0.2838209271430969,
+                  0.1555464118719101,
+                  0.265250563621521,
+                  0.22212262451648712,
+                  0.35460299253463745
+                ]
+              ]
+            ]
+          ]
+        },
+        "ridge": 2e-06
+      },
+      "plain": {
+        "report": {
+          "method": "ema_head",
+          "source_ids": [
+            "pseudo_class_1",
+            "pseudo_class_2"
+          ],
+          "before": [
+            0.13050663249225436,
+            0.1459236962241038,
+            0.1674262946002784
+          ],
+          "positive_pixels": [
+            [
+              2
+            ],
+            [
+              1
+            ],
+            [
+              1
+            ]
+          ],
+          "scope": "observed_TRAIN_one_vs_rest_Brier",
+          "optimizer_steps_in_transaction": 0,
+          "ema_updates_in_transaction": 0,
+          "alpha": [
+            1.0,
+            1.0
+          ],
+          "scale": 1.0,
+          "after": [
+            0.13203629545848955,
+            0.13541463729763167,
+            0.22997795791818268
+          ],
+          "status": "PLAIN",
+          "guarded": false,
+          "trials": [
+            {
+              "scale": 1.0,
+              "risks": [
+                0.13203629545848955,
+                0.13541463729763167,
+                0.22997795791818268
+              ],
+              "accepted": true
+            }
+          ],
+          "realized_max_regression": 0.06255166331790427,
+          "linearized_after": [
+            0.154532772617306,
+            0.3684916219698716,
+            0.41621406375039705
+          ]
+        },
+        "metrics": {
+          "predictions": [
+            [
+              [
+                2,
+                2,
+                1,
+                2,
+                2,
+                2
+              ]
+            ]
+          ],
+          "rv": {
+            "class": "RV",
+            "TP": 1,
+            "FP": 0,
+            "FN": 1,
+            "reference_present": true,
+            "dice": 0.6666666666666666,
+            "precision": 1.0,
+            "recall": 0.5,
+            "prediction_count": 1,
+            "reference_count": 2
+          },
+          "classes": [
+            {
+              "class": "BG",
+              "TP": 0,
+              "FP": 0,
+              "FN": 2,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 2
+            },
+            {
+              "class": "RV",
+              "TP": 1,
+              "FP": 0,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.6666666666666666,
+              "precision": 1.0,
+              "recall": 0.5,
+              "prediction_count": 1,
+              "reference_count": 2
+            },
+            {
+              "class": "MYO",
+              "TP": 1,
+              "FP": 4,
+              "FN": 0,
+              "reference_present": true,
+              "dice": 0.3333333333333333,
+              "precision": 0.2,
+              "recall": 1.0,
+              "prediction_count": 5,
+              "reference_count": 1
+            },
+            {
+              "class": "LV",
+              "TP": 0,
+              "FP": 0,
+              "FN": 1,
+              "reference_present": true,
+              "dice": 0.0,
+              "precision": null,
+              "recall": 0.0,
+              "prediction_count": 0,
+              "reference_count": 1
+            }
+          ],
+          "probabilities": [
+            [
+              [
+                [
+                  0.17407990992069244,
+                  0.017371751368045807,
+                  0.01004063617438078,
+                  0.04679996520280838,
+                  0.12300848960876465,
+                  0.010957942344248295
+                ]
+              ],
+              [
+                [
+                  0.07212206721305847,
+                  0.003533276030793786,
+                  0.9640647768974304,
+                  0.024334991350769997,
+                  0.3439590632915497,
+                  0.0021357100922614336
+                ]
+              ],
+              [
+                [
+                  0.7121896743774414,
+                  0.9783994555473328,
+                  0.006434310227632523,
+                  0.9245951771736145,
+                  0.4919308125972748,
+                  0.9865831732749939
+                ]
+              ],
+              [
+                [
+                  0.04160836338996887,
+                  0.0006954726413823664,
+                  0.01946037821471691,
+                  0.004269802011549473,
+                  0.04110163450241089,
+                  0.00032323095365427434
+                ]
+              ]
+            ]
+          ]
+        }
+      }
+    }
+  }
+}

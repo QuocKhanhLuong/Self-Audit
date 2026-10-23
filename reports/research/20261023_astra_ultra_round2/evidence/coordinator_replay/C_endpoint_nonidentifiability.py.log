@@ -1,0 +1,191 @@
+{
+  "status": "MANUFACTURED_ALGEBRAIC_IDENTIFIABILITY_COUNTEREXAMPLE",
+  "scope": "Exact balanced one-vs-rest Brier arithmetic on valid4-class probabilities; no patient or actual NativeStudent candidate-generation evidence.",
+  "risk_definition": "R_RV=((1-u)^2+v^2)/4; R_MYO=R_LV=1/20000; labels RV andBG; absent-class probabilities1/100.",
+  "points": {
+    "S": {
+      "RV_probabilities": [
+        "4/5",
+        "1/10"
+      ],
+      "risks": [
+        "1/80",
+        "1/20000",
+        "1/20000"
+      ],
+      "mean_risk": "21/5000",
+      "confusion": [
+        [
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    "A": {
+      "RV_probabilities": [
+        "9/10",
+        "1/20"
+      ],
+      "risks": [
+        "1/320",
+        "1/20000",
+        "1/20000"
+      ],
+      "mean_risk": "43/40000",
+      "confusion": [
+        [
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    "H": {
+      "RV_probabilities": [
+        "3/5",
+        "1/5"
+      ],
+      "risks": [
+        "1/20",
+        "1/20000",
+        "1/20000"
+      ],
+      "mean_risk": "167/10000",
+      "confusion": [
+        [
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    }
+  },
+  "S_to_A_guard_accepts": true,
+  "S_to_H_guard_accepts": false,
+  "H_direction_backtracks": [
+    {
+      "scale": "1",
+      "RV_risk": "1/20",
+      "accepted_at_tolerance_1e_minus8": false
+    },
+    {
+      "scale": "1/2",
+      "RV_risk": "9/320",
+      "accepted_at_tolerance_1e_minus8": false
+    },
+    {
+      "scale": "1/4",
+      "RV_risk": "5/256",
+      "accepted_at_tolerance_1e_minus8": false
+    },
+    {
+      "scale": "1/8",
+      "RV_risk": "81/5120",
+      "accepted_at_tolerance_1e_minus8": false
+    },
+    {
+      "scale": "1/16",
+      "RV_risk": "289/20480",
+      "accepted_at_tolerance_1e_minus8": false
+    },
+    {
+      "scale": "1/32",
+      "RV_risk": "1089/81920",
+      "accepted_at_tolerance_1e_minus8": false
+    },
+    {
+      "scale": "1/64",
+      "RV_risk": "845/65536",
+      "accepted_at_tolerance_1e_minus8": false
+    },
+    {
+      "scale": "1/128",
+      "RV_risk": "16641/1310720",
+      "accepted_at_tolerance_1e_minus8": false
+    }
+  ],
+  "same_initial_and_final_soft_prediction_histories": {
+    "pseudo_updates_per_history": 8,
+    "history1_harmful_pseudo_count": 8,
+    "history2_harmful_pseudo_count": 0,
+    "same_start": "S",
+    "same_final_after_labeled_compensation": "S",
+    "all_hard_confusions_equal": true
+  },
+  "conclusion": "Endpoint hard counts, even identical endpoint probabilities plus aggregate pseudo-step counts, do not determine prior audit-risk signs or would-be finite guard decisions without transaction data.",
+  "limitations": [
+    "The compensating labeled transition is possible in an unconstrained probability trajectory, not claimed to be produced by the fixed training code.",
+    "No claim these probability paths are actual per-class pseudo-CE gradient directions or the sampled patient optimizer trajectory.",
+    "The probability map is manufactured; source-shaped realization is a separate question."
+  ]
+}

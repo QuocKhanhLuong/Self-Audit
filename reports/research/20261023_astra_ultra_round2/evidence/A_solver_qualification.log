@@ -1,0 +1,101 @@
+{
+  "kind": "EXECUTED_MANUFACTURED_CPU_SOLVER_QUALIFICATION",
+  "head": "ccfde9bb99b6050e00ad94fbd6d57fcf9afc8b3f",
+  "canonical_source": "637f38ced217fe1db2347a87924695533056d8f0",
+  "experiment_source": "8960b6baac4c6600553d900c303f192c2fcfa4f0",
+  "command": "rtk proxy python reports/research/20261023_astra_ultra_round2/probes/A_solver_qualification.py",
+  "script_sha256": "009a113dc9c1a54b2e3ccf0054f0d5c83dee6f3d2076b7aff45aca7d95b86a2b",
+  "production_control_sha256": "6bedb4165e85b4cc1e507d73858e491a4b7e668601604f216a4472280b723068",
+  "round1_tree_sha256_before": "58bfd186e37f71739eac1b7c5d79c92a66054770a14db7e6a49e285244665f67",
+  "round1_tree_sha256_after": "58bfd186e37f71739eac1b7c5d79c92a66054770a14db7e6a49e285244665f67",
+  "python": "3.11.16",
+  "numpy": "2.4.6",
+  "scipy": "1.17.1",
+  "original_unit_feasibility_tolerance": 1e-10,
+  "original_unit_objective_tolerance": 1e-12,
+  "elapsed_seconds": 0.46694091707468033,
+  "summary": {
+    "case_count": 114,
+    "scalar_cases": 39,
+    "original": {
+      "numerical_failure_or_fallback_count": 1,
+      "declared_infeasible_returns": 0,
+      "gap_above_1e_10": 7,
+      "max_gap": 2.44999755000245e-07
+    },
+    "normalized": {
+      "numerical_failure_or_fallback_count": 1,
+      "declared_infeasible_returns": 0,
+      "gap_above_1e_10": 1,
+      "max_gap": 0.0043569347037887745
+    },
+    "scalar_original_coefficient_error_above_1e_3": [
+      "scalar_response_-8",
+      "scalar_response_-7",
+      "scalar_response_-6",
+      "scalar_uniform_-9_fixedFalse",
+      "scalar_uniform_-8_fixedFalse",
+      "scalar_uniform_-7_fixedFalse",
+      "scalar_uniform_-6_fixedFalse",
+      "scalar_uniform_-5_fixedFalse",
+      "scalar_uniform_-4_fixedFalse",
+      "scalar_uniform_-3_fixedFalse"
+    ],
+    "scalar_normalized_coefficient_error_above_1e_3": [],
+    "normalized_raw_original_unit_rejections": [
+      "m2_near_collinear_3"
+    ],
+    "normalized_raw_tolerance_only": [
+      "scalar_conflict_budget1e-08",
+      "scalar_zero_budget_singleton",
+      "m2_near_collinear_0",
+      "m2_near_collinear_2",
+      "m3_seed3_0",
+      "m4_seed0_-8",
+      "m4_seed2_-8"
+    ],
+    "normalized_raw_not_exact_budget_feasible": [
+      "scalar_conflict_budget1e-08",
+      "scalar_conflict_budget0.01",
+      "scalar_zero_budget_singleton",
+      "m2_near_collinear_0",
+      "m2_near_collinear_2",
+      "m3_seed3_-8",
+      "m3_seed3_-6",
+      "m3_seed3_-3",
+      "m3_seed3_0",
+      "m4_seed0_-8",
+      "m4_seed0_-6",
+      "m4_seed0_-3",
+      "m4_seed0_0",
+      "m4_seed2_-8",
+      "m4_seed2_-6",
+      "m4_seed2_-3",
+      "m4_seed2_0"
+    ],
+    "incumbent_improved_over_original_1e_12": [
+      "scalar_response_-8",
+      "scalar_response_-7",
+      "scalar_response_-6",
+      "scalar_uniform_-5_fixedFalse",
+      "scalar_uniform_-4_fixedFalse",
+      "scalar_uniform_-3_fixedFalse",
+      "m2_near_collinear_-6",
+      "m2_redundant_group_-6",
+      "m3_seed2_-6",
+      "m4_seed0_-6",
+      "m4_seed2_-6"
+    ],
+    "original_worse_than_ray_1e_12": [
+      "scalar_response_-8",
+      "scalar_response_-7",
+      "scalar_response_-6",
+      "scalar_uniform_-5_fixedFalse",
+      "scalar_uniform_-4_fixedFalse",
+      "scalar_uniform_-3_fixedFalse",
+      "m2_near_collinear_-6",
+      "m3_seed2_-6"
+    ],
+    "exceptions": {}
+  }
+}

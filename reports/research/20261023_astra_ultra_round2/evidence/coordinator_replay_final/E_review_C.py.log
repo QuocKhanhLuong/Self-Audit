@@ -1,0 +1,79 @@
+{
+  "status": "PASS",
+  "input_sha256": "5f3b8c49d8505bba052fdfb56a40097b0fdceb608e74afa1b5cb6f6f98b8e695",
+  "oracles": [
+    {
+      "methods": [
+        "ema_block",
+        "supervised"
+      ],
+      "constant": 0.7547267881148105,
+      "whole_patient": 0.768232796982508,
+      "class_relaxation": 0.7762917496345063
+    },
+    {
+      "methods": [
+        "ema_block",
+        "ema_full"
+      ],
+      "constant": 0.819047095465382,
+      "whole_patient": 0.819047095465382,
+      "class_relaxation": 0.8241407948023279
+    },
+    {
+      "methods": [
+        "supervised",
+        "supervised_extra",
+        "ema_full",
+        "ema_block"
+      ],
+      "constant": 0.819047095465382,
+      "whole_patient": 0.8210067001694497,
+      "class_relaxation": 0.8284569774427942
+    }
+  ],
+  "coupling": {
+    "supervised": {
+      "wrong_to_correct": [
+        2578,
+        49850
+      ],
+      "correct_to_wrong": [
+        15282,
+        62554
+      ]
+    },
+    "ema_full": {
+      "wrong_to_correct": [
+        30708,
+        68302
+      ],
+      "correct_to_wrong": [
+        879,
+        38473
+      ]
+    }
+  },
+  "BG_RV_bounds": [
+    {
+      "comparator": "supervised",
+      "bounds": [
+        67687,
+        100452
+      ]
+    },
+    {
+      "comparator": "ema_full",
+      "bounds": [
+        65801,
+        100452
+      ]
+    }
+  ],
+  "rational_counterexample": {
+    "three_risks_verified": true,
+    "all_eight_scales_reject_at_1e_minus8": true,
+    "not_production_realizability": true
+  },
+  "claim_scope": "Independent arithmetic only; finite endpoint selector and marginal coupling bounds; not patient execution or new-method headroom."
+}

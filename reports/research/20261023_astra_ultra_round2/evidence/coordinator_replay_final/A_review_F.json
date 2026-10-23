@@ -1,0 +1,558 @@
+{
+  "kind": "INDEPENDENT_SYNTHETIC_CPU_REVIEW_OF_F_GENERATED_DIRECTIONS",
+  "script_sha256": "f4fe8280fd31d9dca8596197e8971469cafc327aa99eff1c175779b87bd5ad03",
+  "original_F_search_sha256": "ae5cefcd1bcfd7f827ebb1f49c8c7c2464e8e575fa1f176d91be0e251dc52843",
+  "scipy_not_rerun_search": true,
+  "torch": "2.14.0",
+  "numpy": "2.4.6",
+  "results": {
+    "original_selected": {
+      "step": 9.603135192124833,
+      "source_ids": [
+        "pseudo_class_1",
+        "pseudo_class_2"
+      ],
+      "proposal": {
+        "accepted_pixels": 2,
+        "class_pixels": [
+          0,
+          1,
+          1,
+          0
+        ]
+      },
+      "gradient_sum_error": 2.220446049250313e-16,
+      "student_state_unchanged_by_generation": true,
+      "teacher_copy_exact": true,
+      "before_rv": {
+        "class": "RV",
+        "TP": 1,
+        "FP": 0,
+        "FN": 1,
+        "reference_present": true,
+        "dice": 0.6666666666666666,
+        "precision": 1.0,
+        "recall": 0.5,
+        "prediction_count": 1,
+        "reference_count": 2
+      },
+      "after_joint_rv": {
+        "class": "RV",
+        "TP": 1,
+        "FP": 1,
+        "FN": 1,
+        "reference_present": true,
+        "dice": 0.5,
+        "precision": 0.5,
+        "recall": 0.5,
+        "prediction_count": 2,
+        "reference_count": 2
+      },
+      "after_scalar_rv": {
+        "class": "RV",
+        "TP": 1,
+        "FP": 1,
+        "FN": 1,
+        "reference_present": true,
+        "dice": 0.5,
+        "precision": 0.5,
+        "recall": 0.5,
+        "prediction_count": 2,
+        "reference_count": 2
+      },
+      "joint": {
+        "method": "joint_guard",
+        "source_ids": [
+          "pseudo_class_1",
+          "pseudo_class_2"
+        ],
+        "before": [
+          0.13047189001225812,
+          0.14582708793555163,
+          0.16739242901234486
+        ],
+        "positive_pixels": [
+          [
+            2
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ]
+        ],
+        "scope": "observed_TRAIN_one_vs_rest_Brier",
+        "optimizer_steps_in_transaction": 0,
+        "ema_updates_in_transaction": 0,
+        "alpha": [
+          0.4267516590851447,
+          0.12358790704661766
+        ],
+        "scale": 0.5,
+        "after": [
+          0.12296486633818865,
+          0.13640706026259505,
+          0.16655264750262666
+        ],
+        "status": "NUMERICAL_FEASIBLE",
+        "guarded": true,
+        "trials": [
+          {
+            "scale": 1.0,
+            "risks": [
+              0.1221396612727297,
+              0.12933735355299675,
+              0.16858726575424463
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.5,
+            "risks": [
+              0.12296486633818865,
+              0.13640706026259505,
+              0.16655264750262666
+            ],
+            "accepted": true
+          }
+        ],
+        "realized_max_regression": -0.000839781509718196,
+        "linearized_after": [
+          0.12183465610162006,
+          0.13667485699698226,
+          0.1662753947736547
+        ]
+      },
+      "scalar": {
+        "method": "independent_guard",
+        "source_ids": [
+          "aggregate"
+        ],
+        "before": [
+          0.13047189001225812,
+          0.14582708793555163,
+          0.16739242901234486
+        ],
+        "positive_pixels": [
+          [
+            2
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ]
+        ],
+        "scope": "observed_TRAIN_one_vs_rest_Brier",
+        "optimizer_steps_in_transaction": 0,
+        "ema_updates_in_transaction": 0,
+        "alpha": [
+          0.10725863504828556
+        ],
+        "scale": 0.5,
+        "after": [
+          0.12796994263739575,
+          0.13754313176115002,
+          0.16664578051086443
+        ],
+        "status": "INDEPENDENT_SCALARS",
+        "guarded": true,
+        "trials": [
+          {
+            "scale": 1.0,
+            "risks": [
+              0.1264496691996249,
+              0.1313062309467737,
+              0.16760069169219846
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.5,
+            "risks": [
+              0.12796994263739575,
+              0.13754313176115002,
+              0.16664578051086443
+            ],
+            "accepted": true
+          }
+        ],
+        "realized_max_regression": -0.0007466485014804292,
+        "linearized_after": [
+          0.12766871237091756,
+          0.13769896896051886,
+          0.166592155804156
+        ]
+      },
+      "max_abs_feature": 2.5266673444648213
+    },
+    "rounded_independent": {
+      "step": 9.603,
+      "source_ids": [
+        "pseudo_class_1",
+        "pseudo_class_2"
+      ],
+      "proposal": {
+        "accepted_pixels": 2,
+        "class_pixels": [
+          0,
+          1,
+          1,
+          0
+        ]
+      },
+      "gradient_sum_error": 2.220446049250313e-16,
+      "student_state_unchanged_by_generation": true,
+      "teacher_copy_exact": true,
+      "before_rv": {
+        "class": "RV",
+        "TP": 1,
+        "FP": 0,
+        "FN": 1,
+        "reference_present": true,
+        "dice": 0.6666666666666666,
+        "precision": 1.0,
+        "recall": 0.5,
+        "prediction_count": 1,
+        "reference_count": 2
+      },
+      "after_joint_rv": {
+        "class": "RV",
+        "TP": 1,
+        "FP": 1,
+        "FN": 1,
+        "reference_present": true,
+        "dice": 0.5,
+        "precision": 0.5,
+        "recall": 0.5,
+        "prediction_count": 2,
+        "reference_count": 2
+      },
+      "after_scalar_rv": {
+        "class": "RV",
+        "TP": 1,
+        "FP": 1,
+        "FN": 1,
+        "reference_present": true,
+        "dice": 0.5,
+        "precision": 0.5,
+        "recall": 0.5,
+        "prediction_count": 2,
+        "reference_count": 2
+      },
+      "joint": {
+        "method": "joint_guard",
+        "source_ids": [
+          "pseudo_class_1",
+          "pseudo_class_2"
+        ],
+        "before": [
+          0.13050663188412895,
+          0.14592370416770506,
+          0.16742630124031146
+        ],
+        "positive_pixels": [
+          [
+            2
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ]
+        ],
+        "scope": "observed_TRAIN_one_vs_rest_Brier",
+        "optimizer_steps_in_transaction": 0,
+        "ema_updates_in_transaction": 0,
+        "alpha": [
+          0.4264018107484825,
+          0.12385989160017911
+        ],
+        "scale": 0.5,
+        "after": [
+          0.12300715598201488,
+          0.13649537584982982,
+          0.1665798751595983
+        ],
+        "status": "NUMERICAL_FEASIBLE",
+        "guarded": true,
+        "trials": [
+          {
+            "scale": 1.0,
+            "risks": [
+              0.12218377994335966,
+              0.12942740999114022,
+              0.16862037078008799
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.5,
+            "risks": [
+              0.12300715598201488,
+              0.13649537584982982,
+              0.1665798751595983
+            ],
+            "accepted": true
+          }
+        ],
+        "realized_max_regression": -0.0008464260807131696,
+        "linearized_after": [
+          0.12187735290616421,
+          0.13676529693454872,
+          0.16630254421892907
+        ]
+      },
+      "scalar": {
+        "method": "independent_guard",
+        "source_ids": [
+          "aggregate"
+        ],
+        "before": [
+          0.13050663188412895,
+          0.14592370416770506,
+          0.16742630124031146
+        ],
+        "positive_pixels": [
+          [
+            2
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ]
+        ],
+        "scope": "observed_TRAIN_one_vs_rest_Brier",
+        "optimizer_steps_in_transaction": 0,
+        "ema_updates_in_transaction": 0,
+        "alpha": [
+          0.10756317119893005
+        ],
+        "scale": 0.5,
+        "after": [
+          0.12800014569637325,
+          0.13762863220976393,
+          0.16667394520788142
+        ],
+        "status": "INDEPENDENT_SCALARS",
+        "guarded": true,
+        "trials": [
+          {
+            "scale": 1.0,
+            "risks": [
+              0.12648079433934778,
+              0.13139241023845144,
+              0.1676356796385891
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.5,
+            "risks": [
+              0.12800014569637325,
+              0.13762863220976393,
+              0.16667394520788142
+            ],
+            "accepted": true
+          }
+        ],
+        "realized_max_regression": -0.0007523560324300405,
+        "linearized_after": [
+          0.12769707977687506,
+          0.1377857503154316,
+          0.16661995994449658
+        ]
+      },
+      "max_abs_feature": 2.527
+    },
+    "lifted_independent": {
+      "step": 0.001,
+      "source_ids": [
+        "pseudo_class_1",
+        "pseudo_class_2"
+      ],
+      "proposal": {
+        "accepted_pixels": 2,
+        "class_pixels": [
+          0,
+          1,
+          1,
+          0
+        ]
+      },
+      "gradient_sum_error": 6.938893903907228e-18,
+      "student_state_unchanged_by_generation": true,
+      "teacher_copy_exact": true,
+      "before_rv": {
+        "class": "RV",
+        "TP": 1,
+        "FP": 0,
+        "FN": 1,
+        "reference_present": true,
+        "dice": 0.6666666666666666,
+        "precision": 1.0,
+        "recall": 0.5,
+        "prediction_count": 1,
+        "reference_count": 2
+      },
+      "after_joint_rv": {
+        "class": "RV",
+        "TP": 1,
+        "FP": 1,
+        "FN": 1,
+        "reference_present": true,
+        "dice": 0.5,
+        "precision": 0.5,
+        "recall": 0.5,
+        "prediction_count": 2,
+        "reference_count": 2
+      },
+      "after_scalar_rv": {
+        "class": "RV",
+        "TP": 1,
+        "FP": 1,
+        "FN": 1,
+        "reference_present": true,
+        "dice": 0.5,
+        "precision": 0.5,
+        "recall": 0.5,
+        "prediction_count": 2,
+        "reference_count": 2
+      },
+      "joint": {
+        "method": "joint_guard",
+        "source_ids": [
+          "pseudo_class_1",
+          "pseudo_class_2"
+        ],
+        "before": [
+          0.13050663188412895,
+          0.14592370416770506,
+          0.16742630124031146
+        ],
+        "positive_pixels": [
+          [
+            2
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ]
+        ],
+        "scope": "observed_TRAIN_one_vs_rest_Brier",
+        "optimizer_steps_in_transaction": 0,
+        "ema_updates_in_transaction": 0,
+        "alpha": [
+          0.42640181074848227,
+          0.12385989160017946
+        ],
+        "scale": 0.5,
+        "after": [
+          0.1230071559820149,
+          0.1364953758498298,
+          0.1665798751595983
+        ],
+        "status": "NUMERICAL_FEASIBLE",
+        "guarded": true,
+        "trials": [
+          {
+            "scale": 1.0,
+            "risks": [
+              0.12218377994335969,
+              0.12942740999114022,
+              0.16862037078008799
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.5,
+            "risks": [
+              0.1230071559820149,
+              0.1364953758498298,
+              0.1665798751595983
+            ],
+            "accepted": true
+          }
+        ],
+        "realized_max_regression": -0.0008464260807131696,
+        "linearized_after": [
+          0.12187735290616421,
+          0.1367652969345487,
+          0.16630254421892907
+        ]
+      },
+      "scalar": {
+        "method": "independent_guard",
+        "source_ids": [
+          "aggregate"
+        ],
+        "before": [
+          0.13050663188412895,
+          0.14592370416770506,
+          0.16742630124031146
+        ],
+        "positive_pixels": [
+          [
+            2
+          ],
+          [
+            1
+          ],
+          [
+            1
+          ]
+        ],
+        "scope": "observed_TRAIN_one_vs_rest_Brier",
+        "optimizer_steps_in_transaction": 0,
+        "ema_updates_in_transaction": 0,
+        "alpha": [
+          0.10756317119893012
+        ],
+        "scale": 0.5,
+        "after": [
+          0.12800014569637327,
+          0.1376286322097639,
+          0.16667394520788142
+        ],
+        "status": "INDEPENDENT_SCALARS",
+        "guarded": true,
+        "trials": [
+          {
+            "scale": 1.0,
+            "risks": [
+              0.12648079433934778,
+              0.13139241023845147,
+              0.1676356796385891
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.5,
+            "risks": [
+              0.12800014569637327,
+              0.1376286322097639,
+              0.16667394520788142
+            ],
+            "accepted": true
+          }
+        ],
+        "realized_max_regression": -0.0007523560324300405,
+        "linearized_after": [
+          0.12769707977687506,
+          0.13778575031543158,
+          0.16661995994449658
+        ]
+      },
+      "max_abs_feature": 247.63310680722805
+    }
+  },
+  "lifting_max_source_logit_effect_error": 1.3322676295501878e-15,
+  "scope": "Canonical affine generator/control seams; no native feature or EMA-history reachability claim."
+}

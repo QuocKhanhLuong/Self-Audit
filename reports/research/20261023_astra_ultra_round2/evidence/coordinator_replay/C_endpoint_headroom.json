@@ -1,0 +1,384 @@
+{
+  "revision": "8960b6baac4c6600553d900c303f192c2fcfa4f0",
+  "input_path": "results/PATIENT_METRICS.csv",
+  "input_sha256": "5f3b8c49d8505bba052fdfb56a40097b0fdceb608e74afa1b5cb6f6f98b8e695",
+  "scope": "Local arithmetic on Git-tracked endpoint tables; no patient arrays, inference or training; all oracle calculations are retrospective and forbidden for training/selection on VAL labels.",
+  "score_definition": "Mean over18 patients of mean RV/MYO/LV; each class input is stored mean of reference-present3D frame Dice.",
+  "oracles": [
+    {
+      "methods": [
+        "ema_block",
+        "supervised"
+      ],
+      "best_constant_method": "supervised",
+      "best_constant_foreground_dice": 0.7547267881148105,
+      "ORACLE_retrospective_whole_patient_foreground_dice": 0.768232796982508,
+      "ORACLE_gain_over_best_constant_pp": 1.3506008867697483,
+      "ORACLE_selection_counts": {
+        "supervised": 11,
+        "ema_block": 7
+      },
+      "RELAXATION_independent_patient_class_score_maximum": 0.7762917496345061,
+      "RELAXATION_gain_over_best_constant_pp": 2.156496151969556,
+      "ORACLE_RV_only_selection_counts": {
+        "supervised": 13,
+        "ema_block": 5
+      },
+      "ORACLE_RV_only_selector_class_dice": {
+        "RV": 0.6256719948042114,
+        "MYO": 0.7859643171800124,
+        "LV": 0.8894182542363918
+      },
+      "status": "Retrospective label-informed bound for switching among these final endpoint predictions ONLY; not an admissible learned policy or bound on a new guard."
+    },
+    {
+      "methods": [
+        "ema_block",
+        "ema_full"
+      ],
+      "best_constant_method": "ema_full",
+      "best_constant_foreground_dice": 0.8190470954653819,
+      "ORACLE_retrospective_whole_patient_foreground_dice": 0.8190470954653819,
+      "ORACLE_gain_over_best_constant_pp": 0.0,
+      "ORACLE_selection_counts": {
+        "ema_full": 18
+      },
+      "RELAXATION_independent_patient_class_score_maximum": 0.8241407948023275,
+      "RELAXATION_gain_over_best_constant_pp": 0.509369933694559,
+      "ORACLE_RV_only_selection_counts": {
+        "ema_full": 18
+      },
+      "ORACLE_RV_only_selector_class_dice": {
+        "RV": 0.7362486449593038,
+        "MYO": 0.8067370324768901,
+        "LV": 0.914155608959952
+      },
+      "status": "Retrospective label-informed bound for switching among these final endpoint predictions ONLY; not an admissible learned policy or bound on a new guard."
+    },
+    {
+      "methods": [
+        "supervised",
+        "supervised_extra",
+        "ema_full",
+        "ema_block"
+      ],
+      "best_constant_method": "ema_full",
+      "best_constant_foreground_dice": 0.8190470954653819,
+      "ORACLE_retrospective_whole_patient_foreground_dice": 0.8210067001694497,
+      "ORACLE_gain_over_best_constant_pp": 0.19596047040677522,
+      "ORACLE_selection_counts": {
+        "ema_full": 17,
+        "supervised_extra": 1
+      },
+      "RELAXATION_independent_patient_class_score_maximum": 0.8284569774427938,
+      "RELAXATION_gain_over_best_constant_pp": 0.9409881977411882,
+      "ORACLE_RV_only_selection_counts": {
+        "ema_full": 15,
+        "supervised_extra": 3
+      },
+      "ORACLE_RV_only_selector_class_dice": {
+        "RV": 0.7450829659037915,
+        "MYO": 0.7953093262812665,
+        "LV": 0.9079484714103268
+      },
+      "status": "Retrospective label-informed bound for switching among these final endpoint predictions ONLY; not an admissible learned policy or bound on a new guard."
+    }
+  ],
+  "paired_tradeoffs": [
+    {
+      "comparator": "supervised",
+      "reference": "ema_block",
+      "class": {
+        "BG": {
+          "comparator_counts": {
+            "TP": 16977046,
+            "FP": 175211,
+            "FN": 35615
+          },
+          "ema_block_counts": {
+            "TP": 16883943,
+            "FP": 134332,
+            "FN": 128718
+          },
+          "comparator_minus_block_counts": {
+            "TP": 93103,
+            "FP": 40879,
+            "FN": -93103
+          },
+          "block_wrong_comparator_correct_count_bounds": [
+            93103,
+            128718
+          ],
+          "block_correct_comparator_wrong_count_bounds": [
+            0,
+            35615
+          ],
+          "bound_type": "Sharp marginal-overlap bounds conditional on the common patient/GT domains; not confidence intervals."
+        },
+        "RV": {
+          "comparator_counts": {
+            "TP": 109045,
+            "FP": 17125,
+            "FN": 121236
+          },
+          "ema_block_counts": {
+            "TP": 121749,
+            "FP": 105066,
+            "FN": 108532
+          },
+          "comparator_minus_block_counts": {
+            "TP": -12704,
+            "FP": -87941,
+            "FN": 12704
+          },
+          "block_wrong_comparator_correct_count_bounds": [
+            2578,
+            49850
+          ],
+          "block_correct_comparator_wrong_count_bounds": [
+            15282,
+            62554
+          ],
+          "bound_type": "Sharp marginal-overlap bounds conditional on the common patient/GT domains; not confidence intervals.",
+          "mean_dice_delta_pp": 8.491816919567743,
+          "patients_better_worse_equal": [
+            13,
+            5,
+            0
+          ]
+        },
+        "MYO": {
+          "comparator_counts": {
+            "TP": 184996,
+            "FP": 49266,
+            "FN": 59050
+          },
+          "ema_block_counts": {
+            "TP": 194482,
+            "FP": 44022,
+            "FN": 49564
+          },
+          "comparator_minus_block_counts": {
+            "TP": -9486,
+            "FP": 5244,
+            "FN": 9486
+          },
+          "block_wrong_comparator_correct_count_bounds": [
+            1252,
+            49564
+          ],
+          "block_correct_comparator_wrong_count_bounds": [
+            10738,
+            59050
+          ],
+          "bound_type": "Sharp marginal-overlap bounds conditional on the common patient/GT domains; not confidence intervals.",
+          "mean_dice_delta_pp": -3.1561879330189018,
+          "patients_better_worse_equal": [
+            4,
+            14,
+            0
+          ]
+        },
+        "LV": {
+          "comparator_counts": {
+            "TP": 212058,
+            "FP": 9397,
+            "FN": 35098
+          },
+          "ema_block_counts": {
+            "TP": 226501,
+            "FP": 24049,
+            "FN": 20655
+          },
+          "comparator_minus_block_counts": {
+            "TP": -14443,
+            "FP": -14652,
+            "FN": 14443
+          },
+          "block_wrong_comparator_correct_count_bounds": [
+            0,
+            20655
+          ],
+          "block_correct_comparator_wrong_count_bounds": [
+            14443,
+            35098
+          ],
+          "bound_type": "Sharp marginal-overlap bounds conditional on the common patient/GT domains; not confidence intervals.",
+          "mean_dice_delta_pp": 0.7049573408154177,
+          "patients_better_worse_equal": [
+            9,
+            9,
+            0
+          ]
+        }
+      },
+      "patient_foreground_better_worse_equal": [
+        11,
+        7,
+        0
+      ],
+      "block_RV_lower_MYO_higher_patients": 10
+    },
+    {
+      "comparator": "ema_full",
+      "reference": "ema_block",
+      "class": {
+        "BG": {
+          "comparator_counts": {
+            "TP": 16972795,
+            "FP": 109591,
+            "FN": 39866
+          },
+          "ema_block_counts": {
+            "TP": 16883943,
+            "FP": 134332,
+            "FN": 128718
+          },
+          "comparator_minus_block_counts": {
+            "TP": 88852,
+            "FP": -24741,
+            "FN": -88852
+          },
+          "block_wrong_comparator_correct_count_bounds": [
+            88852,
+            128718
+          ],
+          "block_correct_comparator_wrong_count_bounds": [
+            0,
+            39866
+          ],
+          "bound_type": "Sharp marginal-overlap bounds conditional on the common patient/GT domains; not confidence intervals."
+        },
+        "RV": {
+          "comparator_counts": {
+            "TP": 151578,
+            "FP": 17436,
+            "FN": 78703
+          },
+          "ema_block_counts": {
+            "TP": 121749,
+            "FP": 105066,
+            "FN": 108532
+          },
+          "comparator_minus_block_counts": {
+            "TP": 29829,
+            "FP": -87630,
+            "FN": -29829
+          },
+          "block_wrong_comparator_correct_count_bounds": [
+            30708,
+            68302
+          ],
+          "block_correct_comparator_wrong_count_bounds": [
+            879,
+            38473
+          ],
+          "bound_type": "Sharp marginal-overlap bounds conditional on the common patient/GT domains; not confidence intervals.",
+          "mean_dice_delta_pp": 21.365716067765515,
+          "patients_better_worse_equal": [
+            18,
+            0,
+            0
+          ]
+        },
+        "MYO": {
+          "comparator_counts": {
+            "TP": 197435,
+            "FP": 43559,
+            "FN": 46611
+          },
+          "ema_block_counts": {
+            "TP": 194482,
+            "FP": 44022,
+            "FN": 49564
+          },
+          "comparator_minus_block_counts": {
+            "TP": 2953,
+            "FP": -463,
+            "FN": -2953
+          },
+          "block_wrong_comparator_correct_count_bounds": [
+            4419,
+            49564
+          ],
+          "block_correct_comparator_wrong_count_bounds": [
+            1466,
+            46611
+          ],
+          "bound_type": "Sharp marginal-overlap bounds conditional on the common patient/GT domains; not confidence intervals.",
+          "mean_dice_delta_pp": 0.38598444135791166,
+          "patients_better_worse_equal": [
+            9,
+            9,
+            0
+          ]
+        },
+        "LV": {
+          "comparator_counts": {
+            "TP": 230369,
+            "FP": 11381,
+            "FN": 16787
+          },
+          "ema_block_counts": {
+            "TP": 226501,
+            "FP": 24049,
+            "FN": 20655
+          },
+          "comparator_minus_block_counts": {
+            "TP": 3868,
+            "FP": -12668,
+            "FN": -3868
+          },
+          "block_wrong_comparator_correct_count_bounds": [
+            5319,
+            20655
+          ],
+          "block_correct_comparator_wrong_count_bounds": [
+            1451,
+            16787
+          ],
+          "bound_type": "Sharp marginal-overlap bounds conditional on the common patient/GT domains; not confidence intervals.",
+          "mean_dice_delta_pp": 3.5849780234122406,
+          "patients_better_worse_equal": [
+            15,
+            3,
+            0
+          ]
+        }
+      },
+      "patient_foreground_better_worse_equal": [
+        18,
+        0,
+        0
+      ],
+      "block_RV_lower_MYO_higher_patients": 9
+    }
+  ],
+  "BG_RV_endpoint_overlap_bounds": [
+    {
+      "comparator": "supervised",
+      "block_BG_to_RV_and_comparator_BG_count_bounds": [
+        67687,
+        100452
+      ],
+      "meaning": "Bounds on coincident endpoint predictions only; no pixel coordinates or responsible training updates identified."
+    },
+    {
+      "comparator": "ema_full",
+      "block_BG_to_RV_and_comparator_BG_count_bounds": [
+        65801,
+        100452
+      ],
+      "meaning": "Bounds on coincident endpoint predictions only; no pixel coordinates or responsible training updates identified."
+    }
+  ],
+  "full_minus_block_supervised_patient_oracle_pp": 5.081429848287389,
+  "nonidentifiable_from_input": [
+    "Actual pixelwise cross-model overlap",
+    "Any transaction counterfactual",
+    "Audit Brier values or local acceptance",
+    "Pseudo-update responsibility",
+    "Learning a legal selector from TRAIN",
+    "Realized benefit of a retrained joint/scalar guard"
+  ]
+}

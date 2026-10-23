@@ -1,0 +1,2364 @@
+{
+  "scope": "research-only CPU float64; no patient, pretrained, GPU or real pseudo-gradient evidence",
+  "python": "3.11.16",
+  "numpy": "2.4.6",
+  "scipy": "1.17.1",
+  "torch": "2.14.0",
+  "probe_sha256": "fc4323bcdfafd59b122951933874174b995c5496f9464d68438e9b7b7ea11da6",
+  "production_source_sha256": {
+    "self_audit/control.py": "6bedb4165e85b4cc1e507d73858e491a4b7e668601604f216a4472280b723068",
+    "self_audit/decoder_control.py": "b23713c4ca09ea47ee1eee073bfc0b0e31771556d928f19f024bece07b879159"
+  },
+  "local_cases": [
+    {
+      "name": "symmetry_no_benefit",
+      "scope": "consistent manufactured quadratic moments, not patient data",
+      "V": [
+        [
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0
+        ]
+      ],
+      "r": [
+        0.4,
+        0.4
+      ],
+      "ridge": 0.1,
+      "joint_alpha": [
+        0.36363636363636365,
+        0.36363636363636365
+      ],
+      "scalar_alpha": [
+        0.36363636363636365,
+        0.36363636363636365
+      ],
+      "joint": {
+        "minimum_supporting_hyperplane_on_box": -8.831319514063745e-18,
+        "risks": [
+          0.0013223140495867702
+        ],
+        "mean_risk": 0.0013223140495867702,
+        "penalty": 0.01322314049586777,
+        "objective": 0.01454545454545454,
+        "gradient": [
+          -6.938893903907228e-18,
+          -6.938893903907228e-18
+        ]
+      },
+      "scalar": {
+        "risks": [
+          0.0013223140495867702
+        ],
+        "mean_risk": 0.0013223140495867702,
+        "penalty": 0.01322314049586777,
+        "objective": 0.01454545454545454,
+        "gradient": [
+          -6.938893903907228e-18,
+          -6.938893903907228e-18
+        ]
+      }
+    },
+    {
+      "name": "asymmetry_strict_benefit",
+      "scope": "consistent manufactured quadratic moments, not patient data",
+      "V": [
+        [
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0
+        ]
+      ],
+      "r": [
+        0.9,
+        0.1
+      ],
+      "ridge": 0.1,
+      "joint_alpha": [
+        0.8181818181818181,
+        0.09090909090909091
+      ],
+      "scalar_alpha": [
+        0.45454545454545453,
+        0.45454545454545453
+      ],
+      "joint": {
+        "minimum_supporting_hyperplane_on_box": -1.671642622304924e-17,
+        "risks": [
+          0.0033884297520661577
+        ],
+        "mean_risk": 0.0033884297520661577,
+        "penalty": 0.033884297520661154,
+        "objective": 0.03727272727272731,
+        "gradient": [
+          -8.326672684688674e-17,
+          -1.734723475976807e-18
+        ]
+      },
+      "scalar": {
+        "risks": [
+          0.16206611570247936
+        ],
+        "mean_risk": 0.16206611570247936,
+        "penalty": 0.02066115702479339,
+        "objective": 0.18272727272727274,
+        "gradient": [
+          -0.4,
+          0.39999999999999997
+        ]
+      }
+    },
+    {
+      "name": "regularized_objective_better_mean_risk_worse",
+      "V": [
+        [
+          0.00223606797749979,
+          0.0
+        ],
+        [
+          0.0,
+          0.001
+        ]
+      ],
+      "r": [
+        0.0017173002067198385,
+        0.0009999999999999998
+      ],
+      "ridge": 1e-06,
+      "joint_alpha": [
+        0.64,
+        0.5
+      ],
+      "scalar_alpha": [
+        0.605,
+        0.605
+      ],
+      "joint": {
+        "minimum_supporting_hyperplane_on_box": -1.3552527156068806e-22,
+        "risks": [
+          1.6596000000000014e-07
+        ],
+        "mean_risk": 1.6596000000000014e-07,
+        "penalty": 3.298e-07,
+        "objective": 4.957600000000001e-07,
+        "gradient": [
+          2.117582368135751e-22,
+          0.0
+        ]
+      },
+      "scalar": {
+        "risks": [
+          1.4443500000000038e-07
+        ],
+        "mean_risk": 1.4443500000000038e-07,
+        "penalty": 3.660249999999999e-07,
+        "objective": 5.104600000000003e-07,
+        "gradient": [
+          -2.099999999999999e-07,
+          2.099999999999999e-07
+        ]
+      }
+    }
+  ],
+  "finite_reversal": {
+    "name": "local_joint_wins_finite_joint_rejects",
+    "scope": "manually constructed candidate directions; actual existing finite head guard",
+    "dz": [
+      [
+        1.0,
+        0.0,
+        -0.5,
+        -0.5
+      ],
+      [
+        -0.8,
+        0.1,
+        0.35,
+        0.35
+      ]
+    ],
+    "A": [
+      [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0006250000000000004
+        ]
+      ],
+      [
+        [
+          0.015625,
+          -0.0109375
+        ],
+        [
+          -0.0109375,
+          0.007656249999999999
+        ]
+      ],
+      [
+        [
+          0.015625,
+          -0.0109375
+        ],
+        [
+          -0.0109375,
+          0.007656249999999999
+        ]
+      ]
+    ],
+    "b": [
+      [
+        0.0,
+        0.018750000000000006
+      ],
+      [
+        0.03125,
+        -0.021875
+      ],
+      [
+        0.03125,
+        -0.021875
+      ]
+    ],
+    "e": [
+      0.28125,
+      0.03125,
+      0.03125
+    ],
+    "ridge": 1e-06,
+    "exact_joint": [
+      1.0,
+      0.0
+    ],
+    "exact_scalar": 1.0,
+    "joint_box_certificate": {
+      "minimum_supporting_hyperplane_on_box": 0.0,
+      "risks": [
+        0.28125,
+        0.0078125,
+        0.0078125
+      ],
+      "mean_risk": 0.09895833333333333,
+      "penalty": 5e-07,
+      "objective": 0.09895883333333333,
+      "gradient": [
+        -0.010415666666666667,
+        0.0010416666666666638
+      ]
+    },
+    "scalar_local": {
+      "risks": [
+        0.2628125,
+        0.022578124999999998,
+        0.022578124999999998
+      ],
+      "mean_risk": 0.10265625,
+      "penalty": 1e-06,
+      "objective": 0.10265725,
+      "gradient": [
+        -0.017707333333333332,
+        0.006355166666666663
+      ]
+    },
+    "joint_default_guard": {
+      "control": {
+        "method": "joint_guard",
+        "source_ids": [
+          "manufactured_source_0",
+          "manufactured_source_1"
+        ],
+        "before": [
+          0.28125,
+          0.03125,
+          0.03125
+        ],
+        "positive_pixels": [
+          [
+            1
+          ],
+          [
+            0
+          ],
+          [
+            0
+          ]
+        ],
+        "scope": "observed_TRAIN_one_vs_rest_Brier",
+        "optimizer_steps_in_transaction": 0,
+        "ema_updates_in_transaction": 0,
+        "alpha": [
+          1.0,
+          0.0
+        ],
+        "scale": 0.0,
+        "after": [
+          0.28125,
+          0.03125,
+          0.03125
+        ],
+        "status": "RESEARCH_EXACT_FIXED_COEFFICIENTS",
+        "guarded": true,
+        "trials": [
+          {
+            "scale": 1.0,
+            "risks": [
+              0.317776269376124,
+              0.007563887737072739,
+              0.007563887737072739
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.5,
+            "risks": [
+              0.2905221818522896,
+              0.0171402660843921,
+              0.0171402660843921
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.25,
+            "risks": [
+              0.28352453831584307,
+              0.023751809801012328,
+              0.023751809801012328
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.125,
+            "risks": [
+              0.2818099114241601,
+              0.027413649078071322,
+              0.027413649078071322
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.0625,
+            "risks": [
+              0.28138870792845355,
+              0.029313244948950247,
+              0.029313244948950247
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.03125,
+            "risks": [
+              0.2812845079025094,
+              0.030277391209871878,
+              0.030277391209871878
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.015625,
+            "risks": [
+              0.28125860522277507,
+              0.03076268980576593,
+              0.03076268980576593
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.0078125,
+            "risks": [
+              0.2812521485488588,
+              0.03100609996648815,
+              0.03100609996648815
+            ],
+            "accepted": false
+          }
+        ],
+        "realized_max_regression": 0.0,
+        "linearized_after": [
+          0.28125,
+          0.03125,
+          0.03125
+        ]
+      },
+      "head_unchanged": true,
+      "rng_unchanged": true,
+      "probabilities": [
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ]
+    },
+    "scalar_default_guard": {
+      "control": {
+        "method": "joint_guard",
+        "source_ids": [
+          "manufactured_source_0",
+          "manufactured_source_1"
+        ],
+        "before": [
+          0.28125,
+          0.03125,
+          0.03125
+        ],
+        "positive_pixels": [
+          [
+            1
+          ],
+          [
+            0
+          ],
+          [
+            0
+          ]
+        ],
+        "scope": "observed_TRAIN_one_vs_rest_Brier",
+        "optimizer_steps_in_transaction": 0,
+        "ema_updates_in_transaction": 0,
+        "alpha": [
+          1.0,
+          1.0
+        ],
+        "scale": 1.0,
+        "after": [
+          0.26425197349414997,
+          0.02260491495294484,
+          0.02260491495294484
+        ],
+        "status": "RESEARCH_EXACT_FIXED_COEFFICIENTS",
+        "guarded": true,
+        "trials": [
+          {
+            "scale": 1.0,
+            "risks": [
+              0.26425197349414997,
+              0.02260491495294484,
+              0.02260491495294484
+            ],
+            "accepted": true
+          }
+        ],
+        "realized_max_regression": -0.008645085047055159,
+        "linearized_after": [
+          0.2628125,
+          0.022578124999999998,
+          0.022578124999999998
+        ]
+      },
+      "head_unchanged": false,
+      "rng_unchanged": true,
+      "probabilities": [
+        0.30173070340498176,
+        0.27301723061113764,
+        0.2126260329919403,
+        0.2126260329919403
+      ]
+    },
+    "joint_zero_tolerance": {
+      "control": {
+        "method": "joint_guard",
+        "source_ids": [
+          "manufactured_source_0",
+          "manufactured_source_1"
+        ],
+        "before": [
+          0.28125,
+          0.03125,
+          0.03125
+        ],
+        "positive_pixels": [
+          [
+            1
+          ],
+          [
+            0
+          ],
+          [
+            0
+          ]
+        ],
+        "scope": "observed_TRAIN_one_vs_rest_Brier",
+        "optimizer_steps_in_transaction": 0,
+        "ema_updates_in_transaction": 0,
+        "alpha": [
+          1.0,
+          0.0
+        ],
+        "scale": 0.0,
+        "after": [
+          0.28125,
+          0.03125,
+          0.03125
+        ],
+        "status": "RESEARCH_EXACT_FIXED_COEFFICIENTS",
+        "guarded": true,
+        "trials": [
+          {
+            "scale": 1.0,
+            "risks": [
+              0.317776269376124,
+              0.007563887737072739,
+              0.007563887737072739
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.5,
+            "risks": [
+              0.2905221818522896,
+              0.0171402660843921,
+              0.0171402660843921
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.25,
+            "risks": [
+              0.28352453831584307,
+              0.023751809801012328,
+              0.023751809801012328
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.125,
+            "risks": [
+              0.2818099114241601,
+              0.027413649078071322,
+              0.027413649078071322
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.0625,
+            "risks": [
+              0.28138870792845355,
+              0.029313244948950247,
+              0.029313244948950247
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.03125,
+            "risks": [
+              0.2812845079025094,
+              0.030277391209871878,
+              0.030277391209871878
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.015625,
+            "risks": [
+              0.28125860522277507,
+              0.03076268980576593,
+              0.03076268980576593
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.0078125,
+            "risks": [
+              0.2812521485488588,
+              0.03100609996648815,
+              0.03100609996648815
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.00390625,
+            "risks": [
+              0.2812505367902802,
+              0.031127989563770258,
+              0.031127989563770258
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.001953125,
+            "risks": [
+              0.2812501341540585,
+              0.03118897977886505,
+              0.03118897977886505
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.0009765625,
+            "risks": [
+              0.28125003353306666,
+              0.031219486151409563,
+              0.031219486151409563
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.00048828125,
+            "risks": [
+              0.2812500083825851,
+              0.031234742142790612,
+              0.031234742142790612
+            ],
+            "accepted": false
+          }
+        ],
+        "realized_max_regression": 0.0,
+        "linearized_after": [
+          0.28125,
+          0.03125,
+          0.03125
+        ]
+      },
+      "head_unchanged": true,
+      "rng_unchanged": true,
+      "probabilities": [
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ]
+    },
+    "scalar_zero_tolerance": {
+      "control": {
+        "method": "joint_guard",
+        "source_ids": [
+          "manufactured_source_0",
+          "manufactured_source_1"
+        ],
+        "before": [
+          0.28125,
+          0.03125,
+          0.03125
+        ],
+        "positive_pixels": [
+          [
+            1
+          ],
+          [
+            0
+          ],
+          [
+            0
+          ]
+        ],
+        "scope": "observed_TRAIN_one_vs_rest_Brier",
+        "optimizer_steps_in_transaction": 0,
+        "ema_updates_in_transaction": 0,
+        "alpha": [
+          1.0,
+          1.0
+        ],
+        "scale": 1.0,
+        "after": [
+          0.26425197349414997,
+          0.02260491495294484,
+          0.02260491495294484
+        ],
+        "status": "RESEARCH_EXACT_FIXED_COEFFICIENTS",
+        "guarded": true,
+        "trials": [
+          {
+            "scale": 1.0,
+            "risks": [
+              0.26425197349414997,
+              0.02260491495294484,
+              0.02260491495294484
+            ],
+            "accepted": true
+          }
+        ],
+        "realized_max_regression": -0.008645085047055159,
+        "linearized_after": [
+          0.2628125,
+          0.022578124999999998,
+          0.022578124999999998
+        ]
+      },
+      "head_unchanged": false,
+      "rng_unchanged": true,
+      "probabilities": [
+        0.30173070340498176,
+        0.27301723061113764,
+        0.2126260329919403,
+        0.2126260329919403
+      ]
+    },
+    "source_solver_joint_default_guard": {
+      "control": {
+        "method": "joint_guard",
+        "source_ids": [
+          "manufactured_source_0",
+          "manufactured_source_1"
+        ],
+        "before": [
+          0.28125,
+          0.03125,
+          0.03125
+        ],
+        "positive_pixels": [
+          [
+            1
+          ],
+          [
+            0
+          ],
+          [
+            0
+          ]
+        ],
+        "scope": "observed_TRAIN_one_vs_rest_Brier",
+        "optimizer_steps_in_transaction": 0,
+        "ema_updates_in_transaction": 0,
+        "alpha": [
+          1.0,
+          8.673617379884035e-19
+        ],
+        "scale": 0.0,
+        "after": [
+          0.28125,
+          0.03125,
+          0.03125
+        ],
+        "status": "NUMERICAL_FEASIBLE",
+        "guarded": true,
+        "trials": [
+          {
+            "scale": 1.0,
+            "risks": [
+              0.317776269376124,
+              0.007563887737072739,
+              0.007563887737072739
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.5,
+            "risks": [
+              0.2905221818522896,
+              0.0171402660843921,
+              0.0171402660843921
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.25,
+            "risks": [
+              0.28352453831584307,
+              0.023751809801012328,
+              0.023751809801012328
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.125,
+            "risks": [
+              0.2818099114241601,
+              0.027413649078071322,
+              0.027413649078071322
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.0625,
+            "risks": [
+              0.28138870792845355,
+              0.029313244948950247,
+              0.029313244948950247
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.03125,
+            "risks": [
+              0.2812845079025094,
+              0.030277391209871878,
+              0.030277391209871878
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.015625,
+            "risks": [
+              0.28125860522277507,
+              0.03076268980576593,
+              0.03076268980576593
+            ],
+            "accepted": false
+          },
+          {
+            "scale": 0.0078125,
+            "risks": [
+              0.2812521485488588,
+              0.03100609996648815,
+              0.03100609996648815
+            ],
+            "accepted": false
+          }
+        ],
+        "realized_max_regression": 0.0,
+        "linearized_after": [
+          0.28125,
+          0.03125,
+          0.03125
+        ]
+      },
+      "head_unchanged": true,
+      "rng_unchanged": true,
+      "probabilities": [
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ]
+    },
+    "feasible_near_optimal_perturbations": [
+      {
+        "alpha": [
+          1.0,
+          1e-05
+        ],
+        "objective_gap_to_exact_joint": 1.041693234449248e-08,
+        "local": {
+          "risks": [
+            0.2812498125000312,
+            0.007812609375382813,
+            0.007812609375382813
+          ],
+          "mean_risk": 0.09895834375026562,
+          "penalty": 5.0000000005e-07,
+          "objective": 0.09895884375026567,
+          "gradient": [
+            -0.010415739583333333,
+            0.0010417198016666636
+          ]
+        },
+        "actual": {
+          "control": {
+            "method": "joint_guard",
+            "source_ids": [
+              "manufactured_source_0",
+              "manufactured_source_1"
+            ],
+            "before": [
+              0.28125,
+              0.03125,
+              0.03125
+            ],
+            "positive_pixels": [
+              [
+                1
+              ],
+              [
+                0
+              ],
+              [
+                0
+              ]
+            ],
+            "scope": "observed_TRAIN_one_vs_rest_Brier",
+            "optimizer_steps_in_transaction": 0,
+            "ema_updates_in_transaction": 0,
+            "alpha": [
+              1.0,
+              1e-05
+            ],
+            "scale": 0.0,
+            "after": [
+              0.28125,
+              0.03125,
+              0.03125
+            ],
+            "status": "RESEARCH_EXACT_FIXED_COEFFICIENTS",
+            "guarded": true,
+            "trials": [
+              {
+                "scale": 1.0,
+                "risks": [
+                  0.31777556678128777,
+                  0.007563991303141673,
+                  0.007563991303141673
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.5,
+                "risks": [
+                  0.29052194609564996,
+                  0.017140353532650487,
+                  0.017140353532650487
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.25,
+                "risks": [
+                  0.28352445628525236,
+                  0.023751860443624904,
+                  0.023751860443624904
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.125,
+                "risks": [
+                  0.28180987935043744,
+                  0.027413675609090988,
+                  0.027413675609090988
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.0625,
+                "risks": [
+                  0.2813886940755856,
+                  0.029313258442920185,
+                  0.029313258442920185
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.03125,
+                "risks": [
+                  0.2812845015130532,
+                  0.030277398004499613,
+                  0.030277398004499613
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.015625,
+                "risks": [
+                  0.2812586021610179,
+                  0.03076269321380281,
+                  0.03076269321380281
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.0078125,
+                "risks": [
+                  0.28125214705105517,
+                  0.031006101673038956,
+                  0.031006101673038956
+                ],
+                "accepted": false
+              }
+            ],
+            "realized_max_regression": 0.0,
+            "linearized_after": [
+              0.28125,
+              0.03125,
+              0.03125
+            ]
+          },
+          "head_unchanged": true,
+          "rng_unchanged": true,
+          "probabilities": [
+            0.25,
+            0.25,
+            0.25,
+            0.25
+          ]
+        }
+      },
+      {
+        "alpha": [
+          1.0,
+          0.0001
+        ],
+        "objective_gap_to_exact_joint": 1.041932341516727e-07,
+        "local": {
+          "risks": [
+            0.281248125003125,
+            0.00781359378828125,
+            0.00781359378828125
+          ],
+          "mean_risk": 0.09895843752656248,
+          "penalty": 5.00000005e-07,
+          "objective": 0.09895893752656748,
+          "gradient": [
+            -0.010416395833333333,
+            0.0010421980166666635
+          ]
+        },
+        "actual": {
+          "control": {
+            "method": "joint_guard",
+            "source_ids": [
+              "manufactured_source_0",
+              "manufactured_source_1"
+            ],
+            "before": [
+              0.28125,
+              0.03125,
+              0.03125
+            ],
+            "positive_pixels": [
+              [
+                1
+              ],
+              [
+                0
+              ],
+              [
+                0
+              ]
+            ],
+            "scope": "observed_TRAIN_one_vs_rest_Brier",
+            "optimizer_steps_in_transaction": 0,
+            "ema_updates_in_transaction": 0,
+            "alpha": [
+              1.0,
+              0.0001
+            ],
+            "scale": 0.0,
+            "after": [
+              0.28125,
+              0.03125,
+              0.03125
+            ],
+            "status": "RESEARCH_EXACT_FIXED_COEFFICIENTS",
+            "guarded": true,
+            "trials": [
+              {
+                "scale": 1.0,
+                "risks": [
+                  0.3177692435239052,
+                  0.007564923442990285,
+                  0.007564923442990285
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.5,
+                "risks": [
+                  0.29051982433203866,
+                  0.017141140576526822,
+                  0.017141140576526822
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.25,
+                "risks": [
+                  0.28352371802207466,
+                  0.02375231622861716,
+                  0.02375231622861716
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.125,
+                "risks": [
+                  0.28180959068991607,
+                  0.027413914388501145,
+                  0.027413914388501145
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.0625,
+                "risks": [
+                  0.28138856940050677,
+                  0.029313379888690375,
+                  0.029313379888690375
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.03125,
+                "risks": [
+                  0.2812844440081275,
+                  0.030277459156157312,
+                  0.030277459156157312
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.015625,
+                "risks": [
+                  0.28125857460524767,
+                  0.03076272388613641,
+                  0.03076272388613641
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.0078125,
+                "risks": [
+                  0.2812521335708333,
+                  0.031006117031996704,
+                  0.031006117031996704
+                ],
+                "accepted": false
+              }
+            ],
+            "realized_max_regression": 0.0,
+            "linearized_after": [
+              0.28125,
+              0.03125,
+              0.03125
+            ]
+          },
+          "head_unchanged": true,
+          "rng_unchanged": true,
+          "probabilities": [
+            0.25,
+            0.25,
+            0.25,
+            0.25
+          ]
+        }
+      },
+      {
+        "alpha": [
+          1.0,
+          0.001
+        ],
+        "objective_gap_to_exact_joint": 1.04432341668792e-06,
+        "local": {
+          "risks": [
+            0.2812312503125,
+            0.007823441328125,
+            0.007823441328125
+          ],
+          "mean_risk": 0.09895937765625001,
+          "penalty": 5.000005e-07,
+          "objective": 0.09895987765675002,
+          "gradient": [
+            -0.010422958333333333,
+            0.0010469801666666638
+          ]
+        },
+        "actual": {
+          "control": {
+            "method": "joint_guard",
+            "source_ids": [
+              "manufactured_source_0",
+              "manufactured_source_1"
+            ],
+            "before": [
+              0.28125,
+              0.03125,
+              0.03125
+            ],
+            "positive_pixels": [
+              [
+                1
+              ],
+              [
+                0
+              ],
+              [
+                0
+              ]
+            ],
+            "scope": "observed_TRAIN_one_vs_rest_Brier",
+            "optimizer_steps_in_transaction": 0,
+            "ema_updates_in_transaction": 0,
+            "alpha": [
+              1.0,
+              0.001
+            ],
+            "scale": 0.0,
+            "after": [
+              0.28125,
+              0.03125,
+              0.03125
+            ],
+            "status": "RESEARCH_EXACT_FIXED_COEFFICIENTS",
+            "guarded": true,
+            "trials": [
+              {
+                "scale": 1.0,
+                "risks": [
+                  0.31770602047513835,
+                  0.007574249319345376,
+                  0.007574249319345376
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.5,
+                "risks": [
+                  0.2904986112647247,
+                  0.017149011960660984,
+                  0.017149011960660984
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.25,
+                "risks": [
+                  0.28351633659200187,
+                  0.02375687422493492,
+                  0.02375687422493492
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.125,
+                "risks": [
+                  0.28180670437997424,
+                  0.02741630220568133,
+                  0.02741630220568133
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.0625,
+                "risks": [
+                  0.28138732272223377,
+                  0.029314594350428512,
+                  0.029314594350428512
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.03125,
+                "risks": [
+                  0.2812838689768001,
+                  0.030278070673526954,
+                  0.030278070673526954
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.015625,
+                "risks": [
+                  0.2812582990520009,
+                  0.030763030609643735,
+                  0.030763030609643735
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.0078125,
+                "risks": [
+                  0.28125199876972484,
+                  0.031006270621613565,
+                  0.031006270621613565
+                ],
+                "accepted": false
+              }
+            ],
+            "realized_max_regression": 0.0,
+            "linearized_after": [
+              0.28125,
+              0.03125,
+              0.03125
+            ]
+          },
+          "head_unchanged": true,
+          "rng_unchanged": true,
+          "probabilities": [
+            0.25,
+            0.25,
+            0.25,
+            0.25
+          ]
+        }
+      },
+      {
+        "alpha": [
+          1.0,
+          0.005
+        ],
+        "objective_gap_to_exact_joint": 5.274752083339607e-06,
+        "local": {
+          "risks": [
+            0.2811562578125,
+            0.007867283203124999,
+            0.007867283203124999
+          ],
+          "mean_risk": 0.09896360807291667,
+          "penalty": 5.000125e-07,
+          "objective": 0.09896410808541667,
+          "gradient": [
+            -0.010452125,
+            0.0010682341666666635
+          ]
+        },
+        "actual": {
+          "control": {
+            "method": "joint_guard",
+            "source_ids": [
+              "manufactured_source_0",
+              "manufactured_source_1"
+            ],
+            "before": [
+              0.28125,
+              0.03125,
+              0.03125
+            ],
+            "positive_pixels": [
+              [
+                1
+              ],
+              [
+                0
+              ],
+              [
+                0
+              ]
+            ],
+            "scope": "observed_TRAIN_one_vs_rest_Brier",
+            "optimizer_steps_in_transaction": 0,
+            "ema_updates_in_transaction": 0,
+            "alpha": [
+              1.0,
+              0.005
+            ],
+            "scale": 0.0,
+            "after": [
+              0.28125,
+              0.03125,
+              0.03125
+            ],
+            "status": "RESEARCH_EXACT_FIXED_COEFFICIENTS",
+            "guarded": true,
+            "trials": [
+              {
+                "scale": 1.0,
+                "risks": [
+                  0.3174252394301554,
+                  0.007615796191523671,
+                  0.007615796191523671
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.5,
+                "risks": [
+                  0.2904044315043,
+                  0.01718401666835002,
+                  0.01718401666835002
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.25,
+                "risks": [
+                  0.2834835566711604,
+                  0.02377713520366409,
+                  0.02377713520366409
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.125,
+                "risks": [
+                  0.2817938828309176,
+                  0.02742691523376624,
+                  0.02742691523376624
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.0625,
+                "risks": [
+                  0.2813817835250436,
+                  0.02931999204689106,
+                  0.02931999204689106
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.03125,
+                "risks": [
+                  0.28128131367641873,
+                  0.03028078854593547,
+                  0.03028078854593547
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.015625,
+                "risks": [
+                  0.2812570744689124,
+                  0.030764393828998503,
+                  0.030764393828998503
+                ],
+                "accepted": false
+              },
+              {
+                "scale": 0.0078125,
+                "risks": [
+                  0.28125139967811247,
+                  0.031006953243000887,
+                  0.031006953243000887
+                ],
+                "accepted": false
+              }
+            ],
+            "realized_max_regression": 0.0,
+            "linearized_after": [
+              0.28125,
+              0.03125,
+              0.03125
+            ]
+          },
+          "head_unchanged": true,
+          "rng_unchanged": true,
+          "probabilities": [
+            0.25,
+            0.25,
+            0.25,
+            0.25
+          ]
+        }
+      }
+    ]
+  },
+  "finite_strict_benefit": {
+    "name": "local_joint_wins_finite_joint_wins",
+    "scope": "manually constructed candidate directions; actual existing finite head guard",
+    "dz": [
+      [
+        -0.1,
+        0.3,
+        -0.1,
+        -0.1
+      ],
+      [
+        0.3,
+        -0.1,
+        -0.1,
+        -0.1
+      ]
+    ],
+    "A": [
+      [
+        [
+          0.005625,
+          -0.001875
+        ],
+        [
+          -0.001875,
+          0.0006250000000000001
+        ]
+      ],
+      [
+        [
+          0.0006250000000000001,
+          0.0006250000000000001
+        ],
+        [
+          0.0006250000000000001,
+          0.0006250000000000001
+        ]
+      ],
+      [
+        [
+          0.0006250000000000001,
+          0.0006250000000000001
+        ],
+        [
+          0.0006250000000000001,
+          0.0006250000000000001
+        ]
+      ]
+    ],
+    "b": [
+      [
+        0.056249999999999994,
+        -0.018750000000000003
+      ],
+      [
+        0.00625,
+        0.00625
+      ],
+      [
+        0.00625,
+        0.00625
+      ]
+    ],
+    "e": [
+      0.28125,
+      0.03125,
+      0.03125
+    ],
+    "ridge": 1e-06,
+    "exact_joint": [
+      1.0,
+      0.0
+    ],
+    "exact_scalar": 1.0,
+    "joint_box_certificate": {
+      "minimum_supporting_hyperplane_on_box": 0.0,
+      "risks": [
+        0.2278125,
+        0.0253125,
+        0.0253125
+      ],
+      "mean_risk": 0.0928125,
+      "penalty": 5e-07,
+      "objective": 0.092813,
+      "gradient": [
+        -0.020623999999999997,
+        0.001875000000000001
+      ]
+    },
+    "scalar_local": {
+      "risks": [
+        0.24500000000000002,
+        0.02,
+        0.02
+      ],
+      "mean_risk": 0.09500000000000001,
+      "penalty": 1e-06,
+      "objective": 0.09500100000000002,
+      "gradient": [
+        -0.02083233333333333,
+        0.002501000000000001
+      ]
+    },
+    "joint_default_guard": {
+      "control": {
+        "method": "joint_guard",
+        "source_ids": [
+          "manufactured_source_0",
+          "manufactured_source_1"
+        ],
+        "before": [
+          0.28125,
+          0.03125,
+          0.03125
+        ],
+        "positive_pixels": [
+          [
+            1
+          ],
+          [
+            0
+          ],
+          [
+            0
+          ]
+        ],
+        "scope": "observed_TRAIN_one_vs_rest_Brier",
+        "optimizer_steps_in_transaction": 0,
+        "ema_updates_in_transaction": 0,
+        "alpha": [
+          1.0,
+          0.0
+        ],
+        "scale": 1.0,
+        "after": [
+          0.22303186518221857,
+          0.024781318353579846,
+          0.024781318353579846
+        ],
+        "status": "RESEARCH_EXACT_FIXED_COEFFICIENTS",
+        "guarded": true,
+        "trials": [
+          {
+            "scale": 1.0,
+            "risks": [
+              0.22303186518221857,
+              0.024781318353579846,
+              0.024781318353579846
+            ],
+            "accepted": true
+          }
+        ],
+        "realized_max_regression": -0.006468681646420154,
+        "linearized_after": [
+          0.2278125,
+          0.0253125,
+          0.0253125
+        ]
+      },
+      "head_unchanged": false,
+      "rng_unchanged": true,
+      "probabilities": [
+        0.2226266756414417,
+        0.3321199730756749,
+        0.2226266756414417,
+        0.2226266756414417
+      ]
+    },
+    "scalar_default_guard": {
+      "control": {
+        "method": "joint_guard",
+        "source_ids": [
+          "manufactured_source_0",
+          "manufactured_source_1"
+        ],
+        "before": [
+          0.28125,
+          0.03125,
+          0.03125
+        ],
+        "positive_pixels": [
+          [
+            1
+          ],
+          [
+            0
+          ],
+          [
+            0
+          ]
+        ],
+        "scope": "observed_TRAIN_one_vs_rest_Brier",
+        "optimizer_steps_in_transaction": 0,
+        "ema_updates_in_transaction": 0,
+        "alpha": [
+          1.0,
+          1.0
+        ],
+        "scale": 1.0,
+        "after": [
+          0.24545953424013944,
+          0.02013144926825235,
+          0.02013144926825235
+        ],
+        "status": "RESEARCH_EXACT_FIXED_COEFFICIENTS",
+        "guarded": true,
+        "trials": [
+          {
+            "scale": 1.0,
+            "risks": [
+              0.24545953424013944,
+              0.02013144926825235,
+              0.02013144926825235
+            ],
+            "accepted": true
+          }
+        ],
+        "realized_max_regression": -0.01111855073174765,
+        "linearized_after": [
+          0.24500000000000002,
+          0.02,
+          0.02
+        ]
+      },
+      "head_unchanged": false,
+      "rng_unchanged": true,
+      "probabilities": [
+        0.29934383005622595,
+        0.29934383005622595,
+        0.20065616994377397,
+        0.20065616994377397
+      ]
+    },
+    "joint_zero_tolerance": {
+      "control": {
+        "method": "joint_guard",
+        "source_ids": [
+          "manufactured_source_0",
+          "manufactured_source_1"
+        ],
+        "before": [
+          0.28125,
+          0.03125,
+          0.03125
+        ],
+        "positive_pixels": [
+          [
+            1
+          ],
+          [
+            0
+          ],
+          [
+            0
+          ]
+        ],
+        "scope": "observed_TRAIN_one_vs_rest_Brier",
+        "optimizer_steps_in_transaction": 0,
+        "ema_updates_in_transaction": 0,
+        "alpha": [
+          1.0,
+          0.0
+        ],
+        "scale": 1.0,
+        "after": [
+          0.22303186518221857,
+          0.024781318353579846,
+          0.024781318353579846
+        ],
+        "status": "RESEARCH_EXACT_FIXED_COEFFICIENTS",
+        "guarded": true,
+        "trials": [
+          {
+            "scale": 1.0,
+            "risks": [
+              0.22303186518221857,
+              0.024781318353579846,
+              0.024781318353579846
+            ],
+            "accepted": true
+          }
+        ],
+        "realized_max_regression": -0.006468681646420154,
+        "linearized_after": [
+          0.2278125,
+          0.0253125,
+          0.0253125
+        ]
+      },
+      "head_unchanged": false,
+      "rng_unchanged": true,
+      "probabilities": [
+        0.2226266756414417,
+        0.3321199730756749,
+        0.2226266756414417,
+        0.2226266756414417
+      ]
+    },
+    "scalar_zero_tolerance": {
+      "control": {
+        "method": "joint_guard",
+        "source_ids": [
+          "manufactured_source_0",
+          "manufactured_source_1"
+        ],
+        "before": [
+          0.28125,
+          0.03125,
+          0.03125
+        ],
+        "positive_pixels": [
+          [
+            1
+          ],
+          [
+            0
+          ],
+          [
+            0
+          ]
+        ],
+        "scope": "observed_TRAIN_one_vs_rest_Brier",
+        "optimizer_steps_in_transaction": 0,
+        "ema_updates_in_transaction": 0,
+        "alpha": [
+          1.0,
+          1.0
+        ],
+        "scale": 1.0,
+        "after": [
+          0.24545953424013944,
+          0.02013144926825235,
+          0.02013144926825235
+        ],
+        "status": "RESEARCH_EXACT_FIXED_COEFFICIENTS",
+        "guarded": true,
+        "trials": [
+          {
+            "scale": 1.0,
+            "risks": [
+              0.24545953424013944,
+              0.02013144926825235,
+              0.02013144926825235
+            ],
+            "accepted": true
+          }
+        ],
+        "realized_max_regression": -0.01111855073174765,
+        "linearized_after": [
+          0.24500000000000002,
+          0.02,
+          0.02
+        ]
+      },
+      "head_unchanged": false,
+      "rng_unchanged": true,
+      "probabilities": [
+        0.29934383005622595,
+        0.29934383005622595,
+        0.20065616994377397,
+        0.20065616994377397
+      ]
+    },
+    "source_solver_joint_default_guard": {
+      "control": {
+        "method": "joint_guard",
+        "source_ids": [
+          "manufactured_source_0",
+          "manufactured_source_1"
+        ],
+        "before": [
+          0.28125,
+          0.03125,
+          0.03125
+        ],
+        "positive_pixels": [
+          [
+            1
+          ],
+          [
+            0
+          ],
+          [
+            0
+          ]
+        ],
+        "scope": "observed_TRAIN_one_vs_rest_Brier",
+        "optimizer_steps_in_transaction": 0,
+        "ema_updates_in_transaction": 0,
+        "alpha": [
+          1.0,
+          0.0
+        ],
+        "scale": 1.0,
+        "after": [
+          0.22303186518221857,
+          0.024781318353579846,
+          0.024781318353579846
+        ],
+        "status": "NUMERICAL_FEASIBLE",
+        "guarded": true,
+        "trials": [
+          {
+            "scale": 1.0,
+            "risks": [
+              0.22303186518221857,
+              0.024781318353579846,
+              0.024781318353579846
+            ],
+            "accepted": true
+          }
+        ],
+        "realized_max_regression": -0.006468681646420154,
+        "linearized_after": [
+          0.2278125,
+          0.0253125,
+          0.0253125
+        ]
+      },
+      "head_unchanged": false,
+      "rng_unchanged": true,
+      "probabilities": [
+        0.2226266756414417,
+        0.3321199730756749,
+        0.2226266756414417,
+        0.2226266756414417
+      ]
+    }
+  },
+  "finite_no_benefit": {
+    "name": "symmetry_no_finite_benefit",
+    "scope": "manually constructed candidate directions; actual existing finite head guard",
+    "dz": [
+      [
+        [
+          -0.1,
+          0.0
+        ],
+        [
+          0.3,
+          0.0
+        ],
+        [
+          -0.1,
+          0.0
+        ],
+        [
+          -0.1,
+          0.0
+        ]
+      ],
+      [
+        [
+          0.0,
+          -0.1
+        ],
+        [
+          0.0,
+          0.3
+        ],
+        [
+          0.0,
+          -0.1
+        ],
+        [
+          0.0,
+          -0.1
+        ]
+      ]
+    ],
+    "A": [
+      [
+        [
+          0.0028125,
+          0.0
+        ],
+        [
+          0.0,
+          0.0028125
+        ]
+      ],
+      [
+        [
+          0.00031250000000000006,
+          0.0
+        ],
+        [
+          0.0,
+          0.00031250000000000006
+        ]
+      ],
+      [
+        [
+          0.00031250000000000006,
+          0.0
+        ],
+        [
+          0.0,
+          0.00031250000000000006
+        ]
+      ]
+    ],
+    "b": [
+      [
+        0.028124999999999997,
+        0.028124999999999997
+      ],
+      [
+        0.003125,
+        0.003125
+      ],
+      [
+        0.003125,
+        0.003125
+      ]
+    ],
+    "e": [
+      0.28125,
+      0.03125,
+      0.03125
+    ],
+    "ridge": 1e-06,
+    "exact_joint": [
+      1.0,
+      1.0
+    ],
+    "exact_scalar": 1.0,
+    "joint_box_certificate": {
+      "minimum_supporting_hyperplane_on_box": 0.0,
+      "risks": [
+        0.2278125,
+        0.0253125,
+        0.0253125
+      ],
+      "mean_risk": 0.0928125,
+      "penalty": 1e-06,
+      "objective": 0.09281350000000001,
+      "gradient": [
+        -0.0103115,
+        -0.0103115
+      ]
+    },
+    "scalar_local": {
+      "risks": [
+        0.2278125,
+        0.0253125,
+        0.0253125
+      ],
+      "mean_risk": 0.0928125,
+      "penalty": 1e-06,
+      "objective": 0.09281350000000001,
+      "gradient": [
+        -0.0103115,
+        -0.0103115
+      ]
+    },
+    "joint_default_guard": {
+      "control": {
+        "method": "joint_guard",
+        "source_ids": [
+          "manufactured_source_0",
+          "manufactured_source_1"
+        ],
+        "before": [
+          0.28125,
+          0.03125,
+          0.03125
+        ],
+        "positive_pixels": [
+          [
+            2
+          ],
+          [
+            0
+          ],
+          [
+            0
+          ]
+        ],
+        "scope": "observed_TRAIN_one_vs_rest_Brier",
+        "optimizer_steps_in_transaction": 0,
+        "ema_updates_in_transaction": 0,
+        "alpha": [
+          1.0,
+          1.0
+        ],
+        "scale": 1.0,
+        "after": [
+          0.22303186518221857,
+          0.024781318353579846,
+          0.024781318353579846
+        ],
+        "status": "RESEARCH_EXACT_FIXED_COEFFICIENTS",
+        "guarded": true,
+        "trials": [
+          {
+            "scale": 1.0,
+            "risks": [
+              0.22303186518221857,
+              0.024781318353579846,
+              0.024781318353579846
+            ],
+            "accepted": true
+          }
+        ],
+        "realized_max_regression": -0.006468681646420154,
+        "linearized_after": [
+          0.2278125,
+          0.0253125,
+          0.0253125
+        ]
+      },
+      "head_unchanged": false,
+      "rng_unchanged": true,
+      "probabilities": [
+        0.2226266756414417,
+        0.2226266756414417,
+        0.332119973075675,
+        0.332119973075675,
+        0.2226266756414417,
+        0.2226266756414417,
+        0.2226266756414417,
+        0.2226266756414417
+      ]
+    },
+    "scalar_default_guard": {
+      "control": {
+        "method": "joint_guard",
+        "source_ids": [
+          "manufactured_source_0",
+          "manufactured_source_1"
+        ],
+        "before": [
+          0.28125,
+          0.03125,
+          0.03125
+        ],
+        "positive_pixels": [
+          [
+            2
+          ],
+          [
+            0
+          ],
+          [
+            0
+          ]
+        ],
+        "scope": "observed_TRAIN_one_vs_rest_Brier",
+        "optimizer_steps_in_transaction": 0,
+        "ema_updates_in_transaction": 0,
+        "alpha": [
+          1.0,
+          1.0
+        ],
+        "scale": 1.0,
+        "after": [
+          0.22303186518221857,
+          0.024781318353579846,
+          0.024781318353579846
+        ],
+        "status": "RESEARCH_EXACT_FIXED_COEFFICIENTS",
+        "guarded": true,
+        "trials": [
+          {
+            "scale": 1.0,
+            "risks": [
+              0.22303186518221857,
+              0.024781318353579846,
+              0.024781318353579846
+            ],
+            "accepted": true
+          }
+        ],
+        "realized_max_regression": -0.006468681646420154,
+        "linearized_after": [
+          0.2278125,
+          0.0253125,
+          0.0253125
+        ]
+      },
+      "head_unchanged": false,
+      "rng_unchanged": true,
+      "probabilities": [
+        0.2226266756414417,
+        0.2226266756414417,
+        0.332119973075675,
+        0.332119973075675,
+        0.2226266756414417,
+        0.2226266756414417,
+        0.2226266756414417,
+        0.2226266756414417
+      ]
+    },
+    "joint_zero_tolerance": {
+      "control": {
+        "method": "joint_guard",
+        "source_ids": [
+          "manufactured_source_0",
+          "manufactured_source_1"
+        ],
+        "before": [
+          0.28125,
+          0.03125,
+          0.03125
+        ],
+        "positive_pixels": [
+          [
+            2
+          ],
+          [
+            0
+          ],
+          [
+            0
+          ]
+        ],
+        "scope": "observed_TRAIN_one_vs_rest_Brier",
+        "optimizer_steps_in_transaction": 0,
+        "ema_updates_in_transaction": 0,
+        "alpha": [
+          1.0,
+          1.0
+        ],
+        "scale": 1.0,
+        "after": [
+          0.22303186518221857,
+          0.024781318353579846,
+          0.024781318353579846
+        ],
+        "status": "RESEARCH_EXACT_FIXED_COEFFICIENTS",
+        "guarded": true,
+        "trials": [
+          {
+            "scale": 1.0,
+            "risks": [
+              0.22303186518221857,
+              0.024781318353579846,
+              0.024781318353579846
+            ],
+            "accepted": true
+          }
+        ],
+        "realized_max_regression": -0.006468681646420154,
+        "linearized_after": [
+          0.2278125,
+          0.0253125,
+          0.0253125
+        ]
+      },
+      "head_unchanged": false,
+      "rng_unchanged": true,
+      "probabilities": [
+        0.2226266756414417,
+        0.2226266756414417,
+        0.332119973075675,
+        0.332119973075675,
+        0.2226266756414417,
+        0.2226266756414417,
+        0.2226266756414417,
+        0.2226266756414417
+      ]
+    },
+    "scalar_zero_tolerance": {
+      "control": {
+        "method": "joint_guard",
+        "source_ids": [
+          "manufactured_source_0",
+          "manufactured_source_1"
+        ],
+        "before": [
+          0.28125,
+          0.03125,
+          0.03125
+        ],
+        "positive_pixels": [
+          [
+            2
+          ],
+          [
+            0
+          ],
+          [
+            0
+          ]
+        ],
+        "scope": "observed_TRAIN_one_vs_rest_Brier",
+        "optimizer_steps_in_transaction": 0,
+        "ema_updates_in_transaction": 0,
+        "alpha": [
+          1.0,
+          1.0
+        ],
+        "scale": 1.0,
+        "after": [
+          0.22303186518221857,
+          0.024781318353579846,
+          0.024781318353579846
+        ],
+        "status": "RESEARCH_EXACT_FIXED_COEFFICIENTS",
+        "guarded": true,
+        "trials": [
+          {
+            "scale": 1.0,
+            "risks": [
+              0.22303186518221857,
+              0.024781318353579846,
+              0.024781318353579846
+            ],
+            "accepted": true
+          }
+        ],
+        "realized_max_regression": -0.006468681646420154,
+        "linearized_after": [
+          0.2278125,
+          0.0253125,
+          0.0253125
+        ]
+      },
+      "head_unchanged": false,
+      "rng_unchanged": true,
+      "probabilities": [
+        0.2226266756414417,
+        0.2226266756414417,
+        0.332119973075675,
+        0.332119973075675,
+        0.2226266756414417,
+        0.2226266756414417,
+        0.2226266756414417,
+        0.2226266756414417
+      ]
+    },
+    "source_solver_joint_default_guard": {
+      "control": {
+        "method": "joint_guard",
+        "source_ids": [
+          "manufactured_source_0",
+          "manufactured_source_1"
+        ],
+        "before": [
+          0.28125,
+          0.03125,
+          0.03125
+        ],
+        "positive_pixels": [
+          [
+            2
+          ],
+          [
+            0
+          ],
+          [
+            0
+          ]
+        ],
+        "scope": "observed_TRAIN_one_vs_rest_Brier",
+        "optimizer_steps_in_transaction": 0,
+        "ema_updates_in_transaction": 0,
+        "alpha": [
+          1.0,
+          1.0
+        ],
+        "scale": 1.0,
+        "after": [
+          0.22303186518221857,
+          0.024781318353579846,
+          0.024781318353579846
+        ],
+        "status": "NUMERICAL_FEASIBLE",
+        "guarded": true,
+        "trials": [
+          {
+            "scale": 1.0,
+            "risks": [
+              0.22303186518221857,
+              0.024781318353579846,
+              0.024781318353579846
+            ],
+            "accepted": true
+          }
+        ],
+        "realized_max_regression": -0.006468681646420154,
+        "linearized_after": [
+          0.2278125,
+          0.0253125,
+          0.0253125
+        ]
+      },
+      "head_unchanged": false,
+      "rng_unchanged": true,
+      "probabilities": [
+        0.2226266756414417,
+        0.2226266756414417,
+        0.332119973075675,
+        0.332119973075675,
+        0.2226266756414417,
+        0.2226266756414417,
+        0.2226266756414417,
+        0.2226266756414417
+      ]
+    }
+  },
+  "portfolio_noncomponentwise": {
+    "scope": "valid probability endpoints illustrating selection implication only; not solver outputs",
+    "probabilities": {
+      "base": [
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ],
+      "accepted_S": [
+        0.2,
+        0.6,
+        0.1,
+        0.1
+      ],
+      "accepted_J": [
+        0.1,
+        0.65,
+        0.15,
+        0.1
+      ]
+    },
+    "risks": {
+      "base": [
+        0.28125,
+        0.03125,
+        0.03125
+      ],
+      "accepted_S": [
+        0.08000000000000002,
+        0.005000000000000001,
+        0.005000000000000001
+      ],
+      "accepted_J": [
+        0.06124999999999999,
+        0.01125,
+        0.005000000000000001
+      ]
+    },
+    "selected_by_actual_mean": "accepted_J"
+  }
+}

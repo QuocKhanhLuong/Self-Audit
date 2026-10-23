@@ -1,0 +1,33 @@
+{
+  "scope": "Canonical software verification only; no patient/GPU execution",
+  "python": "3.11.16",
+  "executable": "/Users/alvinluong/miniforge3/bin/python",
+  "torch": "2.14.0",
+  "numpy": "2.4.6",
+  "scipy": "1.17.1",
+  "cuda_available": false,
+  "commands": [
+    {
+      "name": "check_repo",
+      "command": [
+        "/Users/alvinluong/miniforge3/bin/python",
+        "scripts/check_repo.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.025529250036925077,
+      "log": "check_repo.log"
+    },
+    {
+      "name": "pytest",
+      "command": [
+        "/Users/alvinluong/miniforge3/bin/python",
+        "-m",
+        "pytest",
+        "-q"
+      ],
+      "exit_code": 0,
+      "seconds": 3.8110630000010133,
+      "log": "pytest.log"
+    }
+  ]
+}

@@ -1,0 +1,132 @@
+{
+  "status": "PASS",
+  "scope": "Package syntax, local relative file links (not anchors/remote URLs), final probe hash bindings, and dossier/review completeness; not patient validation",
+  "counts": {
+    "json": 39,
+    "jsonl_rows": 292,
+    "python": 13,
+    "local_markdown_links": 65
+  },
+  "dossiers": 6,
+  "cross_reviews": 6,
+  "current_hash_passing_probes": {
+    "A_solver_qualification.py": {
+      "name": "A_solver_qualification.py",
+      "sha256": "009a113dc9c1a54b2e3ccf0054f0d5c83dee6f3d2076b7aff45aca7d95b86a2b",
+      "exit_code": 0,
+      "seconds": 1.8464526659809053,
+      "log": "A_solver_qualification.py.log",
+      "phase": "coordinator_replay_final"
+    },
+    "B_geometry.py": {
+      "name": "B_geometry.py",
+      "sha256": "fc4323bcdfafd59b122951933874174b995c5496f9464d68438e9b7b7ea11da6",
+      "exit_code": 0,
+      "seconds": 0.9290490001440048,
+      "log": "B_geometry.py.log",
+      "phase": "coordinator_replay"
+    },
+    "C_endpoint_headroom.py": {
+      "name": "C_endpoint_headroom.py",
+      "sha256": "185f8262374e0bf45cad6206fd8a52cebd6169b986a26bcce57bd4e2948e6439",
+      "exit_code": 0,
+      "seconds": 0.05710016703233123,
+      "log": "C_endpoint_headroom.py.log",
+      "phase": "coordinator_replay"
+    },
+    "C_endpoint_nonidentifiability.py": {
+      "name": "C_endpoint_nonidentifiability.py",
+      "sha256": "101068760eedf9a6e9cf88a94c349b9ffcb7f6b001be383f7f439e7f9ab92d6b",
+      "exit_code": 0,
+      "seconds": 0.020403374917805195,
+      "log": "C_endpoint_nonidentifiability.py.log",
+      "phase": "coordinator_replay"
+    },
+    "E_identification.py": {
+      "name": "E_identification.py",
+      "sha256": "c02f06b18fa8d34dc73a7a723dc85192db476a38f634efcb71ca7248c6766666",
+      "exit_code": 0,
+      "seconds": 0.040059959050267935,
+      "log": "E_identification.py.log",
+      "phase": "coordinator_replay_final"
+    },
+    "F_realizable_replay.py": {
+      "name": "F_realizable_replay.py",
+      "sha256": "2ee70ed7448a123d43ba8247782b891dac0cd933eb91fb0fced00b87f0b0e21a",
+      "exit_code": 0,
+      "seconds": 0.9797906670719385,
+      "log": "F_realizable_replay.py.log",
+      "phase": "coordinator_replay"
+    },
+    "A_moment_audit.py": {
+      "name": "A_moment_audit.py",
+      "sha256": "409ef0354d7beacb1fed7d7fb96c8b29c16cd89c09cce954244af4bf3d4bcecc",
+      "exit_code": 0,
+      "seconds": 0.046675791032612324,
+      "log": "A_moment_audit.py.log",
+      "phase": "coordinator_replay_final"
+    },
+    "A_review_F.py": {
+      "name": "A_review_F.py",
+      "sha256": "f4fe8280fd31d9dca8596197e8971469cafc327aa99eff1c175779b87bd5ad03",
+      "exit_code": 0,
+      "seconds": 0.957935499958694,
+      "log": "A_review_F.py.log",
+      "phase": "coordinator_replay_final"
+    },
+    "B_review_E.py": {
+      "name": "B_review_E.py",
+      "sha256": "5c8f0dd36d2d04c7f2239dc83ba498697983f5ae4920db453f2c132838cbfd95",
+      "exit_code": 0,
+      "seconds": 0.028211666271090508,
+      "log": "B_review_E.py.log",
+      "phase": "coordinator_replay_final"
+    },
+    "E_review_C.py": {
+      "name": "E_review_C.py",
+      "sha256": "b602431725b31f37dfd964497f49ff3612304702a2467db6d9498d4190086f96",
+      "exit_code": 0,
+      "seconds": 0.041158958338201046,
+      "log": "E_review_C.py.log",
+      "phase": "coordinator_replay_final"
+    },
+    "F_review_A.py": {
+      "name": "F_review_A.py",
+      "sha256": "2e6cc8da421993468c8a0f74bf42a4f7331b0f676b8b2a5d01fe634e30e5c5a4",
+      "exit_code": 0,
+      "seconds": 1.4948347923345864,
+      "log": "F_review_A.py.log",
+      "phase": "coordinator_replay_refresh"
+    }
+  },
+  "markdown_trailing_whitespace_cleanup_only": [
+    "workers/D_claims.md"
+  ],
+  "errors": [],
+  "inventory_excludes_itself_and_python_caches": true,
+  "packaging_removed_redundant_copied_dependencies": [
+    "evidence/coordinator_replay/C_transaction_schema.json",
+    "evidence/coordinator_replay/F_search_result.json",
+    "evidence/coordinator_replay_final/B_geometry.json",
+    "evidence/coordinator_replay_final/C_endpoint_headroom.json",
+    "evidence/coordinator_replay_final/C_transaction_schema.json",
+    "evidence/coordinator_replay_final/C_endpoint_nonidentifiability.json",
+    "evidence/coordinator_replay_final/F_A_rounded_gram_check.json",
+    "evidence/coordinator_replay_final/F_realizable_replay.json",
+    "evidence/coordinator_replay_final/F_search_result.json",
+    "evidence/coordinator_replay_refresh/A_solver_qualification.json",
+    "evidence/coordinator_replay_refresh/E_review_C.json",
+    "evidence/coordinator_replay_refresh/B_geometry.json",
+    "evidence/coordinator_replay_refresh/C_endpoint_headroom.json",
+    "evidence/coordinator_replay_refresh/A_moment_audit.json",
+    "evidence/coordinator_replay_refresh/B_review_E.json",
+    "evidence/coordinator_replay_refresh/E_identification.json",
+    "evidence/coordinator_replay_refresh/C_transaction_schema.json",
+    "evidence/coordinator_replay_refresh/C_endpoint_nonidentifiability.json",
+    "evidence/coordinator_replay_refresh/F_validation_receipt.json",
+    "evidence/coordinator_replay_refresh/A_review_F.json",
+    "evidence/coordinator_replay_refresh/F_A_rounded_gram_check.json",
+    "evidence/coordinator_replay_refresh/F_realizable_replay.json",
+    "evidence/coordinator_replay_refresh/F_search_result.json"
+  ]
+}

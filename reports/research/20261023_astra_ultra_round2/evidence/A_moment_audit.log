@@ -1,0 +1,18 @@
+{
+  "kind": "EXACT_RATIONAL_AUDIT_OF_FLOAT64_MOMENT_VALUES",
+  "input_sha256": "5dab6c4badf431633445f29bba19cb761a77d9fb9b0ec08106b90386e09b68bb",
+  "script_sha256": "409ef0354d7beacb1fed7d7fb96c8b29c16cd89c09cce954244af4bf3d4bcecc",
+  "negative_minor_count": 17,
+  "affected_cases": [
+    "B_finite_head_local_box_optimum",
+    "m2_near_collinear_-8",
+    "m2_near_collinear_-6",
+    "m2_near_collinear_-4",
+    "m2_near_collinear_-2",
+    "m2_near_collinear_0",
+    "m2_near_collinear_2",
+    "m2_near_collinear_3"
+  ],
+  "objective_hessians_positive_definite": 114,
+  "qualification": "Constraint Gram rounding can lose exact PSD; objective ridge can still make the represented objective positive definite. This does not certify numerical optimizer accuracy."
+}

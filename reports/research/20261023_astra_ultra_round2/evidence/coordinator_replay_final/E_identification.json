@@ -1,0 +1,1433 @@
+{
+  "schema": "astra.E.identification.synthetic.v1",
+  "status": "PASS",
+  "python": "3.11.16",
+  "production_imports": false,
+  "patient_gpu_execution": false,
+  "canonical_source_context_sha": "637f38ced217fe1db2347a87924695533056d8f0",
+  "experiment_context_sha": "8960b6baac4c6600553d900c303f192c2fcfa4f0",
+  "probe_sha256": "c02f06b18fa8d34dc73a7a723dc85192db476a38f634efcb71ca7248c6766666",
+  "model": "affine four-class probabilities; identity supervised reference; handcrafted proposal map",
+  "candidate_generator_parity": "NOT_CLAIMED; no v2 CE or softmax/JVP reproduction",
+  "ridge": 0.001,
+  "ema_decay": 0.5,
+  "reference_replay": {
+    "final_state": {
+      "student": [
+        0.75,
+        0.55
+      ],
+      "teacher": [
+        0.675,
+        0.525
+      ],
+      "buffers": {
+        "sentinel": 7
+      },
+      "optimizer": {
+        "steps": 0,
+        "momentum": [
+          0.0,
+          0.0
+        ]
+      },
+      "ema_updates": 2,
+      "reference": "IDENTITY_TO_ISOLATE_EXTRA_TRANSACTION"
+    },
+    "final_live_sha256": "c23d2f8a16126a9ae78680c07685eee1738c4c53050c5a5d21e7df30829fee03",
+    "rows": [
+      {
+        "step": 0,
+        "exogenous_draw": 0.2529479731947105,
+        "pre_shadow_live_sha256": "2d2a1cbcdb8f44887cc24a14cbdcf94bb6fb1278be8325aaa365aa468cd8cd87",
+        "shadow_live_unchanged": true,
+        "shadows": {
+          "P": {
+            "method": "P",
+            "step": 0,
+            "reference_state_sha256": "c21a86cfbffda15cb0cb646b9968481723dd545a90929b429d102ce61bd1c3be",
+            "candidate_sha256": "4396fddd946044cb8c01b05fe280c83cfe293b189fa1842e24a2563f572a01bf",
+            "directions": [
+              [
+                0.35,
+                -0.35
+              ],
+              [
+                -0.15,
+                0.35
+              ]
+            ],
+            "candidate_info": {
+              "map": "HANDCRAFTED_INITIAL",
+              "pseudo_class": null
+            },
+            "alpha": [
+              1.0,
+              1.0
+            ],
+            "scalar_ridge": null,
+            "accepted": true,
+            "guarded": false,
+            "student_after": [
+              0.7,
+              0.5
+            ],
+            "audit_A_before": [
+              0.125,
+              5e-05,
+              5e-05
+            ],
+            "audit_A_after": [
+              0.04500000000000001,
+              5e-05,
+              5e-05
+            ],
+            "shadow_B_before": [
+              0.125,
+              5e-05,
+              5e-05
+            ],
+            "shadow_B_after": [
+              0.125,
+              5e-05,
+              5e-05
+            ],
+            "effective_delta": [
+              0.19999999999999996,
+              0.0
+            ],
+            "finite_trial_count": 1,
+            "jvp_count": 0,
+            "oracle": "EXACT_AFFINE_TOY"
+          },
+          "S": {
+            "method": "S",
+            "step": 0,
+            "reference_state_sha256": "c21a86cfbffda15cb0cb646b9968481723dd545a90929b429d102ce61bd1c3be",
+            "candidate_sha256": "4396fddd946044cb8c01b05fe280c83cfe293b189fa1842e24a2563f572a01bf",
+            "directions": [
+              [
+                0.35,
+                -0.35
+              ],
+              [
+                -0.15,
+                0.35
+              ]
+            ],
+            "candidate_info": {
+              "map": "HANDCRAFTED_INITIAL",
+              "pseudo_class": null
+            },
+            "alpha": [
+              1.0,
+              1.0
+            ],
+            "scalar_ridge": 0.002,
+            "accepted": true,
+            "guarded": true,
+            "student_after": [
+              0.7,
+              0.5
+            ],
+            "audit_A_before": [
+              0.125,
+              5e-05,
+              5e-05
+            ],
+            "audit_A_after": [
+              0.04500000000000001,
+              5e-05,
+              5e-05
+            ],
+            "shadow_B_before": [
+              0.125,
+              5e-05,
+              5e-05
+            ],
+            "shadow_B_after": [
+              0.125,
+              5e-05,
+              5e-05
+            ],
+            "effective_delta": [
+              0.19999999999999996,
+              0.0
+            ],
+            "finite_trial_count": 1,
+            "jvp_count": 0,
+            "oracle": "EXACT_AFFINE_TOY"
+          },
+          "J": {
+            "method": "J",
+            "step": 0,
+            "reference_state_sha256": "c21a86cfbffda15cb0cb646b9968481723dd545a90929b429d102ce61bd1c3be",
+            "candidate_sha256": "4396fddd946044cb8c01b05fe280c83cfe293b189fa1842e24a2563f572a01bf",
+            "directions": [
+              [
+                0.35,
+                -0.35
+              ],
+              [
+                -0.15,
+                0.35
+              ]
+            ],
+            "candidate_info": {
+              "map": "HANDCRAFTED_INITIAL",
+              "pseudo_class": null
+            },
+            "alpha": [
+              1.0,
+              0.0
+            ],
+            "scalar_ridge": null,
+            "accepted": true,
+            "guarded": true,
+            "student_after": [
+              0.85,
+              0.15000000000000002
+            ],
+            "audit_A_before": [
+              0.125,
+              5e-05,
+              5e-05
+            ],
+            "audit_A_after": [
+              0.011250000000000003,
+              5e-05,
+              5e-05
+            ],
+            "shadow_B_before": [
+              0.125,
+              5e-05,
+              5e-05
+            ],
+            "shadow_B_after": [
+              0.36124999999999996,
+              5e-05,
+              5e-05
+            ],
+            "effective_delta": [
+              0.35,
+              -0.35
+            ],
+            "finite_trial_count": 1,
+            "jvp_count": 0,
+            "oracle": "EXACT_AFFINE_TOY"
+          }
+        },
+        "committed_method": "P",
+        "ema_updates": 1,
+        "post_commit_live_sha256": "2b9a1d45a4e41a2f4256f0cf8ecacbedeba3ccc2c6bdb5eaa754ddf82dd03685"
+      },
+      {
+        "step": 1,
+        "exogenous_draw": 0.7788603842413495,
+        "pre_shadow_live_sha256": "47bf624c28f753d00a9eb94d263f3ec1b19a57dc4c453e743f384d7b5440ed88",
+        "shadow_live_unchanged": true,
+        "shadows": {
+          "P": {
+            "method": "P",
+            "step": 1,
+            "reference_state_sha256": "3eb74a92455e5612084533cbe2e3c127226c7b5808b936b7c628f59a47c400ae",
+            "candidate_sha256": "e32000805c55e7448b6555cbfa22002c02e8dd385b892cb9bc08415d5bcb4c25",
+            "directions": [
+              [
+                0.05,
+                0.05
+              ]
+            ],
+            "candidate_info": {
+              "map": "EMA_ARGMAX_RESPONSE",
+              "pseudo_class": 1,
+              "teacher_B": [
+                0.48,
+                0.5,
+                0.01,
+                0.01
+              ]
+            },
+            "alpha": [
+              1.0
+            ],
+            "scalar_ridge": null,
+            "accepted": true,
+            "guarded": false,
+            "student_after": [
+              0.75,
+              0.55
+            ],
+            "audit_A_before": [
+              0.04500000000000001,
+              5e-05,
+              5e-05
+            ],
+            "audit_A_after": [
+              0.03125,
+              5e-05,
+              5e-05
+            ],
+            "shadow_B_before": [
+              0.125,
+              5e-05,
+              5e-05
+            ],
+            "shadow_B_after": [
+              0.10124999999999998,
+              5e-05,
+              5e-05
+            ],
+            "effective_delta": [
+              0.050000000000000044,
+              0.050000000000000044
+            ],
+            "finite_trial_count": 1,
+            "jvp_count": 0,
+            "oracle": "EXACT_AFFINE_TOY"
+          },
+          "S": {
+            "method": "S",
+            "step": 1,
+            "reference_state_sha256": "3eb74a92455e5612084533cbe2e3c127226c7b5808b936b7c628f59a47c400ae",
+            "candidate_sha256": "e32000805c55e7448b6555cbfa22002c02e8dd385b892cb9bc08415d5bcb4c25",
+            "directions": [
+              [
+                0.05,
+                0.05
+              ]
+            ],
+            "candidate_info": {
+              "map": "EMA_ARGMAX_RESPONSE",
+              "pseudo_class": 1,
+              "teacher_B": [
+                0.48,
+                0.5,
+                0.01,
+                0.01
+              ]
+            },
+            "alpha": [
+              1.0
+            ],
+            "scalar_ridge": 0.001,
+            "accepted": true,
+            "guarded": true,
+            "student_after": [
+              0.75,
+              0.55
+            ],
+            "audit_A_before": [
+              0.04500000000000001,
+              5e-05,
+              5e-05
+            ],
+            "audit_A_after": [
+              0.03125,
+              5e-05,
+              5e-05
+            ],
+            "shadow_B_before": [
+              0.125,
+              5e-05,
+              5e-05
+            ],
+            "shadow_B_after": [
+              0.10124999999999998,
+              5e-05,
+              5e-05
+            ],
+            "effective_delta": [
+              0.050000000000000044,
+              0.050000000000000044
+            ],
+            "finite_trial_count": 1,
+            "jvp_count": 0,
+            "oracle": "EXACT_AFFINE_TOY"
+          },
+          "J": {
+            "method": "J",
+            "step": 1,
+            "reference_state_sha256": "3eb74a92455e5612084533cbe2e3c127226c7b5808b936b7c628f59a47c400ae",
+            "candidate_sha256": "e32000805c55e7448b6555cbfa22002c02e8dd385b892cb9bc08415d5bcb4c25",
+            "directions": [
+              [
+                0.05,
+                0.05
+              ]
+            ],
+            "candidate_info": {
+              "map": "EMA_ARGMAX_RESPONSE",
+              "pseudo_class": 1,
+              "teacher_B": [
+                0.48,
+                0.5,
+                0.01,
+                0.01
+              ]
+            },
+            "alpha": [
+              1.0
+            ],
+            "scalar_ridge": null,
+            "accepted": true,
+            "guarded": true,
+            "student_after": [
+              0.75,
+              0.55
+            ],
+            "audit_A_before": [
+              0.04500000000000001,
+              5e-05,
+              5e-05
+            ],
+            "audit_A_after": [
+              0.03125,
+              5e-05,
+              5e-05
+            ],
+            "shadow_B_before": [
+              0.125,
+              5e-05,
+              5e-05
+            ],
+            "shadow_B_after": [
+              0.10124999999999998,
+              5e-05,
+              5e-05
+            ],
+            "effective_delta": [
+              0.050000000000000044,
+              0.050000000000000044
+            ],
+            "finite_trial_count": 1,
+            "jvp_count": 0,
+            "oracle": "EXACT_AFFINE_TOY"
+          }
+        },
+        "committed_method": "P",
+        "ema_updates": 2,
+        "post_commit_live_sha256": "c23d2f8a16126a9ae78680c07685eee1738c4c53050c5a5d21e7df30829fee03"
+      }
+    ]
+  },
+  "shadow_invariance": {
+    "no_shadow_endpoint_sha256": "c23d2f8a16126a9ae78680c07685eee1738c4c53050c5a5d21e7df30829fee03",
+    "cases": [
+      {
+        "order": [
+          "P",
+          "S",
+          "J"
+        ],
+        "repeats": 1,
+        "same_live_endpoint": true
+      },
+      {
+        "order": [
+          "P",
+          "S",
+          "J"
+        ],
+        "repeats": 3,
+        "same_live_endpoint": true
+      },
+      {
+        "order": [
+          "P",
+          "J",
+          "S"
+        ],
+        "repeats": 1,
+        "same_live_endpoint": true
+      },
+      {
+        "order": [
+          "P",
+          "J",
+          "S"
+        ],
+        "repeats": 3,
+        "same_live_endpoint": true
+      },
+      {
+        "order": [
+          "S",
+          "P",
+          "J"
+        ],
+        "repeats": 1,
+        "same_live_endpoint": true
+      },
+      {
+        "order": [
+          "S",
+          "P",
+          "J"
+        ],
+        "repeats": 3,
+        "same_live_endpoint": true
+      },
+      {
+        "order": [
+          "S",
+          "J",
+          "P"
+        ],
+        "repeats": 1,
+        "same_live_endpoint": true
+      },
+      {
+        "order": [
+          "S",
+          "J",
+          "P"
+        ],
+        "repeats": 3,
+        "same_live_endpoint": true
+      },
+      {
+        "order": [
+          "J",
+          "P",
+          "S"
+        ],
+        "repeats": 1,
+        "same_live_endpoint": true
+      },
+      {
+        "order": [
+          "J",
+          "P",
+          "S"
+        ],
+        "repeats": 3,
+        "same_live_endpoint": true
+      },
+      {
+        "order": [
+          "J",
+          "S",
+          "P"
+        ],
+        "repeats": 1,
+        "same_live_endpoint": true
+      },
+      {
+        "order": [
+          "J",
+          "S",
+          "P"
+        ],
+        "repeats": 3,
+        "same_live_endpoint": true
+      }
+    ],
+    "orders": 6,
+    "repeat_settings": 2,
+    "all_passed": true
+  },
+  "independent_policies": {
+    "P": {
+      "method": "P",
+      "freeze_teacher_at_step1": false,
+      "rows": [
+        {
+          "method": "P",
+          "step": 0,
+          "reference_state_sha256": "c21a86cfbffda15cb0cb646b9968481723dd545a90929b429d102ce61bd1c3be",
+          "candidate_sha256": "4396fddd946044cb8c01b05fe280c83cfe293b189fa1842e24a2563f572a01bf",
+          "directions": [
+            [
+              0.35,
+              -0.35
+            ],
+            [
+              -0.15,
+              0.35
+            ]
+          ],
+          "candidate_info": {
+            "map": "HANDCRAFTED_INITIAL",
+            "pseudo_class": null
+          },
+          "alpha": [
+            1.0,
+            1.0
+          ],
+          "scalar_ridge": null,
+          "accepted": true,
+          "guarded": false,
+          "student_after": [
+            0.7,
+            0.5
+          ],
+          "audit_A_before": [
+            0.125,
+            5e-05,
+            5e-05
+          ],
+          "audit_A_after": [
+            0.04500000000000001,
+            5e-05,
+            5e-05
+          ],
+          "shadow_B_before": [
+            0.125,
+            5e-05,
+            5e-05
+          ],
+          "shadow_B_after": [
+            0.125,
+            5e-05,
+            5e-05
+          ],
+          "effective_delta": [
+            0.19999999999999996,
+            0.0
+          ],
+          "finite_trial_count": 1,
+          "jvp_count": 0,
+          "oracle": "EXACT_AFFINE_TOY"
+        },
+        {
+          "method": "P",
+          "step": 1,
+          "reference_state_sha256": "3eb74a92455e5612084533cbe2e3c127226c7b5808b936b7c628f59a47c400ae",
+          "candidate_sha256": "e32000805c55e7448b6555cbfa22002c02e8dd385b892cb9bc08415d5bcb4c25",
+          "directions": [
+            [
+              0.05,
+              0.05
+            ]
+          ],
+          "candidate_info": {
+            "map": "EMA_ARGMAX_RESPONSE",
+            "pseudo_class": 1,
+            "teacher_B": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ]
+          },
+          "alpha": [
+            1.0
+          ],
+          "scalar_ridge": null,
+          "accepted": true,
+          "guarded": false,
+          "student_after": [
+            0.75,
+            0.55
+          ],
+          "audit_A_before": [
+            0.04500000000000001,
+            5e-05,
+            5e-05
+          ],
+          "audit_A_after": [
+            0.03125,
+            5e-05,
+            5e-05
+          ],
+          "shadow_B_before": [
+            0.125,
+            5e-05,
+            5e-05
+          ],
+          "shadow_B_after": [
+            0.10124999999999998,
+            5e-05,
+            5e-05
+          ],
+          "effective_delta": [
+            0.050000000000000044,
+            0.050000000000000044
+          ],
+          "finite_trial_count": 1,
+          "jvp_count": 0,
+          "oracle": "EXACT_AFFINE_TOY"
+        }
+      ],
+      "final_state": {
+        "student": [
+          0.75,
+          0.55
+        ],
+        "teacher": [
+          0.675,
+          0.525
+        ],
+        "buffers": {
+          "sentinel": 7
+        },
+        "optimizer": {
+          "steps": 0,
+          "momentum": [
+            0.0,
+            0.0
+          ]
+        },
+        "ema_updates": 2,
+        "reference": "IDENTITY_TO_ISOLATE_EXTRA_TRANSACTION"
+      },
+      "final_RV_A": 0.03125,
+      "final_RV_B": 0.10124999999999998,
+      "equal_support_RV_risk": 0.06624999999999999
+    },
+    "S": {
+      "method": "S",
+      "freeze_teacher_at_step1": false,
+      "rows": [
+        {
+          "method": "S",
+          "step": 0,
+          "reference_state_sha256": "c21a86cfbffda15cb0cb646b9968481723dd545a90929b429d102ce61bd1c3be",
+          "candidate_sha256": "4396fddd946044cb8c01b05fe280c83cfe293b189fa1842e24a2563f572a01bf",
+          "directions": [
+            [
+              0.35,
+              -0.35
+            ],
+            [
+              -0.15,
+              0.35
+            ]
+          ],
+          "candidate_info": {
+            "map": "HANDCRAFTED_INITIAL",
+            "pseudo_class": null
+          },
+          "alpha": [
+            1.0,
+            1.0
+          ],
+          "scalar_ridge": 0.002,
+          "accepted": true,
+          "guarded": true,
+          "student_after": [
+            0.7,
+            0.5
+          ],
+          "audit_A_before": [
+            0.125,
+            5e-05,
+            5e-05
+          ],
+          "audit_A_after": [
+            0.04500000000000001,
+            5e-05,
+            5e-05
+          ],
+          "shadow_B_before": [
+            0.125,
+            5e-05,
+            5e-05
+          ],
+          "shadow_B_after": [
+            0.125,
+            5e-05,
+            5e-05
+          ],
+          "effective_delta": [
+            0.19999999999999996,
+            0.0
+          ],
+          "finite_trial_count": 1,
+          "jvp_count": 0,
+          "oracle": "EXACT_AFFINE_TOY"
+        },
+        {
+          "method": "S",
+          "step": 1,
+          "reference_state_sha256": "3eb74a92455e5612084533cbe2e3c127226c7b5808b936b7c628f59a47c400ae",
+          "candidate_sha256": "e32000805c55e7448b6555cbfa22002c02e8dd385b892cb9bc08415d5bcb4c25",
+          "directions": [
+            [
+              0.05,
+              0.05
+            ]
+          ],
+          "candidate_info": {
+            "map": "EMA_ARGMAX_RESPONSE",
+            "pseudo_class": 1,
+            "teacher_B": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ]
+          },
+          "alpha": [
+            1.0
+          ],
+          "scalar_ridge": 0.001,
+          "accepted": true,
+          "guarded": true,
+          "student_after": [
+            0.75,
+            0.55
+          ],
+          "audit_A_before": [
+            0.04500000000000001,
+            5e-05,
+            5e-05
+          ],
+          "audit_A_after": [
+            0.03125,
+            5e-05,
+            5e-05
+          ],
+          "shadow_B_before": [
+            0.125,
+            5e-05,
+            5e-05
+          ],
+          "shadow_B_after": [
+            0.10124999999999998,
+            5e-05,
+            5e-05
+          ],
+          "effective_delta": [
+            0.050000000000000044,
+            0.050000000000000044
+          ],
+          "finite_trial_count": 1,
+          "jvp_count": 0,
+          "oracle": "EXACT_AFFINE_TOY"
+        }
+      ],
+      "final_state": {
+        "student": [
+          0.75,
+          0.55
+        ],
+        "teacher": [
+          0.675,
+          0.525
+        ],
+        "buffers": {
+          "sentinel": 7
+        },
+        "optimizer": {
+          "steps": 0,
+          "momentum": [
+            0.0,
+            0.0
+          ]
+        },
+        "ema_updates": 2,
+        "reference": "IDENTITY_TO_ISOLATE_EXTRA_TRANSACTION"
+      },
+      "final_RV_A": 0.03125,
+      "final_RV_B": 0.10124999999999998,
+      "equal_support_RV_risk": 0.06624999999999999
+    },
+    "J": {
+      "method": "J",
+      "freeze_teacher_at_step1": false,
+      "rows": [
+        {
+          "method": "J",
+          "step": 0,
+          "reference_state_sha256": "c21a86cfbffda15cb0cb646b9968481723dd545a90929b429d102ce61bd1c3be",
+          "candidate_sha256": "4396fddd946044cb8c01b05fe280c83cfe293b189fa1842e24a2563f572a01bf",
+          "directions": [
+            [
+              0.35,
+              -0.35
+            ],
+            [
+              -0.15,
+              0.35
+            ]
+          ],
+          "candidate_info": {
+            "map": "HANDCRAFTED_INITIAL",
+            "pseudo_class": null
+          },
+          "alpha": [
+            1.0,
+            0.0
+          ],
+          "scalar_ridge": null,
+          "accepted": true,
+          "guarded": true,
+          "student_after": [
+            0.85,
+            0.15000000000000002
+          ],
+          "audit_A_before": [
+            0.125,
+            5e-05,
+            5e-05
+          ],
+          "audit_A_after": [
+            0.011250000000000003,
+            5e-05,
+            5e-05
+          ],
+          "shadow_B_before": [
+            0.125,
+            5e-05,
+            5e-05
+          ],
+          "shadow_B_after": [
+            0.36124999999999996,
+            5e-05,
+            5e-05
+          ],
+          "effective_delta": [
+            0.35,
+            -0.35
+          ],
+          "finite_trial_count": 1,
+          "jvp_count": 0,
+          "oracle": "EXACT_AFFINE_TOY"
+        },
+        {
+          "method": "J",
+          "step": 1,
+          "reference_state_sha256": "72528580950322844160be38c69f249939ba074bb08e9cfec79878aae0265f3d",
+          "candidate_sha256": "959c4471a5d0463dbaed06fb2f4e8afde27c6e110208ab0c5acdca9597447242",
+          "directions": [
+            [
+              0.05,
+              -0.05
+            ]
+          ],
+          "candidate_info": {
+            "map": "EMA_ARGMAX_RESPONSE",
+            "pseudo_class": 0,
+            "teacher_B": [
+              0.655,
+              0.325,
+              0.01,
+              0.01
+            ]
+          },
+          "alpha": [
+            1.0
+          ],
+          "scalar_ridge": null,
+          "accepted": true,
+          "guarded": true,
+          "student_after": [
+            0.9,
+            0.10000000000000002
+          ],
+          "audit_A_before": [
+            0.011250000000000003,
+            5e-05,
+            5e-05
+          ],
+          "audit_A_after": [
+            0.0049999999999999975,
+            5e-05,
+            5e-05
+          ],
+          "shadow_B_before": [
+            0.36124999999999996,
+            5e-05,
+            5e-05
+          ],
+          "shadow_B_after": [
+            0.405,
+            5e-05,
+            5e-05
+          ],
+          "effective_delta": [
+            0.050000000000000044,
+            -0.05
+          ],
+          "finite_trial_count": 1,
+          "jvp_count": 0,
+          "oracle": "EXACT_AFFINE_TOY"
+        }
+      ],
+      "final_state": {
+        "student": [
+          0.9,
+          0.10000000000000002
+        ],
+        "teacher": [
+          0.7875000000000001,
+          0.21250000000000002
+        ],
+        "buffers": {
+          "sentinel": 7
+        },
+        "optimizer": {
+          "steps": 0,
+          "momentum": [
+            0.0,
+            0.0
+          ]
+        },
+        "ema_updates": 2,
+        "reference": "IDENTITY_TO_ISOLATE_EXTRA_TRANSACTION"
+      },
+      "final_RV_A": 0.0049999999999999975,
+      "final_RV_B": 0.405,
+      "equal_support_RV_risk": 0.20500000000000002
+    }
+  },
+  "teacher_frozen_intervention": {
+    "P": {
+      "method": "P",
+      "freeze_teacher_at_step1": true,
+      "rows": [
+        {
+          "method": "P",
+          "step": 0,
+          "reference_state_sha256": "c21a86cfbffda15cb0cb646b9968481723dd545a90929b429d102ce61bd1c3be",
+          "candidate_sha256": "4396fddd946044cb8c01b05fe280c83cfe293b189fa1842e24a2563f572a01bf",
+          "directions": [
+            [
+              0.35,
+              -0.35
+            ],
+            [
+              -0.15,
+              0.35
+            ]
+          ],
+          "candidate_info": {
+            "map": "HANDCRAFTED_INITIAL",
+            "pseudo_class": null
+          },
+          "alpha": [
+            1.0,
+            1.0
+          ],
+          "scalar_ridge": null,
+          "accepted": true,
+          "guarded": false,
+          "student_after": [
+            0.7,
+            0.5
+          ],
+          "audit_A_before": [
+            0.125,
+            5e-05,
+            5e-05
+          ],
+          "audit_A_after": [
+            0.04500000000000001,
+            5e-05,
+            5e-05
+          ],
+          "shadow_B_before": [
+            0.125,
+            5e-05,
+            5e-05
+          ],
+          "shadow_B_after": [
+            0.125,
+            5e-05,
+            5e-05
+          ],
+          "effective_delta": [
+            0.19999999999999996,
+            0.0
+          ],
+          "finite_trial_count": 1,
+          "jvp_count": 0,
+          "oracle": "EXACT_AFFINE_TOY"
+        },
+        {
+          "method": "P",
+          "step": 1,
+          "reference_state_sha256": "3eb74a92455e5612084533cbe2e3c127226c7b5808b936b7c628f59a47c400ae",
+          "candidate_sha256": "e32000805c55e7448b6555cbfa22002c02e8dd385b892cb9bc08415d5bcb4c25",
+          "directions": [
+            [
+              0.05,
+              0.05
+            ]
+          ],
+          "candidate_info": {
+            "map": "EMA_ARGMAX_RESPONSE",
+            "pseudo_class": 1,
+            "teacher_B": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ]
+          },
+          "alpha": [
+            1.0
+          ],
+          "scalar_ridge": null,
+          "accepted": true,
+          "guarded": false,
+          "student_after": [
+            0.75,
+            0.55
+          ],
+          "audit_A_before": [
+            0.04500000000000001,
+            5e-05,
+            5e-05
+          ],
+          "audit_A_after": [
+            0.03125,
+            5e-05,
+            5e-05
+          ],
+          "shadow_B_before": [
+            0.125,
+            5e-05,
+            5e-05
+          ],
+          "shadow_B_after": [
+            0.10124999999999998,
+            5e-05,
+            5e-05
+          ],
+          "effective_delta": [
+            0.050000000000000044,
+            0.050000000000000044
+          ],
+          "finite_trial_count": 1,
+          "jvp_count": 0,
+          "oracle": "EXACT_AFFINE_TOY"
+        }
+      ],
+      "final_state": {
+        "student": [
+          0.75,
+          0.55
+        ],
+        "teacher": [
+          0.675,
+          0.525
+        ],
+        "buffers": {
+          "sentinel": 7
+        },
+        "optimizer": {
+          "steps": 0,
+          "momentum": [
+            0.0,
+            0.0
+          ]
+        },
+        "ema_updates": 2,
+        "reference": "IDENTITY_TO_ISOLATE_EXTRA_TRANSACTION"
+      },
+      "final_RV_A": 0.03125,
+      "final_RV_B": 0.10124999999999998,
+      "equal_support_RV_risk": 0.06624999999999999
+    },
+    "S": {
+      "method": "S",
+      "freeze_teacher_at_step1": true,
+      "rows": [
+        {
+          "method": "S",
+          "step": 0,
+          "reference_state_sha256": "c21a86cfbffda15cb0cb646b9968481723dd545a90929b429d102ce61bd1c3be",
+          "candidate_sha256": "4396fddd946044cb8c01b05fe280c83cfe293b189fa1842e24a2563f572a01bf",
+          "directions": [
+            [
+              0.35,
+              -0.35
+            ],
+            [
+              -0.15,
+              0.35
+            ]
+          ],
+          "candidate_info": {
+            "map": "HANDCRAFTED_INITIAL",
+            "pseudo_class": null
+          },
+          "alpha": [
+            1.0,
+            1.0
+          ],
+          "scalar_ridge": 0.002,
+          "accepted": true,
+          "guarded": true,
+          "student_after": [
+            0.7,
+            0.5
+          ],
+          "audit_A_before": [
+            0.125,
+            5e-05,
+            5e-05
+          ],
+          "audit_A_after": [
+            0.04500000000000001,
+            5e-05,
+            5e-05
+          ],
+          "shadow_B_before": [
+            0.125,
+            5e-05,
+            5e-05
+          ],
+          "shadow_B_after": [
+            0.125,
+            5e-05,
+            5e-05
+          ],
+          "effective_delta": [
+            0.19999999999999996,
+            0.0
+          ],
+          "finite_trial_count": 1,
+          "jvp_count": 0,
+          "oracle": "EXACT_AFFINE_TOY"
+        },
+        {
+          "method": "S",
+          "step": 1,
+          "reference_state_sha256": "3eb74a92455e5612084533cbe2e3c127226c7b5808b936b7c628f59a47c400ae",
+          "candidate_sha256": "e32000805c55e7448b6555cbfa22002c02e8dd385b892cb9bc08415d5bcb4c25",
+          "directions": [
+            [
+              0.05,
+              0.05
+            ]
+          ],
+          "candidate_info": {
+            "map": "EMA_ARGMAX_RESPONSE",
+            "pseudo_class": 1,
+            "teacher_B": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ]
+          },
+          "alpha": [
+            1.0
+          ],
+          "scalar_ridge": 0.001,
+          "accepted": true,
+          "guarded": true,
+          "student_after": [
+            0.75,
+            0.55
+          ],
+          "audit_A_before": [
+            0.04500000000000001,
+            5e-05,
+            5e-05
+          ],
+          "audit_A_after": [
+            0.03125,
+            5e-05,
+            5e-05
+          ],
+          "shadow_B_before": [
+            0.125,
+            5e-05,
+            5e-05
+          ],
+          "shadow_B_after": [
+            0.10124999999999998,
+            5e-05,
+            5e-05
+          ],
+          "effective_delta": [
+            0.050000000000000044,
+            0.050000000000000044
+          ],
+          "finite_trial_count": 1,
+          "jvp_count": 0,
+          "oracle": "EXACT_AFFINE_TOY"
+        }
+      ],
+      "final_state": {
+        "student": [
+          0.75,
+          0.55
+        ],
+        "teacher": [
+          0.675,
+          0.525
+        ],
+        "buffers": {
+          "sentinel": 7
+        },
+        "optimizer": {
+          "steps": 0,
+          "momentum": [
+            0.0,
+            0.0
+          ]
+        },
+        "ema_updates": 2,
+        "reference": "IDENTITY_TO_ISOLATE_EXTRA_TRANSACTION"
+      },
+      "final_RV_A": 0.03125,
+      "final_RV_B": 0.10124999999999998,
+      "equal_support_RV_risk": 0.06624999999999999
+    },
+    "J": {
+      "method": "J",
+      "freeze_teacher_at_step1": true,
+      "rows": [
+        {
+          "method": "J",
+          "step": 0,
+          "reference_state_sha256": "c21a86cfbffda15cb0cb646b9968481723dd545a90929b429d102ce61bd1c3be",
+          "candidate_sha256": "4396fddd946044cb8c01b05fe280c83cfe293b189fa1842e24a2563f572a01bf",
+          "directions": [
+            [
+              0.35,
+              -0.35
+            ],
+            [
+              -0.15,
+              0.35
+            ]
+          ],
+          "candidate_info": {
+            "map": "HANDCRAFTED_INITIAL",
+            "pseudo_class": null
+          },
+          "alpha": [
+            1.0,
+            0.0
+          ],
+          "scalar_ridge": null,
+          "accepted": true,
+          "guarded": true,
+          "student_after": [
+            0.85,
+            0.15000000000000002
+          ],
+          "audit_A_before": [
+            0.125,
+            5e-05,
+            5e-05
+          ],
+          "audit_A_after": [
+            0.011250000000000003,
+            5e-05,
+            5e-05
+          ],
+          "shadow_B_before": [
+            0.125,
+            5e-05,
+            5e-05
+          ],
+          "shadow_B_after": [
+            0.36124999999999996,
+            5e-05,
+            5e-05
+          ],
+          "effective_delta": [
+            0.35,
+            -0.35
+          ],
+          "finite_trial_count": 1,
+          "jvp_count": 0,
+          "oracle": "EXACT_AFFINE_TOY"
+        },
+        {
+          "method": "J",
+          "step": 1,
+          "reference_state_sha256": "72528580950322844160be38c69f249939ba074bb08e9cfec79878aae0265f3d",
+          "candidate_sha256": "e32000805c55e7448b6555cbfa22002c02e8dd385b892cb9bc08415d5bcb4c25",
+          "directions": [
+            [
+              0.05,
+              0.05
+            ]
+          ],
+          "candidate_info": {
+            "map": "EMA_ARGMAX_RESPONSE",
+            "pseudo_class": 1,
+            "teacher_B": [
+              0.48,
+              0.5,
+              0.01,
+              0.01
+            ]
+          },
+          "alpha": [
+            1.0
+          ],
+          "scalar_ridge": null,
+          "accepted": true,
+          "guarded": true,
+          "student_after": [
+            0.9,
+            0.2
+          ],
+          "audit_A_before": [
+            0.011250000000000003,
+            5e-05,
+            5e-05
+          ],
+          "audit_A_after": [
+            0.0049999999999999975,
+            5e-05,
+            5e-05
+          ],
+          "shadow_B_before": [
+            0.36124999999999996,
+            5e-05,
+            5e-05
+          ],
+          "shadow_B_after": [
+            0.32000000000000006,
+            5e-05,
+            5e-05
+          ],
+          "effective_delta": [
+            0.050000000000000044,
+            0.04999999999999999
+          ],
+          "finite_trial_count": 1,
+          "jvp_count": 0,
+          "oracle": "EXACT_AFFINE_TOY"
+        }
+      ],
+      "final_state": {
+        "student": [
+          0.9,
+          0.2
+        ],
+        "teacher": [
+          0.7875000000000001,
+          0.2625
+        ],
+        "buffers": {
+          "sentinel": 7
+        },
+        "optimizer": {
+          "steps": 0,
+          "momentum": [
+            0.0,
+            0.0
+          ]
+        },
+        "ema_updates": 2,
+        "reference": "IDENTITY_TO_ISOLATE_EXTRA_TRANSACTION"
+      },
+      "final_RV_A": 0.0049999999999999975,
+      "final_RV_B": 0.32000000000000006,
+      "equal_support_RV_risk": 0.16250000000000003
+    }
+  },
+  "contrast_units": "RV half-Brier; corresponding three-group mean differences are divided by three",
+  "B_support_role": "Toy input/feature support enters teacher proposal map; manufactured B labels/scores are score-only; not untouched held-out data",
+  "contrasts": {
+    "first_transaction_J_advantage_A": 0.03375000000000001,
+    "first_transaction_J_advantage_B": -0.23624999999999996,
+    "final_policy_J_advantage_A": 0.026250000000000002,
+    "final_policy_J_advantage_B": -0.3037500000000001,
+    "final_policy_J_advantage_equal_support": -0.13875000000000004,
+    "EMA_feedback_extra_J_B_risk": 0.08499999999999996
+  },
+  "interpretation": "Logical nonidentification counterexample; not patient frequency or source failure."
+}

@@ -1,0 +1,71 @@
+{
+  "schema": "self_audit.proposed_transaction_evidence.v1",
+  "status": "PROPOSED_SCHEMA_ONLY_NOT_PATIENT_EVIDENCE",
+  "estimand": "Conditional same-state differences among no-pseudo, plain aggregate, scalar-guard and joint-guard outcomes on one fixed TRAIN audit measure",
+  "observation_unit": "One supervised-reference state and one frozen candidate/audit tuple; sampled crops within a patient are dependent",
+  "required_records": {
+    "identity": [
+      "run_id and transaction_index",
+      "full Git commit plus exact source_digest file scope and artifact digests",
+      "effective model/training/audit/solver/trial/selection configuration",
+      "parameter names, device, dtype, library/CUDA versions",
+      "labeled patient allowlist and total annotation budget"
+    ],
+    "pre_state": [
+      "hashes and retrievable snapshots or exact replay dependencies for student parameters/buffers, optimizer states, teacher and RNG streams before supervised step",
+      "supervised-step outcome theta_s hash and supervised loss/gradient/clipping/update counters",
+      "teacher snapshot used for this transaction; state phase explicitly declared"
+    ],
+    "data_and_measure": [
+      "TRAIN-only supervised/audit/U patient IDs, frame/slice IDs, crop/padding/augmentation metadata, input and label artifact hashes",
+      "separate supervised and audit patient identity check",
+      "validity mask and ignore-label rules",
+      "per-audit-slice/per-class positive/negative counts and weights; absent-positive flags",
+      "audit reduction order and effective normalization/mass for every group",
+      "shadow TRAIN support identities if used, fixed before outcomes and prohibited from policy selection"
+    ],
+    "fixed_candidates": [
+      "teacher q artifact or exact regeneration dependency; teacher hash and forward count",
+      "accepted pseudo mask, common accepted denominator, class pixel counts",
+      "unique source IDs and ordering, parameter block, pseudo step size",
+      "candidate direction artifacts or exact deterministic regeneration dependencies",
+      "direction norms, nonzero counts, effective dtype and source multiplicity"
+    ],
+    "local_problem": [
+      "A_c,b_c,e_c for every group in original declared units",
+      "ridge lambda, risk budgets, feasibility and optimality tolerances",
+      "scalar restricted ridge m*lambda and scalar solution",
+      "joint candidate solution, numerical status, baseline-subtracted objective and group changes",
+      "independent feasibility and incumbent comparison; no implication of global optimality from a success flag"
+    ],
+    "actual_trial_outcomes": [
+      "for each no-pseudo/plain/scalar/joint option: alpha, scale, actual effective parameter displacement and changed-element count",
+      "every attempted finite-trial scale, not just the accepted trial",
+      "before/after per-group actual Brier; finiteness; exact acceptance and mean-risk tests",
+      "risk recomputation witness: either frozen audit labels/weights/probabilities or exact weighted sum_w_y2,sum_w_yp,sum_w_p2 sufficient statistics per group",
+      "local-predicted versus actual risk changes",
+      "explicit category for no candidate, verified local zero, numerical failure, no representable displacement, finite rejection and effective acceptance"
+    ],
+    "commit": [
+      "declared trajectory-driving policy and chosen option",
+      "pre/post parameter-buffer hashes, actual committed-risk check",
+      "optimizer state unchanged by pseudo transaction; no hidden optimizer transformation",
+      "rejected and shadow trials leave live state unchanged",
+      "one EMA update only after final live commit; post-EMA hash and counter",
+      "timing and memory split among candidate gradients, JVPs, solve, finite trials and checkpoint work"
+    ]
+  },
+  "decision_recomputation": {
+    "risk": "R_c=0.5*(sum_w_y2-2*sum_w_yp+sum_w_p2), using the frozen declared group weights",
+    "guard_accepts": "All actual outputs finite; for every group R_trial<=R_reference+budget+tolerance; mean R_trial<=mean R_reference+tolerance; apply source-exact handling of zero directions/scales",
+    "portfolio_order": "If a future selector chooses minimum observed mean actual risk among the same finite feasible options including fallback, the selected observed mean cannot exceed the included options' observed mean; no population or Dice implication",
+    "scope": "These scalar/statistic records suffice to recompute the declared decision only conditional on their truthful generation; independent model replay additionally requires the referenced state/input/direction bytes or validated deterministic regeneration"
+  },
+  "policy_effect_requires_separate_evidence": [
+    "Fresh independently evolving policy arms from matched initial state and data schedule; later teacher/candidates may differ as mediated policy outcomes",
+    "Frozen final evaluation on prospectively specified patients, class/frame support and metric denominator policy",
+    "Repeated subset/init blocks and measured compute for any practical utility claim",
+    "No VAL/TEST labels used to create coefficients, select trial candidates, tune thresholds or choose patients",
+    "No current-audit risk ordering promoted to external-patient safety or repairability"
+  ]
+}

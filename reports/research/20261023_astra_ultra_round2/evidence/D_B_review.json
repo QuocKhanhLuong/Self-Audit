@@ -1,0 +1,45 @@
+{
+  "scope": "Independent exact rational arithmetic and read-only receipt/probe inspection; no model/probe rerun",
+  "date": "2026-10-23",
+  "reviewed_sha256": {
+    "workers/B_geometry.md": "53224dc470d221cdf0f2db6d8a7cc49edd78b3005db71945eaec1c53a8d0863c",
+    "probes/B_geometry.py": "fc4323bcdfafd59b122951933874174b995c5496f9464d68438e9b7b7ea11da6",
+    "evidence/B_geometry.json": "963d0c6f926a9724d83a93d375b78f42d0323a4cf0a0ceaadd3ca814e90c6162"
+  },
+  "exact_reversal_check": {
+    "mean_A": [
+      [
+        "1/96",
+        "-7/960"
+      ],
+      [
+        "-7/960",
+        "17/3200"
+      ]
+    ],
+    "mean_b": [
+      "1/48",
+      "-1/120"
+    ],
+    "ridge": "1/1000000",
+    "gradient_at_J": [
+      "-31247/3000000",
+      "1/960"
+    ],
+    "local_risks_J": [
+      "9/32",
+      "1/128",
+      "1/128"
+    ],
+    "local_risks_S": [
+      "841/3200",
+      "289/12800",
+      "289/12800"
+    ],
+    "mean_local_S_minus_J": "71/19200",
+    "regularized_S_minus_J": "44381/12000000",
+    "scalar_unconstrained_optimum_greater_than_one": true,
+    "whole_box_certificate": "negative first gradient at upper coordinate, positive second gradient at lower coordinate; convexity gives exact global optimum over box and hence feasible QCQP"
+  },
+  "status": "PASS"
+}

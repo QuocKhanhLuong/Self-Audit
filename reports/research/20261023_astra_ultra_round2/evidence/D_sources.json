@@ -1,0 +1,44 @@
+{
+  "schema": "self_audit.research.round2.claim_audit.v1",
+  "access_date": "2026-10-23",
+  "head": "ccfde9bb99b6050e00ad94fbd6d57fcf9afc8b3f",
+  "canonical_source": "637f38ced217fe1db2347a87924695533056d8f0",
+  "scope": "Four narrow primary references; deterministic implications derived directly, not novelty claims",
+  "sources": [
+    {
+      "title": "minimize(method='SLSQP')",
+      "version": "SciPy v1.18.0 online documentation",
+      "url": "https://docs.scipy.org/doc/scipy/reference/optimize.minimize-slsqp.html",
+      "access": "Official full documentation read; ftol behavior; executed package version belongs to A/B receipts"
+    },
+    {
+      "title": "Nonlinear programming without a penalty function",
+      "authors": "Roger Fletcher; Sven Leyffer",
+      "version": "Mathematical Programming91(2):239-269, 2002; DOI10.1007/s101070100244",
+      "url": "https://discovery.dundee.ac.uk/en/publications/nonlinear-programming-without-a-penalty-function/",
+      "access": "Institutional primary abstract/metadata; only high-level safeguard mechanism used, no transferred convergence theorem"
+    },
+    {
+      "title": "Generalization in Adaptive Data Analysis and Holdout Reuse",
+      "version": "arXiv1506.02629v2; 2015-09-25",
+      "url": "https://arxiv.org/abs/1506.02629v2",
+      "access": "D independently checked full HTML section4.1 Theorem25 and exact protected-access assumptions; adaptive_scope subaudit agrees",
+      "full_text_url": "https://arxiv.org/html/1506.02629v2"
+    },
+    {
+      "title": "Probability Inequalities for Sums of Bounded Random Variables",
+      "authors": "Wassily Hoeffding",
+      "version": "JASA58(301):13-30,1963",
+      "url": "https://doi.org/10.2307/2282952",
+      "access": "adaptive_scope primary-source check; finite-class selection bound in D report is a direct Hoeffding-plus-union-bound derivation"
+    }
+  ],
+  "queries": [
+    "\"Nonlinear programming without a penalty function\" Fletcher Leyffer pdf author"
+  ],
+  "delegation": {
+    "agent": "/root/astra_prior_art/adaptive_scope",
+    "task": "At most two primary adaptive-validation sources; theorem assumptions only",
+    "execution": "read-only; no source edits or model execution"
+  }
+}
