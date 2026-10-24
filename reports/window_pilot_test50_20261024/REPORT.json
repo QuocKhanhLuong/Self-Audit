@@ -5,7 +5,7 @@
   "reference_frames": 100,
   "citation": "O. Bernard et al., IEEE TMI 37(11), 2514-2525 (2018), doi:10.1109/TMI.2018.2837502",
   "protocol": "All three final step10000 student checkpoints pinned before TEST preparation; no selection or tuning on TEST",
-  "scoring": "Raw argmax on full native cines; per-class Dice averaged over present reference frames per patient, then over patients; foreground macro averages each patient RV/MYO/LV",
+  "scoring": "Raw argmax on full native cines; per-class Dice averaged over present reference frames per patient, then over patients. foreground_patient_macro averages each patient RV/MYO/LV; all_class_patient_macro averages each patient BG/RV/MYO/LV. Both are then averaged over the same 50 patients.",
   "reference_provenance": "Configured KhanhDrive testing mirror; official upstream label provenance and challenge-server certification unavailable",
   "comparison_to_active_train_val": {
     "exact_voxel_overlap": 0,
@@ -26,5 +26,11 @@
   "source_git_sha": "0f54455b67bb11a72fbfe2a8ac6fae4073f3e9ca",
   "executed_source_sha256": "3c7fa85f00d54a6e087af3cd6c7045351fb72d532f1069bf09d95f9cd72359b7",
   "pretrained_weights_sha256": "21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54",
-  "new_training_or_checkpoint_updates": false
+  "new_training_or_checkpoint_updates": false,
+  "metric_definitions": {
+    "foreground_patient_macro": "mean_patient(mean_class(Dice_RV, Dice_MYO, Dice_LV))",
+    "all_class_patient_macro": "mean_patient(mean_class(Dice_BG, Dice_RV, Dice_MYO, Dice_LV))",
+    "macro_patient.BG.dice": "mean_patient(Dice_BG)",
+    "revision": "Additional reporting aggregate requested after the initial TEST report; original foreground aggregate retained explicitly. Training objectives, checkpoints, predictions and classwise scores are unchanged."
+  }
 }

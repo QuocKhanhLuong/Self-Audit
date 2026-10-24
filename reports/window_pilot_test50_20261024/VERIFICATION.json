@@ -1,6 +1,6 @@
 {
   "status": "PASS",
-  "created_utc": "2026-10-24T10:35:58Z",
+  "created_utc": "2026-10-24T10:41:26Z",
   "check_repo": "PASS",
   "pytest": "85 passed, 1 FutureWarning",
   "checkpoint_and_frozen_prediction_payload_hashes_verified": true,
@@ -19,6 +19,10 @@
   },
   "python": "3.12.15",
   "files": {
+    "reports/window_pilot_test50_20261024/BACKGROUND_METRIC_REVISION.json": {
+      "bytes": 701,
+      "sha256": "cfa37d78538444f651e675894933fe6549771763649ddeab216ff4240357ff84"
+    },
     "reports/window_pilot_test50_20261024/CHECK_REPO.log": {
       "bytes": 153,
       "sha256": "f9317b13e55fd8916cf0f91882298e60bc9274551929baa2de5c15e80fd35b83"
@@ -40,8 +44,8 @@
       "sha256": "74bde85166a47e28f83205c86d85554e88f5e6249a7500b07fe7de8203696d79"
     },
     "reports/window_pilot_test50_20261024/PATIENT_METRICS.csv": {
-      "bytes": 16855,
-      "sha256": "51250ec52696a03d3c4d023dd1f3f980e0ada914452c2f83427ee2f9644a536f"
+      "bytes": 19699,
+      "sha256": "b92461bd7f5643eb732bc9361026e379ff976805b47ba20d8ceda7e012513a2f"
     },
     "reports/window_pilot_test50_20261024/PROTOCOL.json": {
       "bytes": 2596,
@@ -49,23 +53,23 @@
     },
     "reports/window_pilot_test50_20261024/PYTEST.log": {
       "bytes": 587,
-      "sha256": "6c5f322ae0eaa78a0fe97b383be74a0f471e21873c443751ee4f853bdd0b88f5"
+      "sha256": "cbe500202aedabd349c1452a14e99c328f013ced90176455b99de2b547e7b86a"
     },
     "reports/window_pilot_test50_20261024/RCLONE_CHECK.txt": {
       "bytes": 11924,
       "sha256": "ae405bba18d56957e35633d3e0af811d9d2a79fd59441f0893486f6f293b05bf"
     },
     "reports/window_pilot_test50_20261024/REPORT.json": {
-      "bytes": 1834,
-      "sha256": "728e399f3f22c97e29b5b0835322ff4e9949294ea205f36fd3e699b836534c8c"
+      "bytes": 2445,
+      "sha256": "ffff68804a824de522affcc4c6bf34ad312bc7bf9df1f5ea31fc2c759d8a58be"
     },
     "reports/window_pilot_test50_20261024/RESULTS.csv": {
-      "bytes": 292,
-      "sha256": "1feffb2bfd7ce1d49ecbad607e0dd3a45958b37ea49f16e53cfbb9202eada044"
+      "bytes": 443,
+      "sha256": "e6d750b5cc46ee95665e5258cbcbc42ea331bf7afec3edfc024545742c62ca6d"
     },
     "reports/window_pilot_test50_20261024/RESULTS.json": {
-      "bytes": 4359,
-      "sha256": "e5e6d359b58d1646da24d8d4022368c60fb3368b9188b8ee14b2774e7a96b3ab"
+      "bytes": 4511,
+      "sha256": "d4653ad608e3d18c4e4d41473cd07dc090c86ca2eb76a872db2d3f88a8ee58ae"
     },
     "reports/window_pilot_test50_20261024/baseline/CHECKPOINT_MANIFEST.json": {
       "bytes": 3845,
@@ -121,5 +125,6 @@
     "tests/test_prepare_test.py": "1ac95117ffd9fbdfcef20af96221b8a906333de4f643ff564ac41148a529ca9b",
     "scripts/benchmark_window_cuda.py": "64758347d79c0243f1efb225e53e81b6ebaff78ba7ce3607004100a0fa741818",
     "scripts/run_window_server.py": "6bd1b612ef353bef5a8e27b4ec10bdb34de64c55f9dbb21be94be7379c5ba88b"
-  }
+  },
+  "background_aggregate_validation": "PASS; recomputed for all 150 patient/model rows; existing classwise means and foreground aggregates agree within 1e-12"
 }
