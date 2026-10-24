@@ -1,0 +1,24 @@
+{
+  "status": "PASS",
+  "inputs": "same 12 largest TRAIN cines x first2 timepoints",
+  "mask_reads": 0,
+  "checks": [
+    {
+      "workers": 2,
+      "selected_endpoint_tensors_and_metadata_bitwise_equal": true
+    },
+    {
+      "workers": 4,
+      "selected_endpoint_tensors_and_metadata_bitwise_equal": true
+    },
+    {
+      "workers": 8,
+      "selected_endpoint_tensors_and_metadata_bitwise_equal": true
+    },
+    {
+      "workers": 12,
+      "selected_endpoint_tensors_and_metadata_bitwise_equal": true
+    }
+  ],
+  "tile_batch_size": 1
+}

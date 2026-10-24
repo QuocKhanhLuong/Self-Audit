@@ -1,0 +1,22 @@
+{
+  "captured_utc": "2026-10-24T13:25:23Z",
+  "status": "PARALLEL_FULL_EXTRACTION_RUNNING",
+  "offline_stage": {
+    "stage": "BUILDING_FULL_TRAIN_PARALLEL",
+    "utc": "2026-10-24T13:17:07Z",
+    "workers": 12,
+    "patients": 80,
+    "timepoints": 2148,
+    "benchmark_timepoints_per_second": 0.6076850311526508,
+    "serial_attempt_preserved": true
+  },
+  "ready_workers": 12,
+  "allocated_patient_caches": 22,
+  "full_bank_complete": false,
+  "full_training_queue": "Preserved, waiting for COMPLETE full-bank status",
+  "raw_data_and_previous_checkpoints_modified": false,
+  "tile_batch_size": 1,
+  "source_sha256": "7f5856216d59bc787633f8a703fa362cf83582427b830ab1ce09c15aeb55e8a9",
+  "performance_comparison": "12 workers / 2 workers = 1.9166x measured processing throughput; no same-input 1-worker benchmark claimed",
+  "memory_policy": "At least2GiB GPU spare, cgroup RAM cap120GiB; old read-only file cache pages advised reclaimable without changing bytes"
+}

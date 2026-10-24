@@ -115,3 +115,24 @@ Reporting includes BG/RV/MYO/LV, macro over all4 and foreground macro separately
 Previously exposed VAL18 and Drive TEST50 are not independent confirmation;
 external-teacher subject overlap and official TEST-label provenance remain
 unresolved.
+
+### Parallel offline extraction optimization
+
+The user subsequently requested more parallelism during bank construction. The
+serial attempt was stopped only within this owned pipeline; its incomplete
+arrays remain preserved. The full-run queue still waits for a complete bank.
+`build_teacher_memory_parallel.py` runs disjoint patient shards with tile batch1,
+then merges their deterministic round-robin prefixes into the canonical global
+selection. Selected tensors are copied without a second normalization. Complete
+A1 arrays are hard-linked into one cache index and validated by the canonical
+writer; bounded diagnostic shards cannot be advertised as full TRAIN coverage.
+
+On the same 12 largest-geometry TRAIN cines and first2 timepoints, measured
+processing rates for 2/4/8/12 workers were 0.317/0.428/0.583/0.608 timepoints/s.
+The selected12-worker run peaked at18.33GiB device-used VRAM and70.03GiB cgroup
+RAM. All four selected benchmark banks matched bitwise in endpoint tensors,
+confidence, validity and entry metadata. These are compute measurements, not
+patient Dice. Model-load time is recorded separately; full extraction still
+uses all80 patients/all2,148 timepoints. The main trainer, crop, losses, budget,
+sampling schedule and frozen validation/TEST plan remain unchanged. Receipts
+are under `reports/teacher_memory_full_20261024/parallel_optimization/`.
