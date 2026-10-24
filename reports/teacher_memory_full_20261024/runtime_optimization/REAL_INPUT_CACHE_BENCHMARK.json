@@ -1,0 +1,65 @@
+{
+  "status": "PASS",
+  "measured_on": "real TRAIN L8, CPU only; not GPU/accuracy evidence",
+  "batch": 24,
+  "crop": 256,
+  "threads": 1,
+  "rows": [
+    {
+      "implementation": "TrainingData",
+      "steps": 32,
+      "measured_steps": 24,
+      "seconds_per_transaction": 0.09087465573490287,
+      "cpu_augmentation_seconds": 3.1142654540017247,
+      "input_sha256": "69eac1d52ab42a6eb36f8412ea7991a5a917e431c9f272d06f8000ff5a5b89b1",
+      "rng_final": {
+        "bit_generator": "PCG64",
+        "state": {
+          "state": 234939654565967207059431589936314614366,
+          "inc": 332724090758049132448979897138935081983
+        },
+        "has_uint32": 0,
+        "uinteger": 2137714827
+      },
+      "label_reads": [
+        "patient007",
+        "patient010",
+        "patient011",
+        "patient024",
+        "patient026",
+        "patient041",
+        "patient077",
+        "patient099"
+      ]
+    },
+    {
+      "implementation": "CachedTrainingData",
+      "steps": 32,
+      "measured_steps": 24,
+      "seconds_per_transaction": 0.042401154428565256,
+      "cpu_augmentation_seconds": 3.2367421307135373,
+      "input_sha256": "69eac1d52ab42a6eb36f8412ea7991a5a917e431c9f272d06f8000ff5a5b89b1",
+      "rng_final": {
+        "bit_generator": "PCG64",
+        "state": {
+          "state": 234939654565967207059431589936314614366,
+          "inc": 332724090758049132448979897138935081983
+        },
+        "has_uint32": 0,
+        "uinteger": 2137714827
+      },
+      "label_reads": [
+        "patient007",
+        "patient010",
+        "patient011",
+        "patient024",
+        "patient026",
+        "patient041",
+        "patient077",
+        "patient099"
+      ]
+    }
+  ],
+  "sampling_speedup": 2.143211829008162,
+  "manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4"
+}

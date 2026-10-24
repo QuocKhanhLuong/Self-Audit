@@ -1,0 +1,90 @@
+{
+  "status": "QUEUED_NOT_GPU_BENCHMARKED",
+  "captured_utc": "2026-10-24T17:28:36Z",
+  "canonical_source_sha256": "7f5856216d59bc787633f8a703fa362cf83582427b830ab1ce09c15aeb55e8a9",
+  "backbone_weights_sha256": "21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54",
+  "training_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+  "runtime_helper_sha256": {
+    "runtime_performance.py": "b8e71ee74d5c8ce831606479f94fb657db18ccd596ed411537d9cc995b979aff",
+    "prefetch_runtime.py": "4d5ba11ee9a62531c7d0c6ddba6add109ee9c372c54f90a8777fe58096422663",
+    "profile_runtime_performance.py": "1118351ab608f8454e5d0db43b5a3c0c9ea4fe9d31afdfb0507b8aaa75c3e27e",
+    "benchmark_runtime_inputs.py": "eff3a04cac542266dac249d30bc1b574dfb898e5ecbeaf4e750b4153122d27b3",
+    "optimize_training_runtime.py": "d4ad38b0f305f3461551d430aa4178e167d38ff8586d062a5878a19bbcdb2b29",
+    "continue_teacher_memory_full.py": "5b00a68074397823604200e0368d7c3a5fc9983570bf4983afa4b8da0f3eec4b",
+    "optimize_a5_extraction.py": "f4d25577dd1d4dae641cbcad00e13bf104a533952670cab8b40205f188935918",
+    "build_teacher_memory_parallel.py": "62fc9eb8db3384d1eff537888ef45dd280bdc22004d40138f27d565361d91736"
+  },
+  "checks": {
+    "check_repo": "PASS",
+    "pytest": "164 passed, 1 FutureWarning in 20.67s; CUDA hidden for tests"
+  },
+  "running_A1_unchanged": true,
+  "queued_status": {
+    "stage": "WAITING_FOR_A1",
+    "utc": "2026-10-24T17:27:23Z",
+    "current_training_untouched": true,
+    "parent_pid": 344995,
+    "child_pid": 501285,
+    "target": "minimum remaining wall time; matched batch24",
+    "thread_candidates": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      24,
+      32,
+      64
+    ]
+  },
+  "runtime_choices": {
+    "batch": 24,
+    "crop": 256,
+    "steps": 10000,
+    "warmup": 1000,
+    "threads": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      24,
+      32,
+      64
+    ],
+    "modes": [
+      "canonical",
+      "cached budgeted TRAIN mask metadata",
+      "cache + one-step CPU input and noise prefetch"
+    ],
+    "probe": "40 real-data CUDA steps, first10 excluded; cost-only pseudo threshold0; scientific threshold0.7",
+    "apply": "original batch and exposure; >=3% full-step speedup; cache/prefetch full student+EMA+optimizer+RNG bitwise parity at threads8; paired-arm regression gate",
+    "batch48": "cost-only control, excluded from fixed-step wall-time recipe selection"
+  },
+  "a5_parallelism": {
+    "workers": [
+      1,
+      2,
+      4,
+      8,
+      12,
+      16
+    ],
+    "benchmark": "16 largest-geometry TRAIN cines x first2 timepoints",
+    "selection": "highest throughput with bitwise selected-bank and entry-metadata parity vs worker1",
+    "full": "80 TRAIN patients, 2148 timepoints; frozen matched A0 final checkpoint only; slice batch1"
+  },
+  "resource_limits": {
+    "gpu_spare_GiB": 2,
+    "probe_allocator_spare_GiB": 2.5,
+    "cgroup_RAM_cap_GiB": 120
+  },
+  "missing_evidence": [
+    "full-step GPU speedup not yet measured",
+    "GPU state parity not yet measured",
+    "A5 parallel GPU profiles not yet measured",
+    "remaining full training and VAL/TEST metrics pending"
+  ],
+  "artifacts_root": "/root/self-audit-memory-full-20261024",
+  "monitor_tmux_window": "ssh_tmux:self-audit-log"
+}

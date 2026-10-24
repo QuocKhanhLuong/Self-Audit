@@ -56,7 +56,6 @@ def merge_selected_banks(banks,provenance):
 
 
 def worker(args):
-    from self_audit.cinema_teacher import CineMATeacher
     out=args.out;out.mkdir(exist_ok=False)
     torch.set_num_threads(2)
     if args.device.startswith('cuda'):
@@ -65,11 +64,16 @@ def worker(args):
         if allowed<=0:raise ValueError('invalid aggregate GPU memory budget')
         torch.cuda.set_per_process_memory_fraction(allowed/total)
     started=time.perf_counter()
-    adapter=CineMATeacher(args.teacher_config,args.teacher_weights,source_root=args.teacher_source,device=args.device)
-    write(out/'READY.json',dict(pid=os.getpid(),model_load_seconds=time.perf_counter()-started))
+    adapter=None
+    if args.mode=='teacher':
+        from self_audit.cinema_teacher import CineMATeacher
+        adapter=CineMATeacher(args.teacher_config,args.teacher_weights,source_root=args.teacher_source,device=args.device)
+    write(out/'READY.json',dict(pid=os.getpid(),model_load_seconds=time.perf_counter()-started,
+          a5_checkpoint_load_in_processing_time=args.mode=='a5'))
     while not args.go.exists():time.sleep(.1)
     start=time.perf_counter()
-    result=build_memory_bank(args.native_manifest,args.native_manifest_sha256,mode='teacher',adapter=adapter,
+    result=build_memory_bank(args.native_manifest,args.native_manifest_sha256,mode=args.mode,adapter=adapter,
+        student_checkpoint=args.student_checkpoint,student_manifest_sha256=args.student_checkpoint_manifest_sha256,
         device=args.device,max_timepoints=args.max_timepoints,
         collect_a1_cache=args.write_a1_cache,a1_cache_dir=out/'external_pseudo' if args.write_a1_cache else None)
     payload=result['bank'];bank=MemoryBank(payload['endpoints'],payload['confidences'],payload['valid'],payload['metadata'])
@@ -108,9 +112,14 @@ def coordinator(args):
             target=out/f'worker_{i}'
             cmd=[sys.executable,str(Path(__file__).resolve()),'--worker','--out',str(target),
                 '--native-manifest',str(manifest),'--native-manifest-sha256',sha256_file(manifest),
-                '--teacher-source',str(args.teacher_source),'--teacher-config',str(args.teacher_config),
-                '--teacher-weights',str(args.teacher_weights),'--device',args.device,'--workers',str(len(groups)),
+                '--mode',args.mode,'--device',args.device,'--workers',str(len(groups)),
                 '--go',str(go)]
+            if args.mode=='teacher':
+                cmd+=['--teacher-source',str(args.teacher_source),'--teacher-config',str(args.teacher_config),
+                      '--teacher-weights',str(args.teacher_weights)]
+            else:
+                cmd+=['--student-checkpoint',str(args.student_checkpoint),
+                      '--student-checkpoint-manifest-sha256',args.student_checkpoint_manifest_sha256]
             if args.max_timepoints:cmd+=['--max-timepoints',str(args.max_timepoints)]
             if args.write_a1_cache:cmd+=['--write-a1-cache']
             log=(out/f'worker_{i}.log').open('x');p=subprocess.Popen(cmd,cwd=REPO,stdout=log,stderr=subprocess.STDOUT);log.close();children.append(p)
@@ -165,7 +174,8 @@ def coordinator(args):
                     items.append(entry)
             payload=dict(bank=dict(metadata=bank.metadata),coverage=coverage,a1_records=items,manifest=source)
             cache=write_a1_cache(destination,payload,bank_sha256=bank_sha)
-        receipt=dict(schema='self_audit.memory_bank_build.v1',status='BUILT',mode='external_teacher_image_only_parallel',
+        receipt=dict(schema='self_audit.memory_bank_build.v1',status='BUILT',
+            mode='A5_student_only_parallel' if args.mode=='a5' else 'external_teacher_image_only_parallel',
             bank=str((out/'fixed_bank.npz').resolve()),bank_sha256=bank_sha,native_manifest_sha256=args.native_manifest_sha256,
             coverage=coverage,coverage_status='FULL_TRAIN' if full else 'BOUNDED_NOT_FULL_BANK',
             a1_cache=str(cache) if cache else None,mask_paths_read=0,evaluation_ids_used=False,workers=len(groups),
@@ -182,7 +192,10 @@ def coordinator(args):
 
 def parser():
     p=argparse.ArgumentParser(description=__doc__)
-    for name in ('out','native-manifest','teacher-source','teacher-config','teacher-weights'):p.add_argument('--'+name,type=Path,required=True)
+    for name in ('out','native-manifest'):p.add_argument('--'+name,type=Path,required=True)
+    for name in ('teacher-source','teacher-config','teacher-weights','student-checkpoint'):p.add_argument('--'+name,type=Path)
+    p.add_argument('--mode',choices=('teacher','a5'),default='teacher')
+    p.add_argument('--student-checkpoint-manifest-sha256')
     p.add_argument('--native-manifest-sha256',required=True);p.add_argument('--device',default='cuda')
     p.add_argument('--workers',type=int,default=4);p.add_argument('--ram-limit-gib',type=float,default=120)
     p.add_argument('--max-patients',type=int);p.add_argument('--max-timepoints',type=int)
@@ -190,9 +203,20 @@ def parser():
     return p
 
 
-if __name__=='__main__':
-    args=parser().parse_args()
+def validate_args(args):
+    if args.mode=='a5':
+        if not args.student_checkpoint or not args.student_checkpoint_manifest_sha256:
+            raise ValueError('A5 requires a pinned frozen A0 checkpoint')
+        if args.write_a1_cache or args.teacher_source or args.teacher_config or args.teacher_weights:
+            raise ValueError('A5 must not receive external teacher assets or produce an A1 cache')
+    elif not all((args.teacher_source,args.teacher_config,args.teacher_weights)):
+        raise ValueError('teacher mode requires pinned source, config and weights')
     if args.workers<1:raise ValueError('positive worker count required')
     if args.max_patients is not None and args.max_patients<1:raise ValueError('positive patient bound required')
     if args.max_timepoints is not None and args.max_timepoints<1:raise ValueError('positive timepoint bound required')
+
+
+if __name__=='__main__':
+    args=parser().parse_args()
+    validate_args(args)
     worker(args) if args.worker else coordinator(args)
