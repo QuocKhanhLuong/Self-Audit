@@ -1,0 +1,40 @@
+{
+  "status": "LAUNCHED_OFFLINE_EXTRACTION; FULL_MATRIX_QUEUED",
+  "captured_utc": "2026-10-24T12:28:29Z",
+  "source_git_base": "8252760092e5dc97e0c441bd2d3d306146dcff64",
+  "source_sha256": "7f5856216d59bc787633f8a703fa362cf83582427b830ab1ce09c15aeb55e8a9",
+  "worktree": "/root/Self-Audit-memory-full-20261024",
+  "outputs": "/root/self-audit-memory-full-20261024",
+  "offline_teacher": {
+    "stage": "BUILDING_FULL_TRAIN_TEACHER_BANK_AND_A1_CACHE",
+    "utc": "2026-10-24T11:59:29Z",
+    "patients": 80,
+    "timepoints": 2148,
+    "cache_expected_bytes": 18944759200,
+    "cache_storage": "shared RAM, derived/rebuildable; final banks copied to disk"
+  },
+  "offline_patient_cache_files_allocated_at_capture": 15,
+  "full_training_status": "NOT_STARTED; gated on complete bank/cache and measured common batch",
+  "validation_and_test_status": "NOT_RUN for this new seven-arm experiment",
+  "ablation_arms": [
+    "A0",
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "A5",
+    "A6"
+  ],
+  "steps_per_arm": 10000,
+  "warmup_steps": 1000,
+  "seed": 42,
+  "label_budget": 8,
+  "main_pid": 344995,
+  "offline_pid": 329526,
+  "tmux_window": "ssh_tmux:self-audit-log",
+  "raw_files_modified": 0,
+  "old_checkpoints_or_data_deleted": 0,
+  "geometry_adjudication": "52 missing-unit headers declared mm in separate derived files; source/payload hashes retained; canonical unknown-unit guard unchanged",
+  "test_scope": "Previously exposed Drive TEST50; not independent confirmation",
+  "git_results_already_pushed": "9341cc81fc046d61135b928f5ac51ebed19c19ed; inherited by current base"
+}

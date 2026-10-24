@@ -1,0 +1,413 @@
+{
+  "schema": "self_audit.acdc_units_declaration.v1",
+  "train_manifest": "/root/self-audit-pilot-artifacts/data/cache/L8_S42/train.json",
+  "train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+  "spatial_units_for_unknown": "mm",
+  "evidence_urls": [
+    "https://raw.githubusercontent.com/mathpluscode/CineMA/c10daa1d93f0ea28d8b9ad9206b0f673d25805c1/cinema/data/acdc/README.md",
+    "https://www.creatis.insa-lyon.fr/site/sites/default/files/Olivier%20BERNARDL.pdf"
+  ],
+  "evidence_statement": "Pinned CineMA ACDC pipeline resamples native NIfTI spacing to 1x1x10 mm; ACDC acquisition documentation specifies mm resolution/thickness. This is an explicit dataset-level unit adjudication for absent tags, not independent per-file metadata certification. No masks, diagnostic fields or VAL/TEST data informed this choice.",
+  "patients": [
+    {
+      "id": "patient001",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient001/patient001_4d.nii",
+      "sha256": "262f856a7f31a10837a53902d0750877aade6f094e4f999a317b9de1b7047d17"
+    },
+    {
+      "id": "patient002",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient002/patient002_4d.nii",
+      "sha256": "671d6a03f1c150ef0ecdb23f782c5104e74ceadf48f608e6a5abfed3a6228296"
+    },
+    {
+      "id": "patient003",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient003/patient003_4d.nii",
+      "sha256": "719fbaa5947e8565ee9092062e586d659f3407fac1c22a6155675050aede05d2"
+    },
+    {
+      "id": "patient006",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient006/patient006_4d.nii",
+      "sha256": "145176464fd9f866f3e9f9245de0adc0d9225fd245d8b2120d4132db00b7cc60"
+    },
+    {
+      "id": "patient007",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient007/patient007_4d.nii",
+      "sha256": "b009681b3647e172a27d015701b56574368e73fb124053c3647590512631a568"
+    },
+    {
+      "id": "patient008",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient008/patient008_4d.nii",
+      "sha256": "33d8729a21f350df24a100aa31b48b30a53244132f3b56af6f1e3d154b29fac4"
+    },
+    {
+      "id": "patient009",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient009/patient009_4d.nii",
+      "sha256": "81eef484ed24ed3c647b2a77fbbb6a6b2edff4e2d9e20061bafaf7514e9d36d5"
+    },
+    {
+      "id": "patient010",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient010/patient010_4d.nii",
+      "sha256": "7eb2362719652d907145af4b11f30d50feeb201ddbcaa853f81b73c95a900884"
+    },
+    {
+      "id": "patient011",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient011/patient011_4d.nii",
+      "sha256": "6664ab45067777d903db03974b488647163eb5a417a9a79ea0fe88cf35748d3c"
+    },
+    {
+      "id": "patient013",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient013/patient013_4d.nii",
+      "sha256": "3779446792b7a7370a27bc0cdd0154b8e2000bad27b7fee9128164eeca00e075"
+    },
+    {
+      "id": "patient016",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient016/patient016_4d.nii",
+      "sha256": "1e8969689ce901dac712ec05971c367a8496df722bc452595b8ffd53317e796d"
+    },
+    {
+      "id": "patient017",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient017/patient017_4d.nii",
+      "sha256": "5b38bb94498a1bff8193f81e828988e395f0e4a7c299eb4fce4e84b57f8e90c9"
+    },
+    {
+      "id": "patient019",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient019/patient019_4d.nii",
+      "sha256": "86732ec1734a59e6c230c8690c4deba78b5a6047c78f5d0747a3830e4385a2c4"
+    },
+    {
+      "id": "patient020",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient020/patient020_4d.nii",
+      "sha256": "d2b663360eff8b1b34f43d1a042c8b9907c19477077f3d13000d5df329dff4ca"
+    },
+    {
+      "id": "patient021",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient021/patient021_4d.nii",
+      "sha256": "8f0d0ff61f22cd8cace5d4b7af686a08b10311695f7f1c710c79f47d2ca7fd9b"
+    },
+    {
+      "id": "patient022",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient022/patient022_4d.nii",
+      "sha256": "6b5f2dcf556dd173f5dfd58280db595211ba25bb6b7980a0e5145aa12420ebc2"
+    },
+    {
+      "id": "patient023",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient023/patient023_4d.nii",
+      "sha256": "4fb5ca12b41f1ce087d9f4565414e29a9a295f7884d10b0dfb3a79069679819a"
+    },
+    {
+      "id": "patient024",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient024/patient024_4d.nii",
+      "sha256": "15efa5e6dd9023639b1accb7215dff50ce3d76ccbb7573a5c9fd34624006b0ad"
+    },
+    {
+      "id": "patient025",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient025/patient025_4d.nii",
+      "sha256": "b8fb01258af61ed930ac27977d854d0ea3700985e6f854f731f74f012987ddda"
+    },
+    {
+      "id": "patient026",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient026/patient026_4d.nii",
+      "sha256": "80ff797ae70753cd95b8307aecac6b47f6b52d44c54cefb12e689a5a20e0db5f"
+    },
+    {
+      "id": "patient027",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient027/patient027_4d.nii",
+      "sha256": "3b1f1ae81255028ac61aeb6fbdff16de5fb35d7099013780204370f4c6dd49f2"
+    },
+    {
+      "id": "patient031",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient031/patient031_4d.nii",
+      "sha256": "6bfd15ae619b926bd10517d56071d9f880d6539575e06d72682c1c3685a8d5e4"
+    },
+    {
+      "id": "patient033",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient033/patient033_4d.nii",
+      "sha256": "0cac08267460d7a2bdd7b84f510cb5fbebe652a232d7b1e606b768a12fae4dad"
+    },
+    {
+      "id": "patient034",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient034/patient034_4d.nii",
+      "sha256": "b7654332a4163a21eb8db2b50483cb06104734e48e97eda5932c17590cd38d9c"
+    },
+    {
+      "id": "patient035",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient035/patient035_4d.nii",
+      "sha256": "96d2559d33e87b5f199fcd833dcd84a89b71ee93a5e5fabe49b1891fd35fcd21"
+    },
+    {
+      "id": "patient037",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient037/patient037_4d.nii",
+      "sha256": "99829af9ce86ff5f43bd7a351d02fabf6a00d5101bf0a3d9810684d20e65ce98"
+    },
+    {
+      "id": "patient038",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient038/patient038_4d.nii",
+      "sha256": "69614d2e9302829443f907e96e73e0b1c0f59754ca12ec7a68de187f08eb4eb7"
+    },
+    {
+      "id": "patient039",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient039/patient039_4d.nii",
+      "sha256": "46b38419bfd3e863a65c5770ff668c728a32e1a86e4a2039d4a20ed80c2c2af1"
+    },
+    {
+      "id": "patient040",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient040/patient040_4d.nii",
+      "sha256": "7c60eb5188bab9b211607f8c39ccb953a5568d15c686bd17d40ad6d6da32950d"
+    },
+    {
+      "id": "patient041",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient041/patient041_4d.nii",
+      "sha256": "8355e06503d51c4acdbad4c8bfb4f2ee9b8343957eb2be4e1af685febcf801a6"
+    },
+    {
+      "id": "patient042",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient042/patient042_4d.nii",
+      "sha256": "1a452f18a0d542780ec97b534b40e787fe9774f9029c52fa9bcd8a19ae6e5a48"
+    },
+    {
+      "id": "patient043",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient043/patient043_4d.nii",
+      "sha256": "7d7d8ce7ef82da3713146da9940b677b42d5d106a2e9855110ab5c3a6974f686"
+    },
+    {
+      "id": "patient044",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient044/patient044_4d.nii",
+      "sha256": "f5c38236c05d9380ffbb6172f507ae3bf37dee59a69dfad1250ebb511534f6da"
+    },
+    {
+      "id": "patient045",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient045/patient045_4d.nii",
+      "sha256": "14a833549ae6f90005dd857971859494c13d83e038fd84196c394ed9ce8fce62"
+    },
+    {
+      "id": "patient046",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient046/patient046_4d.nii",
+      "sha256": "4a314786be0497ab26a17c6b267f68b9e573717d09b665f3234a145abd08a196"
+    },
+    {
+      "id": "patient047",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient047/patient047_4d.nii",
+      "sha256": "a2fc5477a9ac94f9070ee0f18db5cc90083e1c2bae81efd77551d0b574ce1ced"
+    },
+    {
+      "id": "patient048",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient048/patient048_4d.nii",
+      "sha256": "2616f7d68f08990f27a0c108e05da5273394db5478876ced95f3ddb5c4099d04"
+    },
+    {
+      "id": "patient049",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient049/patient049_4d.nii",
+      "sha256": "48318d426c43d30338b2f747d60fb95fbb48a0454a88f812c867354bddcad8f0"
+    },
+    {
+      "id": "patient050",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient050/patient050_4d.nii",
+      "sha256": "4d6ef50b1a590180863e1637a6b97c7c903b809103a4a5454ecd17d18e1202d0"
+    },
+    {
+      "id": "patient051",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient051/patient051_4d.nii",
+      "sha256": "78424248aa059ea9336f3d9f982794f48a84419cb2ddc2569dd415cdef33ea9c"
+    },
+    {
+      "id": "patient052",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient052/patient052_4d.nii",
+      "sha256": "87271d169c31b6d4488538b721c7d771e886b4c6d4e7ce988732c499485a8af5"
+    },
+    {
+      "id": "patient053",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient053/patient053_4d.nii",
+      "sha256": "347b24a8cc61acf10c46a6f4ae2a246e7b419ac71772fecd3665017b9362c8ee"
+    },
+    {
+      "id": "patient054",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient054/patient054_4d.nii",
+      "sha256": "a055c76cdf508c0b9ce1dc785fb1706173f9e56f4d49e8dee04424a3d026d18e"
+    },
+    {
+      "id": "patient056",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient056/patient056_4d.nii",
+      "sha256": "a5733abffce81c0f9e90b9bf8afebed1d28ebf588180f58a3470d1fb395327a7"
+    },
+    {
+      "id": "patient057",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient057/patient057_4d.nii",
+      "sha256": "162a508524ad73d1b5d3bd82b8146373ebeb5c2ddf09320110f0f43e476fc972"
+    },
+    {
+      "id": "patient058",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient058/patient058_4d.nii",
+      "sha256": "c0835e2dc7654dddd62c04bdf8b2bd7c11f74efc95b7eaec0f78dc4abbb53d5e"
+    },
+    {
+      "id": "patient059",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient059/patient059_4d.nii",
+      "sha256": "bd54172d89b382ec06e2f5c5242429055e3a4b766e186825b0648b84858379cb"
+    },
+    {
+      "id": "patient060",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient060/patient060_4d.nii",
+      "sha256": "7220af02d9b4ac4b7f2c52bcb357326e8977d0a83b21078003efa0f218df1f5b"
+    },
+    {
+      "id": "patient061",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient061/patient061_4d.nii",
+      "sha256": "2ebf49f26ed8731abb763d874646a89f2529d9ee88b346eaee387cf7ac3c698c"
+    },
+    {
+      "id": "patient062",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient062/patient062_4d.nii",
+      "sha256": "32d200bfed66bba4dd1e7481638baac75b6415019d7d8367de16364b15fc751b"
+    },
+    {
+      "id": "patient063",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient063/patient063_4d.nii",
+      "sha256": "6295ffb04ca7c3233837fff8ce29f919257653b9d200c01711672aacaeea8f88"
+    },
+    {
+      "id": "patient064",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient064/patient064_4d.nii",
+      "sha256": "0515d959892b9e6466da45e816f21a8eb59bcf1d4e28b0a91b55ee4f887fb75d"
+    },
+    {
+      "id": "patient066",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient066/patient066_4d.nii",
+      "sha256": "4fa9ad78c8367841fd63b8b07f92cb85fc0b13086abd1310b414ee3746bd9939"
+    },
+    {
+      "id": "patient067",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient067/patient067_4d.nii",
+      "sha256": "fe8f997a17aa8ec7ae2ebb04941a65e461aca410541c3fa775922480b5c669f5"
+    },
+    {
+      "id": "patient068",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient068/patient068_4d.nii",
+      "sha256": "d47ade69f7b99369d26de173bd6c55fc90bc68185e248c1d287a335d971f6417"
+    },
+    {
+      "id": "patient069",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient069/patient069_4d.nii",
+      "sha256": "dbeba857c6dff9a1a1df4c5597dfc02ecc1108da4c2653d30003042dfa9255df"
+    },
+    {
+      "id": "patient071",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient071/patient071_4d.nii",
+      "sha256": "eb67d9406972cdeeadfaf348ca86b6c31fee066c5b47386e1fd40654e6440703"
+    },
+    {
+      "id": "patient072",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient072/patient072_4d.nii",
+      "sha256": "6e3481b05a38e6ad03088f22ab899c42818d7cb7d42626124952d8a87b82553f"
+    },
+    {
+      "id": "patient073",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient073/patient073_4d.nii",
+      "sha256": "daacc8685018bde7e8cdebf9d46576a10518fad59401520892b75e793d40508d"
+    },
+    {
+      "id": "patient074",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient074/patient074_4d.nii",
+      "sha256": "69487c77380cf665520ffbe6ce3abc0eba5a121dc2270e564079be765c296a52"
+    },
+    {
+      "id": "patient075",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient075/patient075_4d.nii",
+      "sha256": "4333f734a23438fd0b8d17500b185dac8c59688f3d33d7385d862a928b17893c"
+    },
+    {
+      "id": "patient077",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient077/patient077_4d.nii",
+      "sha256": "cf916871be3822429ac1a9ae17d723c94664b93c9951fdedba933a4be7193384"
+    },
+    {
+      "id": "patient078",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient078/patient078_4d.nii",
+      "sha256": "0908ad845d0bad6dbc457e126b3569b93dd4ccd54099900b55eb9170ec6a98f3"
+    },
+    {
+      "id": "patient079",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient079/patient079_4d.nii",
+      "sha256": "a346bb2625688b79efdd70f583f74ad4da6302473a8e0bd2c832cb8e4caa7052"
+    },
+    {
+      "id": "patient080",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient080/patient080_4d.nii",
+      "sha256": "9bb088ef46a367e6ab7758339d1ee8694ad97b187e0054f3e009c38ae92d5e41"
+    },
+    {
+      "id": "patient081",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient081/patient081_4d.nii",
+      "sha256": "75d8a85366b66df88accbe9c67fb15649edeb6176850c1dc21d1cdd01aefafe4"
+    },
+    {
+      "id": "patient083",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient083/patient083_4d.nii",
+      "sha256": "0dc52ff43b4a53c6a4a71268982824142e04411fdf8c6d87297b4d82240b6ffa"
+    },
+    {
+      "id": "patient084",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient084/patient084_4d.nii",
+      "sha256": "d9be342673878c01aad056e4043ded6cbc96dfea6b9eaf7a8c2d2e371570fde6"
+    },
+    {
+      "id": "patient085",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient085/patient085_4d.nii",
+      "sha256": "acd152bf422243be64089601c71c7d86b1b39e166b89f0027b7c25aaafde22e8"
+    },
+    {
+      "id": "patient086",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient086/patient086_4d.nii",
+      "sha256": "32506debbfd65f58ed3cfdc6c90c834d1de34f2d4870d8cad6b1cb5821763b85"
+    },
+    {
+      "id": "patient088",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient088/patient088_4d.nii",
+      "sha256": "0abdbba843f0c3b22ad9509430dcd7e71ea9d0947a4f272f4a0b9cf55cbb96e8"
+    },
+    {
+      "id": "patient090",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient090/patient090_4d.nii",
+      "sha256": "1a986cf00048b195d7fd1f4802d3f0c729dc1f0c2bb814f70db035b5d118b446"
+    },
+    {
+      "id": "patient091",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient091/patient091_4d.nii",
+      "sha256": "6231158587db6758ebdbf3a61d94f3dc1c309c5cff19382522d267102f4c3c24"
+    },
+    {
+      "id": "patient092",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient092/patient092_4d.nii",
+      "sha256": "8d8576b7c6feb7f409a3f5d8d64f5c26c354b06c4e8432dc300c08989d5ecaac"
+    },
+    {
+      "id": "patient093",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient093/patient093_4d.nii",
+      "sha256": "a55037ab2a500511ef809204a12408c2fa74391965a24f4076d88b2ac7ab8559"
+    },
+    {
+      "id": "patient094",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient094/patient094_4d.nii",
+      "sha256": "67e21e6006d24817881e28ed43ab810dc5cd7c165d05215c04e5884db9de98e6"
+    },
+    {
+      "id": "patient096",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient096/patient096_4d.nii",
+      "sha256": "f45d1c1dd8df8a174d1decb204390a9babc4ee0a55297ce9f6b78be3ebc60859"
+    },
+    {
+      "id": "patient097",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient097/patient097_4d.nii",
+      "sha256": "e70a08e2a2585ef83fa9478ccd28a5c772210d8db65fa2b94149641bc8321062"
+    },
+    {
+      "id": "patient099",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient099/patient099_4d.nii",
+      "sha256": "977516f48fc496c93aab2aab982f50c2fc1c86371b8a95900461bf788cd5fb7f"
+    },
+    {
+      "id": "patient100",
+      "path": "/root/self-audit-pilot-artifacts/data/raw/ACDC/training/patient100/patient100_4d.nii",
+      "sha256": "808f30e98345ec05620c717c0ff381b941f99a5a476c95da84c43482c7bf74d1"
+    }
+  ]
+}

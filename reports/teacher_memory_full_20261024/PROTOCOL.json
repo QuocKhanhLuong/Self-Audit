@@ -1,0 +1,29 @@
+{
+  "schema": "self_audit.teacher_memory_full.v1",
+  "source_sha256": "7f5856216d59bc787633f8a703fa362cf83582427b830ab1ce09c15aeb55e8a9",
+  "base_git_sha": "8252760092e5dc97e0c441bd2d3d306146dcff64",
+  "arms": [
+    "A0",
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "A5",
+    "A6"
+  ],
+  "steps": 10000,
+  "warmup_steps": 1000,
+  "seed": 42,
+  "label_budget": 8,
+  "crop_size": 256,
+  "matched_inputs_and_sampling": true,
+  "train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+  "a5_snapshot_rule": "new matched A0 final step10000; fixed before any new VAL/TEST outcomes",
+  "validation": "frozen midpoint and final checkpoints; no early stopping or tuning",
+  "test": "all seven preselected final student checkpoints, only after every training arm completes; reused/exposed Drive TEST50",
+  "primary_reporting": "Dice BG/RV/MYO/LV and patient macro over all4 classes; foreground macro retained separately",
+  "storage": "new lossless gzip argmax volumes; checkpoint midpoint+final; no existing data deleted",
+  "geometry": "explicit pinned dataset-level mm declaration for missing raw NIfTI unit tags; metadata-only derived copies",
+  "cache": "complete FP32 external targets in shared RAM; derived/rebuildable, lost on container restart",
+  "teacher_subject_overlap": "UNKNOWN; M&Ms/UKB lineage does not certify ACDC-disjoint subjects"
+}

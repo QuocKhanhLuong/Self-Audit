@@ -76,3 +76,42 @@ After binding all intended assets and shared budgets, the launch command is:
 ```
 
 Use the corresponding A0–A6 config and a new output directory for each arm. Runs beyond128 updates additionally require the CLI's explicit `--allow-full-run`; no such run was started. [Delivery report](../reports/teacher_memory_pilot/REPORT.md) lists actual tests, hardware timings, hashes, coverage and NOT RUN items.
+
+## Subsequently authorized full experiment
+
+The user subsequently authorized full A0–A6 training, validation and TEST. The
+execution worktree is `/root/Self-Audit-memory-full-20261024`, based on
+`8252760092e5dc97e0c441bd2d3d306146dcff64`; receipts are under
+`reports/teacher_memory_full_20261024/`. The initial delivery's NOT RUN statements
+above describe that delivery and are not completion claims for the new job.
+
+`scripts/run_teacher_memory_full.py --root /root/self-audit-memory-full-20261024
+--steps 10000 --warmup-steps 1000` waits for a complete 80-patient/2,148-timepoint
+teacher bank and A1 cache, benchmarks real full transactions on A0/A1/A2/A3,
+checks dense memory capacity, then selects one shared batch and thread count by
+measured suite throughput. Profile threshold0 forces the pseudo path for cost
+measurement; every full recipe retains threshold0.7, crop256, L8 and seed42.
+A0's final checkpoint is the prespecified A5 source, irrespective of outcomes.
+All seven training schedules must match exactly. No exact resume or early
+stopping is introduced.
+
+The raw mirror lacks spatial-unit tags in 52/80 TRAIN cines. An explicit
+dataset-level mm declaration is recorded against image hashes and the pinned
+CineMA ACDC preprocessing convention. `declare_acdc_spatial_units.py` creates
+new gzip copies changing only NIfTI-1 header byte123, verifies identical payload
+bytes/affine/spacing, and leaves raw files and the strict unknown-unit guard
+unchanged. This adjudication is explicit provenance, not independent per-file
+clinical geometry certification. No masks or diagnostic fields resolve units.
+
+The complete FP32 A1 cache uses approximately17.6GiB of shared RAM and is
+rebuildable; it is not durable across container restart. Banks, midpoint/final
+checkpoints and reports remain on disk. Validation uses midpoint and final
+checkpoints; TEST uses all seven preselected final students after all training
+finishes. `evaluate_frozen_labels.py --compress-predictions` retains full native
+uint8 argmax volumes with lossless gzip and hashes before opening references.
+Dice is checked against the canonical probability evaluator. Probability
+calibration analyses are unavailable from these compressed label outputs.
+Reporting includes BG/RV/MYO/LV, macro over all4 and foreground macro separately.
+Previously exposed VAL18 and Drive TEST50 are not independent confirmation;
+external-teacher subject overlap and official TEST-label provenance remain
+unresolved.
