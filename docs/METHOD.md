@@ -147,5 +147,8 @@ The separate [window pilot](WINDOW_PILOT.md) adds fixed or adaptive semantic
 support at the final decoder fusion, with an optional update-mediated meta-Dice
 geometry rule on top of full EMA. It does not alter the canonical defaults or
 the guarded policy described above. The new method has no finite-step Dice
-guarantee. Its current evidence is CPU/manufactured numerical and software
-verification only; patient and CUDA experiments are not part of this delivery.
+guarantee. Its initial evidence was CPU/manufactured numerical and software
+verification. Subsequent matched GPU runs and frozen TEST50 evaluation are
+recorded in `reports/window_pilot_test50_20261024/`; the Drive reference copy is
+not independently certified as official challenge ground truth. These
+measurements do not extend the guarded policy's guarantees to patient Dice.

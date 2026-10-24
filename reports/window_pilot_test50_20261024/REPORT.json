@@ -1,0 +1,30 @@
+{
+  "status": "COMPLETED",
+  "dataset": "Drive TEST50, patient101..patient150",
+  "patients": 50,
+  "reference_frames": 100,
+  "citation": "O. Bernard et al., IEEE TMI 37(11), 2514-2525 (2018), doi:10.1109/TMI.2018.2837502",
+  "protocol": "All three final step10000 student checkpoints pinned before TEST preparation; no selection or tuning on TEST",
+  "scoring": "Raw argmax on full native cines; per-class Dice averaged over present reference frames per patient, then over patients; foreground macro averages each patient RV/MYO/LV",
+  "reference_provenance": "Configured KhanhDrive testing mirror; official upstream label provenance and challenge-server certification unavailable",
+  "comparison_to_active_train_val": {
+    "exact_voxel_overlap": 0,
+    "within_test_duplicates": 0
+  },
+  "quarantined_copy_matches": [
+    {
+      "test_id": "patient118",
+      "excluded_raw_ids": [
+        "patient055"
+      ]
+    }
+  ],
+  "initial_preparation_failure": "Conservative first pass rejected TEST118 matching raw patient055; locked split already excluded 055 before this TEST request. Final preparation checks active TRAIN80/VAL18 and explicitly reports quarantined matches. No TEST patient was removed.",
+  "physical_boundary_metrics": "Not computed; HD95 geometry/implementation not certified",
+  "checkpoints_and_source_hashes": "See RESULTS.json, PROTOCOL.json and arm/CHECKPOINT_MANIFEST.json",
+  "frozen_arrays": "Full native FP32 probabilities, references, cines and checkpoint payloads retained locally outside Git",
+  "source_git_sha": "0f54455b67bb11a72fbfe2a8ac6fae4073f3e9ca",
+  "executed_source_sha256": "3c7fa85f00d54a6e087af3cd6c7045351fb72d532f1069bf09d95f9cd72359b7",
+  "pretrained_weights_sha256": "21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54",
+  "new_training_or_checkpoint_updates": false
+}

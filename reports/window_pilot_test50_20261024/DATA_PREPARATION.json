@@ -1,0 +1,1225 @@
+{
+  "status": "PASS",
+  "patients": 50,
+  "reference_frames": 100,
+  "normalization": "per_cine_image_only_percentiles_0.5_99.5; full native grid",
+  "test_mask_patient_ids_read": [
+    "patient101",
+    "patient102",
+    "patient103",
+    "patient104",
+    "patient105",
+    "patient106",
+    "patient107",
+    "patient108",
+    "patient109",
+    "patient110",
+    "patient111",
+    "patient112",
+    "patient113",
+    "patient114",
+    "patient115",
+    "patient116",
+    "patient117",
+    "patient118",
+    "patient119",
+    "patient120",
+    "patient121",
+    "patient122",
+    "patient123",
+    "patient124",
+    "patient125",
+    "patient126",
+    "patient127",
+    "patient128",
+    "patient129",
+    "patient130",
+    "patient131",
+    "patient132",
+    "patient133",
+    "patient134",
+    "patient135",
+    "patient136",
+    "patient137",
+    "patient138",
+    "patient139",
+    "patient140",
+    "patient141",
+    "patient142",
+    "patient143",
+    "patient144",
+    "patient145",
+    "patient146",
+    "patient147",
+    "patient148",
+    "patient149",
+    "patient150"
+  ],
+  "train_u_val_mask_reads": 0,
+  "exact_cine_overlap_with_active_train_val": 0,
+  "quarantined_raw_cine_matches": [
+    {
+      "test_id": "patient118",
+      "excluded_raw_ids": [
+        "patient055"
+      ]
+    }
+  ],
+  "raw_train_val_cines_compared": 100,
+  "source_split_sha256": "b826eaf494760079aa559b0c0c12f7444951d779ebbb5ed291c0398f20bf835f",
+  "pinned_protocol_sha256": "a7d4d844288e80041b4acc53790eda79a112b6301058eb1d98577c3b590d4a3c",
+  "manifest_sha256": "22a9ea63821f266bd59e810bcd8f9a6958e6f92cc363e4a360b5ab9d4eb1e25c",
+  "sources": [
+    {
+      "patient": "patient101",
+      "cine_sha256": "c13e2a670ea22f47d659b8723167ff26eb375a28190ecc975a154efb96075689",
+      "cine_voxel_sha256": "0d91e317caf915924944552ce024800f006852a6cdf89f20cadd7196269fb64f",
+      "shape_xyzt": [
+        232,
+        256,
+        10,
+        30
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "061c3b971e30481399952a7b17b78b5af5f046735f57a106842a6b5f17c84aa1",
+          "frame_image_sha256": "93f38961de414a158d651a4de097e0dcc0c04a5b74b57b22ed3e500dd0d2ffc0"
+        },
+        {
+          "frame": 13,
+          "source_sha256": "bbd786c4a4351a5952471ccc1305eeaeb3eac7fe7aa35190f49e89e7fced0024",
+          "frame_image_sha256": "4bb7f35ad342d8e3598abf7c743588ddd40b2ba64e5cb1c441e9bc26d8285492"
+        }
+      ]
+    },
+    {
+      "patient": "patient102",
+      "cine_sha256": "935d45b5157ea2f9a89bf9089b9d95c657a23d68a75435611048cfcfed7cb329",
+      "cine_voxel_sha256": "856f392131dab9c277cfd5913976b896d45494f8dd6813f142b7a7e970078219",
+      "shape_xyzt": [
+        216,
+        256,
+        8,
+        30
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "0f85f0a532d2f1d0021ac900cd7e2220899b05031abdb261ea824e9ebc066a14",
+          "frame_image_sha256": "fb281d4753b74329d9620cd57bfa668644634f79d7be49c0acb1f70250c279da"
+        },
+        {
+          "frame": 12,
+          "source_sha256": "f7ad605ea87bec2eccfebd9c036cf29c699134dbc1c3c13b2694b1c571b5c5f3",
+          "frame_image_sha256": "f48a18e76a3d03a8ecd7dc27030bee47e9d16b100168fc7d1e3a28234eb7ebff"
+        }
+      ]
+    },
+    {
+      "patient": "patient103",
+      "cine_sha256": "7db37f1a76bdaded025f5e1e278e03ab9dd656f9c1740ef52783413fce70244c",
+      "cine_voxel_sha256": "9ed968d048f64169ca5e779c2324e85383a1be7be031d09e603cbf038d64382a",
+      "shape_xyzt": [
+        216,
+        256,
+        9,
+        30
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "c4e133bca7a26349f581abcb0c8d6be5bbd0e7349914123f701df4b2f1c8b930",
+          "frame_image_sha256": "6d464eadd5793adff098d52bb59dc4f162a0fb0596e6ad29faf855bcbf43a5d1"
+        },
+        {
+          "frame": 10,
+          "source_sha256": "a497c90cc680903d681128871f6295994a1829a379bfb8a750f6cd33cd76c975",
+          "frame_image_sha256": "3532a3142ad9dc65c13b57e36110ee5d8c63f00d90c7a68e4a47defcd60b049b"
+        }
+      ]
+    },
+    {
+      "patient": "patient104",
+      "cine_sha256": "7f93782b3e04327ca2c74e820961532f2848f196e8ad8c082305018a0bc264ef",
+      "cine_voxel_sha256": "618f8811739f9703e83e2175458f0132129e5c79677bf856b995c943ed89695a",
+      "shape_xyzt": [
+        208,
+        256,
+        9,
+        30
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "5d260b05687ab6df62457d9da8d23035362d50622535500c4f8a9782dedbeac1",
+          "frame_image_sha256": "0e1779ef4f4dc217b9f2a3a1765870395bca48aa227eea1139ddccf2207e6e07"
+        },
+        {
+          "frame": 10,
+          "source_sha256": "3b36b2443401c43538aeace622cc1bba05ec42ca57497ad2d39b94b039af7450",
+          "frame_image_sha256": "008a49c628967d464516d61f5adcf366369352371474bde6d5f87da4ed03469d"
+        }
+      ]
+    },
+    {
+      "patient": "patient105",
+      "cine_sha256": "8d6b76b5e96d6fb7430562cd65000caecfa584a8484c2e052abac99158cf6037",
+      "cine_voxel_sha256": "b0253b921fdb7b1a25169ea0224457d8afba6199f36ccedb30e97f2e4e6cbc80",
+      "shape_xyzt": [
+        232,
+        256,
+        10,
+        30
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "755eb153ec18e5706665806e58943b6d35890c081548259f5326da8024837e12",
+          "frame_image_sha256": "4fdf439e8e202beb30ca9395fe53e4d192f8e0812c216bf660c259f4735df1b4"
+        },
+        {
+          "frame": 9,
+          "source_sha256": "8c2e8118fa28fe4401b523d3f7708cf66f1302268f6130e430d66daac8ce9e05",
+          "frame_image_sha256": "8a0fb8e8d4b24c4a4c089d08d72761f84fb049e7b3ad27f4d573c8ba533ba60e"
+        }
+      ]
+    },
+    {
+      "patient": "patient106",
+      "cine_sha256": "f69def2026380ea70f099d29189811cf6a8eb8472dbdc1fcc859a8a2ae3d828a",
+      "cine_voxel_sha256": "c27d6c04b18cda0829041ae4cb872d3a374cb3409a405ac385037a2d3a205902",
+      "shape_xyzt": [
+        216,
+        256,
+        9,
+        30
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "f5998d020502350d7b6095484cc1cd16b63732d228a1e2f1985d7f3cafe29159",
+          "frame_image_sha256": "441aa0290964a14685b559a1a379d9a25e57610ac151e6449d0c3b10cfbf01b1"
+        },
+        {
+          "frame": 12,
+          "source_sha256": "b184077adf55c22fe50ad75bff97d06428261d0f04543cd70da52897d7c9d202",
+          "frame_image_sha256": "fd7d92b7d8c50fa0797fad0de2e56006c57633960f0cf8c27a4be0194819c498"
+        }
+      ]
+    },
+    {
+      "patient": "patient107",
+      "cine_sha256": "a3bed1c445634cd7eca08d5040849fe5170c00397e927be532f874d83accc1b3",
+      "cine_voxel_sha256": "21638f4e5a802b0b3abec63017ac0ba310589f2f67fc83827c853137c18adec6",
+      "shape_xyzt": [
+        256,
+        216,
+        9,
+        30
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "b18cec28a7b1790220bf6cf477101ef5f091a69d2f2a930c22a30ffa8aa0abbd",
+          "frame_image_sha256": "802b9200ac6c3e5ba99ca10735fa93fd138e7745a98439ca4ba4e4558eaffcdb"
+        },
+        {
+          "frame": 9,
+          "source_sha256": "4f8689314197d509b97e6af6b8d7d25c760255c94abd7ff214119bc8af1bc909",
+          "frame_image_sha256": "a45e98dcd6f08334511134503665c0f338d2f1f4ce90f3744c19843afda0d607"
+        }
+      ]
+    },
+    {
+      "patient": "patient108",
+      "cine_sha256": "66c521dcb0d4d392d448c8f0a25e90a1809dc8bed0440a83a9523e79a5027c98",
+      "cine_voxel_sha256": "8db705dfc197eab68f38649fc7b6b08768a24b1fdef73f7f5d965baa69c7e302",
+      "shape_xyzt": [
+        240,
+        256,
+        10,
+        30
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "b7eb1932f9e57993b6cc7f9625d427f8e18bf65dc50f3180a312ad38f66ac36e",
+          "frame_image_sha256": "1ecf5c2e9bc95fac33d029eb9662c407917dc9f4fc75e9299de15bd855cd374c"
+        },
+        {
+          "frame": 8,
+          "source_sha256": "1243a74ed852fa7a9a6e7f58cf81a04de6d2e042551eb72ba8c67a3165ba226e",
+          "frame_image_sha256": "e7f1979ac6ed6c282ac1af619b32b25a7173b74ed4020045d3ed178443d577b3"
+        }
+      ]
+    },
+    {
+      "patient": "patient109",
+      "cine_sha256": "2945f605829c4f15c5a55414d6fc27efbcee62c329c6ebe466c1aba4b7ab0a6a",
+      "cine_voxel_sha256": "37ea9357eba6d40ced606e3c6f65878b4269827e3eb6c9bc201fdf3e49090235",
+      "shape_xyzt": [
+        224,
+        180,
+        8,
+        30
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "888cb5c7dbaa44723f6f181851d655c1bafdff8c0074dc2acd26ecfe7f12c5e0",
+          "frame_image_sha256": "0c4e88d22326e26073356e7b871268628b4880cd3ae1a0a3b784c9da6432b617"
+        },
+        {
+          "frame": 9,
+          "source_sha256": "5449f0dd8478f4a8ea92ff531a4153f26622b08d93b775b08668364e58b57fbc",
+          "frame_image_sha256": "28c2b0e7aeba876b3bc4f2001818051f913525549033eeccaa6b5f3cc17ce63b"
+        }
+      ]
+    },
+    {
+      "patient": "patient110",
+      "cine_sha256": "ea138c3fca9031821610a569383fa83715db303b51e96b8f24363893a61ed633",
+      "cine_voxel_sha256": "287e27b597063bcc59ea52d44875b1491c2b6742b82165e6d2bc56a0ee87a70b",
+      "shape_xyzt": [
+        216,
+        256,
+        9,
+        30
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "28bf2f20c25869394c816401ac3dc88010dc0ee6af1af64371296c42c3433f82",
+          "frame_image_sha256": "06e8903f4581f095242f61d5d8bd56f79a398928d02e13edcd441c3a4e742289"
+        },
+        {
+          "frame": 10,
+          "source_sha256": "a058097a9cebdd68c77d3d2b832fba856b223e667feea760687053913c3de28a",
+          "frame_image_sha256": "3911d12c1d696ea2089cc141ee8aee463c43ad1403bc6f303f29b4c358be52be"
+        }
+      ]
+    },
+    {
+      "patient": "patient111",
+      "cine_sha256": "ab968cd21922897e6d50a98535635dae8873aa1fbc715610d1a1a79f99cec058",
+      "cine_voxel_sha256": "2250f14d5233dad875f93859d9c6b250a22b9240895c4f178d5f4d5013ecc19a",
+      "shape_xyzt": [
+        214,
+        256,
+        6,
+        15
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "a4b232a323544f8abfd72ad60e39582a5d34c12e9a3266b09e4e46fbe1e40c37",
+          "frame_image_sha256": "89abb1c45c0d7ab3aa0e23d542c612d2548fe989217da4c9c3cc62472c01c31b"
+        },
+        {
+          "frame": 6,
+          "source_sha256": "e8c5260c2afc79b3cc1160875e9192e090ba20c47fe025796707177af3a0f811",
+          "frame_image_sha256": "4cac6296dfa6ba03f73ce034ce71ad8fdc526704e4c7abec1d9cab854cc9d17d"
+        }
+      ]
+    },
+    {
+      "patient": "patient112",
+      "cine_sha256": "077ca4e14ee877bc278d749cd5a6fbc731cb914feb4278997b319bf112626dbf",
+      "cine_voxel_sha256": "0e858b4d520e3b64f09b6f25a3ff1665299d61b111d82ab5696e64622ceb4372",
+      "shape_xyzt": [
+        248,
+        256,
+        10,
+        30
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "b27b1ae7bd1e4cca2d7865e1f6b48fc78c8faf60245589be2b00948b5c508bbf",
+          "frame_image_sha256": "0810a1f27760c614dd870f9f2475191d23544e6bf922c61da12c8816cb4dbb9b"
+        },
+        {
+          "frame": 11,
+          "source_sha256": "4b818613d413165aebe2179b1053b0bbd5751c4bc0e44324c29fe9fdbae36fb8",
+          "frame_image_sha256": "62022fce5ae36a8736f9bc9109d1e9a36b22fe7f5413bf6c477dafb55c0fdae8"
+        }
+      ]
+    },
+    {
+      "patient": "patient113",
+      "cine_sha256": "6b3d465e6552ad5b05647dc93cad12c390c5460c2ebc98df757a4ec895ba34c7",
+      "cine_voxel_sha256": "194014c730739dee35a34ffd8f4f32939dc58001e6a78b551f2d8bb5e5dfcd5a",
+      "shape_xyzt": [
+        208,
+        174,
+        10,
+        15
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "339c67a9c5345a993f44681f58101c3e3b28f3b919808033b0fa4faa2538cf2d",
+          "frame_image_sha256": "22dbad7b30165027ab82f4244f00f5d690fa8e1d69c6d28b245b355614b8b2ce"
+        },
+        {
+          "frame": 7,
+          "source_sha256": "563f8a9fa031caa534bb73ea4776f417e5857a87e4dd4eba2267378de65bb7cb",
+          "frame_image_sha256": "e749eeaaf87e4b60082dcfd9670f66f7856a293fdb1a8cb108601d892b570679"
+        }
+      ]
+    },
+    {
+      "patient": "patient114",
+      "cine_sha256": "33014879a00b8933f8236f7591a76931c0ae3ad46f208e6a3819f201ebf37f22",
+      "cine_voxel_sha256": "c829a2206e9ed5497b81db7536a349b5f0b8c53e62b906821b3054cdb963bebc",
+      "shape_xyzt": [
+        216,
+        256,
+        11,
+        30
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "c59cfd750d32f2dd6cf2b0d6795d8967534aaeb2f5d3ba5a2d569f22de801c81",
+          "frame_image_sha256": "35d291949cb6653670e807f6a4389bd67983c7b1917cd9950eb156892901a7df"
+        },
+        {
+          "frame": 10,
+          "source_sha256": "c91e68b85426363a35e6cf5c9ecdfc1d316817a8846ad56632ddcff8c22dd348",
+          "frame_image_sha256": "411c8a8d85017e8574d194a3f82afd8ed9736564371f0aa5d4c0457db59a59b7"
+        }
+      ]
+    },
+    {
+      "patient": "patient115",
+      "cine_sha256": "75c286ba9cf864ff3bf633cccfeebac1d9a9986aa41413f9fe434595a5555a76",
+      "cine_voxel_sha256": "602a3f8349d03e3753f607c39f12ab7d74b6398a84f8b127cfebd8ef575ecc3d",
+      "shape_xyzt": [
+        216,
+        256,
+        10,
+        30
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "3ac236af9455ad10406fb2c3267ee775ecf7de853e60021eaf85e0fa486bb117",
+          "frame_image_sha256": "9ad6c9f180537dc9c42a1b43ef93459733c1b79c4ea0345886dadc3b0efb1828"
+        },
+        {
+          "frame": 12,
+          "source_sha256": "b59801bf9e48772ce9bc77f7b8c98e730a19898615891c43f6c256c5e985da03",
+          "frame_image_sha256": "0075580f18f552503c6b64196a378739d261129ee8234d9972b101e58b0ca474"
+        }
+      ]
+    },
+    {
+      "patient": "patient116",
+      "cine_sha256": "15327a8882c2042a9ecef896db500e8b11ec46e8f9bb2df2cc4214b5d39f62aa",
+      "cine_voxel_sha256": "52d36e35e550401f00ef1194c2fa2f1fc07cab411be56338949c64801c818c87",
+      "shape_xyzt": [
+        216,
+        256,
+        10,
+        30
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "fee12ede33d488467718d4e982acd50aaecebe1c331aefac505784f8bca82f38",
+          "frame_image_sha256": "ba9aa368de210cd9a3d2939b4f62aeccb2e178615724863e0a1593c111ebd0dc"
+        },
+        {
+          "frame": 8,
+          "source_sha256": "a6c16c1eed336716e0657a745a016478d1981b24499eeef82326f99738bbd1c8",
+          "frame_image_sha256": "55db73858a969e6ecf6a730fa4022cbb4425cf1053e412c2bd4a03c650c344d9"
+        }
+      ]
+    },
+    {
+      "patient": "patient117",
+      "cine_sha256": "b66572fd86a2ab10cbdee1c203c68948171dbed7bbb3cba4e2552df779817a92",
+      "cine_voxel_sha256": "326e590a8251db0f3f89cbd3dd4ea941283ee90532233aff86343dd0499a5c2c",
+      "shape_xyzt": [
+        256,
+        216,
+        10,
+        30
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "a4b8cf7138d8dcda398c6c35344f73370777ef7447e979bd5dcbacf73b3016e8",
+          "frame_image_sha256": "8be771b2138b1d209c395e7c25bfae54e4858bf7a17daa5f259af9bba190869c"
+        },
+        {
+          "frame": 12,
+          "source_sha256": "cf7e94403deb966d6f4e5d683e5577e03c91e913a369fd67546729b14ff19e53",
+          "frame_image_sha256": "76e1815fd815196b55f6d081891e4189f881d4b2bd24053e4742579d6ed134c5"
+        }
+      ]
+    },
+    {
+      "patient": "patient118",
+      "cine_sha256": "ae245957fee700499974cbd7341c9397cc34d333915c10ed7d7285f29a1b8a47",
+      "cine_voxel_sha256": "9002cf4c58036e2459a1751bec65692c539f72e9667da4ce5078e3b056749d56",
+      "shape_xyzt": [
+        256,
+        216,
+        9,
+        25
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "0517932d9ba8ea4ad0f4d39a6d3f851551da3d59039180cedf6669008ec55327",
+          "frame_image_sha256": "df3f3a57a3e8f262b8da34631bfe680e6ad4968c2e7f59b2f090e3135c590b75"
+        },
+        {
+          "frame": 9,
+          "source_sha256": "c973199124bc0007c13d97a7d671c351514f426d7bfd9c8cf497e006d33cb545",
+          "frame_image_sha256": "11f7c54643e1da512c0d7b654b1b8e9f263b050d3ac6bdeed29789ec48c946c0"
+        }
+      ]
+    },
+    {
+      "patient": "patient119",
+      "cine_sha256": "a97eb23cdec4efda7f94ef5293f346b2ed7f5349b3e11b7cdabade700a000239",
+      "cine_voxel_sha256": "45ff3e4d94ef78566202fe5c059c1c918b22e4fbb6f2109fe6bbeb76ab002c2d",
+      "shape_xyzt": [
+        174,
+        208,
+        17,
+        15
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "1485eb171c34aee68594103eee41b26e51600abab3fa80e094e681573f8e6733",
+          "frame_image_sha256": "9fd0a7668a5beb2ba641a386b078975563ec349cb38a3aa5ea4efdb22b801384"
+        },
+        {
+          "frame": 8,
+          "source_sha256": "d509778ad92933f72a31c7c00dbee4f8558ff7663bd4b4cf30a3bb5781a2a475",
+          "frame_image_sha256": "60f115a7b5dd9138bed88c3acbc41e264c75a8290d999b541edbfc5a8678c0f7"
+        }
+      ]
+    },
+    {
+      "patient": "patient120",
+      "cine_sha256": "c896b408ea62ba70bf954862aaf269820b91e5c6c4e182484aa365b54b4985df",
+      "cine_voxel_sha256": "3948d2bc3b57d337dc759680cdb30bba7eec6031c8c0cb005b8634928b85cd36",
+      "shape_xyzt": [
+        214,
+        256,
+        9,
+        25
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "6c9a88e0df7d68780ec0c7d762f919b6f5c198b0e85e81a3e2c19ff95af61b81",
+          "frame_image_sha256": "5b93bab5bc66ba7a447b2d3352850b64e017d3b8fb87de6db4a9b27890d3fa9c"
+        },
+        {
+          "frame": 7,
+          "source_sha256": "fd32c7599cd1a2b80415f1732777f2c9c20af982fe55d43a47b0b3e42a5f31a2",
+          "frame_image_sha256": "7f848cf0446176517d0c600335cc82825167d5bc7cee6ea51ffa4a4f9a8bec59"
+        }
+      ]
+    },
+    {
+      "patient": "patient121",
+      "cine_sha256": "39a1da369a8de6ec29c1e3b8852852f41fe98adbf18b8143769233ab35503fea",
+      "cine_voxel_sha256": "4b4a5646baf0ec90db1f17c4a84db46911340741a4d0d97ccab5ef64490b1f85",
+      "shape_xyzt": [
+        240,
+        166,
+        8,
+        35
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "2134980382e8c8ae6d48bda7be574f2be4eb093d95cd72f89af75007d3132483",
+          "frame_image_sha256": "f7c4b651022f1a4fbd4c74bc359edd01c0108658c49e86a23d9dbaf96a20dc03"
+        },
+        {
+          "frame": 9,
+          "source_sha256": "958a5b604500709dd1f0429f147d0866210851b91105d7b34b16074e03d431fa",
+          "frame_image_sha256": "c37317b69a4e93c3e2a84e95c919729e55044ab4f0aceb7262520f5b483ef5cc"
+        }
+      ]
+    },
+    {
+      "patient": "patient122",
+      "cine_sha256": "863026ee19d8778326132be30c4c4d739e52b1b55bbbe3efcc51602ecc18c146",
+      "cine_voxel_sha256": "5acaa4bf6f3129c9251ce8632859f975967e4f800d6df1d501592d40bdc0bab8",
+      "shape_xyzt": [
+        180,
+        224,
+        9,
+        14
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "a0162cd31eb80e25eab553fd6bdc32de84eeda9c37ac2118033cce9254afc207",
+          "frame_image_sha256": "3015ffd54eaa8132bd54efa9d8b6202ef7a12e680291c3fea8ea8a8061eebece"
+        },
+        {
+          "frame": 5,
+          "source_sha256": "4374e9aee54e1c9ec16601ac757ff01b0de01aa40edc52cdc75ba47654e37e04",
+          "frame_image_sha256": "6348c09729fe3f86f932b43b99c7a8566e1aaca93c1ae545188253da1552d479"
+        }
+      ]
+    },
+    {
+      "patient": "patient123",
+      "cine_sha256": "51d8e9f4e7778b0c0041d22d6ed5c3e574f4907546bb3f5c67720c4792258a13",
+      "cine_voxel_sha256": "d11a8b539be21b6a9760e19ee88e6e1e7a3636b99ce19ceb2ff142f024f8946e",
+      "shape_xyzt": [
+        216,
+        256,
+        8,
+        30
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "259baac103fb95657389f9e937ecb990c80f0c271f68a56b3664e0cb93c86cb7",
+          "frame_image_sha256": "d4be8a9b7bd02bb1ec191e9f16acacff5aed23a41190e1b39b0ce5b51eaae4d7"
+        },
+        {
+          "frame": 10,
+          "source_sha256": "5afbd7db97b9181e49480af36848b4ebab124eeadfe04ddb317d1102030af5a2",
+          "frame_image_sha256": "7288554444bf7e50ba13bd5b00594d738ebaccf39d36c207ce9ac0807d0a8e3f"
+        }
+      ]
+    },
+    {
+      "patient": "patient124",
+      "cine_sha256": "5c37870ea76d29fcf65b9cd6786cc0ed7b6111a7c591b38b423297de7617648d",
+      "cine_voxel_sha256": "2caec06f579a55ce3a6ac70bf6cca76f7ee4c910fb1ff8b6d894324a3180d3e9",
+      "shape_xyzt": [
+        168,
+        208,
+        21,
+        15
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "b3ad2b27dc6fbd683a8793ba8177f37d9274687eb5e281bc178a0758f2368a44",
+          "frame_image_sha256": "4435d9137628cc40b8e88106ed50dba94d61d898d14ad48888c87ba200dcff26"
+        },
+        {
+          "frame": 6,
+          "source_sha256": "f533d3af135fb7c1898753000d96b5a0b93989c0e7a59d9771b56e24e2249cf1",
+          "frame_image_sha256": "020cb4c0e6c6792cae1e54aecfa6545be08b877272c6aa6c392a36cb71acad18"
+        }
+      ]
+    },
+    {
+      "patient": "patient125",
+      "cine_sha256": "4a97e0847b2ec3e926c00d549c84055e311fe435e1256e13139bd0cddf23e961",
+      "cine_voxel_sha256": "043a06553b2596fba3ae9323ce345a04f680ae9190f32d9e7ce0ddefdbda0e27",
+      "shape_xyzt": [
+        208,
+        162,
+        17,
+        15
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "6dcf5c1d4b0126e2cf6a3100e6b4fa1c6546697e70ce7b59663ae64e5c3615af",
+          "frame_image_sha256": "a353d3af41e562b89c16d8808059259857638f8f424d90579bfbd8c122e22dee"
+        },
+        {
+          "frame": 6,
+          "source_sha256": "822af8048a9121e6d77cac6315702efb440ff8971a7476d622c8440de76c2fb7",
+          "frame_image_sha256": "818edab77052be75d46f210b59f8d1e20e7711bb45f8096e8bbd87ceb3e2ef1f"
+        }
+      ]
+    },
+    {
+      "patient": "patient126",
+      "cine_sha256": "693d45642f20cdd4ca9b09c30a84328bbc141f932416223f283fa2bd23ba6a87",
+      "cine_voxel_sha256": "febb58219451036edc1415277a8be458a1f26b275b599aee5ccf559ed1651efc",
+      "shape_xyzt": [
+        208,
+        174,
+        16,
+        15
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "b98b6e29315c70e8a79f85a332fc9ce047c5b062fea96f1cdaaa10654634cf83",
+          "frame_image_sha256": "b112268998a6c763128235a91ce741796c588727cc04facdaa220fbb9cada6bb"
+        },
+        {
+          "frame": 6,
+          "source_sha256": "7cee1cfa046507aded5e5be7bfead98027ccc95c988b4685ac88e5e5d62324f6",
+          "frame_image_sha256": "6b75dce3aa6ba352b95086be6bedfcb4026ea54dac73d1cb24897d1c33d40199"
+        }
+      ]
+    },
+    {
+      "patient": "patient127",
+      "cine_sha256": "36c9db797d7b983ac07bdc16e6a17b6cb659f6f1b03e5b9a7ce430eb594c3fc0",
+      "cine_voxel_sha256": "8d4d856cb3844089929443b927c0c3089b8f0fcffeac88d38a4d4a88d7c3e60b",
+      "shape_xyzt": [
+        162,
+        208,
+        19,
+        18
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "601040b6677e0233f52b07cc042c93923192791faf71fa14599e95189af49e31",
+          "frame_image_sha256": "563ba02d555e6b63501823e264a585a353bf9c1fb53ab20712497cb024eb61e8"
+        },
+        {
+          "frame": 6,
+          "source_sha256": "6998f494b8f795e9120f46b354a4becc4d731f3d2ae2be3581c5b6be06d7f996",
+          "frame_image_sha256": "faf3bf0a6e4f7018e1706323ec8be06dd7cfdf2bf14a45784f9a9da2553b2674"
+        }
+      ]
+    },
+    {
+      "patient": "patient128",
+      "cine_sha256": "3eb643aaa299cd33e03d75ec7cb3cd2c396884f71e457315c79e7dc52a27883d",
+      "cine_voxel_sha256": "4aadb86f3e8aa2d7b6051de0109b106296d2ac2930414e71849b4483a1adab6d",
+      "shape_xyzt": [
+        216,
+        256,
+        9,
+        30
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "2590e5a2676872595af5006a11837b83b239636082e0941ce441bf23fb4a0179",
+          "frame_image_sha256": "833f39df640ee31540d1839783fba3912b95c6fa11d8004058ba17d7b44886c4"
+        },
+        {
+          "frame": 10,
+          "source_sha256": "c62dcec34fb5da761d570f89f87dd92af97c1c49edc67ff685a72a922f37672e",
+          "frame_image_sha256": "870e24f077f8ced43a5cce09c3a919a5bb25025b334c44a9c158e4dd42496b47"
+        }
+      ]
+    },
+    {
+      "patient": "patient129",
+      "cine_sha256": "6daaf84b66046baae98345e973c4cfea21c3900d9d020eca4d6dff41e98dda20",
+      "cine_voxel_sha256": "997282f79f95e2a9bd89e1b6f50ec77c5f494dbf7ee5d3eb0a98aa0f62c2ff7d",
+      "shape_xyzt": [
+        154,
+        224,
+        17,
+        16
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "0ce4b114bf84706437711f0b85fa5794bae2d3599fdfbf6faf0de366e9df5074",
+          "frame_image_sha256": "5959cc7f52ea2cc085d7003afa64e8664217020a9cea3efe7507ea0e10aad3a3"
+        },
+        {
+          "frame": 7,
+          "source_sha256": "3477efe4bd47c577e4137b4eadae3cad8dd3d9900b067c35b623aa4f9a1926b5",
+          "frame_image_sha256": "923d7956db054b77f72e71f872232d7550172f493d66e20eb47af7e80aba004b"
+        }
+      ]
+    },
+    {
+      "patient": "patient130",
+      "cine_sha256": "504ff0468cc6cb0173e589c32fdf82647492bec7c71b50b547009bc32a05812a",
+      "cine_voxel_sha256": "6427a8f8d32512a70bf0b8b748a3fd2f37d302c102bddecb884976d6bc0d5852",
+      "shape_xyzt": [
+        256,
+        216,
+        10,
+        30
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "e1df2ba041933e6ead143d9f6d1dde06601f59caa00ff0ecc7642e3ee943036a",
+          "frame_image_sha256": "f0f7d2a106a48f1c506bf833baa07750719f1f366f9ace22d8a1f8ecd4a7e67c"
+        },
+        {
+          "frame": 10,
+          "source_sha256": "4a9f38a69024a19e0665092df5d71d87d3d3f33b9eb1b416f0b1222c1bff2666",
+          "frame_image_sha256": "157c9d7730b97fabb62f5b7d42d0d83524d2e82b4dad4847f2e5036f0e70cc2d"
+        }
+      ]
+    },
+    {
+      "patient": "patient131",
+      "cine_sha256": "30f66d28a0d1401ae1f4d1f1ba26f0f83ae94ee39167a0a426b8858e9952c9c9",
+      "cine_voxel_sha256": "ec4113d46593800542fa2a176a3622137e70e870d37f0799cf2c457819be90cd",
+      "shape_xyzt": [
+        256,
+        214,
+        10,
+        25
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "f9d94cbf706a7acc06adfc45884c0217a7c3a6a516d0228fb3870dfec8b9ff4e",
+          "frame_image_sha256": "126c21d0279bb34efe93db1df09660e1314ef2b8ac99f874fb5ee110c6cdf683"
+        },
+        {
+          "frame": 8,
+          "source_sha256": "7508975e5334520b995e227643e3d07203f650004154a0dcefb308edb629cf35",
+          "frame_image_sha256": "ba0eae79fcccfac6568ec752e8dbedb9ab3faaa6423b009e8436c34a3cc66c1f"
+        }
+      ]
+    },
+    {
+      "patient": "patient132",
+      "cine_sha256": "e796990d84ffd1077a7b824007e179040e0f92ecbbb359cb25975d5c6b23e0ac",
+      "cine_voxel_sha256": "b91b05a34461ba2ce853bb89b924c239ef3dcb6f1ff4e17df4a6e7f723e19ad8",
+      "shape_xyzt": [
+        256,
+        232,
+        10,
+        30
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "168248089ff6eff90b2d8a458d4f6a15ab71bcc0581b979fe0b42f3fb7e5a561",
+          "frame_image_sha256": "967b23aea054518c683b1a941a0bb77769da5a9a01bd0c393a2aa04b79435bd4"
+        },
+        {
+          "frame": 14,
+          "source_sha256": "368ae589736b3af6aa381178f91c45c767164ec79ee6c32c94ae369cba019a5a",
+          "frame_image_sha256": "1f49f7af319ca2a99c4abeb4fdc2a84200cd6cf792c0582cb6bdee0f24a7975c"
+        }
+      ]
+    },
+    {
+      "patient": "patient133",
+      "cine_sha256": "4882b1af3c1023d4db1e90d9b32ba5709e525cf7c39a3348e03b041b15b7e977",
+      "cine_voxel_sha256": "565fd689b67bc3d264962dc8677cb376102b66fd44e3469af96d6bddd751d998",
+      "shape_xyzt": [
+        224,
+        256,
+        10,
+        14
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "7776efc6a44b5c03558aa277fbd4ada196ac0ab7331760be4047ba776c6e01e0",
+          "frame_image_sha256": "684a609c4e7751b71b8d7bd8252bf9f0695438f76ed08f89e230b064f45174a0"
+        },
+        {
+          "frame": 9,
+          "source_sha256": "a8d85e23962ff6293ce77db91d8a9eeb9c5adf400dff3fbeddd4951e958a0679",
+          "frame_image_sha256": "44d574e7344e357c02cf3847321e23fa638bc05e3a905e087c38fecab7d5f0c1"
+        }
+      ]
+    },
+    {
+      "patient": "patient134",
+      "cine_sha256": "46f90d647dd52c5d938adc9ea708d6eef525ada848d05972362b7377ed7c75ca",
+      "cine_voxel_sha256": "78bcc0833954ddbba346ed11e0f5f52a9f2ccfb8faf5b9952bb3e31a15e4ddb9",
+      "shape_xyzt": [
+        216,
+        256,
+        11,
+        35
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "e9aff2b5334fe1b909f88c3e4b5c12b24a6009e9bc2bf7583b65b43690cead47",
+          "frame_image_sha256": "e55cd58d21496ee44ac31cbbe0ac5d500be34ac2d4b0108e5d6f3a3085847697"
+        },
+        {
+          "frame": 14,
+          "source_sha256": "8ed55a415c438568e851f644aab78d052d0613e50eade7952680abd6905fa60b",
+          "frame_image_sha256": "d56ec4001b55bf2fd9a780c9f9fad0cc577cdb3c31cb8e2d257123f1b2fcdb5d"
+        }
+      ]
+    },
+    {
+      "patient": "patient135",
+      "cine_sha256": "b0d0d7539a3b36e8b9181e11b273b2433584c5379ef224196ea4c90a9f18e24c",
+      "cine_voxel_sha256": "710958093f442e07d60e67388e79a658eb31352020979cf84941278fdda4c0a6",
+      "shape_xyzt": [
+        216,
+        256,
+        10,
+        20
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "65b2d680b0ecd2b6bf1833f42a10e2fb226a52dc18af8fbd125ec147250b3772",
+          "frame_image_sha256": "17aed3b17daf5f21e22bb2b4bac2cc168d0646fb510e683764ced5f08d4bff65"
+        },
+        {
+          "frame": 9,
+          "source_sha256": "972df70095cbc47df11a94da57bee33c7155b8766bd0a99d68993a79534bc709",
+          "frame_image_sha256": "a7d41da4730d8d032273cdf633746fbfa365a2198052454d014717a6002d8268"
+        }
+      ]
+    },
+    {
+      "patient": "patient136",
+      "cine_sha256": "ac8413d07ebc44b4da8096596d4e2564b3b1d274922eb53beb72d3199a10c18e",
+      "cine_voxel_sha256": "008fdda502e7437734dac9299c0610a5672cf818eef1bfe036e34142c3ea2bbe",
+      "shape_xyzt": [
+        256,
+        216,
+        10,
+        24
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "5723f96c5e1c5078222fe262f26c7522a12ff8e3ba4d7a59a98bf3abd9bda17b",
+          "frame_image_sha256": "420a0d3ab388f4c71840a767cc44d907b9b7cd63bcbbb4575baf3166fd5ab3a0"
+        },
+        {
+          "frame": 11,
+          "source_sha256": "f8050c4ea6d82358f2c1cbb2a49c857e7ce61b428cc0ad55d7eda28a2960e496",
+          "frame_image_sha256": "f1f76b6001f5d2479f2262e1a0561874dce85264d7cde8f8547c6018282010e3"
+        }
+      ]
+    },
+    {
+      "patient": "patient137",
+      "cine_sha256": "e90c45dbebe154c0ac0c566dc6a18f5f504051f9f115596bc6ecf0ae13fd4d85",
+      "cine_voxel_sha256": "a88f04c87c7de0253f207d04082a7181e4734e38a2c72b62bea656e40e69548c",
+      "shape_xyzt": [
+        216,
+        256,
+        9,
+        30
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "632691f523dc1bb5685c9e6937ebbe83a598eb9d89af75b58c92cca718f3a2f1",
+          "frame_image_sha256": "48ed36aa9e404093134463963d95dffb583511950f6d3832b9517aaba2b324fb"
+        },
+        {
+          "frame": 10,
+          "source_sha256": "4bc527ae9aaf7b0e0862d97d8ee93405abd306e7cee0a891efd4e4685b43c804",
+          "frame_image_sha256": "407943e63f12a2599db55d66f278bdaf6a692c79d403e98ec72d5ed46c68a9df"
+        }
+      ]
+    },
+    {
+      "patient": "patient138",
+      "cine_sha256": "e51f2a3121d64b8b38ca4e9b572d13ac6bb851794efd5a40b7861b4b71710ed4",
+      "cine_voxel_sha256": "9ce1353b91f1a83d4093116e61cf985462ac4fda9208c9f20a3da0eab5fdd9c6",
+      "shape_xyzt": [
+        216,
+        256,
+        9,
+        30
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "5f10e80724ebcdc34aa89d5097dba3a5615612d0ecbd6048ece1eaafdb14208c",
+          "frame_image_sha256": "ab4a6a0b31e417889fcb8c0508814f9b582ba11b5eb0ebe8247d5c477ca58e37"
+        },
+        {
+          "frame": 9,
+          "source_sha256": "52f2d9fbb58640223695bd088d64f492f1bb1cdebe3fd0f0c08f61a47c2c4993",
+          "frame_image_sha256": "0729e8080861ca5a955f1571640422f21e8244e6e8ace641b17290361aca2c73"
+        }
+      ]
+    },
+    {
+      "patient": "patient139",
+      "cine_sha256": "4de1358f9fb79ede4f7888b9bc03aca9aad1123be28a3d75ce86941502a9267f",
+      "cine_voxel_sha256": "02e8df3f9acffc92bc03a554c12a5fd6ecba6be08fc5a23fd11bac38567c7456",
+      "shape_xyzt": [
+        174,
+        208,
+        16,
+        15
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "409c0684335e8079a969207e4feca9174e664c4c516fe5884f5b015e0e496562",
+          "frame_image_sha256": "37695da0b7f257b95f2713762a49e979cbbaef24400410de86a02f90f3186a95"
+        },
+        {
+          "frame": 7,
+          "source_sha256": "53559f10780b4946083b2015cedf6fd9bc79784a3d798dafcce2e9ccec888df7",
+          "frame_image_sha256": "bc078e82665f408840c312659a2303f75131c25c798e5f8cf628ab1238e36d68"
+        }
+      ]
+    },
+    {
+      "patient": "patient140",
+      "cine_sha256": "fbf4b2e4a944adc5553dde6fcde8cc08af5071505a9ec854cd8b9580d58cb142",
+      "cine_voxel_sha256": "7968f347e814e5b51b00f052d475823d2119f679be1e57d94062702b45a1fcdc",
+      "shape_xyzt": [
+        174,
+        208,
+        20,
+        15
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "bb5888f793a50e671b09e2acd22f9dec7543acd8cfbd9eebdd85059b9a64dcd8",
+          "frame_image_sha256": "488ec420bdbd049e644f686402be1e78ea29d921749f3f91ebfbde29180ea78e"
+        },
+        {
+          "frame": 8,
+          "source_sha256": "535281df5febca24297413f59a3c69d48ac4f9641c584c1cc3a72668206b5f52",
+          "frame_image_sha256": "fa09eb88c911bf1a2c9c2ecb6297ebdc3bbd396d2c0e56cf2fa32cc77fd3e388"
+        }
+      ]
+    },
+    {
+      "patient": "patient141",
+      "cine_sha256": "981f7afbb32e1bdc4b30036516782f7535bdb6fadb69a95598ef84f77dd10817",
+      "cine_voxel_sha256": "5e43498107d6dd5bcff2d1bf56f232f1a036b4267b935c26f96781696fe654c0",
+      "shape_xyzt": [
+        256,
+        216,
+        10,
+        19
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "8502e9c04b4cfe6ffcf12cca9622fd4e1b8d63cb042103b263e77ad55b3c3f82",
+          "frame_image_sha256": "a37d8c277f8fa43d0538b7cf834bcfa1705af96fd457fc3c0a0fc11002824621"
+        },
+        {
+          "frame": 10,
+          "source_sha256": "65098722ba4d3a9f0cf9ac5cf042a81d5745e80ba221906d3d5d9700f6c15657",
+          "frame_image_sha256": "d14149b67c24fa3dc05576bf80d9486b1a59a2d109553d27db042ce85dc7a6e7"
+        }
+      ]
+    },
+    {
+      "patient": "patient142",
+      "cine_sha256": "968caea0f594a6791ed7788fb04cefbf701148958d643bb2a1045793361351bb",
+      "cine_voxel_sha256": "2a0c888008a824fd66a547cfb6ac7cbfdf251144d1cc92236a5b52f4da07a8a9",
+      "shape_xyzt": [
+        216,
+        256,
+        8,
+        30
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "6b8f4542c059dfc776f3bddb64c31fe0d118555adfacb1c59c28a3c69007b0d0",
+          "frame_image_sha256": "10ca2860cd50471a5e50df526bf73a12202af3565ed5e9827ae8c133219a47c9"
+        },
+        {
+          "frame": 11,
+          "source_sha256": "473c97a3e563e313d75801385b879f5a2bb9e73003832905314cd54f7eafe020",
+          "frame_image_sha256": "636867b0ce135605a6ded9900c584adaab3ee9c2bbe377ce443cd6ae70106d88"
+        }
+      ]
+    },
+    {
+      "patient": "patient143",
+      "cine_sha256": "f652fe2d4ae2a319106426e47b6074eb7f925293ac66702a8a70ac260e1a3334",
+      "cine_voxel_sha256": "f450549f9d086d60df1d34190d6c91d075ff8cb4470088d16415a077df42f0c2",
+      "shape_xyzt": [
+        256,
+        216,
+        10,
+        30
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "01fbba2d9036a2ead56553f02bd764ab8ffc1592111f5f8ab1c71e5803256f5a",
+          "frame_image_sha256": "757480389869dc50de7792747d5a70ab5cfd697e62734c01ea1788e282a13ee6"
+        },
+        {
+          "frame": 11,
+          "source_sha256": "bebf97ae544d5a8412e47bfea20aa1909f63ed04fcc33410c56a3a2658b7631a",
+          "frame_image_sha256": "fc730ad753975d028bf589d090e0bf02ad38ec5f3a6125e70952a4527a563bd7"
+        }
+      ]
+    },
+    {
+      "patient": "patient144",
+      "cine_sha256": "f640d71a6d54650521a7c44dcb96f2ab32ea761d621eab31a1ac73602c3d260b",
+      "cine_voxel_sha256": "dc510eaa43682c2f880f51e00563eb2d326387bf2cc2c7462bb4f499cd1b971a",
+      "shape_xyzt": [
+        214,
+        256,
+        8,
+        25
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "590cb1877b654510354a966c7c4c9d34e1f08127460f52d950bfb5aca7818c3d",
+          "frame_image_sha256": "e16e24080a7757075db0bcd4f2e51a37306efc6d7a4d44d23434db3861a7db80"
+        },
+        {
+          "frame": 8,
+          "source_sha256": "c3efe8954d53a9a91ebb9cc4c920459f69469e0d0e276f894f5fab4a3c5b70d3",
+          "frame_image_sha256": "a58f0b0ed56a260fd386ab0578ed424110511facc45389d633756576b53a744e"
+        }
+      ]
+    },
+    {
+      "patient": "patient145",
+      "cine_sha256": "59a8018b408118c1750e80dce4f21d254cdaf110045a6cbd27a5746127e9f1b5",
+      "cine_voxel_sha256": "548c9c48f1c0eb50f1c2b1f4655380958904afc772782414897c27621a2fd38e",
+      "shape_xyzt": [
+        232,
+        256,
+        10,
+        30
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "eec8d74f72d290a21b08e4d59b4081d6c657c19694dddf6927a7ace7cdccb0d7",
+          "frame_image_sha256": "ebb12de28f6b1103e852be92c901036b6a2198f8a034818b33cb68fa78eb3a0f"
+        },
+        {
+          "frame": 12,
+          "source_sha256": "a70072ae3ac17e50d30eb9aa69fe0bff1d983b646b7aeaf051aef9e72b91c657",
+          "frame_image_sha256": "dd4133ad6301c6626885640f02ec3dabf233d8075592d3134ca84463b38e87ea"
+        }
+      ]
+    },
+    {
+      "patient": "patient146",
+      "cine_sha256": "5746680fe43ee16724dc390f2dd6fc8f16c16efdc380070fb39dc374c18b7c7a",
+      "cine_voxel_sha256": "15b1870e0ac07f7335cdc413705c38cb39d8d85cfb4fa75ec70554f748a20735",
+      "shape_xyzt": [
+        232,
+        256,
+        9,
+        30
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "6dc88ec069373cb242c0bc0fb97c2237b7bb03490afbeed3aa10ceeb075fec36",
+          "frame_image_sha256": "6711d182a4f1461baba610f9a4ba3a8d01f442083056614a038b4004fa385a70"
+        },
+        {
+          "frame": 9,
+          "source_sha256": "b8d39267696e5ccb7fe5d137eab5560b6f6820921406d94d28c7e2b84e4f9e2a",
+          "frame_image_sha256": "e8653d2f191183ba3162d036b25df430ec2d708feff259a865ac27791f92d63f"
+        }
+      ]
+    },
+    {
+      "patient": "patient147",
+      "cine_sha256": "5f2c7b7d3ebfc7003eb2b597a2b8a436db51bb3974bb36d9073847f3fc360f0f",
+      "cine_voxel_sha256": "4f790924a042cba34c1ffc633928173e2756eb3fac063de3bdb2ea0cf61df423",
+      "shape_xyzt": [
+        232,
+        288,
+        15,
+        19
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "87249f6639c0443b496b7777f0d8713817f20418b2eafc5f6e309ad80a791969",
+          "frame_image_sha256": "f79d263bd7f7e56f59481b8a11319af3c9b41d5a4c11f7bfa59147dd1df3b2f6"
+        },
+        {
+          "frame": 8,
+          "source_sha256": "def391dd4e43cd3187be0b0441f67d005e5e5c0c47be12e7ef5ef03b1a474464",
+          "frame_image_sha256": "909287fb61067e0335eea7b9855fea468d183d3c4e8b73b11b66228dfeffe6f7"
+        }
+      ]
+    },
+    {
+      "patient": "patient148",
+      "cine_sha256": "ad7fe4c01513d1744b9b088a71e7afa419ccb88c9655867e27ecb85ebe902250",
+      "cine_voxel_sha256": "aceadde98aa0fbc9a685d6b470affc0886a3dbff19d645f2cefd8aae1445c7ef",
+      "shape_xyzt": [
+        192,
+        256,
+        8,
+        35
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "40b60e49f3ce00344b34e1bc720d60681e61ea1a6bb3d1ec5ca0201536e43f18",
+          "frame_image_sha256": "27b7a6226fe4887656f0750bd911cd2bbf80079c191cfee34bf6b04ebdf772df"
+        },
+        {
+          "frame": 9,
+          "source_sha256": "7247a99f73107c2f1d0697af99e77a69b2378e5c6faa6be6f49143958a0db2d4",
+          "frame_image_sha256": "91e8ff4b509b0893071a39c2d00d6d295e0e65181073b52b9a24773a71af3477"
+        }
+      ]
+    },
+    {
+      "patient": "patient149",
+      "cine_sha256": "9f13ac16ed71c7e69863b1276b6bf644d407752fce5143d89991e2b308b2ac5d",
+      "cine_voxel_sha256": "180e49bf08dabb02ebe4c5e62d045b9108ca8b860323af9d4f0c4c5c06ab3f3a",
+      "shape_xyzt": [
+        214,
+        256,
+        10,
+        25
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "d86bd52f237da6c2441a14a74eadc7edd54da14f935a271fc74271f5e8666baf",
+          "frame_image_sha256": "087c1d0bfead257bb987cc6df54254ebd7b3ff9b31faa0d755496dfe3a32f8a9"
+        },
+        {
+          "frame": 11,
+          "source_sha256": "c761992caa4d41a01bc6d4502da80b7def7e914e21c6e693834068bc6835d8bd",
+          "frame_image_sha256": "0ea5ede3bb3795f7c24fb49f7f1a8a1ef520685923f501dc4f8e1c80a1562de4"
+        }
+      ]
+    },
+    {
+      "patient": "patient150",
+      "cine_sha256": "f70aa296d5c238d14d42aaaa65f294d2e5f172d3f8d95de292018953cd333b14",
+      "cine_voxel_sha256": "cc3819c71f72b0693ca1f97d1b61c3bcdd624d99c43e5cb0353ca861aad3fc2f",
+      "shape_xyzt": [
+        216,
+        256,
+        8,
+        30
+      ],
+      "masks": [
+        {
+          "frame": 0,
+          "source_sha256": "0f3a2336e62fda9468e93cc73bdaafb37442d59e5ebcc50def280decfdb83c0d",
+          "frame_image_sha256": "cdeee5e5f16c66f7f9960d7e6f5edc102626655c8259b5f19e4d7d7ad111aba9"
+        },
+        {
+          "frame": 11,
+          "source_sha256": "0e82ca780779b8117a731d234ad09fa935543d4444b1795bd60bc55b08c208ae",
+          "frame_image_sha256": "022838034abdddfb59c08fa5a4702bb2f2f8d5377ab2c367665e9550e1a36c19"
+        }
+      ]
+    }
+  ],
+  "warning": "Drive copy; independent official label provenance and challenge-server certification unavailable"
+}

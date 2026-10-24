@@ -1,9 +1,18 @@
 # NativeStudent adaptive-window + meta-Dice pilot
 
-Status: implemented opt-in research pilot. CPU/manufactured verification only;
-no patient training, CUDA memory benchmark, ACDC Dice improvement or novelty
-claim. Base: experiment commit `8960b6baac4c6600553d900c303f192c2fcfa4f0`.
+Status: implemented opt-in research pilot. The initial delivery contained
+CPU/manufactured verification only. Base: experiment commit
+`8960b6baac4c6600553d900c303f192c2fcfa4f0`.
 The canonical `joint_guard` defaults and existing experiment matrix stay intact.
+
+Subsequent server execution on 2026-10-24 completed all three arms with 10,000
+steps, 1,000 warmup steps, seed42, dense TRAIN budget L8, crop256 and batch8.
+Frozen final-student TEST50 evaluation receipts are under
+`reports/window_pilot_test50_20261024/`. All three final checkpoints were pinned
+before TEST preparation; no TEST masks influenced training or model selection.
+The testing copy and references came from the configured Drive mirror; their
+official upstream provenance and challenge-server certification are unavailable.
+These measurements do not establish novelty or a general Dice guarantee.
 
 ## Matched arms
 
@@ -140,7 +149,7 @@ test receipts. Baseline parity compares the disabled-window branch with an
 isolated copy of the exact base commit using identical manufactured data.
 Student, teacher and optimizer tensors are compared directly, not only losses.
 
-These tests establish software/numerical behavior for the inspected backend.
+The initial tests establish software/numerical behavior for the inspected backend.
 They do not establish useful geometry, patient Dice, calibration, GPU capacity,
 or a new algorithm relative to prior work. The original real-data baseline
 remains one seed on exposed VAL18. No cancelled real-data jobs are resumed.
