@@ -1,0 +1,46 @@
+{
+  "runs": [
+    {
+      "name": "export-A3",
+      "command": [
+        "/venv/main/bin/python",
+        "scripts/export_teacher_memory_student.py",
+        "--checkpoint",
+        "/root/self-audit-teacher-memory-execution/real-train-smoke-A3/final",
+        "--checkpoint-sha256",
+        "9e9178ff0b7b6f826be30c803ddc7313b91024fbb6576e372b094fd7113cadd0",
+        "--out",
+        "/root/self-audit-teacher-memory-execution/student-export-A3"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 6.079688523197547
+    },
+    {
+      "name": "bounded-student-bank",
+      "command": [
+        "/venv/main/bin/python",
+        "scripts/build_teacher_memory.py",
+        "--mode",
+        "a5",
+        "--native-manifest",
+        "/root/self-audit-teacher-memory-execution/native-train-smoke.json",
+        "--native-manifest-sha256",
+        "605e0a77023cdee5920586c741a27aa96989ec0ea514d886c96e3cb6134c283b",
+        "--student-checkpoint",
+        "/root/self-audit-teacher-memory-execution/real-train-smoke-A0/final",
+        "--student-checkpoint-manifest-sha256",
+        "83964dafec627a70bbc83ebcabd74aa60c8f45f3f3c00e1922106610a0d1592f",
+        "--device",
+        "cuda",
+        "--max-timepoints",
+        "1",
+        "--out",
+        "/root/self-audit-teacher-memory-execution/bounded-student-bank"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 10.291698654880747
+    }
+  ],
+  "a5_scope": "Two-step matched A0 plumbing witness only; no quality claims or external teacher input",
+  "external_teacher_environment": false
+}

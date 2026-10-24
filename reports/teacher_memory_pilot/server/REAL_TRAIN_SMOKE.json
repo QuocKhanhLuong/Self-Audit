@@ -1,0 +1,61 @@
+{
+  "scope": "Two real TRAIN engineering updates each; threshold0 forces pseudo path; not quality evaluation or experimental recipe",
+  "runs": [
+    {
+      "arm": "A0",
+      "command": [
+        "/venv/main/bin/python",
+        "train.py",
+        "--config",
+        "/root/self-audit-teacher-memory-execution/smoke-configs/A0.json",
+        "--model-config",
+        "/root/self-audit-pilot-artifacts/BACKBONE.json",
+        "--data",
+        "/root/self-audit-pilot-artifacts/data/cache/L8_S42/train.json",
+        "--data-sha256",
+        "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+        "--device",
+        "cuda",
+        "--out",
+        "/root/self-audit-teacher-memory-execution/real-train-smoke-A0"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 14.0970145938918,
+      "smoke_overrides": {
+        "steps": 2,
+        "warmup_steps": 0,
+        "batch_size": 32,
+        "pseudo_threshold": 0.0
+      },
+      "quality": "NOT_EVALUATED"
+    },
+    {
+      "arm": "A3",
+      "command": [
+        "/venv/main/bin/python",
+        "train.py",
+        "--config",
+        "/root/self-audit-teacher-memory-execution/smoke-configs/A3.json",
+        "--model-config",
+        "/root/self-audit-pilot-artifacts/BACKBONE.json",
+        "--data",
+        "/root/self-audit-pilot-artifacts/data/cache/L8_S42/train.json",
+        "--data-sha256",
+        "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+        "--device",
+        "cuda",
+        "--out",
+        "/root/self-audit-teacher-memory-execution/real-train-smoke-A3"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 14.096526734996587,
+      "smoke_overrides": {
+        "steps": 2,
+        "warmup_steps": 0,
+        "batch_size": 32,
+        "pseudo_threshold": 0.0
+      },
+      "quality": "NOT_EVALUATED"
+    }
+  ]
+}

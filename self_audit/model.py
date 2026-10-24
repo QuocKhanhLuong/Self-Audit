@@ -48,7 +48,7 @@ class Residual(nn.Module):
 
 class NativeStudent(nn.Module):
     """All pixels are supervised at output resolution. Affine head for audit."""
-    def __init__(self, encoder, widths=(96, 128, 192, 256), window=None):
+    def __init__(self, encoder, widths=(96, 128, 192, 256), window=None, teacher_memory=None):
         super().__init__()
         self.encoder = encoder
         self.input_adapter = CenterDifference()
@@ -70,8 +70,10 @@ class NativeStudent(nn.Module):
         self.detail = nn.Sequential(nn.Conv2d(3, 32, 3, padding=1), nn.GELU(), Residual(32))
         self.fuse = nn.Sequential(nn.Conv2d(widths[0] + 32, 32, 1), nn.GELU(), Residual(32))
         self.head = nn.Conv2d(32, 4, 1)
+        # None registers no module/state keys and leaves the baseline path intact.
+        self.teacher_memory = teacher_memory
 
-    def features(self, x, valid_mask=None):
+    def features(self, x, valid_mask=None, *, return_memory_feature=False):
         if x.ndim != 4 or x.shape[1] != 3 or not torch.isfinite(x).all() or x.min() < 0 or x.max() > 1:
             raise ValueError("expected finite normalized Bx3xHxW input")
         if valid_mask is not None:
@@ -98,6 +100,7 @@ class NativeStudent(nn.Module):
             if f.shape[1] != c or f.shape[-2:] != (norm.shape[-2] // (4 * 2**i), norm.shape[-1] // (4 * 2**i)):
                 raise ValueError("incorrect native backbone stride; no implicit feature resizing")
         d = self.refine[3](self.lateral[3](stages[3]))
+        memory_feature = None
         for i in (2, 1, 0):
             skip = self.lateral[i](stages[i])
             up = self.up[i](F.interpolate(d, skip.shape[-2:], mode="bilinear", align_corners=False))
@@ -115,11 +118,20 @@ class NativeStudent(nn.Module):
                     ).ge(1.0 - 1e-6)[:, 0]
                 merged = merged + self.window(merged, d, window_valid)
             d = self.refine[i](merged)
+            if i == 0 and return_memory_feature:
+                # [B,widths[0],ceil(H/4),ceil(W/4)]: post-refine[0] memory query.
+                memory_feature = d
         f = self.fuse(torch.cat((F.interpolate(d, raw.shape[-2:], mode="bilinear", align_corners=False), self.detail(raw)), 1))
-        return f[..., :h, :w]
+        f = f[..., :h, :w]
+        return (f, memory_feature) if return_memory_feature else f
 
     def forward(self, x, valid_mask=None):
-        return self.head(self.features(x, valid_mask=valid_mask))
+        if self.teacher_memory is None:
+            return self.head(self.features(x, valid_mask=valid_mask))
+        features, memory_feature = self.features(x, valid_mask=valid_mask, return_memory_feature=True)
+        base_logits = self.head(features)
+        native_valid = valid_mask.to(device=x.device) if valid_mask is not None else None
+        return base_logits + self.teacher_memory(memory_feature, base_logits, native_valid)
 
 
 class TinyEncoder(nn.Module):
@@ -149,14 +161,23 @@ class OfficialStages(nn.Module):
         return outputs
 
 
-def build_model(config, *, synthetic=False, window=None):
+def build_model(config, *, synthetic=False, window=None, memory_bank=None,
+                memory_mode="paired", memory_tau=0.2):
     if window is None and isinstance(config, dict) and "window" in config:
         window = config["window"]
     name = config["backbone"]
+    def attach_memory(model):
+        if memory_bank is not None:
+            from .teacher_memory import TeacherMemory
+            # Memory projection initialization must not perturb later RNG draws.
+            with torch.random.fork_rng(devices=[]):
+                model.teacher_memory = TeacherMemory(model.lateral[0].out_channels, memory_bank,
+                                                     mode=memory_mode, tau=memory_tau)
+        return model
     if name == "tiny_test":
         if not synthetic:
             raise ValueError("tiny_test is prohibited for patient training")
-        return NativeStudent(TinyEncoder(), (8, 16, 24, 32), window=window), {"pretrained": False, "synthetic": True}
+        return attach_memory(NativeStudent(TinyEncoder(), (8, 16, 24, 32), window=window)), {"pretrained": False, "synthetic": True}
     if name != "dinov3_convnext_tiny":
         raise ValueError("unsupported backbone; no random/legacy fallback")
     source, weights = Path(config["source_repo"]).resolve(), Path(config["weights"]).resolve()
@@ -170,5 +191,5 @@ def build_model(config, *, synthetic=False, window=None):
     if dirty:
         raise ValueError("backbone tracked source is dirty")
     original = torch.hub.load(str(source), "dinov3_convnext_tiny", source="local", weights=str(weights), pretrained=True)
-    return NativeStudent(OfficialStages(original), window=window), {"pretrained": True, "weights_sha256": expected,
+    return attach_memory(NativeStudent(OfficialStages(original), window=window)), {"pretrained": True, "weights_sha256": expected,
             "source_commit": head, "lineage": "user_supplied_hash_pinned;not_independent_upstream_certification"}

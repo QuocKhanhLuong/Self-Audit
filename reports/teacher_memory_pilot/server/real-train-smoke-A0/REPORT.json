@@ -1,0 +1,31 @@
+{
+  "schema": "self_audit.semi_v2",
+  "status": "COMPLETED",
+  "synthetic": false,
+  "quality": "NOT_EVALUATED",
+  "steps": 2,
+  "supervised_updates": 2,
+  "pseudo_accepted": 2,
+  "ema_updates": 2,
+  "geometry_updates": 0,
+  "elapsed_seconds": 4.445869282819331,
+  "seen_supervised": [
+    "patient007",
+    "patient010"
+  ],
+  "seen_audit": [
+    "patient010",
+    "patient011"
+  ],
+  "seen_unlabeled": [
+    "patient001",
+    "patient002"
+  ],
+  "final_manifest_sha256": "83964dafec627a70bbc83ebcabd74aa60c8f45f3f3c00e1922106610a0d1592f",
+  "label_budget": 8,
+  "teacher_memory_arm": "A0",
+  "teacher_memory_source_bank_sha256": null,
+  "teacher_memory_effective_bank_sha256": null,
+  "label_reads_outside_budget": [],
+  "guard_scope": "extra pseudo step vs supervised-only state on current TRAIN audit slice only"
+}

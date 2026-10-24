@@ -1,0 +1,31 @@
+{
+  "status": "PASS",
+  "python": "3.11.16 | packaged by conda-forge | (main, Aug 21 2026, 22:39:01) [Clang 19.1.7 ]",
+  "torch": "2.14.0",
+  "numpy": "2.4.6",
+  "scipy": "1.17.1",
+  "cuda_available": false,
+  "scope": "Software/CPU tests, not patient efficacy",
+  "commands": [
+    {
+      "command": [
+        "/Users/alvinluong/miniforge3/bin/python",
+        "scripts/check_repo.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.01875104196369648,
+      "log": "check_repo-final.log"
+    },
+    {
+      "command": [
+        "/Users/alvinluong/miniforge3/bin/python",
+        "-m",
+        "pytest",
+        "-q"
+      ],
+      "exit_code": 0,
+      "seconds": 11.248137084301561,
+      "log": "pytest-final.log"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "status": "COSMETIC_EOF_WARNINGS_RETAINED",
+  "raw_command": [
+    "git",
+    "diff",
+    "--cached",
+    "--check"
+  ],
+  "raw_exit_code": 2,
+  "raw_output": "self_audit/teacher_memory.py:409: new blank line at EOF.\ntests/test_cinema_teacher.py:227: new blank line at EOF.\ntests/test_teacher_memory_core.py:227: new blank line at EOF.\n",
+  "secondary_command": [
+    "git",
+    "-c",
+    "core.whitespace=-blank-at-eof",
+    "diff",
+    "--cached",
+    "--check"
+  ],
+  "secondary_exit_code": 0,
+  "secondary_output": "",
+  "reason": "Only extra terminal blank lines; preserve byte-identical reviewed/executed source and strict checkpoint source_digest. No source/test semantic edits. Full pytest and check_repo passed separately.",
+  "scope": "Not a claim that the unmodified Git whitespace check passed"
+}

@@ -1,0 +1,210 @@
+{
+  "schema": "self_audit.teacher_memory_profile.v1",
+  "status": "COMPLETED_OPERATOR_COST_ONLY",
+  "data_mode": "MODEL_REAL_DINO_INPUTS_AND_BANKS_MANUFACTURED_COST_ONLY",
+  "label_mode": "MODEL_REAL_DINO_INPUTS_AND_BANKS_MANUFACTURED_COST_ONLY",
+  "device": "cuda",
+  "quality": "NOT_EVALUATED",
+  "patient_dice": "NOT_MEASURED",
+  "evaluation": "NOT_RUN",
+  "source_sha256": "feffd1f7771c3d079871ae28c56fe44942771e581367d6e2b17d4a48278a6254",
+  "model_assets": {
+    "backbone": "dinov3_convnext_tiny",
+    "model_config_sha256": "d5ad2fe5844a1478e80537f8337ffea14f33879a803214734652a92553052360",
+    "source_repo": "/root/self-audit-pilot-artifacts/backbone/dinov3",
+    "source_commit": "6876159a11b4df116f30f667f8c9888617df0751",
+    "weights_declared_sha256": "21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54",
+    "weights_actual_sha256": "21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54"
+  },
+  "profile_script_sha256": "11b89f20b1369872f6c295848e9b4a89e8704e7524ce2247b48c7f3be6997bdd",
+  "class_map": [
+    "BG",
+    "RV",
+    "MYO",
+    "LV"
+  ],
+  "manufactured_bank_content_sha256": "0cd2ad06460ecfdfbc23f98148e6423ed63ae77d9074f24f588aa0baeae0d34f",
+  "protocol": {
+    "arms": [
+      "A2",
+      "A3"
+    ],
+    "common_batch_size": 32,
+    "crop_size": 256,
+    "dense_entries_per_class_pair": 8,
+    "warmup_full_transactions": 1,
+    "measured_full_transactions": 2,
+    "same_inputs_initialization_and_update_count_across_arms": true,
+    "full_engine_train": "NOT_CALLED; existing supervised_step/full_pseudo_step/ema_update helpers used",
+    "A1": "external soft-target optimizer branch cost only; manufactured uniform targets, no cache evidence",
+    "A5": "memory operator branch cost only; random bank is not student-derived and is not A5 bank evidence",
+    "offline_teacher_runtime": "EXCLUDED; no external teacher import or inference",
+    "checkpoint_persistence": "NOT_SAVED_PROFILE_ONLY"
+  },
+  "runs": [
+    {
+      "arm": "A2",
+      "status": "PROFILED_OPERATOR_COST_ONLY",
+      "data_mode": "MODEL_REAL_DINO_INPUTS_AND_BANKS_MANUFACTURED_COST_ONLY",
+      "arm_config_sha256": "6f3c44530c1db168855446c136e82a1e3d4832745404cc9bfdc9e9f6c68a6931",
+      "batch_size": 32,
+      "crop_size": 256,
+      "warmup_updates_excluded": 1,
+      "measured_updates": 2,
+      "measured_seconds": 1.7907014419324696,
+      "supervised_labeled_examples": 64,
+      "unlabeled_examples": 64,
+      "labeled_plus_unlabeled_examples": 128,
+      "labeled_plus_unlabeled_examples_per_second": 71.4803690903752,
+      "optimizer_step_counts": {
+        "supervised_transactions": 3,
+        "pseudo_transactions": 3,
+        "body_optimizer_steps": 6,
+        "head_optimizer_steps": 6,
+        "ema_updates": 3
+      },
+      "cuda_peak_allocated_bytes_including_model_and_teacher": 13277137920,
+      "cuda_peak_reserved_bytes_including_model_and_teacher": 16292773888,
+      "backbone_provenance": {
+        "pretrained": true,
+        "weights_sha256": "21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54",
+        "source_commit": "6876159a11b4df116f30f667f8c9888617df0751",
+        "lineage": "user_supplied_hash_pinned;not_independent_upstream_certification"
+      },
+      "bank_content_sha256": "0cd2ad06460ecfdfbc23f98148e6423ed63ae77d9074f24f588aa0baeae0d34f",
+      "memory_gradients_after_pseudo_backward": [
+        {
+          "projection_grad_present": true,
+          "projection_grad_norm": 0.00027638147003017366,
+          "alpha_gamma_grad_present": true,
+          "alpha_gamma_grad_norm": 2.6179972337558866e-05
+        },
+        {
+          "projection_grad_present": true,
+          "projection_grad_norm": 0.0010336361592635512,
+          "alpha_gamma_grad_present": true,
+          "alpha_gamma_grad_norm": 8.9335793745704e-05
+        },
+        {
+          "projection_grad_present": true,
+          "projection_grad_norm": 0.0015513271791860461,
+          "alpha_gamma_grad_present": true,
+          "alpha_gamma_grad_norm": 0.00015353155322372913
+        }
+      ],
+      "rows": [
+        {
+          "step": 1,
+          "seconds": 2.6644102870486677,
+          "supervised_loss": 2.199871063232422,
+          "supervised_gradient_norm": 5.881277561187744,
+          "pseudo_loss": 1.358870029449463,
+          "pseudo_gradient_norm": 63.47522735595703,
+          "accepted_pseudo_pixels": 2097152
+        },
+        {
+          "step": 2,
+          "seconds": 0.8939890048932284,
+          "supervised_loss": 2.1668362617492676,
+          "supervised_gradient_norm": 3.9341845512390137,
+          "pseudo_loss": 1.2618557214736938,
+          "pseudo_gradient_norm": 19.650117874145508,
+          "accepted_pseudo_pixels": 2097152
+        },
+        {
+          "step": 3,
+          "seconds": 0.8967124370392412,
+          "supervised_loss": 2.1672146320343018,
+          "supervised_gradient_norm": 2.59413480758667,
+          "pseudo_loss": 1.2193150520324707,
+          "pseudo_gradient_norm": 11.735270500183105,
+          "accepted_pseudo_pixels": 2097152
+        }
+      ],
+      "quality": "NOT_EVALUATED",
+      "patient_dice": "NOT_MEASURED"
+    },
+    {
+      "arm": "A3",
+      "status": "PROFILED_OPERATOR_COST_ONLY",
+      "data_mode": "MODEL_REAL_DINO_INPUTS_AND_BANKS_MANUFACTURED_COST_ONLY",
+      "arm_config_sha256": "74dce694f55721b1c4774772cf8672e5e62c14224811bb862bf2e7287eaf4690",
+      "batch_size": 32,
+      "crop_size": 256,
+      "warmup_updates_excluded": 1,
+      "measured_updates": 2,
+      "measured_seconds": 1.741177599877119,
+      "supervised_labeled_examples": 64,
+      "unlabeled_examples": 64,
+      "labeled_plus_unlabeled_examples": 128,
+      "labeled_plus_unlabeled_examples_per_second": 73.51346583429135,
+      "optimizer_step_counts": {
+        "supervised_transactions": 3,
+        "pseudo_transactions": 3,
+        "body_optimizer_steps": 6,
+        "head_optimizer_steps": 6,
+        "ema_updates": 3
+      },
+      "cuda_peak_allocated_bytes_including_model_and_teacher": 13154794496,
+      "cuda_peak_reserved_bytes_including_model_and_teacher": 15967715328,
+      "backbone_provenance": {
+        "pretrained": true,
+        "weights_sha256": "21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54",
+        "source_commit": "6876159a11b4df116f30f667f8c9888617df0751",
+        "lineage": "user_supplied_hash_pinned;not_independent_upstream_certification"
+      },
+      "bank_content_sha256": "0cd2ad06460ecfdfbc23f98148e6423ed63ae77d9074f24f588aa0baeae0d34f",
+      "memory_gradients_after_pseudo_backward": [
+        {
+          "projection_grad_present": true,
+          "projection_grad_norm": 0.00026742799673229456,
+          "alpha_gamma_grad_present": true,
+          "alpha_gamma_grad_norm": 2.7312593374517746e-05
+        },
+        {
+          "projection_grad_present": true,
+          "projection_grad_norm": 0.0010682024294510484,
+          "alpha_gamma_grad_present": true,
+          "alpha_gamma_grad_norm": 9.104821947403252e-05
+        },
+        {
+          "projection_grad_present": true,
+          "projection_grad_norm": 0.0017746445955708623,
+          "alpha_gamma_grad_present": true,
+          "alpha_gamma_grad_norm": 0.00015226984396576881
+        }
+      ],
+      "rows": [
+        {
+          "step": 1,
+          "seconds": 0.8697424221318215,
+          "supervised_loss": 2.1999096870422363,
+          "supervised_gradient_norm": 5.884193420410156,
+          "pseudo_loss": 1.3586697578430176,
+          "pseudo_gradient_norm": 63.71122360229492,
+          "accepted_pseudo_pixels": 2097152
+        },
+        {
+          "step": 2,
+          "seconds": 0.8694582229945809,
+          "supervised_loss": 2.166835069656372,
+          "supervised_gradient_norm": 3.932003974914551,
+          "pseudo_loss": 1.2621183395385742,
+          "pseudo_gradient_norm": 19.641071319580078,
+          "accepted_pseudo_pixels": 2097152
+        },
+        {
+          "step": 3,
+          "seconds": 0.8717193768825382,
+          "supervised_loss": 2.1670618057250977,
+          "supervised_gradient_norm": 2.5784783363342285,
+          "pseudo_loss": 1.2188732624053955,
+          "pseudo_gradient_norm": 11.823379516601562,
+          "accepted_pseudo_pixels": 2097152
+        }
+      ],
+      "quality": "NOT_EVALUATED",
+      "patient_dice": "NOT_MEASURED"
+    }
+  ]
+}

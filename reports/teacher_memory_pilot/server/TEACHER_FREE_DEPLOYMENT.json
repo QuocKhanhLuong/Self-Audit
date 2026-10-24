@@ -1,0 +1,36 @@
+{
+  "status": "PASS",
+  "scope": "Real TRAIN-image deployment plumbing; not quality evaluation",
+  "source_sha256": "7f5856216d59bc787633f8a703fa362cf83582427b830ab1ce09c15aeb55e8a9",
+  "checkpoint_manifest_sha256": "9e9178ff0b7b6f826be30c803ddc7313b91024fbb6576e372b094fd7113cadd0",
+  "export_manifest_sha256": "7c24aaa90d8708a8a8add67bca9881134e3da5ef5663afef8564b6a8b7e9b2c4",
+  "export_payload_sha256": "96126991fbc7c2d6028bbebed30dac2a77045869ae91e0be23d78ed8db932647",
+  "payload_keys": [
+    "student"
+  ],
+  "teacher_included": false,
+  "original_bank_and_teacher_access": "Blocked by Python audit hook; no access attempted",
+  "blocked_asset_roots": [
+    "/root/self-audit-teacher-memory-assets",
+    "/root/self-audit-teacher-memory-execution/bounded-real-bank",
+    "/root/self-audit-teacher-memory-execution/external_pseudo"
+  ],
+  "forbidden_attempts": [],
+  "bank_embedded": true,
+  "input_shape": [
+    1,
+    3,
+    256,
+    216
+  ],
+  "output_shape": [
+    1,
+    4,
+    256,
+    216
+  ],
+  "max_abs_logit_difference": 0.0,
+  "single_inference_seconds": 0.01452938886359334,
+  "student_architecture_dependency": "Pinned DINO source and construction weights remain required",
+  "quality": "NOT_EVALUATED"
+}

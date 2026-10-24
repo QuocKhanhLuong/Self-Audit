@@ -1,0 +1,32 @@
+{
+  "status": "PASS",
+  "python": "3.12.15 (main, Oct 13 2026, 16:52:04) [GCC 15.3.0]",
+  "torch": "2.14.1+cu132",
+  "numpy": "2.5.4",
+  "scipy": "1.18.1",
+  "cuda": "13.2",
+  "source_sha256": "7f5856216d59bc787633f8a703fa362cf83582427b830ab1ce09c15aeb55e8a9",
+  "commands": [
+    {
+      "command": [
+        "/venv/main/bin/python",
+        "scripts/check_repo.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.02827980904839933,
+      "log": "server-check_repo.log"
+    },
+    {
+      "command": [
+        "/venv/main/bin/python",
+        "-m",
+        "pytest",
+        "-q"
+      ],
+      "exit_code": 0,
+      "seconds": 23.87265354185365,
+      "log": "server-pytest.log"
+    }
+  ],
+  "quality": "NOT_EVALUATED"
+}

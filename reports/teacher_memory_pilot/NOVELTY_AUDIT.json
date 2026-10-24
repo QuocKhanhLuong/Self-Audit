@@ -1,0 +1,94 @@
+{
+  "schema": "self_audit.teacher_memory.novelty_audit.v1",
+  "audit_date": "2026-10-24",
+  "source_base_sha": "9341cc81fc046d61135b928f5ac51ebed19c19ed",
+  "review_scope": "primary literature and proposed experimental controls",
+  "implementation_certified": false,
+  "patient_experiment_status": "NOT_RUN_BY_THIS_AUDIT",
+  "novelty_status": "NOT_ESTABLISHED",
+  "candidate_claim": "Fixed TRAIN-image spatial boundary endpoint pairs, retrieved jointly through an antisymmetric uncertainty-gated logit residual.",
+  "excluded_broad_claims": [
+    "first teacher feature memory",
+    "first prototype attention or residual augmentation",
+    "first boundary-aware prototype method",
+    "first dual-teacher medical segmentation method",
+    "first boundary or relational distillation method"
+  ],
+  "sources": [
+    {
+      "id": "ProC-KD",
+      "url": "https://arxiv.org/html/2212.13180v1",
+      "evidence": "Sections III-A-C, Eqs. 1-6",
+      "verified_overlap": "Learned prototypes, student attention, residual feature augmentation, auxiliary distillation objectives"
+    },
+    {
+      "id": "IC-KD",
+      "url": "https://arxiv.org/html/2501.07040v1",
+      "evidence": "Section III-B, Eqs. 7-11, Algorithm 1",
+      "verified_overlap": "Fixed-teacher offline feature memory; same/different-class retrieval and distillation"
+    },
+    {
+      "id": "BRPG",
+      "url": "https://arxiv.org/html/2307.10097v2",
+      "evidence": "Sections 3.4-3.5, Eqs. 8-22",
+      "verified_overlap": "Confidence-separated boundary-refining prototypes, category memory, contrastive classification, prototype EMA"
+    },
+    {
+      "id": "Dual-Teacher-SAM-prototype",
+      "url": "https://papers.miccai.org/miccai-2026/0318-Paper3395.html",
+      "title": "Dual-Teacher Knowledge Distillation with SAM and Learnable Prototype Guidance for Semi-supervised 3D Medical Segmentation",
+      "authors": ["Shuaiguang Huo", "Zifeng Sang", "Xu Luo", "Jinghua Zhu", "Heran Xi"],
+      "venue": "MICCAI 2026, LNCS 16880",
+      "existence_status": "VERIFIED_OFFICIAL_ACCEPTED_PAPER_PAGE",
+      "doi_status": "NOT_AVAILABLE_ON_OFFICIAL_PAGE_AT_REVIEW",
+      "evidence": "Official abstract, BibTeX, author feedback",
+      "verified_overlap": "EMA internal teacher, frozen SAM-Med3D, learnable location-independent prototype residual pseudo-label calibration",
+      "limit": "No independent reproduction or source-code verification of this prior work"
+    },
+    {
+      "id": "SimCVD",
+      "url": "https://arxiv.org/abs/2108.06227",
+      "evidence": "Primary abstract",
+      "verified_overlap": "Boundary-aware representation learning and pairwise similarity distillation",
+      "limit": "Nearby threat; complete formula-level comparison remains outside this audit"
+    },
+    {
+      "id": "MONA",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11903367/",
+      "arxiv_url": "https://arxiv.org/abs/2209.13476",
+      "evidence": "Primary abstract and author manuscript description of FIFO neighbor memory",
+      "verified_overlap": "Medical anatomical neighbors and memory",
+      "limit": "Nearby threat; complete formula-level comparison remains outside this audit"
+    }
+  ],
+  "a2_recommendation": {
+    "status": "REVIEW_RECOMMENDATION_NOT_IMPLEMENTATION_CERTIFICATION",
+    "endpoint_attention": "a_c=softmax(s_c/(2*tau)+log(rho_c)); a_d=softmax(s_d/(2*tau)+log(rho_d))",
+    "residual": "sum_i sum_j a_c[i]*a_d[j]*tanh((s_c[i]-s_d[j])/tau)",
+    "matching": "Same 2N endpoint vectors, W, six gains, gate, temperature and update schedule",
+    "reliability": "Use consistent endpoint-factorized reliability in A2/A3/A4 or uniform reliability; never reuse orphan pair weights after shuffle",
+    "compute_limit_per_class_pair": 64
+  },
+  "a4_requirement": {
+    "operation": "Permute d endpoints across entries within each semantic class-pair; move endpoint reliability with its endpoint",
+    "preserve": ["class labels", "endpoint vector marginals", "endpoint confidence marginals", "trainable parameter budget"],
+    "fewer_than_two_entries": "Record identity permutation and no pairing evidence",
+    "patient_confound": "Within-patient shuffling preferred when possible; cross-patient shuffling also changes patient association",
+    "invalid_null": "Swapping both endpoints within an original pair is orientation invariance or semantic label corruption"
+  },
+  "a5_requirement": "No-external-teacher claim requires student provenance for labels, positions and features; retaining external features tests only no-external-label/position",
+  "derived_invariants": {
+    "sum_class_delta": "0",
+    "per_class_bound": "abs(delta[c]) <= beta_max*4*p0[c]*(1-p0[c]) <= beta_max <= 0.5",
+    "initial_beta": 0.00899310498,
+    "efficacy_guarantee": false
+  },
+  "primary_falsifiers": [
+    "A2 matches or exceeds A3 within a prespecified meaningful-effect margin",
+    "Frozen repeated A4 shuffles match A3 despite informative shuffle support",
+    "A5 matches A3, weakening external-source necessity",
+    "A6 matches A3, weakening semantic feature-memory explanation"
+  ],
+  "statistical_limit": "Non-significance alone is not equivalence; patient-level intervals, repeated seeds and prespecified margins are required.",
+  "search_limit": "Scoped comparison, not an exhaustive prior-art or priority determination."
+}
