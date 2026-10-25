@@ -1,0 +1,20 @@
+{
+  "batch": 24,
+  "threads": 8,
+  "status": "PASS",
+  "suite_samples_per_second": 29.19829512101646,
+  "per_arm_seconds": {
+    "A0": 0.8507484063350906,
+    "A1": 0.829720018664375,
+    "A2": 0.8256417730202278,
+    "A3": 0.8119126000286391
+  },
+  "peak_reserved_bytes": 12375293952,
+  "receipt": "/root/self-audit-memory-full-20261024/profiles/b24_t8/PROFILE.json",
+  "crop": 256,
+  "dtype": "FP32; no AMP",
+  "selection": "highest measured full-suite throughput estimate across real A0/A1/A2/A3; dense A2/A3 capacity guard",
+  "actual_training_pseudo_threshold": 0.7,
+  "profile_pseudo_threshold": 0.0,
+  "safe_memory_policy": "2GiB spare plus 512MiB context allowance"
+}

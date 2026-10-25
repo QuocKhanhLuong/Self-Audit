@@ -1,0 +1,191 @@
+[
+  {
+    "schema": "self_audit.memory_bank_build.v1",
+    "status": "PASS",
+    "mode": "A5_student_only_parallel",
+    "bank": "/root/self-audit-memory-full-20261024/a5-parallel-optimization/benchmark_w1/fixed_bank.npz",
+    "bank_sha256": "7e9ffab1c5b4d9296dc994fccb5aaa1b0a76eb428ef4ea971df5df17f383593c",
+    "native_manifest_sha256": "ccaba9611234558f02c58bb94388a2bef2dc51b9cd9763b14971e830c61e3721",
+    "coverage": {
+      "train_patients_total": 80,
+      "train_patients_in_manifest": 16,
+      "train_patients_used": 16,
+      "timepoints_total": 2148,
+      "timepoints_used": 32,
+      "complete": false,
+      "bounded": true
+    },
+    "coverage_status": "BOUNDED_NOT_FULL_BANK",
+    "a1_cache": null,
+    "mask_paths_read": 0,
+    "evaluation_ids_used": false,
+    "workers": 1,
+    "tile_batch_size": 1,
+    "startup_seconds": 1.6647404339164495,
+    "processing_seconds": 196.05009099002928,
+    "timepoints_per_second": 0.1632235916770243,
+    "peak_device_used_bytes": 1065353216,
+    "peak_cgroup_ram_bytes": 81481293824,
+    "parallel_count_parity": null
+  },
+  {
+    "schema": "self_audit.memory_bank_build.v1",
+    "status": "PASS",
+    "mode": "A5_student_only_parallel",
+    "bank": "/root/self-audit-memory-full-20261024/a5-parallel-optimization/benchmark_w2/fixed_bank.npz",
+    "bank_sha256": "e93a60668e755921f93293ebb5f03de2cbd0f91d7d26f68a0d422a01a210b2d5",
+    "native_manifest_sha256": "ccaba9611234558f02c58bb94388a2bef2dc51b9cd9763b14971e830c61e3721",
+    "coverage": {
+      "train_patients_total": 80,
+      "train_patients_in_manifest": 16,
+      "train_patients_used": 16,
+      "timepoints_total": 2148,
+      "timepoints_used": 32,
+      "complete": false,
+      "bounded": true
+    },
+    "coverage_status": "BOUNDED_NOT_FULL_BANK",
+    "a1_cache": null,
+    "mask_paths_read": 0,
+    "evaluation_ids_used": false,
+    "workers": 2,
+    "tile_batch_size": 1,
+    "startup_seconds": 2.186892695026472,
+    "processing_seconds": 131.24419822497293,
+    "timepoints_per_second": 0.24382030164218788,
+    "peak_device_used_bytes": 1922039808,
+    "peak_cgroup_ram_bytes": 83557732352,
+    "parallel_count_parity": {
+      "reference": "/root/self-audit-memory-full-20261024/a5-parallel-optimization/benchmark_w1/BUILD_RECEIPT.json",
+      "selected_bank_bitwise_equal": true
+    }
+  },
+  {
+    "schema": "self_audit.memory_bank_build.v1",
+    "status": "PASS",
+    "mode": "A5_student_only_parallel",
+    "bank": "/root/self-audit-memory-full-20261024/a5-parallel-optimization/benchmark_w4/fixed_bank.npz",
+    "bank_sha256": "f698c2665cce602b35257f3dc15897af8109b06823cb59415e2c39eb6dd43acf",
+    "native_manifest_sha256": "ccaba9611234558f02c58bb94388a2bef2dc51b9cd9763b14971e830c61e3721",
+    "coverage": {
+      "train_patients_total": 80,
+      "train_patients_in_manifest": 16,
+      "train_patients_used": 16,
+      "timepoints_total": 2148,
+      "timepoints_used": 32,
+      "complete": false,
+      "bounded": true
+    },
+    "coverage_status": "BOUNDED_NOT_FULL_BANK",
+    "a1_cache": null,
+    "mask_paths_read": 0,
+    "evaluation_ids_used": false,
+    "workers": 4,
+    "tile_batch_size": 1,
+    "startup_seconds": 2.251908121164888,
+    "processing_seconds": 74.18964701518416,
+    "timepoints_per_second": 0.4313270286007785,
+    "peak_device_used_bytes": 3265265664,
+    "peak_cgroup_ram_bytes": 87429656576,
+    "parallel_count_parity": {
+      "reference": "/root/self-audit-memory-full-20261024/a5-parallel-optimization/benchmark_w1/BUILD_RECEIPT.json",
+      "selected_bank_bitwise_equal": true
+    }
+  },
+  {
+    "schema": "self_audit.memory_bank_build.v1",
+    "status": "PASS",
+    "mode": "A5_student_only_parallel",
+    "bank": "/root/self-audit-memory-full-20261024/a5-parallel-optimization/benchmark_w8/fixed_bank.npz",
+    "bank_sha256": "15e16aeaae9a2425d8e19655f91fbf9aa3862756cbb28c2d86a4cbf18288fbd4",
+    "native_manifest_sha256": "ccaba9611234558f02c58bb94388a2bef2dc51b9cd9763b14971e830c61e3721",
+    "coverage": {
+      "train_patients_total": 80,
+      "train_patients_in_manifest": 16,
+      "train_patients_used": 16,
+      "timepoints_total": 2148,
+      "timepoints_used": 32,
+      "complete": false,
+      "bounded": true
+    },
+    "coverage_status": "BOUNDED_NOT_FULL_BANK",
+    "a1_cache": null,
+    "mask_paths_read": 0,
+    "evaluation_ids_used": false,
+    "workers": 8,
+    "tile_batch_size": 1,
+    "startup_seconds": 2.299691720865667,
+    "processing_seconds": 46.54532106383704,
+    "timepoints_per_second": 0.6875019715969283,
+    "peak_device_used_bytes": 6032457728,
+    "peak_cgroup_ram_bytes": 94920372224,
+    "parallel_count_parity": {
+      "reference": "/root/self-audit-memory-full-20261024/a5-parallel-optimization/benchmark_w1/BUILD_RECEIPT.json",
+      "selected_bank_bitwise_equal": true
+    }
+  },
+  {
+    "schema": "self_audit.memory_bank_build.v1",
+    "status": "PASS",
+    "mode": "A5_student_only_parallel",
+    "bank": "/root/self-audit-memory-full-20261024/a5-parallel-optimization/benchmark_w12/fixed_bank.npz",
+    "bank_sha256": "83010165bfebfabaa1437fd4ae22f83fde631a0e53fb5731a28422096dc26f6e",
+    "native_manifest_sha256": "ccaba9611234558f02c58bb94388a2bef2dc51b9cd9763b14971e830c61e3721",
+    "coverage": {
+      "train_patients_total": 80,
+      "train_patients_in_manifest": 16,
+      "train_patients_used": 16,
+      "timepoints_total": 2148,
+      "timepoints_used": 32,
+      "complete": false,
+      "bounded": true
+    },
+    "coverage_status": "BOUNDED_NOT_FULL_BANK",
+    "a1_cache": null,
+    "mask_paths_read": 0,
+    "evaluation_ids_used": false,
+    "workers": 12,
+    "tile_batch_size": 1,
+    "startup_seconds": 2.382321750978008,
+    "processing_seconds": 39.39419836201705,
+    "timepoints_per_second": 0.8123023523903875,
+    "peak_device_used_bytes": 8661237760,
+    "peak_cgroup_ram_bytes": 101917839360,
+    "parallel_count_parity": {
+      "reference": "/root/self-audit-memory-full-20261024/a5-parallel-optimization/benchmark_w1/BUILD_RECEIPT.json",
+      "selected_bank_bitwise_equal": true
+    }
+  },
+  {
+    "schema": "self_audit.memory_bank_build.v1",
+    "status": "PASS",
+    "mode": "A5_student_only_parallel",
+    "bank": "/root/self-audit-memory-full-20261024/a5-parallel-optimization/benchmark_w16/fixed_bank.npz",
+    "bank_sha256": "cc40587d112268af514c6b8e9765e1b8366a98713884cc4803fb99d2e7cfd147",
+    "native_manifest_sha256": "ccaba9611234558f02c58bb94388a2bef2dc51b9cd9763b14971e830c61e3721",
+    "coverage": {
+      "train_patients_total": 80,
+      "train_patients_in_manifest": 16,
+      "train_patients_used": 16,
+      "timepoints_total": 2148,
+      "timepoints_used": 32,
+      "complete": false,
+      "bounded": true
+    },
+    "coverage_status": "BOUNDED_NOT_FULL_BANK",
+    "a1_cache": null,
+    "mask_paths_read": 0,
+    "evaluation_ids_used": false,
+    "workers": 16,
+    "tile_batch_size": 1,
+    "startup_seconds": 2.4552138440776616,
+    "processing_seconds": 46.20137071609497,
+    "timepoints_per_second": 0.6926201431693086,
+    "peak_device_used_bytes": 10565451776,
+    "peak_cgroup_ram_bytes": 108208320512,
+    "parallel_count_parity": {
+      "reference": "/root/self-audit-memory-full-20261024/a5-parallel-optimization/benchmark_w1/BUILD_RECEIPT.json",
+      "selected_bank_bitwise_equal": true
+    }
+  }
+]

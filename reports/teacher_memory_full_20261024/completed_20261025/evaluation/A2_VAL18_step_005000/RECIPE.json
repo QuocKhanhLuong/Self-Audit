@@ -1,0 +1,19 @@
+{
+  "checkpoint_sha256": "c582172c04ac12a8a5fb29a0e24ad7487663f28a93a4568487b0fcfeabb87c97",
+  "data_sha256": "f0997269ded69370e7b48241872ac72f6eed9bbd91a055d76f2107bd1a86a394",
+  "scope": "exposed_development",
+  "prediction_model": "student",
+  "synthetic": false,
+  "input": "full native cines; no crop/resize",
+  "probability_dtype": "float32; no AMP",
+  "output": "softmax(logits).argmax; uint8 native TZYX; no threshold/postprocessing",
+  "prediction_storage": "gzip lossless uint8 labels; no probability calibration analyses",
+  "batch_size": 8,
+  "threads": 2,
+  "metric_classes": [
+    "BG",
+    "RV",
+    "MYO",
+    "LV"
+  ]
+}

@@ -1,0 +1,251 @@
+{
+  "status": "PASS",
+  "verified_utc": "2026-10-25T08:19:07.256822+00:00",
+  "canonical_source_sha256": "7f5856216d59bc787633f8a703fa362cf83582427b830ab1ce09c15aeb55e8a9",
+  "shared_schedule_sha256": "d185ed73928b8925a6c8c7f4630204ef63b94934e3a4741cbe92de0bde0b8866",
+  "training_steps": 70000,
+  "checkpoints_hashed": 14,
+  "frozen_prediction_files_hashed_and_replayed": 602,
+  "evaluation_frames_replayed": 1204,
+  "assets_hashed": {
+    "/root/self-audit-pilot-artifacts/backbone/pretrained/dinov3_convnext_tiny_pretrain_lvd1689m-21b726bb.pth": "21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54",
+    "/dev/shm/self-audit-memory-full-20261024/parallel-optimization/full/external_pseudo/external_pseudo.json": "92caaf79f3fcad5f564c723c97737a3acdec69bb9b4e6050d38af72ef6fa3b00",
+    "/root/self-audit-memory-full-20261024/teacher-bank/fixed_bank.npz": "009c1e74da0033b6cbddcfefffcf5df90a8a9b8a246774a284d28b0cf162ef04",
+    "/root/self-audit-memory-full-20261024/student-bank/fixed_bank.npz": "093e43ea106ee1b11ad8d83dc58179bdef3c8653ab02f4e75246c1e7e9442e72"
+  },
+  "evaluations": [
+    {
+      "arm": "A0",
+      "split": "VAL18",
+      "checkpoint": "step_005000",
+      "metrics_sha256": "5fac0e943a6015934cc6af0c983a4104d2e78518b3f6a1876b99d6a9ac58bb49",
+      "recipe_sha256": "e1b68c7b10568bc8af6b761582971db199490fae4a5d333f3a69714c8da422a1",
+      "frozen_predictions_receipt_sha256": "b0b2b7db023b8152d690aabf4eb4d2d947374c08d7e5cdf024b9cff5097a14c6",
+      "patients": 18,
+      "frames": 36,
+      "elapsed_seconds": 19.236184156965464
+    },
+    {
+      "arm": "A0",
+      "split": "VAL18",
+      "checkpoint": "final",
+      "metrics_sha256": "324debc300cc38831c1b58582ad2a7a4e9048b51e27a9dea23beb13c755b3d56",
+      "recipe_sha256": "ad52ae12164cb01804434a2032bc79dfbb12b810e0fbebc4387b862941d9a135",
+      "frozen_predictions_receipt_sha256": "cd36b00cce401b3dc5559fe819b5b266774846964548944b478c72569a2a262d",
+      "patients": 18,
+      "frames": 36,
+      "elapsed_seconds": 19.192443248815835
+    },
+    {
+      "arm": "A0",
+      "split": "TEST50",
+      "checkpoint": "final",
+      "metrics_sha256": "9186fd432cdae2f339eece8ae5f5580e159f008d52c227df95ad7bc2d15e01fb",
+      "recipe_sha256": "905b1a1152dc7d3568cce49048a75d944533acd589406315f1166b6929f1e59b",
+      "frozen_predictions_receipt_sha256": "9f5c29be590a971ccf120d2992f0a0e95b358e6ab6e90781f102c8c262f60441",
+      "patients": 50,
+      "frames": 100,
+      "elapsed_seconds": 52.07727082492784
+    },
+    {
+      "arm": "A1",
+      "split": "VAL18",
+      "checkpoint": "step_005000",
+      "metrics_sha256": "464d30d5de761f534e4647f7b264f1a0b44f2bce33be856311f7ce4f81687e47",
+      "recipe_sha256": "453e1a52de4446a399adbf192df0b866d88c815e298036609467e8e633c53ef2",
+      "frozen_predictions_receipt_sha256": "099b13df0dfc9a482821e164cf3ba36853a61367f8f896d6b25adb5ae1468543",
+      "patients": 18,
+      "frames": 36,
+      "elapsed_seconds": 19.222119559068233
+    },
+    {
+      "arm": "A1",
+      "split": "VAL18",
+      "checkpoint": "final",
+      "metrics_sha256": "f501ab76c5948c96837010b4cbebb82acaecece17bfe25d95de2ceee292a1d4c",
+      "recipe_sha256": "d1186ed4520ca3e862502744cd54c31ec8f1b3385497f4a211ecc505128d3bde",
+      "frozen_predictions_receipt_sha256": "3df27dae0cfd232c0592458c69f547ab33f355153e600ff2f52ebca6715cb7e5",
+      "patients": 18,
+      "frames": 36,
+      "elapsed_seconds": 19.239504653029144
+    },
+    {
+      "arm": "A1",
+      "split": "TEST50",
+      "checkpoint": "final",
+      "metrics_sha256": "092af24a4f44dc392079fd87ea0215dfa0916cc0cb52b7d98286de0f6fab2c4e",
+      "recipe_sha256": "fc620422a79865a783206c79a6cffffb2426661dd1e5372b24344431e50dda1a",
+      "frozen_predictions_receipt_sha256": "b88be49547d9019d07b7d043d2f459c9c8a5ff0049f208c848215c5f430d49f6",
+      "patients": 50,
+      "frames": 100,
+      "elapsed_seconds": 52.06757038482465
+    },
+    {
+      "arm": "A2",
+      "split": "VAL18",
+      "checkpoint": "step_005000",
+      "metrics_sha256": "801179ad73f7efd586fcfc7d8d530a0e0262420b1487be884474c6c77019db34",
+      "recipe_sha256": "51e00cffdca83834a05295fcf1727d7c49cb27aabef4f3dc38a6833a4d0b84e8",
+      "frozen_predictions_receipt_sha256": "03ca74049d63669627337645407407624a3ed5ffcc9ee41aa06739f6c64d4b4e",
+      "patients": 18,
+      "frames": 36,
+      "elapsed_seconds": 21.198932049795985
+    },
+    {
+      "arm": "A2",
+      "split": "VAL18",
+      "checkpoint": "final",
+      "metrics_sha256": "d54dc74a9412d3e05ffb5805089e7893d85c15b38091b771d22ed0e3f7cb9eef",
+      "recipe_sha256": "ac2f39db400168251c485b95b396219fea3c63e2818ffb5413a3e84e6cda6921",
+      "frozen_predictions_receipt_sha256": "7cb26ab27ed76d6816b1ea56ce243fc9fe9b1305a4f08dfc536c2d38962765a1",
+      "patients": 18,
+      "frames": 36,
+      "elapsed_seconds": 21.257129997946322
+    },
+    {
+      "arm": "A2",
+      "split": "TEST50",
+      "checkpoint": "final",
+      "metrics_sha256": "05b2fffa08bfec584736ecd766fc9a5d37f7605e179ceb1bcbba115c79bc09a1",
+      "recipe_sha256": "877101c7c882f7fb4eb6299ad7e669e5ac9a15d07e0a107995282089df271e53",
+      "frozen_predictions_receipt_sha256": "cfc1f3fe561eab95163241691c92d280193e272901e2ae930f4beb44af0d3b61",
+      "patients": 50,
+      "frames": 100,
+      "elapsed_seconds": 57.8336382759735
+    },
+    {
+      "arm": "A3",
+      "split": "VAL18",
+      "checkpoint": "step_005000",
+      "metrics_sha256": "c07b0d2ee4b4f4c1e1a8af055a3594d7f459531e278bb412e68f78b9c784e1f4",
+      "recipe_sha256": "8980e2c9d69a81b56e23b2a5e819361e32b2efee138d339612f7bf56c83cbb63",
+      "frozen_predictions_receipt_sha256": "1f54784b16515673ff2b8a8dd3759c03d6dc7e0fbb6e58d23c7578cea6b32ba7",
+      "patients": 18,
+      "frames": 36,
+      "elapsed_seconds": 21.01196154905483
+    },
+    {
+      "arm": "A3",
+      "split": "VAL18",
+      "checkpoint": "final",
+      "metrics_sha256": "474df6d0a4b673f55957f97279dd8afaf160be332caade9b23db620b2ae57e72",
+      "recipe_sha256": "f945d2812c8b1a1d0508ab5f1e722a5466fa8ac69817af30532cfb6f09d8e949",
+      "frozen_predictions_receipt_sha256": "8bb38ca103884d3bfcd771acc81ae7334d4767ba66e5bebe6f3e3e762b827099",
+      "patients": 18,
+      "frames": 36,
+      "elapsed_seconds": 20.78083860897459
+    },
+    {
+      "arm": "A3",
+      "split": "TEST50",
+      "checkpoint": "final",
+      "metrics_sha256": "f018591181e7f35b10ef39fa85df12093d774dfc85896ee40d520db93080af76",
+      "recipe_sha256": "14836941e45b7ae6098bab83b25d30e90b6c57ea10c00b20a3ea77e3862c96b0",
+      "frozen_predictions_receipt_sha256": "ce557661c411b97de25eaf7a91fed21991b119f55802e392faf8fbec3993e548",
+      "patients": 50,
+      "frames": 100,
+      "elapsed_seconds": 56.41262180591002
+    },
+    {
+      "arm": "A4",
+      "split": "VAL18",
+      "checkpoint": "step_005000",
+      "metrics_sha256": "420221d573b715c19a3fa0a1d8f011358563183aa98e838a3eb5ca7920e0fe25",
+      "recipe_sha256": "62ea6901481348b5331fdcb267f4f342ab569d0c7227dd32a41ac96e227633b4",
+      "frozen_predictions_receipt_sha256": "8f29ba53d9ff88915ed38e7b6f9944870dfa666622940da35f0164922946257c",
+      "patients": 18,
+      "frames": 36,
+      "elapsed_seconds": 20.997022673022002
+    },
+    {
+      "arm": "A4",
+      "split": "VAL18",
+      "checkpoint": "final",
+      "metrics_sha256": "eaaf87632001839daa88c4ceb6189ce91d1cef60f4cfbe18791961caba49cc32",
+      "recipe_sha256": "8313b28b44172243267a29e64978013a9bf9c035608d046efd8cea86c5e3ad3d",
+      "frozen_predictions_receipt_sha256": "91888da33987dce70610548958942428059b7f7e1954d5007ce7e7526002c4ef",
+      "patients": 18,
+      "frames": 36,
+      "elapsed_seconds": 20.85422329395078
+    },
+    {
+      "arm": "A4",
+      "split": "TEST50",
+      "checkpoint": "final",
+      "metrics_sha256": "c3710d266fc638d457c7e5335ec8007fea9312b2255bb70f6cf7114e80ecf2a8",
+      "recipe_sha256": "7104110d7a701de7625acf2de491d1f876f8731b2770fe365fc74be231042ed7",
+      "frozen_predictions_receipt_sha256": "ff946d3f26bf8a02e37d72b9b5291f2c88b5a8fb79ae7abd2b8239129eb7c161",
+      "patients": 50,
+      "frames": 100,
+      "elapsed_seconds": 56.79770066589117
+    },
+    {
+      "arm": "A5",
+      "split": "VAL18",
+      "checkpoint": "step_005000",
+      "metrics_sha256": "c4d3cbfcfa9ebaa136f52b95739719100526f1eec6a5343f07c029ddd00e1454",
+      "recipe_sha256": "0c547664e75bbf7e02bf8faaeee3b3764f58d272625ab8a000768cf2425ae14e",
+      "frozen_predictions_receipt_sha256": "68f7be5e9e3f1eb02f7b9ae45096dd5c591a89d08949100f6e1420ef2ea193bc",
+      "patients": 18,
+      "frames": 36,
+      "elapsed_seconds": 21.067828690167516
+    },
+    {
+      "arm": "A5",
+      "split": "VAL18",
+      "checkpoint": "final",
+      "metrics_sha256": "9c6a9fdbed1f898ed688ed7acd4e7985476da9d9dd333df0e38d7d9c2b07d034",
+      "recipe_sha256": "decb1636b47f121877535ba4ff58537573758e0f1dd19387dc34bfe6f68dbd95",
+      "frozen_predictions_receipt_sha256": "e1125608aab2563325ba452963ab1f55b46bddda4ca6e3782c5f8fae573870bd",
+      "patients": 18,
+      "frames": 36,
+      "elapsed_seconds": 20.899609172018245
+    },
+    {
+      "arm": "A5",
+      "split": "TEST50",
+      "checkpoint": "final",
+      "metrics_sha256": "091fa1d767ebb05712aceed69f714fe9e3d9e70e72af21ec599e3ab5c5a79e6a",
+      "recipe_sha256": "d28cd900e9d6719aa606b39db036ccd83a33af7fa3a7968ae67d94678294f2e7",
+      "frozen_predictions_receipt_sha256": "26679a4518bb7922cb9309c501d633c00aec7aac1b21d8a492ae65a1e6cc5ecd",
+      "patients": 50,
+      "frames": 100,
+      "elapsed_seconds": 56.36500018509105
+    },
+    {
+      "arm": "A6",
+      "split": "VAL18",
+      "checkpoint": "step_005000",
+      "metrics_sha256": "09cae03cf7b9cb3b91ec20ae6d1109f183dbbe80682ac3ab3977956c029a9ef6",
+      "recipe_sha256": "a4f92c1ced1453c358a19cf50327c358894dbce90a433cc48165ebe42d59d071",
+      "frozen_predictions_receipt_sha256": "a225b705e6ad337928f2b32c79dbc010621a217a3c282a1c554150f66e86b31c",
+      "patients": 18,
+      "frames": 36,
+      "elapsed_seconds": 21.051657930016518
+    },
+    {
+      "arm": "A6",
+      "split": "VAL18",
+      "checkpoint": "final",
+      "metrics_sha256": "23bfe6e24e48bebff9206663c67d1907d2dbc603bf3af2cd44bf9b59fe28c77f",
+      "recipe_sha256": "00ad32cb7d260edca2a5f10f2b60496fac53db8d33e453e3e1c94a61b9cb67f3",
+      "frozen_predictions_receipt_sha256": "1e85c8010a988fa4b7f9dfa8c3d8e3c5f34a35bd00133d79ffcfb76b0455afa0",
+      "patients": 18,
+      "frames": 36,
+      "elapsed_seconds": 21.04802040895447
+    },
+    {
+      "arm": "A6",
+      "split": "TEST50",
+      "checkpoint": "final",
+      "metrics_sha256": "5e4143ab85314daede5ed7fda214fd19037bb1384ecc6d9c59979b4dbb218f0b",
+      "recipe_sha256": "fd4342ed6583cd2fba3702a6f3da900bcf2b164c3e50abb3acd6238d414230b6",
+      "frozen_predictions_receipt_sha256": "b6ba0b9f67f34161644f2a0f486151885b6a81877a87ba19323f99ea6f3c3d72",
+      "patients": 50,
+      "frames": 100,
+      "elapsed_seconds": 57.028388219187036
+    }
+  ],
+  "retained_on_server_only": "patient arrays, frozen prediction arrays, checkpoint and bank tensor payloads",
+  "replay": "CPU confusion matrices and patient aggregation replayed from all frozen predictions and hash-checked refs; no new inference"
+}

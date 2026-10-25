@@ -1,0 +1,39 @@
+{
+  "schema": "self_audit.semi_v2",
+  "method": "ema_full",
+  "source_sha256": "7f5856216d59bc787633f8a703fa362cf83582427b830ab1ce09c15aeb55e8a9",
+  "parameters": 32883525,
+  "device": "cuda",
+  "backbone": {
+    "pretrained": true,
+    "weights_sha256": "21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54",
+    "source_commit": "6876159a11b4df116f30f667f8c9888617df0751",
+    "lineage": "user_supplied_hash_pinned;not_independent_upstream_certification"
+  },
+  "synthetic": false,
+  "label_budget": 8,
+  "supervision": "dense TRAIN subset; audit included; never no-GT",
+  "pseudo_update_scope": "full",
+  "window": {
+    "mode": "fixed",
+    "dim": 32,
+    "radius_min": 0.5,
+    "radius_max": 4.0,
+    "offset_limit": 2.0,
+    "initial_radius": 1.0,
+    "gamma_init": 0.001
+  },
+  "meta_window": null,
+  "teacher_memory_arm": "A5",
+  "teacher_memory_bank_sha256": "093e43ea106ee1b11ad8d83dc58179bdef3c8653ab02f4e75246c1e7e9442e72",
+  "teacher_memory_effective_bank_sha256": "377c9be8712dc73da2cc2c98f355e0e5fb85d0fa953ded680c68afd7e3d7e009",
+  "external_pseudo_cache_sha256": null,
+  "geometry_scope": "fixed",
+  "outer_loss": null,
+  "batch_size": 24,
+  "batch_protocol": "one_patient_per_role; native_grid; equal_slice_audit_mass",
+  "crop_size": 256,
+  "crop_policy": "image_geometry_random; edge_pad; ignore_padding_in_all_losses; no_resize",
+  "native_supervised_loss": "CE+present_foreground_Dice",
+  "prediction_model": "student"
+}
