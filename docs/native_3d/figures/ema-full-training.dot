@@ -1,0 +1,35 @@
+digraph EMAFull {
+  graph [rankdir=TB, bgcolor="white", pad="0.35", nodesep="0.42", ranksep="0.44", splines=polyline, fontname="Arial", fontsize=22, labelloc=t, label="ema_full · current A0 training timeline\nTwo student optimizer updates · one final EMA update"];
+  node [shape=box, style="rounded,filled", fillcolor="#F5F7FA", color="#CBD3DF", fontname="Arial", fontsize=14, margin="0.18,0.12", penwidth=1.2];
+  edge [color="#506074", fontname="Arial", fontsize=11, arrowsize=0.7];
+  l [label="TRAIN-L · 8 labeled patients\nNative image + volume mask\nAligned crop/flip; target = center slice", fillcolor="#E7F0FC"];
+  sf [label="Student forward\nEntire NativeStudent", fillcolor="#E7F3EC"];
+  sl [label="Supervised loss\nCE + batch-pooled present-foreground Dice", fillcolor="#FFF0DB"];
+  first [label="1. Supervised optimizer step\nUpdate student → θs", fillcolor="#E7F3EC"];
+  u [label="TRAIN-U · images only\nSame crop and spatial coordinates for both views", fillcolor="#E7F0FC"];
+  weak [label="Weak view", fillcolor="#E7F0FC"];
+  strong [label="Strong view\nGamma + noise; no spatial warp", fillcolor="#E7F0FC"];
+  teacher [label="Teacher from previous iteration\nFull EMA copy of NativeStudent\nFrozen parameters; no backprop", fillcolor="#EEE8FA"];
+  tp [label="EMA teacher forward\nSoftmax probabilities", fillcolor="#EEE8FA"];
+  pseudo [label="Detached hard pseudo-labels\nAccept confidence ≥ 0.7\nAND valid image support", fillcolor="#EEE8FA"];
+  uf [label="Updated student θs\nForward on strong view", fillcolor="#E7F3EC"];
+  ul [label="Pseudo loss\nCE normalized over accepted pixels", fillcolor="#FFF0DB"];
+  second [label="2. Pseudo optimizer step, if accepted support exists\nUpdate full student → θnext", fillcolor="#E7F3EC"];
+  ema [label="3. EMA update exactly once\nTeacher ← 0.99 teacher + 0.01 θnext", fillcolor="#EEE8FA"];
+  next [label="Next iteration's teacher\nReported evaluation uses STUDENT", fillcolor="#E7F0FC"];
+  l -> sf -> sl -> first;
+  u -> weak;
+  u -> strong;
+  teacher -> tp;
+  weak -> tp -> pseudo;
+  first -> uf [label="after supervised step"];
+  strong -> uf;
+  uf -> ul;
+  pseudo -> ul;
+  ul -> second -> ema -> next;
+  teacher -> ema [style=dashed, label="previous EMA weights", color="#7A66A8"];
+  first -> ema [style=dashed, label="warmup or empty pseudo support", color="#7A66A8"];
+  {rank=same; l; u; teacher;}
+  note [shape=note, fillcolor="#FFFFFF", color="#CBD3DF", fontsize=11, label="First 1,000 outer iterations: supervised only. Completed suite: 10,000 L + 9,000 U + 10,000 EMA updates.\nSame optimizers for both student steps: AdamW body LR 3e−5; SGD head LR 3e−3; gradient clip 5.\nNo LR scheduler. Legacy pseudo_lr does not set the ordinary ema_full pseudo-step learning rate.\nA0 has no external-teacher loss or memory; no audit/guard selection; no adaptive/meta-Dice update.\nSource engine: 8252760 · executed-source hashes verified against results at fa7a866."];
+  next -> note [style=invis];
+}

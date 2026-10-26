@@ -1,0 +1,45 @@
+digraph NativeStudent {
+  graph [rankdir=TB, bgcolor="white", pad="0.35", nodesep="0.32", ranksep="0.48", splines=polyline, fontname="Arial", fontsize=22, labelloc=t, label="NativeStudent · current A0 architecture\n2.5D input · fixed window · native-resolution output"];
+  node [shape=box, style="rounded,filled", fillcolor="#F5F7FA", color="#CBD3DF", fontname="Arial", fontsize=14, margin="0.18,0.12", penwidth=1.2];
+  edge [color="#506074", fontname="Arial", fontsize=11, arrowsize=0.7];
+  input [label="Cine MRI: T × Z × H × W\nAt fixed t: z−1, z, z+1\nTraining crop: B × 3 × 256 × 256", fillcolor="#E7F0FC"];
+  adapter [label="CenterDifference adapter\nNormalized center replicated to 3 channels\n+ Conv3×3(previous−center, next−center)", fillcolor="#E7F0FC"];
+  detail [label="Native detail branch\nRaw three-slice input\nConv3×3 → GELU → R\n32 × 256 × 256", fillcolor="#FFF0DB"];
+  subgraph cluster_encoder {
+    label="DINOv3 ConvNeXt-Tiny · pretrained, fine-tuned";
+    fontname="Arial"; fontsize=16; color="#C1D6F1"; style=rounded;
+    e1 [label="Encoder stage 1\n96 × 64 × 64", fillcolor="#E7F0FC"];
+    e2 [label="Encoder stage 2\n192 × 32 × 32", fillcolor="#E7F0FC"];
+    e3 [label="Encoder stage 3\n384 × 16 × 16", fillcolor="#E7F0FC"];
+    e4 [label="Encoder stage 4\n768 × 8 × 8", fillcolor="#E7F0FC"];
+    e1 -> e2 -> e3 -> e4;
+  }
+  d4 [label="Conv1×1: 768→256 · 2R\nD4: 256 × 8 × 8", fillcolor="#E7F3EC"];
+  d3 [label="Add projected skip · 2R\nD3: 192 × 16 × 16", fillcolor="#E7F3EC"];
+  d2 [label="Add projected skip · 2R\nD2: 128 × 32 × 32", fillcolor="#E7F3EC"];
+  m [label="Add projected skip\nM: 96 × 64 × 64", fillcolor="#E7F3EC"];
+  window [label="Fixed-window attention\nQ from M · K/V from D2\n9 sampled support points per query\nLearned attention / output / residual scale\nFixed sampling geometry", fillcolor="#EEE8FA"];
+  add [label="M + window residual\n2R → D1: 96 × 64 × 64", fillcolor="#E7F3EC"];
+  concat [label="Upsampled D1 concatenated with detail\n128 × 256 × 256", fillcolor="#FFF0DB"];
+  fuse [label="Conv1×1: 128→32 → GELU → R\nCrop back to original spatial extent", fillcolor="#FFF0DB"];
+  head [label="Head Conv1×1: 32→4\nCenter-slice logits: BG / RV / MYO / LV", fillcolor="#E7F0FC"];
+  output [label="Inference: repeat for every z and t\nNative-grid probabilities: T × Z × 4 × H × W\nVolume Dice per labeled frame → patient mean", fillcolor="#E7F0FC"];
+  input -> adapter -> e1;
+  input -> detail;
+  e4 -> d4;
+  d4 -> d3 [label="bilinear ↑2 + 1×1"];
+  d3 -> d2 [label="bilinear ↑2 + 1×1"];
+  d2 -> m [label="bilinear ↑2 + 1×1"];
+  e3 -> d3 [style=dashed, color="#52779F", label="skip · 1×1", constraint=false];
+  e2 -> d2 [style=dashed, color="#52779F", label="skip · 1×1", constraint=false];
+  e1 -> m [style=dashed, color="#52779F", label="skip · 1×1", constraint=false];
+  m -> window [label="query"];
+  d2 -> window [label="coarse feature", color="#7A66A8"];
+  m -> add;
+  window -> add;
+  add -> concat [label="bilinear ↑4"];
+  detail -> concat;
+  concat -> fuse -> head -> output;
+  note [shape=note, fillcolor="#FFFFFF", color="#CBD3DF", fontsize=11, label="Feature sizes omit B; shown for crop256. Inference uses native H/W with internal padding.\nR = GELU(x + Conv3×3 → GroupNorm → GELU → Conv3×3 → GroupNorm).\nDashed edges are active long skips. A0 has no external target, memory correction or meta-Dice.\nExisting A1 adds a training loss; A2–A6 add memory correction from D1 to logits.\nSource model: 8252760 · executed-source hashes verified against results at fa7a866."];
+  output -> note [style=invis];
+}
