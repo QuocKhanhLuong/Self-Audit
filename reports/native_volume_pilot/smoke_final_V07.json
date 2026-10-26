@@ -1,0 +1,390 @@
+{
+  "schema": "self_audit.volume.tooling_receipt.v1",
+  "command": "smoke",
+  "status": "PASS",
+  "config_id": "V07",
+  "config_path": "configs/native_volume/V07.json",
+  "config_sha256": "8e2134d8e04f5599248d54d416d62e3f4971cfd9d78da55a1276d357d30763c7",
+  "synthetic": true,
+  "real_train_smoke": "NOT_RUN",
+  "gpu": "NOT_RUN",
+  "steps": 1,
+  "optimizer_steps": 2,
+  "optimizer_updates": 4,
+  "supervised_updates": 1,
+  "supervised_extra_updates": 0,
+  "pseudo_updates": 1,
+  "ema_updates": 1,
+  "elapsed_seconds": 0.7682220418937504,
+  "output_shape": [
+    1,
+    4,
+    5,
+    32,
+    32
+  ],
+  "loss": 2.4551119804382324,
+  "loss_metrics": {
+    "step": 1,
+    "supervised_loss": 2.4551119804382324,
+    "supervised_grad_norm": 4.558953285217285,
+    "supervised_update_norm": 0.017725005745887756,
+    "ce": 1.5896939039230347,
+    "dice_loss": 0.865418016910553,
+    "loss": 2.4551119804382324,
+    "support_voxels": 1292.0,
+    "volumes_used": 1.0,
+    "present_foreground": 3.0,
+    "absent_foreground": 0.0,
+    "dice_foreground": 0.13458198308944702,
+    "dice_macro4": 0.18012523651123047,
+    "estimator_code": 1.0,
+    "label_voxels": 1292.0,
+    "pseudo_accepted": 1615,
+    "pseudo_accepted_per_class": [
+      68,
+      168,
+      670,
+      709
+    ],
+    "pseudo_weight": 1.0,
+    "teacher_student_disagreement": 0.11888544891640866,
+    "pseudo_valid_voxels": 1615,
+    "pseudo_coverage": 1.0,
+    "pseudo_loss": 0.9843947887420654,
+    "pseudo_ce_loss": 0.9843947887420654,
+    "pseudo_grad_norm": 2.5490946769714355,
+    "pseudo_update_norm": 0.012165181338787079,
+    "aux_grad_witness": 0.0,
+    "pseudo_accepted_voxels": 1615.0,
+    "region_loss": 0.0,
+    "region_active_regions": 0.0,
+    "region_valid_region_voxels": 0.0,
+    "region_supported_volumes": 0.0,
+    "temporal_loss": 0.0,
+    "temporal_valid_voxels": 0.0,
+    "temporal_valid_fraction": 0.0,
+    "mean_displacement_voxels": 0.0,
+    "mean_displacement_mm": 0.0,
+    "occlusion_fraction": 0.0,
+    "supervised_updates": 1,
+    "pseudo_updates": 1,
+    "ema_updates": 1,
+    "optimizer_updates": 4
+  },
+  "model_parameters": 348716,
+  "model_provenance": {
+    "architecture": "cnn3d",
+    "depth_mode": null,
+    "skip_fusion": "legacy",
+    "skip_stopgrad": false,
+    "synthetic": true,
+    "external_teacher": false,
+    "architecture_only": false,
+    "initialization": "scratch",
+    "encoder_widths": [
+      8,
+      16,
+      24,
+      32
+    ],
+    "decoder_widths": [
+      8,
+      16,
+      24,
+      32
+    ],
+    "parameter_count": 348716,
+    "parameter_group_counts": {
+      "encoder": 139176,
+      "body": 209504,
+      "head": 36
+    },
+    "capacity": {
+      "parameters": 347692,
+      "macs_per_output_voxel": 347128,
+      "executed_mac_proxy": {
+        "input_shape": [
+          1,
+          3,
+          3,
+          32,
+          32
+        ],
+        "macs": 96817152,
+        "layers": [
+          {
+            "kind": "conv3d",
+            "output_elements": 24576,
+            "macs": 663552
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 24576,
+            "macs": 5308416
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 24576,
+            "macs": 5308416
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 12288,
+            "macs": 2654208
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 12288,
+            "macs": 5308416
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 12288,
+            "macs": 5308416
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 4608,
+            "macs": 1990656
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 4608,
+            "macs": 2985984
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 4608,
+            "macs": 2985984
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 1536,
+            "macs": 995328
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 1536,
+            "macs": 1327104
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 1536,
+            "macs": 1327104
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 1536,
+            "macs": 1327104
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 1536,
+            "macs": 1327104
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 1536,
+            "macs": 1327104
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 1536,
+            "macs": 1327104
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 4608,
+            "macs": 147456
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 4608,
+            "macs": 5971968
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 4608,
+            "macs": 2985984
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 4608,
+            "macs": 2985984
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 12288,
+            "macs": 294912
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 12288,
+            "macs": 10616832
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 12288,
+            "macs": 5308416
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 12288,
+            "macs": 5308416
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 24576,
+            "macs": 393216
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 24576,
+            "macs": 10616832
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 24576,
+            "macs": 5308416
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 24576,
+            "macs": 5308416
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 12288,
+            "macs": 98304
+          }
+        ],
+        "omitted_ops": [
+          "bias_add",
+          "normalization",
+          "activation",
+          "interpolation",
+          "memory_traffic"
+        ]
+      }
+    },
+    "backbone": "tiny_test",
+    "native_provenance": {}
+  },
+  "teacher_copy_finite": true,
+  "device": "cpu",
+  "coverage": {
+    "trainer": true,
+    "fixture_manifest_sha256": "7ac295c1e4e2c03b2fb978f9405683e4058af198d6f8c0fc82507d31abc382fd",
+    "fixture_geometry_sha256": "922a94c6950b259bb6ae839350887a691d457ec93310f51a92a690b763352af2",
+    "labeled_label_reads": [
+      "synthetic_volume_000"
+    ],
+    "u_records_mask_free": true,
+    "exposure": {
+      "labeled_geometric_voxels": 1292,
+      "labeled_valid_voxels": 1292,
+      "unlabeled_geometric_voxels": 1615,
+      "unlabeled_valid_voxels": 0
+    },
+    "transaction_records": [
+      {
+        "step": 1,
+        "supervised_loss": 2.4551119804382324,
+        "supervised_grad_norm": 4.558953285217285,
+        "supervised_update_norm": 0.017725005745887756,
+        "ce": 1.5896939039230347,
+        "dice_loss": 0.865418016910553,
+        "loss": 2.4551119804382324,
+        "support_voxels": 1292.0,
+        "volumes_used": 1.0,
+        "present_foreground": 3.0,
+        "absent_foreground": 0.0,
+        "dice_foreground": 0.13458198308944702,
+        "dice_macro4": 0.18012523651123047,
+        "estimator_code": 1.0,
+        "label_voxels": 1292.0,
+        "pseudo_accepted": 1615,
+        "pseudo_accepted_per_class": [
+          68,
+          168,
+          670,
+          709
+        ],
+        "pseudo_weight": 1.0,
+        "teacher_student_disagreement": 0.11888544891640866,
+        "pseudo_valid_voxels": 1615,
+        "pseudo_coverage": 1.0,
+        "pseudo_loss": 0.9843947887420654,
+        "pseudo_ce_loss": 0.9843947887420654,
+        "pseudo_grad_norm": 2.5490946769714355,
+        "pseudo_update_norm": 0.012165181338787079,
+        "aux_grad_witness": 0.0,
+        "pseudo_accepted_voxels": 1615.0,
+        "region_loss": 0.0,
+        "region_active_regions": 0.0,
+        "region_valid_region_voxels": 0.0,
+        "region_supported_volumes": 0.0,
+        "temporal_loss": 0.0,
+        "temporal_valid_voxels": 0.0,
+        "temporal_valid_fraction": 0.0,
+        "mean_displacement_voxels": 0.0,
+        "mean_displacement_mm": 0.0,
+        "occlusion_fraction": 0.0,
+        "supervised_updates": 1,
+        "pseudo_updates": 1,
+        "ema_updates": 1,
+        "optimizer_updates": 4
+      }
+    ]
+  },
+  "runtime_overrides": {
+    "model.backbone": {
+      "from": "dinov3_convnext_tiny",
+      "to": "tiny_test"
+    },
+    "architecture.widths": {
+      "from": [
+        16,
+        32,
+        64,
+        128
+      ],
+      "to": [
+        8,
+        16,
+        24,
+        32
+      ],
+      "explicit": false
+    },
+    "geometry.crop_size": {
+      "from": 256,
+      "to": 32
+    },
+    "training.steps": {
+      "from": 8,
+      "to": 1
+    },
+    "training.microbatch": {
+      "from": 1,
+      "to": 1,
+      "explicit": true
+    },
+    "training.pseudo_threshold": {
+      "from": 0.7,
+      "to": 0.0,
+      "reason": "bounded synthetic U fixture"
+    },
+    "training.pseudo_delay": {
+      "from": 1,
+      "to": 0,
+      "reason": "bounded synthetic U fixture"
+    }
+  },
+  "logical_batch_size": 1,
+  "microbatch": 1,
+  "accumulation": 1,
+  "pseudo_threshold_override": 0.0,
+  "pseudo_delay_override": 0
+}

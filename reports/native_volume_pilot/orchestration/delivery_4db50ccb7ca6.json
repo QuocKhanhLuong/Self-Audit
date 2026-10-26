@@ -1,0 +1,113 @@
+{
+  "id": "ed7f8e9c-3b44-49b7-acb8-720a0fd8c0b1",
+  "ok": true,
+  "result": {
+    "runId": "run_0a8d03557566",
+    "deliveryId": "delivery_4db50ccb7ca6",
+    "messages": [
+      {
+        "id": "msg_f1ba8e7c2b45",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_401b20ac-81f8-46d6-88be-9ec469e507ca",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Final integration verification",
+        "body": "After final alias/AMP/config updates: rtk python scripts/check_repo.py PASS; rtk python -m pytest -q => 217 passed, 1 warning; owned 8 tests pass; all native registry configs V00..V08/O01..O03/S/R/T/I/C validate. Report integration.md updated with hashes and boundaries. No unresolved integration code failures; tooling configs remain outside ownership but now metadata-bearing and registry tests pass.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_e96dff360299\",\"dispatchId\":\"ctx_b34d0f176fb1\"}",
+        "created_at": "2026-10-26T01:07:49Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_65146025a160",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_9c887a91-e08d-444c-8798-7b941d7dbd41",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Full test evidence: unrelated owner failures",
+        "body": "Owned tests remain 7 passed. Latest full pytest: 235 passed, 4 failed in correction/temporal owner tests (geodesic boundary, click center, known-motion displacement, motion alignment loss). Earlier baseline before those files landed was 207 passed. Tooling files are unaffected; final coordinator gate should include these owner fixes or report failures.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_955c87b48c9c\",\"dispatchId\":\"ctx_b8c923620621\"}",
+        "created_at": "2026-10-26T01:07:57Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_7cd7eae72e8f",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_9c887a91-e08d-444c-8798-7b941d7dbd41",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Full pytest currently has 4 unrelated owner failures",
+        "body": "After strict config alignment, owned tests still 7 passed. Full ........................................................................ [ 30%]\n........................................................................ [ 60%]\n.....................F....F............................................. [ 90%]\n......FF...............                                                  [100%]\n=================================== FAILURES ===================================\n___________ test_geodesic_propagation_respects_intensity_boundaries ____________\n\n    def test_geodesic_propagation_respects_intensity_boundaries():\n        \"\"\"Geodesic propagation should spread within similar intensity and stop at sharp edge.\"\"\"\n        # Volume with two distinct intensity regions:\n        # Left half: bright (1.0), Right half: dark (0.0)\n        zdim, h, w = 3, 16, 16\n        img = np.zeros((zdim, h, w), dtype=np.float32)\n        img[:, :, :8] = 1.0  # bright left block\n    \n        # Click in bright region for class 1\n        click_left = PointPrompt(coord=(4.0, 8.0, 1.0), coord_system=\"native_voxel_xyz\", target_class=1)\n    \n        corrector = VolumeCorrector(\n            num_classes=4,\n            propagation_mode=\"geodesic_3d\",\n            sigma_mm=10.0,\n            gamma_intensity=20.0,  # high penalty for crossing 1.0 -> 0.0 edge\n            prompt_weight=0.95,\n        )\n        res = corrector.correct(img, [click_left])\n    \n        # Voxels inside the bright region on the same slice should have high class 1 probability\n        assert res.probabilities[1, 1, 8, 2] > 0.70\n        assert res.labels[1, 8, 2] == 1\n    \n        # Voxels across the edge in the dark region should NOT be labeled class 1\n>       assert res.labels[1, 8, 12] != 1\nE       assert np.uint8(1) != 1\n\ntests/test_volume_correction.py:163: AssertionError\n______________ test_click_simulation_finds_error_center_on_train _______________\n\n    def test_click_simulation_finds_error_center_on_train():\n        gt = np.zeros((3, 16, 16), dtype=np.uint8)\n        pred = np.zeros((3, 16, 16), dtype=np.uint8)\n        # Introduce error block for class 2 in slice 1, rows 4..12, cols 4..12\n        gt[1, 4:12, 4:12] = 2\n    \n        clicks = simulate_clicks_from_ground_truth(\n            gt,\n            pred,\n            dataset_role=\"TRAIN\",\n            max_clicks=3,\n            strategy=\"error_component_center\",\n        )\n        assert len(clicks) >= 1\n        first = clicks[0]\n        assert first.target_class == 2\n        assert first.slice_index == 1\n        # Center of [4:12, 4:12] is near (7 or 8)\n        iz, iy, ix = resolve_prompt_to_voxel_zyx(first, gt.shape)\n        assert iz == 1\n>       assert 5 <= iy <= 10\nE       assert 5 <= 4\n\ntests/test_volume_correction.py:254: AssertionError\n____________________ test_known_motion_phantom_registration ____________________\n\n    def test_known_motion_phantom_registration():\n        # 3D phantom shifted by known subpixel displacement: dy=2.0, dx=-3.0, dz=0.0\n        z, h, w = 5, 48, 48\n        phantom_t = _make_gaussian_sphere_phantom(z, h, w, cz=2.0, cy=24.0, cx=24.0, sigma=5.0)\n    \n        # Adjacent frame shifted by (dz=0, dy=2.0, dx=-3.0)\n        # So center moves to (cz=2.0, cy=26.0, cx=21.0)\n        true_dz, true_dy, true_dx = 0.0, 2.0, -3.0\n        phantom_adj = _make_gaussian_sphere_phantom(\n            z, h, w, cz=2.0 + true_dz, cy=24.0 + true_dy, cx=24.0 + true_dx, sigma=5.0\n        )\n    \n        curr_img = phantom_t.unsqueeze(0).unsqueeze(0).repeat(1, 3, 1, 1, 1)\n        adj_img = phantom_adj.unsqueeze(0).unsqueeze(0).repeat(1, 3, 1, 1, 1)\n    \n        cfg = TemporalConfig(mode=\"motion\", slice_wise=False)\n        reg = register_volumes(curr_img, adj_img, config=cfg)\n    \n        # Recovered displacement should map curr -> adj: so +dx=-3.0, +dy=2.0, +dz=0.0\n        rec_dx = reg.flow_xyz[0, 0].mean().item()\n        rec_dy = reg.flow_xyz[0, 1].mean().item()\n        rec_dz = reg.flow_xyz[0, 2].mean().item()\n    \n>       assert abs(rec_dx - true_dx) < 0.25, f\"Expected dx {true_dx}, got {rec_dx}\"\nE       AssertionError: Expected dx -3.0, got 3.437446355819702\nE       assert 6.437446355819702 < 0.25\nE        +  where 6.437446355819702 = abs((3.437446355819702 - -3.0))\n\ntests/test_volume_temporal.py:117: AssertionError\n_________________ test_motion_alignment_reduces_temporal_loss __________________\n\n    def test_motion_alignment_reduces_temporal_loss():\n        # When predictions are shifted according to motion, motion alignment should reduce loss\n        z, h, w = 3, 32, 32\n        curr_phantom = _make_gaussian_sphere_phantom(z, h, w, cz=1.0, cy=16.0, cx=16.0, sigma=4.0)\n        adj_phantom = _make_gaussian_sphere_phantom(z, h, w, cz=1.0, cy=18.0, cx=13.0, sigma=4.0)\n    \n        curr_img = curr_phantom.unsqueeze(0).unsqueeze(0).repeat(1, 3, 1, 1, 1)\n        adj_img = adj_phantom.unsqueeze(0).unsqueeze(0).repeat(1, 3, 1, 1, 1)\n        valid = torch.ones(1, z, h, w, dtype=torch.bool)\n    \n        # Let student logits predict class 1 inside curr_phantom, 0 elsewhere\n        student_logits = torch.zeros(1, 2, z, h, w, requires_grad=True)\n        with torch.no_grad():\n            student_logits[0, 1] = curr_phantom * 5.0\n            student_logits[0, 0] = (1.0 - curr_phantom) * 5.0\n    \n        # Let teacher predict class 1 inside adj_phantom, 0 elsewhere\n        teacher_prob = torch.zeros(1, 2, z, h, w)\n        teacher_prob[0, 1] = adj_phantom\n        teacher_prob[0, 0] = 1.0 - adj_phantom\n    \n        # 1. Loss with identity diagnostic (no alignment)\n        loss_unaligned, m_unaligned = temporal_consistency(\n            student_logits=student_logits,\n            teacher_probabilities=teacher_prob,\n            current_image=curr_img,\n            adjacent_image=adj_img,\n            current_valid=valid,\n            adjacent_valid=valid,\n            config=TemporalConfig(mode=\"identity\"),\n        )\n    \n        # 2. Loss with motion alignment\n        loss_aligned, m_aligned = temporal_consistency(\n            student_logits=student_logits,\n            teacher_probabilities=teacher_prob,\n            current_image=curr_img,\n            adjacent_image=adj_img,\n            current_valid=valid,\n            adjacent_valid=valid,\n            config=TemporalConfig(mode=\"motion\"),\n        )\n    \n>       assert float(loss_aligned.item()) < float(loss_unaligned.item()), (\n            f\"Aligned loss {loss_aligned.item()} should be less than unaligned {loss_unaligned.item()}\"\n        )\nE       AssertionError: Aligned loss 0.013210082426667213 should be less than unaligned 0.0051443795673549175\nE       assert 0.013210082426667213 < 0.0051443795673549175\nE        +  where 0.013210082426667213 = float(0.013210082426667213)\nE        +    where 0.013210082426667213 = <built-in method item of Tensor object at 0x315a74320>()\nE        +      where <built-in method item of Tensor object at 0x315a74320> = tensor(0.0132, grad_fn=<MulBackward0>).item\nE        +  and   0.0051443795673549175 = float(0.0051443795673549175)\nE        +    where 0.0051443795673549175 = <built-in method item of Tensor object at 0x315a77d40>()\nE        +      where <built-in method item of Tensor object at 0x315a77d40> = tensor(0.0051, grad_fn=<MulBackward0>).item\n\ntests/test_volume_temporal.py:170: AssertionError\n=============================== warnings summary ===============================\ntests/test_pipeline.py::test_decoder_jvp_transaction\n  /Users/alvinluong/miniforge3/lib/python3.11/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.\n    warnings.warn(\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ============================\nFAILED tests/test_volume_correction.py::test_geodesic_propagation_respects_intensity_boundaries\nFAILED tests/test_volume_correction.py::test_click_simulation_finds_error_center_on_train\nFAILED tests/test_volume_temporal.py::test_known_motion_phantom_registration\nFAILED tests/test_volume_temporal.py::test_motion_alignment_reduces_temporal_loss\n4 failed, 235 passed, 1 warning in 22.19s now 235 passed, 4 failed: tests/test_volume_correction.py geodesic boundary and click center; tests/test_volume_temporal.py known-motion displacement sign/magnitude and motion loss alignment. These are correction/temporal owner paths, not tooling files; please coordinate those owners before final gate. Earlier baseline full run was 207 passed before those files landed.",
+        "type": "escalation",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_955c87b48c9c\",\"dispatchId\":\"ctx_b8c923620621\"}",
+        "created_at": "2026-10-26T01:08:04Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_e31a08f17ab6",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_401b20ac-81f8-46d6-88be-9ec469e507ca",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Integration complete and verified",
+        "body": "Implemented the validated self_audit.volume.v1 integration: explicit train.py routing, supervised/fixed-target/one-pseudo/one-EMA transactions with auxiliary hooks, full checkpoint/resume RNG and source hashing, frozen student/EMA evaluation/export, and fail-closed historical compatibility. Verified CPU/software behavior with 8 owned tests, all native registry configs validating, repository check PASS, and the full suite at 217 passed with 1 warning; synthetic V04 routing and fresh checkpoint save/load also completed. GPU, patient training, external assets, and downloads remain NOT RUN; coordinator should stage these owned files with the other workers and retain the report's evidence boundaries.",
+        "type": "worker_done",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_e96dff360299\",\"dispatchId\":\"ctx_b34d0f176fb1\",\"outcome\":\"succeeded\",\"filesModified\":[\"train.py\",\"self_audit/volume/__init__.py\",\"self_audit/volume/config.py\",\"self_audit/volume/engine.py\",\"self_audit/volume/checkpoint.py\",\"self_audit/volume/evaluation.py\",\"self_audit/volume/legacy_compat.py\",\"tests/test_volume_config.py\",\"tests/test_volume_engine.py\",\"tests/test_volume_resume.py\",\"tests/test_volume_legacy.py\",\"reports/native_volume_pilot/integration.md\"],\"reportPath\":\"reports/native_volume_pilot/integration.md\"}",
+        "created_at": "2026-10-26T01:08:04Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_090c9a0e0a4d",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_9c887a91-e08d-444c-8798-7b941d7dbd41",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Final tooling checks",
+        "body": "Current strict-config/model tests: tests/test_volume_config.py + test_volume_models.py + owned CLI/registry = 15 passed. All 23 configs load through integration validate_volume_config; selected synthetic smoke/profile receipts remain PASS. Full latest repository run is 235 passed, 4 correction/temporal failures (reported separately). reports/native_volume_pilot/tooling.md documents this mixed status and exact modified paths.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_955c87b48c9c\",\"dispatchId\":\"ctx_b8c923620621\"}",
+        "created_at": "2026-10-26T01:08:11Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_bfe87d7cb150",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_9c887a91-e08d-444c-8798-7b941d7dbd41",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Tooling registry and bounded CLIs complete",
+        "body": "Implemented all 23 native-volume registry/config rows, strict-schema preflight, bounded synthetic smoke/profile CLIs, tests, and the exact runbook. All 23 configs validate through integration APIs; owned tests pass (7/7), selected architecture smokes and CPU profile pass, while the latest full suite is 235 passed with 4 correction/temporal-owner failures reported to the coordinator. GPU and real TRAIN smoke remain NOT_RUN because PRO4000/assets are unavailable; follow-up is to resolve those unrelated owner failures before final repository gate.",
+        "type": "worker_done",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_955c87b48c9c\",\"dispatchId\":\"ctx_b8c923620621\",\"outcome\":\"succeeded\",\"filesModified\":[\"configs/native_volume/*.json\",\"scripts/volume_preflight.py\",\"scripts/volume_smoke.py\",\"scripts/volume_profile.py\",\"tests/test_volume_registry.py\",\"tests/test_volume_cli.py\",\"docs/native_3d/RUNBOOK.md\"],\"reportPath\":\"reports/native_volume_pilot/tooling.md\"}",
+        "created_at": "2026-10-26T01:08:19Z",
+        "delivered_at": null
+      }
+    ],
+    "count": 6,
+    "replayed": false,
+    "acknowledged": "delivery_b453352caa98",
+    "timedOut": false,
+    "cancelled": false,
+    "connectionLost": false,
+    "mutation": {
+      "requestId": "1528e23b-fbb2-4ed2-b443-fb08d0225aac",
+      "replayed": false
+    }
+  },
+  "_meta": {
+    "runtimeId": "c8b104cf-2048-4e37-ba45-397799d374ac"
+  }
+}

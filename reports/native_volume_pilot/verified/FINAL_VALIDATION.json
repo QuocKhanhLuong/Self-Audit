@@ -1,0 +1,51 @@
+{
+  "status": "PASS",
+  "evidence": "CPU_SYNTHETIC_SOFTWARE_ONLY",
+  "source_sha256_before": "3668c8cdd9523d2440a7e93ab2ed0564ba08ddd6bf8998ef88210ff6c96632ac",
+  "source_sha256_after": "3668c8cdd9523d2440a7e93ab2ed0564ba08ddd6bf8998ef88210ff6c96632ac",
+  "source_stable": true,
+  "pytest_output": "........................................................................ [ 17%]\n........................................................................ [ 34%]\n........................................................................ [ 51%]\n........................................................................ [ 68%]\n........................................................................ [ 86%]\n..........................................................               [100%]\n=============================== warnings summary ===============================\ntests/test_pipeline.py::test_decoder_jvp_transaction\n  /Users/alvinluong/miniforge3/lib/python3.11/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.\n    warnings.warn(\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n418 passed, 1 warning in 27.57s\n",
+  "smoke_arms": {
+    "V00": "HISTORICAL_REFERENCE_ONLY",
+    "V01": "PASS",
+    "V02": "PASS",
+    "V03": "PASS",
+    "V04": "PASS",
+    "V05": "PASS",
+    "V06": "PASS",
+    "V07": "PASS",
+    "V08": "PASS",
+    "O01": "PASS",
+    "O02": "PASS",
+    "O03": "PASS",
+    "S01": "PASS",
+    "S02": "PASS",
+    "R00": "PASS",
+    "R01": "PASS",
+    "R02": "PASS",
+    "T00": "PASS",
+    "T01": "PASS",
+    "I00": "PASS",
+    "I01": "PASS",
+    "C00": "PASS",
+    "C01": "PASS"
+  },
+  "profile_receipts": [
+    "V01",
+    "V04",
+    "V06",
+    "V06_matchedZ3",
+    "profile_V04_m2a1",
+    "profile_V04_m1a2"
+  ],
+  "command_count": 59,
+  "NOT_RUN": [
+    "PRO4000/CUDA/VRAM",
+    "real DINO weights",
+    "real patient TRAIN smoke",
+    "patient Dice",
+    "human annotation time",
+    "long training",
+    "novelty/efficacy"
+  ]
+}

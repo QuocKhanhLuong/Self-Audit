@@ -1,0 +1,83 @@
+{
+  "id": "fbe6e112-20ae-4b1d-8bba-b7472a9c9424",
+  "ok": true,
+  "result": {
+    "runId": "run_0a8d03557566",
+    "deliveryId": "delivery_d0b0d79941df",
+    "messages": [
+      {
+        "id": "msg_58e95406a50e",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_3f856468-6fc1-4b86-9b48-817902529036",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "R/T recheck: R2 boundary witness still FAILS",
+        "body": "Current regions SHA d88f8b5a049cd9047ab1aa01e0e5d1862248fee14394688c5a2145396bd13b38: independent harness cross_patient_cache + immutable_targets PASS; temporal cf24a302 invalid-input/clipped-motion/through-Z witnesses PASS. But region_boundary unchanged FAIL loss0.4990006685 with boundary_rejection=True; target region still crosses classes. Exact executable harness is report block (case region_boundary); metadata spacing=[1,1,4] in harness, shape8cube, target_num_regions1/spatial_weight1000/confident halves. Please route original R2 requirement again; current sources still only per-voxel boundary weights. Also mode=ema without probabilities/features remains silently image-derived; fail closed needed.",
+        "type": "escalation",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_041ea9f6373b\",\"dispatchId\":\"ctx_a1f3944f22c6\"}",
+        "created_at": "2026-10-26T01:39:49Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_e9b568215264",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_401b20ac-81f8-46d6-88be-9ec469e507ca",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Owned suite final",
+        "body": "Final owned suite is 24 passed with check_repo PASS and diff-check clean. Source-ready changes include all Astra caveat fixes, strict microbatch enforcement, explicit weak/strong view policy, parameter update norms, strict checkpoint state/source/data/config checks, and direct historical student/EMA loading; latest full gate remains 328 passed, one correction-owner failure, one warning.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_9be4e6df1c36\",\"dispatchId\":\"ctx_1f3abfc97cf9\"}",
+        "created_at": "2026-10-26T01:39:55Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_fc95189b2dda",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_27e807c0-0ffc-4b6f-8fcc-1e28e0a44ba2",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Independent eval/export CLI positive check on stable CPU snapshot",
+        "body": "Unmocked CPU CLI roundtrip from /tmp passed for a manufactured CNN3D checkpoint and two-patient manifest: image-only labels_read0, scored labels_read4; both native probabilities [2,4,3,9,11] per patient and support594. Student export CLI+load_exported_student passed with torch.equal original/restored logits, teacher_included=false and pretrained_weights_required_at_load=false. Snapshot source digest unchanged e38b58adf5661a80f17cb213b83db0247a7db990f76ef80fbec09223cd205f6e; six eval tests also pass1.37s. This closes prior non-executable real-like manifest/export issue for manufactured CNN paths; actual DINO/GPU/real patients NOT RUN and mask/frame geometry negative probes are underway.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_f2bc1cb317d7\",\"dispatchId\":\"ctx_361d6f315a58\"}",
+        "created_at": "2026-10-26T01:40:02Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_e87c6eda1723",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_1fc79f1c-17a9-4d06-9d0d-f2ce56cae9ca",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "width/kernels schema correction",
+        "body": "Astra followup: corrected canonical widths are DINO NativeStudent decoder/lateral [96,128,192,256], separate encoder [96,192,384,768]; tiny decoder [8,16,24,32], encoder [8,16,32,64]. I will enforce declared widths as decoder tuple and reject hybrid z_kernels XY unless exact (1,1) since only depthwise (kz,1,1) is implemented. Config/tooling/integration owners should update V03/V04/V05 and provenance expectations.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_67071818a922\",\"dispatchId\":\"ctx_afc99ff2def0\"}",
+        "created_at": "2026-10-26T01:40:20Z",
+        "delivered_at": null
+      }
+    ],
+    "count": 4,
+    "replayed": false,
+    "acknowledged": "delivery_e2893ac59f17",
+    "timedOut": false,
+    "cancelled": false,
+    "connectionLost": false,
+    "mutation": {
+      "requestId": "84091848-70f9-4498-9e4a-21de6f1fa9d9",
+      "replayed": false
+    }
+  },
+  "_meta": {
+    "runtimeId": "c8b104cf-2048-4e37-ba45-397799d374ac"
+  }
+}

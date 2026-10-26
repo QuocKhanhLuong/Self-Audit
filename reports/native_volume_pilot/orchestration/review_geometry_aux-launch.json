@@ -1,0 +1,75 @@
+{
+  "id": "448fa30a-7ff4-4c47-963c-55edcafe891f",
+  "ok": true,
+  "result": {
+    "runId": "run_0a8d03557566",
+    "taskId": "task_041ea9f6373b",
+    "dispatchId": "ctx_e1936f1fd4ff",
+    "state": "failed",
+    "stage": "agent_readiness",
+    "failedStage": "agent_readiness",
+    "lastError": "timeout",
+    "setup": {
+      "requested": "not_applicable",
+      "effective": "not_applicable",
+      "source": "existing_worktree",
+      "hookFound": false,
+      "startupPolicy": "start-immediately",
+      "state": "not_applicable"
+    },
+    "launch": {
+      "requested": {
+        "agent": "codex",
+        "model": "gpt-6-astra",
+        "effort": "ultra"
+      },
+      "effective": {
+        "agent": "codex",
+        "model": "gpt-6-astra",
+        "effort": "ultra"
+      }
+    },
+    "mode": {
+      "mode": "terminal",
+      "preferred": "terminal",
+      "reason": "user_default",
+      "detail": "Started a terminal agent worker, the default for new agent tabs in your settings."
+    },
+    "effects": [
+      {
+        "kind": "worktree",
+        "action": "reused",
+        "id": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit-native-volume-ema-pilot"
+      },
+      {
+        "kind": "setup",
+        "action": "not_applicable",
+        "state": "not_applicable"
+      },
+      {
+        "kind": "terminal",
+        "role": "agent",
+        "action": "created",
+        "id": "term_3f856468-6fc1-4b86-9b48-817902529036",
+        "surface": "visible"
+      }
+    ],
+    "residualResources": [
+      {
+        "kind": "terminal",
+        "role": "agent",
+        "action": "created",
+        "id": "term_3f856468-6fc1-4b86-9b48-817902529036",
+        "surface": "visible"
+      }
+    ],
+    "recovery": "This start created a terminal that never ran the Task. Close it with: orca orchestration worker-release --dispatch ctx_e1936f1fd4ff",
+    "mutation": {
+      "requestId": "e8711924-3eef-4413-b940-d6e31acb5c1a",
+      "replayed": false
+    }
+  },
+  "_meta": {
+    "runtimeId": "c8b104cf-2048-4e37-ba45-397799d374ac"
+  }
+}

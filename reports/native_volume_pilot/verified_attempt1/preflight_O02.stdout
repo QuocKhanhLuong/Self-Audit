@@ -1,0 +1,23 @@
+{
+  "schema": "self_audit.volume.tooling_receipt.v1",
+  "command": "preflight",
+  "status": "PASS",
+  "config_id": "O02",
+  "config_path": "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/O02.json",
+  "config_sha256": "b5a93abeed6cfcb614041151b503fb1935a7d67ebfa3d4a37b3551e5cfb5a4f8",
+  "synthetic": true,
+  "real_train_smoke": "NOT_RUN",
+  "gpu": "NOT_RUN",
+  "parent": "O01",
+  "changed_factors": [
+    "optimizer family: grouped AdamW vs O01 legacy optimizer",
+    "encoder_lr: 2e-5 vs O01 3e-5",
+    "head_lr: 3e-4 vs O01 3e-3",
+    "decoder_lr matched at 3e-5; scheduler/warmup unchanged and therefore not a factor",
+    "optimizer/LR confound unvalidated by scientific training"
+  ],
+  "registry_sha256": "1700cede94dab65a28021056cf68bdcba3b7cb69970d7cd25bd712fa1c60f00d",
+  "bounded_steps": 8,
+  "config_status": "IMPLEMENTED",
+  "historical_reference": false
+}

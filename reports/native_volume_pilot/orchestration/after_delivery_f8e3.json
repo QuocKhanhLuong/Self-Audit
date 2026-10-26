@@ -1,0 +1,143 @@
+{
+  "id": "c653bfd5-c78f-4005-82b0-ace78756e2d8",
+  "ok": true,
+  "result": {
+    "runId": "run_0a8d03557566",
+    "deliveryId": "delivery_e2893ac59f17",
+    "messages": [
+      {
+        "id": "msg_6d2d9c86d673",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_66af5510-7eac-4095-adcc-8556a8a08895",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Model/G6 independent numerical controls pass; DINO declaration fix remains",
+        "body": "Independent fixed-window raw-volume probe: zero-init hybrid mix/off/planar outputs all exactly match per-slice NativeStudent with matched native weights; activating residuals lets rawz0 change centerz3 only in mix(delta4.649e-6), off/planar exactly0. After3SGD steps delayed/matched-additive zero-init G6 have nonzero upstream grads1.286e-5/5.574e-5, real branch intervention changes logits and restoration is exact. Owned model/fusion suite26passed; DINO decoder-width/provenance/kernel/cost issues sent separately remain unaccepted pending fix.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_7d023d5190f0\",\"dispatchId\":\"ctx_c12c99de1f65\"}",
+        "created_at": "2026-10-26T01:38:03Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_09e42154bc01",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_9c887a91-e08d-444c-8798-7b941d7dbd41",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Full suite blocked by correction owner regressions",
+        "body": "After tooling fixes, owned tests pass 13/13 and registry/selected CLI paths pass, but full pytest is 327 passed/2 failed. Failures are outside ownership in tests/test_volume_correction.py: volume_correct.py CLI rejects existing --label-budget and affine mismatch path reports sidecar shape mismatch instead of expected affine mismatch; please route to correction owner ctx_ca3503b8b267 and refresh full suite after fix.",
+        "type": "escalation",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_8d85746b7e04\",\"dispatchId\":\"ctx_b826a43cc764\"}",
+        "created_at": "2026-10-26T01:38:08Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_3a926d31fbe0",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_9c887a91-e08d-444c-8798-7b941d7dbd41",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Ready checkpoint for Astra reviewer",
+        "body": "Owned tooling checkpoint is ready for reviewer ctx_361d6f315a58: strict preflight bootstraps repo/no fallback and absolute /tmp PASS, unknown flags reject, canonical DINO/fixed-window configs are factor-audited, 22 nonhistorical CPU smoke rows PASS including V06/V07, V04/V06/C01 profiles measure logical batches and valid voxels, I01 explicit correction protocol/export PASS, and V00 is provenance-only. Owned tests pass 13/13; full suite currently 327 passed/2 correction-owner regressions (label-budget CLI and affine mismatch), which are outside owned paths and escalated to correction owner.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_8d85746b7e04\",\"dispatchId\":\"ctx_b826a43cc764\"}",
+        "created_at": "2026-10-26T01:38:12Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_2619986a1e67",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_9c887a91-e08d-444c-8798-7b941d7dbd41",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Remaining science-comparability question",
+        "body": "Current row diffs now verify V01->V02 only loss, V03/V04/V05 depth+kernel implementation with SAME legacy skip, O03 only pseudo ramp (base weight=1), T00 no temporal objective, and all production model provenance/fixed-window exact. Top-level new arms remain bounded steps=8/microbatch=1 for safe software defaults while receipts explicitly override steps/crop/batch; if Astra requires full A0 steps/batch in every production row, integration preflight needs a separate production recipe metadata field or owner-approved allow_full_run policy.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_8d85746b7e04\",\"dispatchId\":\"ctx_b826a43cc764\"}",
+        "created_at": "2026-10-26T01:38:27Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_02b6733fd4f2",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "dispatch:ctx_b826a43cc764",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Question",
+        "body": "For final registry configs, should I keep canonical DINO production widths [96,192,384,768] with explicit tiny CPU overrides, or switch hybrid rows to model-owner-requested [8,16,24,32] despite non-synthetic DINO custom-width rejection?",
+        "type": "question",
+        "priority": "normal",
+        "thread_id": "msg_02b6733fd4f2",
+        "payload": "{\"taskId\":\"task_8d85746b7e04\",\"dispatchId\":\"ctx_b826a43cc764\",\"question\":\"For final registry configs, should I keep canonical DINO production widths [96,192,384,768] with explicit tiny CPU overrides, or switch hybrid rows to model-owner-requested [8,16,24,32] despite non-synthetic DINO custom-width rejection?\",\"options\":[\"Keep DINO widths\",\"Use tiny widths\"]}",
+        "created_at": "2026-10-26T01:38:34Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_7b8d1ff42447",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_401b20ac-81f8-46d6-88be-9ec469e507ca",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Full gate correction mismatch remains",
+        "body": "Latest full gate after all owned fixes: 328 passed, 1 failed, 1 warning; check_repo PASS. Remaining failure is outside ownership tests/test_volume_correction.py::test_prior_and_gt_affine_mismatch_fails_closed, where volume_correct_module.main reports Sidecar image_sha256 mismatch before the expected prior/GT affine mismatch. Owned suite remains 22 passed; no correction files were edited.",
+        "type": "escalation",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_9be4e6df1c36\",\"dispatchId\":\"ctx_1f3abfc97cf9\"}",
+        "created_at": "2026-10-26T01:38:45Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_f86000d06fbb",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_401b20ac-81f8-46d6-88be-9ec469e507ca",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Final owned receipt pending Astra",
+        "body": "After root/Astra caveat fixes, owned targeted tests are 23 passed and check_repo.py PASS. Latest full gate is 328 passed, 1 failed, 1 warning; remaining correction affine-mismatch error-order failure is outside owned files and escalated. Report integration.md updated with exact source hashes, independent denominator/update-norm policy, strict resume/state/source identity, fixture L/U policy, and explicit pseudo/correction controls; Astra final handoff sent.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_9be4e6df1c36\",\"dispatchId\":\"ctx_1f3abfc97cf9\"}",
+        "created_at": "2026-10-26T01:39:23Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_85e1cec25aaa",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_1fc79f1c-17a9-4d06-9d0d-f2ce56cae9ca",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "alive",
+        "body": "",
+        "type": "heartbeat",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_67071818a922\",\"dispatchId\":\"ctx_afc99ff2def0\",\"phase\":\"investigating\"}",
+        "created_at": "2026-10-26T01:39:24Z",
+        "delivered_at": null
+      }
+    ],
+    "count": 8,
+    "replayed": false,
+    "acknowledged": "delivery_f8e3333f567b",
+    "timedOut": false,
+    "cancelled": false,
+    "connectionLost": false,
+    "mutation": {
+      "requestId": "e69d1b88-52e6-4ad9-a9b3-9345092b99d6",
+      "replayed": false
+    }
+  },
+  "_meta": {
+    "runtimeId": "c8b104cf-2048-4e37-ba45-397799d374ac"
+  }
+}

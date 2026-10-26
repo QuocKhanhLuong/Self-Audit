@@ -1,0 +1,132 @@
+{
+  "schema": "self_audit.volume.run.v1",
+  "config": {
+    "schema": "self_audit.volume.v1",
+    "model": {
+      "backbone": "tiny_test",
+      "source_repo": "/root/self-audit-pilot-artifacts/backbone/dinov3",
+      "source_commit": "6876159a11b4df116f30f667f8c9888617df0751",
+      "weights": "/root/self-audit-pilot-artifacts/backbone/pretrained/dinov3_convnext_tiny_pretrain_lvd1689m-21b726bb.pth",
+      "weights_sha256": "21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54"
+    },
+    "architecture": {
+      "name": "hybrid",
+      "depth_mode": "mix",
+      "widths": [
+        8,
+        16,
+        24,
+        32
+      ],
+      "z_kernels": [
+        [
+          3,
+          1,
+          1
+        ]
+      ],
+      "z_strides": [
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "residual_init": "zero",
+      "skip_fusion": "legacy",
+      "skip_stopgrad": false
+    },
+    "window": {
+      "mode": "fixed"
+    },
+    "geometry": {
+      "slab_depth": 3,
+      "crop_size": 32,
+      "spacing_xyz_mm": null,
+      "fov_xyz_mm": null,
+      "flip": false,
+      "resampling": "native_z"
+    },
+    "loss": {
+      "mode": "volume_mean"
+    },
+    "optimization": {
+      "recipe": "legacy",
+      "body_lr": 3e-05,
+      "head_lr": 0.003,
+      "encoder_lr": 3e-05,
+      "decoder_lr": 3e-05,
+      "weight_decay": 0.0001,
+      "clip_norm": 1.0,
+      "scheduler": "cosine",
+      "lr_warmup_steps": 1,
+      "min_lr_ratio": 0.1
+    },
+    "training": {
+      "steps": 4,
+      "pseudo_delay": 0,
+      "seed": 42,
+      "microbatch": 1,
+      "accumulation": 1,
+      "ema_decay": 0.99,
+      "pseudo_threshold": 0.0,
+      "pseudo_weight": 1.0,
+      "pseudo_ramp_steps": 0,
+      "pseudo_view": "strong_intensity",
+      "pseudo_student_mode": "eval",
+      "method": "ema_full",
+      "precision": "fp32",
+      "threads": 2,
+      "save_every": 1
+    },
+    "regions": {
+      "mode": "none",
+      "weight": 0.0,
+      "refresh_every": 0,
+      "spatial_weight": 1.0,
+      "target_num_regions": 32,
+      "min_region_size": 8,
+      "iterations": 4,
+      "boundary_threshold": 0.2,
+      "boundary_downweight": 0.1,
+      "boundary_rejection": false,
+      "loss_type": "mse",
+      "detached": true
+    },
+    "temporal": {
+      "mode": "none",
+      "weight": 0.0,
+      "max_disp_xyz": [
+        4.0,
+        16.0,
+        16.0
+      ],
+      "consistency_threshold": 1.5,
+      "loss_type": "mse",
+      "slice_wise": true,
+      "window": "none",
+      "occlusion": true
+    },
+    "prediction_model": "student"
+  },
+  "provenance": {
+    "resume_manifest_sha256": "70f1ed24a8e7bd483da69b278aa830bb0d25970bf69354491281bd645ff1741e",
+    "resumed_from_step": 2
+  },
+  "steps": 4,
+  "schedule_steps": 4,
+  "supervised_updates": 4,
+  "supervised_extra_updates": 0,
+  "pseudo_updates": 4,
+  "optimizer_updates": 16,
+  "ema_updates": 4,
+  "quality": "SOFTWARE_SYNTHETIC_ONLY",
+  "data": {
+    "synthetic": true,
+    "manifest_sha256": "6932474cbab796f47ee5e98088b588158a737ddac1e0c37064d8c2bdefcc6794",
+    "geometry_sha256": "f7ef503cf11ead739f6596359f81592375d423cc44c4bb874442bac3c25cd205",
+    "labeled_patient_count": 3,
+    "unlabeled_patient_count": 3
+  },
+  "checkpoint_manifest_sha256": "8dec981cf94c7ac1e23a5157d1ed4f697364b2f8567106f3e96067f915f944b6"
+}

@@ -1,0 +1,128 @@
+{
+  "id": "dc8df874-9535-45fd-aea2-f940094b7035",
+  "ok": true,
+  "result": {
+    "runId": "run_0a8d03557566",
+    "deliveryId": "delivery_f8e3333f567b",
+    "messages": [
+      {
+        "id": "msg_d5860b2bfe36",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_5121fc6e-4bde-4bbd-ad35-d9c4a30a29e1",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Resolved Astra P1 cache defect and temporal validity blockers",
+        "body": "Resolved Astra P1 cache defects by implementing an immutable sample-identity cache keyed on full image/support bytes and loader metadata with cadence interval indexing and fail-closed physical metadata, and fixed temporal registration with support-aware apodization, conservative bilinear validity support (>0.999), explicit out-of-bounds motion rejection, and mapped-coordinate forward-backward occlusion checks. All 30 owned unit tests and 149 volume test suite tests pass cleanly, confirming cross-patient isolation, interior voxel change detection, exact checkpoint state recovery, and robust adversarial rejection of invalid textures, fractional boundary contamination, and out-of-bounds displacements. Software implementation and CPU verification are complete; integration owners can downstream these stable APIs for real-data runs on server GPU hardware when authorized.",
+        "type": "worker_done",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_51c9c079ebd9\",\"dispatchId\":\"ctx_a1f78519d654\",\"outcome\":\"succeeded\",\"filesModified\":[\"self_audit/volume/regions.py\",\"self_audit/volume/temporal.py\",\"tests/test_volume_regions.py\",\"tests/test_volume_temporal.py\",\"reports/native_volume_pilot/agy_worker_regions_temporal.md\"],\"reportPath\":\"reports/native_volume_pilot/agy_worker_regions_temporal.md\"}",
+        "created_at": "2026-10-26T01:36:49Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_9c5edc00b012",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_401b20ac-81f8-46d6-88be-9ec469e507ca",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Full gate now blocked by correction owner",
+        "body": "Latest full gate after owned changes: 317 passed, 3 failed, 1 warning. All failures are outside ownership in correction/tooling paths: tests/test_volume_cli.py::test_correction_witness_requires_explicit_protocol and tests/test_volume_correction.py::{test_nifti_and_json_export,test_cli_execution_end_to_end}, because correction exporter now rejects missing affine but fixtures/CLI omit geometry. Owned suite remains green (22 passed), check_repo PASS; do not modify correction.py/scripts/volume_correct.py/tests/test_volume_correction.py under this dispatch.",
+        "type": "escalation",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_9be4e6df1c36\",\"dispatchId\":\"ctx_1f3abfc97cf9\"}",
+        "created_at": "2026-10-26T01:36:55Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_83f628870ca5",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_6aad6431-10e9-4bab-83a2-52237137bcfe",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "investigating geometry/data gates",
+        "body": "",
+        "type": "heartbeat",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_b74edd2ba359\",\"dispatchId\":\"ctx_2fd6a1208812\",\"phase\":\"investigating\"}",
+        "created_at": "2026-10-26T01:36:56Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_484f8d200218",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_1fc79f1c-17a9-4d06-9d0d-f2ce56cae9ca",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "source-ready exact hashes",
+        "body": "Source-ready: 26 owned tests passed (models/fusion), check_repo PASS, py_compile PASS. SHA256: self_audit/volume/models.py=2ab925f7e46b2333ebfc92d8c2776026aff55a0235e2639d327e95ef6b3f35ef; fusion.py=bc1b4f90bdd9b109670365e2c23b1d201ea7838f1540b57fc8180942dce28df2; test_volume_models.py=cf4519bb9ecc307948ab920b0ce9b1297456d86877a371fe87128d61bd8fc5fc; test_volume_fusion.py=1bd75b87f72225bcdf682739218047266423c059967baa8b528e3d23c4d7d8fe; models.md=ed0bbf3b36eef96858d0120a97b401ff72d5b00662dfa80d6e35fbf41513b37c. No full suite rerun, commits, server/downloads, or training.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_024e9d368e5a\",\"dispatchId\":\"ctx_6596c93fd1b5\"}",
+        "created_at": "2026-10-26T01:37:18Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_e59f28622bd9",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_1fc79f1c-17a9-4d06-9d0d-f2ce56cae9ca",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "architecture-only and G6 fixes verified",
+        "body": "Implemented the explicit architecture-only model-construction seam and operational G6 branch interventions while preserving strict normal-training pretrained validation. Verified missing-weight DINO architecture-only construction through a mocked clean pinned local source, strict state replay and source commit/dirty rejection, plus reversible nonzero residual intervention and gradient-boundary tests; owned tests pass 26/26, check_repo and py_compile pass. Updated models.md with APIs, scope, hashes, and evidence; remaining integration work is to replace evaluation's temporary builder monkeypatch with architecture_only=True, with no full-suite rerun, commits, downloads, server access, or training performed.",
+        "type": "worker_done",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_024e9d368e5a\",\"dispatchId\":\"ctx_6596c93fd1b5\",\"outcome\":\"succeeded\",\"filesModified\":[\"self_audit/volume/models.py\",\"self_audit/volume/fusion.py\",\"tests/test_volume_models.py\",\"tests/test_volume_fusion.py\",\"reports/native_volume_pilot/models.md\"],\"reportPath\":\"reports/native_volume_pilot/models.md\"}",
+        "created_at": "2026-10-26T01:37:22Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_cb6e550c853d",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_401b20ac-81f8-46d6-88be-9ec469e507ca",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "V01 pseudo policy fields",
+        "body": "Astra requested historical weak/strong policy parity for V01. I added explicit training.pseudo_view (identity|strong_intensity) and training.pseudo_student_mode (train|eval) controls and engine support; current V01 JSON lacks these fields. Please have tooling/config owner add the intended explicit values to V01 (no filename heuristic), or confirm desired defaults.",
+        "type": "question",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_9be4e6df1c36\",\"dispatchId\":\"ctx_1f3abfc97cf9\"}",
+        "created_at": "2026-10-26T01:37:34Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_fda932430992",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_66af5510-7eac-4095-adcc-8556a8a08895",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Model ready recheck: DINO encoder/decoder widths conflated",
+        "body": "models.py _configured_widths describes decoder stage widths; _load_native_student checks DINO widths==(96,192,384,768), which are encoder channels, while canonical NativeStudent default decoder widths are(96,128,192,256). Thus correctly declared historical decoder widths reject and accepted encoder-channel tuple is silently ignored by NativeStudent(OfficialStages(original)) default. Fix both normal/architecture_only validation against actual decoder widths and test declared-vs-actual lateral out_channels using fake DINO. Also hybrid z_kernels retains only tuple[0], accepting arbitrary ignored XY components; reject non-neutral XY or define schema onlydepth. Provenance initialization remains native_tiny_synthetic for real DINO; label real pretrained accurately. MAC cost still sums stage-local locations and omits grouped-conv divisor; it cannot be called total native-voxel FLOPs.",
+        "type": "escalation",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_7d023d5190f0\",\"dispatchId\":\"ctx_c12c99de1f65\"}",
+        "created_at": "2026-10-26T01:37:39Z",
+        "delivered_at": null
+      }
+    ],
+    "count": 7,
+    "replayed": false,
+    "acknowledged": "delivery_d4acbfaa899a",
+    "timedOut": false,
+    "cancelled": false,
+    "connectionLost": false,
+    "mutation": {
+      "requestId": "40874a9f-ce53-4f18-97d2-b19bcd127243",
+      "replayed": false
+    }
+  },
+  "_meta": {
+    "runtimeId": "c8b104cf-2048-4e37-ba45-397799d374ac"
+  }
+}

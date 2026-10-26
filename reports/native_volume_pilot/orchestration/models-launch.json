@@ -1,0 +1,86 @@
+{
+  "id": "d3f1cd76-b3dd-4e43-88d0-ca5ff6f30d0b",
+  "ok": true,
+  "result": {
+    "runId": "run_0a8d03557566",
+    "taskId": "task_66cce55563a7",
+    "dispatchId": "ctx_968d230289d8",
+    "state": "ready",
+    "stage": "input_accepted",
+    "turnStart": "observed",
+    "setup": {
+      "requested": "not_applicable",
+      "effective": "not_applicable",
+      "source": "existing_worktree",
+      "hookFound": false,
+      "startupPolicy": "start-immediately",
+      "state": "not_applicable"
+    },
+    "launch": {
+      "requested": {
+        "agent": "codex",
+        "model": "gpt-5.6-luna",
+        "effort": null
+      },
+      "effective": {
+        "agent": "codex",
+        "model": "gpt-5.6-luna",
+        "effort": null
+      }
+    },
+    "mode": {
+      "mode": "terminal",
+      "preferred": "terminal",
+      "reason": "user_default",
+      "detail": "Started a terminal agent worker, the default for new agent tabs in your settings."
+    },
+    "timeoutMs": 60000,
+    "effects": [
+      {
+        "kind": "worktree",
+        "action": "reused",
+        "id": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit-native-volume-ema-pilot"
+      },
+      {
+        "kind": "setup",
+        "action": "not_applicable",
+        "state": "not_applicable"
+      },
+      {
+        "kind": "terminal",
+        "role": "agent",
+        "action": "created",
+        "id": "term_c9c2d718-cc7b-4e8b-8f7e-a38cf39b3bdf",
+        "surface": "visible"
+      },
+      {
+        "kind": "dispatch_input",
+        "role": "agent",
+        "id": "term_c9c2d718-cc7b-4e8b-8f7e-a38cf39b3bdf",
+        "state": "accepted"
+      }
+    ],
+    "prompt": {
+      "requestId": "13494a54-7ede-419c-8ad5-d58bc5a8190a",
+      "stages": [
+        "input_accepted",
+        "turn_started"
+      ],
+      "provider": "codex",
+      "observation": "supported",
+      "processIncarnation": "afc1ca1f-dfa2-49a0-b77a-49af045e1f1a",
+      "generation": 11,
+      "baselineWorkingSequence": 1,
+      "baselineExplicitWorkingStartedAt": null,
+      "baselinePermissionSequence": 0
+    },
+    "residualResources": [],
+    "mutation": {
+      "requestId": "13494a54-7ede-419c-8ad5-d58bc5a8190a",
+      "replayed": false
+    }
+  },
+  "_meta": {
+    "runtimeId": "c8b104cf-2048-4e37-ba45-397799d374ac"
+  }
+}

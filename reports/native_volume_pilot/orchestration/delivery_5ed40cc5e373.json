@@ -1,0 +1,143 @@
+{
+  "id": "f9dea512-05a9-4588-91b8-b4776fe6e2d5",
+  "ok": true,
+  "result": {
+    "runId": "run_0a8d03557566",
+    "deliveryId": "delivery_5ed40cc5e373",
+    "messages": [
+      {
+        "id": "msg_ceb12fba27d9",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_4faf1227-3f17-4770-8d3d-269fa519e93b",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "API contract: self_audit/volume/correction.py & scripts/volume_correct.py",
+        "body": "Correction API contract finalized: PointPrompt dataclass (world_mm/native_voxel_xyz, target_class, radius), VolumeCorrector & refine_volume_probabilities (geodesic/image-guided refinement with strict hard manual preservation), CorrectionResult (probabilities, labels, provenance separated: ORIGINAL=1, MANUAL=2, PROPAGATED=3, PSEUDO=4, UNKNOWN=255), simulate_clicks_from_ground_truth (strictly validates TRAIN-L role, fails closed on U/VAL/TEST), and scripts/volume_correct.py CLI with NIfTI/JSON export.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_17c3b359b118\",\"dispatchId\":\"ctx_e590fb361b61\"}",
+        "created_at": "2026-10-26T01:02:34Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_953f10b721ac",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_4faf1227-3f17-4770-8d3d-269fa519e93b",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "alive",
+        "body": "",
+        "type": "heartbeat",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_17c3b359b118\",\"dispatchId\":\"ctx_e590fb361b61\",\"phase\":\"implementing\"}",
+        "created_at": "2026-10-26T01:02:40Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_b6fa0dfcf5e0",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_c9c2d718-cc7b-4e8b-8f7e-a38cf39b3bdf",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Final models API and evidence",
+        "body": "Final files: self_audit/volume/models.py, fusion.py, tests/test_volume_models.py, tests/test_volume_fusion.py, reports/native_volume_pilot/models.md. build_volume_model(full config, synthetic=True) returns volume25d/hybrid/cnn3d + provenance; forward B,3,Z,H,W -> B,4,Z,H,W; valid_mask B,Z,H,W; groups encoder/body/head disjoint. CNN3D consumes image[:,1:2] only. Owned tests 8 passed; compileall passed; repository check_repo PASS; full pytest 192 passed/1 warning (pre-existing TorchScript warning). Engine smoke dependency noted separately (string losses metric cast). No GPU/patient/weights accessed.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_66cce55563a7\",\"dispatchId\":\"ctx_968d230289d8\"}",
+        "created_at": "2026-10-26T01:02:42Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_d4bc7579d056",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_449b5a83-653f-4827-b515-92cdc60310c2",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "integration note: use explicit pseudo ramp",
+        "body": "Engine currently has own _pseudo_weight(iteration) (iteration+1/ramp) and only guards pseudo by training.pseudo_delay; my losses.pseudo_weight_ramp(step, base_weight, ramp_steps, pseudo_delay) encodes delay+linear ramp explicitly. Consider routing engine to helper for declared ramp semantics and use pseudo_volume_ce/safe_optimizer_step if desired; volume tests pass unchanged.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_d0b19d4f7b21\",\"dispatchId\":\"ctx_fcbf8cb5cdd9\"}",
+        "created_at": "2026-10-26T01:02:45Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_edc24a8f6d68",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_c9c2d718-cc7b-4e8b-8f7e-a38cf39b3bdf",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Models and fusion delivered",
+        "body": "Implemented the owned native-volume model ladder and fusion controls: volume25d wraps unchanged NativeStudent per slice, hybrid provides explicit cross-Z depth modes and G6 skip interventions, and scratch anisotropic CNN3D uses only the center channel. Added meaningful neighbor/gradient/shape/group tests and recorded APIs, CPU evidence, boundaries, and integration notes in reports/native_volume_pilot/models.md; owned tests pass 8/8, repository check_repo passes, and full pytest passes 192 tests with one pre-existing warning. No GPU, patient data, external weights, U/VAL/TEST masks, or long training were used; remaining dependency is integration handling of the nonnumeric loss mode metric and verified non-synthetic backbone routing.",
+        "type": "worker_done",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_66cce55563a7\",\"dispatchId\":\"ctx_968d230289d8\",\"outcome\":\"succeeded\",\"filesModified\":[\"self_audit/volume/models.py\",\"self_audit/volume/fusion.py\",\"tests/test_volume_models.py\",\"tests/test_volume_fusion.py\",\"reports/native_volume_pilot/models.md\"],\"reportPath\":\"reports/native_volume_pilot/models.md\"}",
+        "created_at": "2026-10-26T01:02:58Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_089ca87d381e",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_a48b57d8-aa20-4702-9391-95cc51dd9af2",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "G0 implementation underway",
+        "body": "Implemented geometry.py/data.py/fixtures.py and volume_prepare.py. Fixture returns (manifest, manifest_sha256, geometry, geometry_sha256); loader emits image B,3,Z,H,W, labels/valid masks, metadata reversible transforms; temporal pair uses adjacent frames and identical crop; U records are checked for image-only fields. 9 owned geometry/data tests pass; physical resample path is CPU-only and synthetic.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_6432a7773195\",\"dispatchId\":\"ctx_a084f6c05c31\"}",
+        "created_at": "2026-10-26T01:03:02Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_cda93f1da9bc",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_7b722567-108e-405a-8a04-e44ce118e92f",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "alive",
+        "body": "",
+        "type": "heartbeat",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_305090c74baf\",\"dispatchId\":\"ctx_1333377b0986\",\"phase\":\"implementing\"}",
+        "created_at": "2026-10-26T01:03:02Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_af724b8eed2e",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_9c887a91-e08d-444c-8798-7b941d7dbd41",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Config API mismatch discovered",
+        "body": "Current integration self_audit/volume/config.py uses strict top-level schema: only model, architecture, window, geometry, loss, optimization, training, regions, temporal, prediction_model; architecture.name/depth_mode etc; geometry.crop_size is int; precision fp32|amp; regions none|image|ema; temporal none|identity|motion. My initial registry configs had per-row id/parent/changed_factors metadata and list crop_size, which strict validation rejects. I will rewrite config files to strict schema and keep id/parent/factors/historical A0 metadata solely in REGISTRY.json; preflight will derive ID from registry config path. Please preserve this schema or tell me if integration owner plans explicit metadata extension.",
+        "type": "escalation",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_955c87b48c9c\",\"dispatchId\":\"ctx_b8c923620621\"}",
+        "created_at": "2026-10-26T01:03:11Z",
+        "delivered_at": null
+      }
+    ],
+    "count": 8,
+    "replayed": false,
+    "acknowledged": "delivery_67791a72b722",
+    "timedOut": false,
+    "cancelled": false,
+    "connectionLost": false,
+    "mutation": {
+      "requestId": "b0544e93-7712-4de3-aebe-b06bf3b3971d",
+      "replayed": false
+    }
+  },
+  "_meta": {
+    "runtimeId": "c8b104cf-2048-4e37-ba45-397799d374ac"
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "id": "5fe8d27d-74d6-4e79-82e5-6a53c14d5c4d",
+  "ok": true,
+  "result": {
+    "runId": "run_0a8d03557566",
+    "deliveryId": "delivery_43e463c5cbff",
+    "messages": [
+      {
+        "id": "msg_5c9d798d31de",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_4b58c974-f64f-4857-9e53-0d972e00ac01",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Checkpoint-configured evaluation geometry verified",
+        "body": "Implemented checkpoint-configured native evaluation geometry: configured spacing resamples before model inference, physical XY FOV fixes model windows with invalid edge padding, and reversible transforms invert probabilities/support to native before argmax; native_z behavior remains unchanged and image-only mode remains mask-free. Independent verification passed with a nonidentity spacing/FOV witness, checkpoint-CLI config propagation witness, 13 evaluation tests, 31 combined owned/compatibility tests, py_compile, and check_repo PASS. Remaining evidence is bounded CPU/manufactured software only; no patient masks, GPU, pretrained downloads, network, or long training were used.",
+        "type": "worker_done",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_2d96ec65258a\",\"dispatchId\":\"ctx_676b805f5fa9\",\"outcome\":\"succeeded\",\"filesModified\":[\"self_audit/volume/evaluation.py\",\"scripts/volume_evaluate.py\",\"tests/test_volume_evaluation.py\",\"reports/native_volume_pilot/evaluation.md\"],\"reportPath\":\"reports/native_volume_pilot/evaluation.md\"}",
+        "created_at": "2026-10-26T01:57:59Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_d4b770a31698",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_b4862548-dc52-437e-b69c-f2fc8b78507e",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "R2, LRU resume, and temporal observability repairs complete",
+        "body": "Resolved the R2 region boundary pooling defect via confident class boundary splitting, enforced detached EMA source requirements, restored LRU max_cache_size across state resume, and added pre-apodization variance rejection for unobservable temporal motion. All 13 Astra independent adversarial checks in review_geometry_aux.md pass (including the region_boundary witness with loss dropping from 0.499 to 7.5e-7), and all 34 owned unit tests in test_volume_regions.py and test_volume_temporal.py pass. All assigned blockers are cleared with source-ready hashes delivered to Astra and root, leaving zero remaining tasks in this lane.",
+        "type": "worker_done",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_8bd8b97f8414\",\"dispatchId\":\"ctx_d65d2bd88a39\",\"outcome\":\"succeeded\",\"filesModified\":[\"self_audit/volume/regions.py\",\"self_audit/volume/temporal.py\",\"tests/test_volume_regions.py\",\"tests/test_volume_temporal.py\",\"reports/native_volume_pilot/agy_worker_regions_temporal.md\"],\"reportPath\":\"reports/native_volume_pilot/agy_worker_regions_temporal.md\"}",
+        "created_at": "2026-10-26T01:58:13Z",
+        "delivered_at": null
+      }
+    ],
+    "count": 2,
+    "replayed": false,
+    "acknowledged": "delivery_61baef2c8f40",
+    "timedOut": false,
+    "cancelled": false,
+    "connectionLost": false,
+    "mutation": {
+      "requestId": "b030dd30-fb53-4cbe-8c07-dce95afbd1e2",
+      "replayed": false
+    }
+  },
+  "_meta": {
+    "runtimeId": "c8b104cf-2048-4e37-ba45-397799d374ac"
+  }
+}

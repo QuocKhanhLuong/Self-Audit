@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "evidence": "CPU_SYNTHETIC_LEGACY_COMPATIBILITY_ONLY",
+  "reference_commit": "486fae40c490e382d58896442215476d7d32095e",
+  "steps": 3,
+  "supervised_updates": 3,
+  "pseudo_updates": 2,
+  "ema_updates": 3,
+  "checkpoint_payload_keys": [
+    "student",
+    "teacher",
+    "optimizers",
+    "torch_rng"
+  ],
+  "payload_differences": [],
+  "step_schedule_losses_gradients_exact": true,
+  "config_sha256": "21a7126bd81fc7bf32af984560f5c5189235c6feabbe6edda67e6baa2e395c3c",
+  "note": "Source and manifest hashes correctly differ after entrypoint routing change; numerical state/sampler/optimizer/RNG compared, not elapsed wall time. This is not canonical batch24 efficacy."
+}

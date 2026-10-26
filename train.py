@@ -11,17 +11,76 @@ def main():
     p.add_argument("--config", default="configs/pilot.json")
     p.add_argument("--model-config", help="Explicit local backbone source and weight provenance JSON")
     p.add_argument("--data"); p.add_argument("--data-sha256"); p.add_argument("--out")
+    p.add_argument("--geometry"); p.add_argument("--geometry-sha256")
+    p.add_argument("--resume", help="Hash-pinned native-volume checkpoint to continue")
+    p.add_argument("--resume-sha256")
+    p.add_argument("--steps", type=int, help="native-volume target outer steps (resume continuation)")
     p.add_argument("--device", default="cuda"); p.add_argument("--allow-full-run", action="store_true")
     p.add_argument("--synthetic", action="store_true", help="Manufactured CPU test, never patient evidence")
+    p.add_argument("--legacy-checkpoint", help="Explicit historical checkpoint compatibility verification")
+    p.add_argument("--legacy-manifest-sha256"); p.add_argument("--legacy-source-sha256")
     args = p.parse_args()
     if args.describe:
         print(Path(__file__).with_name("ACTIVE_PIPELINE.json").read_text()); return
+    c = json.loads(Path(args.config).read_text())
+    # Apply explicit model provenance before schema dispatch so native-volume
+    # configs validate the actual DINO/tiny override rather than a stale file.
+    if args.model_config:
+        override = json.loads(Path(args.model_config).read_text())
+        if not isinstance(override, dict):
+            p.error("--model-config must contain a JSON object")
+        c["model"] = override
+    is_volume = c.get("schema") == "self_audit.volume.v1"
+    native_only = {
+        "--model-config": args.model_config,
+        "--geometry": args.geometry,
+        "--geometry-sha256": args.geometry_sha256,
+        "--resume": args.resume,
+        "--resume-sha256": args.resume_sha256,
+        "--steps": args.steps,
+    }
+    legacy_only = {
+        "--legacy-checkpoint": args.legacy_checkpoint,
+        "--legacy-manifest-sha256": args.legacy_manifest_sha256,
+        "--legacy-source-sha256": args.legacy_source_sha256,
+    }
+    if is_volume:
+        supplied = [flag for flag, value in legacy_only.items() if value is not None]
+        if supplied:
+            p.error(f"legacy-only flags are invalid for self_audit.volume.v1: {', '.join(supplied)}")
+        if args.resume_sha256 and not args.resume:
+            p.error("--resume-sha256 requires --resume")
+    else:
+        supplied = [flag for flag, value in native_only.items() if value is not None]
+        if supplied:
+            p.error(f"native-volume-only flags are invalid for historical schema: {', '.join(supplied)}")
+    if is_volume:
+        from self_audit.volume import train_volume, validate_volume_config
+        effective_steps = args.steps if args.steps is not None else c.get("training", {}).get("steps")
+        if isinstance(effective_steps, bool) or not isinstance(effective_steps, int) or effective_steps < 1:
+            p.error("native-volume effective steps must be a positive integer")
+        if effective_steps > 8 and not args.allow_full_run:
+            p.error("native-volume effective steps > 8 requires --allow-full-run")
+        if not args.synthetic and not all([args.data, args.data_sha256, args.geometry, args.geometry_sha256]):
+            p.error("native-volume patient runs require --data/--data-sha256 and --geometry/--geometry-sha256; no implicit data discovery")
+        if not args.out:
+            p.error("native-volume runs require --out for a checkpoint receipt")
+        try:
+            c = validate_volume_config(c, allow_full_run=args.allow_full_run, stop_steps=args.steps)
+        except ValueError as exc:
+            p.error(str(exc))
+        print(json.dumps(train_volume(c, out=args.out, device=args.device, synthetic=args.synthetic,
+                                      manifest=args.data, manifest_sha256=args.data_sha256,
+                                      geometry_path=args.geometry, geometry_sha256=args.geometry_sha256,
+                                      steps=args.steps,
+                                      resume=args.resume, resume_sha256=args.resume_sha256,
+                                      allow_full_run=args.allow_full_run), indent=2))
+        return
     if not all([args.data, args.data_sha256, args.out]):
         p.error("--data, --data-sha256 and --out are mandatory; v1 --bank is unsupported")
     from self_audit.engine import train, validate_config
-    c = json.loads(Path(args.config).read_text())
-    if args.model_config:
-        c["model"] = json.loads(Path(args.model_config).read_text())
+    if args.legacy_checkpoint:
+        p.error("--legacy-checkpoint cannot verify then fresh-train; use load_legacy_checkpoint with explicit model/canonical hashes")
     c = validate_config(c)
     if c["steps"] > 128 and not args.allow_full_run:
         p.error("more than 128 updates requires --allow-full-run")

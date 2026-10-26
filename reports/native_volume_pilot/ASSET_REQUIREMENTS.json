@@ -1,0 +1,22 @@
+{
+  "status": "NOT_RUN_ASSETS_ON_UNRENTED_SERVER",
+  "dino_model": {
+    "backbone": "dinov3_convnext_tiny",
+    "source_repo": "/root/self-audit-pilot-artifacts/backbone/dinov3",
+    "source_commit": "6876159a11b4df116f30f667f8c9888617df0751",
+    "weights": "/root/self-audit-pilot-artifacts/backbone/pretrained/dinov3_convnext_tiny_pretrain_lvd1689m-21b726bb.pth",
+    "weights_sha256": "21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54"
+  },
+  "expected_train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+  "geometry_sidecar": "Must be generated from verified native source NIfTI headers and exact cached image/frame correspondence; no historical sidecar hash invented.",
+  "local_KhanhDrive_configured": false,
+  "prepared_discovery_commands_not_executed": [
+    "nvidia-smi --query-gpu=name,memory.total,memory.free,driver_version --format=csv",
+    "rclone listremotes",
+    "rclone lsf KhanhDrive: --dirs-only",
+    "git -C /root/self-audit-pilot-artifacts/backbone/dinov3 rev-parse HEAD",
+    "sha256sum /root/self-audit-pilot-artifacts/backbone/pretrained/dinov3_convnext_tiny_pretrain_lvd1689m-21b726bb.pth"
+  ],
+  "retrieval_status": "Exact remote object path not verified on unavailable server. Discover verified existing archive before any future approved copy; no download or license acceptance performed.",
+  "external_teacher_bank": "Disabled and not required for new primary arms"
+}

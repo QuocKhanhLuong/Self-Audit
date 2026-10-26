@@ -1,0 +1,465 @@
+{
+  "schema": "self_audit.volume.run.v1",
+  "config": {
+    "schema": "self_audit.volume.v1",
+    "model": {
+      "backbone": "tiny_test",
+      "source_repo": "/root/self-audit-pilot-artifacts/backbone/dinov3",
+      "source_commit": "6876159a11b4df116f30f667f8c9888617df0751",
+      "weights": "/root/self-audit-pilot-artifacts/backbone/pretrained/dinov3_convnext_tiny_pretrain_lvd1689m-21b726bb.pth",
+      "weights_sha256": "21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54"
+    },
+    "architecture": {
+      "name": "hybrid",
+      "depth_mode": "mix",
+      "widths": [
+        8,
+        16,
+        24,
+        32
+      ],
+      "z_kernels": [
+        [
+          3,
+          1,
+          1
+        ]
+      ],
+      "z_strides": [
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "residual_init": "zero",
+      "skip_fusion": "legacy",
+      "skip_stopgrad": false
+    },
+    "window": {
+      "mode": "fixed"
+    },
+    "geometry": {
+      "slab_depth": 3,
+      "crop_size": 32,
+      "spacing_xyz_mm": null,
+      "fov_xyz_mm": null,
+      "flip": false,
+      "resampling": "native_z"
+    },
+    "loss": {
+      "mode": "volume_mean"
+    },
+    "optimization": {
+      "recipe": "legacy",
+      "body_lr": 3e-05,
+      "head_lr": 0.003,
+      "encoder_lr": 3e-05,
+      "decoder_lr": 3e-05,
+      "weight_decay": 0.0001,
+      "clip_norm": 1.0,
+      "scheduler": "cosine",
+      "lr_warmup_steps": 1,
+      "min_lr_ratio": 0.1
+    },
+    "training": {
+      "steps": 4,
+      "pseudo_delay": 0,
+      "seed": 42,
+      "microbatch": 1,
+      "accumulation": 1,
+      "ema_decay": 0.99,
+      "pseudo_threshold": 0.0,
+      "pseudo_weight": 1.0,
+      "pseudo_ramp_steps": 0,
+      "pseudo_view": "strong_intensity",
+      "pseudo_student_mode": "eval",
+      "method": "ema_full",
+      "precision": "fp32",
+      "threads": 2,
+      "save_every": 1
+    },
+    "regions": {
+      "mode": "none",
+      "weight": 0.0,
+      "refresh_every": 0,
+      "spatial_weight": 1.0,
+      "target_num_regions": 32,
+      "min_region_size": 8,
+      "iterations": 4,
+      "boundary_threshold": 0.2,
+      "boundary_downweight": 0.1,
+      "boundary_rejection": false,
+      "loss_type": "mse",
+      "detached": true
+    },
+    "temporal": {
+      "mode": "none",
+      "weight": 0.0,
+      "max_disp_xyz": [
+        4.0,
+        16.0,
+        16.0
+      ],
+      "consistency_threshold": 1.5,
+      "loss_type": "mse",
+      "slice_wise": true,
+      "window": "none",
+      "occlusion": true
+    },
+    "prediction_model": "student"
+  },
+  "provenance": {
+    "architecture": "hybrid",
+    "depth_mode": "mix",
+    "skip_fusion": "legacy",
+    "skip_stopgrad": false,
+    "synthetic": true,
+    "external_teacher": false,
+    "architecture_only": false,
+    "initialization": "native_tiny_synthetic",
+    "encoder_widths": [
+      8,
+      16,
+      32,
+      64
+    ],
+    "decoder_widths": [
+      8,
+      16,
+      24,
+      32
+    ],
+    "parameter_count": 129207,
+    "parameter_group_counts": {
+      "encoder": 11256,
+      "body": 117783,
+      "head": 132
+    },
+    "capacity": {
+      "parameters": 129207,
+      "macs_per_output_voxel": 127734,
+      "native": {
+        "parameters": 125854,
+        "macs_per_output_voxel": 125430
+      },
+      "new_residual": {
+        "parameters": 2048,
+        "macs_per_output_voxel": 1920
+      },
+      "skip": {
+        "mode": "legacy",
+        "parameters": 408,
+        "macs_per_voxel": 384
+      },
+      "total_new_parameters": 2456,
+      "total_new_macs_per_output_voxel": 2304,
+      "executed_mac_proxy": {
+        "input_shape": [
+          1,
+          3,
+          3,
+          32,
+          32
+        ],
+        "macs": 122164032,
+        "layers": [
+          {
+            "kind": "conv2d",
+            "output_elements": 9216,
+            "macs": 165888
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 1536,
+            "macs": 73728
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 768,
+            "macs": 24576
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 384,
+            "macs": 24576
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 192,
+            "macs": 24576
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 96,
+            "macs": 6144
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 96,
+            "macs": 27648
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 96,
+            "macs": 27648
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 96,
+            "macs": 27648
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 96,
+            "macs": 27648
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 24,
+            "macs": 768
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 24,
+            "macs": 576
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 96,
+            "macs": 768
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 288,
+            "macs": 9216
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 288,
+            "macs": 9216
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 288,
+            "macs": 62208
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 288,
+            "macs": 62208
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 288,
+            "macs": 62208
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 288,
+            "macs": 62208
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 96,
+            "macs": 2304
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 96,
+            "macs": 2304
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 288,
+            "macs": 2304
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 768,
+            "macs": 12288
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 768,
+            "macs": 18432
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 768,
+            "macs": 110592
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 768,
+            "macs": 110592
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 768,
+            "macs": 110592
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 768,
+            "macs": 110592
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 384,
+            "macs": 6144
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 384,
+            "macs": 9216
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 768,
+            "macs": 6144
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 1536,
+            "macs": 12288
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 1536,
+            "macs": 24576
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 1536,
+            "macs": 24576
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 1536,
+            "macs": 24576
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 6144,
+            "macs": 49152
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 1536,
+            "macs": 49152
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 1536,
+            "macs": 110592
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 1536,
+            "macs": 110592
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 1536,
+            "macs": 110592
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 1536,
+            "macs": 110592
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 1536,
+            "macs": 36864
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 98304,
+            "macs": 2654208
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 98304,
+            "macs": 28311552
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 98304,
+            "macs": 28311552
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 1536,
+            "macs": 12288
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 1536,
+            "macs": 49152
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 1536,
+            "macs": 12288
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 98304,
+            "macs": 3932160
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 98304,
+            "macs": 28311552
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 98304,
+            "macs": 28311552
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 12288,
+            "macs": 393216
+          }
+        ],
+        "omitted_ops": [
+          "bias_add",
+          "normalization",
+          "activation",
+          "interpolation",
+          "memory_traffic"
+        ]
+      }
+    },
+    "backbone": "tiny_test",
+    "native_provenance": {
+      "pretrained": false,
+      "synthetic": true,
+      "custom_widths": [
+        8,
+        16,
+        24,
+        32
+      ]
+    }
+  },
+  "steps": 4,
+  "schedule_steps": 4,
+  "supervised_updates": 4,
+  "supervised_extra_updates": 0,
+  "pseudo_updates": 4,
+  "optimizer_updates": 16,
+  "ema_updates": 4,
+  "quality": "SOFTWARE_SYNTHETIC_ONLY",
+  "data": {
+    "synthetic": true,
+    "manifest_sha256": "6932474cbab796f47ee5e98088b588158a737ddac1e0c37064d8c2bdefcc6794",
+    "geometry_sha256": "f7ef503cf11ead739f6596359f81592375d423cc44c4bb874442bac3c25cd205",
+    "labeled_patient_count": 3,
+    "unlabeled_patient_count": 3
+  },
+  "checkpoint_manifest_sha256": "98e1991ba3fb4b05483bddb9a78c83c32f2fca16265cab34847b1e80b2382060"
+}

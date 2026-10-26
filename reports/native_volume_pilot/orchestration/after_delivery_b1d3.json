@@ -1,0 +1,68 @@
+{
+  "id": "8a39f79a-c1b6-4399-b65e-f66af1e632ad",
+  "ok": true,
+  "result": {
+    "runId": "run_0a8d03557566",
+    "deliveryId": "delivery_f72808409261",
+    "messages": [
+      {
+        "id": "msg_be25136d4eca",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_3efcab68-6585-4672-b631-52e9a4a7cc3c",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Architecture-only seam needed",
+        "body": "Model owner dispatch ctx_65db715ab627 is completed, so direct mailbox unavailable. Evaluation currently has a temporary global models.build_model monkeypatch; root rejected. Please relay to model owner or add authorized build_volume_model(... architecture_only=True) seam that validates pinned clean source and source-only pretrained=False, then I will remove monkeypatch and call it.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_922936fa2d56\",\"dispatchId\":\"ctx_419347c963a7\"}",
+        "created_at": "2026-10-26T01:34:02Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_4c3821771645",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_401b20ac-81f8-46d6-88be-9ec469e507ca",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Defect fixes and Astra handoff",
+        "body": "I fixed the reported integration defects within owned files: strict alias/schema handling, scheduler-before-update warmup, zero pseudo/no-aux no-step, independent CE/region/temporal denominator accumulation, fixture-only VolumeTrainingData L/U plus temporal batches, effective steps/allow-full-run gating, resume config/data/geometry identity checks and exact sampler/RNG/region state, expanded public source digest, and direct explicit historical student/EMA loader. check_repo.py passes; full suite is 309 passed, 1 warning; owned integration run is 20 passed and report updated. Source-ready handoff sent to Astra ctx_c12c99de1f65; correction workflow routing from explicit config section remains a tooling/evaluation coordination dependency.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_9be4e6df1c36\",\"dispatchId\":\"ctx_1f3abfc97cf9\"}",
+        "created_at": "2026-10-26T01:34:04Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_3632abe455f1",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_1fc79f1c-17a9-4d06-9d0d-f2ce56cae9ca",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "alive",
+        "body": "",
+        "type": "heartbeat",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_024e9d368e5a\",\"dispatchId\":\"ctx_6596c93fd1b5\",\"phase\":\"investigating\"}",
+        "created_at": "2026-10-26T01:34:11Z",
+        "delivered_at": null
+      }
+    ],
+    "count": 3,
+    "replayed": false,
+    "acknowledged": "delivery_b1d37f966b5f",
+    "timedOut": false,
+    "cancelled": false,
+    "connectionLost": false,
+    "mutation": {
+      "requestId": "60744c0a-a4d9-4b51-85f2-154245f5aac1",
+      "replayed": false
+    }
+  },
+  "_meta": {
+    "runtimeId": "c8b104cf-2048-4e37-ba45-397799d374ac"
+  }
+}

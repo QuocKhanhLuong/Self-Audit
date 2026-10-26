@@ -1,0 +1,179 @@
+{
+  "checkpoint_sha256": "c580100a56895c5e8e0c68b11a7a0393e758f7d013f2c74d8aa61000084b6b9b",
+  "cli_flags": {
+    "allow_labels": false,
+    "checkpoint": "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-htm7s0un/resumed",
+    "checkpoint_sha256": "c580100a56895c5e8e0c68b11a7a0393e758f7d013f2c74d8aa61000084b6b9b",
+    "device": "cpu",
+    "geometry": "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-htm7s0un/data/eval_geometry.json",
+    "geometry_sha256": "0f89dcfd11934727ccda07b617ddbfccaa629919e0aec347ed13e3e4dbfac782",
+    "manifest": "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-htm7s0un/data/eval.json",
+    "manifest_sha256": "692364ea7ab700971098b5e5fe00b246faecdb075608e5dcb69c2c02801acf2f",
+    "output": "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/evaluation.json",
+    "prediction_model": "student",
+    "predictions_dir": "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-htm7s0un/predictions",
+    "slab_depth": 3,
+    "slab_overlap": 1,
+    "split": null,
+    "synthetic": true,
+    "tile_overlap": 2,
+    "tile_size": 17
+  },
+  "evaluation_source_sha256": "3668c8cdd9523d2440a7e93ab2ed0564ba08ddd6bf8998ef88210ff6c96632ac",
+  "executed_source_sha256": "3668c8cdd9523d2440a7e93ab2ed0564ba08ddd6bf8998ef88210ff6c96632ac",
+  "frames": [],
+  "geometry_sha256": "0f89dcfd11934727ccda07b617ddbfccaa629919e0aec347ed13e3e4dbfac782",
+  "inference_protocol": {
+    "declared": {
+      "flip": false,
+      "fov_xyz_mm": null,
+      "resampling": "native_z",
+      "slab_depth": 3,
+      "slab_overlap": 1,
+      "spacing_xyz_mm": null,
+      "tile_overlap": 2,
+      "tile_size": [
+        17,
+        17
+      ]
+    },
+    "effective_by_record": {
+      "synthetic_volume_003": {
+        "flip": false,
+        "fov_derived_window": false,
+        "fov_xyz_mm": null,
+        "resampling": "native_z",
+        "slab_depth": 3,
+        "slab_overlap": 1,
+        "spacing_xyz_mm": null,
+        "tile_overlap": 2,
+        "tile_size": [
+          17,
+          17
+        ]
+      },
+      "synthetic_volume_004": {
+        "flip": false,
+        "fov_derived_window": false,
+        "fov_xyz_mm": null,
+        "resampling": "native_z",
+        "slab_depth": 3,
+        "slab_overlap": 1,
+        "spacing_xyz_mm": null,
+        "tile_overlap": 2,
+        "tile_size": [
+          17,
+          17
+        ]
+      }
+    }
+  },
+  "labels_allowed": false,
+  "labels_read": 0,
+  "macro_patient": {
+    "BG": {
+      "dice": null,
+      "present_patients": 0
+    },
+    "LV": {
+      "dice": null,
+      "present_patients": 0
+    },
+    "MYO": {
+      "dice": null,
+      "present_patients": 0
+    },
+    "RV": {
+      "dice": null,
+      "present_patients": 0
+    }
+  },
+  "manifest_sha256": "692364ea7ab700971098b5e5fe00b246faecdb075608e5dcb69c2c02801acf2f",
+  "native_probability_shapes": {
+    "synthetic_volume_003": [
+      2,
+      4,
+      5,
+      17,
+      19
+    ],
+    "synthetic_volume_004": [
+      2,
+      4,
+      5,
+      17,
+      19
+    ]
+  },
+  "native_support_voxels": {
+    "synthetic_volume_003": 3230,
+    "synthetic_volume_004": 3230
+  },
+  "patients": {
+    "synthetic_volume_003": {
+      "BG": null,
+      "LV": null,
+      "MYO": null,
+      "RV": null
+    },
+    "synthetic_volume_004": {
+      "BG": null,
+      "LV": null,
+      "MYO": null,
+      "RV": null
+    }
+  },
+  "physical_boundary_metrics": "NOT_COMPUTED; no spacing-certified HD95 boundary protocol",
+  "pooled_confusion": [
+    [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  ],
+  "prediction_files": {
+    "synthetic_volume_003": {
+      "probabilities": "synthetic_volume_003.npy",
+      "probabilities_sha256": "b3f6924caaa7e72cf83227e6c0ed2a8cbbbc0fb761e86219ca47224ae45418d5",
+      "support": "synthetic_volume_003_support.npy",
+      "support_sha256": "76a0816fdf900b4c0f0193f9f66d2a499cd5ce1e628d29825d07bf99e6d0d701"
+    },
+    "synthetic_volume_004": {
+      "probabilities": "synthetic_volume_004.npy",
+      "probabilities_sha256": "1d1d1763261f4d251aaa03666ea5fcbfc1ebcf8ce258a7f145034542af6c5e7b",
+      "support": "synthetic_volume_004_support.npy",
+      "support_sha256": "76a0816fdf900b4c0f0193f9f66d2a499cd5ce1e628d29825d07bf99e6d0d701"
+    }
+  },
+  "prediction_model": "student",
+  "quality": "FROZEN_IMAGE_ONLY",
+  "schema": "self_audit.volume.frozen_eval.v2",
+  "scope": "evaluation",
+  "source_sha256": "3668c8cdd9523d2440a7e93ab2ed0564ba08ddd6bf8998ef88210ff6c96632ac",
+  "split": "development",
+  "synthetic": true,
+  "warning": "Synthetic/CPU results are software evidence only; no patient accuracy claim is made."
+}

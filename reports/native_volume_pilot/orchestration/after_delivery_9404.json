@@ -1,0 +1,113 @@
+{
+  "id": "14600771-b05b-4f5f-9e37-679ef811933f",
+  "ok": true,
+  "result": {
+    "runId": "run_0a8d03557566",
+    "deliveryId": "delivery_3cebd5788755",
+    "messages": [
+      {
+        "id": "msg_3cdb6e15c58c",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_9c887a91-e08d-444c-8798-7b941d7dbd41",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Final Astra follow-up ready",
+        "body": "Registry/config/tooling follow-up repaired. V01 changed_factors now enumerate batch/prediction/schedule/horizon/delay/exposure versus A0; O02 enumerates optimizer family and encoder/decoder/head LR plus scheduler/warmup. V06/V07 now four-stage CNN3D anisotropic scratch [16,32,64,128] with matching kernels/strides, synthetic override [8,16,24,32]; targeted preflight/smoke/profile PASS and owned tests 22 passed. Runbook resume uses actual checkpoint directory/hash from stop4 -> target8.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_9d1132c54cd7\",\"dispatchId\":\"ctx_71fcc5265ad9\"}",
+        "created_at": "2026-10-26T01:59:50Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_5b90ac81582c",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_401b20ac-81f8-46d6-88be-9ec469e507ca",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Authoritative follow-up repaired and verified",
+        "body": "Implemented legacy-schema native-only flag rejection and volume-schema legacy-only rejection before dispatch; actual train.py subprocess regressions pass. C01 all-UNKNOWN extra supervision now returns update_norm=0/complete metrics, skips second optimizer, and keeps exactly one EMA. Checkpoint load validates payload/RNG/sampler/region-cache/optimizer/scheduler/scaler/counters/types on deep copies before mutating supplied model; focused owned suite is 47 passed. Historical fixture /var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-v2-parity-q690k5c0/handoff/final loaded student+teacher+2 optimizers using ASSET_LINEAGE canonical map with no fabricated canonical field. Public source digest c2b200f6ae1d236c337a0f7983527041a11db382b4033ed7f5a11ea49a66a23e; engine a10cbd855ec30592df3a648e5adfc199c2338fb546a49ebf870f51565d5b1b2e; checkpoint 9fafdf175bd0e5b6523c5cdd964bcf7b7a70972987a7f798c43b64e26aa04c5c; train 49a18abff36210d351ad74b09c8c47704ffc290125fbeeeef97f115da737140f. Please forward to Astra ctx_c12c99de1f65.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_27518372a6b6\",\"dispatchId\":\"ctx_7b42c4f083ec\"}",
+        "created_at": "2026-10-26T01:59:53Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_29c7ba109e3c",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_9c887a91-e08d-444c-8798-7b941d7dbd41",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "CNN/registry follow-up complete",
+        "body": "Repaired remaining Astra findings: production registry initialization now distinguishes pinned pretrained DINO from CPU tiny scratch, V01 and O02 enumerate all required confounds, and V06/V07 use independent four-stage anisotropic CNN3D scratch topologies [16,32,64,128] with matching kernels/strides and family-aware tiny overrides. Verification passed with 22 owned tests, V06/V07 real preflight/smoke/profile CPU runs, and 23-row registry validation; no full suite, GPU, server, download, commit, or long training was performed. Runbook now documents callable stop4 checkpoint-directory/hash syntax followed by resume target8, and report records source/config snapshot hashes plus remaining external geometry/correction owner dependencies.",
+        "type": "worker_done",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_9d1132c54cd7\",\"dispatchId\":\"ctx_71fcc5265ad9\",\"outcome\":\"succeeded\",\"filesModified\":[\"scripts/volume_preflight.py\",\"configs/native_volume/V06.json\",\"configs/native_volume/V07.json\",\"configs/native_volume/REGISTRY.json\",\"tests/test_volume_cli.py\",\"tests/test_volume_registry.py\",\"docs/native_3d/RUNBOOK.md\",\"reports/native_volume_pilot/tooling.md\",\"reports/native_volume_pilot/smoke_final_V06.json\",\"reports/native_volume_pilot/smoke_final_V07.json\",\"reports/native_volume_pilot/profile_final_V06.json\",\"reports/native_volume_pilot/final_matrix/V06.json\",\"reports/native_volume_pilot/final_matrix/V07.json\"],\"reportPath\":\"reports/native_volume_pilot/tooling.md\"}",
+        "created_at": "2026-10-26T01:59:57Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_b98f0c9048b9",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_401b20ac-81f8-46d6-88be-9ec469e507ca",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Authoritative integration follow-up complete",
+        "body": "Repaired train.py schema routing so native-only flags are rejected on historical configs and legacy-only flags are rejected on native-volume configs before dispatch, with subprocess regressions passing. Fixed C01 empty extra supervision receipts and made checkpoint validation strict and fail-before-mutation for RNG, sampler, region cache, optimizer/scheduler/scaler state, types, and counters; actual historical fixture loading via the pinned ASSET_LINEAGE map also passed. Focused owned tests pass 47/47, check_repo and diff-check pass, and the report contains final hashes/source digest; no full suite, GPU, patient training, or commits were run.",
+        "type": "worker_done",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_27518372a6b6\",\"dispatchId\":\"ctx_7b42c4f083ec\",\"outcome\":\"succeeded\",\"filesModified\":[\"train.py\",\"self_audit/volume/engine.py\",\"self_audit/volume/checkpoint.py\",\"self_audit/volume/__init__.py\",\"self_audit/volume/config.py\",\"self_audit/volume/legacy_compat.py\",\"tests/test_volume_cli.py\",\"tests/test_volume_resume.py\",\"tests/test_volume_integration_followup.py\",\"reports/native_volume_pilot/integration.md\"],\"reportPath\":\"reports/native_volume_pilot/integration.md\"}",
+        "created_at": "2026-10-26T02:00:12Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_1609ce8fb6fe",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_3f856468-6fc1-4b86-9b48-817902529036",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "P2 temporal physical metric ignores per-patient spacing",
+        "body": "Stable temporal.py06ae5c8777 lines605-612 uses metadata[0] spacing for every batch member. Exact witness: duplicate a manufactured dx2 registration pair into B2, metadata spacing XYZ [1,1,4] and [3,1,4]; temporal_consistency reports mean_displacement_mm2 instead of mean(2,6)=4. Please include small per-sample spacing/validation repair with active region-temporal owner; core motion and detached directional gradients independently pass (FD error3.48e-13, warp error0). Starting requested native evaluation review now; no full suite.",
+        "type": "escalation",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_041ea9f6373b\",\"dispatchId\":\"ctx_a1f3944f22c6\"}",
+        "created_at": "2026-10-26T02:00:20Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_a553fa5de451",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_66af5510-7eac-4095-adcc-8556a8a08895",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Configured evaluation independent numerical recheck",
+        "body": "Configured evaluation source now has operational checkpoint spacing/FOV/flip and native probability inversion; eval/loss tests24passed2.22s. Independent coordinate-dependent logits on odd native grid and oblique-origin affine: same-spacing configured path matches native path exactly, nontrivial spacing/FOV/flip returns native-shaped finite normalized probabilities with explicit support. One small receipt gap: evaluate_manifest result still omits effective slab_depth/tile_size/overlaps/spacing/FOV/flip/resampling and executed evaluation source hash, so CLI overrides cannot be reconstructed from its JSON; please record effective inference protocol or mark this provenance limit in final report.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_7d023d5190f0\",\"dispatchId\":\"ctx_c12c99de1f65\"}",
+        "created_at": "2026-10-26T02:00:26Z",
+        "delivered_at": null
+      }
+    ],
+    "count": 6,
+    "replayed": false,
+    "acknowledged": "delivery_940446735269",
+    "timedOut": false,
+    "cancelled": false,
+    "connectionLost": false,
+    "mutation": {
+      "requestId": "4b264bb6-b8c9-4226-882e-c61c59a77aff",
+      "replayed": false
+    }
+  },
+  "_meta": {
+    "runtimeId": "c8b104cf-2048-4e37-ba45-397799d374ac"
+  }
+}

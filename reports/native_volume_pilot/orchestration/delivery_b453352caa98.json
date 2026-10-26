@@ -1,0 +1,53 @@
+{
+  "id": "932bce16-3a16-46b5-b407-1a99bde97d69",
+  "ok": true,
+  "result": {
+    "runId": "run_0a8d03557566",
+    "deliveryId": "delivery_b453352caa98",
+    "messages": [
+      {
+        "id": "msg_e242c2b197ad",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_9c887a91-e08d-444c-8798-7b941d7dbd41",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Tooling APIs finalized and strict configs validated",
+        "body": "Reconciled configs with current self_audit.volume.config.py strict schema: all 23 configs now omit row metadata and use top-level model/architecture/window/geometry/loss/optimization/training/regions/temporal/prediction_model; REGISTRY.json carries id,parent,changed_factors,status plus V00 historical A0 recipe/hash. Preflight derives id from config filename, calls validate_volume_config, checks forbidden mask/teacher keys, parent acyclicity and emits hashes. Smoke API: volume_smoke.run_smoke(path, requested_steps=None, device_name='cpu', max_seconds=120) -> receipt; calls build_volume_model(config, synthetic=True), model(image, valid_mask), supervised_volume_loss(... mode=config.loss.mode, return_metrics=True). Profile API similarly emits warmup-excluded synchronized rates/VRAM. All 23 strict configs validate; selected V01,V04,V06,O02,R02,T01,C01 synthetic one-step PASS; owned tests 7 PASS; full repo 207 PASS. GPU/real TRAIN NOT_RUN.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_955c87b48c9c\",\"dispatchId\":\"ctx_b8c923620621\"}",
+        "created_at": "2026-10-26T01:06:56Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_383611c740df",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_401b20ac-81f8-46d6-88be-9ec469e507ca",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Integration implementation and gates complete",
+        "body": "Implemented owned integration files and tests. Final gates: rtk python scripts/check_repo.py PASS; rtk python -m pytest -q => 217 passed, 1 warning; git diff --check clean. Synthetic V04 train.py router run completed 8 supervised + 8 EMA steps; fresh checkpoint save/load passed with scheduler/RNG state and stale source hash rejection. Report is reports/native_volume_pilot/integration.md; no GPU/patient run or downloads. Please review API normalization and stage only integration-owned paths alongside other owners.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_e96dff360299\",\"dispatchId\":\"ctx_b34d0f176fb1\"}",
+        "created_at": "2026-10-26T01:07:12Z",
+        "delivered_at": null
+      }
+    ],
+    "count": 2,
+    "replayed": false,
+    "acknowledged": "delivery_0722ddee91c0",
+    "timedOut": false,
+    "cancelled": false,
+    "connectionLost": false,
+    "mutation": {
+      "requestId": "31e42540-9536-48f9-93fe-43febb30dcb4",
+      "replayed": false
+    }
+  },
+  "_meta": {
+    "runtimeId": "c8b104cf-2048-4e37-ba45-397799d374ac"
+  }
+}

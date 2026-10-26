@@ -1,0 +1,473 @@
+{
+  "schema": "self_audit.volume.tooling_receipt.v1",
+  "command": "smoke",
+  "status": "PASS",
+  "config_id": "C01",
+  "config_path": "configs/native_volume/C01.json",
+  "config_sha256": "0d742dfb53cb09e387b00311a596a712e87ca7144de4654e8e35b0096ea7c74d",
+  "synthetic": true,
+  "real_train_smoke": "NOT_RUN",
+  "gpu": "NOT_RUN",
+  "steps": 1,
+  "optimizer_steps": 1,
+  "supervised_updates": 1,
+  "supervised_extra_updates": 1,
+  "pseudo_updates": 0,
+  "ema_updates": 1,
+  "elapsed_seconds": 0.838106791023165,
+  "output_shape": [
+    1,
+    4,
+    3,
+    64,
+    64
+  ],
+  "loss": 2.5332798957824707,
+  "loss_metrics": {
+    "step": 1,
+    "supervised_loss": 2.5332798957824707,
+    "supervised_grad_norm": 15.351031303405762,
+    "supervised_update_norm": 0.010676377452909946,
+    "ce": 1.6681700944900513,
+    "dice_loss": 0.8651096820831299,
+    "loss": 2.5332798957824707,
+    "support_voxels": 969.0,
+    "volumes_used": 1.0,
+    "present_foreground": 3.0,
+    "absent_foreground": 0.0,
+    "dice_foreground": 0.13489031791687012,
+    "dice_macro4": 0.16930092871189117,
+    "estimator_code": 1.0,
+    "label_voxels": 969.0,
+    "pseudo_accepted": 0,
+    "pseudo_accepted_per_class": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "pseudo_weight": 0.0,
+    "teacher_student_disagreement": 0.0,
+    "supervised_extra_loss": 2.5100526809692383,
+    "supervised_extra_grad_norm": 11.427721977233887,
+    "supervised_extra_update_norm": 0.008482098579406738,
+    "extra_label_voxels": 646,
+    "supervised_extra_updates": 1,
+    "supervised_updates": 1,
+    "pseudo_updates": 0,
+    "ema_updates": 1,
+    "optimizer_updates": 4
+  },
+  "model_parameters": 129207,
+  "model_provenance": {
+    "architecture": "hybrid",
+    "depth_mode": "mix",
+    "skip_fusion": "legacy",
+    "skip_stopgrad": false,
+    "synthetic": true,
+    "external_teacher": false,
+    "architecture_only": false,
+    "initialization": "native_tiny_synthetic",
+    "encoder_widths": [
+      8,
+      16,
+      32,
+      64
+    ],
+    "decoder_widths": [
+      8,
+      16,
+      24,
+      32
+    ],
+    "parameter_count": 129207,
+    "parameter_group_counts": {
+      "encoder": 11256,
+      "body": 117783,
+      "head": 132
+    },
+    "capacity": {
+      "parameters": 129207,
+      "macs_per_output_voxel": 127734,
+      "native": {
+        "parameters": 125854,
+        "macs_per_output_voxel": 125430
+      },
+      "new_residual": {
+        "parameters": 2048,
+        "macs_per_output_voxel": 1920
+      },
+      "skip": {
+        "mode": "legacy",
+        "parameters": 408,
+        "macs_per_voxel": 384
+      },
+      "total_new_parameters": 2456,
+      "total_new_macs_per_output_voxel": 2304,
+      "executed_mac_proxy": {
+        "input_shape": [
+          1,
+          3,
+          3,
+          32,
+          32
+        ],
+        "macs": 122164032,
+        "layers": [
+          {
+            "kind": "conv2d",
+            "output_elements": 9216,
+            "macs": 165888
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 1536,
+            "macs": 73728
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 768,
+            "macs": 24576
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 384,
+            "macs": 24576
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 192,
+            "macs": 24576
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 96,
+            "macs": 6144
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 96,
+            "macs": 27648
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 96,
+            "macs": 27648
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 96,
+            "macs": 27648
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 96,
+            "macs": 27648
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 24,
+            "macs": 768
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 24,
+            "macs": 576
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 96,
+            "macs": 768
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 288,
+            "macs": 9216
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 288,
+            "macs": 9216
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 288,
+            "macs": 62208
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 288,
+            "macs": 62208
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 288,
+            "macs": 62208
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 288,
+            "macs": 62208
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 96,
+            "macs": 2304
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 96,
+            "macs": 2304
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 288,
+            "macs": 2304
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 768,
+            "macs": 12288
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 768,
+            "macs": 18432
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 768,
+            "macs": 110592
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 768,
+            "macs": 110592
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 768,
+            "macs": 110592
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 768,
+            "macs": 110592
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 384,
+            "macs": 6144
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 384,
+            "macs": 9216
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 768,
+            "macs": 6144
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 1536,
+            "macs": 12288
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 1536,
+            "macs": 24576
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 1536,
+            "macs": 24576
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 1536,
+            "macs": 24576
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 6144,
+            "macs": 49152
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 1536,
+            "macs": 49152
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 1536,
+            "macs": 110592
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 1536,
+            "macs": 110592
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 1536,
+            "macs": 110592
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 1536,
+            "macs": 110592
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 1536,
+            "macs": 36864
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 98304,
+            "macs": 2654208
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 98304,
+            "macs": 28311552
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 98304,
+            "macs": 28311552
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 1536,
+            "macs": 12288
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 1536,
+            "macs": 49152
+          },
+          {
+            "kind": "conv3d",
+            "output_elements": 1536,
+            "macs": 12288
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 98304,
+            "macs": 3932160
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 98304,
+            "macs": 28311552
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 98304,
+            "macs": 28311552
+          },
+          {
+            "kind": "conv2d",
+            "output_elements": 12288,
+            "macs": 393216
+          }
+        ],
+        "omitted_ops": [
+          "bias_add",
+          "normalization",
+          "activation",
+          "interpolation",
+          "memory_traffic"
+        ]
+      }
+    },
+    "backbone": "tiny_test",
+    "native_provenance": {
+      "pretrained": false,
+      "synthetic": true,
+      "custom_widths": [
+        8,
+        16,
+        24,
+        32
+      ]
+    }
+  },
+  "teacher_copy_finite": true,
+  "device": "cpu",
+  "coverage": {
+    "trainer": true,
+    "fixture_manifest_sha256": "7ac295c1e4e2c03b2fb978f9405683e4058af198d6f8c0fc82507d31abc382fd",
+    "fixture_geometry_sha256": "922a94c6950b259bb6ae839350887a691d457ec93310f51a92a690b763352af2",
+    "labeled_label_reads": [
+      "synthetic_volume_000",
+      "synthetic_volume_001"
+    ],
+    "u_records_mask_free": true,
+    "transaction_records": [
+      {
+        "step": 1,
+        "supervised_loss": 2.5332798957824707,
+        "supervised_grad_norm": 15.351031303405762,
+        "supervised_update_norm": 0.010676377452909946,
+        "ce": 1.6681700944900513,
+        "dice_loss": 0.8651096820831299,
+        "loss": 2.5332798957824707,
+        "support_voxels": 969.0,
+        "volumes_used": 1.0,
+        "present_foreground": 3.0,
+        "absent_foreground": 0.0,
+        "dice_foreground": 0.13489031791687012,
+        "dice_macro4": 0.16930092871189117,
+        "estimator_code": 1.0,
+        "label_voxels": 969.0,
+        "pseudo_accepted": 0,
+        "pseudo_accepted_per_class": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "pseudo_weight": 0.0,
+        "teacher_student_disagreement": 0.0,
+        "supervised_extra_loss": 2.5100526809692383,
+        "supervised_extra_grad_norm": 11.427721977233887,
+        "supervised_extra_update_norm": 0.008482098579406738,
+        "extra_label_voxels": 646,
+        "supervised_extra_updates": 1,
+        "supervised_updates": 1,
+        "pseudo_updates": 0,
+        "ema_updates": 1,
+        "optimizer_updates": 4
+      }
+    ],
+    "extra_supervised_updates": 1
+  },
+  "runtime_overrides": {
+    "model.backbone": {
+      "from": "dinov3_convnext_tiny",
+      "to": "tiny_test"
+    },
+    "geometry.crop_size": {
+      "from": 256,
+      "to": 64
+    },
+    "training.steps": {
+      "from": 8,
+      "to": 1
+    },
+    "training.microbatch": {
+      "from": 1,
+      "to": 1,
+      "explicit": true
+    }
+  },
+  "logical_batch_size": 1,
+  "microbatch": 1,
+  "accumulation": 1,
+  "pseudo_threshold_override": null,
+  "pseudo_delay_override": null
+}

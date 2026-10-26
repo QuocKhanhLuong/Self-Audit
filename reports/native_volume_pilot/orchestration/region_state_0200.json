@@ -1,0 +1,218 @@
+{
+  "id": "a8ec2291-4cd3-4d1e-b027-46ab22da0aea",
+  "ok": true,
+  "result": {
+    "dispatch": {
+      "id": "ctx_d65d2bd88a39",
+      "runId": "run_0a8d03557566",
+      "taskId": "task_8bd8b97f8414",
+      "task_id": "task_8bd8b97f8414",
+      "contractVersion": 1,
+      "assigneeHandle": "term_b4862548-dc52-437e-b69c-f2fc8b78507e",
+      "assigneePaneKey": "cf9d5348-1567-495d-97ea-ccbd1b27e90f:edc82fa0-6ff8-43c1-9432-47a0ffa96e2e",
+      "processIncarnation": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit-native-volume-ema-pilot@@532509cd:5d5c4e38-b989-4970-9c05-4950c632cec2",
+      "capabilityRevokedAt": "2026-10-26T01:58:13.778Z",
+      "retryOfDispatchId": null,
+      "creatorDispatchId": null,
+      "hostScope": {
+        "kind": "local",
+        "hostId": "local"
+      },
+      "status": "completed",
+      "failureCount": 0,
+      "lastFailure": null,
+      "terminationReason": null,
+      "depth": 1,
+      "dispatchedAt": "2026-10-26 01:41:17",
+      "completedAt": "2026-10-26T01:58:13.778Z",
+      "createdAt": "2026-10-26 01:41:17",
+      "lastHeartbeatAt": "2026-10-26T01:46:33Z"
+    },
+    "worker": {
+      "dispatchId": "ctx_d65d2bd88a39",
+      "runtimeEpoch": "c8b104cf-2048-4e37-ba45-397799d374ac",
+      "state": "succeeded",
+      "stage": "settled",
+      "worktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit-native-volume-ema-pilot",
+      "agentTerminalHandle": "term_b4862548-dc52-437e-b69c-f2fc8b78507e",
+      "setupState": "not_applicable",
+      "effects": [
+        {
+          "kind": "worktree",
+          "action": "reused",
+          "id": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit-native-volume-ema-pilot"
+        },
+        {
+          "kind": "setup",
+          "action": "not_applicable",
+          "state": "not_applicable"
+        },
+        {
+          "kind": "terminal",
+          "role": "agent",
+          "action": "created",
+          "id": "term_b4862548-dc52-437e-b69c-f2fc8b78507e",
+          "surface": "visible"
+        },
+        {
+          "kind": "dispatch_input",
+          "role": "agent",
+          "id": "term_b4862548-dc52-437e-b69c-f2fc8b78507e",
+          "state": "accepted"
+        }
+      ],
+      "residualResources": [
+        {
+          "kind": "terminal",
+          "role": "agent",
+          "action": "created",
+          "id": "term_b4862548-dc52-437e-b69c-f2fc8b78507e",
+          "surface": "visible"
+        }
+      ],
+      "startOptions": {
+        "worktree": "path:/Users/alvinluong/Self-Audit-native-volume-ema-pilot",
+        "mode": {
+          "mode": "terminal",
+          "preferred": "terminal",
+          "reason": "user_default",
+          "detail": "Started a terminal agent worker, the default for new agent tabs in your settings."
+        },
+        "resolvedWorktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit-native-volume-ema-pilot",
+        "name": null,
+        "repo": null,
+        "baseBranch": null,
+        "terminal": null,
+        "agent": "antigravity",
+        "launch": {
+          "requested": {
+            "agent": "antigravity",
+            "model": "gemini-3.8-flash-high",
+            "effort": null
+          },
+          "effective": {
+            "agent": "antigravity",
+            "model": "gemini-3.8-flash-high",
+            "effort": null
+          }
+        },
+        "timeoutMs": 60000,
+        "setup": "not_applicable",
+        "setupSource": "existing_worktree"
+      },
+      "lastError": null,
+      "createdAt": "2026-10-26 01:41:17",
+      "updatedAt": "2026-10-26T01:58:13.778Z"
+    },
+    "projection": {
+      "id": "ctx_d65d2bd88a39",
+      "dispatchId": "ctx_d65d2bd88a39",
+      "taskId": "task_8bd8b97f8414",
+      "runId": "run_0a8d03557566",
+      "role": "worker",
+      "parent": null,
+      "provider": {
+        "id": "antigravity",
+        "model": null
+      },
+      "host": {
+        "kind": "local",
+        "id": "local"
+      },
+      "workspace": {
+        "id": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit-native-volume-ema-pilot",
+        "kind": "folder_or_worktree"
+      },
+      "stage": {
+        "worker": "succeeded",
+        "dispatch": "completed",
+        "detail": "settled",
+        "activity": "working"
+      },
+      "outcome": "succeeded",
+      "liveness": {
+        "verdict": "live",
+        "observedAt": 1792979894011,
+        "source": "agent_status"
+      },
+      "evidence": {
+        "durable": true,
+        "liveStatus": "fresh",
+        "lastObservedAt": 1792979894011
+      },
+      "resource": {
+        "state": "owned",
+        "id": "wtr_6c8e986d6409",
+        "ownerDispatchId": "ctx_d65d2bd88a39",
+        "releaseState": "not_requested",
+        "terminalState": "reclaimable"
+      },
+      "nextAction": {
+        "kind": "release",
+        "argv": [
+          "orchestration",
+          "worker-release",
+          "--dispatch",
+          "ctx_d65d2bd88a39"
+        ]
+      },
+      "attention": {
+        "categories": [
+          "root_completion"
+        ],
+        "requiresAction": false
+      }
+    },
+    "terminal": {
+      "handle": "term_b4862548-dc52-437e-b69c-f2fc8b78507e",
+      "ptyId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit-native-volume-ema-pilot@@532509cd",
+      "incarnationId": "5d5c4e38-b989-4970-9c05-4950c632cec2",
+      "orphaned": true,
+      "recordedPaneKey": "cf9d5348-1567-495d-97ea-ccbd1b27e90f:edc82fa0-6ff8-43c1-9432-47a0ffa96e2e",
+      "worktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit-native-volume-ema-pilot",
+      "worktreePath": "/Users/alvinluong/Self-Audit-native-volume-ema-pilot",
+      "branch": "refs/heads/feat/native-volume-ema-pilot",
+      "tabId": "cf9d5348-1567-495d-97ea-ccbd1b27e90f",
+      "leafId": "edc82fa0-6ff8-43c1-9432-47a0ffa96e2e",
+      "title": "agy",
+      "connected": true,
+      "writable": true,
+      "lastOutputAt": 1792979906754,
+      "preview": "RegionManager.targets\nRegionManager.state_dict and RegionManager.load_state_dict\n_phase_correlation_2d_support_aware\n_phase_correlation_3d_support_aware\ntemporal.py:1\n/native_volu",
+      "executionHostId": "local",
+      "agentIdentity": "antigravity",
+      "paneRuntimeId": -1,
+      "rendererGraphEpoch": 3,
+      "agentWait": null
+    },
+    "observation": {
+      "status": "live",
+      "exactWorker": true,
+      "agentWait": null
+    },
+    "terminalResource": {
+      "id": "wtr_6c8e986d6409",
+      "ownershipState": "owned",
+      "releaseState": "not_requested",
+      "retainedReason": null,
+      "terminalHandle": "term_b4862548-dc52-437e-b69c-f2fc8b78507e",
+      "worktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit-native-volume-ema-pilot",
+      "endpointId": "c8b104cf-2048-4e37-ba45-397799d374ac",
+      "endpointIncarnation": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit-native-volume-ema-pilot@@532509cd:5d5c4e38-b989-4970-9c05-4950c632cec2",
+      "originDispatchId": "ctx_d65d2bd88a39",
+      "ownerDispatchId": "ctx_d65d2bd88a39",
+      "releaseRequestedAt": null,
+      "releaseCompletedAt": null,
+      "releaseError": null,
+      "recoveryAttemptCount": 0,
+      "lastRecoveryAt": null,
+      "archive": {
+        "source": null,
+        "status": null
+      }
+    }
+  },
+  "_meta": {
+    "runtimeId": "c8b104cf-2048-4e37-ba45-397799d374ac"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "id": "22d88574-6aa7-466d-a8eb-e9b4ac7f3510",
+  "ok": true,
+  "result": {
+    "runId": "run_0a8d03557566",
+    "deliveryId": "delivery_b1d37f966b5f",
+    "messages": [
+      {
+        "id": "msg_c64a5ec90f50",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_1fc79f1c-17a9-4d06-9d0d-f2ce56cae9ca",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "models/fusion fixes verified",
+        "body": "Patched self_audit/volume/models.py and fusion.py so zero-init controls only terminal residual projections, upstream planar/skip layers stay trainable, fixed-window defaults and architecture controls are explicit, and width/kernel/stride knobs are honored or rejected rather than ignored. Added independent regression coverage for exact old-function parity, two-step input-dependent residual learning, fork_rng preservation, architecture knob validation, CNN width tails, capacity accounting, and SkipFusion zero-init; owned tests pass 23/23, check_repo and py_compile pass. Updated reports/native_volume_pilot/models.md with APIs, hashes/evidence, and current shared-suite boundary (299 passed, 3 correction-owner failures, 1 warning); no commits, pushes, downloads, or long training performed.",
+        "type": "worker_done",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_ad3da5fd618d\",\"dispatchId\":\"ctx_65db715ab627\",\"outcome\":\"succeeded\",\"filesModified\":[\"self_audit/volume/models.py\",\"self_audit/volume/fusion.py\",\"tests/test_volume_models.py\",\"tests/test_volume_fusion.py\",\"reports/native_volume_pilot/models.md\"],\"reportPath\":\"reports/native_volume_pilot/models.md\"}",
+        "created_at": "2026-10-26T01:32:40Z",
+        "delivered_at": null
+      }
+    ],
+    "count": 1,
+    "replayed": false,
+    "acknowledged": "delivery_6fc8d52771e1",
+    "timedOut": false,
+    "cancelled": false,
+    "connectionLost": false,
+    "mutation": {
+      "requestId": "da2a9f6d-5221-4fbe-92d8-1ddb08de1fce",
+      "replayed": false
+    }
+  },
+  "_meta": {
+    "runtimeId": "c8b104cf-2048-4e37-ba45-397799d374ac"
+  }
+}

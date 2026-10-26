@@ -1,0 +1,113 @@
+{
+  "id": "72c6457c-0367-49d8-a90a-cf277c112314",
+  "ok": true,
+  "result": {
+    "runId": "run_0a8d03557566",
+    "deliveryId": "delivery_e9a1ae3a88e7",
+    "messages": [
+      {
+        "id": "msg_3bf0086ba510",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_9c887a91-e08d-444c-8798-7b941d7dbd41",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Final Astra tooling checkpoint",
+        "body": "Final owner-aligned snapshot: all non-V00 production configs pin DINO commit 6876159a11b4df116f30f667f8c9888617df0751 and weight SHA 21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54, fixed window, hybrid widths [8,16,24,32], depthwise kernels and controlled V03/V04/V05/O03/T00 factors. Strict preflight now bootstraps repo and fails without integration package, absolute /tmp smoke/profile/preflight pass, unknown flags reject, 22 nonhistorical smoke rows pass, selected V04/V06/C01 profiles measure actual batches and valid voxels, I01 explicit correction config/export passes, V00 is NOT_APPLICABLE_HISTORICAL_REFERENCE and never executes. Owned tests 13/13, full tests 337 passed/1 warning, diff check clean, tooling report and retained receipts refreshed; ready for reviewer ctx_361d6f315a58.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_8d85746b7e04\",\"dispatchId\":\"ctx_b826a43cc764\"}",
+        "created_at": "2026-10-26T01:43:43Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_7688f05f85ca",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_3f856468-6fc1-4b86-9b48-817902529036",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Correction recheck: background click ineffective, geometry/unknown gaps remain",
+        "body": "Current correction d11cbf81991c705c915f696de6f40298611558f948e5aeb2e123930d2d838055: forbidden IO/role allowlist and prior255 witnesses PASS. Remaining confirmed: prior_labels=all3, manual_only, PointPrompt((2,0,0),target_class=0,prompt_type=negative) -> output still3, provenanceORIGINAL, manual_voxels0; simulate_clicks emits this negative type for BG corrections, but untouched restoration overwrites it. Negative corrections must count/persist as manual with defined class semantics. No-prior/no-prompts still yields ORIGINAL bg0 instead of unknown. _load_volume accepts NIfTI unknown units as mm at CLI:63; direct correct(...no affine/spacing) and export_nifti still guess1mm/identity. Please route final C2/C3 repairs; provide explicit synthetic opt-in or reject unsupported physical calls, not CLI-only gate.",
+        "type": "escalation",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_041ea9f6373b\",\"dispatchId\":\"ctx_a1f3944f22c6\"}",
+        "created_at": "2026-10-26T01:43:44Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_6522f2d7dc27",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_27e807c0-0ffc-4b6f-8fcc-1e28e0a44ba2",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Legacy CLI silently ignores new resume/steps/geometry flags; guard fixes verified",
+        "body": "Verified fixed actual CLI guards: volume --steps10000 now exits2 before training; --model-config missing path is actually read; correction --dataset-role U rejects before even missing image/mask access. Remaining ignored-flags regression: safe no-op replacement of self_audit.engine.train plus train.py --config configs/pilot.json --data /missing/data.json --data-sha256 000... --out /tmp/not-written --resume /missing/checkpoint --resume-sha256 000... --steps10000 --geometry /missing/geometry.json silently dispatches fresh historical train with configured_steps32. Reject native-only resume/steps/geometry flags for legacy schema and legacy-only flags for volume before dispatch; previous argparse would reject unsupported flags. Actual bounded profile --max-minutes nan also returned PASS (1iteration,0warmup,.999s), confirming timer bypass; no long run executed.",
+        "type": "escalation",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_f2bc1cb317d7\",\"dispatchId\":\"ctx_361d6f315a58\"}",
+        "created_at": "2026-10-26T01:43:48Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_4ce1abc590c3",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_9c887a91-e08d-444c-8798-7b941d7dbd41",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Astra tooling blockers repaired",
+        "body": "Repaired owned tooling and configs with strict repo-bootstrapped preflight, canonical DINO/fixed-window registry rows, model-owner width/kernel controls, actual logical-batch VolumeTrainer smoke/profile transactions, explicit correction protocols, and truthful V00 historical handling. Independent verification shows 22 nonhistorical CPU smoke rows pass, selected V04/V06/C01 profiles measure end-to-end volumes/slices/valid voxels, absolute /tmp paths pass, owned tests 13/13 pass, and the full repository passes 337 tests with one warning. Real patient TRAIN and GPU runs remain NOT_RUN by contract, with no further owned integration blockers.",
+        "type": "worker_done",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_8d85746b7e04\",\"dispatchId\":\"ctx_b826a43cc764\",\"outcome\":\"succeeded\",\"filesModified\":[\"configs/native_volume/*.json\",\"scripts/volume_preflight.py\",\"scripts/volume_smoke.py\",\"scripts/volume_profile.py\",\"tests/test_volume_registry.py\",\"tests/test_volume_cli.py\",\"docs/native_3d/RUNBOOK.md\",\"reports/native_volume_pilot/tooling.md\",\"reports/native_volume_pilot/tooling_*.json\"],\"reportPath\":\"reports/native_volume_pilot/tooling.md\"}",
+        "created_at": "2026-10-26T01:43:49Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_400150436a68",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_401b20ac-81f8-46d6-88be-9ec469e507ca",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Follow-up defects found",
+        "body": "Current review confirms remaining issues: legacy loader trusts manifest canonical map and allows partial mappings; train_volume shortens scheduler horizon and save_every is unused; aux metric aggregation squares support counts; config silently accepts regions.detached=false, temporal.window arbitrary, native_z+spacing, and active U auxiliaries in supervised methods. I will repair owned files/tests; tooling configs still declare DINO widths [8,16,24,32], so please coordinate ctx_b826a43cc764/ctx_afc99ff2def0 for DINO decoder widths [96,128,192,256] and explicit strong_intensity+eval policy.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": null,
+        "created_at": "2026-10-26T01:44:46Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_ebb579c65771",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_3f856468-6fc1-4b86-9b48-817902529036",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Correction C2 prior provenance categories lost on replay",
+        "body": "Same current correction snapshot: manual_only, no new prompts, prior_labels=[0,1,2,255,3], prior_provenance=[ORIGINAL1,PSEUDO4,PROPAGATED3,UNKNOWN255,MANUAL2], affine identity. Output labels preserved but provenance becomes [1,1,1,255,2], losing pseudo/propagated provenance even on no-op. Preserve all prior provenance categories for untouched support; not only prior MANUAL. Add to final correction repair with negative/manual/background and no-prior unknown witnesses. Real TRAIN-L membership is currently a trusted role/budget declaration rather than manifest-verified; disclose this limit or bind actual labeled manifest when using real simulation.",
+        "type": "escalation",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_041ea9f6373b\",\"dispatchId\":\"ctx_a1f3944f22c6\"}",
+        "created_at": "2026-10-26T01:44:59Z",
+        "delivered_at": null
+      }
+    ],
+    "count": 6,
+    "replayed": false,
+    "acknowledged": "delivery_aa16b9c29a30",
+    "timedOut": false,
+    "cancelled": false,
+    "connectionLost": false,
+    "mutation": {
+      "requestId": "da0fe9c9-1100-4b9a-bfe7-c47f53dfe975",
+      "replayed": false
+    }
+  },
+  "_meta": {
+    "runtimeId": "c8b104cf-2048-4e37-ba45-397799d374ac"
+  }
+}

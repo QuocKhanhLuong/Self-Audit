@@ -1,0 +1,113 @@
+{
+  "id": "82cad589-62a2-4a95-808c-60943ef53a1a",
+  "ok": true,
+  "result": {
+    "runId": "run_0a8d03557566",
+    "deliveryId": "delivery_7d90ce7599ff",
+    "messages": [
+      {
+        "id": "msg_7f04c1451fcd",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_c9c2d718-cc7b-4e8b-8f7e-a38cf39b3bdf",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Corrected model APIs ready",
+        "body": "Models corrected per review: volume25d/hybrid now call unchanged self_audit.model.build_model via _load_native_student seam for both synthetic and hash-pinned non-synthetic DINO; missing fields fail closed. Hybrid reuses NativeStudent input_adapter, 4 stages, lateral/up/refine, fixed window/detail, with fork_rng multiscale residuals; residual_init=zero exact parity test passes, mix cross-Z, planar_control active per-slice. CNN3D now has learned multiscale decoder/skip U-Net. SkipFusion matched_additive is nonlinear near-capacity to delayed, and frozen intervention is separate from stopgrad. Owned tests 14 passed; report updated.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_2e8961879f13\",\"dispatchId\":\"ctx_51b72a3898e9\"}",
+        "created_at": "2026-10-26T01:10:07Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_0a7f24bed122",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_c9c2d718-cc7b-4e8b-8f7e-a38cf39b3bdf",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Models owner acceptance evidence",
+        "body": "Owned implementation now satisfies the requested model gaps. Production paths call unchanged legacy build_model for both volume25d and hybrid (strict DINO source/commit/weights/hash validation; mocked seam tested), hybrid uses all NativeStudent multiscale stages/lateral-up-refine/fixed window/detail and fork_rng residuals with exact zero parity, planar control is trainable per-slice, SkipFusion matched_additive is nonlinear near-capacity with separate frozen intervention, and CNN3D is learned residual U-Net with decoder skips and anisotropic planning. Exact checks: owned tests 14 passed; check_repo PASS; full pytest 246 passed/1 warning (pre-existing TorchScript deprecation); no GPU/patient/assets accessed.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_2e8961879f13\",\"dispatchId\":\"ctx_51b72a3898e9\"}",
+        "created_at": "2026-10-26T01:10:56Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_1327436a03ec",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_c9c2d718-cc7b-4e8b-8f7e-a38cf39b3bdf",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Corrected model ladder delivered",
+        "body": "Fixed all owned model gaps: production volume25d and hybrid routes now delegate to unchanged hash-pinned NativeStudent loading, hybrid reuses all multiscale stages/window/detail with exact zero-residual parity and active mix/planar controls, and CNN3D is a learned anisotropic residual U-Net with decoder skips. Matched-additive fusion now has nonlinear near-capacity accounting, frozen-checkpoint intervention is separate from stop-gradient, and owned tests plus strict loader/edge-case coverage pass 14/14; reports/native_volume_pilot/models.md records APIs, analytical costs, boundaries, and evidence. Repository check_repo passes and full CPU pytest passes 246 tests with one pre-existing warning; real DINO/GPU/patient execution remains NOT RUN pending local verified assets and future integration routing.",
+        "type": "worker_done",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_2e8961879f13\",\"dispatchId\":\"ctx_51b72a3898e9\",\"outcome\":\"succeeded\",\"filesModified\":[\"self_audit/volume/models.py\",\"self_audit/volume/fusion.py\",\"tests/test_volume_models.py\",\"tests/test_volume_fusion.py\",\"reports/native_volume_pilot/models.md\"],\"reportPath\":\"reports/native_volume_pilot/models.md\"}",
+        "created_at": "2026-10-26T01:10:59Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_8fc809f68db7",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_7b722567-108e-405a-8a04-e44ce118e92f",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Regions and temporal implementation complete",
+        "body": "Implemented deterministic physical 3D supervoxel region learning in self_audit/volume/regions.py and operational motion-aligned phase-correlation temporal consistency with occlusion checking in self_audit/volume/temporal.py. Verified all 18 owned unit tests pass with verified subpixel phantom registration, stop-gradient detached targets, and exact state serialization through VolumeTrainer. Future GPU runs on PRO4000 remain NOT RUN pending rental, with software interfaces ready for coordinator and integration owner execution.",
+        "type": "worker_done",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_305090c74baf\",\"dispatchId\":\"ctx_1333377b0986\",\"outcome\":\"succeeded\",\"filesModified\":[\"self_audit/volume/regions.py\",\"self_audit/volume/temporal.py\",\"tests/test_volume_regions.py\",\"tests/test_volume_temporal.py\"],\"reportPath\":\"reports/native_volume_pilot/agy_worker_regions_temporal.md\"}",
+        "created_at": "2026-10-26T01:11:24Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_92584486c9f0",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_4faf1227-3f17-4770-8d3d-269fa519e93b",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "G9 native3D correction workflow complete",
+        "body": "Implemented G9 executable native-3D correction workflow in self_audit/volume/correction.py and scripts/volume_correct.py featuring deterministic geodesic/bilateral refinement, strict hard manual preservation, separated provenance tracking (ORIGINAL, MANUAL, PROPAGATED, PSEUDO, UNKNOWN), and TRAIN-L budget click simulation. Verified 20/20 owned unit and CLI tests in tests/test_volume_correction.py passing on CPU alongside repository checks and the full volume test suite (85/85 tests passing). All CPU/software contracts are complete with durable documentation in reports/native_volume_pilot/agy_worker_correction.md, leaving only future PRO4000 GPU runs to be executed when rented.",
+        "type": "worker_done",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_17c3b359b118\",\"dispatchId\":\"ctx_e590fb361b61\",\"outcome\":\"succeeded\",\"filesModified\":[\"self_audit/volume/correction.py\",\"scripts/volume_correct.py\",\"tests/test_volume_correction.py\",\"reports/native_volume_pilot/agy_worker_correction.md\"],\"reportPath\":\"reports/native_volume_pilot/agy_worker_correction.md\"}",
+        "created_at": "2026-10-26T01:13:43Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_aed601331ef8",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_401b20ac-81f8-46d6-88be-9ec469e507ca",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Follow-up API audit",
+        "body": "I found current engine still has fallback model/loss/imports and broad auxiliary catches. I will remove them and use direct APIs: losses.supervised_volume_loss/pseudo_volume_ce/combine_accumulated_losses/pseudo_weight_ramp; optim.build_optimizers/build_schedulers/safe_optimizer_step; RegionManager.targets returning RegionTargets + regions.region_consistency_loss; temporal.temporal_consistency using adjacent teacher probabilities. Please flag any interface changes while I implement strict propagation.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_fe38771f8432\",\"dispatchId\":\"ctx_5f6b42452746\"}",
+        "created_at": "2026-10-26T01:15:04Z",
+        "delivered_at": null
+      }
+    ],
+    "count": 6,
+    "replayed": false,
+    "acknowledged": "delivery_4db50ccb7ca6",
+    "timedOut": false,
+    "cancelled": false,
+    "connectionLost": false,
+    "mutation": {
+      "requestId": "977f7ee9-2027-4b75-bbf8-623153fb7cba",
+      "replayed": false
+    }
+  },
+  "_meta": {
+    "runtimeId": "c8b104cf-2048-4e37-ba45-397799d374ac"
+  }
+}

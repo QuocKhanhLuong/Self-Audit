@@ -1,0 +1,1151 @@
+[
+  {
+    "name": "check_repo",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/check_repo.py"
+    ],
+    "cwd": "/Users/alvinluong/Self-Audit-native-volume-ema-pilot",
+    "exit_code": 0,
+    "wall_seconds": 0.033540291246026754
+  },
+  {
+    "name": "pytest",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "-m",
+      "pytest",
+      "-q"
+    ],
+    "cwd": "/Users/alvinluong/Self-Audit-native-volume-ema-pilot",
+    "exit_code": 0,
+    "wall_seconds": 28.362994958180934
+  },
+  {
+    "name": "preflight_V00",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_preflight.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/V00.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 1.3495135409757495
+  },
+  {
+    "name": "smoke_V00",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_smoke.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/V00.json",
+      "--steps",
+      "2",
+      "--crop-size",
+      "32",
+      "--batch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-seconds",
+      "60",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/smoke_V00.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 1.3455411670729518
+  },
+  {
+    "name": "preflight_V01",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_preflight.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/V01.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 1.3734087496995926
+  },
+  {
+    "name": "smoke_V01",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_smoke.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/V01.json",
+      "--steps",
+      "2",
+      "--crop-size",
+      "32",
+      "--batch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-seconds",
+      "60",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/smoke_V01.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.6334204580634832
+  },
+  {
+    "name": "preflight_V02",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_preflight.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/V02.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 1.386197834275663
+  },
+  {
+    "name": "smoke_V02",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_smoke.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/V02.json",
+      "--steps",
+      "2",
+      "--crop-size",
+      "32",
+      "--batch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-seconds",
+      "60",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/smoke_V02.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.2797105410136282
+  },
+  {
+    "name": "preflight_V03",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_preflight.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/V03.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 1.3176364582031965
+  },
+  {
+    "name": "smoke_V03",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_smoke.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/V03.json",
+      "--steps",
+      "2",
+      "--crop-size",
+      "32",
+      "--batch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-seconds",
+      "60",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/smoke_V03.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.3893388328142464
+  },
+  {
+    "name": "preflight_V04",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_preflight.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/V04.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 1.3602157081477344
+  },
+  {
+    "name": "smoke_V04",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_smoke.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/V04.json",
+      "--steps",
+      "2",
+      "--crop-size",
+      "32",
+      "--batch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-seconds",
+      "60",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/smoke_V04.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 3.0243817078880966
+  },
+  {
+    "name": "preflight_V05",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_preflight.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/V05.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.0878284173086286
+  },
+  {
+    "name": "smoke_V05",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_smoke.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/V05.json",
+      "--steps",
+      "2",
+      "--crop-size",
+      "32",
+      "--batch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-seconds",
+      "60",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/smoke_V05.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.8156697498634458
+  },
+  {
+    "name": "preflight_V06",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_preflight.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/V06.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 1.4646222088485956
+  },
+  {
+    "name": "smoke_V06",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_smoke.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/V06.json",
+      "--steps",
+      "2",
+      "--crop-size",
+      "32",
+      "--batch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-seconds",
+      "60",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/smoke_V06.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.377403208054602
+  },
+  {
+    "name": "preflight_V07",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_preflight.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/V07.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 1.3326148330233991
+  },
+  {
+    "name": "smoke_V07",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_smoke.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/V07.json",
+      "--steps",
+      "2",
+      "--crop-size",
+      "32",
+      "--batch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-seconds",
+      "60",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/smoke_V07.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.3391292500309646
+  },
+  {
+    "name": "preflight_V08",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_preflight.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/V08.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 1.3548905001953244
+  },
+  {
+    "name": "smoke_V08",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_smoke.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/V08.json",
+      "--steps",
+      "2",
+      "--crop-size",
+      "32",
+      "--batch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-seconds",
+      "60",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/smoke_V08.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.320364000275731
+  },
+  {
+    "name": "preflight_O01",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_preflight.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/O01.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 1.4772535422816873
+  },
+  {
+    "name": "smoke_O01",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_smoke.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/O01.json",
+      "--steps",
+      "2",
+      "--crop-size",
+      "32",
+      "--batch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-seconds",
+      "60",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/smoke_O01.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.485581791959703
+  },
+  {
+    "name": "preflight_O02",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_preflight.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/O02.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 1.3636276246979833
+  },
+  {
+    "name": "smoke_O02",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_smoke.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/O02.json",
+      "--steps",
+      "2",
+      "--crop-size",
+      "32",
+      "--batch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-seconds",
+      "60",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/smoke_O02.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.655393083114177
+  },
+  {
+    "name": "preflight_O03",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_preflight.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/O03.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 1.342158333864063
+  },
+  {
+    "name": "smoke_O03",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_smoke.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/O03.json",
+      "--steps",
+      "2",
+      "--crop-size",
+      "32",
+      "--batch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-seconds",
+      "60",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/smoke_O03.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.4588994588702917
+  },
+  {
+    "name": "preflight_S01",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_preflight.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/S01.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 1.3513669590465724
+  },
+  {
+    "name": "smoke_S01",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_smoke.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/S01.json",
+      "--steps",
+      "2",
+      "--crop-size",
+      "32",
+      "--batch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-seconds",
+      "60",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/smoke_S01.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.4533429169096053
+  },
+  {
+    "name": "preflight_S02",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_preflight.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/S02.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 1.387433957774192
+  },
+  {
+    "name": "smoke_S02",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_smoke.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/S02.json",
+      "--steps",
+      "2",
+      "--crop-size",
+      "32",
+      "--batch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-seconds",
+      "60",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/smoke_S02.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.4332521250471473
+  },
+  {
+    "name": "preflight_R00",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_preflight.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/R00.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 1.4738401672802866
+  },
+  {
+    "name": "smoke_R00",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_smoke.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/R00.json",
+      "--steps",
+      "2",
+      "--crop-size",
+      "32",
+      "--batch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-seconds",
+      "60",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/smoke_R00.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.478548541199416
+  },
+  {
+    "name": "preflight_R01",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_preflight.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/R01.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 1.3355530840344727
+  },
+  {
+    "name": "smoke_R01",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_smoke.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/R01.json",
+      "--steps",
+      "2",
+      "--crop-size",
+      "32",
+      "--batch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-seconds",
+      "60",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/smoke_R01.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.5542895407415926
+  },
+  {
+    "name": "preflight_R02",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_preflight.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/R02.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 1.5197483748197556
+  },
+  {
+    "name": "smoke_R02",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_smoke.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/R02.json",
+      "--steps",
+      "2",
+      "--crop-size",
+      "32",
+      "--batch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-seconds",
+      "60",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/smoke_R02.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.850927249994129
+  },
+  {
+    "name": "preflight_T00",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_preflight.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/T00.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 1.3492932501249015
+  },
+  {
+    "name": "smoke_T00",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_smoke.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/T00.json",
+      "--steps",
+      "2",
+      "--crop-size",
+      "32",
+      "--batch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-seconds",
+      "60",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/smoke_T00.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.677095416933298
+  },
+  {
+    "name": "preflight_T01",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_preflight.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/T01.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 1.380834249779582
+  },
+  {
+    "name": "smoke_T01",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_smoke.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/T01.json",
+      "--steps",
+      "2",
+      "--crop-size",
+      "32",
+      "--batch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-seconds",
+      "60",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/smoke_T01.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.3491649157367647
+  },
+  {
+    "name": "preflight_I00",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_preflight.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/I00.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 1.32101225014776
+  },
+  {
+    "name": "smoke_I00",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_smoke.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/I00.json",
+      "--steps",
+      "2",
+      "--crop-size",
+      "32",
+      "--batch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-seconds",
+      "60",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/smoke_I00.json",
+      "--correction-config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/I00_correction.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.3320951252244413
+  },
+  {
+    "name": "preflight_I01",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_preflight.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/I01.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 1.307879792060703
+  },
+  {
+    "name": "smoke_I01",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_smoke.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/I01.json",
+      "--steps",
+      "2",
+      "--crop-size",
+      "32",
+      "--batch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-seconds",
+      "60",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/smoke_I01.json",
+      "--correction-config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/I01_correction.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.334973624907434
+  },
+  {
+    "name": "preflight_C00",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_preflight.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/C00.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 1.2926612081937492
+  },
+  {
+    "name": "smoke_C00",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_smoke.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/C00.json",
+      "--steps",
+      "2",
+      "--crop-size",
+      "32",
+      "--batch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-seconds",
+      "60",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/smoke_C00.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.2085423339158297
+  },
+  {
+    "name": "preflight_C01",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_preflight.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/C01.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 1.3391159591265023
+  },
+  {
+    "name": "smoke_C01",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_smoke.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/C01.json",
+      "--steps",
+      "2",
+      "--crop-size",
+      "32",
+      "--batch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-seconds",
+      "60",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/smoke_C01.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.2848258330486715
+  },
+  {
+    "name": "profile_V01",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_profile.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/V01.json",
+      "--iterations",
+      "10",
+      "--warmup",
+      "2",
+      "--crop-size",
+      "32",
+      "--microbatch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-minutes",
+      "1",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/profile_V01.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.715341459028423
+  },
+  {
+    "name": "profile_V04",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_profile.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/V04.json",
+      "--iterations",
+      "10",
+      "--warmup",
+      "2",
+      "--crop-size",
+      "32",
+      "--microbatch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-minutes",
+      "1",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/profile_V04.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.7988489591516554
+  },
+  {
+    "name": "profile_V06",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_profile.py",
+      "--config",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/configs/native_volume/V06.json",
+      "--iterations",
+      "10",
+      "--warmup",
+      "2",
+      "--crop-size",
+      "32",
+      "--microbatch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-minutes",
+      "1",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/profile_V06.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.8805034160614014
+  },
+  {
+    "name": "profile_V06_matchedZ3",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_profile.py",
+      "--config",
+      "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-htm7s0un/matchedZ3/V06.json",
+      "--iterations",
+      "10",
+      "--warmup",
+      "2",
+      "--crop-size",
+      "32",
+      "--microbatch",
+      "1",
+      "--device",
+      "cpu",
+      "--max-minutes",
+      "1",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/profile_V06_matchedZ3.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.683294666931033
+  },
+  {
+    "name": "profile_V04_m2a1",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_profile.py",
+      "--config",
+      "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-htm7s0un/m2a1/V04.json",
+      "--iterations",
+      "10",
+      "--warmup",
+      "2",
+      "--crop-size",
+      "32",
+      "--device",
+      "cpu",
+      "--max-minutes",
+      "1",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/profile_V04_m2a1.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 3.123778416775167
+  },
+  {
+    "name": "profile_V04_m1a2",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_profile.py",
+      "--config",
+      "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-htm7s0un/m1a2/V04.json",
+      "--iterations",
+      "10",
+      "--warmup",
+      "2",
+      "--crop-size",
+      "32",
+      "--device",
+      "cpu",
+      "--max-minutes",
+      "1",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/profile_V04_m1a2.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 3.5368904592469335
+  },
+  {
+    "name": "train_full4",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/train.py",
+      "--config",
+      "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-htm7s0un/train_config.json",
+      "--data",
+      "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-htm7s0un/data/train.json",
+      "--data-sha256",
+      "6932474cbab796f47ee5e98088b588158a737ddac1e0c37064d8c2bdefcc6794",
+      "--geometry",
+      "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-htm7s0un/data/geometry.json",
+      "--geometry-sha256",
+      "f7ef503cf11ead739f6596359f81592375d423cc44c4bb874442bac3c25cd205",
+      "--device",
+      "cpu",
+      "--synthetic",
+      "--out",
+      "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-htm7s0un/full",
+      "--steps",
+      "4"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.574591707903892
+  },
+  {
+    "name": "train_stop2",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/train.py",
+      "--config",
+      "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-htm7s0un/train_config.json",
+      "--data",
+      "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-htm7s0un/data/train.json",
+      "--data-sha256",
+      "6932474cbab796f47ee5e98088b588158a737ddac1e0c37064d8c2bdefcc6794",
+      "--geometry",
+      "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-htm7s0un/data/geometry.json",
+      "--geometry-sha256",
+      "f7ef503cf11ead739f6596359f81592375d423cc44c4bb874442bac3c25cd205",
+      "--device",
+      "cpu",
+      "--synthetic",
+      "--out",
+      "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-htm7s0un/split",
+      "--steps",
+      "2"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.332544249948114
+  },
+  {
+    "name": "train_resume4",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/train.py",
+      "--config",
+      "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-htm7s0un/train_config.json",
+      "--data",
+      "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-htm7s0un/data/train.json",
+      "--data-sha256",
+      "6932474cbab796f47ee5e98088b588158a737ddac1e0c37064d8c2bdefcc6794",
+      "--geometry",
+      "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-htm7s0un/data/geometry.json",
+      "--geometry-sha256",
+      "f7ef503cf11ead739f6596359f81592375d423cc44c4bb874442bac3c25cd205",
+      "--device",
+      "cpu",
+      "--synthetic",
+      "--out",
+      "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-htm7s0un/resumed",
+      "--steps",
+      "4",
+      "--resume",
+      "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-htm7s0un/split",
+      "--resume-sha256",
+      "06c1ea68091fb1a582a8f0ae4a8b5e62baa062b645e4dbce77d5707c1babf2fb"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.3809063751250505
+  },
+  {
+    "name": "evaluate_image_only",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_evaluate.py",
+      "--checkpoint",
+      "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-htm7s0un/resumed",
+      "--checkpoint-sha256",
+      "c580100a56895c5e8e0c68b11a7a0393e758f7d013f2c74d8aa61000084b6b9b",
+      "--manifest",
+      "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-htm7s0un/data/eval.json",
+      "--manifest-sha256",
+      "692364ea7ab700971098b5e5fe00b246faecdb075608e5dcb69c2c02801acf2f",
+      "--geometry",
+      "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-htm7s0un/data/eval_geometry.json",
+      "--geometry-sha256",
+      "0f89dcfd11934727ccda07b617ddbfccaa629919e0aec347ed13e3e4dbfac782",
+      "--prediction-model",
+      "student",
+      "--synthetic",
+      "--device",
+      "cpu",
+      "--tile-size",
+      "17",
+      "--tile-overlap",
+      "2",
+      "--slab-depth",
+      "3",
+      "--slab-overlap",
+      "1",
+      "--predictions-dir",
+      "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-htm7s0un/predictions",
+      "--output",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/reports/native_volume_pilot/verified/evaluation.json"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 2.3196940841153264
+  },
+  {
+    "name": "export_student",
+    "argv": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/scripts/volume_export.py",
+      "--checkpoint",
+      "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-htm7s0un/resumed",
+      "--checkpoint-sha256",
+      "c580100a56895c5e8e0c68b11a7a0393e758f7d013f2c74d8aa61000084b6b9b",
+      "--out",
+      "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-htm7s0un/export",
+      "--device",
+      "cpu",
+      "--synthetic"
+    ],
+    "cwd": "/tmp",
+    "exit_code": 0,
+    "wall_seconds": 1.6861463752575219
+  }
+]

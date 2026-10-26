@@ -1,0 +1,128 @@
+{
+  "id": "bc3eca45-751e-40a5-8aff-98bb5516ae80",
+  "ok": true,
+  "result": {
+    "runId": "run_0a8d03557566",
+    "deliveryId": "delivery_6fc8d52771e1",
+    "messages": [
+      {
+        "id": "msg_7b3b58dbc409",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_01a2835d-fcca-4631-b589-ed7ac00100fa",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "G0 checks restored and green",
+        "body": "evaluation.py restored by concurrent worker; owned tests now 15 passed. check_repo.py PASS. Full suite current receipt 277 passed, 8 failed only in other workers' correction/regions tests. Report updated with exact receipts and physical metadata CLI contract.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_27287e46be04\",\"dispatchId\":\"ctx_103e2ce6d02d\"}",
+        "created_at": "2026-10-26T01:31:13Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_a34af5cf673d",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_1fc79f1c-17a9-4d06-9d0d-f2ce56cae9ca",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "owned verification update",
+        "body": "Owned model/fusion tests now 23 passed after strict off/planar depth-kernel rejection and CNN stage-width-tail test. check_repo PASS, py_compile PASS. Latest hashes: models.py 058ccada6ab72bbcdeb6efb77aed4a0506f6d4afc68683dcdad442ac6b04719a; fusion.py 6af0b22f0b982a70f6bdf6d9a10ac8832f3a4090ae6bfca01d7bcdf7bc5063a4; tests models c90e5ef9a6bb462a697ca018495db9d26e12c1ffb4f9c58849d77faf1d992089; tests fusion 51261d8d457bd0e38e2d9b4c20106a7c0d7a4a1fc55f431ec2dfe1a0fece6a95; report 392ebbc82d47f53361af0c01142980229085b75ab312258fe6086bafa1f862a1.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_ad3da5fd618d\",\"dispatchId\":\"ctx_65db715ab627\"}",
+        "created_at": "2026-10-26T01:31:26Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_198ae0f8e4a0",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_01a2835d-fcca-4631-b589-ed7ac00100fa",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Final G0 verification",
+        "body": "After receipt/report update, py_compile owned files PASS, tests/test_volume_geometry.py + tests/test_volume_data.py = 15 passed, check_repo.py PASS. volume_prepare now reports actual labeled mask_sources count (0 for image-only); physical metadata remains hash-pinned and U mask_sources rejected. Full suite receipt remains 277 passed, 8 unrelated correction/regions failures.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_27287e46be04\",\"dispatchId\":\"ctx_103e2ce6d02d\"}",
+        "created_at": "2026-10-26T01:31:37Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_05bbc297d8a0",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_01a2835d-fcca-4631-b589-ed7ac00100fa",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "G0 geometry/data fixes complete",
+        "body": "Implemented sparse labeled-frame sampling, non-duplicating Z slabs with invalid padding, conservative full-stencil probability inversion, probability normalization on support, and physical NIfTI/sidecar provenance validation across the owned geometry/data/preparation paths. Added independent affine/resampling/slab/unknown/sparse-frame/NIfTI regressions and a geometry report; py_compile, check_repo.py, and owned tests pass (15 passed), while the full suite is 277 passed with 8 unrelated correction/regions failures. Remaining integration action is coordinator reconciliation of other workers' failures and final publication; no patient/GPU run or commit was performed.",
+        "type": "worker_done",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_27287e46be04\",\"dispatchId\":\"ctx_103e2ce6d02d\",\"outcome\":\"succeeded\",\"filesModified\":[\"self_audit/volume/geometry.py\",\"self_audit/volume/data.py\",\"scripts/volume_prepare.py\",\"tests/test_volume_geometry.py\",\"tests/test_volume_data.py\",\"reports/native_volume_pilot/geometry.md\"],\"reportPath\":\"reports/native_volume_pilot/geometry.md\"}",
+        "created_at": "2026-10-26T01:31:49Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_2a5fec323f7f",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_1fc79f1c-17a9-4d06-9d0d-f2ce56cae9ca",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "latest full suite 299/3",
+        "body": "Latest shared full pytest: 299 passed, 3 failed, 1 warning. Remaining failures are correction-owner strict TRAIN-L click-simulation contract vs legacy tests/CLI passing TRAIN; owned models/fusion 23 passed. Report updated accordingly.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_ad3da5fd618d\",\"dispatchId\":\"ctx_65db715ab627\"}",
+        "created_at": "2026-10-26T01:32:17Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_07c9e7c0b72b",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_1fc79f1c-17a9-4d06-9d0d-f2ce56cae9ca",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "models/fusion API handoff",
+        "body": "API handoff: build_volume_model(config, synthetic=False)->(nn.Module, provenance), model(image B,3,Z,H,W, valid_mask B,Z,H,W)->B,4,Z,H,W, parameter_groups() disjoint encoder/body/head; Hybrid depth_mode off|mix|planar_control, scalar width is residual bottleneck, widths list exactly four native stage widths, z_kernels depth maps cross-Z, z_strides must be unit; fixed window is default but explicit mode none is preserved; CNN3D widths tail and anisotropic kernels/strides are honored. CrossZResidual(... zero_init=True) and SkipFusion(... zero_init=True or residual_init='zero') zero only terminal projection. Capacity reports exact whole-model parameter/MAC totals. Owned tests 23 passed; no commit/push.",
+        "type": "handoff",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_ad3da5fd618d\",\"dispatchId\":\"ctx_65db715ab627\"}",
+        "created_at": "2026-10-26T01:32:23Z",
+        "delivered_at": null
+      },
+      {
+        "id": "msg_9f476afb9559",
+        "run_id": "run_0a8d03557566",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_3efcab68-6585-4672-b631-52e9a4a7cc3c",
+        "to_handle": "run:run_0a8d03557566",
+        "subject": "Evaluation APIs ready for integration seam",
+        "body": "Implemented evaluation.py APIs: predict_native_volume(model,image_tzyx,affine,slab_depth,tile_size,tile_overlap,slab_overlap,native_valid,device)->(T,4,Z,Y,X probs,TZYX support); evaluate_manifest(... manifest+sha, geometry+sha, prediction_model, split, allow_labels=False, synthetic=False)->frame/patient metrics; load_checkpoint_student_only for export without trainer/EMA/pretrained weights; export_student v2 strict payload/config/source hashes. volume_evaluate now requires manifest/geometry hashes and runs real tiled native path (labels only --score/--allow-labels); volume_export uses student-only checkpoint path and explicit --synthetic. No model.py edits; DINO architecture-only loader uses local pinned source with pretrained=False temporary factory seam. Owned evaluation tests 6 PASS.",
+        "type": "status",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_922936fa2d56\",\"dispatchId\":\"ctx_419347c963a7\"}",
+        "created_at": "2026-10-26T01:32:28Z",
+        "delivered_at": null
+      }
+    ],
+    "count": 7,
+    "replayed": false,
+    "acknowledged": "delivery_bda8029dd006",
+    "timedOut": false,
+    "cancelled": false,
+    "connectionLost": false,
+    "mutation": {
+      "requestId": "a7ecdb6e-d92b-4c8a-969c-5ea01964059e",
+      "replayed": false
+    }
+  },
+  "_meta": {
+    "runtimeId": "c8b104cf-2048-4e37-ba45-397799d374ac"
+  }
+}

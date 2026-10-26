@@ -1,0 +1,35 @@
+{
+  "status": "PASS",
+  "evidence": "CPU_SYNTHETIC_LEGACY_COMPATIBILITY_ONLY",
+  "reference_commit": "486fae40c490e382d58896442215476d7d32095e",
+  "command": [
+    "python",
+    "/Users/alvinluong/Self-Audit-native-volume-ema-pilot/train.py",
+    "--config",
+    "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-v2-parity-q690k5c0/config.json",
+    "--data",
+    "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-v2-parity-q690k5c0/data/train.json",
+    "--data-sha256",
+    "420e65930f3f57c6088ca8dc082ccac96e910d724c903d9185efaa3c4d9a56bd",
+    "--out",
+    "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/native-volume-final-v2-parity-xkb7a2vv/pilot",
+    "--device",
+    "cpu",
+    "--synthetic"
+  ],
+  "cwd": "/tmp",
+  "wall_seconds": 2.401163083035499,
+  "payload_differences": [],
+  "exact_step_rows": [
+    true,
+    true,
+    true
+  ],
+  "train_py_sha256": "49a18abff36210d351ad74b09c8c47704ffc290125fbeeeef97f115da737140f",
+  "config_sha256": "21a7126bd81fc7bf32af984560f5c5189235c6feabbe6edda67e6baa2e395c3c",
+  "steps": 3,
+  "supervised_updates": 3,
+  "pseudo_updates": 2,
+  "ema_updates": 3,
+  "note": "Historical snapshot unchanged; only entrypoint/source identity intentionally differs. Not canonical batch24 efficacy."
+}

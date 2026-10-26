@@ -1,0 +1,33 @@
+{
+  "schema": "self_audit.semi_v2",
+  "status": "COMPLETED",
+  "synthetic": true,
+  "quality": "NOT_EVALUATED",
+  "steps": 3,
+  "supervised_updates": 3,
+  "pseudo_accepted": 2,
+  "ema_updates": 3,
+  "geometry_updates": 0,
+  "elapsed_seconds": 0.1035173749551177,
+  "seen_supervised": [
+    "synthetic_000",
+    "synthetic_001",
+    "synthetic_002"
+  ],
+  "seen_audit": [
+    "synthetic_000",
+    "synthetic_001"
+  ],
+  "seen_unlabeled": [
+    "synthetic_003",
+    "synthetic_004",
+    "synthetic_005"
+  ],
+  "final_manifest_sha256": "0b9a04a09f64c3ab70dc262ceefc1b3f61ffe1515637d879d1a291e37fb7df2d",
+  "label_budget": 3,
+  "teacher_memory_arm": "A0",
+  "teacher_memory_source_bank_sha256": null,
+  "teacher_memory_effective_bank_sha256": null,
+  "label_reads_outside_budget": [],
+  "guard_scope": "extra pseudo step vs supervised-only state on current TRAIN audit slice only"
+}
