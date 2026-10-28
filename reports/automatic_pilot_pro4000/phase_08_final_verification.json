@@ -1,0 +1,74 @@
+{
+  "schema": "self_audit.pro4000.phase.v1",
+  "phase": "final_verification",
+  "utc": "2026-10-28T10:32:59.149232+00:00",
+  "status": "COMPLETE",
+  "base_commit": "93f7c7a1f9606a68955f849dd580b90462ad329e",
+  "test_suite": "535 passed, 1 warning in 128.48s",
+  "check_repo": "PASS",
+  "output_audit": {
+    "status": "PASS",
+    "checkpoint_count": 20,
+    "evaluation_count": 25,
+    "native_prediction_file_count": 1160
+  },
+  "output_audit_sha256": "2d8c8011a2f83963acc893056f227a7113cb03bdd192e649ee575de723891b9a",
+  "acdc_decision": {
+    "decision": "NO_GO",
+    "quality_status": "MEASURED",
+    "gates": {
+      "joint_beats_scalar": false,
+      "dice_guard_beats_smaller_lr": false,
+      "u_beats_extra_supervised": false
+    },
+    "scores": {
+      "joint_dice": 0.0,
+      "scalar_dice": 0.0,
+      "smaller_lr": 0.0,
+      "extra_supervised": 0.0
+    },
+    "per_class_primary_results": {
+      "joint_dice": {
+        "RV": 0.0,
+        "MYO": 0.0,
+        "LV": 0.0
+      },
+      "scalar_dice": {
+        "RV": 0.0,
+        "MYO": 0.0,
+        "LV": 0.0
+      },
+      "smaller_lr": {
+        "RV": 0.0,
+        "MYO": 0.0,
+        "LV": 0.0
+      },
+      "extra_supervised": {
+        "RV": 0.0,
+        "MYO": 0.0,
+        "LV": 0.0
+      }
+    },
+    "matched_compute": {
+      "status": "VERIFIED_MATCHED",
+      "comparison_mode": "equal_time",
+      "steps": null,
+      "time_budget_seconds": 600.0,
+      "device": "cuda",
+      "hardware": "PRO4000 24GB"
+    },
+    "reason": "One or more independent query gates failed."
+  },
+  "mnm_full_ema_foreground_patient_macro": 0.410174324677344,
+  "final_report_sha256": "e65ccad7834d74915fd36af56c6e65844f68dfdbeef8172a4789786d1fe97f04",
+  "comparison_csv_sha256": "cfb5f3a608c6db7d4d3581604e74f138b36b3d880b3a9f5e81818118d9c1e6c2",
+  "patient_metrics_csv_sha256": "cce03a55e488aeaf6976c1b423c811161a1d6646e01e35ab15c72e6452acace9",
+  "failure_patients_csv_sha256": "655bb6ff5266ccc56f01d572768d581c78e8d202d9358c6958e9e4a18006e2f7",
+  "artifact_hashes_sha256": "b666d37f8ad0c243d3a92813365dd5927bea6421fbf224c9a901ec9b0afa13c8",
+  "paths": {
+    "final_report": "reports/automatic_pilot_pro4000/FINAL_REPORT.md",
+    "checkpoints": "/workspace/Self-Audit/runs/pro4000/",
+    "raw_acdc": "/workspace/Self-Audit/data/ACDC/",
+    "raw_mnm": "/workspace/Self-Audit/data/MnM/"
+  }
+}
