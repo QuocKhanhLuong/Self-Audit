@@ -95,7 +95,7 @@ vals = []
 for pid, per in results_t['full_ema']['metrics']['patients'].items():
     scores = [per[c] for c in ('RV', 'MYO', 'LV') if per[c] is not None]
     vals.append((statistics.mean(scores), pid))
-L += table(['Patient', 'FG Dice'], [[pid, f(v)] for v, pid in sorted(vals)[:5]])
+L += [''] + table(['Patient', 'FG Dice'], [[pid, f(v)] for v, pid in sorted(vals)[:5]])
 L += ['', '## M&Ms VAL32 external generalization', '']
 L += table(['Arm', 'RV', 'MYO', 'LV', 'FG mean', 'Patients'], [[a, *[f(x['metrics']['macro_patient'][c]['dice']) for c in ('RV','MYO','LV')], f(x['metrics']['foreground_patient_macro']), x['metrics']['total_patients_scored']] for a, x in mnm.items()])
 L += ['', 'The four declared primary arms score 0 foreground Dice on VAL32. The full_ema row is a supplemental separate-dataset comparator, exported and scored with the same verified adapter; it does not alter the ACDC GO/NO-GO gate. M&Ms original TEST136 was not scored.',
