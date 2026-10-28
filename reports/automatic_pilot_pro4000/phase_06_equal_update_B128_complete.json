@@ -1,0 +1,134 @@
+{
+  "schema": "self_audit.pro4000.phase.v1",
+  "phase": "equal_update_B128_M40_complete",
+  "utc": "2026-10-28T08:18:55.801243+00:00",
+  "base_commit": "93f7c7a1f9606a68955f849dd580b90462ad329e",
+  "source_sha256": "177ca3d21859a9ddd6ed686a11cb0623d71ec52ec0895b3ca501e9aa7861df28",
+  "training_manifest": {
+    "path": "/workspace/Self-Audit/data/prepared/ACDC_L8_S42/train.json",
+    "sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4"
+  },
+  "warm_start": {
+    "manifest_sha256": "2b5cb5961958eab8aeff2cf852625cf3c53940fda09e176a627dafe4ec8ca2fb",
+    "path": "/workspace/Self-Audit/runs/pro4000/warm_start_B128_final/warm_start_support_only/final"
+  },
+  "comparison": "equal_update",
+  "steps_per_arm": 128,
+  "batch_size": 128,
+  "full_ema_microbatch_size": 40,
+  "arms": {
+    "scalar_brier": {
+      "status": "COMPLETED",
+      "steps": 128,
+      "phase_cost_seconds": 587.595373456832,
+      "peak_vram_allocated_mb": 12400.337,
+      "peak_vram_reserved_mb": 20616.0,
+      "pseudo_transactions_proposed": 128,
+      "pseudo_transactions_accepted": 0,
+      "throughput_updates_per_sec": 0.218,
+      "final_manifest_sha256": "24d4ca5e1c73ae969127614c9def8f15cd7c674adfedf0cd407aca17ad64b413"
+    },
+    "joint_brier": {
+      "status": "COMPLETED",
+      "steps": 128,
+      "phase_cost_seconds": 574.9324312349781,
+      "peak_vram_allocated_mb": 12400.337,
+      "peak_vram_reserved_mb": 20616.0,
+      "pseudo_transactions_proposed": 128,
+      "pseudo_transactions_accepted": 0,
+      "throughput_updates_per_sec": 0.223,
+      "final_manifest_sha256": "5d6e8ff5884a30a647f3951dfa12b972a284d284fd5cf70c30da3e9999ac74b0"
+    },
+    "scalar_dice": {
+      "status": "COMPLETED",
+      "steps": 128,
+      "phase_cost_seconds": 582.9438339318149,
+      "peak_vram_allocated_mb": 12400.337,
+      "peak_vram_reserved_mb": 20616.0,
+      "pseudo_transactions_proposed": 128,
+      "pseudo_transactions_accepted": 0,
+      "throughput_updates_per_sec": 0.22,
+      "final_manifest_sha256": "14e2c3dfbd0f182aa95284cc3342269df3356b6e385d2bf54bde69ccb8a5b687"
+    },
+    "joint_dice": {
+      "status": "COMPLETED",
+      "steps": 128,
+      "phase_cost_seconds": 587.9398568880279,
+      "peak_vram_allocated_mb": 12400.337,
+      "peak_vram_reserved_mb": 20616.0,
+      "pseudo_transactions_proposed": 128,
+      "pseudo_transactions_accepted": 0,
+      "throughput_updates_per_sec": 0.218,
+      "final_manifest_sha256": "461697d2315f2f04109020f5a12b15cdc3288ec936169b1bad9f67c1b3ef91a3"
+    },
+    "frozen": {
+      "status": "COMPLETED",
+      "steps": 128,
+      "phase_cost_seconds": 175.2432176428847,
+      "peak_vram_allocated_mb": 11367.616,
+      "peak_vram_reserved_mb": 20616.0,
+      "pseudo_transactions_proposed": 0,
+      "pseudo_transactions_accepted": 0,
+      "throughput_updates_per_sec": 0.73,
+      "final_manifest_sha256": "50b94000f336b8672eff3b51b75ccb0059036591ea0098473eece19dccb5c764"
+    },
+    "support_only": {
+      "status": "COMPLETED",
+      "steps": 128,
+      "phase_cost_seconds": 176.70932618295774,
+      "peak_vram_allocated_mb": 11376.336,
+      "peak_vram_reserved_mb": 20616.0,
+      "pseudo_transactions_proposed": 0,
+      "pseudo_transactions_accepted": 0,
+      "throughput_updates_per_sec": 0.724,
+      "final_manifest_sha256": "e3ce7f72b8b8fdfde82ae5bffb2021df3b23ad1387329567f5cf5cfcabc1b5fe"
+    },
+    "plain_head_u": {
+      "status": "COMPLETED",
+      "steps": 128,
+      "phase_cost_seconds": 245.44327570102178,
+      "peak_vram_allocated_mb": 12400.34,
+      "peak_vram_reserved_mb": 20616.0,
+      "pseudo_transactions_proposed": 128,
+      "pseudo_transactions_accepted": 128,
+      "throughput_updates_per_sec": 0.522,
+      "final_manifest_sha256": "52872d54ba57d6ba2df2101f956eeccd25cdabff698c772e620dca69dfe1d964"
+    },
+    "extra_supervised": {
+      "status": "COMPLETED",
+      "steps": 128,
+      "phase_cost_seconds": 173.99631453002803,
+      "peak_vram_allocated_mb": 11384.15,
+      "peak_vram_reserved_mb": 20616.0,
+      "pseudo_transactions_proposed": 0,
+      "pseudo_transactions_accepted": 0,
+      "throughput_updates_per_sec": 0.736,
+      "final_manifest_sha256": "e1b7531c4dede8cc551060b81a053076f028a428b1233b890d89e446d0cf7d5e"
+    },
+    "smaller_lr": {
+      "status": "COMPLETED",
+      "steps": 128,
+      "phase_cost_seconds": 245.92411302402616,
+      "peak_vram_allocated_mb": 12400.34,
+      "peak_vram_reserved_mb": 20616.0,
+      "pseudo_transactions_proposed": 128,
+      "pseudo_transactions_accepted": 128,
+      "throughput_updates_per_sec": 0.52,
+      "final_manifest_sha256": "339c19dee0497be8f44526241c5d1c1f272c73b7dba933237ba7147739df52d3"
+    },
+    "full_ema": {
+      "status": "COMPLETED",
+      "steps": 128,
+      "phase_cost_seconds": 524.0544183528982,
+      "peak_vram_allocated_mb": 16074.652,
+      "peak_vram_reserved_mb": 19770.0,
+      "pseudo_transactions_proposed": 128,
+      "pseudo_transactions_accepted": 128,
+      "throughput_updates_per_sec": 0.244,
+      "final_manifest_sha256": "85b9f4e6a7bba12633f478dd9cca423e695a5161a8fb35b164c517a80d9eed06"
+    }
+  },
+  "quality": "NOT_EVALUATED; query export and scoring pending",
+  "equal_compute_claim": "NOT_APPLICABLE; actual phase costs vary substantially",
+  "summary_sha256": "e395ae60c7e160773789c4ce0352545ed21b529c280ee055bd97734f81603290"
+}
