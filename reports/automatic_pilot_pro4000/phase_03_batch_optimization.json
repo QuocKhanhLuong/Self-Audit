@@ -1,0 +1,190 @@
+{
+  "status": "B40_SELECTED_AND_FULL_MATRIX_RESTARTED",
+  "reason": "User requested higher batch/VRAM/FLOP utilization",
+  "profiles": [
+    {
+      "batch_size": 4,
+      "arms": {
+        "full_ema": {
+          "peak_allocated_GiB": 2.1518216133117676,
+          "peak_reserved_GiB": 2.546875,
+          "latency_p50_ms": 1308.992,
+          "U_slices_per_second_from_p50": 3.0557864371974772,
+          "steps": 3
+        },
+        "joint_dice": {
+          "peak_allocated_GiB": 3.4481801986694336,
+          "peak_reserved_GiB": 4.369140625,
+          "latency_p50_ms": 2562.464,
+          "U_slices_per_second_from_p50": 1.5609975398678773,
+          "steps": 3
+        }
+      }
+    },
+    {
+      "batch_size": 8,
+      "arms": {
+        "full_ema": {
+          "peak_allocated_GiB": 3.6077332496643066,
+          "peak_reserved_GiB": 4.38671875,
+          "latency_p50_ms": 1382.719,
+          "U_slices_per_second_from_p50": 5.785701939439611,
+          "steps": 3
+        },
+        "joint_dice": {
+          "peak_allocated_GiB": 3.492070198059082,
+          "peak_reserved_GiB": 4.369140625,
+          "latency_p50_ms": 2551.58,
+          "U_slices_per_second_from_p50": 3.1353122379074927,
+          "steps": 3
+        }
+      }
+    },
+    {
+      "batch_size": 16,
+      "arms": {
+        "full_ema": {
+          "peak_allocated_GiB": 6.5040764808654785,
+          "peak_reserved_GiB": 8.0390625,
+          "latency_p50_ms": 1539.021,
+          "U_slices_per_second_from_p50": 10.396219414809805,
+          "steps": 3
+        },
+        "joint_dice": {
+          "peak_allocated_GiB": 3.582402229309082,
+          "peak_reserved_GiB": 4.48828125,
+          "latency_p50_ms": 3467.883,
+          "U_slices_per_second_from_p50": 4.613765804671035,
+          "steps": 3
+        }
+      }
+    },
+    {
+      "batch_size": 24,
+      "arms": {
+        "full_ema": {
+          "peak_allocated_GiB": 9.396539211273193,
+          "peak_reserved_GiB": 11.6484375,
+          "latency_p50_ms": 1819.706,
+          "U_slices_per_second_from_p50": 13.188943708489175,
+          "steps": 3
+        },
+        "joint_dice": {
+          "peak_allocated_GiB": 3.6727800369262695,
+          "peak_reserved_GiB": 4.556640625,
+          "latency_p50_ms": 3070.602,
+          "U_slices_per_second_from_p50": 7.816056916526467,
+          "steps": 3
+        }
+      }
+    },
+    {
+      "batch_size": 32,
+      "arms": {
+        "full_ema": {
+          "peak_allocated_GiB": 12.289624691009521,
+          "peak_reserved_GiB": 15.26171875,
+          "latency_p50_ms": 1984.496,
+          "U_slices_per_second_from_p50": 16.12500100781256,
+          "steps": 3
+        },
+        "joint_dice": {
+          "peak_allocated_GiB": 3.7626237869262695,
+          "peak_reserved_GiB": 4.658203125,
+          "latency_p50_ms": 3379.178,
+          "U_slices_per_second_from_p50": 9.46975862177133,
+          "steps": 3
+        }
+      }
+    },
+    {
+      "batch_size": 40,
+      "arms": {
+        "full_ema": {
+          "peak_allocated_GiB": 15.189610004425049,
+          "peak_reserved_GiB": 18.896484375,
+          "latency_p50_ms": 2109.996,
+          "U_slices_per_second_from_p50": 18.95738190972874,
+          "steps": 3
+        },
+        "joint_dice": {
+          "peak_allocated_GiB": 4.035139560699463,
+          "peak_reserved_GiB": 5.72265625,
+          "latency_p50_ms": 3631.625,
+          "U_slices_per_second_from_p50": 11.014353078855883,
+          "steps": 3
+        }
+      }
+    },
+    {
+      "batch_size": 48,
+      "arms": {
+        "full_ema": {
+          "peak_allocated_GiB": 18.084392547607422,
+          "peak_reserved_GiB": 22.533203125,
+          "latency_p50_ms": 2288.513,
+          "U_slices_per_second_from_p50": 20.97431825818774,
+          "steps": 3
+        },
+        "joint_dice": {
+          "peak_allocated_GiB": 4.769758701324463,
+          "peak_reserved_GiB": 7.25,
+          "latency_p50_ms": 3612.761,
+          "U_slices_per_second_from_p50": 13.286237312681354,
+          "steps": 3
+        }
+      }
+    }
+  ],
+  "active_plan": {
+    "base_commit": "93f7c7a1f9606a68955f849dd580b90462ad329e",
+    "authorization": "user explicitly authorized full real-patient training and main report publication",
+    "dataset": "ACDC primary; M&Ms kept separate",
+    "split": "splits/acdc_reviewed_locked_train80_val18.json; unchanged",
+    "dense_training_budget": 8,
+    "label_seed": 42,
+    "train_unlabeled_patients": 72,
+    "warm_start_steps": 512,
+    "equal_update_steps_per_arm": 128,
+    "fresh_equal_time_target_seconds_per_arm": 600,
+    "equal_time_tolerance": 0.05,
+    "arms": [
+      "scalar_brier",
+      "joint_brier",
+      "scalar_dice",
+      "joint_dice",
+      "frozen",
+      "support_only",
+      "plain_head_u",
+      "extra_supervised",
+      "smaller_lr",
+      "full_ema"
+    ],
+    "teacher": "per-arm EMA of shared L8-only head warm-start, original DINOv3 LVD1689M initialization; no historical segmentation checkpoints or CineMA teacher used",
+    "query": "complete Drive TEST50, patient-disjoint from active TRAIN/VAL; prior repository evaluations exposed this cohort, so not new confirmatory evidence",
+    "precision": "FP32 throughout; no AMP/TF32 optimization that could alter finite argmax guard semantics",
+    "batch_size": 40,
+    "crop_size": 256,
+    "threads": 4,
+    "max_extract_batch": 4,
+    "support_voxel_limit": 10000000,
+    "cache_limit_bytes": 2147483648,
+    "controller_workspace_limit_bytes_after_successful_profile": 8589934592,
+    "full_run_gate": "530 tests pass; finite real CUDA forward; verified datasets; extraction profile PASS; all-ten-arm bounded profile and nonempty candidate profile PASS; measured VRAM headroom",
+    "equal_time": "fresh runs only, no resumed timing as compute evidence; 100000-step safety cap; retry with larger shared budget if 5% measured spread fails",
+    "evaluation": "full native compressed predictions frozen and hashed before evaluator opens references; RV/MYO/LV patient macro; all ten arms under both regimes",
+    "source_overlay": "SOURCE_PATCH.patch documents heterogeneous-shape metric padding and portable CPU rounding regression witnesses; no model architecture changes",
+    "full_ema_documentation_discrepancy": "93f7c7a implementation optimizes all non-head parameters including encoder; runbook claims a frozen encoder, but NativeStudent does not freeze it. Preserve executable commit behavior, report this stronger comparator explicitly.",
+    "wandb": "No W&B credentials available; structured steps.jsonl, utilization.csv, REPORT.json and persistent tmux logging used.",
+    "checkpoint_policy": "save_every=1000 for all B40 arms and both comparison regimes",
+    "old_B1_matrix": "Superseded at completed-arm boundary after two arms, retained at runs/pro4000/equal_update; not pooled.",
+    "active_matrix_directories": [
+      "runs/pro4000/equal_update_B40",
+      "runs/pro4000/equal_time_B40"
+    ],
+    "batch_selection": "Profile 4/8/16/24/32/48 then40; B48 reached22.533GiB reserved with inadequate native-variation headroom. Select B40 only if measured peak<21GiB; shared U batch across all arms."
+  },
+  "safety": "B48 reached22.533GiB reserved; B40 selected below21GiB ceiling. Profiles are short throughput/capacity measurements, not efficacy.",
+  "implementation": "U minibatch40; supervised support one native slice per transaction, matching canonical engine. All arms receive same effective batch/schedules.",
+  "previous_runs": "Two B1 arms completed and preserved; excluded from new matched comparison. No resume timing used."
+}
