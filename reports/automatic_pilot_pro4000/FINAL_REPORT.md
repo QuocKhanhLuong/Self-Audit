@@ -59,6 +59,7 @@ All 20 ACDC evaluations scored 50/50 patients, 100/100 annotated frames, with pr
 All four guarded arms accepted zero pseudo transactions in both regimes. Each head-only arm predicted at most one foreground voxel across all 50 ACDC query patients and produced zero RV/MYO/LV Dice; extra_supervised at equal-time predicted zero foreground voxels. This supports a near-total foreground-collapse diagnosis for the fixed-encoder/head-only pilot under this initialization and budget; the reported scores do not isolate which individual component caused it.
 
 The stronger full_ema executable comparator trains encoder/body despite frozen-encoder wording in the runbook. It was the only nonzero ACDC predictor: equal-update FG 0.481, equal-time FG 0.575. For equal-time full_ema, RV/MYO/LV are 0.504/0.523/0.699. The worst five patient foreground means are recorded below; per-patient and per-class details remain in the CSV.
+
 | Patient | FG Dice |
 |---|---|
 | patient124 | 0.325 |
