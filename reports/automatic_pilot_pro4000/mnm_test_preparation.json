@@ -1,0 +1,28 @@
+{
+  "schema": "self_audit.pro4000.mnm_test_preparation.v1",
+  "status": "PASS",
+  "original_test_patients": 136,
+  "active_test_patients": 135,
+  "quarantined_test_ids": [
+    "C8O0P2"
+  ],
+  "source_nifti_images": 136,
+  "prepared_images": 135,
+  "prepared_annotated_frames": 270,
+  "unknown_temporal_spacing_images": 135,
+  "original_files_modified": false,
+  "normalization": "per-cine image-only .5/99.5 percentiles, native TZHW float32, no resize",
+  "label_mapping": {
+    "0": 0,
+    "1": 3,
+    "2": 2,
+    "3": 1,
+    "255": 255
+  },
+  "source_split_csv_sha256": "612b76738262dcca277e2fe9afba2c1bfea869543fb6af82a68fe30097433fbd",
+  "manifest": "/workspace/Self-Audit/reports/automatic_pilot_pro4000/MnM_TEST135_manifest.json",
+  "manifest_sha256": "11beea130c5913cc0a174f3dd74438fff31c1f1af0f94dc4bc096fb4cec375a8",
+  "scratch": "/dev/shm/self_audit_mnm_test135_20261028",
+  "scratch_persistence": "tmpfs only; regenerate with this script after instance restart",
+  "training_access": false
+}
