@@ -1,0 +1,495 @@
+{
+  "kind": "dataset",
+  "server_artifact": "/workspace/Self-Audit/reports/automatic_pilot_pro4000/mnm_loading_smoke.json",
+  "artifact_sha256": "f00c9a6e7b6d8c67d8bcafba14108aa77283ab1513250c2ac2890ec419e0cec1",
+  "base_commit": "93f7c7a1f9606a68955f849dd580b90462ad329e",
+  "receipt": {
+    "status": "PASS",
+    "train_manifest": "/workspace/Self-Audit/data/prepared/MnM_L8_S42_verified/train.json",
+    "sha256": "a7fc92227c555d0de3895b5b37154e49bd3de5b44d26958bde34863d86dfaae3",
+    "L": 8,
+    "U": 162,
+    "generalization_patients": 32,
+    "generalization_manifest": "/workspace/Self-Audit/data/prepared/MnM_L8_S42_verified/generalization_verified_val.json",
+    "quarantined_image_duplicate_ids": [
+      "A7G0P5",
+      "A8C9H8",
+      "C5Q2Y5",
+      "C8J7L5",
+      "C8O0P2",
+      "E9L4N2",
+      "K3R0Y7",
+      "Q0Q1Y4"
+    ],
+    "original_test_patients": 136,
+    "labeled_shape": [
+      1,
+      3,
+      240,
+      196
+    ],
+    "mask_shape": [
+      1,
+      240,
+      196
+    ],
+    "unlabeled_shape": [
+      1,
+      3,
+      256,
+      216
+    ],
+    "label_reads": [
+      "MnM_A2N8V0"
+    ],
+    "unlabeled_mask_reads": 0,
+    "mapping": {
+      "0": 0,
+      "1": 3,
+      "2": 2,
+      "3": 1,
+      "255": 255
+    },
+    "mapping_primary_source": "https://github.com/MarioProjects/MnMsCardiac/blob/master/README.md",
+    "mask_rounding": "NIfTI slope/intercept representation roundoff <1e-4, round only in separate prepared masks; original files unchanged",
+    "teacher_provenance": "No CineMA or historical segmentation checkpoint used. DINO self-supervised LVD1689M initialization only.",
+    "masks_read": {
+      "A5C2D2": {
+        "nifti_mask_sha256": "c74cb5a57e78ebeeaba37842ef0ff8faf245913416403af49eaf5314800ff277",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          9,
+          24
+        ]
+      },
+      "A9F3T5": {
+        "nifti_mask_sha256": "6f2e3fde985c4fb721b05f36db60baea3816917f76c504d7c812f358e078f9b9",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          8,
+          24
+        ]
+      },
+      "B0H7V0": {
+        "nifti_mask_sha256": "73e7fa5d31c802ea6cfbff24bccc925ba3f2b3af8e30547be539c2370f5b0b9e",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          0,
+          9
+        ]
+      },
+      "C4E9I1": {
+        "nifti_mask_sha256": "8a333c5dedfb59a94c54d427103be5f1b71f653fe0f7fa540fefedebb240ce43",
+        "max_scaling_roundoff": 5.8673322200775146e-08,
+        "frames": [
+          0,
+          8
+        ]
+      },
+      "C5L0R0": {
+        "nifti_mask_sha256": "deb675c79023de440554267a54ffa46111aea4d3eda6e07ab6c6ed89a0e7cd49",
+        "max_scaling_roundoff": 5.8673322200775146e-08,
+        "frames": [
+          12,
+          29
+        ]
+      },
+      "C6E0F9": {
+        "nifti_mask_sha256": "cce5d1deeb15fccf45b915e5bb8f57dd9616af6d404609d62f73e366f38c6df0",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          0,
+          8
+        ]
+      },
+      "C8I7P7": {
+        "nifti_mask_sha256": "d154512c74be48ef5f9190f366b2bc3836b59ad5ea22e17b16c3057ab817b82b",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          11,
+          29
+        ]
+      },
+      "D1H6U2": {
+        "nifti_mask_sha256": "35dd733a36add7086384d7a8580f3574cd3cd84fa00eaaf97d05f97e8b3b81d5",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          0,
+          8
+        ]
+      },
+      "D1R0Y5": {
+        "nifti_mask_sha256": "90a3dff7a4199bf79394869cecbce5642db31f08c12c37796fafe35234a6e75c",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          9,
+          24
+        ]
+      },
+      "D1S5T8": {
+        "nifti_mask_sha256": "d8d74d8b0c41fd3fe672fdba7f65f19497220a69e2f5bbcbb7076020c2eb58da",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          14,
+          23
+        ]
+      },
+      "D2U0V0": {
+        "nifti_mask_sha256": "7bcfdb9b7e176f0715838393efcc959588e5fe7b4e4d326009ce5306bcbc7b8b",
+        "max_scaling_roundoff": 5.8673322200775146e-08,
+        "frames": [
+          10,
+          24
+        ]
+      },
+      "D5G3W8": {
+        "nifti_mask_sha256": "5c6ff246192041480dbdce82861e18d2183276c5a9fd75a11b17c126ad271d4d",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          8,
+          23
+        ]
+      },
+      "D6N7Q8": {
+        "nifti_mask_sha256": "178fcd8efb4a0464f396cd9ed704205c19dcc8dd8d902010c3e641bf4e3431fa",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          9,
+          24
+        ]
+      },
+      "D7M8P9": {
+        "nifti_mask_sha256": "6937117a474001e7b5c32389fb0812f881d616187440aa5823e2744de377d04d",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          8,
+          24
+        ]
+      },
+      "D7T3V8": {
+        "nifti_mask_sha256": "0def45f28bfbb250d8688623f917d73b3baca5646af6cc30814451a4a67c459a",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          7,
+          24
+        ]
+      },
+      "D8O0W2": {
+        "nifti_mask_sha256": "5d216223c3a6f2e4116f1972eb0326589001b369805606d6a8582cb1d6bf361f",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          8,
+          24
+        ]
+      },
+      "E1L8Y4": {
+        "nifti_mask_sha256": "3cc97836345278a0bbc3842c6ea53004028e9d5afdaf8dbebc2347926bf09699",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          10,
+          24
+        ]
+      },
+      "E3F2U7": {
+        "nifti_mask_sha256": "c6f9678898b6d733f1e869cda39d158c4afe9f44438596251ab1f78bece31686",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          0,
+          7
+        ]
+      },
+      "E4O8P3": {
+        "nifti_mask_sha256": "814f371ddcb47473b6ae1df005907f861d679461e0b21850ac4146dd74d0ffc1",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          12,
+          29
+        ]
+      },
+      "F6J9L9": {
+        "nifti_mask_sha256": "1c27deb3339086c91e32637c2b8e055abed9319df53cd7b1ca8c72c5322a77b3",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          10,
+          29
+        ]
+      },
+      "G7Q2W0": {
+        "nifti_mask_sha256": "fe238fba89c310d1af12ed9dfc67ed8d8085f5b4fa178c8fca0bdb95a26bb851",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          0,
+          8
+        ]
+      },
+      "H3R6S9": {
+        "nifti_mask_sha256": "96b7037a7016665e9056c895c0798586274c9695021b4ee42a23f8f3cfb44fc0",
+        "max_scaling_roundoff": 5.8673322200775146e-08,
+        "frames": [
+          9,
+          24
+        ]
+      },
+      "H6P7T1": {
+        "nifti_mask_sha256": "b32fff0eb977c7a03abfd19df00fca06541fa55c5aee960902361461bca3c628",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          12,
+          25
+        ]
+      },
+      "I4L4V7": {
+        "nifti_mask_sha256": "31812bef5730c8ae3ea22f14fd5a02c0f377edbd0b4581ff3d1416949f1d00e8",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          9,
+          22
+        ]
+      },
+      "I7W4Y8": {
+        "nifti_mask_sha256": "d2dab399f1b99a1df91e19236c923aa8a725c12eab087c02692691f607d32e2f",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          10,
+          27
+        ]
+      },
+      "J6M5O2": {
+        "nifti_mask_sha256": "ea61afd2eb6f2148ab45b813802ea27774d8179b909f6969e53771fc3e60f0e3",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          11,
+          33
+        ]
+      },
+      "K5K6N1": {
+        "nifti_mask_sha256": "a575aa0ec2b0e6e69002b0da3f1f08fbfe0f83be667f18dd08519b4b3893c79c",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          9,
+          24
+        ]
+      },
+      "K5M7V5": {
+        "nifti_mask_sha256": "6b24d7192fc99fb9d2f612c20a155ce8e2c2b8aeface612abe03e07438a3a7ff",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          10,
+          23
+        ]
+      },
+      "K9N0W0": {
+        "nifti_mask_sha256": "da44d547f1a283645ff10ddc2bc7864d4ed407f0b1b0434c00a317bfcd33849b",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          12,
+          29
+        ]
+      },
+      "N2O7U5": {
+        "nifti_mask_sha256": "043ec3fb8e242c4014a40ac9e859eca85ded5b6a2b7e3b2262acb33112a32c13",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          7,
+          18
+        ]
+      },
+      "O7Q7U3": {
+        "nifti_mask_sha256": "ec43af003cfa692783c860594675e6eacd04c5cc25c5188ade6ea70435b6260c",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          11,
+          29
+        ]
+      },
+      "P8V0Y7": {
+        "nifti_mask_sha256": "df1065242a3e49196fe7a164885c3413a41d36f5cd74e07b8f7b73f0c5b2f0cd",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          9,
+          27
+        ]
+      },
+      "A2N8V0": {
+        "nifti_mask_sha256": "97fa5d786f88b78c573c6819526c5bd18168596e1412b096dfe418141b785fcd",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          0,
+          9
+        ]
+      },
+      "A9E3G9": {
+        "nifti_mask_sha256": "3a24aca4ba6fc850a493ed586e668302d337e65a058536f9ced6dc4836c75872",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          8,
+          23
+        ]
+      },
+      "B9E0Q1": {
+        "nifti_mask_sha256": "608842f674570fa02094b2a32045bab8fbe26a211c25f6f843b091b172f6ac4d",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          0,
+          11
+        ]
+      },
+      "C1K8P5": {
+        "nifti_mask_sha256": "0417e33c6cd9f7098534db32f600d7f8bf62d1a8866c0959c81c01b86d403be1",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          0,
+          8
+        ]
+      },
+      "D3F9H9": {
+        "nifti_mask_sha256": "d778a49466f1396c797b6f686a1e647bb7aee3853e2fb54b2d7d59f1b8e1a64a",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          8,
+          24
+        ]
+      },
+      "E3T0Z2": {
+        "nifti_mask_sha256": "02ec5392f88022b6b4dad23beba4c8c9a2b7dad74f54ccbfc774ef0b6ef7f8c7",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          10,
+          29
+        ]
+      },
+      "E5F5V7": {
+        "nifti_mask_sha256": "aaa89a422b8524d871bc8d4104511573e497136c3b0429688d51a315937c4bc9",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          0,
+          9
+        ]
+      },
+      "J6P5T8": {
+        "nifti_mask_sha256": "3ea66733dc60d823af1ee769e3ddd3c9182c8f4648a2b0bbc269390699d5886b",
+        "max_scaling_roundoff": 0.0,
+        "frames": [
+          0,
+          9
+        ]
+      }
+    },
+    "normalization": "per-cine image-only .5/99.5 percentiles; native TZHW; no resizing"
+  },
+  "duplicate_audit": {
+    "status": "PASS_IMAGE_IDENTITY_AUDIT",
+    "images": 495,
+    "mask_reads": 0,
+    "duplicates": [
+      [
+        {
+          "dataset": "MnM",
+          "id": "C8J7L5",
+          "role": "VAL",
+          "path": "/workspace/Self-Audit/data/MnM/M&M-20251118T142205Z-1-002/M&M/Validation_extracted/Validation/C8J7L5/C8J7L5_sa.nii.gz",
+          "voxel_sha256": "ee79af25e3163e9ca89c1b8cd7f9f0144c77147b80c24e17c8166fd8d81372f7"
+        },
+        {
+          "dataset": "MnM",
+          "id": "C8O0P2",
+          "role": "TEST",
+          "path": "/workspace/Self-Audit/data/MnM/Testing-003/Testing/C8O0P2/C8O0P2_sa.nii.gz",
+          "voxel_sha256": "ee79af25e3163e9ca89c1b8cd7f9f0144c77147b80c24e17c8166fd8d81372f7"
+        }
+      ],
+      [
+        {
+          "dataset": "MnM",
+          "id": "K3R0Y7",
+          "role": "VAL",
+          "path": "/workspace/Self-Audit/data/MnM/M&M-20251118T142205Z-1-002/M&M/Validation_extracted/Validation/K3R0Y7/K3R0Y7_sa.nii.gz",
+          "voxel_sha256": "0230b049fd4e77029a3fac5dd60c1e1cb46a45d35a0ecd7abb33c7f5ce288124"
+        },
+        {
+          "dataset": "MnM",
+          "id": "A7G0P5",
+          "role": "TRAIN",
+          "path": "/workspace/Self-Audit/data/MnM/Training-001/Training/Labeled/A7G0P5/A7G0P5_sa.nii.gz",
+          "voxel_sha256": "0230b049fd4e77029a3fac5dd60c1e1cb46a45d35a0ecd7abb33c7f5ce288124"
+        }
+      ],
+      [
+        {
+          "dataset": "MnM",
+          "id": "A8C9H8",
+          "role": "TRAIN",
+          "path": "/workspace/Self-Audit/data/MnM/Training-001/Training/Unlabeled/A8C9H8/A8C9H8_sa.nii.gz",
+          "voxel_sha256": "1f7ffd2baf5d13db904000d8be3b2af818a96e1612d2f7ddce0ecffd7fe05ea3"
+        },
+        {
+          "dataset": "MnM",
+          "id": "Q0Q1Y4",
+          "role": "TRAIN",
+          "path": "/workspace/Self-Audit/data/MnM/Training-001/Training/Unlabeled/Q0Q1Y4/Q0Q1Y4_sa.nii.gz",
+          "voxel_sha256": "1f7ffd2baf5d13db904000d8be3b2af818a96e1612d2f7ddce0ecffd7fe05ea3"
+        }
+      ],
+      [
+        {
+          "dataset": "MnM",
+          "id": "C5Q2Y5",
+          "role": "TRAIN",
+          "path": "/workspace/Self-Audit/data/MnM/Training-001/Training/Unlabeled/C5Q2Y5/C5Q2Y5_sa.nii.gz",
+          "voxel_sha256": "e5bfd6fdeee67ae5e8e432e9b39fd3dc5c36a969fcb4668ae7761cd4c8e1a669"
+        },
+        {
+          "dataset": "MnM",
+          "id": "E9L4N2",
+          "role": "TRAIN",
+          "path": "/workspace/Self-Audit/data/MnM/Training-001/Training/Unlabeled/E9L4N2/E9L4N2_sa.nii.gz",
+          "voxel_sha256": "e5bfd6fdeee67ae5e8e432e9b39fd3dc5c36a969fcb4668ae7761cd4c8e1a669"
+        }
+      ],
+      [
+        {
+          "dataset": "ACDC",
+          "id": "patient118",
+          "role": "TEST",
+          "path": "/workspace/Self-Audit/data/ACDC/testing/patient118/patient118_4d.nii",
+          "voxel_sha256": "9002cf4c58036e2459a1751bec65692c539f72e9667da4ce5078e3b056749d56"
+        },
+        {
+          "dataset": "ACDC",
+          "id": "patient055",
+          "role": "TRAIN",
+          "path": "/workspace/Self-Audit/data/ACDC/training/patient055/patient055_4d.nii",
+          "voxel_sha256": "9002cf4c58036e2459a1751bec65692c539f72e9667da4ce5078e3b056749d56"
+        }
+      ],
+      [
+        {
+          "dataset": "ACDC",
+          "id": "patient074",
+          "role": "TRAIN",
+          "path": "/workspace/Self-Audit/data/ACDC/training/patient074/patient074_4d.nii",
+          "voxel_sha256": "51e97413efd7d093d4da8e892a760c396f6e46daa6d86cb181d0dd33f9e0cfd0"
+        },
+        {
+          "dataset": "ACDC",
+          "id": "patient076",
+          "role": "TRAIN",
+          "path": "/workspace/Self-Audit/data/ACDC/training/patient076/patient076_4d.nii",
+          "voxel_sha256": "51e97413efd7d093d4da8e892a760c396f6e46daa6d86cb181d0dd33f9e0cfd0"
+        }
+      ]
+    ],
+    "quarantined_mnm_ids": [
+      "A7G0P5",
+      "A8C9H8",
+      "C5Q2Y5",
+      "C8J7L5",
+      "C8O0P2",
+      "E9L4N2",
+      "K3R0Y7",
+      "Q0Q1Y4"
+    ],
+    "policy": "Original splits and originals unchanged. Exclude all M&Ms members of exact-voxel duplicate groups, including cross-ACDC matches, from derived training/evaluation manifests. Never choose based on reference masks."
+  },
+  "limitation": "Original splits/files unchanged. Exact-voxel duplicate M&Ms IDs quarantined in derived manifests; missing temporal spacing remains unknown."
+}
