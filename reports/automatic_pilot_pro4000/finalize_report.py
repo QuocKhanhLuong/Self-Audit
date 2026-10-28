@@ -110,5 +110,17 @@ if post.exists():
     lines = post.read_text().splitlines()
     summary = next((line for line in reversed(lines) if ' passed' in line), 'UNKNOWN')
     L += ['', 'Post-run full test suite: `' + summary + '`.']
+audit = R / 'OUTPUT_AUDIT.json'
+if audit.exists():
+    checked = json.loads(audit.read_text())
+    assert checked['status'] == 'PASS'
+    L += ['', 'Independent output audit: PASS for ' + str(checked['checkpoint_count']) +
+          ' checkpoint manifests/payloads, ' + str(checked['evaluation_count']) +
+          ' metric/frozen receipts and ' + str(checked['native_prediction_file_count']) +
+          ' native prediction files. See `OUTPUT_AUDIT.json`.']
 (R / 'FINAL_REPORT.md').write_text('\n'.join(L) + '\n')
+hashes = {str(p.relative_to(R)): sha(p) for p in sorted(R.iterdir())
+          if p.is_file() and p.suffix in ('.py', '.sh', '.json', '.patch', '.csv', '.md')
+          and p.name != 'ARTIFACT_HASHES.json'}
+(R / 'ARTIFACT_HASHES.json').write_text(json.dumps(hashes, indent=2) + '\n')
 print('FINAL_REPORT_WRITTEN', len(L), 'lines', len(rows), 'ACDC table rows')
