@@ -12,9 +12,10 @@ def write_json(path, data):
     Path(path).write_text(json.dumps(data, indent=2, allow_nan=False) + "\n")
 
 
-def label_subset(patient_ids, count, seed):
-    if len(set(patient_ids)) != len(patient_ids) or not 2 <= count < len(patient_ids):
-        raise ValueError("need unique TRAIN IDs and 2 <= label budget < TRAIN patients")
+def label_subset(patient_ids, count, seed, *, allow_k1=False):
+    min_count = 1 if allow_k1 else 2
+    if len(set(patient_ids)) != len(patient_ids) or not min_count <= count < len(patient_ids):
+        raise ValueError(f"need unique TRAIN IDs and {min_count} <= label budget < TRAIN patients")
     return sorted(sorted(patient_ids, key=lambda p: hashlib.sha256(f"{seed}:{p}".encode()).hexdigest())[:count])
 
 
@@ -113,8 +114,9 @@ class StepIndices(tuple):
 
 
 class TrainingData:
-    def __init__(self, manifest, expected_sha256, *, synthetic=False):
+    def __init__(self, manifest, expected_sha256, *, synthetic=False, allow_k1=False):
         self.path = Path(manifest).resolve()
+        self.allow_k1 = allow_k1
         if digest(self.path) != expected_sha256:
             raise ValueError("training manifest hash mismatch")
         self.manifest = json.loads(self.path.read_text())
@@ -127,8 +129,10 @@ class TrainingData:
         self.lids, self.uids = [r["id"] for r in self.labeled], [r["id"] for r in self.unlabeled]
         for pid in self.lids + self.uids + m.get("evaluation_ids", []):
             _validate_patient_id(pid)
-        if len(self.lids) < 2 or not self.uids or len(set(self.lids + self.uids)) != len(self.lids + self.uids):
-            raise ValueError("nonempty disjoint patient sets and at least two labeled patients required")
+        min_labeled = 1 if allow_k1 else 2
+        if len(self.lids) < min_labeled or not self.uids or len(set(self.lids + self.uids)) != len(self.lids + self.uids):
+            msg = "nonempty disjoint patient sets and at least two labeled patients required" if min_labeled == 2 else "nonempty disjoint patient sets and at least one labeled patient required"
+            raise ValueError(msg)
         if set(self.lids + self.uids) & set(m.get("evaluation_ids", [])):
             raise ValueError("TRAIN/evaluation patient overlap")
         if m.get("label_budget") != len(self.lids):
@@ -402,7 +406,10 @@ class TrainingData:
         if not self.is_shared:
             li = step % len(self.lids)
             ui = step % len(self.uids)
-            ai = (li + 1 + int(rng.integers(len(self.lids) - 1))) % len(self.lids)
+            if len(self.lids) == 1:
+                ai = li
+            else:
+                ai = (li + 1 + int(rng.integers(len(self.lids) - 1))) % len(self.lids)
             return (li, ai, ui)
 
         li = self.choose_patient(step, rng, labeled=True)

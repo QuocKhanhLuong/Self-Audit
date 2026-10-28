@@ -1,0 +1,48 @@
+{
+  "schema": "self_audit.compact.v1",
+  "method": "joint_guard",
+  "steps": 32,
+  "warmup_steps": 8,
+  "seed": 42,
+  "lr": 0.0003,
+  "weight_decay": 0.0001,
+  "pseudo_lr": 0.001,
+  "temperature": 1.0,
+  "coefficient": 1.0,
+  "pseudo_threshold": 0.7,
+  "ridge": 1e-06,
+  "risk_budget": 0.0,
+  "absent_fp_budget": 0.0,
+  "guard_tolerance": 1e-06,
+  "max_trials": 8,
+  "batch_size": 1,
+  "crop_size": 0,
+  "save_every": 1000,
+  "model": {
+    "name": "CompactStudent",
+    "widths": [16, 32, 64, 128],
+    "in_channels": 3,
+    "num_classes": 4,
+    "init": "kaiming_normal"
+  },
+  "data": {
+    "budget_k": 4,
+    "labeled_ids": null
+  },
+  "teacher": {
+    "source_training_cost": "NOT_KNOWN",
+    "cache_path": null,
+    "cache_sha256": null,
+    "state": "student",
+    "lineage": {
+      "budget_k": 4,
+      "exact_labeled_ids": null,
+      "matching_lineage_required": true
+    }
+  },
+  "acceptance": {
+    "metric": "Macro4",
+    "min_macro4": 0.87,
+    "notes": "K=4 placeholder; requires explicit matching teacher label lineage, no default sweeps"
+  }
+}

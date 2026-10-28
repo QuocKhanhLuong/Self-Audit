@@ -19,5 +19,21 @@
   "patient_training_this_delivery": true,
   "training_input_policy": "random_crop_256_image_geometry_only; edge_pad; exclude_padding; no_resize",
   "training_batch_size": 52,
-  "evaluation_input_policy": "full_native_cine_no_training_crop"
+  "evaluation_input_policy": "full_native_cine_no_training_crop",
+  "opt_in_modes": {
+    "compact": {
+      "schema": "self_audit.compact.v1",
+      "entrypoint": "train.py",
+      "trainer": "self_audit.compact_training",
+      "architecture": "compact_residual_unet_2p5d",
+      "teacher": "fixed verified full-EMA-run teacher; state explicitly pinned",
+      "student_ema": false,
+      "prototype": false,
+      "deployment": "raw exported compact student only",
+      "quality_metric": "historical frame -> patient/class -> class patient mean -> Macro4",
+      "quality_threshold": 0.87,
+      "documentation": "docs/COMPACT_STUDENT.md",
+      "patient_training_this_delivery": false
+    }
+  }
 }

@@ -1,0 +1,19 @@
+{
+  "schema": "self_audit.compact_reference.v1",
+  "role": "quality_reference_pointer",
+  "reference_training_method": "ema_full",
+  "reference_inference_state": "student",
+  "target_quality_macro4": 0.8729522993309857,
+  "target_quality_foreground_dice": 0.831862063046926,
+  "config_path": "reports/window_pilot_test50_20261024/baseline/TRAIN_CONFIG.json",
+  "config_sha256": "f4292dd5b8591d96dca7798b1972f28cf25f9138a7bb06b65aed0f55ac15f769",
+  "checkpoint_manifest_path": "reports/window_pilot_test50_20261024/baseline/CHECKPOINT_MANIFEST.json",
+  "checkpoint_manifest_sha256": "03c1730f88941ada898bed7fcf1b9f13cdd8f08bcce4390539fec665c82e97de",
+  "checkpoint_payload_sha256": "b36bcafe9613325d85ee70dabd6a36fef7c17429882967831a151c0cce6d8437",
+  "train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+  "labeled_ids": [
+    "patient007", "patient010", "patient011", "patient024",
+    "patient026", "patient041", "patient077", "patient099"
+  ],
+  "notes": "Exact historical full-EMA-run reference. Compact student deployment requires Macro4 >= 0.87."
+}

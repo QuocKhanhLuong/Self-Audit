@@ -37,6 +37,9 @@ DEFAULT = {"schema": SCHEMA, "method": "joint_guard", "update_scope": "head", "s
 
 
 def validate_config(c):
+    if c.get("schema") == "self_audit.compact.v1":
+        from .compact_training import validate_compact_config
+        return validate_compact_config(c)
     # Existing pinned v2 recipes retain their original single-slice behavior.
     c = copy.deepcopy(c)
     if "batch_size" not in c:
@@ -276,7 +279,29 @@ def load_exported_student(folder, expected_sha256, device="cpu"):
     return model.to(device).eval(), metadata
 
 
-def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=False):
+def train(
+    config,
+    manifest,
+    manifest_sha256,
+    out,
+    *,
+    device="cuda",
+    synthetic=False,
+    stop_steps=None,
+    allow_full_run=False,
+):
+    if config.get("schema") == "self_audit.compact.v1":
+        from .compact_training import train_compact
+        return train_compact(
+            config,
+            manifest,
+            manifest_sha256,
+            out,
+            device=device,
+            synthetic=synthetic,
+            stop_steps=stop_steps,
+            allow_full_run=allow_full_run,
+        )
     c = validate_config(config)
     if device.startswith("cuda") and not torch.cuda.is_available():
         raise RuntimeError("CUDA unavailable; no silent device fallback")

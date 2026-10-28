@@ -1,0 +1,202 @@
+{
+  "schema": "self_audit.compact_source_inventory.v1",
+  "date": "2026-10-28",
+  "base_commit": "cf0fe5a78048f0aee4daabfe7d77aa0706473246",
+  "design": {
+    "path": "/Users/alvinluong/.local/share/openresearch/files/self-audit/fewshot-design-20261028/FEWSHOT_ACCURACY_SPEED_NOVELTY_VI.md",
+    "sha256": "7ce51ce8bad1482e7f49dc8d29204673c9a1ee938b65b7e275188433e834d07d"
+  },
+  "design_snapshots": [
+    {
+      "commit": "bdb1c399d29c63ae49865af8db78954f79f9ad9d",
+      "source": "reports/window_pilot_test50_20261024/RESULTS.csv",
+      "snapshot": "evidence/window_RESULTS.csv",
+      "sha256": "e6d750b5cc46ee95665e5258cbcbc42ea331bf7afec3edfc024545742c62ca6d",
+      "available": true,
+      "actual_sha256": "e6d750b5cc46ee95665e5258cbcbc42ea331bf7afec3edfc024545742c62ca6d",
+      "matches": true
+    },
+    {
+      "commit": "bdb1c399d29c63ae49865af8db78954f79f9ad9d",
+      "source": "reports/window_pilot_test50_20261024/REPORT.json",
+      "snapshot": "evidence/window_REPORT.json",
+      "sha256": "ffff68804a824de522affcc4c6bf34ad312bc7bf9df1f5ea31fc2c759d8a58be",
+      "available": true,
+      "actual_sha256": "ffff68804a824de522affcc4c6bf34ad312bc7bf9df1f5ea31fc2c759d8a58be",
+      "matches": true
+    },
+    {
+      "commit": "bdb1c399d29c63ae49865af8db78954f79f9ad9d",
+      "source": "reports/window_pilot_test50_20261024/fixed/TRAIN_CONFIG.json",
+      "snapshot": "evidence/window_fixed_CONFIG.json",
+      "sha256": "12b69f7fd5bd3e5082ab5f0496164dcb3ce0c39fdf89bde08c7032ea06eff1ab",
+      "available": true,
+      "actual_sha256": "12b69f7fd5bd3e5082ab5f0496164dcb3ce0c39fdf89bde08c7032ea06eff1ab",
+      "matches": true
+    },
+    {
+      "commit": "9958d421ccae1da3b8527f74da5438dbb9f3f521",
+      "source": "reports/automatic_pilot_pro4000/FINAL_REPORT.md",
+      "snapshot": "evidence/pro4000_FINAL_REPORT.md",
+      "sha256": "5ff62527c51541dc514cdeb5ecc00738c8112bd4fcdf8b419aeaebaa1e304017",
+      "available": true,
+      "actual_sha256": "5ff62527c51541dc514cdeb5ecc00738c8112bd4fcdf8b419aeaebaa1e304017",
+      "matches": true
+    },
+    {
+      "commit": "9958d421ccae1da3b8527f74da5438dbb9f3f521",
+      "source": "reports/automatic_pilot_pro4000/SOURCE_PATCH_B128_FINAL.patch",
+      "snapshot": "evidence/pro4000_SOURCE_PATCH.patch",
+      "sha256": "aedb2cd50c3a59a78be0da30e973de22894f9ccee7ed08613d515166094dc561",
+      "available": true,
+      "actual_sha256": "aedb2cd50c3a59a78be0da30e973de22894f9ccee7ed08613d515166094dc561",
+      "matches": true
+    },
+    {
+      "commit": "93f7c7a1f9606a68955f849dd580b90462ad329e",
+      "source": "self_audit/automatic.py",
+      "snapshot": "evidence/automatic_base.py",
+      "sha256": "fab4b2690a03c5b2e65b5ae7016909322fabc4e6aedf40d0c786520f7dd3ad26",
+      "available": true,
+      "actual_sha256": "fab4b2690a03c5b2e65b5ae7016909322fabc4e6aedf40d0c786520f7dd3ad26",
+      "matches": true
+    }
+  ],
+  "design_other_assets": {
+    "CoW-figure2.png": {
+      "available": true,
+      "sha256": "68c9cefaad16e269d8bc1d190b0f4a6ca0e5b095789cedf34ed905e90be14766"
+    },
+    "FIGURE_PROVENANCE.json": {
+      "available": true,
+      "sha256": "d1209257798be91f9429c4adc06f954d4b16005ba95e6c33cbd00130a7017080"
+    },
+    "extract_cow_figure.py": {
+      "available": true,
+      "sha256": "1743bd010ced4a3a885abfc452333b9854804302827eb3aa56570d564680c80d"
+    }
+  },
+  "reference": {
+    "training_method": "ema_full",
+    "inference_state": "student",
+    "source_commit": "0f54455b67bb11a72fbfe2a8ac6fae4073f3e9ca",
+    "source_sha256": "3c7fa85f00d54a6e087af3cd6c7045351fb72d532f1069bf09d95f9cd72359b7",
+    "manifest_sha256": "03c1730f88941ada898bed7fcf1b9f13cdd8f08bcce4390539fec665c82e97de",
+    "payload_sha256_declared": "b36bcafe9613325d85ee70dabd6a36fef7c17429882967831a151c0cce6d8437",
+    "train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+    "labeled_ids": [
+      "patient007",
+      "patient010",
+      "patient011",
+      "patient024",
+      "patient026",
+      "patient041",
+      "patient077",
+      "patient099"
+    ],
+    "unlabeled_ids": [
+      "patient001",
+      "patient002",
+      "patient003",
+      "patient006",
+      "patient008",
+      "patient009",
+      "patient013",
+      "patient016",
+      "patient017",
+      "patient019",
+      "patient020",
+      "patient021",
+      "patient022",
+      "patient023",
+      "patient025",
+      "patient027",
+      "patient031",
+      "patient033",
+      "patient034",
+      "patient035",
+      "patient037",
+      "patient038",
+      "patient039",
+      "patient040",
+      "patient042",
+      "patient043",
+      "patient044",
+      "patient045",
+      "patient046",
+      "patient047",
+      "patient048",
+      "patient049",
+      "patient050",
+      "patient051",
+      "patient052",
+      "patient053",
+      "patient054",
+      "patient056",
+      "patient057",
+      "patient058",
+      "patient059",
+      "patient060",
+      "patient061",
+      "patient062",
+      "patient063",
+      "patient064",
+      "patient066",
+      "patient067",
+      "patient068",
+      "patient069",
+      "patient071",
+      "patient072",
+      "patient073",
+      "patient074",
+      "patient075",
+      "patient078",
+      "patient079",
+      "patient080",
+      "patient081",
+      "patient083",
+      "patient084",
+      "patient085",
+      "patient086",
+      "patient088",
+      "patient090",
+      "patient091",
+      "patient092",
+      "patient093",
+      "patient094",
+      "patient096",
+      "patient097",
+      "patient100"
+    ],
+    "macro4_recomputed_from_report": 0.8729522993309857,
+    "foreground_recomputed_from_report": 0.831862063046926,
+    "class_metrics": {
+      "BG": {
+        "dice": 0.9962230081831648,
+        "present_patients": 50
+      },
+      "RV": {
+        "dice": 0.7858393732716549,
+        "present_patients": 50
+      },
+      "MYO": {
+        "dice": 0.8193005986489774,
+        "present_patients": 50
+      },
+      "LV": {
+        "dice": 0.8904462172201458,
+        "present_patients": 50
+      }
+    },
+    "physical_payload_status": "NOT_VERIFIED",
+    "new_patient_inference": "NOT_RUN",
+    "metric_note": "All four classes have 50 present patients, so historical extra patient-first summary equals mean of class means. New mode explicitly uses historical evaluator class-first reduction even with absent classes.",
+    "scope": "TEST50 already observed development reference; no new confirmatory claim"
+  },
+  "original_checkout_preserved": {
+    "branch": "main",
+    "head": "637f38ced217fe1db2347a87924695533056d8f0"
+  },
+  "missing_design_artifacts": [],
+  "scientific_literature_claims": "NOT_REAUDITED; implementation only"
+}

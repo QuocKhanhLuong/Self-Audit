@@ -161,3 +161,27 @@ verification. Subsequent matched GPU runs and frozen TEST50 evaluation are
 recorded in `reports/window_pilot_test50_20261024/`; the Drive reference copy is
 not independently certified as official challenge ground truth. These
 measurements do not extend the guarded policy's guarantees to patient Dice.
+
+
+## Opt-in compact fixed-teacher distillation
+
+`self_audit.compact.v1` is an additive mode through the same `train.py` entrypoint
+and `self_audit.engine` dispatch. See [the compact contract and runbook](COMPACT_STUDENT.md).
+It uses a separately initialized, fully learned compact encoder/decoder, not the
+synthetic `tiny_test` backbone and not a smaller head on DINO. The full-EMA-run
+teacher is frozen and its selected state and complete target-label lineage must
+be verified. The compact student has no EMA or prototype inference branch.
+
+The new transaction is supervised AdamW -> post-supervised reference -> fixed
+teacher targets -> class SGD displacement candidates -> finite scalar/vector
+coefficient proposals -> actual whole-network functional trials -> one additive
+commit or keep reference. No EMA update follows in this mode. The existing EMA
+and Brier modes above keep their original meaning. Hard-Dice and absent-class FP
+guards constrain only the extra U displacement on the declared TRAIN audit unit.
+The guard does not certify supervised updates, future updates or query Dice.
+
+Deploy only the independently reloadable compact export. Acceptance requires
+real evaluation of that export with historical Macro4 >= .87 and matched-device
+inference measurements showing lower seconds/volume, peak GPU memory, peak host
+RAM and weights-only bytes than the pinned full-EMA-run reference. Foreground
+and every class remain reported separately. Tests do not establish this gate.

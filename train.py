@@ -36,6 +36,7 @@ def main():
         c["model"] = override
     is_volume = c.get("schema") == "self_audit.volume.v1"
     is_automatic = c.get("schema") == "self_audit.automatic.v1"
+    is_compact = c.get("schema") == "self_audit.compact.v1"
     br_sec = c.get("baseline_recovery")
     is_baseline_recovery = isinstance(br_sec, dict) and br_sec.get("enabled", True)
     native_only = {
@@ -82,6 +83,22 @@ def main():
             p.error("--resume-sha256 is mandatory when --resume is specified")
         if args.resume_sha256 and not args.resume:
             p.error("--resume-sha256 requires --resume")
+    elif is_compact:
+        supplied = [flag for flag, value in legacy_only.items() if value is not None]
+        if supplied:
+            p.error(f"legacy-only flags are invalid for self_audit.compact.v1: {', '.join(supplied)}")
+        vol_only = {
+            "--geometry": args.geometry,
+            "--geometry-sha256": args.geometry_sha256,
+            "--resume": args.resume,
+            "--resume-sha256": args.resume_sha256,
+        }
+        vol_supplied = [flag for flag, value in vol_only.items() if value is not None]
+        if vol_supplied:
+            p.error(f"volume flags are invalid for self_audit.compact.v1: {', '.join(vol_supplied)}")
+        auto_supplied = [flag for flag, value in automatic_only.items() if value is not None]
+        if auto_supplied:
+            p.error(f"automatic-only flags are invalid for self_audit.compact.v1: {', '.join(auto_supplied)}")
     else:
         supplied = [flag for flag, value in native_only.items() if value is not None]
         if supplied:
@@ -136,6 +153,33 @@ def main():
                                       steps=args.steps,
                                       resume=args.resume, resume_sha256=args.resume_sha256,
                                       allow_full_run=args.allow_full_run), indent=2))
+        return
+    if is_compact:
+        from self_audit.compact_training import validate_compact_config
+        from self_audit.engine import train
+        effective_steps = args.steps if args.steps is not None else c.get("steps")
+        if isinstance(effective_steps, bool) or not isinstance(effective_steps, int) or effective_steps < 1:
+            p.error("compact effective steps must be a positive integer")
+        if effective_steps > 128 and not args.allow_full_run:
+            p.error("more than 128 updates requires --allow-full-run")
+        if not args.synthetic and not all([args.data, args.data_sha256]):
+            p.error("compact patient runs require --data/--data-sha256; no implicit data discovery")
+        if not args.out:
+            p.error("compact runs require --out for a checkpoint receipt")
+        try:
+            c = validate_compact_config(c, allow_full_run=args.allow_full_run, stop_steps=args.steps)
+        except ValueError as exc:
+            p.error(str(exc))
+        print(json.dumps(train(
+            c,
+            args.data,
+            args.data_sha256,
+            args.out,
+            device=args.device,
+            synthetic=args.synthetic,
+            stop_steps=args.steps,
+            allow_full_run=args.allow_full_run,
+        ), indent=2))
         return
     if not all([args.data, args.data_sha256, args.out]):
         p.error("--data, --data-sha256 and --out are mandatory; v1 --bank is unsupported")

@@ -1,0 +1,58 @@
+{
+  "schema": "self_audit.compact.acceptance.v1",
+  "status": "BLOCKED",
+  "threshold_macro4": 0.87,
+  "macro4_recomputed": null,
+  "class_means_BG_RV_MYO_LV": null,
+  "gates": {},
+  "measurements": {
+    "e2e_seconds_per_volume": {
+      "compact": 0.005909125087782741,
+      "reference": null
+    },
+    "peak_gpu_allocated": {
+      "compact": null,
+      "reference": null
+    },
+    "peak_gpu_reserved": {
+      "compact": null,
+      "reference": null
+    },
+    "peak_host_ram": {
+      "compact": 210.640625,
+      "reference": null
+    },
+    "weights_only_bytes": {
+      "compact": 18060,
+      "reference": null
+    }
+  },
+  "blockers": [
+    "benchmark cases differ from quality evaluation",
+    "benchmark patient evidence missing or synthetic",
+    "both inference benchmarks must be completed",
+    "missing positive finite measurement: e2e_seconds_per_volume",
+    "missing positive finite measurement: peak_gpu_allocated",
+    "missing positive finite measurement: peak_gpu_reserved",
+    "missing positive finite measurement: peak_host_ram",
+    "missing positive finite measurement: weights_only_bytes",
+    "patient evidence is missing or synthetic",
+    "quality reduction: locked TEST50 protocol requires 50 scored patients",
+    "quality split is not the locked historical TEST50 development reference",
+    "reference is not the locked historical raw student",
+    "single EMA-run reference identity not verified",
+    "target GPU inference memory was not measured",
+    "this acceptance protocol is the locked ACDC L8 milestone",
+    "unmatched benchmark device",
+    "unmatched benchmark io_policy",
+    "unmatched benchmark precision",
+    "unmatched benchmark workload"
+  ],
+  "audit_contribution": "NOT_ESTABLISHED_BY_DEPLOYMENT_GATES",
+  "joint_superiority": "REQUIRES_MATCHED_EMPIRICAL_COMPARISON",
+  "evidence_sha256": {
+    "export": "95e0982a36cead467796cdbac93b1a3fc7ff268d1b2ebcb37384b6d93715b754",
+    "quality": "23569ceafcc0dbcc00ea2bcb0d6b12710fd12e1c86a4c61ac0b3bd9e24025dba",
+    "benchmark": "62309b55d1f6f633ecb4efe40e5513d7f84b70d198e4d97d4998421078df34c0"
+  }
+}

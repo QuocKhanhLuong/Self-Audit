@@ -1,0 +1,2938 @@
+{
+  "schema": "self_audit.compact.software_smoke.v1",
+  "status": "VERIFIED",
+  "synthetic": true,
+  "patient_quality": "NOT_RUN",
+  "patient_gpu_resources": "NOT_RUN",
+  "source_sha256": "38d22cdc272c8cec51361535f39b5cf5e1ef4970a9d19fe8a9197c35db1093e8",
+  "train_manifest_sha256": "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+  "evaluation_manifest_sha256": "b43ac84265704eb196a375922eabbb944646cde67220e037e0e71ed9032cec63",
+  "teacher_cache_manifest_sha256": "21c3c94cbf7e2b74454c3e23d486a54b7c62b3a3502a1a88976044514e4e4a20",
+  "teacher_identity": {
+    "schema": "self_audit.compact_teacher_identity.v1",
+    "teacher_kind": "synthetic",
+    "inference_state": "student",
+    "label_budget": 1,
+    "labeled_ids": [
+      "synthetic_p000"
+    ],
+    "verified": false,
+    "verification_status": "CLAIMED_METADATA_UNVERIFIED",
+    "checks_passed": [
+      "lineage_format",
+      "patient_ids_validated",
+      "inference_state_declared",
+      "budget_k_satisfied",
+      "label_union_satisfied",
+      "synthetic_kind_validated"
+    ],
+    "physical_payload_status": "BLOCKED_MISSING_PAYLOAD"
+  },
+  "configurations": {
+    "supervised": {
+      "path": "/private/tmp/self-audit-compact-smoke-20261028-release/supervised.json",
+      "sha256": "5d13b9644484c46f0ce94320d9d1018349e7e4afaa2c4bf7c7d22435dceb863b"
+    },
+    "plain_kd": {
+      "path": "/private/tmp/self-audit-compact-smoke-20261028-release/plain_kd.json",
+      "sha256": "a759a74a1f638e8ca7051780dad0665eb813988483ecf380d8f04c150cab246c"
+    },
+    "scalar_guard": {
+      "path": "/private/tmp/self-audit-compact-smoke-20261028-release/scalar_guard.json",
+      "sha256": "180edb7bf8e2757ade64e4d765b3f45189578704986908cbb58193f716480ab0"
+    },
+    "joint_guard": {
+      "path": "/private/tmp/self-audit-compact-smoke-20261028-release/joint_guard.json",
+      "sha256": "02e8077178a4ccff30e5a0900f82992c04ee2d1a23f910e690a8b06823ca1a21"
+    }
+  },
+  "checkpoint_manifest_sha256": "e77537cd298f72124a9d3bf8c7f2c8fb7c2ee302759b15e7ed8a399c250b4a79",
+  "export_manifest_sha256": "95e0982a36cead467796cdbac93b1a3fc7ff268d1b2ebcb37384b6d93715b754",
+  "export_payload_sha256": "a2307ac209c44fdda973eeee4a751e35bdcff6a700749f7e4fa1b8fe591d005a",
+  "commands": [
+    {
+      "name": "cache",
+      "argv": [
+        "/Users/alvinluong/miniforge3/bin/python",
+        "scripts/build_compact_teacher_cache.py",
+        "--data-manifest",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/train_data/train.json",
+        "--data-sha256",
+        "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+        "--output-dir",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/cache",
+        "--synthetic-teacher",
+        "--device",
+        "cpu",
+        "--batch-size",
+        "2"
+      ],
+      "exit_code": 0,
+      "seconds": 0.7435429580509663
+    },
+    {
+      "name": "supervised",
+      "argv": [
+        "/Users/alvinluong/miniforge3/bin/python",
+        "train.py",
+        "--config",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/supervised.json",
+        "--data",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/train_data/train.json",
+        "--data-sha256",
+        "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+        "--out",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/supervised",
+        "--device",
+        "cpu",
+        "--synthetic"
+      ],
+      "exit_code": 0,
+      "seconds": 1.5870579998008907
+    },
+    {
+      "name": "plain_kd",
+      "argv": [
+        "/Users/alvinluong/miniforge3/bin/python",
+        "train.py",
+        "--config",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/plain_kd.json",
+        "--data",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/train_data/train.json",
+        "--data-sha256",
+        "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+        "--out",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/plain_kd",
+        "--device",
+        "cpu",
+        "--synthetic"
+      ],
+      "exit_code": 0,
+      "seconds": 1.383578334003687
+    },
+    {
+      "name": "scalar_guard",
+      "argv": [
+        "/Users/alvinluong/miniforge3/bin/python",
+        "train.py",
+        "--config",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/scalar_guard.json",
+        "--data",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/train_data/train.json",
+        "--data-sha256",
+        "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+        "--out",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/scalar_guard",
+        "--device",
+        "cpu",
+        "--synthetic"
+      ],
+      "exit_code": 0,
+      "seconds": 1.3462768332101405
+    },
+    {
+      "name": "joint_guard",
+      "argv": [
+        "/Users/alvinluong/miniforge3/bin/python",
+        "train.py",
+        "--config",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/joint_guard.json",
+        "--data",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/train_data/train.json",
+        "--data-sha256",
+        "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+        "--out",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/joint_guard",
+        "--device",
+        "cpu",
+        "--synthetic"
+      ],
+      "exit_code": 0,
+      "seconds": 1.3548615421168506
+    },
+    {
+      "name": "export",
+      "argv": [
+        "/Users/alvinluong/miniforge3/bin/python",
+        "scripts/export_compact_student.py",
+        "--checkpoint",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/plain_kd/final",
+        "--checkpoint-sha256",
+        "e77537cd298f72124a9d3bf8c7f2c8fb7c2ee302759b15e7ed8a399c250b4a79",
+        "--out",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/export"
+      ],
+      "exit_code": 0,
+      "seconds": 0.7986695421859622
+    },
+    {
+      "name": "infer",
+      "argv": [
+        "/Users/alvinluong/miniforge3/bin/python",
+        "scripts/infer_compact_student.py",
+        "--export",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/export",
+        "--export-sha256",
+        "95e0982a36cead467796cdbac93b1a3fc7ff268d1b2ebcb37384b6d93715b754",
+        "--manifest",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/eval_data/manifest.json",
+        "--manifest-sha256",
+        "b43ac84265704eb196a375922eabbb944646cde67220e037e0e71ed9032cec63",
+        "--device",
+        "cpu",
+        "--batch-size",
+        "2",
+        "--out",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/inference"
+      ],
+      "exit_code": 0,
+      "seconds": 0.6392748751677573
+    },
+    {
+      "name": "evaluate",
+      "argv": [
+        "/Users/alvinluong/miniforge3/bin/python",
+        "scripts/evaluate_compact_student.py",
+        "--export",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/export",
+        "--export-sha256",
+        "95e0982a36cead467796cdbac93b1a3fc7ff268d1b2ebcb37384b6d93715b754",
+        "--manifest",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/eval_data/manifest.json",
+        "--manifest-sha256",
+        "b43ac84265704eb196a375922eabbb944646cde67220e037e0e71ed9032cec63",
+        "--device",
+        "cpu",
+        "--batch-size",
+        "2",
+        "--train-manifest",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/train_data/train.json",
+        "--train-manifest-sha256",
+        "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+        "--out",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/evaluation"
+      ],
+      "exit_code": 0,
+      "seconds": 0.8910562912933528
+    },
+    {
+      "name": "benchmark",
+      "argv": [
+        "/Users/alvinluong/miniforge3/bin/python",
+        "scripts/benchmark_compact_student.py",
+        "--compact-export",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/export",
+        "--compact-export-sha256",
+        "95e0982a36cead467796cdbac93b1a3fc7ff268d1b2ebcb37384b6d93715b754",
+        "--manifest",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/eval_data/manifest.json",
+        "--manifest-sha256",
+        "b43ac84265704eb196a375922eabbb944646cde67220e037e0e71ed9032cec63",
+        "--out",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/benchmark.json",
+        "--device",
+        "cpu",
+        "--batch-size",
+        "2",
+        "--warmup",
+        "1",
+        "--repeats",
+        "1"
+      ],
+      "exit_code": 0,
+      "seconds": 1.5222247503697872
+    },
+    {
+      "name": "assess",
+      "argv": [
+        "/Users/alvinluong/miniforge3/bin/python",
+        "scripts/assess_compact_deployment.py",
+        "--export",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/export",
+        "--export-sha256",
+        "95e0982a36cead467796cdbac93b1a3fc7ff268d1b2ebcb37384b6d93715b754",
+        "--quality",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/evaluation/METRICS.json",
+        "--quality-sha256",
+        "23569ceafcc0dbcc00ea2bcb0d6b12710fd12e1c86a4c61ac0b3bd9e24025dba",
+        "--benchmark",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/benchmark.json",
+        "--benchmark-sha256",
+        "62309b55d1f6f633ecb4efe40e5513d7f84b70d198e4d97d4998421078df34c0",
+        "--out",
+        "/private/tmp/self-audit-compact-smoke-20261028-release/ACCEPTANCE.json"
+      ],
+      "exit_code": 2,
+      "seconds": 0.7935893326066434
+    }
+  ],
+  "training_receipts": {
+    "supervised": {
+      "schema": "self_audit.compact.report.v1",
+      "status": "COMPLETED",
+      "method": "supervised",
+      "synthetic": true,
+      "quality": "NOT_EVALUATED",
+      "steps": 2,
+      "steps_requested": 2,
+      "max_steps": 2,
+      "termination_reason": "max_steps_reached",
+      "equal_wall_time": {
+        "enabled": false
+      },
+      "counts": {
+        "supervised_updates": 2,
+        "pseudo_accepted": 0,
+        "pseudo_rejected": 0,
+        "warmup_steps": 0,
+        "no_candidates": 0,
+        "rejected_all": 0,
+        "zero_displacement": 2
+      },
+      "slices_sampled": {
+        "labeled": 2,
+        "unlabeled": 2,
+        "audit": 0
+      },
+      "slices_optimized": {
+        "labeled": 2,
+        "unlabeled": 0
+      },
+      "batch_sizes": {
+        "labeled": 1,
+        "unlabeled": 1
+      },
+      "effective_batch_counts": {
+        "labeled": 2,
+        "unlabeled": 2
+      },
+      "optimizer_calls": {
+        "adamw": 2,
+        "sgd": 0
+      },
+      "teacher_costs": {
+        "teacher_cache_total_seconds": 0.0,
+        "teacher_cache_generation_cost": "NOT_KNOWN",
+        "teacher_training_cost": "SYNTHETIC_NOT_PATIENT_EVIDENCE"
+      },
+      "audit_consumption": {
+        "slice_reads": 0,
+        "frame_reads": 0,
+        "patient_reads": 0,
+        "stream_replays": 0,
+        "unique_frames": [],
+        "unique_patients": []
+      },
+      "runtime_comparability": "SUPERVISED_NO_AUDIT",
+      "quality_gate": {
+        "threshold_macro4": 0.87,
+        "status": "GATE_METADATA_LOCKED",
+        "notes": "Acceptance requires evaluation of exported compact student with Macro4 >= 0.87"
+      },
+      "warm_start_summary": {
+        "initial_gradient_norms": {
+          "encoder": 4.471066474914551,
+          "decoder": 1.1296958923339844,
+          "head": 0.7209318280220032
+        },
+        "initial_weight_changes": {
+          "encoder": 0.013104132376611233,
+          "decoder": 0.005692054517567158,
+          "head": 0.0013417997397482395
+        },
+        "final_gradient_norms": {
+          "encoder": 4.085174560546875,
+          "decoder": 1.115267276763916,
+          "head": 0.7162021398544312
+        },
+        "final_weight_changes": {
+          "encoder": 0.012805862352252007,
+          "decoder": 0.005588088650256395,
+          "head": 0.0012962731998413801
+        }
+      },
+      "initialization": {
+        "seed": 217,
+        "initial_state_sha256": "cb9002fdc550d41f444f7c108e92c1313cdc5781ab31985907cb4f1e3e38720c",
+        "first_step_optimizer": {
+          "name": "AdamW",
+          "owner": "labeled_supervised_update_only",
+          "parameter_ownership": {
+            "encoder.stem.0.weight": "encoder",
+            "encoder.stem.1.weight": "encoder",
+            "encoder.stem.1.bias": "encoder",
+            "encoder.stem.3.conv1.weight": "encoder",
+            "encoder.stem.3.norm1.weight": "encoder",
+            "encoder.stem.3.norm1.bias": "encoder",
+            "encoder.stem.3.conv2.weight": "encoder",
+            "encoder.stem.3.norm2.weight": "encoder",
+            "encoder.stem.3.norm2.bias": "encoder",
+            "encoder.down_stages.0.0.weight": "encoder",
+            "encoder.down_stages.0.1.weight": "encoder",
+            "encoder.down_stages.0.1.bias": "encoder",
+            "encoder.down_stages.0.3.conv1.weight": "encoder",
+            "encoder.down_stages.0.3.norm1.weight": "encoder",
+            "encoder.down_stages.0.3.norm1.bias": "encoder",
+            "encoder.down_stages.0.3.conv2.weight": "encoder",
+            "encoder.down_stages.0.3.norm2.weight": "encoder",
+            "encoder.down_stages.0.3.norm2.bias": "encoder",
+            "decoder.up_stages.0.fuse.0.weight": "decoder",
+            "decoder.up_stages.0.fuse.1.weight": "decoder",
+            "decoder.up_stages.0.fuse.1.bias": "decoder",
+            "decoder.up_stages.0.refine.conv1.weight": "decoder",
+            "decoder.up_stages.0.refine.norm1.weight": "decoder",
+            "decoder.up_stages.0.refine.norm1.bias": "decoder",
+            "decoder.up_stages.0.refine.conv2.weight": "decoder",
+            "decoder.up_stages.0.refine.norm2.weight": "decoder",
+            "decoder.up_stages.0.refine.norm2.bias": "decoder",
+            "head.weight": "head",
+            "head.bias": "head"
+          }
+        }
+      },
+      "teacher_preflight": null,
+      "train_manifest_sha256": "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+      "teacher_cache_manifest_sha256": "21c3c94cbf7e2b74454c3e23d486a54b7c62b3a3502a1a88976044514e4e4a20",
+      "source_hashes": {
+        "self_audit/compact_training.py": "b7a5123ebc93e9271e111430f4818b8654d0c63d1b31e7a5b34dc05749c06a70",
+        "self_audit/engine.py": "7119466bfc8de9e96d440935a46c353033c583b6f674ef6a912b27e50b7ca569",
+        "train.py": "ec671ef385b7ef6aea0cbe4975cdb69a743c937998170529f9bdbb9226ad68fe"
+      },
+      "source_digest": "38d22cdc272c8cec51361535f39b5cf5e1ef4970a9d19fe8a9197c35db1093e8",
+      "final_manifest_sha256": "6693f62ad434a711c1b66b0d0405a2215ca5cf61375e7805fbbf93309eb90c7a",
+      "final_weights_sha256": "9f8ce1dfb3b19f913bb54c664c126f21e09053fda8015891c4560930b49dc8a5",
+      "final_checkpoint_path": "/private/tmp/self-audit-compact-smoke-20261028-release/supervised/final",
+      "final_weights_path": "/private/tmp/self-audit-compact-smoke-20261028-release/supervised/final/weights.pt",
+      "report_path": "/private/tmp/self-audit-compact-smoke-20261028-release/supervised/REPORT.json",
+      "output_dir": "/private/tmp/self-audit-compact-smoke-20261028-release/supervised",
+      "label_budget": 1,
+      "seen_supervised": [
+        "synthetic_p000"
+      ],
+      "seen_audit": [],
+      "seen_unlabeled": [
+        "synthetic_p001",
+        "synthetic_p002"
+      ],
+      "elapsed_seconds": 0.6119277076795697,
+      "profile": {
+        "device": "cpu",
+        "cuda_peak_allocated_bytes": null,
+        "cuda_peak_reserved_bytes": null,
+        "optimizer_steps_per_second": 41.506154486677445,
+        "supervised_slices_per_second": 41.505221923346916,
+        "scope": "student training including synchronous telemetry, proposal and audit; teacher/cache build separate"
+      },
+      "training_elapsed_seconds": 0.048187042120844126
+    },
+    "plain_kd": {
+      "schema": "self_audit.compact.report.v1",
+      "status": "COMPLETED",
+      "method": "plain_kd",
+      "synthetic": true,
+      "quality": "NOT_EVALUATED",
+      "steps": 2,
+      "steps_requested": 2,
+      "max_steps": 2,
+      "termination_reason": "max_steps_reached",
+      "equal_wall_time": {
+        "enabled": false
+      },
+      "counts": {
+        "supervised_updates": 2,
+        "pseudo_accepted": 1,
+        "pseudo_rejected": 0,
+        "warmup_steps": 1,
+        "no_candidates": 0,
+        "rejected_all": 0,
+        "zero_displacement": 0
+      },
+      "slices_sampled": {
+        "labeled": 2,
+        "unlabeled": 2,
+        "audit": 0
+      },
+      "slices_optimized": {
+        "labeled": 2,
+        "unlabeled": 1
+      },
+      "batch_sizes": {
+        "labeled": 1,
+        "unlabeled": 1
+      },
+      "effective_batch_counts": {
+        "labeled": 2,
+        "unlabeled": 2
+      },
+      "optimizer_calls": {
+        "adamw": 2,
+        "sgd": 1
+      },
+      "teacher_costs": {
+        "teacher_cache_total_seconds": 0.004365250002592802,
+        "teacher_cache_generation_cost": {
+          "total_latency_seconds": 0.03611612506210804,
+          "mean_seconds_per_volume": 0.01805806253105402,
+          "median_seconds_per_volume": 0.01797491661272943,
+          "total_disk_bytes": 33024,
+          "vram_peak_allocated_bytes": null,
+          "vram_peak_reserved_bytes": null
+        },
+        "teacher_training_cost": "SYNTHETIC_NOT_PATIENT_EVIDENCE"
+      },
+      "audit_consumption": {
+        "slice_reads": 0,
+        "frame_reads": 0,
+        "patient_reads": 0,
+        "stream_replays": 0,
+        "unique_frames": [],
+        "unique_patients": []
+      },
+      "runtime_comparability": "PLAIN_KD_EXCLUDES_AUDIT_NOT_LATENCY_MATCHED",
+      "quality_gate": {
+        "threshold_macro4": 0.87,
+        "status": "GATE_METADATA_LOCKED",
+        "notes": "Acceptance requires evaluation of exported compact student with Macro4 >= 0.87"
+      },
+      "warm_start_summary": {
+        "initial_gradient_norms": {
+          "encoder": 4.471066474914551,
+          "decoder": 1.1296958923339844,
+          "head": 0.7209318280220032
+        },
+        "initial_weight_changes": {
+          "encoder": 0.013104132376611233,
+          "decoder": 0.005692054517567158,
+          "head": 0.0013417997397482395
+        },
+        "final_gradient_norms": {
+          "encoder": 4.085174560546875,
+          "decoder": 1.115267276763916,
+          "head": 0.7162021398544312
+        },
+        "final_weight_changes": {
+          "encoder": 0.012805862352252007,
+          "decoder": 0.005588088650256395,
+          "head": 0.0012962731998413801
+        }
+      },
+      "initialization": {
+        "seed": 217,
+        "initial_state_sha256": "cb9002fdc550d41f444f7c108e92c1313cdc5781ab31985907cb4f1e3e38720c",
+        "first_step_optimizer": {
+          "name": "AdamW",
+          "owner": "labeled_supervised_update_only",
+          "parameter_ownership": {
+            "encoder.stem.0.weight": "encoder",
+            "encoder.stem.1.weight": "encoder",
+            "encoder.stem.1.bias": "encoder",
+            "encoder.stem.3.conv1.weight": "encoder",
+            "encoder.stem.3.norm1.weight": "encoder",
+            "encoder.stem.3.norm1.bias": "encoder",
+            "encoder.stem.3.conv2.weight": "encoder",
+            "encoder.stem.3.norm2.weight": "encoder",
+            "encoder.stem.3.norm2.bias": "encoder",
+            "encoder.down_stages.0.0.weight": "encoder",
+            "encoder.down_stages.0.1.weight": "encoder",
+            "encoder.down_stages.0.1.bias": "encoder",
+            "encoder.down_stages.0.3.conv1.weight": "encoder",
+            "encoder.down_stages.0.3.norm1.weight": "encoder",
+            "encoder.down_stages.0.3.norm1.bias": "encoder",
+            "encoder.down_stages.0.3.conv2.weight": "encoder",
+            "encoder.down_stages.0.3.norm2.weight": "encoder",
+            "encoder.down_stages.0.3.norm2.bias": "encoder",
+            "decoder.up_stages.0.fuse.0.weight": "decoder",
+            "decoder.up_stages.0.fuse.1.weight": "decoder",
+            "decoder.up_stages.0.fuse.1.bias": "decoder",
+            "decoder.up_stages.0.refine.conv1.weight": "decoder",
+            "decoder.up_stages.0.refine.norm1.weight": "decoder",
+            "decoder.up_stages.0.refine.norm1.bias": "decoder",
+            "decoder.up_stages.0.refine.conv2.weight": "decoder",
+            "decoder.up_stages.0.refine.norm2.weight": "decoder",
+            "decoder.up_stages.0.refine.norm2.bias": "decoder",
+            "head.weight": "head",
+            "head.bias": "head"
+          }
+        }
+      },
+      "teacher_preflight": {
+        "status": "PASS",
+        "label_budget": 1,
+        "union_count": 1,
+        "union_labeled_ids": [
+          "synthetic_p000"
+        ],
+        "exact_budget_matched": true,
+        "components": {
+          "teacher": [
+            "synthetic_p000"
+          ],
+          "student": [
+            "synthetic_p000"
+          ],
+          "warmstart": [
+            "synthetic_p000"
+          ],
+          "audit": [
+            "synthetic_p000"
+          ]
+        },
+        "train_manifest_sha256": "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+        "teacher_verification": "CLAIMED_METADATA_UNVERIFIED"
+      },
+      "train_manifest_sha256": "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+      "teacher_cache_manifest_sha256": "21c3c94cbf7e2b74454c3e23d486a54b7c62b3a3502a1a88976044514e4e4a20",
+      "source_hashes": {
+        "self_audit/compact_training.py": "b7a5123ebc93e9271e111430f4818b8654d0c63d1b31e7a5b34dc05749c06a70",
+        "self_audit/engine.py": "7119466bfc8de9e96d440935a46c353033c583b6f674ef6a912b27e50b7ca569",
+        "train.py": "ec671ef385b7ef6aea0cbe4975cdb69a743c937998170529f9bdbb9226ad68fe"
+      },
+      "source_digest": "38d22cdc272c8cec51361535f39b5cf5e1ef4970a9d19fe8a9197c35db1093e8",
+      "final_manifest_sha256": "e77537cd298f72124a9d3bf8c7f2c8fb7c2ee302759b15e7ed8a399c250b4a79",
+      "final_weights_sha256": "edbbdeb10a63ec667989e1865b446662cc210dd89ff16f641e5f0a1b9e85f63e",
+      "final_checkpoint_path": "/private/tmp/self-audit-compact-smoke-20261028-release/plain_kd/final",
+      "final_weights_path": "/private/tmp/self-audit-compact-smoke-20261028-release/plain_kd/final/weights.pt",
+      "report_path": "/private/tmp/self-audit-compact-smoke-20261028-release/plain_kd/REPORT.json",
+      "output_dir": "/private/tmp/self-audit-compact-smoke-20261028-release/plain_kd",
+      "label_budget": 1,
+      "seen_supervised": [
+        "synthetic_p000"
+      ],
+      "seen_audit": [],
+      "seen_unlabeled": [
+        "synthetic_p001",
+        "synthetic_p002"
+      ],
+      "elapsed_seconds": 0.43268104223534465,
+      "profile": {
+        "device": "cpu",
+        "cuda_peak_allocated_bytes": null,
+        "cuda_peak_reserved_bytes": null,
+        "optimizer_steps_per_second": 54.13281470635044,
+        "supervised_slices_per_second": 54.13104493512121,
+        "scope": "student training including synchronous telemetry, proposal and audit; teacher/cache build separate"
+      },
+      "training_elapsed_seconds": 0.03694783290848136
+    },
+    "scalar_guard": {
+      "schema": "self_audit.compact.report.v1",
+      "status": "COMPLETED",
+      "method": "scalar_guard",
+      "synthetic": true,
+      "quality": "NOT_EVALUATED",
+      "steps": 2,
+      "steps_requested": 2,
+      "max_steps": 2,
+      "termination_reason": "max_steps_reached",
+      "equal_wall_time": {
+        "enabled": false
+      },
+      "counts": {
+        "supervised_updates": 2,
+        "pseudo_accepted": 1,
+        "pseudo_rejected": 0,
+        "warmup_steps": 1,
+        "no_candidates": 0,
+        "rejected_all": 0,
+        "zero_displacement": 0
+      },
+      "slices_sampled": {
+        "labeled": 2,
+        "unlabeled": 2,
+        "audit": 6
+      },
+      "slices_optimized": {
+        "labeled": 2,
+        "unlabeled": 1
+      },
+      "batch_sizes": {
+        "labeled": 1,
+        "unlabeled": 1
+      },
+      "effective_batch_counts": {
+        "labeled": 2,
+        "unlabeled": 2
+      },
+      "optimizer_calls": {
+        "adamw": 2,
+        "sgd": 1
+      },
+      "teacher_costs": {
+        "teacher_cache_total_seconds": 0.004889166913926601,
+        "teacher_cache_generation_cost": {
+          "total_latency_seconds": 0.03611612506210804,
+          "mean_seconds_per_volume": 0.01805806253105402,
+          "median_seconds_per_volume": 0.01797491661272943,
+          "total_disk_bytes": 33024,
+          "vram_peak_allocated_bytes": null,
+          "vram_peak_reserved_bytes": null
+        },
+        "teacher_training_cost": "SYNTHETIC_NOT_PATIENT_EVIDENCE"
+      },
+      "audit_consumption": {
+        "slice_reads": 6,
+        "frame_reads": 3,
+        "patient_reads": 3,
+        "stream_replays": 3,
+        "unique_frames": [
+          [
+            "synthetic_p000",
+            0
+          ]
+        ],
+        "unique_patients": [
+          "synthetic_p000"
+        ]
+      },
+      "runtime_comparability": "AUDIT_OVERHEAD_INCLUDED",
+      "quality_gate": {
+        "threshold_macro4": 0.87,
+        "status": "GATE_METADATA_LOCKED",
+        "notes": "Acceptance requires evaluation of exported compact student with Macro4 >= 0.87"
+      },
+      "warm_start_summary": {
+        "initial_gradient_norms": {
+          "encoder": 4.471066474914551,
+          "decoder": 1.1296958923339844,
+          "head": 0.7209318280220032
+        },
+        "initial_weight_changes": {
+          "encoder": 0.013104132376611233,
+          "decoder": 0.005692054517567158,
+          "head": 0.0013417997397482395
+        },
+        "final_gradient_norms": {
+          "encoder": 4.085174560546875,
+          "decoder": 1.115267276763916,
+          "head": 0.7162021398544312
+        },
+        "final_weight_changes": {
+          "encoder": 0.012805862352252007,
+          "decoder": 0.005588088650256395,
+          "head": 0.0012962731998413801
+        }
+      },
+      "initialization": {
+        "seed": 217,
+        "initial_state_sha256": "cb9002fdc550d41f444f7c108e92c1313cdc5781ab31985907cb4f1e3e38720c",
+        "first_step_optimizer": {
+          "name": "AdamW",
+          "owner": "labeled_supervised_update_only",
+          "parameter_ownership": {
+            "encoder.stem.0.weight": "encoder",
+            "encoder.stem.1.weight": "encoder",
+            "encoder.stem.1.bias": "encoder",
+            "encoder.stem.3.conv1.weight": "encoder",
+            "encoder.stem.3.norm1.weight": "encoder",
+            "encoder.stem.3.norm1.bias": "encoder",
+            "encoder.stem.3.conv2.weight": "encoder",
+            "encoder.stem.3.norm2.weight": "encoder",
+            "encoder.stem.3.norm2.bias": "encoder",
+            "encoder.down_stages.0.0.weight": "encoder",
+            "encoder.down_stages.0.1.weight": "encoder",
+            "encoder.down_stages.0.1.bias": "encoder",
+            "encoder.down_stages.0.3.conv1.weight": "encoder",
+            "encoder.down_stages.0.3.norm1.weight": "encoder",
+            "encoder.down_stages.0.3.norm1.bias": "encoder",
+            "encoder.down_stages.0.3.conv2.weight": "encoder",
+            "encoder.down_stages.0.3.norm2.weight": "encoder",
+            "encoder.down_stages.0.3.norm2.bias": "encoder",
+            "decoder.up_stages.0.fuse.0.weight": "decoder",
+            "decoder.up_stages.0.fuse.1.weight": "decoder",
+            "decoder.up_stages.0.fuse.1.bias": "decoder",
+            "decoder.up_stages.0.refine.conv1.weight": "decoder",
+            "decoder.up_stages.0.refine.norm1.weight": "decoder",
+            "decoder.up_stages.0.refine.norm1.bias": "decoder",
+            "decoder.up_stages.0.refine.conv2.weight": "decoder",
+            "decoder.up_stages.0.refine.norm2.weight": "decoder",
+            "decoder.up_stages.0.refine.norm2.bias": "decoder",
+            "head.weight": "head",
+            "head.bias": "head"
+          }
+        }
+      },
+      "teacher_preflight": {
+        "status": "PASS",
+        "label_budget": 1,
+        "union_count": 1,
+        "union_labeled_ids": [
+          "synthetic_p000"
+        ],
+        "exact_budget_matched": true,
+        "components": {
+          "teacher": [
+            "synthetic_p000"
+          ],
+          "student": [
+            "synthetic_p000"
+          ],
+          "warmstart": [
+            "synthetic_p000"
+          ],
+          "audit": [
+            "synthetic_p000"
+          ]
+        },
+        "train_manifest_sha256": "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+        "teacher_verification": "CLAIMED_METADATA_UNVERIFIED"
+      },
+      "train_manifest_sha256": "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+      "teacher_cache_manifest_sha256": "21c3c94cbf7e2b74454c3e23d486a54b7c62b3a3502a1a88976044514e4e4a20",
+      "source_hashes": {
+        "self_audit/compact_training.py": "b7a5123ebc93e9271e111430f4818b8654d0c63d1b31e7a5b34dc05749c06a70",
+        "self_audit/engine.py": "7119466bfc8de9e96d440935a46c353033c583b6f674ef6a912b27e50b7ca569",
+        "train.py": "ec671ef385b7ef6aea0cbe4975cdb69a743c937998170529f9bdbb9226ad68fe"
+      },
+      "source_digest": "38d22cdc272c8cec51361535f39b5cf5e1ef4970a9d19fe8a9197c35db1093e8",
+      "final_manifest_sha256": "8fbcc78bb9b35e69f44a640e1c499b4e0200ec6b9bbd63958ec108527017b439",
+      "final_weights_sha256": "44db2537b1dca37928020e6c9491b48e7124630c593eb18c92aa57d847977b8b",
+      "final_checkpoint_path": "/private/tmp/self-audit-compact-smoke-20261028-release/scalar_guard/final",
+      "final_weights_path": "/private/tmp/self-audit-compact-smoke-20261028-release/scalar_guard/final/weights.pt",
+      "report_path": "/private/tmp/self-audit-compact-smoke-20261028-release/scalar_guard/REPORT.json",
+      "output_dir": "/private/tmp/self-audit-compact-smoke-20261028-release/scalar_guard",
+      "label_budget": 1,
+      "seen_supervised": [
+        "synthetic_p000"
+      ],
+      "seen_audit": [
+        "synthetic_p000"
+      ],
+      "seen_unlabeled": [
+        "synthetic_p001",
+        "synthetic_p002"
+      ],
+      "elapsed_seconds": 0.4198946664109826,
+      "profile": {
+        "device": "cpu",
+        "cuda_peak_allocated_bytes": null,
+        "cuda_peak_reserved_bytes": null,
+        "optimizer_steps_per_second": 45.677569377524314,
+        "supervised_slices_per_second": 45.67670032067202,
+        "scope": "student training including synchronous telemetry, proposal and audit; teacher/cache build separate"
+      },
+      "training_elapsed_seconds": 0.04378637485206127
+    },
+    "joint_guard": {
+      "schema": "self_audit.compact.report.v1",
+      "status": "COMPLETED",
+      "method": "joint_guard",
+      "synthetic": true,
+      "quality": "NOT_EVALUATED",
+      "steps": 2,
+      "steps_requested": 2,
+      "max_steps": 2,
+      "termination_reason": "max_steps_reached",
+      "equal_wall_time": {
+        "enabled": false
+      },
+      "counts": {
+        "supervised_updates": 2,
+        "pseudo_accepted": 1,
+        "pseudo_rejected": 0,
+        "warmup_steps": 1,
+        "no_candidates": 0,
+        "rejected_all": 0,
+        "zero_displacement": 0
+      },
+      "slices_sampled": {
+        "labeled": 2,
+        "unlabeled": 2,
+        "audit": 6
+      },
+      "slices_optimized": {
+        "labeled": 2,
+        "unlabeled": 1
+      },
+      "batch_sizes": {
+        "labeled": 1,
+        "unlabeled": 1
+      },
+      "effective_batch_counts": {
+        "labeled": 2,
+        "unlabeled": 2
+      },
+      "optimizer_calls": {
+        "adamw": 2,
+        "sgd": 1
+      },
+      "teacher_costs": {
+        "teacher_cache_total_seconds": 0.00485558295622468,
+        "teacher_cache_generation_cost": {
+          "total_latency_seconds": 0.03611612506210804,
+          "mean_seconds_per_volume": 0.01805806253105402,
+          "median_seconds_per_volume": 0.01797491661272943,
+          "total_disk_bytes": 33024,
+          "vram_peak_allocated_bytes": null,
+          "vram_peak_reserved_bytes": null
+        },
+        "teacher_training_cost": "SYNTHETIC_NOT_PATIENT_EVIDENCE"
+      },
+      "audit_consumption": {
+        "slice_reads": 6,
+        "frame_reads": 3,
+        "patient_reads": 3,
+        "stream_replays": 3,
+        "unique_frames": [
+          [
+            "synthetic_p000",
+            0
+          ]
+        ],
+        "unique_patients": [
+          "synthetic_p000"
+        ]
+      },
+      "runtime_comparability": "AUDIT_OVERHEAD_INCLUDED",
+      "quality_gate": {
+        "threshold_macro4": 0.87,
+        "status": "GATE_METADATA_LOCKED",
+        "notes": "Acceptance requires evaluation of exported compact student with Macro4 >= 0.87"
+      },
+      "warm_start_summary": {
+        "initial_gradient_norms": {
+          "encoder": 4.471066474914551,
+          "decoder": 1.1296958923339844,
+          "head": 0.7209318280220032
+        },
+        "initial_weight_changes": {
+          "encoder": 0.013104132376611233,
+          "decoder": 0.005692054517567158,
+          "head": 0.0013417997397482395
+        },
+        "final_gradient_norms": {
+          "encoder": 4.085174560546875,
+          "decoder": 1.115267276763916,
+          "head": 0.7162021398544312
+        },
+        "final_weight_changes": {
+          "encoder": 0.012805862352252007,
+          "decoder": 0.005588088650256395,
+          "head": 0.0012962731998413801
+        }
+      },
+      "initialization": {
+        "seed": 217,
+        "initial_state_sha256": "cb9002fdc550d41f444f7c108e92c1313cdc5781ab31985907cb4f1e3e38720c",
+        "first_step_optimizer": {
+          "name": "AdamW",
+          "owner": "labeled_supervised_update_only",
+          "parameter_ownership": {
+            "encoder.stem.0.weight": "encoder",
+            "encoder.stem.1.weight": "encoder",
+            "encoder.stem.1.bias": "encoder",
+            "encoder.stem.3.conv1.weight": "encoder",
+            "encoder.stem.3.norm1.weight": "encoder",
+            "encoder.stem.3.norm1.bias": "encoder",
+            "encoder.stem.3.conv2.weight": "encoder",
+            "encoder.stem.3.norm2.weight": "encoder",
+            "encoder.stem.3.norm2.bias": "encoder",
+            "encoder.down_stages.0.0.weight": "encoder",
+            "encoder.down_stages.0.1.weight": "encoder",
+            "encoder.down_stages.0.1.bias": "encoder",
+            "encoder.down_stages.0.3.conv1.weight": "encoder",
+            "encoder.down_stages.0.3.norm1.weight": "encoder",
+            "encoder.down_stages.0.3.norm1.bias": "encoder",
+            "encoder.down_stages.0.3.conv2.weight": "encoder",
+            "encoder.down_stages.0.3.norm2.weight": "encoder",
+            "encoder.down_stages.0.3.norm2.bias": "encoder",
+            "decoder.up_stages.0.fuse.0.weight": "decoder",
+            "decoder.up_stages.0.fuse.1.weight": "decoder",
+            "decoder.up_stages.0.fuse.1.bias": "decoder",
+            "decoder.up_stages.0.refine.conv1.weight": "decoder",
+            "decoder.up_stages.0.refine.norm1.weight": "decoder",
+            "decoder.up_stages.0.refine.norm1.bias": "decoder",
+            "decoder.up_stages.0.refine.conv2.weight": "decoder",
+            "decoder.up_stages.0.refine.norm2.weight": "decoder",
+            "decoder.up_stages.0.refine.norm2.bias": "decoder",
+            "head.weight": "head",
+            "head.bias": "head"
+          }
+        }
+      },
+      "teacher_preflight": {
+        "status": "PASS",
+        "label_budget": 1,
+        "union_count": 1,
+        "union_labeled_ids": [
+          "synthetic_p000"
+        ],
+        "exact_budget_matched": true,
+        "components": {
+          "teacher": [
+            "synthetic_p000"
+          ],
+          "student": [
+            "synthetic_p000"
+          ],
+          "warmstart": [
+            "synthetic_p000"
+          ],
+          "audit": [
+            "synthetic_p000"
+          ]
+        },
+        "train_manifest_sha256": "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+        "teacher_verification": "CLAIMED_METADATA_UNVERIFIED"
+      },
+      "train_manifest_sha256": "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+      "teacher_cache_manifest_sha256": "21c3c94cbf7e2b74454c3e23d486a54b7c62b3a3502a1a88976044514e4e4a20",
+      "source_hashes": {
+        "self_audit/compact_training.py": "b7a5123ebc93e9271e111430f4818b8654d0c63d1b31e7a5b34dc05749c06a70",
+        "self_audit/engine.py": "7119466bfc8de9e96d440935a46c353033c583b6f674ef6a912b27e50b7ca569",
+        "train.py": "ec671ef385b7ef6aea0cbe4975cdb69a743c937998170529f9bdbb9226ad68fe"
+      },
+      "source_digest": "38d22cdc272c8cec51361535f39b5cf5e1ef4970a9d19fe8a9197c35db1093e8",
+      "final_manifest_sha256": "82ca4e5991703ad6c3873eb672c1f7582248629b4e752bd18a99974465373cb9",
+      "final_weights_sha256": "44db2537b1dca37928020e6c9491b48e7124630c593eb18c92aa57d847977b8b",
+      "final_checkpoint_path": "/private/tmp/self-audit-compact-smoke-20261028-release/joint_guard/final",
+      "final_weights_path": "/private/tmp/self-audit-compact-smoke-20261028-release/joint_guard/final/weights.pt",
+      "report_path": "/private/tmp/self-audit-compact-smoke-20261028-release/joint_guard/REPORT.json",
+      "output_dir": "/private/tmp/self-audit-compact-smoke-20261028-release/joint_guard",
+      "label_budget": 1,
+      "seen_supervised": [
+        "synthetic_p000"
+      ],
+      "seen_audit": [
+        "synthetic_p000"
+      ],
+      "seen_unlabeled": [
+        "synthetic_p001",
+        "synthetic_p002"
+      ],
+      "elapsed_seconds": 0.43262304179370403,
+      "profile": {
+        "device": "cpu",
+        "cuda_peak_allocated_bytes": null,
+        "cuda_peak_reserved_bytes": null,
+        "optimizer_steps_per_second": 47.35670706185947,
+        "supervised_slices_per_second": 47.355959341352204,
+        "scope": "student training including synchronous telemetry, proposal and audit; teacher/cache build separate"
+      },
+      "training_elapsed_seconds": 0.04223370784893632
+    }
+  },
+  "transaction_logs": {
+    "supervised": [
+      {
+        "step": 0,
+        "method": "supervised",
+        "status": "zero_displacement",
+        "accepted": false,
+        "supervised_loss": 2.6351301670074463,
+        "initial_state_sha256": "cb9002fdc550d41f444f7c108e92c1313cdc5781ab31985907cb4f1e3e38720c",
+        "first_step_optimizer": {
+          "name": "AdamW",
+          "owner": "labeled_supervised_update_only",
+          "parameter_ownership": {
+            "encoder.stem.0.weight": "encoder",
+            "encoder.stem.1.weight": "encoder",
+            "encoder.stem.1.bias": "encoder",
+            "encoder.stem.3.conv1.weight": "encoder",
+            "encoder.stem.3.norm1.weight": "encoder",
+            "encoder.stem.3.norm1.bias": "encoder",
+            "encoder.stem.3.conv2.weight": "encoder",
+            "encoder.stem.3.norm2.weight": "encoder",
+            "encoder.stem.3.norm2.bias": "encoder",
+            "encoder.down_stages.0.0.weight": "encoder",
+            "encoder.down_stages.0.1.weight": "encoder",
+            "encoder.down_stages.0.1.bias": "encoder",
+            "encoder.down_stages.0.3.conv1.weight": "encoder",
+            "encoder.down_stages.0.3.norm1.weight": "encoder",
+            "encoder.down_stages.0.3.norm1.bias": "encoder",
+            "encoder.down_stages.0.3.conv2.weight": "encoder",
+            "encoder.down_stages.0.3.norm2.weight": "encoder",
+            "encoder.down_stages.0.3.norm2.bias": "encoder",
+            "decoder.up_stages.0.fuse.0.weight": "decoder",
+            "decoder.up_stages.0.fuse.1.weight": "decoder",
+            "decoder.up_stages.0.fuse.1.bias": "decoder",
+            "decoder.up_stages.0.refine.conv1.weight": "decoder",
+            "decoder.up_stages.0.refine.norm1.weight": "decoder",
+            "decoder.up_stages.0.refine.norm1.bias": "decoder",
+            "decoder.up_stages.0.refine.conv2.weight": "decoder",
+            "decoder.up_stages.0.refine.norm2.weight": "decoder",
+            "decoder.up_stages.0.refine.norm2.bias": "decoder",
+            "head.weight": "head",
+            "head.bias": "head"
+          }
+        },
+        "warm_start": {
+          "step": 0,
+          "gradient_norms": {
+            "encoder": 4.471066474914551,
+            "decoder": 1.1296958923339844,
+            "head": 0.7209318280220032
+          },
+          "weight_changes": {
+            "encoder": 0.013104132376611233,
+            "decoder": 0.005692054517567158,
+            "head": 0.0013417997397482395
+          },
+          "optimizer": {
+            "name": "AdamW",
+            "owner": "labeled_supervised_update_only",
+            "parameter_ownership": {
+              "encoder.stem.0.weight": "encoder",
+              "encoder.stem.1.weight": "encoder",
+              "encoder.stem.1.bias": "encoder",
+              "encoder.stem.3.conv1.weight": "encoder",
+              "encoder.stem.3.norm1.weight": "encoder",
+              "encoder.stem.3.norm1.bias": "encoder",
+              "encoder.stem.3.conv2.weight": "encoder",
+              "encoder.stem.3.norm2.weight": "encoder",
+              "encoder.stem.3.norm2.bias": "encoder",
+              "encoder.down_stages.0.0.weight": "encoder",
+              "encoder.down_stages.0.1.weight": "encoder",
+              "encoder.down_stages.0.1.bias": "encoder",
+              "encoder.down_stages.0.3.conv1.weight": "encoder",
+              "encoder.down_stages.0.3.norm1.weight": "encoder",
+              "encoder.down_stages.0.3.norm1.bias": "encoder",
+              "encoder.down_stages.0.3.conv2.weight": "encoder",
+              "encoder.down_stages.0.3.norm2.weight": "encoder",
+              "encoder.down_stages.0.3.norm2.bias": "encoder",
+              "decoder.up_stages.0.fuse.0.weight": "decoder",
+              "decoder.up_stages.0.fuse.1.weight": "decoder",
+              "decoder.up_stages.0.fuse.1.bias": "decoder",
+              "decoder.up_stages.0.refine.conv1.weight": "decoder",
+              "decoder.up_stages.0.refine.norm1.weight": "decoder",
+              "decoder.up_stages.0.refine.norm1.bias": "decoder",
+              "decoder.up_stages.0.refine.conv2.weight": "decoder",
+              "decoder.up_stages.0.refine.norm2.weight": "decoder",
+              "decoder.up_stages.0.refine.norm2.bias": "decoder",
+              "head.weight": "head",
+              "head.bias": "head"
+            }
+          }
+        },
+        "batch_sizes": {
+          "labeled": 1,
+          "unlabeled": 1
+        },
+        "effective_batch_counts": {
+          "labeled": 1,
+          "unlabeled": 1
+        },
+        "data_schedule": {
+          "step": 0,
+          "supervised": [
+            {
+              "patient": "synthetic_p000",
+              "frame": 0,
+              "slice": 1,
+              "crop_sha256": "c221458fa02ab63e82128271e50b3577c3f3f1aea15a547525fba3825e7cced1"
+            }
+          ],
+          "unlabeled": [
+            {
+              "patient": "synthetic_p001",
+              "frame": 1,
+              "slice": 1,
+              "crop_sha256": "c221458fa02ab63e82128271e50b3577c3f3f1aea15a547525fba3825e7cced1"
+            }
+          ],
+          "audit_patient_selected": "synthetic_p000"
+        },
+        "data_schedule_sha256": "6697cb86545c917c27f5a4c3f3ced344b16d534238503f2c01ce8ddebb6140f4",
+        "audit_consumption": {
+          "slice_reads": 0,
+          "frame_reads": 0,
+          "patient_reads": 0,
+          "stream_replays": 0,
+          "unique_frames": [],
+          "selected_patient": "synthetic_p000"
+        },
+        "scale": 0.0,
+        "proposed_displacement_norm": 0.0,
+        "realized_displacement_norm": 0.0,
+        "margins_before": {},
+        "margins_after": {},
+        "margin_change": 0.0,
+        "mean_margin_decreased": false,
+        "margin_decreased_fraction": null,
+        "trial_count": 0,
+        "candidate_receipt": null,
+        "transaction": {
+          "method": "supervised",
+          "status": "zero_displacement",
+          "accepted": false,
+          "scale": 0.0,
+          "proposed_displacement_norm": 0.0,
+          "realized_displacement_norm": 0.0,
+          "margin_change": 0.0,
+          "mean_margin_decreased": false,
+          "margin_decreased_fraction": null,
+          "trials": []
+        },
+        "timings": {
+          "supervised_seconds": 0.02890466619282961,
+          "teacher_cache_seconds": 0.0,
+          "proposal_seconds": 0.0,
+          "audit_trials_seconds": 0.0,
+          "step_elapsed_seconds": 0.03435354167595506,
+          "cuda_synchronized": false
+        },
+        "runtime_scope": "SUPERVISED_NO_AUDIT",
+        "slices_sampled": {
+          "labeled": 1,
+          "unlabeled": 1,
+          "audit": 0
+        },
+        "slices_optimized": {
+          "labeled": 1,
+          "unlabeled": 0
+        },
+        "optimizer_calls": {
+          "adamw": 1,
+          "sgd": 0
+        },
+        "cumulative_updates": {
+          "supervised_updates": 1,
+          "pseudo_accepted": 0,
+          "pseudo_rejected": 0,
+          "warmup_steps": 0,
+          "no_candidates": 0,
+          "rejected_all": 0,
+          "zero_displacement": 1
+        }
+      },
+      {
+        "step": 1,
+        "method": "supervised",
+        "status": "zero_displacement",
+        "accepted": false,
+        "supervised_loss": 2.608605146408081,
+        "initial_state_sha256": null,
+        "first_step_optimizer": null,
+        "warm_start": {
+          "step": 1,
+          "gradient_norms": {
+            "encoder": 4.085174560546875,
+            "decoder": 1.115267276763916,
+            "head": 0.7162021398544312
+          },
+          "weight_changes": {
+            "encoder": 0.012805862352252007,
+            "decoder": 0.005588088650256395,
+            "head": 0.0012962731998413801
+          },
+          "optimizer": null
+        },
+        "batch_sizes": {
+          "labeled": 1,
+          "unlabeled": 1
+        },
+        "effective_batch_counts": {
+          "labeled": 1,
+          "unlabeled": 1
+        },
+        "data_schedule": {
+          "step": 1,
+          "supervised": [
+            {
+              "patient": "synthetic_p000",
+              "frame": 0,
+              "slice": 1,
+              "crop_sha256": "c221458fa02ab63e82128271e50b3577c3f3f1aea15a547525fba3825e7cced1"
+            }
+          ],
+          "unlabeled": [
+            {
+              "patient": "synthetic_p002",
+              "frame": 0,
+              "slice": 0,
+              "crop_sha256": "c221458fa02ab63e82128271e50b3577c3f3f1aea15a547525fba3825e7cced1"
+            }
+          ],
+          "audit_patient_selected": "synthetic_p000"
+        },
+        "data_schedule_sha256": "40b153c77116d9e4e6a1bb2e0d05fb4cb1c37192bc174eab9fe018f108b7b0cc",
+        "audit_consumption": {
+          "slice_reads": 0,
+          "frame_reads": 0,
+          "patient_reads": 0,
+          "stream_replays": 0,
+          "unique_frames": [],
+          "selected_patient": "synthetic_p000"
+        },
+        "scale": 0.0,
+        "proposed_displacement_norm": 0.0,
+        "realized_displacement_norm": 0.0,
+        "margins_before": {},
+        "margins_after": {},
+        "margin_change": 0.0,
+        "mean_margin_decreased": false,
+        "margin_decreased_fraction": null,
+        "trial_count": 0,
+        "candidate_receipt": null,
+        "transaction": {
+          "method": "supervised",
+          "status": "zero_displacement",
+          "accepted": false,
+          "scale": 0.0,
+          "proposed_displacement_norm": 0.0,
+          "realized_displacement_norm": 0.0,
+          "margin_change": 0.0,
+          "mean_margin_decreased": false,
+          "margin_decreased_fraction": null,
+          "trials": []
+        },
+        "timings": {
+          "supervised_seconds": 0.0019327918998897076,
+          "teacher_cache_seconds": 0.0,
+          "proposal_seconds": 0.0,
+          "audit_trials_seconds": 0.0,
+          "step_elapsed_seconds": 0.002183707896620035,
+          "cuda_synchronized": false
+        },
+        "runtime_scope": "SUPERVISED_NO_AUDIT",
+        "slices_sampled": {
+          "labeled": 2,
+          "unlabeled": 2,
+          "audit": 0
+        },
+        "slices_optimized": {
+          "labeled": 2,
+          "unlabeled": 0
+        },
+        "optimizer_calls": {
+          "adamw": 2,
+          "sgd": 0
+        },
+        "cumulative_updates": {
+          "supervised_updates": 2,
+          "pseudo_accepted": 0,
+          "pseudo_rejected": 0,
+          "warmup_steps": 0,
+          "no_candidates": 0,
+          "rejected_all": 0,
+          "zero_displacement": 2
+        }
+      }
+    ],
+    "plain_kd": [
+      {
+        "step": 0,
+        "method": "plain_kd",
+        "status": "warmup",
+        "accepted": false,
+        "supervised_loss": 2.6351301670074463,
+        "initial_state_sha256": "cb9002fdc550d41f444f7c108e92c1313cdc5781ab31985907cb4f1e3e38720c",
+        "first_step_optimizer": {
+          "name": "AdamW",
+          "owner": "labeled_supervised_update_only",
+          "parameter_ownership": {
+            "encoder.stem.0.weight": "encoder",
+            "encoder.stem.1.weight": "encoder",
+            "encoder.stem.1.bias": "encoder",
+            "encoder.stem.3.conv1.weight": "encoder",
+            "encoder.stem.3.norm1.weight": "encoder",
+            "encoder.stem.3.norm1.bias": "encoder",
+            "encoder.stem.3.conv2.weight": "encoder",
+            "encoder.stem.3.norm2.weight": "encoder",
+            "encoder.stem.3.norm2.bias": "encoder",
+            "encoder.down_stages.0.0.weight": "encoder",
+            "encoder.down_stages.0.1.weight": "encoder",
+            "encoder.down_stages.0.1.bias": "encoder",
+            "encoder.down_stages.0.3.conv1.weight": "encoder",
+            "encoder.down_stages.0.3.norm1.weight": "encoder",
+            "encoder.down_stages.0.3.norm1.bias": "encoder",
+            "encoder.down_stages.0.3.conv2.weight": "encoder",
+            "encoder.down_stages.0.3.norm2.weight": "encoder",
+            "encoder.down_stages.0.3.norm2.bias": "encoder",
+            "decoder.up_stages.0.fuse.0.weight": "decoder",
+            "decoder.up_stages.0.fuse.1.weight": "decoder",
+            "decoder.up_stages.0.fuse.1.bias": "decoder",
+            "decoder.up_stages.0.refine.conv1.weight": "decoder",
+            "decoder.up_stages.0.refine.norm1.weight": "decoder",
+            "decoder.up_stages.0.refine.norm1.bias": "decoder",
+            "decoder.up_stages.0.refine.conv2.weight": "decoder",
+            "decoder.up_stages.0.refine.norm2.weight": "decoder",
+            "decoder.up_stages.0.refine.norm2.bias": "decoder",
+            "head.weight": "head",
+            "head.bias": "head"
+          }
+        },
+        "warm_start": {
+          "step": 0,
+          "gradient_norms": {
+            "encoder": 4.471066474914551,
+            "decoder": 1.1296958923339844,
+            "head": 0.7209318280220032
+          },
+          "weight_changes": {
+            "encoder": 0.013104132376611233,
+            "decoder": 0.005692054517567158,
+            "head": 0.0013417997397482395
+          },
+          "optimizer": {
+            "name": "AdamW",
+            "owner": "labeled_supervised_update_only",
+            "parameter_ownership": {
+              "encoder.stem.0.weight": "encoder",
+              "encoder.stem.1.weight": "encoder",
+              "encoder.stem.1.bias": "encoder",
+              "encoder.stem.3.conv1.weight": "encoder",
+              "encoder.stem.3.norm1.weight": "encoder",
+              "encoder.stem.3.norm1.bias": "encoder",
+              "encoder.stem.3.conv2.weight": "encoder",
+              "encoder.stem.3.norm2.weight": "encoder",
+              "encoder.stem.3.norm2.bias": "encoder",
+              "encoder.down_stages.0.0.weight": "encoder",
+              "encoder.down_stages.0.1.weight": "encoder",
+              "encoder.down_stages.0.1.bias": "encoder",
+              "encoder.down_stages.0.3.conv1.weight": "encoder",
+              "encoder.down_stages.0.3.norm1.weight": "encoder",
+              "encoder.down_stages.0.3.norm1.bias": "encoder",
+              "encoder.down_stages.0.3.conv2.weight": "encoder",
+              "encoder.down_stages.0.3.norm2.weight": "encoder",
+              "encoder.down_stages.0.3.norm2.bias": "encoder",
+              "decoder.up_stages.0.fuse.0.weight": "decoder",
+              "decoder.up_stages.0.fuse.1.weight": "decoder",
+              "decoder.up_stages.0.fuse.1.bias": "decoder",
+              "decoder.up_stages.0.refine.conv1.weight": "decoder",
+              "decoder.up_stages.0.refine.norm1.weight": "decoder",
+              "decoder.up_stages.0.refine.norm1.bias": "decoder",
+              "decoder.up_stages.0.refine.conv2.weight": "decoder",
+              "decoder.up_stages.0.refine.norm2.weight": "decoder",
+              "decoder.up_stages.0.refine.norm2.bias": "decoder",
+              "head.weight": "head",
+              "head.bias": "head"
+            }
+          }
+        },
+        "batch_sizes": {
+          "labeled": 1,
+          "unlabeled": 1
+        },
+        "effective_batch_counts": {
+          "labeled": 1,
+          "unlabeled": 1
+        },
+        "data_schedule": {
+          "step": 0,
+          "supervised": [
+            {
+              "patient": "synthetic_p000",
+              "frame": 0,
+              "slice": 1,
+              "crop_sha256": "c221458fa02ab63e82128271e50b3577c3f3f1aea15a547525fba3825e7cced1"
+            }
+          ],
+          "unlabeled": [
+            {
+              "patient": "synthetic_p001",
+              "frame": 1,
+              "slice": 1,
+              "crop_sha256": "c221458fa02ab63e82128271e50b3577c3f3f1aea15a547525fba3825e7cced1"
+            }
+          ],
+          "audit_patient_selected": "synthetic_p000"
+        },
+        "data_schedule_sha256": "6697cb86545c917c27f5a4c3f3ced344b16d534238503f2c01ce8ddebb6140f4",
+        "audit_consumption": {
+          "slice_reads": 0,
+          "frame_reads": 0,
+          "patient_reads": 0,
+          "stream_replays": 0,
+          "unique_frames": [],
+          "selected_patient": "synthetic_p000"
+        },
+        "scale": 0.0,
+        "proposed_displacement_norm": 0.0,
+        "realized_displacement_norm": 0.0,
+        "margins_before": {},
+        "margins_after": {},
+        "margin_change": 0.0,
+        "mean_margin_decreased": false,
+        "margin_decreased_fraction": null,
+        "trial_count": 0,
+        "candidate_receipt": null,
+        "transaction": {
+          "method": "plain_kd",
+          "status": "warmup",
+          "accepted": false,
+          "scale": 0.0,
+          "proposed_displacement_norm": 0.0,
+          "realized_displacement_norm": 0.0,
+          "margin_change": 0.0,
+          "mean_margin_decreased": false,
+          "margin_decreased_fraction": null,
+          "trials": []
+        },
+        "timings": {
+          "supervised_seconds": 0.012266499921679497,
+          "teacher_cache_seconds": 0.0,
+          "proposal_seconds": 0.0,
+          "audit_trials_seconds": 0.0,
+          "step_elapsed_seconds": 0.016694457735866308,
+          "cuda_synchronized": false
+        },
+        "runtime_scope": "PLAIN_KD_EXCLUDES_AUDIT_NOT_LATENCY_MATCHED",
+        "slices_sampled": {
+          "labeled": 1,
+          "unlabeled": 1,
+          "audit": 0
+        },
+        "slices_optimized": {
+          "labeled": 1,
+          "unlabeled": 0
+        },
+        "optimizer_calls": {
+          "adamw": 1,
+          "sgd": 0
+        },
+        "cumulative_updates": {
+          "supervised_updates": 1,
+          "pseudo_accepted": 0,
+          "pseudo_rejected": 0,
+          "warmup_steps": 1,
+          "no_candidates": 0,
+          "rejected_all": 0,
+          "zero_displacement": 0
+        }
+      },
+      {
+        "step": 1,
+        "method": "plain_kd",
+        "status": "accepted_nonzero",
+        "accepted": true,
+        "supervised_loss": 2.608605146408081,
+        "initial_state_sha256": null,
+        "first_step_optimizer": null,
+        "warm_start": {
+          "step": 1,
+          "gradient_norms": {
+            "encoder": 4.085174560546875,
+            "decoder": 1.115267276763916,
+            "head": 0.7162021398544312
+          },
+          "weight_changes": {
+            "encoder": 0.012805862352252007,
+            "decoder": 0.005588088650256395,
+            "head": 0.0012962731998413801
+          },
+          "optimizer": null
+        },
+        "batch_sizes": {
+          "labeled": 1,
+          "unlabeled": 1
+        },
+        "effective_batch_counts": {
+          "labeled": 1,
+          "unlabeled": 1
+        },
+        "data_schedule": {
+          "step": 1,
+          "supervised": [
+            {
+              "patient": "synthetic_p000",
+              "frame": 0,
+              "slice": 1,
+              "crop_sha256": "c221458fa02ab63e82128271e50b3577c3f3f1aea15a547525fba3825e7cced1"
+            }
+          ],
+          "unlabeled": [
+            {
+              "patient": "synthetic_p002",
+              "frame": 0,
+              "slice": 0,
+              "crop_sha256": "c221458fa02ab63e82128271e50b3577c3f3f1aea15a547525fba3825e7cced1"
+            }
+          ],
+          "audit_patient_selected": "synthetic_p000"
+        },
+        "data_schedule_sha256": "40b153c77116d9e4e6a1bb2e0d05fb4cb1c37192bc174eab9fe018f108b7b0cc",
+        "audit_consumption": {
+          "slice_reads": 0,
+          "frame_reads": 0,
+          "patient_reads": 0,
+          "stream_replays": 0,
+          "unique_frames": [],
+          "selected_patient": "synthetic_p000"
+        },
+        "scale": 1.0,
+        "proposed_displacement_norm": 0.002070405800439481,
+        "realized_displacement_norm": 0.002070405800439481,
+        "margins_before": {
+          "mean_true_margin": null,
+          "min_true_margin": null
+        },
+        "margins_after": {
+          "mean_true_margin": null,
+          "min_true_margin": null
+        },
+        "margin_change": 0.0,
+        "mean_margin_decreased": false,
+        "margin_decreased_fraction": null,
+        "trial_count": 1,
+        "candidate_receipt": {
+          "source_ids": [
+            "pseudo_class_0",
+            "pseudo_class_1",
+            "pseudo_class_2",
+            "pseudo_class_3"
+          ],
+          "denominator": 256,
+          "telemetry": {
+            "accepted_pixels": 256,
+            "total_valid_pixels": 256,
+            "confidence_threshold": 0.0,
+            "temperature": 1.0,
+            "coefficient": 1.0,
+            "lr": 0.001,
+            "max_norm": null,
+            "class_pixels": [
+              124,
+              1,
+              63,
+              68
+            ],
+            "source_ids": [
+              "pseudo_class_0",
+              "pseudo_class_1",
+              "pseudo_class_2",
+              "pseudo_class_3"
+            ],
+            "status": "CANDIDATES_BUILT",
+            "aggregate_clip_scale": 1.0
+          }
+        },
+        "transaction": {
+          "method": "plain_kd",
+          "status": "accepted_nonzero",
+          "accepted": true,
+          "source_ids": [
+            "pseudo_class_0",
+            "pseudo_class_1",
+            "pseudo_class_2",
+            "pseudo_class_3"
+          ],
+          "alpha": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "scale": 1.0,
+          "proposed_displacement_norm": 0.002070405800439481,
+          "realized_displacement_norm": 0.002070405800439481,
+          "base_macro_dice": {
+            "RV": null,
+            "MYO": null,
+            "LV": null
+          },
+          "base_macro_absent_fp": {
+            "RV": null,
+            "MYO": null,
+            "LV": null
+          },
+          "base_fg_dice": null,
+          "macro_dice_after": {
+            "RV": null,
+            "MYO": null,
+            "LV": null
+          },
+          "macro_absent_fp_after": {
+            "RV": null,
+            "MYO": null,
+            "LV": null
+          },
+          "macro_fg_dice_after": null,
+          "margins_before": {
+            "mean_true_margin": null,
+            "min_true_margin": null
+          },
+          "margins_after": {
+            "mean_true_margin": null,
+            "min_true_margin": null
+          },
+          "margin_change": 0.0,
+          "mean_margin_decreased": false,
+          "margin_decreased_fraction": null,
+          "trials": [
+            {
+              "trial_index": 0,
+              "alpha": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "displacement_norm": 0.002070405800439481,
+              "finite": true,
+              "macro_dice": {
+                "RV": null,
+                "MYO": null,
+                "LV": null
+              },
+              "macro_absent_fp": {
+                "RV": null,
+                "MYO": null,
+                "LV": null
+              },
+              "foreground_macro_dice": null,
+              "margins": {
+                "mean_true_margin": null,
+                "min_true_margin": null
+              },
+              "objective": 2e-06,
+              "per_class_dice_ok": true,
+              "absent_fp_ok": true,
+              "norm_bound_ok": true,
+              "guard_passed": true,
+              "accepted": true
+            }
+          ],
+          "optimizer_steps_in_transaction": 0,
+          "ema_updates_in_transaction": 0,
+          "telemetry": {
+            "eps": 0.0,
+            "absent_fp_budget": 0.0,
+            "tolerance": 1e-06,
+            "ridge": 1e-06,
+            "max_trials": 2,
+            "max_norm": null,
+            "num_directions": 4,
+            "audit_identity_hash": null
+          }
+        },
+        "timings": {
+          "supervised_seconds": 0.0016666669398546219,
+          "teacher_cache_seconds": 0.004365250002592802,
+          "proposal_seconds": 0.004631875082850456,
+          "audit_trials_seconds": 0.0027581253089010715,
+          "step_elapsed_seconds": 0.013677958864718676,
+          "cuda_synchronized": false
+        },
+        "runtime_scope": "PLAIN_KD_EXCLUDES_AUDIT_NOT_LATENCY_MATCHED",
+        "slices_sampled": {
+          "labeled": 2,
+          "unlabeled": 2,
+          "audit": 0
+        },
+        "slices_optimized": {
+          "labeled": 2,
+          "unlabeled": 1
+        },
+        "optimizer_calls": {
+          "adamw": 2,
+          "sgd": 1
+        },
+        "cumulative_updates": {
+          "supervised_updates": 2,
+          "pseudo_accepted": 1,
+          "pseudo_rejected": 0,
+          "warmup_steps": 1,
+          "no_candidates": 0,
+          "rejected_all": 0,
+          "zero_displacement": 0
+        }
+      }
+    ],
+    "scalar_guard": [
+      {
+        "step": 0,
+        "method": "scalar_guard",
+        "status": "warmup",
+        "accepted": false,
+        "supervised_loss": 2.6351301670074463,
+        "initial_state_sha256": "cb9002fdc550d41f444f7c108e92c1313cdc5781ab31985907cb4f1e3e38720c",
+        "first_step_optimizer": {
+          "name": "AdamW",
+          "owner": "labeled_supervised_update_only",
+          "parameter_ownership": {
+            "encoder.stem.0.weight": "encoder",
+            "encoder.stem.1.weight": "encoder",
+            "encoder.stem.1.bias": "encoder",
+            "encoder.stem.3.conv1.weight": "encoder",
+            "encoder.stem.3.norm1.weight": "encoder",
+            "encoder.stem.3.norm1.bias": "encoder",
+            "encoder.stem.3.conv2.weight": "encoder",
+            "encoder.stem.3.norm2.weight": "encoder",
+            "encoder.stem.3.norm2.bias": "encoder",
+            "encoder.down_stages.0.0.weight": "encoder",
+            "encoder.down_stages.0.1.weight": "encoder",
+            "encoder.down_stages.0.1.bias": "encoder",
+            "encoder.down_stages.0.3.conv1.weight": "encoder",
+            "encoder.down_stages.0.3.norm1.weight": "encoder",
+            "encoder.down_stages.0.3.norm1.bias": "encoder",
+            "encoder.down_stages.0.3.conv2.weight": "encoder",
+            "encoder.down_stages.0.3.norm2.weight": "encoder",
+            "encoder.down_stages.0.3.norm2.bias": "encoder",
+            "decoder.up_stages.0.fuse.0.weight": "decoder",
+            "decoder.up_stages.0.fuse.1.weight": "decoder",
+            "decoder.up_stages.0.fuse.1.bias": "decoder",
+            "decoder.up_stages.0.refine.conv1.weight": "decoder",
+            "decoder.up_stages.0.refine.norm1.weight": "decoder",
+            "decoder.up_stages.0.refine.norm1.bias": "decoder",
+            "decoder.up_stages.0.refine.conv2.weight": "decoder",
+            "decoder.up_stages.0.refine.norm2.weight": "decoder",
+            "decoder.up_stages.0.refine.norm2.bias": "decoder",
+            "head.weight": "head",
+            "head.bias": "head"
+          }
+        },
+        "warm_start": {
+          "step": 0,
+          "gradient_norms": {
+            "encoder": 4.471066474914551,
+            "decoder": 1.1296958923339844,
+            "head": 0.7209318280220032
+          },
+          "weight_changes": {
+            "encoder": 0.013104132376611233,
+            "decoder": 0.005692054517567158,
+            "head": 0.0013417997397482395
+          },
+          "optimizer": {
+            "name": "AdamW",
+            "owner": "labeled_supervised_update_only",
+            "parameter_ownership": {
+              "encoder.stem.0.weight": "encoder",
+              "encoder.stem.1.weight": "encoder",
+              "encoder.stem.1.bias": "encoder",
+              "encoder.stem.3.conv1.weight": "encoder",
+              "encoder.stem.3.norm1.weight": "encoder",
+              "encoder.stem.3.norm1.bias": "encoder",
+              "encoder.stem.3.conv2.weight": "encoder",
+              "encoder.stem.3.norm2.weight": "encoder",
+              "encoder.stem.3.norm2.bias": "encoder",
+              "encoder.down_stages.0.0.weight": "encoder",
+              "encoder.down_stages.0.1.weight": "encoder",
+              "encoder.down_stages.0.1.bias": "encoder",
+              "encoder.down_stages.0.3.conv1.weight": "encoder",
+              "encoder.down_stages.0.3.norm1.weight": "encoder",
+              "encoder.down_stages.0.3.norm1.bias": "encoder",
+              "encoder.down_stages.0.3.conv2.weight": "encoder",
+              "encoder.down_stages.0.3.norm2.weight": "encoder",
+              "encoder.down_stages.0.3.norm2.bias": "encoder",
+              "decoder.up_stages.0.fuse.0.weight": "decoder",
+              "decoder.up_stages.0.fuse.1.weight": "decoder",
+              "decoder.up_stages.0.fuse.1.bias": "decoder",
+              "decoder.up_stages.0.refine.conv1.weight": "decoder",
+              "decoder.up_stages.0.refine.norm1.weight": "decoder",
+              "decoder.up_stages.0.refine.norm1.bias": "decoder",
+              "decoder.up_stages.0.refine.conv2.weight": "decoder",
+              "decoder.up_stages.0.refine.norm2.weight": "decoder",
+              "decoder.up_stages.0.refine.norm2.bias": "decoder",
+              "head.weight": "head",
+              "head.bias": "head"
+            }
+          }
+        },
+        "batch_sizes": {
+          "labeled": 1,
+          "unlabeled": 1
+        },
+        "effective_batch_counts": {
+          "labeled": 1,
+          "unlabeled": 1
+        },
+        "data_schedule": {
+          "step": 0,
+          "supervised": [
+            {
+              "patient": "synthetic_p000",
+              "frame": 0,
+              "slice": 1,
+              "crop_sha256": "c221458fa02ab63e82128271e50b3577c3f3f1aea15a547525fba3825e7cced1"
+            }
+          ],
+          "unlabeled": [
+            {
+              "patient": "synthetic_p001",
+              "frame": 1,
+              "slice": 1,
+              "crop_sha256": "c221458fa02ab63e82128271e50b3577c3f3f1aea15a547525fba3825e7cced1"
+            }
+          ],
+          "audit_patient_selected": "synthetic_p000"
+        },
+        "data_schedule_sha256": "6697cb86545c917c27f5a4c3f3ced344b16d534238503f2c01ce8ddebb6140f4",
+        "audit_consumption": {
+          "slice_reads": 0,
+          "frame_reads": 0,
+          "patient_reads": 0,
+          "stream_replays": 0,
+          "unique_frames": [],
+          "selected_patient": "synthetic_p000"
+        },
+        "scale": 0.0,
+        "proposed_displacement_norm": 0.0,
+        "realized_displacement_norm": 0.0,
+        "margins_before": {},
+        "margins_after": {},
+        "margin_change": 0.0,
+        "mean_margin_decreased": false,
+        "margin_decreased_fraction": null,
+        "trial_count": 0,
+        "candidate_receipt": null,
+        "transaction": {
+          "method": "scalar_guard",
+          "status": "warmup",
+          "accepted": false,
+          "scale": 0.0,
+          "proposed_displacement_norm": 0.0,
+          "realized_displacement_norm": 0.0,
+          "margin_change": 0.0,
+          "mean_margin_decreased": false,
+          "margin_decreased_fraction": null,
+          "trials": []
+        },
+        "timings": {
+          "supervised_seconds": 0.013255457859486341,
+          "teacher_cache_seconds": 0.0,
+          "proposal_seconds": 0.0,
+          "audit_trials_seconds": 0.0,
+          "step_elapsed_seconds": 0.018664750270545483,
+          "cuda_synchronized": false
+        },
+        "runtime_scope": "AUDIT_OVERHEAD_INCLUDED",
+        "slices_sampled": {
+          "labeled": 1,
+          "unlabeled": 1,
+          "audit": 0
+        },
+        "slices_optimized": {
+          "labeled": 1,
+          "unlabeled": 0
+        },
+        "optimizer_calls": {
+          "adamw": 1,
+          "sgd": 0
+        },
+        "cumulative_updates": {
+          "supervised_updates": 1,
+          "pseudo_accepted": 0,
+          "pseudo_rejected": 0,
+          "warmup_steps": 1,
+          "no_candidates": 0,
+          "rejected_all": 0,
+          "zero_displacement": 0
+        }
+      },
+      {
+        "step": 1,
+        "method": "scalar_guard",
+        "status": "accepted_nonzero",
+        "accepted": true,
+        "supervised_loss": 2.608605146408081,
+        "initial_state_sha256": null,
+        "first_step_optimizer": null,
+        "warm_start": {
+          "step": 1,
+          "gradient_norms": {
+            "encoder": 4.085174560546875,
+            "decoder": 1.115267276763916,
+            "head": 0.7162021398544312
+          },
+          "weight_changes": {
+            "encoder": 0.012805862352252007,
+            "decoder": 0.005588088650256395,
+            "head": 0.0012962731998413801
+          },
+          "optimizer": null
+        },
+        "batch_sizes": {
+          "labeled": 1,
+          "unlabeled": 1
+        },
+        "effective_batch_counts": {
+          "labeled": 1,
+          "unlabeled": 1
+        },
+        "data_schedule": {
+          "step": 1,
+          "supervised": [
+            {
+              "patient": "synthetic_p000",
+              "frame": 0,
+              "slice": 1,
+              "crop_sha256": "c221458fa02ab63e82128271e50b3577c3f3f1aea15a547525fba3825e7cced1"
+            }
+          ],
+          "unlabeled": [
+            {
+              "patient": "synthetic_p002",
+              "frame": 0,
+              "slice": 0,
+              "crop_sha256": "c221458fa02ab63e82128271e50b3577c3f3f1aea15a547525fba3825e7cced1"
+            }
+          ],
+          "audit_patient_selected": "synthetic_p000"
+        },
+        "data_schedule_sha256": "40b153c77116d9e4e6a1bb2e0d05fb4cb1c37192bc174eab9fe018f108b7b0cc",
+        "audit_consumption": {
+          "slice_reads": 6,
+          "frame_reads": 3,
+          "patient_reads": 3,
+          "stream_replays": 3,
+          "unique_frames": [
+            [
+              "synthetic_p000",
+              0
+            ]
+          ],
+          "selected_patient": "synthetic_p000"
+        },
+        "scale": 0.5,
+        "proposed_displacement_norm": 0.002070405800439481,
+        "realized_displacement_norm": 0.0010352029002197406,
+        "margins_before": {
+          "mean_true_margin": -0.895787239074707,
+          "min_true_margin": -7.2305450439453125
+        },
+        "margins_after": {
+          "mean_true_margin": -0.8967737257480621,
+          "min_true_margin": -7.2327704429626465
+        },
+        "margin_change": -0.0009864866733551025,
+        "mean_margin_decreased": true,
+        "margin_decreased_fraction": null,
+        "trial_count": 2,
+        "candidate_receipt": {
+          "source_ids": [
+            "pseudo_class_0",
+            "pseudo_class_1",
+            "pseudo_class_2",
+            "pseudo_class_3"
+          ],
+          "denominator": 256,
+          "telemetry": {
+            "accepted_pixels": 256,
+            "total_valid_pixels": 256,
+            "confidence_threshold": 0.0,
+            "temperature": 1.0,
+            "coefficient": 1.0,
+            "lr": 0.001,
+            "max_norm": null,
+            "class_pixels": [
+              124,
+              1,
+              63,
+              68
+            ],
+            "source_ids": [
+              "pseudo_class_0",
+              "pseudo_class_1",
+              "pseudo_class_2",
+              "pseudo_class_3"
+            ],
+            "status": "CANDIDATES_BUILT",
+            "aggregate_clip_scale": 1.0
+          }
+        },
+        "transaction": {
+          "method": "scalar_guard",
+          "status": "accepted_nonzero",
+          "accepted": true,
+          "source_ids": [
+            "pseudo_class_0",
+            "pseudo_class_1",
+            "pseudo_class_2",
+            "pseudo_class_3"
+          ],
+          "alpha": [
+            0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "scale": 0.5,
+          "proposed_displacement_norm": 0.002070405800439481,
+          "realized_displacement_norm": 0.0010352029002197406,
+          "base_macro_dice": {
+            "RV": 0.33972602739726027,
+            "MYO": 0.041666666666666664,
+            "LV": 0.13471502590673576
+          },
+          "base_macro_absent_fp": {
+            "RV": null,
+            "MYO": null,
+            "LV": null
+          },
+          "base_fg_dice": 0.1720359066568876,
+          "macro_dice_after": {
+            "RV": 0.3442622950819672,
+            "MYO": 0.041666666666666664,
+            "LV": 0.13541666666666666
+          },
+          "macro_absent_fp_after": {
+            "RV": null,
+            "MYO": null,
+            "LV": null
+          },
+          "macro_fg_dice_after": 0.17378187613843352,
+          "margins_before": {
+            "mean_true_margin": -0.895787239074707,
+            "min_true_margin": -7.2305450439453125
+          },
+          "margins_after": {
+            "mean_true_margin": -0.8967737257480621,
+            "min_true_margin": -7.2327704429626465
+          },
+          "margin_change": -0.0009864866733551025,
+          "mean_margin_decreased": true,
+          "margin_decreased_fraction": null,
+          "trials": [
+            {
+              "trial_index": 0,
+              "alpha": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "displacement_norm": 0.002070405800439481,
+              "finite": true,
+              "macro_dice": {
+                "RV": 0.33879781420765026,
+                "MYO": 0.042105263157894736,
+                "LV": 0.13471502590673576
+              },
+              "macro_absent_fp": {
+                "RV": null,
+                "MYO": null,
+                "LV": null
+              },
+              "foreground_macro_dice": 0.17187270109076025,
+              "margins": {
+                "mean_true_margin": -0.8978309035301208,
+                "min_true_margin": -7.234687805175781
+              },
+              "objective": 0.8281292989092397,
+              "per_class_dice_ok": false,
+              "absent_fp_ok": true,
+              "norm_bound_ok": true,
+              "guard_passed": false,
+              "accepted": false
+            },
+            {
+              "trial_index": 1,
+              "alpha": [
+                0.5,
+                0.5,
+                0.5,
+                0.5
+              ],
+              "displacement_norm": 0.0010352029002197406,
+              "finite": true,
+              "macro_dice": {
+                "RV": 0.3442622950819672,
+                "MYO": 0.041666666666666664,
+                "LV": 0.13541666666666666
+              },
+              "macro_absent_fp": {
+                "RV": null,
+                "MYO": null,
+                "LV": null
+              },
+              "foreground_macro_dice": 0.17378187613843352,
+              "margins": {
+                "mean_true_margin": -0.8967737257480621,
+                "min_true_margin": -7.2327704429626465
+              },
+              "objective": 0.8262186238615664,
+              "per_class_dice_ok": true,
+              "absent_fp_ok": true,
+              "norm_bound_ok": true,
+              "guard_passed": true,
+              "accepted": true
+            }
+          ],
+          "optimizer_steps_in_transaction": 0,
+          "ema_updates_in_transaction": 0,
+          "telemetry": {
+            "eps": 0.0,
+            "absent_fp_budget": 0.0,
+            "tolerance": 1e-06,
+            "ridge": 1e-06,
+            "max_trials": 2,
+            "max_norm": null,
+            "num_directions": 4,
+            "audit_identity_hash": "4613fd15babdf3c9db36c9780ae6004f93ec6b2bbe838348b6d042a4a8af8d49"
+          }
+        },
+        "timings": {
+          "supervised_seconds": 0.0017495830543339252,
+          "teacher_cache_seconds": 0.004889166913926601,
+          "proposal_seconds": 0.003586874809116125,
+          "audit_trials_seconds": 0.00770549988374114,
+          "step_elapsed_seconds": 0.018328750040382147,
+          "cuda_synchronized": false
+        },
+        "runtime_scope": "AUDIT_OVERHEAD_INCLUDED",
+        "slices_sampled": {
+          "labeled": 2,
+          "unlabeled": 2,
+          "audit": 6
+        },
+        "slices_optimized": {
+          "labeled": 2,
+          "unlabeled": 1
+        },
+        "optimizer_calls": {
+          "adamw": 2,
+          "sgd": 1
+        },
+        "cumulative_updates": {
+          "supervised_updates": 2,
+          "pseudo_accepted": 1,
+          "pseudo_rejected": 0,
+          "warmup_steps": 1,
+          "no_candidates": 0,
+          "rejected_all": 0,
+          "zero_displacement": 0
+        }
+      }
+    ],
+    "joint_guard": [
+      {
+        "step": 0,
+        "method": "joint_guard",
+        "status": "warmup",
+        "accepted": false,
+        "supervised_loss": 2.6351301670074463,
+        "initial_state_sha256": "cb9002fdc550d41f444f7c108e92c1313cdc5781ab31985907cb4f1e3e38720c",
+        "first_step_optimizer": {
+          "name": "AdamW",
+          "owner": "labeled_supervised_update_only",
+          "parameter_ownership": {
+            "encoder.stem.0.weight": "encoder",
+            "encoder.stem.1.weight": "encoder",
+            "encoder.stem.1.bias": "encoder",
+            "encoder.stem.3.conv1.weight": "encoder",
+            "encoder.stem.3.norm1.weight": "encoder",
+            "encoder.stem.3.norm1.bias": "encoder",
+            "encoder.stem.3.conv2.weight": "encoder",
+            "encoder.stem.3.norm2.weight": "encoder",
+            "encoder.stem.3.norm2.bias": "encoder",
+            "encoder.down_stages.0.0.weight": "encoder",
+            "encoder.down_stages.0.1.weight": "encoder",
+            "encoder.down_stages.0.1.bias": "encoder",
+            "encoder.down_stages.0.3.conv1.weight": "encoder",
+            "encoder.down_stages.0.3.norm1.weight": "encoder",
+            "encoder.down_stages.0.3.norm1.bias": "encoder",
+            "encoder.down_stages.0.3.conv2.weight": "encoder",
+            "encoder.down_stages.0.3.norm2.weight": "encoder",
+            "encoder.down_stages.0.3.norm2.bias": "encoder",
+            "decoder.up_stages.0.fuse.0.weight": "decoder",
+            "decoder.up_stages.0.fuse.1.weight": "decoder",
+            "decoder.up_stages.0.fuse.1.bias": "decoder",
+            "decoder.up_stages.0.refine.conv1.weight": "decoder",
+            "decoder.up_stages.0.refine.norm1.weight": "decoder",
+            "decoder.up_stages.0.refine.norm1.bias": "decoder",
+            "decoder.up_stages.0.refine.conv2.weight": "decoder",
+            "decoder.up_stages.0.refine.norm2.weight": "decoder",
+            "decoder.up_stages.0.refine.norm2.bias": "decoder",
+            "head.weight": "head",
+            "head.bias": "head"
+          }
+        },
+        "warm_start": {
+          "step": 0,
+          "gradient_norms": {
+            "encoder": 4.471066474914551,
+            "decoder": 1.1296958923339844,
+            "head": 0.7209318280220032
+          },
+          "weight_changes": {
+            "encoder": 0.013104132376611233,
+            "decoder": 0.005692054517567158,
+            "head": 0.0013417997397482395
+          },
+          "optimizer": {
+            "name": "AdamW",
+            "owner": "labeled_supervised_update_only",
+            "parameter_ownership": {
+              "encoder.stem.0.weight": "encoder",
+              "encoder.stem.1.weight": "encoder",
+              "encoder.stem.1.bias": "encoder",
+              "encoder.stem.3.conv1.weight": "encoder",
+              "encoder.stem.3.norm1.weight": "encoder",
+              "encoder.stem.3.norm1.bias": "encoder",
+              "encoder.stem.3.conv2.weight": "encoder",
+              "encoder.stem.3.norm2.weight": "encoder",
+              "encoder.stem.3.norm2.bias": "encoder",
+              "encoder.down_stages.0.0.weight": "encoder",
+              "encoder.down_stages.0.1.weight": "encoder",
+              "encoder.down_stages.0.1.bias": "encoder",
+              "encoder.down_stages.0.3.conv1.weight": "encoder",
+              "encoder.down_stages.0.3.norm1.weight": "encoder",
+              "encoder.down_stages.0.3.norm1.bias": "encoder",
+              "encoder.down_stages.0.3.conv2.weight": "encoder",
+              "encoder.down_stages.0.3.norm2.weight": "encoder",
+              "encoder.down_stages.0.3.norm2.bias": "encoder",
+              "decoder.up_stages.0.fuse.0.weight": "decoder",
+              "decoder.up_stages.0.fuse.1.weight": "decoder",
+              "decoder.up_stages.0.fuse.1.bias": "decoder",
+              "decoder.up_stages.0.refine.conv1.weight": "decoder",
+              "decoder.up_stages.0.refine.norm1.weight": "decoder",
+              "decoder.up_stages.0.refine.norm1.bias": "decoder",
+              "decoder.up_stages.0.refine.conv2.weight": "decoder",
+              "decoder.up_stages.0.refine.norm2.weight": "decoder",
+              "decoder.up_stages.0.refine.norm2.bias": "decoder",
+              "head.weight": "head",
+              "head.bias": "head"
+            }
+          }
+        },
+        "batch_sizes": {
+          "labeled": 1,
+          "unlabeled": 1
+        },
+        "effective_batch_counts": {
+          "labeled": 1,
+          "unlabeled": 1
+        },
+        "data_schedule": {
+          "step": 0,
+          "supervised": [
+            {
+              "patient": "synthetic_p000",
+              "frame": 0,
+              "slice": 1,
+              "crop_sha256": "c221458fa02ab63e82128271e50b3577c3f3f1aea15a547525fba3825e7cced1"
+            }
+          ],
+          "unlabeled": [
+            {
+              "patient": "synthetic_p001",
+              "frame": 1,
+              "slice": 1,
+              "crop_sha256": "c221458fa02ab63e82128271e50b3577c3f3f1aea15a547525fba3825e7cced1"
+            }
+          ],
+          "audit_patient_selected": "synthetic_p000"
+        },
+        "data_schedule_sha256": "6697cb86545c917c27f5a4c3f3ced344b16d534238503f2c01ce8ddebb6140f4",
+        "audit_consumption": {
+          "slice_reads": 0,
+          "frame_reads": 0,
+          "patient_reads": 0,
+          "stream_replays": 0,
+          "unique_frames": [],
+          "selected_patient": "synthetic_p000"
+        },
+        "scale": 0.0,
+        "proposed_displacement_norm": 0.0,
+        "realized_displacement_norm": 0.0,
+        "margins_before": {},
+        "margins_after": {},
+        "margin_change": 0.0,
+        "mean_margin_decreased": false,
+        "margin_decreased_fraction": null,
+        "trial_count": 0,
+        "candidate_receipt": null,
+        "transaction": {
+          "method": "joint_guard",
+          "status": "warmup",
+          "accepted": false,
+          "scale": 0.0,
+          "proposed_displacement_norm": 0.0,
+          "realized_displacement_norm": 0.0,
+          "margin_change": 0.0,
+          "mean_margin_decreased": false,
+          "margin_decreased_fraction": null,
+          "trials": []
+        },
+        "timings": {
+          "supervised_seconds": 0.013289791066199541,
+          "teacher_cache_seconds": 0.0,
+          "proposal_seconds": 0.0,
+          "audit_trials_seconds": 0.0,
+          "step_elapsed_seconds": 0.018836125265806913,
+          "cuda_synchronized": false
+        },
+        "runtime_scope": "AUDIT_OVERHEAD_INCLUDED",
+        "slices_sampled": {
+          "labeled": 1,
+          "unlabeled": 1,
+          "audit": 0
+        },
+        "slices_optimized": {
+          "labeled": 1,
+          "unlabeled": 0
+        },
+        "optimizer_calls": {
+          "adamw": 1,
+          "sgd": 0
+        },
+        "cumulative_updates": {
+          "supervised_updates": 1,
+          "pseudo_accepted": 0,
+          "pseudo_rejected": 0,
+          "warmup_steps": 1,
+          "no_candidates": 0,
+          "rejected_all": 0,
+          "zero_displacement": 0
+        }
+      },
+      {
+        "step": 1,
+        "method": "joint_guard",
+        "status": "accepted_nonzero",
+        "accepted": true,
+        "supervised_loss": 2.608605146408081,
+        "initial_state_sha256": null,
+        "first_step_optimizer": null,
+        "warm_start": {
+          "step": 1,
+          "gradient_norms": {
+            "encoder": 4.085174560546875,
+            "decoder": 1.115267276763916,
+            "head": 0.7162021398544312
+          },
+          "weight_changes": {
+            "encoder": 0.012805862352252007,
+            "decoder": 0.005588088650256395,
+            "head": 0.0012962731998413801
+          },
+          "optimizer": null
+        },
+        "batch_sizes": {
+          "labeled": 1,
+          "unlabeled": 1
+        },
+        "effective_batch_counts": {
+          "labeled": 1,
+          "unlabeled": 1
+        },
+        "data_schedule": {
+          "step": 1,
+          "supervised": [
+            {
+              "patient": "synthetic_p000",
+              "frame": 0,
+              "slice": 1,
+              "crop_sha256": "c221458fa02ab63e82128271e50b3577c3f3f1aea15a547525fba3825e7cced1"
+            }
+          ],
+          "unlabeled": [
+            {
+              "patient": "synthetic_p002",
+              "frame": 0,
+              "slice": 0,
+              "crop_sha256": "c221458fa02ab63e82128271e50b3577c3f3f1aea15a547525fba3825e7cced1"
+            }
+          ],
+          "audit_patient_selected": "synthetic_p000"
+        },
+        "data_schedule_sha256": "40b153c77116d9e4e6a1bb2e0d05fb4cb1c37192bc174eab9fe018f108b7b0cc",
+        "audit_consumption": {
+          "slice_reads": 6,
+          "frame_reads": 3,
+          "patient_reads": 3,
+          "stream_replays": 3,
+          "unique_frames": [
+            [
+              "synthetic_p000",
+              0
+            ]
+          ],
+          "selected_patient": "synthetic_p000"
+        },
+        "scale": 0.5,
+        "proposed_displacement_norm": 0.002070405800439481,
+        "realized_displacement_norm": 0.0010352029002197406,
+        "margins_before": {
+          "mean_true_margin": -0.895787239074707,
+          "min_true_margin": -7.2305450439453125
+        },
+        "margins_after": {
+          "mean_true_margin": -0.8967737257480621,
+          "min_true_margin": -7.2327704429626465
+        },
+        "margin_change": -0.0009864866733551025,
+        "mean_margin_decreased": true,
+        "margin_decreased_fraction": null,
+        "trial_count": 2,
+        "candidate_receipt": {
+          "source_ids": [
+            "pseudo_class_0",
+            "pseudo_class_1",
+            "pseudo_class_2",
+            "pseudo_class_3"
+          ],
+          "denominator": 256,
+          "telemetry": {
+            "accepted_pixels": 256,
+            "total_valid_pixels": 256,
+            "confidence_threshold": 0.0,
+            "temperature": 1.0,
+            "coefficient": 1.0,
+            "lr": 0.001,
+            "max_norm": null,
+            "class_pixels": [
+              124,
+              1,
+              63,
+              68
+            ],
+            "source_ids": [
+              "pseudo_class_0",
+              "pseudo_class_1",
+              "pseudo_class_2",
+              "pseudo_class_3"
+            ],
+            "status": "CANDIDATES_BUILT",
+            "aggregate_clip_scale": 1.0
+          }
+        },
+        "transaction": {
+          "method": "joint_guard",
+          "status": "accepted_nonzero",
+          "accepted": true,
+          "source_ids": [
+            "pseudo_class_0",
+            "pseudo_class_1",
+            "pseudo_class_2",
+            "pseudo_class_3"
+          ],
+          "alpha": [
+            0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "scale": 0.5,
+          "proposed_displacement_norm": 0.002070405800439481,
+          "realized_displacement_norm": 0.0010352029002197406,
+          "base_macro_dice": {
+            "RV": 0.33972602739726027,
+            "MYO": 0.041666666666666664,
+            "LV": 0.13471502590673576
+          },
+          "base_macro_absent_fp": {
+            "RV": null,
+            "MYO": null,
+            "LV": null
+          },
+          "base_fg_dice": 0.1720359066568876,
+          "macro_dice_after": {
+            "RV": 0.3442622950819672,
+            "MYO": 0.041666666666666664,
+            "LV": 0.13541666666666666
+          },
+          "macro_absent_fp_after": {
+            "RV": null,
+            "MYO": null,
+            "LV": null
+          },
+          "macro_fg_dice_after": 0.17378187613843352,
+          "margins_before": {
+            "mean_true_margin": -0.895787239074707,
+            "min_true_margin": -7.2305450439453125
+          },
+          "margins_after": {
+            "mean_true_margin": -0.8967737257480621,
+            "min_true_margin": -7.2327704429626465
+          },
+          "margin_change": -0.0009864866733551025,
+          "mean_margin_decreased": true,
+          "margin_decreased_fraction": null,
+          "trials": [
+            {
+              "trial_index": 0,
+              "alpha": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "displacement_norm": 0.002070405800439481,
+              "finite": true,
+              "macro_dice": {
+                "RV": 0.33879781420765026,
+                "MYO": 0.042105263157894736,
+                "LV": 0.13471502590673576
+              },
+              "macro_absent_fp": {
+                "RV": null,
+                "MYO": null,
+                "LV": null
+              },
+              "foreground_macro_dice": 0.17187270109076025,
+              "margins": {
+                "mean_true_margin": -0.8978309035301208,
+                "min_true_margin": -7.234687805175781
+              },
+              "objective": 0.8281292989092397,
+              "per_class_dice_ok": false,
+              "absent_fp_ok": true,
+              "norm_bound_ok": true,
+              "guard_passed": false,
+              "accepted": false
+            },
+            {
+              "trial_index": 1,
+              "alpha": [
+                0.5,
+                0.5,
+                0.5,
+                0.5
+              ],
+              "displacement_norm": 0.0010352029002197406,
+              "finite": true,
+              "macro_dice": {
+                "RV": 0.3442622950819672,
+                "MYO": 0.041666666666666664,
+                "LV": 0.13541666666666666
+              },
+              "macro_absent_fp": {
+                "RV": null,
+                "MYO": null,
+                "LV": null
+              },
+              "foreground_macro_dice": 0.17378187613843352,
+              "margins": {
+                "mean_true_margin": -0.8967737257480621,
+                "min_true_margin": -7.2327704429626465
+              },
+              "objective": 0.8262186238615664,
+              "per_class_dice_ok": true,
+              "absent_fp_ok": true,
+              "norm_bound_ok": true,
+              "guard_passed": true,
+              "accepted": true
+            }
+          ],
+          "optimizer_steps_in_transaction": 0,
+          "ema_updates_in_transaction": 0,
+          "telemetry": {
+            "eps": 0.0,
+            "absent_fp_budget": 0.0,
+            "tolerance": 1e-06,
+            "ridge": 1e-06,
+            "max_trials": 2,
+            "max_norm": null,
+            "num_directions": 4,
+            "audit_identity_hash": "4613fd15babdf3c9db36c9780ae6004f93ec6b2bbe838348b6d042a4a8af8d49"
+          }
+        },
+        "timings": {
+          "supervised_seconds": 0.0018759998492896557,
+          "teacher_cache_seconds": 0.00485558295622468,
+          "proposal_seconds": 0.004000083077698946,
+          "audit_trials_seconds": 0.0053131249733269215,
+          "step_elapsed_seconds": 0.016310082748532295,
+          "cuda_synchronized": false
+        },
+        "runtime_scope": "AUDIT_OVERHEAD_INCLUDED",
+        "slices_sampled": {
+          "labeled": 2,
+          "unlabeled": 2,
+          "audit": 6
+        },
+        "slices_optimized": {
+          "labeled": 2,
+          "unlabeled": 1
+        },
+        "optimizer_calls": {
+          "adamw": 2,
+          "sgd": 1
+        },
+        "cumulative_updates": {
+          "supervised_updates": 2,
+          "pseudo_accepted": 1,
+          "pseudo_rejected": 0,
+          "warmup_steps": 1,
+          "no_candidates": 0,
+          "rejected_all": 0,
+          "zero_displacement": 0
+        }
+      }
+    ]
+  },
+  "matched_initialization_and_schedules": true,
+  "benchmark": {
+    "schema": "self_audit.compact.benchmark.v1",
+    "benchmark_conditions": {
+      "device": "cpu",
+      "batch_size": 2,
+      "warmup_runs": 1,
+      "steady_repeats": 1,
+      "normalization": "prepared",
+      "precision": "float32",
+      "volume_definition": "full_native_4d_cine_tzyx",
+      "io_cache_policy": "streaming_native_no_full_prob_cache; live_verified_npy_write_per_volume; OS_cache_not_flushed",
+      "io_policy": "streaming native; no full probability cache; verified uint8 NPY writes; OS filesystem cache retained",
+      "evaluation_manifest_sha256": "b43ac84265704eb196a375922eabbb944646cde67220e037e0e71ed9032cec63",
+      "synthetic": true,
+      "timestamp": "2026-10-28T17:35:29Z",
+      "environment": {
+        "os": "Darwin",
+        "python_version": "3.11.16",
+        "torch_version": "2.14.0",
+        "cpu_count": 12
+      }
+    },
+    "compact_student": {
+      "status": "COMPLETED",
+      "model_type": "compact_export",
+      "model_path": "/private/tmp/self-audit-compact-smoke-20261028-release/export",
+      "artifact_manifest_sha256": "95e0982a36cead467796cdbac93b1a3fc7ff268d1b2ebcb37384b6d93715b754",
+      "artifact_payload_sha256": "a2307ac209c44fdda973eeee4a751e35bdcff6a700749f7e4fa1b8fe591d005a",
+      "evaluation_manifest_sha256": "b43ac84265704eb196a375922eabbb944646cde67220e037e0e71ed9032cec63",
+      "synthetic": true,
+      "device": "cpu",
+      "precision": "float32",
+      "volume_definition": "full_native_4d_cine_tzyx; one complete patient cine per volume",
+      "io_policy": "streaming native; no full probability cache; verified uint8 NPY writes; OS filesystem cache retained",
+      "io_cache_policy": "streaming native; no full probability cache; verified NPY volume writes; OS cache not flushed",
+      "reference": null,
+      "workload": {
+        "total_cases": 2,
+        "total_slices_per_cohort": 8,
+        "batch_size": 2,
+        "case_hashes": [
+          {
+            "id": "synthetic_eval_0",
+            "dataset": "manufactured",
+            "image_sha256": "d24e3fec35d588965e60d9e404e1948f0cdbc23d2d1335c3a488b996767044d9",
+            "shape_tzyx": [
+              2,
+              2,
+              17,
+              19
+            ],
+            "axes": [
+              "T",
+              "Z",
+              "Y",
+              "X"
+            ],
+            "affine": [
+              [
+                1.25,
+                0.0,
+                0.0,
+                3.0
+              ],
+              [
+                0.0,
+                1.5,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                7.5,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          },
+          {
+            "id": "synthetic_eval_1",
+            "dataset": "manufactured",
+            "image_sha256": "f862aa2a6bd2cbf058b8b9a0b7dcf7211e0b15f7ec5f28ee86bfed2597812352",
+            "shape_tzyx": [
+              2,
+              2,
+              19,
+              21
+            ],
+            "axes": [
+              "T",
+              "Z",
+              "Y",
+              "X"
+            ],
+            "affine": [
+              [
+                1.25,
+                0.0,
+                0.0,
+                13.0
+              ],
+              [
+                0.0,
+                1.5,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                7.5,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        ],
+        "case_shapes": [
+          {
+            "id": "synthetic_eval_0",
+            "shape_tzyx": [
+              2,
+              2,
+              17,
+              19
+            ]
+          },
+          {
+            "id": "synthetic_eval_1",
+            "shape_tzyx": [
+              2,
+              2,
+              19,
+              21
+            ]
+          }
+        ],
+        "patient_coverage_complete": true
+      },
+      "inference_outputs": [
+        {
+          "id": "synthetic_eval_0",
+          "dataset": "manufactured",
+          "image_sha256": "d24e3fec35d588965e60d9e404e1948f0cdbc23d2d1335c3a488b996767044d9",
+          "shape_tzyx": [
+            2,
+            2,
+            17,
+            19
+          ],
+          "axes": [
+            "T",
+            "Z",
+            "Y",
+            "X"
+          ],
+          "affine": [
+            [
+              1.25,
+              0.0,
+              0.0,
+              3.0
+            ],
+            [
+              0.0,
+              1.5,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              7.5,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "slice_count": 4,
+          "prediction_file": "synthetic_eval_0_case_0.npy",
+          "prediction_sha256": "a604cf3381cd1f6a3e77c5e858d3518ff1c9270f260278a69672d643f1faef81"
+        },
+        {
+          "id": "synthetic_eval_1",
+          "dataset": "manufactured",
+          "image_sha256": "f862aa2a6bd2cbf058b8b9a0b7dcf7211e0b15f7ec5f28ee86bfed2597812352",
+          "shape_tzyx": [
+            2,
+            2,
+            19,
+            21
+          ],
+          "axes": [
+            "T",
+            "Z",
+            "Y",
+            "X"
+          ],
+          "affine": [
+            [
+              1.25,
+              0.0,
+              0.0,
+              13.0
+            ],
+            [
+              0.0,
+              1.5,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              7.5,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "slice_count": 4,
+          "prediction_file": "synthetic_eval_1_case_1.npy",
+          "prediction_sha256": "f6432aa5bc914cacfbbfc1bdcc99ef6b9ea8c56abb0c650c78c33c489d107114"
+        }
+      ],
+      "model_size": {
+        "total_parameters": 2288,
+        "trainable_parameters": 0,
+        "tensor_param_bytes": 9152,
+        "deployed_file_bytes": 18060,
+        "deployed_weights_bytes": 18060,
+        "load_time_seconds": 0.0037262500263750553
+      },
+      "latency": {
+        "cold": {
+          "load_seconds": 0.0037262500263750553,
+          "model_only_median_seconds_per_volume": 0.004757000133395195,
+          "e2e_median_seconds_per_volume": 0.020572729175910354
+        },
+        "steady": {
+          "repeats": 1,
+          "model_only_median_seconds_per_volume": 0.0007481877692043781,
+          "model_only_p95_seconds_per_volume": 0.0007696940563619136,
+          "model_only_min_seconds_per_volume": 0.0007242918945848942,
+          "model_only_max_seconds_per_volume": 0.0007720836438238621,
+          "e2e_median_seconds_per_volume": 0.005909125087782741,
+          "e2e_p95_seconds_per_volume": 0.006138512422330678,
+          "total_wall_seconds": 0.0607913751155138,
+          "total_volumes": 2,
+          "total_slices": 8,
+          "volumes_per_second": 32.899403841411136,
+          "slices_per_second": 131.59761536564454
+        }
+      },
+      "memory": {
+        "peak_inference_process_tree_ram_mb": 210.640625,
+        "ram_poll_interval_ms": 5,
+        "cuda_peak_allocated_mb": null,
+        "cuda_peak_reserved_mb": null
+      }
+    },
+    "baseline_student": {
+      "status": "NOT_RUN",
+      "reason": "No validated baseline checkpoint provided; missing real assets stays NOT_RUN"
+    },
+    "reference_identity": {
+      "status": "NOT_RUN",
+      "verified": false
+    },
+    "comparison": {}
+  },
+  "acceptance_status": "BLOCKED"
+}

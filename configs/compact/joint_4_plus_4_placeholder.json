@@ -1,0 +1,63 @@
+{
+  "schema": "self_audit.compact.v1",
+  "method": "joint_guard",
+  "experiment": {
+    "name": "joint_4_plus_4_placeholder",
+    "status": "PLACEHOLDER",
+    "launchable": false,
+    "requires_exact_teacher_lineage": true,
+    "requires_existing_baseline_gate": true
+  },
+  "steps": 32,
+  "warmup_steps": 8,
+  "seed": 42,
+  "lr": 0.0003,
+  "weight_decay": 0.0001,
+  "pseudo_lr": 0.001,
+  "temperature": 1.0,
+  "coefficient": 1.0,
+  "pseudo_threshold": 0.7,
+  "ridge": 0.000001,
+  "risk_budget": 0.0,
+  "absent_fp_budget": 0.0,
+  "guard_tolerance": 0.000001,
+  "max_trials": 8,
+  "batch_size": 1,
+  "labeled_batch_size": 1,
+  "unlabeled_batch_size": 1,
+  "crop_size": 0,
+  "save_every": 1000,
+  "model": {
+    "name": "CompactStudent",
+    "widths": [16, 32, 64, 128],
+    "in_channels": 3,
+    "num_classes": 4,
+    "init": "kaiming_normal"
+  },
+  "data": {
+    "manifest_sha256": null,
+    "budget_k": 8,
+    "labeled_ids": []
+  },
+  "teacher": {
+    "source_training_cost": "NOT_KNOWN",
+    "cache_path": null,
+    "cache_sha256": null,
+    "state": "student",
+    "lineage": {
+      "budget_k": 4,
+      "exact_labeled_ids": [],
+      "matching_lineage_required": true
+    }
+  },
+  "baseline_gate": {
+    "reference_config": "configs/compact/ema_reference.json",
+    "reference_config_sha256": "ec77f55d2b0d419f2fc4ccbb7b03129ebfe206d794914623348fe3708f397863",
+    "status": "REQUIRED_BEFORE_LAUNCH"
+  },
+  "acceptance": {
+    "metric": "Macro4",
+    "min_macro4": 0.87,
+    "notes": "Joint 4+4 placeholder; exact label union and baseline gate are mandatory before launch."
+  }
+}
