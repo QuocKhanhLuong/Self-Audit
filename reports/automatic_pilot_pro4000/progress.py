@@ -17,7 +17,7 @@ print(subprocess.check_output(['nvidia-smi','--query-gpu=memory.used,memory.tota
 print('RAM cgroup GiB:',round(int(Path('/sys/fs/cgroup/memory.current').read_text())/2**30,1),'/120.7')
 print(f"{'Arm':19} {'Equal update (128)':27} Equal time (600s)")
 for a in arms:print(f'{a:19} {status("equal_update_B128_M40",a):27} {status("equal_time_B128_M40",a)}')
-for regime in ['equal_update_B128_M40','equal_time_B128_M40','equal_time_B128_M40_MnM_verified_VAL']:
+for regime in ['equal_update_B128_M40','equal_time_B128_M40']:
  p=R/f'evaluation_progress_{regime}.json'
  if p.exists():x=json.loads(p.read_text());print('Evaluation',regime,len(x['completed_arms']),'arms completed')
 print('Raw logs: reports/automatic_pilot_pro4000/optimized128-full-training-live.log')
