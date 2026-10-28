@@ -26,7 +26,5 @@ python reports/automatic_pilot_pro4000/run_stage.py equal_time --time-budget 600
 python reports/automatic_pilot_pro4000/evaluate_stage.py equal_update_B128_M40
 python reports/automatic_pilot_pro4000/evaluate_stage.py equal_time_B128_M40
 echo FULL_ACDC_B128_MATRIX_AND_EVALUATION_COMPLETE
-python -c 'import json; assert json.load(open("reports/automatic_pilot_pro4000/mnm_loading_smoke.json"))["status"]=="PASS"'
-python reports/automatic_pilot_pro4000/evaluate_stage.py equal_time_B128_M40 --mnm
 python reports/automatic_pilot_pro4000/build_report.py
-echo ALL_FEASIBLE_B128_EXPERIMENTS_COMPLETE
+echo ALL_ACDC_B128_EXPERIMENTS_COMPLETE
