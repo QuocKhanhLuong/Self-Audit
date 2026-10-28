@@ -5,6 +5,15 @@ efficacy. Primary setting: a budgeted dense-labeled TRAIN subset L and image-onl
 U. Audit examples rotate within L and are patient-disjoint from the supervised
 minibatch **within each transaction**, not a held-out statistical validation set.
 
+The opt-in `self_audit.automatic.v1` pilot has a separate
+[locked contract](AUTOMATIC_PILOT_CONTRACT.md) and
+[runbook](AUTOMATIC_PILOT_RUNBOOK.md). It uses fixed complete TRAIN-L support,
+frozen fixed-window features during head adaptation, and raw-student deployment.
+Its finite Dice predicate protects only the extra U step relative to theta_sup.
+The fixed volume support measure is a declared experimental factor, distinct
+from the rotating single-slice protocol described below. Neither protocol
+certifies EMA predictions or query-patient Dice.
+
 ## Questions and choices
 
 1. Where do names/boundaries come from? Dense native CE + present-foreground Dice

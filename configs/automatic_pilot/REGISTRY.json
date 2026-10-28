@@ -1,0 +1,96 @@
+{
+  "schema": "self_audit.automatic_registry.v1",
+  "hardware_target": "NVIDIA RTX PRO 4000 24GB",
+  "total_arms": 10,
+  "warm_start_policy": "All 10 arms branch from the single shared support-only warm-start checkpoint with verified SHA-256.",
+  "fixed_arms": [
+    "scalar_brier",
+    "joint_brier",
+    "scalar_dice",
+    "joint_dice",
+    "frozen",
+    "support_only",
+    "plain_head_u",
+    "extra_supervised",
+    "smaller_lr",
+    "full_ema"
+  ],
+  "decision_gates": {
+    "joint_beats_scalar": "Joint proposer must outperform common-scalar proposer on independent query under equal compute.",
+    "dice_guard_beats_smaller_lr": "Hard-Dice guarded adaptation must outperform smaller learning rate baseline under equal compute.",
+    "u_beats_extra_supervised": "Unlabeled adaptation must outperform extra supervised training on observed support under equal compute.",
+    "no_software_only_go": "Software-only, synthetic, or missing patient evaluations strictly yield NO_GO / NOT_RUN, never software GO."
+  },
+  "arms": {
+    "scalar_brier": {
+      "role": "mechanism_contrast",
+      "description": "Common scalar proposer alpha = s * 1 preserving cross terms, Brier finite predicate",
+      "allocation": "scalar",
+      "dice_guard": false,
+      "config_file": "configs/automatic_pilot/scalar_brier.json"
+    },
+    "joint_brier": {
+      "role": "mechanism_primary",
+      "description": "Joint multi-direction proposer, Brier finite predicate",
+      "allocation": "joint",
+      "dice_guard": false,
+      "config_file": "configs/automatic_pilot/joint_brier.json"
+    },
+    "scalar_dice": {
+      "role": "mechanism_contrast",
+      "description": "Common scalar proposer alpha = s * 1, dual Brier + hard-Dice finite predicate",
+      "allocation": "scalar",
+      "dice_guard": true,
+      "config_file": "configs/automatic_pilot/scalar_dice.json"
+    },
+    "joint_dice": {
+      "role": "proposed_primary",
+      "description": "Joint multi-direction proposer, dual Brier + hard-Dice finite predicate on full support volume",
+      "allocation": "joint",
+      "dice_guard": true,
+      "config_file": "configs/automatic_pilot/joint_dice.json"
+    },
+    "frozen": {
+      "role": "negative_control",
+      "description": "Frozen head control with 0 parameter updates",
+      "allocation": "none",
+      "dice_guard": false,
+      "config_file": "configs/automatic_pilot/frozen.json"
+    },
+    "support_only": {
+      "role": "reference_baseline",
+      "description": "Support-only supervised warm-start reference without unlabeled adaptation",
+      "allocation": "none",
+      "dice_guard": false,
+      "config_file": "configs/automatic_pilot/support_only.json"
+    },
+    "plain_head_u": {
+      "role": "unguarded_control",
+      "description": "Unguarded head adaptation with unlabeled pseudo-labels",
+      "allocation": "plain",
+      "dice_guard": false,
+      "config_file": "configs/automatic_pilot/plain_head_u.json"
+    },
+    "extra_supervised": {
+      "role": "compute_control",
+      "description": "Extra support-supervised training matching adaptation compute budget to test U utility",
+      "allocation": "none",
+      "dice_guard": false,
+      "config_file": "configs/automatic_pilot/extra_supervised.json"
+    },
+    "smaller_lr": {
+      "role": "conservative_control",
+      "description": "Tuned smaller pseudo learning rate baseline on development protocol",
+      "allocation": "plain",
+      "dice_guard": false,
+      "config_file": "configs/automatic_pilot/smaller_lr.json"
+    },
+    "full_ema": {
+      "role": "capacity_control",
+      "description": "Full model EMA continuation updating backbone/decoder at matched compute",
+      "allocation": "plain",
+      "dice_guard": false,
+      "config_file": "configs/automatic_pilot/full_ema.json"
+    }
+  }
+}

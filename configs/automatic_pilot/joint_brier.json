@@ -1,0 +1,54 @@
+{
+  "schema": "self_audit.automatic.v1",
+  "arm": "joint_brier",
+  "steps": 32,
+  "warmup_steps": 0,
+  "seed": 42,
+  "head_lr": 0.003,
+  "body_lr": 0.0,
+  "pseudo_lr": 0.001,
+  "weight_decay": 0.0001,
+  "ema_decay": 0.99,
+  "pseudo_threshold": 0.7,
+  "ridge": 1e-06,
+  "risk_budget": 0.0,
+  "guard_tolerance": 1e-08,
+  "dice_tolerance": 0.0,
+  "fp_tolerance": 0.0,
+  "backtracks": 8,
+  "save_every": 100,
+  "threads": 2,
+  "batch_size": 1,
+  "crop_size": 256,
+  "max_support_voxels": 10000000,
+  "max_extract_batch": 8,
+  "support": {
+    "patient_ids": null,
+    "k_reuse": 1
+  },
+  "initialization": {
+    "warm_start_checkpoint": null,
+    "warm_start_sha256": null,
+    "declared_target_budget": 1
+  },
+  "window": {
+    "mode": "fixed",
+    "dim": 32,
+    "radius_min": 0.5,
+    "radius_max": 4.0,
+    "offset_limit": 2.0,
+    "initial_radius": 1.0,
+    "gamma_init": 0.001
+  },
+  "model": {
+    "backbone": "dinov3_convnext_tiny",
+    "source_repo": "",
+    "source_commit": "",
+    "weights": "",
+    "weights_sha256": ""
+  },
+  "phase": "adaptation",
+  "time_budget_seconds": null,
+  "max_cache_bytes": 2147483648,
+  "max_controller_workspace_bytes": 4294967296
+}

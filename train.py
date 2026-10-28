@@ -19,6 +19,10 @@ def main():
     p.add_argument("--synthetic", action="store_true", help="Manufactured CPU test, never patient evidence")
     p.add_argument("--legacy-checkpoint", help="Explicit historical checkpoint compatibility verification")
     p.add_argument("--legacy-manifest-sha256"); p.add_argument("--legacy-source-sha256")
+    p.add_argument("--phase", choices=["warm_start", "adaptation"], help="phase override for self_audit.automatic.v1")
+    p.add_argument("--time-budget", type=float, help="time budget seconds for self_audit.automatic.v1")
+    p.add_argument("--max-cache-bytes", type=int, help="max cache bytes for self_audit.automatic.v1")
+    p.add_argument("--max-controller-workspace-bytes", type=int, help="max controller workspace bytes for self_audit.automatic.v1")
     args = p.parse_args()
     if args.describe:
         print(Path(__file__).with_name("ACTIVE_PIPELINE.json").read_text()); return
@@ -31,6 +35,7 @@ def main():
             p.error("--model-config must contain a JSON object")
         c["model"] = override
     is_volume = c.get("schema") == "self_audit.volume.v1"
+    is_automatic = c.get("schema") == "self_audit.automatic.v1"
     native_only = {
         "--model-config": args.model_config,
         "--geometry": args.geometry,
@@ -44,16 +49,69 @@ def main():
         "--legacy-manifest-sha256": args.legacy_manifest_sha256,
         "--legacy-source-sha256": args.legacy_source_sha256,
     }
+    automatic_only = {
+        "--phase": args.phase,
+        "--time-budget": args.time_budget,
+        "--max-cache-bytes": args.max_cache_bytes,
+        "--max-controller-workspace-bytes": args.max_controller_workspace_bytes,
+    }
     if is_volume:
         supplied = [flag for flag, value in legacy_only.items() if value is not None]
         if supplied:
             p.error(f"legacy-only flags are invalid for self_audit.volume.v1: {', '.join(supplied)}")
+        auto_supplied = [flag for flag, value in automatic_only.items() if value is not None]
+        if auto_supplied:
+            p.error(f"automatic-only flags are invalid for self_audit.volume.v1: {', '.join(auto_supplied)}")
+        if args.resume_sha256 and not args.resume:
+            p.error("--resume-sha256 requires --resume")
+    elif is_automatic:
+        supplied = [flag for flag, value in legacy_only.items() if value is not None]
+        if supplied:
+            p.error(f"legacy-only flags are invalid for self_audit.automatic.v1: {', '.join(supplied)}")
+        vol_only = {
+            "--geometry": args.geometry,
+            "--geometry-sha256": args.geometry_sha256,
+        }
+        vol_supplied = [flag for flag, value in vol_only.items() if value is not None]
+        if vol_supplied:
+            p.error(f"volume-geometry flags are invalid for self_audit.automatic.v1: {', '.join(vol_supplied)}")
+        if args.resume and not args.resume_sha256:
+            p.error("--resume-sha256 is mandatory when --resume is specified")
         if args.resume_sha256 and not args.resume:
             p.error("--resume-sha256 requires --resume")
     else:
         supplied = [flag for flag, value in native_only.items() if value is not None]
         if supplied:
             p.error(f"native-volume-only flags are invalid for historical schema: {', '.join(supplied)}")
+        auto_supplied = [flag for flag, value in automatic_only.items() if value is not None]
+        if auto_supplied:
+            p.error(f"automatic-only flags are invalid for historical schema: {', '.join(auto_supplied)}")
+    if is_automatic:
+        from self_audit.automatic import run, validate_automatic_config
+        if args.phase:
+            c["phase"] = args.phase
+        if args.time_budget is not None:
+            c["time_budget_seconds"] = args.time_budget
+        if args.max_cache_bytes is not None:
+            c["max_cache_bytes"] = args.max_cache_bytes
+        if args.max_controller_workspace_bytes is not None:
+            c["max_controller_workspace_bytes"] = args.max_controller_workspace_bytes
+        effective_steps = args.steps if args.steps is not None else c.get("steps")
+        if isinstance(effective_steps, bool) or not isinstance(effective_steps, int) or effective_steps < 1:
+            p.error("automatic effective steps must be a positive integer")
+        if not args.synthetic and not all([args.data, args.data_sha256]):
+            p.error("automatic patient runs require --data/--data-sha256; no implicit data discovery")
+        if not args.out:
+            p.error("automatic runs require --out for a checkpoint receipt")
+        try:
+            c = validate_automatic_config(c, allow_full_run=args.allow_full_run, stop_steps=args.steps)
+        except ValueError as exc:
+            p.error(str(exc))
+        print(json.dumps(run(c, output=args.out, device=args.device, synthetic=args.synthetic,
+                             manifest=args.data, manifest_sha256=args.data_sha256,
+                             steps=args.steps, resume=args.resume, resume_sha256=args.resume_sha256,
+                             allow_full_run=args.allow_full_run), indent=2))
+        return
     if is_volume:
         from self_audit.volume import train_volume, validate_volume_config
         effective_steps = args.steps if args.steps is not None else c.get("training", {}).get("steps")

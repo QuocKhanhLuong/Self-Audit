@@ -1,0 +1,30 @@
+{
+  "status": "VERIFIED_SOFTWARE_ONLY",
+  "base_commit": "bdb1c399d29c63ae49865af8db78954f79f9ad9d",
+  "main_preserved_at": "637f38ced217fe1db2347a87924695533056d8f0",
+  "branch": "feat/fully-automatic-head-pilot",
+  "orchestration_run": "run_d64a93010971",
+  "workers": {
+    "controller": "ctx_7409bb22a7e1",
+    "engine": "ctx_2cc05330084d",
+    "runner": "ctx_a6c0f7084545"
+  },
+  "provider": "antigravity",
+  "python": "/Users/alvinluong/miniforge3/bin/python",
+  "torch": "2.14.0",
+  "scipy": "1.17.1",
+  "cuda_available": false,
+  "check_repo": "PASS",
+  "pytest": {"passed": 422, "warnings": 1, "seconds": 22.07},
+  "warning": "torch.jit.script deprecation in tests/test_pipeline.py::test_decoder_jvp_transaction",
+  "source_documents_sha256": {
+    "FULLY_AUTOMATIC_REVIEW_VI.md": "78bf302b088bc188275a1bfcaaebd127013df2913bd23a2a481a9f70cf74bf9e",
+    "FULLY_AUTOMATIC_GROUNDING_VI.md": "beea3d71fe732cc84095b1458ce8c1907b17d69fa51220c9742143067135992e",
+    "review-native-bdb1c39/self_audit/control.py": "be31bdabbd5389e1989b31c6e7a416e8cf6a3172f72ae67c6d8c0d15a91dbe29",
+    "review-native-bdb1c39/self_audit/engine.py": "e40757b248811b4525205320d1a756ca9da1c1fd1260f86d977c5aa0124c3f32"
+  },
+  "patient_training": "NOT_RUN",
+  "PRO4000_profile": "NOT_RUN",
+  "pretrained_weights_used": false,
+  "quality_and_novelty": "NOT_ESTABLISHED"
+}
