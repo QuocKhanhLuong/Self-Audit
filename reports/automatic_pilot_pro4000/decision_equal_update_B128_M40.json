@@ -1,0 +1,573 @@
+{
+  "kind": "decision",
+  "server_artifact": "/workspace/Self-Audit/reports/automatic_pilot_pro4000/decision_equal_update_B128_M40.json",
+  "artifact_sha256": "32e4fc0f18a4d6b33bbe488ce98805e31956e49f409de0a83399ac9264ab2f69",
+  "base_commit": "93f7c7a1f9606a68955f849dd580b90462ad329e",
+  "decision_gate": {
+    "decision": "INCONCLUSIVE_NOT_RUN",
+    "quality_status": "NOT_RUN",
+    "reason": "Matched compute verification failed or missing in verified_context.",
+    "gates": {
+      "joint_beats_scalar": null,
+      "dice_guard_beats_smaller_lr": null,
+      "u_beats_extra_supervised": null
+    }
+  },
+  "verified_context": {
+    "query_provenance": "8f89d631bc67f7eccef94740866513fe6f794872e7cb6e61302b1663e17e8f9e",
+    "prediction_model": "student",
+    "output_coverage": 1.0,
+    "matched_initialization": true,
+    "matched_lineage": true,
+    "matched_compute": false,
+    "comparison_mode": "equal_update",
+    "time_budget_seconds": null,
+    "device": "cuda"
+  },
+  "actual_phase_seconds": [
+    587.595373456832,
+    574.9324312349781,
+    582.9438339318149,
+    587.9398568880279,
+    175.2432176428847,
+    176.70932618295774,
+    245.44327570102178,
+    173.99631453002803,
+    245.92411302402616,
+    524.0544183528982
+  ],
+  "arms": {
+    "scalar_brier": {
+      "foreground_patient_macro": 0.0,
+      "macro_patient": {
+        "BG": {
+          "dice": 0.9807936703179436,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "RV": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "MYO": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "LV": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        }
+      },
+      "accounting": {
+        "marginal_adaptation_cost": {
+          "marginal_adaptation_seconds": 587.595373456832,
+          "extraction_seconds": 6.739994412986562,
+          "throughput_updates_per_sec": 0.218,
+          "latency_p50_ms": 4462.5935,
+          "latency_p95_ms": 4523.425,
+          "peak_vram_allocated_mb": 12400.337,
+          "peak_vram_reserved_mb": 20616.0,
+          "acceptance_rate": 0.0,
+          "nonzero_displacement_updates": 0,
+          "margin_changes": {
+            "initial_mean_true_margin": 3.0279338359832764,
+            "final_mean_true_margin": 3.2168493270874023,
+            "net_margin_change": 0.18891549110412598
+          }
+        },
+        "cold_total_cost": {
+          "status": "COMPLETE",
+          "warm_start_seconds": 27.37397775100544,
+          "marginal_adaptation_seconds": 587.595373456832,
+          "output_export_seconds": 57.31754712597467,
+          "cold_total_seconds": 672.2868983338121,
+          "resume_cost_policy": "Fresh phase clocks only; resumed checkpoint timing omits the previous checkpoint write boundary"
+        }
+      },
+      "prediction_coverage": 1.0,
+      "scoring_coverage": 1.0
+    },
+    "joint_brier": {
+      "foreground_patient_macro": 0.0,
+      "macro_patient": {
+        "BG": {
+          "dice": 0.9807936703179436,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "RV": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "MYO": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "LV": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        }
+      },
+      "accounting": {
+        "marginal_adaptation_cost": {
+          "marginal_adaptation_seconds": 574.9324312349781,
+          "extraction_seconds": 6.729803266003728,
+          "throughput_updates_per_sec": 0.223,
+          "latency_p50_ms": 4346.0625,
+          "latency_p95_ms": 4465.77305,
+          "peak_vram_allocated_mb": 12400.337,
+          "peak_vram_reserved_mb": 20616.0,
+          "acceptance_rate": 0.0,
+          "nonzero_displacement_updates": 0,
+          "margin_changes": {
+            "initial_mean_true_margin": 3.0279338359832764,
+            "final_mean_true_margin": 3.2168493270874023,
+            "net_margin_change": 0.18891549110412598
+          }
+        },
+        "cold_total_cost": {
+          "status": "COMPLETE",
+          "warm_start_seconds": 27.37397775100544,
+          "marginal_adaptation_seconds": 574.9324312349781,
+          "output_export_seconds": 54.676260718144476,
+          "cold_total_seconds": 656.982669704128,
+          "resume_cost_policy": "Fresh phase clocks only; resumed checkpoint timing omits the previous checkpoint write boundary"
+        }
+      },
+      "prediction_coverage": 1.0,
+      "scoring_coverage": 1.0
+    },
+    "scalar_dice": {
+      "foreground_patient_macro": 0.0,
+      "macro_patient": {
+        "BG": {
+          "dice": 0.9807936703179436,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "RV": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "MYO": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "LV": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        }
+      },
+      "accounting": {
+        "marginal_adaptation_cost": {
+          "marginal_adaptation_seconds": 582.9438339318149,
+          "extraction_seconds": 6.78116399096325,
+          "throughput_updates_per_sec": 0.22,
+          "latency_p50_ms": 4426.5215,
+          "latency_p95_ms": 4485.20555,
+          "peak_vram_allocated_mb": 12400.337,
+          "peak_vram_reserved_mb": 20616.0,
+          "acceptance_rate": 0.0,
+          "nonzero_displacement_updates": 0,
+          "margin_changes": {
+            "initial_mean_true_margin": 3.0279338359832764,
+            "final_mean_true_margin": 3.2168493270874023,
+            "net_margin_change": 0.18891549110412598
+          }
+        },
+        "cold_total_cost": {
+          "status": "COMPLETE",
+          "warm_start_seconds": 27.37397775100544,
+          "marginal_adaptation_seconds": 582.9438339318149,
+          "output_export_seconds": 54.467111469013616,
+          "cold_total_seconds": 664.7849231518339,
+          "resume_cost_policy": "Fresh phase clocks only; resumed checkpoint timing omits the previous checkpoint write boundary"
+        }
+      },
+      "prediction_coverage": 1.0,
+      "scoring_coverage": 1.0
+    },
+    "joint_dice": {
+      "foreground_patient_macro": 0.0,
+      "macro_patient": {
+        "BG": {
+          "dice": 0.9807936703179436,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "RV": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "MYO": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "LV": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        }
+      },
+      "accounting": {
+        "marginal_adaptation_cost": {
+          "marginal_adaptation_seconds": 587.9398568880279,
+          "extraction_seconds": 6.766351781086996,
+          "throughput_updates_per_sec": 0.218,
+          "latency_p50_ms": 4472.744000000001,
+          "latency_p95_ms": 4518.1533500000005,
+          "peak_vram_allocated_mb": 12400.337,
+          "peak_vram_reserved_mb": 20616.0,
+          "acceptance_rate": 0.0,
+          "nonzero_displacement_updates": 0,
+          "margin_changes": {
+            "initial_mean_true_margin": 3.0279338359832764,
+            "final_mean_true_margin": 3.2168493270874023,
+            "net_margin_change": 0.18891549110412598
+          }
+        },
+        "cold_total_cost": {
+          "status": "COMPLETE",
+          "warm_start_seconds": 27.37397775100544,
+          "marginal_adaptation_seconds": 587.9398568880279,
+          "output_export_seconds": 54.51205110992305,
+          "cold_total_seconds": 669.8258857489564,
+          "resume_cost_policy": "Fresh phase clocks only; resumed checkpoint timing omits the previous checkpoint write boundary"
+        }
+      },
+      "prediction_coverage": 1.0,
+      "scoring_coverage": 1.0
+    },
+    "frozen": {
+      "foreground_patient_macro": 0.0,
+      "macro_patient": {
+        "BG": {
+          "dice": 0.9807936703179436,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "RV": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "MYO": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "LV": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        }
+      },
+      "accounting": {
+        "marginal_adaptation_cost": {
+          "marginal_adaptation_seconds": 175.2432176428847,
+          "extraction_seconds": 6.751982361078262,
+          "throughput_updates_per_sec": 0.73,
+          "latency_p50_ms": 1241.7640000000001,
+          "latency_p95_ms": 1321.7648499999998,
+          "peak_vram_allocated_mb": 11367.616,
+          "peak_vram_reserved_mb": 20616.0,
+          "acceptance_rate": "NOT_APPLICABLE",
+          "nonzero_displacement_updates": 0,
+          "margin_changes": {
+            "initial_mean_true_margin": 3.025665760040283,
+            "final_mean_true_margin": 3.025665760040283,
+            "net_margin_change": 0.0
+          }
+        },
+        "cold_total_cost": {
+          "status": "COMPLETE",
+          "warm_start_seconds": 27.37397775100544,
+          "marginal_adaptation_seconds": 175.2432176428847,
+          "output_export_seconds": 54.65526966005564,
+          "cold_total_seconds": 257.2724650539458,
+          "resume_cost_policy": "Fresh phase clocks only; resumed checkpoint timing omits the previous checkpoint write boundary"
+        }
+      },
+      "prediction_coverage": 1.0,
+      "scoring_coverage": 1.0
+    },
+    "support_only": {
+      "foreground_patient_macro": 0.0,
+      "macro_patient": {
+        "BG": {
+          "dice": 0.9807936703179436,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "RV": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "MYO": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "LV": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        }
+      },
+      "accounting": {
+        "marginal_adaptation_cost": {
+          "marginal_adaptation_seconds": 176.70932618295774,
+          "extraction_seconds": 7.12408424098976,
+          "throughput_updates_per_sec": 0.724,
+          "latency_p50_ms": 1251.1615000000002,
+          "latency_p95_ms": 1271.781,
+          "peak_vram_allocated_mb": 11376.336,
+          "peak_vram_reserved_mb": 20616.0,
+          "acceptance_rate": "NOT_APPLICABLE",
+          "nonzero_displacement_updates": 0,
+          "margin_changes": {
+            "initial_mean_true_margin": 3.0279338359832764,
+            "final_mean_true_margin": 3.2168493270874023,
+            "net_margin_change": 0.18891549110412598
+          }
+        },
+        "cold_total_cost": {
+          "status": "COMPLETE",
+          "warm_start_seconds": 27.37397775100544,
+          "marginal_adaptation_seconds": 176.70932618295774,
+          "output_export_seconds": 54.26665926910937,
+          "cold_total_seconds": 258.34996320307255,
+          "resume_cost_policy": "Fresh phase clocks only; resumed checkpoint timing omits the previous checkpoint write boundary"
+        }
+      },
+      "prediction_coverage": 1.0,
+      "scoring_coverage": 1.0
+    },
+    "plain_head_u": {
+      "foreground_patient_macro": 0.0,
+      "macro_patient": {
+        "BG": {
+          "dice": 0.9807936703179436,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "RV": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "MYO": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "LV": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        }
+      },
+      "accounting": {
+        "marginal_adaptation_cost": {
+          "marginal_adaptation_seconds": 245.44327570102178,
+          "extraction_seconds": 6.836611761013046,
+          "throughput_updates_per_sec": 0.522,
+          "latency_p50_ms": 1788.673,
+          "latency_p95_ms": 1832.8987,
+          "peak_vram_allocated_mb": 12400.34,
+          "peak_vram_reserved_mb": 20616.0,
+          "acceptance_rate": 1.0,
+          "nonzero_displacement_updates": 128,
+          "margin_changes": {
+            "initial_mean_true_margin": 3.0279338359832764,
+            "final_mean_true_margin": 3.323557138442993,
+            "net_margin_change": 0.2956233024597168
+          }
+        },
+        "cold_total_cost": {
+          "status": "COMPLETE",
+          "warm_start_seconds": 27.37397775100544,
+          "marginal_adaptation_seconds": 245.44327570102178,
+          "output_export_seconds": 54.58332250104286,
+          "cold_total_seconds": 327.4005759530701,
+          "resume_cost_policy": "Fresh phase clocks only; resumed checkpoint timing omits the previous checkpoint write boundary"
+        }
+      },
+      "prediction_coverage": 1.0,
+      "scoring_coverage": 1.0
+    },
+    "extra_supervised": {
+      "foreground_patient_macro": 0.0,
+      "macro_patient": {
+        "BG": {
+          "dice": 0.9807936703179436,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "RV": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "MYO": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "LV": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        }
+      },
+      "accounting": {
+        "marginal_adaptation_cost": {
+          "marginal_adaptation_seconds": 173.99631453002803,
+          "extraction_seconds": 6.73936447291635,
+          "throughput_updates_per_sec": 0.736,
+          "latency_p50_ms": 1230.885,
+          "latency_p95_ms": 1250.2966999999999,
+          "peak_vram_allocated_mb": 11384.15,
+          "peak_vram_reserved_mb": 20616.0,
+          "acceptance_rate": "NOT_APPLICABLE",
+          "nonzero_displacement_updates": 128,
+          "margin_changes": {
+            "initial_mean_true_margin": 3.0279338359832764,
+            "final_mean_true_margin": 3.356696128845215,
+            "net_margin_change": 0.3287622928619385
+          }
+        },
+        "cold_total_cost": {
+          "status": "COMPLETE",
+          "warm_start_seconds": 27.37397775100544,
+          "marginal_adaptation_seconds": 173.99631453002803,
+          "output_export_seconds": 55.14286650298163,
+          "cold_total_seconds": 256.5131587840151,
+          "resume_cost_policy": "Fresh phase clocks only; resumed checkpoint timing omits the previous checkpoint write boundary"
+        }
+      },
+      "prediction_coverage": 1.0,
+      "scoring_coverage": 1.0
+    },
+    "smaller_lr": {
+      "foreground_patient_macro": 0.0,
+      "macro_patient": {
+        "BG": {
+          "dice": 0.9807936703179436,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "RV": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "MYO": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "LV": {
+          "dice": 0.0,
+          "present_patients": 50,
+          "total_patients": 50
+        }
+      },
+      "accounting": {
+        "marginal_adaptation_cost": {
+          "marginal_adaptation_seconds": 245.92411302402616,
+          "extraction_seconds": 6.910304884891957,
+          "throughput_updates_per_sec": 0.52,
+          "latency_p50_ms": 1794.075,
+          "latency_p95_ms": 1814.44265,
+          "peak_vram_allocated_mb": 12400.34,
+          "peak_vram_reserved_mb": 20616.0,
+          "acceptance_rate": 1.0,
+          "nonzero_displacement_updates": 128,
+          "margin_changes": {
+            "initial_mean_true_margin": 3.0279338359832764,
+            "final_mean_true_margin": 3.238878011703491,
+            "net_margin_change": 0.21094417572021484
+          }
+        },
+        "cold_total_cost": {
+          "status": "COMPLETE",
+          "warm_start_seconds": 27.37397775100544,
+          "marginal_adaptation_seconds": 245.92411302402616,
+          "output_export_seconds": 54.671521108131856,
+          "cold_total_seconds": 327.96961188316345,
+          "resume_cost_policy": "Fresh phase clocks only; resumed checkpoint timing omits the previous checkpoint write boundary"
+        }
+      },
+      "prediction_coverage": 1.0,
+      "scoring_coverage": 1.0
+    },
+    "full_ema": {
+      "foreground_patient_macro": 0.48148717921531103,
+      "macro_patient": {
+        "BG": {
+          "dice": 0.9882599525040066,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "RV": {
+          "dice": 0.41711249728342187,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "MYO": {
+          "dice": 0.4083722376846927,
+          "present_patients": 50,
+          "total_patients": 50
+        },
+        "LV": {
+          "dice": 0.6189768026778182,
+          "present_patients": 50,
+          "total_patients": 50
+        }
+      },
+      "accounting": {
+        "marginal_adaptation_cost": {
+          "marginal_adaptation_seconds": 524.0544183528982,
+          "extraction_seconds": 6.816205930896103,
+          "throughput_updates_per_sec": 0.244,
+          "latency_p50_ms": 3915.1385,
+          "latency_p95_ms": 3981.66675,
+          "peak_vram_allocated_mb": 16074.652,
+          "peak_vram_reserved_mb": 19770.0,
+          "acceptance_rate": 1.0,
+          "nonzero_displacement_updates": 128,
+          "margin_changes": {
+            "initial_mean_true_margin": 3.5018091201782227,
+            "final_mean_true_margin": 7.910882472991943,
+            "net_margin_change": 4.409073352813721
+          }
+        },
+        "cold_total_cost": {
+          "status": "COMPLETE",
+          "warm_start_seconds": 27.37397775100544,
+          "marginal_adaptation_seconds": 524.0544183528982,
+          "output_export_seconds": 54.6025070308242,
+          "cold_total_seconds": 606.0309031347279,
+          "resume_cost_policy": "Fresh phase clocks only; resumed checkpoint timing omits the previous checkpoint write boundary"
+        }
+      },
+      "prediction_coverage": 1.0,
+      "scoring_coverage": 1.0
+    }
+  },
+  "patient_metric_artifacts": "Full per-patient metrics and failures are retained under reports/automatic_pilot_pro4000/PATIENT_METRICS.csv, FAILURE_PATIENTS.csv and runs/pro4000/evaluation_*/METRICS.json",
+  "limitations": "Single seed, configured pilot; Drive TEST50 previously exposed, not a new confirmatory cohort; references not challenge certified. Full-EMA includes encoder updates in executed base code. See local report, evaluation index and frozen prediction hashes."
+}
