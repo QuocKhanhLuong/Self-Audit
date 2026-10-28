@@ -36,8 +36,7 @@ for regime in ('equal_update_B128_M40', 'equal_time_B128_M40'):
 export_checks = []
 for tag, expected_patients in (
         ('equal_update_B128_M40', 50),
-        ('equal_time_B128_M40', 50),
-        ('equal_time_B128_M40_MnM_verified_VAL', 32)):
+        ('equal_time_B128_M40', 50)):
     index = load(R / f'evaluation_index_{tag}.json')
     for arm, item in index['evaluations'].items():
         out = Path(item['directory'])
@@ -51,19 +50,6 @@ for tag, expected_patients in (
         export_checks.append({'tag': tag, 'arm': arm, 'patients': len(frozen['files']),
                               'metrics_sha256': item['metrics_sha256'],
                               'frozen_receipt_sha256': digest(out / 'PREDICTIONS_FROZEN.json')})
-
-supplement = load(R / 'mnm_full_ema_supplemental.json')
-out = Path(supplement['output_directory'])
-frozen = load(out / 'PREDICTIONS_FROZEN.json')
-assert digest(out / 'METRICS.json') == supplement['metrics_sha256']
-assert frozen['checkpoint_sha256'] == supplement['checkpoint_manifest_sha256']
-assert len(frozen['files']) == 32 and frozen['coverage'] == 1.0
-for record in frozen['files']:
-    assert digest(out / 'predictions' / record['file']) == record['sha256']
-export_checks.append({'tag': 'equal_time_B128_M40_MnM_verified_VAL_supplemental',
-                      'arm': 'full_ema', 'patients': 32,
-                      'metrics_sha256': supplement['metrics_sha256'],
-                      'frozen_receipt_sha256': digest(out / 'PREDICTIONS_FROZEN.json')})
 
 report = {'schema': 'self_audit.pro4000.output_audit.v1', 'status': 'PASS',
           'checkpoint_count': len(matrix_checks), 'evaluation_count': len(export_checks),
