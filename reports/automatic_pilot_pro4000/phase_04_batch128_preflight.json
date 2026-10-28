@@ -1,0 +1,42 @@
+{
+  "schema": "self_audit.pro4000.phase.v1",
+  "phase": "batch128_preflight",
+  "utc": "2026-10-28T07:12:24.492750+00:00",
+  "base_commit": "93f7c7a1f9606a68955f849dd580b90462ad329e",
+  "source_sha256": "177ca3d21859a9ddd6ed686a11cb0623d71ec52ec0895b3ca501e9aa7861df28",
+  "source_patch_sha256": "aedb2cd50c3a59a78be0da30e973de22894f9ccee7ed08613d515166094dc561",
+  "tests": "535 passed, 1 warning in 130.91s",
+  "batch_size": 128,
+  "full_ema_microbatch_size": 40,
+  "profiles": {
+    "full_ema": {
+      "steps": 3,
+      "pseudo_transactions_proposed": 3,
+      "pseudo_transactions_accepted": 3,
+      "peak_vram_allocated_mb": 16072.925,
+      "peak_vram_reserved_mb": 19740.0,
+      "latency_p50_ms": 3930.241,
+      "latency_p95_ms": 4199.0737,
+      "throughput_updates_per_sec": 0.089
+    },
+    "joint_dice": {
+      "steps": 3,
+      "pseudo_transactions_proposed": 3,
+      "pseudo_transactions_accepted": 1,
+      "peak_vram_allocated_mb": 12398.83,
+      "peak_vram_reserved_mb": 20616.0,
+      "latency_p50_ms": 8312.993,
+      "latency_p95_ms": 8696.9069,
+      "throughput_updates_per_sec": 0.077
+    }
+  },
+  "training_manifest": {
+    "path": "/workspace/Self-Audit/data/prepared/ACDC_L8_S42/train.json",
+    "sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4"
+  },
+  "commands": [
+    "bash reports/automatic_pilot_pro4000/execute_B128.sh"
+  ],
+  "status": "B128_FULL_RUN_GATE_PASS; warm-start launched; quality NOT_EVALUATED",
+  "limitations": "Profile tests only 3 optimizer steps; actual longer run may have higher CUDA memory. No query metrics available at this phase."
+}
