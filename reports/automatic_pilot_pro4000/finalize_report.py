@@ -27,12 +27,8 @@ eq_u = load('equal_update_B128_M40.json')
 eq_t = load('equal_time_B128_M40.json')
 results_u = {x['arm']: x for x in load('results_equal_update_B128_M40.json')}
 results_t = {x['arm']: x for x in load('results_equal_time_B128_M40.json')}
-mnm = {x['arm']: x for x in load('results_equal_time_B128_M40_MnM_verified_VAL.json')}
-extra = load('mnm_full_ema_supplemental.json')
-mnm['full_ema'] = load('results_equal_time_B128_M40_MnM_full_ema.json')[0]
 dec = load('decision_equal_time_B128_M40.json')['decision_gate']
 acdc = load('acdc_integrity.json')
-mm = load('mnm_integrity.json')
 warm = load('warm_start_B128_final.json')
 times = [a['receipt']['phase_cost_seconds'] for a in eq_t['arms'].values()]
 assert len(eq_u['arms']) == len(eq_t['arms']) == len(results_u) == len(results_t) == 10
@@ -58,19 +54,18 @@ export_u = sum(x['metrics']['output_export_seconds'] for x in results_u.values()
 export_t = sum(x['metrics']['output_export_seconds'] for x in results_t.values())
 
 L = [
-    '# Self-Audit real-patient PRO4000 execution', '',
+    '# Self-Audit real-patient PRO4000 ACDC execution', '',
     f"**Decision: {dec['decision']}.** The declared joint/guard/U query gates all failed under verified fresh equal-time compute. This is one pilot seed, not a clinical conclusion.", '',
     '## Dataset and provenance', '',
 ]
 L += table(['Dataset', 'Raw files', 'NIfTI', 'Patients', 'Image/mask pairs', 'Integrity'], [
     ['ACDC', acdc['files'], acdc['nifti'], acdc['patients'], acdc['image_mask_pairs'], acdc['status']],
-    ['M&Ms', mm['files'], mm['nifti'], mm['patients'], mm['image_mask_pairs'], mm['status']],
 ])
 L += [
-    '', 'ACDC original data: `data/ACDC/`; M&Ms original data: `data/MnM/`; immutable downloaded ZIPs: `data/archives/MnM/`. Remote paths were discovered with `rclone lsd KhanhDrive:` and verified by checksum/CRC. Original files, archive names and directory structures were preserved.',
-    '', 'ACDC locked TRAIN80/VAL18/TEST50 split: L8, U72, TEST50 has 100 labeled frames. Two image-duplicate training IDs (055, 076) were already excluded by the reviewed split. M&Ms original TRAIN175/VAL34/TEST136 split is unchanged; eight duplicate-image IDs were quarantined only in derived manifests, yielding active TRAIN170/VAL32/TEST135. Generalization uses VAL32. No M&Ms data entered ACDC training. TRAIN-U manifests have no mask paths and no U GT reads; TEST/VAL GT was opened only by the offline scorer after prediction export.',
-    '', 'M&Ms label mapping: original 1→LV(3), 2→MYO(2), 3→RV(1). All 690 NIfTI files have zero temporal spacing; it is treated as unknown and no physical time is invented. Image/mask shape, affine, spatial zoom, orientation and class checks passed. Separate loading/preprocessing smoke tests passed for both datasets.',
-    '', f"Training manifest SHA256: `{eq_u['training_manifest']['sha256']}`. ACDC TEST50 manifest SHA256: `8f89d631bc67f7eccef94740866513fe6f794872e7cb6e61302b1663e17e8f9e`. M&Ms prepared train manifest SHA256: `a7fc92227c555d0de3895b5b37154e49bd3de5b44d26958bde34863d86dfaae3`.",
+    '', 'ACDC original data: `data/ACDC/`. Its remote path was discovered with `rclone lsd KhanhDrive:` and all 1053 copied files matched remote checksums. Original files and directory structure were preserved.',
+    '', 'ACDC locked TRAIN80/VAL18/TEST50 split: L8, U72, TEST50 has 100 labeled frames. Two image-duplicate training IDs (055, 076) were already excluded by the reviewed split. TRAIN-U manifests have no mask paths and no U GT reads; TEST/VAL GT was opened only by the offline scorer after prediction export. No M&Ms data entered this training or this result report.',
+    '', 'ACDC image/mask shape, affine, spatial zoom, orientation and class checks passed. Dataset loading and preprocessing smoke tests passed.',
+    '', f"Training manifest SHA256: `{eq_u['training_manifest']['sha256']}`. ACDC TEST50 manifest SHA256: `8f89d631bc67f7eccef94740866513fe6f794872e7cb6e61302b1663e17e8f9e`.",
     '', 'DINOv3 ConvNeXt-Tiny source commit `6876159a11b4df116f30f667f8c9888617df0751`; authorized backup weight SHA256 `21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54`. This is self-supervised LVD1689M pretraining; no historical segmentation teacher or random substitute was used. Independent upstream full-weight-hash certification is unavailable.',
     '', '## Execution and hardware', '',
     'Base commit `93f7c7a1f9606a68955f849dd580b90462ad329e`; executable overlay `SOURCE_PATCH_B128_FINAL.patch` SHA256 `' + sha(R / 'SOURCE_PATCH_B128_FINAL.patch') + '`. No model architecture or canonical engine changes. PyTorch 2.14.1+cu132 on RTX PRO 4000 Blackwell 24GB; reuse `/venv/main`. FP32, no AMP. Batch 128 in all arms; full_ema uses four microbatches of up to 40 with one globally normalized optimizer step and one EMA step. Shared support-only warm start: 512 steps/27.37s, manifest SHA256 `' + warm['manifest_sha256'] + '`.',
@@ -96,14 +91,11 @@ for pid, per in results_t['full_ema']['metrics']['patients'].items():
     scores = [per[c] for c in ('RV', 'MYO', 'LV') if per[c] is not None]
     vals.append((statistics.mean(scores), pid))
 L += [''] + table(['Patient', 'FG Dice'], [[pid, f(v)] for v, pid in sorted(vals)[:5]])
-L += ['', '## M&Ms VAL32 external generalization', '']
-L += table(['Arm', 'RV', 'MYO', 'LV', 'FG mean', 'Patients'], [[a, *[f(x['metrics']['macro_patient'][c]['dice']) for c in ('RV','MYO','LV')], f(x['metrics']['foreground_patient_macro']), x['metrics']['total_patients_scored']] for a, x in mnm.items()])
-L += ['', 'The four declared primary arms score 0 foreground Dice on VAL32. The full_ema row is a supplemental separate-dataset comparator, exported and scored with the same verified adapter; it does not alter the ACDC GO/NO-GO gate. M&Ms original TEST136 was not scored.',
-      '', '## Decision and limits', '',
+L += ['', '## Decision and limits', '',
       'Offline equal-time gate: **' + dec['decision'] + '**; joint>scalar=' + str(dec['gates']['joint_beats_scalar']) + ', guarded Dice>smaller LR=' + str(dec['gates']['dice_guard_beats_smaller_lr']) + ', U>extra supervised=' + str(dec['gates']['u_beats_extra_supervised']) + '. The equal-update gate is `INCONCLUSIVE_NOT_RUN` by design because its actual compute was unmatched.',
-      '', 'Single label seed and one run per arm; no uncertainty interval. ACDC Drive TEST50 was previously used in this repository and is not a newly unseen confirmatory cohort; challenge provenance is not independently certified. M&Ms VAL32 is a verified but nonofficial filtered subset after duplicate quarantine. No M&Ms retraining or pooling. The implementation discrepancy in full_ema makes it a stronger comparator. W&B credentials were unavailable; tmux log, JSONL steps, utilization CSV, checkpoint manifests and native prediction receipts provide the audit trail.',
+      '', 'Single label seed and one run per arm; no uncertainty interval. ACDC Drive TEST50 was previously used in this repository and is not a newly unseen confirmatory cohort; challenge provenance is not independently certified. No M&Ms training or results are included in this ACDC-only report. The implementation discrepancy in full_ema makes it a stronger comparator. W&B credentials were unavailable; tmux log, JSONL steps, utilization CSV, checkpoint manifests and native prediction receipts provide the audit trail.',
       '', '## Reproduction and paths', '',
-      'Run `bash reports/automatic_pilot_pro4000/execute_B128.sh` from `/workspace/Self-Audit` in the existing `/venv/main` only when creating a new output tree; the original output directories are immutable. Per-arm config overrides are in `run_stage.py`, model source/weight hashes in `model.json`, numeric backend in `numeric_backend.json`, data checks in `acdc_integrity.json` and `mnm_integrity.json`. Checkpoints and native predictions: `/workspace/Self-Audit/runs/pro4000/`. Reports: `/workspace/Self-Audit/reports/automatic_pilot_pro4000/`. Tmux window: `ssh_tmux:self-audit-pilot`. Raw patient data and checkpoint binaries were not pushed to Git.',
+      'Run `bash reports/automatic_pilot_pro4000/execute_B128.sh` from `/workspace/Self-Audit` in the existing `/venv/main` only when creating a new output tree; the original output directories are immutable. Per-arm config overrides are in `run_stage.py`, model source/weight hashes in `model.json`, numeric backend in `numeric_backend.json`, and ACDC data checks in `acdc_integrity.json`. Checkpoints and native predictions: `/workspace/Self-Audit/runs/pro4000/`. Reports: `/workspace/Self-Audit/reports/automatic_pilot_pro4000/`. Tmux window: `ssh_tmux:self-audit-pilot`. Raw patient data and checkpoint binaries were not pushed to Git.',
 ]
 post = R / 'pytest-B128-postrun.log'
 if post.exists():
@@ -119,8 +111,20 @@ if audit.exists():
           ' metric/frozen receipts and ' + str(checked['native_prediction_file_count']) +
           ' native prediction files. See `OUTPUT_AUDIT.json`.']
 (R / 'FINAL_REPORT.md').write_text('\n'.join(L) + '\n')
-hashes = {str(p.relative_to(R)): sha(p) for p in sorted(R.iterdir())
-          if p.is_file() and p.suffix in ('.py', '.sh', '.json', '.patch', '.csv', '.md')
-          and p.name != 'ARTIFACT_HASHES.json'}
+acdc_artifacts = (
+    'FINAL_REPORT.md', 'REPORT.md', 'COMPARISON.csv', 'PATIENT_METRICS.csv',
+    'FAILURE_PATIENTS.csv', 'OUTPUT_AUDIT.json', 'SOURCE_PATCH_B128_FINAL.patch',
+    'execute_B128.sh', 'run_stage.py', 'evaluate_stage.py', 'build_report.py',
+    'finalize_report.py', 'verify_outputs.py', 'PLAN.json', 'model.json',
+    'numeric_backend.json', 'acdc_integrity.json', 'acdc_loading_smoke.json',
+    'query_preparation.json', 'warm_start_B128_final.json',
+    'equal_update_B128_M40.json', 'equal_time_B128_M40.json',
+    'decision_equal_update_B128_M40.json', 'decision_equal_time_B128_M40.json',
+    'evaluation_index_equal_update_B128_M40.json',
+    'evaluation_index_equal_time_B128_M40.json',
+    'phase_04_batch128_preflight.json',
+    'phase_06_equal_update_B128_complete.json', 'phase_07_equal_time_B128_matched.json',
+)
+hashes = {name: sha(R / name) for name in acdc_artifacts}
 (R / 'ARTIFACT_HASHES.json').write_text(json.dumps(hashes, indent=2) + '\n')
 print('FINAL_REPORT_WRITTEN', len(L), 'lines', len(rows), 'ACDC table rows')
