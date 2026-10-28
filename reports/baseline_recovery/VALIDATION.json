@@ -1,0 +1,117 @@
+{
+  "schema": "self_audit.baseline_recovery_software_validation.v1",
+  "date": "2026-10-28",
+  "scope": "CODE_ONLY; manufactured CPU software verification",
+  "branch": "QuocKhanhLuong/baseline-recovery-20261028",
+  "base_commit": "93f7c7a1f9606a68955f849dd580b90462ad329e",
+  "source_sha256": "3bdd0ae2abb886066a9155b5ce1e8cb8b11c8d2ea603bf92ca4c2d67d44692f7",
+  "environment": {
+    "python": "3.11.16",
+    "torch": "2.14.0",
+    "platform": "macOS-26.2-arm64-arm-64bit",
+    "device": "cpu"
+  },
+  "final_checks": [
+    {
+      "command": "python scripts/check_repo.py",
+      "status": "PASS",
+      "architecture": "dinov3_convnext_tiny_native_decoder_v2"
+    },
+    {
+      "command": "python -m pytest -q -p no:cacheprovider",
+      "status": "PASS",
+      "passed": 645,
+      "failed": 0,
+      "warnings": 2,
+      "seconds": 89.47
+    },
+    {
+      "command": "python -m pytest -q tests/test_shared_training_data.py tests/test_recovery_report.py -p no:cacheprovider",
+      "status": "PASS",
+      "passed": 38,
+      "seconds": 15.26
+    },
+    {
+      "command": "git diff --check",
+      "status": "PASS"
+    },
+    {
+      "command": "git diff --cached --check",
+      "status": "PASS after trailing-blank-line cleanup"
+    }
+  ],
+  "warning_notes": [
+    "Intentional duplicate-optimizer-parameter rejection fixture triggers a Torch warning.",
+    "Existing decoder JVP test triggers torch.jit.script deprecation."
+  ],
+  "review": {
+    "implementation": "agy Orca workers with explicit non-overlapping ownership; coordinator integration review and corrections",
+    "earlier_integrated_run": {
+      "passed": 626,
+      "failed": 5,
+      "status": "INTERMEDIATE_FAILURE_FIXED"
+    },
+    "corrections": [
+      "Full optimizer ownership including partially frozen modules; actual gradients/deltas and post-commit accounting.",
+      "Physical evidence/hash lineage and frame-confusion recomputation; offline reference rescoring separated from learner startup.",
+      "Exact prepared-mask ontology proof; a mapping plan alone cannot imply already-remapped labels.",
+      "Historical legacy trust roots remain immutable; current source explicitly rejects old source pins.",
+      "Canonical trainer profile, pinned preregistration and truthful synthetic report provenance."
+    ],
+    "post_test_formatting": "Removed one trailing blank line in a test file; no executable change."
+  },
+  "software_integration": "manufactured/INTEGRATION_RECEIPT.json",
+  "export_validation": "manufactured/EXPORT_RECEIPT.json",
+  "profile": "manufactured/CPU_PROFILE.json",
+  "patient_quality_decision": "NOT_RUN_CODE_ONLY; no empirical GO or NO_GO inferred",
+  "outstanding_evidence": [
+    "Physical historical checkpoint payload rehash and fresh DINO inference.",
+    "Real TRAIN tiny-fit and baseline quality gate.",
+    "Actual prepared 4+4 manifest and physical overlap verification.",
+    "PRO4000 latency/VRAM/throughput.",
+    "Shared patient checkpoint, frozen patient predictions and per-domain quality."
+  ],
+  "limitations": [
+    "Canonical semi-v2 resume is explicitly NOT_SUPPORTED.",
+    "No supervised microbatch accumulation is introduced; stop if effective batch 8 cannot fit.",
+    "Initial real profile measures warmup, not post-warmup U performance.",
+    "Head-audit expansion remains deferred behind baseline recovery."
+  ],
+  "file_sha256": {
+    "configs/baseline_recovery/baseline_l8_10k.json": "d23192de267818fa4fd9ea7cbc9b1dd2e03e148abd95ecc81bcf951d7eee734f",
+    "configs/baseline_recovery/baseline_profile_8steps.json": "5d3c921f43390c6b10f4fa34144a1ba7112a17b064f190116bfe7b1b700bdf0a",
+    "configs/baseline_recovery/baseline_smoke_cpu.json": "34d163e3afb0a03d1e7aa2d369844201b9f75ab3dd4e8ffb5921effb33a5fcec",
+    "configs/baseline_recovery/shared_4plus4_10k.json": "176a7b88bdc295b0967e25c3486e7f0f13f4123c4be1024e6e7b78d65f5e28ed",
+    "configs/baseline_recovery/shared_4plus4_smoke_cpu.json": "066b9ac626f5c984e8a5a00a1b6ecf283e88190c6d409b550101d0af5074886c",
+    "docs/BASELINE_RECOVERY_RUNBOOK.md": "d6dbdc5b2088dcf1845278e7a8f4fdf9fd0d9ce3ba4f3b85a74cb65234651bdd",
+    "reports/baseline_recovery/HISTORICAL_EVIDENCE.json": "de1aa883dc22f9c712d683803ae5f484a9a99894d90f04dec478442c258e9c3a",
+    "reports/baseline_recovery/MNM_PREPARATION_SOURCE.json": "82f6a05b38fa8e69607b0fd6fcecf0062809353dfb47cc8107cbbfb865bf030b",
+    "reports/baseline_recovery/RECIPE_COMPARISON.md": "e36bda454e37937672290538f3dddc3a0b48caaaf79ef99c19c0cd49077f5771",
+    "reports/baseline_recovery/manufactured/CPU_PROFILE.json": "14bb13818e338d52801852737c7c4e06711410550064610078692ab831380754",
+    "reports/baseline_recovery/manufactured/EXPORT_RECEIPT.json": "347f5a2308930b16e49e7b06a63bba1c0125a75e32f68b08b52d79dfad0981e0",
+    "reports/baseline_recovery/manufactured/FIGURE_PROVENANCE.json": "1029ff7a534f5eddc12da694851d166c634a6664b97d27d0174842b4899a4aa3",
+    "reports/baseline_recovery/manufactured/INTEGRATION_RECEIPT.json": "a06928279bd7f798cc60babfd204ff242aee13ec24d41df983e1bb748758b661",
+    "reports/baseline_recovery/manufactured/README.md": "ecfb6d50a9df11cc487836cfbb7901eb386174c299bdf67f4876455eba9832e6",
+    "reports/baseline_recovery/manufactured/learning_curves.png": "b8f36e5eb234dbcac6f95523dc425dd6af7c7c14dbe16eeec7f21e64c7fcae12",
+    "reports/baseline_recovery/manufactured/overlay_acdc.png": "2bc3b284b312110130b9aadb5a847f47189cd54be101a23b239d6f366a6d25d7",
+    "reports/baseline_recovery/manufactured/overlay_mnm.png": "bb22c3753d547785380c581afa7f08cf7041ed43666910c43cbf6ad27d056191",
+    "scripts/evaluate_shared_student.py": "f3145e39723bd55039098ff113692ec67c935f48017909362972fd0e395fc83f",
+    "scripts/prepare_shared_training.py": "967dfbb2d10683d193000cbb9458aeeac188ea9e83fe9949943613f30e035773",
+    "scripts/render_recovery_report.py": "cb285b6bcf8381fcb28a86afc0bdee16a60ae68d0365b03f724ed0322183006f",
+    "scripts/run_baseline_recovery.py": "0968257c62f89a3dc793bd615bd421a70125461db96c24cc15be163ba3c5ecfa",
+    "self_audit/baseline_recovery.py": "a60f8b110e451cc71e3626a6ab94d9083321d3fb319bd8b365914f3badbf3c92",
+    "self_audit/data.py": "79f9ac8dd5274e48552ecf2bf145a7b7932d10adabe7c60a17927f447b017c98",
+    "self_audit/engine.py": "b27aa1c41ae7c0dae0a57b90f3a0535ebd9682d8211d573b2e33f5d3410c0136",
+    "self_audit/losses.py": "09a1824306b500962cda27f1ed4c831b3b98a5a1f0f3ca3b5584fd3d23573a71",
+    "self_audit/model.py": "dcf9aee4f75f00d8a226db1d815e19cd9afcb61ffa23a4d2bca910366a986c91",
+    "self_audit/recovery_gates.py": "f9008c2f1742616b0f91add632fb5c4fb51bc9df5a65302f79f2aef4bfb96a51",
+    "self_audit/shared_data.py": "d698a8a51247bef3f1662bac926d0e6fd9e876b4f091bb5a0c14f573e5826484",
+    "tests/test_baseline_recovery_training.py": "e057e677f2fff12549872c929059597fa2a37ee0f7dd98cf1eae0c6759cf4263",
+    "tests/test_recovery_gates.py": "e998b784d4766dd815b6429eb9fef462195b37b79f38bcb0d5860a73b10284b3",
+    "tests/test_recovery_report.py": "ccfe76764e1f94b29ca2bdf640f8ffde42446bc35149e5e8d2f023e6eed21d0b",
+    "tests/test_shared_student_evaluation.py": "4dd5a9f832520f2a8c172dbfc5df4d1d070619d4d5f657a45eda7c47a8958e8b",
+    "tests/test_shared_training_data.py": "c4a2a57259427e01307dcc0fa5ffcd5e17cac424790b88a18560fb19738575ea",
+    "tests/test_volume_legacy.py": "6ce10fe96d612f8a88e74d9a172270b49a8a79bb6bcd0c3993dfb5e109aa1786",
+    "train.py": "0e4f8b182317fa523039381ce18017e83aa139b85437802a685340ad6468e968"
+  }
+}

@@ -3,7 +3,7 @@ import torch
 from torch.nn import functional as F
 
 
-def supervised_loss(logits, labels):
+def supervised_loss(logits, labels, *, return_components=False):
     if labels.shape != logits.shape[:1] + logits.shape[2:] or logits.shape[1] != 4:
         raise ValueError("native logits and labels must have identical spatial shape")
     valid = labels != 255
@@ -17,7 +17,10 @@ def supervised_loss(logits, labels):
     dice = (2 * (p * y).sum(dims) + 1e-5) / (den + 1e-5)
     present = y[:, 1:].sum(dims) > 0
     dl = (1 - dice[1:][present]).mean() if present.any() else logits.sum() * 0
-    return ce + dl
+    total = ce + dl
+    if return_components:
+        return total, {"ce": float(ce.detach()), "dice": float(dl.detach())}
+    return total
 
 
 def strong_intensity(x, rng):

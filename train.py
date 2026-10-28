@@ -36,14 +36,17 @@ def main():
         c["model"] = override
     is_volume = c.get("schema") == "self_audit.volume.v1"
     is_automatic = c.get("schema") == "self_audit.automatic.v1"
+    br_sec = c.get("baseline_recovery")
+    is_baseline_recovery = isinstance(br_sec, dict) and br_sec.get("enabled", True)
     native_only = {
-        "--model-config": args.model_config,
         "--geometry": args.geometry,
         "--geometry-sha256": args.geometry_sha256,
         "--resume": args.resume,
         "--resume-sha256": args.resume_sha256,
         "--steps": args.steps,
     }
+    if not is_baseline_recovery:
+        native_only["--model-config"] = args.model_config
     legacy_only = {
         "--legacy-checkpoint": args.legacy_checkpoint,
         "--legacy-manifest-sha256": args.legacy_manifest_sha256,
@@ -140,6 +143,30 @@ def main():
     if args.legacy_checkpoint:
         p.error("--legacy-checkpoint cannot verify then fresh-train; use load_legacy_checkpoint with explicit model/canonical hashes")
     c = validate_config(c)
+    if not args.synthetic:
+        # Prevent CLI bypass for shared real training without baseline recovery
+        manifest_obj = json.loads(Path(args.data).read_text())
+        is_shared_manifest = bool(manifest_obj.get("shared", False)) or len(manifest_obj.get("domains", [])) > 1
+        if is_shared_manifest:
+            br_cfg = c.get("baseline_recovery")
+            if not isinstance(br_cfg, dict) or not br_cfg.get("enabled", True):
+                p.error("shared real training requires baseline_recovery configuration to be present and enabled")
+            cert_p = br_cfg.get("baseline_certificate_path")
+            if not cert_p or not Path(cert_p).is_file():
+                p.error(f"shared real training requires valid baseline_certificate_path: {cert_p}")
+            cert_sha = br_cfg.get("baseline_certificate_sha256")
+            if not cert_sha or len(cert_sha) != 64:
+                p.error("shared real training requires mandatory baseline_certificate_sha256 (64 hex characters)")
+            from self_audit.recovery_gates import block_shared_training_unless_baseline_gated
+            try:
+                block_shared_training_unless_baseline_gated(
+                    cert_p,
+                    expected_cert_sha=cert_sha,
+                    shared_manifest_path=args.data,
+                    shared_config=c,
+                )
+            except Exception as e:
+                p.error(f"shared real training baseline gate check failed: {e}")
     if c["steps"] > 128 and not args.allow_full_run:
         p.error("more than 128 updates requires --allow-full-run")
     print(json.dumps(train(c, args.data, args.data_sha256, args.out, device=args.device, synthetic=args.synthetic), indent=2))

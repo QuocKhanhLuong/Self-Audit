@@ -1,0 +1,41 @@
+{
+  "scope": "bounded diagnostic; NOT patient quality or convergence evidence",
+  "synthetic": true,
+  "device": "cpu",
+  "is_cuda": false,
+  "profile_steps": 3,
+  "recipe_steps": 4,
+  "recipe_warmup_steps": 1,
+  "effective_warmup_steps": 1,
+  "cold_total_seconds": 0.5945039172656834,
+  "cold_first_commit_seconds": 0.5169437080621719,
+  "commit_latencies_seconds": [
+    0.5169437080621719,
+    0.027416375000029802,
+    0.024316249880939722
+  ],
+  "marginal_step_seconds": 0.025866312440484762,
+  "optimized_slices_per_cold_second": 16.820747028872827,
+  "slices_sampled": {
+    "supervised": 6,
+    "audit": 6,
+    "unlabeled": 6
+  },
+  "slices_optimized": {
+    "supervised": 6,
+    "unlabeled": 4
+  },
+  "optimizer_calls": {
+    "adamw": 5,
+    "sgd": 5,
+    "geometry": 0
+  },
+  "ema_updates": 3,
+  "peak_vram_allocated_mib": null,
+  "peak_vram_reserved_mib": null,
+  "pseudo_phase_measured": true,
+  "limitation": "An initial warmup profile does not measure post-warmup pseudo-training throughput",
+  "source_sha256": "3bdd0ae2abb886066a9155b5ce1e8cb8b11c8d2ea603bf92ca4c2d67d44692f7",
+  "data_sha256": "737479cdb9368aaf15484d1afa643197e313525b50d0c2175525122c07b8db55",
+  "effective_config_sha256": "e3d4fe5e1841784082c196834a7995739048f06643f5c1a1fc3564f77bf4ae20"
+}

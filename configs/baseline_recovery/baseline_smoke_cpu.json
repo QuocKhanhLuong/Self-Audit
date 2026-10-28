@@ -1,0 +1,66 @@
+{
+  "schema": "self_audit.semi_v2",
+  "method": "ema_full",
+  "update_scope": "head",
+  "steps": 4,
+  "warmup_steps": 2,
+  "seed": 42,
+  "body_lr": 3e-05,
+  "head_lr": 0.003,
+  "pseudo_lr": 0.001,
+  "weight_decay": 0.0001,
+  "ema_decay": 0.99,
+  "pseudo_threshold": 0.7,
+  "ridge": 1e-06,
+  "risk_budget": 0.0,
+  "guard_tolerance": 1e-08,
+  "backtracks": 8,
+  "save_every": 1000,
+  "threads": 2,
+  "batch_size": 2,
+  "crop_size": 0,
+  "window": {
+    "mode": "none",
+    "dim": 32,
+    "radius_min": 0.5,
+    "radius_max": 4.0,
+    "offset_limit": 2.0,
+    "initial_radius": 1.0,
+    "gamma_init": 0.001
+  },
+  "meta_window": {
+    "lr": 0.001,
+    "clip_norm": 1.0
+  },
+  "teacher_memory": {
+    "arm": "A0",
+    "bank_path": null,
+    "bank_sha256": null,
+    "cache_path": null,
+    "cache_sha256": null,
+    "tau": 0.2,
+    "external_weight": 0.25
+  },
+  "baseline_recovery": {
+    "enabled": true,
+    "purpose": "training",
+    "supervised_batch_size": 2,
+    "unlabeled_batch_size": 2,
+    "record_module_telemetry": true,
+    "warmup_gate": {
+      "enabled": true,
+      "min_class_counts": {
+        "1": 1,
+        "2": 1,
+        "3": 1
+      }
+    }
+  },
+  "model": {
+    "backbone": "tiny_test",
+    "source_repo": "",
+    "source_commit": "",
+    "weights": "",
+    "weights_sha256": ""
+  }
+}

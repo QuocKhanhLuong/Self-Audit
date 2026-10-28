@@ -1,0 +1,45 @@
+{
+  "scope": "CPU manufactured software evidence only",
+  "source_sha256": "3bdd0ae2abb886066a9155b5ce1e8cb8b11c8d2ea603bf92ca4c2d67d44692f7",
+  "historical_parity": {
+    "student": true,
+    "teacher": true,
+    "optimizers": true,
+    "torch_rng": true
+  },
+  "student_tensors": 91,
+  "teacher_tensors": 91,
+  "shared_optimizer_calls": {
+    "adamw": 7,
+    "sgd": 7,
+    "geometry": 0
+  },
+  "shared_ema_updates": 4,
+  "shared_label_budget": 8,
+  "shared_domain_coverage": {
+    "acdc": {
+      "labeled_total": 4,
+      "labeled_seen": 3,
+      "labeled_coverage": 0.75,
+      "unlabeled_total": 4,
+      "unlabeled_seen": 2,
+      "unlabeled_coverage": 0.5,
+      "total_patients": 8,
+      "total_seen": 5,
+      "total_coverage": 0.625
+    },
+    "mnm": {
+      "labeled_total": 4,
+      "labeled_seen": 3,
+      "labeled_coverage": 0.75,
+      "unlabeled_total": 4,
+      "unlabeled_seen": 2,
+      "unlabeled_coverage": 0.5,
+      "total_patients": 8,
+      "total_seen": 5,
+      "total_coverage": 0.625
+    }
+  },
+  "actual_patient_or_GPU_quality": "NOT_RUN",
+  "artifact_directory": "/private/tmp/self-audit-recovery-final-20261028"
+}

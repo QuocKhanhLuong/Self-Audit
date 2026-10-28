@@ -13,6 +13,21 @@ def _canonical_map():
     return json.loads(path.read_text())["canonical_runtime_file_sha256"]
 
 
+@pytest.fixture
+def synthetic_current_map(monkeypatch):
+    """Unit trust root only; this does not certify compatibility with old source."""
+    import self_audit.volume.legacy_compat as compat
+    current = {name: hashlib.sha256(Path(name).read_bytes()).hexdigest() for name in _canonical_map()}
+    monkeypatch.setattr(compat, "_trusted_canonical_file_map", lambda: current)
+    return current
+
+
+def test_current_checkout_rejects_immutable_historical_source_map():
+    import self_audit.volume.legacy_compat as compat
+    with pytest.raises(ValueError, match="canonical module differs"):
+        compat._verify_canonical_files(_canonical_map())
+
+
 def _model_map():
     return {"name": "canonical", "commit": "deadbeef"}
 
@@ -40,7 +55,7 @@ def test_legacy_compat_requires_all_external_pins(tmp_path):
         verify_legacy_manifest(folder, expected_source_sha256="a" * 64)
 
 
-def test_legacy_compat_checks_external_canonical_files_not_manifest_claims(tmp_path):
+def test_legacy_compat_checks_external_canonical_files_not_manifest_claims(tmp_path, synthetic_current_map):
     folder = tmp_path / "legacy"
     folder.mkdir()
     payload = b"payload"
@@ -53,7 +68,7 @@ def test_legacy_compat_checks_external_canonical_files_not_manifest_claims(tmp_p
         expected_data_sha256="b" * 64,
         expected_payload_sha256=metadata["payload_sha256"],
         expected_model=_model_map(),
-        expected_canonical_modules=_canonical_map(),
+        expected_canonical_modules=synthetic_current_map,
     )
     assert accepted["schema"] == "self_audit.checkpoint.v2"
     with pytest.raises(ValueError, match="incomplete"):
@@ -63,11 +78,11 @@ def test_legacy_compat_checks_external_canonical_files_not_manifest_claims(tmp_p
             expected_data_sha256="b" * 64,
             expected_payload_sha256=metadata["payload_sha256"],
             expected_model=_model_map(),
-            expected_canonical_modules={"self_audit/model.py": _canonical_map()["self_audit/model.py"]},
+            expected_canonical_modules={"self_audit/model.py": synthetic_current_map["self_audit/model.py"]},
         )
 
 
-def test_legacy_loader_returns_verified_student_teacher_and_optimizer(tmp_path):
+def test_legacy_loader_returns_verified_student_teacher_and_optimizer(tmp_path, synthetic_current_map):
     from self_audit.model import build_model
 
     student, _ = build_model({"backbone": "tiny_test"}, synthetic=True)
@@ -90,7 +105,7 @@ def test_legacy_loader_returns_verified_student_teacher_and_optimizer(tmp_path):
     loaded_student, loaded_teacher, loaded_optimizers, loaded_manifest = load_legacy_checkpoint(
         tmp_path, manifest_sha256=manifest_sha, source_sha256="a" * 64,
         data_sha256="b" * 64, payload_sha256=payload_sha,
-        expected_model={"backbone": "tiny_test"}, expected_canonical_modules=_canonical_map(),
+        expected_model={"backbone": "tiny_test"}, expected_canonical_modules=synthetic_current_map,
         return_optimizers=True,
     )
     assert loaded_manifest["schema"] == "self_audit.checkpoint.v2"

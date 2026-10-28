@@ -31,6 +31,7 @@ DEFAULT = {"schema": SCHEMA, "method": "joint_guard", "update_scope": "head", "s
            "teacher_memory": {"arm": "A0", "bank_path": None, "bank_sha256": None,
                               "cache_path": None, "cache_sha256": None, "tau": .2,
                               "external_weight": .25},
+           "baseline_recovery": None,
            "model": {"backbone": "dinov3_convnext_tiny", "source_repo": "",
                      "source_commit": "", "weights": "", "weights_sha256": ""}}
 
@@ -46,6 +47,7 @@ def validate_config(c):
     c.setdefault("window", copy.deepcopy(WINDOW_DEFAULT))
     c.setdefault("meta_window", copy.deepcopy(DEFAULT["meta_window"]))
     c.setdefault("teacher_memory", copy.deepcopy(DEFAULT["teacher_memory"]))
+    c.setdefault("baseline_recovery", None)
     if set(c) != set(DEFAULT) or c.get("schema") != SCHEMA or c.get("method") not in METHODS:
         raise ValueError("not an exact v2 recipe; legacy configs and unknown fields are rejected")
     if c["update_scope"] not in {"head", "decoder"}:
@@ -103,6 +105,9 @@ def validate_config(c):
     if c["window"]["mode"] != "none" and c["method"] not in {
             "ema_full", "ema_full_meta_window", "supervised", "supervised_extra"}:
         raise ValueError("window pilot supports full-EMA/supervised arms only, not guarded transactions")
+    if c["baseline_recovery"] is not None:
+        from .baseline_recovery import validate_baseline_recovery_config
+        c["baseline_recovery"] = validate_baseline_recovery_config(c["baseline_recovery"])
     return copy.deepcopy(c)
 
 
@@ -131,7 +136,7 @@ def ema_update(teacher, student, decay):
             t.copy_(s)
 
 
-def supervised_step(model, optimizers, x, y, *, valid_mask=None, freeze_geometry=False):
+def supervised_step(model, optimizers, x, y, *, valid_mask=None, freeze_geometry=False, return_telemetry=False):
     model.train()
     model.zero_grad(set_to_none=True)
     with frozen_geometry(model) if freeze_geometry else nullcontext():
@@ -141,13 +146,24 @@ def supervised_step(model, optimizers, x, y, *, valid_mask=None, freeze_geometry
         loss.backward()
         norm = torch.nn.utils.clip_grad_norm_([p for p in model.parameters() if p.requires_grad],
                                              5., error_if_nonfinite=True)
+        if return_telemetry:
+            from .baseline_recovery import snapshot_parameters, compute_module_telemetry
+            telemetry = compute_module_telemetry(model)
+            before = snapshot_parameters(model)
+            for opt in optimizers:
+                opt.step()
+            after = compute_module_telemetry(model, before)
+            telemetry["update_deltas"] = after.get("update_deltas", {})
+            telemetry["all_deltas_nonzero"] = after.get("all_deltas_nonzero", False)
+            return float(loss.detach()), float(norm), telemetry
         for opt in optimizers:
             opt.step()
     return float(loss.detach()), float(norm)
 
 
 def full_pseudo_step(model, optimizers, strong, py, accepted, *, input_valid=None, freeze_geometry=False,
-                     external_probabilities=None, external_accepted=None, external_weight=0.0):
+                     external_probabilities=None, external_accepted=None, external_weight=0.0,
+                     return_telemetry=False):
     """One ordinary committed full-model pseudo step; no target or EMA refresh."""
     model.eval()
     model.zero_grad(set_to_none=True)
@@ -173,6 +189,16 @@ def full_pseudo_step(model, optimizers, strong, py, accepted, *, input_valid=Non
         loss.backward()
         norm = torch.nn.utils.clip_grad_norm_([p for p in model.parameters() if p.requires_grad],
                                              5., error_if_nonfinite=True)
+        if return_telemetry:
+            from .baseline_recovery import snapshot_parameters, compute_module_telemetry
+            telemetry = compute_module_telemetry(model)
+            before = snapshot_parameters(model)
+            for opt in optimizers:
+                opt.step()
+            after = compute_module_telemetry(model, before)
+            telemetry["update_deltas"] = after.get("update_deltas", {})
+            telemetry["all_deltas_nonzero"] = after.get("all_deltas_nonzero", False)
+            return float(loss.detach()), float(norm), telemetry
         for opt in optimizers:
             opt.step()
     return float(loss.detach()), float(norm)
@@ -255,6 +281,58 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
     if device.startswith("cuda") and not torch.cuda.is_available():
         raise RuntimeError("CUDA unavailable; no silent device fallback")
     data = TrainingData(manifest, manifest_sha256, synthetic=synthetic)
+    br_cfg = c.get("baseline_recovery")
+    br_enabled = br_cfg is not None and br_cfg.get("enabled", True)
+    is_shared = getattr(data, "is_shared", False)
+    verified_gate_certificate = None
+    if is_shared and not synthetic:
+        if not br_enabled:
+            raise ValueError("Shared real training is BLOCKED: baseline_recovery configuration must be present and enabled")
+        cert_path = br_cfg.get("baseline_certificate_path")
+        cert_sha = br_cfg.get("baseline_certificate_sha256")
+        if not cert_path:
+            from .recovery_gates import MissingEvidenceError
+            raise MissingEvidenceError(
+                "Shared real training is BLOCKED: baseline_recovery.baseline_certificate_path must be declared"
+            )
+        if not cert_sha or len(cert_sha) != 64:
+            from .recovery_gates import MissingEvidenceError
+            raise MissingEvidenceError(
+                "Shared real training is BLOCKED: baseline_recovery.baseline_certificate_sha256 is mandatory (64 hex characters)"
+            )
+        resolved_cert = Path(cert_path).resolve()
+        if not resolved_cert.is_file():
+            from .recovery_gates import MissingEvidenceError
+            raise MissingEvidenceError(f"Baseline certificate file not found: {resolved_cert}")
+        actual_sha = digest(resolved_cert)
+        if actual_sha != cert_sha:
+            from .recovery_gates import ImplementationVerificationError
+            raise ImplementationVerificationError(
+                f"Baseline certificate SHA mismatch: expected {cert_sha}, got {actual_sha}"
+            )
+        from .recovery_gates import block_shared_training_unless_baseline_gated
+        verified_gate_certificate = block_shared_training_unless_baseline_gated(
+            resolved_cert,
+            expected_cert_sha=cert_sha,
+            shared_manifest_path=data.path,
+            shared_config=c,
+        )
+    if br_enabled and not synthetic:
+        purpose = br_cfg.get("purpose", "training")
+        if purpose == "training":
+            if c["method"] != "ema_full":
+                raise ValueError(f"Real baseline recovery training requires method 'ema_full', got '{c['method']}'")
+            if c["teacher_memory"]["arm"] != "A0" or c["teacher_memory"]["bank_path"] is not None or c["teacher_memory"]["cache_path"] is not None:
+                raise ValueError("Real baseline recovery training requires teacher_memory arm 'A0' with no bank or cache")
+            if c["window"]["mode"] != "none":
+                raise ValueError(f"Real baseline recovery training requires window mode 'none', got '{c['window']['mode']}'")
+            if not br_cfg.get("warmup_gate", {}).get("enabled", True):
+                raise ValueError("Real baseline recovery training requires warmup_gate to be enabled")
+            if c["warmup_steps"] <= 0:
+                raise ValueError("Real baseline recovery training requires warmup_steps > 0")
+        elif purpose == "profile":
+            if c["steps"] > 8:
+                raise ValueError(f"Real baseline recovery profile allows at most 8 steps, got {c['steps']}")
     tm = c["teacher_memory"]
     external_cache = ExternalPseudoCache(tm["cache_path"], tm["cache_sha256"], data) if tm["arm"] == "A1" else None
     out = Path(out).resolve()
@@ -296,9 +374,25 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
             torch.optim.SGD(model.head.parameters(), lr=c["head_lr"], momentum=0., weight_decay=0., foreach=False if is_meta else None)]
     geometry_opt = torch.optim.SGD(geometry.values(), lr=c["meta_window"]["lr"], momentum=0., weight_decay=0.) if is_meta else None
     saved_opts = opts + ([geometry_opt] if geometry_opt is not None else [])
+    if br_enabled:
+        from .baseline_recovery import (verify_optimizer_ownership, build_warmup_probe,
+                                        evaluate_warmup_gate, WarmupCollapseError)
+        sup_bs = br_cfg.get("supervised_batch_size", c["batch_size"])
+        u_bs = br_cfg.get("unlabeled_batch_size", c["batch_size"])
+        record_telemetry = br_cfg.get("record_module_telemetry", True)
+        wg_cfg = br_cfg.get("warmup_gate", {})
+        ownership = verify_optimizer_ownership(model, opts)
+        warmup_probe = build_warmup_probe(data, crop_size=c["crop_size"], seed=c["seed"]) if wg_cfg.get("enabled", True) else None
+    else:
+        sup_bs = c["batch_size"]
+        u_bs = c["batch_size"]
+        record_telemetry = False
+        ownership = None
+        warmup_probe = None
+        wg_cfg = None
     out.mkdir(parents=True)
     write_json(out / "CONFIG.json", c)
-    write_json(out / "STARTUP.json", {"schema": SCHEMA, "method": c["method"], "source_sha256": source_digest(),
+    startup_payload = {"schema": SCHEMA, "method": c["method"], "source_sha256": source_digest(),
                 "parameters": sum(p.numel() for p in model.parameters()), "device": device,
                 "backbone": provenance, "synthetic": synthetic, "label_budget": len(data.lids),
                 "supervision": "dense TRAIN subset; audit included; never no-GT",
@@ -309,21 +403,42 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
                 "external_pseudo_cache_sha256": tm["cache_sha256"] if external_cache is not None else None,
                 "geometry_scope": "meta_only_after_frozen_warmup" if is_meta else c["window"]["mode"],
                 "outer_loss": "batch_present_foreground_soft_Dice; direct_geometry_detached" if is_meta else None,
-                "batch_size": c["batch_size"], "batch_protocol": "one_patient_per_role; native_grid; equal_slice_audit_mass",
+                "batch_size": c["batch_size"], "supervised_batch_size": sup_bs, "unlabeled_batch_size": u_bs,
+                "batch_protocol": "one_patient_per_role; native_grid; equal_slice_audit_mass",
                 "crop_size": c["crop_size"], "crop_policy": "image_geometry_random; edge_pad; ignore_padding_in_all_losses; no_resize",
-                "native_supervised_loss": "CE+present_foreground_Dice", "prediction_model": "student"})
-    start = time.monotonic(); counts = {"supervised_updates": 0, "pseudo_accepted": 0, "ema_updates": 0, "geometry_updates": 0}
+                "native_supervised_loss": "CE+present_foreground_Dice", "prediction_model": "student"}
+    if br_enabled:
+        startup_payload["baseline_recovery"] = br_cfg
+        startup_payload["optimizer_ownership"] = ownership
+    if verified_gate_certificate is not None:
+        startup_payload["verified_baseline_certificate"] = verified_gate_certificate
+    write_json(out / "STARTUP.json", startup_payload)
+    start = time.monotonic(); counts = {"supervised_updates": 0, "pseudo_accepted": 0, "pseudo_optimizer_updates": 0, "ema_updates": 0, "geometry_updates": 0, "guarded_commit_updates": 0}
     seen_l, seen_u, seen_a = set(), set(), set()
+    slices_sampled = {"supervised": 0, "audit": 0, "unlabeled": 0}
+    slices_optimized = {"supervised": 0, "unlabeled": 0}
+    optimizer_calls = {"adamw": 0, "sgd": 0, "geometry": 0}
     log = (out / "steps.jsonl").open("x")
     try:
         for step in range(c["steps"]):
-            # Round robin coverage; a separate RNG controls only data/augmentations.
-            li, ui = step % len(data.lids), step % len(data.uids)
-            ai = (li + 1 + int(rng.integers(len(data.lids) - 1))) % len(data.lids)
-            xs, ys, sm, svalid = data.sample_batch(li, rng, c["batch_size"], labeled=True, crop_size=c["crop_size"], return_valid=True)
-            xa, ya, am, avalid = data.sample_batch(ai, rng, c["batch_size"], labeled=True, crop_size=c["crop_size"], return_valid=True)
-            xu, um, uvalid = data.sample_batch(ui, rng, c["batch_size"], labeled=False, crop_size=c["crop_size"], return_valid=True)
+            # Gate check runs strictly BEFORE supervised update at step == warmup_steps
+            gate_evidence_for_step = None
+            if step == c["warmup_steps"] and c["method"] != "supervised" and warmup_probe is not None and wg_cfg.get("enabled", True):
+                gate_evidence = evaluate_warmup_gate(model, warmup_probe, device=device,
+                                                     min_class_counts=wg_cfg.get("min_class_counts"))
+                gate_evidence_for_step = gate_evidence
+                counts["warmup_gate"] = gate_evidence
+
+            # Round robin or domain-alternating coverage; separate RNG for augmentations
+            li, ai, ui = data.sample_indices(step, rng)
+            xs, ys, sm, svalid = data.sample_batch(li, rng, sup_bs, labeled=True, crop_size=c["crop_size"], return_valid=True)
+            xa, ya, am, avalid = data.sample_batch(ai, rng, sup_bs, labeled=True, crop_size=c["crop_size"], return_valid=True)
+            xu, um, uvalid = data.sample_batch(ui, rng, u_bs, labeled=False, crop_size=c["crop_size"], return_valid=True)
             assert sm["patient"] != am["patient"]
+            slices_sampled["supervised"] += len(xs)
+            slices_sampled["audit"] += len(xa)
+            slices_sampled["unlabeled"] += len(xu)
+
             xs, ys, svalid = aligned_flip(xs, ys, rng, svalid)
             xs, ys, xa, ya, xu = (a.to(device) for a in (xs, ys, xa, ya, xu))
             uvalid = uvalid.to(device)
@@ -331,18 +446,79 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
             strong = strong_intensity(xu, rng)  # Generated for every arm, preserving data RNG schedule.
             seen_l.add(sm["patient"]); seen_a.add(am["patient"]); seen_u.add(um["patient"])
             freeze_geo = is_meta or (c["window"]["mode"] == "adaptive" and step < c["warmup_steps"])
-            sloss, grad_norm = supervised_step(model, opts, xs, ys,
-                                               valid_mask=svalid if window_enabled else None,
-                                               freeze_geometry=freeze_geo)
+
+            is_first_step = (step == 0)
+            want_telemetry = is_first_step and (record_telemetry or br_enabled)
+            if want_telemetry:
+                sloss, grad_norm, step_telem = supervised_step(model, opts, xs, ys,
+                                                               valid_mask=svalid if window_enabled else None,
+                                                               freeze_geometry=freeze_geo,
+                                                               return_telemetry=True)
+            else:
+                sloss, grad_norm = supervised_step(model, opts, xs, ys,
+                                                   valid_mask=svalid if window_enabled else None,
+                                                   freeze_geometry=freeze_geo,
+                                                   return_telemetry=False)
+                step_telem = None
             counts["supervised_updates"] += 1
+            slices_optimized["supervised"] += len(xs)
+            optimizer_calls["adamw"] += 1
+            optimizer_calls["sgd"] += 1
+
+            if is_first_step and br_enabled and step_telem is not None:
+                gnorms = step_telem.get("gradient_norms", {})
+                dnorms = step_telem.get("update_deltas", {})
+                first_step_failed = False
+                fail_reasons = []
+                from .baseline_recovery import CANONICAL_MODULES
+                for m in CANONICAL_MODULES:
+                    gn = gnorms.get(m)
+                    dn = dnorms.get(m)
+                    if gn is None or not np.isfinite(gn) or gn <= 0:
+                        first_step_failed = True
+                        fail_reasons.append(f"canonical module '{m}' non-finite or non-positive gradient norm: {gn}")
+                    if dn is None or not np.isfinite(dn) or dn <= 0:
+                        first_step_failed = True
+                        fail_reasons.append(f"canonical module '{m}' non-finite or non-positive update delta: {dn}")
+                if first_step_failed:
+                    receipt = {
+                        "failure_type": "implementation_error",
+                        "step": 1,
+                        "reasons": fail_reasons,
+                        "module_gradient_norms": gnorms,
+                        "module_update_deltas": dnorms,
+                    }
+                    write_json(out / "FIRST_STEP_FAILURE.json", receipt)
+                    write_json(out / "FAILURE.json", receipt)
+                    raise RuntimeError(f"First step optimizer telemetry verification failed: {fail_reasons}")
+
             row = {"step": step+1, "supervised": sm, "audit": am, "unlabeled": um,
-                   "batch_size": c["batch_size"], "crop_size": c["crop_size"], "unlabeled_valid_pixels": int(uvalid.sum()),
-                   "supervised_loss": sloss, "gradient_norm": grad_norm, "warmup": step < c["warmup_steps"]}
+                   "batch_size": c["batch_size"], "supervised_batch_size": sup_bs, "unlabeled_batch_size": u_bs,
+                   "crop_size": c["crop_size"], "unlabeled_valid_pixels": int(uvalid.sum()),
+                   "supervised_loss": sloss, "gradient_norm": grad_norm, "warmup": step < c["warmup_steps"],
+                   "slices_sampled": copy.deepcopy(slices_sampled),
+                   "slices_optimized": copy.deepcopy(slices_optimized),
+                   "optimizer_calls": copy.deepcopy(optimizer_calls)}
+            if is_shared:
+                row["domains"] = {
+                    "supervised": data.domain_of(sm["patient"]),
+                    "audit": data.domain_of(am["patient"]),
+                    "unlabeled": data.domain_of(um["patient"]),
+                }
+            if step_telem is not None:
+                row["module_gradient_norms"] = step_telem["gradient_norms"]
+                row["module_update_deltas"] = step_telem["update_deltas"]
+            if gate_evidence_for_step is not None:
+                row["warmup_gate"] = gate_evidence_for_step
+
             if step >= c["warmup_steps"] and c["method"] != "supervised":
                 if c["method"] == "supervised_extra":
                     row["extra_supervised_loss"], _ = supervised_step(model, opts, xa, ya,
                                                                       valid_mask=avalid if window_enabled else None)
                     counts["supervised_updates"] += 1
+                    slices_optimized["supervised"] += len(xa)
+                    optimizer_calls["adamw"] += 1
+                    optimizer_calls["sgd"] += 1
                 else:
                     model.eval()
                     with torch.no_grad():
@@ -374,11 +550,19 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
                                     meta["geometry_gradient_norm"] = float(gn)
                                     meta["geometry_update_norm"] = float(torch.sqrt(sum((p.detach()-before[n]).square().sum() for n,p in geometry.items())))
                                     counts["geometry_updates"] += 1
-                            row["pseudo_loss"], row["pseudo_gradient_norm"] = full_pseudo_step(
+                                    optimizer_calls["geometry"] += 1
+                            ploss, pnorm = full_pseudo_step(
                                 model, opts, strong, py.detach(), valid, input_valid=uvalid if window_enabled else None,
                                 freeze_geometry=is_meta, external_probabilities=ext_probs,
                                 external_accepted=ext_valid,
-                                external_weight=tm["external_weight"] if ext_probs is not None else 0.0)
+                                external_weight=tm["external_weight"] if ext_probs is not None else 0.0,
+                                return_telemetry=False)
+                            row["pseudo_loss"], row["pseudo_gradient_norm"] = ploss, pnorm
+                            counts["pseudo_accepted"] += 1
+                            counts["pseudo_optimizer_updates"] = counts.get("pseudo_optimizer_updates", 0) + 1
+                            slices_optimized["unlabeled"] += len(xu)
+                            optimizer_calls["adamw"] += 1
+                            optimizer_calls["sgd"] += 1
                             if is_meta and "reference_outer_dice_loss" in row["meta_window"]:
                                 # A diagnostic on TRAIN optimization data, never an acceptance
                                 # guarantee: new geometry + real update can differ from the trial.
@@ -388,14 +572,17 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
                                     raise FloatingPointError("nonfinite committed TRAIN audit Dice")
                                 row["meta_window"]["committed_outer_dice_loss"] = float(committed)
                                 row["meta_window"]["actual_dice_loss_reduction"] = row["meta_window"]["reference_outer_dice_loss"] - float(committed)
-                            counts["pseudo_accepted"] += 1
                         elif is_meta:
                             row["meta_window"] = {"status": "SKIPPED_EMPTY_PSEUDO_SUPPORT"}
                     elif c["update_scope"] == "decoder":
                         row["proposal"], row["control"] = decoder_transaction(model, strong, q, xa, ya,
                             method=c["method"], threshold=c["pseudo_threshold"], step_size=c["pseudo_lr"],
                             ridge=c["ridge"], budget=c["risk_budget"], backtracks=c["backtracks"], tolerance=c["guard_tolerance"], valid_mask=uvalid)
-                        counts["pseudo_accepted"] += int(row["control"]["scale"] > 0)
+                        acc = int(row["control"]["scale"] > 0)
+                        counts["pseudo_accepted"] += acc
+                        if acc:
+                            slices_optimized["unlabeled"] += len(xu)
+                            counts["guarded_commit_updates"] = counts.get("guarded_commit_updates", 0) + 1
                     else:
                         with torch.no_grad():
                             uf, af = model.features(strong).detach(), model.features(xa).detach()
@@ -404,9 +591,19 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
                         row["control"] = controlled_head_step(model.head, af, ya, directions, ids,
                             method="ema_head" if c["method"] == "ema_block" else c["method"], ridge=c["ridge"], budget=c["risk_budget"],
                             backtracks=c["backtracks"], tolerance=c["guard_tolerance"])
-                        counts["pseudo_accepted"] += int(row["control"]["scale"] > 0)
+                        acc = int(row["control"]["scale"] > 0)
+                        counts["pseudo_accepted"] += acc
+                        if acc:
+                            slices_optimized["unlabeled"] += len(xu)
+                            counts["guarded_commit_updates"] = counts.get("guarded_commit_updates", 0) + 1
             # Exactly once, and only after the final committed student state.
             ema_update(teacher, model, c["ema_decay"]); counts["ema_updates"] += 1
+            row["slices_sampled"] = copy.deepcopy(slices_sampled)
+            row["slices_optimized"] = copy.deepcopy(slices_optimized)
+            row["optimizer_calls"] = copy.deepcopy(optimizer_calls)
+            row["ema_updates"] = counts["ema_updates"]
+            row["pseudo_optimizer_updates"] = counts.get("pseudo_optimizer_updates", 0)
+            row["supervised_updates"] = counts["supervised_updates"]
             row["elapsed_seconds"] = time.monotonic() - start
             row["cuda_peak_allocated"] = torch.cuda.max_memory_allocated() if device.startswith("cuda") else None
             log.write(json.dumps(row, allow_nan=False)+"\n"); log.flush()
@@ -420,11 +617,47 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
                   "teacher_memory_arm": tm["arm"], "teacher_memory_source_bank_sha256": tm["bank_sha256"],
                   "teacher_memory_effective_bank_sha256": effective_bank_digest(memory_bank) if memory_bank is not None else None,
                   "label_reads_outside_budget": sorted(data.label_reads-set(data.lids)),
-                  "guard_scope": "none; meta-Dice is not a finite-step Dice guarantee" if is_meta else "extra pseudo step vs supervised-only state on current TRAIN audit slice only"}
+                  "guard_scope": "none; meta-Dice is not a finite-step Dice guarantee" if is_meta else "extra pseudo step vs supervised-only state on current TRAIN audit slice only",
+                  "slices_sampled": slices_sampled,
+                  "slices_optimized": slices_optimized,
+                  "optimizer_calls": optimizer_calls}
+        if is_shared:
+            all_seen = seen_l | seen_a | seen_u
+            report["domain_coverage"] = data.domain_coverage(all_seen)
+        if br_enabled:
+            purpose = br_cfg.get("purpose", "training")
+            report["baseline_recovery"] = {
+                "purpose": purpose,
+                "certifiable": False if (purpose == "profile" or synthetic) else True,
+                "supervised_batch_size": sup_bs,
+                "unlabeled_batch_size": u_bs,
+                "optimizer_ownership": ownership,
+                "warmup_gate": counts.get("warmup_gate", {"status": "SKIPPED_WARMUP_NOT_REACHED"} if c["warmup_steps"] >= c["steps"] else None),
+                "unique_patient_coverage": {
+                    "supervised_count": len(seen_l),
+                    "audit_count": len(seen_a),
+                    "unlabeled_count": len(seen_u),
+                    "total_unique": len(seen_l | seen_a | seen_u),
+                },
+                "slices_sampled": slices_sampled,
+                "slices_optimized": slices_optimized,
+                "optimizer_calls": optimizer_calls,
+                "pseudo_optimizer_updates": counts.get("pseudo_optimizer_updates", 0),
+            }
+            if is_shared:
+                report["baseline_recovery"]["domain_coverage"] = data.domain_coverage(seen_l | seen_a | seen_u)
         write_json(out / "REPORT.json", report)
         return report
     except Exception as exc:
-        write_json(out / "FAILURE.json", {"status": "FAILED", "error": repr(exc), **counts})
+        failure_record = {"status": "FAILED", "error": repr(exc), **counts,
+                          "slices_sampled": slices_sampled,
+                          "slices_optimized": slices_optimized,
+                          "optimizer_calls": optimizer_calls}
+        if is_shared:
+            failure_record["domain_coverage"] = data.domain_coverage(seen_l | seen_a | seen_u)
+        if hasattr(exc, "evidence"):
+            failure_record["evidence"] = exc.evidence
+        write_json(out / "FAILURE.json", failure_record)
         raise
     finally:
         log.close()

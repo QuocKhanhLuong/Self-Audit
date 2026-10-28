@@ -41,6 +41,77 @@ def crop_native(x, labels, rng, size):
     return x[spatial], labels[spatial] if labels is not None else None, valid[spatial], info
 
 
+# Known duplicates from origin/main reports/automatic_pilot_pro4000/dataset_MnM_verified_preparation.json
+KNOWN_QUARANTINED_MNM_IDS = frozenset({
+    "A7G0P5", "A8C9H8", "C5Q2Y5", "C8J7L5", "C8O0P2", "E9L4N2", "K3R0Y7", "Q0Q1Y4",
+})
+KNOWN_EXCLUDED_ACDC_IDS = frozenset({
+    "patient055", "patient076", "055", "076",
+})
+
+
+def _is_quarantined_patient(patient_id: str) -> bool:
+    raw = patient_id.split(":", 1)[1] if ":" in patient_id else patient_id
+    if raw.startswith("acdc_") or raw.startswith("acdc-"):
+        raw = raw[5:]
+    elif raw.startswith("mnm_") or raw.startswith("mnm-") or raw.startswith("MnM_"):
+        raw = raw[4:]
+    num_suffix = raw.replace("patient", "")
+    return raw in KNOWN_QUARANTINED_MNM_IDS or raw in KNOWN_EXCLUDED_ACDC_IDS or num_suffix in KNOWN_EXCLUDED_ACDC_IDS
+
+
+def _validate_patient_id(patient_id: str) -> None:
+    if not isinstance(patient_id, str) or not patient_id.strip():
+        raise ValueError(f"invalid patient ID: {patient_id}")
+    pid = patient_id.strip()
+    for forbidden in ("..", "/", "\\", "\0", "\n", "\r", "\t"):
+        if forbidden in pid:
+            raise ValueError(f"potential path traversal or invalid characters in patient ID: '{patient_id}'")
+
+
+def _validate_relative_path(path_str: str) -> None:
+    if not isinstance(path_str, str) or not path_str.strip():
+        raise ValueError(f"invalid path string: {path_str}")
+    p = Path(path_str)
+    for part in p.parts:
+        if part == "..":
+            raise ValueError(f"path traversal detected in path: '{path_str}'")
+
+
+class StepIndices(tuple):
+    """Step index tuple with named/attribute access for multi-domain coordination."""
+    def __new__(cls, li, ai, ui, domain_s=None, domain_u=None):
+        return super().__new__(cls, (li, ai, ui))
+
+    def __init__(self, li, ai, ui, domain_s=None, domain_u=None):
+        self.supervised = li
+        self.audit = ai
+        self.unlabeled = ui
+        self.domain_supervised = domain_s
+        self.domain_unlabeled = domain_u
+
+    def __getitem__(self, item):
+        if isinstance(item, str):
+            mapping = {
+                "supervised": self[0], "audit": self[1], "unlabeled": self[2],
+                "li": self[0], "ai": self[1], "ui": self[2],
+                "domain_supervised": self.domain_supervised,
+                "domain_unlabeled": self.domain_unlabeled,
+                "domain_s": self.domain_supervised,
+                "domain_u": self.domain_unlabeled,
+            }
+            if item in mapping:
+                return mapping[item]
+            raise KeyError(item)
+        return super().__getitem__(item)
+
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except (KeyError, IndexError):
+            return default
+
+
 class TrainingData:
     def __init__(self, manifest, expected_sha256, *, synthetic=False):
         self.path = Path(manifest).resolve()
@@ -54,6 +125,8 @@ class TrainingData:
             raise ValueError("synthetic/patient identity mismatch")
         self.labeled, self.unlabeled = m["labeled"], m["unlabeled"]
         self.lids, self.uids = [r["id"] for r in self.labeled], [r["id"] for r in self.unlabeled]
+        for pid in self.lids + self.uids + m.get("evaluation_ids", []):
+            _validate_patient_id(pid)
         if len(self.lids) < 2 or not self.uids or len(set(self.lids + self.uids)) != len(self.lids + self.uids):
             raise ValueError("nonempty disjoint patient sets and at least two labeled patients required")
         if set(self.lids + self.uids) & set(m.get("evaluation_ids", [])):
@@ -61,11 +134,137 @@ class TrainingData:
         if m.get("label_budget") != len(self.lids):
             raise ValueError("audit labels must be counted in the label budget")
         for r in self.unlabeled:
+            _validate_relative_path(r.get("image", ""))
             if set(r) != {"id", "image", "image_sha256"}:
                 raise ValueError("unlabeled record must contain image only, never reference paths")
         for r in self.labeled:
+            _validate_relative_path(r.get("image", ""))
             if set(r) != {"id", "image", "image_sha256", "masks"} or not r["masks"]:
                 raise ValueError("invalid labeled record")
+            for minfo in r["masks"].values():
+                _validate_relative_path(minfo.get("path", ""))
+
+        # Strict shared metadata validation BEFORE array / mask hash IO
+        has_shared_metadata = any(k in m for k in ("shared", "domains", "domain_budgets", "domain_patients", "domain_map"))
+        if has_shared_metadata:
+            if m.get("shared") is not True:
+                raise ValueError("shared manifest must declare 'shared': true")
+            declared_domains = m.get("domains")
+            if declared_domains != ["acdc", "mnm"]:
+                raise ValueError("manifest domains must be exactly ['acdc', 'mnm'] with canonical lowercase names and no aliases")
+
+            # Budget checks
+            budget = m.get("label_budget")
+            if type(budget) is not int or isinstance(budget, bool):
+                raise ValueError(f"label_budget must be int, got {type(budget).__name__}")
+            db = m.get("domain_budgets")
+            if not isinstance(db, dict) or set(db.keys()) != {"acdc", "mnm"}:
+                raise ValueError("domain_budgets must be dict with exact keys {'acdc', 'mnm'}")
+            for k in ("acdc", "mnm"):
+                if type(db[k]) is not int or isinstance(db[k], bool):
+                    raise ValueError(f"domain_budgets[{k}] must be int, got {type(db[k]).__name__}")
+            if not synthetic:
+                if budget != 8 or db["acdc"] != 4 or db["mnm"] != 4:
+                    raise ValueError(f"real patient shared budget must be exactly 4+4=8, reject any other budget (got {db}, total={budget})")
+            else:
+                if sum(db.values()) != budget:
+                    raise ValueError("sum of domain budgets must equal label_budget")
+
+            # Domain patients coverage
+            dp = m.get("domain_patients")
+            if not isinstance(dp, dict) or set(dp.keys()) != {"acdc", "mnm"}:
+                raise ValueError("manifest must declare 'domain_patients' with exact keys {'acdc', 'mnm'}")
+            dp_acdc = set(dp["acdc"])
+            dp_mnm = set(dp["mnm"])
+            if dp_acdc & dp_mnm:
+                raise ValueError("domain_patients sets must be disjoint")
+            if dp_acdc | dp_mnm != set(self.lids + self.uids):
+                raise ValueError("domain_patients must cover all labeled and unlabeled IDs completely")
+
+            # Domain map completeness & consistency
+            dmap = m.get("domain_map")
+            if not isinstance(dmap, dict) or set(dmap.keys()) != set(self.lids + self.uids):
+                raise ValueError("manifest must declare 'domain_map' covering every train patient ID")
+            for pid in self.lids + self.uids:
+                dom = dmap[pid]
+                if dom not in ("acdc", "mnm"):
+                    raise ValueError(f"domain_map[{pid}]='{dom}' is not a canonical domain")
+                exp_dom = "acdc" if pid in dp_acdc else "mnm"
+                if dom != exp_dom:
+                    raise ValueError(f"domain_map[{pid}]='{dom}' conflicts with domain_patients '{exp_dom}'")
+
+            # Namespace consistency
+            for pid in self.lids + self.uids:
+                if ":" not in pid:
+                    raise ValueError(f"shared patient ID '{pid}' lacks canonical 'domain:id' namespace")
+                p_dom, _ = pid.split(":", 1)
+                if p_dom not in ("acdc", "mnm"):
+                    raise ValueError(f"shared patient ID '{pid}' has invalid domain prefix '{p_dom}'")
+                if p_dom != dmap[pid]:
+                    raise ValueError(f"patient ID '{pid}' namespace '{p_dom}' conflicts with domain_map '{dmap[pid]}'")
+
+            # Quarantines
+            for pid in self.lids + self.uids + m.get("evaluation_ids", []):
+                if _is_quarantined_patient(pid):
+                    raise ValueError(f"quarantined patient '{pid}' found in manifest")
+
+            # Evaluation IDs must be namespaced
+            for eid in m.get("evaluation_ids", []):
+                if ":" not in eid or eid.split(":", 1)[0] not in ("acdc", "mnm"):
+                    raise ValueError(f"evaluation ID '{eid}' must be namespaced with 'acdc:' or 'mnm:'")
+
+            # Per-domain labeled counts match budgets
+            acdc_l_count = sum(1 for pid in self.lids if dmap[pid] == "acdc")
+            mnm_l_count = sum(1 for pid in self.lids if dmap[pid] == "mnm")
+            if acdc_l_count != db["acdc"] or mnm_l_count != db["mnm"]:
+                raise ValueError(f"domain labeled counts ({acdc_l_count}, {mnm_l_count}) != declared budgets ({db['acdc']}, {db['mnm']})")
+
+            # Shared metadata: preprocessing, candidate_pool, mapping_provenance, ssl_initialization_requirement
+            from .shared_data import CANONICAL_PREPROCESSING, SSL_INITIALIZATION_REQUIREMENT
+            prep = m.get("preprocessing")
+            if not isinstance(prep, dict) or prep != CANONICAL_PREPROCESSING:
+                raise ValueError("manifest missing or invalid canonical preprocessing metadata")
+
+            cp = m.get("candidate_pool")
+            if not isinstance(cp, dict) or "mode" not in cp or "restricted_candidate_pool" not in cp:
+                raise ValueError("manifest must declare 'candidate_pool' with 'mode' and 'restricted_candidate_pool'")
+            if cp.get("mode") == "restricted_manifest_labeled" and not cp.get("restricted_candidate_pool"):
+                raise ValueError("restricted manifest candidate pool must declare restricted_candidate_pool=True")
+
+            mp = m.get("mapping_provenance")
+            if not isinstance(mp, dict) or "acdc" not in mp or "mnm" not in mp:
+                raise ValueError("manifest must declare 'mapping_provenance' containing 'acdc' and 'mnm'")
+            for dom in ("acdc", "mnm"):
+                desc = str(mp[dom]).strip().lower()
+                for forbidden in ("double_remap", "unknown", "not canonical", "non-canonical", "not_canonical", "uncanonical"):
+                    if forbidden in desc:
+                        raise ValueError(f"rejected invalid mapping provenance for {dom}: {desc}")
+                is_canonical = "canonical" in desc or "identity" in desc
+                is_raw_mnm = "raw_mnm" in desc
+                if dom == "acdc" and not is_canonical:
+                    raise ValueError(f"ACDC mapping provenance must declare canonical, got: {desc}")
+                if dom == "mnm" and not (is_canonical or is_raw_mnm):
+                    raise ValueError(f"MnM mapping provenance must declare canonical or raw_mnm, got: {desc}")
+
+            if m.get("ssl_initialization_requirement") != SSL_INITIALIZATION_REQUIREMENT:
+                raise ValueError("manifest missing or invalid ssl_initialization_requirement")
+
+            self.is_shared = True
+            self.domains = ["acdc", "mnm"]
+            self._domain_map = dict(dmap)
+            self.domain_indices = {
+                "labeled": {d: [i for i, r in enumerate(self.labeled) if dmap[r["id"]] == d] for d in self.domains},
+                "unlabeled": {d: [i for i, r in enumerate(self.unlabeled) if dmap[r["id"]] == d] for d in self.domains},
+            }
+        else:
+            self.is_shared = False
+            self.domains = ["default"]
+            self._domain_map = {}
+            self.domain_indices = {
+                "labeled": {"default": list(range(len(self.labeled)))},
+                "unlabeled": {"default": list(range(len(self.unlabeled)))},
+            }
+
         self.cache, self.label_reads = {}, set()
         hashes = [r["image_sha256"] for r in self.labeled + self.unlabeled]
         if len(set(hashes)) != len(hashes):
@@ -106,6 +305,8 @@ class TrainingData:
         frame = sorted(r["masks"], key=int)[int(rng.integers(len(r["masks"])))]
         rec = r["masks"][frame]
         mask = self.array(rec["path"], rec["sha256"])
+        if not (np.issubdtype(mask.dtype, np.integer) or mask.dtype == bool):
+            raise ValueError("mask must have integer dtype")
         if mask.shape != cine.shape[1:] or not np.isin(mask, [0, 1, 2, 3, 255]).all():
             raise ValueError("mask shape/ontology mismatch")
         self.label_reads.add(r["id"])
@@ -151,6 +352,98 @@ class TrainingData:
         if return_valid:
             return images, metadata, torch.cat(validity)
         return images, metadata
+
+    def domain_of(self, patient_id):
+        if self._domain_map and patient_id in self._domain_map:
+            return self._domain_map[patient_id]
+        if self.is_shared and ":" in patient_id:
+            dom = patient_id.split(":", 1)[0].lower()
+            if dom in self.domains:
+                return dom
+        return "default"
+
+    def choose_patient(self, step, rng=None, *, labeled=True, domain=None):
+        """Select patient index with 50/50 domain balancing then round-robin within domain.
+
+        If domain is None and dataset is shared, alternates domain per step (step % len(domains)),
+        and indexes round-robin within that domain (step // len(domains)).
+        If not shared, preserves exact baseline round-robin (step % len(pool)).
+        """
+        pool = self.labeled if labeled else self.unlabeled
+        role = "labeled" if labeled else "unlabeled"
+        if not self.is_shared or domain == "all":
+            return step % len(pool)
+
+        if domain is None:
+            target_domain = self.domains[step % len(self.domains)]
+            domain_step = step // len(self.domains)
+        else:
+            if domain not in self.domains:
+                raise ValueError(f"unknown domain: {domain}; available: {self.domains}")
+            target_domain = domain
+            domain_step = step
+
+        indices = self.domain_indices[role][target_domain]
+        if not indices:
+            raise ValueError(f"no {role} patients in domain {target_domain}")
+        return indices[domain_step % len(indices)]
+
+    def sample_indices(self, step, rng):
+        """Return plain tuple (li, ai, ui) adhering to 50/50 domain balancing.
+
+        When not shared:
+            li = step % len(self.lids)
+            ui = step % len(self.uids)
+            ai = (li + 1 + int(rng.integers(len(self.lids) - 1))) % len(self.lids)
+        When shared:
+            li and ui alternate domains 50/50 per step and round-robin within domain.
+            ai is chosen from labeled pool excluding li, guaranteeing disjoint patient.
+        """
+        if not self.is_shared:
+            li = step % len(self.lids)
+            ui = step % len(self.uids)
+            ai = (li + 1 + int(rng.integers(len(self.lids) - 1))) % len(self.lids)
+            return (li, ai, ui)
+
+        li = self.choose_patient(step, rng, labeled=True)
+        ui = self.choose_patient(step, rng, labeled=False)
+
+        sup_patient = self.labeled[li]["id"]
+        sup_domain = self.domain_of(sup_patient)
+        domain_cand = [idx for idx in self.domain_indices["labeled"][sup_domain] if self.labeled[idx]["id"] != sup_patient]
+        if domain_cand:
+            ai = domain_cand[int(rng.integers(len(domain_cand)))]
+        else:
+            all_cand = [idx for idx in range(len(self.labeled)) if self.labeled[idx]["id"] != sup_patient]
+            ai = all_cand[int(rng.integers(len(all_cand)))]
+
+        if self.labeled[li]["id"] == self.labeled[ai]["id"]:
+            raise ValueError("audit patient must be disjoint from supervised patient")
+        return (li, ai, ui)
+
+    def domain_coverage(self, seen_patient_ids):
+        """Return per-domain telemetry of observed patients."""
+        seen = set(seen_patient_ids)
+        telemetry = {}
+        for dom in self.domains:
+            l_pids = {self.labeled[i]["id"] for i in self.domain_indices["labeled"][dom]}
+            u_pids = {self.unlabeled[i]["id"] for i in self.domain_indices["unlabeled"][dom]}
+            all_pids = l_pids | u_pids
+            seen_dom_l = l_pids & seen
+            seen_dom_u = u_pids & seen
+            seen_dom = all_pids & seen
+            telemetry[dom] = {
+                "labeled_total": len(l_pids),
+                "labeled_seen": len(seen_dom_l),
+                "labeled_coverage": len(seen_dom_l) / max(len(l_pids), 1),
+                "unlabeled_total": len(u_pids),
+                "unlabeled_seen": len(seen_dom_u),
+                "unlabeled_coverage": len(seen_dom_u) / max(len(u_pids), 1),
+                "total_patients": len(all_pids),
+                "total_seen": len(seen_dom),
+                "total_coverage": len(seen_dom) / max(len(all_pids), 1),
+            }
+        return telemetry
 
 
 def synthetic_fixture(folder, seed=11, n_labeled=3, n_unlabeled=3, size=32):

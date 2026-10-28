@@ -1,0 +1,64 @@
+{
+  "schema": "self_audit.recovery_report.v1",
+  "checkpoint_sha256": "3f26718c83e39af99e1739630880f4933d1c6de2c9b06655e8240ea7329086dd",
+  "checkpoint_payload_sha256": "96ef59c785d903aee5ab989c6afa3115378ef4675139d35e968fd26befd4563d",
+  "datasets": [
+    "acdc",
+    "mnm"
+  ],
+  "learning_curves": {
+    "file": "learning_curves.png",
+    "sha256": "b8f36e5eb234dbcac6f95523dc425dd6af7c7c14dbe16eeec7f21e64c7fcae12",
+    "metrics": {
+      "total_steps": 4,
+      "initial_supervised_loss": 2.5443639755249023,
+      "final_supervised_loss": 2.471036195755005,
+      "total_pseudo_accepted": 3.0,
+      "has_ema_coverage": true
+    }
+  },
+  "overlays": [
+    {
+      "dataset": "acdc",
+      "patient_id": "acdc_eval_000",
+      "frame": 0,
+      "slice": 0,
+      "file": "overlay_acdc_acdc_eval_000_f0_s0.png",
+      "sha256": "2bc3b284b312110130b9aadb5a847f47189cd54be101a23b239d6f366a6d25d7",
+      "checkpoint_sha256": "3f26718c83e39af99e1739630880f4933d1c6de2c9b06655e8240ea7329086dd",
+      "has_measured_dice": true,
+      "measured_fg_dice": 0.19137083858126913
+    },
+    {
+      "dataset": "mnm",
+      "patient_id": "mnm_eval_001",
+      "frame": 0,
+      "slice": 0,
+      "file": "overlay_mnm_mnm_eval_001_f0_s0.png",
+      "sha256": "bb22c3753d547785380c581afa7f08cf7041ed43666910c43cbf6ad27d056191",
+      "checkpoint_sha256": "3f26718c83e39af99e1739630880f4933d1c6de2c9b06655e8240ea7329086dd",
+      "has_measured_dice": true,
+      "measured_fg_dice": 0.18124431289838208
+    }
+  ],
+  "metrics_pointers": {
+    "evaluation": {
+      "evaluation_dir": "/private/tmp/self-audit-recovery-final-20261028/evaluation",
+      "recipe_sha256": "4750d8e1464be7dc532ad6256c3fee2687efcfda8a1fcf2c71fa0a6693928695",
+      "checkpoint_sha256": "3f26718c83e39af99e1739630880f4933d1c6de2c9b06655e8240ea7329086dd",
+      "checkpoint_payload_sha256": "96ef59c785d903aee5ab989c6afa3115378ef4675139d35e968fd26befd4563d",
+      "metrics_bound": true,
+      "metrics_file": "/private/tmp/self-audit-recovery-final-20261028/evaluation/METRICS.json",
+      "metrics_sha256": "647321e69ac1fc2f929106d6f69b3ef280f2ef42b1a62e6121dfffe93cc424e9",
+      "macro_patient": null
+    }
+  },
+  "canonical_colors": {
+    "BG": "transparent",
+    "RV": "red (#ff0000)",
+    "MYO": "green (#00cc00)",
+    "LV": "blue (#0033ff)",
+    "ignore_255": "transparent"
+  },
+  "synthetic": true
+}

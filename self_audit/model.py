@@ -73,6 +73,17 @@ class NativeStudent(nn.Module):
         # None registers no module/state keys and leaves the baseline path intact.
         self.teacher_memory = teacher_memory
 
+    def module_parameters(self):
+        """Return parameters grouped by canonical module name."""
+        return {
+            "encoder": list(self.encoder.parameters()),
+            "input_adapter": list(self.input_adapter.parameters()),
+            "decoder": list(self.lateral.parameters()) + list(self.up.parameters()) + list(self.refine.parameters()),
+            "detail": list(self.detail.parameters()),
+            "fuse": list(self.fuse.parameters()),
+            "head": list(self.head.parameters()),
+        }
+
     def features(self, x, valid_mask=None, *, return_memory_feature=False):
         if x.ndim != 4 or x.shape[1] != 3 or not torch.isfinite(x).all() or x.min() < 0 or x.max() > 1:
             raise ValueError("expected finite normalized Bx3xHxW input")
