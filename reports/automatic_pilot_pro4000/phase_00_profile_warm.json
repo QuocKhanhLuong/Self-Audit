@@ -1,0 +1,185 @@
+{
+  "phase": "bounded_real_patient_warm_profile",
+  "base_commit": "93f7c7a1f9606a68955f849dd580b90462ad329e",
+  "status": "PROFILE_COMPLETED_NOT_FULL_TRAINING",
+  "environment": {
+    "commit": "93f7c7a1f9606a68955f849dd580b90462ad329e",
+    "conda_prefix": "/venv/main",
+    "torch": "2.14.1+cu132",
+    "cuda": "13.2",
+    "gpu": "NVIDIA RTX PRO 4000 Blackwell",
+    "vram_bytes": 25153044480,
+    "ram_cgroup_bytes": "129628110848",
+    "free_vram_bytes": 24672206848,
+    "cuda_matmul_finite": true
+  },
+  "warm_profile": {
+    "stage": "profile_warm",
+    "path": "/workspace/Self-Audit/runs/pro4000/profile_warm/warm_start_support_only/final",
+    "manifest_sha256": "4517735bfe48f418bedcc5fdccd9663d6cffbe769db8cb6a7fe7514d9abbd7df",
+    "receipt": {
+      "schema": "self_audit.automatic.v1",
+      "phase": "warm_start",
+      "status": "COMPLETED",
+      "arm": "support_only",
+      "synthetic": false,
+      "quality": "NOT_EVALUATED",
+      "steps": 2,
+      "elapsed_seconds": 7.849408454960212,
+      "phase_cost_seconds": 7.849408454960212,
+      "marginal_adaptation_seconds": 7.849408454960212,
+      "startup_seconds": 6.506995800882578,
+      "extraction_seconds": 0.0,
+      "transaction_seconds": 1.0306770189199597,
+      "final_save_seconds": 0.311722774989903,
+      "pseudo_transactions_proposed": 0,
+      "pseudo_transactions_accepted": 0,
+      "pseudo_directions_proposed": 0,
+      "pseudo_directions_accepted": 0,
+      "pseudo_proposals": 0,
+      "pseudo_accepted": 0,
+      "nonzero_displacement_updates": 2,
+      "zero_displacement_updates": 0,
+      "acceptance_rate": "NOT_APPLICABLE",
+      "step_latencies_ms": [
+        997.765,
+        32.822
+      ],
+      "latency_p50_ms": 515.2935,
+      "latency_p95_ms": 949.51785,
+      "peak_allocated_bytes": 638841344,
+      "peak_reserved_bytes": 734003200,
+      "peak_vram_allocated_mb": 609.247,
+      "peak_vram_reserved_mb": 700.0,
+      "throughput_updates_per_sec": 0.25479627050572917,
+      "termination_reason": "STEP_LIMIT_REACHED",
+      "equal_time_certified": false,
+      "final_manifest_sha256": "4517735bfe48f418bedcc5fdccd9663d6cffbe769db8cb6a7fe7514d9abbd7df",
+      "warm_start_manifest_sha256": "4517735bfe48f418bedcc5fdccd9663d6cffbe769db8cb6a7fe7514d9abbd7df",
+      "warm_start_path": "/workspace/Self-Audit/runs/pro4000/profile_warm/warm_start_support_only/final",
+      "target_budget": 8,
+      "lineage": {
+        "patients": [
+          "patient007",
+          "patient010",
+          "patient011",
+          "patient024",
+          "patient026",
+          "patient041",
+          "patient077",
+          "patient099"
+        ],
+        "count": 8,
+        "support_patient_ids": [
+          "patient007",
+          "patient010",
+          "patient011",
+          "patient024",
+          "patient026",
+          "patient041",
+          "patient077",
+          "patient099"
+        ],
+        "support_frames": {
+          "patient007": [
+            0,
+            6
+          ],
+          "patient010": [
+            0,
+            12
+          ],
+          "patient011": [
+            0,
+            7
+          ],
+          "patient024": [
+            0,
+            8
+          ],
+          "patient026": [
+            0,
+            11
+          ],
+          "patient041": [
+            0,
+            10
+          ],
+          "patient077": [
+            0,
+            8
+          ],
+          "patient099": [
+            0,
+            8
+          ]
+        },
+        "k_reuse": 1,
+        "prior_lineage": null
+      },
+      "provenance": {
+        "pretrained": true,
+        "weights_sha256": "21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54",
+        "source_commit": "6876159a11b4df116f30f667f8c9888617df0751",
+        "lineage": "user_supplied_hash_pinned;not_independent_upstream_certification"
+      },
+      "source_sha256": "72a54218c26f50cce330096b1da43c2cdecd727c42e957ef05a184a2b0ca0ba3",
+      "prediction_model": "student",
+      "invocation_timing": {
+        "startup_seconds": 6.506995800882578,
+        "extraction_seconds": 0.0,
+        "transaction_seconds": 1.0306770189199597,
+        "final_save_seconds": 0.311722774989903,
+        "total_seconds": 7.849408454960212
+      },
+      "cumulative_timing": {
+        "startup_seconds": 6.506995800882578,
+        "extraction_seconds": 0.0,
+        "transaction_seconds": 1.0306770189199597,
+        "final_save_seconds": 0.311722774989903,
+        "total_seconds": 7.849408454960212
+      },
+      "subprocess_wall_seconds": 10.194268019869924
+    }
+  },
+  "extraction_profile": {
+    "status": "PASS",
+    "phase": "extraction_only_no_training",
+    "slices": 154,
+    "native_support_voxels": 7407104,
+    "padded_cache_bytes_estimated": 1199041536,
+    "controller_workspace_bytes_estimated": 7712812800,
+    "default_workspace_limit_bytes": 4294967296,
+    "profile_workspace_ceiling_bytes": 8589934592,
+    "peak_allocated_bytes": 530700288,
+    "peak_reserved_bytes": 817889280,
+    "free_vram_bytes_after_extract": 23726325760,
+    "elapsed_seconds": 5.767990577034652,
+    "slices_per_second": 26.69907274348774,
+    "max_rss_kib": 11434772,
+    "labeled_ids": [
+      "patient007",
+      "patient010",
+      "patient011",
+      "patient024",
+      "patient026",
+      "patient041",
+      "patient077",
+      "patient099"
+    ],
+    "parity_verified": true,
+    "precision": "FP32; no AMP or TF32 override",
+    "provenance": {
+      "pretrained": true,
+      "weights_sha256": "21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54",
+      "source_commit": "6876159a11b4df116f30f667f8c9888617df0751",
+      "lineage": "user_supplied_hash_pinned;not_independent_upstream_certification"
+    }
+  },
+  "tests": "530 passed; 1 upstream torch.jit deprecation warning",
+  "source_overlay": "CPU rounding-witness portability tests; heterogeneous native-shape metric padding fix. No architecture change. Training source digest in receipt. Patch retained on server.",
+  "dataset": "ACDC 1053 remote MD5 matches; 150 patients; 750 NIfTI; 300 pairs. Existing TRAIN80/VAL18/TEST50 with excluded055/076. L8/U72 manifest.",
+  "research_decision": "NOT_RUN; no quality metrics inferred",
+  "server_report_root": "/workspace/Self-Audit/reports/automatic_pilot_pro4000",
+  "tmux": "ssh_tmux:3 self-audit-pilot"
+}
