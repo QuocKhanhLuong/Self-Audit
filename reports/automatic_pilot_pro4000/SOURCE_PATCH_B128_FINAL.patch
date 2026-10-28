@@ -1,0 +1,271 @@
+diff --git a/self_audit/automatic.py b/self_audit/automatic.py
+index 265dd4e..fa4882e 100644
+--- a/self_audit/automatic.py
++++ b/self_audit/automatic.py
+@@ -90,6 +90,7 @@ DEFAULT_AUTOMATIC_CONFIG: dict[str, Any] = {
+     "save_every": 100,
+     "threads": 2,
+     "batch_size": 1,
++    "full_ema_microbatch_size": 0,
+     "crop_size": 256,
+     "max_support_voxels": 10_000_000,
+     "max_extract_batch": 8,
+@@ -234,9 +235,9 @@ def validate_automatic_config(
+ 
+     # Validate integer fields
+     for k in ("steps", "warmup_steps", "seed", "backtracks", "save_every", "threads",
+-              "batch_size", "crop_size", "max_support_voxels", "max_extract_batch"):
++              "batch_size", "full_ema_microbatch_size", "crop_size", "max_support_voxels", "max_extract_batch"):
+         val = c.get(k)
+-        if type(val) is not int or val < (0 if k in ("warmup_steps", "crop_size") else 1):
++        if type(val) is not int or val < (0 if k in ("warmup_steps", "crop_size", "full_ema_microbatch_size") else 1):
+             raise ValueError(f"invalid {k}: {val}")
+ 
+     if stop_steps is not None:
+@@ -645,6 +646,39 @@ def ema_head_update(teacher: nn.Module, student: nn.Module, decay: float) -> Non
+             t.copy_(s)
+ 
+ 
++def microbatch_pseudo_step(model, optimizers, strong, py, accepted, *, input_valid=None,
++                          microbatch_size=None):
++    """Pilot-only full EMA accumulation with one global denominator/clip/step.
++
++    Eval-mode NativeStudent has no batch-coupled normalization. Chunking changes
++    floating reduction order, not the effective-batch mathematical objective.
++    The canonical historical engine remains byte-for-byte unchanged.
++    """
++    if microbatch_size is not None and (type(microbatch_size) is not int or microbatch_size < 1):
++        raise ValueError("microbatch_size must be a positive integer")
++    if microbatch_size is None or len(strong) <= microbatch_size:
++        return full_pseudo_step(model, optimizers, strong, py, accepted, input_valid=input_valid)
++    model.eval()
++    model.zero_grad(set_to_none=True)
++    denominator = accepted.sum().clamp_min(1)
++    total_loss = 0.0
++    for start in range(0, len(strong), microbatch_size):
++        stop = min(start + microbatch_size, len(strong))
++        v = input_valid[start:stop] if input_valid is not None else None
++        logits = model(strong[start:stop], valid_mask=v)
++        loss = (F.cross_entropy(logits, py[start:stop], reduction="none")
++                * accepted[start:stop]).sum() / denominator
++        if not torch.isfinite(loss):
++            raise FloatingPointError("nonfinite microbatch pseudo loss")
++        loss.backward()
++        total_loss += float(loss.detach())
++    norm = torch.nn.utils.clip_grad_norm_(
++        [p for p in model.parameters() if p.requires_grad], 5., error_if_nonfinite=True)
++    for opt in optimizers:
++        opt.step()
++    return total_loss, float(norm)
++
++
+ def compute_complete_support_margins(
+     model: nn.Module,
+     is_head_only: bool,
+@@ -675,9 +709,14 @@ def compute_complete_support_margins(
+                     all_logits.append(bl)
+                     all_labels.append(by)
+                     all_val.append(by != 255)
+-            cat_logits = torch.cat(all_logits, dim=0)
+-            cat_labels = torch.cat(all_labels, dim=0)
+-            cat_val = torch.cat(all_val, dim=0)
++            # Real patients have different native H/W. Pad only the metric
++            # tensors, excluding every padded voxel from the reduction.
++            max_h = max(x.shape[-2] for x in all_logits)
++            max_w = max(x.shape[-1] for x in all_logits)
++            pads = [(0, max_w-x.shape[-1], 0, max_h-x.shape[-2]) for x in all_logits]
++            cat_logits = torch.cat([F.pad(x, pad) for x, pad in zip(all_logits, pads)], dim=0)
++            cat_labels = torch.cat([F.pad(x, pad, value=255) for x, pad in zip(all_labels, pads)], dim=0)
++            cat_val = torch.cat([F.pad(x, pad, value=False) for x, pad in zip(all_val, pads)], dim=0)
+             m, _ = compute_margins(cat_logits, cat_labels, valid_mask=cat_val)
+         if was_train:
+             model.train(True)
+@@ -1397,7 +1436,14 @@ def run(
+             # -----------------------------------------------------------------
+             with torch.no_grad():
+                 teacher.eval()
+-                teacher_logits = teacher(xu, valid_mask=uvalid)
++                teacher_chunk = c["full_ema_microbatch_size"] if arm == "full_ema" else 0
++                if teacher_chunk and len(xu) > teacher_chunk:
++                    teacher_logits = torch.cat([
++                        teacher(xu[start:start+teacher_chunk], valid_mask=uvalid[start:start+teacher_chunk])
++                        for start in range(0, len(xu), teacher_chunk)
++                    ], dim=0)
++                else:
++                    teacher_logits = teacher(xu, valid_mask=uvalid)
+                 teacher_probs = teacher_logits.softmax(1)
+ 
+             # -----------------------------------------------------------------
+@@ -1542,13 +1588,14 @@ def run(
+                     counts["pseudo_transactions_proposed"] += 1
+                     counts["pseudo_directions_proposed"] += 1
+                     before_params = [p.detach().clone() for p in model.parameters()]
+-                    row["pseudo_loss"], row["pseudo_gradient_norm"] = full_pseudo_step(
++                    row["pseudo_loss"], row["pseudo_gradient_norm"] = microbatch_pseudo_step(
+                         model,
+                         opts,
+                         strong,
+                         py.detach(),
+                         valid,
+                         input_valid=uvalid,
++                        microbatch_size=c["full_ema_microbatch_size"] or None,
+                     )
+                     disp_norm = float(torch.sqrt(sum((p.detach() - bp).double().norm()**2 for p, bp in zip(model.parameters(), before_params))).item())
+                     counts["pseudo_transactions_accepted"] += 1
+diff --git a/tests/test_automatic_control.py b/tests/test_automatic_control.py
+index 0ab4020..108b4e9 100644
+--- a/tests/test_automatic_control.py
++++ b/tests/test_automatic_control.py
+@@ -60,59 +60,45 @@ from self_audit.automatic_control import (
+ # 1. Deterministic CPU witness & actual functional trial evaluation
+ # ---------------------------------------------------------------------------
+ 
+-def test_deterministic_cpu_witness_seed873_iteration16_argmax_discrepancy():
+-    """Witness CPU seed 873 iteration 16 where cached argmax != actual argmax.
++def _rounding_discrepancy_witness():
++    """Find the same rounding counterexample across CPU/PyTorch kernels.
+ 
+-    Shows that cached affine logits and actual head forward can disagree on argmax
+-    even when max error is < 1e-5, proving why actual functional trial evaluation
+-    is required.
++    Iteration 16 is a witness on the original host, but is not portable to
++    PyTorch 2.14 CPU kernels. Keep the actual argmax and error requirements.
+     """
+     torch.manual_seed(873)
+     f = torch.randn(1, 32, 1, 1)
+     head = nn.Conv2d(32, 4, 1)
+     head.bias.data.copy_(torch.tensor([1.0, 0.0, -100.0, -100.0]))
+-
+-    for it in range(17):
++    for _ in range(4096):
+         dw = torch.randn_like(head.weight) * 0.2
+         db = torch.randn_like(head.bias) * 0.2
+         base = F.conv2d(f, head.weight, head.bias)
+         dz = F.conv2d(f, dw, db)
+         margin = (base[0, 0, 0, 0] + dz[0, 0, 0, 0] - (base[0, 1, 0, 0] + dz[0, 1, 0, 0])).item()
+         db[1] += margin
++        cached = base + F.conv2d(f, dw, db)
++        actual = F.conv2d(f, head.weight + dw, head.bias + db)
++        if (base.argmax(1).item() == 0 and cached.argmax(1).item() == 0
++                and actual.argmax(1).item() == 1
++                and (actual - cached).abs().max().item() < 1e-5):
++            return f, head, dw, db
++    pytest.fail("CPU rounding witness not found within the fixed search budget")
+ 
+-        if it == 16:
+-            cached = base + F.conv2d(f, dw, db)
+-            actual = F.conv2d(f, head.weight + dw, head.bias + db)
+-            diff = (actual - cached).abs().max().item()
+-            cached_argmax = cached.argmax(1).item()
+-            actual_argmax = actual.argmax(1).item()
+ 
+-            assert cached_argmax == 0, f"expected cached argmax 0, got {cached_argmax}"
+-            assert actual_argmax == 1, f"expected actual argmax 1, got {actual_argmax}"
+-            assert diff < 1e-5, f"expected parity error < 1e-5, got {diff}"
++def test_deterministic_cpu_witness_seed873_iteration16_argmax_discrepancy():
++    """Cached affine parity does not certify actual finite argmax parity."""
++    f, head, dw, db = _rounding_discrepancy_witness()
++    cached = F.conv2d(f, head.weight, head.bias) + F.conv2d(f, dw, db)
++    actual = F.conv2d(f, head.weight + dw, head.bias + db)
++    assert cached.argmax(1).item() == 0
++    assert actual.argmax(1).item() == 1
++    assert (actual - cached).abs().max().item() < 1e-5
+ 
+ 
+ def test_actual_functional_evaluation_catches_argmax_discrepancy_and_rejects():
+-    """Verify controller evaluates actual functional metrics to catch argmax discrepancy.
+-
+-    Tests on an untouched independent head, forces allocation alpha=[1], asserts
+-    cached screening passes while actual functional metrics fail the absent FP guard,
+-    and asserts rejection, parameter version invariance, and final metric equality.
+-    """
+-    torch.manual_seed(873)
+-    f = torch.randn(1, 32, 1, 1)
+-    head = nn.Conv2d(32, 4, 1)
+-    head.bias.data.copy_(torch.tensor([1.0, 0.0, -100.0, -100.0]))
+-
+-    for it in range(17):
+-        dw = torch.randn_like(head.weight) * 0.2
+-        db = torch.randn_like(head.bias) * 0.2
+-        base = F.conv2d(f, head.weight, head.bias)
+-        dz = F.conv2d(f, dw, db)
+-        margin = (base[0, 0, 0, 0] + dz[0, 0, 0, 0] - (base[0, 1, 0, 0] + dz[0, 1, 0, 0])).item()
+-        db[1] += margin
+-        if it == 16:
+-            break
++    """Actual functional checks must reject the independently witnessed flip."""
++    f, head, dw, db = _rounding_discrepancy_witness()
+ 
+     # Ground truth: pixel is class 0 (BG); class 1 (RV) is ABSENT
+     labels = torch.zeros(1, 1, 1, dtype=torch.long)
+diff --git a/tests/test_automatic_engine.py b/tests/test_automatic_engine.py
+index 7f4ca2b..2a1cecb 100644
+--- a/tests/test_automatic_engine.py
++++ b/tests/test_automatic_engine.py
+@@ -759,3 +759,21 @@ def test_regression_warmstart_arm_and_nan_features(tmp_path):
+     rep_all_l = run(ws_cfg, out_all_l, synthetic=True, manifest=m, manifest_sha256=sha)
+     assert rep_all_l["status"] == "COMPLETED"
+     assert rep_all_l["target_budget"] == 3
++
++
++def test_full_ema_support_margins_keep_heterogeneous_native_shapes():
++    from self_audit.automatic import compute_complete_support_margins
++    from self_audit.automatic_control import compute_margins
++    from torch.nn import functional as F
++    model = torch.nn.Conv2d(3, 4, 1)
++    records = [SupportVolumeRecord(str(i), 0, torch.rand(2, 3, h, w),
++               torch.zeros(2, h, w, dtype=torch.long), "a"*64, "b"*64)
++               for i, (h, w) in enumerate(((7, 11), (9, 8)))]
++    got = compute_complete_support_margins(model, False, None, records, torch.device("cpu"), max_batch=1)
++    logits = [model(r.images) for r in records]
++    pads = [(0, 11-r.width, 0, 9-r.height) for r in records]
++    expected, _ = compute_margins(
++        torch.cat([F.pad(x, p) for x, p in zip(logits, pads)]),
++        torch.cat([F.pad(r.labels, p, value=255) for r, p in zip(records, pads)]),
++        valid_mask=torch.cat([F.pad(r.labels != 255, p, value=False) for r, p in zip(records, pads)]))
++    assert got == pytest.approx(expected, abs=1e-6)
+diff --git a/tests/test_pseudo_microbatch.py b/tests/test_pseudo_microbatch.py
+new file mode 100644
+index 0000000..db065a0
+--- /dev/null
++++ b/tests/test_pseudo_microbatch.py
+@@ -0,0 +1,39 @@
++import copy
++import pytest
++import torch
++from torch import nn
++from self_audit.automatic import microbatch_pseudo_step as full_pseudo_step
++
++class BatchIndependentModel(nn.Module):
++    def __init__(self):
++        super().__init__()
++        self.body=nn.Sequential(nn.Conv2d(3,8,3,padding=1),nn.GroupNorm(2,8),nn.GELU())
++        self.head=nn.Conv2d(8,4,1)
++    def forward(self,x,valid_mask=None):
++        return 25 * self.head(self.body(x))
++
++def test_microbatch_global_denominator_single_clip_and_optimizer_step():
++    torch.manual_seed(1907)
++    a=BatchIndependentModel().double();b=copy.deepcopy(a)
++    x=torch.randn(5,3,9,11,dtype=torch.float64);py=torch.randint(4,(5,9,11))
++    accepted=torch.rand(5,9,11)>.65;accepted[:2]=False;accepted[4]=True
++    opts_a=[torch.optim.SGD(a.head.parameters(),lr=.03),torch.optim.AdamW(a.body.parameters(),lr=.002)]
++    opts_b=[torch.optim.SGD(b.head.parameters(),lr=.03),torch.optim.AdamW(b.body.parameters(),lr=.002)]
++    la,na=full_pseudo_step(a,opts_a,x,py,accepted)
++    lb,nb=full_pseudo_step(b,opts_b,x,py,accepted,microbatch_size=2)
++    assert lb==pytest.approx(la,abs=1e-12)
++    assert nb==pytest.approx(na,abs=1e-12)
++    assert na > 5.0  # Exercise clipping once on the full accumulated gradient.
++    for p,q in zip(a.parameters(),b.parameters()):
++        assert torch.allclose(p,q,atol=1e-12,rtol=1e-12)
++        assert torch.allclose(p.grad,q.grad,atol=1e-12,rtol=1e-12)
++    for p,q in zip(a.body.parameters(),b.body.parameters()):
++        sa,sb=opts_a[1].state[p],opts_b[1].state[q]
++        assert sa['step'].item()==sb['step'].item()==1
++        for k in ['exp_avg','exp_avg_sq']:assert torch.allclose(sa[k],sb[k],atol=1e-12,rtol=1e-12)
++
++@pytest.mark.parametrize('value',[0,-1,True,1.5])
++def test_microbatch_rejects_invalid_size(value):
++    model=BatchIndependentModel()
++    with pytest.raises(ValueError,match='microbatch_size'):
++        full_pseudo_step(model,[torch.optim.SGD(model.parameters(),lr=.1)],torch.rand(3,3,5,5),torch.zeros(3,5,5,dtype=torch.long),torch.ones(3,5,5,dtype=torch.bool),microbatch_size=value)
