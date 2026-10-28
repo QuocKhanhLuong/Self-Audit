@@ -1,7 +1,7 @@
 {
   "schema": "self_audit.pro4000.phase.v1",
   "phase": "final_verification",
-  "utc": "2026-10-28T10:32:59.149232+00:00",
+  "utc": "2026-10-28T11:37:21.758796+00:00",
   "status": "COMPLETE",
   "base_commit": "93f7c7a1f9606a68955f849dd580b90462ad329e",
   "test_suite": "535 passed, 1 warning in 128.48s",
@@ -9,10 +9,10 @@
   "output_audit": {
     "status": "PASS",
     "checkpoint_count": 20,
-    "evaluation_count": 25,
-    "native_prediction_file_count": 1160
+    "evaluation_count": 20,
+    "native_prediction_file_count": 1000
   },
-  "output_audit_sha256": "2d8c8011a2f83963acc893056f227a7113cb03bdd192e649ee575de723891b9a",
+  "output_audit_sha256": "8df0d58a9a56e2606d6c70082e4717ce53af2d1e5586c4acc2314023aa1bd822",
   "acdc_decision": {
     "decision": "NO_GO",
     "quality_status": "MEASURED",
@@ -59,16 +59,16 @@
     },
     "reason": "One or more independent query gates failed."
   },
-  "mnm_full_ema_foreground_patient_macro": 0.410174324677344,
-  "final_report_sha256": "e65ccad7834d74915fd36af56c6e65844f68dfdbeef8172a4789786d1fe97f04",
-  "comparison_csv_sha256": "cfb5f3a608c6db7d4d3581604e74f138b36b3d880b3a9f5e81818118d9c1e6c2",
-  "patient_metrics_csv_sha256": "cce03a55e488aeaf6976c1b423c811161a1d6646e01e35ab15c72e6452acace9",
-  "failure_patients_csv_sha256": "655bb6ff5266ccc56f01d572768d581c78e8d202d9358c6958e9e4a18006e2f7",
-  "artifact_hashes_sha256": "b666d37f8ad0c243d3a92813365dd5927bea6421fbf224c9a901ec9b0afa13c8",
+  "final_report_sha256": "5ff62527c51541dc514cdeb5ecc00738c8112bd4fcdf8b419aeaebaa1e304017",
+  "comparison_csv_sha256": "e29acb9135768611a0263fa1a5122509b591f54e791c029cec49250eefc52feb",
+  "patient_metrics_csv_sha256": "703e8e58b028e3796fdb56a4bbbabac5bc9b66cd993ff4167a0fba13622a0a4d",
+  "failure_patients_csv_sha256": "2a551911703a0a675bd33fc60bfa48f7ea9ffa52f4bbf6356b9c85c1e5199506",
+  "artifact_hashes_sha256": "7e923e640a6dbe26cbbce7174c0ab8579194c1e3438bdff1c331ffdfb19d471a",
   "paths": {
     "final_report": "reports/automatic_pilot_pro4000/FINAL_REPORT.md",
     "checkpoints": "/workspace/Self-Audit/runs/pro4000/",
     "raw_acdc": "/workspace/Self-Audit/data/ACDC/",
     "raw_mnm": "/workspace/Self-Audit/data/MnM/"
-  }
+  },
+  "scope": "ACDC results only"
 }
