@@ -1,7 +1,7 @@
 {
   "base_commit": "93f7c7a1f9606a68955f849dd580b90462ad329e",
   "authorization": "user explicitly authorized full real-patient training and main report publication",
-  "dataset": "ACDC primary; M&Ms kept separate",
+  "dataset": "ACDC only for experiment results; M&Ms dataset setup retained separately, no M&Ms training or results in current report",
   "split": "splits/acdc_reviewed_locked_train80_val18.json; unchanged",
   "dense_training_budget": 8,
   "label_seed": 42,
@@ -34,7 +34,7 @@
   "controller_workspace_limit_bytes_after_successful_profile": 8589934592,
   "full_run_gate": "535 tests pass; source-pinned B128 real CUDA 3-step profiles for full_ema and joint_dice; both under 22GiB reserved; verified data and locked patient split",
   "equal_time": "fresh runs only, no resumed timing as compute evidence; 100000-step safety cap; retry with larger shared budget if 5% measured spread fails",
-  "evaluation": "full native compressed predictions frozen and hashed before evaluator opens references; RV/MYO/LV patient macro; all ten arms under both regimes",
+  "evaluation": "ACDC TEST50 full native compressed predictions frozen and hashed before evaluator opens references; RV/MYO/LV patient macro; all ten arms under both regimes",
   "source_overlay": "SOURCE_PATCH_B128_FINAL.patch; pilot-only full_ema accumulation with one global loss normalization, one optimizer step, one EMA update; no model architecture or canonical engine changes",
   "full_ema_documentation_discrepancy": "93f7c7a implementation optimizes all non-head parameters including encoder; runbook claims a frozen encoder, but NativeStudent does not freeze it. Preserve executable commit behavior, report this stronger comparator explicitly.",
   "wandb": "No W&B credentials available; structured steps.jsonl, utilization.csv, REPORT.json and persistent tmux logging used.",
@@ -46,5 +46,6 @@
   ],
   "batch_selection": "B128 real CUDA profiles: joint_dice 20616 MiB reserved, full_ema effective B128/M40 19740 MiB reserved, both below 22GiB gate; shared effective U batch of 128 for all arms.",
   "full_ema_microbatch_size": 40,
-  "old_B40_matrix": "Superseded by user-requested B128, retained; not pooled."
+  "old_B40_matrix": "Superseded by user-requested B128, retained; not pooled.",
+  "user_scope_update": "M&Ms TEST135 evaluation interrupted on user request; publish only ACDC results to main"
 }
