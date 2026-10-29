@@ -210,6 +210,7 @@ def validate_nifti_correspondence(
     base_dir: str | Path | None = None,
     prepared_image_tzyx: Any | None = None,
     prepared_masks_tzyx: Mapping[str, Any] | None = None,
+    allow_unknown_spatial_units: bool = False,
 ) -> dict[str, Any]:
     """Validate optional raw NIfTI provenance for a prepared TRAIN record.
 
@@ -237,7 +238,7 @@ def validate_nifti_correspondence(
     units = image_obj.header.get_xyzt_units()[0]
     if units not in ("mm", "unknown"):
         raise ValueError("raw cine spatial units must be millimetres")
-    if units != "mm":
+    if units != "mm" and not (allow_unknown_spatial_units and units == "unknown" and not masks):
         raise ValueError("raw cine NIfTI is missing explicit millimetre units")
     axcodes = "".join(str(x) for x in nib.aff2axcodes(image_obj.affine))
     if expected_orientation and expected_orientation not in {axcodes, "affine_direction_cosines"}:
@@ -326,7 +327,7 @@ def validate_nifti_correspondence(
         "source_sha256": image_sha256,
         "shape_xyzt": list(reversed(expected_shape_tzyx)),
         "orientation": "".join(str(x) for x in nib.aff2axcodes(image_obj.affine)),
-        "units": "mm",
+        "units": units,
         "frame_mapping": list(expected_frame_mapping),
     }
 

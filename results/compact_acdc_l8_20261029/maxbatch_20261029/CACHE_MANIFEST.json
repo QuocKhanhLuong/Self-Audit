@@ -1,0 +1,1071 @@
+{
+  "schema": "self_audit.compact_teacher_cache.v1",
+  "teacher_identity": {
+    "schema": "self_audit.compact_teacher_identity.v1",
+    "teacher_kind": "canonical",
+    "source_commit": "0f54455b67bb11a72fbfe2a8ac6fae4073f3e9ca",
+    "source_sha256": "3c7fa85f00d54a6e087af3cd6c7045351fb72d532f1069bf09d95f9cd72359b7",
+    "manifest_sha256": "ae36d026ce26ca188627e6ea4699695e9eb99501312ce05d5324b81e44d3ddaa",
+    "payload_sha256": "0ae593ecb6b6f9dcb88d0a41d4a77d7b3b3a3edd87396624c3648afb1281f1b6",
+    "train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+    "inference_state": "student",
+    "training_method": "ema_full",
+    "model_class": "NativeStudent",
+    "label_budget": 8,
+    "labeled_ids": [
+      "patient007",
+      "patient010",
+      "patient011",
+      "patient024",
+      "patient026",
+      "patient041",
+      "patient077",
+      "patient099"
+    ],
+    "quality_receipt": {
+      "path": "/workspace/compact-acdc-l8/20261028/b8_recovery/test50_receipt/QUALITY_RECEIPT.json",
+      "sha256": "f1054ce3dea44ff600dca1708dc7c0906eef5fc84b229c19859d863cc4b46e5c"
+    },
+    "source_training_cost": {
+      "elapsed_seconds": 2440.043427208904,
+      "steps": 10000
+    },
+    "verified": true,
+    "verification_status": "VERIFIED",
+    "checks_passed": [
+      "lineage_format",
+      "patient_ids_validated",
+      "inference_state_declared",
+      "mandatory_hashes_present",
+      "full_ema_method",
+      "quality_receipt_present",
+      "actual_manifest_file_verified",
+      "actual_payload_file_verified"
+    ],
+    "physical_payload_status": "VERIFIED_ON_DISK",
+    "quality_receipt_sha256": "f1054ce3dea44ff600dca1708dc7c0906eef5fc84b229c19859d863cc4b46e5c"
+  },
+  "train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+  "native_axes": "TZYX",
+  "num_classes": 4,
+  "precision": "float32",
+  "total_unlabeled_patients": 72,
+  "patients": {
+    "patient001": {
+      "file": "patient001_probs.npy",
+      "file_sha256": "92ca38aa657d455b6a98b3510a3db023142a0913f2d872bc1e4b3d31ed41218f",
+      "image_sha256": "b6d1650a4cf32bef86b6af381c792228024c944f81eb77f1d3960d93b017a640",
+      "shape": [
+        30,
+        10,
+        4,
+        256,
+        216
+      ],
+      "dtype": "float32",
+      "file_bytes": 265420928
+    },
+    "patient002": {
+      "file": "patient002_probs.npy",
+      "file_sha256": "a4c9386ac630daa2e14fa7fd83fdfc566602714e3a2522a324470bf380b2b624",
+      "image_sha256": "f0038127510d48e6670d3330a2f3d8002daa4ef3c2267e6987636997cc2bd5b3",
+      "shape": [
+        30,
+        10,
+        4,
+        256,
+        232
+      ],
+      "dtype": "float32",
+      "file_bytes": 285081728
+    },
+    "patient003": {
+      "file": "patient003_probs.npy",
+      "file_sha256": "ab57e9edeee7248bf94da796d8b7371f04c6cd7016014d710f615aeba084a929",
+      "image_sha256": "22114d9aab232c856297bb998e464e508b7eadbeb026b602f0f2e408c7b1e566",
+      "shape": [
+        30,
+        10,
+        4,
+        256,
+        256
+      ],
+      "dtype": "float32",
+      "file_bytes": 314572928
+    },
+    "patient006": {
+      "file": "patient006_probs.npy",
+      "file_sha256": "fc9ab336b68dd9dec491afc90a9492cb3888b49f8053172d9cc52bd4a44ffe2d",
+      "image_sha256": "db1b45974c497565622d50b2140d540d4de8ec6547c54e5c5d753ed4530e4ba0",
+      "shape": [
+        28,
+        11,
+        4,
+        256,
+        232
+      ],
+      "dtype": "float32",
+      "file_bytes": 292683904
+    },
+    "patient008": {
+      "file": "patient008_probs.npy",
+      "file_sha256": "728afe6235c7c1ec10e5f23eba222246eb399f1d67d3b48d85db9ea0d68d971b",
+      "image_sha256": "a21a4550e47acab75ed04731de8a830e037552226da68bd31f0ad09a577e09bb",
+      "shape": [
+        28,
+        10,
+        4,
+        256,
+        200
+      ],
+      "dtype": "float32",
+      "file_bytes": 229376128
+    },
+    "patient009": {
+      "file": "patient009_probs.npy",
+      "file_sha256": "87827a4350260a5e34f9f141428452682d9e5807170050a18872e5940a3da87f",
+      "image_sha256": "5defdf4082944ae5bd50370e6c6632418d0e374df73fff34b3e28006c95d69d6",
+      "shape": [
+        35,
+        10,
+        4,
+        256,
+        208
+      ],
+      "dtype": "float32",
+      "file_bytes": 298188928
+    },
+    "patient013": {
+      "file": "patient013_probs.npy",
+      "file_sha256": "8658b9102e261b7bb6f9395bbaeaf96d7749061ad1914c2c0fdbade0909769ef",
+      "image_sha256": "a4256355198e431fa3ea5172105d99c5cc733c3db445d6b2c697dc09e6191ad0",
+      "shape": [
+        30,
+        10,
+        4,
+        256,
+        216
+      ],
+      "dtype": "float32",
+      "file_bytes": 265420928
+    },
+    "patient016": {
+      "file": "patient016_probs.npy",
+      "file_sha256": "3d48e219d4b125c7177a2e073af44929cdadb61a52c4da3fe43ca262511a8e27",
+      "image_sha256": "e616d528c274e0744ffd8ef0d73ae01ca2c093d40946f6e38bbd5afe4128d8a8",
+      "shape": [
+        30,
+        10,
+        4,
+        256,
+        192
+      ],
+      "dtype": "float32",
+      "file_bytes": 235929728
+    },
+    "patient017": {
+      "file": "patient017_probs.npy",
+      "file_sha256": "5e084c9e1b68a1f71b1954449eebb6b3249cfda83157c494e62a8ce193b48080",
+      "image_sha256": "fd6c5ce09e3a29d1d0cd86b87d4681dae53619405b3374a93d358b04c7794b40",
+      "shape": [
+        19,
+        9,
+        4,
+        256,
+        216
+      ],
+      "dtype": "float32",
+      "file_bytes": 151289984
+    },
+    "patient019": {
+      "file": "patient019_probs.npy",
+      "file_sha256": "d05bf9fe45a49da9ebb90930c1e3038b3b651ea5fe47b7a6707e60ea5851cf25",
+      "image_sha256": "00698085b558b57ca9be3d719e2d987f71628b8660154b6c2ec3d2879e8fc436",
+      "shape": [
+        30,
+        11,
+        4,
+        256,
+        216
+      ],
+      "dtype": "float32",
+      "file_bytes": 291963008
+    },
+    "patient020": {
+      "file": "patient020_probs.npy",
+      "file_sha256": "696b7bcb93ca72af5afea5f38bd5f20d6dd9fcd047446c8b3a884bb1ee5f31a6",
+      "image_sha256": "73967639d6bcd1b100e7aaa056a72a90f9aff379d09161b624060e8857966505",
+      "shape": [
+        20,
+        8,
+        4,
+        256,
+        208
+      ],
+      "dtype": "float32",
+      "file_bytes": 136315008
+    },
+    "patient021": {
+      "file": "patient021_probs.npy",
+      "file_sha256": "ce181a6b94fffc820cba06e7bc74992bcfcebbdba4f1d973ec5d40ceb288cd3f",
+      "image_sha256": "cc0f0033385d12bcf9e9e607f1136cf3f291fa243b6936f1dcbe05040d5e6438",
+      "shape": [
+        30,
+        10,
+        4,
+        256,
+        240
+      ],
+      "dtype": "float32",
+      "file_bytes": 294912128
+    },
+    "patient022": {
+      "file": "patient022_probs.npy",
+      "file_sha256": "151d10824aa3069c5def717adac6707cda7bbb09adb1bc218fba2821cb14218e",
+      "image_sha256": "f12b597fb641ac553caad6244693dd5cfdc330d78f06a092b466a92832bf6a05",
+      "shape": [
+        28,
+        7,
+        4,
+        256,
+        200
+      ],
+      "dtype": "float32",
+      "file_bytes": 160563328
+    },
+    "patient023": {
+      "file": "patient023_probs.npy",
+      "file_sha256": "af183d8a27da1491609f65650406180b0571bf5fcdba3a82f8bdcf0282632a2b",
+      "image_sha256": "1b895302eab2300801aa42fcbc4c7ccae1a7d441654c0304d15494bc19926210",
+      "shape": [
+        25,
+        9,
+        4,
+        256,
+        216
+      ],
+      "dtype": "float32",
+      "file_bytes": 199065728
+    },
+    "patient025": {
+      "file": "patient025_probs.npy",
+      "file_sha256": "93384b88a8c0544b1d66de5cabc9722c3ad91081b79f733bb0dc4f4580d576eb",
+      "image_sha256": "afa6b690a2f8fc513476cfab7486a7536aaa262be56f04ea42ba7406e2acc4e8",
+      "shape": [
+        25,
+        9,
+        4,
+        256,
+        256
+      ],
+      "dtype": "float32",
+      "file_bytes": 235929728
+    },
+    "patient027": {
+      "file": "patient027_probs.npy",
+      "file_sha256": "99bbd4c6e04c2a821e8129bbeae20ea239405cd2d444f20a953b57a55aeaaaed",
+      "image_sha256": "a2651908d2f696cf57fc26278c7e680c7cb2bd1073472e49004a6cd63cebf6d1",
+      "shape": [
+        30,
+        10,
+        4,
+        256,
+        216
+      ],
+      "dtype": "float32",
+      "file_bytes": 265420928
+    },
+    "patient031": {
+      "file": "patient031_probs.npy",
+      "file_sha256": "81ceb24cd67193f18f1d617b39e6cbab47fa1a415212bed6d8f28ad8a0987401",
+      "image_sha256": "b4f26ed93fe8a7c431e800ea53770d9ff524b18084858b3a9143174b5bccfb8c",
+      "shape": [
+        30,
+        10,
+        4,
+        256,
+        216
+      ],
+      "dtype": "float32",
+      "file_bytes": 265420928
+    },
+    "patient033": {
+      "file": "patient033_probs.npy",
+      "file_sha256": "70e3bae060ae4a09828f2a6d7d27d2c59f89328bc2450bfe4c7a560ae88c77ee",
+      "image_sha256": "cff0f2b0b92a0468e6e6571f69ad66526224d34536c0b5f5b8cffd26ee7f1005",
+      "shape": [
+        30,
+        10,
+        4,
+        256,
+        216
+      ],
+      "dtype": "float32",
+      "file_bytes": 265420928
+    },
+    "patient034": {
+      "file": "patient034_probs.npy",
+      "file_sha256": "3b7e4dddbfa6dc00b4f02089ae519d625b409a9273760339ce6f02bba201d22d",
+      "image_sha256": "4d7ff326442bf1fbb283cececb931c9ca712a02005b9fb7caa6746b1c5996ca4",
+      "shape": [
+        30,
+        10,
+        4,
+        256,
+        224
+      ],
+      "dtype": "float32",
+      "file_bytes": 275251328
+    },
+    "patient035": {
+      "file": "patient035_probs.npy",
+      "file_sha256": "4ba7c34087a9bd4e9fafef30cf154b0518f21b7a87bf76e6e386cb701e4366c9",
+      "image_sha256": "c604bf42dc8ccba829891852c5bd843a819f0548e580f16221ecc97d2cec3c7d",
+      "shape": [
+        28,
+        13,
+        4,
+        256,
+        208
+      ],
+      "dtype": "float32",
+      "file_bytes": 310116480
+    },
+    "patient037": {
+      "file": "patient037_probs.npy",
+      "file_sha256": "eff7a816c453476f585ab07999bcd960f38c218fa12b27e36aa1c872f36b797d",
+      "image_sha256": "f697980f05f4e552ead94528011417c11944c2cc016d4920288f9638085fe61a",
+      "shape": [
+        30,
+        7,
+        4,
+        256,
+        216
+      ],
+      "dtype": "float32",
+      "file_bytes": 185794688
+    },
+    "patient038": {
+      "file": "patient038_probs.npy",
+      "file_sha256": "4a0ffe17fed68bcf9c94547f9295201e7a8f1b02c9fba33c49cf70954cd94471",
+      "image_sha256": "f672692ca75b6daf327840d752882921edf80f8b9844c46b3b5dec1b5f7c02a3",
+      "shape": [
+        24,
+        8,
+        4,
+        384,
+        276
+      ],
+      "dtype": "float32",
+      "file_bytes": 325582976
+    },
+    "patient039": {
+      "file": "patient039_probs.npy",
+      "file_sha256": "836b31ad35a5b4f8328a977a29be643c4d0ddf85cf30eaf7298e219aa012dc80",
+      "image_sha256": "5ceba0c899c6eded1add378558dd79d712350959b4aedbdcd2a19d89b53e77b8",
+      "shape": [
+        28,
+        9,
+        4,
+        256,
+        208
+      ],
+      "dtype": "float32",
+      "file_bytes": 214696064
+    },
+    "patient040": {
+      "file": "patient040_probs.npy",
+      "file_sha256": "628a8a7e140b6c9f9a89a74be6388535e7d3c37e9eef9c3a7a4b30593ba08094",
+      "image_sha256": "2fddd2fd6253e8da5a1a4716dcf8c168fdd008a9f1dfed3a2f7fb6b807c2428b",
+      "shape": [
+        35,
+        10,
+        4,
+        256,
+        208
+      ],
+      "dtype": "float32",
+      "file_bytes": 298188928
+    },
+    "patient042": {
+      "file": "patient042_probs.npy",
+      "file_sha256": "6be52ac0a757cbeaac3e5527dfa971fe22550115ef569e53917cdaaef3cf7da9",
+      "image_sha256": "51eedd84f99706e50bfc5c4ae4d847061015b723da9d7f5fd1d819f3ee9e0ca2",
+      "shape": [
+        35,
+        9,
+        4,
+        256,
+        232
+      ],
+      "dtype": "float32",
+      "file_bytes": 299335808
+    },
+    "patient043": {
+      "file": "patient043_probs.npy",
+      "file_sha256": "2761d3d6a2e80d563c32ffe2202d83435aabaa5c36f75ac2db4fa0f3fba05304",
+      "image_sha256": "7ab2d53728e9aee56e637cb78d09cda612b2ecd9692fcf99c1a2e31ef0d992b8",
+      "shape": [
+        13,
+        12,
+        4,
+        224,
+        174
+      ],
+      "dtype": "float32",
+      "file_bytes": 97284224
+    },
+    "patient044": {
+      "file": "patient044_probs.npy",
+      "file_sha256": "978e4ee439a7545d6c551775a89c1296c3a971fe23fad08f8d7d5083cefbd830",
+      "image_sha256": "65fb094da39722e8f8c069914a937a62adf0eb6f20037148a43de978405e3f9a",
+      "shape": [
+        30,
+        9,
+        4,
+        216,
+        256
+      ],
+      "dtype": "float32",
+      "file_bytes": 238878848
+    },
+    "patient045": {
+      "file": "patient045_probs.npy",
+      "file_sha256": "2dc52ee82727fc5439608ced1c4bd3ec8818d2d0548473b1d95cc452c51bb84c",
+      "image_sha256": "1d3b6b5e29ec78ee200d7ada3ddc706fa848c993610ef6773ff9dfea51188954",
+      "shape": [
+        35,
+        8,
+        4,
+        256,
+        208
+      ],
+      "dtype": "float32",
+      "file_bytes": 238551168
+    },
+    "patient046": {
+      "file": "patient046_probs.npy",
+      "file_sha256": "5efb7f01717f0a9c681a6eed6597c69a271f9f042849403149aff9d905a1e2c2",
+      "image_sha256": "b00efcc39f01f5ada8726e4a965fb35740c731972d82c443060593014457eff2",
+      "shape": [
+        30,
+        9,
+        4,
+        216,
+        256
+      ],
+      "dtype": "float32",
+      "file_bytes": 238878848
+    },
+    "patient047": {
+      "file": "patient047_probs.npy",
+      "file_sha256": "0984a92aa61c40e1b304249565998bee2a63af44b4a2c0d993084dbd21eb6a6b",
+      "image_sha256": "683d7fdac8d8ea07db2cca4a17828f6d4cfbcc2259f30d45cd874fea125b075b",
+      "shape": [
+        22,
+        9,
+        4,
+        208,
+        256
+      ],
+      "dtype": "float32",
+      "file_bytes": 168689792
+    },
+    "patient048": {
+      "file": "patient048_probs.npy",
+      "file_sha256": "2e230c5ff3050994fb9d3638ef741a738fd20f5a0541cc61fa1a93b4b29d462d",
+      "image_sha256": "3cb76a84f40c412a765d3656c21f3a68a67577e3db8c91242c37b27d7c7741a0",
+      "shape": [
+        28,
+        8,
+        4,
+        256,
+        208
+      ],
+      "dtype": "float32",
+      "file_bytes": 190840960
+    },
+    "patient049": {
+      "file": "patient049_probs.npy",
+      "file_sha256": "f3cdeb6eb8a1a911af876b9624a7ca757be6693517d0e8b425410e6e72467d8e",
+      "image_sha256": "4d83edc14b60704961794df3782e7f2f4f9f8d3f4e39f402f599a43d2a214dd5",
+      "shape": [
+        35,
+        7,
+        4,
+        216,
+        256
+      ],
+      "dtype": "float32",
+      "file_bytes": 216760448
+    },
+    "patient050": {
+      "file": "patient050_probs.npy",
+      "file_sha256": "abd30985aae74e145fb9a89b9f872150523c715ca0d4202633bd9b28922b6b0e",
+      "image_sha256": "5baa2731d283078a8cc77d009f7104f91cfcc38d68acbe82cff0df356ef50447",
+      "shape": [
+        30,
+        10,
+        4,
+        256,
+        248
+      ],
+      "dtype": "float32",
+      "file_bytes": 304742528
+    },
+    "patient051": {
+      "file": "patient051_probs.npy",
+      "file_sha256": "7aa1be09870a2179a8382e06a58ebce34a17a561e78219b16bec5a13cb9a9af1",
+      "image_sha256": "6b08eae07249ee7b3e4073e6f7ff91f06723cd20bb29ce5a69abc697746e67eb",
+      "shape": [
+        30,
+        10,
+        4,
+        256,
+        224
+      ],
+      "dtype": "float32",
+      "file_bytes": 275251328
+    },
+    "patient052": {
+      "file": "patient052_probs.npy",
+      "file_sha256": "8b2187adb37b01eae55d211f8e71b21fd23512e1c6df3f8f8b31b86a8221ea76",
+      "image_sha256": "c9e65dd936f01bdbefe6f90257886499b4f34211228132bda6350fe694084828",
+      "shape": [
+        20,
+        8,
+        4,
+        256,
+        216
+      ],
+      "dtype": "float32",
+      "file_bytes": 141557888
+    },
+    "patient053": {
+      "file": "patient053_probs.npy",
+      "file_sha256": "5a167b26d7b930df8ba6d258fdca87c513e2fa3f77c67e88ad293218bdf7913c",
+      "image_sha256": "4ec4d1c1f3057ad867a30e36fb5e4a1b23f8f12ef9cdbf7678d2150fcb8cd4a9",
+      "shape": [
+        30,
+        7,
+        4,
+        256,
+        216
+      ],
+      "dtype": "float32",
+      "file_bytes": 185794688
+    },
+    "patient054": {
+      "file": "patient054_probs.npy",
+      "file_sha256": "fe7fd0c2ab93ab8d52191d74acdfa3c715ff2e4e4f3c892a0bed79105ebb4ac4",
+      "image_sha256": "2ccb28279a41b87730532b3db65f465d22d171c63168ad3602ee163d0ca7dad5",
+      "shape": [
+        30,
+        8,
+        4,
+        256,
+        216
+      ],
+      "dtype": "float32",
+      "file_bytes": 212336768
+    },
+    "patient056": {
+      "file": "patient056_probs.npy",
+      "file_sha256": "4f84ff2164a1dd0c179031066583ffcf374ce9136100ea53c7bb610ecf2be729",
+      "image_sha256": "0a58e8a63c9078e4187761e55da551bef0716b96bdae308f5e6a7e92ad92b43d",
+      "shape": [
+        30,
+        9,
+        4,
+        256,
+        216
+      ],
+      "dtype": "float32",
+      "file_bytes": 238878848
+    },
+    "patient057": {
+      "file": "patient057_probs.npy",
+      "file_sha256": "11cc6b1783e506c46f547c9d685ee69243dad43ec697cf970ace7e87b1171c2c",
+      "image_sha256": "f7685ddfd42eb91b22a1be9dcb5ce05205a32b6ffd281be1651c485cc04e76ed",
+      "shape": [
+        25,
+        8,
+        4,
+        512,
+        428
+      ],
+      "dtype": "float32",
+      "file_bytes": 701235328
+    },
+    "patient058": {
+      "file": "patient058_probs.npy",
+      "file_sha256": "6a280187b13c44785678d02d53efdd42935f7cb0f143678435da562a224e616a",
+      "image_sha256": "dc759cc82ae737b415aff1316852de6a0aebfbf980252a7aa61261bf15889577",
+      "shape": [
+        30,
+        9,
+        4,
+        256,
+        216
+      ],
+      "dtype": "float32",
+      "file_bytes": 238878848
+    },
+    "patient059": {
+      "file": "patient059_probs.npy",
+      "file_sha256": "186765d1433843ff6ca60ca0d9293a0470b8da844c88ab98c9f1edc8f07a1b19",
+      "image_sha256": "c7ab39112494464608046cafe91666996aa0a92dc0975fb836576950c97f0a27",
+      "shape": [
+        30,
+        9,
+        4,
+        216,
+        256
+      ],
+      "dtype": "float32",
+      "file_bytes": 238878848
+    },
+    "patient060": {
+      "file": "patient060_probs.npy",
+      "file_sha256": "d4c9c0d8f4aabdc5d8de4d3b0457f43375c7955035cd761993952a2378c337c4",
+      "image_sha256": "756269ae1fe549788af4e30229571b3e774be915edf46038994ce7ae6664f7fb",
+      "shape": [
+        30,
+        9,
+        4,
+        256,
+        216
+      ],
+      "dtype": "float32",
+      "file_bytes": 238878848
+    },
+    "patient061": {
+      "file": "patient061_probs.npy",
+      "file_sha256": "faec31a847672c17ea72345d05bb97a5d2b45173be830c6c6282dbe8d59b8543",
+      "image_sha256": "c5010115afdab3c4358a9006f435086be72c205479cbd74d829f7f87e21b9830",
+      "shape": [
+        30,
+        9,
+        4,
+        256,
+        216
+      ],
+      "dtype": "float32",
+      "file_bytes": 238878848
+    },
+    "patient062": {
+      "file": "patient062_probs.npy",
+      "file_sha256": "87b1e4827cae2b4921f2646f0521046884629b7bd948fe79574c0af90aa74b1c",
+      "image_sha256": "37d8514473c1b468eb7a2bda5ab0832ccc46859aa13c08d2ac67873d4aa90c3f",
+      "shape": [
+        30,
+        10,
+        4,
+        216,
+        256
+      ],
+      "dtype": "float32",
+      "file_bytes": 265420928
+    },
+    "patient063": {
+      "file": "patient063_probs.npy",
+      "file_sha256": "ba3fde157f129699799ba10bfe61bd0393b3afcadc8304c3f182f5786c3a8110",
+      "image_sha256": "abf3d2dcbabb276290f3c9f636ce524b9e8823cbc145df2236184734c489192c",
+      "shape": [
+        35,
+        8,
+        4,
+        176,
+        256
+      ],
+      "dtype": "float32",
+      "file_bytes": 201851008
+    },
+    "patient064": {
+      "file": "patient064_probs.npy",
+      "file_sha256": "7e995a47840162c84b89e0d72016a9b1e17b22b5e8f935acda42bcae35884b39",
+      "image_sha256": "a3739fabf586005645d2396c3935bd31460e58587dff416b093d6d696ad791ba",
+      "shape": [
+        35,
+        10,
+        4,
+        256,
+        216
+      ],
+      "dtype": "float32",
+      "file_bytes": 309657728
+    },
+    "patient066": {
+      "file": "patient066_probs.npy",
+      "file_sha256": "9ddbfb76da2b03f553af35f751ef54fdffd7567ee0170f0578da0bf50f3264e9",
+      "image_sha256": "1adf18433ce3f484adf55a9774140e3220d608ed469869cb3157c3fb2bf795da",
+      "shape": [
+        30,
+        9,
+        4,
+        256,
+        240
+      ],
+      "dtype": "float32",
+      "file_bytes": 265420928
+    },
+    "patient067": {
+      "file": "patient067_probs.npy",
+      "file_sha256": "42b48f03a0bb43556af16b8cc01279d4726391ce67e3fcf0ae256c2c5345f1b1",
+      "image_sha256": "8f1808801536231a653f16a41e7211fef4b0c43a1caa9eb368a8c3f983cd013d",
+      "shape": [
+        30,
+        10,
+        4,
+        216,
+        256
+      ],
+      "dtype": "float32",
+      "file_bytes": 265420928
+    },
+    "patient068": {
+      "file": "patient068_probs.npy",
+      "file_sha256": "1a73bad0ab576db2d57a806fb3069a39f019dff67f4b328c5b201a1f8d0d8f61",
+      "image_sha256": "ca72677a8369873e8f8b36f0fc56f6fe223cc75381139ee91ce24168874129fe",
+      "shape": [
+        28,
+        7,
+        4,
+        208,
+        256
+      ],
+      "dtype": "float32",
+      "file_bytes": 166985856
+    },
+    "patient069": {
+      "file": "patient069_probs.npy",
+      "file_sha256": "a92f1af71295e24d5a3496f5d930be3fd160ab3eecd5405a2d440c7bf11dae2e",
+      "image_sha256": "9ba8102819cd7d8f29905fa50223c0ccab2f0c24c18147a86bdc7b2736bea0cb",
+      "shape": [
+        30,
+        7,
+        4,
+        256,
+        216
+      ],
+      "dtype": "float32",
+      "file_bytes": 185794688
+    },
+    "patient071": {
+      "file": "patient071_probs.npy",
+      "file_sha256": "050bef6b485eb8deacc112260a2f83826df7dc292f69b0273fb4d1ac9d54102d",
+      "image_sha256": "34c69c4b2983c6984864e2d9bd6873f0d6105eb7321a3f6b0b3b6d6e852441a0",
+      "shape": [
+        30,
+        10,
+        4,
+        256,
+        192
+      ],
+      "dtype": "float32",
+      "file_bytes": 235929728
+    },
+    "patient072": {
+      "file": "patient072_probs.npy",
+      "file_sha256": "e43c847928673c1440dc929997fdd93c231d68ebf6edd6dcf04a503e38df371c",
+      "image_sha256": "41b79306b62fd283c3ee96919a0aa0624e8981f5e5f1027b8d8df1c343164fc0",
+      "shape": [
+        30,
+        8,
+        4,
+        256,
+        216
+      ],
+      "dtype": "float32",
+      "file_bytes": 212336768
+    },
+    "patient073": {
+      "file": "patient073_probs.npy",
+      "file_sha256": "dd63a35f73afe1847c71966e2e47d7d162ead3f882c440c0edf77222e0e72825",
+      "image_sha256": "5348ad111a44a36b2a46d27d40d42fe69a87d90736da87ad794caae5775d4f80",
+      "shape": [
+        35,
+        7,
+        4,
+        256,
+        208
+      ],
+      "dtype": "float32",
+      "file_bytes": 208732288
+    },
+    "patient074": {
+      "file": "patient074_probs.npy",
+      "file_sha256": "fc346f95e76ff083bf4f195e82012bf0f75849f34fabcb52dc1464d16df25eec",
+      "image_sha256": "cd9ac6fcf7c5831464f3d993b87ac18b96a29d1a8d3cbc4d16befd3c0ecbd445",
+      "shape": [
+        30,
+        8,
+        4,
+        256,
+        256
+      ],
+      "dtype": "float32",
+      "file_bytes": 251658368
+    },
+    "patient075": {
+      "file": "patient075_probs.npy",
+      "file_sha256": "9b153ca85fe65638a823e82dd2a71dbb34ef815d89f5197cb870e5ff55f0b833",
+      "image_sha256": "7f808833f52c9492e97951c741f4d7e9d18b3c702466f9645e5d53d945f6970e",
+      "shape": [
+        14,
+        14,
+        4,
+        224,
+        168
+      ],
+      "dtype": "float32",
+      "file_bytes": 118014080
+    },
+    "patient078": {
+      "file": "patient078_probs.npy",
+      "file_sha256": "5ddd4c53fb72cb566fa7ac136ee131573f9fa9b2114ad03e9b7f1947c34c7b10",
+      "image_sha256": "e4fad1f291a1380a823020f64914cd7298412f582bfe17f6b5a764fa8fdfb6f9",
+      "shape": [
+        30,
+        8,
+        4,
+        256,
+        216
+      ],
+      "dtype": "float32",
+      "file_bytes": 212336768
+    },
+    "patient079": {
+      "file": "patient079_probs.npy",
+      "file_sha256": "469512e03b0c2bf655d00579bb13936f464f48beb2e44ef0bc2b41ab8bdc5cc1",
+      "image_sha256": "4dc75bb840526e85517ae80ae5d42133845eea0f604ade5a527f1635f526d36a",
+      "shape": [
+        30,
+        9,
+        4,
+        256,
+        216
+      ],
+      "dtype": "float32",
+      "file_bytes": 238878848
+    },
+    "patient080": {
+      "file": "patient080_probs.npy",
+      "file_sha256": "1f7d62af9d4806991f0287a4ea10da9e82213856d8b40153e353baf08e819589",
+      "image_sha256": "42c24120a59fb00089982ddb2a26399d80c398317249a3df696fab1ad2eb8402",
+      "shape": [
+        21,
+        6,
+        4,
+        256,
+        216
+      ],
+      "dtype": "float32",
+      "file_bytes": 111476864
+    },
+    "patient081": {
+      "file": "patient081_probs.npy",
+      "file_sha256": "9b06b9a1c563b92e3b77ee363c6eeedec3d6efbb6055f85cc6701c1fc60c0ff9",
+      "image_sha256": "e42daf4b848d521e26d3026980c100bc9d9a4eaa5eb0bb377b0ddb01cf3ffff5",
+      "shape": [
+        16,
+        17,
+        4,
+        224,
+        154
+      ],
+      "dtype": "float32",
+      "file_bytes": 150126720
+    },
+    "patient083": {
+      "file": "patient083_probs.npy",
+      "file_sha256": "540ec4964b6c8be185972fe42d1f728d300504d53ffdc9e0f99004a3acef5eab",
+      "image_sha256": "fc6347e48a6cdaff9b5abfc9961feeb268d082e87a041ad7f6ad5790a1ed39e5",
+      "shape": [
+        17,
+        6,
+        4,
+        256,
+        208
+      ],
+      "dtype": "float32",
+      "file_bytes": 86900864
+    },
+    "patient084": {
+      "file": "patient084_probs.npy",
+      "file_sha256": "78658e58fd42b818c9ba763b4a103dd0bde5afef980f3e5ce6cee59ca76b67e1",
+      "image_sha256": "090fd9abd9a1b7ee6da31310fba98699f8c1089b7fe9ca9c09829df2180cc2a2",
+      "shape": [
+        35,
+        12,
+        4,
+        256,
+        208
+      ],
+      "dtype": "float32",
+      "file_bytes": 357826688
+    },
+    "patient085": {
+      "file": "patient085_probs.npy",
+      "file_sha256": "b10bb428f245983935f470bd1ba84ed6b39e57a6d4938d17dbad6281691b2e78",
+      "image_sha256": "ff68a99e12d9868d2f2b986a51454cf6b0feeb07b692d63f3a87cb4e25b6c0be",
+      "shape": [
+        30,
+        15,
+        4,
+        288,
+        184
+      ],
+      "dtype": "float32",
+      "file_bytes": 381542528
+    },
+    "patient086": {
+      "file": "patient086_probs.npy",
+      "file_sha256": "0e8ba76953f96de685e40846932c96c924c930e6b84fb53d43dd56909e3500eb",
+      "image_sha256": "e534db5d0bf4e9ddd2b27175a389d88a654259d97dba14b88f74349cb1a342c6",
+      "shape": [
+        19,
+        7,
+        4,
+        256,
+        192
+      ],
+      "dtype": "float32",
+      "file_bytes": 104595584
+    },
+    "patient088": {
+      "file": "patient088_probs.npy",
+      "file_sha256": "f775f1b1ce69567dd55aa935cafb714f822b4a2537011dc375fb5a2643339b64",
+      "image_sha256": "8f073109b17292fb17477c5b8cc8ceadf3a89530d64995b6a042dd3226f7622c",
+      "shape": [
+        25,
+        16,
+        4,
+        154,
+        224
+      ],
+      "dtype": "float32",
+      "file_bytes": 220774528
+    },
+    "patient090": {
+      "file": "patient090_probs.npy",
+      "file_sha256": "94cb49f3999f08dc51a324120ff04310c2a371b8e918064bcea1c004bff89d13",
+      "image_sha256": "e3c1753036cd8aebc17a31d8f2fdb0b896bd533de9955937e43629ed171d88b2",
+      "shape": [
+        12,
+        7,
+        4,
+        224,
+        154
+      ],
+      "dtype": "float32",
+      "file_bytes": 46362752
+    },
+    "patient091": {
+      "file": "patient091_probs.npy",
+      "file_sha256": "e5adf897ac548fb1ad10cbd2597e0134b41cb4167957485d1f2cf950b4569d03",
+      "image_sha256": "09413a5b2259f38b2203b43de8418893dcc85ba5632fbd9dbb5dd9a548717642",
+      "shape": [
+        16,
+        8,
+        4,
+        224,
+        180
+      ],
+      "dtype": "float32",
+      "file_bytes": 82575488
+    },
+    "patient092": {
+      "file": "patient092_probs.npy",
+      "file_sha256": "6115a3acc846a37cec4638b65549fa895fc1ac9fed71dd1e05a7d8554cb24882",
+      "image_sha256": "5dbeef176e5fd377f5e1ee11f809f163ccf23cf08d89fdadc452ce5a35945835",
+      "shape": [
+        15,
+        15,
+        4,
+        208,
+        174
+      ],
+      "dtype": "float32",
+      "file_bytes": 130291328
+    },
+    "patient093": {
+      "file": "patient093_probs.npy",
+      "file_sha256": "ce0fa70713ffbbe03f005fb93e1a81b5138abbd2bb2224b2e9d8921ae1410f80",
+      "image_sha256": "0fbc2dade8764a7658efcc44a935814beb665acc5f26b856f95e648b2e615bf5",
+      "shape": [
+        30,
+        10,
+        4,
+        224,
+        180
+      ],
+      "dtype": "float32",
+      "file_bytes": 193536128
+    },
+    "patient094": {
+      "file": "patient094_probs.npy",
+      "file_sha256": "d7ae1b4578c61901ddbd26dcc1b6be48236238115f1bbda1f2b960753b2fcf7e",
+      "image_sha256": "479d0d1a993ef50d674fe58d4912b1a16d5f9aa739bd19ab3d71ef647d5108f6",
+      "shape": [
+        14,
+        10,
+        4,
+        174,
+        208
+      ],
+      "dtype": "float32",
+      "file_bytes": 81070208
+    },
+    "patient096": {
+      "file": "patient096_probs.npy",
+      "file_sha256": "7f44e1324e4b07830ae5b2840edbfac13d7807011daa1aa1d2a566f0166d5ba9",
+      "image_sha256": "43a895857926d45303e2793ec53aea578d36dd1e067b92c4dcca8755fd873cb4",
+      "shape": [
+        15,
+        18,
+        4,
+        208,
+        174
+      ],
+      "dtype": "float32",
+      "file_bytes": 156349568
+    },
+    "patient097": {
+      "file": "patient097_probs.npy",
+      "file_sha256": "3ebda463de7deeff490a25afa6f773ff4c4b3a0c9d27ef10dc36ccf5709f0f6e",
+      "image_sha256": "ff48a77dcf510b745c9a5f21cc438315b665ca66349fa0e662cfda99f5209238",
+      "shape": [
+        30,
+        8,
+        4,
+        256,
+        216
+      ],
+      "dtype": "float32",
+      "file_bytes": 212336768
+    },
+    "patient100": {
+      "file": "patient100_probs.npy",
+      "file_sha256": "fb5c73510bc5895f33a416128fa8feaed983b0189da1cc71baade8c9b87a6aca",
+      "image_sha256": "dbf8033120315ca19a9d0c359965b07519244980a4d677068d3f128e6d052545",
+      "shape": [
+        34,
+        8,
+        4,
+        304,
+        216
+      ],
+      "dtype": "float32",
+      "file_bytes": 285769856
+    }
+  },
+  "telemetry": {
+    "total_latency_seconds": 88.49919097987004,
+    "mean_seconds_per_volume": 1.2291554302759726,
+    "median_seconds_per_volume": 1.0734457479557022,
+    "total_disk_bytes": 16507115008,
+    "vram_peak_allocated_bytes": 2635844608,
+    "vram_peak_reserved_bytes": 4437573632
+  }
+}

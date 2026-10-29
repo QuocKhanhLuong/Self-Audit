@@ -1,0 +1,29 @@
+{
+  "schema": "self_audit.compact_final_selection.v1",
+  "rule": "highest VAL18 class-first Macro4; foreground tie break; TEST50 never used for compact selection",
+  "ranked_arms": [
+    {
+      "method": "plain_kd",
+      "macro4": 0.7540422944994748,
+      "foreground": 0.67515379204663
+    },
+    {
+      "method": "supervised",
+      "macro4": 0.7300056641674114,
+      "foreground": 0.6435221101975203
+    },
+    {
+      "method": "scalar_guard",
+      "macro4": 0.729832881063088,
+      "foreground": 0.6432677933614762
+    },
+    {
+      "method": "joint_guard",
+      "macro4": 0.7270359488834012,
+      "foreground": 0.6395102780300347
+    }
+  ],
+  "selected_method": "plain_kd",
+  "selected_export_manifest_sha256": "ce2fd65a1d1ae5708aae1b7187ae7eb0b21d8ed1d93612cfaf38aec346964753",
+  "val_manifest_sha256": "cac4426393ca11959f56df2876869e825443916cdec02c6d95ec8da3fac0ca50"
+}

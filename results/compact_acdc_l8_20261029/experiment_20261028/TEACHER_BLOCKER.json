@@ -1,0 +1,31 @@
+{
+  "status": "BLOCKED_MISSING_EXACT_PHYSICAL_TEACHER",
+  "required_reference_source_commit": "0f54455b67bb11a72fbfe2a8ac6fae4073f3e9ca",
+  "required_checkpoint_manifest_sha256": "03c1730f88941ada898bed7fcf1b9f13cdd8f08bcce4390539fec665c82e97de",
+  "required_payload_sha256": "b36bcafe9613325d85ee70dabd6a36fef7c17429882967831a151c0cce6d8437",
+  "required_inference_state": "student",
+  "required_training_method": "ema_full",
+  "required_train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+  "actual_train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+  "required_labeled_ids": [
+    "patient007",
+    "patient010",
+    "patient011",
+    "patient024",
+    "patient026",
+    "patient041",
+    "patient077",
+    "patient099"
+  ],
+  "local_reference_payload_found": false,
+  "user_confirmed_checkpoint_unavailable": true,
+  "local_archive_ema_full_payload_sha256": "edbce7e5da09e33ec46586b71fc5807102fe5b8849aee6eed7ad768257b2e89d",
+  "blocked_actions": [
+    "build_fixed_teacher_cache",
+    "plain_kd_10000",
+    "scalar_guard_10000",
+    "joint_guard_10000",
+    "matched_ema_inference_benchmark"
+  ],
+  "substitution_permitted": false
+}

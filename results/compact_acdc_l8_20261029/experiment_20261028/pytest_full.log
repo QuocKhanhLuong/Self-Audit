@@ -1,0 +1,22 @@
+........................................................................ [  9%]
+........................................................................ [ 18%]
+........................................................................ [ 27%]
+........................................................................ [ 36%]
+........................................................................ [ 45%]
+........................................................................ [ 54%]
+........................................................................ [ 63%]
+........................................................................ [ 73%]
+........................................................................ [ 82%]
+........................................................................ [ 91%]
+.....................................................................    [100%]
+=============================== warnings summary ===============================
+tests/test_baseline_recovery_training.py::test_optimizer_ownership_duplicate_within_group
+  /venv/main/lib/python3.12/site-packages/torch/_compile.py:54: UserWarning: optimizer contains a parameter group with duplicate parameters; in future, this will cause an error; see github.com/pytorch/pytorch/issues/40967 for more information
+    return disable_fn(*args, **kwargs)
+
+tests/test_pipeline.py::test_decoder_jvp_transaction
+  /venv/main/lib/python3.12/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+789 passed, 2 warnings in 233.18s (0:03:53)

@@ -60,36 +60,42 @@ from self_audit.automatic_control import (
 # 1. Deterministic CPU witness & actual functional trial evaluation
 # ---------------------------------------------------------------------------
 
-def test_deterministic_cpu_witness_seed873_iteration16_argmax_discrepancy():
-    """Witness CPU seed 873 iteration 16 where cached argmax != actual argmax.
-
-    Shows that cached affine logits and actual head forward can disagree on argmax
-    even when max error is < 1e-5, proving why actual functional trial evaluation
-    is required.
-    """
+def _roundoff_argmax_witness():
+    """Find a deterministic boundary case across PyTorch convolution kernels."""
     torch.manual_seed(873)
     f = torch.randn(1, 32, 1, 1)
     head = nn.Conv2d(32, 4, 1)
     head.bias.data.copy_(torch.tensor([1.0, 0.0, -100.0, -100.0]))
 
-    for it in range(17):
+    for _ in range(256):
         dw = torch.randn_like(head.weight) * 0.2
         db = torch.randn_like(head.bias) * 0.2
         base = F.conv2d(f, head.weight, head.bias)
         dz = F.conv2d(f, dw, db)
         margin = (base[0, 0, 0, 0] + dz[0, 0, 0, 0] - (base[0, 1, 0, 0] + dz[0, 1, 0, 0])).item()
         db[1] += margin
+        cached = base + F.conv2d(f, dw, db)
+        actual = F.conv2d(f, head.weight + dw, head.bias + db)
+        if (
+            cached.argmax(1).item() == 0
+            and actual.argmax(1).item() == 1
+            and (actual - cached).abs().max().item() < 1e-5
+        ):
+            return f, head, dw, db, cached, actual
+    pytest.fail("no roundoff argmax witness found for this PyTorch convolution kernel")
 
-        if it == 16:
-            cached = base + F.conv2d(f, dw, db)
-            actual = F.conv2d(f, head.weight + dw, head.bias + db)
-            diff = (actual - cached).abs().max().item()
-            cached_argmax = cached.argmax(1).item()
-            actual_argmax = actual.argmax(1).item()
 
-            assert cached_argmax == 0, f"expected cached argmax 0, got {cached_argmax}"
-            assert actual_argmax == 1, f"expected actual argmax 1, got {actual_argmax}"
-            assert diff < 1e-5, f"expected parity error < 1e-5, got {diff}"
+def test_deterministic_cpu_witness_argmax_discrepancy():
+    """Witness a kernel-dependent iteration where cached argmax != actual argmax.
+
+    Shows that cached affine logits and actual head forward can disagree on argmax
+    even when max error is < 1e-5, proving why actual functional trial evaluation
+    is required.
+    """
+    _, _, _, _, cached, actual = _roundoff_argmax_witness()
+    assert cached.argmax(1).item() == 0
+    assert actual.argmax(1).item() == 1
+    assert (actual - cached).abs().max().item() < 1e-5
 
 
 def test_actual_functional_evaluation_catches_argmax_discrepancy_and_rejects():
@@ -99,20 +105,7 @@ def test_actual_functional_evaluation_catches_argmax_discrepancy_and_rejects():
     cached screening passes while actual functional metrics fail the absent FP guard,
     and asserts rejection, parameter version invariance, and final metric equality.
     """
-    torch.manual_seed(873)
-    f = torch.randn(1, 32, 1, 1)
-    head = nn.Conv2d(32, 4, 1)
-    head.bias.data.copy_(torch.tensor([1.0, 0.0, -100.0, -100.0]))
-
-    for it in range(17):
-        dw = torch.randn_like(head.weight) * 0.2
-        db = torch.randn_like(head.bias) * 0.2
-        base = F.conv2d(f, head.weight, head.bias)
-        dz = F.conv2d(f, dw, db)
-        margin = (base[0, 0, 0, 0] + dz[0, 0, 0, 0] - (base[0, 1, 0, 0] + dz[0, 1, 0, 0])).item()
-        db[1] += margin
-        if it == 16:
-            break
+    f, head, dw, db, _, _ = _roundoff_argmax_witness()
 
     # Ground truth: pixel is class 0 (BG); class 1 (RV) is ABSENT
     labels = torch.zeros(1, 1, 1, dtype=torch.long)

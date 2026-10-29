@@ -36,6 +36,8 @@ def main() -> None:
     p.add_argument("--baseline-checkpoint-sha256", type=str, default=None, help="Expected SHA-256 of baseline checkpoint manifest")
     p.add_argument("--baseline-state", choices=["student"], default="student", help="Locked historical raw-student inference state")
     p.add_argument("--historical-source", type=Path, default=None, help="Explicit verified historical source checkout required for reference benchmarking")
+    p.add_argument("--baseline-teacher-identity", type=Path, default=None, help="Verified canonical teacher identity JSON for a recovered EMA reference")
+    p.add_argument("--baseline-teacher-identity-sha256", type=str, default=None, help="Exact SHA-256 of canonical teacher identity JSON")
     p.add_argument("--out", type=Path, required=True, help="Output JSON path for benchmark report")
     p.add_argument("--device", type=str, default="cpu", help="Device to benchmark on (cpu or cuda)")
     p.add_argument("--batch-size", type=int, default=16, help="Batch size for 2.5D slices")
@@ -55,6 +57,10 @@ def main() -> None:
     require_sha256(args.manifest_sha256, "manifest_sha256")
     if args.baseline_checkpoint_sha256 is not None:
         require_sha256(args.baseline_checkpoint_sha256, "baseline_checkpoint_sha256")
+    if args.baseline_teacher_identity is not None or args.baseline_teacher_identity_sha256 is not None:
+        if args.baseline_teacher_identity is None or args.baseline_teacher_identity_sha256 is None:
+            p.error("canonical baseline requires both identity path and SHA-256")
+        require_sha256(args.baseline_teacher_identity_sha256, "baseline_teacher_identity_sha256")
 
     report = run_isolated_benchmark(
         compact_export_path=args.compact_export,
@@ -66,6 +72,8 @@ def main() -> None:
         baseline_checkpoint_sha=args.baseline_checkpoint_sha256,
         baseline_state=args.baseline_state,
         historical_source_path=args.historical_source,
+        baseline_teacher_identity_path=args.baseline_teacher_identity,
+        baseline_teacher_identity_sha=args.baseline_teacher_identity_sha256,
         device=args.device,
         batch_size=args.batch_size,
         warmup=args.warmup,

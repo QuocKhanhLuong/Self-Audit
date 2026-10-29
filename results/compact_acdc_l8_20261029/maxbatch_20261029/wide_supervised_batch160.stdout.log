@@ -1,0 +1,193 @@
+{
+  "schema": "self_audit.compact.report.v1",
+  "status": "COMPLETED",
+  "method": "supervised",
+  "synthetic": false,
+  "quality": "NOT_EVALUATED",
+  "steps": 1,
+  "steps_requested": 1,
+  "max_steps": 1,
+  "termination_reason": "max_steps_reached",
+  "equal_wall_time": {
+    "enabled": false
+  },
+  "counts": {
+    "supervised_updates": 1,
+    "pseudo_accepted": 0,
+    "pseudo_rejected": 0,
+    "warmup_steps": 0,
+    "no_candidates": 0,
+    "rejected_all": 0,
+    "zero_displacement": 1
+  },
+  "slices_sampled": {
+    "labeled": 160,
+    "unlabeled": 160,
+    "audit": 0
+  },
+  "slices_optimized": {
+    "labeled": 160,
+    "unlabeled": 0
+  },
+  "batch_sizes": {
+    "labeled": 160,
+    "unlabeled": 160
+  },
+  "effective_batch_counts": {
+    "labeled": 160,
+    "unlabeled": 160
+  },
+  "optimizer_calls": {
+    "adamw": 1,
+    "sgd": 0
+  },
+  "teacher_costs": {
+    "teacher_cache_total_seconds": 0.0,
+    "teacher_cache_generation_cost": "NOT_KNOWN",
+    "teacher_training_cost": "NOT_KNOWN"
+  },
+  "audit_consumption": {
+    "slice_reads": 0,
+    "frame_reads": 0,
+    "patient_reads": 0,
+    "stream_replays": 0,
+    "unique_frames": [],
+    "unique_patients": []
+  },
+  "runtime_comparability": "SUPERVISED_NO_AUDIT",
+  "quality_gate": {
+    "threshold_macro4": 0.87,
+    "status": "GATE_METADATA_LOCKED",
+    "notes": "Acceptance requires evaluation of exported compact student with Macro4 >= 0.87"
+  },
+  "warm_start_summary": {
+    "initial_gradient_norms": {
+      "encoder": 16.176485061645508,
+      "decoder": 15.440776824951172,
+      "head": 1.4462459087371826
+    },
+    "initial_weight_changes": {
+      "encoder": 0.4197004437446594,
+      "decoder": 0.2018934190273285,
+      "head": 0.003446761751547456
+    },
+    "final_gradient_norms": {
+      "encoder": 16.176485061645508,
+      "decoder": 15.440776824951172,
+      "head": 1.4462459087371826
+    },
+    "final_weight_changes": {
+      "encoder": 0.4197004437446594,
+      "decoder": 0.2018934190273285,
+      "head": 0.003446761751547456
+    }
+  },
+  "initialization": {
+    "seed": 42,
+    "initial_state_sha256": "c627085522efb8fa1b636160e59515c1c15141582c261255026736f697f18d8d",
+    "first_step_optimizer": {
+      "name": "AdamW",
+      "owner": "labeled_supervised_update_only",
+      "parameter_ownership": {
+        "encoder.stem.0.weight": "encoder",
+        "encoder.stem.1.weight": "encoder",
+        "encoder.stem.1.bias": "encoder",
+        "encoder.stem.3.conv1.weight": "encoder",
+        "encoder.stem.3.norm1.weight": "encoder",
+        "encoder.stem.3.norm1.bias": "encoder",
+        "encoder.stem.3.conv2.weight": "encoder",
+        "encoder.stem.3.norm2.weight": "encoder",
+        "encoder.stem.3.norm2.bias": "encoder",
+        "encoder.down_stages.0.0.weight": "encoder",
+        "encoder.down_stages.0.1.weight": "encoder",
+        "encoder.down_stages.0.1.bias": "encoder",
+        "encoder.down_stages.0.3.conv1.weight": "encoder",
+        "encoder.down_stages.0.3.norm1.weight": "encoder",
+        "encoder.down_stages.0.3.norm1.bias": "encoder",
+        "encoder.down_stages.0.3.conv2.weight": "encoder",
+        "encoder.down_stages.0.3.norm2.weight": "encoder",
+        "encoder.down_stages.0.3.norm2.bias": "encoder",
+        "encoder.down_stages.1.0.weight": "encoder",
+        "encoder.down_stages.1.1.weight": "encoder",
+        "encoder.down_stages.1.1.bias": "encoder",
+        "encoder.down_stages.1.3.conv1.weight": "encoder",
+        "encoder.down_stages.1.3.norm1.weight": "encoder",
+        "encoder.down_stages.1.3.norm1.bias": "encoder",
+        "encoder.down_stages.1.3.conv2.weight": "encoder",
+        "encoder.down_stages.1.3.norm2.weight": "encoder",
+        "encoder.down_stages.1.3.norm2.bias": "encoder",
+        "encoder.down_stages.2.0.weight": "encoder",
+        "encoder.down_stages.2.1.weight": "encoder",
+        "encoder.down_stages.2.1.bias": "encoder",
+        "encoder.down_stages.2.3.conv1.weight": "encoder",
+        "encoder.down_stages.2.3.norm1.weight": "encoder",
+        "encoder.down_stages.2.3.norm1.bias": "encoder",
+        "encoder.down_stages.2.3.conv2.weight": "encoder",
+        "encoder.down_stages.2.3.norm2.weight": "encoder",
+        "encoder.down_stages.2.3.norm2.bias": "encoder",
+        "decoder.up_stages.0.fuse.0.weight": "decoder",
+        "decoder.up_stages.0.fuse.1.weight": "decoder",
+        "decoder.up_stages.0.fuse.1.bias": "decoder",
+        "decoder.up_stages.0.refine.conv1.weight": "decoder",
+        "decoder.up_stages.0.refine.norm1.weight": "decoder",
+        "decoder.up_stages.0.refine.norm1.bias": "decoder",
+        "decoder.up_stages.0.refine.conv2.weight": "decoder",
+        "decoder.up_stages.0.refine.norm2.weight": "decoder",
+        "decoder.up_stages.0.refine.norm2.bias": "decoder",
+        "decoder.up_stages.1.fuse.0.weight": "decoder",
+        "decoder.up_stages.1.fuse.1.weight": "decoder",
+        "decoder.up_stages.1.fuse.1.bias": "decoder",
+        "decoder.up_stages.1.refine.conv1.weight": "decoder",
+        "decoder.up_stages.1.refine.norm1.weight": "decoder",
+        "decoder.up_stages.1.refine.norm1.bias": "decoder",
+        "decoder.up_stages.1.refine.conv2.weight": "decoder",
+        "decoder.up_stages.1.refine.norm2.weight": "decoder",
+        "decoder.up_stages.1.refine.norm2.bias": "decoder",
+        "decoder.up_stages.2.fuse.0.weight": "decoder",
+        "decoder.up_stages.2.fuse.1.weight": "decoder",
+        "decoder.up_stages.2.fuse.1.bias": "decoder",
+        "decoder.up_stages.2.refine.conv1.weight": "decoder",
+        "decoder.up_stages.2.refine.norm1.weight": "decoder",
+        "decoder.up_stages.2.refine.norm1.bias": "decoder",
+        "decoder.up_stages.2.refine.conv2.weight": "decoder",
+        "decoder.up_stages.2.refine.norm2.weight": "decoder",
+        "decoder.up_stages.2.refine.norm2.bias": "decoder",
+        "head.weight": "head",
+        "head.bias": "head"
+      }
+    }
+  },
+  "teacher_preflight": null,
+  "train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+  "teacher_cache_manifest_sha256": null,
+  "source_hashes": {
+    "self_audit/compact_training.py": "b7a5123ebc93e9271e111430f4818b8654d0c63d1b31e7a5b34dc05749c06a70",
+    "self_audit/engine.py": "7119466bfc8de9e96d440935a46c353033c583b6f674ef6a912b27e50b7ca569",
+    "train.py": "ec671ef385b7ef6aea0cbe4975cdb69a743c937998170529f9bdbb9226ad68fe"
+  },
+  "source_digest": "bbfbdab02cf7703904121f39720adcb1dc358b6d76b60fbbcb4366fa30244b3c",
+  "final_manifest_sha256": "1b422075d30864f6f3a873278ae6e51231497e35a159245f504d7ef6ecd4d502",
+  "final_weights_sha256": "cb2e1ea570385000a7bf4ed6cef0cf7e434316e7771571ca1b4d7c6d4f2ff9ce",
+  "final_checkpoint_path": "/workspace/compact-acdc-l8/20261029-maxbatch/wide_supervised_batch160/final",
+  "final_weights_path": "/workspace/compact-acdc-l8/20261029-maxbatch/wide_supervised_batch160/final/weights.pt",
+  "report_path": "/workspace/compact-acdc-l8/20261029-maxbatch/wide_supervised_batch160/REPORT.json",
+  "output_dir": "/workspace/compact-acdc-l8/20261029-maxbatch/wide_supervised_batch160",
+  "label_budget": 8,
+  "seen_supervised": [
+    "patient007"
+  ],
+  "seen_audit": [],
+  "seen_unlabeled": [
+    "patient001"
+  ],
+  "elapsed_seconds": 7.772986673051491,
+  "profile": {
+    "device": "cuda",
+    "cuda_peak_allocated_bytes": 21452458496,
+    "cuda_peak_reserved_bytes": 23754440704,
+    "optimizer_steps_per_second": 0.38310428225349824,
+    "supervised_slices_per_second": 61.296641480196,
+    "scope": "student training including synchronous telemetry, proposal and audit; teacher/cache build separate"
+  },
+  "training_elapsed_seconds": 2.610258253989741
+}

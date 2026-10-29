@@ -1,0 +1,23 @@
+{
+  "schema": "self_audit.semi_v2",
+  "method": "ema_full",
+  "source_sha256": "6e12885e44b725c132a01437dc6179cbf524b94c51dd5a5f5254701eb78cf442",
+  "parameters": 32865530,
+  "device": "cuda",
+  "backbone": {
+    "pretrained": true,
+    "weights_sha256": "21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54",
+    "source_commit": "6876159a11b4df116f30f667f8c9888617df0751",
+    "lineage": "user_supplied_hash_pinned;not_independent_upstream_certification"
+  },
+  "synthetic": false,
+  "label_budget": 8,
+  "supervision": "dense TRAIN subset; audit included; never no-GT",
+  "pseudo_update_scope": "full",
+  "batch_size": 52,
+  "batch_protocol": "one_patient_per_role; native_grid; equal_slice_audit_mass",
+  "crop_size": 256,
+  "crop_policy": "image_geometry_random; edge_pad; ignore_padding_in_all_losses; no_resize",
+  "native_supervised_loss": "CE+present_foreground_Dice",
+  "prediction_model": "student"
+}

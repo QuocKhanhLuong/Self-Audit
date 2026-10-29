@@ -1,0 +1,85 @@
+{
+  "absent_fp_budget": 0.0,
+  "acceptance": {
+    "metric": "Macro4",
+    "min_macro4": 0.87,
+    "notes": "Full opt-in profile; requires verified teacher identity/cache and explicit --allow-full-run."
+  },
+  "batch_size": 176,
+  "coefficient": 1.0,
+  "crop_size": 160,
+  "data": {
+    "manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+    "budget_k": 8,
+    "labeled_ids": [
+      "patient007",
+      "patient010",
+      "patient011",
+      "patient024",
+      "patient026",
+      "patient041",
+      "patient077",
+      "patient099"
+    ]
+  },
+  "equal_wall_time": {
+    "enabled": false
+  },
+  "experiment": {
+    "name": "wide_supervised_batch176_one_step_capacity",
+    "status": "ONE_STEP_CAPACITY_PROFILE",
+    "source": "selected_wide_compact"
+  },
+  "guard_tolerance": 1e-06,
+  "labeled_batch_size": 176,
+  "lr": 0.0003,
+  "max_trials": 8,
+  "method": "supervised",
+  "model": {
+    "in_channels": 3,
+    "init": "kaiming_normal",
+    "name": "CompactStudent",
+    "num_classes": 4,
+    "widths": [
+      32,
+      64,
+      128,
+      256
+    ]
+  },
+  "pseudo_lr": 0.001,
+  "pseudo_threshold": 0.7,
+  "ridge": 1e-06,
+  "risk_budget": 0.0,
+  "save_every": 1,
+  "schema": "self_audit.compact.v1",
+  "seed": 42,
+  "steps": 1,
+  "teacher": {
+    "cache_path": null,
+    "cache_sha256": null,
+    "lineage": {
+      "budget_k": 8,
+      "exact_labeled_ids": [
+        "patient007",
+        "patient010",
+        "patient011",
+        "patient024",
+        "patient026",
+        "patient041",
+        "patient077",
+        "patient099"
+      ]
+    },
+    "source": "reports/window_pilot_test50_20261024/baseline/CHECKPOINT_MANIFEST.json",
+    "source_manifest_sha256": "03c1730f88941ada898bed7fcf1b9f13cdd8f08bcce4390539fec665c82e97de",
+    "source_payload_sha256": "b36bcafe9613325d85ee70dabd6a36fef7c17429882967831a151c0cce6d8437",
+    "source_training_cost": "NOT_KNOWN",
+    "state": "student",
+    "teacher_identity": null
+  },
+  "temperature": 1.0,
+  "unlabeled_batch_size": 176,
+  "warmup_steps": 1,
+  "weight_decay": 0.0001
+}

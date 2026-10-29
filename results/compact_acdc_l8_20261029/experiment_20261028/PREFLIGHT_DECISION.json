@@ -1,0 +1,56 @@
+{
+  "schema": "self_audit.compact_preflight_decision.v1",
+  "decision": "NO_GO_FOR_KD_FULL_EXPERIMENT_NOW",
+  "reason": [
+    "B52 raw-student TEST50 Macro4 below predeclared 0.87 threshold",
+    "B8 replacement teacher is being reconstructed; no KD cache yet"
+  ],
+  "b52": {
+    "macro4": 0.8614206623204309,
+    "foreground_macro": 0.8166642816010583,
+    "class_dice": {
+      "BG": 0.9956898044785486,
+      "RV": 0.7563217002435976,
+      "MYO": 0.793444168909345,
+      "LV": 0.9002269756502325
+    },
+    "manifest_sha256": "9eec782e0d1aa20f99d47fb398197d4a5441812b3e9f3517c3e9fbba454c284a",
+    "payload_sha256": "edbce7e5da09e33ec46586b71fc5807102fe5b8849aee6eed7ad768257b2e89d",
+    "source_sha256": "6e12885e44b725c132a01437dc6179cbf524b94c51dd5a5f5254701eb78cf442",
+    "selected_state": "student"
+  },
+  "compact_supervised": {
+    "steps": 10000,
+    "model": "CompactStudent residual 2.5D UNet",
+    "parameters": 603956,
+    "trainable_parameters": 603956,
+    "tiny_test": false,
+    "optimizer": "AdamW all encoder/decoder/head",
+    "initial_weight_changes": {
+      "encoder": 0.21005690097808838,
+      "decoder": 0.10109606385231018,
+      "head": 0.0024739736691117287
+    },
+    "final_weight_changes": {
+      "encoder": 0.03454923629760742,
+      "decoder": 0.01857505366206169,
+      "head": 0.0005798987112939358
+    },
+    "val18_macro4": 0.7300056641674114,
+    "val18_foreground": 0.6435221101975203,
+    "val18_classes": {
+      "BG": 0.9894563260770849,
+      "RV": 0.5383522443792481,
+      "MYO": 0.6572138846075402,
+      "LV": 0.7350002016057725
+    },
+    "collapsed_to_background": false,
+    "train_elapsed_seconds": 1195.3513599010184,
+    "peak_cuda_allocated_bytes": 559131136,
+    "peak_cuda_reserved_bytes": 708837376,
+    "final_checkpoint_manifest_sha256": "9fbedaaaef1c3ea54977bd57a80324a8eab9f7c4752f08b2a163841447f6de29",
+    "final_weights_sha256": "3d88a83b58604eb5a8763af15ab13767de0223eeb5d6437844789444888ca0ff",
+    "export_manifest_sha256": "26e7d500c8514778704a063dcad8310a00db3919cada937956d35b7bee3cba5e"
+  },
+  "next_action": "reconstruct and evaluate locked B8 source/config/10k before fixed-teacher KD; no ACDC+MnM joint until label union and teacher lineage locked"
+}

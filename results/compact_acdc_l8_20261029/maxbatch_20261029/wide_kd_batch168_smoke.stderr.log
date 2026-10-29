@@ -1,0 +1,26 @@
+[W1029 04:39:49.377967425 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1652555776 bytes (free: 1550385152, total: 25153044480).
+[W1029 04:39:50.109478618 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 2204106752 bytes (free: 1139343360, total: 25153044480).
+[W1029 04:39:51.820692602 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1652555776 bytes (free: 107544576, total: 25153044480).
+[W1029 04:39:51.820821262 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1652555776 bytes (free: 107544576, total: 25153044480).
+Traceback (most recent call last):
+  File "/workspace/Self-Audit-compact/train.py", line 220, in <module>
+    main()
+  File "/workspace/Self-Audit-compact/train.py", line 173, in main
+    print(json.dumps(train(
+                     ^^^^^^
+  File "/workspace/Self-Audit-compact/self_audit/engine.py", line 295, in train
+    return train_compact(
+           ^^^^^^^^^^^^^^
+  File "/workspace/Self-Audit-compact/self_audit/compact_training.py", line 801, in train_compact
+    candidates = build_class_candidates(
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/Self-Audit-compact/self_audit/compact_control.py", line 251, in build_class_candidates
+    grads = torch.autograd.grad(loss_c, trainable_params, retain_graph=True)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/venv/main/lib/python3.12/site-packages/torch/autograd/__init__.py", line 594, in grad
+    result = _engine_run_backward(
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/venv/main/lib/python3.12/site-packages/torch/autograd/graph.py", line 1072, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 1.54 GiB. GPU 0 has a total capacity of 23.43 GiB of which 102.56 MiB is free. Including non-PyTorch memory, this process has 23.32 GiB memory in use. Of the allocated memory 20.10 GiB is allocated by PyTorch, and 2.94 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)

@@ -1,0 +1,37 @@
+[W1029 04:40:25.896219490 CUDACachingAllocator.cpp:528] expandable_segments: memory mapping failed with OOM on device 0 while trying to map 20971520 bytes (free: 8978432, total: 25153044480).
+[W1029 04:40:25.930299197 CUDACachingAllocator.cpp:528] expandable_segments: memory mapping failed with OOM on device 0 while trying to map 20971520 bytes (free: 11075584, total: 25153044480).
+[W1029 04:40:25.937510270 CUDACachingAllocator.cpp:528] expandable_segments: memory mapping failed with OOM on device 0 while trying to map 20971520 bytes (free: 11075584, total: 25153044480).
+[W1029 04:40:25.940646262 CUDACachingAllocator.cpp:528] expandable_segments: memory mapping failed with OOM on device 0 while trying to map 20971520 bytes (free: 11075584, total: 25153044480).
+[W1029 04:40:25.982577380 CUDACachingAllocator.cpp:528] expandable_segments: memory mapping failed with OOM on device 0 while trying to map 20971520 bytes (free: 11075584, total: 25153044480).
+[W1029 04:40:25.033466827 CUDACachingAllocator.cpp:528] expandable_segments: memory mapping failed with OOM on device 0 while trying to map 20971520 bytes (free: 11075584, total: 25153044480).
+[W1029 04:40:25.034771663 CUDACachingAllocator.cpp:528] expandable_segments: memory mapping failed with OOM on device 0 while trying to map 20971520 bytes (free: 11075584, total: 25153044480).
+[W1029 04:40:25.038425335 CUDACachingAllocator.cpp:528] expandable_segments: memory mapping failed with OOM on device 0 while trying to map 20971520 bytes (free: 11075584, total: 25153044480).
+[W1029 04:40:25.039737111 CUDACachingAllocator.cpp:528] expandable_segments: memory mapping failed with OOM on device 0 while trying to map 20971520 bytes (free: 11075584, total: 25153044480).
+[W1029 04:40:25.041237708 CUDACachingAllocator.cpp:528] expandable_segments: memory mapping failed with OOM on device 0 while trying to map 20971520 bytes (free: 11075584, total: 25153044480).
+[W1029 04:40:25.042538045 CUDACachingAllocator.cpp:528] expandable_segments: memory mapping failed with OOM on device 0 while trying to map 20971520 bytes (free: 11075584, total: 25153044480).
+[W1029 04:40:25.044008761 CUDACachingAllocator.cpp:528] expandable_segments: memory mapping failed with OOM on device 0 while trying to map 20971520 bytes (free: 11075584, total: 25153044480).
+[W1029 04:40:25.045308478 CUDACachingAllocator.cpp:528] expandable_segments: memory mapping failed with OOM on device 0 while trying to map 20971520 bytes (free: 11075584, total: 25153044480).
+[W1029 04:40:25.056991389 CUDACachingAllocator.cpp:528] expandable_segments: memory mapping failed with OOM on device 0 while trying to map 20971520 bytes (free: 11075584, total: 25153044480).
+[W1029 04:40:25.073142840 CUDACachingAllocator.cpp:528] expandable_segments: memory mapping failed with OOM on device 0 while trying to map 20971520 bytes (free: 11075584, total: 25153044480).
+Traceback (most recent call last):
+  File "/workspace/Self-Audit-compact/train.py", line 220, in <module>
+    main()
+  File "/workspace/Self-Audit-compact/train.py", line 173, in main
+    print(json.dumps(train(
+                     ^^^^^^
+  File "/workspace/Self-Audit-compact/self_audit/engine.py", line 295, in train
+    return train_compact(
+           ^^^^^^^^^^^^^^
+  File "/workspace/Self-Audit-compact/self_audit/compact_training.py", line 801, in train_compact
+    candidates = build_class_candidates(
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/Self-Audit-compact/self_audit/compact_control.py", line 251, in build_class_candidates
+    grads = torch.autograd.grad(loss_c, trainable_params, retain_graph=True)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/venv/main/lib/python3.12/site-packages/torch/autograd/__init__.py", line 594, in grad
+    result = _engine_run_backward(
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/venv/main/lib/python3.12/site-packages/torch/autograd/graph.py", line 1072, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 1.07 GiB. GPU 0 has a total capacity of 23.43 GiB of which 650.56 MiB is free. Including non-PyTorch memory, this process has 22.78 GiB memory in use. Of the allocated memory 22.36 GiB is allocated by PyTorch, and 138.59 MiB is reserved by PyTorch but unallocated.

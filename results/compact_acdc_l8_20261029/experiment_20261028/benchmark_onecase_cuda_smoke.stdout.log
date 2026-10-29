@@ -1,0 +1,26 @@
+
+=== Benchmark Summary ===
+Compact Student:
+  Params:           603,956
+  Deployed Weights: 2,435,872 bytes
+  Peak RAM:         1549.09 MB
+  CUDA Alloc:       377.39 MB
+  Cold Load:        0.1823 s
+  Cold Model/Vol:   0.6176 s
+  Cold E2E/Vol:     1.0036 s
+  Steady Model/Vol: 0.2405 s (p95: 0.2405 s)
+  Steady E2E/Vol:   0.5864 s (p95: 0.5864 s)
+  Throughput:       1.68 vol/s (503.1 slices/s)
+
+Baseline Student Status: COMPLETED
+  Params:           32,865,530
+  Deployed Weights: 131,541,429 bytes
+  Steady RAM:       2042.46 MB
+  Steady Model/Vol: 1.0451 s
+
+Comparison (Speedup & Reduction):
+  model_only_speedup: 4.35x
+  peak_inference_ram_reduction_factor: 1.32x
+  deployed_bytes_reduction_factor: 54.00x
+
+Full report written to /workspace/compact-acdc-l8/20261028/benchmark_onecase_cuda_smoke_report.json

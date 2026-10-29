@@ -1,0 +1,214 @@
+{
+  "schema": "self_audit.max_batch_capacity_profile.v1",
+  "status": "BATCH_152_SELECTED_FOR_FULL_RUN",
+  "gpu": "NVIDIA RTX PRO 4000 Blackwell",
+  "gpu_total_memory_mib": 24467,
+  "selected_batch": 152,
+  "selected_config_path": "/workspace/compact-acdc-l8/20261029-maxbatch/wide_kd_batch152_full.json",
+  "selected_config_sha256": "3951584b176e06befebc5e3dcee3a3b7e2485b677b07a162b665fa0a6adc2262",
+  "selection_basis": "batch 168 failed by step 6; batch 160 and 156 completed 100 steps but with more allocator OOM warnings; batch 152 completed 100 KD steps at 21.48 GiB allocated / 23.12 GiB reserved and retains more headroom for 10,000 steps",
+  "teacher_cache_manifest_sha256": "3c071aca7931ce3f7de454f2f22c164c091aaba7a5ccae7053653e71c7669f67",
+  "same_teacher_identity_as_previous_cache": true,
+  "same_train_manifest_as_previous_cache": true,
+  "same_72_patient_file_hashes": true,
+  "profiles": [
+    {
+      "name": "wide_kd_batch152_100step",
+      "status": "COMPLETED",
+      "stderr_path": "/workspace/compact-acdc-l8/20261029-maxbatch/wide_kd_batch152_100step.stderr.log",
+      "allocator_oom_warning_count": 106,
+      "steps": 100,
+      "batch_sizes": {
+        "labeled": 152,
+        "unlabeled": 152
+      },
+      "peak_vram_allocated_bytes": 23064391168,
+      "peak_vram_reserved_bytes": 24823988224,
+      "elapsed_seconds": 303.5768038230017
+    },
+    {
+      "name": "wide_kd_batch152_full",
+      "status": "NO_REPORT",
+      "stderr_path": "/workspace/compact-acdc-l8/20261029-maxbatch/wide_kd_batch152_full.stderr.log",
+      "allocator_oom_warning_count": 0
+    },
+    {
+      "name": "wide_kd_batch156_100step",
+      "status": "COMPLETED",
+      "stderr_path": "/workspace/compact-acdc-l8/20261029-maxbatch/wide_kd_batch156_100step.stderr.log",
+      "allocator_oom_warning_count": 148,
+      "steps": 100,
+      "batch_sizes": {
+        "labeled": 156,
+        "unlabeled": 156
+      },
+      "peak_vram_allocated_bytes": 23668039168,
+      "peak_vram_reserved_bytes": 24823988224,
+      "elapsed_seconds": 311.6503137280233
+    },
+    {
+      "name": "wide_kd_batch160_100step",
+      "status": "COMPLETED",
+      "stderr_path": "/workspace/compact-acdc-l8/20261029-maxbatch/wide_kd_batch160_100step.stderr.log",
+      "allocator_oom_warning_count": 201,
+      "steps": 100,
+      "batch_sizes": {
+        "labeled": 160,
+        "unlabeled": 160
+      },
+      "peak_vram_allocated_bytes": 24271687168,
+      "peak_vram_reserved_bytes": 24823988224,
+      "elapsed_seconds": 327.3057098069694
+    },
+    {
+      "name": "wide_kd_batch160_20step",
+      "status": "COMPLETED",
+      "stderr_path": "/workspace/compact-acdc-l8/20261029-maxbatch/wide_kd_batch160_20step.stderr.log",
+      "allocator_oom_warning_count": 28,
+      "steps": 20,
+      "batch_sizes": {
+        "labeled": 160,
+        "unlabeled": 160
+      },
+      "peak_vram_allocated_bytes": 24271687168,
+      "peak_vram_reserved_bytes": 24821891072,
+      "elapsed_seconds": 78.1412374000065
+    },
+    {
+      "name": "wide_kd_batch160_smoke",
+      "status": "COMPLETED",
+      "stderr_path": "/workspace/compact-acdc-l8/20261029-maxbatch/wide_kd_batch160_smoke.stderr.log",
+      "allocator_oom_warning_count": 17,
+      "steps": 3,
+      "batch_sizes": {
+        "labeled": 160,
+        "unlabeled": 160
+      },
+      "peak_vram_allocated_bytes": 23507363328,
+      "peak_vram_reserved_bytes": 24708644864,
+      "elapsed_seconds": 27.630883602891117
+    },
+    {
+      "name": "wide_kd_batch168_20step",
+      "status": "OOM",
+      "stderr_path": "/workspace/compact-acdc-l8/20261029-maxbatch/wide_kd_batch168_20step.stderr.log",
+      "allocator_oom_warning_count": 393
+    },
+    {
+      "name": "wide_kd_batch168_expand_smoke",
+      "status": "COMPLETED",
+      "stderr_path": "/workspace/compact-acdc-l8/20261029-maxbatch/wide_kd_batch168_expand_smoke.stderr.log",
+      "allocator_oom_warning_count": 56,
+      "steps": 3,
+      "batch_sizes": {
+        "labeled": 168,
+        "unlabeled": 168
+      },
+      "peak_vram_allocated_bytes": 24616374784,
+      "peak_vram_reserved_bytes": 24836571136,
+      "elapsed_seconds": 29.024786306079477
+    },
+    {
+      "name": "wide_kd_batch168_smoke",
+      "status": "OOM",
+      "stderr_path": "/workspace/compact-acdc-l8/20261029-maxbatch/wide_kd_batch168_smoke.stderr.log",
+      "allocator_oom_warning_count": 4
+    },
+    {
+      "name": "wide_kd_batch176_expand_smoke",
+      "status": "OOM",
+      "stderr_path": "/workspace/compact-acdc-l8/20261029-maxbatch/wide_kd_batch176_expand_smoke.stderr.log",
+      "allocator_oom_warning_count": 15
+    },
+    {
+      "name": "wide_kd_batch176_smoke",
+      "status": "OOM",
+      "stderr_path": "/workspace/compact-acdc-l8/20261029-maxbatch/wide_kd_batch176_smoke.stderr.log",
+      "allocator_oom_warning_count": 8
+    },
+    {
+      "name": "wide_supervised_batch128",
+      "status": "COMPLETED",
+      "stderr_path": "/workspace/compact-acdc-l8/20261029-maxbatch/wide_supervised_batch128.stderr.log",
+      "allocator_oom_warning_count": 0,
+      "steps": 1,
+      "batch_sizes": {
+        "labeled": 128,
+        "unlabeled": 128
+      },
+      "peak_vram_allocated_bytes": 17156137472,
+      "peak_vram_reserved_bytes": 20703084544,
+      "elapsed_seconds": 7.218741816002876
+    },
+    {
+      "name": "wide_supervised_batch144",
+      "status": "COMPLETED",
+      "stderr_path": "/workspace/compact-acdc-l8/20261029-maxbatch/wide_supervised_batch144.stderr.log",
+      "allocator_oom_warning_count": 0,
+      "steps": 1,
+      "batch_sizes": {
+        "labeled": 144,
+        "unlabeled": 144
+      },
+      "peak_vram_allocated_bytes": 19306001920,
+      "peak_vram_reserved_bytes": 23309844480,
+      "elapsed_seconds": 7.351457942044362
+    },
+    {
+      "name": "wide_supervised_batch152",
+      "status": "COMPLETED",
+      "stderr_path": "/workspace/compact-acdc-l8/20261029-maxbatch/wide_supervised_batch152.stderr.log",
+      "allocator_oom_warning_count": 0,
+      "steps": 1,
+      "batch_sizes": {
+        "labeled": 152,
+        "unlabeled": 152
+      },
+      "peak_vram_allocated_bytes": 20394641920,
+      "peak_vram_reserved_bytes": 24591204352,
+      "elapsed_seconds": 7.54770108894445
+    },
+    {
+      "name": "wide_supervised_batch156",
+      "status": "COMPLETED",
+      "stderr_path": "/workspace/compact-acdc-l8/20261029-maxbatch/wide_supervised_batch156.stderr.log",
+      "allocator_oom_warning_count": 1,
+      "steps": 1,
+      "batch_sizes": {
+        "labeled": 156,
+        "unlabeled": 156
+      },
+      "peak_vram_allocated_bytes": 20923877888,
+      "peak_vram_reserved_bytes": 24178065408,
+      "elapsed_seconds": 7.559000680921599
+    },
+    {
+      "name": "wide_supervised_batch160",
+      "status": "COMPLETED",
+      "stderr_path": "/workspace/compact-acdc-l8/20261029-maxbatch/wide_supervised_batch160.stderr.log",
+      "allocator_oom_warning_count": 1,
+      "steps": 1,
+      "batch_sizes": {
+        "labeled": 160,
+        "unlabeled": 160
+      },
+      "peak_vram_allocated_bytes": 21452458496,
+      "peak_vram_reserved_bytes": 23754440704,
+      "elapsed_seconds": 7.772986673051491
+    },
+    {
+      "name": "wide_supervised_batch176",
+      "status": "COMPLETED",
+      "stderr_path": "/workspace/compact-acdc-l8/20261029-maxbatch/wide_supervised_batch176.stderr.log",
+      "allocator_oom_warning_count": 1,
+      "steps": 1,
+      "batch_sizes": {
+        "labeled": 176,
+        "unlabeled": 176
+      },
+      "peak_vram_allocated_bytes": 23596686848,
+      "peak_vram_reserved_bytes": 24394072064,
+      "elapsed_seconds": 7.55538992700167
+    }
+  ]
+}

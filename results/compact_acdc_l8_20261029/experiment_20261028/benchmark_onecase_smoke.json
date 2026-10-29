@@ -1,0 +1,67 @@
+{
+  "schema": "self_audit.data.v2",
+  "role": "external_frozen",
+  "synthetic": false,
+  "scope": "Drive TEST50; prior repository experiments exposed this cohort; not a new confirmatory cohort, independent official GT certification unavailable",
+  "patients": [
+    {
+      "id": "patient101",
+      "image": "/workspace/Self-Audit/data/prepared/ACDC_TEST50/patient101.npy",
+      "image_sha256": "905d7eca7b57d4f9b5af9d35bad9fb6bd2bbb151e0c7a9e34541501fa55dca7e",
+      "masks": {
+        "0": {
+          "path": "/workspace/Self-Audit/data/prepared/ACDC_TEST50/patient101_t000_mask.npy",
+          "sha256": "5794b3209752d946bb46c32e60235fc8a2388c952ab309aa5ea6e7242a3f54d5"
+        },
+        "13": {
+          "path": "/workspace/Self-Audit/data/prepared/ACDC_TEST50/patient101_t013_mask.npy",
+          "sha256": "8254d5c62f2b59f650f05ad6dc851855109a675636dc43f146c109ccd373628b"
+        }
+      },
+      "affine": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "axes": [
+        "T",
+        "Z",
+        "Y",
+        "X"
+      ],
+      "spatial_units": "unknown",
+      "geometry_source_image": {
+        "path": "/workspace/Self-Audit/data/ACDC/testing/patient101/patient101_4d.nii",
+        "sha256": "c13e2a670ea22f47d659b8723167ff26eb375a28190ecc975a154efb96075689"
+      }
+    }
+  ],
+  "geometry_provenance": {
+    "parent_manifest_sha256": "8f89d631bc67f7eccef94740866513fe6f794872e7cb6e61302b1663e17e8f9e",
+    "raw_sources_manifest_sha256": "e84099a2a8fc874ba6e0e3b0186f63708637a29c0353f1515165f4cff15e6e0d",
+    "correspondence": "canonical percentile-normalized XYZT->TZYX image voxels",
+    "spatial_units": "unknown_in_source",
+    "reference_masks_opened": false
+  }
+}

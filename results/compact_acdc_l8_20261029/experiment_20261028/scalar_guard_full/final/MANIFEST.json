@@ -1,0 +1,851 @@
+{
+  "architecture": {
+    "dino_required": false,
+    "in_channels": 3,
+    "init": "kaiming_normal",
+    "init_lineage": "random_kaiming_distinct_from_dino",
+    "model_class": "CompactStudent",
+    "name": "CompactStudent",
+    "norm": "group_norm",
+    "num_classes": 4,
+    "pretrained": false,
+    "widths": [
+      16,
+      32,
+      64,
+      128
+    ]
+  },
+  "config": {
+    "absent_fp_budget": 0.0,
+    "acceptance": {
+      "metric": "Macro4",
+      "min_macro4": 0.87,
+      "notes": "Full opt-in profile; requires verified teacher identity/cache and explicit --allow-full-run."
+    },
+    "batch_size": 8,
+    "coefficient": 1.0,
+    "crop_size": 160,
+    "data": {
+      "budget_k": 8,
+      "labeled_ids": [
+        "patient007",
+        "patient010",
+        "patient011",
+        "patient024",
+        "patient026",
+        "patient041",
+        "patient077",
+        "patient099"
+      ],
+      "manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4"
+    },
+    "equal_wall_time": {
+      "enabled": false
+    },
+    "experiment": {
+      "full_patient_training_this_delivery": true,
+      "name": "acdc_l8_b8_scalar_guard",
+      "requires_explicit_allow_full_run": true,
+      "status": "LOCKED_REAL_RUN"
+    },
+    "guard_tolerance": 1e-06,
+    "labeled_batch_size": 8,
+    "lr": 0.0003,
+    "max_trials": 8,
+    "method": "scalar_guard",
+    "model": {
+      "in_channels": 3,
+      "init": "kaiming_normal",
+      "name": "CompactStudent",
+      "num_classes": 4,
+      "widths": [
+        16,
+        32,
+        64,
+        128
+      ]
+    },
+    "pseudo_lr": 0.001,
+    "pseudo_threshold": 0.7,
+    "ridge": 1e-06,
+    "risk_budget": 0.0,
+    "save_every": 1000,
+    "schema": "self_audit.compact.v1",
+    "seed": 42,
+    "steps": 10000,
+    "teacher": {
+      "cache_path": "/dev/shm/compact_teacher_b8/CACHE_MANIFEST.json",
+      "cache_sha256": "783624211e760fbeb2c3a80ded7b8dacb9d1407f0dcc1e484010cda2c343897b",
+      "lineage": {
+        "budget_k": 8,
+        "exact_labeled_ids": [
+          "patient007",
+          "patient010",
+          "patient011",
+          "patient024",
+          "patient026",
+          "patient041",
+          "patient077",
+          "patient099"
+        ]
+      },
+      "source": "/workspace/compact-acdc-l8/20261028/b8_recovery/full/final/MANIFEST.json",
+      "source_manifest_sha256": "ae36d026ce26ca188627e6ea4699695e9eb99501312ce05d5324b81e44d3ddaa",
+      "source_payload_sha256": "0ae593ecb6b6f9dcb88d0a41d4a77d7b3b3a3edd87396624c3648afb1281f1b6",
+      "source_training_cost": {
+        "elapsed_seconds": 2440.043427208904,
+        "steps": 10000
+      },
+      "state": "student",
+      "teacher_identity": {
+        "inference_state": "student",
+        "label_budget": 8,
+        "labeled_ids": [
+          "patient007",
+          "patient010",
+          "patient011",
+          "patient024",
+          "patient026",
+          "patient041",
+          "patient077",
+          "patient099"
+        ],
+        "manifest_sha256": "ae36d026ce26ca188627e6ea4699695e9eb99501312ce05d5324b81e44d3ddaa",
+        "model_class": "NativeStudent",
+        "payload_sha256": "0ae593ecb6b6f9dcb88d0a41d4a77d7b3b3a3edd87396624c3648afb1281f1b6",
+        "quality_receipt": {
+          "path": "/workspace/compact-acdc-l8/20261028/b8_recovery/test50_receipt/QUALITY_RECEIPT.json",
+          "sha256": "f1054ce3dea44ff600dca1708dc7c0906eef5fc84b229c19859d863cc4b46e5c"
+        },
+        "schema": "self_audit.compact_teacher_identity.v1",
+        "source_commit": "0f54455b67bb11a72fbfe2a8ac6fae4073f3e9ca",
+        "source_sha256": "3c7fa85f00d54a6e087af3cd6c7045351fb72d532f1069bf09d95f9cd72359b7",
+        "source_training_cost": {
+          "elapsed_seconds": 2440.043427208904,
+          "steps": 10000
+        },
+        "teacher_kind": "canonical",
+        "train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+        "training_method": "ema_full"
+      }
+    },
+    "temperature": 1.0,
+    "unlabeled_batch_size": 8,
+    "warmup_steps": 1000,
+    "weight_decay": 0.0001
+  },
+  "data_provenance": {
+    "data_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+    "label_budget": 8,
+    "lids": [
+      "patient007",
+      "patient010",
+      "patient011",
+      "patient024",
+      "patient026",
+      "patient041",
+      "patient077",
+      "patient099"
+    ],
+    "manifest": {
+      "evaluation_ids": [
+        "patient004",
+        "patient005",
+        "patient012",
+        "patient014",
+        "patient015",
+        "patient018",
+        "patient028",
+        "patient029",
+        "patient030",
+        "patient032",
+        "patient036",
+        "patient065",
+        "patient070",
+        "patient082",
+        "patient087",
+        "patient089",
+        "patient095",
+        "patient098",
+        "patient101",
+        "patient102",
+        "patient103",
+        "patient104",
+        "patient105",
+        "patient106",
+        "patient107",
+        "patient108",
+        "patient109",
+        "patient110",
+        "patient111",
+        "patient112",
+        "patient113",
+        "patient114",
+        "patient115",
+        "patient116",
+        "patient117",
+        "patient118",
+        "patient119",
+        "patient120",
+        "patient121",
+        "patient122",
+        "patient123",
+        "patient124",
+        "patient125",
+        "patient126",
+        "patient127",
+        "patient128",
+        "patient129",
+        "patient130",
+        "patient131",
+        "patient132",
+        "patient133",
+        "patient134",
+        "patient135",
+        "patient136",
+        "patient137",
+        "patient138",
+        "patient139",
+        "patient140",
+        "patient141",
+        "patient142",
+        "patient143",
+        "patient144",
+        "patient145",
+        "patient146",
+        "patient147",
+        "patient148",
+        "patient149",
+        "patient150"
+      ],
+      "label_budget": 8,
+      "label_seed": 42,
+      "labeled": [
+        {
+          "id": "patient007",
+          "image": "patient007.npy",
+          "image_sha256": "d002648cc8555fb88675f4509664e1f2e0dc3b15576c77524c5a3de6c3875e0d",
+          "masks": {
+            "0": {
+              "path": "patient007_t000_mask.npy",
+              "sha256": "c2c81ca933efe43c294b7043b64d1b289c5569e4990dd6f4c77278727797cf63"
+            },
+            "6": {
+              "path": "patient007_t006_mask.npy",
+              "sha256": "6ac65b033f2b29122126480125535a4109b36978dd8550b9af0dac720e5f582b"
+            }
+          }
+        },
+        {
+          "id": "patient010",
+          "image": "patient010.npy",
+          "image_sha256": "74ac31a2d3e5c2d5b1f1c554ca3342f2731d23968e903d4c8f8318ec3e809eef",
+          "masks": {
+            "0": {
+              "path": "patient010_t000_mask.npy",
+              "sha256": "31d3e898c39ea46838e9e3d88bcd5fe86d5bf909c19cf38146abd34de2859ee5"
+            },
+            "12": {
+              "path": "patient010_t012_mask.npy",
+              "sha256": "e3568a3104b048824c7b2f8302ec920800193ddda8511f659524dc875b6e31af"
+            }
+          }
+        },
+        {
+          "id": "patient011",
+          "image": "patient011.npy",
+          "image_sha256": "944e347fba793ce9802d2d727775bbab608328ef9583b2288fa62282da7ab6e2",
+          "masks": {
+            "0": {
+              "path": "patient011_t000_mask.npy",
+              "sha256": "83ba591aa38b9d9676a1912e883f6bebda51420dea0e801208f0d49667d1a87a"
+            },
+            "7": {
+              "path": "patient011_t007_mask.npy",
+              "sha256": "4557d44621c6d6b8690f55b0dff7086b061b8658b85771c57311984a68c975a0"
+            }
+          }
+        },
+        {
+          "id": "patient024",
+          "image": "patient024.npy",
+          "image_sha256": "bee4fb2417c4cb67c90187c51a5eac17ee6012981d07fe6b4e3e296294487d62",
+          "masks": {
+            "0": {
+              "path": "patient024_t000_mask.npy",
+              "sha256": "fd8c6afd9b02d168f01af35cd20d216c3f74b1f53abf16ba688b6de785820846"
+            },
+            "8": {
+              "path": "patient024_t008_mask.npy",
+              "sha256": "9bb5efb4989683845c9f2c88063c3a127ba5a9bfc3d1b42f31ce3ecfd5653639"
+            }
+          }
+        },
+        {
+          "id": "patient026",
+          "image": "patient026.npy",
+          "image_sha256": "f5e2fd924a0d5646b5da23f60ed8ac823574aade7ebc737b82a64f1a0ec655cd",
+          "masks": {
+            "0": {
+              "path": "patient026_t000_mask.npy",
+              "sha256": "dacac09980a36f29d70d8ae5b7f48e9b5f70b37b889d1395333d036d1cae75e7"
+            },
+            "11": {
+              "path": "patient026_t011_mask.npy",
+              "sha256": "2e1071f149f990dc3520824120838970c63ec614fbbf387478808a8961ee8b2b"
+            }
+          }
+        },
+        {
+          "id": "patient041",
+          "image": "patient041.npy",
+          "image_sha256": "3dbfc515f05895e59b411cc026000cca844e0074e11e994deb415fe78944fdcf",
+          "masks": {
+            "0": {
+              "path": "patient041_t000_mask.npy",
+              "sha256": "737035e0a658e96fff4011b4cb62f6458b9364c4afeb4e206f99f68d2ecac6af"
+            },
+            "10": {
+              "path": "patient041_t010_mask.npy",
+              "sha256": "f2c8f0b12e9ec937f5501d8bebfd2dba7919ee18597cfa87b631d1e47efb1ffa"
+            }
+          }
+        },
+        {
+          "id": "patient077",
+          "image": "patient077.npy",
+          "image_sha256": "58e911f1565a18071c55031e8b239c8b5164fa515891ec558291f20e2f4ce2d1",
+          "masks": {
+            "0": {
+              "path": "patient077_t000_mask.npy",
+              "sha256": "3d9e16f4e7c5f08bd3725543f3a3727ee4dd2d9ac39e2bb8799daed7d8042e3c"
+            },
+            "8": {
+              "path": "patient077_t008_mask.npy",
+              "sha256": "27de83be3632ddb32665796cef66400fc93d8c34d40e4091ec6f00ced68d2adc"
+            }
+          }
+        },
+        {
+          "id": "patient099",
+          "image": "patient099.npy",
+          "image_sha256": "398862ff9a1b9540e3fa14f239938f31a8b5c8ea3ca7cf83f21737c72b9cb482",
+          "masks": {
+            "0": {
+              "path": "patient099_t000_mask.npy",
+              "sha256": "c13a46bc49b79f65ff90030ee95da5e34e8e7ed3e245937950de45f32ee23999"
+            },
+            "8": {
+              "path": "patient099_t008_mask.npy",
+              "sha256": "4f28cb589794e5b38d91474c696f96513224faf2c896e287601554b7285e5878"
+            }
+          }
+        }
+      ],
+      "role": "training",
+      "schema": "self_audit.data.v2",
+      "synthetic": false,
+      "unlabeled": [
+        {
+          "id": "patient001",
+          "image": "patient001.npy",
+          "image_sha256": "b6d1650a4cf32bef86b6af381c792228024c944f81eb77f1d3960d93b017a640"
+        },
+        {
+          "id": "patient002",
+          "image": "patient002.npy",
+          "image_sha256": "f0038127510d48e6670d3330a2f3d8002daa4ef3c2267e6987636997cc2bd5b3"
+        },
+        {
+          "id": "patient003",
+          "image": "patient003.npy",
+          "image_sha256": "22114d9aab232c856297bb998e464e508b7eadbeb026b602f0f2e408c7b1e566"
+        },
+        {
+          "id": "patient006",
+          "image": "patient006.npy",
+          "image_sha256": "db1b45974c497565622d50b2140d540d4de8ec6547c54e5c5d753ed4530e4ba0"
+        },
+        {
+          "id": "patient008",
+          "image": "patient008.npy",
+          "image_sha256": "a21a4550e47acab75ed04731de8a830e037552226da68bd31f0ad09a577e09bb"
+        },
+        {
+          "id": "patient009",
+          "image": "patient009.npy",
+          "image_sha256": "5defdf4082944ae5bd50370e6c6632418d0e374df73fff34b3e28006c95d69d6"
+        },
+        {
+          "id": "patient013",
+          "image": "patient013.npy",
+          "image_sha256": "a4256355198e431fa3ea5172105d99c5cc733c3db445d6b2c697dc09e6191ad0"
+        },
+        {
+          "id": "patient016",
+          "image": "patient016.npy",
+          "image_sha256": "e616d528c274e0744ffd8ef0d73ae01ca2c093d40946f6e38bbd5afe4128d8a8"
+        },
+        {
+          "id": "patient017",
+          "image": "patient017.npy",
+          "image_sha256": "fd6c5ce09e3a29d1d0cd86b87d4681dae53619405b3374a93d358b04c7794b40"
+        },
+        {
+          "id": "patient019",
+          "image": "patient019.npy",
+          "image_sha256": "00698085b558b57ca9be3d719e2d987f71628b8660154b6c2ec3d2879e8fc436"
+        },
+        {
+          "id": "patient020",
+          "image": "patient020.npy",
+          "image_sha256": "73967639d6bcd1b100e7aaa056a72a90f9aff379d09161b624060e8857966505"
+        },
+        {
+          "id": "patient021",
+          "image": "patient021.npy",
+          "image_sha256": "cc0f0033385d12bcf9e9e607f1136cf3f291fa243b6936f1dcbe05040d5e6438"
+        },
+        {
+          "id": "patient022",
+          "image": "patient022.npy",
+          "image_sha256": "f12b597fb641ac553caad6244693dd5cfdc330d78f06a092b466a92832bf6a05"
+        },
+        {
+          "id": "patient023",
+          "image": "patient023.npy",
+          "image_sha256": "1b895302eab2300801aa42fcbc4c7ccae1a7d441654c0304d15494bc19926210"
+        },
+        {
+          "id": "patient025",
+          "image": "patient025.npy",
+          "image_sha256": "afa6b690a2f8fc513476cfab7486a7536aaa262be56f04ea42ba7406e2acc4e8"
+        },
+        {
+          "id": "patient027",
+          "image": "patient027.npy",
+          "image_sha256": "a2651908d2f696cf57fc26278c7e680c7cb2bd1073472e49004a6cd63cebf6d1"
+        },
+        {
+          "id": "patient031",
+          "image": "patient031.npy",
+          "image_sha256": "b4f26ed93fe8a7c431e800ea53770d9ff524b18084858b3a9143174b5bccfb8c"
+        },
+        {
+          "id": "patient033",
+          "image": "patient033.npy",
+          "image_sha256": "cff0f2b0b92a0468e6e6571f69ad66526224d34536c0b5f5b8cffd26ee7f1005"
+        },
+        {
+          "id": "patient034",
+          "image": "patient034.npy",
+          "image_sha256": "4d7ff326442bf1fbb283cececb931c9ca712a02005b9fb7caa6746b1c5996ca4"
+        },
+        {
+          "id": "patient035",
+          "image": "patient035.npy",
+          "image_sha256": "c604bf42dc8ccba829891852c5bd843a819f0548e580f16221ecc97d2cec3c7d"
+        },
+        {
+          "id": "patient037",
+          "image": "patient037.npy",
+          "image_sha256": "f697980f05f4e552ead94528011417c11944c2cc016d4920288f9638085fe61a"
+        },
+        {
+          "id": "patient038",
+          "image": "patient038.npy",
+          "image_sha256": "f672692ca75b6daf327840d752882921edf80f8b9844c46b3b5dec1b5f7c02a3"
+        },
+        {
+          "id": "patient039",
+          "image": "patient039.npy",
+          "image_sha256": "5ceba0c899c6eded1add378558dd79d712350959b4aedbdcd2a19d89b53e77b8"
+        },
+        {
+          "id": "patient040",
+          "image": "patient040.npy",
+          "image_sha256": "2fddd2fd6253e8da5a1a4716dcf8c168fdd008a9f1dfed3a2f7fb6b807c2428b"
+        },
+        {
+          "id": "patient042",
+          "image": "patient042.npy",
+          "image_sha256": "51eedd84f99706e50bfc5c4ae4d847061015b723da9d7f5fd1d819f3ee9e0ca2"
+        },
+        {
+          "id": "patient043",
+          "image": "patient043.npy",
+          "image_sha256": "7ab2d53728e9aee56e637cb78d09cda612b2ecd9692fcf99c1a2e31ef0d992b8"
+        },
+        {
+          "id": "patient044",
+          "image": "patient044.npy",
+          "image_sha256": "65fb094da39722e8f8c069914a937a62adf0eb6f20037148a43de978405e3f9a"
+        },
+        {
+          "id": "patient045",
+          "image": "patient045.npy",
+          "image_sha256": "1d3b6b5e29ec78ee200d7ada3ddc706fa848c993610ef6773ff9dfea51188954"
+        },
+        {
+          "id": "patient046",
+          "image": "patient046.npy",
+          "image_sha256": "b00efcc39f01f5ada8726e4a965fb35740c731972d82c443060593014457eff2"
+        },
+        {
+          "id": "patient047",
+          "image": "patient047.npy",
+          "image_sha256": "683d7fdac8d8ea07db2cca4a17828f6d4cfbcc2259f30d45cd874fea125b075b"
+        },
+        {
+          "id": "patient048",
+          "image": "patient048.npy",
+          "image_sha256": "3cb76a84f40c412a765d3656c21f3a68a67577e3db8c91242c37b27d7c7741a0"
+        },
+        {
+          "id": "patient049",
+          "image": "patient049.npy",
+          "image_sha256": "4d83edc14b60704961794df3782e7f2f4f9f8d3f4e39f402f599a43d2a214dd5"
+        },
+        {
+          "id": "patient050",
+          "image": "patient050.npy",
+          "image_sha256": "5baa2731d283078a8cc77d009f7104f91cfcc38d68acbe82cff0df356ef50447"
+        },
+        {
+          "id": "patient051",
+          "image": "patient051.npy",
+          "image_sha256": "6b08eae07249ee7b3e4073e6f7ff91f06723cd20bb29ce5a69abc697746e67eb"
+        },
+        {
+          "id": "patient052",
+          "image": "patient052.npy",
+          "image_sha256": "c9e65dd936f01bdbefe6f90257886499b4f34211228132bda6350fe694084828"
+        },
+        {
+          "id": "patient053",
+          "image": "patient053.npy",
+          "image_sha256": "4ec4d1c1f3057ad867a30e36fb5e4a1b23f8f12ef9cdbf7678d2150fcb8cd4a9"
+        },
+        {
+          "id": "patient054",
+          "image": "patient054.npy",
+          "image_sha256": "2ccb28279a41b87730532b3db65f465d22d171c63168ad3602ee163d0ca7dad5"
+        },
+        {
+          "id": "patient056",
+          "image": "patient056.npy",
+          "image_sha256": "0a58e8a63c9078e4187761e55da551bef0716b96bdae308f5e6a7e92ad92b43d"
+        },
+        {
+          "id": "patient057",
+          "image": "patient057.npy",
+          "image_sha256": "f7685ddfd42eb91b22a1be9dcb5ce05205a32b6ffd281be1651c485cc04e76ed"
+        },
+        {
+          "id": "patient058",
+          "image": "patient058.npy",
+          "image_sha256": "dc759cc82ae737b415aff1316852de6a0aebfbf980252a7aa61261bf15889577"
+        },
+        {
+          "id": "patient059",
+          "image": "patient059.npy",
+          "image_sha256": "c7ab39112494464608046cafe91666996aa0a92dc0975fb836576950c97f0a27"
+        },
+        {
+          "id": "patient060",
+          "image": "patient060.npy",
+          "image_sha256": "756269ae1fe549788af4e30229571b3e774be915edf46038994ce7ae6664f7fb"
+        },
+        {
+          "id": "patient061",
+          "image": "patient061.npy",
+          "image_sha256": "c5010115afdab3c4358a9006f435086be72c205479cbd74d829f7f87e21b9830"
+        },
+        {
+          "id": "patient062",
+          "image": "patient062.npy",
+          "image_sha256": "37d8514473c1b468eb7a2bda5ab0832ccc46859aa13c08d2ac67873d4aa90c3f"
+        },
+        {
+          "id": "patient063",
+          "image": "patient063.npy",
+          "image_sha256": "abf3d2dcbabb276290f3c9f636ce524b9e8823cbc145df2236184734c489192c"
+        },
+        {
+          "id": "patient064",
+          "image": "patient064.npy",
+          "image_sha256": "a3739fabf586005645d2396c3935bd31460e58587dff416b093d6d696ad791ba"
+        },
+        {
+          "id": "patient066",
+          "image": "patient066.npy",
+          "image_sha256": "1adf18433ce3f484adf55a9774140e3220d608ed469869cb3157c3fb2bf795da"
+        },
+        {
+          "id": "patient067",
+          "image": "patient067.npy",
+          "image_sha256": "8f1808801536231a653f16a41e7211fef4b0c43a1caa9eb368a8c3f983cd013d"
+        },
+        {
+          "id": "patient068",
+          "image": "patient068.npy",
+          "image_sha256": "ca72677a8369873e8f8b36f0fc56f6fe223cc75381139ee91ce24168874129fe"
+        },
+        {
+          "id": "patient069",
+          "image": "patient069.npy",
+          "image_sha256": "9ba8102819cd7d8f29905fa50223c0ccab2f0c24c18147a86bdc7b2736bea0cb"
+        },
+        {
+          "id": "patient071",
+          "image": "patient071.npy",
+          "image_sha256": "34c69c4b2983c6984864e2d9bd6873f0d6105eb7321a3f6b0b3b6d6e852441a0"
+        },
+        {
+          "id": "patient072",
+          "image": "patient072.npy",
+          "image_sha256": "41b79306b62fd283c3ee96919a0aa0624e8981f5e5f1027b8d8df1c343164fc0"
+        },
+        {
+          "id": "patient073",
+          "image": "patient073.npy",
+          "image_sha256": "5348ad111a44a36b2a46d27d40d42fe69a87d90736da87ad794caae5775d4f80"
+        },
+        {
+          "id": "patient074",
+          "image": "patient074.npy",
+          "image_sha256": "cd9ac6fcf7c5831464f3d993b87ac18b96a29d1a8d3cbc4d16befd3c0ecbd445"
+        },
+        {
+          "id": "patient075",
+          "image": "patient075.npy",
+          "image_sha256": "7f808833f52c9492e97951c741f4d7e9d18b3c702466f9645e5d53d945f6970e"
+        },
+        {
+          "id": "patient078",
+          "image": "patient078.npy",
+          "image_sha256": "e4fad1f291a1380a823020f64914cd7298412f582bfe17f6b5a764fa8fdfb6f9"
+        },
+        {
+          "id": "patient079",
+          "image": "patient079.npy",
+          "image_sha256": "4dc75bb840526e85517ae80ae5d42133845eea0f604ade5a527f1635f526d36a"
+        },
+        {
+          "id": "patient080",
+          "image": "patient080.npy",
+          "image_sha256": "42c24120a59fb00089982ddb2a26399d80c398317249a3df696fab1ad2eb8402"
+        },
+        {
+          "id": "patient081",
+          "image": "patient081.npy",
+          "image_sha256": "e42daf4b848d521e26d3026980c100bc9d9a4eaa5eb0bb377b0ddb01cf3ffff5"
+        },
+        {
+          "id": "patient083",
+          "image": "patient083.npy",
+          "image_sha256": "fc6347e48a6cdaff9b5abfc9961feeb268d082e87a041ad7f6ad5790a1ed39e5"
+        },
+        {
+          "id": "patient084",
+          "image": "patient084.npy",
+          "image_sha256": "090fd9abd9a1b7ee6da31310fba98699f8c1089b7fe9ca9c09829df2180cc2a2"
+        },
+        {
+          "id": "patient085",
+          "image": "patient085.npy",
+          "image_sha256": "ff68a99e12d9868d2f2b986a51454cf6b0feeb07b692d63f3a87cb4e25b6c0be"
+        },
+        {
+          "id": "patient086",
+          "image": "patient086.npy",
+          "image_sha256": "e534db5d0bf4e9ddd2b27175a389d88a654259d97dba14b88f74349cb1a342c6"
+        },
+        {
+          "id": "patient088",
+          "image": "patient088.npy",
+          "image_sha256": "8f073109b17292fb17477c5b8cc8ceadf3a89530d64995b6a042dd3226f7622c"
+        },
+        {
+          "id": "patient090",
+          "image": "patient090.npy",
+          "image_sha256": "e3c1753036cd8aebc17a31d8f2fdb0b896bd533de9955937e43629ed171d88b2"
+        },
+        {
+          "id": "patient091",
+          "image": "patient091.npy",
+          "image_sha256": "09413a5b2259f38b2203b43de8418893dcc85ba5632fbd9dbb5dd9a548717642"
+        },
+        {
+          "id": "patient092",
+          "image": "patient092.npy",
+          "image_sha256": "5dbeef176e5fd377f5e1ee11f809f163ccf23cf08d89fdadc452ce5a35945835"
+        },
+        {
+          "id": "patient093",
+          "image": "patient093.npy",
+          "image_sha256": "0fbc2dade8764a7658efcc44a935814beb665acc5f26b856f95e648b2e615bf5"
+        },
+        {
+          "id": "patient094",
+          "image": "patient094.npy",
+          "image_sha256": "479d0d1a993ef50d674fe58d4912b1a16d5f9aa739bd19ab3d71ef647d5108f6"
+        },
+        {
+          "id": "patient096",
+          "image": "patient096.npy",
+          "image_sha256": "43a895857926d45303e2793ec53aea578d36dd1e067b92c4dcca8755fd873cb4"
+        },
+        {
+          "id": "patient097",
+          "image": "patient097.npy",
+          "image_sha256": "ff48a77dcf510b745c9a5f21cc438315b665ca66349fa0e662cfda99f5209238"
+        },
+        {
+          "id": "patient100",
+          "image": "patient100.npy",
+          "image_sha256": "dbf8033120315ca19a9d0c359965b07519244980a4d677068d3f128e6d052545"
+        }
+      ]
+    },
+    "path": "/workspace/Self-Audit/data/prepared/ACDC_L8_S42/train.json",
+    "synthetic": false,
+    "uids": [
+      "patient001",
+      "patient002",
+      "patient003",
+      "patient006",
+      "patient008",
+      "patient009",
+      "patient013",
+      "patient016",
+      "patient017",
+      "patient019",
+      "patient020",
+      "patient021",
+      "patient022",
+      "patient023",
+      "patient025",
+      "patient027",
+      "patient031",
+      "patient033",
+      "patient034",
+      "patient035",
+      "patient037",
+      "patient038",
+      "patient039",
+      "patient040",
+      "patient042",
+      "patient043",
+      "patient044",
+      "patient045",
+      "patient046",
+      "patient047",
+      "patient048",
+      "patient049",
+      "patient050",
+      "patient051",
+      "patient052",
+      "patient053",
+      "patient054",
+      "patient056",
+      "patient057",
+      "patient058",
+      "patient059",
+      "patient060",
+      "patient061",
+      "patient062",
+      "patient063",
+      "patient064",
+      "patient066",
+      "patient067",
+      "patient068",
+      "patient069",
+      "patient071",
+      "patient072",
+      "patient073",
+      "patient074",
+      "patient075",
+      "patient078",
+      "patient079",
+      "patient080",
+      "patient081",
+      "patient083",
+      "patient084",
+      "patient085",
+      "patient086",
+      "patient088",
+      "patient090",
+      "patient091",
+      "patient092",
+      "patient093",
+      "patient094",
+      "patient096",
+      "patient097",
+      "patient100"
+    ]
+  },
+  "dino_required": false,
+  "extra": {
+    "completed": true,
+    "total_steps": 10000
+  },
+  "model_class": "CompactStudent",
+  "model_file_sha256": "5ac969c8e86a71dbd4451010b893693ea657d6a3a567d7d35a500327921448e2",
+  "parameters_total": 603956,
+  "parameters_trainable": 603956,
+  "payload_sha256": "c6cd0723ba0167a951fdcf5330b00dd6d1b781a26780ce86355cb278f2816121",
+  "schema": "self_audit.compact.checkpoint.v1",
+  "serialization_bytes": 7324151,
+  "source_sha256": "bbfbdab02cf7703904121f39720adcb1dc358b6d76b60fbbcb4366fa30244b3c",
+  "step": 10000,
+  "teacher_identity": {
+    "checks_passed": [
+      "lineage_format",
+      "patient_ids_validated",
+      "inference_state_declared",
+      "budget_k_satisfied",
+      "label_union_satisfied",
+      "mandatory_hashes_present",
+      "full_ema_method",
+      "quality_receipt_present"
+    ],
+    "inference_state": "student",
+    "label_budget": 8,
+    "labeled_ids": [
+      "patient007",
+      "patient010",
+      "patient011",
+      "patient024",
+      "patient026",
+      "patient041",
+      "patient077",
+      "patient099"
+    ],
+    "manifest_sha256": "ae36d026ce26ca188627e6ea4699695e9eb99501312ce05d5324b81e44d3ddaa",
+    "model_class": "NativeStudent",
+    "payload_sha256": "0ae593ecb6b6f9dcb88d0a41d4a77d7b3b3a3edd87396624c3648afb1281f1b6",
+    "physical_payload_status": "VERIFIED_ON_DISK",
+    "quality_receipt": {
+      "path": "/workspace/compact-acdc-l8/20261028/b8_recovery/test50_receipt/QUALITY_RECEIPT.json",
+      "sha256": "f1054ce3dea44ff600dca1708dc7c0906eef5fc84b229c19859d863cc4b46e5c"
+    },
+    "quality_receipt_sha256": "f1054ce3dea44ff600dca1708dc7c0906eef5fc84b229c19859d863cc4b46e5c",
+    "schema": "self_audit.compact_teacher_identity.v1",
+    "source_commit": "0f54455b67bb11a72fbfe2a8ac6fae4073f3e9ca",
+    "source_sha256": "3c7fa85f00d54a6e087af3cd6c7045351fb72d532f1069bf09d95f9cd72359b7",
+    "source_training_cost": {
+      "elapsed_seconds": 2440.043427208904,
+      "steps": 10000
+    },
+    "teacher_kind": "canonical",
+    "train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+    "training_method": "ema_full",
+    "verification_status": "VERIFIED_FROM_PINNED_CACHE",
+    "verified": true
+  },
+  "teacher_included": false,
+  "training_source_sha256": "bbfbdab02cf7703904121f39720adcb1dc358b6d76b60fbbcb4366fa30244b3c",
+  "weights_only_bytes": 2415824
+}

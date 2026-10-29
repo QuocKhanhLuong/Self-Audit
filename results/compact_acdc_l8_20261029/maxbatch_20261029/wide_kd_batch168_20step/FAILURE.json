@@ -1,0 +1,52 @@
+{
+  "schema": "self_audit.compact.failure.v1",
+  "status": "FAILED",
+  "error": "OutOfMemoryError('CUDA out of memory. Tried to allocate 264.00 MiB. GPU 0 has a total capacity of 23.43 GiB of which 256.56 MiB is free. Including non-PyTorch memory, this process has 23.17 GiB memory in use. Of the allocated memory 22.35 GiB is allocated by PyTorch, and 546.62 MiB is reserved by PyTorch but unallocated.')",
+  "counts": {
+    "supervised_updates": 12,
+    "pseudo_accepted": 10,
+    "pseudo_rejected": 0,
+    "warmup_steps": 1,
+    "no_candidates": 0,
+    "rejected_all": 0,
+    "zero_displacement": 0
+  },
+  "slices_sampled": {
+    "labeled": 2016,
+    "unlabeled": 2016,
+    "audit": 0
+  },
+  "slices_optimized": {
+    "labeled": 2016,
+    "unlabeled": 1680
+  },
+  "optimizer_calls": {
+    "adamw": 12,
+    "sgd": 10
+  },
+  "seen_supervised": [
+    "patient007",
+    "patient010",
+    "patient011",
+    "patient024",
+    "patient026",
+    "patient041",
+    "patient077",
+    "patient099"
+  ],
+  "seen_audit": [],
+  "seen_unlabeled": [
+    "patient001",
+    "patient002",
+    "patient003",
+    "patient006",
+    "patient008",
+    "patient009",
+    "patient013",
+    "patient016",
+    "patient017",
+    "patient019",
+    "patient020",
+    "patient021"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "remote": "KhanhDrive:Self-Audit-v2-artifacts/compact_ACDC_L8_S42_selected_197dd436_20261029/selected_compact_student/",
+  "selection": "wide plain KD, batch 8, selected on VAL18",
+  "selected_model": {
+    "MANIFEST.json": {
+      "sha256": "197dd4367877c51bc21b91d172f25442549ef9a3d0e422d28118bb07308067de",
+      "bytes": 9673
+    },
+    "weights.pt": {
+      "sha256": "32a35c1fc3b83d57d083de4ed17ab80bda6ba38a8ebc50133e5aede17ab00380",
+      "bytes": 9662432
+    }
+  },
+  "verification": "rclone cat of both model files compared with local SHA256; rclone check --download --one-way of staging files: 0 differences, 3 matching",
+  "teacher_included": false,
+  "external_teacher_required": false
+}

@@ -1195,6 +1195,97 @@ def _prepare_historical_reference_bundle(
     }
     return bundle, deploy_sha, identity_receipt
 
+
+def _prepare_canonical_reference_bundle(
+    checkpoint_dir: Union[str, Path],
+    expected_manifest_sha: str,
+    historical_source_path: Union[str, Path],
+    identity_path: Union[str, Path],
+    expected_identity_sha: str,
+    out_dir: Union[str, Path],
+    *,
+    inference_state: str,
+) -> Tuple[Path, str, Dict[str, Any]]:
+    """Freeze a physically verified recovered EMA raw student for fair timing."""
+    from .compact_teacher import load_teacher_for_cache, verify_historical_source
+
+    base = Path(checkpoint_dir).resolve()
+    manifest_file = base / "MANIFEST.json"
+    clean_manifest_sha = require_sha256(expected_manifest_sha, "baseline_checkpoint_sha256")
+    clean_identity_sha = require_sha256(expected_identity_sha, "baseline_teacher_identity_sha256")
+    identity_file = Path(identity_path).resolve()
+    if not identity_file.is_file() or digest(identity_file) != clean_identity_sha:
+        raise ValueError("canonical teacher identity file/hash mismatch")
+    if not manifest_file.is_file() or digest(manifest_file) != clean_manifest_sha:
+        raise ValueError("canonical teacher checkpoint manifest file/hash mismatch")
+    identity = json.loads(identity_file.read_text(encoding="utf-8"))
+    if identity.get("teacher_kind") != "canonical" or identity.get("inference_state") != "student":
+        raise ValueError("canonical reference must use the raw student state")
+    if inference_state != "student" or identity.get("manifest_sha256") != clean_manifest_sha:
+        raise ValueError("canonical teacher identity/state does not match requested checkpoint")
+    source_receipt = verify_historical_source(historical_source_path)
+    if identity.get("source_sha256") != source_receipt["source_closure"] or identity.get("source_commit") != source_receipt["source_commit"]:
+        raise ValueError("canonical teacher historical source closure mismatch")
+    model = load_teacher_for_cache(
+        checkpoint_dir=base,
+        teacher_identity=identity,
+        device="cpu",
+        historical_source_path=historical_source_path,
+        synthetic=False,
+    )
+    if getattr(model, "_compact_teacher_identity", {}).get("verified") is not True:
+        raise ValueError("canonical teacher physical verification failed")
+    manifest_data = json.loads(manifest_file.read_text(encoding="utf-8"))
+    config = manifest_data["config"]
+    if manifest_data.get("model_class") != "NativeStudent" or config.get("method") != identity.get("training_method"):
+        raise ValueError("canonical teacher model/method mismatch")
+
+    bundle = Path(out_dir).resolve()
+    if bundle.exists():
+        raise ValueError(f"canonical reference bundle destination already exists: {bundle}")
+    bundle.mkdir(parents=True)
+    weights_path = bundle / "weights.pt"
+    torch.save({k: v.detach().cpu() for k, v in model.state_dict().items()}, weights_path)
+    del model
+    gc.collect()
+    weights_sha = digest(weights_path)
+    shutil.copy2(identity_file, bundle / "TEACHER_IDENTITY.json")
+    deployed_manifest = {
+        "schema": "self_audit.compact.canonical_reference.v1",
+        "model_class": "NativeStudent",
+        "model_config": copy.deepcopy(dict(config["model"])),
+        "window": copy.deepcopy(config.get("window")),
+        "synthetic": False,
+        "inference_state": "student",
+        "training_method": identity["training_method"],
+        "weights": "weights.pt",
+        "weights_sha256": weights_sha,
+        "source_manifest_sha256": clean_manifest_sha,
+        "source_payload_sha256": identity["payload_sha256"],
+        "source_sha256": identity["source_sha256"],
+        "source_commit": identity["source_commit"],
+        "source_verified": True,
+        "teacher_identity_sha256": clean_identity_sha,
+        "quality_receipt": identity["quality_receipt"],
+    }
+    deploy_sha = write_json(bundle / "MANIFEST.json", deployed_manifest)
+    receipt = {
+        "status": "VERIFIED",
+        "teacher_kind": "canonical",
+        "source_manifest_sha256": clean_manifest_sha,
+        "source_payload_sha256": identity["payload_sha256"],
+        "source_sha256": identity["source_sha256"],
+        "source_commit": identity["source_commit"],
+        "inference_state": "student",
+        "training_method": identity["training_method"],
+        "teacher_identity_sha256": clean_identity_sha,
+        "quality_receipt_sha256": identity["quality_receipt"]["sha256"],
+        "deploy_manifest_sha256": deploy_sha,
+        "deploy_payload_sha256": weights_sha,
+        "verified": True,
+    }
+    return bundle, deploy_sha, receipt
+
 def run_isolated_benchmark(
     compact_export_path: Union[str, Path],
     compact_export_sha: str,
@@ -1206,6 +1297,8 @@ def run_isolated_benchmark(
     baseline_checkpoint_sha: Optional[str] = None,
     baseline_state: str = "student",
     historical_source_path: Optional[Union[str, Path]] = None,
+    baseline_teacher_identity_path: Optional[Union[str, Path]] = None,
+    baseline_teacher_identity_sha: Optional[str] = None,
     device: str = "cpu",
     batch_size: int = 16,
     warmup: int = 2,
@@ -1258,13 +1351,19 @@ def run_isolated_benchmark(
             base_p = Path(baseline_checkpoint_path).resolve()
             clean_base_sha = require_sha256(baseline_checkpoint_sha, "baseline_checkpoint_sha")
             try:
-                reference_bundle, deploy_sha, reference_identity = _prepare_historical_reference_bundle(
-                    base_p,
-                    clean_base_sha,
-                    historical_source_path,
-                    scratch_dir / "historical_reference",
-                    inference_state=baseline_state,
-                )
+                if baseline_teacher_identity_path is not None:
+                    if baseline_teacher_identity_sha is None:
+                        raise ValueError("canonical teacher identity SHA-256 is required")
+                    reference_bundle, deploy_sha, reference_identity = _prepare_canonical_reference_bundle(
+                        base_p, clean_base_sha, historical_source_path,
+                        baseline_teacher_identity_path, baseline_teacher_identity_sha,
+                        scratch_dir / "historical_reference", inference_state=baseline_state,
+                    )
+                else:
+                    reference_bundle, deploy_sha, reference_identity = _prepare_historical_reference_bundle(
+                        base_p, clean_base_sha, historical_source_path,
+                        scratch_dir / "historical_reference", inference_state=baseline_state,
+                    )
                 baseline_sub_result = _profile_in_subprocess(
                     model_type="historical_reference",
                     model_path=str(reference_bundle),
@@ -1459,18 +1558,43 @@ def _worker_benchmark_target(args: argparse.Namespace) -> None:
         if not manifest_file.is_file() or digest(manifest_file) != clean_expected_sha:
             raise ValueError("standalone historical reference manifest pin mismatch")
         ref = json.loads(manifest_file.read_text(encoding="utf-8"))
-        if ref.get("schema") != "self_audit.compact.historical_reference.v1":
+        ref_schema = ref.get("schema")
+        if ref_schema not in {"self_audit.compact.historical_reference.v1", "self_audit.compact.canonical_reference.v1"}:
             raise ValueError("unsupported standalone historical reference schema")
-        if ref.get("source_verified") is not True or ref.get("source_manifest_sha256") != HISTORICAL_BASELINE_PINS["manifest_sha256"]:
-            raise ValueError("standalone historical reference is not bound to the pinned source manifest")
-        if ref.get("source_payload_sha256") != HISTORICAL_BASELINE_PINS["payload_sha256"]:
-            raise ValueError("standalone historical reference is not bound to the pinned source payload")
         if ref.get("source_sha256") != HISTORICAL_SOURCE_CLOSURE or ref.get("source_commit") != HISTORICAL_SOURCE_COMMIT:
             raise ValueError("standalone historical reference source closure mismatch")
         if ref.get("inference_state") != HISTORICAL_INFERENCE_STATE or ref.get("training_method") != HISTORICAL_METHOD:
             raise ValueError("standalone historical reference state/method mismatch")
         if ref.get("synthetic") is not False:
             raise ValueError("historical baseline reference must be real, non-synthetic")
+        if ref.get("source_verified") is not True:
+            raise ValueError("standalone reference source was not verified")
+        if ref_schema == "self_audit.compact.historical_reference.v1":
+            if ref.get("source_manifest_sha256") != HISTORICAL_BASELINE_PINS["manifest_sha256"]:
+                raise ValueError("standalone historical reference is not bound to the pinned source manifest")
+            if ref.get("source_payload_sha256") != HISTORICAL_BASELINE_PINS["payload_sha256"]:
+                raise ValueError("standalone historical reference is not bound to the pinned source payload")
+        else:
+            from .compact_teacher import validate_teacher_identity
+            identity_file = bundle / "TEACHER_IDENTITY.json"
+            if not identity_file.is_file() or digest(identity_file) != ref.get("teacher_identity_sha256"):
+                raise ValueError("standalone canonical identity file/hash mismatch")
+            identity = json.loads(identity_file.read_text(encoding="utf-8"))
+            validate_teacher_identity(identity)
+            if identity.get("teacher_kind") != "canonical" or identity.get("inference_state") != "student":
+                raise ValueError("standalone canonical reference state/kind mismatch")
+            for key, source_key in (("manifest_sha256", "source_manifest_sha256"), ("payload_sha256", "source_payload_sha256"), ("source_sha256", "source_sha256")):
+                if identity.get(key) != ref.get(source_key):
+                    raise ValueError(f"standalone canonical reference {key} mismatch")
+            quality = identity["quality_receipt"]
+            quality_file = Path(quality["path"])
+            if not quality_file.is_file() or digest(quality_file) != quality.get("sha256") or ref.get("quality_receipt") != quality:
+                raise ValueError("standalone canonical quality receipt file/hash mismatch")
+            qr = json.loads(quality_file.read_text(encoding="utf-8"))
+            if qr.get("checkpoint_manifest_sha256") != ref["source_manifest_sha256"] or qr.get("inference_state") != "student":
+                raise ValueError("standalone canonical quality receipt refers to another teacher/state")
+            if not isinstance(qr.get("class_first_macro4"), (int, float)) or qr["class_first_macro4"] < 0.87:
+                raise ValueError("standalone canonical teacher quality gate failed")
         source_receipt = verify_historical_source(args.historical_source)
         if source_receipt.get("source_closure") != HISTORICAL_SOURCE_CLOSURE:
             raise ValueError("historical source closure changed after parent verification")

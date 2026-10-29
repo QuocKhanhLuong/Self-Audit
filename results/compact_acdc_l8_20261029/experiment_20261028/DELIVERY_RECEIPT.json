@@ -1,0 +1,167 @@
+{
+  "schema": "self_audit.compact_l8_delivery.v1",
+  "status": "COMPLETE",
+  "quality": {
+    "selection_rule": "higher VAL18 class-first Macro4; foreground tie break; TEST50 excluded",
+    "small_plain_val_macro4": 0.7540422944994748,
+    "wide_plain_val_macro4": 0.777413392930114,
+    "small_plain_val_foreground": 0.67515379204663,
+    "wide_plain_val_foreground": 0.7060258837373868,
+    "selected_method": "wide_plain_kd",
+    "selected_test50_macro4": 0.7596732665386504,
+    "selected_test50_foreground": 0.6824982806324317,
+    "selected_test50_class_dice": {
+      "BG": 0.9911982242573069,
+      "RV": 0.6238343071541723,
+      "MYO": 0.6869618100047334,
+      "LV": 0.7366987247383893
+    },
+    "decision": "NO_GO"
+  },
+  "teacher": {
+    "training_method": "ema_full",
+    "inference_state": "raw_student",
+    "b52_backup_zip_sha256": "61ff791ee2e6666722a68b06bb4f6fb7b1dc1baca7e9cf5e1b02816377aebc1c",
+    "b52_payload_sha256": "edbce7e5da09e33ec46586b71fc5807102fe5b8849aee6eed7ad768257b2e89d",
+    "b52_test50_macro4": 0.8614206623204309,
+    "b52_test50_foreground": 0.8166642816010583,
+    "b52_teacher_gate": "FAIL",
+    "b8_recovered_manifest_sha256": "ae36d026ce26ca188627e6ea4699695e9eb99501312ce05d5324b81e44d3ddaa",
+    "b8_recovered_payload_sha256": "0ae593ecb6b6f9dcb88d0a41d4a77d7b3b3a3edd87396624c3648afb1281f1b6",
+    "b8_test50_macro4": 0.8800492397526454,
+    "b8_test50_foreground": 0.8412102397257094,
+    "b8_teacher_gate": "PASS",
+    "identity_path": "/workspace/compact-acdc-l8/20261028/b8_recovery/TEACHER_IDENTITY.json",
+    "identity_sha256": "1cc82863264331c98d1ffd48fa5e2da61cdc6dcce5bcc1a55aa94762bfe4526b"
+  },
+  "label_budget": {
+    "dataset": "ACDC L8/U72",
+    "labeled_train_ids": [
+      "patient007",
+      "patient010",
+      "patient011",
+      "patient024",
+      "patient026",
+      "patient041",
+      "patient077",
+      "patient099"
+    ],
+    "train_manifest_path": "/workspace/Self-Audit/data/prepared/ACDC_L8_S42/train.json",
+    "train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+    "val18_manifest_sha256": "cac4426393ca11959f56df2876869e825443916cdec02c6d95ec8da3fac0ca50",
+    "test50_manifest_sha256": "68251014b877c25c4e182bbd05c570c24b0788e483435d68cb41ca350bc45242",
+    "joint_acdc_mnm": "NOT_RUN_UNLOCKED_LABEL_BUDGET_AND_LINEAGE"
+  },
+  "selected_artifact": {
+    "path": "/workspace/compact-acdc-l8/20261028/compact_student_selected",
+    "manifest_sha256": "197dd4367877c51bc21b91d172f25442549ef9a3d0e422d28118bb07308067de",
+    "weights_sha256": "32a35c1fc3b83d57d083de4ed17ab80bda6ba38a8ebc50133e5aede17ab00380",
+    "weights_only_file_bytes": 9662432,
+    "teacher_included": false,
+    "external_teacher_required": false,
+    "support_or_audit_required": false
+  },
+  "selected_test": {
+    "metrics_path": "/workspace/wide-plain-kd-test50-20261029/METRICS.json",
+    "metrics_sha256": "fd66b2a1be0d85790dc2502334809c27e658a647e48e0795f028736d3dcb40a7",
+    "exposed_development": true,
+    "independent_confirmation": false
+  },
+  "benchmark": {
+    "path": "/workspace/compact-acdc-l8/20261028/WIDE_QUALITY_SPEED_MEMORY.json",
+    "sha256": "6d0b7e246f7d1dea6f420840798891bd376485fd36946ea300b8b44211ab3fbb",
+    "conditions": {
+      "device": "cuda",
+      "batch_size": 8,
+      "warmup_runs": 2,
+      "steady_repeats": 5,
+      "normalization": "prepared",
+      "precision": "float32",
+      "volume_definition": "full_native_4d_cine_tzyx",
+      "io_cache_policy": "streaming_native_no_full_prob_cache; live_verified_npy_write_per_volume; OS_cache_not_flushed",
+      "io_policy": "streaming native; no full probability cache; verified uint8 NPY writes; OS filesystem cache retained",
+      "evaluation_manifest_sha256": "68251014b877c25c4e182bbd05c570c24b0788e483435d68cb41ca350bc45242",
+      "synthetic": false,
+      "timestamp": "2026-10-29T04:26:34Z",
+      "environment": {
+        "os": "Linux",
+        "python_version": "3.12.15",
+        "torch_version": "2.14.1+cu132",
+        "cpu_count": 128
+      }
+    },
+    "models": {
+      "selected_compact": {
+        "parameters": 2410596,
+        "weights_only_bytes": 9662432,
+        "steady_e2e_median_seconds_per_volume": 0.7636483130045235,
+        "steady_e2e_p95_seconds_per_volume": 1.05122871423373,
+        "peak_vram_allocated_mib": 832.0830078125,
+        "peak_vram_reserved_mib": 2136.0,
+        "peak_ram_mib": 1679.58984375
+      },
+      "b8_raw_student": {
+        "parameters": 32865530,
+        "weights_only_bytes": 131541429,
+        "steady_e2e_median_seconds_per_volume": 0.9995386878727004,
+        "steady_e2e_p95_seconds_per_volume": 1.3568016970995813,
+        "peak_vram_allocated_mib": 916.6357421875,
+        "peak_vram_reserved_mib": 1478.0,
+        "peak_ram_mib": 2182.375
+      }
+    }
+  },
+  "training": {
+    "run_elapsed_seconds": {
+      "supervised": 1200.347398414975,
+      "plain_kd": 2039.8826333219185,
+      "scalar_guard": 12662.36170998402,
+      "joint_guard": 11355.91764367302,
+      "wide_plain_kd": 2325.102953887079
+    },
+    "teacher_elapsed_seconds": 2440.043427208904,
+    "teacher_cache_elapsed_seconds": 88.75977764395066,
+    "total_elapsed_seconds": 32112.415544133866,
+    "source_digest": "bbfbdab02cf7703904121f39720adcb1dc358b6d76b60fbbcb4366fa30244b3c",
+    "wide_l_u_schedule_steps_compared": 10000,
+    "wide_l_u_schedule_mismatches": 0,
+    "batch200_one_step_report_path": "/workspace/compact-acdc-l8/20261028/batch200_capacity_profile/REPORT.json"
+  },
+  "source": {
+    "compact_worktree": "/workspace/Self-Audit-compact",
+    "benchmark_worktree": "/workspace/Self-Audit-benchmark",
+    "git_head": "6a9fa189072ccbe2d41edc8855a79108dd6c1bce",
+    "isolated_worktree_modifications_uncommitted": true,
+    "train_report_source_hashes": {
+      "self_audit/compact_training.py": "b7a5123ebc93e9271e111430f4818b8654d0c63d1b31e7a5b34dc05749c06a70",
+      "self_audit/engine.py": "7119466bfc8de9e96d440935a46c353033c583b6f674ef6a912b27e50b7ca569",
+      "train.py": "ec671ef385b7ef6aea0cbe4975cdb69a743c937998170529f9bdbb9226ad68fe"
+    },
+    "benchmark_source_hashes": {
+      "compact_inference.py": "8cdb7c216c7a6b2c66e9e095dde369265006d1b28dca007ba7af06104993d4c6",
+      "benchmark_compact_student.py": "45272e92f23a4e8a2be4fb79d0b470b8a553477c7587dd0ec7610a34b0c99839"
+    }
+  },
+  "tests": {
+    "training_check_repo_log": "/workspace/compact-acdc-l8/20261028/train_check_repo_final.log",
+    "benchmark_check_repo_log": "/workspace/compact-acdc-l8/20261028/benchmark_check_repo_final.log",
+    "training_pytest_log": "/workspace/compact-acdc-l8/20261028/pytest_final.log",
+    "training_pytest": "790 passed, 2 warnings",
+    "benchmark_pytest_log": "/workspace/compact-acdc-l8/20261028/benchmark_pytest.log",
+    "benchmark_pytest": "789 passed, 2 warnings",
+    "git_diff_check": "PASS"
+  },
+  "cleanup": {
+    "mnm_zip_verification_path": "/workspace/compact-acdc-l8/20261028/MNM_ZIP_VERIFICATION.json",
+    "mnm_zips_deleted_after_extract_verification": true,
+    "teacher_cache_dev_shm_cleared_after_all_runs": true,
+    "local_datasets_and_valid_checkpoints_preserved": true
+  },
+  "paths": {
+    "root": "/workspace/compact-acdc-l8/20261028",
+    "final_selection": "/workspace/compact-acdc-l8/20261028/FINAL_SELECTION.json",
+    "capacity_selection": "/workspace/compact-acdc-l8/20261028/WIDE_CAPACITY_RESULT.json",
+    "small_benchmark": "/workspace/compact-acdc-l8/20261028/QUALITY_SPEED_MEMORY.json",
+    "wide_benchmark": "/workspace/compact-acdc-l8/20261028/WIDE_QUALITY_SPEED_MEMORY.json"
+  }
+}

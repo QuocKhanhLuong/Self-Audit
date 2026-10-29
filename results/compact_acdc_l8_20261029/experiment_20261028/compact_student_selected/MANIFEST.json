@@ -1,0 +1,340 @@
+{
+  "architecture": {
+    "dino_required": false,
+    "in_channels": 3,
+    "init": "kaiming_normal",
+    "init_lineage": "random_kaiming_distinct_from_dino",
+    "model_class": "CompactStudent",
+    "name": "CompactStudent",
+    "norm": "group_norm",
+    "num_classes": 4,
+    "pretrained": false,
+    "widths": [
+      32,
+      64,
+      128,
+      256
+    ]
+  },
+  "class_map": {
+    "0": "background",
+    "1": "right_ventricle",
+    "2": "myocardium",
+    "3": "left_ventricle"
+  },
+  "config": {
+    "absent_fp_budget": 0.0,
+    "acceptance": {
+      "metric": "Macro4",
+      "min_macro4": 0.87,
+      "notes": "Full opt-in profile; requires verified teacher identity/cache and explicit --allow-full-run."
+    },
+    "batch_size": 8,
+    "coefficient": 1.0,
+    "crop_size": 160,
+    "data": null,
+    "equal_wall_time": {
+      "enabled": false
+    },
+    "experiment": {
+      "name": "acdc_l8_b8_wide_plain_kd_single_capacity_trial",
+      "parent_config_sha256": "3aecdeadb882deef1b26135e44c2c68ce97e358cd3e46b44f367d6e2bc3c628c",
+      "rationale": "Small 603956-param plain KD export measured TEST50 Macro4 0.7177706; one width-doubled arm on same L8/U72 schedule and fixed B8 teacher; no added labels.",
+      "status": "ONE_LARGER_CAPACITY_TRIAL"
+    },
+    "guard_tolerance": 1e-06,
+    "labeled_batch_size": 8,
+    "lr": 0.0003,
+    "max_trials": 8,
+    "method": "plain_kd",
+    "model": {
+      "in_channels": 3,
+      "init": "kaiming_normal",
+      "name": "CompactStudent",
+      "num_classes": 4,
+      "widths": [
+        32,
+        64,
+        128,
+        256
+      ]
+    },
+    "pseudo_lr": 0.001,
+    "pseudo_threshold": 0.7,
+    "ridge": 1e-06,
+    "risk_budget": 0.0,
+    "save_every": 1000,
+    "schema": "self_audit.compact.v1",
+    "seed": 42,
+    "steps": 10000,
+    "teacher": {
+      "cache_path": null,
+      "cache_sha256": null,
+      "lineage": {
+        "budget_k": 8,
+        "exact_labeled_ids": [
+          "patient007",
+          "patient010",
+          "patient011",
+          "patient024",
+          "patient026",
+          "patient041",
+          "patient077",
+          "patient099"
+        ]
+      },
+      "source": "/workspace/compact-acdc-l8/20261028/b8_recovery/full/final/MANIFEST.json",
+      "source_manifest_sha256": "ae36d026ce26ca188627e6ea4699695e9eb99501312ce05d5324b81e44d3ddaa",
+      "source_payload_sha256": "0ae593ecb6b6f9dcb88d0a41d4a77d7b3b3a3edd87396624c3648afb1281f1b6",
+      "source_training_cost": {
+        "elapsed_seconds": 2440.043427208904,
+        "steps": 10000
+      },
+      "state": "student",
+      "teacher_identity": {
+        "inference_state": "student",
+        "label_budget": 8,
+        "labeled_ids": [
+          "patient007",
+          "patient010",
+          "patient011",
+          "patient024",
+          "patient026",
+          "patient041",
+          "patient077",
+          "patient099"
+        ],
+        "manifest_sha256": "ae36d026ce26ca188627e6ea4699695e9eb99501312ce05d5324b81e44d3ddaa",
+        "model_class": "NativeStudent",
+        "payload_sha256": "0ae593ecb6b6f9dcb88d0a41d4a77d7b3b3a3edd87396624c3648afb1281f1b6",
+        "quality_receipt": {
+          "path": "/workspace/compact-acdc-l8/20261028/b8_recovery/test50_receipt/QUALITY_RECEIPT.json",
+          "sha256": "f1054ce3dea44ff600dca1708dc7c0906eef5fc84b229c19859d863cc4b46e5c"
+        },
+        "schema": "self_audit.compact_teacher_identity.v1",
+        "source_commit": "0f54455b67bb11a72fbfe2a8ac6fae4073f3e9ca",
+        "source_sha256": "3c7fa85f00d54a6e087af3cd6c7045351fb72d532f1069bf09d95f9cd72359b7",
+        "source_training_cost": {
+          "elapsed_seconds": 2440.043427208904,
+          "steps": 10000
+        },
+        "teacher_kind": "canonical",
+        "train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+        "training_method": "ema_full"
+      }
+    },
+    "temperature": 1.0,
+    "unlabeled_batch_size": 8,
+    "warmup_steps": 1000,
+    "weight_decay": 0.0001
+  },
+  "dino_required": false,
+  "external_teacher_required": false,
+  "lineage": {
+    "data_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+    "label_budget": 8,
+    "lids": [
+      "patient007",
+      "patient010",
+      "patient011",
+      "patient024",
+      "patient026",
+      "patient041",
+      "patient077",
+      "patient099"
+    ],
+    "synthetic": false,
+    "teacher_identity": {
+      "checks_passed": [
+        "lineage_format",
+        "patient_ids_validated",
+        "inference_state_declared",
+        "budget_k_satisfied",
+        "label_union_satisfied",
+        "mandatory_hashes_present",
+        "full_ema_method",
+        "quality_receipt_present"
+      ],
+      "inference_state": "student",
+      "label_budget": 8,
+      "labeled_ids": [
+        "patient007",
+        "patient010",
+        "patient011",
+        "patient024",
+        "patient026",
+        "patient041",
+        "patient077",
+        "patient099"
+      ],
+      "manifest_sha256": "ae36d026ce26ca188627e6ea4699695e9eb99501312ce05d5324b81e44d3ddaa",
+      "model_class": "NativeStudent",
+      "payload_sha256": "0ae593ecb6b6f9dcb88d0a41d4a77d7b3b3a3edd87396624c3648afb1281f1b6",
+      "physical_payload_status": "VERIFIED_ON_DISK",
+      "quality_receipt": {
+        "path": "/workspace/compact-acdc-l8/20261028/b8_recovery/test50_receipt/QUALITY_RECEIPT.json",
+        "sha256": "f1054ce3dea44ff600dca1708dc7c0906eef5fc84b229c19859d863cc4b46e5c"
+      },
+      "quality_receipt_sha256": "f1054ce3dea44ff600dca1708dc7c0906eef5fc84b229c19859d863cc4b46e5c",
+      "schema": "self_audit.compact_teacher_identity.v1",
+      "source_commit": "0f54455b67bb11a72fbfe2a8ac6fae4073f3e9ca",
+      "source_sha256": "3c7fa85f00d54a6e087af3cd6c7045351fb72d532f1069bf09d95f9cd72359b7",
+      "source_training_cost": {
+        "elapsed_seconds": 2440.043427208904,
+        "steps": 10000
+      },
+      "teacher_kind": "canonical",
+      "train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+      "training_method": "ema_full",
+      "verification_status": "VERIFIED_FROM_PINNED_CACHE",
+      "verified": true
+    },
+    "uids": [
+      "patient001",
+      "patient002",
+      "patient003",
+      "patient006",
+      "patient008",
+      "patient009",
+      "patient013",
+      "patient016",
+      "patient017",
+      "patient019",
+      "patient020",
+      "patient021",
+      "patient022",
+      "patient023",
+      "patient025",
+      "patient027",
+      "patient031",
+      "patient033",
+      "patient034",
+      "patient035",
+      "patient037",
+      "patient038",
+      "patient039",
+      "patient040",
+      "patient042",
+      "patient043",
+      "patient044",
+      "patient045",
+      "patient046",
+      "patient047",
+      "patient048",
+      "patient049",
+      "patient050",
+      "patient051",
+      "patient052",
+      "patient053",
+      "patient054",
+      "patient056",
+      "patient057",
+      "patient058",
+      "patient059",
+      "patient060",
+      "patient061",
+      "patient062",
+      "patient063",
+      "patient064",
+      "patient066",
+      "patient067",
+      "patient068",
+      "patient069",
+      "patient071",
+      "patient072",
+      "patient073",
+      "patient074",
+      "patient075",
+      "patient078",
+      "patient079",
+      "patient080",
+      "patient081",
+      "patient083",
+      "patient084",
+      "patient085",
+      "patient086",
+      "patient088",
+      "patient090",
+      "patient091",
+      "patient092",
+      "patient093",
+      "patient094",
+      "patient096",
+      "patient097",
+      "patient100"
+    ]
+  },
+  "model_class": "CompactStudent",
+  "model_file_sha256": "5ac969c8e86a71dbd4451010b893693ea657d6a3a567d7d35a500327921448e2",
+  "native_axes": {
+    "patient_volume_cine": [
+      "T",
+      "Z",
+      "Y",
+      "X"
+    ],
+    "slice_batch_tensor": [
+      "B",
+      "C",
+      "H",
+      "W"
+    ]
+  },
+  "parameters_total": 2410596,
+  "parameters_trainable": 2410596,
+  "payload_sha256": "32a35c1fc3b83d57d083de4ed17ab80bda6ba38a8ebc50133e5aede17ab00380",
+  "preprocessing": {
+    "context_boundary_mode": "clamp",
+    "context_slices": [
+      -1,
+      0,
+      1
+    ],
+    "default_normalization": "prepared",
+    "input_channels": 3,
+    "normalization_recipes": {
+      "prepared": {
+        "description": "Validates that values are already in [0, 1] without renormalizing.",
+        "mode": "prepared",
+        "renormalize": false,
+        "tolerance": 1e-05,
+        "value_range": [
+          0.0,
+          1.0
+        ]
+      },
+      "raw": {
+        "axes": [
+          "T",
+          "Z",
+          "Y",
+          "X"
+        ],
+        "description": "Per-cine 0.5% and 99.5% percentile intensity scaling to [0, 1].",
+        "epsilon": 1e-06,
+        "mode": "raw",
+        "percentile_scope": "per_cine",
+        "percentiles": [
+          0.5,
+          99.5
+        ],
+        "renormalize": true,
+        "target_range": [
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "pretrained_weights_required": false,
+  "schema": "self_audit.compact.export.v1",
+  "serialization_bytes": 9662432,
+  "source_checkpoint_manifest_sha256": "8d2ba59c8bbc9f600fc0a829477d5ceea8c42e06ad8c7460786244deda183f46",
+  "source_checkpoint_payload_sha256": "94b7dff60c97acd1bbc1ae5099d92402235dd79a6ad065f28958eb3b80e9e866",
+  "source_sha256": "bbfbdab02cf7703904121f39720adcb1dc358b6d76b60fbbcb4366fa30244b3c",
+  "synthetic": false,
+  "teacher_included": false,
+  "teacher_memory_included": false,
+  "training_source_sha256": "bbfbdab02cf7703904121f39720adcb1dc358b6d76b60fbbcb4366fa30244b3c",
+  "weights_only_bytes": 9642384
+}

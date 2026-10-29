@@ -1,0 +1,29 @@
+{
+  "schema": "self_audit.semi_v2",
+  "method": "ema_full",
+  "update_scope": "decoder",
+  "steps": 10000,
+  "warmup_steps": 1000,
+  "seed": 42,
+  "body_lr": 3e-05,
+  "head_lr": 0.003,
+  "pseudo_lr": 0.001,
+  "weight_decay": 0.0001,
+  "ema_decay": 0.99,
+  "pseudo_threshold": 0.7,
+  "ridge": 1e-06,
+  "risk_budget": 0.0,
+  "guard_tolerance": 1e-08,
+  "backtracks": 8,
+  "save_every": 1000,
+  "threads": 2,
+  "model": {
+    "backbone": "dinov3_convnext_tiny",
+    "source_repo": "/workspace/self-audit-v2/external/dinov3",
+    "source_commit": "6876159a11b4df116f30f667f8c9888617df0751",
+    "weights": "/workspace/self-audit-v2/weights/dinov3_convnext_tiny_pretrain_lvd1689m-21b726bb.pth",
+    "weights_sha256": "21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54"
+  },
+  "batch_size": 52,
+  "crop_size": 256
+}

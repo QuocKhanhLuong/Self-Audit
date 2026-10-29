@@ -1,0 +1,41 @@
+{
+  "schema": "self_audit.compact_capacity_selection.v1",
+  "selection_rule": "higher VAL18 class-first Macro4; foreground tie break; TEST50 excluded",
+  "checks": {
+    "complete": true,
+    "fixed_teacher": true,
+    "same_source": true,
+    "same_l8": true,
+    "manifest_sha": true,
+    "weights_sha": true,
+    "matched_l_u_schedule": true
+  },
+  "schedule_steps_compared": 10000,
+  "schedule_mismatches": 0,
+  "small_plain_val_macro4": 0.7540422944994748,
+  "wide_plain_val_macro4": 0.777413392930114,
+  "small_plain_val_foreground": 0.67515379204663,
+  "wide_plain_val_foreground": 0.7060258837373868,
+  "selected_method": "wide_plain_kd",
+  "selected_export_path": "/workspace/compact-acdc-l8/20261028/compact_student_selected",
+  "selected_export_manifest_sha256": "197dd4367877c51bc21b91d172f25442549ef9a3d0e422d28118bb07308067de",
+  "selected_test50_macro4": 0.7596732665386504,
+  "selected_test50_foreground": 0.6824982806324317,
+  "selected_test50_class_dice": {
+    "BG": 0.9911982242573069,
+    "RV": 0.6238343071541723,
+    "MYO": 0.6869618100047334,
+    "LV": 0.7366987247383893
+  },
+  "decision": "NO_GO",
+  "wide_train_elapsed_seconds": 2325.102953887079,
+  "wide_peak_train_vram_allocated_bytes": 1363081728,
+  "wide_peak_train_vram_reserved_bytes": 1635778560,
+  "wide_export_manifest_sha256": "197dd4367877c51bc21b91d172f25442549ef9a3d0e422d28118bb07308067de",
+  "wide_benchmark_path": "/workspace/compact-acdc-l8/20261028/WIDE_QUALITY_SPEED_MEMORY.json",
+  "wide_benchmark_sha256": "6d0b7e246f7d1dea6f420840798891bd376485fd36946ea300b8b44211ab3fbb",
+  "wide_val_metrics_path": "/workspace/wide-plain-kd-val18-20261029/METRICS.json",
+  "wide_val_metrics_sha256": "da1e6252abf8e849aa57bf29507139a27627e2f6537cc1f7e3e496ce0b093058",
+  "selected_test_metrics_path": "/workspace/wide-plain-kd-test50-20261029/METRICS.json",
+  "selected_test_metrics_sha256": "fd66b2a1be0d85790dc2502334809c27e658a647e48e0795f028736d3dcb40a7"
+}

@@ -1,0 +1,400 @@
+{
+  "schema": "self_audit.compact.benchmark.v1",
+  "benchmark_conditions": {
+    "device": "cuda",
+    "batch_size": 8,
+    "warmup_runs": 0,
+    "steady_repeats": 1,
+    "normalization": "prepared",
+    "precision": "float32",
+    "volume_definition": "full_native_4d_cine_tzyx",
+    "io_cache_policy": "streaming_native_no_full_prob_cache; live_verified_npy_write_per_volume; OS_cache_not_flushed",
+    "io_policy": "streaming native; no full probability cache; verified uint8 NPY writes; OS filesystem cache retained",
+    "evaluation_manifest_sha256": "c68f60373c67176e9aa0076dff1b360aea0054da61bea150d7406b553b5dd218",
+    "synthetic": false,
+    "timestamp": "2026-10-28T20:56:04Z",
+    "environment": {
+      "os": "Linux",
+      "python_version": "3.12.15",
+      "torch_version": "2.14.1+cu132",
+      "cpu_count": 128
+    }
+  },
+  "compact_student": {
+    "status": "COMPLETED",
+    "model_type": "compact_export",
+    "model_path": "/workspace/compact-acdc-l8/20261028/plain_kd_export",
+    "artifact_manifest_sha256": "ce2fd65a1d1ae5708aae1b7187ae7eb0b21d8ed1d93612cfaf38aec346964753",
+    "artifact_payload_sha256": "217eca970d22cf029f6120ae0c08c6681a1284ab013d21349bc9496fb33657ff",
+    "evaluation_manifest_sha256": "c68f60373c67176e9aa0076dff1b360aea0054da61bea150d7406b553b5dd218",
+    "synthetic": false,
+    "device": "cuda",
+    "precision": "float32",
+    "volume_definition": "full_native_4d_cine_tzyx; one complete patient cine per volume",
+    "io_policy": "streaming native; no full probability cache; verified uint8 NPY writes; OS filesystem cache retained",
+    "io_cache_policy": "streaming native; no full probability cache; verified NPY volume writes; OS cache not flushed",
+    "reference": null,
+    "workload": {
+      "total_cases": 1,
+      "total_slices_per_cohort": 300,
+      "batch_size": 8,
+      "case_hashes": [
+        {
+          "id": "patient101",
+          "dataset": "unspecified",
+          "image_sha256": "905d7eca7b57d4f9b5af9d35bad9fb6bd2bbb151e0c7a9e34541501fa55dca7e",
+          "shape_tzyx": [
+            30,
+            10,
+            256,
+            232
+          ],
+          "axes": [
+            "T",
+            "Z",
+            "Y",
+            "X"
+          ],
+          "affine": [
+            [
+              -1.0,
+              0.0,
+              0.0,
+              -0.0
+            ],
+            [
+              0.0,
+              -1.0,
+              0.0,
+              -0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        }
+      ],
+      "case_shapes": [
+        {
+          "id": "patient101",
+          "shape_tzyx": [
+            30,
+            10,
+            256,
+            232
+          ]
+        }
+      ],
+      "patient_coverage_complete": true
+    },
+    "inference_outputs": [
+      {
+        "id": "patient101",
+        "dataset": "unspecified",
+        "image_sha256": "905d7eca7b57d4f9b5af9d35bad9fb6bd2bbb151e0c7a9e34541501fa55dca7e",
+        "shape_tzyx": [
+          30,
+          10,
+          256,
+          232
+        ],
+        "axes": [
+          "T",
+          "Z",
+          "Y",
+          "X"
+        ],
+        "affine": [
+          [
+            -1.0,
+            0.0,
+            0.0,
+            -0.0
+          ],
+          [
+            0.0,
+            -1.0,
+            0.0,
+            -0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "slice_count": 300,
+        "prediction_file": "patient101_case_0.npy",
+        "prediction_sha256": "3b9decfb42e904e66a2b6b0607b3ea3e112ff9e38bf1f372c73e69faee83c62b"
+      }
+    ],
+    "model_size": {
+      "total_parameters": 603956,
+      "trainable_parameters": 0,
+      "tensor_param_bytes": 2415824,
+      "deployed_file_bytes": 2435872,
+      "deployed_weights_bytes": 2435872,
+      "load_time_seconds": 0.18234440102241933
+    },
+    "latency": {
+      "cold": {
+        "load_seconds": 0.18234440102241933,
+        "model_only_median_seconds_per_volume": 0.6175663948524743,
+        "e2e_median_seconds_per_volume": 1.0035641330759972
+      },
+      "steady": {
+        "repeats": 1,
+        "model_only_median_seconds_per_volume": 0.24045901373028755,
+        "model_only_p95_seconds_per_volume": 0.24045901373028755,
+        "model_only_min_seconds_per_volume": 0.24045901373028755,
+        "model_only_max_seconds_per_volume": 0.24045901373028755,
+        "e2e_median_seconds_per_volume": 0.5863525772001594,
+        "e2e_p95_seconds_per_volume": 0.5863525772001594,
+        "total_wall_seconds": 0.5962962340563536,
+        "total_volumes": 1,
+        "total_slices": 300,
+        "volumes_per_second": 1.6770188085834767,
+        "slices_per_second": 503.105642575043
+      }
+    },
+    "memory": {
+      "peak_inference_process_tree_ram_mb": 1549.09375,
+      "ram_poll_interval_ms": 5,
+      "cuda_peak_allocated_mb": 377.38916015625,
+      "cuda_peak_reserved_mb": 456.0
+    }
+  },
+  "baseline_student": {
+    "status": "COMPLETED",
+    "model_type": "historical_reference",
+    "model_path": "/workspace/compact-acdc-l8/20261028/_bench_scratch_1793220948/historical_reference",
+    "artifact_manifest_sha256": "d6ecde84f1e74424105ffffa1c09d752834f5a9915389a3e1375d34e68e39ad9",
+    "artifact_payload_sha256": "348a622155efceb9ceb6c98fbf1fbd973d2e23b701ed46a9c44d757519846973",
+    "evaluation_manifest_sha256": "c68f60373c67176e9aa0076dff1b360aea0054da61bea150d7406b553b5dd218",
+    "synthetic": false,
+    "device": "cuda",
+    "precision": "float32",
+    "volume_definition": "full_native_4d_cine_tzyx; one complete patient cine per volume",
+    "io_policy": "streaming native; no full probability cache; verified uint8 NPY writes; OS filesystem cache retained",
+    "io_cache_policy": "streaming native; no full probability cache; verified NPY volume writes; OS cache not flushed",
+    "reference": {
+      "schema": "self_audit.compact.canonical_reference.v1",
+      "model_class": "NativeStudent",
+      "model_config": {
+        "backbone": "dinov3_convnext_tiny",
+        "source_repo": "/root/self-audit-pilot-artifacts/backbone/dinov3",
+        "source_commit": "6876159a11b4df116f30f667f8c9888617df0751",
+        "weights": "/root/self-audit-pilot-artifacts/backbone/pretrained/dinov3_convnext_tiny_pretrain_lvd1689m-21b726bb.pth",
+        "weights_sha256": "21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54"
+      },
+      "window": {
+        "mode": "none",
+        "dim": 32,
+        "radius_min": 0.5,
+        "radius_max": 4.0,
+        "offset_limit": 2.0,
+        "initial_radius": 1.0,
+        "gamma_init": 0.001
+      },
+      "synthetic": false,
+      "inference_state": "student",
+      "training_method": "ema_full",
+      "weights": "weights.pt",
+      "weights_sha256": "348a622155efceb9ceb6c98fbf1fbd973d2e23b701ed46a9c44d757519846973",
+      "source_manifest_sha256": "ae36d026ce26ca188627e6ea4699695e9eb99501312ce05d5324b81e44d3ddaa",
+      "source_payload_sha256": "0ae593ecb6b6f9dcb88d0a41d4a77d7b3b3a3edd87396624c3648afb1281f1b6",
+      "source_sha256": "3c7fa85f00d54a6e087af3cd6c7045351fb72d532f1069bf09d95f9cd72359b7",
+      "source_commit": "0f54455b67bb11a72fbfe2a8ac6fae4073f3e9ca",
+      "source_verified": true,
+      "teacher_identity_sha256": "1cc82863264331c98d1ffd48fa5e2da61cdc6dcce5bcc1a55aa94762bfe4526b",
+      "quality_receipt": {
+        "path": "/workspace/compact-acdc-l8/20261028/b8_recovery/test50_receipt/QUALITY_RECEIPT.json",
+        "sha256": "f1054ce3dea44ff600dca1708dc7c0906eef5fc84b229c19859d863cc4b46e5c"
+      }
+    },
+    "workload": {
+      "total_cases": 1,
+      "total_slices_per_cohort": 300,
+      "batch_size": 8,
+      "case_hashes": [
+        {
+          "id": "patient101",
+          "dataset": "unspecified",
+          "image_sha256": "905d7eca7b57d4f9b5af9d35bad9fb6bd2bbb151e0c7a9e34541501fa55dca7e",
+          "shape_tzyx": [
+            30,
+            10,
+            256,
+            232
+          ],
+          "axes": [
+            "T",
+            "Z",
+            "Y",
+            "X"
+          ],
+          "affine": [
+            [
+              -1.0,
+              0.0,
+              0.0,
+              -0.0
+            ],
+            [
+              0.0,
+              -1.0,
+              0.0,
+              -0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        }
+      ],
+      "case_shapes": [
+        {
+          "id": "patient101",
+          "shape_tzyx": [
+            30,
+            10,
+            256,
+            232
+          ]
+        }
+      ],
+      "patient_coverage_complete": true
+    },
+    "inference_outputs": [
+      {
+        "id": "patient101",
+        "dataset": "unspecified",
+        "image_sha256": "905d7eca7b57d4f9b5af9d35bad9fb6bd2bbb151e0c7a9e34541501fa55dca7e",
+        "shape_tzyx": [
+          30,
+          10,
+          256,
+          232
+        ],
+        "axes": [
+          "T",
+          "Z",
+          "Y",
+          "X"
+        ],
+        "affine": [
+          [
+            -1.0,
+            0.0,
+            0.0,
+            -0.0
+          ],
+          [
+            0.0,
+            -1.0,
+            0.0,
+            -0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "slice_count": 300,
+        "prediction_file": "patient101_case_0.npy",
+        "prediction_sha256": "0c46496d87f62d5b033067cadaf07286eb78974dfc57792cea8f6349e33ccc48"
+      }
+    ],
+    "model_size": {
+      "total_parameters": 32865530,
+      "trainable_parameters": 0,
+      "tensor_param_bytes": 131462120,
+      "deployed_file_bytes": 131541429,
+      "deployed_weights_bytes": 131541429,
+      "load_time_seconds": 2.9551073010079563
+    },
+    "latency": {
+      "cold": {
+        "load_seconds": 2.9551073010079563,
+        "model_only_median_seconds_per_volume": 1.549222888192162,
+        "e2e_median_seconds_per_volume": 1.9109034861903638
+      },
+      "steady": {
+        "repeats": 1,
+        "model_only_median_seconds_per_volume": 1.0451301785651594,
+        "model_only_p95_seconds_per_volume": 1.0451301785651594,
+        "model_only_min_seconds_per_volume": 1.0451301785651594,
+        "model_only_max_seconds_per_volume": 1.0451301785651594,
+        "e2e_median_seconds_per_volume": 1.3991090888157487,
+        "e2e_p95_seconds_per_volume": 1.3991090888157487,
+        "total_wall_seconds": 1.4048121550586075,
+        "total_volumes": 1,
+        "total_slices": 300,
+        "volumes_per_second": 0.7118389433057553,
+        "slices_per_second": 213.55168299172658
+      }
+    },
+    "memory": {
+      "peak_inference_process_tree_ram_mb": 2042.46484375,
+      "ram_poll_interval_ms": 5,
+      "cuda_peak_allocated_mb": 832.9873046875,
+      "cuda_peak_reserved_mb": 1188.0
+    },
+    "source_manifest_sha256": "ae36d026ce26ca188627e6ea4699695e9eb99501312ce05d5324b81e44d3ddaa",
+    "source_payload_sha256": "0ae593ecb6b6f9dcb88d0a41d4a77d7b3b3a3edd87396624c3648afb1281f1b6",
+    "inference_state": "student"
+  },
+  "reference_identity": {
+    "status": "VERIFIED",
+    "teacher_kind": "canonical",
+    "source_manifest_sha256": "ae36d026ce26ca188627e6ea4699695e9eb99501312ce05d5324b81e44d3ddaa",
+    "source_payload_sha256": "0ae593ecb6b6f9dcb88d0a41d4a77d7b3b3a3edd87396624c3648afb1281f1b6",
+    "source_sha256": "3c7fa85f00d54a6e087af3cd6c7045351fb72d532f1069bf09d95f9cd72359b7",
+    "source_commit": "0f54455b67bb11a72fbfe2a8ac6fae4073f3e9ca",
+    "inference_state": "student",
+    "training_method": "ema_full",
+    "teacher_identity_sha256": "1cc82863264331c98d1ffd48fa5e2da61cdc6dcce5bcc1a55aa94762bfe4526b",
+    "quality_receipt_sha256": "f1054ce3dea44ff600dca1708dc7c0906eef5fc84b229c19859d863cc4b46e5c",
+    "deploy_manifest_sha256": "d6ecde84f1e74424105ffffa1c09d752834f5a9915389a3e1375d34e68e39ad9",
+    "deploy_payload_sha256": "348a622155efceb9ceb6c98fbf1fbd973d2e23b701ed46a9c44d757519846973",
+    "verified": true
+  },
+  "comparison": {
+    "model_only_speedup": 4.346396345688404,
+    "peak_inference_ram_reduction_factor": 1.3184901454479434,
+    "deployed_bytes_reduction_factor": 54.001782113345854
+  }
+}

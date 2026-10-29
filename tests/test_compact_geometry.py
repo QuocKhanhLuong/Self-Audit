@@ -45,3 +45,19 @@ def test_geometry_requires_voxel_correspondence_not_shape_alone(tmp_path):
     m.write_text(json.dumps(manifest))
     with pytest.raises(ValueError,match='voxel correspondence'):
         attach_geometry(m,digest(m),s,digest(s),tmp_path/'out.json')
+
+
+def test_geometry_records_unknown_source_units_without_claiming_mm(tmp_path):
+    m,s,_=geometry_fixture(tmp_path)
+    source=json.loads(s.read_text())['patients']['p']['path']
+    raw=s.parent/source
+    obj=nib.load(raw)
+    obj.header.set_xyzt_units('unknown','unknown')
+    nib.save(obj,raw)
+    mapping=json.loads(s.read_text())
+    mapping['patients']['p']['sha256']=digest(raw)
+    s.write_text(json.dumps(mapping))
+    attach_geometry(m,digest(m),s,digest(s),tmp_path/'out.json')
+    derived=json.loads((tmp_path/'out.json').read_text())
+    assert derived['patients'][0]['spatial_units']=='unknown'
+    assert derived['geometry_provenance']['spatial_units']=='unknown_in_source'

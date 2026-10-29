@@ -1,0 +1,23 @@
+{
+  "schema": "self_audit.active_pipeline.v2",
+  "entrypoint": "train.py",
+  "package": "self_audit",
+  "architecture": "dinov3_convnext_tiny_native_decoder_v2",
+  "model_class": "NativeStudent",
+  "supervision": "semi_supervised; dense TRAIN subset incl audit; not no-GT",
+  "method": "joint_guard",
+  "pilot_update_scope": "head",
+  "full_update_scope": "decoder",
+  "pretrained_required": true,
+  "default_max_steps": 32,
+  "historical_bank_used": false,
+  "teacher": "EMA of labeled-initialized student; updated after final commit only",
+  "audit": "TRAIN optimization data; one-v-rest Brier incl negatives; not a generalization certificate",
+  "guard": "extra pseudo displacement only; no hidden AdamW transformation",
+  "legacy_archive": "archive/pre-semisupervised-20261020",
+  "legacy_commit": "924265f7df604d3dca84dda49578b1a0cf28d821",
+  "patient_training_this_delivery": true,
+  "training_input_policy": "random_crop_256_image_geometry_only; edge_pad; exclude_padding; no_resize",
+  "training_batch_size": 52,
+  "evaluation_input_policy": "full_native_cine_no_training_crop"
+}

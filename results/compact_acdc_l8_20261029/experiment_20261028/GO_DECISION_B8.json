@@ -1,0 +1,43 @@
+{
+  "schema": "self_audit.compact_go_decision.v1",
+  "decision": "GO_FIXED_B8_TEACHER_AND_MATCHED_COMPACT_ARMS",
+  "b52_teacher_gate": "NO_GO",
+  "b52_macro4": 0.8614206623204309,
+  "b52_foreground": 0.8166642816010583,
+  "b8_recovery": {
+    "status": "COMPLETED",
+    "steps": 10000,
+    "checkpoint_manifest_sha256": "ae36d026ce26ca188627e6ea4699695e9eb99501312ce05d5324b81e44d3ddaa",
+    "payload_sha256": "0ae593ecb6b6f9dcb88d0a41d4a77d7b3b3a3edd87396624c3648afb1281f1b6",
+    "inference_state": "student",
+    "class_first_macro4": 0.8800492397526454,
+    "foreground_dice": 0.8412102397257094,
+    "class_dice": {
+      "BG": 0.9965662398334529,
+      "RV": 0.7924774507072041,
+      "MYO": 0.8287187197421295,
+      "LV": 0.9024345487277949
+    },
+    "quality_receipt_sha256": "f1054ce3dea44ff600dca1708dc7c0906eef5fc84b229c19859d863cc4b46e5c",
+    "label_budget_k": 8,
+    "train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4"
+  },
+  "compact_supervised": {
+    "status": "COMPLETED",
+    "steps": 10000,
+    "train_fit_macro4": 0.976706,
+    "val18_macro4": 0.7300056641674114,
+    "val18_foreground": 0.6435221101975203,
+    "collapsed": false,
+    "initialization_sha256": "6adb6858dc50593cece8c4254d039767d1d76f02b014930b07ad1c1a5459af7a"
+  },
+  "teacher_cache": {
+    "manifest_sha256": "783624211e760fbeb2c3a80ded7b8dacb9d1407f0dcc1e484010cda2c343897b",
+    "precision": "float32",
+    "u_patients": 72,
+    "state": "student"
+  },
+  "tests": "python scripts/check_repo.py PASS; python -m pytest -q 790 passed, 2 warnings",
+  "test50_scope": "exposed development cohort; teacher selection used it, no independent confirmation",
+  "next": "plain KD -> VAL collapse check -> scalar guard -> joint guard; final export/TEST50/benchmark after arms"
+}

@@ -46,11 +46,13 @@ def attach_geometry(manifest, manifest_sha, sources, sources_sha, out):
             raise ValueError('raw image hash mismatch')
         obj=nib.load(str(native))
         affine=np.asarray(obj.affine)
-        validate_nifti_correspondence(
+        correspondence=validate_nifti_correspondence(
             native,image_sha256=source['sha256'],expected_shape_tzyx=tuple(prepared.shape),
             expected_affine_xyz_to_world_mm=affine,expected_orientation=''.join(nib.aff2axcodes(affine)),
-            expected_frame_mapping=list(range(prepared.shape[0])),prepared_image_tzyx=prepared,masks=None)
+            expected_frame_mapping=list(range(prepared.shape[0])),prepared_image_tzyx=prepared,masks=None,
+            allow_unknown_spatial_units=True)
         row.update(image=str(image.resolve()),affine=affine.tolist(),axes=['T','Z','Y','X'],
+                   spatial_units=correspondence['units'],
                    geometry_source_image={'path':str(native.resolve()),'sha256':source['sha256']})
         # Resolve paths for the new location, without opening reference labels.
         for mask in row.get('masks',{}).values():
@@ -59,6 +61,7 @@ def attach_geometry(manifest, manifest_sha, sources, sources_sha, out):
     enriched['geometry_provenance']={'parent_manifest_sha256':manifest_sha,
                                      'raw_sources_manifest_sha256':sources_sha,
                                      'correspondence':'canonical percentile-normalized XYZT->TZYX image voxels',
+                                     'spatial_units':'mm' if all(r['spatial_units']=='mm' for r in enriched['patients']) else 'unknown_in_source',
                                      'reference_masks_opened':False}
     out.parent.mkdir(parents=True,exist_ok=True)
     out.write_text(json.dumps(enriched,indent=2,allow_nan=False)+'\n')

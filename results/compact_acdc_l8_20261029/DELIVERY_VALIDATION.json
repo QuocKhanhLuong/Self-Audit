@@ -1,0 +1,21 @@
+{
+  "check_repo": {
+    "command": "python scripts/check_repo.py",
+    "exit_code": 0,
+    "status": "PASS",
+    "architecture": "dinov3_convnext_tiny_native_decoder_v2",
+    "supervision": "semi_supervised; dense TRAIN subset incl audit; not no-GT"
+  },
+  "pytest": {
+    "command": "python -m pytest -q",
+    "exit_code": 0,
+    "passed": 790,
+    "warnings": 2,
+    "elapsed_seconds": 248.72
+  },
+  "git_diff_cached_check": {
+    "command": "git diff --cached --check",
+    "exit_code": 0
+  },
+  "scope": "Source/test verification; patient/GPU results are evidenced by archived experiment reports, not inferred from tests."
+}
