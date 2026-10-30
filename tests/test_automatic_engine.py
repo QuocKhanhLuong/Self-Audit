@@ -27,6 +27,7 @@ import copy
 import json
 from pathlib import Path
 import subprocess
+import sys
 import pytest
 import torch
 import numpy as np
@@ -494,7 +495,7 @@ def test_train_py_cli_routing(tmp_path):
     write_json(cfg_ws_path, ws_cfg)
     out_ws = tmp_path / "cli_ws_out"
     cmd_ws = [
-        "python", "train.py",
+        sys.executable, "train.py",
         "--config", str(cfg_ws_path),
         "--data", str(m),
         "--data-sha256", sha,
@@ -515,7 +516,7 @@ def test_train_py_cli_routing(tmp_path):
     write_json(cfg_adapt_path, adapt_cfg)
     out_adapt = tmp_path / "cli_adapt_out"
     cmd_adapt = [
-        "python", "train.py",
+        sys.executable, "train.py",
         "--config", str(cfg_adapt_path),
         "--data", str(m),
         "--data-sha256", sha,

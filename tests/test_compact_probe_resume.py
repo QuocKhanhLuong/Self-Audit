@@ -1010,8 +1010,18 @@ def test_resume_cuda_rng_required_on_cuda_device(tmp_path: Path):
     base_out = tmp_path / "cpu_run"
     rep = train_compact(base_cfg, manifest_p, manifest_sha, base_out, synthetic=True, stop_after_step=2)
     ckpt_path = base_out / "final"
-    ckpt_sha = rep["final_manifest_sha256"]
 
-    # When requesting cuda device on CPU checkpoint without torch_cuda_rng, must fail closed
+    # Explicitly remove torch_cuda_rng from saved payload and repin payload/manifest hashes
+    weights_path = ckpt_path / "weights.pt"
+    manifest_path = ckpt_path / "MANIFEST.json"
+    payload = torch.load(weights_path, map_location="cpu", weights_only=True)
+    manifest = json.loads(manifest_path.read_text())
+    payload["rng"].pop("torch_cuda_rng", None)
+    torch.save(payload, weights_path)
+    manifest["payload_sha256"] = digest(weights_path)
+    manifest_path.write_text(json.dumps(manifest, indent=2))
+    ckpt_sha = digest(manifest_path)
+
+    # When requesting cuda device on checkpoint without torch_cuda_rng, must fail closed
     with pytest.raises(ValueError, match="checkpoint lacks mandatory 'torch_cuda_rng' for exact CUDA resume"):
         load_exact_compact_checkpoint(ckpt_path, ckpt_sha, expected_config=base_cfg, device="cuda:0")
