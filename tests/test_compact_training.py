@@ -749,3 +749,122 @@ def test_public_cli_forwards_allow_full_run_without_starting_long_training(monke
     assert seen["stop_steps"] == 129
     assert seen["config_steps"] == 129
     assert not (tmp_path / "never_created").exists()
+
+
+def test_compact_cuda_startup_initialization_ordering(monkeypatch, tmp_path: Path):
+    """Verify fresh CUDA startup initializes CUDA state before resetting peak stats,
+
+    and resets peak stats before model build/load to retain peak memory scope.
+    Simulates the fresh-process failure where torch.cuda.reset_peak_memory_stats(device)
+    raises RuntimeError('Invalid device argument') if called prior to torch.cuda.init().
+    """
+    import self_audit.compact_training as compact_training
+
+    manifest, manifest_sha = synthetic_compact_fixture(
+        tmp_path / "cuda_startup",
+        n_labeled=2,
+        n_unlabeled=1,
+        size=8,
+        num_frames=1,
+        num_slices=1,
+    )
+    metadata_data = compact_training.CompactTrainingData(manifest, manifest_sha, synthetic=True, allow_k1=True)
+    cfg = copy.deepcopy(DEFAULT_CONFIG)
+    cfg.update(method="plain_kd", steps=2, warmup_steps=1)
+    _bind_synthetic_teacher(cfg, metadata_data.lids)
+    cfg["data"] = {
+        "manifest_sha256": manifest_sha,
+        "budget_k": len(metadata_data.lids),
+        "labeled_ids": list(metadata_data.lids),
+    }
+
+    # 1. Positive fresh training startup: torch.cuda.init() precedes reset_peak_memory_stats,
+    # which precedes build_compact_model (ensuring student parameters are counted in peak stats).
+    events = []
+    cuda_state = {"initialized": False}
+
+    def fake_init():
+        cuda_state["initialized"] = True
+        events.append("torch.cuda.init")
+
+    def fake_reset_peak_memory_stats(dev):
+        if not cuda_state["initialized"]:
+            raise RuntimeError("Invalid device argument ")
+        events.append(("torch.cuda.reset_peak_memory_stats", str(dev)))
+
+    class _StartupHalt(Exception):
+        pass
+
+    def tracking_build_compact_model(*args, **kwargs):
+        events.append("build_compact_model")
+        raise _StartupHalt("startup_verification_halt")
+
+    monkeypatch.setattr(torch.cuda, "init", fake_init)
+    monkeypatch.setattr(torch.cuda, "reset_peak_memory_stats", fake_reset_peak_memory_stats)
+    monkeypatch.setattr(compact_training, "build_compact_model", tracking_build_compact_model)
+
+    with pytest.raises(_StartupHalt, match="startup_verification_halt"):
+        train_compact(
+            cfg,
+            manifest,
+            manifest_sha,
+            tmp_path / "out_startup",
+            device="cuda:0",
+            synthetic=True,
+            stop_steps=1,
+        )
+
+    assert events == [
+        "torch.cuda.init",
+        ("torch.cuda.reset_peak_memory_stats", "cuda:0"),
+        "build_compact_model",
+    ]
+    assert cuda_state["initialized"] is True
+
+    # 2. Negative test: uninitialized CUDA call reproduces RuntimeError('Invalid device argument')
+    cuda_state["initialized"] = False
+    monkeypatch.setattr(torch.cuda, "init", lambda: None)  # simulate missing initialization
+    with pytest.raises(RuntimeError, match="Invalid device argument"):
+        train_compact(
+            cfg,
+            manifest,
+            manifest_sha,
+            tmp_path / "out_uninit",
+            device="cuda:0",
+            synthetic=True,
+            stop_steps=1,
+        )
+
+    # 3. Positive resume startup: torch.cuda.init() and reset precede load_exact_compact_checkpoint.
+    events.clear()
+    cuda_state["initialized"] = False
+    monkeypatch.setattr(torch.cuda, "init", fake_init)
+
+    dummy_resume = tmp_path / "dummy_resume_dir"
+    dummy_resume.mkdir()
+
+    def tracking_load_exact(*args, **kwargs):
+        events.append("load_exact_compact_checkpoint")
+        raise _StartupHalt("resume_verification_halt")
+
+    monkeypatch.setattr(compact_training, "load_exact_compact_checkpoint", tracking_load_exact)
+
+    with pytest.raises(_StartupHalt, match="resume_verification_halt"):
+        train_compact(
+            cfg,
+            manifest,
+            manifest_sha,
+            tmp_path / "out_resume",
+            device="cuda:0",
+            synthetic=True,
+            stop_steps=2,
+            resume=dummy_resume,
+            resume_sha256="0" * 64,
+        )
+
+    assert events == [
+        "torch.cuda.init",
+        ("torch.cuda.reset_peak_memory_stats", "cuda:0"),
+        "load_exact_compact_checkpoint",
+    ]
+    assert cuda_state["initialized"] is True

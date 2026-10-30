@@ -649,6 +649,7 @@ def train_compact(
         lineage_preflight["teacher_verification"] = validated_teacher_identity["verification_status"]
     cache_generation = copy.deepcopy(getattr(cache, "raw_manifest", {}).get("telemetry"))
     if str(device).startswith("cuda"):
+        torch.cuda.init()
         torch.cuda.reset_peak_memory_stats(device)
 
     # Build or load Compact Student only after the full teacher/data preflight.
