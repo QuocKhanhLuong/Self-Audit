@@ -1,0 +1,290 @@
+{
+  "schema": "self_audit.compact.benchmark.v1",
+  "benchmark_conditions": {
+    "device": "cuda:0",
+    "batch_size": 2,
+    "warmup_runs": 1,
+    "steady_repeats": 1,
+    "normalization": "prepared",
+    "precision": "float32",
+    "volume_definition": "full_native_4d_cine_tzyx",
+    "io_cache_policy": "streaming_native_no_full_prob_cache; live_verified_npy_write_per_volume; OS_cache_not_flushed",
+    "io_policy": "streaming native; no full probability cache; verified uint8 NPY writes; OS filesystem cache retained",
+    "evaluation_manifest_sha256": "b43ac84265704eb196a375922eabbb944646cde67220e037e0e71ed9032cec63",
+    "synthetic": true,
+    "timestamp": "2026-10-30T16:41:39Z",
+    "environment": {
+      "os": "Linux",
+      "python_version": "3.12.15",
+      "torch_version": "2.14.1+cu132",
+      "cpu_count": 128
+    }
+  },
+  "compact_student": {
+    "status": "COMPLETED",
+    "model_type": "compact_export",
+    "model_path": "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/export",
+    "artifact_manifest_sha256": "c0f1a298925a650760568d1d38d5c2c73833f91a40b49376d7f41a803e87db87",
+    "artifact_payload_sha256": "4f9c85a444b6f833f2276047070986385e48aa4a00688d615a330559d0325de7",
+    "evaluation_manifest_sha256": "b43ac84265704eb196a375922eabbb944646cde67220e037e0e71ed9032cec63",
+    "synthetic": true,
+    "device": "cuda:0",
+    "precision": "float32",
+    "volume_definition": "full_native_4d_cine_tzyx; one complete patient cine per volume",
+    "io_policy": "streaming native; no full probability cache; verified uint8 NPY writes; OS filesystem cache retained",
+    "io_cache_policy": "streaming native; no full probability cache; verified NPY volume writes; OS cache not flushed",
+    "reference": null,
+    "workload": {
+      "total_cases": 2,
+      "total_slices_per_cohort": 8,
+      "batch_size": 2,
+      "case_hashes": [
+        {
+          "id": "synthetic_eval_0",
+          "dataset": "manufactured",
+          "image_sha256": "d24e3fec35d588965e60d9e404e1948f0cdbc23d2d1335c3a488b996767044d9",
+          "shape_tzyx": [
+            2,
+            2,
+            17,
+            19
+          ],
+          "axes": [
+            "T",
+            "Z",
+            "Y",
+            "X"
+          ],
+          "affine": [
+            [
+              1.25,
+              0.0,
+              0.0,
+              3.0
+            ],
+            [
+              0.0,
+              1.5,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              7.5,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        {
+          "id": "synthetic_eval_1",
+          "dataset": "manufactured",
+          "image_sha256": "f862aa2a6bd2cbf058b8b9a0b7dcf7211e0b15f7ec5f28ee86bfed2597812352",
+          "shape_tzyx": [
+            2,
+            2,
+            19,
+            21
+          ],
+          "axes": [
+            "T",
+            "Z",
+            "Y",
+            "X"
+          ],
+          "affine": [
+            [
+              1.25,
+              0.0,
+              0.0,
+              13.0
+            ],
+            [
+              0.0,
+              1.5,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              7.5,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        }
+      ],
+      "case_shapes": [
+        {
+          "id": "synthetic_eval_0",
+          "shape_tzyx": [
+            2,
+            2,
+            17,
+            19
+          ]
+        },
+        {
+          "id": "synthetic_eval_1",
+          "shape_tzyx": [
+            2,
+            2,
+            19,
+            21
+          ]
+        }
+      ],
+      "patient_coverage_complete": true
+    },
+    "inference_outputs": [
+      {
+        "id": "synthetic_eval_0",
+        "dataset": "manufactured",
+        "image_sha256": "d24e3fec35d588965e60d9e404e1948f0cdbc23d2d1335c3a488b996767044d9",
+        "shape_tzyx": [
+          2,
+          2,
+          17,
+          19
+        ],
+        "axes": [
+          "T",
+          "Z",
+          "Y",
+          "X"
+        ],
+        "affine": [
+          [
+            1.25,
+            0.0,
+            0.0,
+            3.0
+          ],
+          [
+            0.0,
+            1.5,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            7.5,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "slice_count": 4,
+        "prediction_file": "synthetic_eval_0_case_0.npy",
+        "prediction_sha256": "467bd45e89e5e32fb7dec48026edb93f012cd3d8edada168d744b7adb9959e4a"
+      },
+      {
+        "id": "synthetic_eval_1",
+        "dataset": "manufactured",
+        "image_sha256": "f862aa2a6bd2cbf058b8b9a0b7dcf7211e0b15f7ec5f28ee86bfed2597812352",
+        "shape_tzyx": [
+          2,
+          2,
+          19,
+          21
+        ],
+        "axes": [
+          "T",
+          "Z",
+          "Y",
+          "X"
+        ],
+        "affine": [
+          [
+            1.25,
+            0.0,
+            0.0,
+            13.0
+          ],
+          [
+            0.0,
+            1.5,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            7.5,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "slice_count": 4,
+        "prediction_file": "synthetic_eval_1_case_1.npy",
+        "prediction_sha256": "fe3484179759b4587d29d9dd702c878db4a839671a985f9a64456022f664c4d1"
+      }
+    ],
+    "model_size": {
+      "total_parameters": 2288,
+      "trainable_parameters": 0,
+      "tensor_param_bytes": 9152,
+      "deployed_file_bytes": 18060,
+      "deployed_weights_bytes": 18060,
+      "load_time_seconds": 0.13098887295927852
+    },
+    "latency": {
+      "cold": {
+        "load_seconds": 0.13098887295927852,
+        "model_only_median_seconds_per_volume": 0.11476298701018095,
+        "e2e_median_seconds_per_volume": 0.12162764702225104
+      },
+      "steady": {
+        "repeats": 1,
+        "model_only_median_seconds_per_volume": 0.0031080039916560054,
+        "model_only_p95_seconds_per_volume": 0.003274867567233741,
+        "model_only_min_seconds_per_volume": 0.0029226000187918544,
+        "model_only_max_seconds_per_volume": 0.0032934079645201564,
+        "e2e_median_seconds_per_volume": 0.005678819085005671,
+        "e2e_p95_seconds_per_volume": 0.005835121200652793,
+        "total_wall_seconds": 0.027476959978230298,
+        "total_volumes": 2,
+        "total_slices": 8,
+        "volumes_per_second": 72.78825610928497,
+        "slices_per_second": 291.1530244371399
+      }
+    },
+    "memory": {
+      "peak_inference_process_tree_ram_mb": 999.4296875,
+      "ram_poll_interval_ms": 5,
+      "cuda_peak_allocated_mb": 0.197265625,
+      "cuda_peak_reserved_mb": 2.0
+    }
+  },
+  "baseline_student": {
+    "status": "NOT_RUN",
+    "reason": "No validated baseline checkpoint provided; missing real assets stays NOT_RUN"
+  },
+  "reference_identity": {
+    "status": "NOT_RUN",
+    "verified": false
+  },
+  "comparison": {}
+}

@@ -1,0 +1,70 @@
+{
+  "status": "FAIL",
+  "source_git_sha": "71761cd1b2f2c770b5bfdc14019ff4fad8e6e51b",
+  "source_sha256": "f44e1d12bda0eaacab2bdea26c3960a803a7f179e9273466be40f5c1ca4362d1",
+  "commands": [
+    {
+      "name": "check_repo",
+      "argv": [
+        "/workspace/cptu-runtime-20261030/bin/python",
+        "scripts/check_repo.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.03264746710192412,
+      "stdout_sha256": "f9317b13e55fd8916cf0f91882298e60bc9274551929baa2de5c15e80fd35b83",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "pytest",
+      "argv": [
+        "/workspace/cptu-runtime-20261030/bin/python",
+        "-m",
+        "pytest",
+        "-q"
+      ],
+      "exit_code": 0,
+      "seconds": 308.1494541669963,
+      "stdout_sha256": "3970e5e4341a08091c43f37dc920782e6ee8d2a8063cb1d3b04471b214f74342",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "original_parity",
+      "argv": [
+        "/workspace/cptu-runtime-20261030/bin/python",
+        "scripts/verify_compact_original_parity.py",
+        "--out",
+        "/workspace/cptu-server-setup-20261030/verification_v2/ORIGINAL_PARITY.json"
+      ],
+      "exit_code": 0,
+      "seconds": 3.169234730070457,
+      "stdout_sha256": "cc70fa76ea5853bdc52994156ffbfd353558b94cfb5f482c72920cdff06d154f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "smoke_cuda",
+      "argv": [
+        "/workspace/cptu-runtime-20261030/bin/python",
+        "scripts/smoke_compact_pipeline.py",
+        "--transfer-utility",
+        "--device",
+        "cuda:0",
+        "--out",
+        "/workspace/cptu-server-setup-20261030/verification_v2/smoke_cuda"
+      ],
+      "exit_code": 1,
+      "seconds": 6.474583417992108,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "11a76a132ee3496a491aab4f6a1c78f3f63eecd5b466d85d055f10a4649ad664"
+    }
+  ],
+  "environment": {
+    "python": "3.12.15 (main, Oct 13 2026, 16:52:04) [GCC 15.3.0]",
+    "torch": "2.14.1+cu132",
+    "cuda": "13.2",
+    "gpu": "NVIDIA RTX 5000 Ada Generation",
+    "cpu_threads": 1
+  },
+  "scope": "software and manufactured CUDA verification only; no patient training",
+  "current_command": "smoke_cuda",
+  "error": "RuntimeError('smoke_cuda failed; inspect logs')"
+}

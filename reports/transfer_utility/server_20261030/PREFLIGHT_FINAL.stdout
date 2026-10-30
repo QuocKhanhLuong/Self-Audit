@@ -1,0 +1,44 @@
+{
+  "schema": "self_audit.compact.transfer_utility.preflight.v1",
+  "timestamp": "2026-10-30T16:53:13Z",
+  "synthetic": false,
+  "device": "cuda:0",
+  "source_receipts": {
+    "compact_training_source_sha256": "e3d70d291dcbe190c24d6898b260698ef92e15027a54fe8c6f034374d968ff27",
+    "transfer_preflight_sha256": "0410c877966c4e9c0141d9fe5288cc2914e67f468dbc9c0646b456df2a031c31"
+  },
+  "out_dir": "/workspace/cptu-pilot-20261030",
+  "checks": {
+    "output_directory": {
+      "status": "PASS",
+      "path": "/workspace/cptu-pilot-20261030"
+    },
+    "active_jobs": {
+      "status": "CLEAN",
+      "active_job_count": 0,
+      "active_jobs": []
+    },
+    "gpu_occupancy": {
+      "status": "PASS",
+      "device": "cuda:0",
+      "device_index": 0,
+      "physical_index": 0,
+      "uuid": "GPU-30c27f31-bbbe-49bc-a8eb-2bdef74081ed",
+      "name": "NVIDIA RTX 5000 Ada Generation",
+      "total_mb": 32760.0,
+      "used_mb": 1.0,
+      "free_mb": 32230.0,
+      "fraction_used": 0.0,
+      "active_processes": [],
+      "is_busy": false,
+      "gpu_available": true
+    },
+    "protocol": {
+      "status": "PASS"
+    }
+  },
+  "status": "NOT_RUN",
+  "reasons": [
+    "Physical teacher checkpoint directory not found on disk: /workspace/compact-acdc-l8/20261028/b8_recovery/full/final"
+  ]
+}

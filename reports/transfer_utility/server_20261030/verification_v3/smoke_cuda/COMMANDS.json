@@ -1,0 +1,240 @@
+[
+  {
+    "name": "cache",
+    "argv": [
+      "/workspace/cptu-runtime-20261030/bin/python",
+      "scripts/build_compact_teacher_cache.py",
+      "--data-manifest",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/train_data/train.json",
+      "--data-sha256",
+      "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+      "--output-dir",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/cache",
+      "--synthetic-teacher",
+      "--device",
+      "cuda:0",
+      "--batch-size",
+      "2"
+    ],
+    "exit_code": 0,
+    "seconds": 2.399339911993593
+  },
+  {
+    "name": "plain_kd",
+    "argv": [
+      "/workspace/cptu-runtime-20261030/bin/python",
+      "train.py",
+      "--config",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/plain_kd.json",
+      "--data",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/train_data/train.json",
+      "--data-sha256",
+      "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+      "--out",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/plain_kd",
+      "--device",
+      "cuda:0",
+      "--synthetic"
+    ],
+    "exit_code": 0,
+    "seconds": 4.63251288398169
+  },
+  {
+    "name": "original",
+    "argv": [
+      "/workspace/cptu-runtime-20261030/bin/python",
+      "train.py",
+      "--config",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/original.json",
+      "--data",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/train_data/train.json",
+      "--data-sha256",
+      "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+      "--out",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/original",
+      "--device",
+      "cuda:0",
+      "--synthetic"
+    ],
+    "exit_code": 0,
+    "seconds": 4.819030811893754
+  },
+  {
+    "name": "larger_tie",
+    "argv": [
+      "/workspace/cptu-runtime-20261030/bin/python",
+      "train.py",
+      "--config",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/larger_tie.json",
+      "--data",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/train_data/train.json",
+      "--data-sha256",
+      "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+      "--out",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/larger_tie",
+      "--device",
+      "cuda:0",
+      "--synthetic"
+    ],
+    "exit_code": 0,
+    "seconds": 4.89007502689492
+  },
+  {
+    "name": "cross_patient_utility",
+    "argv": [
+      "/workspace/cptu-runtime-20261030/bin/python",
+      "train.py",
+      "--config",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/cross_patient_utility.json",
+      "--data",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/train_data/train.json",
+      "--data-sha256",
+      "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+      "--out",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/cross_patient_utility",
+      "--device",
+      "cuda:0",
+      "--synthetic"
+    ],
+    "exit_code": 0,
+    "seconds": 4.9098154730163515
+  },
+  {
+    "name": "export",
+    "argv": [
+      "/workspace/cptu-runtime-20261030/bin/python",
+      "scripts/export_compact_student.py",
+      "--checkpoint",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/cross_patient_utility/final",
+      "--checkpoint-sha256",
+      "6b1172c05d6b8c529ea686653b381a25feb9ff0b23182ae1befbf75c99249377",
+      "--out",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/export"
+    ],
+    "exit_code": 0,
+    "seconds": 2.0400965959997848
+  },
+  {
+    "name": "infer",
+    "argv": [
+      "/workspace/cptu-runtime-20261030/bin/python",
+      "scripts/infer_compact_student.py",
+      "--export",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/export",
+      "--export-sha256",
+      "c0f1a298925a650760568d1d38d5c2c73833f91a40b49376d7f41a803e87db87",
+      "--manifest",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/eval_data/manifest.json",
+      "--manifest-sha256",
+      "b43ac84265704eb196a375922eabbb944646cde67220e037e0e71ed9032cec63",
+      "--device",
+      "cuda:0",
+      "--batch-size",
+      "2",
+      "--out",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/inference"
+    ],
+    "exit_code": 0,
+    "seconds": 2.1706039760028943
+  },
+  {
+    "name": "infer_without_training_assets",
+    "argv": [
+      "/workspace/cptu-runtime-20261030/bin/python",
+      "scripts/infer_compact_student.py",
+      "--export",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/export",
+      "--export-sha256",
+      "c0f1a298925a650760568d1d38d5c2c73833f91a40b49376d7f41a803e87db87",
+      "--manifest",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/eval_data/manifest.json",
+      "--manifest-sha256",
+      "b43ac84265704eb196a375922eabbb944646cde67220e037e0e71ed9032cec63",
+      "--device",
+      "cuda:0",
+      "--batch-size",
+      "2",
+      "--out",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/inference_without_training_assets"
+    ],
+    "exit_code": 0,
+    "seconds": 2.1572887409711257
+  },
+  {
+    "name": "evaluate",
+    "argv": [
+      "/workspace/cptu-runtime-20261030/bin/python",
+      "scripts/evaluate_compact_student.py",
+      "--export",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/export",
+      "--export-sha256",
+      "c0f1a298925a650760568d1d38d5c2c73833f91a40b49376d7f41a803e87db87",
+      "--manifest",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/eval_data/manifest.json",
+      "--manifest-sha256",
+      "b43ac84265704eb196a375922eabbb944646cde67220e037e0e71ed9032cec63",
+      "--device",
+      "cuda:0",
+      "--batch-size",
+      "2",
+      "--train-manifest",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/train_data/train.json",
+      "--train-manifest-sha256",
+      "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+      "--out",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/evaluation"
+    ],
+    "exit_code": 0,
+    "seconds": 2.555860825930722
+  },
+  {
+    "name": "benchmark",
+    "argv": [
+      "/workspace/cptu-runtime-20261030/bin/python",
+      "scripts/benchmark_compact_student.py",
+      "--compact-export",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/export",
+      "--compact-export-sha256",
+      "c0f1a298925a650760568d1d38d5c2c73833f91a40b49376d7f41a803e87db87",
+      "--manifest",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/eval_data/manifest.json",
+      "--manifest-sha256",
+      "b43ac84265704eb196a375922eabbb944646cde67220e037e0e71ed9032cec63",
+      "--out",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/benchmark.json",
+      "--device",
+      "cuda:0",
+      "--batch-size",
+      "2",
+      "--warmup",
+      "1",
+      "--repeats",
+      "1"
+    ],
+    "exit_code": 0,
+    "seconds": 3.9317751040216535
+  },
+  {
+    "name": "assess",
+    "argv": [
+      "/workspace/cptu-runtime-20261030/bin/python",
+      "scripts/assess_compact_deployment.py",
+      "--export",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/export",
+      "--export-sha256",
+      "c0f1a298925a650760568d1d38d5c2c73833f91a40b49376d7f41a803e87db87",
+      "--quality",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/evaluation/METRICS.json",
+      "--quality-sha256",
+      "32e3813a9891b9a2df28ee1ae7ba80c94257ff37537f1556c24f57d3271928be",
+      "--benchmark",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/benchmark.json",
+      "--benchmark-sha256",
+      "72a2de920391ebc4fab0bcb56a6daf0561353f5e809861c3a47af0696da15191",
+      "--out",
+      "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/ACCEPTANCE.json"
+    ],
+    "exit_code": 2,
+    "seconds": 1.9588547019520774
+  }
+]

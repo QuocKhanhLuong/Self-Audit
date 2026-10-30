@@ -1,0 +1,41 @@
+{
+  "status": "FAIL",
+  "source_git_sha": "6969750dedd0fdcef29b9cfa8b0718ff49c983b5",
+  "source_sha256": "f44e1d12bda0eaacab2bdea26c3960a803a7f179e9273466be40f5c1ca4362d1",
+  "commands": [
+    {
+      "name": "check_repo",
+      "argv": [
+        "/workspace/cptu-runtime-20261030/bin/python",
+        "scripts/check_repo.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.03301840694621205,
+      "stdout_sha256": "f9317b13e55fd8916cf0f91882298e60bc9274551929baa2de5c15e80fd35b83",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "pytest",
+      "argv": [
+        "/workspace/cptu-runtime-20261030/bin/python",
+        "-m",
+        "pytest",
+        "-q"
+      ],
+      "exit_code": 1,
+      "seconds": 298.5805528999772,
+      "stdout_sha256": "2f8c2ea41259f90b6037468d12433b28350b2eebded4084029cb3ad62d9f7471",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "environment": {
+    "python": "3.12.15 (main, Oct 13 2026, 16:52:04) [GCC 15.3.0]",
+    "torch": "2.14.1+cu132",
+    "cuda": "13.2",
+    "gpu": "NVIDIA RTX 5000 Ada Generation",
+    "cpu_threads": 1
+  },
+  "scope": "software and manufactured CUDA verification only; no patient training",
+  "current_command": "pytest",
+  "error": "RuntimeError('pytest failed; inspect logs')"
+}

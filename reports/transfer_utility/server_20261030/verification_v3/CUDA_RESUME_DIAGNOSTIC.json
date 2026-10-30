@@ -1,0 +1,30 @@
+{
+  "status": "FAIL_EXACT_STATE_REPRODUCTION",
+  "git_sha": "c7a7a09565da549631d876dbbcb64a8931837d7c",
+  "initialization_equal": true,
+  "student_bitwise_equal": false,
+  "optimizer_bitwise_equal": false,
+  "max_parameter_abs_difference": 6.109476089477539e-07,
+  "same_decisions_and_schedule": true,
+  "first_continuation_independent_run_loss_difference_at_step_1": 1.1920928955078125e-06,
+  "interpretation": "Mismatch already occurs before the resume boundary in independent fresh CUDA runs. Dataset/probe RNG and decisions are assessed separately below. Not an empirical utility NO_GO. No guard tolerance is relaxed.",
+  "runtime_deterministic_algorithms": false,
+  "profile_32steps": "NOT_RUN_STOPPED_AT_REPRODUCTION_GATE",
+  "patient_pilot": "NOT_RUN",
+  "checkpoint_rng_container_equal_by_component": {
+    "torch_cpu_rng": true,
+    "torch_cuda_rng": true,
+    "np_legacy_rng": true,
+    "py_rng": true,
+    "data_rng_state": true,
+    "probe_rng_state": false
+  },
+  "random_generators_bitwise_equal": true,
+  "probe_coverage_equal": true,
+  "probe_container_difference_fields": [
+    "total_sampling_seconds",
+    "total_cache_seconds"
+  ],
+  "probe_timing_difference_interpretation": "Expected measured elapsed-time differences, not random-generator state differences.",
+  "diagnosis": "Same initial weights, L/U schedules, selector decisions and all random-generator states; small parameter/optimizer numerical differences already occur in independent fresh CUDA runs before the resume boundary. Runtime deterministic algorithms are disabled. Cause is not isolated by an intervention; bitwise replay remains unverified."
+}

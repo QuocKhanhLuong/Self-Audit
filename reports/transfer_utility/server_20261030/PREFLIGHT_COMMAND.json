@@ -1,0 +1,33 @@
+{
+  "argv": [
+    "/workspace/cptu-runtime-20261030/bin/python",
+    "scripts/run_transfer_utility_pilot.py",
+    "--mode",
+    "preflight",
+    "--data",
+    "/root/self-audit-assets/data/prepared/ACDC_L8_S42/train.json",
+    "--data-sha256",
+    "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+    "--val-manifest",
+    "/workspace/Self-Audit-cptu-20261030/results/compact_acdc_l8_20261029/experiment_20261028/val18_native.json",
+    "--val-manifest-sha256",
+    "cac4426393ca11959f56df2876869e825443916cdec02c6d95ec8da3fac0ca50",
+    "--teacher-checkpoint",
+    "/workspace/compact-acdc-l8/20261028/b8_recovery/full/final",
+    "--teacher-checkpoint-sha256",
+    "ae36d026ce26ca188627e6ea4699695e9eb99501312ce05d5324b81e44d3ddaa",
+    "--teacher-payload-sha256",
+    "0ae593ecb6b6f9dcb88d0a41d4a77d7b3b3a3edd87396624c3648afb1281f1b6",
+    "--teacher-cache",
+    "/dev/shm/compact_teacher_b8/CACHE_MANIFEST.json",
+    "--teacher-cache-sha256",
+    "783624211e760fbeb2c3a80ded7b8dacb9d1407f0dcc1e484010cda2c343897b",
+    "--device",
+    "cuda:0",
+    "--out",
+    "/workspace/cptu-pilot-20261030"
+  ],
+  "exit_code": 2,
+  "git_sha": "71761cd1b2f2c770b5bfdc14019ff4fad8e6e51b",
+  "pilot_directory_created": false
+}

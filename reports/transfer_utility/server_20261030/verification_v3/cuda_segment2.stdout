@@ -1,0 +1,187 @@
+{
+  "schema": "self_audit.compact.report.v1",
+  "status": "COMPLETED",
+  "method": "scalar_guard",
+  "selector": "cross_patient_utility",
+  "synthetic": true,
+  "quality": "NOT_EVALUATED",
+  "steps": 4,
+  "steps_requested": 4,
+  "max_steps": 4,
+  "total_budget": 4,
+  "immutable_steps_total": 4,
+  "resumed_from": "/workspace/cptu-server-setup-20261030/verification_v3/cuda_segment1/final",
+  "resumed_step": 2,
+  "termination_reason": "max_steps_reached",
+  "equal_wall_time": {
+    "enabled": false
+  },
+  "counts": {
+    "supervised_updates": 4,
+    "pseudo_accepted": 3,
+    "pseudo_rejected": 0,
+    "warmup_steps": 1,
+    "no_candidates": 0,
+    "rejected_all": 0,
+    "zero_displacement": 0
+  },
+  "slices_sampled": {
+    "labeled": 4,
+    "unlabeled": 4,
+    "audit": 54,
+    "probe": 3
+  },
+  "slices_optimized": {
+    "labeled": 4,
+    "unlabeled": 3
+  },
+  "batch_sizes": {
+    "labeled": 1,
+    "unlabeled": 1,
+    "probe": 1
+  },
+  "effective_batch_counts": {
+    "labeled": 4,
+    "unlabeled": 4,
+    "probe": 3
+  },
+  "optimizer_calls": {
+    "adamw": 4,
+    "sgd": 3
+  },
+  "teacher_costs": {
+    "teacher_cache_total_seconds": 0.0032699290895834565,
+    "teacher_cache_u_seconds": 0.001763493986800313,
+    "teacher_cache_probe_seconds": 0.0015064351027831435,
+    "probe_sampling_total_seconds": 0.0006524870404973626,
+    "teacher_cache_generation_cost": {
+      "total_latency_seconds": 0.4331466610310599,
+      "mean_seconds_per_volume": 0.21657333051552996,
+      "median_seconds_per_volume": 0.21644029603339732,
+      "total_disk_bytes": 33024,
+      "vram_peak_allocated_bytes": 1831424,
+      "vram_peak_reserved_bytes": 2097152
+    },
+    "teacher_training_cost": "SYNTHETIC_NOT_PATIENT_EVIDENCE"
+  },
+  "audit_consumption": {
+    "slice_reads": 54,
+    "frame_reads": 27,
+    "patient_reads": 27,
+    "stream_replays": 27,
+    "unique_frames": [
+      [
+        "synthetic_p000",
+        0
+      ]
+    ],
+    "unique_patients": [
+      "synthetic_p000"
+    ]
+  },
+  "runtime_comparability": "AUDIT_OVERHEAD_INCLUDED",
+  "quality_gate": {
+    "threshold_macro4": 0.87,
+    "status": "GATE_METADATA_LOCKED",
+    "notes": "Acceptance requires evaluation of exported compact student with Macro4 >= 0.87"
+  },
+  "warm_start_summary": {
+    "initial_gradient_norms": {
+      "encoder": 4.471330165863037,
+      "decoder": 1.1298608779907227,
+      "head": 0.7209318280220032
+    },
+    "initial_weight_changes": {
+      "encoder": 0.013104132376611233,
+      "decoder": 0.005692033562809229,
+      "head": 0.0013417997397482395
+    },
+    "final_gradient_norms": {
+      "encoder": 3.5159108638763428,
+      "decoder": 1.0909684896469116,
+      "head": 0.7082880735397339
+    },
+    "final_weight_changes": {
+      "encoder": 0.010351789183914661,
+      "decoder": 0.00492118950933218,
+      "head": 0.0012236073380336165
+    }
+  },
+  "initialization": {
+    "seed": 217,
+    "initial_state_sha256": "5ff8c2b7f6823f7e5dfe12d7b1cb5bc42079d97656ff059bfce877a264766f97",
+    "first_step_optimizer": null
+  },
+  "teacher_preflight": {
+    "status": "PASS",
+    "label_budget": 1,
+    "union_count": 1,
+    "union_labeled_ids": [
+      "synthetic_p000"
+    ],
+    "exact_budget_matched": true,
+    "components": {
+      "teacher": [
+        "synthetic_p000"
+      ],
+      "student": [
+        "synthetic_p000"
+      ],
+      "warmstart": [
+        "synthetic_p000"
+      ],
+      "audit": [
+        "synthetic_p000"
+      ]
+    },
+    "train_manifest_sha256": "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+    "teacher_verification": "CLAIMED_METADATA_UNVERIFIED"
+  },
+  "train_manifest_sha256": "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+  "teacher_cache_manifest_sha256": "67f64fdc73bc4f8a2ac332c17797bddc32b5148da3b64f5c96dfb7213d99efd3",
+  "source_hashes": {
+    "self_audit/compact_training.py": "140761792c40a7ef1f57d678582e0edc9df47ddb12dac1c14fde4d7ed26b4677",
+    "self_audit/compact_probe.py": "380567281be335596b1eb8f6f978d426c162c8712489829306cf5974602e4c99",
+    "self_audit/compact_artifacts.py": "7827c73f66de129f0e6dbe8acacf1fe55c43050e451433541466d470edc74243",
+    "self_audit/engine.py": "8134f5fbb0622eefefea503fc04b7df988c6e115b03a12036c8c04d867a4a7bc",
+    "train.py": "bca8d6e7ea658c037bc3aad3155fb54679ed5903a08af303b5afeb17d33663ba"
+  },
+  "source_digest": "e3d70d291dcbe190c24d6898b260698ef92e15027a54fe8c6f034374d968ff27",
+  "final_manifest_sha256": "4ec1d5856077028afca70d8847e0c4f114d6d81062c5c617aa5e7e9d12899ab5",
+  "final_weights_sha256": "1e0c875be5dfe3e7f6d3f79e3a4a968e38c6f1edced9ada73fa9b8a4b2eaa724",
+  "final_checkpoint_path": "/workspace/cptu-server-setup-20261030/verification_v3/cuda_segment2/final",
+  "final_weights_path": "/workspace/cptu-server-setup-20261030/verification_v3/cuda_segment2/final/weights.pt",
+  "report_path": "/workspace/cptu-server-setup-20261030/verification_v3/cuda_segment2/REPORT.json",
+  "output_dir": "/workspace/cptu-server-setup-20261030/verification_v3/cuda_segment2",
+  "label_budget": 1,
+  "seen_supervised": [
+    "synthetic_p000"
+  ],
+  "seen_audit": [
+    "synthetic_p000"
+  ],
+  "seen_unlabeled": [
+    "synthetic_p001",
+    "synthetic_p002"
+  ],
+  "seen_probe": [
+    "synthetic_p001",
+    "synthetic_p002"
+  ],
+  "elapsed_seconds": 2.34014909400139,
+  "segment_elapsed_seconds": 1.080125574953854,
+  "cumulative_elapsed_seconds": 2.03476850700099,
+  "profile": {
+    "device": "cuda:0",
+    "segment_cuda_peak_allocated_bytes": 525312,
+    "segment_cuda_peak_reserved_bytes": 2097152,
+    "cuda_peak_allocated_bytes": 525312,
+    "cuda_peak_reserved_bytes": 2097152,
+    "segment_training_elapsed_seconds": 1.080530002946034,
+    "cumulative_training_elapsed_seconds": 2.0351729050744325,
+    "optimizer_steps_per_second": 1.850941697504592,
+    "supervised_slices_per_second": 3.701878598599642,
+    "scope": "student training including synchronous telemetry, proposal and audit; teacher/cache build separate"
+  },
+  "training_elapsed_seconds": 2.0351763950893655
+}

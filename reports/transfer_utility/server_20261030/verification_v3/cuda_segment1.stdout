@@ -1,0 +1,220 @@
+{
+  "schema": "self_audit.compact.report.v1",
+  "status": "STOPPED_BOUNDARY",
+  "method": "scalar_guard",
+  "selector": "cross_patient_utility",
+  "synthetic": true,
+  "quality": "NOT_EVALUATED",
+  "steps": 2,
+  "steps_requested": 2,
+  "max_steps": 2,
+  "total_budget": 4,
+  "immutable_steps_total": 4,
+  "resumed_from": null,
+  "resumed_step": 0,
+  "termination_reason": "stop_after_step_reached",
+  "equal_wall_time": {
+    "enabled": false
+  },
+  "counts": {
+    "supervised_updates": 2,
+    "pseudo_accepted": 1,
+    "pseudo_rejected": 0,
+    "warmup_steps": 1,
+    "no_candidates": 0,
+    "rejected_all": 0,
+    "zero_displacement": 0
+  },
+  "slices_sampled": {
+    "labeled": 2,
+    "unlabeled": 2,
+    "audit": 18,
+    "probe": 1
+  },
+  "slices_optimized": {
+    "labeled": 2,
+    "unlabeled": 1
+  },
+  "batch_sizes": {
+    "labeled": 1,
+    "unlabeled": 1,
+    "probe": 1
+  },
+  "effective_batch_counts": {
+    "labeled": 2,
+    "unlabeled": 2,
+    "probe": 1
+  },
+  "optimizer_calls": {
+    "adamw": 2,
+    "sgd": 1
+  },
+  "teacher_costs": {
+    "teacher_cache_total_seconds": 0.0013507648836821318,
+    "teacher_cache_u_seconds": 0.0006776979425922036,
+    "teacher_cache_probe_seconds": 0.0006730669410899282,
+    "probe_sampling_total_seconds": 0.00022819906007498503,
+    "teacher_cache_generation_cost": {
+      "total_latency_seconds": 0.4331466610310599,
+      "mean_seconds_per_volume": 0.21657333051552996,
+      "median_seconds_per_volume": 0.21644029603339732,
+      "total_disk_bytes": 33024,
+      "vram_peak_allocated_bytes": 1831424,
+      "vram_peak_reserved_bytes": 2097152
+    },
+    "teacher_training_cost": "SYNTHETIC_NOT_PATIENT_EVIDENCE"
+  },
+  "audit_consumption": {
+    "slice_reads": 18,
+    "frame_reads": 9,
+    "patient_reads": 9,
+    "stream_replays": 9,
+    "unique_frames": [
+      [
+        "synthetic_p000",
+        0
+      ]
+    ],
+    "unique_patients": [
+      "synthetic_p000"
+    ]
+  },
+  "runtime_comparability": "AUDIT_OVERHEAD_INCLUDED",
+  "quality_gate": {
+    "threshold_macro4": 0.87,
+    "status": "GATE_METADATA_LOCKED",
+    "notes": "Acceptance requires evaluation of exported compact student with Macro4 >= 0.87"
+  },
+  "warm_start_summary": {
+    "initial_gradient_norms": {
+      "encoder": 4.471330165863037,
+      "decoder": 1.1298608779907227,
+      "head": 0.7209318280220032
+    },
+    "initial_weight_changes": {
+      "encoder": 0.013104132376611233,
+      "decoder": 0.005692033562809229,
+      "head": 0.0013417997397482395
+    },
+    "final_gradient_norms": {
+      "encoder": 4.086680889129639,
+      "decoder": 1.115055799484253,
+      "head": 0.7162140011787415
+    },
+    "final_weight_changes": {
+      "encoder": 0.012808052822947502,
+      "decoder": 0.005588920786976814,
+      "head": 0.0012966017238795757
+    }
+  },
+  "initialization": {
+    "seed": 217,
+    "initial_state_sha256": "5ff8c2b7f6823f7e5dfe12d7b1cb5bc42079d97656ff059bfce877a264766f97",
+    "first_step_optimizer": {
+      "name": "AdamW",
+      "owner": "labeled_supervised_update_only",
+      "parameter_ownership": {
+        "encoder.stem.0.weight": "encoder",
+        "encoder.stem.1.weight": "encoder",
+        "encoder.stem.1.bias": "encoder",
+        "encoder.stem.3.conv1.weight": "encoder",
+        "encoder.stem.3.norm1.weight": "encoder",
+        "encoder.stem.3.norm1.bias": "encoder",
+        "encoder.stem.3.conv2.weight": "encoder",
+        "encoder.stem.3.norm2.weight": "encoder",
+        "encoder.stem.3.norm2.bias": "encoder",
+        "encoder.down_stages.0.0.weight": "encoder",
+        "encoder.down_stages.0.1.weight": "encoder",
+        "encoder.down_stages.0.1.bias": "encoder",
+        "encoder.down_stages.0.3.conv1.weight": "encoder",
+        "encoder.down_stages.0.3.norm1.weight": "encoder",
+        "encoder.down_stages.0.3.norm1.bias": "encoder",
+        "encoder.down_stages.0.3.conv2.weight": "encoder",
+        "encoder.down_stages.0.3.norm2.weight": "encoder",
+        "encoder.down_stages.0.3.norm2.bias": "encoder",
+        "decoder.up_stages.0.fuse.0.weight": "decoder",
+        "decoder.up_stages.0.fuse.1.weight": "decoder",
+        "decoder.up_stages.0.fuse.1.bias": "decoder",
+        "decoder.up_stages.0.refine.conv1.weight": "decoder",
+        "decoder.up_stages.0.refine.norm1.weight": "decoder",
+        "decoder.up_stages.0.refine.norm1.bias": "decoder",
+        "decoder.up_stages.0.refine.conv2.weight": "decoder",
+        "decoder.up_stages.0.refine.norm2.weight": "decoder",
+        "decoder.up_stages.0.refine.norm2.bias": "decoder",
+        "head.weight": "head",
+        "head.bias": "head"
+      }
+    }
+  },
+  "teacher_preflight": {
+    "status": "PASS",
+    "label_budget": 1,
+    "union_count": 1,
+    "union_labeled_ids": [
+      "synthetic_p000"
+    ],
+    "exact_budget_matched": true,
+    "components": {
+      "teacher": [
+        "synthetic_p000"
+      ],
+      "student": [
+        "synthetic_p000"
+      ],
+      "warmstart": [
+        "synthetic_p000"
+      ],
+      "audit": [
+        "synthetic_p000"
+      ]
+    },
+    "train_manifest_sha256": "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+    "teacher_verification": "CLAIMED_METADATA_UNVERIFIED"
+  },
+  "train_manifest_sha256": "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+  "teacher_cache_manifest_sha256": "67f64fdc73bc4f8a2ac332c17797bddc32b5148da3b64f5c96dfb7213d99efd3",
+  "source_hashes": {
+    "self_audit/compact_training.py": "140761792c40a7ef1f57d678582e0edc9df47ddb12dac1c14fde4d7ed26b4677",
+    "self_audit/compact_probe.py": "380567281be335596b1eb8f6f978d426c162c8712489829306cf5974602e4c99",
+    "self_audit/compact_artifacts.py": "7827c73f66de129f0e6dbe8acacf1fe55c43050e451433541466d470edc74243",
+    "self_audit/engine.py": "8134f5fbb0622eefefea503fc04b7df988c6e115b03a12036c8c04d867a4a7bc",
+    "train.py": "bca8d6e7ea658c037bc3aad3155fb54679ed5903a08af303b5afeb17d33663ba"
+  },
+  "source_digest": "e3d70d291dcbe190c24d6898b260698ef92e15027a54fe8c6f034374d968ff27",
+  "final_manifest_sha256": "2ddda75e57af906394bb666a8492ab36b5131af189a7dd142ea00b001a766bc5",
+  "final_weights_sha256": "35607fd152364d9472ac184919157c47438225d65a1f4b3f86a8b8c624744d39",
+  "final_checkpoint_path": "/workspace/cptu-server-setup-20261030/verification_v3/cuda_segment1/final",
+  "final_weights_path": "/workspace/cptu-server-setup-20261030/verification_v3/cuda_segment1/final/weights.pt",
+  "report_path": "/workspace/cptu-server-setup-20261030/verification_v3/cuda_segment1/REPORT.json",
+  "output_dir": "/workspace/cptu-server-setup-20261030/verification_v3/cuda_segment1",
+  "label_budget": 1,
+  "seen_supervised": [
+    "synthetic_p000"
+  ],
+  "seen_audit": [
+    "synthetic_p000"
+  ],
+  "seen_unlabeled": [
+    "synthetic_p001",
+    "synthetic_p002"
+  ],
+  "seen_probe": [
+    "synthetic_p001"
+  ],
+  "elapsed_seconds": 2.2107061489950866,
+  "segment_elapsed_seconds": 0.9707022740039974,
+  "cumulative_elapsed_seconds": 0.970702994032763,
+  "profile": {
+    "device": "cuda:0",
+    "segment_cuda_peak_allocated_bytes": 525312,
+    "segment_cuda_peak_reserved_bytes": 2097152,
+    "cuda_peak_allocated_bytes": 525312,
+    "cuda_peak_reserved_bytes": 2097152,
+    "segment_training_elapsed_seconds": 0.9710973820183426,
+    "cumulative_training_elapsed_seconds": 0.9710977219510823,
+    "optimizer_steps_per_second": 2.0595239874001505,
+    "supervised_slices_per_second": 2.059521843358493,
+    "scope": "student training including synchronous telemetry, proposal and audit; teacher/cache build separate"
+  },
+  "training_elapsed_seconds": 0.9711002330295742
+}

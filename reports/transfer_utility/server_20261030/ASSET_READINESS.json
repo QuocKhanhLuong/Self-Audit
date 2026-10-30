@@ -1,0 +1,67 @@
+{
+  "utc": "2026-10-30T16:16:13Z",
+  "status": "BLOCKED_PENDING_VERIFIED_ASSETS",
+  "data_download_owner": "other_Codex",
+  "raw_acdc_root": "/root/self-audit-assets/data/ACDC/training",
+  "split_metadata_sha256": "b826eaf494760079aa559b0c0c12f7444951d779ebbb5ed291c0398f20bf835f",
+  "raw_image_presence": {
+    "train": {
+      "expected": 80,
+      "image_file_present": 80,
+      "missing_image_ids": [],
+      "verification": "file_presence_only_not_hash_or_complete_download"
+    },
+    "val": {
+      "expected": 18,
+      "image_file_present": 18,
+      "missing_image_ids": [],
+      "verification": "file_presence_only_not_hash_or_complete_download"
+    }
+  },
+  "checkpoint_payload_inventory": [
+    {
+      "path": "/root/self-audit-assets/checkpoints/compact_selected/weights.pt",
+      "bytes": 9662432
+    }
+  ],
+  "pinned_paths": {
+    "teacher_manifest": {
+      "path": "/workspace/compact-acdc-l8/20261028/b8_recovery/full/final/MANIFEST.json",
+      "exists": false
+    },
+    "teacher_payload": {
+      "path": "/workspace/compact-acdc-l8/20261028/b8_recovery/full/final/weights.pt",
+      "exists": false
+    },
+    "teacher_cache": {
+      "path": "/dev/shm/compact_teacher_b8/CACHE_MANIFEST.json",
+      "exists": false
+    }
+  },
+  "teacher_payload_required_sha256": "0ae593ecb6b6f9dcb88d0a41d4a77d7b3b3a3edd87396624c3648afb1281f1b6",
+  "teacher_physical_lineage": "NOT_VERIFIED",
+  "train_manifest_required_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+  "patient_training": "NOT_RUN",
+  "u_val_test_mask_content_reads": 0,
+  "scope": "read-only metadata inventory; not a successful training preflight",
+  "archive_metadata_checks": {
+    "manifest_sha256": "ae36d026ce26ca188627e6ea4699695e9eb99501312ce05d5324b81e44d3ddaa",
+    "manifest_hash_matches_protocol": true,
+    "checkpoint_train_ids_equal_locked_split": true,
+    "train_val_patient_disjoint": true,
+    "budget": 8,
+    "label_ids": [
+      "patient007",
+      "patient010",
+      "patient011",
+      "patient024",
+      "patient026",
+      "patient041",
+      "patient077",
+      "patient099"
+    ],
+    "prediction_model": "student",
+    "steps": 10000,
+    "scope": "archived_metadata_only_does_not_verify_missing_payload"
+  }
+}

@@ -1,0 +1,15 @@
+Traceback (most recent call last):
+  File "/workspace/Self-Audit-cptu-20261030/train.py", line 276, in <module>
+    main()
+  File "/workspace/Self-Audit-cptu-20261030/train.py", line 226, in main
+    print(json.dumps(train(
+                     ^^^^^^
+  File "/workspace/Self-Audit-cptu-20261030/self_audit/engine.py", line 298, in train
+    return train_compact(
+           ^^^^^^^^^^^^^^
+  File "/workspace/Self-Audit-cptu-20261030/self_audit/compact_training.py", line 652, in train_compact
+    torch.cuda.reset_peak_memory_stats(device)
+  File "/venv/main/lib/python3.12/site-packages/torch/cuda/memory.py", line 397, in reset_peak_memory_stats
+    return torch._C._cuda_resetPeakMemoryStats(device)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Invalid device argument 

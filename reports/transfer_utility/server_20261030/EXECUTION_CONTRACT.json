@@ -1,0 +1,45 @@
+{
+  "status": "BLOCKED_TEACHER_AND_BITWISE_REPLAY",
+  "implementation_commit": "6969750dedd0fdcef29b9cfa8b0718ff49c983b5",
+  "training_source_sha256": "e3d70d291dcbe190c24d6898b260698ef92e15027a54fe8c6f034374d968ff27",
+  "runtime": "/workspace/cptu-runtime-20261030/bin/python",
+  "server_worktree": "/workspace/Self-Audit-cptu-20261030",
+  "gpu": "NVIDIA RTX 5000 Ada Generation 32760 MiB",
+  "cpu_cgroup_cores": 30.71999,
+  "memory_cgroup_bytes": 259505782784,
+  "protocol_sha256": "08c241fb3b0d0e6fd865aef35663a5ccf9b14e182ef29e310c1ddfc8ac84f425",
+  "matrix_sha256": "b64a760bb0a66ff0c1ca293d06ac9e7e8e54783d0051eab002b4df29627f7a0f",
+  "pilot": {
+    "steps": 2000,
+    "warmup_steps": 1000,
+    "eval_steps": [
+      1000,
+      1500,
+      2000
+    ],
+    "batch_l": 8,
+    "batch_u": 8,
+    "watchdog_seconds_per_arm": 7200,
+    "profile_steps": 32
+  },
+  "execution_policy": {
+    "arms": "sequential_one_gpu_no_concurrent_training",
+    "precision": "FP32_locked",
+    "threads": "existing_config_unchanged",
+    "thread_env": {
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1"
+    },
+    "data_download": "owned_by_other_Codex_do_not_duplicate_or_interrupt",
+    "teacher_substitution": false,
+    "source_changes": "Two portable regression fixes and explicit CUDA initialization before allocator reset; no protocol or optimizer changes"
+  },
+  "boundaries": [
+    "No patient training before required suite, CUDA smoke, exact resume, physical teacher and data/cache hashes PASS",
+    "No loss, scale, epsilon, threshold, label, batch or step changes",
+    "TEST50 not opened or evaluated for pilot",
+    "No deployment quality or speed claim from manufactured checks"
+  ],
+  "verified_code_revision": "c7a7a09565da549631d876dbbcb64a8931837d7c"
+}

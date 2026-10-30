@@ -1,0 +1,161 @@
+{
+  "status": "BLOCKED",
+  "implemented": true,
+  "full_verification": "NOT_MET_BITWISE_CUDA_REPLAY",
+  "tested_git_sha": "c7a7a09565da549631d876dbbcb64a8931837d7c",
+  "training_source_sha256": "e3d70d291dcbe190c24d6898b260698ef92e15027a54fe8c6f034374d968ff27",
+  "branch": "QuocKhanhLuong/cptu-server-verification-20261030",
+  "checks": {
+    "check_repo": "PASS",
+    "pytest": "900 passed, 2 warnings",
+    "original_parity": "PASS_80_OF_80",
+    "manufactured_cuda_four_arm_smoke": "PASS",
+    "asset_free_export_reload": "PASS_MANUFACTURED",
+    "cuda_rng_and_selector_decisions_replay": "PASS_MANUFACTURED",
+    "cuda_parameter_optimizer_bitwise_replay": "FAIL",
+    "target_architecture_32_step_profile": "NOT_RUN_STOPPED_AT_REPLAY_GATE"
+  },
+  "data": {
+    "train": "/root/self-audit-assets/data/prepared/ACDC_L8_S42/train.json",
+    "train_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+    "labeled_ids": [
+      "patient007",
+      "patient010",
+      "patient011",
+      "patient024",
+      "patient026",
+      "patient041",
+      "patient077",
+      "patient099"
+    ],
+    "labeled_patients": 8,
+    "unlabeled_patients": 72,
+    "val_patients": 18,
+    "val_manifest_sha256": "cac4426393ca11959f56df2876869e825443916cdec02c6d95ec8da3fac0ca50",
+    "val_byte_hash_checks": 72,
+    "val_aliases": {
+      "/workspace/Self-Audit/data/prepared/ACDC_L8_S42": "/workspace/cptu-evaluation-assets-20261030",
+      "/workspace/Self-Audit/data/ACDC": "/root/self-audit-assets/data/ACDC"
+    },
+    "unlabeled_mask_reads_in_canonical_preparation": 0,
+    "teacher_payload": "MISSING_NOT_SUBSTITUTED",
+    "teacher_payload_required_sha256": "0ae593ecb6b6f9dcb88d0a41d4a77d7b3b3a3edd87396624c3648afb1281f1b6",
+    "teacher_cache": "MISSING",
+    "teacher_cache_required_sha256": "783624211e760fbeb2c3a80ded7b8dacb9d1407f0dcc1e484010cda2c343897b"
+  },
+  "replay_diagnostic": {
+    "status": "FAIL_EXACT_STATE_REPRODUCTION",
+    "git_sha": "c7a7a09565da549631d876dbbcb64a8931837d7c",
+    "initialization_equal": true,
+    "student_bitwise_equal": false,
+    "optimizer_bitwise_equal": false,
+    "max_parameter_abs_difference": 6.109476089477539e-07,
+    "same_decisions_and_schedule": true,
+    "first_continuation_independent_run_loss_difference_at_step_1": 1.1920928955078125e-06,
+    "interpretation": "Mismatch already occurs before the resume boundary in independent fresh CUDA runs. Dataset/probe RNG and decisions are assessed separately below. Not an empirical utility NO_GO. No guard tolerance is relaxed.",
+    "runtime_deterministic_algorithms": false,
+    "profile_32steps": "NOT_RUN_STOPPED_AT_REPRODUCTION_GATE",
+    "patient_pilot": "NOT_RUN",
+    "checkpoint_rng_container_equal_by_component": {
+      "torch_cpu_rng": true,
+      "torch_cuda_rng": true,
+      "np_legacy_rng": true,
+      "py_rng": true,
+      "data_rng_state": true,
+      "probe_rng_state": false
+    },
+    "random_generators_bitwise_equal": true,
+    "probe_coverage_equal": true,
+    "probe_container_difference_fields": [
+      "total_sampling_seconds",
+      "total_cache_seconds"
+    ],
+    "probe_timing_difference_interpretation": "Expected measured elapsed-time differences, not random-generator state differences.",
+    "diagnosis": "Same initial weights, L/U schedules, selector decisions and all random-generator states; small parameter/optimizer numerical differences already occur in independent fresh CUDA runs before the resume boundary. Runtime deterministic algorithms are disabled. Cause is not isolated by an intervention; bitwise replay remains unverified."
+  },
+  "patient_pilot": {
+    "status": "NOT_RUN",
+    "budget": {
+      "total_steps": 2000,
+      "warmup_steps": 1000,
+      "eval_steps": [
+        1000,
+        1500,
+        2000
+      ],
+      "final_step": 2000,
+      "save_every": 500,
+      "watchdog_max_seconds": 7200,
+      "profile_max_steps": 32
+    },
+    "arms": {
+      "plain_kd": {
+        "status": "NOT_RUN",
+        "optimizer_steps_executed": 0,
+        "Macro4": null,
+        "foreground_dice": null,
+        "RV_dice": null,
+        "MYO_dice": null,
+        "LV_dice": null,
+        "RV_recall": null,
+        "training_wall_seconds": null
+      },
+      "scalar_guard_original": {
+        "status": "NOT_RUN",
+        "optimizer_steps_executed": 0,
+        "Macro4": null,
+        "foreground_dice": null,
+        "RV_dice": null,
+        "MYO_dice": null,
+        "LV_dice": null,
+        "RV_recall": null,
+        "training_wall_seconds": null
+      },
+      "scalar_guard_larger_tie": {
+        "status": "NOT_RUN",
+        "optimizer_steps_executed": 0,
+        "Macro4": null,
+        "foreground_dice": null,
+        "RV_dice": null,
+        "MYO_dice": null,
+        "LV_dice": null,
+        "RV_recall": null,
+        "training_wall_seconds": null
+      },
+      "scalar_guard_cross_patient_utility": {
+        "status": "NOT_RUN",
+        "optimizer_steps_executed": 0,
+        "Macro4": null,
+        "foreground_dice": null,
+        "RV_dice": null,
+        "MYO_dice": null,
+        "LV_dice": null,
+        "RV_recall": null,
+        "training_wall_seconds": null
+      }
+    },
+    "decision": "BLOCKED_NOT_AN_EMPIRICAL_NO_GO",
+    "conditional_same_batch": "NOT_TRIGGERED",
+    "test50_tuning": false
+  },
+  "server_receipts": "/workspace/cptu-server-setup-20261030",
+  "server_source": "/workspace/Self-Audit-cptu-20261030",
+  "artifact_backup": {
+    "archive": "/workspace/cptu-server-verification-20261030.tar.gz",
+    "sha256": "26b454054ffe3c913704c290ba920504a91e3c48ddf20d12b9675e19019df4f6",
+    "bytes": 543151,
+    "scope": "receipts and manufactured checkpoints; no patient image/mask arrays or B8 teacher payload",
+    "local_archive": "/Users/alvinluong/.local/share/openresearch/files/self-audit/server-verification-20261030/cptu-server-verification-20261030.tar.gz"
+  },
+  "next_requirements": [
+    "Restore exact B8 physical weights and verified immutable cache. Do not substitute B52 or compact_selected.",
+    "Resolve or explicitly bound CUDA numerical reproducibility before claiming exact replay; preserve failed evidence and do not relax guard or utility tolerances.",
+    "Rerun full real-asset preflight and bounded 32-step profile before the unchanged authorized four-arm pilot."
+  ],
+  "claims_not_made": [
+    "patient Dice or Macro4 threshold",
+    "inference speed or resource superiority versus B8",
+    "utility or joint superiority",
+    "completed patient pilot"
+  ]
+}

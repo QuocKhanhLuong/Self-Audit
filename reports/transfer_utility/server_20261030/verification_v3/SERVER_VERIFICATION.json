@@ -1,0 +1,107 @@
+{
+  "status": "FAIL",
+  "source_git_sha": "c7a7a09565da549631d876dbbcb64a8931837d7c",
+  "source_sha256": "e3d70d291dcbe190c24d6898b260698ef92e15027a54fe8c6f034374d968ff27",
+  "commands": [
+    {
+      "name": "check_repo",
+      "argv": [
+        "/workspace/cptu-runtime-20261030/bin/python",
+        "scripts/check_repo.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.03287135809659958,
+      "stdout_sha256": "f9317b13e55fd8916cf0f91882298e60bc9274551929baa2de5c15e80fd35b83",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "original_parity",
+      "argv": [
+        "/workspace/cptu-runtime-20261030/bin/python",
+        "scripts/verify_compact_original_parity.py",
+        "--out",
+        "/workspace/cptu-server-setup-20261030/verification_v3/ORIGINAL_PARITY.json"
+      ],
+      "exit_code": 0,
+      "seconds": 3.018605045042932,
+      "stdout_sha256": "35ff9f258c13bed52b2a8fbdeea3191abe28a48295bddc89d31a7484e8ae9183",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "smoke_cuda",
+      "argv": [
+        "/workspace/cptu-runtime-20261030/bin/python",
+        "scripts/smoke_compact_pipeline.py",
+        "--transfer-utility",
+        "--device",
+        "cuda:0",
+        "--out",
+        "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda"
+      ],
+      "exit_code": 0,
+      "seconds": 38.521949484944344,
+      "stdout_sha256": "f743bfb562d6aef139f9c845a03e11e6f5579b11217762f764363bad5ebd2c7e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "cuda_segment1",
+      "argv": [
+        "/workspace/cptu-runtime-20261030/bin/python",
+        "train.py",
+        "--config",
+        "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/cross_patient_utility.json",
+        "--data",
+        "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/train_data/train.json",
+        "--data-sha256",
+        "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+        "--synthetic",
+        "--device",
+        "cuda:0",
+        "--stop-after-step",
+        "2",
+        "--out",
+        "/workspace/cptu-server-setup-20261030/verification_v3/cuda_segment1"
+      ],
+      "exit_code": 0,
+      "seconds": 4.621836215956137,
+      "stdout_sha256": "5a816277dddc5ed6787277033b40022e0593cce7923fe7919f219a00a2710563",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "cuda_segment2",
+      "argv": [
+        "/workspace/cptu-runtime-20261030/bin/python",
+        "train.py",
+        "--config",
+        "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/cross_patient_utility.json",
+        "--data",
+        "/workspace/cptu-server-setup-20261030/verification_v3/smoke_cuda/train_data/train.json",
+        "--data-sha256",
+        "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+        "--synthetic",
+        "--device",
+        "cuda:0",
+        "--resume",
+        "/workspace/cptu-server-setup-20261030/verification_v3/cuda_segment1/final",
+        "--resume-sha256",
+        "2ddda75e57af906394bb666a8492ab36b5131af189a7dd142ea00b001a766bc5",
+        "--out",
+        "/workspace/cptu-server-setup-20261030/verification_v3/cuda_segment2"
+      ],
+      "exit_code": 0,
+      "seconds": 4.72205419302918,
+      "stdout_sha256": "f76ac5b0d2a1ff60c37fe9e2b1acf96a52761a8d36dac6ee6d4ab6435aa5cec3",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "environment": {
+    "python": "3.12.15 (main, Oct 13 2026, 16:52:04) [GCC 15.3.0]",
+    "torch": "2.14.1+cu132",
+    "cuda": "13.2",
+    "gpu": "NVIDIA RTX 5000 Ada Generation",
+    "cpu_threads": 1
+  },
+  "scope": "software and manufactured CUDA verification only; no patient training",
+  "current_command": "cuda_segment2",
+  "error": "AssertionError('CUDA exact resume differs: student')"
+}

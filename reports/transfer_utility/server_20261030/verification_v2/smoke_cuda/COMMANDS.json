@@ -1,0 +1,42 @@
+[
+  {
+    "name": "cache",
+    "argv": [
+      "/workspace/cptu-runtime-20261030/bin/python",
+      "scripts/build_compact_teacher_cache.py",
+      "--data-manifest",
+      "/workspace/cptu-server-setup-20261030/verification_v2/smoke_cuda/train_data/train.json",
+      "--data-sha256",
+      "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+      "--output-dir",
+      "/workspace/cptu-server-setup-20261030/verification_v2/smoke_cuda/cache",
+      "--synthetic-teacher",
+      "--device",
+      "cuda:0",
+      "--batch-size",
+      "2"
+    ],
+    "exit_code": 0,
+    "seconds": 2.44850664306432
+  },
+  {
+    "name": "plain_kd",
+    "argv": [
+      "/workspace/cptu-runtime-20261030/bin/python",
+      "train.py",
+      "--config",
+      "/workspace/cptu-server-setup-20261030/verification_v2/smoke_cuda/plain_kd.json",
+      "--data",
+      "/workspace/cptu-server-setup-20261030/verification_v2/smoke_cuda/train_data/train.json",
+      "--data-sha256",
+      "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+      "--out",
+      "/workspace/cptu-server-setup-20261030/verification_v2/smoke_cuda/plain_kd",
+      "--device",
+      "cuda:0",
+      "--synthetic"
+    ],
+    "exit_code": 1,
+    "seconds": 2.029677144018933
+  }
+]

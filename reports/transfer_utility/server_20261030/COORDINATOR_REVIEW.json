@@ -1,0 +1,35 @@
+{
+  "status": "PASS",
+  "git_sha": "71761cd1b2f2c770b5bfdc14019ff4fad8e6e51b",
+  "command": [
+    "/Users/alvinluong/miniforge3/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/test_automatic_engine.py::test_train_py_cli_routing",
+    "tests/test_compact_probe_resume.py::test_resume_cuda_rng_required_on_cuda_device"
+  ],
+  "result": "2 passed in 4.23s",
+  "review": "Only subprocess interpreter selection and explicit negative checkpoint fixture changed. No training source/config modification.",
+  "worker": {
+    "provider": "antigravity",
+    "run_id": "run_befcd71c191c",
+    "task_id": "task_6976baa83a8c",
+    "dispatch_id": "ctx_9b83631c3ea9",
+    "outcome": "succeeded",
+    "resource_state": "released"
+  },
+  "superseded_command_error": {
+    "command": "python3 -m pytest ...",
+    "error": "/opt/homebrew/opt/python@3.14/bin/python3.14: No module named pytest",
+    "resolution": "Used existing Miniforge interpreter; no package installation or test weakening."
+  },
+  "scope": "two local CPU regressions, not CUDA or patient experiment",
+  "cuda_startup_fix": {
+    "git_sha": "c7a7a09565da549631d876dbbcb64a8931837d7c",
+    "coordinator_focused_test": "test_compact_cuda_startup_initialization_ordering: 1 passed in 0.46s",
+    "review": "CUDA init precedes allocator reset, which remains before model construction/loading. No recipe change. Removed one trailing blank line after worker settlement.",
+    "worker_dispatch": "ctx_04ec1ef0ad0b",
+    "worker_resource_state": "released"
+  }
+}
