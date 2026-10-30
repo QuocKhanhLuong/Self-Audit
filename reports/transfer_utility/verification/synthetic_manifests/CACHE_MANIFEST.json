@@ -1,0 +1,66 @@
+{
+  "schema": "self_audit.compact_teacher_cache.v1",
+  "teacher_identity": {
+    "schema": "self_audit.compact_teacher_identity.v1",
+    "teacher_kind": "synthetic",
+    "inference_state": "student",
+    "label_budget": 1,
+    "labeled_ids": [
+      "synthetic_p000"
+    ],
+    "verified": false,
+    "verification_status": "CLAIMED_METADATA_UNVERIFIED",
+    "checks_passed": [
+      "lineage_format",
+      "patient_ids_validated",
+      "inference_state_declared",
+      "budget_k_satisfied",
+      "label_union_satisfied",
+      "synthetic_kind_validated"
+    ],
+    "physical_payload_status": "BLOCKED_MISSING_PAYLOAD"
+  },
+  "train_manifest_sha256": "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+  "native_axes": "TZYX",
+  "num_classes": 4,
+  "precision": "float32",
+  "total_unlabeled_patients": 2,
+  "patients": {
+    "synthetic_p001": {
+      "file": "synthetic_p001_probs.npy",
+      "file_sha256": "72071c2cc12fc6389cbe190a50c1611ad0fd1dbf6b0cb55fee4fc74ee47c2036",
+      "image_sha256": "ca34af0ebdf6d736c294079e7eac70202b9522eb6dfc747fc1c3b576b95eed40",
+      "shape": [
+        2,
+        2,
+        4,
+        16,
+        16
+      ],
+      "dtype": "float32",
+      "file_bytes": 16512
+    },
+    "synthetic_p002": {
+      "file": "synthetic_p002_probs.npy",
+      "file_sha256": "9606574b257c2161e639fd4be0642a59b0e9ae175ca5fdc7c3d453a28ad5319f",
+      "image_sha256": "957c44b01d02956b39697d4a924843b377ebdeb71ef3aa16b7264c2f7c15f33e",
+      "shape": [
+        2,
+        2,
+        4,
+        16,
+        16
+      ],
+      "dtype": "float32",
+      "file_bytes": 16512
+    }
+  },
+  "telemetry": {
+    "total_latency_seconds": 0.017220583744347095,
+    "mean_seconds_per_volume": 0.008610291872173548,
+    "median_seconds_per_volume": 0.008567666402086616,
+    "total_disk_bytes": 33024,
+    "vram_peak_allocated_bytes": null,
+    "vram_peak_reserved_bytes": null
+  }
+}

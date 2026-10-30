@@ -1,0 +1,317 @@
+{
+  "schema": "self_audit.compact.transfer_utility.profile.v1",
+  "synthetic": true,
+  "max_steps": 8,
+  "warmup_steps": 4,
+  "u_steps": 4,
+  "device": "cpu",
+  "source_sha256": "f44e1d12bda0eaacab2bdea26c3960a803a7f179e9273466be40f5c1ca4362d1",
+  "config_sha256": "b0a3e89b55397449f8537d24bfa2823d82118303a586716a174e38310d7cd161",
+  "train_manifest_sha256": "b95682826f76187c3c905f06831a48dfc2a852c678962fbbdb4df082ddb26a53",
+  "teacher_cache_sha256": "6d160ed9da7f1b1884e88150ed66c264c2800fd7bf5957b37179fd50646c8256",
+  "status": "PASS",
+  "training_report": {
+    "schema": "self_audit.compact.report.v1",
+    "status": "COMPLETED",
+    "method": "scalar_guard",
+    "selector": "cross_patient_utility",
+    "synthetic": true,
+    "quality": "NOT_EVALUATED",
+    "steps": 8,
+    "steps_requested": 8,
+    "max_steps": 8,
+    "total_budget": 8,
+    "immutable_steps_total": 8,
+    "resumed_from": null,
+    "resumed_step": 0,
+    "termination_reason": "max_steps_reached",
+    "equal_wall_time": {
+      "enabled": false
+    },
+    "counts": {
+      "supervised_updates": 8,
+      "pseudo_accepted": 4,
+      "pseudo_rejected": 0,
+      "warmup_steps": 4,
+      "no_candidates": 0,
+      "rejected_all": 0,
+      "zero_displacement": 0
+    },
+    "slices_sampled": {
+      "labeled": 8,
+      "unlabeled": 8,
+      "audit": 72,
+      "probe": 4
+    },
+    "slices_optimized": {
+      "labeled": 8,
+      "unlabeled": 4
+    },
+    "batch_sizes": {
+      "labeled": 1,
+      "unlabeled": 1,
+      "probe": 1
+    },
+    "effective_batch_counts": {
+      "labeled": 8,
+      "unlabeled": 8,
+      "probe": 4
+    },
+    "optimizer_calls": {
+      "adamw": 8,
+      "sgd": 4
+    },
+    "teacher_costs": {
+      "teacher_cache_total_seconds": 0.0029662507586181164,
+      "teacher_cache_u_seconds": 0.002679751720279455,
+      "teacher_cache_probe_seconds": 0.0002864990383386612,
+      "probe_sampling_total_seconds": 0.0001309993676841259,
+      "teacher_cache_generation_cost": {
+        "total_latency_seconds": 0.01757979206740856,
+        "mean_seconds_per_volume": 0.00878989603370428,
+        "median_seconds_per_volume": 0.008740687044337392,
+        "total_disk_bytes": 33024,
+        "vram_peak_allocated_bytes": null,
+        "vram_peak_reserved_bytes": null
+      },
+      "teacher_training_cost": "NOT_KNOWN"
+    },
+    "audit_consumption": {
+      "slice_reads": 72,
+      "frame_reads": 36,
+      "patient_reads": 36,
+      "stream_replays": 36,
+      "unique_frames": [
+        [
+          "synthetic_p000",
+          0
+        ],
+        [
+          "synthetic_p001",
+          0
+        ]
+      ],
+      "unique_patients": [
+        "synthetic_p000",
+        "synthetic_p001"
+      ]
+    },
+    "runtime_comparability": "AUDIT_OVERHEAD_INCLUDED",
+    "quality_gate": {
+      "threshold_macro4": 0.87,
+      "status": "GATE_METADATA_LOCKED",
+      "notes": "Acceptance requires evaluation of exported compact student with Macro4 >= 0.87"
+    },
+    "warm_start_summary": {
+      "initial_gradient_norms": {
+        "encoder": 3.7436301708221436,
+        "decoder": 1.3140391111373901,
+        "head": 0.6921603083610535
+      },
+      "initial_weight_changes": {
+        "encoder": 0.013104138895869255,
+        "decoder": 0.0056921192444860935,
+        "head": 0.0013417821610346437
+      },
+      "final_gradient_norms": {
+        "encoder": 3.139364004135132,
+        "decoder": 1.2185373306274414,
+        "head": 0.6887379884719849
+      },
+      "final_weight_changes": {
+        "encoder": 0.007573030423372984,
+        "decoder": 0.004273680970072746,
+        "head": 0.001220323028974235
+      }
+    },
+    "initialization": {
+      "seed": 42,
+      "initial_state_sha256": "88ef865e0300de2a98b32e5b0b23f59075db7b7da490635c120401fd70a24c5d",
+      "first_step_optimizer": {
+        "name": "AdamW",
+        "owner": "labeled_supervised_update_only",
+        "parameter_ownership": {
+          "encoder.stem.0.weight": "encoder",
+          "encoder.stem.1.weight": "encoder",
+          "encoder.stem.1.bias": "encoder",
+          "encoder.stem.3.conv1.weight": "encoder",
+          "encoder.stem.3.norm1.weight": "encoder",
+          "encoder.stem.3.norm1.bias": "encoder",
+          "encoder.stem.3.conv2.weight": "encoder",
+          "encoder.stem.3.norm2.weight": "encoder",
+          "encoder.stem.3.norm2.bias": "encoder",
+          "encoder.down_stages.0.0.weight": "encoder",
+          "encoder.down_stages.0.1.weight": "encoder",
+          "encoder.down_stages.0.1.bias": "encoder",
+          "encoder.down_stages.0.3.conv1.weight": "encoder",
+          "encoder.down_stages.0.3.norm1.weight": "encoder",
+          "encoder.down_stages.0.3.norm1.bias": "encoder",
+          "encoder.down_stages.0.3.conv2.weight": "encoder",
+          "encoder.down_stages.0.3.norm2.weight": "encoder",
+          "encoder.down_stages.0.3.norm2.bias": "encoder",
+          "decoder.up_stages.0.fuse.0.weight": "decoder",
+          "decoder.up_stages.0.fuse.1.weight": "decoder",
+          "decoder.up_stages.0.fuse.1.bias": "decoder",
+          "decoder.up_stages.0.refine.conv1.weight": "decoder",
+          "decoder.up_stages.0.refine.norm1.weight": "decoder",
+          "decoder.up_stages.0.refine.norm1.bias": "decoder",
+          "decoder.up_stages.0.refine.conv2.weight": "decoder",
+          "decoder.up_stages.0.refine.norm2.weight": "decoder",
+          "decoder.up_stages.0.refine.norm2.bias": "decoder",
+          "head.weight": "head",
+          "head.bias": "head"
+        }
+      }
+    },
+    "teacher_preflight": {
+      "status": "PASS",
+      "label_budget": 2,
+      "union_count": 2,
+      "union_labeled_ids": [
+        "synthetic_p000",
+        "synthetic_p001"
+      ],
+      "exact_budget_matched": true,
+      "components": {
+        "teacher": [
+          "synthetic_p000",
+          "synthetic_p001"
+        ],
+        "student": [
+          "synthetic_p000",
+          "synthetic_p001"
+        ],
+        "warmstart": [
+          "synthetic_p000",
+          "synthetic_p001"
+        ],
+        "audit": [
+          "synthetic_p000",
+          "synthetic_p001"
+        ]
+      },
+      "train_manifest_sha256": "b95682826f76187c3c905f06831a48dfc2a852c678962fbbdb4df082ddb26a53",
+      "teacher_verification": "CLAIMED_METADATA_UNVERIFIED"
+    },
+    "train_manifest_sha256": "b95682826f76187c3c905f06831a48dfc2a852c678962fbbdb4df082ddb26a53",
+    "teacher_cache_manifest_sha256": "6d160ed9da7f1b1884e88150ed66c264c2800fd7bf5957b37179fd50646c8256",
+    "source_hashes": {
+      "self_audit/compact_training.py": "ea5796f6f0fe253f9622fa6d6eb618ff2623dc055e8180e445a97c49ebc36840",
+      "self_audit/compact_probe.py": "380567281be335596b1eb8f6f978d426c162c8712489829306cf5974602e4c99",
+      "self_audit/compact_artifacts.py": "7827c73f66de129f0e6dbe8acacf1fe55c43050e451433541466d470edc74243",
+      "self_audit/engine.py": "8134f5fbb0622eefefea503fc04b7df988c6e115b03a12036c8c04d867a4a7bc",
+      "train.py": "bca8d6e7ea658c037bc3aad3155fb54679ed5903a08af303b5afeb17d33663ba"
+    },
+    "source_digest": "f44e1d12bda0eaacab2bdea26c3960a803a7f179e9273466be40f5c1ca4362d1",
+    "final_manifest_sha256": "e1eb295e620a909ec102a35d39271187467e55c79ed51a521ba806903f6b28c7",
+    "final_weights_sha256": "6b77e085ba653031021f99f91b4d16ccdb071985f58246012e01f01cf1155d69",
+    "final_checkpoint_path": "/private/tmp/cptu-final-verify-20261030-1034/cpu_profile/training/final",
+    "final_weights_path": "/private/tmp/cptu-final-verify-20261030-1034/cpu_profile/training/final/weights.pt",
+    "report_path": "/private/tmp/cptu-final-verify-20261030-1034/cpu_profile/training/REPORT.json",
+    "output_dir": "/private/tmp/cptu-final-verify-20261030-1034/cpu_profile/training",
+    "label_budget": 2,
+    "seen_supervised": [
+      "synthetic_p000",
+      "synthetic_p001"
+    ],
+    "seen_audit": [
+      "synthetic_p000",
+      "synthetic_p001"
+    ],
+    "seen_unlabeled": [
+      "synthetic_p002",
+      "synthetic_p003"
+    ],
+    "seen_probe": [
+      "synthetic_p002",
+      "synthetic_p003"
+    ],
+    "elapsed_seconds": 0.5056993751786649,
+    "segment_elapsed_seconds": 0.12401425000280142,
+    "cumulative_elapsed_seconds": 0.1240143752656877,
+    "profile": {
+      "device": "cpu",
+      "segment_cuda_peak_allocated_bytes": null,
+      "segment_cuda_peak_reserved_bytes": null,
+      "cuda_peak_allocated_bytes": null,
+      "cuda_peak_reserved_bytes": null,
+      "segment_training_elapsed_seconds": 0.12401504116132855,
+      "cumulative_training_elapsed_seconds": 0.12401512498036027,
+      "optimizer_steps_per_second": 64.50817412278072,
+      "supervised_slices_per_second": 64.50784906544312,
+      "scope": "student training including synchronous telemetry, proposal and audit; teacher/cache build separate"
+    },
+    "training_elapsed_seconds": 0.12401637528091669
+  },
+  "diagnostics": {
+    "status": "COMPLETED",
+    "total_steps": 8,
+    "warmup_steps": 4,
+    "no_candidate_steps": 0,
+    "u_attempted_steps": 4,
+    "alpha_histogram": {
+      "1.0": 2,
+      "0.5": 1,
+      "0.25": 0,
+      "0.125": 1,
+      "0.0625": 0,
+      "0.03125": 0,
+      "0.015625": 0,
+      "0.0078125": 0,
+      "0.0": 0,
+      "other": 0
+    },
+    "transaction_outcomes": {
+      "accepted_nonzero": 4,
+      "zero_displacement": 0,
+      "rejected_all": 0,
+      "u_acceptance_rate": 1.0,
+      "u_zero_rate": 0.0,
+      "u_reject_rate": 0.0,
+      "overall_acceptance_rate": 0.5
+    },
+    "displacement_norms": {
+      "mean_proposed": 0.0016474136078243233,
+      "mean_realized": 0.0009450665244800758,
+      "max_realized": 0.0013854584145456292
+    },
+    "utility_probe_gains": {
+      "scope": "all evaluated feasible nonzero trials, including unselected trials",
+      "count": 28,
+      "mean": 0.00014021566935947964,
+      "min": 3.5762786865234375e-06,
+      "max": 0.0010254383087158203
+    },
+    "selected_probe_gains": {
+      "scope": "selected nonzero or valid-reference logical-zero decisions; unavailable probes excluded",
+      "count": 4,
+      "mean": 0.0004944503307342529,
+      "classwise_mean": {
+        "BG": 0.0002474188804626465,
+        "RV": 1.9778963178396225e-06,
+        "MYO": 0.00023017823696136475,
+        "LV": 1.4804303646087646e-05
+      },
+      "classwise_count": {
+        "BG": 4,
+        "RV": 4,
+        "MYO": 4,
+        "LV": 4
+      }
+    },
+    "selection_reasons": {
+      "max_utility_gain": 4
+    },
+    "latencies": {
+      "mean_step_seconds": 0.014444046712014824,
+      "mean_audit_seconds": 0.008396427088882774,
+      "mean_supervised_seconds": 0.002731208165641874,
+      "total_wall_seconds": 0.1155523736961186
+    }
+  },
+  "checkpoint_manifest_sha256": "e1eb295e620a909ec102a35d39271187467e55c79ed51a521ba806903f6b28c7",
+  "elapsed_seconds": 1.3843868332915008,
+  "seconds_per_step": 0.1730483541614376,
+  "projected_2000_steps_seconds": 346.0967083228752,
+  "within_watchdog_7200s": true
+}

@@ -23,6 +23,15 @@ def main():
     p.add_argument("--time-budget", type=float, help="time budget seconds for self_audit.automatic.v1")
     p.add_argument("--max-cache-bytes", type=int, help="max cache bytes for self_audit.automatic.v1")
     p.add_argument("--max-controller-workspace-bytes", type=int, help="max controller workspace bytes for self_audit.automatic.v1")
+    p.add_argument("--stop-after-step", type=int, help="Bounded stop step within immutable --steps total")
+    p.add_argument("--selector", choices=["original", "larger_tie", "utility", "cross_patient_utility", "same_batch_utility"], help="Compact scalar selector")
+    p.add_argument("--selector-dice-tolerance", type=float, help="Dice tolerance for larger_tie selector")
+    p.add_argument("--utility-gain-tolerance", type=float, help="Gain tolerance for utility selector")
+    p.add_argument("--utility-tie-tolerance", type=float, help="Tie tolerance for utility selector")
+    p.add_argument("--probe-seed", type=int, help="Seed for independent probe generator")
+    p.add_argument("--probe-batch-size", type=int, help="Batch size for independent probe generator")
+    p.add_argument("--same-batch-utility", action="store_true", help="Reuse proposal batch for utility evaluation")
+    p.add_argument("--max-trials", type=int, help="Max candidate trials")
     args = p.parse_args()
     if args.describe:
         print(Path(__file__).with_name("ACTIVE_PIPELINE.json").read_text()); return
@@ -59,6 +68,21 @@ def main():
         "--max-cache-bytes": args.max_cache_bytes,
         "--max-controller-workspace-bytes": args.max_controller_workspace_bytes,
     }
+    compact_only = {
+        "--stop-after-step": args.stop_after_step,
+        "--selector": args.selector,
+        "--selector-dice-tolerance": args.selector_dice_tolerance,
+        "--utility-gain-tolerance": args.utility_gain_tolerance,
+        "--utility-tie-tolerance": args.utility_tie_tolerance,
+        "--probe-seed": args.probe_seed,
+        "--probe-batch-size": args.probe_batch_size,
+        "--same-batch-utility": True if args.same_batch_utility else None,
+        "--max-trials": args.max_trials,
+    }
+    if not is_compact:
+        compact_supplied = [flag for flag, value in compact_only.items() if value is not None]
+        if compact_supplied:
+            p.error(f"compact-only flags are invalid for noncompact schema ({c.get('schema')}): {', '.join(compact_supplied)}")
     if is_volume:
         supplied = [flag for flag, value in legacy_only.items() if value is not None]
         if supplied:
@@ -90,12 +114,14 @@ def main():
         vol_only = {
             "--geometry": args.geometry,
             "--geometry-sha256": args.geometry_sha256,
-            "--resume": args.resume,
-            "--resume-sha256": args.resume_sha256,
         }
         vol_supplied = [flag for flag, value in vol_only.items() if value is not None]
         if vol_supplied:
             p.error(f"volume flags are invalid for self_audit.compact.v1: {', '.join(vol_supplied)}")
+        if args.resume and not args.resume_sha256:
+            p.error("--resume-sha256 is mandatory when --resume is specified")
+        if args.resume_sha256 and not args.resume:
+            p.error("--resume-sha256 requires --resume")
         auto_supplied = [flag for flag, value in automatic_only.items() if value is not None]
         if auto_supplied:
             p.error(f"automatic-only flags are invalid for self_audit.compact.v1: {', '.join(auto_supplied)}")
@@ -157,17 +183,44 @@ def main():
     if is_compact:
         from self_audit.compact_training import validate_compact_config
         from self_audit.engine import train
+        if args.selector is not None:
+            c["selector"] = args.selector
+        if args.selector_dice_tolerance is not None:
+            c["selector_dice_tolerance"] = args.selector_dice_tolerance
+        if args.utility_gain_tolerance is not None:
+            c["utility_gain_tolerance"] = args.utility_gain_tolerance
+        if args.utility_tie_tolerance is not None:
+            c["utility_tie_tolerance"] = args.utility_tie_tolerance
+        if args.probe_seed is not None:
+            c["probe_seed"] = args.probe_seed
+        if args.probe_batch_size is not None:
+            c["probe_batch_size"] = args.probe_batch_size
+        if args.same_batch_utility:
+            c["same_batch_utility"] = True
+        if args.max_trials is not None:
+            c["max_trials"] = args.max_trials
+
         effective_steps = args.steps if args.steps is not None else c.get("steps")
         if isinstance(effective_steps, bool) or not isinstance(effective_steps, int) or effective_steps < 1:
             p.error("compact effective steps must be a positive integer")
         if effective_steps > 128 and not args.allow_full_run:
             p.error("more than 128 updates requires --allow-full-run")
+        if args.stop_after_step is not None:
+            if isinstance(args.stop_after_step, bool) or not isinstance(args.stop_after_step, int) or args.stop_after_step < 1:
+                p.error("compact stop_after_step must be a positive integer")
+            if args.stop_after_step > effective_steps:
+                p.error(f"--stop-after-step ({args.stop_after_step}) cannot exceed total steps ({effective_steps})")
         if not args.synthetic and not all([args.data, args.data_sha256]):
             p.error("compact patient runs require --data/--data-sha256; no implicit data discovery")
         if not args.out:
             p.error("compact runs require --out for a checkpoint receipt")
         try:
-            c = validate_compact_config(c, allow_full_run=args.allow_full_run, stop_steps=args.steps)
+            c = validate_compact_config(
+                c,
+                allow_full_run=args.allow_full_run,
+                stop_steps=args.steps,
+                stop_after_step=args.stop_after_step,
+            )
         except ValueError as exc:
             p.error(str(exc))
         print(json.dumps(train(
@@ -178,6 +231,9 @@ def main():
             device=args.device,
             synthetic=args.synthetic,
             stop_steps=args.steps,
+            stop_after_step=args.stop_after_step,
+            resume=args.resume,
+            resume_sha256=args.resume_sha256,
             allow_full_run=args.allow_full_run,
         ), indent=2))
         return

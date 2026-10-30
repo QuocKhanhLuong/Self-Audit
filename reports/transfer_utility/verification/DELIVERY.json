@@ -1,0 +1,161 @@
+{
+  "schema": "self_audit.compact.transfer_utility.delivery.v1",
+  "timestamp_utc": "2026-10-30T10:37:08Z",
+  "branch": "QuocKhanhLuong/cptu-scalar-20261030",
+  "source_base_revision": "d93c4dea4f42895297ec5941bb938b47140aa9e4",
+  "training_source_sha256": "f44e1d12bda0eaacab2bdea26c3960a803a7f179e9273466be40f5c1ca4362d1",
+  "protocol_sha256": "08c241fb3b0d0e6fd865aef35663a5ccf9b14e182ef29e310c1ddfc8ac84f425",
+  "matrix_sha256": "b64a760bb0a66ff0c1ca293d06ac9e7e8e54783d0051eab002b4df29627f7a0f",
+  "environment": {
+    "python": "3.11.16 | packaged by conda-forge | (main, Aug 21 2026, 22:39:01) [Clang 19.1.7 ]",
+    "executable": "/Users/alvinluong/miniforge3/bin/python",
+    "platform": "macOS-26.2-arm64-arm-64bit",
+    "torch": "2.14.0",
+    "numpy": "2.4.6",
+    "pytest": "9.1.1",
+    "cuda_available": false
+  },
+  "coordination": {
+    "skill": "orchestration",
+    "provider": "antigravity",
+    "run_id": "run_dfbd2d7b3985",
+    "fallback_used": false,
+    "root_integrated_review": true
+  },
+  "statuses": {
+    "implementation": "IMPLEMENTED",
+    "software_verification": "VERIFIED",
+    "real_teacher_weights_lineage": "BLOCKED_SSH",
+    "cuda_reproducibility": "NOT_RUN",
+    "pro4000_profile": "NOT_RUN",
+    "patient_pilot": "NOT_RUN",
+    "pilot_completed": false,
+    "scientific_go_no_go": "BLOCKED",
+    "deployment_gate": "NOT_VERIFIED"
+  },
+  "tests": {
+    "repository_check": "PASS",
+    "pytest_passed": 899,
+    "pytest_warnings": 2,
+    "original_source_parity_cases": 80,
+    "smoke_four_arms": "PASS",
+    "actual_three_segment_cli_resume": "PASS_IN_PYTEST",
+    "asset_free_export_inference": "PASS_SYNTHETIC",
+    "cpu_profile_steps": 8,
+    "selector_tests_after_whitespace_cleanup": "15 passed in 0.85s"
+  },
+  "intermediate_failure": {
+    "status": "RESOLVED",
+    "details": "One integrated test run had 884 passes and a resume source-hash failure because source files changed between segments during active worker edits; final stable-source suite has 899 passes. No test was dropped."
+  },
+  "pilot_budget": {
+    "steps_per_arm": 2000,
+    "warmup_included": 1000,
+    "eval_steps": [
+      1000,
+      1500,
+      2000
+    ],
+    "primary_checkpoint": 2000,
+    "watchdog_seconds_per_arm": 7200,
+    "separate_gpu_profile_steps": 32
+  },
+  "pilot_arms": {
+    "plain_kd": {
+      "status": "NOT_RUN",
+      "Macro4": null,
+      "foreground_macro": null,
+      "checkpoint": null,
+      "wall_seconds": null,
+      "GPU_allocated": null,
+      "GPU_reserved": null
+    },
+    "scalar_guard_original": {
+      "status": "NOT_RUN",
+      "Macro4": null,
+      "foreground_macro": null,
+      "checkpoint": null,
+      "wall_seconds": null,
+      "GPU_allocated": null,
+      "GPU_reserved": null
+    },
+    "scalar_guard_larger_tie": {
+      "status": "NOT_RUN",
+      "Macro4": null,
+      "foreground_macro": null,
+      "checkpoint": null,
+      "wall_seconds": null,
+      "GPU_allocated": null,
+      "GPU_reserved": null
+    },
+    "scalar_guard_cross_patient_utility": {
+      "status": "NOT_RUN",
+      "Macro4": null,
+      "foreground_macro": null,
+      "checkpoint": null,
+      "wall_seconds": null,
+      "GPU_allocated": null,
+      "GPU_reserved": null
+    }
+  },
+  "conditional_same_batch": {
+    "status": "NOT_RUN",
+    "reason": "No real VAL evidence to trigger control"
+  },
+  "root_review_fixes": [
+    "Original selector legacy objective parity, including zero-first and plain norm behavior",
+    "Logical zero utility ties, cloned BatchNorm buffers, classwise probe diagnostics and frozen probe identity",
+    "Full immutable config and RNG/optimizer/protocol/counters/log-prefix exact resume",
+    "No silent utility probe API fallback; explicit no eligible probe zero reason",
+    "Physical raw B8/quality/cache validation and exact archived data.v2 VAL18 metadata schema",
+    "Fresh sequential segment outputs, exports/evaluation before next segment, completion/coverage/cohort/provenance checks before GO"
+  ],
+  "local_manufactured_artifacts": "/tmp/cptu-final-verify-20261030-1034",
+  "manufactured_artifact_scope": "Small widths [4,8] software witnesses only. Binary fixture weights remain local and are not delivered as a patient checkpoint.",
+  "artifact_hashes": {
+    "original_parity.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "SSH_RECEIPT.json": "f9a0d6dc6a7dcc4b595546c8901f19cfe61c17b2e3dcce8000242e6e2716f445",
+    "smoke.stdout": "c45258c429eac1ee31ea9ac437215a90920fb57e232b51ecb0d991fbea2b9a18",
+    "smoke.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "SMOKE_REPORT.json": "da652eac18214ccfe93491a03cff86faf75ef0c3f20b919fceb124c606544e96",
+    "original_parity.stdout": "23c12f14e02ccbcd60a1a67ba9c5238c1a5e4ec234d3873c213655092d91b979",
+    "COMMANDS.json": "fac6e16371850c7f27724f902f8f560c8fcafa6c93b1c0dae5a9183352c35801",
+    "ORIGINAL_PARITY.json": "b6f9c60820540e898ee3229651fc9b3fddfbb014445d0eab864ad6eb7d3aaabc",
+    "pytest.stdout": "e598cbcfdc528130dc7ad362ad307a35f14833c921e2640cfb63c1f1a0a0da62",
+    "cpu_profile.stdout": "c26de83abdc9496cd1301470918ec39ecca1cf389ef0ae1c6504da1800d1c431",
+    "SOURCE_FILES.json": "a70f2c71c7537ed4dadf1f1ff68448c667828efa75b5428ff14df6624192a434",
+    "DELIVERY.md": "4b3d3b00963369e5d9806fc7324b2c1e181d86e3bf4b4a2a82c05ec40b19813c",
+    "check_repo.stdout": "f9317b13e55fd8916cf0f91882298e60bc9274551929baa2de5c15e80fd35b83",
+    "VERIFICATION.json": "fbe712a438133c1086027a0fdd8fe6d2a27195955b810140c2adb3b70ea53947",
+    "selector_final_format.stdout": "68587daf15e0e823b9ac77ce26be72d048ec22b62b04b1daa8a48139ffd8eaaa",
+    "cpu_profile.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "SYNTHETIC_CPU_PROFILE.json": "f5628d347e94845fb3b9ae1466d6a39120bb8b54aba79acf2344cfd1cfef3ca5",
+    "SYNTHETIC_CPU_BENCHMARK.json": "8a61f9e3fe96d4b015abbe58879770af4948abf2f8201630b3f05b8957d5f19b",
+    "check_repo.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "pytest.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "synthetic_manifests/METRICS.json": "c4cd35cf7f65adaeb5de6bb3a8334a166bfc170343e5bf4b219010855e9cdcf2",
+    "synthetic_manifests/CACHE_MANIFEST.json": "5c4c857bad883ef67e96e1f40ac49c945cce97fda2a8091375e0a33f0552379a",
+    "synthetic_manifests/PREDICTIONS_FROZEN.json": "99b41d181de67e5f715a17f2fe1d550c5824bf3f13c500883843fde0e63b466d",
+    "synthetic_manifests/plain_kd_CONFIG.json": "185f568654bbb16279944dd5f0b6f4ab3849454064b03a55646f2212bf2c49e1",
+    "synthetic_manifests/TRAIN_MANIFEST.json": "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+    "synthetic_manifests/original_CONFIG.json": "18d7292d7e40d5818e13782e32e7953d6237cd3464c06afd5cc7a52ed592fc54",
+    "synthetic_manifests/cross_patient_utility_CONFIG.json": "b3f893c1c9e531df5cd183400cda4d7158982efe0a2a79be22c06c0b5383ce4b",
+    "synthetic_manifests/CPU_PROFILE_CONFIG.json": "b0a3e89b55397449f8537d24bfa2823d82118303a586716a174e38310d7cd161",
+    "synthetic_manifests/EVAL_MANIFEST.json": "b43ac84265704eb196a375922eabbb944646cde67220e037e0e71ed9032cec63",
+    "synthetic_manifests/CHECKPOINT_MANIFEST.json": "ca7b1d1738a0af21dee9982b857f3986882029a77a0864ec8f7557d3511304b7",
+    "synthetic_manifests/larger_tie_CONFIG.json": "c34433796952474a277b211d8847ff27269ba043ed69acbbc5a65fcd92fd7776",
+    "synthetic_manifests/EXPORT_MANIFEST.json": "2155053ca1d884509cdee497dc661d28b7d041cedcb085c236994a506ce643d4"
+  },
+  "format_only_changes_after_suite": {
+    "reports/transfer_utility/preflight/EVIDENCE_REPORT.md": {
+      "before_sha256": "59357aaf12e6cd471b9733cfa6396d67f35be8371bcbc1d46a08f8f5c530b413",
+      "after_sha256": "114414eb623dec16bbabf4e0ae2293518bdebbe6afba893f7d74df1b88e6f98d",
+      "change": "trailing whitespace/EOF only; training source closure unchanged"
+    },
+    "tests/test_compact_selectors.py": {
+      "before_sha256": "fd6ee01d68ffe5b9420f772f65bc6803c104e9bfacffd4bb2e34ca454d2e9a81",
+      "after_sha256": "1b69c5eaa7510000590c3a5407de8b8b8aa45f7141b60ea922ccbd94c93bec55",
+      "change": "trailing whitespace/EOF only; training source closure unchanged"
+    }
+  }
+}

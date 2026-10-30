@@ -1,0 +1,587 @@
+{
+  "macro_patient": {
+    "BG": {
+      "dice": 0.09859318106587223,
+      "present_patients": 2
+    },
+    "RV": {
+      "dice": 0.3682602502587816,
+      "present_patients": 2
+    },
+    "MYO": {
+      "dice": 0.11769627428883653,
+      "present_patients": 2
+    },
+    "LV": {
+      "dice": 0.19231691238163728,
+      "present_patients": 2
+    }
+  },
+  "class_first_macro4": 0.19421665449878192,
+  "class_first_foreground_macro": 0.22609114564308516,
+  "patient_first_all_class_macro": 0.1942166544987819,
+  "patient_first_foreground_macro": 0.22609114564308513,
+  "patients": {
+    "synthetic_eval_0": {
+      "BG": 0.08490566037735849,
+      "RV": 0.34026465028355385,
+      "MYO": 0.0881057268722467,
+      "LV": 0.20987654320987653,
+      "foreground_mean": 0.2127489734552257,
+      "all_class_mean": 0.18078814518575886,
+      "valid_voxels": 646,
+      "frame_count": 1
+    },
+    "synthetic_eval_1": {
+      "BG": 0.11228070175438597,
+      "RV": 0.3962558502340094,
+      "MYO": 0.14728682170542637,
+      "LV": 0.17475728155339806,
+      "foreground_mean": 0.2394333178309446,
+      "all_class_mean": 0.20764516381180495,
+      "valid_voxels": 798,
+      "frame_count": 1
+    }
+  },
+  "absent_class_tracking": {
+    "BG": {
+      "absent_frame_count": 0,
+      "absent_valid_voxels": 0,
+      "absent_false_positive_voxels": 0,
+      "absent_fp_rate": null
+    },
+    "RV": {
+      "absent_frame_count": 0,
+      "absent_valid_voxels": 0,
+      "absent_false_positive_voxels": 0,
+      "absent_fp_rate": null
+    },
+    "MYO": {
+      "absent_frame_count": 0,
+      "absent_valid_voxels": 0,
+      "absent_false_positive_voxels": 0,
+      "absent_fp_rate": null
+    },
+    "LV": {
+      "absent_frame_count": 0,
+      "absent_valid_voxels": 0,
+      "absent_false_positive_voxels": 0,
+      "absent_fp_rate": null
+    }
+  },
+  "failure_cases": [
+    {
+      "patient": "synthetic_eval_0",
+      "reason": "collapsed_or_low_foreground",
+      "foreground_mean": 0.2127489734552257,
+      "scores": {
+        "BG": 0.08490566037735849,
+        "RV": 0.34026465028355385,
+        "MYO": 0.0881057268722467,
+        "LV": 0.20987654320987653
+      }
+    },
+    {
+      "patient": "synthetic_eval_1",
+      "reason": "collapsed_or_low_foreground",
+      "foreground_mean": 0.2394333178309446,
+      "scores": {
+        "BG": 0.11228070175438597,
+        "RV": 0.3962558502340094,
+        "MYO": 0.14728682170542637,
+        "LV": 0.17475728155339806
+      }
+    }
+  ],
+  "total_valid_voxels": 1444,
+  "synthetic": true,
+  "status": "COMPLETED",
+  "global": {
+    "macro_patient": {
+      "BG": {
+        "dice": 0.09859318106587223,
+        "present_patients": 2
+      },
+      "RV": {
+        "dice": 0.3682602502587816,
+        "present_patients": 2
+      },
+      "MYO": {
+        "dice": 0.11769627428883653,
+        "present_patients": 2
+      },
+      "LV": {
+        "dice": 0.19231691238163728,
+        "present_patients": 2
+      }
+    },
+    "class_first_macro4": 0.19421665449878192,
+    "class_first_foreground_macro": 0.22609114564308516,
+    "patient_first_all_class_macro": 0.1942166544987819,
+    "patient_first_foreground_macro": 0.22609114564308513,
+    "patients": {
+      "synthetic_eval_0": {
+        "BG": 0.08490566037735849,
+        "RV": 0.34026465028355385,
+        "MYO": 0.0881057268722467,
+        "LV": 0.20987654320987653,
+        "foreground_mean": 0.2127489734552257,
+        "all_class_mean": 0.18078814518575886,
+        "valid_voxels": 646,
+        "frame_count": 1
+      },
+      "synthetic_eval_1": {
+        "BG": 0.11228070175438597,
+        "RV": 0.3962558502340094,
+        "MYO": 0.14728682170542637,
+        "LV": 0.17475728155339806,
+        "foreground_mean": 0.2394333178309446,
+        "all_class_mean": 0.20764516381180495,
+        "valid_voxels": 798,
+        "frame_count": 1
+      }
+    },
+    "absent_class_tracking": {
+      "BG": {
+        "absent_frame_count": 0,
+        "absent_valid_voxels": 0,
+        "absent_false_positive_voxels": 0,
+        "absent_fp_rate": null
+      },
+      "RV": {
+        "absent_frame_count": 0,
+        "absent_valid_voxels": 0,
+        "absent_false_positive_voxels": 0,
+        "absent_fp_rate": null
+      },
+      "MYO": {
+        "absent_frame_count": 0,
+        "absent_valid_voxels": 0,
+        "absent_false_positive_voxels": 0,
+        "absent_fp_rate": null
+      },
+      "LV": {
+        "absent_frame_count": 0,
+        "absent_valid_voxels": 0,
+        "absent_false_positive_voxels": 0,
+        "absent_fp_rate": null
+      }
+    },
+    "failure_cases": [
+      {
+        "patient": "synthetic_eval_0",
+        "reason": "collapsed_or_low_foreground",
+        "foreground_mean": 0.2127489734552257,
+        "scores": {
+          "BG": 0.08490566037735849,
+          "RV": 0.34026465028355385,
+          "MYO": 0.0881057268722467,
+          "LV": 0.20987654320987653
+        }
+      },
+      {
+        "patient": "synthetic_eval_1",
+        "reason": "collapsed_or_low_foreground",
+        "foreground_mean": 0.2394333178309446,
+        "scores": {
+          "BG": 0.11228070175438597,
+          "RV": 0.3962558502340094,
+          "MYO": 0.14728682170542637,
+          "LV": 0.17475728155339806
+        }
+      }
+    ],
+    "total_valid_voxels": 1444
+  },
+  "datasets": {
+    "manufactured": {
+      "macro_patient": {
+        "BG": {
+          "dice": 0.09859318106587223,
+          "present_patients": 2
+        },
+        "RV": {
+          "dice": 0.3682602502587816,
+          "present_patients": 2
+        },
+        "MYO": {
+          "dice": 0.11769627428883653,
+          "present_patients": 2
+        },
+        "LV": {
+          "dice": 0.19231691238163728,
+          "present_patients": 2
+        }
+      },
+      "class_first_macro4": 0.19421665449878192,
+      "class_first_foreground_macro": 0.22609114564308516,
+      "patient_first_all_class_macro": 0.1942166544987819,
+      "patient_first_foreground_macro": 0.22609114564308513,
+      "patients": {
+        "synthetic_eval_0": {
+          "BG": 0.08490566037735849,
+          "RV": 0.34026465028355385,
+          "MYO": 0.0881057268722467,
+          "LV": 0.20987654320987653,
+          "foreground_mean": 0.2127489734552257,
+          "all_class_mean": 0.18078814518575886,
+          "valid_voxels": 646,
+          "frame_count": 1
+        },
+        "synthetic_eval_1": {
+          "BG": 0.11228070175438597,
+          "RV": 0.3962558502340094,
+          "MYO": 0.14728682170542637,
+          "LV": 0.17475728155339806,
+          "foreground_mean": 0.2394333178309446,
+          "all_class_mean": 0.20764516381180495,
+          "valid_voxels": 798,
+          "frame_count": 1
+        }
+      },
+      "absent_class_tracking": {
+        "BG": {
+          "absent_frame_count": 0,
+          "absent_valid_voxels": 0,
+          "absent_false_positive_voxels": 0,
+          "absent_fp_rate": null
+        },
+        "RV": {
+          "absent_frame_count": 0,
+          "absent_valid_voxels": 0,
+          "absent_false_positive_voxels": 0,
+          "absent_fp_rate": null
+        },
+        "MYO": {
+          "absent_frame_count": 0,
+          "absent_valid_voxels": 0,
+          "absent_false_positive_voxels": 0,
+          "absent_fp_rate": null
+        },
+        "LV": {
+          "absent_frame_count": 0,
+          "absent_valid_voxels": 0,
+          "absent_false_positive_voxels": 0,
+          "absent_fp_rate": null
+        }
+      },
+      "failure_cases": [
+        {
+          "patient": "synthetic_eval_0",
+          "reason": "collapsed_or_low_foreground",
+          "foreground_mean": 0.2127489734552257,
+          "scores": {
+            "BG": 0.08490566037735849,
+            "RV": 0.34026465028355385,
+            "MYO": 0.0881057268722467,
+            "LV": 0.20987654320987653
+          }
+        },
+        {
+          "patient": "synthetic_eval_1",
+          "reason": "collapsed_or_low_foreground",
+          "foreground_mean": 0.2394333178309446,
+          "scores": {
+            "BG": 0.11228070175438597,
+            "RV": 0.3962558502340094,
+            "MYO": 0.14728682170542637,
+            "LV": 0.17475728155339806
+          }
+        }
+      ],
+      "total_valid_voxels": 1444,
+      "synthetic": true
+    }
+  },
+  "coverage": {
+    "expected_patients": [
+      "synthetic_eval_0",
+      "synthetic_eval_1"
+    ],
+    "predicted_patients": [
+      "synthetic_eval_0",
+      "synthetic_eval_1"
+    ],
+    "scored_patients": [
+      "synthetic_eval_0",
+      "synthetic_eval_1"
+    ],
+    "expected_frames": {
+      "synthetic_eval_0": [
+        0
+      ],
+      "synthetic_eval_1": [
+        0
+      ]
+    },
+    "scored_frames": {
+      "synthetic_eval_0": [
+        0
+      ],
+      "synthetic_eval_1": [
+        0
+      ]
+    },
+    "complete": true
+  },
+  "preprocessing_recipe": {
+    "mode": "prepared",
+    "value_range": [
+      0.0,
+      1.0
+    ],
+    "tolerance": 1e-05,
+    "renormalize": false,
+    "description": "Validates that values are already in [0, 1] without renormalizing."
+  },
+  "pooled_confusion": [
+    [
+      25,
+      191,
+      38,
+      115,
+      0
+    ],
+    [
+      23,
+      217,
+      38,
+      106,
+      0
+    ],
+    [
+      32,
+      185,
+      29,
+      94,
+      0
+    ],
+    [
+      48,
+      193,
+      40,
+      70,
+      0
+    ]
+  ],
+  "recipe_sha256": "65ef24709a71ad93ee5b6168228fb644c9c2978a427421d01b5485f79c243905",
+  "frozen_predictions_sha256": "34198710b59e98dfba4a45f776ad38f64d4a9349a696c2226e022762c904cec3",
+  "export_manifest_sha256": "2155053ca1d884509cdee497dc661d28b7d041cedcb085c236994a506ce643d4",
+  "export_payload_sha256": "c7de65da0ab4de179cd2a44d273d35b081da754fac47713dcd9eda2dfd36b328",
+  "evaluation_manifest_sha256": "b43ac84265704eb196a375922eabbb944646cde67220e037e0e71ed9032cec63",
+  "evaluation_source_manifest_sha256": "b43ac84265704eb196a375922eabbb944646cde67220e037e0e71ed9032cec63",
+  "geometry_provenance": null,
+  "train_manifest_sha256": "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+  "frames": [
+    {
+      "patient": "synthetic_eval_0",
+      "frame": 0,
+      "dataset": "manufactured",
+      "raw": [
+        {
+          "class": "BG",
+          "TP": 9,
+          "FP": 38,
+          "FN": 156,
+          "reference_present": true,
+          "dice": 0.08490566037735849,
+          "iou": 0.04433497536945813,
+          "precision": 0.19148936170212766,
+          "recall": 0.05454545454545454,
+          "prediction_count": 47,
+          "reference_count": 165
+        },
+        {
+          "class": "RV",
+          "TP": 90,
+          "FP": 271,
+          "FN": 78,
+          "reference_present": true,
+          "dice": 0.34026465028355385,
+          "iou": 0.20501138952164008,
+          "precision": 0.24930747922437674,
+          "recall": 0.5357142857142857,
+          "prediction_count": 361,
+          "reference_count": 168
+        },
+        {
+          "class": "MYO",
+          "TP": 10,
+          "FP": 51,
+          "FN": 156,
+          "reference_present": true,
+          "dice": 0.0881057268722467,
+          "iou": 0.04608294930875576,
+          "precision": 0.16393442622950818,
+          "recall": 0.060240963855421686,
+          "prediction_count": 61,
+          "reference_count": 166
+        },
+        {
+          "class": "LV",
+          "TP": 34,
+          "FP": 143,
+          "FN": 113,
+          "reference_present": true,
+          "dice": 0.20987654320987653,
+          "iou": 0.11724137931034483,
+          "precision": 0.192090395480226,
+          "recall": 0.23129251700680273,
+          "prediction_count": 177,
+          "reference_count": 147
+        }
+      ],
+      "confusion": [
+        [
+          9,
+          88,
+          18,
+          50,
+          0
+        ],
+        [
+          12,
+          90,
+          18,
+          48,
+          0
+        ],
+        [
+          12,
+          99,
+          10,
+          45,
+          0
+        ],
+        [
+          14,
+          84,
+          15,
+          34,
+          0
+        ]
+      ],
+      "valid_voxels": 646
+    },
+    {
+      "patient": "synthetic_eval_1",
+      "frame": 0,
+      "dataset": "manufactured",
+      "raw": [
+        {
+          "class": "BG",
+          "TP": 16,
+          "FP": 65,
+          "FN": 188,
+          "reference_present": true,
+          "dice": 0.11228070175438597,
+          "iou": 0.05947955390334572,
+          "precision": 0.19753086419753085,
+          "recall": 0.0784313725490196,
+          "prediction_count": 81,
+          "reference_count": 204
+        },
+        {
+          "class": "RV",
+          "TP": 127,
+          "FP": 298,
+          "FN": 89,
+          "reference_present": true,
+          "dice": 0.3962558502340094,
+          "iou": 0.24708171206225682,
+          "precision": 0.2988235294117647,
+          "recall": 0.5879629629629629,
+          "prediction_count": 425,
+          "reference_count": 216
+        },
+        {
+          "class": "MYO",
+          "TP": 19,
+          "FP": 65,
+          "FN": 155,
+          "reference_present": true,
+          "dice": 0.14728682170542637,
+          "iou": 0.0794979079497908,
+          "precision": 0.2261904761904762,
+          "recall": 0.10919540229885058,
+          "prediction_count": 84,
+          "reference_count": 174
+        },
+        {
+          "class": "LV",
+          "TP": 36,
+          "FP": 172,
+          "FN": 168,
+          "reference_present": true,
+          "dice": 0.17475728155339806,
+          "iou": 0.09574468085106383,
+          "precision": 0.17307692307692307,
+          "recall": 0.17647058823529413,
+          "prediction_count": 208,
+          "reference_count": 204
+        }
+      ],
+      "confusion": [
+        [
+          16,
+          103,
+          20,
+          65,
+          0
+        ],
+        [
+          11,
+          127,
+          20,
+          58,
+          0
+        ],
+        [
+          20,
+          86,
+          19,
+          49,
+          0
+        ],
+        [
+          34,
+          109,
+          25,
+          36,
+          0
+        ]
+      ],
+      "valid_voxels": 798
+    }
+  ],
+  "class_counts": {
+    "BG": {
+      "TP": 25,
+      "FP": 103,
+      "FN": 344,
+      "reference_count": 369,
+      "prediction_count": 128
+    },
+    "RV": {
+      "TP": 217,
+      "FP": 569,
+      "FN": 167,
+      "reference_count": 384,
+      "prediction_count": 786
+    },
+    "MYO": {
+      "TP": 29,
+      "FP": 116,
+      "FN": 311,
+      "reference_count": 340,
+      "prediction_count": 145
+    },
+    "LV": {
+      "TP": 70,
+      "FP": 315,
+      "FN": 281,
+      "reference_count": 351,
+      "prediction_count": 385
+    }
+  }
+}

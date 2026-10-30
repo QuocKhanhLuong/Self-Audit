@@ -15,6 +15,7 @@ import copy
 import hashlib
 import json
 from pathlib import Path
+import random
 import time
 from types import SimpleNamespace
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple, Union
@@ -24,7 +25,12 @@ import torch
 from torch import Tensor, nn
 from torch.nn import functional as F
 
-from .compact_artifacts import save_compact_checkpoint
+from .compact_artifacts import (
+    _require_sha256,
+    load_exact_compact_checkpoint,
+    restore_compact_rng,
+    save_compact_checkpoint,
+)
 from .compact_control import (
     CLASS_NAMES,
     FOREGROUND_CLASS_NAMES,
@@ -33,6 +39,7 @@ from .compact_control import (
 )
 from .compact_data import CompactTrainingData, synthetic_compact_fixture
 from .compact_model import CompactStudent, build_compact_model
+from .compact_probe import CompactProbeSampler, build_same_batch_probe
 from .compact_teacher import FixedTeacherCache, preflight_teacher_lineage, validate_teacher_identity
 from .data import write_json
 from .losses import supervised_loss
@@ -142,6 +149,13 @@ METHODS = {"supervised", "plain_kd", "scalar_guard", "joint_guard"}
 DEFAULT_CONFIG: Dict[str, Any] = {
     "schema": "self_audit.compact.v1",
     "method": "joint_guard",
+    "selector": "original",
+    "selector_dice_tolerance": 0.0,
+    "utility_gain_tolerance": 1e-7,
+    "utility_tie_tolerance": 1e-7,
+    "probe_seed": 42017,
+    "probe_batch_size": 8,
+    "same_batch_utility": False,
     "steps": 32,
     "warmup_steps": 8,
     "seed": 42,
@@ -195,6 +209,7 @@ def validate_compact_config(
     *,
     allow_full_run: bool = False,
     stop_steps: Optional[int] = None,
+    stop_after_step: Optional[int] = None,
 ) -> Dict[str, Any]:
     """Strict opt-in config validation for self_audit.compact.v1 schema."""
     if not isinstance(c, Mapping):
@@ -209,6 +224,52 @@ def validate_compact_config(
     method = cfg.get("method")
     if method not in METHODS:
         raise ValueError(f"invalid compact method '{method}'; expected one of {sorted(METHODS)}")
+
+    # Selector configuration
+    selector = cfg.get("selector", "original")
+    if selector == "utility":
+        selector = "cross_patient_utility"
+    same_batch = cfg.get("same_batch_utility", False)
+    if not isinstance(same_batch, bool):
+        raise ValueError("same_batch_utility must be a boolean")
+    if same_batch and method != "scalar_guard":
+        raise ValueError("same_batch_utility is restricted to method 'scalar_guard'")
+    if same_batch:
+        if selector not in ("original", "cross_patient_utility", "same_batch_utility"):
+            raise ValueError(f"same_batch_utility cannot be combined with selector '{selector}'")
+        selector = "same_batch_utility"
+    valid_selectors = {"original", "larger_tie", "cross_patient_utility", "same_batch_utility"}
+    if selector not in valid_selectors:
+        raise ValueError(f"invalid selector '{selector}'; expected one of {sorted(valid_selectors)}")
+    if selector != "original" and method != "scalar_guard":
+        raise ValueError(f"selector '{selector}' is restricted to method 'scalar_guard', got method '{method}'")
+    cfg["selector"] = selector
+    cfg["same_batch_utility"] = bool(same_batch or selector == "same_batch_utility")
+
+    sel_dice_tol = cfg.get("selector_dice_tolerance", 0.0)
+    if isinstance(sel_dice_tol, bool) or not isinstance(sel_dice_tol, (int, float)) or not np.isfinite(sel_dice_tol) or sel_dice_tol < 0:
+        raise ValueError("selector_dice_tolerance must be a non-negative finite float")
+    cfg["selector_dice_tolerance"] = float(sel_dice_tol)
+
+    u_gain_tol = cfg.get("utility_gain_tolerance", 1e-7)
+    if isinstance(u_gain_tol, bool) or not isinstance(u_gain_tol, (int, float)) or not np.isfinite(u_gain_tol) or u_gain_tol < 0:
+        raise ValueError("utility_gain_tolerance must be a non-negative finite float")
+    cfg["utility_gain_tolerance"] = float(u_gain_tol)
+
+    u_tie_tol = cfg.get("utility_tie_tolerance", 1e-7)
+    if isinstance(u_tie_tol, bool) or not isinstance(u_tie_tol, (int, float)) or not np.isfinite(u_tie_tol) or u_tie_tol < 0:
+        raise ValueError("utility_tie_tolerance must be a non-negative finite float")
+    cfg["utility_tie_tolerance"] = float(u_tie_tol)
+
+    p_seed = cfg.get("probe_seed", 42017)
+    if isinstance(p_seed, bool) or not isinstance(p_seed, int) or p_seed < 0:
+        raise ValueError("probe_seed must be a non-negative integer")
+    cfg["probe_seed"] = p_seed
+
+    p_batch = cfg.get("probe_batch_size", 8)
+    if isinstance(p_batch, bool) or not isinstance(p_batch, int) or p_batch < 1:
+        raise ValueError("probe_batch_size must be a positive integer")
+    cfg["probe_batch_size"] = p_batch
 
     experiment = cfg.get("experiment")
     if isinstance(experiment, Mapping) and experiment.get("launchable") is False:
@@ -249,12 +310,22 @@ def validate_compact_config(
         raise ValueError("more than 128 updates requires --allow-full-run")
     cfg["steps"] = steps
 
+    effective_stop_after = stop_after_step if stop_after_step is not None else cfg.get("stop_after_step")
+    if effective_stop_after is not None:
+        if isinstance(effective_stop_after, bool) or not isinstance(effective_stop_after, int) or effective_stop_after < 1:
+            raise ValueError("stop_after_step must be a positive integer")
+        if effective_stop_after > steps:
+            raise ValueError(f"stop_after_step ({effective_stop_after}) cannot exceed immutable total steps ({steps})")
+        cfg["stop_after_step"] = effective_stop_after
+    else:
+        cfg["stop_after_step"] = None
+
     warmup = cfg.get("warmup_steps", 8)
     if isinstance(warmup, bool) or not isinstance(warmup, int) or warmup < 0:
         raise ValueError("warmup_steps must be a non-negative integer")
-    if stop_steps is not None and warmup > steps:
-        warmup = steps
-    if warmup > steps:
+    if effective_stop_after is None:
+        warmup = min(warmup, steps)
+    elif warmup > steps:
         raise ValueError(f"warmup_steps ({warmup}) exceeds total steps budget ({steps})")
     cfg["warmup_steps"] = warmup
 
@@ -372,6 +443,9 @@ def train_compact(
     device: str = "cpu",
     synthetic: bool = False,
     stop_steps: Optional[int] = None,
+    stop_after_step: Optional[int] = None,
+    resume: Optional[Union[str, Path]] = None,
+    resume_sha256: Optional[str] = None,
     allow_full_run: bool = False,
 ) -> Dict[str, Any]:
     """Execute canonical compact student distillation and audited transfer.
@@ -380,25 +454,44 @@ def train_compact(
         JSON-safe report dictionary.
     """
     start_walltime = time.monotonic()
-    c = validate_compact_config(config, allow_full_run=allow_full_run, stop_steps=stop_steps)
-    effective_steps = stop_steps if stop_steps is not None else c["steps"]
+    c = validate_compact_config(
+        config,
+        allow_full_run=allow_full_run,
+        stop_steps=stop_steps,
+        stop_after_step=stop_after_step,
+    )
+    effective_steps = stop_after_step if stop_after_step is not None else (stop_steps if stop_steps is not None else c["steps"])
 
     out = Path(out_dir).resolve()
     if out.exists():
         raise FileExistsError(f"compact output directory must not already exist: {out}")
-    out.mkdir(parents=True, exist_ok=False)
+    if resume is not None:
+        if not resume_sha256:
+            raise ValueError("--resume requires mandatory --resume-sha256")
+        resume_path = Path(resume).resolve()
+        if not resume_path.exists():
+            raise FileNotFoundError(f"resume checkpoint directory not found: {resume_path}")
+        if out == resume_path or out.is_relative_to(resume_path) or resume_path.is_relative_to(out):
+            raise ValueError(f"compact output directory cannot overlap with resume checkpoint: {out}")
+        if c.get("equal_wall_time", {}).get("enabled", False):
+            raise ValueError(
+                "equal-wall-time resume is not supported without explicit remaining budget specification; refuse explicitly until correctly budgeted"
+            )
 
     # Deterministic seeds
     seed = int(c.get("seed", 42))
+    random.seed(seed)
     torch.manual_seed(seed)
     np.random.seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
     data_rng = np.random.default_rng(seed)
 
     # Resolve only the hashed manifest metadata before lineage preflight. The
     # CompactTrainingData constructor validates image arrays, so it must run
     # after the complete labeled-patient union has passed.
     if synthetic and (manifest_path is None or not Path(manifest_path).exists()):
-        synth_dir = out / "synthetic_fixture"
+        synth_dir = out.parent / f".synthetic_fixture_{out.name}"
         fix_manifest, fix_sha = synthetic_compact_fixture(
             synth_dir, seed=seed, n_labeled=1, n_unlabeled=2, size=32
         )
@@ -431,30 +524,24 @@ def train_compact(
         )
 
     data_cfg = c.get("data")
-    if data_cfg is None and synthetic:
-        data_cfg = {
-            "manifest_sha256": actual_manifest_sha,
-            "budget_k": actual_budget,
-            "labeled_ids": list(manifest_lids),
-        }
-        c["data"] = data_cfg
-    if not isinstance(data_cfg, Mapping):
-        raise ValueError("compact training requires a data mapping with manifest_sha256, budget_k, and exact labeled_ids")
-    if data_cfg.get("manifest_sha256") != actual_manifest_sha:
-        raise ValueError(
-            f"config data.manifest_sha256 mismatch: {data_cfg.get('manifest_sha256')!r} != {actual_manifest_sha}"
-        )
-    cfg_budget = data_cfg.get("budget_k")
-    if type(cfg_budget) is not int or cfg_budget != actual_budget:
-        raise ValueError(f"config data.budget_k {cfg_budget!r} != TRAIN manifest budget K={actual_budget}")
-    cfg_ids = data_cfg.get("labeled_ids")
-    if (
-        not isinstance(cfg_ids, list)
-        or not all(isinstance(pid, str) for pid in cfg_ids)
-        or len(cfg_ids) != len(set(cfg_ids))
-        or set(cfg_ids) != set(manifest_lids)
-    ):
-        raise ValueError("config data.labeled_ids must exactly match unique TRAIN manifest labeled IDs")
+    if data_cfg is not None and isinstance(data_cfg, Mapping):
+        if data_cfg.get("manifest_sha256") and data_cfg.get("manifest_sha256").lower() != actual_manifest_sha.lower():
+            raise ValueError(
+                f"config data.manifest_sha256 mismatch: {data_cfg.get('manifest_sha256')!r} != {actual_manifest_sha}"
+            )
+        if data_cfg.get("budget_k") is not None and data_cfg.get("budget_k") != actual_budget:
+            raise ValueError(f"config data.budget_k {data_cfg.get('budget_k')!r} != TRAIN manifest budget K={actual_budget}")
+        if data_cfg.get("labeled_ids") is not None:
+            cfg_ids = data_cfg.get("labeled_ids")
+            if (
+                not isinstance(cfg_ids, list)
+                or not all(isinstance(pid, str) for pid in cfg_ids)
+                or len(cfg_ids) != len(set(cfg_ids))
+                or set(cfg_ids) != set(manifest_lids)
+            ):
+                raise ValueError("config data.labeled_ids must exactly match unique TRAIN manifest labeled IDs")
+
+    # Contract Requirement 3: Bind actual TRAIN manifest SHA to runtime config before resume check
     data_cfg = {
         "manifest_sha256": actual_manifest_sha,
         "budget_k": actual_budget,
@@ -564,11 +651,69 @@ def train_compact(
     if str(device).startswith("cuda"):
         torch.cuda.reset_peak_memory_stats(device)
 
-    # Build Compact Student only after the full teacher/data preflight.
+    # Build or load Compact Student only after the full teacher/data preflight.
     model_cfg = c.get("model", {})
-    model = build_compact_model(model_cfg)
-    model.to(device)
-    initial_state_sha256 = _state_sha256(model)
+    payload = None
+    if resume is not None:
+        resume_path = Path(resume).resolve()
+        model, payload, ckpt_meta = load_exact_compact_checkpoint(
+            resume_path, resume_sha256, device=device, expected_config=c
+        )
+        proto = payload.get("protocol") or {}
+        initial_state_sha256 = (
+            proto.get("initial_state_sha256")
+            or ckpt_meta.get("initial_state_sha256")
+            or (ckpt_meta.get("protocol") or {}).get("initial_state_sha256")
+        )
+        if not initial_state_sha256:
+            raise ValueError("checkpoint missing persisted initial_state_sha256 lineage; fallback hashing prohibited")
+        initial_state_sha256 = _require_sha256(initial_state_sha256, "initial_state_sha256")
+
+        start_step = int(payload["step"])
+        prev_log_path = resume_path.parent / "TRAIN_LOG.jsonl"
+        if start_step > 0:
+            if not prev_log_path.is_file():
+                raise FileNotFoundError(f"previous TRAIN_LOG.jsonl not found at {prev_log_path}")
+            log_bytes = proto.get("log_bytes")
+            log_sha = proto.get("log_sha256")
+            if log_bytes is None or log_sha is None:
+                raise ValueError(
+                    f"checkpoint protocol missing mandatory 'log_bytes' and 'log_sha256' for exact resume at step {start_step}"
+                )
+            prev_log_data = prev_log_path.read_bytes()
+            if len(prev_log_data) < log_bytes:
+                raise ValueError(
+                    f"previous log truncated: expected at least {log_bytes} bytes, found {len(prev_log_data)} bytes"
+                )
+            verified_log_prefix = prev_log_data[:log_bytes]
+            actual_log_sha = hashlib.sha256(verified_log_prefix).hexdigest()
+            if actual_log_sha != log_sha.lower():
+                raise ValueError(
+                    f"previous log prefix hash mismatch: expected {log_sha}, got {actual_log_sha} (tampered log)"
+                )
+            prefix_lines = [l for l in verified_log_prefix.decode("utf-8").splitlines() if l.strip()]
+            if len(prefix_lines) != start_step:
+                raise ValueError(
+                    f"previous log prefix step count mismatch: expected {start_step} steps, found {len(prefix_lines)}"
+                )
+        else:
+            verified_log_prefix = b""
+    else:
+        model = build_compact_model(model_cfg)
+        model.to(device)
+        initial_state_sha256 = _state_sha256(model)
+        start_step = 0
+        verified_log_prefix = b""
+
+    # Contract Requirement 4: Require NEW output directory on resume too.
+    out.mkdir(parents=True, exist_ok=False)
+    write_json(out / "config.json", c)
+
+    # Contract Requirement 5: Copy only verified log prefix through checkpoint step
+    log_path = out / "TRAIN_LOG.jsonl"
+    if resume is not None and verified_log_prefix:
+        log_path.write_bytes(verified_log_prefix)
+    log_file = open(log_path, "a" if (resume is not None and verified_log_prefix) else "w", encoding="utf-8")
 
     # Parameter groups and named ownership for initialization receipts.
     module_params = model.module_parameters()
@@ -585,20 +730,25 @@ def train_compact(
     lr = float(c["lr"])
     wd = float(c["weight_decay"])
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=wd)
+    if resume is not None and payload.get("optimizer") is not None:
+        optimizer.load_state_dict(payload["optimizer"])
+
     optimizer_metadata = {
         "name": type(optimizer).__name__,
         "owner": "labeled_supervised_update_only",
         "parameter_ownership": parameter_ownership,
     }
 
-    # Store the resolved, immutable config before the first optimization step.
-    write_json(out / "config.json", c)
+    # Independent probe sampler
+    probe_sampler = CompactProbeSampler(
+        data,
+        cache,
+        seed=int(c.get("probe_seed", 42017)),
+        batch_size=int(c.get("probe_batch_size", 8)),
+        crop_size=int(c.get("crop_size", 0)),
+    )
 
-    # Telemetry and logging
-    log_path = out / "TRAIN_LOG.jsonl"
-    log_file = open(log_path, "w", encoding="utf-8")
-
-    slices_sampled = {"labeled": 0, "unlabeled": 0, "audit": 0}
+    slices_sampled = {"labeled": 0, "unlabeled": 0, "audit": 0, "probe": 0}
     slices_optimized = {"labeled": 0, "unlabeled": 0}
     optimizer_calls = {"adamw": 0, "sgd": 0}
     counts = {
@@ -613,10 +763,9 @@ def train_compact(
     seen_l: set[str] = set()
     seen_a: set[str] = set()
     seen_u: set[str] = set()
-    total_cache_time = 0.0
-    warm_start_logs: List[Dict[str, Any]] = []
+    seen_probe: set[str] = set()
     audit_totals = {"slice_reads": 0, "frame_reads": 0, "patient_reads": 0, "stream_replays": 0}
-    audit_unique_frames: set[Tuple[str, int]] = set()
+
     equal_wall_time = c["equal_wall_time"]
     wall_time_enabled = bool(equal_wall_time.get("enabled", False))
     wall_step_limit = min(
@@ -624,13 +773,120 @@ def train_compact(
         equal_wall_time["max_steps"] if wall_time_enabled else effective_steps,
     )
     wall_budget_seconds = equal_wall_time.get("budget_seconds") if wall_time_enabled else None
+
+    # RESTORE RNG AND COUNTERS AFTER MODEL AND OPTIMIZER LOAD
+    if resume is not None:
+        restore_compact_rng(payload["rng"], data_rng, probe_sampler, device=device)
+        completed_steps = start_step
+        if wall_step_limit <= start_step:
+            raise ValueError(
+                f"target step ({wall_step_limit}) must be strictly greater than resumed step ({start_step})"
+            )
+        ckpt_counters = payload.get("counters", {})
+        if ckpt_counters:
+            counts.update(ckpt_counters.get("counts", {}))
+            slices_sampled.update(ckpt_counters.get("slices_sampled", {}))
+            slices_optimized.update(ckpt_counters.get("slices_optimized", {}))
+            optimizer_calls.update(ckpt_counters.get("optimizer_calls", {}))
+            seen_l.update(ckpt_counters.get("seen_l", []))
+            seen_a.update(ckpt_counters.get("seen_a", []))
+            seen_u.update(ckpt_counters.get("seen_u", []))
+            seen_probe.update(ckpt_counters.get("seen_probe", []))
+            audit_totals.update(ckpt_counters.get("audit_totals", {}))
+            audit_unique_frames = {tuple(f) for f in ckpt_counters.get("audit_unique_frames", [])}
+            total_cache_time = float(ckpt_counters.get("total_cache_time", 0.0))
+            total_u_cache_time = float(ckpt_counters.get("total_u_cache_time", total_cache_time))
+            total_probe_cache_time = float(ckpt_counters.get("total_probe_cache_time", 0.0))
+            total_probe_sample_time = float(ckpt_counters.get("total_probe_sample_time", 0.0))
+            warm_start_logs = list(ckpt_counters.get("warm_start_logs", []))
+            resumed_walltime = float(ckpt_counters.get("cumulative_training_walltime", 0.0))
+            resumed_peak_allocated = ckpt_counters.get("cuda_peak_allocated_bytes")
+            resumed_peak_reserved = ckpt_counters.get("cuda_peak_reserved_bytes")
+    else:
+        completed_steps = 0
+        total_cache_time = 0.0
+        total_u_cache_time = 0.0
+        total_probe_cache_time = 0.0
+        total_probe_sample_time = 0.0
+        warm_start_logs = []
+        audit_unique_frames = set()
+        resumed_walltime = 0.0
+        resumed_peak_allocated = None
+        resumed_peak_reserved = None
+
     _sync_device(device)
     training_wall_start = time.monotonic()
-    completed_steps = 0
     termination_reason = "max_steps_reached"
 
+    def _build_checkpoint_bundle(cur_step: int) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
+        log_file.flush()
+        log_bytes = log_path.stat().st_size if log_path.exists() else 0
+        log_sha = digest(log_path) if log_bytes > 0 else hashlib.sha256(b"").hexdigest()
+
+        cur_segment_walltime = time.monotonic() - training_wall_start
+        cum_walltime = resumed_walltime + cur_segment_walltime
+        if str(device).startswith("cuda"):
+            cur_peak_alloc = torch.cuda.max_memory_allocated(device)
+            cur_peak_res = torch.cuda.max_memory_reserved(device)
+            cum_alloc = max(cur_peak_alloc, resumed_peak_allocated or 0)
+            cum_res = max(cur_peak_res, resumed_peak_reserved or 0)
+        else:
+            cum_alloc = None
+            cum_res = None
+
+        rng_bundle = {
+            "torch_cpu_rng": torch.get_rng_state(),
+            "torch_cuda_rng": torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None,
+            "np_legacy_rng": np.random.get_state(),
+            "py_rng": random.getstate(),
+            "data_rng_state": data_rng.bit_generator.state,
+            "probe_rng_state": probe_sampler.get_state() if probe_sampler is not None else None,
+        }
+        counters_bundle = {
+            "completed_steps": cur_step,
+            "counts": copy.deepcopy(counts),
+            "slices_sampled": copy.deepcopy(slices_sampled),
+            "slices_optimized": copy.deepcopy(slices_optimized),
+            "optimizer_calls": copy.deepcopy(optimizer_calls),
+            "seen_l": sorted(seen_l),
+            "seen_a": sorted(seen_a),
+            "seen_u": sorted(seen_u),
+            "seen_probe": sorted(seen_probe),
+            "audit_totals": copy.deepcopy(audit_totals),
+            "audit_unique_frames": [list(item) for item in sorted(audit_unique_frames)],
+            "total_cache_time": float(total_cache_time),
+            "total_u_cache_time": float(total_u_cache_time),
+            "total_probe_cache_time": float(total_probe_cache_time),
+            "total_probe_sample_time": float(total_probe_sample_time),
+            "warm_start_logs": copy.deepcopy(warm_start_logs),
+            "cumulative_training_walltime": float(cum_walltime),
+            "cuda_peak_allocated_bytes": cum_alloc,
+            "cuda_peak_reserved_bytes": cum_res,
+        }
+        protocol_bundle = {
+            "schema": c["schema"],
+            "method": c["method"],
+            "selector": c.get("selector", "original"),
+            "steps": c["steps"],
+            "warmup_steps": c["warmup_steps"],
+            "seed": c["seed"],
+            "probe_seed": c.get("probe_seed", 42017),
+            "probe_batch_size": c.get("probe_batch_size", 8),
+            "selector_dice_tolerance": c.get("selector_dice_tolerance", 0.0),
+            "utility_gain_tolerance": c.get("utility_gain_tolerance", 1e-7),
+            "utility_tie_tolerance": c.get("utility_tie_tolerance", 1e-7),
+            "same_batch_utility": c.get("same_batch_utility", False),
+            "max_trials": c["max_trials"],
+            "train_manifest_sha256": actual_manifest_sha,
+            "initial_state_sha256": initial_state_sha256,
+            "log_bytes": log_bytes,
+            "log_sha256": log_sha,
+            "log_step_count": cur_step,
+        }
+        return rng_bundle, counters_bundle, protocol_bundle
+
     try:
-        for step in range(wall_step_limit):
+        for step in range(start_step, wall_step_limit):
             if wall_time_enabled:
                 _sync_device(device)
                 if time.monotonic() - training_wall_start >= wall_budget_seconds:
@@ -756,8 +1012,11 @@ def train_compact(
             t_cache = 0.0
             t_prop = 0.0
             t_audit = 0.0
+            t_probe_sample = 0.0
+            t_probe_cache = 0.0
             u_receipt: Dict[str, Any] = {}
             candidate_receipt = None
+            utility_probe = None
 
             if c["method"] == "supervised":
                 u_receipt = {
@@ -794,7 +1053,7 @@ def train_compact(
                 teacher_targets, valid_mask = cache.sample_batch(u_meta, device=device)
                 _sync_device(device)
                 t_cache = time.monotonic() - t_c0
-                total_cache_time += t_cache
+                total_u_cache_time += t_cache
 
                 # Build class-grouped KD displacement candidates (non-mutating)
                 t_p0 = time.monotonic()
@@ -816,6 +1075,39 @@ def train_compact(
                 _sync_device(device)
                 t_prop = time.monotonic() - t_p0
 
+                # Probe generation
+                utility_probe = None
+                t_probe_sample = 0.0
+                t_probe_cache = 0.0
+                if c.get("same_batch_utility", False):
+                    utility_probe = build_same_batch_probe(
+                        Xu,
+                        teacher_targets,
+                        valid_mask,
+                        temperature=float(c["temperature"]),
+                        coefficient=float(c["coefficient"]),
+                        confidence=float(c["pseudo_threshold"]),
+                        metadata={"patient": p_unl_id, "same_batch": True},
+                    )
+                elif c.get("selector") in ("utility", "cross_patient_utility"):
+                    utility_probe = probe_sampler.sample_probe(
+                        {p_unl_id},
+                        device=device,
+                        temperature=float(c["temperature"]),
+                        coefficient=float(c["coefficient"]),
+                        confidence=float(c["pseudo_threshold"]),
+                    )
+                    if utility_probe is not None:
+                        slices_sampled["probe"] = slices_sampled.get("probe", 0) + int(utility_probe["metadata"]["batch_size"])
+                        seen_probe.add(str(utility_probe["metadata"]["patient"]))
+                        probe_timings = utility_probe.get("timings", {})
+                        t_probe_sample = float(probe_timings.get("probe_sampling_seconds", 0.0))
+                        t_probe_cache = float(probe_timings.get("probe_cache_seconds", 0.0))
+                        total_probe_sample_time += t_probe_sample
+                        total_probe_cache_time += t_probe_cache
+
+                total_cache_time += (t_cache + t_probe_cache)
+
                 # Audit trial search and atomic commit
                 t_a0 = time.monotonic()
                 audit_cfg = {
@@ -824,14 +1116,28 @@ def train_compact(
                     "tolerance": float(c["guard_tolerance"]),
                     "ridge": float(c["ridge"]),
                     "max_trials": int(c["max_trials"]),
+                    "selector": c.get("selector", "original"),
+                    "selector_dice_tolerance": float(c.get("selector_dice_tolerance", 0.0)),
+                    "utility_gain_tolerance": float(c.get("utility_gain_tolerance", 1e-7)),
+                    "utility_tie_tolerance": float(c.get("utility_tie_tolerance", 1e-7)),
                 }
+                update_kwargs = {
+                    "method": c["method"],
+                    "audit_batches": audit_batches_callable,
+                    "config": audit_cfg,
+                }
+                if c["selector"] in ("cross_patient_utility", "same_batch_utility"):
+                    update_kwargs["utility_probe"] = utility_probe
                 u_receipt = apply_compact_update(
                     model,
                     candidates,
-                    method=c["method"],
-                    audit_batches=audit_batches_callable,
-                    config=audit_cfg,
+                    **update_kwargs,
                 )
+                if c["selector"] == "cross_patient_utility" and utility_probe is None:
+                    u_receipt["probe_unavailable_reason"] = "no_eligible_probe_patient"
+                    if u_receipt.get("reason") == "missing_utility_probe":
+                        u_receipt["reason"] = "no_eligible_probe_patient"
+                        u_receipt.get("telemetry", {})["reason"] = "no_eligible_probe_patient"
                 _sync_device(device)
                 t_audit = time.monotonic() - t_a0
 
@@ -849,6 +1155,23 @@ def train_compact(
                 elif u_receipt.get("status") == "rejected_all":
                     counts["rejected_all"] += 1
 
+            # Contract Requirement 7: Transaction CUDA current/peakallocatedreserved nullCPU
+            if str(device).startswith("cuda"):
+                cuda_mem_tx = {
+                    "cuda_current_allocated_bytes": torch.cuda.memory_allocated(device),
+                    "cuda_peak_allocated_bytes": torch.cuda.max_memory_allocated(device),
+                    "cuda_current_reserved_bytes": torch.cuda.memory_reserved(device),
+                    "cuda_peak_reserved_bytes": torch.cuda.max_memory_reserved(device),
+                }
+            else:
+                cuda_mem_tx = {
+                    "cuda_current_allocated_bytes": None,
+                    "cuda_peak_allocated_bytes": None,
+                    "cuda_current_reserved_bytes": None,
+                    "cuda_peak_reserved_bytes": None,
+                }
+            u_receipt["cuda_memory"] = copy.deepcopy(cuda_mem_tx)
+
             # NO COMPACT EMA UPDATE! Student is raw exported model.
             _sync_device(device)
             step_elapsed = time.monotonic() - step_start
@@ -860,17 +1183,38 @@ def train_compact(
             step_row = {
                 "step": step,
                 "method": c["method"],
+                "selector": c.get("selector", "original"),
+                "utility_probe_metadata": utility_probe.get("metadata") if utility_probe is not None else None,
                 "status": u_receipt.get("status", "unknown"),
                 "accepted": bool(u_receipt.get("accepted", False)),
                 "supervised_loss": float(loss_s.item()),
                 "initial_state_sha256": initial_state_sha256 if step == 0 else None,
                 "first_step_optimizer": optimizer_metadata if step == 0 else None,
                 "warm_start": warm_start_rec,
-                "batch_sizes": {
-                    "labeled": int(c["labeled_batch_size"]),
-                    "unlabeled": int(c["unlabeled_batch_size"]),
-                },
-                "effective_batch_counts": {"labeled": len(Xs), "unlabeled": len(Xu)},
+                "batch_sizes": (
+                    {
+                        "labeled": int(c["labeled_batch_size"]),
+                        "unlabeled": int(c["unlabeled_batch_size"]),
+                        "probe": int(c.get("probe_batch_size", 8)),
+                    }
+                    if c.get("selector") in ("cross_patient_utility", "same_batch_utility", "utility")
+                    else {
+                        "labeled": int(c["labeled_batch_size"]),
+                        "unlabeled": int(c["unlabeled_batch_size"]),
+                    }
+                ),
+                "effective_batch_counts": (
+                    {
+                        "labeled": len(Xs),
+                        "unlabeled": len(Xu),
+                        "probe": int(utility_probe["metadata"]["batch_size"]) if utility_probe is not None else 0,
+                    }
+                    if c.get("selector") in ("cross_patient_utility", "same_batch_utility", "utility")
+                    else {
+                        "labeled": len(Xs),
+                        "unlabeled": len(Xu),
+                    }
+                ),
                 "data_schedule": schedule,
                 "data_schedule_sha256": schedule_sha256,
                 "audit_consumption": {
@@ -889,9 +1233,17 @@ def train_compact(
                 "trial_count": len(u_receipt.get("trials", [])),
                 "candidate_receipt": candidate_receipt,
                 "transaction": u_receipt,
+                "cuda_memory": copy.deepcopy(cuda_mem_tx),
+                "cuda_peak_allocated": cuda_mem_tx["cuda_peak_allocated_bytes"],
+                "cuda_peak_reserved": cuda_mem_tx["cuda_peak_reserved_bytes"],
+                "cuda_current_allocated": cuda_mem_tx["cuda_current_allocated_bytes"],
+                "cuda_current_reserved": cuda_mem_tx["cuda_current_reserved_bytes"],
                 "timings": {
                     "supervised_seconds": float(supervised_time),
                     "teacher_cache_seconds": float(t_cache),
+                    "probe_cache_seconds": float(t_probe_cache),
+                    "probe_sampling_seconds": float(t_probe_sample),
+                    "total_teacher_cache_seconds": float(t_cache + t_probe_cache),
                     "proposal_seconds": float(t_prop),
                     "audit_trials_seconds": float(t_audit),
                     "step_elapsed_seconds": float(step_elapsed),
@@ -912,6 +1264,7 @@ def train_compact(
 
             # Periodic checkpoint save
             if (step + 1) % c["save_every"] == 0 and (step + 1) < wall_step_limit:
+                rng_b, cnt_b, proto_b = _build_checkpoint_bundle(step + 1)
                 save_compact_checkpoint(
                     model,
                     optimizer,
@@ -920,12 +1273,16 @@ def train_compact(
                     out / f"step_{step + 1:06d}",
                     step=step + 1,
                     teacher_identity=validated_teacher_identity,
+                    rng_state=rng_b,
+                    counters=cnt_b,
+                    protocol=proto_b,
                 )
 
             if wall_time_enabled and termination_reason == "wall_time_budget_reached":
                 break
 
         # Final checkpoint save
+        rng_b, cnt_b, proto_b = _build_checkpoint_bundle(completed_steps)
         final_manifest_sha = save_compact_checkpoint(
             model,
             optimizer,
@@ -934,12 +1291,27 @@ def train_compact(
             out / "final",
             step=completed_steps,
             teacher_identity=validated_teacher_identity,
-            extra={"completed": True, "total_steps": completed_steps},
+            rng_state=rng_b,
+            counters=cnt_b,
+            protocol=proto_b,
+            extra={
+                "completed": completed_steps >= c["steps"],
+                "total_steps": completed_steps,
+                "immutable_steps_total": c["steps"],
+            },
         )
 
         total_elapsed = time.monotonic() - start_walltime
-        if completed_steps >= wall_step_limit and termination_reason != "wall_time_budget_reached":
+        if completed_steps >= c["steps"]:
             termination_reason = "max_steps_reached"
+            status = "COMPLETED"
+        elif (stop_after_step is not None and completed_steps >= stop_after_step) or (stop_steps is not None and completed_steps >= stop_steps):
+            termination_reason = "stop_after_step_reached"
+            status = "STOPPED_BOUNDARY"
+        elif wall_time_enabled and termination_reason == "wall_time_budget_reached":
+            status = "STOPPED_WALL_TIME"
+        else:
+            status = "STOPPED_EARLY"
 
         # Teacher training cost reporting contract:
         # Report NOT_KNOWN if unavailable, never 0.
@@ -952,35 +1324,61 @@ def train_compact(
 
         source_hashes = {
             "self_audit/compact_training.py": digest(Path(__file__)),
+            "self_audit/compact_probe.py": digest(Path(__file__).with_name("compact_probe.py")),
+            "self_audit/compact_artifacts.py": digest(Path(__file__).with_name("compact_artifacts.py")),
             "self_audit/engine.py": digest(Path(__file__).with_name("engine.py")),
             "train.py": digest(Path(__file__).resolve().parents[1] / "train.py"),
         }
 
         report: Dict[str, Any] = {
             "schema": "self_audit.compact.report.v1",
-            "status": "COMPLETED",
+            "status": status,
             "method": c["method"],
+            "selector": c.get("selector", "original"),
             "synthetic": bool(synthetic),
             "quality": "NOT_EVALUATED",
             "steps": completed_steps,
             "steps_requested": effective_steps,
             "max_steps": wall_step_limit,
+            "total_budget": c["steps"],
+            "immutable_steps_total": c["steps"],
+            "resumed_from": str(resume_path) if resume else None,
+            "resumed_step": start_step,
             "termination_reason": termination_reason,
             "equal_wall_time": copy.deepcopy(equal_wall_time),
             "counts": counts,
             "slices_sampled": slices_sampled,
             "slices_optimized": slices_optimized,
-            "batch_sizes": {
-                "labeled": int(c["labeled_batch_size"]),
-                "unlabeled": int(c["unlabeled_batch_size"]),
-            },
-            "effective_batch_counts": {
-                "labeled": slices_sampled["labeled"],
-                "unlabeled": slices_sampled["unlabeled"],
-            },
+            "batch_sizes": (
+                {
+                    "labeled": int(c["labeled_batch_size"]),
+                    "unlabeled": int(c["unlabeled_batch_size"]),
+                    "probe": int(c.get("probe_batch_size", 8)),
+                }
+                if c.get("selector") in ("cross_patient_utility", "same_batch_utility", "utility")
+                else {
+                    "labeled": int(c["labeled_batch_size"]),
+                    "unlabeled": int(c["unlabeled_batch_size"]),
+                }
+            ),
+            "effective_batch_counts": (
+                {
+                    "labeled": slices_sampled["labeled"],
+                    "unlabeled": slices_sampled["unlabeled"],
+                    "probe": slices_sampled.get("probe", 0),
+                }
+                if c.get("selector") in ("cross_patient_utility", "same_batch_utility", "utility")
+                else {
+                    "labeled": slices_sampled["labeled"],
+                    "unlabeled": slices_sampled["unlabeled"],
+                }
+            ),
             "optimizer_calls": optimizer_calls,
             "teacher_costs": {
                 "teacher_cache_total_seconds": float(total_cache_time),
+                "teacher_cache_u_seconds": float(total_u_cache_time),
+                "teacher_cache_probe_seconds": float(total_probe_cache_time),
+                "probe_sampling_total_seconds": float(total_probe_sample_time),
                 "teacher_cache_generation_cost": cache_generation or "NOT_KNOWN",
                 "teacher_training_cost": teacher_training_cost,
             },
@@ -1008,7 +1406,7 @@ def train_compact(
             "initialization": {
                 "seed": seed,
                 "initial_state_sha256": initial_state_sha256,
-                "first_step_optimizer": optimizer_metadata,
+                "first_step_optimizer": optimizer_metadata if start_step == 0 else None,
             },
             "teacher_preflight": lineage_preflight,
             "train_manifest_sha256": actual_manifest_sha,
@@ -1025,16 +1423,23 @@ def train_compact(
             "seen_supervised": sorted(seen_l),
             "seen_audit": sorted(seen_a),
             "seen_unlabeled": sorted(seen_u),
+            "seen_probe": sorted(seen_probe),
             "elapsed_seconds": float(total_elapsed),
+            "segment_elapsed_seconds": float(time.monotonic() - training_wall_start),
+            "cumulative_elapsed_seconds": float(resumed_walltime + (time.monotonic() - training_wall_start)),
             "profile": {
                 "device": str(device),
-                "cuda_peak_allocated_bytes": torch.cuda.max_memory_allocated(device) if str(device).startswith("cuda") else None,
-                "cuda_peak_reserved_bytes": torch.cuda.max_memory_reserved(device) if str(device).startswith("cuda") else None,
-                "optimizer_steps_per_second": completed_steps / max(time.monotonic() - training_wall_start, 1e-12),
+                "segment_cuda_peak_allocated_bytes": torch.cuda.max_memory_allocated(device) if str(device).startswith("cuda") else None,
+                "segment_cuda_peak_reserved_bytes": torch.cuda.max_memory_reserved(device) if str(device).startswith("cuda") else None,
+                "cuda_peak_allocated_bytes": max(torch.cuda.max_memory_allocated(device), resumed_peak_allocated or 0) if str(device).startswith("cuda") else None,
+                "cuda_peak_reserved_bytes": max(torch.cuda.max_memory_reserved(device), resumed_peak_reserved or 0) if str(device).startswith("cuda") else None,
+                "segment_training_elapsed_seconds": float(time.monotonic() - training_wall_start),
+                "cumulative_training_elapsed_seconds": float(resumed_walltime + (time.monotonic() - training_wall_start)),
+                "optimizer_steps_per_second": (completed_steps - start_step) / max(time.monotonic() - training_wall_start, 1e-12),
                 "supervised_slices_per_second": slices_optimized["labeled"] / max(time.monotonic() - training_wall_start, 1e-12),
                 "scope": "student training including synchronous telemetry, proposal and audit; teacher/cache build separate",
             },
-            "training_elapsed_seconds": float(time.monotonic() - training_wall_start),
+            "training_elapsed_seconds": float(resumed_walltime + (time.monotonic() - training_wall_start)),
         }
         write_json(out / "REPORT.json", report)
         return report

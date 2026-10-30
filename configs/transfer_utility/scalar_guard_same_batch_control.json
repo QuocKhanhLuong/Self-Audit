@@ -1,0 +1,96 @@
+{
+  "schema": "self_audit.compact.v1",
+  "method": "scalar_guard",
+  "selector": "same_batch_utility",
+  "selector_dice_tolerance": 0.0,
+  "utility_gain_tolerance": 1e-07,
+  "utility_tie_tolerance": 1e-07,
+  "experiment": {
+    "name": "scalar_guard_same_batch_control",
+    "arm": "arm5_scalar_guard_same_batch_control",
+    "status": "OPT_IN_FULL_RUN",
+    "requires_explicit_allow_full_run": true,
+    "full_patient_training_this_delivery": false
+  },
+  "steps": 2000,
+  "warmup_steps": 1000,
+  "seed": 42,
+  "lr": 0.0003,
+  "weight_decay": 0.0001,
+  "pseudo_lr": 0.001,
+  "temperature": 1.0,
+  "coefficient": 1.0,
+  "pseudo_threshold": 0.7,
+  "ridge": 1e-06,
+  "risk_budget": 0.0,
+  "absent_fp_budget": 0.0,
+  "guard_tolerance": 1e-06,
+  "max_trials": 8,
+  "batch_size": 8,
+  "labeled_batch_size": 8,
+  "unlabeled_batch_size": 8,
+  "crop_size": 160,
+  "save_every": 500,
+  "equal_wall_time": {
+    "enabled": false
+  },
+  "model": {
+    "name": "CompactStudent",
+    "widths": [
+      16,
+      32,
+      64,
+      128
+    ],
+    "in_channels": 3,
+    "num_classes": 4,
+    "init": "kaiming_normal"
+  },
+  "data": {
+    "manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+    "budget_k": 8,
+    "labeled_ids": [
+      "patient007",
+      "patient010",
+      "patient011",
+      "patient024",
+      "patient026",
+      "patient041",
+      "patient077",
+      "patient099"
+    ]
+  },
+  "teacher": {
+    "source": null,
+    "source_manifest_sha256": "ae36d026ce26ca188627e6ea4699695e9eb99501312ce05d5324b81e44d3ddaa",
+    "source_payload_sha256": "0ae593ecb6b6f9dcb88d0a41d4a77d7b3b3a3edd87396624c3648afb1281f1b6",
+    "source_training_cost": {
+      "status": "REPORTED",
+      "elapsed_seconds": 2440.043427208904,
+      "steps": 10000,
+      "source": "archived B8 full EMA receipt; not rerun in this delivery"
+    },
+    "cache_path": null,
+    "cache_sha256": null,
+    "teacher_identity": null,
+    "state": "student",
+    "lineage": {
+      "budget_k": 8,
+      "exact_labeled_ids": [
+        "patient007",
+        "patient010",
+        "patient011",
+        "patient024",
+        "patient026",
+        "patient041",
+        "patient077",
+        "patient099"
+      ]
+    }
+  },
+  "acceptance": {
+    "metric": "Macro4",
+    "min_macro4": 0.87,
+    "notes": "Conditional Arm 5 scalar_guard with same_batch_utility control (2000 steps, 1000 warmup, seed 42)"
+  }
+}

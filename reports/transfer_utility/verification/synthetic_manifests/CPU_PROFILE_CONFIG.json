@@ -1,0 +1,94 @@
+{
+  "schema": "self_audit.compact.v1",
+  "method": "scalar_guard",
+  "selector": "cross_patient_utility",
+  "selector_dice_tolerance": 0.0,
+  "utility_gain_tolerance": 1e-07,
+  "utility_tie_tolerance": 1e-07,
+  "probe_seed": 42017,
+  "probe_batch_size": 1,
+  "experiment": {
+    "name": "profile_32steps",
+    "arm": "profile_resource_smoke",
+    "status": "BOUNDED_PROFILE_ONLY",
+    "requires_explicit_allow_full_run": false,
+    "full_patient_training_this_delivery": false
+  },
+  "steps": 8,
+  "warmup_steps": 4,
+  "seed": 42,
+  "lr": 0.0003,
+  "weight_decay": 0.0001,
+  "pseudo_lr": 0.001,
+  "temperature": 1.0,
+  "coefficient": 1.0,
+  "pseudo_threshold": 0.0,
+  "ridge": 1e-06,
+  "risk_budget": 0.0,
+  "absent_fp_budget": 0.0,
+  "guard_tolerance": 1e-06,
+  "max_trials": 8,
+  "batch_size": 1,
+  "labeled_batch_size": 1,
+  "unlabeled_batch_size": 1,
+  "crop_size": 16,
+  "save_every": 8,
+  "equal_wall_time": {
+    "enabled": false
+  },
+  "model": {
+    "name": "CompactStudent",
+    "widths": [
+      4,
+      8
+    ],
+    "in_channels": 3,
+    "num_classes": 4
+  },
+  "data": {
+    "manifest_sha256": "b95682826f76187c3c905f06831a48dfc2a852c678962fbbdb4df082ddb26a53",
+    "budget_k": 2,
+    "labeled_ids": [
+      "synthetic_p000",
+      "synthetic_p001"
+    ]
+  },
+  "teacher": {
+    "lineage": {
+      "budget_k": 2,
+      "exact_labeled_ids": [
+        "synthetic_p000",
+        "synthetic_p001"
+      ]
+    },
+    "cache_path": "/private/tmp/cptu-final-verify-20261030-1034/cpu_profile/cache/CACHE_MANIFEST.json",
+    "cache_sha256": "6d160ed9da7f1b1884e88150ed66c264c2800fd7bf5957b37179fd50646c8256",
+    "teacher_identity": {
+      "schema": "self_audit.compact_teacher_identity.v1",
+      "teacher_kind": "synthetic",
+      "inference_state": "student",
+      "label_budget": 2,
+      "labeled_ids": [
+        "synthetic_p000",
+        "synthetic_p001"
+      ],
+      "verified": false,
+      "verification_status": "CLAIMED_METADATA_UNVERIFIED",
+      "checks_passed": [
+        "lineage_format",
+        "patient_ids_validated",
+        "inference_state_declared",
+        "budget_k_satisfied",
+        "label_union_satisfied",
+        "synthetic_kind_validated"
+      ],
+      "physical_payload_status": "BLOCKED_MISSING_PAYLOAD"
+    },
+    "source_training_cost": "NOT_KNOWN"
+  },
+  "acceptance": {
+    "metric": "Macro4",
+    "min_macro4": 0.87,
+    "notes": "Bounded preflight profile (max 32 steps) to verify VRAM and latency without full run"
+  }
+}

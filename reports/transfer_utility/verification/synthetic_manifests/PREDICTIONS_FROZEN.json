@@ -1,0 +1,111 @@
+{
+  "export_manifest_sha256": "2155053ca1d884509cdee497dc661d28b7d041cedcb085c236994a506ce643d4",
+  "export_payload_sha256": "c7de65da0ab4de179cd2a44d273d35b081da754fac47713dcd9eda2dfd36b328",
+  "manifest_sha256": "b43ac84265704eb196a375922eabbb944646cde67220e037e0e71ed9032cec63",
+  "synthetic": true,
+  "coverage": {
+    "expected_patients": [
+      "synthetic_eval_0",
+      "synthetic_eval_1"
+    ],
+    "predicted_patients": [
+      "synthetic_eval_0",
+      "synthetic_eval_1"
+    ],
+    "complete": true
+  },
+  "predictions": [
+    {
+      "id": "synthetic_eval_0",
+      "file": "synthetic_eval_0_prediction.npy",
+      "sha256": "467bd45e89e5e32fb7dec48026edb93f012cd3d8edada168d744b7adb9959e4a",
+      "shape_tzyx": [
+        2,
+        2,
+        17,
+        19
+      ],
+      "affine": [
+        [
+          1.25,
+          0.0,
+          0.0,
+          3.0
+        ],
+        [
+          0.0,
+          1.5,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          7.5,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "axes": [
+        "T",
+        "Z",
+        "Y",
+        "X"
+      ],
+      "dataset": "manufactured",
+      "image_sha256": "d24e3fec35d588965e60d9e404e1948f0cdbc23d2d1335c3a488b996767044d9",
+      "has_valid_mask": false
+    },
+    {
+      "id": "synthetic_eval_1",
+      "file": "synthetic_eval_1_prediction.npy",
+      "sha256": "fe3484179759b4587d29d9dd702c878db4a839671a985f9a64456022f664c4d1",
+      "shape_tzyx": [
+        2,
+        2,
+        19,
+        21
+      ],
+      "affine": [
+        [
+          1.25,
+          0.0,
+          0.0,
+          13.0
+        ],
+        [
+          0.0,
+          1.5,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          7.5,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "axes": [
+        "T",
+        "Z",
+        "Y",
+        "X"
+      ],
+      "dataset": "manufactured",
+      "image_sha256": "f862aa2a6bd2cbf058b8b9a0b7dcf7211e0b15f7ec5f28ee86bfed2597812352",
+      "has_valid_mask": false
+    }
+  ]
+}

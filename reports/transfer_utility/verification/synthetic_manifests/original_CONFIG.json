@@ -1,0 +1,81 @@
+{
+  "schema": "self_audit.compact.v1",
+  "method": "scalar_guard",
+  "steps": 4,
+  "warmup_steps": 1,
+  "seed": 217,
+  "lr": 0.0003,
+  "weight_decay": 0.0001,
+  "pseudo_lr": 0.001,
+  "temperature": 1.0,
+  "coefficient": 1.0,
+  "pseudo_threshold": 0.0,
+  "ridge": 1e-06,
+  "risk_budget": 0.0,
+  "absent_fp_budget": 0.0,
+  "guard_tolerance": 1e-06,
+  "max_trials": 8,
+  "batch_size": 1,
+  "labeled_batch_size": 1,
+  "unlabeled_batch_size": 1,
+  "crop_size": 16,
+  "save_every": 1000,
+  "model": {
+    "name": "CompactStudent",
+    "widths": [
+      4,
+      8
+    ],
+    "in_channels": 3,
+    "num_classes": 4
+  },
+  "data": {
+    "manifest_sha256": "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+    "budget_k": 1,
+    "labeled_ids": [
+      "synthetic_p000"
+    ]
+  },
+  "teacher": {
+    "cache_path": "/private/tmp/cptu-final-verify-20261030-1034/smoke/cache/CACHE_MANIFEST.json",
+    "cache_sha256": "5c4c857bad883ef67e96e1f40ac49c945cce97fda2a8091375e0a33f0552379a",
+    "teacher_identity": {
+      "schema": "self_audit.compact_teacher_identity.v1",
+      "teacher_kind": "synthetic",
+      "inference_state": "student",
+      "label_budget": 1,
+      "labeled_ids": [
+        "synthetic_p000"
+      ],
+      "verified": false,
+      "verification_status": "CLAIMED_METADATA_UNVERIFIED",
+      "checks_passed": [
+        "lineage_format",
+        "patient_ids_validated",
+        "inference_state_declared",
+        "budget_k_satisfied",
+        "label_union_satisfied",
+        "synthetic_kind_validated"
+      ],
+      "physical_payload_status": "BLOCKED_MISSING_PAYLOAD"
+    },
+    "source_training_cost": "SYNTHETIC_NOT_PATIENT_EVIDENCE",
+    "lineage": {
+      "budget_k": 1,
+      "exact_labeled_ids": [
+        "synthetic_p000"
+      ]
+    }
+  },
+  "acceptance": {
+    "metric": "Macro4",
+    "min_macro4": 0.87,
+    "notes": "Locked Macro4>=.87 acceptance metadata"
+  },
+  "selector": "original",
+  "probe_seed": 42017,
+  "probe_batch_size": 1,
+  "selector_dice_tolerance": 0.0,
+  "utility_gain_tolerance": 1e-07,
+  "utility_tie_tolerance": 1e-07
+}

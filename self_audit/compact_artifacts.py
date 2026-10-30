@@ -11,8 +11,10 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import random
 import re
 from typing import Any, Mapping
+import numpy as np
 import torch
 from torch import nn
 
@@ -249,6 +251,23 @@ def _validate_export_metadata_consistency(manifest: Mapping[str, Any]) -> None:
         raise ValueError("export synthetic lineage mismatch")
 
 
+def _serialize_rng_state(rng_state: Mapping[str, Any] | None) -> dict[str, Any] | None:
+    """Serialize RNG state into weights_only-safe pure Python and Tensor types."""
+    if rng_state is None:
+        return None
+    res = dict(rng_state)
+    if "np_legacy_rng" in res and res["np_legacy_rng"] is not None:
+        s = res["np_legacy_rng"]
+        if isinstance(s, (list, tuple)) and len(s) == 5:
+            keys = s[1]
+            if hasattr(keys, "tolist"):
+                keys = keys.tolist()
+            res["np_legacy_rng"] = [s[0], list(keys), int(s[2]), int(s[3]), float(s[4])]
+    if "py_rng" in res and res["py_rng"] is not None:
+        res["py_rng"] = list(res["py_rng"])
+    return res
+
+
 def save_compact_checkpoint(
     model: nn.Module,
     optimizer: Any,
@@ -258,6 +277,9 @@ def save_compact_checkpoint(
     *,
     step: int,
     teacher_identity: Mapping[str, Any] | None = None,
+    rng_state: Mapping[str, Any] | None = None,
+    counters: Mapping[str, Any] | None = None,
+    protocol: Mapping[str, Any] | None = None,
     extra: Mapping[str, Any] | None = None,
 ) -> str:
     """Save full training checkpoint with model, optimizer, config, and data provenance.
@@ -298,7 +320,11 @@ def save_compact_checkpoint(
         "student": student_state,
         "optimizer": opt_state,
         "step": step,
+        "config": copy.deepcopy(dict(config)),
         "teacher_identity": dict(teacher_identity) if teacher_identity is not None else None,
+        "rng": _serialize_rng_state(rng_state),
+        "counters": dict(counters) if counters is not None else None,
+        "protocol": dict(protocol) if protocol is not None else None,
         "extra": dict(extra) if extra is not None else {},
     }
     torch.save(payload, weights_path)
@@ -316,6 +342,11 @@ def save_compact_checkpoint(
         "step": step,
         "data_provenance": data_provenance,
         "teacher_identity": copy.deepcopy(dict(teacher_identity)) if teacher_identity is not None else None,
+        "exact_resume_supported": rng_state is not None,
+        "rng_saved": rng_state is not None,
+        "counters": copy.deepcopy(dict(counters)) if counters is not None else None,
+        "protocol": copy.deepcopy(dict(protocol)) if protocol is not None else None,
+        "initial_state_sha256": (protocol.get("initial_state_sha256") if protocol else None),
         "model_file_sha256": runtime_model_file_sha256(),
         "training_source_sha256": compact_training_source_sha256(),
         "source_sha256": compact_training_source_sha256(),
@@ -401,8 +432,413 @@ def load_compact_checkpoint(
     metadata["manifest_sha256"] = actual_manifest_sha
     if "optimizer" in payload:
         metadata["optimizer_state_available"] = payload["optimizer"] is not None
+    if "rng" in payload:
+        metadata["rng_state_available"] = payload["rng"] is not None
 
     return model, metadata
+
+
+def load_exact_compact_checkpoint(
+    path: str | Path,
+    expected_sha: str,
+    device: str | torch.device = "cpu",
+    expected_config: Mapping[str, Any] | None = None,
+) -> tuple[CompactStudent, dict[str, Any], dict[str, Any]]:
+    """Load CompactStudent, full payload, and metadata for exact training resume.
+
+    Enforces mandatory 64-hex SHA-256 pin, runtime model file integrity,
+    payload hash validation, all-finite parameters, presence of RNG states,
+    and immutability of protocol and total step budget.
+
+    Returns:
+        (model, payload, metadata)
+    """
+    clean_expected_sha = _require_sha256(expected_sha, "expected_sha")
+
+    folder = Path(path).resolve()
+    manifest_path = folder / "MANIFEST.json"
+    if not manifest_path.is_file():
+        raise FileNotFoundError(f"checkpoint manifest not found: {manifest_path}")
+
+    actual_manifest_sha = digest(manifest_path)
+    if actual_manifest_sha != clean_expected_sha:
+        raise ValueError(
+            f"checkpoint manifest hash mismatch: expected {clean_expected_sha}, got {actual_manifest_sha}"
+        )
+
+    manifest = json.loads(manifest_path.read_text())
+    if manifest.get("schema") != "self_audit.compact.checkpoint.v1":
+        raise ValueError(f"unsupported checkpoint schema: {manifest.get('schema')}")
+
+    # Verify model file SHA BEFORE model reconstruction/export
+    expected_model_sha = _require_sha256(manifest.get("model_file_sha256"), "manifest.model_file_sha256")
+    actual_model_sha = runtime_model_file_sha256()
+    if actual_model_sha != expected_model_sha:
+        raise ValueError(
+            f"checkpoint model file SHA mismatch: expected {expected_model_sha}, got {actual_model_sha}. "
+            "Model architecture code has been modified since checkpoint was saved."
+        )
+
+    # 1. Source training hash equality
+    expected_source_sha = _require_sha256(
+        manifest.get("training_source_sha256") or manifest.get("source_sha256"),
+        "manifest.training_source_sha256",
+    )
+    actual_source_sha = compact_training_source_sha256()
+    if actual_source_sha != expected_source_sha:
+        raise ValueError(
+            f"checkpoint training source SHA mismatch: expected {expected_source_sha}, got {actual_source_sha}. "
+            "Training source code has been modified since checkpoint was saved."
+        )
+
+    weights_path = folder / "weights.pt"
+    if not weights_path.is_file():
+        raise FileNotFoundError(f"checkpoint payload weights.pt not found: {weights_path}")
+
+    actual_payload_sha = digest(weights_path)
+    expected_payload_sha = _require_sha256(manifest.get("payload_sha256"), "manifest.payload_sha256")
+    if actual_payload_sha != expected_payload_sha:
+        raise ValueError(
+            f"checkpoint payload hash mismatch: expected {expected_payload_sha}, got {actual_payload_sha}"
+        )
+
+    payload = torch.load(weights_path, map_location="cpu", weights_only=True)
+    if not isinstance(payload, Mapping) or "student" not in payload:
+        raise ValueError("checkpoint payload does not contain student state dict")
+
+    if manifest.get("step") != payload.get("step"):
+        raise ValueError(
+            f"checkpoint step mismatch between manifest ({manifest.get('step')}) and payload ({payload.get('step')})"
+        )
+
+    _verify_all_tensors_finite(payload["student"], "loaded checkpoint parameters")
+
+    # Contract: Exact resume without required RNG metadata must fail clearly.
+    rng_state = payload.get("rng")
+    if rng_state is None:
+        raise ValueError(
+            f"checkpoint at {folder} lacks mandatory exact RNG state metadata; "
+            "legacy checkpoints cannot be used for exact training resume"
+        )
+    for required_key in ("torch_cpu_rng", "py_rng", "np_legacy_rng", "data_rng_state", "probe_rng_state"):
+        if required_key not in rng_state or rng_state[required_key] is None:
+            raise ValueError(
+                f"checkpoint RNG state missing mandatory '{required_key}' for exact resume"
+            )
+
+    is_cuda_device = (
+        (isinstance(device, str) and device.startswith("cuda"))
+        or (isinstance(device, torch.device) and device.type == "cuda")
+    )
+    if is_cuda_device:
+        if "torch_cuda_rng" not in rng_state or rng_state["torch_cuda_rng"] is None:
+            raise ValueError("checkpoint lacks mandatory 'torch_cuda_rng' for exact CUDA resume")
+        cuda_rng = rng_state["torch_cuda_rng"]
+        if not isinstance(cuda_rng, (list, tuple)) or len(cuda_rng) == 0:
+            raise TypeError("torch_cuda_rng must be a non-empty list or tuple for exact CUDA resume")
+
+    # Mandatory optimizer state in payload
+    if payload.get("optimizer") is None:
+        raise ValueError("checkpoint payload missing mandatory optimizer state for exact resume")
+
+    # Mandatory config in payload and manifest
+    if "config" not in payload or payload["config"] is None:
+        raise ValueError("checkpoint payload missing mandatory persisted config")
+    if manifest.get("config") != payload.get("config"):
+        raise ValueError("manifest config does not match payload config")
+
+    # Mandatory protocol and counters in payload and manifest
+    if payload.get("protocol") is None or manifest.get("protocol") is None:
+        raise ValueError("checkpoint missing mandatory protocol metadata for exact resume")
+    if payload.get("counters") is None or manifest.get("counters") is None:
+        raise ValueError("checkpoint missing mandatory counters metadata for exact resume")
+
+    # Compare manifest protocol/counters/teacher to hashed payload
+    if manifest.get("protocol") != payload.get("protocol"):
+        raise ValueError("manifest protocol does not match payload protocol")
+    if manifest.get("counters") != payload.get("counters"):
+        raise ValueError("manifest counters do not match payload counters")
+    if manifest.get("teacher_identity") != payload.get("teacher_identity"):
+        raise ValueError("manifest teacher_identity does not match payload teacher_identity")
+
+    counters = payload["counters"]
+    if not isinstance(counters, Mapping):
+        raise TypeError("checkpoint counters must be a mapping")
+
+    required_counter_keys = (
+        "completed_steps",
+        "counts",
+        "slices_sampled",
+        "slices_optimized",
+        "optimizer_calls",
+        "cumulative_training_walltime",
+        "total_cache_time",
+        "seen_l", "seen_a", "seen_u", "seen_probe",
+        "audit_totals", "audit_unique_frames",
+        "total_u_cache_time", "total_probe_cache_time", "total_probe_sample_time",
+        "warm_start_logs",
+    )
+    for ck in required_counter_keys:
+        if ck not in counters or counters[ck] is None:
+            raise ValueError(f"checkpoint counters missing mandatory field '{ck}' for exact resume")
+    for ck in ("cuda_peak_allocated_bytes", "cuda_peak_reserved_bytes"):
+        if ck not in counters:
+            raise ValueError(f"checkpoint counters missing mandatory field '{ck}' for exact resume")
+        value = counters[ck]
+        if value is not None and (type(value) is not int or value < 0):
+            raise ValueError(f"checkpoint counters '{ck}' must be non-negative bytes or null")
+    for ck in ("cumulative_training_walltime", "total_cache_time", "total_u_cache_time",
+               "total_probe_cache_time", "total_probe_sample_time"):
+        value = counters[ck]
+        if type(value) not in (int, float) or not np.isfinite(value) or value < 0:
+            raise ValueError(f"checkpoint counters '{ck}' must be finite and non-negative")
+    for ck in ("seen_l", "seen_a", "seen_u", "seen_probe", "audit_unique_frames", "warm_start_logs"):
+        if not isinstance(counters[ck], list):
+            raise ValueError(f"checkpoint counters '{ck}' must be a list")
+    if not isinstance(counters['audit_totals'], Mapping):
+        raise ValueError("checkpoint counters 'audit_totals' must be a mapping")
+
+    step_val = int(payload["step"])
+    if int(counters["completed_steps"]) != step_val:
+        raise ValueError(
+            f"counters completed_steps ({counters['completed_steps']}) mismatch checkpoint step ({step_val})"
+        )
+
+    if step_val > 0:
+        cum_wall = counters.get("cumulative_training_walltime")
+        if not isinstance(cum_wall, (int, float)) or cum_wall < 0:
+            raise ValueError("cumulative_training_walltime must be a non-negative float")
+        for map_key in ("counts", "slices_sampled", "slices_optimized", "optimizer_calls"):
+            m = counters.get(map_key)
+            if not isinstance(m, Mapping) or len(m) == 0:
+                raise ValueError(f"checkpoint counters field '{map_key}' cannot be empty for step {step_val}")
+
+    # Protocol requirements: initial_state_sha256 must be persisted 64-hex
+    proto = payload["protocol"]
+    init_state_sha = proto.get("initial_state_sha256") or manifest.get("initial_state_sha256")
+    if not init_state_sha:
+        raise ValueError("checkpoint missing persisted initial_state_sha256 lineage; fallback hashing prohibited")
+    _require_sha256(init_state_sha, "protocol.initial_state_sha256")
+
+    step_val = int(payload["step"])
+    if step_val > 0:
+        if "log_bytes" not in proto or "log_sha256" not in proto:
+            raise ValueError(
+                f"checkpoint protocol missing mandatory 'log_bytes' and 'log_sha256' for exact resume at step {step_val}"
+            )
+        _require_sha256(proto["log_sha256"], "protocol.log_sha256")
+        if type(proto["log_bytes"]) is not int or proto["log_bytes"] < 0:
+            raise ValueError("protocol.log_bytes must be a non-negative integer")
+
+    # Immutability validation against current configuration
+    if expected_config is not None:
+        from .compact_training import validate_compact_config
+
+        checkpoint_cfg = manifest.get("config", {})
+
+        norm_expected = validate_compact_config(expected_config, allow_full_run=True)
+        norm_ckpt = validate_compact_config(checkpoint_cfg, allow_full_run=True)
+
+        # 1. Total step budget cannot be silently changed
+        ckpt_steps = norm_ckpt.get("steps")
+        req_steps = norm_expected.get("steps")
+        if ckpt_steps is not None and req_steps is not None and req_steps != ckpt_steps:
+            raise ValueError(
+                f"cannot silently change total step budget on resume: "
+                f"checkpoint declared steps={ckpt_steps}, requested steps={req_steps}"
+            )
+
+        # 2. Immutable method
+        ckpt_method = norm_ckpt.get("method")
+        req_method = norm_expected.get("method")
+        if ckpt_method is not None and req_method is not None and req_method != ckpt_method:
+            raise ValueError(
+                f"protocol mismatch on resume: checkpoint method={ckpt_method}, requested method={req_method}"
+            )
+
+        # 3. Seed immutability
+        ckpt_seed = norm_ckpt.get("seed")
+        req_seed = norm_expected.get("seed")
+        if ckpt_seed is not None and req_seed is not None and req_seed != ckpt_seed:
+            raise ValueError(
+                f"protocol mismatch on resume: checkpoint seed={ckpt_seed}, requested seed={req_seed}"
+            )
+
+        # 4. Probe seed immutability
+        ckpt_probe_seed = norm_ckpt.get("probe_seed")
+        req_probe_seed = norm_expected.get("probe_seed")
+        if ckpt_probe_seed is not None and req_probe_seed is not None and req_probe_seed != ckpt_probe_seed:
+            raise ValueError(
+                f"protocol mismatch on resume: checkpoint probe_seed={ckpt_probe_seed}, requested probe_seed={req_probe_seed}"
+            )
+
+        # 5. Selector immutability
+        ckpt_selector = norm_ckpt.get("selector", "original")
+        req_selector = norm_expected.get("selector", "original")
+        if ckpt_selector != req_selector:
+            raise ValueError(
+                f"protocol mismatch on resume: checkpoint selector={ckpt_selector}, requested selector={req_selector}"
+            )
+
+        # Exclude ONLY stop_after_step execution boundary
+        norm_expected_diff = dict(norm_expected)
+        norm_ckpt_diff = dict(norm_ckpt)
+        norm_expected_diff.pop("stop_after_step", None)
+        norm_ckpt_diff.pop("stop_after_step", None)
+        if norm_expected.get("data") is None:
+            norm_expected_diff.pop("data", None)
+            norm_ckpt_diff.pop("data", None)
+
+        differing_keys = []
+        all_keys = set(norm_expected_diff.keys()) | set(norm_ckpt_diff.keys())
+        for k in sorted(all_keys):
+            if norm_expected_diff.get(k) != norm_ckpt_diff.get(k):
+                differing_keys.append(k)
+        if differing_keys:
+            raise ValueError(
+                f"immutable configuration mismatch on resume for keys: {differing_keys}; "
+                f"checkpoint had {[norm_ckpt_diff.get(k) for k in differing_keys]}, "
+                f"requested {[norm_expected_diff.get(k) for k in differing_keys]}"
+            )
+
+        # Probe state validation against expected configuration
+        probe_state = rng_state.get("probe_rng_state")
+        if isinstance(probe_state, Mapping):
+            if "seed" in probe_state and norm_expected.get("probe_seed") is not None and probe_state["seed"] != norm_expected["probe_seed"]:
+                raise ValueError(
+                    f"probe sampler seed mismatch: state seed={probe_state.get('seed')!r}, expected={norm_expected['probe_seed']!r}"
+                )
+            if "batch_size" in probe_state and norm_expected.get("probe_batch_size") is not None and probe_state["batch_size"] != norm_expected["probe_batch_size"]:
+                raise ValueError(
+                    f"probe sampler batch_size mismatch: state batch_size={probe_state.get('batch_size')!r}, expected={norm_expected['probe_batch_size']!r}"
+                )
+            if "crop_size" in probe_state and norm_expected.get("crop_size") is not None and probe_state["crop_size"] != norm_expected["crop_size"]:
+                raise ValueError(
+                    f"probe sampler crop_size mismatch: state crop_size={probe_state.get('crop_size')!r}, expected={norm_expected['crop_size']!r}"
+                )
+
+        # Data provenance immutability
+        ckpt_prov = manifest.get("data_provenance", {})
+        if "data" in expected_config and isinstance(expected_config["data"], Mapping):
+            req_data_sha = expected_config["data"].get("manifest_sha256")
+            if req_data_sha and ckpt_prov.get("data_sha256") != req_data_sha:
+                raise ValueError(
+                    f"data provenance mismatch on resume: checkpoint data_sha256={ckpt_prov.get('data_sha256')}, requested={req_data_sha}"
+                )
+            if expected_config["data"].get("budget_k") is not None and ckpt_prov.get("label_budget") != expected_config["data"]["budget_k"]:
+                raise ValueError(
+                    f"data provenance label_budget mismatch on resume: checkpoint label_budget={ckpt_prov.get('label_budget')}, requested={expected_config['data']['budget_k']}"
+                )
+            if expected_config["data"].get("labeled_ids") is not None and sorted(ckpt_prov.get("lids", [])) != sorted(expected_config["data"]["labeled_ids"]):
+                raise ValueError(
+                    f"data provenance labeled_ids mismatch on resume: checkpoint lids={ckpt_prov.get('lids')}, requested={expected_config['data']['labeled_ids']}"
+                )
+            if proto.get("train_manifest_sha256") and req_data_sha and proto["train_manifest_sha256"] != req_data_sha:
+                raise ValueError(
+                    f"protocol train_manifest_sha256 mismatch on resume: protocol={proto['train_manifest_sha256']}, requested={req_data_sha}"
+                )
+
+    # Reconstruct model and load state strictly
+    arch = validate_architecture(manifest.get("architecture", {}))
+    model = build_compact_model(arch)
+    model.load_state_dict(payload["student"], strict=True)
+    model.to(device)
+
+    metadata = dict(manifest)
+    metadata["manifest_sha256"] = actual_manifest_sha
+    metadata["payload_sha256"] = actual_payload_sha
+    metadata["rng_state_available"] = True
+    metadata["optimizer_state_available"] = payload.get("optimizer") is not None
+    metadata["initial_state_sha256"] = init_state_sha
+
+    return model, dict(payload), metadata
+
+
+def restore_compact_rng(
+    rng_dict: Mapping[str, Any],
+    data_rng: np.random.Generator,
+    probe_sampler: Any = None,
+    device: str | torch.device = "cpu",
+) -> None:
+    """Restore all global PyTorch/Python/NumPy RNGs and generator states after model load.
+
+    Validates all fields strictly and never swallows Python exceptions.
+    """
+    if not isinstance(rng_dict, Mapping):
+        raise TypeError("rng_dict must be a mapping of RNG states")
+
+    # 1. PyTorch CPU RNG
+    if "torch_cpu_rng" not in rng_dict or rng_dict["torch_cpu_rng"] is None:
+        raise ValueError("rng_dict missing mandatory 'torch_cpu_rng'")
+    cpu_rng = rng_dict["torch_cpu_rng"]
+    if isinstance(cpu_rng, torch.Tensor):
+        torch.set_rng_state(cpu_rng.cpu())
+    elif isinstance(cpu_rng, (list, bytes, bytearray)):
+        torch.set_rng_state(torch.tensor(cpu_rng, dtype=torch.uint8))
+    else:
+        raise TypeError(f"invalid type for torch_cpu_rng: {type(cpu_rng)}")
+
+    # 2. PyTorch CUDA RNG
+    is_cuda_device = (
+        (isinstance(device, str) and device.startswith("cuda"))
+        or (isinstance(device, torch.device) and device.type == "cuda")
+    )
+    if is_cuda_device:
+        if not torch.cuda.is_available():
+            raise RuntimeError(f"CUDA device requested ({device}) but CUDA is not available")
+        if "torch_cuda_rng" not in rng_dict or rng_dict["torch_cuda_rng"] is None:
+            raise ValueError("checkpoint lacks mandatory 'torch_cuda_rng' for exact CUDA resume")
+        cuda_rng = rng_dict["torch_cuda_rng"]
+        if not isinstance(cuda_rng, (list, tuple)) or len(cuda_rng) == 0:
+            raise TypeError(f"torch_cuda_rng must be a non-empty list or tuple, got {type(cuda_rng)}")
+        if len(cuda_rng) != torch.cuda.device_count():
+            raise ValueError(
+                f"CUDA device count mismatch on resume: checkpoint recorded {len(cuda_rng)} devices, "
+                f"current environment has {torch.cuda.device_count()}"
+            )
+        torch.cuda.set_rng_state_all([
+            t.cpu() if isinstance(t, torch.Tensor) else torch.tensor(t, dtype=torch.uint8)
+            for t in cuda_rng
+        ])
+    elif "torch_cuda_rng" in rng_dict and rng_dict["torch_cuda_rng"] is not None:
+        if torch.cuda.is_available():
+            cuda_rng = rng_dict["torch_cuda_rng"]
+            if isinstance(cuda_rng, (list, tuple)) and len(cuda_rng) == torch.cuda.device_count():
+                torch.cuda.set_rng_state_all([
+                    t.cpu() if isinstance(t, torch.Tensor) else torch.tensor(t, dtype=torch.uint8)
+                    for t in cuda_rng
+                ])
+
+    # 3. Python Random RNG (DO NOT SWALLOW EXCEPTIONS)
+    if "py_rng" not in rng_dict or rng_dict["py_rng"] is None:
+        raise ValueError("rng_dict missing mandatory 'py_rng'")
+    py_rng = rng_dict["py_rng"]
+    if not isinstance(py_rng, (list, tuple)):
+        raise TypeError(f"py_rng must be a list or tuple, got {type(py_rng)}")
+    random.setstate(tuple(py_rng))
+
+    # 4. NumPy Legacy RNG
+    if "np_legacy_rng" not in rng_dict or rng_dict["np_legacy_rng"] is None:
+        raise ValueError("rng_dict missing mandatory 'np_legacy_rng'")
+    raw_leg = rng_dict["np_legacy_rng"]
+    if not isinstance(raw_leg, (list, tuple)) or len(raw_leg) != 5:
+        raise ValueError("np_legacy_rng must be a 5-element tuple or list")
+    arr = np.array(raw_leg[1], dtype=np.uint32)
+    np.random.set_state((str(raw_leg[0]), arr, int(raw_leg[2]), int(raw_leg[3]), float(raw_leg[4])))
+
+    # 5. Data Generator RNG
+    if "data_rng_state" not in rng_dict or rng_dict["data_rng_state"] is None:
+        raise ValueError("rng_dict missing mandatory 'data_rng_state'")
+    if not isinstance(rng_dict["data_rng_state"], Mapping):
+        raise TypeError("data_rng_state must be a mapping")
+    data_rng.bit_generator.state = copy.deepcopy(rng_dict["data_rng_state"])
+
+    # 6. Probe Generator RNG
+    if probe_sampler is not None:
+        if "probe_rng_state" not in rng_dict or rng_dict["probe_rng_state"] is None:
+            raise ValueError("rng_dict missing mandatory 'probe_rng_state' for probe sampler")
+        probe_sampler.load_state(rng_dict["probe_rng_state"])
+
 
 
 def export_compact_student(
@@ -596,6 +1032,8 @@ __all__ = [
     "export_compact_student",
     "load_compact_checkpoint",
     "load_compact_export",
+    "load_exact_compact_checkpoint",
+    "restore_compact_rng",
     "runtime_model_file_sha256",
     "save_compact_checkpoint",
     "source_digest",

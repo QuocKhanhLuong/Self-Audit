@@ -38,6 +38,7 @@ import hashlib
 import inspect
 import json
 import random
+import time
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple, Union
 
 import numpy as np
@@ -46,14 +47,35 @@ from torch import Tensor, nn
 from torch.func import functional_call
 from torch.nn import functional as F
 
+from self_audit.compact_utility import (
+    DEFAULT_SELECTOR,
+    DEFAULT_SELECTOR_DICE_TOLERANCE,
+    DEFAULT_UTILITY_GAIN_TOLERANCE,
+    DEFAULT_UTILITY_TIE_TOLERANCE,
+    VALID_SELECTORS,
+    compute_probe_kd_loss,
+    select_larger_tie,
+    select_utility,
+    validate_utility_probe,
+)
+
 __all__ = [
     "CLASS_NAMES",
+    "DEFAULT_SELECTOR",
+    "DEFAULT_SELECTOR_DICE_TOLERANCE",
+    "DEFAULT_UTILITY_GAIN_TOLERANCE",
+    "DEFAULT_UTILITY_TIE_TOLERANCE",
     "FOREGROUND_CLASS_INDICES",
     "FOREGROUND_CLASS_NAMES",
+    "VALID_SELECTORS",
     "apply_compact_update",
     "build_class_candidates",
     "compute_audit_metrics",
     "compute_batch_margins",
+    "compute_probe_kd_loss",
+    "select_larger_tie",
+    "select_utility",
+    "validate_utility_probe",
 ]
 
 CLASS_NAMES = ("BG", "RV", "MYO", "LV")
@@ -626,11 +648,28 @@ def _validate_config(config: Optional[Dict[str, Any]]) -> Dict[str, Any]:
             "max_trials": 8,
             "trial_alphas": None,
             "max_norm": None,
+            "selector": DEFAULT_SELECTOR,
+            "selector_dice_tolerance": DEFAULT_SELECTOR_DICE_TOLERANCE,
+            "utility_gain_tolerance": DEFAULT_UTILITY_GAIN_TOLERANCE,
+            "utility_tie_tolerance": DEFAULT_UTILITY_TIE_TOLERANCE,
         }
     if not isinstance(config, dict):
         raise TypeError("config must be a dictionary")
 
-    allowed_keys = {"eps", "absent_fp_budget", "tolerance", "ridge", "max_trials", "trial_alphas", "joint_candidates", "max_norm"}
+    allowed_keys = {
+        "eps",
+        "absent_fp_budget",
+        "tolerance",
+        "ridge",
+        "max_trials",
+        "trial_alphas",
+        "joint_candidates",
+        "max_norm",
+        "selector",
+        "selector_dice_tolerance",
+        "utility_gain_tolerance",
+        "utility_tie_tolerance",
+    }
     unknown = set(config.keys()) - allowed_keys
     if unknown:
         raise ValueError(f"unknown configuration keys: {sorted(unknown)}")
@@ -667,6 +706,23 @@ def _validate_config(config: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         validated["trial_alphas"] = trial_alphas
     else:
         validated["trial_alphas"] = None
+
+    selector = config.get("selector", DEFAULT_SELECTOR)
+    if not isinstance(selector, str):
+        raise TypeError(f"config key 'selector' must be a string, got {type(selector)}")
+    if selector not in VALID_SELECTORS:
+        raise ValueError(f"unknown selector '{selector}', expected one of {sorted(VALID_SELECTORS)}")
+    validated["selector"] = selector
+
+    for k, default_val in (
+        ("selector_dice_tolerance", DEFAULT_SELECTOR_DICE_TOLERANCE),
+        ("utility_gain_tolerance", DEFAULT_UTILITY_GAIN_TOLERANCE),
+        ("utility_tie_tolerance", DEFAULT_UTILITY_TIE_TOLERANCE),
+    ):
+        val = config.get(k, default_val)
+        if not isinstance(val, (int, float)) or isinstance(val, bool) or not np.isfinite(val) or val < 0:
+            raise ValueError(f"config key '{k}' must be a finite non-negative float, got {val}")
+        validated[k] = float(val)
 
     return validated
 
@@ -759,6 +815,7 @@ def apply_compact_update(
     method: str,
     audit_batches: Optional[Callable[[], Iterable[Mapping[str, Any]]]] = None,
     config: Optional[Dict[str, Any]] = None,
+    utility_probe: Optional[Mapping[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Audited whole-network parameter update with post-supervised reference and atomic state.
 
@@ -775,6 +832,12 @@ def apply_compact_update(
             - max_trials: int >= 1 (maximum candidate trials, default 8)
             - max_norm: optional aggregate displacement norm bound
             - trial_alphas: optional custom sequence of alpha vectors in box [0, 1]
+            - selector: str ('original', 'larger_tie', 'cross_patient_utility', 'same_batch_utility')
+            - selector_dice_tolerance: float >= 0 (default 0.0)
+            - utility_gain_tolerance: float >= 0 (default 1e-7)
+            - utility_tie_tolerance: float >= 0 (default 1e-7)
+        utility_probe: Optional mapping with detached tensors 'x', 'targets', 'valid', and
+            optional 'temperature', 'coefficient', 'confidence', 'metadata'. Sampled once per transaction.
 
     Returns:
         JSON-safe receipt dictionary with update diagnostics and explicit statuses:
@@ -791,6 +854,13 @@ def apply_compact_update(
     ridge = cfg["ridge"]
     max_trials = cfg["max_trials"]
     config_alphas = cfg["trial_alphas"]
+    selector = cfg["selector"]
+    selector_dice_tolerance = cfg["selector_dice_tolerance"]
+    utility_gain_tolerance = cfg["utility_gain_tolerance"]
+    utility_tie_tolerance = cfg["utility_tie_tolerance"]
+
+    if selector != DEFAULT_SELECTOR and method != "scalar_guard":
+        raise ValueError(f"selector '{selector}' is restricted to method 'scalar_guard', got method '{method}'")
 
     # Extract aggregate max_norm from candidates telemetry or config
     max_norm = None
@@ -839,6 +909,21 @@ def apply_compact_update(
 
     # Fast-path for empty candidates or supervised mode
     if m == 0 or denominator == 0 or method == "supervised":
+        fast_reason = "supervised_mode" if method == "supervised" else "no_candidate"
+        fast_counts = {
+            "audit_stream_batches": 0,
+            "audit_reference_evaluations": 0,
+            "nonzero_trial_evaluations": 0,
+            "probe_reference_evaluations": 0,
+            "probe_trial_evaluations": 0,
+        }
+        fast_timings = {
+            "audit_reference_seconds": 0.0,
+            "audit_trials_seconds": 0.0,
+            "probe_reference_seconds": 0.0,
+            "probe_trials_seconds": 0.0,
+            "total_seconds": 0.0,
+        }
         return {
             "method": method,
             "status": "zero_displacement" if method == "supervised" and m > 0 else "no_candidate",
@@ -862,11 +947,38 @@ def apply_compact_update(
             "trials": [],
             "optimizer_steps_in_transaction": 0,
             "ema_updates_in_transaction": 0,
-            "telemetry": {"info": "no candidates or supervised-only mode"},
+            "selector": selector,
+            "reason": fast_reason,
+            "original_choice": None,
+            "feasible_scales": [],
+            "forward_counts": fast_counts,
+            "timings": fast_timings,
+            "telemetry": {
+                "info": "no candidates or supervised-only mode",
+                "selector": selector,
+                "selector_dice_tolerance": selector_dice_tolerance,
+                "utility_gain_tolerance": utility_gain_tolerance,
+                "utility_tie_tolerance": utility_tie_tolerance,
+                "original_choice": None,
+                "feasible_scales": [],
+                "forward_counts": fast_counts,
+                "timings": fast_timings,
+                "reason": fast_reason,
+            },
         }
 
     if audit_batches is None and method in {"scalar_guard", "joint_guard"}:
         raise ValueError("audit_batches callable is required for guarded methods")
+
+    t_total_start = time.monotonic()
+    t_audit_ref = 0.0
+    t_audit_trials = 0.0
+    t_probe_ref = 0.0
+    t_probe_trials = 0.0
+    audit_stream_batches = 0
+    nonzero_trial_evaluations = 0
+    probe_reference_evaluations = 0
+    probe_trial_evaluations = 0
 
     # Execution state preservation: RNGs and per-module modes
     state_ctx = _ExecutionStateContext(model)
@@ -876,10 +988,18 @@ def apply_compact_update(
         state_ctx.set_eval()
 
         # Step 1: Evaluate post-supervised reference baseline on audit support
+        def counted_audit():
+            nonlocal audit_stream_batches
+            for batch in audit_batches():
+                audit_stream_batches += 1
+                yield batch
+
         if audit_batches is not None:
+            t0_ref = time.monotonic()
             base_metrics, base_margins, audit_hash = _evaluate_model_on_audit_streamed(
-                model, base_params, audit_batches
+                model, base_params, counted_audit
             )
+            t_audit_ref = time.monotonic() - t0_ref
             base_macro_dice = base_metrics["macro_dice"]
             base_macro_absent_fp = base_metrics["macro_absent_fp"]
             base_fg_dice = base_metrics["foreground_macro_dice"]
@@ -903,6 +1023,9 @@ def apply_compact_update(
         chosen_disp: Optional[Dict[str, Tensor]] = None
         after_metrics = base_metrics
         after_margins = base_margins
+        trial_metrics_list: List[Optional[Dict[str, Any]]] = []
+        trial_margins_list: List[Optional[Dict[str, Any]]] = []
+        combined_displacements: List[Dict[str, Tensor]] = []
 
         # Step 3: Evaluate all candidate trials under identical cap
         for k, alpha in enumerate(candidate_alphas):
@@ -915,6 +1038,7 @@ def apply_compact_update(
                         param_delta = term if param_delta is None else (param_delta + term)
                 if param_delta is not None:
                     combined_disp[name] = param_delta
+            combined_displacements.append(combined_disp)
 
             disp_norm_sq = sum(t.double().norm() ** 2 for t in combined_disp.values())
             disp_norm = float(torch.sqrt(disp_norm_sq).item()) if combined_disp else 0.0
@@ -928,6 +1052,7 @@ def apply_compact_update(
                 trial_rec = {
                     "trial_index": k,
                     "alpha": alpha.tolist(),
+                    "scale": float(alpha[0]) if len(alpha) > 0 else 0.0,
                     "displacement_norm": disp_norm,
                     "finite": True,
                     "macro_dice": base_macro_dice,
@@ -940,15 +1065,20 @@ def apply_compact_update(
                     "norm_bound_ok": False,
                     "guard_passed": False,
                     "accepted": False,
+                    "probe_loss": None,
+                    "utility_gain": None,
                     "reason": "aggregate_norm_cap_exceeded",
                 }
                 trials_log.append(trial_rec)
+                trial_metrics_list.append(None)
+                trial_margins_list.append(None)
                 continue
 
             if disp_norm == 0.0:
                 trial_rec = {
                     "trial_index": k,
                     "alpha": alpha.tolist(),
+                    "scale": float(alpha[0]) if len(alpha) > 0 else 0.0,
                     "displacement_norm": 0.0,
                     "finite": True,
                     "macro_dice": base_macro_dice,
@@ -961,9 +1091,13 @@ def apply_compact_update(
                     "norm_bound_ok": True,
                     "guard_passed": True,
                     "accepted": False,
+                    "probe_loss": None,
+                    "utility_gain": None,
                     "reason": "zero_displacement",
                 }
                 trials_log.append(trial_rec)
+                trial_metrics_list.append(base_metrics)
+                trial_margins_list.append(base_margins)
                 if best_trial_idx is None:
                     best_trial_idx = k
                     chosen_disp = combined_disp
@@ -982,9 +1116,12 @@ def apply_compact_update(
             if not guarded:
                 # plain_kd: verify evaluation and commit without guard
                 if audit_batches is not None:
+                    t0_tr = time.monotonic()
                     tr_metrics, tr_margins, _ = _evaluate_model_on_audit_streamed(
-                        model, trial_params, audit_batches, expected_identity_hash=audit_hash
+                        model, trial_params, counted_audit, expected_identity_hash=audit_hash
                     )
+                    t_audit_trials += time.monotonic() - t0_tr
+                    nonzero_trial_evaluations += 1
                     tr_dice = tr_metrics["macro_dice"]
                     tr_fp = tr_metrics["macro_absent_fp"]
                     tr_fg = tr_metrics["foreground_macro_dice"]
@@ -998,6 +1135,7 @@ def apply_compact_update(
                 trial_rec = {
                     "trial_index": k,
                     "alpha": alpha.tolist(),
+                    "scale": float(alpha[0]) if len(alpha) > 0 else 0.0,
                     "displacement_norm": disp_norm,
                     "finite": True,
                     "macro_dice": tr_dice,
@@ -1010,8 +1148,12 @@ def apply_compact_update(
                     "norm_bound_ok": True,
                     "guard_passed": True,
                     "accepted": True,
+                    "probe_loss": None,
+                    "utility_gain": None,
                 }
                 trials_log.append(trial_rec)
+                trial_metrics_list.append(tr_metrics)
+                trial_margins_list.append(tr_margins)
                 best_trial_idx = k
                 chosen_disp = combined_disp
                 after_metrics = tr_metrics
@@ -1019,9 +1161,13 @@ def apply_compact_update(
                 break
 
             # Guarded evaluation (scalar_guard / joint_guard)
+            t0_tr = time.monotonic()
             tr_metrics, tr_margins, _ = _evaluate_model_on_audit_streamed(
-                model, trial_params, audit_batches, expected_identity_hash=audit_hash
+                model, trial_params, counted_audit, expected_identity_hash=audit_hash
             )
+            t_audit_trials += time.monotonic() - t0_tr
+            nonzero_trial_evaluations += 1
+
             tr_dice = tr_metrics["macro_dice"]
             tr_fp = tr_metrics["macro_absent_fp"]
             tr_fg = tr_metrics["foreground_macro_dice"]
@@ -1077,6 +1223,7 @@ def apply_compact_update(
             trial_rec = {
                 "trial_index": k,
                 "alpha": alpha.tolist(),
+                "scale": float(alpha[0]) if len(alpha) > 0 else 0.0,
                 "displacement_norm": disp_norm,
                 "finite": True,
                 "macro_dice": tr_dice,
@@ -1089,8 +1236,12 @@ def apply_compact_update(
                 "norm_bound_ok": norm_bound_ok,
                 "guard_passed": guard_passed,
                 "accepted": False,
+                "probe_loss": None,
+                "utility_gain": None,
             }
             trials_log.append(trial_rec)
+            trial_metrics_list.append(tr_metrics)
+            trial_margins_list.append(tr_margins)
 
             if guard_passed and obj < best_objective:
                 best_objective = obj
@@ -1099,8 +1250,76 @@ def apply_compact_update(
                 after_metrics = tr_metrics
                 after_margins = tr_margins
 
-        # Step 4: Finalize outcome
-        if best_trial_idx is not None and chosen_disp is not None:
+        # Step 4: Selector resolution
+        feasible_scales = [
+            float(candidate_alphas[k][0]) if len(candidate_alphas[k]) > 0 else 0.0
+            for k, tr in enumerate(trials_log)
+            if tr.get("guard_passed") and tr.get("displacement_norm", 0.0) > 0
+        ]
+
+        best_orig_idx = best_trial_idx
+        if best_orig_idx is not None:
+            original_choice: Optional[Dict[str, Any]] = {
+                "trial_index": best_orig_idx,
+                "scale": float(candidate_alphas[best_orig_idx][0]) if len(candidate_alphas[best_orig_idx]) > 0 else 0.0,
+                "objective": float(trials_log[best_orig_idx]["objective"]) if np.isfinite(trials_log[best_orig_idx]["objective"]) else None,
+                "foreground_macro_dice": trials_log[best_orig_idx]["foreground_macro_dice"],
+            }
+        else:
+            original_choice = None
+
+        status_utility = None
+        probe_telemetry: Dict[str, Any] = {
+            "reference_kd_loss": None,
+            "probe_denominator": None,
+            "probe_mask_identity": None,
+            "classwise_kd_loss": None,
+        }
+
+        if selector == DEFAULT_SELECTOR or method != "scalar_guard":
+            if best_trial_idx is not None:
+                if trials_log[best_trial_idx]["displacement_norm"] == 0.0:
+                    reason = "zero_displacement"
+                elif method == "plain_kd":
+                    reason = "plain_kd_commit"
+                else:
+                    reason = "original_strict_objective"
+            else:
+                reason = "guard_rejected_all" if guarded else "plain_kd_rejected"
+
+        elif selector == "larger_tie":
+            best_trial_idx, reason = select_larger_tie(
+                trials_log=trials_log,
+                orig_trial_idx=best_orig_idx,
+                candidate_alphas=candidate_alphas,
+                dice_tolerance=selector_dice_tolerance,
+            )
+
+        elif selector in ("cross_patient_utility", "same_batch_utility"):
+            (
+                best_trial_idx,
+                status_utility,
+                reason,
+                probe_counts,
+                probe_times,
+                probe_telemetry,
+            ) = select_utility(
+                model=model,
+                base_params=base_params,
+                combined_displacements=combined_displacements,
+                candidate_alphas=candidate_alphas,
+                trials_log=trials_log,
+                utility_probe=utility_probe,
+                gain_tolerance=utility_gain_tolerance,
+                tie_tolerance=utility_tie_tolerance,
+            )
+            probe_reference_evaluations += probe_counts["probe_reference_evaluations"]
+            probe_trial_evaluations += probe_counts["probe_trial_evaluations"]
+            t_probe_ref += probe_times["probe_reference_seconds"]
+            t_probe_trials += probe_times["probe_trials_seconds"]
+
+        # Step 5: Finalize outcome
+        if best_trial_idx is not None and (chosen_disp is not None or selector != DEFAULT_SELECTOR):
             chosen_alpha = candidate_alphas[best_trial_idx]
             chosen_disp_norm = trials_log[best_trial_idx]["displacement_norm"]
 
@@ -1108,21 +1327,48 @@ def apply_compact_update(
                 status = "accepted_nonzero"
                 accepted = True
                 trials_log[best_trial_idx]["accepted"] = True
+                after_metrics = trial_metrics_list[best_trial_idx]
+                after_margins = trial_margins_list[best_trial_idx]
+                chosen_disp = combined_displacements[best_trial_idx]
             else:
-                # Zero cancellation: alpha was proposed but resultant displacement norm is zero
                 status = "zero_displacement"
                 accepted = False
                 trials_log[best_trial_idx]["accepted"] = False
+                after_metrics = base_metrics
+                after_margins = base_margins
+                chosen_disp = None
         else:
-            status = "rejected_all"
+            if status_utility is not None:
+                status = status_utility
+            else:
+                status = "rejected_all"
             accepted = False
             chosen_alpha = np.zeros(m, dtype=np.float64)
             chosen_disp_norm = 0.0
+            after_metrics = base_metrics
+            after_margins = base_margins
+            chosen_disp = None
 
-        before_m = base_margins.get("mean_true_margin")
-        after_m = after_margins.get("mean_true_margin")
+        before_m = base_margins.get("mean_true_margin") if base_margins else None
+        after_m = after_margins.get("mean_true_margin") if after_margins else None
         margin_change = float(after_m - before_m) if (before_m is not None and after_m is not None) else 0.0
         mean_margin_decreased = bool(after_m < (before_m - 1e-7)) if (before_m is not None and after_m is not None) else False
+
+        t_total = time.monotonic() - t_total_start
+        forward_counts = {
+            "audit_stream_batches": audit_stream_batches,
+            "audit_reference_evaluations": 1 if base_metrics is not None else 0,
+            "nonzero_trial_evaluations": nonzero_trial_evaluations,
+            "probe_reference_evaluations": probe_reference_evaluations,
+            "probe_trial_evaluations": probe_trial_evaluations,
+        }
+        timings = {
+            "audit_reference_seconds": float(t_audit_ref),
+            "audit_trials_seconds": float(t_audit_trials),
+            "probe_reference_seconds": float(t_probe_ref),
+            "probe_trials_seconds": float(t_probe_trials),
+            "total_seconds": float(t_total),
+        }
 
         receipt: Dict[str, Any] = {
             "method": method,
@@ -1147,6 +1393,12 @@ def apply_compact_update(
             "trials": trials_log,
             "optimizer_steps_in_transaction": 0,
             "ema_updates_in_transaction": 0,
+            "selector": selector,
+            "reason": reason,
+            "original_choice": original_choice,
+            "feasible_scales": feasible_scales,
+            "forward_counts": forward_counts,
+            "timings": timings,
             "telemetry": {
                 "eps": eps,
                 "absent_fp_budget": absent_fp_budget,
@@ -1156,16 +1408,30 @@ def apply_compact_update(
                 "max_norm": max_norm,
                 "num_directions": m,
                 "audit_identity_hash": audit_hash,
+                "selector": selector,
+                "selector_dice_tolerance": selector_dice_tolerance,
+                "utility_gain_tolerance": utility_gain_tolerance,
+                "utility_tie_tolerance": utility_tie_tolerance,
+                "original_choice": original_choice,
+                "feasible_scales": feasible_scales,
+                "forward_counts": forward_counts,
+                "timings": timings,
+                "reason": reason,
+                "reference_kd_loss": probe_telemetry.get("reference_kd_loss"),
+                "probe_denominator": probe_telemetry.get("probe_denominator"),
+                "probe_mask_identity": probe_telemetry.get("probe_mask_identity"),
+                "probe_identity_sha256": probe_telemetry.get("probe_identity_sha256"),
+                "classwise_kd_loss": probe_telemetry.get("classwise_kd_loss"),
             },
         }
 
-        # Step 5: Validate receipt BEFORE any live parameter modification (exception-atomic)
+        # Step 6: Validate receipt BEFORE any live parameter modification (exception-atomic)
         try:
             json.dumps(receipt, allow_nan=False)
         except (TypeError, ValueError) as exc:
             raise RuntimeError(f"receipt must be JSON-safe without NaN: {exc}") from exc
 
-        # Step 6: Direct parameter commit ONLY after successful validation
+        # Step 7: Direct parameter commit ONLY after successful validation
         if accepted and chosen_disp is not None and chosen_disp_norm > 0:
             with torch.no_grad():
                 for name, p in model.named_parameters():

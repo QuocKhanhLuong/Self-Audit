@@ -22,6 +22,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--device', default='cpu')
+    parser.add_argument('--transfer-utility', action='store_true',
+                        help='Exercise the four scalar-transfer arms with a real synthetic cache')
     args = parser.parse_args()
     out = args.out.resolve()
     out.mkdir(parents=True, exist_ok=False)
@@ -55,10 +57,19 @@ def main():
     ids=[r['id'] for r in train_meta['labeled']]
     configs={}
     configs_cache_sha = digest(cache_path)
-    for method in ('supervised','plain_kd','scalar_guard','joint_guard'):
-        c=json.loads((ROOT/'configs/compact'/f'{method}.json').read_text())
-        c.update(steps=2,warmup_steps=1,seed=217,batch_size=1,labeled_batch_size=1,
-                 unlabeled_batch_size=1,crop_size=16,pseudo_threshold=0.,max_trials=2)
+    arms = ('plain_kd', 'original', 'larger_tie', 'cross_patient_utility') if args.transfer_utility else (
+        'supervised','plain_kd','scalar_guard','joint_guard')
+    trial_cap = 8 if args.transfer_utility else 2
+    for method in arms:
+        template_method = 'scalar_guard' if method in ('original', 'larger_tie', 'cross_patient_utility') else method
+        c=json.loads((ROOT/'configs/compact'/f'{template_method}.json').read_text())
+        c.update(steps=4 if args.transfer_utility else 2,warmup_steps=1,seed=217,batch_size=1,labeled_batch_size=1,
+                 unlabeled_batch_size=1,crop_size=16,pseudo_threshold=0.,max_trials=trial_cap)
+        if args.transfer_utility:
+            c.update(selector=method if method != 'plain_kd' else 'original',
+                     probe_seed=42017, probe_batch_size=1,
+                     selector_dice_tolerance=0., utility_gain_tolerance=1e-7,
+                     utility_tie_tolerance=1e-7)
         c['model']={'name':'CompactStudent','widths':[4,8],'in_channels':3,'num_classes':4}
         c['data']={'manifest_sha256':train_sha,'budget_k':1,'labeled_ids':ids}
         c['teacher']={'cache_path':str(cache_path),'cache_sha256':digest(cache_path),
@@ -70,7 +81,7 @@ def main():
         run(method,'train.py','--config',config_path,'--data',train,'--data-sha256',train_sha,
             '--out',out/method,'--device',args.device,'--synthetic')
 
-    checkpoint=out/'plain_kd'/'final'
+    checkpoint=out/('cross_patient_utility' if args.transfer_utility else 'plain_kd')/'final'
     cp_sha=digest(checkpoint/'MANIFEST.json')
     export=out/'export'
     run('export','scripts/export_compact_student.py','--checkpoint',checkpoint,
@@ -99,6 +110,24 @@ def main():
     common=['--export',export,'--export-sha256',export_sha,'--manifest',eval_manifest,
             '--manifest-sha256',eval_sha,'--device',args.device,'--batch-size',2]
     run('infer','scripts/infer_compact_student.py',*common,'--out',out/'inference')
+    if args.transfer_utility:
+        # These are owned manufactured assets inside a fresh smoke directory.
+        # A second inference must be byte-identical with training assets absent.
+        (out/'cache').rename(out/'cache.hidden')
+        (out/'train_data').rename(out/'train_data.hidden')
+        try:
+            run('infer_without_training_assets', 'scripts/infer_compact_student.py',
+                *common, '--out', out/'inference_without_training_assets')
+            masks = sorted((out/'inference').rglob('*.npy'))
+            if not masks:
+                raise AssertionError('native inference wrote no mask arrays')
+            for original in masks:
+                reloaded = out/'inference_without_training_assets'/original.relative_to(out/'inference')
+                if digest(original) != digest(reloaded):
+                    raise AssertionError('predictions changed without teacher/support/cache')
+        finally:
+            (out/'cache.hidden').rename(out/'cache')
+            (out/'train_data.hidden').rename(out/'train_data')
     run('evaluate','scripts/evaluate_compact_student.py',*common,'--train-manifest',train,
         '--train-manifest-sha256',train_sha,'--out',out/'evaluation')
     benchmark=out/'benchmark.json'
@@ -123,11 +152,11 @@ def main():
     for rows in step_logs.values():
         if not all(value > 0 for value in rows[0]['warm_start']['weight_changes'].values()):
             raise AssertionError('a compact module was not actually updated')
-    for method in ('plain_kd','scalar_guard','joint_guard'):
+    for method in (arms if args.transfer_utility else ('plain_kd','scalar_guard','joint_guard')):
         last = step_logs[method][-1]
         if last['candidate_receipt']['denominator'] <= 0:
             raise AssertionError('fixed teacher signal did not reach the student')
-        if last['trial_count'] != len(last['transaction']['trials']) or last['trial_count'] > 2:
+        if last['trial_count'] != len(last['transaction']['trials']) or last['trial_count'] > trial_cap:
             raise AssertionError('incomplete transaction receipt or exceeded trial cap')
     if receipts['plain_kd']['counts']['pseudo_accepted'] < 1:
         raise AssertionError('plain distillation produced no nonzero update')
@@ -140,6 +169,8 @@ def main():
             'configurations':configs,'checkpoint_manifest_sha256':cp_sha,'export_manifest_sha256':export_sha,
             'export_payload_sha256':digest(export/'weights.pt'),'commands':commands,
             'training_receipts':receipts,'transaction_logs':step_logs,'matched_initialization_and_schedules':True,'benchmark':json.loads(benchmark.read_text()),
+            'transfer_utility_selectors_exercised':args.transfer_utility,
+            'inference_without_training_assets':args.transfer_utility,
             'acceptance_status':assessment['status']}
     (out/'SMOKE_REPORT.json').write_text(json.dumps(result,indent=2,allow_nan=False)+'\n')
     print(json.dumps({'status':'VERIFIED_SOFTWARE_ONLY','receipt':str(out/'SMOKE_REPORT.json')},indent=2))

@@ -33,6 +33,9 @@
       "quality_metric": "historical frame -> patient/class -> class patient mean -> Macro4",
       "quality_threshold": 0.87,
       "documentation": "docs/COMPACT_STUDENT.md",
+      "scalar_selector_default": "original",
+      "scalar_selectors": ["original", "larger_tie", "cross_patient_utility", "same_batch_utility"],
+      "transfer_utility_documentation": "docs/TRANSFER_UTILITY_RUNBOOK.md",
       "patient_training_this_delivery": false
     }
   }

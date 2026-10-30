@@ -1,0 +1,210 @@
+{
+  "architecture": {
+    "dino_required": false,
+    "in_channels": 3,
+    "init": "kaiming_normal",
+    "init_lineage": "random_kaiming_distinct_from_dino",
+    "model_class": "CompactStudent",
+    "name": "CompactStudent",
+    "norm": "group_norm",
+    "num_classes": 4,
+    "pretrained": false,
+    "widths": [
+      4,
+      8
+    ]
+  },
+  "class_map": {
+    "0": "background",
+    "1": "right_ventricle",
+    "2": "myocardium",
+    "3": "left_ventricle"
+  },
+  "config": {
+    "absent_fp_budget": 0.0,
+    "acceptance": {
+      "metric": "Macro4",
+      "min_macro4": 0.87,
+      "notes": "Locked Macro4>=.87 acceptance metadata"
+    },
+    "batch_size": 1,
+    "coefficient": 1.0,
+    "crop_size": 16,
+    "data": null,
+    "equal_wall_time": {
+      "enabled": false
+    },
+    "guard_tolerance": 1e-06,
+    "labeled_batch_size": 1,
+    "lr": 0.0003,
+    "max_trials": 8,
+    "method": "scalar_guard",
+    "model": {
+      "in_channels": 3,
+      "name": "CompactStudent",
+      "num_classes": 4,
+      "widths": [
+        4,
+        8
+      ]
+    },
+    "probe_batch_size": 1,
+    "probe_seed": 42017,
+    "pseudo_lr": 0.001,
+    "pseudo_threshold": 0.0,
+    "ridge": 1e-06,
+    "risk_budget": 0.0,
+    "same_batch_utility": false,
+    "save_every": 1000,
+    "schema": "self_audit.compact.v1",
+    "seed": 217,
+    "selector": "cross_patient_utility",
+    "selector_dice_tolerance": 0.0,
+    "steps": 4,
+    "stop_after_step": null,
+    "teacher": {
+      "cache_path": null,
+      "cache_sha256": null,
+      "lineage": {
+        "budget_k": 1,
+        "exact_labeled_ids": [
+          "synthetic_p000"
+        ]
+      },
+      "source_training_cost": "SYNTHETIC_NOT_PATIENT_EVIDENCE",
+      "teacher_identity": {
+        "checks_passed": [
+          "lineage_format",
+          "patient_ids_validated",
+          "inference_state_declared",
+          "budget_k_satisfied",
+          "label_union_satisfied",
+          "synthetic_kind_validated"
+        ],
+        "inference_state": "student",
+        "label_budget": 1,
+        "labeled_ids": [
+          "synthetic_p000"
+        ],
+        "physical_payload_status": "BLOCKED_MISSING_PAYLOAD",
+        "schema": "self_audit.compact_teacher_identity.v1",
+        "teacher_kind": "synthetic",
+        "verification_status": "CLAIMED_METADATA_UNVERIFIED",
+        "verified": false
+      }
+    },
+    "temperature": 1.0,
+    "unlabeled_batch_size": 1,
+    "utility_gain_tolerance": 1e-07,
+    "utility_tie_tolerance": 1e-07,
+    "warmup_steps": 1,
+    "weight_decay": 0.0001
+  },
+  "dino_required": false,
+  "external_teacher_required": false,
+  "lineage": {
+    "data_sha256": "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+    "label_budget": 1,
+    "lids": [
+      "synthetic_p000"
+    ],
+    "synthetic": true,
+    "teacher_identity": {
+      "checks_passed": [
+        "lineage_format",
+        "patient_ids_validated",
+        "inference_state_declared",
+        "budget_k_satisfied",
+        "label_union_satisfied",
+        "synthetic_kind_validated"
+      ],
+      "inference_state": "student",
+      "label_budget": 1,
+      "labeled_ids": [
+        "synthetic_p000"
+      ],
+      "physical_payload_status": "BLOCKED_MISSING_PAYLOAD",
+      "schema": "self_audit.compact_teacher_identity.v1",
+      "teacher_kind": "synthetic",
+      "verification_status": "CLAIMED_METADATA_UNVERIFIED",
+      "verified": false
+    },
+    "uids": [
+      "synthetic_p001",
+      "synthetic_p002"
+    ]
+  },
+  "model_class": "CompactStudent",
+  "model_file_sha256": "5ac969c8e86a71dbd4451010b893693ea657d6a3a567d7d35a500327921448e2",
+  "native_axes": {
+    "patient_volume_cine": [
+      "T",
+      "Z",
+      "Y",
+      "X"
+    ],
+    "slice_batch_tensor": [
+      "B",
+      "C",
+      "H",
+      "W"
+    ]
+  },
+  "parameters_total": 2288,
+  "parameters_trainable": 2288,
+  "payload_sha256": "c7de65da0ab4de179cd2a44d273d35b081da754fac47713dcd9eda2dfd36b328",
+  "preprocessing": {
+    "context_boundary_mode": "clamp",
+    "context_slices": [
+      -1,
+      0,
+      1
+    ],
+    "default_normalization": "prepared",
+    "input_channels": 3,
+    "normalization_recipes": {
+      "prepared": {
+        "description": "Validates that values are already in [0, 1] without renormalizing.",
+        "mode": "prepared",
+        "renormalize": false,
+        "tolerance": 1e-05,
+        "value_range": [
+          0.0,
+          1.0
+        ]
+      },
+      "raw": {
+        "axes": [
+          "T",
+          "Z",
+          "Y",
+          "X"
+        ],
+        "description": "Per-cine 0.5% and 99.5% percentile intensity scaling to [0, 1].",
+        "epsilon": 1e-06,
+        "mode": "raw",
+        "percentile_scope": "per_cine",
+        "percentiles": [
+          0.5,
+          99.5
+        ],
+        "renormalize": true,
+        "target_range": [
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "pretrained_weights_required": false,
+  "schema": "self_audit.compact.export.v1",
+  "serialization_bytes": 18060,
+  "source_checkpoint_manifest_sha256": "ca7b1d1738a0af21dee9982b857f3986882029a77a0864ec8f7557d3511304b7",
+  "source_checkpoint_payload_sha256": "211777261b6ddd1808778c376b48d5896e3f8e55ce3627c8e00078fa5f2334ee",
+  "source_sha256": "f44e1d12bda0eaacab2bdea26c3960a803a7f179e9273466be40f5c1ca4362d1",
+  "synthetic": true,
+  "teacher_included": false,
+  "teacher_memory_included": false,
+  "training_source_sha256": "f44e1d12bda0eaacab2bdea26c3960a803a7f179e9273466be40f5c1ca4362d1",
+  "weights_only_bytes": 9152
+}

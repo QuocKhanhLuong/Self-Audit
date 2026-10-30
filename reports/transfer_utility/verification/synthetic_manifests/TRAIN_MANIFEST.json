@@ -1,0 +1,32 @@
+{
+  "schema": "self_audit.data.v2",
+  "role": "training",
+  "synthetic": true,
+  "label_budget": 1,
+  "labeled": [
+    {
+      "id": "synthetic_p000",
+      "image": "synthetic_p000_cine.npy",
+      "image_sha256": "102b09199b412a792e838d6561f2ff89ae1a082279b80cf82dceb47218f889e3",
+      "masks": {
+        "0": {
+          "path": "synthetic_p000_frame0_mask.npy",
+          "sha256": "417354f0a45ae2268539e29800f33bcc6ff469cecc225c901e9173e1f25b440c"
+        }
+      }
+    }
+  ],
+  "unlabeled": [
+    {
+      "id": "synthetic_p001",
+      "image": "synthetic_p001_cine.npy",
+      "image_sha256": "ca34af0ebdf6d736c294079e7eac70202b9522eb6dfc747fc1c3b576b95eed40"
+    },
+    {
+      "id": "synthetic_p002",
+      "image": "synthetic_p002_cine.npy",
+      "image_sha256": "957c44b01d02956b39697d4a924843b377ebdeb71ef3aa16b7264c2f7c15f33e"
+    }
+  ],
+  "evaluation_ids": []
+}

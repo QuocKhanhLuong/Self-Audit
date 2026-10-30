@@ -1,0 +1,44 @@
+{
+  "schema": "self_audit.compact.transfer_utility.matrix.v1",
+  "protocol": "configs/transfer_utility/protocol.json",
+  "budget_steps": 2000,
+  "warmup_steps": 1000,
+  "jobs": [
+    {
+      "name": "plain_kd",
+      "config": "configs/transfer_utility/plain_kd.json",
+      "method": "plain_kd",
+      "selector": null,
+      "required": true
+    },
+    {
+      "name": "scalar_guard_original",
+      "config": "configs/transfer_utility/scalar_guard_original.json",
+      "method": "scalar_guard",
+      "selector": "original",
+      "required": true
+    },
+    {
+      "name": "scalar_guard_larger_tie",
+      "config": "configs/transfer_utility/scalar_guard_larger_tie.json",
+      "method": "scalar_guard",
+      "selector": "larger_tie",
+      "required": true
+    },
+    {
+      "name": "scalar_guard_cross_patient_utility",
+      "config": "configs/transfer_utility/scalar_guard_cross_patient_utility.json",
+      "method": "scalar_guard",
+      "selector": "cross_patient_utility",
+      "required": true
+    },
+    {
+      "name": "scalar_guard_same_batch_control",
+      "config": "configs/transfer_utility/scalar_guard_same_batch_control.json",
+      "method": "scalar_guard",
+      "selector": "same_batch_utility",
+      "required": false,
+      "conditional": "utility_macro4 - larger_tie_macro4 > 0.002"
+    }
+  ]
+}

@@ -185,3 +185,13 @@ real evaluation of that export with historical Macro4 >= .87 and matched-device
 inference measurements showing lower seconds/volume, peak GPU memory, peak host
 RAM and weights-only bytes than the pinned full-EMA-run reference. Foreground
 and every class remain reported separately. Tests do not establish this gate.
+
+The optional compact scalar selectors `larger_tie` and
+`cross_patient_utility` are specified in [COMPACT_STUDENT.md](COMPACT_STUDENT.md)
+and [TRANSFER_UTILITY_RUNBOOK.md](TRANSFER_UTILITY_RUNBOOK.md). The historical
+`original` selector stays the default. The utility selector maximizes a fixed
+teacher KD reduction on an independently sampled, transaction-disjoint TRAIN-U
+patient among the same hard-Dice/FP-feasible scalar trials, including zero.
+This changes the finite selection objective, not the teacher, candidate update
+rule, guard or deployment architecture. It is a teacher transfer heuristic;
+its value must be measured against original, larger-tie and plain KD on VAL.

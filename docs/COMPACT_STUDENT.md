@@ -41,6 +41,16 @@ step10000, including 1000 full-model supervised warmup steps. Its source is
 Calling the training method EMA does not mean the published inference used the
 payload's teacher state. A different selected state needs its own quality evidence.
 
+The scalar transfer-utility study uses a **different recovered B8 teacher**,
+recorded in `results/compact_acdc_l8_20261029/experiment_20261028/`:
+manifest SHA `ae36d026ce26ca188627e6ea4699695e9eb99501312ce05d5324b81e44d3ddaa`,
+payload SHA `0ae593ecb6b6f9dcb88d0a41d4a77d7b3b3a3edd87396624c3648afb1281f1b6`,
+inference state **raw student**, with the same ACDC L8 lineage. These are archived
+identity claims until the physical payload, quality receipt, source closure and
+cache are verified on the execution server. Do not substitute the historical
+`b36b...` payload or its quality result for this recovered teacher. The existing
+historical example commands below retain their original teacher meaning.
+
 Final GO requires evaluation of the exported-and-reloaded compact student plus a
 matched-device/workload benchmark showing lower end-to-end seconds/volume, peak
 GPU allocated/reserved memory, peak inference-process host RAM and deployed
@@ -97,6 +107,56 @@ Rejected proposals preserve post-supervised parameters, buffers, optimizer state
 RNG and teacher. The guarantee is only about the extra U displacement on the
 declared current TRAIN measure. It is not a test Dice, supervised-step, cumulative
 trajectory or unseen-patient guarantee.
+
+## Opt-in scalar transfer-utility selectors
+
+The [implementation contract](CPTU_IMPLEMENTATION_CONTRACT.md) and
+[pilot runbook](TRANSFER_UTILITY_RUNBOOK.md) describe this additive extension.
+`selector=original` is the default. The original finite search minimizes
+`1 - foreground_macro_Dice + ridge * sum(alpha**2) / 2` over feasible trials.
+The scalar grid is `[1, 1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128]`, with
+`alpha = s * ones(m)` and penalty `ridge * m * s**2 / 2`. Its historical search
+does not include zero as an objective competitor; zero is retained when there
+is no accepted nonzero displacement. This behavior is preserved.
+
+`larger_tie` first resolves that original search. Among feasible trials whose
+foreground Dice equals the original choice within the declared Dice tolerance,
+it selects the largest scalar. The default Dice tie tolerance is exactly zero.
+The guard, ridge and ordering of distinct Dice values are unchanged.
+
+`cross_patient_utility` retains the same proposal, grid and hard guard. It draws
+one image-only TRAIN-U probe batch from a patient absent from the proposal batch
+using an independent, checkpointed RNG. After the supervised update, it freezes
+the probe inputs, aligned fixed-teacher targets and confidence/validity mask.
+For each feasible trial it measures `gain = KD(theta_ref) - KD(theta_trial)`
+on that same probe. Zero has gain zero and reuses the reference evaluation.
+A nonzero trial must improve gain beyond `utility_gain_tolerance`; gain ties
+within `utility_tie_tolerance` prefer smaller displacement. Both tolerances
+default to `1e-7`. No eligible probe, no accepted pixels or nonfinite utility
+means zero, with an explicit reason. These tolerances do not change the Dice
+guard epsilon or absent-FP budget (both zero) or its separate numeric tolerance.
+
+Raw teacher confidence is applied before temperature softening, exactly as in
+proposal KD. Each probe loss uses the same fixed denominator and targets for
+the reference and all trials. No VAL labels, extra teacher update, optimizer
+step or affine-feature approximation enters selection. Probe patient separation
+holds within a transaction; it is not a previously unseen patient cohort or a
+generalization guarantee. Positive teacher KD gain is not clinical correctness.
+The optional `same_batch_utility` control reuses the proposal batch explicitly.
+
+The archived compact recipe at `d93c4de` samples a batch of slices from one
+patient, applies image-geometry random crops with edge padding, and excludes
+padding through cached validity. It does **not** call the native EMA trainer's
+flip or strong-intensity augmentation helpers. The scalar pilot preserves this
+actual crop-only recipe for both proposal and probe. Labeled slice sampling is
+foreground-aware with probability .5 inside budgeted L; U frame/slice sampling
+is uniform and image-only. Inputs are already normalized TZYX arrays in [0,1].
+
+Exact resume records global RNGs, the proposal and probe generators, optimizer,
+coverage and protocol identities. A legacy compact checkpoint remains loadable
+for export, but cannot claim exact training resume without those states. Probe
+assets and selector state are training-only: deployed exports remain independent
+of teacher, support and probe data.
 
 ## Label lineage and expansion
 

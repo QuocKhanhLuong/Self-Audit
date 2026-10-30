@@ -288,6 +288,9 @@ def train(
     device="cuda",
     synthetic=False,
     stop_steps=None,
+    stop_after_step=None,
+    resume=None,
+    resume_sha256=None,
     allow_full_run=False,
 ):
     if config.get("schema") == "self_audit.compact.v1":
@@ -300,6 +303,9 @@ def train(
             device=device,
             synthetic=synthetic,
             stop_steps=stop_steps,
+            stop_after_step=stop_after_step,
+            resume=resume,
+            resume_sha256=resume_sha256,
             allow_full_run=allow_full_run,
         )
     c = validate_config(config)

@@ -1,0 +1,77 @@
+{
+  "status": "PASS",
+  "source_sha256_before": "f44e1d12bda0eaacab2bdea26c3960a803a7f179e9273466be40f5c1ca4362d1",
+  "source_sha256_after": "f44e1d12bda0eaacab2bdea26c3960a803a7f179e9273466be40f5c1ca4362d1",
+  "commands": [
+    {
+      "name": "check_repo",
+      "argv": [
+        "/Users/alvinluong/miniforge3/bin/python",
+        "scripts/check_repo.py"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.024795208126306534,
+      "source_sha256": "f44e1d12bda0eaacab2bdea26c3960a803a7f179e9273466be40f5c1ca4362d1",
+      "stdout_sha256": "f9317b13e55fd8916cf0f91882298e60bc9274551929baa2de5c15e80fd35b83",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "pytest",
+      "argv": [
+        "/Users/alvinluong/miniforge3/bin/python",
+        "-m",
+        "pytest",
+        "-q"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 132.8068466251716,
+      "source_sha256": "f44e1d12bda0eaacab2bdea26c3960a803a7f179e9273466be40f5c1ca4362d1",
+      "stdout_sha256": "e598cbcfdc528130dc7ad362ad307a35f14833c921e2640cfb63c1f1a0a0da62",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "original_parity",
+      "argv": [
+        "/Users/alvinluong/miniforge3/bin/python",
+        "scripts/verify_compact_original_parity.py",
+        "--out",
+        "/private/tmp/cptu-final-verify-20261030-1034/ORIGINAL_PARITY.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.0269701248034835,
+      "source_sha256": "f44e1d12bda0eaacab2bdea26c3960a803a7f179e9273466be40f5c1ca4362d1",
+      "stdout_sha256": "23c12f14e02ccbcd60a1a67ba9c5238c1a5e4ec234d3873c213655092d91b979",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "smoke",
+      "argv": [
+        "/Users/alvinluong/miniforge3/bin/python",
+        "scripts/smoke_compact_pipeline.py",
+        "--transfer-utility",
+        "--device",
+        "cpu",
+        "--out",
+        "/private/tmp/cptu-final-verify-20261030-1034/smoke"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 11.291765541303903,
+      "source_sha256": "f44e1d12bda0eaacab2bdea26c3960a803a7f179e9273466be40f5c1ca4362d1",
+      "stdout_sha256": "c45258c429eac1ee31ea9ac437215a90920fb57e232b51ecb0d991fbea2b9a18",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "cpu_profile",
+      "argv": [
+        "/Users/alvinluong/miniforge3/bin/python",
+        "-c",
+        "import sys;sys.path.insert(0,'/Users/alvinluong/orca/workspaces/Self-Audit/cptu-scalar-20261030');from scripts.run_transfer_utility_pilot import run_bounded_profile;r=run_bounded_profile('/private/tmp/cptu-final-verify-20261030-1034/cpu_profile_config.json','/private/tmp/cptu-final-verify-20261030-1034/cpu_profile',device=\"cpu\",synthetic=True,max_steps=8);print(r[\"status\"]);sys.exit(0 if r[\"status\"]==\"PASS\" else 1)"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 2.7962927906773984,
+      "source_sha256": "f44e1d12bda0eaacab2bdea26c3960a803a7f179e9273466be40f5c1ca4362d1",
+      "stdout_sha256": "c26de83abdc9496cd1301470918ec39ecca1cf389ef0ae1c6504da1800d1c431",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}
