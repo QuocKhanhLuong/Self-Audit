@@ -1,0 +1,52 @@
+{
+  "schema": "self_audit.semi_v2",
+  "method": "ema_full",
+  "source_sha256": "e3b5b9469d5378b50677b7225eddd16421d4de856ee6d883b4dfc719f98905d2",
+  "parameters": 32865530,
+  "device": "cuda",
+  "backbone": {
+    "pretrained": true,
+    "weights_sha256": "21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54",
+    "source_commit": "6876159a11b4df116f30f667f8c9888617df0751",
+    "lineage": "user_supplied_hash_pinned;not_independent_upstream_certification"
+  },
+  "synthetic": false,
+  "label_budget": 8,
+  "supervision": "dense TRAIN subset; audit included; never no-GT",
+  "pseudo_update_scope": "full",
+  "window": {
+    "mode": "none",
+    "dim": 32,
+    "radius_min": 0.5,
+    "radius_max": 4.0,
+    "offset_limit": 2.0,
+    "initial_radius": 1.0,
+    "gamma_init": 0.001
+  },
+  "meta_window": null,
+  "geometry_scope": "none",
+  "outer_loss": null,
+  "batch_size": 8,
+  "batch_protocol": "one_patient_per_role; native_grid; equal_slice_audit_mass",
+  "crop_size": 256,
+  "crop_policy": "image_geometry_random; edge_pad; ignore_padding_in_all_losses; no_resize",
+  "native_supervised_loss": "focal_dice",
+  "supervised_loss": {
+    "name": "focal_dice",
+    "gamma": 2.0,
+    "focal_weight": 1.0,
+    "dice_weight": 1.0
+  },
+  "lr_scheduler": {
+    "name": "train_plateau",
+    "interval_steps": 100,
+    "factor": 0.5,
+    "patience": 5,
+    "threshold": 0.0001,
+    "threshold_mode": "rel",
+    "cooldown": 0,
+    "min_lr_factor": 0.01,
+    "eps": 1e-08
+  },
+  "prediction_model": "student"
+}

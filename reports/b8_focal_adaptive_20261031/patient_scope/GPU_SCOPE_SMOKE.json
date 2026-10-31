@@ -1,0 +1,138 @@
+{
+  "status": "PASS",
+  "scope": "one discarded-weight canonical supervised diagnostic; no quality claim",
+  "source_sha256": "e3b5b9469d5378b50677b7225eddd16421d4de856ee6d883b4dfc719f98905d2",
+  "config_sha256": "281670278fd0f2af08ac514f481a1c42368e997560f8acc91aa16ed942eb5f8d",
+  "data_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+  "supervised_loss": {
+    "name": "focal_dice",
+    "gamma": 2.0,
+    "focal_weight": 1.0,
+    "dice_weight": 1.0
+  },
+  "lr_scheduler": {
+    "name": "train_plateau",
+    "interval_steps": 100,
+    "factor": 0.5,
+    "patience": 5,
+    "threshold": 0.0001,
+    "threshold_mode": "rel",
+    "cooldown": 0,
+    "min_lr_factor": 0.01,
+    "eps": 1e-08
+  },
+  "observed": [
+    {
+      "scopes": {
+        "encoder": {
+          "parameters": 27818592,
+          "grad_norm": 4.519688606262207,
+          "weight_change_norm": 0.15756888687610626,
+          "optimizer_owns_all": true
+        },
+        "input_adapter": {
+          "parameters": 54,
+          "grad_norm": 0.004118230193853378,
+          "weight_change_norm": 0.00022044529032427818,
+          "optimizer_owns_all": true
+        },
+        "lateral": {
+          "parameters": 304800,
+          "grad_norm": 0.4210352599620819,
+          "weight_change_norm": 0.016549261286854744,
+          "optimizer_owns_all": true
+        },
+        "up": {
+          "parameters": 86432,
+          "grad_norm": 0.4287673830986023,
+          "weight_change_norm": 0.008816216140985489,
+          "optimizer_owns_all": true
+        },
+        "refine": {
+          "parameters": 4613376,
+          "grad_norm": 1.8355028629302979,
+          "weight_change_norm": 0.06438171863555908,
+          "optimizer_owns_all": true
+        },
+        "detail": {
+          "parameters": 19456,
+          "grad_norm": 0.19530226290225983,
+          "weight_change_norm": 0.004183814860880375,
+          "optimizer_owns_all": true
+        },
+        "fuse": {
+          "parameters": 22688,
+          "grad_norm": 0.8479338884353638,
+          "weight_change_norm": 0.004518367815762758,
+          "optimizer_owns_all": true
+        },
+        "head": {
+          "parameters": 132,
+          "grad_norm": 0.29167795181274414,
+          "weight_change_norm": 0.000875031400937587,
+          "optimizer_owns_all": true
+        }
+      },
+      "loss": 1.6967432498931885,
+      "batch_shape": [
+        8,
+        3,
+        256,
+        256
+      ],
+      "optimizers": [
+        {
+          "type": "AdamW",
+          "groups": [
+            {
+              "lr": 3e-05,
+              "weight_decay": 0.0001,
+              "parameters": 32865398
+            }
+          ]
+        },
+        {
+          "type": "SGD",
+          "groups": [
+            {
+              "lr": 0.003,
+              "weight_decay": 0.0,
+              "parameters": 132
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "report": {
+    "schema": "self_audit.semi_v2",
+    "status": "INTERRUPTED",
+    "synthetic": false,
+    "quality": "NOT_EVALUATED",
+    "step": 1,
+    "steps": 10000,
+    "supervised_updates": 1,
+    "pseudo_accepted": 0,
+    "ema_updates": 1,
+    "geometry_updates": 0,
+    "elapsed_seconds": 1.9079178069951013,
+    "seen_supervised": [
+      "patient007"
+    ],
+    "seen_audit": [
+      "patient010"
+    ],
+    "seen_unlabeled": [
+      "patient001"
+    ],
+    "checkpoint_manifest_sha256": "e64e7e1a52db2f15ae327f526c6cce7a3ab459928e534765eecfe4990516f84a",
+    "label_budget": 8,
+    "label_reads_outside_budget": [],
+    "scheduler_updates": 0
+  },
+  "seconds": 9.025614910991862,
+  "peak_allocated": 3314556928,
+  "peak_reserved": 3726639104,
+  "torch": "2.14.1+cu132",
+  "gpu": "NVIDIA RTX 5000 Ada Generation"
+}

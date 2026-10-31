@@ -69,7 +69,8 @@ file ID, so an API metadata quota failure cannot erase checksum evidence.
 
 The server plan can opt into `drive_flat_new_folder` for a newly created folder.
 This uses a one-file staging directory and `rclone copy --no-check-dest`, which
-avoids a destination listing before writing. Logical paths are flattened, e.g.
+requests skipping destination checks; the backend may still query Drive and
+encounter quota errors. Logical paths are flattened, e.g.
 `full_checkpoint__weights.pt` and `raw_student__raw_student.pt`. Upload intent is
 persisted before the command; an uncertain write is verified rather than blindly
 repeated. Remote SHA256 verification is still mandatory. If Drive's metadata

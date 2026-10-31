@@ -1,0 +1,52 @@
+{
+  "status": "PASS",
+  "scope": "manufactured execution, checkpoint/resume and LR decay; no quality or bitwise CUDA parity claim",
+  "source_sha256": "e3b5b9469d5378b50677b7225eddd16421d4de856ee6d883b4dfc719f98905d2",
+  "config_sha256": "5783f8212b5bb30aae6ba41fd23fe295c171f0e3250cddf5264f2a26e4453f7c",
+  "manifest_sha256": "420e65930f3f57c6088ca8dc082ccac96e910d724c903d9185efaa3c4d9a56bd",
+  "payload_sha256": "4458fc47e56fad601131f3e747b2a6f434696d856be275ed1d6ffc59474f9c8d",
+  "checkpoint_manifest_sha256": "a0db0b296959d31c3438fa9c12cdf3283b5daba82621b7fa2b6e717ccaba3b66",
+  "device": "cuda",
+  "report": {
+    "schema": "self_audit.semi_v2",
+    "status": "COMPLETED",
+    "synthetic": true,
+    "quality": "NOT_EVALUATED",
+    "steps": 8,
+    "supervised_updates": 8,
+    "pseudo_accepted": 6,
+    "ema_updates": 8,
+    "geometry_updates": 0,
+    "elapsed_seconds": 1.383730873116292,
+    "seen_supervised": [
+      "synthetic_000",
+      "synthetic_001",
+      "synthetic_002"
+    ],
+    "seen_audit": [
+      "synthetic_000",
+      "synthetic_001",
+      "synthetic_002"
+    ],
+    "seen_unlabeled": [
+      "synthetic_003",
+      "synthetic_004",
+      "synthetic_005"
+    ],
+    "final_manifest_sha256": "a0db0b296959d31c3438fa9c12cdf3283b5daba82621b7fa2b6e717ccaba3b66",
+    "label_budget": 3,
+    "label_reads_outside_budget": [],
+    "guard_scope": "extra pseudo step vs supervised-only state on current TRAIN audit slice only",
+    "scheduler_updates": 3
+  },
+  "lr_scheduler": {
+    "num_updates": 3,
+    "metric_count": 0,
+    "body_lr": 0.00025,
+    "head_lr": 0.0075
+  },
+  "restored_partial_window_count": 1,
+  "restored_cuda_rng_states": 1,
+  "peak_allocated": 4610048,
+  "peak_reserved": 6291456
+}

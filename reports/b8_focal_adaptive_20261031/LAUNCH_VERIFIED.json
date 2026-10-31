@@ -1,0 +1,40 @@
+{
+  "status": "RUNNING",
+  "observed_utc": "2026-10-31T03:16:25.877104+00:00",
+  "train_started": {
+    "time": 1793416470.3259802,
+    "command": [
+      "/workspace/cptu-runtime-20261030/bin/python",
+      "train.py",
+      "--config",
+      "/workspace/Self-Audit-b8-focal-adaptive-20261031/configs/b8_focal_adaptive.json",
+      "--data",
+      "/root/self-audit-assets/data/prepared/ACDC_L8_S42/train.json",
+      "--data-sha256",
+      "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+      "--out",
+      "/workspace/ema_full_B8_focal_adaptive_20261031T030334Z_dbcf83c/training",
+      "--device",
+      "cuda",
+      "--allow-full-run"
+    ]
+  },
+  "last_step": 782,
+  "source_commit": "dbcf83ccd84a5b774a1e33faead7ed6cbd1f973a",
+  "runner_commit": "780a632d7228b730725b945d96119d1f380935ae",
+  "plan_sha256": "e6724c68a2844ef93683d919dc82f316f23beaa72ca5d897379220e00cec159c",
+  "new_full_training_runs": 1,
+  "final_weights": "NOT_YET_CREATED",
+  "quality": "NOT_EVALUATED",
+  "remote_weight_verification": "PENDING_TRAINING_COMPLETION",
+  "drive_probe": {
+    "file_id": "1-s_XejCuME165vtnSMHixnjy1nYw5FXU",
+    "parent_id": "14CO6QFWtKBHFB9i0FinbdOvG607Lk7AA",
+    "bytes": 103,
+    "sha256": "e916133f5b00980634641ce518fa2100a59b0cff72dad84d9f9160f759d7921c",
+    "creation_method": "Drive connector copy of an actual rclone-uploaded and SHA256-readback-verified probe; current target ID re-downloaded by rclone before training",
+    "original_rclone_probe_id": "1KHkngG15hzea98iPc7VVZ9oK0PTSqitm",
+    "readback": "SHA256_MATCH",
+    "reverified_before_launch": true
+  }
+}

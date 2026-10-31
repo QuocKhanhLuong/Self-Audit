@@ -1,0 +1,39 @@
+{
+  "training_commit": "dbcf83ccd84a5b774a1e33faead7ed6cbd1f973a",
+  "runner_commit": "780a632d7228b730725b945d96119d1f380935ae",
+  "source_sha256": "e3b5b9469d5378b50677b7225eddd16421d4de856ee6d883b4dfc719f98905d2",
+  "historical_training_commit": "c06c4c9ae08610e047f1e960712f551690de4067",
+  "source_bundle_sha256": "4e7415fb4410c963eb53d7e324c9ba6b1908ca2ced253d2d63cbdda82ae8e400",
+  "experiment": "one separately authorized fresh B8 focal + Dice and TRAIN plateau variant",
+  "path_mapping": {
+    "source_repo": {
+      "historical": "/root/self-audit-pilot-artifacts/backbone/dinov3",
+      "local": "/workspace/b8-repro-setup-20261031/dinov3"
+    },
+    "weights": {
+      "historical": "/root/self-audit-pilot-artifacts/backbone/pretrained/dinov3_convnext_tiny_pretrain_lvd1689m-21b726bb.pth",
+      "local": "/workspace/b8-repro-setup-20261031/pretrained/dinov3_convnext_tiny_pretrain_lvd1689m-21b726bb.pth"
+    }
+  },
+  "changed_experimental_factors": {
+    "supervised_loss": {
+      "name": "focal_dice",
+      "gamma": 2.0,
+      "focal_weight": 1.0,
+      "dice_weight": 1.0
+    },
+    "lr_scheduler": {
+      "name": "train_plateau",
+      "interval_steps": 100,
+      "factor": 0.5,
+      "patience": 5,
+      "threshold": 0.0001,
+      "threshold_mode": "rel",
+      "cooldown": 0,
+      "min_lr_factor": 0.01,
+      "eps": 1e-08
+    }
+  },
+  "same_split_seed_initialization_budget": true,
+  "baseline_payload_sha256": "ae89c3378fe02f30bf5e64c8977bfc260e126a4c7b9218510eb6dcdfc99cb8e1"
+}
