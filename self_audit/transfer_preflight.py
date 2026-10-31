@@ -900,6 +900,10 @@ def check_preflight(
 
         t_manifest_file = t_dir / "MANIFEST.json"
         if not t_manifest_file.is_file():
+            if validated_repro is not None:
+                receipt["reasons"].append(f"Full checkpoint MANIFEST.json not found in reproduction checkpoint dir: {t_dir}")
+                receipt["status"] = "NOT_RUN"
+                return receipt
             t_manifest_file = t_dir / "RAW_STUDENT.json"
         if not t_manifest_file.is_file():
             receipt["reasons"].append(f"Teacher manifest not found in checkpoint dir: {t_dir}")
@@ -929,13 +933,10 @@ def check_preflight(
                 receipt["reasons"].append(f"Teacher manifest SHA does not match reproduction receipt {validated_repro['checkpoint_manifest_sha256']}")
                 receipt["status"] = "NOT_RUN"
                 return receipt
-            allowed_pshas = {
-                validated_repro["raw_student_sha256"].lower(),
-                validated_repro["checkpoint_payload_sha256"].lower(),
-            }
-            if t_payload_sha.lower() not in allowed_pshas:
+            expected_repro_psha = validated_repro["checkpoint_payload_sha256"].lower()
+            if t_payload_sha.lower() != expected_repro_psha:
                 receipt["status"] = "NOT_RUN"
-                receipt["reasons"].append(f"teacher payload {t_payload_sha} not in reproduction receipt payloads {allowed_pshas}")
+                receipt["reasons"].append(f"reproduction teacher payload {t_payload_sha} must equal full checkpoint payload {expected_repro_psha}")
                 return receipt
 
         payload_p: Optional[Path] = None

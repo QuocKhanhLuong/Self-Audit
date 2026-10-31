@@ -267,11 +267,27 @@ def test_validate_reproduction_receipt_failures(valid_reproduction_receipt_dict,
     with pytest.raises(ValueError, match="invalid reproduction receipt schema"):
         validate_reproduction_receipt(bad_schema)
 
-    # 3. Macro4 < 0.87
+    # 3. Macro4 < 0.87 or > 1.0
     bad_macro = copy.deepcopy(valid_reproduction_receipt_dict)
     bad_macro["metrics"]["test50"]["Macro4"] = 0.869
-    with pytest.raises(ValueError, match="Macro4=0.869 < 0.87 minimum requirement"):
+    with pytest.raises(ValueError, match="Macro4=0.869 must be finite in"):
         validate_reproduction_receipt(bad_macro)
+
+    bad_macro_high = copy.deepcopy(valid_reproduction_receipt_dict)
+    bad_macro_high["metrics"]["test50"]["Macro4"] = 1.001
+    with pytest.raises(ValueError, match="Macro4=1.001 must be finite in"):
+        validate_reproduction_receipt(bad_macro_high)
+
+    # 3b. Remote file bytes non-int or <= 0
+    bad_bytes_bool = copy.deepcopy(valid_reproduction_receipt_dict)
+    bad_bytes_bool["remote_files"][0]["bytes"] = True
+    with pytest.raises(ValueError, match="must be positive int"):
+        validate_reproduction_receipt(bad_bytes_bool)
+
+    bad_bytes_zero = copy.deepcopy(valid_reproduction_receipt_dict)
+    bad_bytes_zero["remote_files"][0]["bytes"] = 0
+    with pytest.raises(ValueError, match="must be positive int"):
+        validate_reproduction_receipt(bad_bytes_zero)
 
     # 4. Quality gate != "GO"
     bad_gate = copy.deepcopy(valid_reproduction_receipt_dict)
@@ -320,6 +336,72 @@ def test_validate_reproduction_receipt_failures(valid_reproduction_receipt_dict,
     receipt_file.write_text(json.dumps(valid_reproduction_receipt_dict))
     with pytest.raises(ValueError, match="reproduction receipt file hash mismatch"):
         validate_reproduction_receipt(receipt_file, expected_receipt_sha256="0000000000000000000000000000000000000000000000000000000000000000")
+
+    # 11. Physical checkpoint MANIFEST size mismatch vs remote bytes
+    phys_dir = tmp_path / "phys_cp"
+    phys_dir.mkdir()
+    phys_mfile = phys_dir / "MANIFEST.json"
+    m_content = json.dumps({
+        "schema": "self_audit.checkpoint.v2",
+        "method": "ema_full",
+        "step": 10000,
+        "source_sha256": valid_reproduction_receipt_dict["source_sha256"],
+        "data": {"labeled_ids": valid_reproduction_receipt_dict["labeled_ids"]},
+    })
+    phys_mfile.write_text(m_content)
+    m_sha = digest(phys_mfile)
+    m_bytes = phys_mfile.stat().st_size
+
+    phys_rec = copy.deepcopy(valid_reproduction_receipt_dict)
+    phys_rec["checkpoint_manifest_sha256"] = m_sha
+    for rf in phys_rec["remote_files"]:
+        if rf["file"] == "full_checkpoint/MANIFEST.json":
+            rf["sha256"] = m_sha
+            rf["bytes"] = m_bytes + 1  # Intentionally wrong bytes count!
+
+    with pytest.raises(ValueError, match="full checkpoint MANIFEST.json size mismatch"):
+        validate_reproduction_receipt(phys_rec, checkpoint_dir=phys_dir)
+
+    # 12. Physical checkpoint MANIFEST step != 10000
+    phys_bad_step = phys_dir / "bad_step"
+    phys_bad_step.mkdir()
+    (phys_bad_step / "MANIFEST.json").write_text(json.dumps({
+        "method": "ema_full", "step": 9000,
+        "source_sha256": valid_reproduction_receipt_dict["source_sha256"],
+        "data": {"labeled_ids": valid_reproduction_receipt_dict["labeled_ids"]},
+    }))
+    bad_step_sha = digest(phys_bad_step / "MANIFEST.json")
+    phys_rec_bad_step = copy.deepcopy(valid_reproduction_receipt_dict)
+    phys_rec_bad_step["checkpoint_manifest_sha256"] = bad_step_sha
+    for rf in phys_rec_bad_step["remote_files"]:
+        if rf["file"] == "full_checkpoint/MANIFEST.json":
+            rf["sha256"] = bad_step_sha
+            rf["bytes"] = (phys_bad_step / "MANIFEST.json").stat().st_size
+    with pytest.raises(ValueError, match="checkpoint MANIFEST.json step must be 10000"):
+        validate_reproduction_receipt(phys_rec_bad_step, checkpoint_dir=phys_bad_step)
+
+    # 13. Tensor mismatch between raw_student.pt and checkpoint student weights
+    w_file = phys_dir / "weights.pt"
+    raw_pt = phys_dir / "raw_student.pt"
+    t1 = {"conv.weight": torch.tensor([1.0, 2.0])}
+    t2 = {"conv.weight": torch.tensor([1.0, 99.0])}
+    torch.save(t1, raw_pt)
+    torch.save({"student": t2, "method": "ema_full"}, w_file)
+
+    for rf in phys_rec["remote_files"]:
+        if rf["file"] == "full_checkpoint/MANIFEST.json":
+            rf["bytes"] = m_bytes
+        elif rf["file"] == "full_checkpoint/weights.pt":
+            rf["sha256"] = digest(w_file)
+            rf["bytes"] = w_file.stat().st_size
+        elif rf["file"] == "raw_student/raw_student.pt":
+            rf["sha256"] = digest(raw_pt)
+            rf["bytes"] = raw_pt.stat().st_size
+    phys_rec["checkpoint_payload_sha256"] = digest(w_file)
+    phys_rec["raw_student_sha256"] = digest(raw_pt)
+
+    with pytest.raises(ValueError, match="weight tensor mismatch"):
+        validate_reproduction_receipt(phys_rec, checkpoint_dir=phys_dir, raw_student_path=raw_pt)
 
 
 # ---------------------------------------------------------------------------

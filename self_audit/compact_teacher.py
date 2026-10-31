@@ -471,9 +471,9 @@ def validate_reproduction_receipt(
         raise ValueError("reproduction receipt missing 'metrics.test50'")
     test50 = metrics["test50"]
     macro4 = test50.get("Macro4")
-    if type(macro4) not in (int, float) or not np.isfinite(macro4) or macro4 < 0.87:
+    if type(macro4) not in (int, float) or not np.isfinite(macro4) or macro4 < 0.87 or macro4 > 1.0:
         raise ValueError(
-            f"reproduction teacher quality gate failed: test50.Macro4={macro4} < 0.87 minimum requirement"
+            f"reproduction teacher quality gate failed: test50.Macro4={macro4} must be finite in [0.87, 1.0]"
         )
 
     # Remote files verification check: strictly check hashes, sizes, and reject contradictory duplicates
@@ -493,8 +493,8 @@ def validate_reproduction_receipt(
 
         if not fname or not isinstance(fname, str):
             raise ValueError(f"remote_file missing valid filename: {item}")
-        if not isinstance(fbytes, int) or fbytes <= 0:
-            raise ValueError(f"remote_file '{fname}' has invalid byte count {fbytes}")
+        if type(fbytes) is not int or fbytes <= 0:
+            raise ValueError(f"remote_file '{fname}' has invalid byte count {fbytes!r}; must be positive int")
         if not isinstance(fsha, str) or re.fullmatch(r"[0-9a-fA-F]{64}", fsha) is None:
             raise ValueError(f"remote_file '{fname}' has invalid sha256 {fsha}")
         if not fdrive or not isinstance(fdrive, str):
@@ -528,6 +528,7 @@ def validate_reproduction_receipt(
             )
 
     # Physical checks on disk if paths provided
+    payload_p = None
     if checkpoint_dir is not None:
         cd = Path(checkpoint_dir).resolve()
         m_file = cd / "MANIFEST.json"
@@ -539,8 +540,36 @@ def validate_reproduction_receipt(
                 f"reproduction checkpoint manifest hash mismatch: got {actual_msha}, "
                 f"expected {receipt_data['checkpoint_manifest_sha256']}"
             )
-        find_checkpoint_payload(cd, receipt_data["checkpoint_payload_sha256"])
+        if "full_checkpoint/MANIFEST.json" in verified_remote_files:
+            expected_mbytes = verified_remote_files["full_checkpoint/MANIFEST.json"]["bytes"]
+            actual_mbytes = m_file.stat().st_size
+            if actual_mbytes != expected_mbytes:
+                raise ValueError(
+                    f"full checkpoint MANIFEST.json size mismatch: {actual_mbytes}b != remote {expected_mbytes}b"
+                )
 
+        # Validate checkpoint manifest contents
+        cp_manifest = json.loads(m_file.read_text())
+        if cp_manifest.get("method") != "ema_full":
+            raise ValueError(f"checkpoint MANIFEST.json method must be 'ema_full', got {cp_manifest.get('method')!r}")
+        if cp_manifest.get("step") != 10000:
+            raise ValueError(f"checkpoint MANIFEST.json step must be 10000, got {cp_manifest.get('step')!r}")
+        if cp_manifest.get("source_sha256", "").lower() != receipt_data["source_sha256"].lower():
+            raise ValueError("checkpoint MANIFEST.json source_sha256 mismatch with receipt")
+        manifest_lids = cp_manifest.get("data", {}).get("labeled_ids") or cp_manifest.get("labeled_ids")
+        if manifest_lids and sorted(manifest_lids) != sorted(receipt_data["labeled_ids"]):
+            raise ValueError("checkpoint MANIFEST.json labeled_ids mismatch with receipt")
+
+        payload_p = find_checkpoint_payload(cd, receipt_data["checkpoint_payload_sha256"])
+        if "full_checkpoint/weights.pt" in verified_remote_files:
+            expected_pbytes = verified_remote_files["full_checkpoint/weights.pt"]["bytes"]
+            actual_pbytes = payload_p.stat().st_size
+            if actual_pbytes != expected_pbytes:
+                raise ValueError(
+                    f"full checkpoint payload size mismatch: {actual_pbytes}b != remote {expected_pbytes}b"
+                )
+
+    raw_state = None
     if raw_student_path is not None:
         rp = Path(raw_student_path).resolve()
         if not rp.is_file():
@@ -551,12 +580,37 @@ def validate_reproduction_receipt(
                 f"raw_student payload hash mismatch: got {actual_rsha}, "
                 f"expected {receipt_data['raw_student_sha256']}"
             )
+        if "raw_student/raw_student.pt" in verified_remote_files:
+            expected_rbytes = verified_remote_files["raw_student/raw_student.pt"]["bytes"]
+            actual_rbytes = rp.stat().st_size
+            if actual_rbytes != expected_rbytes:
+                raise ValueError(
+                    f"raw_student.pt size mismatch: {actual_rbytes}b != remote {expected_rbytes}b"
+                )
         raw_state = torch.load(rp, map_location="cpu", weights_only=True)
         if not isinstance(raw_state, Mapping):
             raise ValueError(f"raw_student.pt must contain a state_dict mapping, got {type(raw_state)}")
         for k, v in raw_state.items():
             if isinstance(v, torch.Tensor) and not torch.isfinite(v).all():
                 raise ValueError(f"non-finite weights in raw_student.pt at key '{k}'")
+
+    # If both checkpoint_dir and raw_student_path provided, compare raw student tensors to full payload student
+    if checkpoint_dir is not None and raw_student_path is not None and payload_p is not None and raw_state is not None:
+        full_payload = torch.load(payload_p, map_location="cpu", weights_only=True)
+        if not isinstance(full_payload, Mapping) or "student" not in full_payload:
+            raise ValueError("full checkpoint payload must contain 'student' mapping")
+        student_state = full_payload["student"]
+        if not isinstance(student_state, Mapping):
+            raise ValueError("checkpoint student state must be a mapping")
+        if set(raw_state.keys()) != set(student_state.keys()):
+            raise ValueError(
+                f"state_dict key mismatch between raw_student.pt and checkpoint student: "
+                f"raw={set(raw_state.keys())} vs checkpoint={set(student_state.keys())}"
+            )
+        for k, raw_t in raw_state.items():
+            stud_t = student_state[k]
+            if not torch.equal(raw_t, stud_t):
+                raise ValueError(f"weight tensor mismatch between raw_student.pt and checkpoint student at '{k}'")
 
     res = dict(receipt_data)
     # Claims in a dict alone cannot stamp physical verified
