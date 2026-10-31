@@ -67,6 +67,18 @@ upload failure records `UPLOAD_PENDING` and keeps all local weights. Successful
 byte readback is persisted in `UPLOAD_PROGRESS.json` before querying the Drive
 file ID, so an API metadata quota failure cannot erase checksum evidence.
 
+The server plan can opt into `drive_flat_new_folder` for a newly created folder.
+This uses a one-file staging directory and `rclone copy --no-check-dest`, which
+avoids a destination listing before writing. Logical paths are flattened, e.g.
+`full_checkpoint__weights.pt` and `raw_student__raw_student.pt`. Upload intent is
+persisted before the command; an uncertain write is verified rather than blindly
+repeated. Remote SHA256 verification is still mandatory. If Drive's metadata
+quota prevents discovery, the run records `UPLOAD_PENDING`; it cannot claim a
+verified backup from upload success alone. Both weight payloads are attempted.
+A pre-created probe in the same target folder may be pinned by exact Drive file
+ID and re-downloaded before launch, avoiding a filename lookup. Previously
+discovered IDs are likewise re-downloaded and hashed on retry.
+
 Evaluation uses the same historical native frame → patient/class → class mean
 aggregation. Report Macro4, foreground and BG/RV/MYO/LV separately on VAL18 and
 the already-exposed development TEST50. Final checkpoint only; no tuning on

@@ -60,6 +60,48 @@ def test_write_probe_needs_bytes_but_not_metadata_query(tmp_path, monkeypatch):
     assert proof['readback'] == 'SHA256_MATCH' and proof['drive_id'] is None
 
 
+def test_flat_upload_attempts_once_then_only_verifies(tmp_path, monkeypatch):
+    payload = tmp_path / 'weights.pt'; payload.write_bytes(b'actual weights')
+    backup = runner.DriveBackup('KhanhDrive:', 'fresh-parent', tmp_path / 'log', attempts=3, flat_new_folder=True)
+    uploads = []
+    def upload(argv, log):
+        assert argv[:2] == ['rclone', 'copy'] and '--no-check-dest' in argv
+        staged = Path(argv[2]) / 'raw_student__raw_student.pt'
+        assert staged.read_bytes() == payload.read_bytes()
+        uploads.append(argv)
+    monkeypatch.setattr(runner, 'command', upload)
+    monkeypatch.setattr(runner.time, 'sleep', lambda n: None)
+    def quota(name):
+        raise RuntimeError('readback metadata quota')
+    monkeypatch.setattr(backup, 'readback', quota)
+    for _ in range(2):
+        with pytest.raises(RuntimeError, match='UPLOAD_PENDING'):
+            backup.upload_verified(payload, 'raw_student/raw_student.pt')
+    assert len(uploads) == 1
+    intent = json.loads((tmp_path / 'UPLOAD_PROGRESS.json').read_text())['files']['raw_student/raw_student.pt']
+    assert intent['upload_state'] == 'UPLOAD_COMMAND_SUCCEEDED'
+    assert intent['sha256'] == runner.sha256(payload)
+
+
+def test_uncertain_flat_upload_never_blindly_creates_duplicate(tmp_path, monkeypatch):
+    payload = tmp_path / 'weights.pt'; payload.write_bytes(b'actual weights')
+    backup = runner.DriveBackup('KhanhDrive:', 'fresh-parent', tmp_path / 'log', attempts=1, flat_new_folder=True)
+    calls = []
+    def crash(*args):
+        calls.append(args)
+        raise RuntimeError('connection died after possible server commit')
+    monkeypatch.setattr(runner, 'command', crash)
+    monkeypatch.setattr(backup, 'readback', lambda n: (_ for _ in ()).throw(RuntimeError('quota')))
+    for _ in range(2):
+        with pytest.raises(RuntimeError, match='UPLOAD_PENDING'):
+            backup.upload_verified(payload, 'full_checkpoint/weights.pt')
+    assert len(calls) == 1
+    with pytest.raises(ValueError, match='different bytes'):
+        backup.upload_new_flat_file(payload, 'full_checkpoint/weights.pt', 100, 'wrong')
+    with pytest.raises(ValueError, match='unsafe'):
+        backup.remote_name('ambiguous__path/weights.pt')
+
+
 def test_plan_hash_rejection_precedes_run_creation(tmp_path):
     plan = tmp_path / 'plan.json'
     plan.write_text('{}')

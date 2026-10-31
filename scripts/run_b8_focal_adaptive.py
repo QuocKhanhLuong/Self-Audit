@@ -16,6 +16,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 
 FOCAL_LOSS = {"name": "focal_dice", "gamma": 2.0, "focal_weight": 1.0, "dice_weight": 1.0}
@@ -62,10 +63,11 @@ def command(argv, log, cwd=None):
 
 
 class DriveBackup:
-    def __init__(self, remote, parent_id, log, attempts=3):
+    def __init__(self, remote, parent_id, log, attempts=3, flat_new_folder=False):
         self.remote = remote.rstrip("/")
         self.log = Path(log)
         self.attempts = attempts
+        self.flat_new_folder = flat_new_folder
         self.scope = {"remote": self.remote, "parent_id": parent_id}
         self.progress_path = self.log.parent / "UPLOAD_PROGRESS.json"
         self.progress = {"scope": self.scope, "files": {}}
@@ -76,11 +78,47 @@ class DriveBackup:
         self.flags = ["--drive-root-folder-id", parent_id, "--retries", "1",
                       "--low-level-retries", "2", "--timeout", "60s", "--tpslimit", "2"]
 
+    def remote_name(self, name):
+        if self.flat_new_folder:
+            parts = name.split('/')
+            if any(not p or p in ('.', '..') or '__' in p for p in parts):
+                raise ValueError('unsafe or ambiguous flat backup filename')
+            return '__'.join(parts)
+        return name
+
+    def readback_id(self, file_id):
+        with tempfile.TemporaryDirectory(dir=self.log.parent) as temporary:
+            path = Path(temporary) / 'readback'
+            command(['rclone', 'backend', 'copyid', self.remote, file_id, path, *self.flags], self.log)
+            return path.stat().st_size, sha256(path)
+
+    def upload_new_flat_file(self, path, name, size, digest):
+        """One create attempt in a fresh dedicated folder; no filename listing.
+
+        Persist intent BEFORE upload. If a process dies or quota blocks discovery,
+        retries only verify; they cannot create duplicate copies blindly.
+        """
+        prior = self.progress['files'].get(name)
+        if prior:
+            if (prior.get('bytes'), prior.get('sha256')) != (size, digest):
+                raise ValueError('existing backup intent has different bytes; refusing replacement')
+            return
+        remote_name = self.remote_name(name)
+        self.progress['files'][name] = {'file': name, 'remote_file': remote_name,
+            'bytes': size, 'sha256': digest, 'upload_state': 'INTENT_RECORDED', 'drive_id': None}
+        atomic_json(self.progress_path, self.progress)
+        with tempfile.TemporaryDirectory(dir=self.log.parent) as temporary:
+            staged = Path(temporary) / remote_name
+            os.link(path, staged)
+            command(['rclone', 'copy', temporary, self.remote, '--no-check-dest', *self.flags], self.log)
+        self.progress['files'][name]['upload_state'] = 'UPLOAD_COMMAND_SUCCEEDED'
+        atomic_json(self.progress_path, self.progress)
+
     def readback(self, name):
         h = hashlib.sha256()
         size = 0
         with self.log.open("ab") as errors:
-            proc = subprocess.Popen(["rclone", "cat", self.remote + "/" + name,
+            proc = subprocess.Popen(["rclone", "cat", self.remote + "/" + self.remote_name(name),
                                      *self.flags], stdout=subprocess.PIPE, stderr=errors)
             try:
                 for chunk in iter(lambda: proc.stdout.read(8 << 20), b""):
@@ -101,24 +139,27 @@ class DriveBackup:
             try:
                 if not bytes_verified:
                     prior = self.progress["files"].get(name, {})
-                    if prior.get("sha256") != digest or prior.get("bytes") != size:
+                    if self.flat_new_folder:
+                        self.upload_new_flat_file(path, name, size, digest)
+                    elif prior.get("sha256") != digest or prior.get("bytes") != size:
                         command(["rclone", "copyto", path, self.remote + "/" + name,
                                  *self.flags], self.log)
-                    remote_size, remote_digest = self.readback(name)
+                    remote_size, remote_digest = (self.readback_id(prior['drive_id'])
+                        if prior.get('drive_id') else self.readback(name))
                     if (remote_size, remote_digest) != (size, digest):
                         raise RuntimeError("remote bytes differ from local payload")
                     bytes_verified = True
-                    self.progress["files"][name] = {"file": name, "bytes": size, "sha256": digest,
-                                                    "readback": "SHA256_MATCH", "drive_id": None}
+                    self.progress["files"][name] = {"file": name, "remote_file": self.remote_name(name), "bytes": size, "sha256": digest,
+                                                    "readback": "SHA256_MATCH", "drive_id": prior.get('drive_id')}
                     atomic_json(self.progress_path, self.progress)
-                if not collect_id:
+                if not collect_id or self.progress['files'][name].get('drive_id'):
                     return self.progress["files"][name]
-                raw = subprocess.check_output(["rclone", "lsjson", self.remote + "/" + name,
+                raw = subprocess.check_output(["rclone", "lsjson", self.remote + "/" + self.remote_name(name),
                                                "--stat", *self.flags], text=True)
                 metadata = json.loads(raw)
                 if metadata["Size"] != size or not metadata.get("ID"):
                     raise RuntimeError("missing Drive size/file ID")
-                proof = {"file": name, "bytes": size, "sha256": digest,
+                proof = {"file": name, "remote_file": self.remote_name(name), "bytes": size, "sha256": digest,
                          "drive_id": metadata["ID"], "readback": "SHA256_MATCH"}
                 self.progress["files"][name] = proof
                 atomic_json(self.progress_path, self.progress)
@@ -223,7 +264,8 @@ def run(plan_path, expected_sha, resume=False, preflight_only=False):
         def status(value, **extra):
             atomic_json(state, {"status": value, "time": time.time(), "plan_sha256": expected_sha, **extra})
             print(json.dumps({"status": value, **extra}), flush=True)
-        backup = DriveBackup(plan["drive_remote"], plan["drive_parent_id"], root / "rclone.log")
+        backup = DriveBackup(plan["drive_remote"], plan["drive_parent_id"], root / "rclone.log",
+                             flat_new_folder=plan.get('drive_flat_new_folder', False))
         try:
             status("PREFLIGHT")
             probe = root / "WRITE_PROBE.json"
@@ -231,7 +273,18 @@ def run(plan_path, expected_sha, resume=False, preflight_only=False):
             # The probe proves write permission and exact remote bytes. File IDs
             # remain mandatory for final payloads; no metadata query is needed
             # to certify this disposable preflight probe.
-            proof = backup.upload_verified(probe, probe.name, collect_id=False)
+            if 'drive_write_probe' in plan:
+                # A pre-created probe in THIS new folder avoids quota-heavy
+                # filename discovery. Re-download its exact ID before launch.
+                prior_probe = plan['drive_write_probe']
+                if prior_probe['parent_id'] != plan['drive_parent_id']:
+                    raise ValueError('write probe belongs to another Drive folder')
+                size, digest = backup.readback_id(prior_probe['file_id'])
+                if (size, digest) != (prior_probe['bytes'], prior_probe['sha256']):
+                    raise RuntimeError('pre-created Drive write probe readback mismatch')
+                proof = {**prior_probe, 'readback': 'SHA256_MATCH', 'reverified_before_launch': True}
+            else:
+                proof = backup.upload_verified(probe, probe.name, collect_id=False)
             atomic_json(root / "DRIVE_WRITE_VERIFIED.json", proof)
             if preflight_only:
                 status("READY_NOT_STARTED")
