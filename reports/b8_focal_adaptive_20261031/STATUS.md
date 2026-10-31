@@ -1,4 +1,10 @@
-# B8 focal + Dice / adaptive LR — RUNNING
+# B8 focal + Dice / adaptive LR — launch and completion status
+
+**Update 2026-10-31 06:19 UTC:** training completed all 10,000 steps.
+Full checkpoint Drive SHA256 is verified; raw-student/provenance backup remains
+blocked by quota403. Evaluation and compact arms have not run. See
+[the completion and backup receipt](COMPLETION_20261031.md). The launch record
+below is preserved as historical evidence.
 
 The one additional authorized full-model run started **2026-10-31 03:14:30 UTC
 (10:14:30 Vietnam)**. The observed prefix reached 1,144/10,000 iterations, passed
