@@ -5,6 +5,7 @@ import torch
 
 from self_audit.compact_runtime import _DeterministicBilinear, compact_bilinear, deterministic_runtime
 from self_audit.compact_training import DEFAULT_CONFIG, validate_compact_config
+from self_audit.compact_model import CompactDecoder, build_compact_model
 
 
 def flags():
@@ -74,3 +75,20 @@ def test_default_bilinear_is_unchanged():
     actual = compact_bilinear(x, (6, 8))
     assert torch.equal(reference, actual)
     assert type(reference.grad_fn) is type(actual.grad_fn)
+
+
+def test_scoped_decoder_preserves_forward_state_and_restores(monkeypatch):
+    monkeypatch.setenv("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
+    model = build_compact_model({"widths": [4, 8]})
+    sample = torch.rand(1, 3, 16, 16)
+    original_forward = CompactDecoder.forward
+    expected = model(sample)
+    state_keys = set(model.state_dict())
+    with pytest.raises(RuntimeError, match="sentinel"):
+        with deterministic_runtime(True):
+            assert CompactDecoder.forward is not original_forward
+            assert torch.equal(model(sample), expected)
+            assert set(model.state_dict()) == state_keys
+            raise RuntimeError("sentinel")
+    assert CompactDecoder.forward is original_forward
+    assert torch.equal(model(sample), expected)

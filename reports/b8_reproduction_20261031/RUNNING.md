@@ -51,6 +51,10 @@ losses, data and update rules are unchanged. All compact arms pay this runtime
 cost, which must be measured. Default training and no-grad inference retain the
 native path. CPU forward/backward parity and numerical gradcheck passed; CUDA
 forward parity, derivative comparison and exact replay remain mandatory gates.
+The backend dispatch is scoped by the training runtime context and restored on
+exit; `compact_model.py` remains byte-identical to the existing model definition
+so older standalone exports retain their required model-source hash. The
+canonical runner uses a separate process per training segment.
 
 At launch: teacher `RUNNING`; remote final weights, quality, compact CUDA replay,
 and four-arm patient pilot `NOT_RUN`. No empirical GO/NO_GO has been assigned.
