@@ -19,5 +19,15 @@
   "patient_training_this_delivery": true,
   "training_input_policy": "random_crop_256_image_geometry_only; edge_pad; exclude_padding; no_resize",
   "training_batch_size": 52,
-  "evaluation_input_policy": "full_native_cine_no_training_crop"
+  "evaluation_input_policy": "full_native_cine_no_training_crop",
+  "opt_in_experiments": {
+    "b8_focal_adaptive": {
+      "config": "configs/b8_focal_adaptive.json",
+      "runbook": "docs/B8_FOCAL_ADAPTIVE.md",
+      "base_training_source": "c06c4c9ae08610e047f1e960712f551690de4067",
+      "method": "ema_full",
+      "patient_training_requires_explicit_authorization": true,
+      "historical_baseline_unchanged": true
+    }
+  }
 }

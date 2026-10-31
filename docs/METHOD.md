@@ -5,6 +5,10 @@ efficacy. Primary setting: a budgeted dense-labeled TRAIN subset L and image-onl
 U. Audit examples rotate within L and are patient-disjoint from the supervised
 minibatch **within each transaction**, not a held-out statistical validation set.
 
+The separately authorized [B8 focal/adaptive experiment](B8_FOCAL_ADAPTIVE.md)
+changes supervised CE to focal loss and adds a TRAIN-loss plateau LR schedule.
+It is a new variant, not an exact historical reproduction or a new default.
+
 ## Questions and choices
 
 1. Where do names/boundaries come from? Dense native CE + present-foreground Dice
