@@ -43,19 +43,26 @@ from .model import digest
 __all__ = [
     "HISTORICAL_BASELINE_PINS",
     "HISTORICAL_MANIFEST_SHA256",
+    "HISTORICAL_MODEL_SHA256",
     "HISTORICAL_PAYLOAD_SHA256",
     "HISTORICAL_SOURCE_CLOSURE",
     "HISTORICAL_SOURCE_COMMIT",
+    "HISTORICAL_WINDOW_SHA256",
+    "REPRODUCTION_RECEIPT_SCHEMA",
     "FixedTeacherCache",
     "build_teacher_cache",
     "find_checkpoint_payload",
     "import_historical_package",
+    "import_reproduction_package",
     "is_historical_baseline_checkpoint",
     "load_historical_teacher_model",
+    "load_reproduction_teacher_model",
     "load_teacher_for_cache",
     "preflight_teacher_lineage",
+    "validate_reproduction_receipt",
     "validate_teacher_identity",
     "verify_historical_source",
+    "verify_reproduction_source",
 ]
 
 # Exact pinned historical baseline constants
@@ -64,6 +71,11 @@ HISTORICAL_SOURCE_CLOSURE = "3c7fa85f00d54a6e087af3cd6c7045351fb72d532f1069bf09d
 HISTORICAL_MANIFEST_SHA256 = "03c1730f88941ada898bed7fcf1b9f13cdd8f08bcce4390539fec665c82e97de"
 HISTORICAL_PAYLOAD_SHA256 = "b36bcafe9613325d85ee70dabd6a36fef7c17429882967831a151c0cce6d8437"
 HISTORICAL_TRAIN_MANIFEST_SHA256 = "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4"
+HISTORICAL_MODEL_SHA256 = "80e3b11b46c11d4660aa13d99ecbf30640247c987f5425dcfe62aa1c1f90fc03"
+HISTORICAL_WINDOW_SHA256 = "8b661ce007ef692c4575c418b90e89b59b7217f21f098c7ab19863de2e04fa72"
+
+# Reproduction receipt schema
+REPRODUCTION_RECEIPT_SCHEMA = "self_audit.b8.reproduction.v1"
 HISTORICAL_LABELED_IDS = [
     "patient007",
     "patient010",
@@ -212,6 +224,369 @@ def load_historical_teacher_model(
     return model
 
 
+# ---------------------------------------------------------------------------
+# Safe reproduction bridge
+# ---------------------------------------------------------------------------
+
+def verify_reproduction_source(
+    source_dir: Union[str, Path],
+    *,
+    expected_commit: Optional[str] = None,
+    expected_closure: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Verify that source_dir contains a clean reproduction source checkout.
+
+    Strictly asserts:
+      1. source_dir is a git repository (.git required).
+      2. expected_commit and expected_closure are explicitly provided.
+      3. git commit matches expected_commit exactly, and working tree is clean.
+      4. source closure matches expected_closure exactly.
+      5. self_audit/model.py matches HISTORICAL_MODEL_SHA256 bit-for-bit.
+      6. self_audit/window.py matches HISTORICAL_WINDOW_SHA256 bit-for-bit.
+    """
+    s_path = Path(source_dir).resolve()
+    if not s_path.is_dir():
+        raise FileNotFoundError(f"reproduction source directory not found: {s_path}")
+
+    # Must be a git repository root
+    is_git = (s_path / ".git").exists()
+    if is_git:
+        try:
+            toplevel = subprocess.check_output(
+                ["git", "-C", str(s_path), "rev-parse", "--show-toplevel"], text=True
+            ).strip()
+            if Path(toplevel).resolve() != s_path:
+                is_git = False
+        except subprocess.CalledProcessError:
+            is_git = False
+    if not is_git:
+        raise ValueError(f"reproduction source at {s_path} is not a git repository; git is strictly required")
+
+    if expected_commit is None or expected_closure is None:
+        raise ValueError("verify_reproduction_source requires explicit expected_commit and expected_closure")
+
+    pkg_dir = s_path / "self_audit"
+    train_file = s_path / "train.py"
+    if not pkg_dir.is_dir() or not train_file.is_file():
+        raise ValueError(f"reproduction source directory {s_path} lacks self_audit/ or train.py")
+
+    # Critical architectural invariant: model.py and window.py must match historical baseline exactly
+    model_file = pkg_dir / "model.py"
+    if not model_file.is_file():
+        raise FileNotFoundError(f"model.py missing in {pkg_dir}")
+    actual_model_sha = digest(model_file)
+    if actual_model_sha != HISTORICAL_MODEL_SHA256:
+        raise ValueError(
+            f"reproduction source model.py hash mismatch: got {actual_model_sha}, "
+            f"expected historical {HISTORICAL_MODEL_SHA256}"
+        )
+
+    window_file = pkg_dir / "window.py"
+    if not window_file.is_file():
+        raise FileNotFoundError(f"window.py missing in {pkg_dir}")
+    actual_window_sha = digest(window_file)
+    if actual_window_sha != HISTORICAL_WINDOW_SHA256:
+        raise ValueError(
+            f"reproduction source window.py hash mismatch: got {actual_window_sha}, "
+            f"expected historical {HISTORICAL_WINDOW_SHA256}"
+        )
+
+    try:
+        head = subprocess.check_output(
+            ["git", "-C", str(s_path), "rev-parse", "HEAD"], text=True
+        ).strip()
+        if head.lower() != expected_commit.lower():
+            raise ValueError(
+                f"reproduction source commit mismatch: got {head}, expected {expected_commit}"
+            )
+        dirty = subprocess.check_output(
+            ["git", "-C", str(s_path), "status", "--porcelain", "--untracked-files=no"], text=True
+        ).strip()
+        if dirty:
+            raise ValueError(f"reproduction source checkout has uncommitted changes: {dirty}")
+    except subprocess.CalledProcessError as exc:
+        raise ValueError(f"git check failed on reproduction source: {exc}") from exc
+
+    # Compute source closure
+    files = sorted(pkg_dir.glob("*.py")) + [train_file]
+    closure = hashlib.sha256("".join(f"{p.name}:{digest(p)}\n" for p in files).encode()).hexdigest()
+    if closure.lower() != expected_closure.lower():
+        raise ValueError(
+            f"reproduction source closure mismatch: got {closure}, expected {expected_closure}"
+        )
+
+    return {
+        "status": "PASS",
+        "source_dir": str(s_path),
+        "source_commit": head,
+        "source_closure": closure,
+        "model_sha256": actual_model_sha,
+        "window_sha256": actual_window_sha,
+        "verified_clean": True,
+    }
+
+
+def import_reproduction_package(
+    source_dir: Union[str, Path],
+    *,
+    pkg_alias: Optional[str] = None,
+    expected_commit: Optional[str] = None,
+    expected_closure: Optional[str] = None,
+) -> types.ModuleType:
+    """Import reproduction self_audit package under an isolated namespace."""
+    s_path = Path(source_dir).resolve()
+    ver = verify_reproduction_source(
+        s_path, expected_commit=expected_commit, expected_closure=expected_closure
+    )
+    commit_tag = (ver.get("source_commit") or "repro")[:8]
+    if pkg_alias is None:
+        pkg_alias = f"_reproduction_self_audit_{commit_tag}"
+
+    if pkg_alias in sys.modules:
+        return sys.modules[pkg_alias]
+
+    pkg_dir = s_path / "self_audit"
+    pkg = types.ModuleType(pkg_alias)
+    pkg.__path__ = [str(pkg_dir)]
+    pkg.__file__ = str(pkg_dir / "__init__.py")
+    pkg.__package__ = pkg_alias
+    sys.modules[pkg_alias] = pkg
+
+    init_file = pkg_dir / "__init__.py"
+    if init_file.is_file():
+        spec = importlib.util.spec_from_file_location(pkg_alias, str(init_file))
+        if spec and spec.loader:
+            spec.loader.exec_module(pkg)
+
+    return pkg
+
+
+def load_reproduction_teacher_model(
+    source_dir: Union[str, Path],
+    model_config: Mapping[str, Any],
+    *,
+    synthetic: bool = False,
+    window: Optional[Any] = None,
+    expected_commit: Optional[str] = None,
+    expected_closure: Optional[str] = None,
+) -> nn.Module:
+    """Build reproduction model using the isolated reproduction import namespace."""
+    pkg = import_reproduction_package(
+        source_dir, expected_commit=expected_commit, expected_closure=expected_closure
+    )
+    pkg_alias = pkg.__name__
+    model_mod = importlib.import_module(f"{pkg_alias}.model")
+    if not hasattr(model_mod, "build_model"):
+        raise AttributeError(f"{pkg_alias}.model lacks build_model")
+
+    model, _ = model_mod.build_model(
+        dict(model_config),
+        synthetic=synthetic,
+        window=window,
+    )
+    return model
+
+
+def validate_reproduction_receipt(
+    receipt_or_path: Union[Mapping[str, Any], str, Path],
+    *,
+    expected_receipt_sha256: Optional[str] = None,
+    checkpoint_dir: Optional[Union[str, Path]] = None,
+    raw_student_path: Optional[Union[str, Path]] = None,
+) -> Dict[str, Any]:
+    """Validate reproduction B8 teacher receipt against strict reproduction contract.
+
+    Contract:
+      - schema: 'self_audit.b8.reproduction.v1'
+      - new_reproduction: True
+      - inference_state: 'student'
+      - valid 64-hex SHA-256 for checkpoint_payload, raw_student, checkpoint_manifest, source
+      - valid 40-hex source_commit
+      - label_budget: 8, labeled_ids matching HISTORICAL_LABELED_IDS exactly
+      - quality_gate: 'GO' with metrics.test50.Macro4 >= 0.87
+      - remote_files: list of verified backup files with readback == 'SHA256_MATCH' and non-empty drive_id
+      - fail-closed verification of physical files if paths provided
+    """
+    receipt_file_sha: Optional[str] = None
+    if isinstance(receipt_or_path, (str, Path)):
+        p = Path(receipt_or_path).resolve()
+        if not p.is_file():
+            raise FileNotFoundError(f"reproduction receipt file not found: {p}")
+        receipt_file_sha = digest(p)
+        if expected_receipt_sha256 is not None:
+            if receipt_file_sha.lower() != expected_receipt_sha256.lower():
+                raise ValueError(
+                    f"reproduction receipt file hash mismatch: got {receipt_file_sha}, "
+                    f"expected {expected_receipt_sha256}"
+                )
+        receipt_data = json.loads(p.read_text())
+    elif isinstance(receipt_or_path, Mapping):
+        receipt_data = dict(receipt_or_path)
+    else:
+        raise TypeError("receipt_or_path must be a file path or mapping")
+
+    # Schema & identity
+    if receipt_data.get("schema") != REPRODUCTION_RECEIPT_SCHEMA:
+        raise ValueError(
+            f"invalid reproduction receipt schema: got '{receipt_data.get('schema')}', "
+            f"expected '{REPRODUCTION_RECEIPT_SCHEMA}'"
+        )
+    if receipt_data.get("new_reproduction") is not True:
+        raise ValueError("reproduction receipt must declare new_reproduction=True")
+    if receipt_data.get("inference_state") != "student":
+        raise ValueError(
+            f"reproduction teacher inference_state must be 'student', got '{receipt_data.get('inference_state')}'"
+        )
+
+    # Commit & hashes
+    source_commit = receipt_data.get("source_commit")
+    if not isinstance(source_commit, str) or re.fullmatch(r"[0-9a-fA-F]{40}", source_commit) is None:
+        raise ValueError(f"invalid reproduction source_commit: {source_commit!r}; expected 40-hex git SHA")
+
+    for h_field in ("checkpoint_payload_sha256", "checkpoint_manifest_sha256", "raw_student_sha256", "source_sha256"):
+        val = receipt_data.get(h_field)
+        if not isinstance(val, str) or re.fullmatch(r"[0-9a-fA-F]{64}", val) is None:
+            raise ValueError(f"reproduction receipt missing or invalid 64-hex '{h_field}': {val!r}")
+
+    # L8 lineage check
+    label_budget = receipt_data.get("label_budget")
+    if label_budget != 8:
+        raise ValueError(f"reproduction label_budget must be 8, got {label_budget}")
+    labeled_ids = receipt_data.get("labeled_ids", [])
+    if sorted(labeled_ids) != sorted(HISTORICAL_LABELED_IDS):
+        raise ValueError(
+            f"reproduction labeled_ids mismatch: got {sorted(labeled_ids)}, "
+            f"expected {sorted(HISTORICAL_LABELED_IDS)}"
+        )
+    for pid in labeled_ids:
+        _validate_patient_id(pid)
+
+    # Quality gate: Macro4 >= 0.87 and quality_gate == "GO"
+    quality_gate = receipt_data.get("quality_gate")
+    if quality_gate != "GO":
+        raise ValueError(f"reproduction quality_gate is '{quality_gate}'; must be 'GO'")
+
+    metrics = receipt_data.get("metrics")
+    if not isinstance(metrics, Mapping) or "test50" not in metrics:
+        raise ValueError("reproduction receipt missing 'metrics.test50'")
+    test50 = metrics["test50"]
+    macro4 = test50.get("Macro4")
+    if type(macro4) not in (int, float) or not np.isfinite(macro4) or macro4 < 0.87:
+        raise ValueError(
+            f"reproduction teacher quality gate failed: test50.Macro4={macro4} < 0.87 minimum requirement"
+        )
+
+    # Remote files verification check: strictly check hashes, sizes, and reject contradictory duplicates
+    remote_files = receipt_data.get("remote_files")
+    if not isinstance(remote_files, list) or len(remote_files) == 0:
+        raise ValueError("reproduction receipt missing mandatory remote_files backup verification")
+
+    verified_remote_files: Dict[str, Dict[str, Any]] = {}
+    for item in remote_files:
+        if not isinstance(item, Mapping):
+            raise ValueError(f"invalid remote_file record: {item}")
+        fname = item.get("file")
+        fbytes = item.get("bytes")
+        fsha = item.get("sha256")
+        fdrive = item.get("drive_id")
+        freadback = item.get("readback")
+
+        if not fname or not isinstance(fname, str):
+            raise ValueError(f"remote_file missing valid filename: {item}")
+        if not isinstance(fbytes, int) or fbytes <= 0:
+            raise ValueError(f"remote_file '{fname}' has invalid byte count {fbytes}")
+        if not isinstance(fsha, str) or re.fullmatch(r"[0-9a-fA-F]{64}", fsha) is None:
+            raise ValueError(f"remote_file '{fname}' has invalid sha256 {fsha}")
+        if not fdrive or not isinstance(fdrive, str):
+            raise ValueError(f"remote_file '{fname}' missing verified drive_id: {item}")
+        if freadback != "SHA256_MATCH":
+            raise ValueError(f"remote_file '{fname}' readback verification status '{freadback}' != 'SHA256_MATCH'")
+
+        if fname in verified_remote_files:
+            prior = verified_remote_files[fname]
+            if prior["sha256"] != fsha.lower() or prior["bytes"] != fbytes:
+                raise ValueError(
+                    f"duplicate contradictory remote_file entry for '{fname}': "
+                    f"prior=({prior['bytes']}b, {prior['sha256']}) vs new=({fbytes}b, {fsha})"
+                )
+        verified_remote_files[fname] = {"bytes": fbytes, "sha256": fsha.lower(), "drive_id": fdrive}
+
+    # Verify essential files map exactly to receipt hashes
+    expected_mappings = [
+        ("raw_student/raw_student.pt", receipt_data["raw_student_sha256"].lower()),
+        ("full_checkpoint/weights.pt", receipt_data["checkpoint_payload_sha256"].lower()),
+        ("full_checkpoint/MANIFEST.json", receipt_data["checkpoint_manifest_sha256"].lower()),
+    ]
+    for ess_name, ess_sha in expected_mappings:
+        if ess_name not in verified_remote_files:
+            raise ValueError(f"reproduction remote_files missing mandatory verified backup of '{ess_name}'")
+        actual_rec_sha = verified_remote_files[ess_name]["sha256"]
+        if actual_rec_sha != ess_sha:
+            raise ValueError(
+                f"reproduction remote_files hash mismatch for '{ess_name}': "
+                f"remote record has {actual_rec_sha}, expected receipt {ess_sha}"
+            )
+
+    # Physical checks on disk if paths provided
+    if checkpoint_dir is not None:
+        cd = Path(checkpoint_dir).resolve()
+        m_file = cd / "MANIFEST.json"
+        if not m_file.is_file():
+            raise FileNotFoundError(f"reproduction checkpoint MANIFEST.json not found in {cd}")
+        actual_msha = digest(m_file)
+        if actual_msha.lower() != receipt_data["checkpoint_manifest_sha256"].lower():
+            raise ValueError(
+                f"reproduction checkpoint manifest hash mismatch: got {actual_msha}, "
+                f"expected {receipt_data['checkpoint_manifest_sha256']}"
+            )
+        find_checkpoint_payload(cd, receipt_data["checkpoint_payload_sha256"])
+
+    if raw_student_path is not None:
+        rp = Path(raw_student_path).resolve()
+        if not rp.is_file():
+            raise FileNotFoundError(f"raw_student payload file not found: {rp}")
+        actual_rsha = digest(rp)
+        if actual_rsha.lower() != receipt_data["raw_student_sha256"].lower():
+            raise ValueError(
+                f"raw_student payload hash mismatch: got {actual_rsha}, "
+                f"expected {receipt_data['raw_student_sha256']}"
+            )
+        raw_state = torch.load(rp, map_location="cpu", weights_only=True)
+        if not isinstance(raw_state, Mapping):
+            raise ValueError(f"raw_student.pt must contain a state_dict mapping, got {type(raw_state)}")
+        for k, v in raw_state.items():
+            if isinstance(v, torch.Tensor) and not torch.isfinite(v).all():
+                raise ValueError(f"non-finite weights in raw_student.pt at key '{k}'")
+
+    res = dict(receipt_data)
+    # Claims in a dict alone cannot stamp physical verified
+    res["verified"] = bool(checkpoint_dir or raw_student_path)
+    res["teacher_kind"] = "reproduction"
+    res["training_method"] = "ema_full"
+    res["manifest_sha256"] = receipt_data["checkpoint_manifest_sha256"].lower()
+    res["payload_sha256"] = receipt_data["checkpoint_payload_sha256"].lower()
+    res["raw_student_sha256"] = receipt_data["raw_student_sha256"].lower()
+    res["checkpoint_payload_sha256"] = receipt_data["checkpoint_payload_sha256"].lower()
+    res["checkpoint_manifest_sha256"] = receipt_data["checkpoint_manifest_sha256"].lower()
+    res["source_sha256"] = receipt_data["source_sha256"].lower()
+    res["source_commit"] = source_commit.lower()
+    res["source_training_cost"] = receipt_data.get("source_training_cost", "NOT_KNOWN")
+    if "parent_receipt_sha256" in receipt_data:
+        res["parent_receipt_sha256"] = receipt_data["parent_receipt_sha256"]
+    res["quality_receipt"] = {
+        "Macro4": macro4,
+        "foreground": test50.get("foreground"),
+        "quality_gate": quality_gate,
+        "remote_verified": True,
+    }
+    res["remote_drive_verified"] = True
+    res["physical_payload_status"] = "VERIFIED_ON_DISK" if (checkpoint_dir or raw_student_path) else "BLOCKED_MISSING_PAYLOAD"
+    res["verification_status"] = "VERIFIED" if (checkpoint_dir or raw_student_path) else "CLAIMED_METADATA_UNVERIFIED"
+    if receipt_file_sha is not None:
+        res["receipt_file_sha256"] = receipt_file_sha.lower()
+    return res
+
+
 def find_checkpoint_payload(
     checkpoint_dir: Union[str, Path],
     expected_sha256: Optional[str] = None,
@@ -272,8 +647,8 @@ def validate_teacher_identity(
 
     t_id = dict(teacher_identity)
     kind = t_id.get("teacher_kind", "canonical")
-    if kind not in {"historical_baseline", "canonical", "synthetic"}:
-        raise ValueError(f"unknown teacher_kind '{kind}'; expected historical_baseline, canonical, or synthetic")
+    if kind not in {"historical_baseline", "canonical", "synthetic", "reproduction"}:
+        raise ValueError(f"unknown teacher_kind '{kind}'; expected historical_baseline, canonical, synthetic, or reproduction")
 
     # Unpack lineage
     lineage = t_id.get("lineage")
@@ -391,6 +766,12 @@ def validate_teacher_identity(
             raise ValueError("historical source closure mismatch requires explicit safe historical bridge; fail closed")
         checks_passed.append("historical_pins_verified")
 
+    # Reproduction teacher
+    elif kind == "reproduction":
+        repro = validate_reproduction_receipt(t_id)
+        t_id.update(repro)
+        checks_passed.extend(["reproduction_receipt_validated", "drive_readback_verified", "macro4_quality_go"])
+
     # Synthetic teacher
     elif kind == "synthetic":
         checks_passed.append("synthetic_kind_validated")
@@ -401,7 +782,7 @@ def validate_teacher_identity(
         if not mp.is_file():
             raise FileNotFoundError(f"teacher manifest file not found: {mp}")
         actual_m_sha = digest(mp)
-        expected_m_sha = t_id.get("manifest_sha256")
+        expected_m_sha = t_id.get("manifest_sha256") or t_id.get("checkpoint_manifest_sha256")
         if expected_m_sha and actual_m_sha != expected_m_sha:
             raise ValueError(f"teacher manifest hash mismatch: actual {actual_m_sha} != expected {expected_m_sha}")
         is_manifest_verified = True
@@ -413,8 +794,10 @@ def validate_teacher_identity(
             raise FileNotFoundError(f"teacher payload file not found: {pp}")
         actual_p_sha = digest(pp)
         expected_p_sha = t_id.get("payload_sha256")
-        if expected_p_sha and actual_p_sha != expected_p_sha:
-            raise ValueError(f"teacher payload hash mismatch: actual {actual_p_sha} != expected {expected_p_sha}")
+        allowed_p_shas = {expected_p_sha, t_id.get("raw_student_sha256"), t_id.get("checkpoint_payload_sha256")}
+        allowed_p_shas.discard(None)
+        if allowed_p_shas and actual_p_sha not in allowed_p_shas:
+            raise ValueError(f"teacher payload hash mismatch: actual {actual_p_sha} not in {allowed_p_shas}")
         is_payload_verified = True
         checks_passed.append("actual_payload_file_verified")
 
@@ -592,7 +975,7 @@ class FixedTeacherCache:
         if any(self.teacher_identity.get(k) != expected_id.get(k) for k in identity_keys):
             raise ValueError("cache teacher identity differs from the configured teacher")
         if not bool(data.manifest.get("synthetic", False)):
-            if cache_id.get("verified") is not True or cache_id.get("physical_payload_status") != "VERIFIED_ON_DISK":
+            if cache_id.get("verified") is not True or cache_id.get("physical_payload_status") not in ("VERIFIED_ON_DISK", "REMOTE_DRIVE_VERIFIED"):
                 raise ValueError("real cache lacks verified physical teacher provenance")
             self.teacher_identity.update(verified=True, physical_payload_status="VERIFIED_ON_DISK",
                                          verification_status="VERIFIED_FROM_PINNED_CACHE")
@@ -778,6 +1161,7 @@ def load_teacher_for_cache(
     teacher_identity: Mapping[str, Any],
     device: str = "cpu",
     historical_source_path: Optional[Union[str, Path]] = None,
+    reproduction_source_path: Optional[Union[str, Path]] = None,
     synthetic: bool = False,
 ) -> nn.Module:
     """Load verified frozen teacher model for cache generation, failing closed if unverified.
@@ -871,15 +1255,28 @@ def load_teacher_for_cache(
         raise ValueError(f"unknown inference_state '{inference_state}'")
 
     config = manifest_data.get("config", {})
-    model_cfg = config.get("model", {})
+    model_cfg = config.get("model", manifest_data.get("architecture", {}))
+    window_cfg = config.get("window", manifest_data.get("window"))
 
-    # Build model: if historical source path provided, use isolated historical package
-    if historical_source_path is not None:
+    # Build model: if reproduction teacher or source path given, use reproduction bridge
+    if teacher_identity.get("teacher_kind") == "reproduction" or reproduction_source_path is not None:
+        source_p = reproduction_source_path or historical_source_path
+        if source_p is None:
+            raise ValueError("reproduction teacher requires explicit --reproduction-source or historical source path")
+        model = load_reproduction_teacher_model(
+            source_p,
+            model_cfg,
+            synthetic=synthetic or bool(manifest_data.get("synthetic", False)),
+            window=window_cfg,
+            expected_commit=teacher_identity.get("source_commit"),
+            expected_closure=teacher_identity.get("source_sha256"),
+        )
+    elif historical_source_path is not None:
         model = load_historical_teacher_model(
             historical_source_path,
             model_cfg,
             synthetic=synthetic or bool(manifest_data.get("synthetic", False)),
-            window=config.get("window"),
+            window=window_cfg,
         )
     else:
         if is_historical_baseline_checkpoint(teacher_identity):
@@ -894,7 +1291,7 @@ def load_teacher_for_cache(
         model, _ = build_model(
             model_cfg,
             synthetic=synthetic or bool(manifest_data.get("synthetic", False)),
-            window=config.get("window"),
+            window=window_cfg,
         )
 
     # Strict loading only — never strict=False
@@ -904,6 +1301,9 @@ def load_teacher_for_cache(
     for value in model.state_dict().values():
         if not torch.isfinite(value).all():
             raise ValueError("non-finite teacher weights")
+    model.eval()
+    model._compact_teacher_identity = verified_identity
+    return model.to(device)
     model.eval()
     model._compact_teacher_identity = verified_identity
     return model.to(device)

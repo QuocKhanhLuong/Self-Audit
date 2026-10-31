@@ -34,6 +34,7 @@ from .compact_artifacts import digest, compact_training_source_sha256
 from .compact_teacher import (
     find_checkpoint_payload,
     preflight_teacher_lineage,
+    validate_reproduction_receipt,
     validate_teacher_identity,
 )
 
@@ -49,6 +50,7 @@ __all__ = [
     "check_active_training_jobs",
     "check_gpu_occupancy",
     "check_preflight",
+    "derive_reproduction_protocol",
     "validate_locked_protocol",
 ]
 
@@ -135,9 +137,67 @@ def _read_json(path: Union[Path, str]) -> Dict[str, Any]:
 # Protocol Verification
 # ==============================================================================
 
-def validate_locked_protocol(protocol: Mapping[str, Any]) -> List[str]:
+def validate_locked_protocol(
+    protocol: Mapping[str, Any],
+    *,
+    reproduction_receipt: Optional[Mapping[str, Any]] = None,
+) -> List[str]:
     """Exact typed lock; missing values, booleans and nonfinite numbers cannot pass."""
-    expected = {
+    repro_spec = None
+    if reproduction_receipt is not None:
+        try:
+            repro_receipt_val = validate_reproduction_receipt(reproduction_receipt)
+            repro_spec = {
+                "source_manifest_sha256": repro_receipt_val["checkpoint_manifest_sha256"],
+                "source_payload_sha256": repro_receipt_val["checkpoint_payload_sha256"],
+                "state": "student",
+                "lineage": dict(budget_k=8, exact_labeled_ids=list(PINNED_L8_PATIENT_IDS)),
+                "reproduction": {
+                    "schema": "self_audit.b8.reproduction.v1",
+                    "source_commit": repro_receipt_val["source_commit"],
+                    "source_sha256": repro_receipt_val["source_sha256"],
+                    "raw_student_sha256": repro_receipt_val["raw_student_sha256"],
+                    "checkpoint_payload_sha256": repro_receipt_val["checkpoint_payload_sha256"],
+                    "quality_gate": repro_receipt_val["quality_gate"],
+                    "Macro4": repro_receipt_val["metrics"]["test50"]["Macro4"],
+                    "foreground": repro_receipt_val["metrics"]["test50"]["foreground"],
+                },
+            }
+        except Exception as exc:
+            return [f"invalid reproduction_receipt for locked protocol: {exc}"]
+    elif isinstance(protocol.get("teacher"), Mapping) and "reproduction" in protocol["teacher"]:
+        repro_block = protocol["teacher"]["reproduction"]
+        if not isinstance(repro_block, Mapping) or repro_block.get("schema") != "self_audit.b8.reproduction.v1":
+            return ["teacher.reproduction mismatch: schema must be 'self_audit.b8.reproduction.v1'"]
+        if repro_block.get("quality_gate") != "GO" or repro_block.get("Macro4", 0) < 0.87:
+            return ["teacher.reproduction mismatch: quality_gate must be 'GO' and Macro4 >= 0.87"]
+        repro_spec = {
+            "source_manifest_sha256": protocol["teacher"].get("source_manifest_sha256"),
+            "source_payload_sha256": protocol["teacher"].get("source_payload_sha256"),
+            "state": "student",
+            "lineage": dict(budget_k=8, exact_labeled_ids=list(PINNED_L8_PATIENT_IDS)),
+            "reproduction": repro_block,
+        }
+
+    if repro_spec is not None:
+        teacher_expected = dict(
+            source_manifest_sha256=repro_spec["source_manifest_sha256"],
+            source_payload_sha256=repro_spec["source_payload_sha256"],
+            state="student",
+            lineage=dict(budget_k=8, exact_labeled_ids=list(PINNED_L8_PATIENT_IDS)),
+            cache_sha256=protocol.get("teacher", {}).get("cache_sha256") if isinstance(protocol.get("teacher"), Mapping) else "",
+            reproduction=repro_spec["reproduction"],
+        )
+    else:
+        teacher_expected = dict(
+            source_manifest_sha256=PINNED_B8_TEACHER_MANIFEST_SHA256,
+            source_payload_sha256=PINNED_RAW_PAYLOAD_SHA256,
+            state="student",
+            lineage=dict(budget_k=8, exact_labeled_ids=list(PINNED_L8_PATIENT_IDS)),
+            cache_sha256=PINNED_TEACHER_CACHE_SHA256,
+        )
+
+    expected: Dict[str, Any] = {
         "schema": "self_audit.compact.transfer_utility.protocol.v1",
         "protocol_version": "20261030", "study_name": "scalar_transfer_utility_pilot",
         "budget": dict(total_steps=2000, warmup_steps=1000, eval_steps=[1000,1500,2000],
@@ -153,10 +213,7 @@ def validate_locked_protocol(protocol: Mapping[str, Any]) -> List[str]:
             num_classes=4, init="kaiming_normal"),
         "data": dict(manifest_sha256=PINNED_TRAIN_MANIFEST_SHA256, budget_k=8,
             labeled_ids=list(PINNED_L8_PATIENT_IDS)),
-        "teacher": dict(source_manifest_sha256=PINNED_B8_TEACHER_MANIFEST_SHA256,
-            source_payload_sha256=PINNED_RAW_PAYLOAD_SHA256, state="student",
-            lineage=dict(budget_k=8,exact_labeled_ids=list(PINNED_L8_PATIENT_IDS)),
-            cache_sha256=PINNED_TEACHER_CACHE_SHA256),
+        "teacher": teacher_expected,
         "evaluation": dict(manifest_sha256=PINNED_VAL_MANIFEST_SHA256, expected_patients=18,
             checkpoint_selection="final_step_2000", primary_metric="class_first_macro4"),
         "decision_rules": dict(screening_threshold_delta_macro4=.002),
@@ -166,6 +223,10 @@ def validate_locked_protocol(protocol: Mapping[str, Any]) -> List[str]:
             "arm3": dict(name="scalar_guard_larger_tie", method="scalar_guard", selector="larger_tie"),
             "arm4": dict(name="scalar_guard_cross_patient_utility", method="scalar_guard", selector="cross_patient_utility")},
         "conditional_arms": {"arm5": dict(name="scalar_guard_same_batch_control", method="scalar_guard",selector="same_batch_utility")}}
+    if "runtime_policy" in protocol:
+        rp = protocol["runtime_policy"]
+        if isinstance(rp, Mapping) and isinstance(rp.get("deterministic_algorithms"), bool):
+            expected["runtime_policy"] = dict(deterministic_algorithms=rp["deterministic_algorithms"])
     errors = []
     def compare(actual, required, path):
         if isinstance(required, dict):
@@ -190,7 +251,72 @@ def validate_locked_protocol(protocol: Mapping[str, Any]) -> List[str]:
         elif type(actual) is not type(required) or actual != required:
             errors.append(f"{path} mismatch: expected {required!r}")
     compare(protocol, expected, "")
+    if repro_spec is not None:
+        c_sha = protocol.get("teacher", {}).get("cache_sha256")
+        if not isinstance(c_sha, str) or re.fullmatch(r"[0-9a-fA-F]{64}", c_sha) is None:
+            errors.append("teacher.cache_sha256 must be a valid 64-hex SHA-256 string")
     return errors
+
+
+def derive_reproduction_protocol(
+    base_protocol: Mapping[str, Any],
+    reproduction_receipt: Mapping[str, Any],
+    teacher_cache_sha256: str,
+    *,
+    deterministic_algorithms: bool = True,
+) -> Dict[str, Any]:
+    """Derive an immutable protocol bound to the reproduction B8 teacher identity.
+
+    Preserves all locked pilot hyperparameters, budgets, architecture, L8 pins,
+    evaluation cohorts, screening thresholds, and arm definitions.
+    ONLY updates the teacher section to bind the reproduction checkpoint,
+    full student weights, teacher cache hash, and adds runtime_policy.
+    """
+    base_errors = validate_locked_protocol(base_protocol)
+    if base_errors:
+        raise ValueError(f"base protocol is not a valid locked protocol: {base_errors}")
+
+    receipt = validate_reproduction_receipt(reproduction_receipt)
+    cache_sha = _require_sha256(teacher_cache_sha256, "teacher_cache_sha256")
+
+    derived = json.loads(json.dumps(base_protocol))
+
+    derived["runtime_policy"] = {
+        "deterministic_algorithms": bool(deterministic_algorithms),
+    }
+
+    derived["teacher"] = {
+        "source_manifest_sha256": receipt["checkpoint_manifest_sha256"],
+        "source_payload_sha256": receipt["checkpoint_payload_sha256"],
+        "state": "student",
+        "lineage": {
+            "budget_k": 8,
+            "exact_labeled_ids": list(PINNED_L8_PATIENT_IDS),
+        },
+        "cache_sha256": cache_sha,
+        "reproduction": {
+            "schema": "self_audit.b8.reproduction.v1",
+            "source_commit": receipt["source_commit"],
+            "source_sha256": receipt["source_sha256"],
+            "raw_student_sha256": receipt["raw_student_sha256"],
+            "checkpoint_payload_sha256": receipt["checkpoint_payload_sha256"],
+            "quality_gate": receipt["quality_gate"],
+            "Macro4": receipt["metrics"]["test50"]["Macro4"],
+            "foreground": receipt["metrics"]["test50"]["foreground"],
+        },
+    }
+    if "source_training_cost" in receipt:
+        derived["teacher"]["source_training_cost"] = receipt["source_training_cost"]
+    else:
+        derived["teacher"]["source_training_cost"] = "NOT_KNOWN"
+    if "parent_receipt_sha256" in receipt:
+        derived["teacher"]["parent_receipt_sha256"] = receipt["parent_receipt_sha256"]
+
+    derived_errors = validate_locked_protocol(derived, reproduction_receipt=receipt)
+    if derived_errors:
+        raise ValueError(f"derived reproduction protocol failed validation: {derived_errors}")
+
+    return derived
 
 
 # ==============================================================================
@@ -420,34 +546,77 @@ def check_active_training_jobs() -> Dict[str, Any]:
 # Comprehensive Transfer Preflight
 # ==============================================================================
 
-def _verify_physical_teacher_and_cache(manifest_path, payload_path, cache_path,
-                                      cache_sha, identity, train_path, train_sha, receipt):
+def _verify_physical_teacher_and_cache(
+    manifest_path,
+    payload_path,
+    cache_path,
+    cache_sha,
+    identity,
+    train_path,
+    train_sha,
+    receipt,
+    *,
+    reproduction_receipt=None,
+    reproduction_source_dir=None,
+):
     """Read pinned teacher/quality/cache assets only after the label-union gate."""
     from .compact_data import CompactTrainingData
     from .compact_teacher import FixedTeacherCache, HISTORICAL_SOURCE_CLOSURE, HISTORICAL_SOURCE_COMMIT
     import torch
 
     manifest = _read_json(manifest_path)
-    if (manifest.get("schema") != "self_audit.checkpoint.v2"
+    if reproduction_receipt is not None:
+        repro = validate_reproduction_receipt(reproduction_receipt)
+        if (
+            manifest.get("schema") not in ("self_audit.checkpoint.v2", "self_audit.b8.raw_student.v1")
+            or manifest.get("source_sha256") != repro["source_sha256"]
+            or identity.get("source_sha256") != repro["source_sha256"]
+            or identity.get("source_commit") != repro["source_commit"]
+            or manifest.get("synthetic", False)
+        ):
+            raise ValueError("physical reproduction B8 teacher source/config/state identity mismatch")
+        if reproduction_source_dir is not None:
+            from .compact_teacher import verify_reproduction_source
+            verify_reproduction_source(
+                reproduction_source_dir,
+                expected_commit=repro["source_commit"],
+                expected_closure=repro["source_sha256"],
+            )
+        macro4 = repro["metrics"]["test50"]["Macro4"]
+        if macro4 < 0.87 or repro["quality_gate"] != "GO":
+            raise ValueError("reproduction teacher quality gate failed: Macro4 < 0.87")
+        quality_sha = repro.get("receipt_file_sha256", "reproduction_receipt_verified")
+    else:
+        if (
+            manifest.get("schema") != "self_audit.checkpoint.v2"
             or manifest.get("source_sha256") != HISTORICAL_SOURCE_CLOSURE
             or identity.get("source_sha256") != HISTORICAL_SOURCE_CLOSURE
             or identity.get("source_commit") != HISTORICAL_SOURCE_COMMIT
             or manifest.get("config", {}).get("method") != "ema_full"
-            or manifest.get("synthetic", False)):
-        raise ValueError("physical B8 teacher source/config/state identity mismatch")
-    quality = identity["quality_receipt"]
-    quality_path = Path(quality.get("path", ""))
-    quality_sha = _require_sha256(quality.get("sha256"), "quality receipt")
-    if not quality_path.is_file() or digest(quality_path) != quality_sha:
-        raise ValueError("physical quality receipt missing or hash mismatch")
-    record = _read_json(quality_path)
-    if (record.get("checkpoint_manifest_sha256") != PINNED_B8_TEACHER_MANIFEST_SHA256
+            or manifest.get("synthetic", False)
+        ):
+            raise ValueError("physical B8 teacher source/config/state identity mismatch")
+        quality = identity["quality_receipt"]
+        quality_path = Path(quality.get("path", ""))
+        quality_sha = _require_sha256(quality.get("sha256"), "quality receipt")
+        if not quality_path.is_file() or digest(quality_path) != quality_sha:
+            raise ValueError("physical quality receipt missing or hash mismatch")
+        record = _read_json(quality_path)
+        if (
+            record.get("checkpoint_manifest_sha256") != PINNED_B8_TEACHER_MANIFEST_SHA256
             or record.get("inference_state") != "student"
-            or type(record.get("class_first_macro4")) not in (int,float)
-            or not 0 <= record["class_first_macro4"] <= 1):
-        raise ValueError("quality receipt does not bind the raw B8 checkpoint")
+            or type(record.get("class_first_macro4")) not in (int, float)
+            or not 0 <= record["class_first_macro4"] <= 1
+        ):
+            raise ValueError("quality receipt does not bind the raw B8 checkpoint")
+
     payload = torch.load(payload_path, map_location="cpu", weights_only=True)
-    state = payload.get("student") if isinstance(payload, Mapping) else None
+    if isinstance(payload, Mapping) and "student" in payload:
+        state = payload["student"]
+    elif isinstance(payload, Mapping):
+        state = payload
+    else:
+        state = None
     if not isinstance(state, Mapping) or not state:
         raise ValueError("physical teacher payload lacks raw student state")
     if any(not torch.isfinite(value).all() for value in state.values() if isinstance(value, torch.Tensor)):
@@ -459,9 +628,12 @@ def _verify_physical_teacher_and_cache(manifest_path, payload_path, cache_path,
         cache.close()
     finally:
         data.close()
-    receipt["checks"]["quality_receipt"] = {"status":"PASS", "sha256":quality_sha,
-        "scope":"previously observed receipt only; no new TEST/VAL scoring"}
-    receipt["checks"]["cache_payloads"] = {"status":"PASS", "manifest_sha256":cache_sha}
+    receipt["checks"]["quality_receipt"] = {
+        "status": "PASS",
+        "sha256": quality_sha,
+        "scope": "previously observed receipt only; no new TEST/VAL scoring",
+    }
+    receipt["checks"]["cache_payloads"] = {"status": "PASS", "manifest_sha256": cache_sha}
 
 
 def check_preflight(
@@ -480,6 +652,9 @@ def check_preflight(
     teacher_cache_sha256: Optional[str] = None,
     val_manifest: Optional[Union[str, Path]] = None,
     val_manifest_sha256: Optional[str] = None,
+    reproduction_receipt: Optional[Union[str, Path, Mapping[str, Any]]] = None,
+    reproduction_receipt_sha256: Optional[str] = None,
+    reproduction_source_dir: Optional[Union[str, Path]] = None,
 ) -> Dict[str, Any]:
     """Execute rigorous preflight validation for scalar transfer-utility study.
 
@@ -543,8 +718,28 @@ def check_preflight(
     else:
         receipt["checks"]["gpu_occupancy"] = {"status": "SKIPPED", "synthetic": bool(synthetic), "device": str(device)}
 
+    # Validate reproduction receipt if provided
+    validated_repro = None
+    if reproduction_receipt is not None:
+        try:
+            validated_repro = validate_reproduction_receipt(
+                reproduction_receipt,
+                expected_receipt_sha256=reproduction_receipt_sha256,
+            )
+            receipt["checks"]["reproduction_receipt"] = {
+                "status": "PASS",
+                "schema": validated_repro["schema"],
+                "quality_gate": validated_repro["quality_gate"],
+                "Macro4": validated_repro["metrics"]["test50"]["Macro4"],
+                "remote_verified": True,
+            }
+        except Exception as exc:
+            receipt["reasons"].append(f"Reproduction receipt validation failed: {exc}")
+            receipt["status"] = "NOT_RUN"
+            return receipt
+
     # 4. Strict protocol lock validation
-    proto_errors = validate_locked_protocol(protocol)
+    proto_errors = validate_locked_protocol(protocol, reproduction_receipt=validated_repro)
     if proto_errors:
         receipt["checks"]["protocol"] = {"status": "INVALID_PROTOCOL", "errors": proto_errors}
         receipt["reasons"].extend(proto_errors)
@@ -677,8 +872,20 @@ def check_preflight(
 
         # 5c. Physical Teacher Checkpoint Validation
         t_checkpoint = teacher_checkpoint or protocol.get("teacher", {}).get("source")
-        t_manifest_sha = teacher_checkpoint_sha256 or protocol.get("teacher", {}).get("source_manifest_sha256") or PINNED_B8_TEACHER_MANIFEST_SHA256
-        t_payload_sha = teacher_payload_sha256 or protocol.get("teacher", {}).get("source_payload_sha256") or PINNED_RAW_PAYLOAD_SHA256
+        if validated_repro is not None:
+            t_manifest_sha = (
+                teacher_checkpoint_sha256
+                or protocol.get("teacher", {}).get("source_manifest_sha256")
+                or validated_repro["checkpoint_manifest_sha256"]
+            )
+            t_payload_sha = (
+                teacher_payload_sha256
+                or protocol.get("teacher", {}).get("source_payload_sha256")
+                or validated_repro["raw_student_sha256"]
+            )
+        else:
+            t_manifest_sha = teacher_checkpoint_sha256 or protocol.get("teacher", {}).get("source_manifest_sha256") or PINNED_B8_TEACHER_MANIFEST_SHA256
+            t_payload_sha = teacher_payload_sha256 or protocol.get("teacher", {}).get("source_payload_sha256") or PINNED_RAW_PAYLOAD_SHA256
 
         if not t_checkpoint:
             receipt["reasons"].append("Protocol missing teacher checkpoint path; execution blocked.")
@@ -693,7 +900,9 @@ def check_preflight(
 
         t_manifest_file = t_dir / "MANIFEST.json"
         if not t_manifest_file.is_file():
-            receipt["reasons"].append(f"Teacher MANIFEST.json not found in checkpoint dir: {t_manifest_file}")
+            t_manifest_file = t_dir / "RAW_STUDENT.json"
+        if not t_manifest_file.is_file():
+            receipt["reasons"].append(f"Teacher manifest not found in checkpoint dir: {t_dir}")
             receipt["status"] = "NOT_RUN"
             return receipt
 
@@ -703,17 +912,32 @@ def check_preflight(
             receipt["status"] = "NOT_RUN"
             return receipt
 
-        if actual_t_msha.lower() != PINNED_B8_TEACHER_MANIFEST_SHA256.lower():
-            receipt["reasons"].append(f"Teacher manifest SHA does not match immutable B8 pin {PINNED_B8_TEACHER_MANIFEST_SHA256}")
-            receipt["status"] = "NOT_RUN"
-            return receipt
+        if validated_repro is None:
+            if actual_t_msha.lower() != PINNED_B8_TEACHER_MANIFEST_SHA256.lower():
+                receipt["reasons"].append(f"Teacher manifest SHA does not match immutable B8 pin {PINNED_B8_TEACHER_MANIFEST_SHA256}")
+                receipt["status"] = "NOT_RUN"
+                return receipt
 
-        # Validate physical payload weights exist and match expected SHA
-        # find_checkpoint_payload takes positional expected SHA
-        if t_payload_sha != PINNED_RAW_PAYLOAD_SHA256:
-            receipt["status"] = "NOT_RUN"
-            receipt["reasons"].append("teacher payload differs from pinned raw B8 payload")
-            return receipt
+            # Validate physical payload weights exist and match expected SHA
+            # find_checkpoint_payload takes positional expected SHA
+            if t_payload_sha != PINNED_RAW_PAYLOAD_SHA256:
+                receipt["status"] = "NOT_RUN"
+                receipt["reasons"].append("teacher payload differs from pinned raw B8 payload")
+                return receipt
+        else:
+            if actual_t_msha.lower() != validated_repro["checkpoint_manifest_sha256"].lower():
+                receipt["reasons"].append(f"Teacher manifest SHA does not match reproduction receipt {validated_repro['checkpoint_manifest_sha256']}")
+                receipt["status"] = "NOT_RUN"
+                return receipt
+            allowed_pshas = {
+                validated_repro["raw_student_sha256"].lower(),
+                validated_repro["checkpoint_payload_sha256"].lower(),
+            }
+            if t_payload_sha.lower() not in allowed_pshas:
+                receipt["status"] = "NOT_RUN"
+                receipt["reasons"].append(f"teacher payload {t_payload_sha} not in reproduction receipt payloads {allowed_pshas}")
+                return receipt
+
         payload_p: Optional[Path] = None
         try:
             payload_p = find_checkpoint_payload(t_dir, t_payload_sha)
@@ -725,10 +949,17 @@ def check_preflight(
 
         # 5d. Teacher Cache Validation & Strict Identity
         t_cache = teacher_cache or protocol.get("teacher", {}).get("cache_path")
-        t_cache_sha = teacher_cache_sha256 or protocol.get("teacher", {}).get("cache_sha256") or PINNED_TEACHER_CACHE_SHA256
+        if validated_repro is not None:
+            t_cache_sha = teacher_cache_sha256 or protocol.get("teacher", {}).get("cache_sha256")
+        else:
+            t_cache_sha = teacher_cache_sha256 or protocol.get("teacher", {}).get("cache_sha256") or PINNED_TEACHER_CACHE_SHA256
 
         if t_cache is None:
             receipt["reasons"].append("Teacher cache directory is required for transfer utility distillation pilot.")
+            receipt["status"] = "NOT_RUN"
+            return receipt
+        if not t_cache_sha:
+            receipt["reasons"].append("Teacher cache SHA256 is required.")
             receipt["status"] = "NOT_RUN"
             return receipt
 
@@ -745,10 +976,11 @@ def check_preflight(
             receipt["status"] = "NOT_RUN"
             return receipt
 
-        if actual_c_sha.lower() != PINNED_TEACHER_CACHE_SHA256.lower():
-            receipt["reasons"].append(f"Teacher cache manifest SHA does not match immutable pin {PINNED_TEACHER_CACHE_SHA256}")
-            receipt["status"] = "NOT_RUN"
-            return receipt
+        if validated_repro is None:
+            if actual_c_sha.lower() != PINNED_TEACHER_CACHE_SHA256.lower():
+                receipt["reasons"].append(f"Teacher cache manifest SHA does not match immutable pin {PINNED_TEACHER_CACHE_SHA256}")
+                receipt["status"] = "NOT_RUN"
+                return receipt
 
         # Read exact teacher identity from pinned cache manifest; NEVER invent or fallback
         try:
@@ -759,9 +991,10 @@ def check_preflight(
                 receipt["status"] = "NOT_RUN"
                 return receipt
 
-            # Validate canonical identity attributes
-            if teacher_identity.get("teacher_kind") != "canonical":
-                receipt["reasons"].append(f"Teacher identity kind mismatch: expected 'canonical', got {teacher_identity.get('teacher_kind')!r}")
+            # Validate teacher identity kind
+            expected_kind = "reproduction" if validated_repro is not None else "canonical"
+            if teacher_identity.get("teacher_kind") != expected_kind:
+                receipt["reasons"].append(f"Teacher identity kind mismatch: expected '{expected_kind}', got {teacher_identity.get('teacher_kind')!r}")
                 receipt["status"] = "NOT_RUN"
                 return receipt
 
@@ -791,11 +1024,21 @@ def check_preflight(
                 student_labeled_ids=PINNED_L8_PATIENT_IDS,
                 label_budget=PINNED_LABEL_BUDGET_K,
                 declared_labeled_ids=PINNED_L8_PATIENT_IDS,
-                teacher_kind="canonical",
+                teacher_kind=expected_kind,
             )
             receipt["checks"]["teacher_lineage"] = lineage_receipt
-            _verify_physical_teacher_and_cache(t_manifest_file, payload_p, c_manifest_file,
-                actual_c_sha, ident_receipt, data_p, actual_dsha, receipt)
+            _verify_physical_teacher_and_cache(
+                t_manifest_file,
+                payload_p,
+                c_manifest_file,
+                actual_c_sha,
+                ident_receipt,
+                data_p,
+                actual_dsha,
+                receipt,
+                reproduction_receipt=validated_repro,
+                reproduction_source_dir=reproduction_source_dir,
+            )
 
         except Exception as exc:
             receipt["reasons"].append(f"Teacher identity or lineage preflight failed: {exc}")

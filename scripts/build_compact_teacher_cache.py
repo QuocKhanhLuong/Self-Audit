@@ -28,8 +28,10 @@ from self_audit.compact_teacher import (
     HISTORICAL_BASELINE_PINS,
     build_teacher_cache,
     load_teacher_for_cache,
+    validate_reproduction_receipt,
     validate_teacher_identity,
     verify_historical_source,
+    verify_reproduction_source,
 )
 from self_audit.model import build_model, digest
 
@@ -50,6 +52,9 @@ def main() -> int:
 
     parser.add_argument("--teacher-identity", help="Pinned identity JSON for a matching-budget canonical teacher")
     parser.add_argument("--teacher-identity-sha256")
+    parser.add_argument("--reproduction-receipt", type=str, default=None, help="Path to reproduction teacher receipt JSON.")
+    parser.add_argument("--reproduction-receipt-sha256", type=str, default=None, help="Expected SHA256 of reproduction receipt.")
+    parser.add_argument("--reproduction-source", type=str, default=None, help="Explicit path to reproduction source repository.")
     args = parser.parse_args()
 
     manifest_path = Path(args.data_manifest).resolve()
@@ -83,6 +88,28 @@ def main() -> int:
             "label_budget": len(data.lids),
             "labeled_ids": list(data.lids),
         }
+    elif args.reproduction_receipt:
+        if not args.reproduction_receipt_sha256:
+            parser.error("--reproduction-receipt requires --reproduction-receipt-sha256")
+        if not args.checkpoint_dir:
+            parser.error("--reproduction-receipt requires --checkpoint-dir")
+        if not args.reproduction_source:
+            parser.error("--reproduction-receipt requires explicit --reproduction-source")
+        receipt_path = Path(args.reproduction_receipt).resolve()
+        teacher_id = validate_reproduction_receipt(
+            receipt_path,
+            expected_receipt_sha256=args.reproduction_receipt_sha256,
+            checkpoint_dir=args.checkpoint_dir,
+        )
+        teacher_id["teacher_kind"] = "reproduction"
+        validate_teacher_identity(teacher_id, data=data)
+        teacher_model = load_teacher_for_cache(
+            args.checkpoint_dir,
+            teacher_identity=teacher_id,
+            device=args.device,
+            reproduction_source_path=args.reproduction_source,
+            synthetic=is_synthetic,
+        )
     elif args.teacher_identity:
         if not args.teacher_identity_sha256 or digest(args.teacher_identity) != args.teacher_identity_sha256:
             raise ValueError("teacher identity requires its exact SHA256")

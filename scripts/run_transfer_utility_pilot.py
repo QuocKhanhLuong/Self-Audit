@@ -39,6 +39,7 @@ from self_audit.compact_artifacts import (
 from self_audit.compact_data import CompactTrainingData, synthetic_compact_fixture
 from self_audit.transfer_preflight import (
     check_preflight, check_gpu_occupancy, check_active_training_jobs, validate_locked_protocol,
+    derive_reproduction_protocol,
 )
 
 # Immutable Protocol Specification Pins
@@ -539,7 +540,7 @@ def analyze_checkpoint_evaluations(eval_dir: Path | str) -> Dict[str, Any]:
 # CLI Entrypoint
 # ==============================================================================
 
-def bind_teacher_config(config, cache_path=None, cache_sha=None):
+def bind_teacher_config(config, cache_path=None, cache_sha=None, *, protocol=None, reproduction_receipt=None):
     """Bind the actual cache identity; never manufacture a verified teacher."""
     cfg = copy.deepcopy(config)
     teacher = cfg.setdefault("teacher", {})
@@ -555,9 +556,48 @@ def bind_teacher_config(config, cache_path=None, cache_sha=None):
         identity = cache["teacher_identity"]
         teacher.update(cache_path=str(path), cache_sha256=digest(path),
                        teacher_identity=identity)
-        # Costs remain evidence, not a claim that we reran the source teacher.
-        teacher["source_training_cost"] = identity.get(
-            "source_training_cost", teacher.get("source_training_cost", "NOT_KNOWN"))
+
+        # Detect reproduction teacher
+        is_repro = (
+            identity.get("teacher_kind") == "reproduction"
+            or bool(reproduction_receipt)
+            or (protocol and protocol.get("teacher", {}).get("reproduction") is not None)
+        )
+
+        if is_repro or identity.get("teacher_kind") == "reproduction":
+            chk_msha = identity.get("checkpoint_manifest_sha256") or identity.get("manifest_sha256")
+            chk_psha = identity.get("checkpoint_payload_sha256") or identity.get("payload_sha256")
+            if chk_msha:
+                teacher["source_manifest_sha256"] = chk_msha.lower()
+            if chk_psha:
+                teacher["source_payload_sha256"] = chk_psha.lower()
+            if "labeled_ids" in identity:
+                teacher["lineage"] = {
+                    "budget_k": len(identity["labeled_ids"]),
+                    "exact_labeled_ids": list(identity["labeled_ids"]),
+                }
+            if "parent_receipt_sha256" in identity:
+                teacher["parent_receipt_sha256"] = identity["parent_receipt_sha256"]
+
+            # Cost attribution: preserve measured or explicit cost from receipt/identity;
+            # default to "NOT_KNOWN" for reproduction; NEVER fall back to old archived cost!
+            if "source_training_cost" in identity and identity["source_training_cost"] is not None:
+                teacher["source_training_cost"] = identity["source_training_cost"]
+            else:
+                teacher["source_training_cost"] = "NOT_KNOWN"
+        else:
+            # Canonical teacher
+            teacher["source_training_cost"] = identity.get(
+                "source_training_cost", teacher.get("source_training_cost", "NOT_KNOWN"))
+
+    # Runtime policy: if protocol specifies deterministic_algorithms, apply to config
+    if protocol:
+        rp = protocol.get("runtime_policy", {})
+        if isinstance(rp, Mapping) and "deterministic_algorithms" in rp:
+            det = bool(rp["deterministic_algorithms"])
+            cfg["deterministic_algorithms"] = det
+            cfg.setdefault("runtime_policy", {})["deterministic_algorithms"] = det
+
     return cfg
 
 
@@ -575,7 +615,7 @@ def _run_logged(cmd, root, tag, timeout):
         raise RuntimeError(f"{tag} exited {result.returncode}; see {root / (tag + '.stderr.log')}")
 
 
-def validate_arm_config(cfg, protocol, arm_name):
+def validate_arm_config(cfg, protocol, arm_name, reproduction_receipt=None):
     """Refuse hidden experimental factors in locked real pilot configurations."""
     from self_audit.compact_training import validate_compact_config
     canonical = read_json(ROOT / "configs/transfer_utility" / f"{arm_name}.json")
@@ -591,27 +631,41 @@ def validate_arm_config(cfg, protocol, arm_name):
         raise ValueError("locked architecture/data mismatch")
     if actual['steps'] != protocol['budget']['total_steps'] or actual['warmup_steps'] != protocol['budget']['warmup_steps']:
         raise ValueError("locked steps mismatch")
+
+    # Verify runtime_policy / deterministic_algorithms if present in protocol
+    rp = protocol.get("runtime_policy", {})
+    if isinstance(rp, Mapping) and "deterministic_algorithms" in rp:
+        expected_det = bool(rp["deterministic_algorithms"])
+        actual_det = bool(actual.get("deterministic_algorithms", False))
+        if actual_det != expected_det:
+            raise ValueError(f"deterministic_algorithms mismatch: arm has {actual_det}, protocol requires {expected_det}")
+
     # Runtime assets are hash-verified separately. All other settings are frozen.
     for item in (actual, expected):
         teacher = item.get("teacher", {})
-        for key in ("cache_path", "cache_sha256", "teacher_identity", "source", "source_training_cost"):
+        for key in ("cache_path", "cache_sha256", "teacher_identity", "source", "source_training_cost",
+                    "source_manifest_sha256", "source_payload_sha256", "lineage", "parent_receipt_sha256"):
             teacher.pop(key, None)
+        item.pop("deterministic_algorithms", None)
+        item.pop("runtime_policy", None)
     if actual != expected:
         raise ValueError(f"{arm_name}: config differs from the locked arm")
-    errors = validate_locked_protocol(protocol)
+    errors = validate_locked_protocol(protocol, reproduction_receipt=reproduction_receipt)
     if errors:
         raise ValueError("; ".join(errors))
 
 
 def run_bounded_profile(config_path, out_dir, *, device="cpu", synthetic=True,
                         data_manifest=None, data_manifest_sha256=None, max_steps=32,
-                        py_exec=sys.executable, teacher_cache=None, teacher_cache_sha256=None):
+                        py_exec=sys.executable, teacher_cache=None, teacher_cache_sha256=None,
+                        protocol=None, reproduction_receipt=None, reproduction_receipt_sha256=None):
     """Resource measurement only, separate initialization and budget from pilot."""
     if isinstance(max_steps, bool) or not 2 <= max_steps <= 32:
         raise ValueError("bounded profile requires 2..32 steps")
     out = Path(out_dir).resolve()
     out.mkdir(parents=True, exist_ok=False)
-    cfg = bind_teacher_config(read_json(config_path), teacher_cache, teacher_cache_sha256)
+    cfg = bind_teacher_config(read_json(config_path), teacher_cache, teacher_cache_sha256,
+                              protocol=protocol, reproduction_receipt=reproduction_receipt)
     cfg.update(steps=max_steps, warmup_steps=min(8, max_steps // 2), save_every=max_steps)
     if synthetic and not data_manifest:
         data_manifest, data_manifest_sha256 = synthetic_compact_fixture(
@@ -624,7 +678,7 @@ def run_bounded_profile(config_path, out_dir, *, device="cpu", synthetic=True,
         ids = CompactTrainingData(data_manifest, data_manifest_sha256, synthetic=True, allow_k1=True).lids
         cfg["data"] = {"manifest_sha256": data_manifest_sha256, "budget_k": len(ids), "labeled_ids": ids}
         cfg["teacher"] = {"lineage": {"budget_k": len(ids), "exact_labeled_ids": ids}}
-        cfg = bind_teacher_config(cfg, cache, digest(cache))
+        cfg = bind_teacher_config(cfg, cache, digest(cache), protocol=protocol, reproduction_receipt=reproduction_receipt)
     config_file = out / "profile_config.json"
     write_json(config_file, cfg)
     command, _ = build_train_command(config_file, out / "training", data_manifest=data_manifest,
@@ -721,11 +775,17 @@ def execute_arm(arm_name, config_path, arm_out_dir, *, data_manifest=None,
                 data_manifest_sha256=None, val_manifest=None, val_manifest_sha256=None,
                 device="cpu", synthetic=False, watchdog_seconds=WATCHDOG_DEFAULT_SECONDS,
                 py_exec=sys.executable, teacher_cache=None, teacher_cache_sha256=None,
-                stop_after_steps=None):
+                stop_after_steps=None, protocol=None, reproduction_receipt=None,
+                reproduction_receipt_sha256=None):
     """Fresh output per segment. Export/reload and VAL evaluation at every boundary."""
-    cfg = bind_teacher_config(read_json(config_path), teacher_cache, teacher_cache_sha256)
+    if protocol is None:
+        protocol = read_json(ROOT / "configs/transfer_utility/protocol.json")
+    elif isinstance(protocol, (str, Path)):
+        protocol = read_json(protocol)
+    cfg = bind_teacher_config(read_json(config_path), teacher_cache, teacher_cache_sha256,
+                              protocol=protocol, reproduction_receipt=reproduction_receipt)
     if not synthetic:
-        validate_arm_config(cfg, read_json(ROOT / "configs/transfer_utility/protocol.json"), arm_name)
+        validate_arm_config(cfg, protocol, arm_name, reproduction_receipt=reproduction_receipt)
     if not all((data_manifest, data_manifest_sha256, val_manifest, val_manifest_sha256)):
         raise ValueError("arm execution requires hash-pinned TRAIN and VAL manifests")
     total = cfg["steps"]
@@ -811,7 +871,8 @@ def orchestrate_pilot(protocol_path, matrix_path, out_dir, *, data_manifest=None
         data_manifest_sha256=None, val_manifest=None, val_manifest_sha256=None, device="cuda",
         synthetic=False, skip_preflight=False, skip_jobs_check=False, teacher_checkpoint=None,
         teacher_checkpoint_sha256=None, teacher_payload_sha256=None, teacher_cache=None,
-        teacher_cache_sha256=None, py_exec=sys.executable):
+        teacher_cache_sha256=None, reproduction_receipt=None, reproduction_receipt_sha256=None,
+        reproduction_source=None, py_exec=sys.executable):
     """Locked profile then four sequential arms; no implicit restarts or budget changes."""
     if skip_preflight or (skip_jobs_check and not synthetic):
         raise ValueError("real pilot safety/provenance preflight cannot be bypassed")
@@ -822,7 +883,10 @@ def orchestrate_pilot(protocol_path, matrix_path, out_dir, *, data_manifest=None
         check_jobs=not skip_jobs_check, teacher_checkpoint=teacher_checkpoint,
         teacher_checkpoint_sha256=teacher_checkpoint_sha256, teacher_payload_sha256=teacher_payload_sha256,
         teacher_cache=teacher_cache, teacher_cache_sha256=teacher_cache_sha256,
-        val_manifest=val_manifest, val_manifest_sha256=val_manifest_sha256)
+        val_manifest=val_manifest, val_manifest_sha256=val_manifest_sha256,
+        reproduction_receipt=reproduction_receipt,
+        reproduction_receipt_sha256=reproduction_receipt_sha256,
+        reproduction_source_dir=reproduction_source)
     if preflight["status"] != "PASS":
         return {"status": "BLOCKED", "preflight": preflight, "arm_results": {}}
     expected_matrix = read_json(ROOT / "configs/transfer_utility/matrix.json")
@@ -839,7 +903,9 @@ def orchestrate_pilot(protocol_path, matrix_path, out_dir, *, data_manifest=None
     write_json(report_path, report)
     common = dict(data_manifest=data_manifest, data_manifest_sha256=data_manifest_sha256,
                   device=device, synthetic=False, teacher_cache=teacher_cache,
-                  teacher_cache_sha256=teacher_cache_sha256, py_exec=py_exec)
+                  teacher_cache_sha256=teacher_cache_sha256, py_exec=py_exec,
+                  protocol=protocol, reproduction_receipt=reproduction_receipt,
+                  reproduction_receipt_sha256=reproduction_receipt_sha256)
     profile = run_bounded_profile(ROOT / "configs/transfer_utility/profile_32steps.json", out / "profile", **common)
     report["profile"] = profile
     if profile["status"] != "PASS":
@@ -898,13 +964,36 @@ def main() -> int:
     parser.add_argument("--arm", choices=["plain_kd", "scalar_guard_original", "scalar_guard_larger_tie", "scalar_guard_cross_patient_utility", "scalar_guard_same_batch_control"])
     parser.add_argument("--skip-preflight", action="store_true")
     parser.add_argument("--skip-jobs-check", action="store_true", help="Bypass active jobs preflight check")
+    parser.add_argument("--reproduction-receipt", help="Path to reproduction teacher receipt JSON")
+    parser.add_argument("--reproduction-receipt-sha256", help="Expected SHA256 of reproduction teacher receipt")
+    parser.add_argument("--reproduction-source", help="Path to reproduction source directory")
+    parser.add_argument("--derive-reproduction-protocol", help="Output path to write derived reproduction protocol")
     args = parser.parse_args()
 
+    if args.reproduction_receipt and not args.reproduction_receipt_sha256:
+        parser.error("--reproduction-receipt requires --reproduction-receipt-sha256")
     if (args.skip_preflight or args.skip_jobs_check) and not args.synthetic:
         parser.error("real pilot preflight cannot be bypassed")
     protocol_p = Path(args.protocol).resolve()
     matrix_p = Path(args.matrix).resolve()
     out_p = Path(args.out).resolve()
+
+    if args.derive_reproduction_protocol:
+        if not args.reproduction_receipt:
+            parser.error("--derive-reproduction-protocol requires --reproduction-receipt")
+        if not args.teacher_cache_sha256:
+            parser.error("--derive-reproduction-protocol requires --teacher-cache-sha256")
+        base_proto = read_json(protocol_p)
+        repro_receipt_data = read_json(Path(args.reproduction_receipt).resolve())
+        derived = derive_reproduction_protocol(
+            base_proto,
+            repro_receipt_data,
+            args.teacher_cache_sha256,
+        )
+        out_derived = Path(args.derive_reproduction_protocol).resolve()
+        write_json(out_derived, derived)
+        print(f"Derived reproduction protocol written to {out_derived} (SHA256: {digest(out_derived)})")
+        return 0
 
     if args.mode == "preflight":
         protocol = read_json(protocol_p)
@@ -922,6 +1011,9 @@ def main() -> int:
             teacher_cache=args.teacher_cache,
             teacher_cache_sha256=args.teacher_cache_sha256,
             val_manifest=args.val_manifest, val_manifest_sha256=args.val_manifest_sha256,
+            reproduction_receipt=args.reproduction_receipt,
+            reproduction_receipt_sha256=args.reproduction_receipt_sha256,
+            reproduction_source_dir=args.reproduction_source,
         )
         print(json.dumps(receipt, indent=2))
         return 0 if receipt["status"] == "PASS" else 2
@@ -934,7 +1026,10 @@ def main() -> int:
                 teacher_checkpoint_sha256=args.teacher_checkpoint_sha256,
                 teacher_payload_sha256=args.teacher_payload_sha256, teacher_cache=args.teacher_cache,
                 teacher_cache_sha256=args.teacher_cache_sha256, val_manifest=args.val_manifest,
-                val_manifest_sha256=args.val_manifest_sha256)
+                val_manifest_sha256=args.val_manifest_sha256,
+                reproduction_receipt=args.reproduction_receipt,
+                reproduction_receipt_sha256=args.reproduction_receipt_sha256,
+                reproduction_source_dir=args.reproduction_source)
             if preflight["status"] != "PASS":
                 print(json.dumps(preflight, indent=2))
                 return 2
@@ -945,7 +1040,10 @@ def main() -> int:
                 data_manifest=args.data, data_manifest_sha256=args.data_sha256,
                 val_manifest=args.val_manifest, val_manifest_sha256=args.val_manifest_sha256,
                 device=args.device, synthetic=args.synthetic, teacher_cache=args.teacher_cache,
-                teacher_cache_sha256=args.teacher_cache_sha256)
+                teacher_cache_sha256=args.teacher_cache_sha256,
+                protocol=read_json(protocol_p),
+                reproduction_receipt=args.reproduction_receipt,
+                reproduction_receipt_sha256=args.reproduction_receipt_sha256)
             print(json.dumps(result, indent=2))
             return 0 if result["status"] == "COMPLETED" else 2
         receipt = run_bounded_profile(
@@ -956,6 +1054,9 @@ def main() -> int:
             data_manifest=args.data,
             data_manifest_sha256=args.data_sha256,
             max_steps=32, teacher_cache=args.teacher_cache, teacher_cache_sha256=args.teacher_cache_sha256,
+            protocol=read_json(protocol_p),
+            reproduction_receipt=args.reproduction_receipt,
+            reproduction_receipt_sha256=args.reproduction_receipt_sha256,
         )
         print(json.dumps(receipt, indent=2))
         return 0 if receipt["status"] == "PASS" else 2
@@ -987,6 +1088,9 @@ def main() -> int:
             teacher_payload_sha256=args.teacher_payload_sha256,
             teacher_cache=args.teacher_cache,
             teacher_cache_sha256=args.teacher_cache_sha256,
+            reproduction_receipt=args.reproduction_receipt,
+            reproduction_receipt_sha256=args.reproduction_receipt_sha256,
+            reproduction_source=args.reproduction_source,
         )
         print(json.dumps({"status": report["status"], "screening": report.get("screening")}, indent=2))
         return 0 if report["status"] in ("PILOT_GO", "NO_GO", "PASS", "SYNTHETIC_PASS") else 2
