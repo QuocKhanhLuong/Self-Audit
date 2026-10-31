@@ -24,6 +24,8 @@ def main():
     parser.add_argument('--device', default='cpu')
     parser.add_argument('--transfer-utility', action='store_true',
                         help='Exercise the four scalar-transfer arms with a real synthetic cache')
+    parser.add_argument('--deterministic-algorithms', action='store_true',
+                        help='Use identical strict deterministic runtime for every compact arm')
     args = parser.parse_args()
     out = args.out.resolve()
     out.mkdir(parents=True, exist_ok=False)
@@ -65,6 +67,8 @@ def main():
         c=json.loads((ROOT/'configs/compact'/f'{template_method}.json').read_text())
         c.update(steps=4 if args.transfer_utility else 2,warmup_steps=1,seed=217,batch_size=1,labeled_batch_size=1,
                  unlabeled_batch_size=1,crop_size=16,pseudo_threshold=0.,max_trials=trial_cap)
+        if args.deterministic_algorithms:
+            c['deterministic_algorithms'] = True
         if args.transfer_utility:
             c.update(selector=method if method != 'plain_kd' else 'original',
                      probe_seed=42017, probe_batch_size=1,

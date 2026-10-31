@@ -1,0 +1,245 @@
+{
+  "status": "PASS",
+  "scope": "one supervised diagnostic; discarded weights; no quality claim",
+  "source_sha256": "3c7fa85f00d54a6e087af3cd6c7045351fb72d532f1069bf09d95f9cd72359b7",
+  "config_sha256": "066444a4b11a4c0f2254c68bcc663d79a2c0685fe536c02635d030f614b5821c",
+  "backbone": {
+    "pretrained": true,
+    "weights_sha256": "21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54",
+    "source_commit": "6876159a11b4df116f30f667f8c9888617df0751",
+    "lineage": "user_supplied_hash_pinned;not_independent_upstream_certification"
+  },
+  "scopes": {
+    "encoder": {
+      "grad_norm": 4.562193393707275,
+      "weight_change_norm": 0.15744470059871674,
+      "optimizer_owns_all": true
+    },
+    "input_adapter": {
+      "grad_norm": 0.0026510742027312517,
+      "weight_change_norm": 0.000220432790229097,
+      "optimizer_owns_all": true
+    },
+    "lateral": {
+      "grad_norm": 0.3822292387485504,
+      "weight_change_norm": 0.016548173502087593,
+      "optimizer_owns_all": true
+    },
+    "up": {
+      "grad_norm": 0.4140161871910095,
+      "weight_change_norm": 0.008815878070890903,
+      "optimizer_owns_all": true
+    },
+    "refine": {
+      "grad_norm": 1.7545654773712158,
+      "weight_change_norm": 0.06437577307224274,
+      "optimizer_owns_all": true
+    },
+    "detail": {
+      "grad_norm": 0.18281275033950806,
+      "weight_change_norm": 0.004183541052043438,
+      "optimizer_owns_all": true
+    },
+    "fuse": {
+      "grad_norm": 0.8246238827705383,
+      "weight_change_norm": 0.004518314264714718,
+      "optimizer_owns_all": true
+    },
+    "head": {
+      "grad_norm": 0.2774043381214142,
+      "weight_change_norm": 0.0008322121575474739,
+      "optimizer_owns_all": true
+    }
+  },
+  "loss": 2.300200939178467,
+  "seconds": 1.2919998639263213,
+  "peak_allocated": 3151816192,
+  "peak_reserved": 3548381184,
+  "labeled_patient": {
+    "patient": "patient007",
+    "frame": 0,
+    "slice": 7,
+    "crop": {
+      "original_hw": [
+        224,
+        222
+      ],
+      "pad_lrtb": [
+        17,
+        17,
+        16,
+        16
+      ],
+      "top": 0,
+      "left": 0,
+      "size": 256
+    },
+    "samples": [
+      {
+        "patient": "patient007",
+        "frame": 0,
+        "slice": 7,
+        "crop": {
+          "original_hw": [
+            224,
+            222
+          ],
+          "pad_lrtb": [
+            17,
+            17,
+            16,
+            16
+          ],
+          "top": 0,
+          "left": 0,
+          "size": 256
+        }
+      },
+      {
+        "patient": "patient007",
+        "frame": 0,
+        "slice": 8,
+        "crop": {
+          "original_hw": [
+            224,
+            222
+          ],
+          "pad_lrtb": [
+            17,
+            17,
+            16,
+            16
+          ],
+          "top": 0,
+          "left": 0,
+          "size": 256
+        }
+      },
+      {
+        "patient": "patient007",
+        "frame": 0,
+        "slice": 0,
+        "crop": {
+          "original_hw": [
+            224,
+            222
+          ],
+          "pad_lrtb": [
+            17,
+            17,
+            16,
+            16
+          ],
+          "top": 0,
+          "left": 0,
+          "size": 256
+        }
+      },
+      {
+        "patient": "patient007",
+        "frame": 6,
+        "slice": 7,
+        "crop": {
+          "original_hw": [
+            224,
+            222
+          ],
+          "pad_lrtb": [
+            17,
+            17,
+            16,
+            16
+          ],
+          "top": 0,
+          "left": 0,
+          "size": 256
+        }
+      },
+      {
+        "patient": "patient007",
+        "frame": 6,
+        "slice": 1,
+        "crop": {
+          "original_hw": [
+            224,
+            222
+          ],
+          "pad_lrtb": [
+            17,
+            17,
+            16,
+            16
+          ],
+          "top": 0,
+          "left": 0,
+          "size": 256
+        }
+      },
+      {
+        "patient": "patient007",
+        "frame": 6,
+        "slice": 3,
+        "crop": {
+          "original_hw": [
+            224,
+            222
+          ],
+          "pad_lrtb": [
+            17,
+            17,
+            16,
+            16
+          ],
+          "top": 0,
+          "left": 0,
+          "size": 256
+        }
+      },
+      {
+        "patient": "patient007",
+        "frame": 6,
+        "slice": 6,
+        "crop": {
+          "original_hw": [
+            224,
+            222
+          ],
+          "pad_lrtb": [
+            17,
+            17,
+            16,
+            16
+          ],
+          "top": 0,
+          "left": 0,
+          "size": 256
+        }
+      },
+      {
+        "patient": "patient007",
+        "frame": 6,
+        "slice": 4,
+        "crop": {
+          "original_hw": [
+            224,
+            222
+          ],
+          "pad_lrtb": [
+            17,
+            17,
+            16,
+            16
+          ],
+          "top": 0,
+          "left": 0,
+          "size": 256
+        }
+      }
+    ]
+  },
+  "label_reads": [
+    "patient007"
+  ],
+  "torch": "2.14.1+cu132",
+  "numpy": "2.5.4"
+}

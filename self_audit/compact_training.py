@@ -40,6 +40,7 @@ from .compact_control import (
 from .compact_data import CompactTrainingData, synthetic_compact_fixture
 from .compact_model import CompactStudent, build_compact_model
 from .compact_probe import CompactProbeSampler, build_same_batch_probe
+from .compact_runtime import with_compact_runtime
 from .compact_teacher import FixedTeacherCache, preflight_teacher_lineage, validate_teacher_identity
 from .data import write_json
 from .losses import supervised_loss
@@ -216,6 +217,8 @@ def validate_compact_config(
         raise TypeError("config must be a dictionary or Mapping")
 
     cfg = copy.deepcopy(dict(c))
+    if not isinstance(cfg.get("deterministic_algorithms", False), bool):
+        raise ValueError("deterministic_algorithms must be boolean")
     if cfg.get("schema") != "self_audit.compact.v1":
         raise ValueError(
             f"invalid schema '{cfg.get('schema')}'; expected 'self_audit.compact.v1'"
@@ -434,6 +437,7 @@ def validate_compact_config(
     return cfg
 
 
+@with_compact_runtime
 def train_compact(
     config: Mapping[str, Any],
     manifest_path: Union[str, Path],
