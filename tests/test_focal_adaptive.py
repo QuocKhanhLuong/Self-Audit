@@ -419,7 +419,8 @@ def test_parameterized_warmup_state_rejections(mutation, match):
 # 4. Integration: Uninterrupted vs Resumed Bit-Exact Parity
 # ==============================================================================
 
-def test_uninterrupted_vs_resumed_parity_focal_adaptive(tmp_path):
+@pytest.mark.parametrize("stop_step", [5, 7])
+def test_uninterrupted_vs_resumed_parity_focal_adaptive(tmp_path, stop_step):
     """Verify bit-exact parity between uninterrupted and interrupted-then-resumed runs with focal loss and train_plateau."""
     manifest, sha = synthetic_fixture(tmp_path / "data")
 
@@ -447,42 +448,44 @@ def test_uninterrupted_vs_resumed_parity_focal_adaptive(tmp_path):
         "name": "train_plateau",
         "interval_steps": 2,
         "factor": 0.5,
-        "patience": 1,
-        "threshold": 0.0001,
-        "threshold_mode": "rel",
+        "patience": 0,
+        "threshold": 1.0,
+        "threshold_mode": "abs",
         "cooldown": 0,
         "min_lr_factor": 0.1,
         "eps": 1e-8,
     }
 
     # 1. Uninterrupted Run
-    out_uninterrupted = tmp_path / "run_uninterrupted"
+    out_uninterrupted = tmp_path / f"run_uninterrupted_{stop_step}"
     report_un = train(c, manifest, sha, out_uninterrupted, device="cpu", synthetic=True)
     assert report_un["status"] == "COMPLETED"
     assert report_un["steps"] == 8
     assert report_un["scheduler_updates"] == 3  # (8 - 2) // 2 = 3 updates
 
-    # 2. Interrupted Run stopped at step 5 (middle of monitoring interval: steps 3, 4 was update 1; step 5 is middle of interval 2)
-    out_resumed = tmp_path / "run_resumed"
-    report_stop = train(c, manifest, sha, out_resumed, device="cpu", synthetic=True, stop_after_step=5)
+    # 2. Interrupted Run stopped at stop_step (step 5 is in middle of window; step 7 is after forced decay at 6)
+    out_resumed = tmp_path / f"run_resumed_{stop_step}"
+    report_stop = train(c, manifest, sha, out_resumed, device="cpu", synthetic=True, stop_after_step=stop_step)
     assert report_stop["status"] == "INTERRUPTED"
-    assert report_stop["step"] == 5
+    assert report_stop["step"] == stop_step
 
-    step5_dir = out_resumed / "step_000005"
-    assert step5_dir.is_dir()
-    step5_sha = digest(step5_dir / "MANIFEST.json")
-    step5_m = json.loads((step5_dir / "MANIFEST.json").read_text())
-    assert step5_m["lr_scheduler"]["metric_count"] == 1
-    assert step5_m["lr_scheduler"]["num_updates"] == 1
+    stop_dir = out_resumed / f"step_{stop_step:06d}"
+    assert stop_dir.is_dir()
+    stop_sha = digest(stop_dir / "MANIFEST.json")
+    stop_m = json.loads((stop_dir / "MANIFEST.json").read_text())
+    expected_updates = (stop_step - 2) // 2
+    expected_count = (stop_step - 2) % 2
+    assert stop_m["lr_scheduler"]["num_updates"] == expected_updates
+    assert stop_m["lr_scheduler"]["metric_count"] == expected_count
 
-    # 3. Resume Run from step 5 to completion (step 8)
+    # 3. Resume Run from stop_step to completion (step 8)
     report_res = train(c, manifest, sha, out_resumed, device="cpu", synthetic=True,
-                       resume=str(step5_dir), resume_sha256=step5_sha)
+                       resume=str(stop_dir), resume_sha256=stop_sha)
     assert report_res["status"] == "COMPLETED"
     assert report_res["steps"] == 8
     assert report_res["scheduler_updates"] == 3
 
-    # 4. Bit-exact payload comparison
+    # 4. Bit-exact payload comparison: student, teacher, RNG
     payload_un = torch.load(out_uninterrupted / "final/weights.pt", weights_only=True)
     payload_res = torch.load(out_resumed / "final/weights.pt", weights_only=True)
 
@@ -493,20 +496,59 @@ def test_uninterrupted_vs_resumed_parity_focal_adaptive(tmp_path):
     assert torch.equal(payload_un["torch_rng"], payload_res["torch_rng"])
     assert payload_un["py_rng"] == payload_res["py_rng"]
 
-    # Scheduler state dict equality
+    # Full optimizer states comparison
+    opts_un = payload_un["optimizers"]
+    opts_res = payload_res["optimizers"]
+    assert len(opts_un) == len(opts_res)
+    for i, (ou, or_) in enumerate(zip(opts_un, opts_res)):
+        assert len(ou["param_groups"]) == len(or_["param_groups"])
+        for pgu, pgr in zip(ou["param_groups"], or_["param_groups"]):
+            for k in pgu:
+                if k == "params":
+                    continue
+                assert pgu[k] == pgr[k], f"Optimizer {i} param_group mismatch at {k}"
+        assert len(ou["state"]) == len(or_["state"])
+        for pid in ou["state"]:
+            su = ou["state"][pid]
+            sr = or_["state"][pid]
+            for sk in su:
+                if isinstance(su[sk], torch.Tensor):
+                    assert torch.equal(su[sk], sr[sk]), f"Optimizer {i} tensor mismatch at {sk}"
+                else:
+                    assert su[sk] == sr[sk], f"Optimizer {i} scalar mismatch at {sk}"
+
+    # Complete scheduler state comparison
     sched_un = payload_un["lr_scheduler"]
     sched_res = payload_res["lr_scheduler"]
     assert sched_un["num_updates"] == sched_res["num_updates"]
     assert sched_un["metric_count"] == sched_res["metric_count"]
     assert sched_un["metric_sum"] == pytest.approx(sched_res["metric_sum"], abs=1e-12)
-    assert sched_un["body"]["_last_lr"] == sched_res["body"]["_last_lr"]
-    assert sched_un["head"]["_last_lr"] == sched_res["head"]["_last_lr"]
+    for part in ("body", "head"):
+        for k in sched_un[part]:
+            val_u = sched_un[part][k]
+            val_r = sched_res[part][k]
+            if isinstance(val_u, float):
+                if np.isinf(val_u):
+                    assert np.isinf(val_r) and (val_u > 0) == (val_r > 0)
+                else:
+                    assert val_u == pytest.approx(val_r, abs=1e-12)
+            else:
+                assert val_u == val_r, f"Scheduler {part} mismatch at {k}: {val_u} != {val_r}"
 
-    # 5. Log lines comparison
+    # 5. Log lines comparison & forced LR decay verification
     lines_un = [json.loads(x) for x in (out_uninterrupted / "steps.jsonl").read_text().splitlines() if x.strip()]
     lines_res = [json.loads(x) for x in (out_resumed / "steps.jsonl").read_text().splitlines() if x.strip()]
     assert len(lines_un) == 8
     assert len(lines_res) == 8
+
+    # Assert that decay was forced at step 6 and step 7 observed reduced LR
+    assert lines_un[5]["step"] == 6
+    assert lines_un[5]["scheduler_updated"] is True
+    assert lines_un[5]["lr_reduced"] is True
+    assert lines_un[5]["next_body_lr"] == pytest.approx(0.0005)
+    assert lines_un[6]["step"] == 7
+    assert lines_un[6]["body_lr"] == pytest.approx(0.0005)
+
     for ru, rr in zip(lines_un, lines_res):
         assert ru["step"] == rr["step"]
         assert ru["supervised_loss"] == pytest.approx(rr["supervised_loss"], abs=1e-12)
@@ -515,6 +557,7 @@ def test_uninterrupted_vs_resumed_parity_focal_adaptive(tmp_path):
         assert ru["next_body_lr"] == pytest.approx(rr["next_body_lr"], abs=1e-12)
         assert ru["next_head_lr"] == pytest.approx(rr["next_head_lr"], abs=1e-12)
         assert ru["scheduler_updated"] == rr["scheduler_updated"]
+        assert ru["lr_reduced"] == rr["lr_reduced"]
         if ru["monitored_metric"] is not None:
             assert ru["monitored_metric"] == pytest.approx(rr["monitored_metric"], abs=1e-12)
 

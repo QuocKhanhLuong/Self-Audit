@@ -54,7 +54,7 @@ All existing default behaviors and numerics remain 100% backward compatible.
 - Step logging: logs `body_lr`, `head_lr`, `next_body_lr`, `next_head_lr`, `monitored_metric`, `scheduler_updated`, `lr_reduced`, and detailed `lr_scheduler` diagnostics in `steps.jsonl`.
 
 ### 4. `tests/test_focal_adaptive.py`
-Added 15 comprehensive unit and regression tests:
+Added 16 comprehensive unit and regression tests:
 - `test_gamma0_equals_cross_entropy`: verifies exact match between focal (gamma=0) and cross entropy.
 - `test_ignored_pixel_zero_effect_and_gradient`: verifies zero gradient and invariant loss on label 255.
 - `test_extreme_logits_finite`: verifies finite loss and gradients with extreme logits (+/- 1e4).
@@ -63,7 +63,7 @@ Added 15 comprehensive unit and regression tests:
 - `test_plateau_warmup_timing_and_reductions`: verifies no accumulation during warmup, reduction after patience, ratio preservation, and minimum LR bounds.
 - `test_resume_state_missing_or_tampered_rejected`: tests state dict tampering, negative counters, nonfinite sums, last_epoch mismatch, and optimizer LR mismatch.
 - `test_parameterized_warmup_state_rejections`: 6 parameterized tests covering negative inf best, NaN LR, nonzero empty window sum, out-of-bounds LR, and mode_worse.
-- `test_uninterrupted_vs_resumed_parity_focal_adaptive`: verifies bit-exact student/teacher/optimizer/scheduler/RNG/loss/LR parity across interrupted and resumed runs.
+- `test_uninterrupted_vs_resumed_parity_focal_adaptive`: parameterized across steps 5 (middle of window) and 7 (after forced decay at 6), with `interval=2, patience=0, threshold=1.0, threshold_mode='abs'`, asserting forced decay at step 6 and verifying bit-exact student, teacher, full optimizer states, and complete scheduler states.
 - `test_old_defaults_unchanged`: verifies default recipes produce null scheduler checkpoints and identical original behavior.
 
 ---
@@ -73,8 +73,8 @@ Added 15 comprehensive unit and regression tests:
 - **Python Interpreter**: `/Users/alvinluong/miniforge3/bin/python` (Python 3.11.16)
 - **Repository Integrity**: `python scripts/check_repo.py` -> `{"status": "PASS", "architecture": "dinov3_convnext_tiny_native_decoder_v2", "supervision": "semi_supervised; dense TRAIN subset incl audit; not no-GT"}`
 - **Test Suite Results**:
-  - `pytest tests/test_focal_adaptive.py`: 15 passed in 1.55s
-  - `pytest -q`: **124 passed, 1 warning in 10.28s** (0 failures)
+  - `pytest tests/test_focal_adaptive.py`: 16 passed in 1.81s
+  - `pytest -q`: **125 passed, 1 warning in 10.72s** (0 failures)
 - **Source SHA-256 Digest**: `e3b5b9469d5378b50677b7225eddd16421d4de856ee6d883b4dfc719f98905d2`
 - **Git Branch**: `QuocKhanhLuong/b8-focal-adaptive-20261031`
 - **Files Modified/Created**:
