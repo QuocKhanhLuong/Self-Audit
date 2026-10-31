@@ -5,6 +5,34 @@ from functools import wraps
 import os
 
 import torch
+from torch.nn import functional as F
+
+
+class _DeterministicBilinear(torch.autograd.Function):
+    """Keep the native forward; replace only CUDA's atomic backward reduction.
+
+    ATen's CPU backward implements the same align_corners=False bilinear
+    derivative deterministically. Transfer/CPU overhead belongs to every arm's
+    training cost. This path is never needed for no-grad student inference.
+    """
+    @staticmethod
+    def forward(ctx, x, size):
+        ctx.input_size = list(x.shape)
+        ctx.output_size = list(size)
+        ctx.input_device = x.device
+        return F.interpolate(x, size=size, mode="bilinear", align_corners=False)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        gradient = torch.ops.aten.upsample_bilinear2d_backward.default(
+            grad_output.to("cpu"), ctx.output_size, ctx.input_size, False, None, None)
+        return gradient.to(ctx.input_device), None
+
+
+def compact_bilinear(x, size):
+    if torch.are_deterministic_algorithms_enabled() and x.is_cuda and torch.is_grad_enabled() and x.requires_grad:
+        return _DeterministicBilinear.apply(x, tuple(size))
+    return F.interpolate(x, size=size, mode="bilinear", align_corners=False)
 
 
 @contextmanager

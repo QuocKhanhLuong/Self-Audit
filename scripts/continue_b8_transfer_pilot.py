@@ -116,6 +116,21 @@ def main(plan_path, expected_sha):
             verify_reproduction_source(plan["teacher_source"], expected_commit=identity["source_commit"],
                                        expected_closure=identity["source_sha256"])
             atomic_json(out / "TEACHER_BINDING.json", {"receipt_sha256": sha256(receipt), "identity": identity})
+            training_report_path = teacher / "training/REPORT.json"
+            training_report = json.loads(training_report_path.read_text())
+            if training_report.get("status") != "COMPLETED" or training_report.get("steps") != 10000:
+                raise RuntimeError("teacher cost report is not from the completed locked run")
+            derived_receipt = json.loads(receipt.read_text())
+            derived_receipt["parent_receipt_sha256"] = sha256(receipt)
+            derived_receipt["source_training_cost"] = {
+                "status": "MEASURED_BY_TRAINER", "steps": 10000,
+                "elapsed_seconds": training_report["elapsed_seconds"],
+                "source": str(training_report_path), "report_sha256": sha256(training_report_path),
+                "scope": "canonical trainer elapsed; setup/download/upload/evaluation costs separate"}
+            receipt = out / "CPTU_TEACHER_RECEIPT.json"
+            atomic_json(receipt, derived_receipt)
+            identity = validate_reproduction_receipt(receipt, expected_receipt_sha256=sha256(receipt),
+                checkpoint_dir=teacher / "training/final", raw_student_path=teacher / "raw_student/raw_student.pt")
             run("check_repo", ["scripts/check_repo.py"], 120)
             run("pytest", ["-m", "pytest", "-q"], 900)
             run("cuda_replay", ["scripts/verify_compact_resume.py", "--out", out / "cuda_verification",
@@ -144,7 +159,8 @@ def main(plan_path, expected_sha):
                 "--teacher-checkpoint-sha256", identity["checkpoint_manifest_sha256"],
                 "--teacher-payload-sha256", identity["checkpoint_payload_sha256"],
                 "--teacher-cache", cache, "--teacher-cache-sha256", sha256(cache),
-                "--reproduction-receipt", receipt, "--reproduction-receipt-sha256", sha256(receipt)], 37000)
+                "--reproduction-receipt", receipt, "--reproduction-receipt-sha256", sha256(receipt),
+                "--reproduction-source", plan["teacher_source"]], 37000)
             report = json.loads((out / "pilot/TRANSFER_UTILITY_PILOT_REPORT.json").read_text())
             if report["status"] not in ("PILOT_GO", "NO_GO"):
                 raise RuntimeError("pilot lacks completed empirical decision")

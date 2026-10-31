@@ -3,7 +3,7 @@ import os
 import pytest
 import torch
 
-from self_audit.compact_runtime import deterministic_runtime
+from self_audit.compact_runtime import _DeterministicBilinear, compact_bilinear, deterministic_runtime
 from self_audit.compact_training import DEFAULT_CONFIG, validate_compact_config
 
 
@@ -53,3 +53,24 @@ def test_conflicting_workspace_rejected(monkeypatch):
     with pytest.raises(ValueError, match="4096"):
         with deterministic_runtime(True):
             pytest.fail("conflicting policy must not run")
+
+
+@pytest.mark.parametrize("shape,size", [((2, 3, 5, 7), (10, 14)), ((1, 4, 3, 4), (7, 9))])
+def test_bilinear_backward_matches_reference_exactly_on_cpu(shape, size):
+    x = torch.randn(shape, dtype=torch.float64, requires_grad=True)
+    ref = torch.nn.functional.interpolate(x, size=size, mode="bilinear", align_corners=False)
+    actual = _DeterministicBilinear.apply(x, size)
+    grad = torch.randn_like(ref)
+    assert torch.equal(ref, actual)
+    expected_gradient = torch.autograd.grad(ref, x, grad)[0]
+    actual_gradient = torch.autograd.grad(actual, x, grad)[0]
+    assert torch.equal(expected_gradient, actual_gradient)
+    assert torch.autograd.gradcheck(lambda v: _DeterministicBilinear.apply(v, size), (x,))
+
+
+def test_default_bilinear_is_unchanged():
+    x = torch.randn(1, 2, 3, 4, requires_grad=True)
+    reference = torch.nn.functional.interpolate(x, size=(6, 8), mode="bilinear", align_corners=False)
+    actual = compact_bilinear(x, (6, 8))
+    assert torch.equal(reference, actual)
+    assert type(reference.grad_fn) is type(actual.grad_fn)

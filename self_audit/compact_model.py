@@ -10,6 +10,7 @@ from typing import Any, Mapping, Sequence
 import torch
 from torch import nn
 from torch.nn import functional as F
+from .compact_runtime import compact_bilinear
 
 ALLOWED_ARCHITECTURE_KEYS = {
     "name",
@@ -124,7 +125,7 @@ class CompactDecoder(nn.Module):
         d = stages[-1]
         for idx, i in enumerate(range(len(self.widths) - 2, -1, -1)):
             skip = stages[i]
-            up = F.interpolate(d, size=skip.shape[-2:], mode="bilinear", align_corners=False)
+            up = compact_bilinear(d, skip.shape[-2:])
             merged = torch.cat([up, skip], dim=1)
             stage = self.up_stages[idx]
             d = stage["refine"](stage["fuse"](merged))

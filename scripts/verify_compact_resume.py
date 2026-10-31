@@ -68,6 +68,25 @@ def verify(out, device):
                 ["nvidia-smi", "--query-compute-apps=pid", "--format=csv,noheader"], text=True).strip()
             if occupants:
                 raise RuntimeError("GPU occupied; verification will not overlap existing jobs")
+            run("cuda_bilinear_parity", ["-c", """
+import torch
+from self_audit.compact_runtime import compact_bilinear, deterministic_runtime
+torch.manual_seed(42)
+x = torch.randn(2, 8, 17, 19, device='cuda', requires_grad=True)
+gradient = torch.randn(2, 8, 34, 38, device='cuda')
+reference = torch.nn.functional.interpolate(x, size=(34,38), mode='bilinear', align_corners=False)
+native_gradient = torch.autograd.grad(reference, x, gradient)[0]
+with deterministic_runtime(True):
+    result = compact_bilinear(x, (34,38))
+    actual = torch.autograd.grad(result, x, gradient)[0]
+    replay = torch.autograd.grad(compact_bilinear(x, (34,38)), x, gradient)[0]
+assert torch.equal(reference, result), 'forward changed'
+assert torch.equal(actual, replay), 'backward not deterministic'
+assert torch.allclose(native_gradient, actual, atol=3e-6, rtol=3e-6), 'bilinear derivative differs'
+print({'forward_bitwise_equal':True,'backward_replay_bitwise_equal':True,
+       'max_backward_backend_delta':float((native_gradient-actual).abs().max()),
+       'derivative_comparison_atol_rtol':3e-6,'guard_tolerance_changed':False})
+"""])
         smoke = out / "smoke"
         run("four_arm_smoke", ["scripts/smoke_compact_pipeline.py", "--transfer-utility",
                               "--deterministic-algorithms", "--device", device, "--out", smoke])

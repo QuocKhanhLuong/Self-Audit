@@ -43,5 +43,14 @@ deterministic algorithms, deterministic cuDNN, benchmark disabled and
 `CUBLAS_WORKSPACE_CONFIG=:4096:8`; it makes no quality or speed claim and must
 pass actual CUDA replay before patient compact training.
 
+Installed PyTorch documents CUDA bilinear backward as unsupported under strict
+deterministic execution. The opt-in compact path therefore retains the native
+bilinear forward and uses ATen's deterministic CPU bilinear derivative, copying
+the resulting gradient back to the original device. Architecture, weights,
+losses, data and update rules are unchanged. All compact arms pay this runtime
+cost, which must be measured. Default training and no-grad inference retain the
+native path. CPU forward/backward parity and numerical gradcheck passed; CUDA
+forward parity, derivative comparison and exact replay remain mandatory gates.
+
 At launch: teacher `RUNNING`; remote final weights, quality, compact CUDA replay,
 and four-arm patient pilot `NOT_RUN`. No empirical GO/NO_GO has been assigned.
