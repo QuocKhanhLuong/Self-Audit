@@ -14,7 +14,9 @@ from torch.nn import functional as F
 from . import SCHEMA
 from .model import build_model, digest
 from .data import TrainingData, write_json
-from .losses import supervised_loss, strong_intensity, aligned_flip
+from .losses import supervised_loss, strong_intensity, aligned_flip, validate_supervised_loss_config
+from .lr_schedule import (validate_lr_scheduler_config, validate_scheduler_state_dict,
+                          TrainPlateauScheduler)
 from .control import make_candidates, controlled_head_step
 from .decoder_control import decoder_transaction
 from .window import WINDOW_DEFAULT, validate_window_config
@@ -23,6 +25,7 @@ from .meta_window import (geometry_named_parameters, frozen_geometry, meta_geome
 
 METHODS = {"supervised", "supervised_extra", "ema_full", "ema_full_meta_window", "ema_block", "sign",
            "independent_guard", "joint_no_class", "joint_no_guard", "joint_guard"}
+OPTIONAL_FIELDS = {"supervised_loss", "lr_scheduler"}
 DEFAULT = {"schema": SCHEMA, "method": "joint_guard", "update_scope": "head", "steps": 32, "warmup_steps": 8,
            "seed": 42, "body_lr": 3e-5, "head_lr": 3e-3, "pseudo_lr": 1e-3,
            "weight_decay": 1e-4, "ema_decay": .99, "pseudo_threshold": .7,
@@ -43,7 +46,8 @@ def validate_config(c):
     # Window experiments are opt-in. Old recipes keep the identical no-window path.
     c.setdefault("window", copy.deepcopy(WINDOW_DEFAULT))
     c.setdefault("meta_window", copy.deepcopy(DEFAULT["meta_window"]))
-    if set(c) != set(DEFAULT) or c.get("schema") != SCHEMA or c.get("method") not in METHODS:
+    extra = set(c) - set(DEFAULT)
+    if extra - OPTIONAL_FIELDS or set(DEFAULT) - set(c) or c.get("schema") != SCHEMA or c.get("method") not in METHODS:
         raise ValueError("not an exact v2 recipe; legacy configs and unknown fields are rejected")
     if c["update_scope"] not in {"head", "decoder"}:
         raise ValueError("update_scope must be head or decoder")
@@ -71,6 +75,16 @@ def validate_config(c):
     if c["window"]["mode"] != "none" and c["method"] not in {
             "ema_full", "ema_full_meta_window", "supervised", "supervised_extra"}:
         raise ValueError("window pilot supports full-EMA/supervised arms only, not guarded transactions")
+    if "supervised_loss" in c:
+        c["supervised_loss"] = validate_supervised_loss_config(c["supervised_loss"])
+        if c["supervised_loss"] is not None and c["supervised_loss"].get("name") == "focal_dice":
+            if c["method"] != "ema_full" or c["window"]["mode"] != "none":
+                raise ValueError("supervised_loss focal_dice requires method ema_full with window mode none")
+    if "lr_scheduler" in c:
+        c["lr_scheduler"] = validate_lr_scheduler_config(c["lr_scheduler"])
+        if c["lr_scheduler"] is not None:
+            if c["method"] != "ema_full" or c["window"]["mode"] != "none":
+                raise ValueError("lr_scheduler train_plateau requires method ema_full with window mode none")
     return copy.deepcopy(c)
 
 
@@ -88,11 +102,11 @@ def ema_update(teacher, student, decay):
             t.copy_(s)
 
 
-def supervised_step(model, optimizers, x, y, *, valid_mask=None, freeze_geometry=False):
+def supervised_step(model, optimizers, x, y, *, valid_mask=None, freeze_geometry=False, loss_config=None):
     model.train()
     model.zero_grad(set_to_none=True)
     with frozen_geometry(model) if freeze_geometry else nullcontext():
-        loss = supervised_loss(model(x, valid_mask=valid_mask), y)
+        loss = supervised_loss(model(x, valid_mask=valid_mask), y, config=loss_config)
         if not torch.isfinite(loss):
             raise FloatingPointError("nonfinite supervised loss")
         loss.backward()
@@ -119,7 +133,9 @@ def full_pseudo_step(model, optimizers, strong, py, accepted, *, input_valid=Non
     return float(loss.detach()), float(norm)
 
 
-def save_checkpoint(folder, model, teacher, optimizers, config, data, step, provenance, rng, *, counts=None, seen=None, elapsed_seconds=0.):
+def save_checkpoint(folder, model, teacher, optimizers, config, data, step, provenance, rng, *,
+                    counts=None, seen=None, elapsed_seconds=0.,
+                    lr_scheduler_state=None, lr_scheduler_meta=None):
     folder = Path(folder).resolve()
     if folder.exists():
         raise FileExistsError(f"checkpoint already exists: {folder}")
@@ -135,7 +151,7 @@ def save_checkpoint(folder, model, teacher, optimizers, config, data, step, prov
                     "py_rng": random.getstate(),
                     "model_training": model.training,
                     "teacher_training": teacher.training,
-                    "lr_scheduler": None,
+                    "lr_scheduler": lr_scheduler_state,
                     "scaler": None}, payload)
         np_global = np.random.get_state()
         metadata = {"schema": "self_audit.checkpoint.v2", "model_class": "NativeStudent",
@@ -158,7 +174,7 @@ def save_checkpoint(folder, model, teacher, optimizers, config, data, step, prov
                     "seen_audit": sorted(seen[1]) if seen else [],
                     "seen_unlabeled": sorted(seen[2]) if seen else [],
                     "counts": dict(counts) if counts else {},
-                    "lr_scheduler": None,
+                    "lr_scheduler": lr_scheduler_meta,
                     "scaler": None}
         write_json(tmp_folder / "MANIFEST.json", metadata)
         for durable in (payload, tmp_folder / "MANIFEST.json"):
@@ -251,6 +267,29 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
                 or runtime["cudnn_deterministic"] != torch.backends.cudnn.deterministic
                 or runtime["deterministic_algorithms"] != torch.are_deterministic_algorithms_enabled()):
             raise ValueError("resume runtime settings differ")
+        if c.get("lr_scheduler") is None:
+            if m.get("lr_scheduler") is not None or payload.get("lr_scheduler") is not None:
+                raise ValueError("checkpoint contains lr_scheduler state but config does not enable it")
+        else:
+            if m.get("lr_scheduler") is None or payload.get("lr_scheduler") is None:
+                raise ValueError("checkpoint missing lr_scheduler state required by config")
+            sched_state = payload["lr_scheduler"]
+            validate_scheduler_state_dict(
+                sched_state,
+                config=c["lr_scheduler"],
+                step=m["step"],
+                warmup_steps=c["warmup_steps"],
+                initial_body_lr=c["body_lr"],
+                initial_head_lr=c["head_lr"],
+                payload_optimizers=payload["optimizers"],
+            )
+            m_sched = m["lr_scheduler"]
+            if not isinstance(m_sched, dict):
+                raise ValueError("invalid lr_scheduler manifest metadata")
+            if (m_sched.get("num_updates") != sched_state["num_updates"]
+                    or m_sched.get("metric_count") != sched_state["metric_count"]
+                    or abs(m_sched.get("metric_sum", 0.0) - sched_state["metric_sum"]) > 1e-6):
+                raise ValueError("lr_scheduler manifest vs payload mismatch")
         start_step = m["step"]
         if type(start_step) is not int or start_step < 1 or m["counts"]["ema_updates"] != start_step:
             raise ValueError("invalid resume step/counters")
@@ -285,6 +324,7 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
             torch.optim.SGD(model.head.parameters(), lr=c["head_lr"], momentum=0., weight_decay=0., foreach=False if is_meta else None)]
     geometry_opt = torch.optim.SGD(geometry.values(), lr=c["meta_window"]["lr"], momentum=0., weight_decay=0.) if is_meta else None
     saved_opts = opts + ([geometry_opt] if geometry_opt is not None else [])
+    scheduler = TrainPlateauScheduler(opts, c["lr_scheduler"], c["body_lr"], c["head_lr"]) if c.get("lr_scheduler") else None
 
     if not resume:
         out.mkdir(parents=True)
@@ -299,7 +339,10 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
                     "outer_loss": "batch_present_foreground_soft_Dice; direct_geometry_detached" if is_meta else None,
                     "batch_size": c["batch_size"], "batch_protocol": "one_patient_per_role; native_grid; equal_slice_audit_mass",
                     "crop_size": c["crop_size"], "crop_policy": "image_geometry_random; edge_pad; ignore_padding_in_all_losses; no_resize",
-                    "native_supervised_loss": "CE+present_foreground_Dice", "prediction_model": "student"})
+                    "native_supervised_loss": c["supervised_loss"]["name"] if c.get("supervised_loss") else "CE+present_foreground_Dice",
+                    "supervised_loss": c.get("supervised_loss"),
+                    "lr_scheduler": c.get("lr_scheduler"),
+                    "prediction_model": "student"})
         counts = {"supervised_updates": 0, "pseudo_accepted": 0, "ema_updates": 0, "geometry_updates": 0}
         seen_l, seen_u, seen_a = set(), set(), set()
         log = (out / "steps.jsonl").open("x")
@@ -309,6 +352,8 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
         teacher.to(device).eval().requires_grad_(False)
         for opt, s in zip(saved_opts, payload["optimizers"], strict=True):
             opt.load_state_dict(s)
+        if scheduler is not None:
+            scheduler.load_state_dict(payload["lr_scheduler"])
         torch.set_rng_state(payload["torch_rng"])
         if torch.cuda.is_available() and payload["cuda_rng"]:
             torch.cuda.set_rng_state_all(payload["cuda_rng"])
@@ -362,9 +407,12 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
             strong = strong_intensity(xu, rng)  # Generated for every arm, preserving data RNG schedule.
             seen_l.add(sm["patient"]); seen_a.add(am["patient"]); seen_u.add(um["patient"])
             freeze_geo = is_meta or (c["window"]["mode"] == "adaptive" and step < c["warmup_steps"])
+            used_body_lr = float(opts[0].param_groups[0]["lr"])
+            used_head_lr = float(opts[1].param_groups[0]["lr"])
             sloss, grad_norm = supervised_step(model, opts, xs, ys,
                                                valid_mask=svalid if window_enabled else None,
-                                               freeze_geometry=freeze_geo)
+                                               freeze_geometry=freeze_geo,
+                                               loss_config=c.get("supervised_loss"))
             counts["supervised_updates"] += 1
             row = {"step": step+1, "supervised": sm, "audit": am, "unlabeled": um,
                    "batch_size": c["batch_size"], "crop_size": c["crop_size"], "unlabeled_valid_pixels": int(uvalid.sum()),
@@ -372,7 +420,8 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
             if step >= c["warmup_steps"] and c["method"] != "supervised":
                 if c["method"] == "supervised_extra":
                     row["extra_supervised_loss"], _ = supervised_step(model, opts, xa, ya,
-                                                                      valid_mask=avalid if window_enabled else None)
+                                                                      valid_mask=avalid if window_enabled else None,
+                                                                      loss_config=c.get("supervised_loss"))
                     counts["supervised_updates"] += 1
                 else:
                     model.eval()
@@ -428,29 +477,66 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
                         counts["pseudo_accepted"] += int(row["control"]["scale"] > 0)
             # Exactly once, and only after the final committed student state.
             ema_update(teacher, model, c["ema_decay"]); counts["ema_updates"] += 1
+            scheduler_stepped = False
+            monitored_metric = None
+            lr_reduced = False
+            if scheduler is not None:
+                scheduler.observe(sloss, is_warmup=(step < c["warmup_steps"]))
+                scheduler_stepped, monitored_metric, lr_reduced = scheduler.step_if_interval_complete()
+
+            next_body_lr = float(opts[0].param_groups[0]["lr"])
+            next_head_lr = float(opts[1].param_groups[0]["lr"])
+            if scheduler is not None:
+                row["body_lr"] = used_body_lr
+                row["head_lr"] = used_head_lr
+                row["next_body_lr"] = next_body_lr
+                row["next_head_lr"] = next_head_lr
+                row["monitored_metric"] = monitored_metric
+                row["scheduler_updated"] = scheduler_stepped
+                row["lr_reduced"] = lr_reduced
+                row["lr_scheduler"] = {
+                    "used_body_lr": used_body_lr,
+                    "used_head_lr": used_head_lr,
+                    "next_body_lr": next_body_lr,
+                    "next_head_lr": next_head_lr,
+                    "monitored_metric": monitored_metric,
+                    "updated": scheduler_stepped,
+                    "lr_reduced": lr_reduced,
+                    "accumulated_count": scheduler.metric_count,
+                    "accumulated_sum": scheduler.metric_sum,
+                    "num_updates": scheduler.num_updates,
+                }
             row["elapsed_seconds"] = time.monotonic() - start
             row["cuda_peak_allocated"] = torch.cuda.max_memory_allocated() if device.startswith("cuda") else None
             log.write(json.dumps(row, allow_nan=False)+"\n"); log.flush()
+            sched_state = scheduler.state_dict() if scheduler is not None else None
+            sched_meta = scheduler.manifest_metadata() if scheduler is not None else None
             saved_sha = None
             if (step+1) % c["save_every"] == 0 and step+1 < c["steps"]:
-                saved_sha = save_checkpoint(out / f"step_{step+1:06d}", model, teacher, saved_opts, c, data, step+1, provenance, rng, counts=counts, seen=(seen_l, seen_a, seen_u), elapsed_seconds=time.monotonic()-start)
+                saved_sha = save_checkpoint(out / f"step_{step+1:06d}", model, teacher, saved_opts, c, data, step+1, provenance, rng, counts=counts, seen=(seen_l, seen_a, seen_u), elapsed_seconds=time.monotonic()-start, lr_scheduler_state=sched_state, lr_scheduler_meta=sched_meta)
             if stop_after_step is not None and step + 1 == stop_after_step:
                 if saved_sha is None:
-                    saved_sha = save_checkpoint(out / f"step_{step+1:06d}", model, teacher, saved_opts, c, data, step+1, provenance, rng, counts=counts, seen=(seen_l, seen_a, seen_u), elapsed_seconds=time.monotonic()-start)
+                    saved_sha = save_checkpoint(out / f"step_{step+1:06d}", model, teacher, saved_opts, c, data, step+1, provenance, rng, counts=counts, seen=(seen_l, seen_a, seen_u), elapsed_seconds=time.monotonic()-start, lr_scheduler_state=sched_state, lr_scheduler_meta=sched_meta)
                 report = {"schema": SCHEMA, "status": "INTERRUPTED", "synthetic": synthetic, "quality": "NOT_EVALUATED",
                           "step": step+1, "steps": c["steps"], **counts, "elapsed_seconds": time.monotonic()-start,
                           "seen_supervised": sorted(seen_l), "seen_audit": sorted(seen_a), "seen_unlabeled": sorted(seen_u),
                           "checkpoint_manifest_sha256": saved_sha, "label_budget": len(data.lids),
                           "label_reads_outside_budget": sorted(data.label_reads-set(data.lids))}
+                if scheduler is not None:
+                    report["scheduler_updates"] = scheduler.num_updates
                 write_json(out / "REPORT.json", report)
                 return report
-        sha = save_checkpoint(out / "final", model, teacher, saved_opts, c, data, c["steps"], provenance, rng, counts=counts, seen=(seen_l, seen_a, seen_u), elapsed_seconds=time.monotonic()-start)
+        sched_state = scheduler.state_dict() if scheduler is not None else None
+        sched_meta = scheduler.manifest_metadata() if scheduler is not None else None
+        sha = save_checkpoint(out / "final", model, teacher, saved_opts, c, data, c["steps"], provenance, rng, counts=counts, seen=(seen_l, seen_a, seen_u), elapsed_seconds=time.monotonic()-start, lr_scheduler_state=sched_state, lr_scheduler_meta=sched_meta)
         report = {"schema": SCHEMA, "status": "COMPLETED", "synthetic": synthetic, "quality": "NOT_EVALUATED",
                   "steps": c["steps"], **counts, "elapsed_seconds": time.monotonic()-start,
                   "seen_supervised": sorted(seen_l), "seen_audit": sorted(seen_a), "seen_unlabeled": sorted(seen_u),
                   "final_manifest_sha256": sha, "label_budget": len(data.lids),
                   "label_reads_outside_budget": sorted(data.label_reads-set(data.lids)),
                   "guard_scope": "none; meta-Dice is not a finite-step Dice guarantee" if is_meta else "extra pseudo step vs supervised-only state on current TRAIN audit slice only"}
+        if scheduler is not None:
+            report["scheduler_updates"] = scheduler.num_updates
         write_json(out / "REPORT.json", report)
         return report
     except Exception as exc:
