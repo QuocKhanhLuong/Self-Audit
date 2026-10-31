@@ -119,8 +119,10 @@ def full_pseudo_step(model, optimizers, strong, py, accepted, *, input_valid=Non
     return float(loss.detach()), float(norm)
 
 
-def save_checkpoint(folder, model, teacher, optimizers, config, data, step, provenance, rng, *, counts=None, seen=None):
+def save_checkpoint(folder, model, teacher, optimizers, config, data, step, provenance, rng, *, counts=None, seen=None, elapsed_seconds=0.):
     folder = Path(folder).resolve()
+    if folder.exists():
+        raise FileExistsError(f"checkpoint already exists: {folder}")
     tmp_folder = folder.parent / f".tmp_{folder.name}_{os.getpid()}_{time.time_ns()}"
     tmp_folder.mkdir(parents=True, exist_ok=False)
     try:
@@ -131,6 +133,8 @@ def save_checkpoint(folder, model, teacher, optimizers, config, data, step, prov
                     "torch_rng": torch.get_rng_state(),
                     "cuda_rng": cuda_rng,
                     "py_rng": random.getstate(),
+                    "model_training": model.training,
+                    "teacher_training": teacher.training,
                     "lr_scheduler": None,
                     "scaler": None}, payload)
         np_global = np.random.get_state()
@@ -140,7 +144,14 @@ def save_checkpoint(folder, model, teacher, optimizers, config, data, step, prov
                     "label_budget": len(data.lids), "audit_label_reads": sorted(data.label_reads),
                     "backbone": provenance, "source_sha256": source_digest(), "payload_sha256": digest(payload),
                     "synthetic": bool(data.manifest["synthetic"]), "quality": "NOT_EVALUATED",
-                    "prediction_model": "student", "resume": "SUPPORTED",
+                    "prediction_model": "student", "resume": "SUPPORTED" if counts is not None and seen is not None else "NOT_SUPPORTED",
+                    "elapsed_seconds": float(elapsed_seconds),
+                    "runtime": {"device_type": next(model.parameters()).device.type,
+                                "cuda_devices": len(cuda_rng),
+                                "torch_version": torch.__version__,
+                                "cudnn_benchmark": torch.backends.cudnn.benchmark,
+                                "cudnn_deterministic": torch.backends.cudnn.deterministic,
+                                "deterministic_algorithms": torch.are_deterministic_algorithms_enabled()},
                     "numpy_rng": rng.bit_generator.state,
                     "numpy_global_rng": [np_global[0], np_global[1].tolist(), np_global[2], np_global[3], np_global[4]],
                     "seen_supervised": sorted(seen[0]) if seen else [],
@@ -150,8 +161,9 @@ def save_checkpoint(folder, model, teacher, optimizers, config, data, step, prov
                     "lr_scheduler": None,
                     "scaler": None}
         write_json(tmp_folder / "MANIFEST.json", metadata)
-        if folder.exists():
-            shutil.rmtree(folder)
+        for durable in (payload, tmp_folder / "MANIFEST.json"):
+            with durable.open("rb") as stream:
+                os.fsync(stream.fileno())
         os.replace(tmp_folder, folder)
         return digest(folder / "MANIFEST.json")
     except Exception:
@@ -219,7 +231,31 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
             raise ValueError("checkpoint synthetic flag mismatch")
         if c != m.get("config"):
             raise ValueError("recipe config does not match checkpoint config")
+        required = {"numpy_rng", "numpy_global_rng", "counts", "seen_supervised", "seen_audit",
+                    "seen_unlabeled", "audit_label_reads", "elapsed_seconds", "runtime"}
+        if not required <= m.keys():
+            raise ValueError("missing required resume metadata")
+        if not {"supervised_updates", "pseudo_accepted", "ema_updates", "geometry_updates"} <= m["counts"].keys():
+            raise ValueError("missing required resume counters")
+        payload = torch.load(resume_path / "weights.pt", map_location="cpu", weights_only=True)
+        required_payload = {"student", "teacher", "optimizers", "torch_rng", "cuda_rng", "py_rng",
+                            "lr_scheduler", "scaler", "model_training", "teacher_training"}
+        if not required_payload <= payload.keys():
+            raise ValueError("missing required resume payload state")
+        if device.startswith("cuda") and len(payload["cuda_rng"]) != torch.cuda.device_count():
+            raise ValueError("missing/mismatched CUDA RNG states")
+        runtime = m["runtime"]
+        if (runtime["device_type"] != torch.device(device).type
+                or runtime["torch_version"] != torch.__version__
+                or runtime["cudnn_benchmark"] != torch.backends.cudnn.benchmark
+                or runtime["cudnn_deterministic"] != torch.backends.cudnn.deterministic
+                or runtime["deterministic_algorithms"] != torch.are_deterministic_algorithms_enabled()):
+            raise ValueError("resume runtime settings differ")
         start_step = m["step"]
+        if type(start_step) is not int or start_step < 1 or m["counts"]["ema_updates"] != start_step:
+            raise ValueError("invalid resume step/counters")
+        if (out / "final").exists() or any(int(p.name.split("_")[1]) > start_step for p in out.glob("step_[0-9]*") if p.is_dir()):
+            raise ValueError("newer checkpoint exists; refuse trajectory rollback")
         if start_step >= c["steps"]:
             raise ValueError(f"checkpoint step {start_step} already reached or exceeded configured steps {c['steps']}")
         if stop_after_step is not None and stop_after_step <= start_step:
@@ -268,54 +304,48 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
         seen_l, seen_u, seen_a = set(), set(), set()
         log = (out / "steps.jsonl").open("x")
     else:
-        payload = torch.load(resume_path / "weights.pt", map_location="cpu", weights_only=True)
         model.load_state_dict(payload["student"], strict=True)
         teacher.load_state_dict(payload["teacher"], strict=True)
         teacher.to(device).eval().requires_grad_(False)
         for opt, s in zip(saved_opts, payload["optimizers"], strict=True):
             opt.load_state_dict(s)
-            if device.startswith("cuda"):
-                for state in opt.state.values():
-                    for k, v in state.items():
-                        if isinstance(v, torch.Tensor):
-                            state[k] = v.to(device)
         torch.set_rng_state(payload["torch_rng"])
-        if torch.cuda.is_available() and payload.get("cuda_rng"):
+        if torch.cuda.is_available() and payload["cuda_rng"]:
             torch.cuda.set_rng_state_all(payload["cuda_rng"])
-        if payload.get("py_rng"):
-            random.setstate(payload["py_rng"])
-        if m.get("numpy_rng"):
-            rng.bit_generator.state = m["numpy_rng"]
-        if m.get("numpy_global_rng"):
-            ng = m["numpy_global_rng"]
-            np.random.set_state((ng[0], np.array(ng[1], dtype=np.uint32), ng[2], ng[3], ng[4]))
-        if "audit_label_reads" in m:
-            data.label_reads.update(m["audit_label_reads"])
-        counts = dict(m.get("counts", {"supervised_updates": 0, "pseudo_accepted": 0, "ema_updates": 0, "geometry_updates": 0}))
-        seen_l = set(m.get("seen_supervised", []))
-        seen_a = set(m.get("seen_audit", []))
-        seen_u = set(m.get("seen_unlabeled", []))
+        random.setstate(payload["py_rng"])
+        model.train(payload["model_training"])
+        teacher.train(payload["teacher_training"])
+        rng.bit_generator.state = m["numpy_rng"]
+        ng = m["numpy_global_rng"]
+        np.random.set_state((ng[0], np.array(ng[1], dtype=np.uint32), ng[2], ng[3], ng[4]))
+        data.label_reads.update(m["audit_label_reads"])
+        counts = dict(m["counts"])
+        seen_l = set(m["seen_supervised"])
+        seen_a = set(m["seen_audit"])
+        seen_u = set(m["seen_unlabeled"])
+        recovery_tag = str(time.time_ns())
         if (out / "FAILURE.json").exists():
-            (out / "FAILURE.json").unlink()
+            os.replace(out / "FAILURE.json", out / f"FAILURE.before_resume_{recovery_tag}.json")
         steps_file = out / "steps.jsonl"
-        valid_lines = []
-        if steps_file.exists():
-            with steps_file.open("r") as f:
-                for line in f:
-                    line_str = line.strip()
-                    if not line_str:
-                        continue
-                    try:
-                        row = json.loads(line_str)
-                        if row.get("step", 0) <= start_step:
-                            valid_lines.append(line_str + "\n")
-                    except Exception:
-                        break
-            with steps_file.open("w") as f:
-                f.writelines(valid_lines)
+        original_log = steps_file.read_bytes()
+        lines = original_log.splitlines(keepends=True)
+        if len(lines) < start_step:
+            raise ValueError("checkpoint log prefix missing")
+        for expected_step, line in enumerate(lines[:start_step], 1):
+            if json.loads(line).get("step") != expected_step:
+                raise ValueError("checkpoint log prefix is not contiguous")
+        if len(lines) > start_step:
+            (out / f"steps.before_resume_{recovery_tag}.jsonl").write_bytes(original_log)
+        temp_log = out / f".steps_{recovery_tag}.tmp"
+        with temp_log.open("wb") as stream:
+            stream.write(b"".join(lines[:start_step]))
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temp_log, steps_file)
         log = steps_file.open("a")
 
-    start = time.monotonic()
+    elapsed_before = float(m["elapsed_seconds"]) if resume else 0.
+    start = time.monotonic() - elapsed_before
     try:
         for step in range(start_step, c["steps"]):
             # Round robin coverage; a separate RNG controls only data/augmentations.
@@ -403,10 +433,10 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
             log.write(json.dumps(row, allow_nan=False)+"\n"); log.flush()
             saved_sha = None
             if (step+1) % c["save_every"] == 0 and step+1 < c["steps"]:
-                saved_sha = save_checkpoint(out / f"step_{step+1:06d}", model, teacher, saved_opts, c, data, step+1, provenance, rng, counts=counts, seen=(seen_l, seen_a, seen_u))
+                saved_sha = save_checkpoint(out / f"step_{step+1:06d}", model, teacher, saved_opts, c, data, step+1, provenance, rng, counts=counts, seen=(seen_l, seen_a, seen_u), elapsed_seconds=time.monotonic()-start)
             if stop_after_step is not None and step + 1 == stop_after_step:
                 if saved_sha is None:
-                    saved_sha = save_checkpoint(out / f"step_{step+1:06d}", model, teacher, saved_opts, c, data, step+1, provenance, rng, counts=counts, seen=(seen_l, seen_a, seen_u))
+                    saved_sha = save_checkpoint(out / f"step_{step+1:06d}", model, teacher, saved_opts, c, data, step+1, provenance, rng, counts=counts, seen=(seen_l, seen_a, seen_u), elapsed_seconds=time.monotonic()-start)
                 report = {"schema": SCHEMA, "status": "INTERRUPTED", "synthetic": synthetic, "quality": "NOT_EVALUATED",
                           "step": step+1, "steps": c["steps"], **counts, "elapsed_seconds": time.monotonic()-start,
                           "seen_supervised": sorted(seen_l), "seen_audit": sorted(seen_a), "seen_unlabeled": sorted(seen_u),
@@ -414,7 +444,7 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
                           "label_reads_outside_budget": sorted(data.label_reads-set(data.lids))}
                 write_json(out / "REPORT.json", report)
                 return report
-        sha = save_checkpoint(out / "final", model, teacher, saved_opts, c, data, c["steps"], provenance, rng, counts=counts, seen=(seen_l, seen_a, seen_u))
+        sha = save_checkpoint(out / "final", model, teacher, saved_opts, c, data, c["steps"], provenance, rng, counts=counts, seen=(seen_l, seen_a, seen_u), elapsed_seconds=time.monotonic()-start)
         report = {"schema": SCHEMA, "status": "COMPLETED", "synthetic": synthetic, "quality": "NOT_EVALUATED",
                   "steps": c["steps"], **counts, "elapsed_seconds": time.monotonic()-start,
                   "seen_supervised": sorted(seen_l), "seen_audit": sorted(seen_a), "seen_unlabeled": sorted(seen_u),
