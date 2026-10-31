@@ -42,6 +42,19 @@ def teacher_gate(root, expected_plan_sha):
     return True
 
 
+def completed_teacher_for_backup(root):
+    """A backup retry can never authorize a fresh or partial teacher training run."""
+    root = Path(root)
+    report = json.loads((root / "training/REPORT.json").read_text())
+    manifest = json.loads((root / "training/final/MANIFEST.json").read_text())
+    if (report.get("status") != "COMPLETED" or report.get("steps") != 10000
+            or manifest.get("step") != 10000
+            or manifest.get("config", {}).get("method") != "ema_full"
+            or sha256(root / "training/final/weights.pt") != manifest.get("payload_sha256")):
+        raise ValueError("backup retry requires an intact completed B8 teacher; training is prohibited")
+    return manifest["payload_sha256"]
+
+
 def main(plan_path, expected_sha):
     plan_path = Path(plan_path).resolve()
     if sha256(plan_path) != expected_sha:
@@ -103,9 +116,53 @@ def main(plan_path, expected_sha):
         try:
             status("WAITING_FOR_TEACHER_BACKUP_AND_EVALUATION")
             deadline = time.monotonic() + 6 * 3600
-            while not teacher_gate(plan["teacher_run"], plan["teacher_plan_sha256"]):
+            backup_retry = plan.get("backup_retry")
+            if backup_retry is not None:
+                if (type(backup_retry.get("max_attempts")) is not int
+                        or not 1 <= backup_retry["max_attempts"] <= 3
+                        or type(backup_retry.get("delay_seconds")) is not int
+                        or not 60 <= backup_retry["delay_seconds"] <= 900):
+                    raise ValueError("backup retry budget must be 1..3 attempts with 60..900 seconds delay")
+                pinned_paths = {str(Path(x["path"]).resolve()) for x in plan["pinned_files"]}
+                if any(str(Path(backup_retry[k]).resolve()) not in pinned_paths
+                       for k in ("runner", "teacher_plan")):
+                    raise ValueError("backup runner and teacher plan must be hash-pinned")
+            retry_count = 0
+            while True:
                 if time.monotonic() > deadline:
                     raise RuntimeError("teacher wait limit exceeded; no new teacher run launched")
+                state = json.loads((Path(plan["teacher_run"]) / "STATUS.json").read_text())
+                if state.get("plan_sha256") != plan["teacher_plan_sha256"]:
+                    raise ValueError("teacher run plan identity differs")
+                if state.get("status") == "UPLOAD_PENDING" and backup_retry is not None:
+                    if retry_count >= backup_retry["max_attempts"]:
+                        raise RuntimeError("bounded backup retries exhausted; weights retained; no retraining")
+                    completed_teacher_for_backup(plan["teacher_run"])
+                    if sha256(backup_retry["teacher_plan"]) != plan["teacher_plan_sha256"]:
+                        raise ValueError("backup retry teacher plan differs")
+                    # Evaluation can follow a successful backup in this runner.
+                    # Wait for any other CUDA job; never stop or overlap it.
+                    occupied = subprocess.check_output(
+                        ["nvidia-smi", "--query-compute-apps=pid", "--format=csv,noheader,nounits"], text=True).strip()
+                    if occupied:
+                        status("WAITING_FOR_GPU_BEFORE_BACKUP_RETRY")
+                        time.sleep(30)
+                        continue
+                    retry_count += 1
+                    try:
+                        run(f"backup_retry_{retry_count}", [backup_retry["runner"],
+                            "--plan", backup_retry["teacher_plan"], "--plan-sha256", plan["teacher_plan_sha256"],
+                            "--resume"], 3600)
+                    except RuntimeError:
+                        after = json.loads((Path(plan["teacher_run"]) / "STATUS.json").read_text())
+                        if after.get("status") != "UPLOAD_PENDING":
+                            raise
+                        status("WAITING_FOR_DRIVE_QUOTA", attempt=retry_count,
+                               maximum=backup_retry["max_attempts"])
+                        time.sleep(backup_retry["delay_seconds"])
+                    continue
+                if teacher_gate(plan["teacher_run"], plan["teacher_plan_sha256"]):
+                    break
                 time.sleep(30)
             teacher = Path(plan["teacher_run"])
             receipt = teacher / "TEACHER_IDENTITY.json"
