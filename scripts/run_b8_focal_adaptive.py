@@ -92,7 +92,7 @@ class DriveBackup:
                 raise RuntimeError("rclone remote readback failed")
         return size, h.hexdigest()
 
-    def upload_verified(self, path, name):
+    def upload_verified(self, path, name, *, collect_id=True):
         path = Path(path)
         size, digest = path.stat().st_size, sha256(path)
         last = None
@@ -111,6 +111,8 @@ class DriveBackup:
                     self.progress["files"][name] = {"file": name, "bytes": size, "sha256": digest,
                                                     "readback": "SHA256_MATCH", "drive_id": None}
                     atomic_json(self.progress_path, self.progress)
+                if not collect_id:
+                    return self.progress["files"][name]
                 raw = subprocess.check_output(["rclone", "lsjson", self.remote + "/" + name,
                                                "--stat", *self.flags], text=True)
                 metadata = json.loads(raw)
@@ -226,7 +228,10 @@ def run(plan_path, expected_sha, resume=False, preflight_only=False):
             status("PREFLIGHT")
             probe = root / "WRITE_PROBE.json"
             atomic_json(probe, {"plan_sha256": expected_sha, "purpose": "B8 backup write/readback gate"})
-            proof = backup.upload_verified(probe, probe.name)
+            # The probe proves write permission and exact remote bytes. File IDs
+            # remain mandatory for final payloads; no metadata query is needed
+            # to certify this disposable preflight probe.
+            proof = backup.upload_verified(probe, probe.name, collect_id=False)
             atomic_json(root / "DRIVE_WRITE_VERIFIED.json", proof)
             if preflight_only:
                 status("READY_NOT_STARTED")

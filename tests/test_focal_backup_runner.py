@@ -48,6 +48,18 @@ def test_readback_stream_checks_process_exit(tmp_path, monkeypatch):
         backup.readback('weights.pt')
 
 
+def test_write_probe_needs_bytes_but_not_metadata_query(tmp_path, monkeypatch):
+    payload = tmp_path / 'probe.json'; payload.write_bytes(b'probe')
+    backup = runner.DriveBackup('KhanhDrive:new', 'parent', tmp_path / 'log', attempts=1)
+    monkeypatch.setattr(runner, 'command', lambda *a: None)
+    monkeypatch.setattr(backup, 'readback', lambda n: (5, runner.sha256(payload)))
+    def forbidden(*a, **kw):
+        raise AssertionError('probe does not need a metadata request')
+    monkeypatch.setattr(runner.subprocess, 'check_output', forbidden)
+    proof = backup.upload_verified(payload, 'probe.json', collect_id=False)
+    assert proof['readback'] == 'SHA256_MATCH' and proof['drive_id'] is None
+
+
 def test_plan_hash_rejection_precedes_run_creation(tmp_path):
     plan = tmp_path / 'plan.json'
     plan.write_text('{}')
@@ -128,7 +140,7 @@ def test_failed_weight_upload_blocks_evaluation_and_preserves_run(tmp_path, monk
         (root / 'raw_student/RAW_STUDENT.json').write_text('{}')
     monkeypatch.setattr(runner, 'command', export_only)
     attempted = []
-    def upload(self, path, name):
+    def upload(self, path, name, **kwargs):
         attempted.append(name)
         if name == 'full_checkpoint/weights.pt':
             raise RuntimeError('UPLOAD_PENDING: disconnected')
