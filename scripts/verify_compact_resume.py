@@ -80,7 +80,10 @@ with deterministic_runtime(True):
     result = compact_bilinear(x, (34,38))
     actual = torch.autograd.grad(result, x, gradient)[0]
     replay = torch.autograd.grad(compact_bilinear(x, (34,38)), x, gradient)[0]
+    with torch.no_grad():
+        guarded = compact_bilinear(x, (34,38))
 assert torch.equal(reference, result), 'forward changed'
+assert torch.equal(reference, guarded), 'no-grad guard forward changed'
 assert torch.equal(actual, replay), 'backward not deterministic'
 assert torch.allclose(native_gradient, actual, atol=3e-6, rtol=3e-6), 'bilinear derivative differs'
 print({'forward_bitwise_equal':True,'backward_replay_bitwise_equal':True,

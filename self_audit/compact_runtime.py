@@ -21,7 +21,10 @@ class _DeterministicBilinear(torch.autograd.Function):
         ctx.input_size = list(x.shape)
         ctx.output_size = list(size)
         ctx.input_device = x.device
-        return F.interpolate(x, size=size, mode="bilinear", align_corners=False)
+        # F.interpolate switches to a different decomposition under strict
+        # determinism in newer torch releases. Call the existing native forward
+        # kernel explicitly so training, guard and exported inference agree.
+        return torch.ops.aten.upsample_bilinear2d.default(x, list(size), False, None, None)
 
     @staticmethod
     def backward(ctx, grad_output):
@@ -31,8 +34,10 @@ class _DeterministicBilinear(torch.autograd.Function):
 
 
 def compact_bilinear(x, size):
-    if torch.are_deterministic_algorithms_enabled() and x.is_cuda and torch.is_grad_enabled() and x.requires_grad:
-        return _DeterministicBilinear.apply(x, tuple(size))
+    if torch.are_deterministic_algorithms_enabled() and x.is_cuda:
+        if torch.is_grad_enabled() and x.requires_grad:
+            return _DeterministicBilinear.apply(x, tuple(size))
+        return torch.ops.aten.upsample_bilinear2d.default(x, list(size), False, None, None)
     return F.interpolate(x, size=size, mode="bilinear", align_corners=False)
 
 
