@@ -105,6 +105,10 @@ def validate_plan(plan):
                                      "--untracked-files=no"], text=True).strip()
     if head != plan["source_commit"] or dirty:
         raise ValueError("training source commit/clean state mismatch")
+    files = sorted((source / 'self_audit').glob('*.py')) + [source / 'train.py']
+    closure = hashlib.sha256(''.join(f'{p.name}:{sha256(p)}\n' for p in files).encode()).hexdigest()
+    if closure != plan['source_sha256']:
+        raise ValueError('training source closure mismatch')
     original = json.loads(Path(plan["historical_config"]).read_text())
     actual = json.loads(Path(plan["config"]).read_text())
     restored = json.loads(json.dumps(actual))
@@ -202,6 +206,13 @@ def run(plan_path, expected_sha, resume=False, preflight_only=False):
             final = root / "training/final"
             completed = report.exists() and json.loads(report.read_text()).get("status") == "COMPLETED"
             if not completed:
+                occupants = subprocess.check_output(
+                    ['nvidia-smi', '--query-compute-apps=pid', '--format=csv,noheader,nounits'],
+                    text=True).strip()
+                if occupants:
+                    raise RuntimeError('GPU has existing compute processes; refusing concurrent training')
+                if shutil.disk_usage(root).free < 12 * 1024**3:
+                    raise RuntimeError('less than 12 GiB free for retained checkpoints and backup')
                 cmd = [plan["python"], "train.py", "--config", plan["config"], "--data", plan["data"],
                        "--data-sha256", plan["data_sha256"], "--out", str(root / "training"),
                        "--device", "cuda", "--allow-full-run"]

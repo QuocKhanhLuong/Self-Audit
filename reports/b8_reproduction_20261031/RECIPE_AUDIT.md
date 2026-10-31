@@ -1,6 +1,6 @@
 # Historical B8 Recipe Audit and Lineage Report
 
-**Audit Target**: Historical B8 evidence and source in `results/compact_acdc_l8_20261029/experiment_20261028/b8_recovery/` and commit `0f54455b67bb11a72fbfe2a8ac6fae4073f3e9ca`.  
+**Audit Target**: Historical B8 evidence and source in `results/compact_acdc_l8_20261029/experiment_20261028/b8_recovery/` and commit `0f54455b67bb11a72fbfe2a8ac6fae4073f3e9ca`.
 **Scope**: Read-only audit owning exclusively `reports/b8_reproduction_20261031/RECIPE_AUDIT.md`. No server actions, no training, no modifications to trainer or historical files.
 
 ---
