@@ -129,11 +129,15 @@ def export_raw(source, checkpoint, destination):
     sys.path.insert(0, str(Path(source).resolve()))
     import torch
     from self_audit.engine import load_checkpoint
+    from self_audit.model import build_model
     torch.set_num_threads(2)
     checkpoint, destination = Path(checkpoint), Path(destination)
     destination.mkdir(exist_ok=True)
     manifest = json.loads((checkpoint / "MANIFEST.json").read_text())
     model, _ = load_checkpoint(checkpoint, sha256(checkpoint / "MANIFEST.json"), "cpu")
+    sample = torch.linspace(0, 1, 3 * 32 * 32).reshape(1, 3, 32, 32)
+    with torch.inference_mode():
+        expected_logits = model(sample).clone()
     state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
     target = destination / "raw_student.pt"
     temporary = destination / "raw_student.pt.tmp"
@@ -142,7 +146,13 @@ def export_raw(source, checkpoint, destination):
         os.fsync(stream.fileno())
     os.replace(temporary, target)
     restored = torch.load(target, map_location="cpu", weights_only=True)
-    model.load_state_dict(restored, strict=True)
+    reloaded, _ = build_model(manifest["config"]["model"], synthetic=False,
+                              window=manifest["config"]["window"])
+    reloaded.load_state_dict(restored, strict=True)
+    reloaded.eval()
+    with torch.inference_mode():
+        if not torch.equal(expected_logits, reloaded(sample)):
+            raise RuntimeError("fresh raw student export reload forward differs")
     if set(restored) != set(state) or any(not torch.equal(state[k], restored[k]) for k in state):
         raise RuntimeError("raw student export reload differs")
     atomic_json(destination / "RAW_STUDENT.json", {
@@ -155,7 +165,7 @@ def export_raw(source, checkpoint, destination):
                           "axes": "TZYX", "context": "3 adjacent z slices with edge replication",
                           "class_map": {"0": "BG", "1": "RV", "2": "MYO", "3": "LV"}},
         "labeled_ids": manifest["labeled_ids"], "label_budget": manifest["label_budget"],
-        "reload": "STRICT_STATE_EQUAL", "source_sha256": manifest["source_sha256"],
+        "reload": "STRICT_STATE_AND_FRESH_MODEL_FORWARD_EQUAL", "source_sha256": manifest["source_sha256"],
         "deployment_note": "Frozen KD teacher raw state; pinned NativeStudent/DINO source and initialization assets included separately. Not compact deployment."})
 
 
@@ -190,7 +200,8 @@ def run(plan_path, expected_sha, resume=False, preflight_only=False):
                 return
             report = root / "training/REPORT.json"
             final = root / "training/final"
-            if not report.exists():
+            completed = report.exists() and json.loads(report.read_text()).get("status") == "COMPLETED"
+            if not completed:
                 cmd = [plan["python"], "train.py", "--config", plan["config"], "--data", plan["data"],
                        "--data-sha256", plan["data_sha256"], "--out", str(root / "training"),
                        "--device", "cuda", "--allow-full-run"]

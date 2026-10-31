@@ -61,3 +61,42 @@ def test_atomic_json_never_replaces_on_invalid_data(tmp_path):
     with pytest.raises(ValueError):
         runner.atomic_json(path, {'invalid': float('nan')})
     assert path.read_bytes() == before
+
+
+def test_failed_weight_upload_blocks_evaluation_and_preserves_run(tmp_path, monkeypatch):
+    root = tmp_path / 'run'
+    final = root / 'training/final'
+    final.mkdir(parents=True)
+    (final / 'weights.pt').write_bytes(b'full training payload')
+    (final / 'MANIFEST.json').write_text(json.dumps({'step': 10000, 'payload_sha256': runner.sha256(final / 'weights.pt')}))
+    (root / 'training/REPORT.json').write_text(json.dumps({'status': 'COMPLETED', 'steps': 10000}))
+    config = tmp_path / 'config.json'
+    config.write_text('{}')
+    data = tmp_path / 'data.json'
+    data.write_text('{}')
+    plan = tmp_path / 'plan.json'
+    plan.write_text(json.dumps({'run_root': str(root), 'drive_remote': 'KhanhDrive:new',
+                               'drive_parent_id': 'parent', 'source': str(tmp_path),
+                               'python': 'python', 'config': str(config), 'data': str(data),
+                               'backup_files': []}))
+    monkeypatch.setattr(runner, 'validate_plan', lambda value: None)
+    commands = []
+    def export_only(argv, *args):
+        commands.append(argv)
+        assert '--export-source' in argv
+        (root / 'raw_student').mkdir(exist_ok=True)
+        (root / 'raw_student/raw_student.pt').write_bytes(b'student payload')
+        (root / 'raw_student/RAW_STUDENT.json').write_text('{}')
+    monkeypatch.setattr(runner, 'command', export_only)
+    def upload(self, path, name):
+        if name == 'full_checkpoint/weights.pt':
+            raise RuntimeError('UPLOAD_PENDING: disconnected')
+        return {'readback': 'SHA256_MATCH'}
+    monkeypatch.setattr(runner.DriveBackup, 'upload_verified', upload)
+    for _ in range(2):
+        with pytest.raises(RuntimeError, match='UPLOAD_PENDING'):
+            runner.run(plan, runner.sha256(plan), resume=True)
+        assert (final / 'weights.pt').read_bytes() == b'full training payload'
+        assert json.loads((root / 'STATUS.json').read_text())['status'] == 'UPLOAD_PENDING'
+    assert len(commands) == 2
+    assert not (root / 'TRAIN_STARTED.json').exists()
