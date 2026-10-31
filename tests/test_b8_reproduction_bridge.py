@@ -62,6 +62,46 @@ from scripts.run_transfer_utility_pilot import (
 ROOT = Path(__file__).resolve().parents[1]
 
 
+@pytest.mark.parametrize("mutation", [None, "legacy_method", "missing_lineage", "raw_schema", "ema_only"])
+def test_real_v2_manifest_layout_and_strict_student(tmp_path, valid_reproduction_receipt_dict, mutation):
+    """Use the schema actually emitted by the historical trainer, not a surrogate layout."""
+    receipt = copy.deepcopy(valid_reproduction_receipt_dict)
+    state = {"head.weight": torch.tensor([0.1, 0.2])}
+    full = tmp_path / "weights.pt"
+    raw = tmp_path / "raw_student.pt"
+    torch.save({"teacher" if mutation == "ema_only" else "student": state}, full)
+    torch.save(state, raw)
+    manifest = {
+        "schema": "self_audit.checkpoint.v2", "config": {"method": "ema_full"},
+        "step": 10000, "source_sha256": receipt["source_sha256"],
+        "labeled_ids": receipt["labeled_ids"], "payload_sha256": digest(full),
+    }
+    if mutation == "legacy_method":
+        manifest.pop("config")
+        manifest["method"] = "ema_full"
+    if mutation == "missing_lineage":
+        manifest.pop("labeled_ids")
+    if mutation == "raw_schema":
+        manifest["schema"] = "self_audit.b8.raw_student.v1"
+    mf = tmp_path / "MANIFEST.json"
+    mf.write_text(json.dumps(manifest))
+    for key, name, path in [
+        ("checkpoint_payload_sha256", "full_checkpoint/weights.pt", full),
+        ("checkpoint_manifest_sha256", "full_checkpoint/MANIFEST.json", mf),
+        ("raw_student_sha256", "raw_student/raw_student.pt", raw),
+    ]:
+        receipt[key] = digest(path)
+        item = next(r for r in receipt["remote_files"] if r["file"] == name)
+        item.update(sha256=digest(path), bytes=path.stat().st_size)
+    if mutation is None:
+        result = validate_reproduction_receipt(receipt, checkpoint_dir=tmp_path, raw_student_path=raw)
+        assert result["verified"] is True
+        assert result["payload_sha256"] == digest(full)
+    else:
+        with pytest.raises(ValueError):
+            validate_reproduction_receipt(receipt, checkpoint_dir=tmp_path, raw_student_path=raw)
+
+
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -343,10 +383,10 @@ def test_validate_reproduction_receipt_failures(valid_reproduction_receipt_dict,
     phys_mfile = phys_dir / "MANIFEST.json"
     m_content = json.dumps({
         "schema": "self_audit.checkpoint.v2",
-        "method": "ema_full",
+        "config": {"method": "ema_full"},
         "step": 10000,
         "source_sha256": valid_reproduction_receipt_dict["source_sha256"],
-        "data": {"labeled_ids": valid_reproduction_receipt_dict["labeled_ids"]},
+        "labeled_ids": valid_reproduction_receipt_dict["labeled_ids"],
     })
     phys_mfile.write_text(m_content)
     m_sha = digest(phys_mfile)
@@ -366,9 +406,9 @@ def test_validate_reproduction_receipt_failures(valid_reproduction_receipt_dict,
     phys_bad_step = phys_dir / "bad_step"
     phys_bad_step.mkdir()
     (phys_bad_step / "MANIFEST.json").write_text(json.dumps({
-        "method": "ema_full", "step": 9000,
+        "schema": "self_audit.checkpoint.v2", "config": {"method": "ema_full"}, "step": 9000,
         "source_sha256": valid_reproduction_receipt_dict["source_sha256"],
-        "data": {"labeled_ids": valid_reproduction_receipt_dict["labeled_ids"]},
+        "labeled_ids": valid_reproduction_receipt_dict["labeled_ids"],
     }))
     bad_step_sha = digest(phys_bad_step / "MANIFEST.json")
     phys_rec_bad_step = copy.deepcopy(valid_reproduction_receipt_dict)

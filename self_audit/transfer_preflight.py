@@ -566,22 +566,23 @@ def _verify_physical_teacher_and_cache(
 
     manifest = _read_json(manifest_path)
     if reproduction_receipt is not None:
-        repro = validate_reproduction_receipt(reproduction_receipt)
+        repro = validate_reproduction_receipt(reproduction_receipt, checkpoint_dir=Path(manifest_path).parent)
         if (
-            manifest.get("schema") not in ("self_audit.checkpoint.v2", "self_audit.b8.raw_student.v1")
+            manifest.get("schema") != "self_audit.checkpoint.v2"
             or manifest.get("source_sha256") != repro["source_sha256"]
             or identity.get("source_sha256") != repro["source_sha256"]
             or identity.get("source_commit") != repro["source_commit"]
             or manifest.get("synthetic", False)
         ):
             raise ValueError("physical reproduction B8 teacher source/config/state identity mismatch")
-        if reproduction_source_dir is not None:
-            from .compact_teacher import verify_reproduction_source
-            verify_reproduction_source(
-                reproduction_source_dir,
-                expected_commit=repro["source_commit"],
-                expected_closure=repro["source_sha256"],
-            )
+        if reproduction_source_dir is None:
+            raise ValueError("reproduction preflight requires the pinned source checkout")
+        from .compact_teacher import verify_reproduction_source
+        verify_reproduction_source(
+            reproduction_source_dir,
+            expected_commit=repro["source_commit"],
+            expected_closure=repro["source_sha256"],
+        )
         macro4 = repro["metrics"]["test50"]["Macro4"]
         if macro4 < 0.87 or repro["quality_gate"] != "GO":
             raise ValueError("reproduction teacher quality gate failed: Macro4 < 0.87")
@@ -611,12 +612,7 @@ def _verify_physical_teacher_and_cache(
             raise ValueError("quality receipt does not bind the raw B8 checkpoint")
 
     payload = torch.load(payload_path, map_location="cpu", weights_only=True)
-    if isinstance(payload, Mapping) and "student" in payload:
-        state = payload["student"]
-    elif isinstance(payload, Mapping):
-        state = payload
-    else:
-        state = None
+    state = payload.get("student") if isinstance(payload, Mapping) else None
     if not isinstance(state, Mapping) or not state:
         raise ValueError("physical teacher payload lacks raw student state")
     if any(not torch.isfinite(value).all() for value in state.values() if isinstance(value, torch.Tensor)):
@@ -881,7 +877,7 @@ def check_preflight(
             t_payload_sha = (
                 teacher_payload_sha256
                 or protocol.get("teacher", {}).get("source_payload_sha256")
-                or validated_repro["raw_student_sha256"]
+                or validated_repro["checkpoint_payload_sha256"]
             )
         else:
             t_manifest_sha = teacher_checkpoint_sha256 or protocol.get("teacher", {}).get("source_manifest_sha256") or PINNED_B8_TEACHER_MANIFEST_SHA256
@@ -900,13 +896,7 @@ def check_preflight(
 
         t_manifest_file = t_dir / "MANIFEST.json"
         if not t_manifest_file.is_file():
-            if validated_repro is not None:
-                receipt["reasons"].append(f"Full checkpoint MANIFEST.json not found in reproduction checkpoint dir: {t_dir}")
-                receipt["status"] = "NOT_RUN"
-                return receipt
-            t_manifest_file = t_dir / "RAW_STUDENT.json"
-        if not t_manifest_file.is_file():
-            receipt["reasons"].append(f"Teacher manifest not found in checkpoint dir: {t_dir}")
+            receipt["reasons"].append(f"Teacher MANIFEST.json not found in checkpoint dir: {t_dir}")
             receipt["status"] = "NOT_RUN"
             return receipt
 

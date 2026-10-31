@@ -550,14 +550,16 @@ def validate_reproduction_receipt(
 
         # Validate checkpoint manifest contents
         cp_manifest = json.loads(m_file.read_text())
-        if cp_manifest.get("method") != "ema_full":
-            raise ValueError(f"checkpoint MANIFEST.json method must be 'ema_full', got {cp_manifest.get('method')!r}")
+        if cp_manifest.get("schema") != "self_audit.checkpoint.v2":
+            raise ValueError("reproduction requires a full v2 checkpoint manifest")
+        if cp_manifest.get("config", {}).get("method") != "ema_full":
+            raise ValueError("checkpoint MANIFEST.json config.method must be 'ema_full'")
         if cp_manifest.get("step") != 10000:
             raise ValueError(f"checkpoint MANIFEST.json step must be 10000, got {cp_manifest.get('step')!r}")
         if cp_manifest.get("source_sha256", "").lower() != receipt_data["source_sha256"].lower():
             raise ValueError("checkpoint MANIFEST.json source_sha256 mismatch with receipt")
-        manifest_lids = cp_manifest.get("data", {}).get("labeled_ids") or cp_manifest.get("labeled_ids")
-        if manifest_lids and sorted(manifest_lids) != sorted(receipt_data["labeled_ids"]):
+        manifest_lids = cp_manifest.get("labeled_ids")
+        if not isinstance(manifest_lids, list) or sorted(manifest_lids) != sorted(receipt_data["labeled_ids"]):
             raise ValueError("checkpoint MANIFEST.json labeled_ids mismatch with receipt")
 
         payload_p = find_checkpoint_payload(cd, receipt_data["checkpoint_payload_sha256"])

@@ -984,7 +984,9 @@ def main() -> int:
         if not args.teacher_cache_sha256:
             parser.error("--derive-reproduction-protocol requires --teacher-cache-sha256")
         base_proto = read_json(protocol_p)
-        repro_receipt_data = read_json(Path(args.reproduction_receipt).resolve())
+        from self_audit.compact_teacher import validate_reproduction_receipt
+        repro_receipt_data = validate_reproduction_receipt(
+            args.reproduction_receipt, expected_receipt_sha256=args.reproduction_receipt_sha256)
         derived = derive_reproduction_protocol(
             base_proto,
             repro_receipt_data,
