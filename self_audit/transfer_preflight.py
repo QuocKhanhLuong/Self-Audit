@@ -147,21 +147,34 @@ def validate_locked_protocol(
     if reproduction_receipt is not None:
         try:
             repro_receipt_val = validate_reproduction_receipt(reproduction_receipt)
+            reproduction = {
+                "schema": "self_audit.b8.reproduction.v1",
+                "source_commit": repro_receipt_val["source_commit"],
+                "source_sha256": repro_receipt_val["source_sha256"],
+                "raw_student_sha256": repro_receipt_val["raw_student_sha256"],
+                "checkpoint_payload_sha256": repro_receipt_val["checkpoint_payload_sha256"],
+                "quality_gate": repro_receipt_val["quality_gate"],
+                "Macro4": repro_receipt_val["metrics"]["test50"]["Macro4"],
+                "foreground": repro_receipt_val["metrics"]["test50"]["foreground"],
+                "backup_status": repro_receipt_val["backup_status"],
+                "backup_policy": repro_receipt_val["backup_policy"],
+                "remote_verified": repro_receipt_val["remote_drive_verified"],
+            }
+            if repro_receipt_val.get("exploratory_authorized"):
+                repro_evidence = repro_receipt_val["backup_deferred"]["evaluation_files"]
+                reproduction.update({
+                    "exploratory_authorized": True,
+                    "exploratory_authorization_sha256": repro_receipt_val["exploratory_authorization_sha256"],
+                    "evaluation_metrics_sha256": {
+                        domain: repro_evidence[domain]["sha256"] for domain in ("val18", "test50")
+                    },
+                })
             repro_spec = {
                 "source_manifest_sha256": repro_receipt_val["checkpoint_manifest_sha256"],
                 "source_payload_sha256": repro_receipt_val["checkpoint_payload_sha256"],
                 "state": "student",
                 "lineage": dict(budget_k=8, exact_labeled_ids=list(PINNED_L8_PATIENT_IDS)),
-                "reproduction": {
-                    "schema": "self_audit.b8.reproduction.v1",
-                    "source_commit": repro_receipt_val["source_commit"],
-                    "source_sha256": repro_receipt_val["source_sha256"],
-                    "raw_student_sha256": repro_receipt_val["raw_student_sha256"],
-                    "checkpoint_payload_sha256": repro_receipt_val["checkpoint_payload_sha256"],
-                    "quality_gate": repro_receipt_val["quality_gate"],
-                    "Macro4": repro_receipt_val["metrics"]["test50"]["Macro4"],
-                    "foreground": repro_receipt_val["metrics"]["test50"]["foreground"],
-                },
+                "reproduction": reproduction,
             }
         except Exception as exc:
             return [f"invalid reproduction_receipt for locked protocol: {exc}"]
@@ -170,7 +183,7 @@ def validate_locked_protocol(
         if not isinstance(repro_block, Mapping) or repro_block.get("schema") != "self_audit.b8.reproduction.v1":
             return ["teacher.reproduction mismatch: schema must be 'self_audit.b8.reproduction.v1'"]
         if repro_block.get("quality_gate") != "GO" or repro_block.get("Macro4", 0) < 0.87:
-            return ["teacher.reproduction mismatch: quality_gate must be 'GO' and Macro4 >= 0.87"]
+            return ["teacher.reproduction NO_GO requires an independently validated exploratory receipt"]
         repro_spec = {
             "source_manifest_sha256": protocol["teacher"].get("source_manifest_sha256"),
             "source_payload_sha256": protocol["teacher"].get("source_payload_sha256"),
@@ -303,8 +316,20 @@ def derive_reproduction_protocol(
             "quality_gate": receipt["quality_gate"],
             "Macro4": receipt["metrics"]["test50"]["Macro4"],
             "foreground": receipt["metrics"]["test50"]["foreground"],
+            "backup_status": receipt["backup_status"],
+            "backup_policy": receipt["backup_policy"],
+            "remote_verified": receipt["remote_drive_verified"],
         },
     }
+    if receipt.get("exploratory_authorized"):
+        evidence = receipt["backup_deferred"]["evaluation_files"]
+        derived["teacher"]["reproduction"].update({
+            "exploratory_authorized": True,
+            "exploratory_authorization_sha256": receipt["exploratory_authorization_sha256"],
+            "evaluation_metrics_sha256": {
+                domain: evidence[domain]["sha256"] for domain in ("val18", "test50")
+            },
+        })
     if "source_training_cost" in receipt:
         derived["teacher"]["source_training_cost"] = receipt["source_training_cost"]
     else:
@@ -585,7 +610,13 @@ def _verify_physical_teacher_and_cache(
         )
         macro4 = repro["metrics"]["test50"]["Macro4"]
         if macro4 < 0.87 or repro["quality_gate"] != "GO":
-            raise ValueError("reproduction teacher quality gate failed: Macro4 < 0.87")
+            if not (
+                repro.get("exploratory_authorized") is True
+                and repro.get("backup_status") == "UPLOAD_PENDING"
+                and repro.get("remote_drive_verified") is False
+                and repro["quality_gate"] == "NO_GO"
+            ):
+                raise ValueError("reproduction teacher quality gate failed: Macro4 < 0.87")
         quality_sha = repro.get("receipt_file_sha256", "reproduction_receipt_verified")
     else:
         if (
@@ -727,7 +758,11 @@ def check_preflight(
                 "schema": validated_repro["schema"],
                 "quality_gate": validated_repro["quality_gate"],
                 "Macro4": validated_repro["metrics"]["test50"]["Macro4"],
-                "remote_verified": True,
+                "backup_status": validated_repro["backup_status"],
+                "backup_policy": validated_repro["backup_policy"],
+                "remote_verified": validated_repro["remote_drive_verified"],
+                "exploratory_authorized": validated_repro.get("exploratory_authorized", False),
+                "exploratory_authorization_sha256": validated_repro.get("exploratory_authorization_sha256"),
             }
         except Exception as exc:
             receipt["reasons"].append(f"Reproduction receipt validation failed: {exc}")

@@ -1,0 +1,31 @@
+{
+  "schema": "self_audit.b8.exploratory_teacher_authorization.v1",
+  "user_instruction": "Chạy bốn arm thăm dò với teacher hiện tại",
+  "time": 1793448069.842508,
+  "purpose": "EXPLORATORY_CPTU_PILOT",
+  "teacher_plan_sha256": "239c6023c14d058fa667b62ae53fca09a523d2dd739b496a09b1431fff166125",
+  "checkpoint_payload_sha256": "ae89c3378fe02f30bf5e64c8977bfc260e126a4c7b9218510eb6dcdfc99cb8e1",
+  "checkpoint_manifest_sha256": "a743b23eaf07a1a0ad957399547199c7ddd877654f0faa090b3faa61801520f1",
+  "raw_student_sha256": "100e811c1cd1b02db99d8d0e78b4c26ab5a1ba96454ff1a039dd2c25c5279ef2",
+  "inference_state": "student",
+  "quality_gate": "NO_GO",
+  "deployment_macro4_threshold": 0.87,
+  "test50_metrics_sha256": "887e05762b9963e79bb36de9c84e4bf1aebbf279f9a3698e0c1868a609ca8158",
+  "val18_metrics_sha256": "01b4bd9c7e2b3d6ee426a7846a57b97e7b30834fd7e98e05499cc5901c833600",
+  "test50_macro4": 0.8682269380656147,
+  "val18_macro4": 0.8734032006496953,
+  "backup_status": "UPLOAD_PENDING",
+  "budget": {
+    "steps_per_arm": 2000,
+    "warmup_steps": 1000,
+    "seed": 42,
+    "required_arms": [
+      "plain_kd",
+      "scalar_guard_original",
+      "scalar_guard_larger_tie",
+      "scalar_guard_cross_patient_utility"
+    ],
+    "conditional_same_batch_control": "only under the unchanged locked >0.002 utility-versus-larger-tie signal rule"
+  },
+  "constraints": "Do not claim teacher quality GO, deployment acceptance, or utility benefit before actual completed evaluations. No teacher retraining, seed/batch/loss/threshold/epsilon/budget changes."
+}

@@ -20,6 +20,18 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from scripts.run_b8_reproduction import atomic_json, sha256
+from self_audit.compact_teacher import (
+    BACKUP_DEFERRED_AUTHORIZATION_INSTRUCTION,
+    BACKUP_DEFERRED_AUTHORIZATION_POLICY,
+    BACKUP_DEFERRED_BUDGET,
+    BACKUP_DEFERRED_POLICY,
+    BACKUP_DEFERRED_QUALITY_GATE,
+    BACKUP_DEFERRED_RECEIPT_SCHEMA,
+    EXPLORATORY_TEACHER_AUTHORIZATION_SCHEMA,
+    EXPLORATORY_TEACHER_BUDGET,
+    EXPLORATORY_TEACHER_USER_INSTRUCTION,
+    REPRODUCTION_RECEIPT_SCHEMA,
+)
 
 
 def teacher_gate(root, expected_plan_sha):
@@ -42,6 +54,11 @@ def teacher_gate(root, expected_plan_sha):
     return True
 
 
+def backup_deferred_opt_in_enabled(state, allow_backup_deferred):
+    """Return true only for UPLOAD_PENDING plus the explicit CLI opt-in."""
+    return allow_backup_deferred is True and isinstance(state, dict) and state.get("status") == "UPLOAD_PENDING"
+
+
 def completed_teacher_for_backup(root):
     """A backup retry can never authorize a fresh or partial teacher training run."""
     root = Path(root)
@@ -55,7 +72,180 @@ def completed_teacher_for_backup(root):
     return manifest["payload_sha256"]
 
 
-def main(plan_path, expected_sha):
+def _historical_eval_summary(path, domain):
+    expected_patients = {"val18": 18, "test50": 50}[domain]
+    metrics = json.loads(Path(path).read_text())
+    patients = metrics.get("patients")
+    if not isinstance(patients, dict) or len(patients) != expected_patients:
+        raise ValueError(f"{domain} evaluation must contain exactly {expected_patients} patients")
+    if any(not isinstance(pid, str) or not pid.strip() for pid in patients):
+        raise ValueError(f"{domain} evaluation contains invalid patient IDs")
+    macro = metrics.get("macro_patient")
+    if not isinstance(macro, dict):
+        raise ValueError(f"{domain} evaluation lacks historical macro_patient results")
+    class_dice = {}
+    for cls in ("BG", "RV", "MYO", "LV"):
+        row = macro.get(cls)
+        value = row.get("dice") if isinstance(row, dict) else None
+        if type(value) not in (int, float) or not 0 <= value <= 1:
+            raise ValueError(f"{domain} evaluation has invalid macro_patient.{cls}.dice")
+        class_dice[cls] = float(value)
+    return {
+        "class_dice": class_dice,
+        "Macro4": sum(class_dice.values()) / 4,
+        "foreground": sum(class_dice[k] for k in ("RV", "MYO", "LV")) / 3,
+        "patients": expected_patients,
+    }
+
+
+def build_backup_deferred_receipt(
+    plan, out, *, exploratory_authorization_path=None, exploratory_authorization_sha256=None,
+):
+    """Derive local-only B8 evidence from pinned artifacts and actual evaluator outputs."""
+    teacher = Path(plan["teacher_run"]).resolve()
+    teacher_plan_sha = plan["teacher_plan_sha256"]
+    locked_plan_path = teacher / "LOCKED_PLAN.json"
+    if not locked_plan_path.is_file() or sha256(locked_plan_path) != teacher_plan_sha:
+        raise ValueError("backup-deferred mode requires the exact locked teacher plan")
+    locked_plan = json.loads(locked_plan_path.read_text())
+    config_path = Path(locked_plan["config"]).resolve()
+    state = json.loads((teacher / "STATUS.json").read_text())
+    report_path = teacher / "training/REPORT.json"
+    report = json.loads(report_path.read_text())
+    final = teacher / "training/final"
+    manifest_path = final / "MANIFEST.json"
+    manifest = json.loads(manifest_path.read_text())
+    raw_path = teacher / "raw_student/raw_student.pt"
+    if state.get("status") != "UPLOAD_PENDING" or state.get("plan_sha256") != teacher_plan_sha:
+        raise ValueError("backup-deferred mode requires teacher STATUS=UPLOAD_PENDING for the locked plan")
+    if report.get("status") != "COMPLETED" or report.get("steps") != 10000:
+        raise ValueError("backup-deferred mode requires the existing completed 10,000-step teacher")
+    if (manifest.get("step") != 10000 or manifest.get("config", {}).get("method") != "ema_full"
+            or manifest.get("synthetic", False) is not False
+            or sha256(final / "weights.pt") != manifest.get("payload_sha256")):
+        raise ValueError("backup-deferred mode requires an intact real full-EMA B8 checkpoint")
+    if locked_plan.get("source_commit") != plan.get("teacher_source_commit", locked_plan.get("source_commit")):
+        raise ValueError("continuation teacher source commit disagrees with the locked teacher plan")
+    if not raw_path.is_file():
+        raise FileNotFoundError(f"local raw-student export is missing: {raw_path}")
+
+    authorization_path = Path(out) / "BACKUP_DEFERRED_AUTHORIZATION.json"
+    eval_status_path = Path(out) / "EVAL_STATUS.json"
+    if not authorization_path.is_file() or not eval_status_path.is_file():
+        raise FileNotFoundError("backup-deferred authorization and completed evaluator status are required")
+    eval_status = json.loads(eval_status_path.read_text())
+    evaluation_files = {}
+    metrics = {}
+    for domain in ("val18", "test50"):
+        evaluation_dir = teacher / f"{domain}_evaluation"
+        metrics_path = evaluation_dir / "METRICS.json"
+        recipe_path = evaluation_dir / "RECIPE.json"
+        frozen_path = evaluation_dir / "PREDICTIONS_FROZEN.json"
+        evaluation_plan = locked_plan.get("evaluation", {}).get(domain, {})
+        evaluation_manifest_path = Path(evaluation_plan.get("path", "")).resolve()
+        evaluation_manifest_sha256 = evaluation_plan.get("sha256")
+        summary = _historical_eval_summary(metrics_path, domain)
+        status_summary = eval_status.get("metrics", {}).get(domain, {})
+        metrics_sha = sha256(metrics_path)
+        if (status_summary.get("metrics_path") != str(metrics_path.resolve())
+                or status_summary.get("metrics_sha256") != metrics_sha
+                or status_summary.get("patients") != summary["patients"]
+                or status_summary.get("class_dice") != summary["class_dice"]
+                or abs(float(status_summary.get("Macro4", -1)) - summary["Macro4"]) > 1e-12
+                or abs(float(status_summary.get("foreground", -1)) - summary["foreground"]) > 1e-12):
+            raise ValueError(f"{domain} evaluator summary does not match the actual METRICS.json")
+        metrics[domain] = summary
+        if (not recipe_path.is_file() or not frozen_path.is_file()
+                or not evaluation_manifest_path.is_file()
+                or not isinstance(evaluation_manifest_sha256, str)
+                or sha256(evaluation_manifest_path) != evaluation_manifest_sha256):
+            raise ValueError(f"{domain} RECIPE, frozen predictions, or locked evaluation manifest is missing/mismatched")
+        evaluation_files[domain] = {
+            "path": str(metrics_path.resolve()), "sha256": metrics_sha,
+            "recipe_path": str(recipe_path.resolve()), "recipe_sha256": sha256(recipe_path),
+            "frozen_path": str(frozen_path.resolve()), "frozen_sha256": sha256(frozen_path),
+            "evaluation_manifest_path": str(evaluation_manifest_path),
+            "evaluation_manifest_sha256": evaluation_manifest_sha256,
+        }
+    expected_quality = "GO" if metrics["test50"]["Macro4"] >= 0.87 else "NO_GO"
+    if (eval_status.get("status") != "COMPLETED"
+            or eval_status.get("backup_status") != "UPLOAD_PENDING"
+            or eval_status.get("quality_gate") != expected_quality):
+        raise ValueError("completed VAL/TEST evaluation status or unchanged quality gate is inconsistent")
+
+    exploratory_authorization = None
+    if (exploratory_authorization_path is None) != (exploratory_authorization_sha256 is None):
+        raise ValueError("exploratory authorization path and SHA256 must be supplied together")
+    if exploratory_authorization_path is not None:
+        exploratory_path = Path(exploratory_authorization_path).resolve()
+        if not exploratory_path.is_file() or sha256(exploratory_path) != exploratory_authorization_sha256:
+            raise ValueError("explicit exploratory authorization file/hash mismatch")
+        authorization = json.loads(exploratory_path.read_text())
+        if (authorization.get("schema") != EXPLORATORY_TEACHER_AUTHORIZATION_SCHEMA
+                or authorization.get("user_instruction") != EXPLORATORY_TEACHER_USER_INSTRUCTION
+                or authorization.get("purpose") != "EXPLORATORY_CPTU_PILOT"
+                or authorization.get("teacher_plan_sha256") != teacher_plan_sha
+                or authorization.get("budget") != EXPLORATORY_TEACHER_BUDGET):
+            raise ValueError("explicit exploratory authorization does not bind the locked teacher/four-arm budget")
+        exploratory_authorization = {
+            "path": str(exploratory_path), "sha256": exploratory_authorization_sha256.lower(),
+        }
+
+    identity = {
+        "schema": REPRODUCTION_RECEIPT_SCHEMA,
+        "new_reproduction": True,
+        "inference_state": "student",
+        "original_payload_recovered": False,
+        "checkpoint_payload_sha256": manifest["payload_sha256"],
+        "raw_student_sha256": sha256(raw_path),
+        "checkpoint_manifest_sha256": sha256(manifest_path),
+        "source_commit": locked_plan["source_commit"],
+        "source_sha256": manifest["source_sha256"],
+        "label_budget": 8,
+        "labeled_ids": manifest["labeled_ids"],
+        "metrics": metrics,
+        "quality_gate": expected_quality,
+        "historical_reference": {"Macro4": 0.8800492397526454, "foreground": 0.8412102397257094},
+        "test50_status": "EXPOSED_DEVELOPMENT; final checkpoint only; no tuning",
+        "source_training_cost": {
+            "status": "MEASURED_BY_TRAINER", "steps": 10000,
+            "elapsed_seconds": report["elapsed_seconds"],
+            "source": str(report_path.resolve()), "report_sha256": sha256(report_path),
+            "scope": "canonical trainer elapsed; setup/download/upload/evaluation costs separate",
+        },
+        "backup_deferred": {
+            "schema": BACKUP_DEFERRED_RECEIPT_SCHEMA,
+            "policy": BACKUP_DEFERRED_POLICY,
+            "status": "UPLOAD_PENDING",
+            "remote_verified": False,
+            "teacher_run": str(teacher),
+            "teacher_plan_sha256": teacher_plan_sha,
+            "teacher_config": {"path": str(config_path), "sha256": sha256(config_path)},
+            "authorization": {
+                "path": str(authorization_path.resolve()), "sha256": sha256(authorization_path),
+            },
+            "evaluation_status": {
+                "path": str(eval_status_path.resolve()), "sha256": sha256(eval_status_path),
+            },
+            "evaluation_files": evaluation_files,
+        },
+    }
+    if exploratory_authorization is not None:
+        identity["backup_deferred"]["exploratory_authorization"] = exploratory_authorization
+    return identity
+
+
+def main(
+    plan_path, expected_sha, *, allow_backup_deferred=False,
+    allow_exploratory_teacher=False, exploratory_authorization_path=None,
+    exploratory_authorization_sha256=None,
+):
+    if allow_exploratory_teacher and not allow_backup_deferred:
+        raise ValueError("--allow-exploratory-teacher also requires --allow-backup-deferred")
+    if allow_exploratory_teacher != (exploratory_authorization_path is not None):
+        raise ValueError("--allow-exploratory-teacher requires an explicit authorization file")
+    if allow_exploratory_teacher != (exploratory_authorization_sha256 is not None):
+        raise ValueError("--allow-exploratory-teacher requires its explicit authorization SHA256")
     plan_path = Path(plan_path).resolve()
     if sha256(plan_path) != expected_sha:
         raise ValueError("continuation plan SHA mismatch")
@@ -114,7 +304,7 @@ def main(plan_path, expected_sha):
                 raise RuntimeError(f"{name} failed; inspect {out / (name + '.log')}")
 
         try:
-            status("WAITING_FOR_TEACHER_BACKUP_AND_EVALUATION")
+            status("WAITING_FOR_TEACHER_BACKUP_AND_EVALUATION_OR_EXPLICIT_LOCAL_POLICY")
             deadline = time.monotonic() + 6 * 3600
             backup_retry = plan.get("backup_retry")
             if backup_retry is not None:
@@ -128,12 +318,24 @@ def main(plan_path, expected_sha):
                        for k in ("runner", "teacher_plan")):
                     raise ValueError("backup runner and teacher plan must be hash-pinned")
             retry_count = 0
+            deferred_identity = None
             while True:
                 if time.monotonic() > deadline:
                     raise RuntimeError("teacher wait limit exceeded; no new teacher run launched")
                 state = json.loads((Path(plan["teacher_run"]) / "STATUS.json").read_text())
                 if state.get("plan_sha256") != plan["teacher_plan_sha256"]:
                     raise ValueError("teacher run plan identity differs")
+                if backup_deferred_opt_in_enabled(state, allow_backup_deferred):
+                    deferred_identity = build_backup_deferred_receipt(
+                        plan, out,
+                        exploratory_authorization_path=(exploratory_authorization_path
+                                                       if allow_exploratory_teacher else None),
+                        exploratory_authorization_sha256=(exploratory_authorization_sha256
+                                                          if allow_exploratory_teacher else None),
+                    )
+                    if deferred_identity["quality_gate"] == "NO_GO" and not allow_exploratory_teacher:
+                        raise RuntimeError("teacher quality gate NO_GO; explicit exploratory authorization is required")
+                    break
                 if state.get("status") == "UPLOAD_PENDING" and backup_retry is not None:
                     if retry_count >= backup_retry["max_attempts"]:
                         raise RuntimeError("bounded backup retries exhausted; weights retained; no retraining")
@@ -165,29 +367,46 @@ def main(plan_path, expected_sha):
                     break
                 time.sleep(30)
             teacher = Path(plan["teacher_run"])
-            receipt = teacher / "TEACHER_IDENTITY.json"
             from self_audit.compact_teacher import validate_reproduction_receipt, verify_reproduction_source
-            identity = validate_reproduction_receipt(
-                receipt, expected_receipt_sha256=sha256(receipt),
-                checkpoint_dir=teacher / "training/final", raw_student_path=teacher / "raw_student/raw_student.pt")
-            verify_reproduction_source(plan["teacher_source"], expected_commit=identity["source_commit"],
-                                       expected_closure=identity["source_sha256"])
-            atomic_json(out / "TEACHER_BINDING.json", {"receipt_sha256": sha256(receipt), "identity": identity})
-            training_report_path = teacher / "training/REPORT.json"
-            training_report = json.loads(training_report_path.read_text())
-            if training_report.get("status") != "COMPLETED" or training_report.get("steps") != 10000:
-                raise RuntimeError("teacher cost report is not from the completed locked run")
-            derived_receipt = json.loads(receipt.read_text())
-            derived_receipt["parent_receipt_sha256"] = sha256(receipt)
-            derived_receipt["source_training_cost"] = {
-                "status": "MEASURED_BY_TRAINER", "steps": 10000,
-                "elapsed_seconds": training_report["elapsed_seconds"],
-                "source": str(training_report_path), "report_sha256": sha256(training_report_path),
-                "scope": "canonical trainer elapsed; setup/download/upload/evaluation costs separate"}
+            if deferred_identity is None:
+                source_receipt = teacher / "TEACHER_IDENTITY.json"
+                identity = validate_reproduction_receipt(
+                    source_receipt, expected_receipt_sha256=sha256(source_receipt),
+                    checkpoint_dir=teacher / "training/final", raw_student_path=teacher / "raw_student/raw_student.pt")
+                derived_receipt = json.loads(source_receipt.read_text())
+                derived_receipt["parent_receipt_sha256"] = sha256(source_receipt)
+                training_report_path = teacher / "training/REPORT.json"
+                training_report = json.loads(training_report_path.read_text())
+                if training_report.get("status") != "COMPLETED" or training_report.get("steps") != 10000:
+                    raise RuntimeError("teacher cost report is not from the completed locked run")
+                derived_receipt["source_training_cost"] = {
+                    "status": "MEASURED_BY_TRAINER", "steps": 10000,
+                    "elapsed_seconds": training_report["elapsed_seconds"],
+                    "source": str(training_report_path), "report_sha256": sha256(training_report_path),
+                    "scope": "canonical trainer elapsed; setup/download/upload/evaluation costs separate"}
+            else:
+                derived_receipt = deferred_identity
+                status("VALIDATING_LOCAL_TEACHER_EVIDENCE", backup_status="UPLOAD_PENDING",
+                       remote_verified=False, quality_gate=derived_receipt["quality_gate"])
             receipt = out / "CPTU_TEACHER_RECEIPT.json"
             atomic_json(receipt, derived_receipt)
             identity = validate_reproduction_receipt(receipt, expected_receipt_sha256=sha256(receipt),
                 checkpoint_dir=teacher / "training/final", raw_student_path=teacher / "raw_student/raw_student.pt")
+            verify_reproduction_source(plan["teacher_source"], expected_commit=identity["source_commit"],
+                                       expected_closure=identity["source_sha256"])
+            if deferred_identity is not None:
+                status(
+                    "EXPLORATORY_TEACHER_VALIDATED_NO_GO" if identity["quality_gate"] == "NO_GO"
+                    else "LOCAL_TEACHER_VALIDATED",
+                    backup_status=identity["backup_status"], remote_verified=False,
+                    quality_gate=identity["quality_gate"],
+                    exploratory_authorized=identity["exploratory_authorized"],
+                )
+            atomic_json(out / "TEACHER_BINDING.json", {
+                "receipt_sha256": sha256(receipt), "identity": identity,
+                "backup_status": identity["backup_status"],
+                "remote_verified": identity["remote_drive_verified"],
+            })
             run("check_repo", ["scripts/check_repo.py"], 120)
             run("pytest", ["-m", "pytest", "-q"], 900)
             run("cuda_replay", ["scripts/verify_compact_resume.py", "--out", out / "cuda_verification",
@@ -231,5 +450,26 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--plan", required=True)
     parser.add_argument("--plan-sha256", required=True)
+    parser.add_argument(
+        "--allow-backup-deferred", action="store_true",
+        help="explicitly permit the hash-verified local teacher when Drive status is UPLOAD_PENDING; quality gates stay mandatory",
+    )
+    parser.add_argument(
+        "--allow-exploratory-teacher", action="store_true",
+        help="with explicit authorization only, permit this exact teacher at NO_GO for the locked four-arm exploratory pilot",
+    )
+    parser.add_argument("--exploratory-authorization")
+    parser.add_argument("--exploratory-authorization-sha256")
     args = parser.parse_args()
-    main(args.plan, args.plan_sha256)
+    if args.allow_exploratory_teacher and not args.allow_backup_deferred:
+        parser.error("--allow-exploratory-teacher requires --allow-backup-deferred")
+    if args.allow_exploratory_teacher and not (args.exploratory_authorization and args.exploratory_authorization_sha256):
+        parser.error("--allow-exploratory-teacher requires --exploratory-authorization and --exploratory-authorization-sha256")
+    if not args.allow_exploratory_teacher and (args.exploratory_authorization or args.exploratory_authorization_sha256):
+        parser.error("exploratory authorization arguments require --allow-exploratory-teacher")
+    main(
+        args.plan, args.plan_sha256, allow_backup_deferred=args.allow_backup_deferred,
+        allow_exploratory_teacher=args.allow_exploratory_teacher,
+        exploratory_authorization_path=args.exploratory_authorization,
+        exploratory_authorization_sha256=args.exploratory_authorization_sha256,
+    )

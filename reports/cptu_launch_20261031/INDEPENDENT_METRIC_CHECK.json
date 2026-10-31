@@ -1,0 +1,35 @@
+{
+  "status": "PASS",
+  "claim_scope": "saved-frame metric aggregation and frozen prediction coverage; no new training or GT reads",
+  "datasets": {
+    "val18": {
+      "patients": 18,
+      "frames": 36,
+      "metrics_sha256": "01b4bd9c7e2b3d6ee426a7846a57b97e7b30834fd7e98e05499cc5901c833600",
+      "Macro4": 0.8734032006496952,
+      "foreground": 0.8325564919180714,
+      "class_dice": {
+        "BG": 0.9959433268445667,
+        "RV": 0.7623552759854062,
+        "MYO": 0.8293129619451773,
+        "LV": 0.9060012378236306
+      },
+      "raw_state_and_complete_coverage": true
+    },
+    "test50": {
+      "patients": 50,
+      "frames": 100,
+      "metrics_sha256": "887e05762b9963e79bb36de9c84e4bf1aebbf279f9a3698e0c1868a609ca8158",
+      "Macro4": 0.8682269380656149,
+      "foreground": 0.8256188966664046,
+      "class_dice": {
+        "BG": 0.9960510622632459,
+        "RV": 0.764968278597045,
+        "MYO": 0.8175471322934332,
+        "LV": 0.8943412791087355
+      },
+      "raw_state_and_complete_coverage": true
+    }
+  },
+  "quality_gate": "NO_GO"
+}

@@ -76,14 +76,69 @@ python scripts/continue_b8_transfer_pilot.py --plan /absolute/CONTINUATION_PLAN.
   --plan-sha256 ACTUAL_CONTINUATION_PLAN_SHA256
 ```
 
+The default continuation still requires `TEACHER_COMPLETED_REMOTE_VERIFIED` and
+the verified Drive readback receipt. After the user explicitly authorizes
+continuing with the completed local teacher, the only backup-deferred form is:
+
+```bash
+python scripts/continue_b8_transfer_pilot.py --plan /absolute/CONTINUATION_PLAN.json \
+  --plan-sha256 ACTUAL_CONTINUATION_PLAN_SHA256 --allow-backup-deferred
+```
+
+This option accepts only teacher `STATUS.json` = `UPLOAD_PENDING` for the exact
+locked teacher plan, with the completed 10,000-step report, intact full/raw
+payloads, matching source/config/L8 lineage, the recorded user authorization,
+and the completed historical VAL18 and TEST50 evaluator outputs. The local
+receipt records the hashes of both actual `METRICS.json` files and reports
+`backup_status=UPLOAD_PENDING` and `remote_verified=false`; it contains no
+invented Drive proof. TEST50 Macro4 must still be at least 0.87, with VAL18 also
+reported. A failed quality gate blocks the four-arm continuation. The locked
+2,000-step arms, 1,000-step warmup, seed, schedules, and all other protocol
+checks are unchanged.
+
+## Explicit exploratory continuation for this pinned NO_GO teacher
+
+The default quality gate remains TEST50 Macro4 >= 0.87 and is never rewritten.
+The separate, hash-pinned `EXPLORATORY_TEACHER_AUTHORIZATION.json` is an
+explicit one-run exception for the current teacher only. It binds the exact
+teacher plan, full checkpoint payload and manifest, raw-student payload,
+completed VAL18/TEST50 metric hashes and scores, student inference state, and
+the four locked arm names/budget. The authorization does not declare the
+teacher accepted: the receipt and derived protocol retain `quality_gate=NO_GO`,
+`backup_status=UPLOAD_PENDING`, and `remote_verified=false`.
+
+Use both opt-ins and the actual authorization file SHA256 when launching that
+continuation:
+
+```bash
+python scripts/continue_b8_transfer_pilot.py --plan /absolute/CONTINUATION_PLAN.json \
+  --plan-sha256 ACTUAL_CONTINUATION_PLAN_SHA256 --allow-backup-deferred \
+  --allow-exploratory-teacher \
+  --exploratory-authorization /absolute/EXPLORATORY_TEACHER_AUTHORIZATION.json \
+  --exploratory-authorization-sha256 ACTUAL_AUTHORIZATION_SHA256
+```
+
+The continuation revalidates each evaluator `RECIPE.json` against the exact
+checkpoint manifest and evaluation-manifest SHA, then checks
+`PREDICTIONS_FROZEN.json` recipe binding and unique patient IDs against both
+the metrics patient mapping and complete evaluation manifest cohort. It hashes
+those files and rechecks each frozen prediction payload. A missing, malformed,
+or differently pinned authorization/evaluation blocks the run. This allows only
+the specified exploratory comparison; it does not grant deployment acceptance,
+change the 0.87 threshold, promise utility benefit, or authorize retraining.
+The four arms retain 2,000 steps, 1,000 warmup steps, seed 42, and all existing
+optimizer, loss, batch, crop, quality, source, lineage, runtime, and hard-Dice
+checks.
+
 Its plan pins source, TRAIN/VAL manifests, the historical pilot protocol/matrix,
 the teacher run directory and that run's immutable plan hash. It never restarts
 teacher training. An optional `backup_retry` block pins the original runner and
 teacher plan, limits recovery to 1–3 attempts separated by 60–900 seconds, and
 requires an intact completed 10,000-step checkpoint before calling `--resume`.
 Recovery cannot authorize another teacher training run. A failed quota recovery
-retains `UPLOAD_PENDING` on the teacher and blocks compact expansion.
-It waits for `TEACHER_COMPLETED_REMOTE_VERIFIED` and a teacher GO,
+retains `UPLOAD_PENDING` on the teacher and blocks compact expansion unless the
+explicit `--allow-backup-deferred` policy above is supplied with its local
+evidence. Otherwise it waits for `TEACHER_COMPLETED_REMOTE_VERIFIED` and a teacher GO,
 then runs checks/tests, manufactured CUDA forward/gradient parity and exact
 resume, streaming FP32 TRAIN-U cache generation, and the locked four-arm runner
 (including its bounded profile and conditional same-batch control). It records

@@ -1,0 +1,52 @@
+[
+  {
+    "domain": "val18",
+    "argv": [
+      "/workspace/cptu-runtime-20261030/bin/python",
+      "/workspace/Self-Audit-b8-repro-20261031/scripts/evaluate_frozen_labels.py",
+      "--checkpoint",
+      "/workspace/ema_full_B8_repro_20261031T012656Z_c06c4c9/training/final",
+      "--checkpoint-sha256",
+      "a743b23eaf07a1a0ad957399547199c7ddd877654f0faa090b3faa61801520f1",
+      "--data",
+      "/workspace/Self-Audit-cptu-20261030/results/compact_acdc_l8_20261029/experiment_20261028/val18_native.json",
+      "--data-sha256",
+      "cac4426393ca11959f56df2876869e825443916cdec02c6d95ec8da3fac0ca50",
+      "--out",
+      "/workspace/ema_full_B8_repro_20261031T012656Z_c06c4c9/val18_evaluation",
+      "--device",
+      "cuda",
+      "--batch-size",
+      "1",
+      "--threads",
+      "2"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 47.12997639493551
+  },
+  {
+    "domain": "test50",
+    "argv": [
+      "/workspace/cptu-runtime-20261030/bin/python",
+      "/workspace/Self-Audit-b8-repro-20261031/scripts/evaluate_frozen_labels.py",
+      "--checkpoint",
+      "/workspace/ema_full_B8_repro_20261031T012656Z_c06c4c9/training/final",
+      "--checkpoint-sha256",
+      "a743b23eaf07a1a0ad957399547199c7ddd877654f0faa090b3faa61801520f1",
+      "--data",
+      "/workspace/Self-Audit-cptu-20261030/results/compact_acdc_l8_20261029/experiment_20261028/test50_native.json",
+      "--data-sha256",
+      "68251014b877c25c4e182bbd05c570c24b0788e483435d68cb41ca350bc45242",
+      "--out",
+      "/workspace/ema_full_B8_repro_20261031T012656Z_c06c4c9/test50_evaluation",
+      "--device",
+      "cuda",
+      "--batch-size",
+      "1",
+      "--threads",
+      "2"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 118.65727038204204
+  }
+]

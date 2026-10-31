@@ -76,6 +76,34 @@ HISTORICAL_WINDOW_SHA256 = "8b661ce007ef692c4575c418b90e89b59b7217f21f098c7ab198
 
 # Reproduction receipt schema
 REPRODUCTION_RECEIPT_SCHEMA = "self_audit.b8.reproduction.v1"
+BACKUP_DEFERRED_RECEIPT_SCHEMA = "self_audit.b8.backup_deferred.v1"
+BACKUP_DEFERRED_POLICY = "LOCAL_HASH_VERIFIED_WITH_USER_AUTHORIZATION"
+BACKUP_DEFERRED_AUTHORIZATION_POLICY = (
+    "Proceed with local hash-verified final raw B8; do not claim Drive backup complete."
+)
+BACKUP_DEFERRED_AUTHORIZATION_INSTRUCTION = "train đi"
+BACKUP_DEFERRED_QUALITY_GATE = (
+    "final raw-student historical TEST50 Macro4 >= 0.87; VAL also reported; no tuning"
+)
+BACKUP_DEFERRED_BUDGET = {"steps_per_arm": 2000, "warmup_steps": 1000, "seed": 42}
+EXPLORATORY_TEACHER_AUTHORIZATION_SCHEMA = "self_audit.b8.exploratory_teacher_authorization.v1"
+EXPLORATORY_TEACHER_USER_INSTRUCTION = "Chạy bốn arm thăm dò với teacher hiện tại"
+EXPLORATORY_TEACHER_REQUIRED_ARMS = [
+    "plain_kd",
+    "scalar_guard_original",
+    "scalar_guard_larger_tie",
+    "scalar_guard_cross_patient_utility",
+]
+EXPLORATORY_TEACHER_CONDITIONAL_ARM_POLICY = (
+    "only under the unchanged locked >0.002 utility-versus-larger-tie signal rule"
+)
+EXPLORATORY_TEACHER_BUDGET = {
+    "steps_per_arm": 2000,
+    "warmup_steps": 1000,
+    "seed": 42,
+    "required_arms": EXPLORATORY_TEACHER_REQUIRED_ARMS,
+    "conditional_same_batch_control": EXPLORATORY_TEACHER_CONDITIONAL_ARM_POLICY,
+}
 HISTORICAL_LABELED_IDS = [
     "patient007",
     "patient010",
@@ -102,6 +130,409 @@ HISTORICAL_BASELINE_PINS: Dict[str, Any] = {
     "label_budget": HISTORICAL_LABEL_BUDGET,
     "labeled_ids": list(HISTORICAL_LABELED_IDS),
 }
+
+
+def _backup_deferred_metric_summary(domain: str, path: Path) -> Dict[str, Any]:
+    expected_patients = {"val18": 18, "test50": 50}.get(domain)
+    if expected_patients is None:
+        raise ValueError(f"unsupported backup-deferred evaluation domain: {domain!r}")
+    if not path.is_file():
+        raise FileNotFoundError(f"backup-deferred {domain} METRICS.json is missing: {path}")
+    data = json.loads(path.read_text(encoding="utf-8"))
+    patient_rows = data.get("patients")
+    if not isinstance(patient_rows, Mapping) or len(patient_rows) != expected_patients:
+        raise ValueError(
+            f"backup-deferred {domain} must contain exactly {expected_patients} patients"
+        )
+    if any(not isinstance(pid, str) or not pid.strip() for pid in patient_rows):
+        raise ValueError(f"backup-deferred {domain} has invalid patient IDs")
+    class_rows = data.get("macro_patient")
+    if not isinstance(class_rows, Mapping):
+        raise ValueError(f"backup-deferred {domain} lacks historical macro_patient metrics")
+    class_dice: Dict[str, float] = {}
+    for name in ("BG", "RV", "MYO", "LV"):
+        row = class_rows.get(name)
+        value = row.get("dice") if isinstance(row, Mapping) else None
+        if type(value) not in (int, float) or not np.isfinite(value) or not 0 <= value <= 1:
+            raise ValueError(f"backup-deferred {domain} has invalid macro_patient.{name}.dice={value!r}")
+        class_dice[name] = float(value)
+    return {
+        "Macro4": sum(class_dice.values()) / 4,
+        "foreground": sum(class_dice[name] for name in ("RV", "MYO", "LV")) / 3,
+        "class_dice": class_dice,
+        "patients": expected_patients,
+    }
+
+
+def _same_metric_summary(actual: Any, expected: Mapping[str, Any], domain: str) -> bool:
+    if not isinstance(actual, Mapping) or not {"Macro4", "foreground", "class_dice", "patients"}.issubset(actual):
+        return False
+    if actual.get("patients") != expected["patients"]:
+        return False
+    for key in ("Macro4", "foreground"):
+        value = actual.get(key)
+        if type(value) not in (int, float) or not np.isfinite(value):
+            return False
+        if not np.isclose(float(value), float(expected[key]), rtol=0, atol=1e-12):
+            return False
+    classes = actual.get("class_dice")
+    if not isinstance(classes, Mapping) or set(classes) != {"BG", "RV", "MYO", "LV"}:
+        return False
+    for name, expected_value in expected["class_dice"].items():
+        value = classes.get(name)
+        if type(value) not in (int, float) or not np.isfinite(value):
+            return False
+        if not np.isclose(float(value), float(expected_value), rtol=0, atol=1e-12):
+            return False
+    return True
+
+
+def _valid_sha256(value: Any) -> bool:
+    return isinstance(value, str) and re.fullmatch(r"[0-9a-fA-F]{64}", value) is not None
+
+
+def _validate_exploratory_teacher_authorization(
+    reference: Any,
+    *,
+    receipt_data: Mapping[str, Any],
+    teacher_plan_sha256: str,
+    evaluation_files: Mapping[str, Any],
+) -> str:
+    """Verify the separate parent-recorded authorization for a below-gate pilot."""
+    if not isinstance(reference, Mapping):
+        raise ValueError("NO_GO local teacher requires separate exploratory authorization")
+    path_raw, expected_sha = reference.get("path"), reference.get("sha256")
+    if not isinstance(path_raw, str) or not path_raw or not _valid_sha256(expected_sha):
+        raise ValueError("exploratory authorization path and SHA256 are required")
+    path = Path(path_raw).resolve()
+    if not path.is_file() or digest(path).lower() != expected_sha.lower():
+        raise ValueError("exploratory authorization file hash mismatch")
+    authorization = json.loads(path.read_text(encoding="utf-8"))
+    if (
+        authorization.get("schema") != EXPLORATORY_TEACHER_AUTHORIZATION_SCHEMA
+        or authorization.get("user_instruction") != EXPLORATORY_TEACHER_USER_INSTRUCTION
+        or authorization.get("purpose") != "EXPLORATORY_CPTU_PILOT"
+        or authorization.get("teacher_plan_sha256") != teacher_plan_sha256
+        or authorization.get("checkpoint_payload_sha256") != receipt_data.get("checkpoint_payload_sha256")
+        or authorization.get("checkpoint_manifest_sha256") != receipt_data.get("checkpoint_manifest_sha256")
+        or authorization.get("raw_student_sha256") != receipt_data.get("raw_student_sha256")
+        or authorization.get("inference_state") != "student"
+        or authorization.get("quality_gate") != "NO_GO"
+        or type(authorization.get("deployment_macro4_threshold")) not in (int, float)
+        or authorization.get("deployment_macro4_threshold") != 0.87
+        or authorization.get("backup_status") != "UPLOAD_PENDING"
+    ):
+        raise ValueError("exploratory authorization does not match the locked teacher identity and NO_GO policy")
+
+    metrics = receipt_data.get("metrics")
+    if not isinstance(metrics, Mapping) or set(evaluation_files) != {"val18", "test50"}:
+        raise ValueError("exploratory authorization requires both pinned VAL18 and TEST50 evidence")
+    expected_pins = {
+        "test50_metrics_sha256": (evaluation_files["test50"].get("sha256"), 64),
+        "val18_metrics_sha256": (evaluation_files["val18"].get("sha256"), 64),
+    }
+    for field, (actual_sha, _) in expected_pins.items():
+        if not _valid_sha256(actual_sha) or authorization.get(field) != actual_sha.lower():
+            raise ValueError(f"exploratory authorization {field} does not match actual evaluation")
+    expected_scores = {
+        "test50_macro4": metrics["test50"].get("Macro4"),
+        "val18_macro4": metrics["val18"].get("Macro4"),
+    }
+    for field, actual in expected_scores.items():
+        declared = authorization.get(field)
+        if (type(declared) not in (int, float) or not np.isfinite(declared)
+                or type(actual) not in (int, float)
+                or not np.isclose(float(declared), float(actual), rtol=0, atol=1e-12)):
+            raise ValueError(f"exploratory authorization {field} does not match actual evaluation")
+    if expected_scores["test50_macro4"] >= 0.87:
+        raise ValueError("exploratory authorization is only valid for an actual TEST50 NO_GO")
+
+    expected_budget = EXPLORATORY_TEACHER_BUDGET
+    budget = authorization.get("budget")
+    if not isinstance(budget, Mapping) or set(budget) != set(expected_budget):
+        raise ValueError("exploratory authorization budget/arms do not match the locked four-arm plan")
+    for key, expected in expected_budget.items():
+        actual = budget.get(key)
+        if (type(actual) is not type(expected) or actual != expected):
+            raise ValueError(f"exploratory authorization budget.{key} differs from the locked plan")
+    timestamp = authorization.get("time")
+    if type(timestamp) not in (int, float) or not np.isfinite(timestamp) or timestamp <= 0:
+        raise ValueError("exploratory authorization requires a positive timestamp")
+    return expected_sha.lower()
+
+
+def _validate_backup_deferred_evidence(
+    receipt_data: Mapping[str, Any],
+    *,
+    checkpoint_dir: Optional[Union[str, Path]],
+    raw_student_path: Optional[Union[str, Path]],
+) -> Tuple[Path, Path, Dict[str, Any]]:
+    """Validate the explicit local-only alternative to a completed Drive backup."""
+    evidence = receipt_data.get("backup_deferred")
+    if not isinstance(evidence, Mapping):
+        raise ValueError("backup-deferred receipt evidence must be a mapping")
+    if evidence.get("schema") != BACKUP_DEFERRED_RECEIPT_SCHEMA:
+        raise ValueError("invalid backup-deferred evidence schema")
+    if evidence.get("policy") != BACKUP_DEFERRED_POLICY:
+        raise ValueError("backup-deferred policy is not the locked local-only policy")
+    if evidence.get("status") != "UPLOAD_PENDING" or evidence.get("remote_verified") is not False:
+        raise ValueError("backup-deferred receipt must record UPLOAD_PENDING and remote_verified=false")
+    if receipt_data.get("remote_files") not in (None, []):
+        raise ValueError("backup-deferred receipt must not claim remote_files")
+
+    teacher_run_raw = evidence.get("teacher_run")
+    if not isinstance(teacher_run_raw, str) or not teacher_run_raw:
+        raise ValueError("backup-deferred teacher_run path is required")
+    teacher_run = Path(teacher_run_raw).resolve()
+    if not teacher_run.is_dir():
+        raise FileNotFoundError(f"backup-deferred teacher run is missing: {teacher_run}")
+
+    teacher_plan_sha = evidence.get("teacher_plan_sha256")
+    if not isinstance(teacher_plan_sha, str) or re.fullmatch(r"[0-9a-fA-F]{64}", teacher_plan_sha) is None:
+        raise ValueError("backup-deferred teacher_plan_sha256 must be 64-hex")
+    locked_plan_path = teacher_run / "LOCKED_PLAN.json"
+    if not locked_plan_path.is_file() or digest(locked_plan_path).lower() != teacher_plan_sha.lower():
+        raise ValueError("backup-deferred locked teacher plan hash mismatch")
+    locked_plan = json.loads(locked_plan_path.read_text(encoding="utf-8"))
+    if locked_plan.get("source_commit", "").lower() != str(receipt_data.get("source_commit", "")).lower():
+        raise ValueError("backup-deferred teacher plan source_commit mismatch")
+    if locked_plan.get("source_sha256", "").lower() != str(receipt_data.get("source_sha256", "")).lower():
+        raise ValueError("backup-deferred teacher plan source_sha256 mismatch")
+
+    config_ref = evidence.get("teacher_config")
+    if not isinstance(config_ref, Mapping):
+        raise ValueError("backup-deferred teacher config evidence is required")
+    config_path_raw, config_sha = config_ref.get("path"), config_ref.get("sha256")
+    if not isinstance(config_path_raw, str) or not config_path_raw:
+        raise ValueError("backup-deferred teacher config path is required")
+    config_path = Path(config_path_raw).resolve()
+    expected_config_path = Path(str(locked_plan.get("config", ""))).resolve()
+    pinned_files = locked_plan.get("pinned_files")
+    config_pins = [item for item in pinned_files if isinstance(item, Mapping)
+                   and Path(str(item.get("path", ""))).resolve() == expected_config_path] if isinstance(pinned_files, list) else []
+    if (config_path != expected_config_path or not config_path.is_file()
+            or not isinstance(config_sha, str) or re.fullmatch(r"[0-9a-fA-F]{64}", config_sha) is None
+            or digest(config_path).lower() != config_sha.lower()
+            or len(config_pins) != 1 or config_pins[0].get("sha256", "").lower() != config_sha.lower()):
+        raise ValueError("backup-deferred teacher config hash differs from its locked plan pin")
+    config_data = json.loads(config_path.read_text(encoding="utf-8"))
+    if config_data.get("method") != "ema_full" or config_data.get("steps") != 10000:
+        raise ValueError("backup-deferred locked teacher config is not the full 10,000-step EMA recipe")
+
+    status_path = teacher_run / "STATUS.json"
+    if not status_path.is_file():
+        raise FileNotFoundError(f"backup-deferred teacher STATUS.json is missing: {status_path}")
+    run_status = json.loads(status_path.read_text(encoding="utf-8"))
+    if run_status.get("status") != "UPLOAD_PENDING" or run_status.get("plan_sha256") != teacher_plan_sha:
+        raise ValueError("backup-deferred teacher status must be UPLOAD_PENDING for the locked plan")
+
+    report_path = teacher_run / "training/REPORT.json"
+    if not report_path.is_file():
+        raise FileNotFoundError(f"completed B8 training report is missing: {report_path}")
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    if report.get("status") != "COMPLETED" or report.get("steps") != 10000:
+        raise ValueError("backup-deferred receipt requires a completed 10,000-step B8 training report")
+    elapsed = report.get("elapsed_seconds")
+    if type(elapsed) not in (int, float) or not np.isfinite(elapsed) or elapsed <= 0:
+        raise ValueError("completed B8 report requires positive finite elapsed_seconds")
+    cost = receipt_data.get("source_training_cost")
+    if not isinstance(cost, Mapping) or (
+        cost.get("status") != "MEASURED_BY_TRAINER"
+        or cost.get("steps") != 10000
+        or type(cost.get("elapsed_seconds")) not in (int, float)
+        or not np.isclose(float(cost["elapsed_seconds"]), float(elapsed), rtol=0, atol=1e-9)
+        or Path(str(cost.get("source", ""))).resolve() != report_path.resolve()
+        or cost.get("report_sha256") != digest(report_path)
+    ):
+        raise ValueError("backup-deferred source_training_cost does not match the completed B8 report")
+
+    authorization_ref = evidence.get("authorization")
+    if not isinstance(authorization_ref, Mapping):
+        raise ValueError("backup-deferred user authorization record is required")
+    authorization_path_raw = authorization_ref.get("path")
+    authorization_sha = authorization_ref.get("sha256")
+    if not isinstance(authorization_path_raw, str) or not authorization_path_raw:
+        raise ValueError("backup-deferred authorization path is required")
+    authorization_path = Path(authorization_path_raw).resolve()
+    if not authorization_path.is_file() or not isinstance(authorization_sha, str) or digest(authorization_path).lower() != authorization_sha.lower():
+        raise ValueError("backup-deferred authorization file hash mismatch")
+    authorization = json.loads(authorization_path.read_text(encoding="utf-8"))
+    if (
+        authorization.get("user_instruction") != BACKUP_DEFERRED_AUTHORIZATION_INSTRUCTION
+        or authorization.get("backup_status") != "UPLOAD_PENDING"
+        or authorization.get("policy") != BACKUP_DEFERRED_AUTHORIZATION_POLICY
+        or authorization.get("teacher_plan_sha256") != teacher_plan_sha
+        or authorization.get("quality_gate_unchanged") != BACKUP_DEFERRED_QUALITY_GATE
+        or not isinstance(authorization.get("training_budget_unchanged"), Mapping)
+        or set(authorization["training_budget_unchanged"]) != set(BACKUP_DEFERRED_BUDGET)
+        or any(type(authorization["training_budget_unchanged"].get(key)) is not type(value)
+               or authorization["training_budget_unchanged"].get(key) != value
+               for key, value in BACKUP_DEFERRED_BUDGET.items())
+        or type(authorization.get("time")) not in (int, float)
+        or not np.isfinite(authorization.get("time"))
+        or authorization["time"] <= 0
+    ):
+        raise ValueError("backup-deferred user authorization does not match the locked policy")
+
+    eval_status_ref = evidence.get("evaluation_status")
+    if not isinstance(eval_status_ref, Mapping):
+        raise ValueError("backup-deferred completed evaluation status is required")
+    eval_status_path_raw = eval_status_ref.get("path")
+    eval_status_sha = eval_status_ref.get("sha256")
+    if not isinstance(eval_status_path_raw, str) or not eval_status_path_raw:
+        raise ValueError("backup-deferred evaluation status path is required")
+    eval_status_path = Path(eval_status_path_raw).resolve()
+    if not eval_status_path.is_file() or not isinstance(eval_status_sha, str) or digest(eval_status_path).lower() != eval_status_sha.lower():
+        raise ValueError("backup-deferred evaluation status hash mismatch")
+    eval_status = json.loads(eval_status_path.read_text(encoding="utf-8"))
+    if eval_status.get("status") != "COMPLETED" or eval_status.get("backup_status") != "UPLOAD_PENDING":
+        raise ValueError("backup-deferred evaluation status must be COMPLETED with UPLOAD_PENDING")
+
+    eval_files = evidence.get("evaluation_files")
+    if not isinstance(eval_files, Mapping) or set(eval_files) != {"val18", "test50"}:
+        raise ValueError("backup-deferred evaluation_files must contain exactly val18 and test50")
+    plan_evaluations = locked_plan.get("evaluation")
+    if not isinstance(plan_evaluations, Mapping) or set(plan_evaluations) != {"val18", "test50"}:
+        raise ValueError("locked teacher plan must pin both val18 and test50 evaluation manifests")
+    expected_metrics: Dict[str, Dict[str, Any]] = {}
+    expected_cohorts: Dict[str, List[str]] = {}
+    for domain in ("val18", "test50"):
+        item = eval_files[domain]
+        if not isinstance(item, Mapping):
+            raise ValueError(f"backup-deferred {domain} file record is malformed")
+        path_raw, expected_sha = item.get("path"), item.get("sha256")
+        if not isinstance(path_raw, str) or not path_raw or not _valid_sha256(expected_sha):
+            raise ValueError(f"backup-deferred {domain} path/hash is required")
+        metrics_path = Path(path_raw).resolve()
+        eval_dir = (teacher_run / f"{domain}_evaluation").resolve()
+        expected_path = eval_dir / "METRICS.json"
+        if metrics_path != expected_path:
+            raise ValueError(f"backup-deferred {domain} path does not match the locked teacher run")
+        if not metrics_path.is_file() or digest(metrics_path).lower() != expected_sha.lower():
+            raise ValueError(f"backup-deferred {domain} METRICS.json hash mismatch")
+        summary = _backup_deferred_metric_summary(domain, metrics_path)
+        expected_metrics[domain] = summary
+        status_summary = eval_status.get("metrics", {}).get(domain) if isinstance(eval_status.get("metrics"), Mapping) else None
+        if not _same_metric_summary(status_summary, summary, domain):
+            raise ValueError(f"backup-deferred {domain} summary differs from METRICS.json")
+        if status_summary.get("metrics_path") != str(metrics_path) or status_summary.get("metrics_sha256") != expected_sha:
+            raise ValueError(f"backup-deferred {domain} evaluation status path/hash mismatch")
+
+        eval_plan = plan_evaluations[domain]
+        if not isinstance(eval_plan, Mapping):
+            raise ValueError(f"locked teacher plan {domain} evaluation manifest pin is malformed")
+        manifest_raw, manifest_sha = eval_plan.get("path"), eval_plan.get("sha256")
+        if not isinstance(manifest_raw, str) or not manifest_raw or not _valid_sha256(manifest_sha):
+            raise ValueError(f"locked teacher plan {domain} evaluation manifest path/hash is required")
+        eval_manifest_path = Path(manifest_raw).resolve()
+        recorded_manifest_path = item.get("evaluation_manifest_path")
+        recorded_manifest_sha = item.get("evaluation_manifest_sha256")
+        if (not isinstance(recorded_manifest_path, str)
+                or Path(recorded_manifest_path).resolve() != eval_manifest_path
+                or recorded_manifest_sha != manifest_sha.lower()
+                or not eval_manifest_path.is_file()
+                or digest(eval_manifest_path).lower() != manifest_sha.lower()):
+            raise ValueError(f"backup-deferred {domain} evaluation manifest hash/path mismatch")
+        manifest = json.loads(eval_manifest_path.read_text(encoding="utf-8"))
+        cohort = manifest.get("patients")
+        patient_count = {"val18": 18, "test50": 50}[domain]
+        if (manifest.get("schema") != "self_audit.data.v2"
+                or manifest.get("role") not in {"development", "external_frozen"}
+                or manifest.get("synthetic", False) is not False
+                or not isinstance(cohort, list) or len(cohort) != patient_count):
+            raise ValueError(f"backup-deferred {domain} evaluation manifest is not the full real cohort")
+        cohort_ids = [record.get("id") if isinstance(record, Mapping) else None for record in cohort]
+        if (any(not isinstance(pid, str) or not pid.strip() for pid in cohort_ids)
+                or len(set(cohort_ids)) != patient_count):
+            raise ValueError(f"backup-deferred {domain} evaluation manifest has invalid or duplicate patient IDs")
+        for pid in cohort_ids:
+            _validate_patient_id(pid)
+        expected_cohorts[domain] = cohort_ids
+
+        recipe_path = eval_dir / "RECIPE.json"
+        frozen_path = eval_dir / "PREDICTIONS_FROZEN.json"
+        recipe_sha, frozen_sha = item.get("recipe_sha256"), item.get("frozen_sha256")
+        if (item.get("recipe_path") != str(recipe_path)
+                or item.get("frozen_path") != str(frozen_path)
+                or not _valid_sha256(recipe_sha) or not _valid_sha256(frozen_sha)
+                or not recipe_path.is_file() or digest(recipe_path).lower() != recipe_sha.lower()
+                or not frozen_path.is_file() or digest(frozen_path).lower() != frozen_sha.lower()):
+            raise ValueError(f"backup-deferred {domain} RECIPE/PREDICTIONS_FROZEN evidence hash mismatch")
+        recipe = json.loads(recipe_path.read_text(encoding="utf-8"))
+        if (recipe.get("checkpoint_sha256") != receipt_data.get("checkpoint_manifest_sha256")
+                or recipe.get("prediction_model") != "student"
+                or recipe.get("synthetic") is not False
+                or recipe.get("data_sha256") != manifest_sha.lower()):
+            raise ValueError(f"backup-deferred {domain} RECIPE checkpoint/state/manifest mismatch")
+
+        frozen = json.loads(frozen_path.read_text(encoding="utf-8"))
+        inventory = frozen.get("files")
+        frozen_ids = [record.get("id") if isinstance(record, Mapping) else None
+                      for record in inventory] if isinstance(inventory, list) else []
+        metric_data = json.loads(metrics_path.read_text(encoding="utf-8"))
+        metric_patients = metric_data.get("patients")
+        if frozen.get("recipe_sha256") != digest(recipe_path).lower():
+            raise ValueError(f"backup-deferred {domain} frozen predictions do not bind the actual recipe")
+        if (not isinstance(inventory, list) or len(inventory) != patient_count
+                or any(not isinstance(pid, str) or not pid.strip() for pid in frozen_ids)
+                or len(set(frozen_ids)) != patient_count):
+            raise ValueError(f"backup-deferred {domain} frozen prediction IDs are invalid or duplicated")
+        if (not isinstance(metric_patients, Mapping)
+                or len(metric_patients) != patient_count
+                or set(frozen_ids) != set(cohort_ids)
+                or set(metric_patients) != set(cohort_ids)):
+            raise ValueError(f"backup-deferred {domain} frozen, metric, and manifest patient IDs differ")
+        if metric_data.get("synthetic") is not False:
+            raise ValueError(f"backup-deferred {domain} METRICS.json must record synthetic=false")
+        pred_dir = eval_dir / "predictions"
+        for record in inventory:
+            pid = record.get("id")
+            name, pred_sha = record.get("file"), record.get("sha256")
+            if (not isinstance(name, str) or Path(name).name != name or name in {"", ".", ".."}
+                    or not _valid_sha256(pred_sha)):
+                raise ValueError(f"backup-deferred {domain} frozen prediction record is malformed for {pid!r}")
+            prediction_path = pred_dir / name
+            if not prediction_path.is_file() or digest(prediction_path).lower() != pred_sha.lower():
+                raise ValueError(f"backup-deferred {domain} frozen prediction hash mismatch for {pid!r}")
+
+    supplied_metrics = receipt_data.get("metrics")
+    if not isinstance(supplied_metrics, Mapping):
+        raise ValueError("backup-deferred receipt metrics are required")
+    for domain in ("val18", "test50"):
+        if not _same_metric_summary(supplied_metrics.get(domain), expected_metrics[domain], domain):
+            raise ValueError(f"backup-deferred receipt metrics.{domain} differ from actual METRICS.json")
+    expected_gate = "GO" if expected_metrics["test50"]["Macro4"] >= 0.87 else "NO_GO"
+    if eval_status.get("quality_gate") != expected_gate or receipt_data.get("quality_gate") != expected_gate:
+        raise ValueError("backup-deferred evaluation quality_gate does not match the unchanged TEST50 threshold")
+    exploratory_authorized = False
+    exploratory_authorization_sha256 = None
+    exploratory_ref = evidence.get("exploratory_authorization")
+    if exploratory_ref is not None:
+        exploratory_authorization_sha256 = _validate_exploratory_teacher_authorization(
+            exploratory_ref,
+            receipt_data=receipt_data,
+            teacher_plan_sha256=teacher_plan_sha.lower(),
+            evaluation_files=eval_files,
+        )
+        exploratory_authorized = True
+    if expected_gate != "GO" and not exploratory_authorized:
+        raise ValueError(
+            f"reproduction quality_gate is '{expected_gate}'; must be 'GO' without explicit exploratory authorization"
+        )
+
+    expected_checkpoint = (teacher_run / "training/final").resolve()
+    expected_raw = (teacher_run / "raw_student/raw_student.pt").resolve()
+    if receipt_data.get("remote_verified", False) is not False or receipt_data.get("remote_drive_verified", False) is not False:
+        raise ValueError("backup-deferred receipt cannot claim remote verification")
+    if checkpoint_dir is not None and Path(checkpoint_dir).resolve() != expected_checkpoint:
+        raise ValueError("backup-deferred checkpoint_dir differs from the locked teacher run")
+    if raw_student_path is not None and Path(raw_student_path).resolve() != expected_raw:
+        raise ValueError("backup-deferred raw_student_path differs from the locked teacher run")
+    return expected_checkpoint, expected_raw, {
+        "exploratory_authorized": exploratory_authorized,
+        "exploratory_authorization_sha256": exploratory_authorization_sha256,
+        "evaluation_cohorts": expected_cohorts,
+    }
 
 
 def _validate_patient_id(pid: str) -> None:
@@ -404,8 +835,10 @@ def validate_reproduction_receipt(
       - valid 40-hex source_commit
       - label_budget: 8, labeled_ids matching HISTORICAL_LABELED_IDS exactly
       - quality_gate: 'GO' with metrics.test50.Macro4 >= 0.87
-      - remote_files: list of verified backup files with readback == 'SHA256_MATCH' and non-empty drive_id
-      - fail-closed verification of physical files if paths provided
+      - either verified Drive files, or the separately authorized local-only
+        UPLOAD_PENDING evidence with hashes for the actual evaluation JSONs
+      - reproduction receipts with local-only evidence always bind physical
+        checkpoint/raw files, report, locked plan, and evaluation files
     """
     receipt_file_sha: Optional[str] = None
     if isinstance(receipt_or_path, (str, Path)):
@@ -461,71 +894,85 @@ def validate_reproduction_receipt(
     for pid in labeled_ids:
         _validate_patient_id(pid)
 
-    # Quality gate: Macro4 >= 0.87 and quality_gate == "GO"
+    # Deployment quality remains Macro4 >= 0.87. Only the separately
+    # authorized local exploratory path may continue with an actual NO_GO.
     quality_gate = receipt_data.get("quality_gate")
-    if quality_gate != "GO":
-        raise ValueError(f"reproduction quality_gate is '{quality_gate}'; must be 'GO'")
-
     metrics = receipt_data.get("metrics")
     if not isinstance(metrics, Mapping) or "test50" not in metrics:
         raise ValueError("reproduction receipt missing 'metrics.test50'")
     test50 = metrics["test50"]
+    if not isinstance(test50, Mapping):
+        raise ValueError("reproduction receipt metrics.test50 must be a mapping")
     macro4 = test50.get("Macro4")
-    if type(macro4) not in (int, float) or not np.isfinite(macro4) or macro4 < 0.87 or macro4 > 1.0:
+    if type(macro4) not in (int, float) or not np.isfinite(macro4) or macro4 < 0.0 or macro4 > 1.0:
         raise ValueError(
-            f"reproduction teacher quality gate failed: test50.Macro4={macro4} must be finite in [0.87, 1.0]"
+            f"reproduction teacher TEST50 Macro4={macro4} must be finite in [0.0, 1.0]"
+        )
+    expected_quality_gate = "GO" if macro4 >= 0.87 else "NO_GO"
+    if quality_gate != expected_quality_gate:
+        raise ValueError(
+            f"reproduction quality_gate is '{quality_gate}'; expected '{expected_quality_gate}' from TEST50 Macro4"
         )
 
-    # Remote files verification check: strictly check hashes, sizes, and reject contradictory duplicates
-    remote_files = receipt_data.get("remote_files")
-    if not isinstance(remote_files, list) or len(remote_files) == 0:
-        raise ValueError("reproduction receipt missing mandatory remote_files backup verification")
-
     verified_remote_files: Dict[str, Dict[str, Any]] = {}
-    for item in remote_files:
-        if not isinstance(item, Mapping):
-            raise ValueError(f"invalid remote_file record: {item}")
-        fname = item.get("file")
-        fbytes = item.get("bytes")
-        fsha = item.get("sha256")
-        fdrive = item.get("drive_id")
-        freadback = item.get("readback")
+    backup_deferred = receipt_data.get("backup_deferred") is not None
+    deferred_validation: Dict[str, Any] = {}
+    if not backup_deferred and quality_gate != "GO":
+        raise ValueError(f"reproduction quality_gate is '{quality_gate}'; must be 'GO'")
+    if backup_deferred:
+        checkpoint_dir, raw_student_path, deferred_validation = _validate_backup_deferred_evidence(
+            receipt_data, checkpoint_dir=checkpoint_dir, raw_student_path=raw_student_path
+        )
+    else:
+        # Legacy/default reproduction receipts still require verified Drive readback.
+        remote_files = receipt_data.get("remote_files")
+        if not isinstance(remote_files, list) or len(remote_files) == 0:
+            raise ValueError("reproduction receipt missing mandatory remote_files backup verification")
 
-        if not fname or not isinstance(fname, str):
-            raise ValueError(f"remote_file missing valid filename: {item}")
-        if type(fbytes) is not int or fbytes <= 0:
-            raise ValueError(f"remote_file '{fname}' has invalid byte count {fbytes!r}; must be positive int")
-        if not isinstance(fsha, str) or re.fullmatch(r"[0-9a-fA-F]{64}", fsha) is None:
-            raise ValueError(f"remote_file '{fname}' has invalid sha256 {fsha}")
-        if not fdrive or not isinstance(fdrive, str):
-            raise ValueError(f"remote_file '{fname}' missing verified drive_id: {item}")
-        if freadback != "SHA256_MATCH":
-            raise ValueError(f"remote_file '{fname}' readback verification status '{freadback}' != 'SHA256_MATCH'")
+        for item in remote_files:
+            if not isinstance(item, Mapping):
+                raise ValueError(f"invalid remote_file record: {item}")
+            fname = item.get("file")
+            fbytes = item.get("bytes")
+            fsha = item.get("sha256")
+            fdrive = item.get("drive_id")
+            freadback = item.get("readback")
 
-        if fname in verified_remote_files:
-            prior = verified_remote_files[fname]
-            if prior["sha256"] != fsha.lower() or prior["bytes"] != fbytes:
+            if not fname or not isinstance(fname, str):
+                raise ValueError(f"remote_file missing valid filename: {item}")
+            if type(fbytes) is not int or fbytes <= 0:
+                raise ValueError(f"remote_file '{fname}' has invalid byte count {fbytes!r}; must be positive int")
+            if not isinstance(fsha, str) or re.fullmatch(r"[0-9a-fA-F]{64}", fsha) is None:
+                raise ValueError(f"remote_file '{fname}' has invalid sha256 {fsha}")
+            if not fdrive or not isinstance(fdrive, str):
+                raise ValueError(f"remote_file '{fname}' missing verified drive_id: {item}")
+            if freadback != "SHA256_MATCH":
+                raise ValueError(f"remote_file '{fname}' readback verification status '{freadback}' != 'SHA256_MATCH'")
+
+            if fname in verified_remote_files:
+                prior = verified_remote_files[fname]
+                if prior["sha256"] != fsha.lower() or prior["bytes"] != fbytes:
+                    raise ValueError(
+                        f"duplicate contradictory remote_file entry for '{fname}': "
+                        f"prior=({prior['bytes']}b, {prior['sha256']}) vs new=({fbytes}b, {fsha})"
+                    )
+            verified_remote_files[fname] = {"bytes": fbytes, "sha256": fsha.lower(), "drive_id": fdrive}
+
+        # Verify essential files map exactly to receipt hashes.
+        expected_mappings = [
+            ("raw_student/raw_student.pt", receipt_data["raw_student_sha256"].lower()),
+            ("full_checkpoint/weights.pt", receipt_data["checkpoint_payload_sha256"].lower()),
+            ("full_checkpoint/MANIFEST.json", receipt_data["checkpoint_manifest_sha256"].lower()),
+        ]
+        for ess_name, ess_sha in expected_mappings:
+            if ess_name not in verified_remote_files:
+                raise ValueError(f"reproduction remote_files missing mandatory verified backup of '{ess_name}'")
+            actual_rec_sha = verified_remote_files[ess_name]["sha256"]
+            if actual_rec_sha != ess_sha:
                 raise ValueError(
-                    f"duplicate contradictory remote_file entry for '{fname}': "
-                    f"prior=({prior['bytes']}b, {prior['sha256']}) vs new=({fbytes}b, {fsha})"
+                    f"reproduction remote_files hash mismatch for '{ess_name}': "
+                    f"remote record has {actual_rec_sha}, expected receipt {ess_sha}"
                 )
-        verified_remote_files[fname] = {"bytes": fbytes, "sha256": fsha.lower(), "drive_id": fdrive}
-
-    # Verify essential files map exactly to receipt hashes
-    expected_mappings = [
-        ("raw_student/raw_student.pt", receipt_data["raw_student_sha256"].lower()),
-        ("full_checkpoint/weights.pt", receipt_data["checkpoint_payload_sha256"].lower()),
-        ("full_checkpoint/MANIFEST.json", receipt_data["checkpoint_manifest_sha256"].lower()),
-    ]
-    for ess_name, ess_sha in expected_mappings:
-        if ess_name not in verified_remote_files:
-            raise ValueError(f"reproduction remote_files missing mandatory verified backup of '{ess_name}'")
-        actual_rec_sha = verified_remote_files[ess_name]["sha256"]
-        if actual_rec_sha != ess_sha:
-            raise ValueError(
-                f"reproduction remote_files hash mismatch for '{ess_name}': "
-                f"remote record has {actual_rec_sha}, expected receipt {ess_sha}"
-            )
 
     # Physical checks on disk if paths provided
     payload_p = None
@@ -629,13 +1076,22 @@ def validate_reproduction_receipt(
     res["source_training_cost"] = receipt_data.get("source_training_cost", "NOT_KNOWN")
     if "parent_receipt_sha256" in receipt_data:
         res["parent_receipt_sha256"] = receipt_data["parent_receipt_sha256"]
+    res["remote_drive_verified"] = not backup_deferred
+    res["remote_verified"] = not backup_deferred
+    res["backup_status"] = "UPLOAD_PENDING" if backup_deferred else "VERIFIED"
+    res["backup_policy"] = BACKUP_DEFERRED_POLICY if backup_deferred else "DRIVE_READBACK_REQUIRED"
+    res["exploratory_authorized"] = bool(deferred_validation.get("exploratory_authorized", False))
+    if deferred_validation.get("exploratory_authorization_sha256") is not None:
+        res["exploratory_authorization_sha256"] = deferred_validation["exploratory_authorization_sha256"]
+    if backup_deferred:
+        res["evaluation_evidence_files"] = receipt_data["backup_deferred"]["evaluation_files"]
     res["quality_receipt"] = {
         "Macro4": macro4,
         "foreground": test50.get("foreground"),
         "quality_gate": quality_gate,
-        "remote_verified": True,
+        "remote_verified": not backup_deferred,
+        "exploratory_authorized": bool(deferred_validation.get("exploratory_authorized", False)),
     }
-    res["remote_drive_verified"] = True
     res["physical_payload_status"] = "VERIFIED_ON_DISK" if (checkpoint_dir or raw_student_path) else "BLOCKED_MISSING_PAYLOAD"
     res["verification_status"] = "VERIFIED" if (checkpoint_dir or raw_student_path) else "CLAIMED_METADATA_UNVERIFIED"
     if receipt_file_sha is not None:
@@ -826,7 +1282,15 @@ def validate_teacher_identity(
     elif kind == "reproduction":
         repro = validate_reproduction_receipt(t_id)
         t_id.update(repro)
-        checks_passed.extend(["reproduction_receipt_validated", "drive_readback_verified", "macro4_quality_go"])
+        checks_passed.append("reproduction_receipt_validated")
+        checks_passed.append(
+            "macro4_quality_go" if repro["quality_gate"] == "GO"
+            else "exploratory_quality_no_go_authorized"
+        )
+        checks_passed.append(
+            "drive_readback_verified" if repro["remote_drive_verified"]
+            else "backup_deferred_local_evidence_verified"
+        )
 
     # Synthetic teacher
     elif kind == "synthetic":

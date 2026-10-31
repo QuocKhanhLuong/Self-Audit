@@ -1,0 +1,106 @@
+{
+  "val18": {
+    "classes": {
+      "BG": {
+        "patient_macro_recall": 0.997273856274925,
+        "patient_macro_precision": 0.9946456485378103,
+        "prediction_count": 17055400,
+        "reference_count": 17012661
+      },
+      "RV": {
+        "patient_macro_recall": 0.7489967075680357,
+        "patient_macro_precision": 0.8697438444271219,
+        "prediction_count": 183614,
+        "reference_count": 230281
+      },
+      "MYO": {
+        "patient_macro_recall": 0.8506676382222833,
+        "patient_macro_precision": 0.8181584841801217,
+        "prediction_count": 248716,
+        "reference_count": 244046
+      },
+      "LV": {
+        "patient_macro_recall": 0.9284565623212931,
+        "patient_macro_precision": 0.8951024778059141,
+        "prediction_count": 246414,
+        "reference_count": 247156
+      }
+    },
+    "zero_foreground_patients": [],
+    "worst_RV_dice": [
+      {
+        "patient": "patient087",
+        "RV": 0.2567157889522889
+      },
+      {
+        "patient": "patient030",
+        "RV": 0.552288381913133
+      },
+      {
+        "patient": "patient005",
+        "RV": 0.5838514958806971
+      },
+      {
+        "patient": "patient082",
+        "RV": 0.5881904599923011
+      },
+      {
+        "patient": "patient014",
+        "RV": 0.6504944699611069
+      }
+    ],
+    "scope": "reference frames from frozen predictions; no inference replay or tuning"
+  },
+  "test50": {
+    "classes": {
+      "BG": {
+        "patient_macro_recall": 0.9964702901258644,
+        "patient_macro_precision": 0.9956505652614092,
+        "prediction_count": 51547559,
+        "reference_count": 51503981
+      },
+      "RV": {
+        "patient_macro_recall": 0.771741265603819,
+        "patient_macro_precision": 0.8269121622406677,
+        "prediction_count": 614918,
+        "reference_count": 689128
+      },
+      "MYO": {
+        "patient_macro_recall": 0.8354898101993268,
+        "patient_macro_precision": 0.8089081127651135,
+        "prediction_count": 663681,
+        "reference_count": 646822
+      },
+      "LV": {
+        "patient_macro_recall": 0.9257075916501158,
+        "patient_macro_precision": 0.880322913517425,
+        "prediction_count": 675730,
+        "reference_count": 661957
+      }
+    },
+    "zero_foreground_patients": [],
+    "worst_RV_dice": [
+      {
+        "patient": "patient124",
+        "RV": 0.04050950585789336
+      },
+      {
+        "patient": "patient125",
+        "RV": 0.13905982597428446
+      },
+      {
+        "patient": "patient107",
+        "RV": 0.2870067615699941
+      },
+      {
+        "patient": "patient131",
+        "RV": 0.32329030806942305
+      },
+      {
+        "patient": "patient130",
+        "RV": 0.4635652501844294
+      }
+    ],
+    "scope": "reference frames from frozen predictions; no inference replay or tuning"
+  }
+}

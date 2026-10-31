@@ -20,12 +20,22 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+import numpy as np
 import pytest
 import torch
 
 from self_audit.compact_artifacts import digest
 from self_audit.compact_data import synthetic_compact_fixture
 from self_audit.compact_teacher import (
+    BACKUP_DEFERRED_AUTHORIZATION_INSTRUCTION,
+    BACKUP_DEFERRED_AUTHORIZATION_POLICY,
+    BACKUP_DEFERRED_BUDGET,
+    BACKUP_DEFERRED_POLICY,
+    BACKUP_DEFERRED_QUALITY_GATE,
+    BACKUP_DEFERRED_RECEIPT_SCHEMA,
+    EXPLORATORY_TEACHER_AUTHORIZATION_SCHEMA,
+    EXPLORATORY_TEACHER_BUDGET,
+    EXPLORATORY_TEACHER_USER_INSTRUCTION,
     HISTORICAL_BASELINE_PINS,
     HISTORICAL_MANIFEST_SHA256,
     HISTORICAL_MODEL_SHA256,
@@ -57,6 +67,12 @@ from self_audit.transfer_preflight import (
 from scripts.run_transfer_utility_pilot import (
     bind_teacher_config,
     validate_arm_config,
+)
+from scripts.continue_b8_transfer_pilot import (
+    backup_deferred_opt_in_enabled,
+    build_backup_deferred_receipt,
+    main as continue_main,
+    teacher_gate,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -168,6 +184,208 @@ def valid_reproduction_receipt_dict() -> dict:
         "quality_gate": "GO",
         "test50_status": "EXPOSED_DEVELOPMENT; final checkpoint only; no tuning",
     }
+
+
+def _backup_deferred_receipt_fixture(tmp_path, base_receipt, *, test_macro4=0.885):
+    teacher = tmp_path / "teacher_run"
+    final = teacher / "training/final"
+    raw_dir = teacher / "raw_student"
+    val_dir = teacher / "val18_evaluation"
+    test_dir = teacher / "test50_evaluation"
+    for path in (final, raw_dir, val_dir / "predictions", test_dir / "predictions"):
+        path.mkdir(parents=True)
+
+    state = {"head.weight": torch.tensor([0.1, 0.2])}
+    payload = final / "weights.pt"
+    raw = raw_dir / "raw_student.pt"
+    torch.save({"student": state}, payload)
+    torch.save(state, raw)
+    manifest = {
+        "schema": "self_audit.checkpoint.v2", "config": {"method": "ema_full"},
+        "step": 10000, "synthetic": False, "source_sha256": base_receipt["source_sha256"],
+        "labeled_ids": list(base_receipt["labeled_ids"]), "payload_sha256": digest(payload),
+    }
+    manifest_path = final / "MANIFEST.json"
+    manifest_path.write_text(json.dumps(manifest))
+
+    config_path = teacher / "CONFIG.json"
+    config_path.write_text(json.dumps({"method": "ema_full", "steps": 10000}))
+    def make_eval_evidence(domain, count, score):
+        eval_dir = teacher / f"{domain}_evaluation"
+        ids = [f"patient{100 + i:03d}" for i in range(count)]
+        manifest_path = teacher / f"{domain}_manifest.json"
+        manifest_path.write_text(json.dumps({
+            "schema": "self_audit.data.v2",
+            "role": "development" if domain == "val18" else "external_frozen",
+            "synthetic": False,
+            "patients": [{"id": pid} for pid in ids],
+        }))
+        if domain == "test50" and np.isclose(score, 0.8682269380656147, rtol=0, atol=1e-14):
+            class_scores = {
+                "BG": 0.9960510622632462, "RV": 0.7649682785970446,
+                "MYO": 0.8175471322934329, "LV": 0.8943412791087352,
+            }
+        else:
+            class_scores = {name: score for name in ("BG", "RV", "MYO", "LV")}
+        metrics_path = eval_dir / "METRICS.json"
+        metrics_path.write_text(json.dumps({
+            "synthetic": False,
+            "patients": {pid: {} for pid in ids},
+            "macro_patient": {name: {"dice": value} for name, value in class_scores.items()},
+        }))
+        recipe_path = eval_dir / "RECIPE.json"
+        recipe_path.write_text(json.dumps({
+            "checkpoint_sha256": digest(manifest_path),
+            "data_sha256": digest(manifest_path),
+            "prediction_model": "student", "synthetic": False,
+        }))
+        inventory = []
+        for pid in ids:
+            prediction_path = eval_dir / "predictions" / f"{pid}.npy"
+            prediction_path.write_bytes(("prediction:" + pid).encode())
+            inventory.append({"id": pid, "file": prediction_path.name, "sha256": digest(prediction_path)})
+        frozen_path = eval_dir / "PREDICTIONS_FROZEN.json"
+        frozen_path.write_text(json.dumps({"recipe_sha256": digest(recipe_path), "files": inventory}))
+        return manifest_path, metrics_path, recipe_path, frozen_path, ids, class_scores
+
+    val_manifest, val_path, val_recipe, val_frozen, val_ids, val_classes = make_eval_evidence("val18", 18, 0.88)
+    test_manifest, test_path, test_recipe, test_frozen, test_ids, test_classes = make_eval_evidence("test50", 50, test_macro4)
+    locked_plan = teacher / "LOCKED_PLAN.json"
+    locked_plan.write_text(json.dumps({
+        "source_commit": base_receipt["source_commit"],
+        "source_sha256": base_receipt["source_sha256"],
+        "config": str(config_path.resolve()),
+        "evaluation": {
+            "val18": {"path": str(val_manifest.resolve()), "sha256": digest(val_manifest)},
+            "test50": {"path": str(test_manifest.resolve()), "sha256": digest(test_manifest)},
+        },
+        "pinned_files": [{"path": str(config_path.resolve()), "sha256": digest(config_path)}],
+    }))
+    teacher_plan_sha = digest(locked_plan)
+    (teacher / "STATUS.json").write_text(json.dumps({
+        "status": "UPLOAD_PENDING", "plan_sha256": teacher_plan_sha,
+    }))
+    report_path = teacher / "training/REPORT.json"
+    report_path.write_text(json.dumps({
+        "status": "COMPLETED", "steps": 10000, "elapsed_seconds": 123.5,
+    }))
+
+    val_summary = {
+        "Macro4": sum(val_classes.values()) / 4,
+        "foreground": sum(val_classes[name] for name in ("RV", "MYO", "LV")) / 3,
+        "class_dice": val_classes, "patients": 18,
+    }
+    test_summary = {
+        "Macro4": sum(test_classes.values()) / 4,
+        "foreground": sum(test_classes[name] for name in ("RV", "MYO", "LV")) / 3,
+        "class_dice": test_classes, "patients": 50,
+    }
+    # Both final evaluation RECIPE files bind the exact checkpoint manifest.
+    recipe_checkpoint_sha = digest(manifest_path)
+    for recipe_path, eval_manifest in ((val_recipe, val_manifest), (test_recipe, test_manifest)):
+        recipe = json.loads(recipe_path.read_text())
+        recipe["checkpoint_sha256"] = recipe_checkpoint_sha
+        recipe["data_sha256"] = digest(eval_manifest)
+        recipe_path.write_text(json.dumps(recipe))
+    for frozen_path, recipe_path in ((val_frozen, val_recipe), (test_frozen, test_recipe)):
+        frozen = json.loads(frozen_path.read_text())
+        frozen["recipe_sha256"] = digest(recipe_path)
+        frozen_path.write_text(json.dumps(frozen))
+    out = tmp_path / "continuation_out"
+    out.mkdir()
+    authorization_path = out / "BACKUP_DEFERRED_AUTHORIZATION.json"
+    authorization_path.write_text(json.dumps({
+        "user_instruction": BACKUP_DEFERRED_AUTHORIZATION_INSTRUCTION,
+        "context": "Explicit request to start four arms after being told Drive backup blocks the pipeline.",
+        "backup_status": "UPLOAD_PENDING",
+        "policy": BACKUP_DEFERRED_AUTHORIZATION_POLICY,
+        "teacher_plan_sha256": teacher_plan_sha,
+        "time": 1.0,
+        "quality_gate_unchanged": BACKUP_DEFERRED_QUALITY_GATE,
+        "training_budget_unchanged": BACKUP_DEFERRED_BUDGET,
+    }))
+    eval_status_path = out / "EVAL_STATUS.json"
+    eval_status_path.write_text(json.dumps({
+        "status": "COMPLETED", "backup_status": "UPLOAD_PENDING",
+        "quality_gate": "GO" if test_macro4 >= 0.87 else "NO_GO",
+        "metrics": {
+            "val18": {**val_summary, "metrics_path": str(val_path.resolve()), "metrics_sha256": digest(val_path)},
+            "test50": {**test_summary, "metrics_path": str(test_path.resolve()), "metrics_sha256": digest(test_path)},
+        },
+    }))
+
+    receipt = copy.deepcopy(base_receipt)
+    receipt.pop("remote_files")
+    receipt.update({
+        "checkpoint_payload_sha256": digest(payload),
+        "checkpoint_manifest_sha256": digest(manifest_path),
+        "raw_student_sha256": digest(raw),
+        "metrics": {"val18": val_summary, "test50": test_summary},
+        "quality_gate": "GO" if test_macro4 >= 0.87 else "NO_GO",
+        "source_training_cost": {
+            "status": "MEASURED_BY_TRAINER", "steps": 10000,
+            "elapsed_seconds": 123.5, "source": str(report_path.resolve()),
+            "report_sha256": digest(report_path),
+            "scope": "canonical trainer elapsed; setup/download/upload/evaluation costs separate",
+        },
+        "backup_deferred": {
+            "schema": BACKUP_DEFERRED_RECEIPT_SCHEMA,
+            "policy": BACKUP_DEFERRED_POLICY,
+            "status": "UPLOAD_PENDING", "remote_verified": False,
+            "teacher_run": str(teacher.resolve()), "teacher_plan_sha256": teacher_plan_sha,
+            "teacher_config": {"path": str(config_path.resolve()), "sha256": digest(config_path)},
+            "authorization": {"path": str(authorization_path.resolve()), "sha256": digest(authorization_path)},
+            "evaluation_status": {"path": str(eval_status_path.resolve()), "sha256": digest(eval_status_path)},
+            "evaluation_files": {
+                "val18": {
+                    "path": str(val_path.resolve()), "sha256": digest(val_path),
+                    "recipe_path": str(val_recipe.resolve()), "recipe_sha256": digest(val_recipe),
+                    "frozen_path": str(val_frozen.resolve()), "frozen_sha256": digest(val_frozen),
+                    "evaluation_manifest_path": str(val_manifest.resolve()),
+                    "evaluation_manifest_sha256": digest(val_manifest),
+                },
+                "test50": {
+                    "path": str(test_path.resolve()), "sha256": digest(test_path),
+                    "recipe_path": str(test_recipe.resolve()), "recipe_sha256": digest(test_recipe),
+                    "frozen_path": str(test_frozen.resolve()), "frozen_sha256": digest(test_frozen),
+                    "evaluation_manifest_path": str(test_manifest.resolve()),
+                    "evaluation_manifest_sha256": digest(test_manifest),
+                },
+            },
+        },
+    })
+    return receipt, teacher
+
+
+def _attach_exploratory_teacher_authorization(receipt, teacher, *, mutate=None):
+    evidence = receipt["backup_deferred"]
+    evaluation_files = evidence["evaluation_files"]
+    auth = {
+        "schema": EXPLORATORY_TEACHER_AUTHORIZATION_SCHEMA,
+        "user_instruction": EXPLORATORY_TEACHER_USER_INSTRUCTION,
+        "time": 1.0,
+        "purpose": "EXPLORATORY_CPTU_PILOT",
+        "teacher_plan_sha256": digest(Path(teacher) / "LOCKED_PLAN.json"),
+        "checkpoint_payload_sha256": receipt["checkpoint_payload_sha256"],
+        "checkpoint_manifest_sha256": receipt["checkpoint_manifest_sha256"],
+        "raw_student_sha256": receipt["raw_student_sha256"],
+        "inference_state": "student",
+        "quality_gate": "NO_GO",
+        "deployment_macro4_threshold": 0.87,
+        "test50_metrics_sha256": evaluation_files["test50"]["sha256"],
+        "val18_metrics_sha256": evaluation_files["val18"]["sha256"],
+        "test50_macro4": receipt["metrics"]["test50"]["Macro4"],
+        "val18_macro4": receipt["metrics"]["val18"]["Macro4"],
+        "backup_status": "UPLOAD_PENDING",
+        "budget": copy.deepcopy(EXPLORATORY_TEACHER_BUDGET),
+        "constraints": "Do not claim teacher quality GO, deployment acceptance, or utility benefit before actual completed evaluations. No teacher retraining, seed/batch/loss/threshold/epsilon/budget changes.",
+    }
+    if mutate is not None:
+        mutate(auth)
+    auth_path = Path(evidence["evaluation_status"]["path"]).parent / "EXPLORATORY_TEACHER_AUTHORIZATION.json"
+    auth_path.write_text(json.dumps(auth))
+    evidence["exploratory_authorization"] = {"path": str(auth_path.resolve()), "sha256": digest(auth_path)}
+    return auth_path
 
 
 @pytest.fixture
@@ -310,7 +528,7 @@ def test_validate_reproduction_receipt_failures(valid_reproduction_receipt_dict,
     # 3. Macro4 < 0.87 or > 1.0
     bad_macro = copy.deepcopy(valid_reproduction_receipt_dict)
     bad_macro["metrics"]["test50"]["Macro4"] = 0.869
-    with pytest.raises(ValueError, match="Macro4=0.869 must be finite in"):
+    with pytest.raises(ValueError, match="expected 'NO_GO' from TEST50 Macro4"):
         validate_reproduction_receipt(bad_macro)
 
     bad_macro_high = copy.deepcopy(valid_reproduction_receipt_dict)
@@ -332,7 +550,7 @@ def test_validate_reproduction_receipt_failures(valid_reproduction_receipt_dict,
     # 4. Quality gate != "GO"
     bad_gate = copy.deepcopy(valid_reproduction_receipt_dict)
     bad_gate["quality_gate"] = "NO_GO"
-    with pytest.raises(ValueError, match="quality_gate is 'NO_GO'; must be 'GO'"):
+    with pytest.raises(ValueError, match="expected 'GO' from TEST50 Macro4"):
         validate_reproduction_receipt(bad_gate)
 
     # 5. Remote file readback != "SHA256_MATCH"
@@ -442,6 +660,232 @@ def test_validate_reproduction_receipt_failures(valid_reproduction_receipt_dict,
 
     with pytest.raises(ValueError, match="weight tensor mismatch"):
         validate_reproduction_receipt(phys_rec, checkpoint_dir=phys_dir, raw_student_path=raw_pt)
+
+
+def test_backup_deferred_receipt_is_explicit_local_only_and_keeps_quality_gate(
+    valid_reproduction_receipt_dict, tmp_path,
+):
+    receipt, teacher = _backup_deferred_receipt_fixture(
+        tmp_path, valid_reproduction_receipt_dict,
+    )
+    validated = validate_reproduction_receipt(receipt)
+    assert validated["verified"] is True
+    assert validated["backup_status"] == "UPLOAD_PENDING"
+    assert validated["backup_policy"] == BACKUP_DEFERRED_POLICY
+    assert validated["remote_drive_verified"] is False
+    assert validated["remote_verified"] is False
+    assert validated["quality_receipt"]["remote_verified"] is False
+
+    # The ordinary reproduction contract remains backup-required by default.
+    legacy_without_drive = copy.deepcopy(valid_reproduction_receipt_dict)
+    legacy_without_drive.pop("remote_files")
+    with pytest.raises(ValueError, match="mandatory remote_files"):
+        validate_reproduction_receipt(legacy_without_drive)
+
+    malformed = copy.deepcopy(receipt)
+    malformed["backup_deferred"]["schema"] = "self_audit.other.v1"
+    with pytest.raises(ValueError, match="invalid backup-deferred evidence schema"):
+        validate_reproduction_receipt(malformed)
+
+    wrong_eval_hash = copy.deepcopy(receipt)
+    wrong_eval_hash["backup_deferred"]["evaluation_files"]["test50"]["sha256"] = "0" * 64
+    with pytest.raises(ValueError, match="test50 METRICS.json hash mismatch"):
+        validate_reproduction_receipt(wrong_eval_hash)
+
+    wrong_config_hash = copy.deepcopy(receipt)
+    wrong_config_hash["backup_deferred"]["teacher_config"]["sha256"] = "0" * 64
+    with pytest.raises(ValueError, match="teacher config hash differs"):
+        validate_reproduction_receipt(wrong_config_hash)
+
+    wrong_raw_hash = copy.deepcopy(receipt)
+    wrong_raw_hash["raw_student_sha256"] = "0" * 64
+    with pytest.raises(ValueError, match="raw_student payload hash mismatch"):
+        validate_reproduction_receipt(wrong_raw_hash)
+
+    auth_ref = receipt["backup_deferred"]["authorization"]
+    auth_path = Path(auth_ref["path"])
+    auth_data = json.loads(auth_path.read_text())
+    auth_data["user_instruction"] = "different instruction"
+    auth_path.write_text(json.dumps(auth_data))
+    auth_ref["sha256"] = digest(auth_path)
+    with pytest.raises(ValueError, match="user authorization does not match"):
+        validate_reproduction_receipt(receipt)
+
+    no_go, _ = _backup_deferred_receipt_fixture(
+        tmp_path / "no_go", valid_reproduction_receipt_dict, test_macro4=0.869,
+    )
+    with pytest.raises(ValueError, match="quality_gate is 'NO_GO'; must be 'GO'"):
+        validate_reproduction_receipt(no_go)
+
+    pending = tmp_path / "pending"
+    pending.mkdir()
+    (pending / "STATUS.json").write_text(json.dumps({"status": "UPLOAD_PENDING", "plan_sha256": "plan"}))
+    assert backup_deferred_opt_in_enabled({"status": "UPLOAD_PENDING"}, True) is True
+    assert backup_deferred_opt_in_enabled({"status": "UPLOAD_PENDING"}, False) is False
+    assert backup_deferred_opt_in_enabled({"status": "TEACHER_COMPLETED_REMOTE_VERIFIED"}, True) is False
+    with pytest.raises(RuntimeError, match="UPLOAD_PENDING"):
+        teacher_gate(pending, "plan")
+
+
+def test_below_gate_teacher_requires_exact_exploratory_authorization(valid_reproduction_receipt_dict, tmp_path):
+    receipt, teacher = _backup_deferred_receipt_fixture(
+        tmp_path / "authorized", valid_reproduction_receipt_dict, test_macro4=0.8682269380656147,
+    )
+    with pytest.raises(ValueError, match="quality_gate is 'NO_GO'; must be 'GO'"):
+        validate_reproduction_receipt(receipt)
+
+    authorization_path = _attach_exploratory_teacher_authorization(receipt, teacher)
+    authorized = validate_reproduction_receipt(receipt)
+    assert authorized["quality_gate"] == "NO_GO"
+    assert authorized["metrics"]["test50"]["Macro4"] == pytest.approx(0.8682269380656147)
+    assert authorized["metrics"]["test50"]["foreground"] == pytest.approx(0.8256188966664042)
+    assert authorized["exploratory_authorized"] is True
+    assert authorized["exploratory_authorization_sha256"] == digest(authorization_path)
+    assert authorized["backup_status"] == "UPLOAD_PENDING"
+    assert authorized["remote_verified"] is False
+    assert authorized["remote_drive_verified"] is False
+    assert authorized["quality_receipt"]["quality_gate"] == "NO_GO"
+    assert authorized["quality_receipt"]["remote_verified"] is False
+
+    base_protocol = json.loads((ROOT / "configs" / "transfer_utility" / "protocol.json").read_text())
+    cache_dir = tmp_path / "exploratory_cache"
+    cache_dir.mkdir()
+    cache_manifest = cache_dir / "CACHE_MANIFEST.json"
+    teacher_identity = dict(authorized, teacher_kind="reproduction")
+    cache_manifest.write_text(json.dumps({
+        "schema": "self_audit.compact_teacher_cache.v1",
+        "teacher_identity": teacher_identity,
+        "train_manifest_sha256": PINNED_TRAIN_MANIFEST_SHA256,
+        "patients": {},
+    }))
+    cache_sha = digest(cache_manifest)
+    derived = derive_reproduction_protocol(base_protocol, receipt, cache_sha)
+    assert derived["teacher"]["reproduction"]["quality_gate"] == "NO_GO"
+    assert derived["teacher"]["reproduction"]["Macro4"] == pytest.approx(0.8682269380656147)
+    assert derived["teacher"]["reproduction"]["remote_verified"] is False
+    assert derived["teacher"]["reproduction"]["exploratory_authorized"] is True
+    assert derived["teacher"]["reproduction"]["exploratory_authorization_sha256"] == digest(authorization_path)
+    assert validate_locked_protocol(derived, reproduction_receipt=receipt) == []
+    assert any("independently validated exploratory receipt" in error for error in validate_locked_protocol(derived))
+
+    arm_names = [
+        "plain_kd", "scalar_guard_original", "scalar_guard_larger_tie",
+        "scalar_guard_cross_patient_utility",
+    ]
+    identities, schedules = [], []
+    for arm_name in arm_names:
+        base_cfg = json.loads((ROOT / "configs" / "transfer_utility" / f"{arm_name}.json").read_text())
+        bound = bind_teacher_config(
+            base_cfg, cache_path=cache_manifest, cache_sha=cache_sha,
+            protocol=derived, reproduction_receipt=receipt,
+        )
+        validate_arm_config(bound, derived, arm_name, reproduction_receipt=receipt)
+        identities.append({key: bound["teacher"][key] for key in (
+            "source_manifest_sha256", "source_payload_sha256", "state", "lineage", "cache_sha256",
+        )})
+        schedules.append({key: bound[key] for key in (
+            "steps", "warmup_steps", "seed", "batch_size", "labeled_batch_size",
+            "unlabeled_batch_size", "crop_size", "save_every",
+        )})
+    assert all(identity == identities[0] for identity in identities)
+    assert all(schedule == schedules[0] for schedule in schedules)
+    assert schedules[0] == {
+        "steps": 2000, "warmup_steps": 1000, "seed": 42, "batch_size": 8,
+        "labeled_batch_size": 8, "unlabeled_batch_size": 8, "crop_size": 160,
+        "save_every": 500,
+    }
+    with pytest.raises(ValueError, match="also requires --allow-backup-deferred"):
+        continue_main(
+            "unused-plan.json", "0" * 64, allow_exploratory_teacher=True,
+            exploratory_authorization_path=str(authorization_path),
+            exploratory_authorization_sha256=digest(authorization_path),
+        )
+
+
+def test_continuation_runner_builds_hash_bound_no_go_receipt(valid_reproduction_receipt_dict, tmp_path):
+    receipt, teacher = _backup_deferred_receipt_fixture(
+        tmp_path / "runner", valid_reproduction_receipt_dict, test_macro4=0.8682269380656147,
+    )
+    authorization_path = _attach_exploratory_teacher_authorization(receipt, teacher)
+    out = Path(receipt["backup_deferred"]["evaluation_status"]["path"]).parent
+    teacher_plan = Path(teacher) / "LOCKED_PLAN.json"
+    plan = {
+        "teacher_run": str(teacher), "teacher_plan_sha256": digest(teacher_plan),
+        "teacher_source_commit": receipt["source_commit"],
+    }
+    built = build_backup_deferred_receipt(
+        plan, out,
+        exploratory_authorization_path=authorization_path,
+        exploratory_authorization_sha256=digest(authorization_path),
+    )
+    validated = validate_reproduction_receipt(
+        built, checkpoint_dir=Path(teacher) / "training/final",
+        raw_student_path=Path(teacher) / "raw_student/raw_student.pt",
+    )
+    assert validated["quality_gate"] == "NO_GO"
+    assert validated["metrics"]["test50"]["Macro4"] == pytest.approx(0.8682269380656147)
+    assert validated["backup_status"] == "UPLOAD_PENDING"
+    assert validated["remote_verified"] is False
+    assert {key for key in validated["evaluation_evidence_files"]["test50"]} >= {
+        "sha256", "recipe_sha256", "frozen_sha256", "evaluation_manifest_sha256",
+    }
+
+
+@pytest.mark.parametrize(
+    "mutation", ["auth_checkpoint", "auth_schema", "recipe_checkpoint", "recipe_state", "duplicate_cohort"],
+)
+def test_exploratory_teacher_rejects_wrong_identity_or_evaluation_lineage(
+    valid_reproduction_receipt_dict, tmp_path, mutation,
+):
+    receipt, teacher = _backup_deferred_receipt_fixture(
+        tmp_path / mutation, valid_reproduction_receipt_dict, test_macro4=0.8682269380656147,
+    )
+    if mutation in {"auth_checkpoint", "auth_schema"}:
+        def mutate(auth):
+            if mutation == "auth_checkpoint":
+                auth["checkpoint_payload_sha256"] = "0" * 64
+            else:
+                auth["schema"] = "self_audit.invalid.v1"
+        _attach_exploratory_teacher_authorization(
+            receipt, teacher, mutate=mutate,
+        )
+        with pytest.raises(ValueError, match="does not match the locked teacher identity"):
+            validate_reproduction_receipt(receipt)
+        return
+
+    _attach_exploratory_teacher_authorization(receipt, teacher)
+    evaluation = receipt["backup_deferred"]["evaluation_files"]["test50"]
+    recipe_path = Path(evaluation["recipe_path"])
+    recipe = json.loads(recipe_path.read_text())
+    if mutation == "recipe_checkpoint":
+        recipe["checkpoint_sha256"] = "0" * 64
+        recipe_path.write_text(json.dumps(recipe))
+        evaluation["recipe_sha256"] = digest(recipe_path)
+        frozen_path = Path(evaluation["frozen_path"])
+        frozen = json.loads(frozen_path.read_text())
+        frozen["recipe_sha256"] = digest(recipe_path)
+        frozen_path.write_text(json.dumps(frozen))
+        evaluation["frozen_sha256"] = digest(frozen_path)
+        expected_error = "RECIPE checkpoint/state/manifest mismatch"
+    elif mutation == "recipe_state":
+        recipe["prediction_model"] = "teacher_ema"
+        recipe_path.write_text(json.dumps(recipe))
+        evaluation["recipe_sha256"] = digest(recipe_path)
+        frozen_path = Path(evaluation["frozen_path"])
+        frozen = json.loads(frozen_path.read_text())
+        frozen["recipe_sha256"] = digest(recipe_path)
+        frozen_path.write_text(json.dumps(frozen))
+        evaluation["frozen_sha256"] = digest(frozen_path)
+        expected_error = "RECIPE checkpoint/state/manifest mismatch"
+    else:
+        frozen_path = Path(evaluation["frozen_path"])
+        frozen = json.loads(frozen_path.read_text())
+        frozen["files"][1]["id"] = frozen["files"][0]["id"]
+        frozen_path.write_text(json.dumps(frozen))
+        evaluation["frozen_sha256"] = digest(frozen_path)
+        expected_error = "frozen prediction IDs are invalid or duplicated"
+    with pytest.raises(ValueError, match=expected_error):
+        validate_reproduction_receipt(receipt)
 
 
 # ---------------------------------------------------------------------------

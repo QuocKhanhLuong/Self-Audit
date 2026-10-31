@@ -210,6 +210,15 @@ cost and verified Drive readback. It cannot satisfy the old B8 hash pins.
 and quality gate, then requires repository checks, exact manufactured CUDA
 replay, a new TRAIN-U cache and the bounded profile before the locked pilot.
 
+Explicitly authorized exploratory continuation is a separate opt-in policy.
+Its receipt binds the actual raw teacher, source, evaluation artifacts and
+unchanged pilot budget, and records pending backup and failed teacher quality
+truthfully. It does not relabel a below-threshold teacher as quality GO or lower
+the deployment Macro4 >= .87 threshold. The default continuation still requires
+both completed backup and the teacher quality gate; see the B8 runbook for the
+explicit flags and authorization records. Comparisons made in exploratory mode
+remain development screening and need actual completed arm evaluations.
+
 That continuation applies the same `deterministic_algorithms: true` runtime to
 every compact arm. It retains the existing bilinear forward and architecture;
 the unsupported CUDA atomic bilinear backward is evaluated by the deterministic
