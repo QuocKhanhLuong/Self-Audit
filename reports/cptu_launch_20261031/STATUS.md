@@ -1,3 +1,76 @@
+# RUNNING: four-arm exploratory CPTU pilot
+
+Launched from source `786511b47ce0a9aa6da8e166bafdfe52126b8838` on RTX 5000 Ada.
+Plain KD completed 2,000/2,000 steps and its final exported-student VAL18
+evaluation. Original scalar guard subsequently passed 1,000 steps and was
+training with nonzero accepted U updates. Larger-tie and cross-patient utility
+remain queued. This is a running-state snapshot, not a completed four-arm result.
+
+| Arm / final step 2,000 | VAL18 Macro4 | Foreground | BG | RV | MYO | LV |
+|---|---:|---:|---:|---:|---:|---:|
+| Plain KD | 70.6674% | 61.2466% | 98.9298% | 49.9931% | 62.0642% | 71.6825% |
+
+Plain KD has not met the 87% deployment quality gate. Pooled RV recall/precision
+are 44.061% / 69.980%; these are explicitly pooled diagnostic counts, not
+patient-macro recall/precision. `PLAIN_KD_FINAL_SUMMARY.json` binds these values
+to its export and metric hashes. No comparative utility verdict is available.
+
+Teacher remains **NO_GO** (TEST50 Macro4 0.8682269380656147), and raw-export
+Drive verification remains **UPLOAD_PENDING**. The user explicitly authorized
+this exploratory pilot. Deployment acceptance remains Macro4 >= 0.87 plus
+matched measured inference resource improvements; none is claimed here.
+
+Server checks passed: `check_repo.py`, **949 tests / 2 warnings**, four-arm CUDA
+smoke, exact checkpoint/resume weights/optimizer/RNG/selector replay, and a
+32-step real-data bounded profile. Profile accepted 13 nonzero U updates and
+rejected 11 after 8 warm-up steps; this is a mechanism/resource check, not a
+patient quality result. Encoder, decoder and head weight changes were measured.
+
+- Run root: `/workspace/cptu-launch-20261031`.
+- tmux: `cptu_exploratory_20261031` (independent of SSH connection).
+- Exact executed commands: `server_launch/LAUNCH_COMMAND.json` and `COMMANDS.json`.
+- Training source tree: `/workspace/Self-Audit-cptu-launch-20261031`, detached at the source commit above.
+- Arm logs/checkpoints: `pilot/runs/<arm>/segments/step_001000`, `step_001500`, `step_002000`.
+- Runner log: `runner.log`; process-tree RSS and GPU samples: `RESOURCE_SAMPLES.jsonl`.
+- CUDA verification: `server_launch/cuda_verification/VERIFICATION.json`.
+- Measured profile: `server_launch/pilot/profile/PROFILE_RECEIPT.json`.
+- Final comparison (when all runs finish): `pilot/TRANSFER_UTILITY_PILOT_REPORT.json`.
+
+Budget remains 2,000 steps including 1,000 warm-up per arm, seed 42, L8/U72,
+L/U batch 8, crop 160, original optimizer/loss/threshold/guard settings and eight
+scales. All four arms share compact initialization and L/U schedule. Teacher
+cache FP32 was generated once: 72 U volumes, 16,507,115,008 bytes. Creation
+wall time was 102.06 seconds (model/cache writer measured 83.75 seconds); peak
+GPU allocated/reserved 2,400,991,744 / 3,709,861,888 bytes. Cache and images are
+streamed; no batch or precision change was made. Profile elapsed 76.68 seconds
+includes process setup; it is not an inference benchmark or a precise full-run ETA.
+
+The unchanged screening rule requires utility final VAL18 Macro4 to exceed all
+three controls by >0.002. A same-batch control runs only if utility exceeds
+larger-tie by >0.002. No joint run, sweep, or teacher retraining is queued.
+VAL18 checkpoints are evaluated at 1,000/1,500/2,000; the final comparison uses
+step 2,000. TEST50 is not used by compact training or selector decisions.
+
+Exact launch argv (already running; **do not rerun it**):
+
+```bash
+/workspace/cptu-runtime-20261030/bin/python /workspace/Self-Audit-cptu-launch-20261031/scripts/continue_b8_transfer_pilot.py --plan /workspace/b8-repro-setup-20261031/LOCKED_CPTU_EXPLORATORY_786511b.json --plan-sha256 970a4abfa7d18b9a6f97793ee6ba29b14ab94c40d9caac7d671ab506da116ea2 --allow-backup-deferred --allow-exploratory-teacher --exploratory-authorization /workspace/cptu-launch-20261031/EXPLORATORY_TEACHER_AUTHORIZATION.json --exploratory-authorization-sha256 dbcea6c02557c39ef7e411b8b6bd54aff6185f0808e03753c407b5a7237a53bd
+```
+
+Monitor without changing the job:
+
+```bash
+ssh vast-gpu 'cat /workspace/cptu-launch-20261031/STATUS.json; tail -n 10 /workspace/cptu-launch-20261031/runner.log'
+ssh vast-gpu 'tail -f /workspace/cptu-launch-20261031/RESOURCE_SAMPLES.jsonl'
+```
+
+`RUNNER_EXIT.json` is written when the runner ends. A failed process must be
+inspected and resumed from its existing state; do not launch a replacement seed
+or delete the lock/output. HANDOVER includes the exploratory authorization,
+source/config/cache hashes, run paths, and observed state.
+
+## Earlier teacher measurement and initial stop
+
 # CPTU launch: explicitly authorized exploratory pilot
 
 **Latest instruction:** after seeing the actual below-threshold teacher result,

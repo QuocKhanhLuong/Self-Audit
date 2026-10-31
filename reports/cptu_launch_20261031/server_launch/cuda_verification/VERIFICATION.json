@@ -1,0 +1,91 @@
+{
+  "status": "PASS",
+  "device": "cuda:0",
+  "synthetic": true,
+  "source_sha256": "2cc9bb6cecb5ab5e13dedf55f00e9ef9a895a5793b9472a284ac4078a2c2bdf0",
+  "commands": [
+    {
+      "name": "cuda_bilinear_parity",
+      "argv": [
+        "/workspace/cptu-runtime-20261030/bin/python",
+        "-c",
+        "\nimport torch\nfrom self_audit.compact_runtime import compact_bilinear, deterministic_runtime\ntorch.manual_seed(42)\nx = torch.randn(2, 8, 17, 19, device='cuda', requires_grad=True)\ngradient = torch.randn(2, 8, 34, 38, device='cuda')\nreference = torch.nn.functional.interpolate(x, size=(34,38), mode='bilinear', align_corners=False)\nnative_gradient = torch.autograd.grad(reference, x, gradient)[0]\nwith deterministic_runtime(True):\n    result = compact_bilinear(x, (34,38))\n    actual = torch.autograd.grad(result, x, gradient)[0]\n    replay = torch.autograd.grad(compact_bilinear(x, (34,38)), x, gradient)[0]\n    with torch.no_grad():\n        guarded = compact_bilinear(x, (34,38))\nassert torch.equal(reference, result), 'forward changed'\nassert torch.equal(reference, guarded), 'no-grad guard forward changed'\nassert torch.equal(actual, replay), 'backward not deterministic'\nassert torch.allclose(native_gradient, actual, atol=3e-6, rtol=3e-6), 'bilinear derivative differs'\nprint({'forward_bitwise_equal':True,'backward_replay_bitwise_equal':True,\n       'max_backward_backend_delta':float((native_gradient-actual).abs().max()),\n       'derivative_comparison_atol_rtol':3e-6,'guard_tolerance_changed':False})\n"
+      ],
+      "exit_code": 0,
+      "seconds": 3.319181135040708,
+      "log_sha256": "65b2a7ea77921d5a0c0cc0904a51b443d1e1b6783e728a871cbbdcccd405d8a3"
+    },
+    {
+      "name": "four_arm_smoke",
+      "argv": [
+        "/workspace/cptu-runtime-20261030/bin/python",
+        "scripts/smoke_compact_pipeline.py",
+        "--transfer-utility",
+        "--deterministic-algorithms",
+        "--device",
+        "cuda:0",
+        "--out",
+        "/workspace/cptu-launch-20261031/cuda_verification/smoke"
+      ],
+      "exit_code": 0,
+      "seconds": 40.06812369695399,
+      "log_sha256": "c25c18df8154fd70dfca21e9be206055c52694f136bcfced895cb5d7ea33d296"
+    },
+    {
+      "name": "segment1",
+      "argv": [
+        "/workspace/cptu-runtime-20261030/bin/python",
+        "train.py",
+        "--config",
+        "/workspace/cptu-launch-20261031/cuda_verification/smoke/cross_patient_utility.json",
+        "--data",
+        "/workspace/cptu-launch-20261031/cuda_verification/smoke/train_data/train.json",
+        "--data-sha256",
+        "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+        "--synthetic",
+        "--device",
+        "cuda:0",
+        "--stop-after-step",
+        "2",
+        "--out",
+        "/workspace/cptu-launch-20261031/cuda_verification/segment1"
+      ],
+      "exit_code": 0,
+      "seconds": 4.771268361015245,
+      "log_sha256": "44d2dc3f902fdc2b90b83b38515ccf164efa875eda229185964f5801403f8fbc"
+    },
+    {
+      "name": "segment2",
+      "argv": [
+        "/workspace/cptu-runtime-20261030/bin/python",
+        "train.py",
+        "--config",
+        "/workspace/cptu-launch-20261031/cuda_verification/smoke/cross_patient_utility.json",
+        "--data",
+        "/workspace/cptu-launch-20261031/cuda_verification/smoke/train_data/train.json",
+        "--data-sha256",
+        "e73ba1a90e9f58595d3ccc16e84e13cef1ca9ad7a073b84f3b8dc6089cf630d1",
+        "--synthetic",
+        "--device",
+        "cuda:0",
+        "--resume",
+        "/workspace/cptu-launch-20261031/cuda_verification/segment1/final",
+        "--resume-sha256",
+        "f168cf683edcf36d98a93b90998ab684cf71acad5225b683c948a92560b119f0",
+        "--out",
+        "/workspace/cptu-launch-20261031/cuda_verification/segment2"
+      ],
+      "exit_code": 0,
+      "seconds": 4.971538973040879,
+      "log_sha256": "806768d2a4f34104ea4474563bcb3a2b7088922263259f3ee7644b022b252879"
+    }
+  ],
+  "excluded_observational_fields": [
+    "probe_rng_state.total_sampling_seconds",
+    "probe_rng_state.total_cache_seconds"
+  ],
+  "patient_quality": "NOT_RUN",
+  "exact_weights_optimizer_rng": true,
+  "exact_selector_decisions": true,
+  "smoke_report_sha256": "9fc5c352aa34a13243a93b14b385c6491118caa2cef3da3acdd17517d39a7ad6"
+}

@@ -1,0 +1,175 @@
+{
+  "schema": "self_audit.compact.transfer_utility.protocol.v1",
+  "protocol_version": "20261030",
+  "study_name": "scalar_transfer_utility_pilot",
+  "budget": {
+    "total_steps": 2000,
+    "warmup_steps": 1000,
+    "eval_steps": [
+      1000,
+      1500,
+      2000
+    ],
+    "final_step": 2000,
+    "save_every": 500,
+    "watchdog_max_seconds": 7200,
+    "profile_max_steps": 32
+  },
+  "hyperparameters": {
+    "seed": 42,
+    "lr": 0.0003,
+    "weight_decay": 0.0001,
+    "pseudo_lr": 0.001,
+    "temperature": 1.0,
+    "coefficient": 1.0,
+    "pseudo_threshold": 0.7,
+    "ridge": 1e-06,
+    "risk_budget": 0.0,
+    "absent_fp_budget": 0.0,
+    "guard_tolerance": 1e-06,
+    "max_trials": 8,
+    "trial_scales": [
+      1.0,
+      0.5,
+      0.25,
+      0.125,
+      0.0625,
+      0.03125,
+      0.015625,
+      0.0078125
+    ],
+    "batch_size": 8,
+    "labeled_batch_size": 8,
+    "unlabeled_batch_size": 8,
+    "crop_size": 160
+  },
+  "selector_parameters": {
+    "selector_dice_tolerance": 0.0,
+    "utility_gain_tolerance": 1e-07,
+    "utility_tie_tolerance": 1e-07,
+    "probe_seed": 42017,
+    "probe_batch_size": 8
+  },
+  "architecture": {
+    "name": "CompactStudent",
+    "widths": [
+      16,
+      32,
+      64,
+      128
+    ],
+    "in_channels": 3,
+    "num_classes": 4,
+    "init": "kaiming_normal"
+  },
+  "data": {
+    "manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+    "budget_k": 8,
+    "labeled_ids": [
+      "patient007",
+      "patient010",
+      "patient011",
+      "patient024",
+      "patient026",
+      "patient041",
+      "patient077",
+      "patient099"
+    ]
+  },
+  "teacher": {
+    "source_manifest_sha256": "a743b23eaf07a1a0ad957399547199c7ddd877654f0faa090b3faa61801520f1",
+    "source_payload_sha256": "ae89c3378fe02f30bf5e64c8977bfc260e126a4c7b9218510eb6dcdfc99cb8e1",
+    "state": "student",
+    "lineage": {
+      "budget_k": 8,
+      "exact_labeled_ids": [
+        "patient007",
+        "patient010",
+        "patient011",
+        "patient024",
+        "patient026",
+        "patient041",
+        "patient077",
+        "patient099"
+      ]
+    },
+    "cache_sha256": "801edfaaee5c356106cd10fbffa7b9014baeabc3a1478b90c6e6a065a53e7633",
+    "reproduction": {
+      "schema": "self_audit.b8.reproduction.v1",
+      "source_commit": "c06c4c9ae08610e047f1e960712f551690de4067",
+      "source_sha256": "07809c252ae67d3ef17b148511c5973296c2367f18284a41766e8248fa3fdc2d",
+      "raw_student_sha256": "100e811c1cd1b02db99d8d0e78b4c26ab5a1ba96454ff1a039dd2c25c5279ef2",
+      "checkpoint_payload_sha256": "ae89c3378fe02f30bf5e64c8977bfc260e126a4c7b9218510eb6dcdfc99cb8e1",
+      "quality_gate": "NO_GO",
+      "Macro4": 0.8682269380656147,
+      "foreground": 0.8256188966664042,
+      "backup_status": "UPLOAD_PENDING",
+      "backup_policy": "LOCAL_HASH_VERIFIED_WITH_USER_AUTHORIZATION",
+      "remote_verified": false,
+      "exploratory_authorized": true,
+      "exploratory_authorization_sha256": "dbcea6c02557c39ef7e411b8b6bd54aff6185f0808e03753c407b5a7237a53bd",
+      "evaluation_metrics_sha256": {
+        "val18": "01b4bd9c7e2b3d6ee426a7846a57b97e7b30834fd7e98e05499cc5901c833600",
+        "test50": "887e05762b9963e79bb36de9c84e4bf1aebbf279f9a3698e0c1868a609ca8158"
+      }
+    },
+    "source_training_cost": {
+      "status": "MEASURED_BY_TRAINER",
+      "steps": 10000,
+      "elapsed_seconds": 2151.4465608199826,
+      "source": "/workspace/ema_full_B8_repro_20261031T012656Z_c06c4c9/training/REPORT.json",
+      "report_sha256": "732427dba138dd9d4680270880c16d9c37787a993a314d76ac3ad83ab7618481",
+      "scope": "canonical trainer elapsed; setup/download/upload/evaluation costs separate"
+    }
+  },
+  "decision_rules": {
+    "screening_threshold_delta_macro4": 0.002,
+    "screening_rule": "PILOT_GO screening iff cross_patient_utility final VAL18 historical Macro4 exceeds EACH plain_kd, original, and larger_tie by > 0.002; otherwise NO_GO once completed.",
+    "conditional_arm_rule": "Optional 5th arm same_batch_utility with same 2000 budget run only if final utility Macro4 exceeds larger_tie by > 0.002.",
+    "missing_failclosed_rule": "Missing, incomplete, or failed runs result in INCOMPLETE or BLOCKED, never empirical NO_GO."
+  },
+  "arms": {
+    "arm1": {
+      "name": "plain_kd",
+      "method": "plain_kd",
+      "selector": null,
+      "description": "Baseline plain KD without audited candidate selection"
+    },
+    "arm2": {
+      "name": "scalar_guard_original",
+      "method": "scalar_guard",
+      "selector": "original",
+      "description": "Historical scalar guard minimizing 1 - foreground_macro_dice + ridge * norm"
+    },
+    "arm3": {
+      "name": "scalar_guard_larger_tie",
+      "method": "scalar_guard",
+      "selector": "larger_tie",
+      "description": "Scalar guard selecting largest feasible scale with foreground Dice equal to original choice"
+    },
+    "arm4": {
+      "name": "scalar_guard_cross_patient_utility",
+      "method": "scalar_guard",
+      "selector": "cross_patient_utility",
+      "description": "Scalar guard maximizing fixed teacher KD gain on an independent disjoint TRAIN-U probe"
+    }
+  },
+  "conditional_arms": {
+    "arm5": {
+      "name": "scalar_guard_same_batch_control",
+      "method": "scalar_guard",
+      "selector": "same_batch_utility",
+      "description": "Explicit control re-evaluating utility on the proposal batch itself rather than independent probe"
+    }
+  },
+  "evaluation": {
+    "manifest_sha256": "cac4426393ca11959f56df2876869e825443916cdec02c6d95ec8da3fac0ca50",
+    "expected_patients": 18,
+    "checkpoint_selection": "final_step_2000",
+    "primary_metric": "class_first_macro4",
+    "test50": "observed_development_reference_no_tuning"
+  },
+  "runtime_policy": {
+    "deterministic_algorithms": true
+  }
+}

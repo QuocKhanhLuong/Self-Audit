@@ -1,0 +1,106 @@
+{
+  "schema": "self_audit.b8.reproduction.v1",
+  "new_reproduction": true,
+  "inference_state": "student",
+  "original_payload_recovered": false,
+  "checkpoint_payload_sha256": "ae89c3378fe02f30bf5e64c8977bfc260e126a4c7b9218510eb6dcdfc99cb8e1",
+  "raw_student_sha256": "100e811c1cd1b02db99d8d0e78b4c26ab5a1ba96454ff1a039dd2c25c5279ef2",
+  "checkpoint_manifest_sha256": "a743b23eaf07a1a0ad957399547199c7ddd877654f0faa090b3faa61801520f1",
+  "source_commit": "c06c4c9ae08610e047f1e960712f551690de4067",
+  "source_sha256": "07809c252ae67d3ef17b148511c5973296c2367f18284a41766e8248fa3fdc2d",
+  "label_budget": 8,
+  "labeled_ids": [
+    "patient007",
+    "patient010",
+    "patient011",
+    "patient024",
+    "patient026",
+    "patient041",
+    "patient077",
+    "patient099"
+  ],
+  "metrics": {
+    "val18": {
+      "class_dice": {
+        "BG": 0.9959433268445669,
+        "RV": 0.7623552759854063,
+        "MYO": 0.8293129619451775,
+        "LV": 0.9060012378236306
+      },
+      "Macro4": 0.8734032006496953,
+      "foreground": 0.8325564919180715,
+      "patients": 18
+    },
+    "test50": {
+      "class_dice": {
+        "BG": 0.9960510622632462,
+        "RV": 0.7649682785970446,
+        "MYO": 0.8175471322934329,
+        "LV": 0.8943412791087352
+      },
+      "Macro4": 0.8682269380656147,
+      "foreground": 0.8256188966664042,
+      "patients": 50
+    }
+  },
+  "quality_gate": "NO_GO",
+  "historical_reference": {
+    "Macro4": 0.8800492397526454,
+    "foreground": 0.8412102397257094
+  },
+  "test50_status": "EXPOSED_DEVELOPMENT; final checkpoint only; no tuning",
+  "source_training_cost": {
+    "status": "MEASURED_BY_TRAINER",
+    "steps": 10000,
+    "elapsed_seconds": 2151.4465608199826,
+    "source": "/workspace/ema_full_B8_repro_20261031T012656Z_c06c4c9/training/REPORT.json",
+    "report_sha256": "732427dba138dd9d4680270880c16d9c37787a993a314d76ac3ad83ab7618481",
+    "scope": "canonical trainer elapsed; setup/download/upload/evaluation costs separate"
+  },
+  "backup_deferred": {
+    "schema": "self_audit.b8.backup_deferred.v1",
+    "policy": "LOCAL_HASH_VERIFIED_WITH_USER_AUTHORIZATION",
+    "status": "UPLOAD_PENDING",
+    "remote_verified": false,
+    "teacher_run": "/workspace/ema_full_B8_repro_20261031T012656Z_c06c4c9",
+    "teacher_plan_sha256": "239c6023c14d058fa667b62ae53fca09a523d2dd739b496a09b1431fff166125",
+    "teacher_config": {
+      "path": "/workspace/b8-repro-setup-20261031/B8_CONFIG_LOCAL.json",
+      "sha256": "066444a4b11a4c0f2254c68bcc663d79a2c0685fe536c02635d030f614b5821c"
+    },
+    "authorization": {
+      "path": "/workspace/cptu-launch-20261031/BACKUP_DEFERRED_AUTHORIZATION.json",
+      "sha256": "d73aa19c52e446b3e1f52b6c213ed53f4e1c77ed6613295397712a3f370d0d56"
+    },
+    "evaluation_status": {
+      "path": "/workspace/cptu-launch-20261031/EVAL_STATUS.json",
+      "sha256": "92040262533ecf639da81ebab9d98711112f116fc735114af56b71c5aecff6f5"
+    },
+    "evaluation_files": {
+      "val18": {
+        "path": "/workspace/ema_full_B8_repro_20261031T012656Z_c06c4c9/val18_evaluation/METRICS.json",
+        "sha256": "01b4bd9c7e2b3d6ee426a7846a57b97e7b30834fd7e98e05499cc5901c833600",
+        "recipe_path": "/workspace/ema_full_B8_repro_20261031T012656Z_c06c4c9/val18_evaluation/RECIPE.json",
+        "recipe_sha256": "7d5d4152c26d03b4e5b9dcd286bcee843b50216677dc5f48949ce72857ece622",
+        "frozen_path": "/workspace/ema_full_B8_repro_20261031T012656Z_c06c4c9/val18_evaluation/PREDICTIONS_FROZEN.json",
+        "frozen_sha256": "ee3cb1168d6ba01999460b79bf8ae2bfb696b17e7796ae9808c9ee16736cfb99",
+        "evaluation_manifest_path": "/workspace/Self-Audit-cptu-20261030/results/compact_acdc_l8_20261029/experiment_20261028/val18_native.json",
+        "evaluation_manifest_sha256": "cac4426393ca11959f56df2876869e825443916cdec02c6d95ec8da3fac0ca50"
+      },
+      "test50": {
+        "path": "/workspace/ema_full_B8_repro_20261031T012656Z_c06c4c9/test50_evaluation/METRICS.json",
+        "sha256": "887e05762b9963e79bb36de9c84e4bf1aebbf279f9a3698e0c1868a609ca8158",
+        "recipe_path": "/workspace/ema_full_B8_repro_20261031T012656Z_c06c4c9/test50_evaluation/RECIPE.json",
+        "recipe_sha256": "c0e4931909b6dae16794d50fd8a2b534b4e320a6ab03d1da4607237de6194f95",
+        "frozen_path": "/workspace/ema_full_B8_repro_20261031T012656Z_c06c4c9/test50_evaluation/PREDICTIONS_FROZEN.json",
+        "frozen_sha256": "cf8aae38881a6e097720a962e41a475a7afbd2714e92a22baf7e0c04c3dbc2cd",
+        "evaluation_manifest_path": "/workspace/Self-Audit-cptu-20261030/results/compact_acdc_l8_20261029/experiment_20261028/test50_native.json",
+        "evaluation_manifest_sha256": "68251014b877c25c4e182bbd05c570c24b0788e483435d68cb41ca350bc45242"
+      }
+    },
+    "exploratory_authorization": {
+      "path": "/workspace/cptu-launch-20261031/EXPLORATORY_TEACHER_AUTHORIZATION.json",
+      "sha256": "dbcea6c02557c39ef7e411b8b6bd54aff6185f0808e03753c407b5a7237a53bd"
+    }
+  }
+}

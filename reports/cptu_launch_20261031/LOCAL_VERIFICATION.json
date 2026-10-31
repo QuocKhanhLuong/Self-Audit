@@ -1,0 +1,32 @@
+{
+  "status": "PASS_LOCAL_SOFTWARE",
+  "time": 1793448703.059016,
+  "files": {
+    "docs/B8_REPRODUCTION_RUNBOOK.md": "358a95d845f115c8c84f52e642094ce6c0afe43dc94c5abd45f63e82b6ad3b38",
+    "docs/METHOD.md": "0a172e35d646c9a51a95c1b16d988f3e2ee022c4063c3f1e515bb993f54b1bf2",
+    "scripts/continue_b8_transfer_pilot.py": "e28c24cadbaf8a33104e50e7abf15c1c8b2ae829436b6374e338d4b45fbb0b28",
+    "self_audit/compact_teacher.py": "19f50a06b6ae2ea14ad268bdd501bc9520f0a881f796178e8f7a6d9b9fe3e68d",
+    "self_audit/transfer_preflight.py": "427fbfc7fb379219055d3fbbf13991042b2afd4c901798452715ce6b0a96a11b",
+    "tests/test_b8_reproduction_bridge.py": "fb2acedec45c5fb475ca7749e4420faccba5ca073e97d24a710a3c72dcfd639f"
+  },
+  "worker": {
+    "provider": "codex",
+    "model": "gpt-6-luna",
+    "effort": "max",
+    "dispatch": "ctx_e526a5710a3c",
+    "full_pytest": {
+      "passed": 949,
+      "warnings": 2,
+      "evidence": "Orca worker transcript and worker_done; server rerun required before launch"
+    }
+  },
+  "parent_checks": {
+    "check_repo": "PASS",
+    "focused_pytest": "20 passed in 4.00s",
+    "review": "Reviewed actual receipt construction, evidence linkage, NO_GO preservation, pinned budget, and downstream preflight."
+  },
+  "limitations": [
+    "Synthetic/software tests do not establish patient quality or inference speed.",
+    "Actual CUDA replay and real artifact validation will run on server before pilot."
+  ]
+}

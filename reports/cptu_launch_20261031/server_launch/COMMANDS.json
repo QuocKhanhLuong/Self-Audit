@@ -1,0 +1,72 @@
+[
+  {
+    "name": "check_repo",
+    "argv": [
+      "/workspace/cptu-runtime-20261030/bin/python",
+      "scripts/check_repo.py"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "seconds": 0.03316318802535534,
+    "log_sha256": "f9317b13e55fd8916cf0f91882298e60bc9274551929baa2de5c15e80fd35b83"
+  },
+  {
+    "name": "pytest",
+    "argv": [
+      "/workspace/cptu-runtime-20261030/bin/python",
+      "-m",
+      "pytest",
+      "-q"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "seconds": 315.25742626399733,
+    "log_sha256": "bbcf0dd9894fd2cb5a463bd9b3f1338b73e74853cae0bbe22397a2f8c5281abe"
+  },
+  {
+    "name": "cuda_replay",
+    "argv": [
+      "/workspace/cptu-runtime-20261030/bin/python",
+      "scripts/verify_compact_resume.py",
+      "--out",
+      "/workspace/cptu-launch-20261031/cuda_verification",
+      "--device",
+      "cuda:0"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "seconds": 55.4920289600268,
+    "log_sha256": "9424d0a2d78458f9781f8d01f0b11b8d85bc488ed194fbfa82c73cfb080fd4bd"
+  },
+  {
+    "name": "teacher_cache",
+    "argv": [
+      "/workspace/cptu-runtime-20261030/bin/python",
+      "scripts/build_compact_teacher_cache.py",
+      "--data-manifest",
+      "/root/self-audit-assets/data/prepared/ACDC_L8_S42/train.json",
+      "--data-sha256",
+      "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+      "--output-dir",
+      "/workspace/cptu-launch-20261031/teacher_cache",
+      "--checkpoint-dir",
+      "/workspace/ema_full_B8_repro_20261031T012656Z_c06c4c9/training/final",
+      "--reproduction-receipt",
+      "/workspace/cptu-launch-20261031/CPTU_TEACHER_RECEIPT.json",
+      "--reproduction-receipt-sha256",
+      "41901f91579fdbc799204708cc75c03ce0bbe3f6cad72506d5df3d20f94dbf31",
+      "--reproduction-source",
+      "/workspace/Self-Audit-b8-repro-20261031",
+      "--precision",
+      "float32",
+      "--device",
+      "cuda:0",
+      "--batch-size",
+      "8"
+    ],
+    "exit_code": 0,
+    "timed_out": false,
+    "seconds": 102.06248275202233,
+    "log_sha256": "d42aa5c28517c1509ee4123a4e0d1dd50908eba563f77a9c39c1d1cf83dddfed"
+  }
+]

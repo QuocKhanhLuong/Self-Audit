@@ -1,0 +1,516 @@
+{
+  "schema": "self_audit.compact.transfer_utility.profile.v1",
+  "synthetic": false,
+  "max_steps": 32,
+  "warmup_steps": 8,
+  "u_steps": 24,
+  "device": "cuda:0",
+  "source_sha256": "2cc9bb6cecb5ab5e13dedf55f00e9ef9a895a5793b9472a284ac4078a2c2bdf0",
+  "config_sha256": "15fa483f877af936f5136793ecc58454650e99ef47b38b2a93b262f6e5190e6b",
+  "train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+  "teacher_cache_sha256": "801edfaaee5c356106cd10fbffa7b9014baeabc3a1478b90c6e6a065a53e7633",
+  "status": "PASS",
+  "training_report": {
+    "schema": "self_audit.compact.report.v1",
+    "status": "COMPLETED",
+    "method": "scalar_guard",
+    "selector": "cross_patient_utility",
+    "synthetic": false,
+    "quality": "NOT_EVALUATED",
+    "steps": 32,
+    "steps_requested": 32,
+    "max_steps": 32,
+    "total_budget": 32,
+    "immutable_steps_total": 32,
+    "resumed_from": null,
+    "resumed_step": 0,
+    "termination_reason": "max_steps_reached",
+    "equal_wall_time": {
+      "enabled": false
+    },
+    "counts": {
+      "supervised_updates": 32,
+      "pseudo_accepted": 13,
+      "pseudo_rejected": 11,
+      "warmup_steps": 8,
+      "no_candidates": 0,
+      "rejected_all": 11,
+      "zero_displacement": 0
+    },
+    "slices_sampled": {
+      "labeled": 256,
+      "unlabeled": 256,
+      "audit": 4428,
+      "probe": 192
+    },
+    "slices_optimized": {
+      "labeled": 256,
+      "unlabeled": 104
+    },
+    "batch_sizes": {
+      "labeled": 8,
+      "unlabeled": 8,
+      "probe": 8
+    },
+    "effective_batch_counts": {
+      "labeled": 256,
+      "unlabeled": 256,
+      "probe": 192
+    },
+    "optimizer_calls": {
+      "adamw": 32,
+      "sgd": 13
+    },
+    "teacher_costs": {
+      "teacher_cache_total_seconds": 0.22386761184316128,
+      "teacher_cache_u_seconds": 0.11322778777685016,
+      "teacher_cache_probe_seconds": 0.11063982406631112,
+      "probe_sampling_total_seconds": 1.104621293139644,
+      "teacher_cache_generation_cost": {
+        "total_latency_seconds": 83.7535071320599,
+        "mean_seconds_per_volume": 1.163243154611943,
+        "median_seconds_per_volume": 0.9861392429447733,
+        "total_disk_bytes": 16507115008,
+        "vram_peak_allocated_bytes": 2400991744,
+        "vram_peak_reserved_bytes": 3709861888
+      },
+      "teacher_training_cost": {
+        "status": "MEASURED_BY_TRAINER",
+        "steps": 10000,
+        "elapsed_seconds": 2151.4465608199826,
+        "source": "/workspace/ema_full_B8_repro_20261031T012656Z_c06c4c9/training/REPORT.json",
+        "report_sha256": "732427dba138dd9d4680270880c16d9c37787a993a314d76ac3ad83ab7618481",
+        "scope": "canonical trainer elapsed; setup/download/upload/evaluation costs separate"
+      }
+    },
+    "audit_consumption": {
+      "slice_reads": 4428,
+      "frame_reads": 432,
+      "patient_reads": 216,
+      "stream_replays": 216,
+      "unique_frames": [
+        [
+          "patient007",
+          0
+        ],
+        [
+          "patient007",
+          6
+        ],
+        [
+          "patient010",
+          0
+        ],
+        [
+          "patient010",
+          12
+        ],
+        [
+          "patient011",
+          0
+        ],
+        [
+          "patient011",
+          7
+        ],
+        [
+          "patient024",
+          0
+        ],
+        [
+          "patient024",
+          8
+        ],
+        [
+          "patient026",
+          0
+        ],
+        [
+          "patient026",
+          11
+        ],
+        [
+          "patient041",
+          0
+        ],
+        [
+          "patient041",
+          10
+        ],
+        [
+          "patient077",
+          0
+        ],
+        [
+          "patient077",
+          8
+        ],
+        [
+          "patient099",
+          0
+        ],
+        [
+          "patient099",
+          8
+        ]
+      ],
+      "unique_patients": [
+        "patient007",
+        "patient010",
+        "patient011",
+        "patient024",
+        "patient026",
+        "patient041",
+        "patient077",
+        "patient099"
+      ]
+    },
+    "runtime_comparability": "AUDIT_OVERHEAD_INCLUDED",
+    "quality_gate": {
+      "threshold_macro4": 0.87,
+      "status": "GATE_METADATA_LOCKED",
+      "notes": "Acceptance requires evaluation of exported compact student with Macro4 >= 0.87"
+    },
+    "warm_start_summary": {
+      "initial_gradient_norms": {
+        "encoder": 8.499403953552246,
+        "decoder": 9.048105239868164,
+        "head": 2.0551834106445312
+      },
+      "initial_weight_changes": {
+        "encoder": 0.21005700528621674,
+        "decoder": 0.10109660029411316,
+        "head": 0.0024739736691117287
+      },
+      "final_gradient_norms": {
+        "encoder": 0.8415890336036682,
+        "decoder": 0.9550603032112122,
+        "head": 0.5579584240913391
+      },
+      "final_weight_changes": {
+        "encoder": 0.03767374902963638,
+        "decoder": 0.022771509364247322,
+        "head": 0.0013393749250099063
+      }
+    },
+    "initialization": {
+      "seed": 42,
+      "initial_state_sha256": "6adb6858dc50593cece8c4254d039767d1d76f02b014930b07ad1c1a5459af7a",
+      "first_step_optimizer": {
+        "name": "AdamW",
+        "owner": "labeled_supervised_update_only",
+        "parameter_ownership": {
+          "encoder.stem.0.weight": "encoder",
+          "encoder.stem.1.weight": "encoder",
+          "encoder.stem.1.bias": "encoder",
+          "encoder.stem.3.conv1.weight": "encoder",
+          "encoder.stem.3.norm1.weight": "encoder",
+          "encoder.stem.3.norm1.bias": "encoder",
+          "encoder.stem.3.conv2.weight": "encoder",
+          "encoder.stem.3.norm2.weight": "encoder",
+          "encoder.stem.3.norm2.bias": "encoder",
+          "encoder.down_stages.0.0.weight": "encoder",
+          "encoder.down_stages.0.1.weight": "encoder",
+          "encoder.down_stages.0.1.bias": "encoder",
+          "encoder.down_stages.0.3.conv1.weight": "encoder",
+          "encoder.down_stages.0.3.norm1.weight": "encoder",
+          "encoder.down_stages.0.3.norm1.bias": "encoder",
+          "encoder.down_stages.0.3.conv2.weight": "encoder",
+          "encoder.down_stages.0.3.norm2.weight": "encoder",
+          "encoder.down_stages.0.3.norm2.bias": "encoder",
+          "encoder.down_stages.1.0.weight": "encoder",
+          "encoder.down_stages.1.1.weight": "encoder",
+          "encoder.down_stages.1.1.bias": "encoder",
+          "encoder.down_stages.1.3.conv1.weight": "encoder",
+          "encoder.down_stages.1.3.norm1.weight": "encoder",
+          "encoder.down_stages.1.3.norm1.bias": "encoder",
+          "encoder.down_stages.1.3.conv2.weight": "encoder",
+          "encoder.down_stages.1.3.norm2.weight": "encoder",
+          "encoder.down_stages.1.3.norm2.bias": "encoder",
+          "encoder.down_stages.2.0.weight": "encoder",
+          "encoder.down_stages.2.1.weight": "encoder",
+          "encoder.down_stages.2.1.bias": "encoder",
+          "encoder.down_stages.2.3.conv1.weight": "encoder",
+          "encoder.down_stages.2.3.norm1.weight": "encoder",
+          "encoder.down_stages.2.3.norm1.bias": "encoder",
+          "encoder.down_stages.2.3.conv2.weight": "encoder",
+          "encoder.down_stages.2.3.norm2.weight": "encoder",
+          "encoder.down_stages.2.3.norm2.bias": "encoder",
+          "decoder.up_stages.0.fuse.0.weight": "decoder",
+          "decoder.up_stages.0.fuse.1.weight": "decoder",
+          "decoder.up_stages.0.fuse.1.bias": "decoder",
+          "decoder.up_stages.0.refine.conv1.weight": "decoder",
+          "decoder.up_stages.0.refine.norm1.weight": "decoder",
+          "decoder.up_stages.0.refine.norm1.bias": "decoder",
+          "decoder.up_stages.0.refine.conv2.weight": "decoder",
+          "decoder.up_stages.0.refine.norm2.weight": "decoder",
+          "decoder.up_stages.0.refine.norm2.bias": "decoder",
+          "decoder.up_stages.1.fuse.0.weight": "decoder",
+          "decoder.up_stages.1.fuse.1.weight": "decoder",
+          "decoder.up_stages.1.fuse.1.bias": "decoder",
+          "decoder.up_stages.1.refine.conv1.weight": "decoder",
+          "decoder.up_stages.1.refine.norm1.weight": "decoder",
+          "decoder.up_stages.1.refine.norm1.bias": "decoder",
+          "decoder.up_stages.1.refine.conv2.weight": "decoder",
+          "decoder.up_stages.1.refine.norm2.weight": "decoder",
+          "decoder.up_stages.1.refine.norm2.bias": "decoder",
+          "decoder.up_stages.2.fuse.0.weight": "decoder",
+          "decoder.up_stages.2.fuse.1.weight": "decoder",
+          "decoder.up_stages.2.fuse.1.bias": "decoder",
+          "decoder.up_stages.2.refine.conv1.weight": "decoder",
+          "decoder.up_stages.2.refine.norm1.weight": "decoder",
+          "decoder.up_stages.2.refine.norm1.bias": "decoder",
+          "decoder.up_stages.2.refine.conv2.weight": "decoder",
+          "decoder.up_stages.2.refine.norm2.weight": "decoder",
+          "decoder.up_stages.2.refine.norm2.bias": "decoder",
+          "head.weight": "head",
+          "head.bias": "head"
+        }
+      }
+    },
+    "teacher_preflight": {
+      "status": "PASS",
+      "label_budget": 8,
+      "union_count": 8,
+      "union_labeled_ids": [
+        "patient007",
+        "patient010",
+        "patient011",
+        "patient024",
+        "patient026",
+        "patient041",
+        "patient077",
+        "patient099"
+      ],
+      "exact_budget_matched": true,
+      "components": {
+        "teacher": [
+          "patient007",
+          "patient010",
+          "patient011",
+          "patient024",
+          "patient026",
+          "patient041",
+          "patient077",
+          "patient099"
+        ],
+        "student": [
+          "patient007",
+          "patient010",
+          "patient011",
+          "patient024",
+          "patient026",
+          "patient041",
+          "patient077",
+          "patient099"
+        ],
+        "warmstart": [
+          "patient007",
+          "patient010",
+          "patient011",
+          "patient024",
+          "patient026",
+          "patient041",
+          "patient077",
+          "patient099"
+        ],
+        "audit": [
+          "patient007",
+          "patient010",
+          "patient011",
+          "patient024",
+          "patient026",
+          "patient041",
+          "patient077",
+          "patient099"
+        ]
+      },
+      "train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+      "teacher_verification": "VERIFIED_FROM_PINNED_CACHE"
+    },
+    "train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+    "teacher_cache_manifest_sha256": "801edfaaee5c356106cd10fbffa7b9014baeabc3a1478b90c6e6a065a53e7633",
+    "source_hashes": {
+      "self_audit/compact_training.py": "bea99d573693a50ab7c9f642df4e0a90a6a5cc26d164b8314f6c8b910dcd1b40",
+      "self_audit/compact_probe.py": "380567281be335596b1eb8f6f978d426c162c8712489829306cf5974602e4c99",
+      "self_audit/compact_artifacts.py": "7827c73f66de129f0e6dbe8acacf1fe55c43050e451433541466d470edc74243",
+      "self_audit/engine.py": "8134f5fbb0622eefefea503fc04b7df988c6e115b03a12036c8c04d867a4a7bc",
+      "train.py": "bca8d6e7ea658c037bc3aad3155fb54679ed5903a08af303b5afeb17d33663ba"
+    },
+    "source_digest": "2cc9bb6cecb5ab5e13dedf55f00e9ef9a895a5793b9472a284ac4078a2c2bdf0",
+    "final_manifest_sha256": "655407c2094b2901720a1b4dfc0ab392d60c539538e999f9a49aa13559e76b7d",
+    "final_weights_sha256": "7ad7ad3639dd3cacb4a4d3996efc24b6fc297ad737f981a5a47efd464a782f2e",
+    "final_checkpoint_path": "/workspace/cptu-launch-20261031/pilot/profile/training/final",
+    "final_weights_path": "/workspace/cptu-launch-20261031/pilot/profile/training/final/weights.pt",
+    "report_path": "/workspace/cptu-launch-20261031/pilot/profile/training/REPORT.json",
+    "output_dir": "/workspace/cptu-launch-20261031/pilot/profile/training",
+    "label_budget": 8,
+    "seen_supervised": [
+      "patient007",
+      "patient010",
+      "patient011",
+      "patient024",
+      "patient026",
+      "patient041",
+      "patient077",
+      "patient099"
+    ],
+    "seen_audit": [
+      "patient007",
+      "patient010",
+      "patient011",
+      "patient024",
+      "patient026",
+      "patient041",
+      "patient077",
+      "patient099"
+    ],
+    "seen_unlabeled": [
+      "patient001",
+      "patient002",
+      "patient003",
+      "patient006",
+      "patient008",
+      "patient009",
+      "patient013",
+      "patient016",
+      "patient017",
+      "patient019",
+      "patient020",
+      "patient021",
+      "patient022",
+      "patient023",
+      "patient025",
+      "patient027",
+      "patient031",
+      "patient033",
+      "patient034",
+      "patient035",
+      "patient037",
+      "patient038",
+      "patient039",
+      "patient040",
+      "patient042",
+      "patient043",
+      "patient044",
+      "patient045",
+      "patient046",
+      "patient047",
+      "patient048",
+      "patient049"
+    ],
+    "seen_probe": [
+      "patient001",
+      "patient002",
+      "patient008",
+      "patient009",
+      "patient019",
+      "patient021",
+      "patient027",
+      "patient034",
+      "patient038",
+      "patient047",
+      "patient050",
+      "patient051",
+      "patient058",
+      "patient059",
+      "patient061",
+      "patient066",
+      "patient068",
+      "patient069",
+      "patient075",
+      "patient079",
+      "patient083",
+      "patient092",
+      "patient097"
+    ],
+    "elapsed_seconds": 73.1511875570286,
+    "segment_elapsed_seconds": 49.14727636997122,
+    "cumulative_elapsed_seconds": 49.14727697998751,
+    "profile": {
+      "device": "cuda:0",
+      "segment_cuda_peak_allocated_bytes": 639596544,
+      "segment_cuda_peak_reserved_bytes": 734003200,
+      "cuda_peak_allocated_bytes": 639596544,
+      "cuda_peak_reserved_bytes": 734003200,
+      "segment_training_elapsed_seconds": 49.14767646801192,
+      "cumulative_training_elapsed_seconds": 49.14767689793371,
+      "optimizer_steps_per_second": 0.6510989260963206,
+      "supervised_slices_per_second": 5.208791277358729,
+      "scope": "student training including synchronous telemetry, proposal and audit; teacher/cache build separate"
+    },
+    "training_elapsed_seconds": 49.14767979795579
+  },
+  "diagnostics": {
+    "status": "COMPLETED",
+    "total_steps": 32,
+    "warmup_steps": 8,
+    "no_candidate_steps": 0,
+    "u_attempted_steps": 24,
+    "alpha_histogram": {
+      "1.0": 1,
+      "0.5": 1,
+      "0.25": 1,
+      "0.125": 2,
+      "0.0625": 1,
+      "0.03125": 2,
+      "0.015625": 2,
+      "0.0078125": 3,
+      "0.0": 11,
+      "other": 0
+    },
+    "transaction_outcomes": {
+      "accepted_nonzero": 13,
+      "zero_displacement": 0,
+      "rejected_all": 11,
+      "u_acceptance_rate": 0.5417,
+      "u_zero_rate": 0.0,
+      "u_reject_rate": 0.4583,
+      "overall_acceptance_rate": 0.4062
+    },
+    "displacement_norms": {
+      "mean_proposed": 0.002139966628109389,
+      "mean_realized": 0.00023796182120133585,
+      "max_realized": 0.003575742520238507
+    },
+    "utility_probe_gains": {
+      "scope": "all evaluated feasible nonzero trials, including unselected trials",
+      "count": 31,
+      "mean": 0.0008787253210621495,
+      "min": 2.3543834686279297e-06,
+      "max": 0.01263880729675293
+    },
+    "selected_probe_gains": {
+      "scope": "selected nonzero or valid-reference logical-zero decisions; unavailable probes excluded",
+      "count": 24,
+      "mean": 0.0006580365200837454,
+      "classwise_mean": {
+        "BG": 0.0006790123879909515,
+        "RV": -1.75106106325984e-05,
+        "MYO": -7.430557161569595e-06,
+        "LV": 3.966425235072772e-06
+      },
+      "classwise_count": {
+        "BG": 24,
+        "RV": 24,
+        "MYO": 24,
+        "LV": 24
+      }
+    },
+    "selection_reasons": {
+      "max_utility_gain": 13,
+      "guard_rejected_all": 11
+    },
+    "latencies": {
+      "mean_step_seconds": 1.5342804063548101,
+      "mean_audit_seconds": 1.1238324429250497,
+      "mean_supervised_seconds": 0.08564784425107064,
+      "total_wall_seconds": 49.096973003353924
+    }
+  },
+  "checkpoint_manifest_sha256": "655407c2094b2901720a1b4dfc0ab392d60c539538e999f9a49aa13559e76b7d",
+  "elapsed_seconds": 76.68449844093993,
+  "seconds_per_step": 2.396390576279373,
+  "projected_2000_steps_seconds": 4792.781152558746,
+  "within_watchdog_7200s": true
+}
