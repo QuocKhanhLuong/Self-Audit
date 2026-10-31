@@ -1,5 +1,8 @@
 # B8 reproduction: launched, not completed
 
+This is the historical launch receipt. See [current handoff](STATUS_20261031.md)
+for the completed training, verified local payloads, tests and Drive blocker.
+
 Full patient training began at 2026-10-31 01:28:34 UTC (08:28:34 Vietnam).
 The first real training row was observed. The 1,000-step warm-up checkpoint
 was subsequently written and pseudo-learning began. This is the one authorized

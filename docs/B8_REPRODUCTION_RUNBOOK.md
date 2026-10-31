@@ -78,7 +78,12 @@ python scripts/continue_b8_transfer_pilot.py --plan /absolute/CONTINUATION_PLAN.
 
 Its plan pins source, TRAIN/VAL manifests, the historical pilot protocol/matrix,
 the teacher run directory and that run's immutable plan hash. It never restarts
-the teacher. It waits for `TEACHER_COMPLETED_REMOTE_VERIFIED` and a teacher GO,
+teacher training. An optional `backup_retry` block pins the original runner and
+teacher plan, limits recovery to 1–3 attempts separated by 60–900 seconds, and
+requires an intact completed 10,000-step checkpoint before calling `--resume`.
+Recovery cannot authorize another teacher training run. A failed quota recovery
+retains `UPLOAD_PENDING` on the teacher and blocks compact expansion.
+It waits for `TEACHER_COMPLETED_REMOTE_VERIFIED` and a teacher GO,
 then runs checks/tests, manufactured CUDA forward/gradient parity and exact
 resume, streaming FP32 TRAIN-U cache generation, and the locked four-arm runner
 (including its bounded profile and conditional same-batch control). It records
@@ -89,3 +94,13 @@ includes a deterministic CPU bilinear backward while retaining the same native
 bilinear forward and model definition. Measure its overhead in every arm;
 do not compare its training cost to an unmatched nondeterministic runtime.
 The raw-student teacher's historical training recipe is unaffected.
+
+On torch 2.14 CUDA, `F.interpolate` switches to a different forward decomposition
+under strict determinism. The opt-in compact runtime explicitly calls the native
+ATen bilinear forward for both differentiable training and no-grad guard trials.
+The spatial CE kernel also rejects strict deterministic execution; compact
+supervision therefore uses the equivalent flattened valid-pixel mean CE kernel
+in this mode. Foreground Dice, ignored pixels, loss coefficients, KD targets and
+denominators are unchanged. The default CE path and historical teacher checkout
+are unchanged. CPU loss/gradient equivalence, actual CUDA forward parity and
+exact segmented replay are tested separately; none certify patient accuracy.

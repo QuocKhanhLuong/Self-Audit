@@ -1,0 +1,49 @@
+{
+  "schema": "self_audit.b8.raw_student.v1",
+  "model_class": "NativeStudent",
+  "inference_state": "student",
+  "payload_sha256": "100e811c1cd1b02db99d8d0e78b4c26ab5a1ba96454ff1a039dd2c25c5279ef2",
+  "source_checkpoint_payload_sha256": "ae89c3378fe02f30bf5e64c8977bfc260e126a4c7b9218510eb6dcdfc99cb8e1",
+  "source_checkpoint_manifest_sha256": "a743b23eaf07a1a0ad957399547199c7ddd877654f0faa090b3faa61801520f1",
+  "architecture": {
+    "backbone": "dinov3_convnext_tiny",
+    "source_repo": "/workspace/b8-repro-setup-20261031/dinov3",
+    "source_commit": "6876159a11b4df116f30f667f8c9888617df0751",
+    "weights": "/workspace/b8-repro-setup-20261031/pretrained/dinov3_convnext_tiny_pretrain_lvd1689m-21b726bb.pth",
+    "weights_sha256": "21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54"
+  },
+  "window": {
+    "mode": "none",
+    "dim": 32,
+    "radius_min": 0.5,
+    "radius_max": 4.0,
+    "offset_limit": 2.0,
+    "initial_radius": 1.0,
+    "gamma_init": 0.001
+  },
+  "preprocessing": {
+    "normalization": "per_cine_image_only_percentiles_0.5_99.5",
+    "axes": "TZYX",
+    "context": "3 adjacent z slices with edge replication",
+    "class_map": {
+      "0": "BG",
+      "1": "RV",
+      "2": "MYO",
+      "3": "LV"
+    }
+  },
+  "labeled_ids": [
+    "patient007",
+    "patient010",
+    "patient011",
+    "patient024",
+    "patient026",
+    "patient041",
+    "patient077",
+    "patient099"
+  ],
+  "label_budget": 8,
+  "reload": "STRICT_STATE_AND_FRESH_MODEL_FORWARD_EQUAL",
+  "source_sha256": "07809c252ae67d3ef17b148511c5973296c2367f18284a41766e8248fa3fdc2d",
+  "deployment_note": "Frozen KD teacher raw state; pinned NativeStudent/DINO source and initialization assets included separately. Not compact deployment."
+}

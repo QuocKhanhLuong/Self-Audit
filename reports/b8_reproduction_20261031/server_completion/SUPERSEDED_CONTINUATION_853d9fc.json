@@ -1,0 +1,52 @@
+{
+  "schema": "self_audit.b8.cptu_continuation.v1",
+  "out": "/workspace/cptu_B8_repro_20261031_71b3837",
+  "source_commit": "71b3837cc4136dfd122cc93d2ae92b203f073f98",
+  "python": "/workspace/cptu-runtime-20261030/bin/python",
+  "teacher_run": "/workspace/ema_full_B8_repro_20261031T012656Z_c06c4c9",
+  "teacher_plan_sha256": "239c6023c14d058fa667b62ae53fca09a523d2dd739b496a09b1431fff166125",
+  "teacher_source": "/workspace/Self-Audit-b8-repro-20261031",
+  "data": "/root/self-audit-assets/data/prepared/ACDC_L8_S42/train.json",
+  "val": "/workspace/Self-Audit-cptu-20261030/results/compact_acdc_l8_20261029/experiment_20261028/val18_native.json",
+  "base_protocol": "/workspace/Self-Audit-cptu-b8-20261031/configs/transfer_utility/protocol.json",
+  "matrix": "/workspace/Self-Audit-cptu-b8-20261031/configs/transfer_utility/matrix.json",
+  "backup_retry": {
+    "runner": "/workspace/Self-Audit-b8-runner-20261031/scripts/run_b8_reproduction.py",
+    "teacher_plan": "/workspace/b8-repro-setup-20261031/LOCKED_B8_PLAN.json",
+    "max_attempts": 2,
+    "delay_seconds": 300
+  },
+  "data_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+  "val_sha256": "cac4426393ca11959f56df2876869e825443916cdec02c6d95ec8da3fac0ca50",
+  "pinned_files": [
+    {
+      "path": "/root/self-audit-assets/data/prepared/ACDC_L8_S42/train.json",
+      "sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4"
+    },
+    {
+      "path": "/workspace/Self-Audit-cptu-20261030/results/compact_acdc_l8_20261029/experiment_20261028/val18_native.json",
+      "sha256": "cac4426393ca11959f56df2876869e825443916cdec02c6d95ec8da3fac0ca50"
+    },
+    {
+      "path": "/workspace/Self-Audit-cptu-b8-20261031/configs/transfer_utility/protocol.json",
+      "sha256": "08c241fb3b0d0e6fd865aef35663a5ccf9b14e182ef29e310c1ddfc8ac84f425"
+    },
+    {
+      "path": "/workspace/Self-Audit-cptu-b8-20261031/configs/transfer_utility/matrix.json",
+      "sha256": "b64a760bb0a66ff0c1ca293d06ac9e7e8e54783d0051eab002b4df29627f7a0f"
+    },
+    {
+      "path": "/workspace/Self-Audit-b8-runner-20261031/scripts/run_b8_reproduction.py",
+      "sha256": "dea761563ff061904ba97bf8cd03010a509c797743855fe5599dc0c19ac3a5b9"
+    },
+    {
+      "path": "/workspace/b8-repro-setup-20261031/LOCKED_B8_PLAN.json",
+      "sha256": "239c6023c14d058fa667b62ae53fca09a523d2dd739b496a09b1431fff166125"
+    },
+    {
+      "path": "/workspace/Self-Audit-cptu-b8-20261031/scripts/continue_b8_transfer_pilot.py",
+      "sha256": "056c646d9fd52316fc72ec3c390f4c86244e0a353a7c6aad4931d29196bf3a75"
+    }
+  ],
+  "supersedes_unstarted_continuation_plan_sha256": "84eea55646389eff736f7b56a92e4bb37235e61f261a95b2ac5f5fdd9bc736ff"
+}
