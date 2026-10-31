@@ -3,13 +3,18 @@ import torch
 from torch.nn import functional as F
 
 
-def supervised_loss(logits, labels, *, return_components=False):
+def supervised_loss(logits, labels, *, return_components=False, deterministic_ce=False):
     if labels.shape != logits.shape[:1] + logits.shape[2:] or logits.shape[1] != 4:
         raise ValueError("native logits and labels must have identical spatial shape")
     valid = labels != 255
     if not valid.any():
         raise ValueError("empty labeled support")
-    ce = F.cross_entropy(logits, labels, ignore_index=255)
+    if deterministic_ce:
+        # Same valid-pixel mean CE; CUDA's spatial NLL reduction uses atomics.
+        # The flattened NLL kernel supports strict deterministic execution.
+        ce = F.cross_entropy(logits.movedim(1, -1).reshape(-1, 4), labels.reshape(-1), ignore_index=255)
+    else:
+        ce = F.cross_entropy(logits, labels, ignore_index=255)
     y = F.one_hot(labels.clamp_max(3), 4).permute(0, 3, 1, 2).to(logits.dtype) * valid[:, None]
     p = logits.softmax(1) * valid[:, None]
     dims = (0, 2, 3)

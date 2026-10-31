@@ -6,6 +6,7 @@ import torch
 from self_audit.compact_runtime import _DeterministicBilinear, compact_bilinear, deterministic_runtime
 from self_audit.compact_training import DEFAULT_CONFIG, validate_compact_config
 from self_audit.compact_model import CompactDecoder, build_compact_model
+from self_audit.losses import supervised_loss
 
 
 def flags():
@@ -75,6 +76,20 @@ def test_default_bilinear_is_unchanged():
     actual = compact_bilinear(x, (6, 8))
     assert torch.equal(reference, actual)
     assert type(reference.grad_fn) is type(actual.grad_fn)
+
+
+@pytest.mark.parametrize("ignore", [False, True])
+def test_deterministic_ce_keeps_loss_and_valid_pixel_denominator(ignore):
+    logits = torch.randn(2, 4, 7, 9, dtype=torch.float64, requires_grad=True)
+    labels = torch.randint(0, 4, (2, 7, 9))
+    if ignore:
+        labels[:, :3, :] = 255
+    old = supervised_loss(logits, labels)
+    new = supervised_loss(logits, labels, deterministic_ce=True)
+    old_grad = torch.autograd.grad(old, logits)[0]
+    new_grad = torch.autograd.grad(new, logits)[0]
+    torch.testing.assert_close(new, old, atol=1e-12, rtol=1e-12)
+    torch.testing.assert_close(new_grad, old_grad, atol=1e-12, rtol=1e-12)
 
 
 def test_scoped_decoder_preserves_forward_state_and_restores(monkeypatch):

@@ -974,7 +974,7 @@ def train_compact(
             optimizer.zero_grad()
 
             logits_s = model(Xs)
-            loss_s = supervised_loss(logits_s, ys)
+            loss_s = supervised_loss(logits_s, ys, deterministic_ce=c.get("deterministic_algorithms", False))
             loss_s.backward()
 
             # Warm-start module gradient norms (encoder, decoder, head)
