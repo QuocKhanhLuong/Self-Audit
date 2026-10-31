@@ -6,6 +6,7 @@ import os
 
 import torch
 from torch.nn import functional as F
+from .compact_model import CompactDecoder
 
 
 class _DeterministicBilinear(torch.autograd.Function):
@@ -35,6 +36,18 @@ def compact_bilinear(x, size):
     return F.interpolate(x, size=size, mode="bilinear", align_corners=False)
 
 
+def _deterministic_decoder_forward(self, stages):
+    """The existing decoder computation with an explicit bilinear backend."""
+    d = stages[-1]
+    for index, i in enumerate(range(len(self.widths) - 2, -1, -1)):
+        skip = stages[i]
+        up = compact_bilinear(d, skip.shape[-2:])
+        merged = torch.cat([up, skip], dim=1)
+        stage = self.up_stages[index]
+        d = stage["refine"](stage["fuse"](merged))
+    return d
+
+
 @contextmanager
 def deterministic_runtime(enabled=False):
     if not isinstance(enabled, bool):
@@ -52,17 +65,21 @@ def deterministic_runtime(enabled=False):
         torch.is_deterministic_algorithms_warn_only_enabled(),
         torch.backends.cudnn.deterministic,
         torch.backends.cudnn.benchmark,
+        CompactDecoder.forward,
     )
     os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
     try:
         torch.use_deterministic_algorithms(True, warn_only=False)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
+        # Scoped to this training process; model definitions and exports stay unchanged.
+        CompactDecoder.forward = _deterministic_decoder_forward
         yield
     finally:
         torch.use_deterministic_algorithms(previous[0], warn_only=previous[1])
         torch.backends.cudnn.deterministic = previous[2]
         torch.backends.cudnn.benchmark = previous[3]
+        CompactDecoder.forward = previous[4]
         if workspace is None:
             os.environ.pop("CUBLAS_WORKSPACE_CONFIG", None)
         else:
