@@ -68,3 +68,24 @@ hashes and preserve the 2,000-step protocol; they cannot silently satisfy the
 old immutable teacher pins. A failed teacher gate stops this expansion. Resume
 reproducibility and CUDA verification remain required before patient CPTU runs.
 No joint sweep is authorized.
+
+The persistent continuation is a separate tmux process:
+
+```bash
+python scripts/continue_b8_transfer_pilot.py --plan /absolute/CONTINUATION_PLAN.json \
+  --plan-sha256 ACTUAL_CONTINUATION_PLAN_SHA256
+```
+
+Its plan pins source, TRAIN/VAL manifests, the historical pilot protocol/matrix,
+the teacher run directory and that run's immutable plan hash. It never restarts
+the teacher. It waits for `TEACHER_COMPLETED_REMOTE_VERIFIED` and a teacher GO,
+then runs checks/tests, manufactured CUDA forward/gradient parity and exact
+resume, streaming FP32 TRAIN-U cache generation, and the locked four-arm runner
+(including its bounded profile and conditional same-batch control). It records
+commands, hashes, costs and status; any failed gate stops with `BLOCKED`.
+
+The new compact run uses a common strict deterministic execution policy. This
+includes a deterministic CPU bilinear backward while retaining the same native
+bilinear forward and model definition. Measure its overhead in every arm;
+do not compare its training cost to an unmatched nondeterministic runtime.
+The raw-student teacher's historical training recipe is unaffected.

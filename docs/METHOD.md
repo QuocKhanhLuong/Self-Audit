@@ -202,3 +202,19 @@ source plus a reviewed checkpoint/resume extension. See
 [B8 reproduction and backup](B8_REPRODUCTION_RUNBOOK.md). It is a new artifact
 identity, with one fixed-budget run and verified Drive backup before evaluation;
 archived Dice scores remain historical evidence.
+
+The reproduced teacher is an explicit opt-in identity, bound to its new full
+checkpoint, raw-student export, source closure, L8 lineage, measured training
+cost and verified Drive readback. It cannot satisfy the old B8 hash pins.
+`scripts/continue_b8_transfer_pilot.py` waits for this teacher's completed backup
+and quality gate, then requires repository checks, exact manufactured CUDA
+replay, a new TRAIN-U cache and the bounded profile before the locked pilot.
+
+That continuation applies the same `deterministic_algorithms: true` runtime to
+every compact arm. It retains the existing bilinear forward and architecture;
+the unsupported CUDA atomic bilinear backward is evaluated by the deterministic
+CPU derivative and transferred back. This is an explicit execution factor with
+training overhead, included in measured costs. The runtime scope restores its
+decoder dispatch and PyTorch flags on exit. Default recipes, the standalone
+model definition and no-grad deployment remain unchanged. Numerical tests of
+this backend and exact replay do not establish clinical quality or speed gains.
