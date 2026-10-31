@@ -195,3 +195,10 @@ patient among the same hard-Dice/FP-feasible scalar trials, including zero.
 This changes the finite selection objective, not the teacher, candidate update
 rule, guard or deployment architecture. It is a teacher transfer heuristic;
 its value must be measured against original, larger-tie and plain KD on VAL.
+
+
+Historical full-model B8 reproduction uses the separately pinned historical
+source plus a reviewed checkpoint/resume extension. See
+[B8 reproduction and backup](B8_REPRODUCTION_RUNBOOK.md). It is a new artifact
+identity, with one fixed-budget run and verified Drive backup before evaluation;
+archived Dice scores remain historical evidence.
