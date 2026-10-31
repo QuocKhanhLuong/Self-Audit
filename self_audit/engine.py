@@ -4,6 +4,9 @@ from contextlib import nullcontext
 import copy
 import hashlib
 import json
+import os
+import random
+import shutil
 import time
 import numpy as np
 import torch
@@ -116,22 +119,45 @@ def full_pseudo_step(model, optimizers, strong, py, accepted, *, input_valid=Non
     return float(loss.detach()), float(norm)
 
 
-def save_checkpoint(folder, model, teacher, optimizers, config, data, step, provenance, rng):
-    folder = Path(folder); folder.mkdir(parents=True, exist_ok=False)
-    payload = folder / "weights.pt"
-    torch.save({"student": model.state_dict(), "teacher": teacher.state_dict(),
-                "optimizers": [o.state_dict() for o in optimizers],
-                "torch_rng": torch.get_rng_state()}, payload)
-    metadata = {"schema": "self_audit.checkpoint.v2", "model_class": "NativeStudent",
-                "config": config, "step": step, "data_sha256": digest(data.path),
-                "labeled_ids": data.lids, "unlabeled_ids": data.uids,
-                "label_budget": len(data.lids), "audit_label_reads": sorted(data.label_reads),
-                "backbone": provenance, "source_sha256": source_digest(), "payload_sha256": digest(payload),
-                "synthetic": bool(data.manifest["synthetic"]), "quality": "NOT_EVALUATED",
-                "prediction_model": "student", "resume": "NOT_SUPPORTED",
-                "numpy_rng": rng.bit_generator.state}
-    write_json(folder / "MANIFEST.json", metadata)
-    return digest(folder / "MANIFEST.json")
+def save_checkpoint(folder, model, teacher, optimizers, config, data, step, provenance, rng, *, counts=None, seen=None):
+    folder = Path(folder).resolve()
+    tmp_folder = folder.parent / f".tmp_{folder.name}_{os.getpid()}_{time.time_ns()}"
+    tmp_folder.mkdir(parents=True, exist_ok=False)
+    try:
+        payload = tmp_folder / "weights.pt"
+        cuda_rng = torch.cuda.get_rng_state_all() if torch.cuda.is_available() else []
+        torch.save({"student": model.state_dict(), "teacher": teacher.state_dict(),
+                    "optimizers": [o.state_dict() for o in optimizers],
+                    "torch_rng": torch.get_rng_state(),
+                    "cuda_rng": cuda_rng,
+                    "py_rng": random.getstate(),
+                    "lr_scheduler": None,
+                    "scaler": None}, payload)
+        np_global = np.random.get_state()
+        metadata = {"schema": "self_audit.checkpoint.v2", "model_class": "NativeStudent",
+                    "config": config, "step": step, "data_sha256": digest(data.path),
+                    "labeled_ids": data.lids, "unlabeled_ids": data.uids,
+                    "label_budget": len(data.lids), "audit_label_reads": sorted(data.label_reads),
+                    "backbone": provenance, "source_sha256": source_digest(), "payload_sha256": digest(payload),
+                    "synthetic": bool(data.manifest["synthetic"]), "quality": "NOT_EVALUATED",
+                    "prediction_model": "student", "resume": "SUPPORTED",
+                    "numpy_rng": rng.bit_generator.state,
+                    "numpy_global_rng": [np_global[0], np_global[1].tolist(), np_global[2], np_global[3], np_global[4]],
+                    "seen_supervised": sorted(seen[0]) if seen else [],
+                    "seen_audit": sorted(seen[1]) if seen else [],
+                    "seen_unlabeled": sorted(seen[2]) if seen else [],
+                    "counts": dict(counts) if counts else {},
+                    "lr_scheduler": None,
+                    "scaler": None}
+        write_json(tmp_folder / "MANIFEST.json", metadata)
+        if folder.exists():
+            shutil.rmtree(folder)
+        os.replace(tmp_folder, folder)
+        return digest(folder / "MANIFEST.json")
+    except Exception:
+        if tmp_folder.exists():
+            shutil.rmtree(tmp_folder)
+        raise
 
 
 def load_checkpoint(folder, expected_sha256, device="cpu"):
@@ -149,21 +175,67 @@ def load_checkpoint(folder, expected_sha256, device="cpu"):
     return model.to(device).eval(), m
 
 
-def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=False):
+def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=False,
+          resume=None, resume_sha256=None, stop_after_step=None):
+    if bool(resume) != bool(resume_sha256):
+        raise ValueError("--resume and --resume-sha256 must be provided together")
     c = validate_config(config)
     if device.startswith("cuda") and not torch.cuda.is_available():
         raise RuntimeError("CUDA unavailable; no silent device fallback")
     data = TrainingData(manifest, manifest_sha256, synthetic=synthetic)
     out = Path(out).resolve()
-    if out.exists() or out == data.path.parent or data.path.parent.is_relative_to(out) or out.is_relative_to(data.path.parent):
+    if out == data.path.parent or data.path.parent.is_relative_to(out) or out.is_relative_to(data.path.parent):
         raise ValueError("output must be a new directory outside source data")
     if synthetic and c["model"]["backbone"] != "tiny_test":
         raise ValueError("synthetic smoke uses declared tiny_test, not a pretrained claim")
+    if stop_after_step is not None and stop_after_step <= 0:
+        raise ValueError("stop_after_step must be positive")
+
+    if resume:
+        resume_path = Path(resume).resolve()
+        if resume_path.parent != out:
+            raise ValueError("resume checkpoint must reside within the specified --out directory")
+        if not out.is_dir():
+            raise ValueError(f"output directory {out} does not exist for resume")
+        mp = resume_path / "MANIFEST.json"
+        if not mp.is_file():
+            raise ValueError(f"manifest missing in resume checkpoint {resume_path}")
+        if digest(mp) != resume_sha256:
+            raise ValueError("resume manifest hash mismatch")
+        m = json.loads(mp.read_text())
+        if m.get("schema") != "self_audit.checkpoint.v2":
+            raise ValueError("invalid checkpoint schema")
+        if digest(resume_path / "weights.pt") != m.get("payload_sha256"):
+            raise ValueError("checkpoint payload hash mismatch")
+        if m.get("resume") != "SUPPORTED":
+            raise ValueError(f"checkpoint resume status is {m.get('resume')}; resume NOT_SUPPORTED")
+        if source_digest() != m.get("source_sha256"):
+            raise ValueError("executed source differs from checkpoint; use its pinned worktree")
+        if digest(data.path) != m.get("data_sha256"):
+            raise ValueError("checkpoint data sha256 mismatch")
+        if data.lids != m.get("labeled_ids") or data.uids != m.get("unlabeled_ids"):
+            raise ValueError("checkpoint data labeled/unlabeled patient IDs mismatch")
+        if bool(data.manifest["synthetic"]) != bool(m.get("synthetic")):
+            raise ValueError("checkpoint synthetic flag mismatch")
+        if c != m.get("config"):
+            raise ValueError("recipe config does not match checkpoint config")
+        start_step = m["step"]
+        if start_step >= c["steps"]:
+            raise ValueError(f"checkpoint step {start_step} already reached or exceeded configured steps {c['steps']}")
+        if stop_after_step is not None and stop_after_step <= start_step:
+            raise ValueError(f"stop_after_step {stop_after_step} must be greater than resume step {start_step}")
+    else:
+        if out.exists():
+            raise ValueError("output must be a new directory outside source data")
+        start_step = 0
+
     torch.manual_seed(c["seed"]); torch.set_num_threads(c["threads"])
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(c["seed"])
     rng = np.random.default_rng(c["seed"])
     model, provenance = build_model(c["model"], synthetic=synthetic, window=c["window"])
+    if resume and provenance != m.get("backbone"):
+        raise ValueError("backbone provenance mismatch")
     model = model.to(device)
     teacher = copy.deepcopy(model).eval().requires_grad_(False)
     # No head momentum to be contaminated by a rejected pseudo transaction.
@@ -177,24 +249,75 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
             torch.optim.SGD(model.head.parameters(), lr=c["head_lr"], momentum=0., weight_decay=0., foreach=False if is_meta else None)]
     geometry_opt = torch.optim.SGD(geometry.values(), lr=c["meta_window"]["lr"], momentum=0., weight_decay=0.) if is_meta else None
     saved_opts = opts + ([geometry_opt] if geometry_opt is not None else [])
-    out.mkdir(parents=True)
-    write_json(out / "CONFIG.json", c)
-    write_json(out / "STARTUP.json", {"schema": SCHEMA, "method": c["method"], "source_sha256": source_digest(),
-                "parameters": sum(p.numel() for p in model.parameters()), "device": device,
-                "backbone": provenance, "synthetic": synthetic, "label_budget": len(data.lids),
-                "supervision": "dense TRAIN subset; audit included; never no-GT",
-                "pseudo_update_scope": "full_except_meta_geometry" if is_meta else ("full" if c["method"] == "ema_full" else c["update_scope"]),
-                "window": c["window"], "meta_window": c["meta_window"] if is_meta else None,
-                "geometry_scope": "meta_only_after_frozen_warmup" if is_meta else c["window"]["mode"],
-                "outer_loss": "batch_present_foreground_soft_Dice; direct_geometry_detached" if is_meta else None,
-                "batch_size": c["batch_size"], "batch_protocol": "one_patient_per_role; native_grid; equal_slice_audit_mass",
-                "crop_size": c["crop_size"], "crop_policy": "image_geometry_random; edge_pad; ignore_padding_in_all_losses; no_resize",
-                "native_supervised_loss": "CE+present_foreground_Dice", "prediction_model": "student"})
-    start = time.monotonic(); counts = {"supervised_updates": 0, "pseudo_accepted": 0, "ema_updates": 0, "geometry_updates": 0}
-    seen_l, seen_u, seen_a = set(), set(), set()
-    log = (out / "steps.jsonl").open("x")
+
+    if not resume:
+        out.mkdir(parents=True)
+        write_json(out / "CONFIG.json", c)
+        write_json(out / "STARTUP.json", {"schema": SCHEMA, "method": c["method"], "source_sha256": source_digest(),
+                    "parameters": sum(p.numel() for p in model.parameters()), "device": device,
+                    "backbone": provenance, "synthetic": synthetic, "label_budget": len(data.lids),
+                    "supervision": "dense TRAIN subset; audit included; never no-GT",
+                    "pseudo_update_scope": "full_except_meta_geometry" if is_meta else ("full" if c["method"] == "ema_full" else c["update_scope"]),
+                    "window": c["window"], "meta_window": c["meta_window"] if is_meta else None,
+                    "geometry_scope": "meta_only_after_frozen_warmup" if is_meta else c["window"]["mode"],
+                    "outer_loss": "batch_present_foreground_soft_Dice; direct_geometry_detached" if is_meta else None,
+                    "batch_size": c["batch_size"], "batch_protocol": "one_patient_per_role; native_grid; equal_slice_audit_mass",
+                    "crop_size": c["crop_size"], "crop_policy": "image_geometry_random; edge_pad; ignore_padding_in_all_losses; no_resize",
+                    "native_supervised_loss": "CE+present_foreground_Dice", "prediction_model": "student"})
+        counts = {"supervised_updates": 0, "pseudo_accepted": 0, "ema_updates": 0, "geometry_updates": 0}
+        seen_l, seen_u, seen_a = set(), set(), set()
+        log = (out / "steps.jsonl").open("x")
+    else:
+        payload = torch.load(resume_path / "weights.pt", map_location="cpu", weights_only=True)
+        model.load_state_dict(payload["student"], strict=True)
+        teacher.load_state_dict(payload["teacher"], strict=True)
+        teacher.to(device).eval().requires_grad_(False)
+        for opt, s in zip(saved_opts, payload["optimizers"], strict=True):
+            opt.load_state_dict(s)
+            if device.startswith("cuda"):
+                for state in opt.state.values():
+                    for k, v in state.items():
+                        if isinstance(v, torch.Tensor):
+                            state[k] = v.to(device)
+        torch.set_rng_state(payload["torch_rng"])
+        if torch.cuda.is_available() and payload.get("cuda_rng"):
+            torch.cuda.set_rng_state_all(payload["cuda_rng"])
+        if payload.get("py_rng"):
+            random.setstate(payload["py_rng"])
+        if m.get("numpy_rng"):
+            rng.bit_generator.state = m["numpy_rng"]
+        if m.get("numpy_global_rng"):
+            ng = m["numpy_global_rng"]
+            np.random.set_state((ng[0], np.array(ng[1], dtype=np.uint32), ng[2], ng[3], ng[4]))
+        if "audit_label_reads" in m:
+            data.label_reads.update(m["audit_label_reads"])
+        counts = dict(m.get("counts", {"supervised_updates": 0, "pseudo_accepted": 0, "ema_updates": 0, "geometry_updates": 0}))
+        seen_l = set(m.get("seen_supervised", []))
+        seen_a = set(m.get("seen_audit", []))
+        seen_u = set(m.get("seen_unlabeled", []))
+        if (out / "FAILURE.json").exists():
+            (out / "FAILURE.json").unlink()
+        steps_file = out / "steps.jsonl"
+        valid_lines = []
+        if steps_file.exists():
+            with steps_file.open("r") as f:
+                for line in f:
+                    line_str = line.strip()
+                    if not line_str:
+                        continue
+                    try:
+                        row = json.loads(line_str)
+                        if row.get("step", 0) <= start_step:
+                            valid_lines.append(line_str + "\n")
+                    except Exception:
+                        break
+            with steps_file.open("w") as f:
+                f.writelines(valid_lines)
+        log = steps_file.open("a")
+
+    start = time.monotonic()
     try:
-        for step in range(c["steps"]):
+        for step in range(start_step, c["steps"]):
             # Round robin coverage; a separate RNG controls only data/augmentations.
             li, ui = step % len(data.lids), step % len(data.uids)
             ai = (li + 1 + int(rng.integers(len(data.lids) - 1))) % len(data.lids)
@@ -278,9 +401,20 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
             row["elapsed_seconds"] = time.monotonic() - start
             row["cuda_peak_allocated"] = torch.cuda.max_memory_allocated() if device.startswith("cuda") else None
             log.write(json.dumps(row, allow_nan=False)+"\n"); log.flush()
+            saved_sha = None
             if (step+1) % c["save_every"] == 0 and step+1 < c["steps"]:
-                save_checkpoint(out / f"step_{step+1:06d}", model, teacher, saved_opts, c, data, step+1, provenance, rng)
-        sha = save_checkpoint(out / "final", model, teacher, saved_opts, c, data, c["steps"], provenance, rng)
+                saved_sha = save_checkpoint(out / f"step_{step+1:06d}", model, teacher, saved_opts, c, data, step+1, provenance, rng, counts=counts, seen=(seen_l, seen_a, seen_u))
+            if stop_after_step is not None and step + 1 == stop_after_step:
+                if saved_sha is None:
+                    saved_sha = save_checkpoint(out / f"step_{step+1:06d}", model, teacher, saved_opts, c, data, step+1, provenance, rng, counts=counts, seen=(seen_l, seen_a, seen_u))
+                report = {"schema": SCHEMA, "status": "INTERRUPTED", "synthetic": synthetic, "quality": "NOT_EVALUATED",
+                          "step": step+1, "steps": c["steps"], **counts, "elapsed_seconds": time.monotonic()-start,
+                          "seen_supervised": sorted(seen_l), "seen_audit": sorted(seen_a), "seen_unlabeled": sorted(seen_u),
+                          "checkpoint_manifest_sha256": saved_sha, "label_budget": len(data.lids),
+                          "label_reads_outside_budget": sorted(data.label_reads-set(data.lids))}
+                write_json(out / "REPORT.json", report)
+                return report
+        sha = save_checkpoint(out / "final", model, teacher, saved_opts, c, data, c["steps"], provenance, rng, counts=counts, seen=(seen_l, seen_a, seen_u))
         report = {"schema": SCHEMA, "status": "COMPLETED", "synthetic": synthetic, "quality": "NOT_EVALUATED",
                   "steps": c["steps"], **counts, "elapsed_seconds": time.monotonic()-start,
                   "seen_supervised": sorted(seen_l), "seen_audit": sorted(seen_a), "seen_unlabeled": sorted(seen_u),

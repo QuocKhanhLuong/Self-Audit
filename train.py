@@ -13,11 +13,16 @@ def main():
     p.add_argument("--data"); p.add_argument("--data-sha256"); p.add_argument("--out")
     p.add_argument("--device", default="cuda"); p.add_argument("--allow-full-run", action="store_true")
     p.add_argument("--synthetic", action="store_true", help="Manufactured CPU test, never patient evidence")
+    p.add_argument("--resume", help="Directory path of checkpoint to resume from")
+    p.add_argument("--resume-sha256", help="Expected SHA256 of resume checkpoint MANIFEST.json")
+    p.add_argument("--stop-after-step", type=int, default=None, help="Diagnostic interruption step")
     args = p.parse_args()
     if args.describe:
         print(Path(__file__).with_name("ACTIVE_PIPELINE.json").read_text()); return
     if not all([args.data, args.data_sha256, args.out]):
         p.error("--data, --data-sha256 and --out are mandatory; v1 --bank is unsupported")
+    if bool(args.resume) != bool(args.resume_sha256):
+        p.error("--resume and --resume-sha256 must be provided together")
     from self_audit.engine import train, validate_config
     c = json.loads(Path(args.config).read_text())
     if args.model_config:
@@ -25,7 +30,8 @@ def main():
     c = validate_config(c)
     if c["steps"] > 128 and not args.allow_full_run:
         p.error("more than 128 updates requires --allow-full-run")
-    print(json.dumps(train(c, args.data, args.data_sha256, args.out, device=args.device, synthetic=args.synthetic), indent=2))
+    print(json.dumps(train(c, args.data, args.data_sha256, args.out, device=args.device, synthetic=args.synthetic,
+                           resume=args.resume, resume_sha256=args.resume_sha256, stop_after_step=args.stop_after_step), indent=2))
 
 
 if __name__ == "__main__":
