@@ -247,6 +247,7 @@ def verify_fresh_container(namespace):
     receipt = json.loads((base / "DATA_PREP.json").read_text())
     assert receipt["stage_container"] != os.environ["MODAL_TASK_ID"]
     assert "RCLONE_CONFIG_TEXT" not in os.environ
+    assert "SELFAUDIT_DRIVE_AUTHORIZED_USER_JSON" not in os.environ
     assert sha256("/assets/receipts/STAGING.json") == OLD_STAGING_SHA
     if receipt["status"] not in ("PREPARED_PENDING_FRESH_CONTAINER", "PASS"):
         return {"status": receipt["status"], "error": receipt.get("error"), "comparison": receipt.get("train_manifest_comparison")}

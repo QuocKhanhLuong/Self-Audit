@@ -1,0 +1,118 @@
+{
+  "absent_fp_budget": 0.0,
+  "acceptance": {
+    "metric": "Macro4",
+    "min_macro4": 0.87,
+    "notes": "Full opt-in profile; requires verified teacher identity/cache and explicit --allow-full-run."
+  },
+  "batch_size": 8,
+  "coefficient": 1.0,
+  "crop_size": 160,
+  "data": {
+    "budget_k": 8,
+    "labeled_ids": [
+      "patient007",
+      "patient010",
+      "patient011",
+      "patient024",
+      "patient026",
+      "patient041",
+      "patient077",
+      "patient099"
+    ],
+    "manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4"
+  },
+  "equal_wall_time": {
+    "enabled": false
+  },
+  "experiment": {
+    "historical_config_sha256": "3f81bc380ab8403ad293da8cb9fd3420b7372e6ea9f789101c9440ba5357d54e",
+    "name": "S1_historical_B8_only",
+    "teacher_substitution_allowed": false
+  },
+  "guard_tolerance": 1e-06,
+  "labeled_batch_size": 8,
+  "lr": 0.0003,
+  "max_trials": 8,
+  "method": "plain_kd",
+  "model": {
+    "in_channels": 3,
+    "init": "kaiming_normal",
+    "name": "CompactStudent",
+    "num_classes": 4,
+    "widths": [
+      32,
+      64,
+      128,
+      256
+    ]
+  },
+  "pseudo_lr": 0.001,
+  "pseudo_threshold": 0.7,
+  "ridge": 1e-06,
+  "risk_budget": 0.0,
+  "save_every": 1000,
+  "schema": "self_audit.compact.v1",
+  "seed": 42,
+  "steps": 10000,
+  "teacher": {
+    "cache_path": "/assets/compact_teacher_b8/CACHE_MANIFEST.json",
+    "cache_sha256": "783624211e760fbeb2c3a80ded7b8dacb9d1407f0dcc1e484010cda2c343897b",
+    "lineage": {
+      "budget_k": 8,
+      "exact_labeled_ids": [
+        "patient007",
+        "patient010",
+        "patient011",
+        "patient024",
+        "patient026",
+        "patient041",
+        "patient077",
+        "patient099"
+      ]
+    },
+    "source": "/assets/b8_recovery/full/final/MANIFEST.json",
+    "source_manifest_sha256": "ae36d026ce26ca188627e6ea4699695e9eb99501312ce05d5324b81e44d3ddaa",
+    "source_payload_sha256": "0ae593ecb6b6f9dcb88d0a41d4a77d7b3b3a3edd87396624c3648afb1281f1b6",
+    "source_training_cost": {
+      "elapsed_seconds": 2440.043427208904,
+      "steps": 10000
+    },
+    "state": "student",
+    "teacher_identity": {
+      "inference_state": "student",
+      "label_budget": 8,
+      "labeled_ids": [
+        "patient007",
+        "patient010",
+        "patient011",
+        "patient024",
+        "patient026",
+        "patient041",
+        "patient077",
+        "patient099"
+      ],
+      "manifest_sha256": "ae36d026ce26ca188627e6ea4699695e9eb99501312ce05d5324b81e44d3ddaa",
+      "model_class": "NativeStudent",
+      "payload_sha256": "0ae593ecb6b6f9dcb88d0a41d4a77d7b3b3a3edd87396624c3648afb1281f1b6",
+      "quality_receipt": {
+        "path": "/workspace/compact-acdc-l8/20261028/b8_recovery/test50_receipt/QUALITY_RECEIPT.json",
+        "sha256": "f1054ce3dea44ff600dca1708dc7c0906eef5fc84b229c19859d863cc4b46e5c"
+      },
+      "schema": "self_audit.compact_teacher_identity.v1",
+      "source_commit": "0f54455b67bb11a72fbfe2a8ac6fae4073f3e9ca",
+      "source_sha256": "3c7fa85f00d54a6e087af3cd6c7045351fb72d532f1069bf09d95f9cd72359b7",
+      "source_training_cost": {
+        "elapsed_seconds": 2440.043427208904,
+        "steps": 10000
+      },
+      "teacher_kind": "canonical",
+      "train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+      "training_method": "ema_full"
+    }
+  },
+  "temperature": 1.0,
+  "unlabeled_batch_size": 8,
+  "warmup_steps": 1000,
+  "weight_decay": 0.0001
+}

@@ -1,5 +1,10 @@
 # CPU asset staging for the pinned diagnostics
 
+For the current no-rclone ACDC/S0 task, use the
+[direct Drive API runbook](MODAL_DRIVE_API_RUNBOOK.md). The workflow below is
+historical staging evidence. Preserve its receipt and17 verified files; do not
+rerun its inventory action to rewrite `/assets/receipts/STAGING.json`.
+
 The diagnostic contract is `docs/DIAGNOSTICS_RUNBOOK.md` at
 `8dc9e7446be23e2b8533871c2a1e418b4a115da7`. Staging is separate from training.
 No trainer, GPU function or A100 launch is added. Data payloads are never routed

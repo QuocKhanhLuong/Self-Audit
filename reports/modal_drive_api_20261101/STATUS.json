@@ -1,0 +1,55 @@
+{
+  "schema": "self_audit.drive_api.delivery.v1",
+  "base_git_sha": "fe6b3880bb966fb8ab9e296362b843cb1210ea5a",
+  "source_sha256": {
+    "self_audit/drive_api_staging.py": "ddd5dcd565b3e4916aa19cee7b1f411d00d0b01bb551e18e2b9b7268ef73e19d",
+    "self_audit/modal_data_prep.py": "f328a7850c483a34c34c368f32e59446cf355ff6d04ddb0258e1a3f354b8b89a",
+    "self_audit/modal_s0.py": "08cdd69bb45f8746f83986d362a9e7de41f6c56c52d21157dd0b54b466e0c02e",
+    "scripts/modal_drive_api.py": "aadd750b17863a65cdc199476a8effdd0ab3b50f5e60464847307a4498984d5a",
+    "scripts/authorize_drive_readonly.py": "fa3326764ee349ba5fbdc0a5cf86d738f981edd25d9d5a6a3274b7bed5d05341",
+    "tests/test_drive_api_staging.py": "fd624be40463652e72a53b29965acc5c2aa4c03607532d28152ac8ac6fb28c18",
+    "configs/fresh_s0/supervised_wide_seed42.json": "936d575f65e02f0adef8d7f5a658951612fe87faa1f87e48ec29fb971c9f305e",
+    "configs/fresh_s0/s1_plain_kd.json": "eed570a8b6d6fb50077695a8e8188b698b088d954577f8a08bbfa8c268e337c9",
+    "configs/fresh_s0/s2_plain_kd.json": "b675dff8cefdfe2ccc5f22a7dd33667ef57125e68f114e9a1201f6791664859c"
+  },
+  "actual_smoke": {
+    "app_id": "ap-cprm3FlylRcbp5iDRNTXaT",
+    "namespace": "/assets/fresh_s0/acdc_api_20261101_r1",
+    "receipt_sha256": "7825b2f5b4f2cf77bc06d2f5af53b7ee0df16297bcf2d59f81c8439c8b50d500",
+    "result": "BLOCKED_HTTP401_authError",
+    "source_snapshot": "NOT_CAPTURED; earlier uncommitted API prototype, not claimed equal to delivery source hashes"
+  },
+  "DATA_PREP": "BLOCKED_OAUTH",
+  "S0": "BLOCKED_DATA_PREP",
+  "S1": "BLOCKED_HISTORICAL_B8_AND_CACHE",
+  "S2": "BLOCKED_HISTORICAL_B8_AND_CACHE",
+  "HISTORICAL_DIAGNOSTICS": "BLOCKED_HISTORICAL_ASSETS",
+  "DRIVE_BACKUP": "NOT_RUN",
+  "patient_training": "NOT_RUN",
+  "gpu_allocated": false,
+  "dataset_transferred_to_mac": false,
+  "rclone_called": false,
+  "browser_blocker": "Computer Use was not approved to use Microsoft Edge; retried after user reported enabling permission",
+  "checks": [
+    {
+      "command": [
+        "/Users/alvinluong/miniforge3/envs/selfaudit-modal/bin/python",
+        "scripts/check_repo.py"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.013404792174696922,
+      "log": "CHECK_REPO.txt"
+    },
+    {
+      "command": [
+        "/Users/alvinluong/miniforge3/envs/selfaudit-modal/bin/python",
+        "-m",
+        "pytest",
+        "-q"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 153.18664758419618,
+      "log": "PYTEST.txt"
+    }
+  ]
+}

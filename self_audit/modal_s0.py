@@ -101,23 +101,33 @@ def checkpoint_io(commit, after_save=None):
         trainer.save_compact_checkpoint = original
 
 
-def progress(log_path, stop):
+def progress(log_path, stop, resume_step=0):
     """Read-only telemetry; never touches PyTorch or sampler RNG."""
-    done = 0
+    offset = 0
     started = time.monotonic()
-    while not stop.wait(10):
+    final_pass = False
+    while True:
         try:
             with Path(log_path).open() as f:
-                rows = f.readlines()
-            row = json.loads(rows[-1]) if rows else None
-            if row and int(row["step"]) + 1 > done:
-                done = int(row["step"]) + 1
-                elapsed = time.monotonic() - started
-                print(json.dumps({"progress": f"{done}/10000", "loss": row["supervised_loss"],
-                    "eta_seconds": (10000 - done) * elapsed / done,
-                    "gpu_memory": row.get("cuda_memory")}), flush=True)
+                f.seek(offset)
+                while True:
+                    before = f.tell()
+                    line = f.readline()
+                    if not line or not line.endswith("\n"):
+                        offset = before
+                        break
+                    row = json.loads(line)
+                    done = int(row["step"]) + 1
+                    if done > resume_step and done % 100 == 0:
+                        elapsed = time.monotonic() - started
+                        print(json.dumps({"progress": f"{done}/10000", "loss": row["supervised_loss"],
+                            "eta_seconds": (10000 - done) * elapsed / (done - resume_step),
+                            "gpu_memory": row.get("cuda_memory")}), flush=True)
         except (OSError, json.JSONDecodeError):
-            continue
+            pass
+        if final_pass:
+            return
+        final_pass = stop.wait(1)
 
 
 def cpu_smoke(namespace, git_sha, config, commit):
@@ -152,7 +162,7 @@ def run_s0(namespace, git_sha, config, budget, commit, resume=None, resume_sha25
     from .compact_model import build_compact_model
     from .compact_artifacts import export_compact_student, load_compact_export
     from .compact_inference import run_two_phase_evaluation
-    assert "RCLONE_CONFIG_TEXT" not in os.environ
+    assert "RCLONE_CONFIG_TEXT" not in os.environ and "SELFAUDIT_DRIVE_AUTHORIZED_USER_JSON" not in os.environ
     data = checked_data(namespace)
     base = Path(namespace)
     smoke = json.loads((base / "CPU_SMOKE.json").read_text())
@@ -200,7 +210,7 @@ def run_s0(namespace, git_sha, config, budget, commit, resume=None, resume_sha25
     atomic_json(base / "S0_STATUS.json", {"status": "RUNNING", "app_id": os.environ.get("MODAL_APP_ID"), "steps": 0})
     commit()
     stop = threading.Event()
-    watcher = threading.Thread(target=progress, args=(out / "TRAIN_LOG.jsonl", stop), daemon=True)
+    watcher = threading.Thread(target=progress, args=(out / "TRAIN_LOG.jsonl", stop, resume_step), daemon=True)
     watcher.start()
     started = time.monotonic()
     def cost_boundary(path, step):

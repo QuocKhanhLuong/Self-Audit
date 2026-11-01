@@ -1,5 +1,11 @@
 # Fresh ACDC S0, independent of historical teacher recovery
 
+**Current transfer route:** [direct Drive API runbook](MODAL_DRIVE_API_RUNBOOK.md).
+It supersedes the rclone execution commands below for the current request.
+The earlier commands remain historical documentation; do not rerun them or
+rewrite the historical STAGING receipt. The preparation/S0 contract below is
+shared by both routes.
+
 This opt-in execution shell starts at commit `0605636`. It does not modify
 `prepare_acdc.py`, the compact trainer, the historical diagnostic pins, or
 `/assets/receipts/STAGING.json`. S1/S2 and historical diagnostics remain blocked
