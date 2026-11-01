@@ -257,3 +257,10 @@ Only D2 superiority over both D0 and D1 under those rules can emit
 GO_TO_R_PILOT. Native KD and D4/D5 are explanatory, not additional GO gates.
 No diagnostic command launches R training. Fixture tests are software evidence
 and do not establish patient quality, a mechanism benefit, or inference speed.
+
+The independent [fresh supervised S0 on Modal](MODAL_FRESH_S0.md) uses the
+existing compact supervised trainer, random wide initialization and the locked
+ACDC L8 cohort. Its real-data and CPU-smoke gates do not depend on restoring the
+historical teacher. S1/S2 and historical diagnostics retain their exact teacher
+and cache requirements. Each fresh run records its own data/source/config
+identity; the old STAGING receipt and historical quality claims are unchanged.

@@ -1,0 +1,57 @@
+{
+  "CPU_smoke_real_data": "NOT_RUN",
+  "DATA_PREP": "BLOCKED_DRIVE_QUERY_QUOTA",
+  "HISTORICAL_DIAGNOSTICS": "BLOCKED_EXACT_B8_AND_COMPACT_RUNTIME",
+  "S0": "NOT_RUN_DATA_BLOCKED",
+  "S1": "BLOCKED_HISTORICAL_B8_AND_CACHE",
+  "S2": "BLOCKED_HISTORICAL_B8_AND_CACHE",
+  "active_containers_after_stop": 0,
+  "apps": [
+    {
+      "id": "ap-kx5bIX1OlTn3EMxYcJIiuK",
+      "result": "BLOCKED_DRIVE_RATE_LIMIT"
+    },
+    {
+      "id": "ap-LpRdS6wS4g7oIULeuR2yZr",
+      "result": "BLOCKED_DRIVE_RATE_LIMIT"
+    },
+    {
+      "id": "ap-cwPxh31P9bUzlN8aiNjCBu",
+      "result": "STOPPED_AFTER_PERSISTING_BLOCKED_DRIVE_QUERY_QUOTA"
+    }
+  ],
+  "base_commit": "06056362576963063679fef7dd76754ce4d88738",
+  "billing_read_only_snapshot": {
+    "billedCost": "0.00000000",
+    "meteredCost": "0.05039856",
+    "scope": "workspace_month_to_date_not_task_attribution",
+    "user_reported_credit_before_task": 30
+  },
+  "check_repo": "PASS",
+  "config_file_sha256": "936d575f65e02f0adef8d7f5a658951612fe87faa1f87e48ec29fb971c9f305e",
+  "data_prep_receipt_sha256": "0a28a99dfddaf2c4e6b5b5f9fbe0885a87ec9e8739af6b1a069d24e9a35e4093",
+  "dataset_through_mac": false,
+  "files_sha256": {
+    "scripts/modal_fresh_s0.py": "4ec11ed6e3b7e984d8cdd2cbfa44f0dbf0094eab6ce08b0b678b67a7b60d1c95",
+    "self_audit/modal_data_prep.py": "fc2f60f400e1ae0cc5deb5bc0381df500e7157bde34bc1805fbd975760ef86c7",
+    "self_audit/modal_s0.py": "3bfed0ef8af33246a74cf13f0aa0bb34a5834942f6b6c7a7d1799ecec21f8512",
+    "tests/test_modal_fresh_s0.py": "6fecb532eadb96c5fe566cf92c6cce5738df4d894d94713521bb5981f52e765f"
+  },
+  "fixture_resume": "PASS_CPU_EXACT_STATE_EQUAL_TO_UNINTERRUPTED",
+  "fixture_smoke_steps": 2,
+  "gpu_allocations": 0,
+  "historical_train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+  "namespace": "/assets/fresh_s0/acdc_l8_s42_20261101_r3",
+  "old_staging_sha256": "c4ffe94c921820f0bc3c67586f3ad64f5c6ec02fe2359146c1f2fa8c7b22029d",
+  "patient_evaluation": "NOT_RUN",
+  "patient_payloads_downloaded": 0,
+  "pytest_log": "PYTEST.txt",
+  "quota_probe": {
+    "metric": "Queries",
+    "raw_stderr_withheld": true,
+    "reason": "rateLimitExceeded"
+  },
+  "status": "WAITING_FOR_DRIVE_QUOTA",
+  "tested_source_sha256": "ccad44fd2a4cba4c6eea7f335b442afc346efb628a756ee5662d12da7feb5d1c",
+  "user_decision": "wait_for_quota_no_background_retry_avoid_spend"
+}

@@ -1,0 +1,168 @@
+{
+  "architecture": {
+    "dino_required": false,
+    "in_channels": 3,
+    "init": "kaiming_normal",
+    "init_lineage": "random_kaiming_distinct_from_dino",
+    "model_class": "CompactStudent",
+    "name": "CompactStudent",
+    "norm": "group_norm",
+    "num_classes": 4,
+    "pretrained": false,
+    "widths": [
+      32,
+      64,
+      128,
+      256
+    ]
+  },
+  "class_map": {
+    "0": "background",
+    "1": "right_ventricle",
+    "2": "myocardium",
+    "3": "left_ventricle"
+  },
+  "config": {
+    "absent_fp_budget": 0.0,
+    "acceptance": {
+      "metric": "Macro4",
+      "min_macro4": 0.87,
+      "target_patient_dice": 0.87
+    },
+    "batch_size": 8,
+    "coefficient": 1.0,
+    "crop_size": 160,
+    "data": null,
+    "deterministic_algorithms": false,
+    "equal_wall_time": {
+      "enabled": false
+    },
+    "guard_tolerance": 1e-06,
+    "labeled_batch_size": 8,
+    "lr": 0.0003,
+    "max_trials": 8,
+    "method": "supervised",
+    "model": {
+      "in_channels": 3,
+      "init": "kaiming_normal",
+      "name": "CompactStudent",
+      "num_classes": 4,
+      "widths": [
+        32,
+        64,
+        128,
+        256
+      ]
+    },
+    "probe_batch_size": 8,
+    "probe_seed": 42017,
+    "pseudo_lr": 0.001,
+    "pseudo_threshold": 0.7,
+    "ridge": 1e-06,
+    "risk_budget": 0.0,
+    "same_batch_utility": false,
+    "save_every": 1000,
+    "schema": "self_audit.compact.v1",
+    "seed": 42,
+    "selector": "original",
+    "selector_dice_tolerance": 0.0,
+    "steps": 10000,
+    "stop_after_step": 2,
+    "teacher": {},
+    "temperature": 1.0,
+    "unlabeled_batch_size": 8,
+    "utility_gain_tolerance": 1e-07,
+    "utility_tie_tolerance": 1e-07,
+    "warmup_steps": 8,
+    "weight_decay": 0.0001
+  },
+  "dino_required": false,
+  "external_teacher_required": false,
+  "lineage": {
+    "data_sha256": "96ad14a4b305742e8f6157c62012310c917b104e10eb044c6591a407ad1a40a7",
+    "label_budget": 2,
+    "lids": [
+      "synthetic_p000",
+      "synthetic_p001"
+    ],
+    "synthetic": true,
+    "teacher_identity": null,
+    "uids": [
+      "synthetic_p002",
+      "synthetic_p003"
+    ]
+  },
+  "model_class": "CompactStudent",
+  "model_file_sha256": "5ac969c8e86a71dbd4451010b893693ea657d6a3a567d7d35a500327921448e2",
+  "native_axes": {
+    "patient_volume_cine": [
+      "T",
+      "Z",
+      "Y",
+      "X"
+    ],
+    "slice_batch_tensor": [
+      "B",
+      "C",
+      "H",
+      "W"
+    ]
+  },
+  "parameters_total": 2410596,
+  "parameters_trainable": 2410596,
+  "payload_sha256": "91a82ac04dd771a149b5c6dac88f5bbea7032b4145a2b2a81783eb346c49a4d1",
+  "preprocessing": {
+    "context_boundary_mode": "clamp",
+    "context_slices": [
+      -1,
+      0,
+      1
+    ],
+    "default_normalization": "prepared",
+    "input_channels": 3,
+    "normalization_recipes": {
+      "prepared": {
+        "description": "Validates that values are already in [0, 1] without renormalizing.",
+        "mode": "prepared",
+        "renormalize": false,
+        "tolerance": 1e-05,
+        "value_range": [
+          0.0,
+          1.0
+        ]
+      },
+      "raw": {
+        "axes": [
+          "T",
+          "Z",
+          "Y",
+          "X"
+        ],
+        "description": "Per-cine 0.5% and 99.5% percentile intensity scaling to [0, 1].",
+        "epsilon": 1e-06,
+        "mode": "raw",
+        "percentile_scope": "per_cine",
+        "percentiles": [
+          0.5,
+          99.5
+        ],
+        "renormalize": true,
+        "target_range": [
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "pretrained_weights_required": false,
+  "schema": "self_audit.compact.export.v1",
+  "serialization_bytes": 9662432,
+  "source_checkpoint_manifest_sha256": "13425e7b50ebac91526a8272ea079dcf756cfb2736ffde259c63bb5bc12cf7bb",
+  "source_checkpoint_payload_sha256": "b4ae7911ec33e08e2a385747a76fb61205175d37846bc7c2e945edf5f26f6cef",
+  "source_sha256": "ccad44fd2a4cba4c6eea7f335b442afc346efb628a756ee5662d12da7feb5d1c",
+  "synthetic": true,
+  "teacher_included": false,
+  "teacher_memory_included": false,
+  "training_source_sha256": "ccad44fd2a4cba4c6eea7f335b442afc346efb628a756ee5662d12da7feb5d1c",
+  "weights_only_bytes": 9642384
+}
