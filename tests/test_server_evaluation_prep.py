@@ -11,6 +11,16 @@ from prepare_acdc import normalize_cine
 from scripts.prepare_server_evaluation import prepare_server_evaluation
 
 
+def test_mnm_metadata_checks_frames_only_for_selected_cohort(tmp_path):
+    from scripts.prepare_server_evaluation import _read_mnm_metadata
+    path = tmp_path / "metadata.csv"
+    path.write_text("External code,ED,ES\nTRAIN_U,0,0\nVAL_A,0,7\n")
+    rows, _ = _read_mnm_metadata(path, _sha(path), selected_ids={"VAL_A"})
+    assert rows == {"VAL_A": {"ed": 0, "es": 7}}
+    with pytest.raises(ValueError, match="distinct"):
+        _read_mnm_metadata(path, _sha(path), selected_ids={"TRAIN_U"})
+
+
 def _sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 

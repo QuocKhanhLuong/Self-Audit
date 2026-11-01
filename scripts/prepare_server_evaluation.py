@@ -142,7 +142,7 @@ def _read_pinned_split(path: Path, expected_sha256: str, dataset: str) -> tuple[
     return roles, actual
 
 
-def _read_mnm_metadata(path: Path, expected_sha256: str) -> tuple[dict[str, dict[str, int]], str]:
+def _read_mnm_metadata(path: Path, expected_sha256: str, *, selected_ids: set[str] | None = None) -> tuple[dict[str, dict[str, int]], str]:
     expected = _sha_pin(expected_sha256, "M&Ms metadata CSV SHA-256")
     csv_path = path.resolve()
     if not csv_path.is_file():
@@ -158,12 +158,18 @@ def _read_mnm_metadata(path: Path, expected_sha256: str) -> tuple[dict[str, dict
             raise ValueError("M&Ms metadata CSV requires unique External code, ED, and ES columns")
         reader.fieldnames = headers
         result: dict[str, dict[str, int]] = {}
+        seen_ids: set[str] = set()
         for row_number, row in enumerate(reader, start=2):
             external_code = str(row.get("External code") or "").strip()
             if not _SAFE_MNM_ID_RE.fullmatch(external_code):
                 raise ValueError(f"invalid External code at CSV row {row_number}: {external_code!r}")
-            if external_code in result:
+            if external_code in seen_ids:
                 raise ValueError(f"duplicate External code in M&Ms metadata CSV: {external_code}")
+            seen_ids.add(external_code)
+            # Official unlabeled rows may carry placeholder ED/ES values.
+            # Only the explicitly selected evaluation cohort needs frame labels.
+            if selected_ids is not None and external_code not in selected_ids:
+                continue
             frame_indices: dict[str, int] = {}
             for key in ("ED", "ES"):
                 value = str(row.get(key) or "").strip()
@@ -444,7 +450,10 @@ def prepare_server_evaluation(
         if metadata_csv is None or metadata_csv_sha256 is None:
             raise ValueError("M&Ms preparation requires both metadata CSV path and SHA-256")
         metadata_path = Path(metadata_csv).resolve()
-        metadata, actual_metadata_sha = _read_mnm_metadata(metadata_path, metadata_csv_sha256)
+        metadata, actual_metadata_sha = _read_mnm_metadata(
+            metadata_path, metadata_csv_sha256,
+            selected_ids=set(requested_ids) - set(KNOWN_QUARANTINED_MNM_IDS),
+        )
     elif metadata_csv is not None or metadata_csv_sha256 is not None:
         raise ValueError("ACDC preparation does not accept M&Ms metadata arguments")
 
