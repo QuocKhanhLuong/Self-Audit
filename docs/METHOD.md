@@ -264,3 +264,22 @@ ACDC L8 cohort. Its real-data and CPU-smoke gates do not depend on restoring the
 historical teacher. S1/S2 and historical diagnostics retain their exact teacher
 and cache requirements. Each fresh run records its own data/source/config
 identity; the old STAGING receipt and historical quality claims are unchanged.
+
+The [SSH server runner](SERVER_COMPACT_RUNBOOK.md) wraps the same compact trainer
+for a new supervised S0 experiment: random wide initialization, seed 42,
+crop 160 and 10,000 supervised steps. A bounded B8/B32/B64 profile precedes
+locking one B32 or B64 for matched arms. This batch change is an explicitly
+authorized experimental factor, not an exact historical reproduction.
+Native validation uses a separately pinned batch of eight. Checkpoints are
+selected on VAL Macro4, with the earliest step retained on exact ties; authorized
+TEST evaluation occurs only after freezing that selection. Full resume and raw
+export weights are backed up with streamed remote checksum verification.
+
+[ACDC geometry validation](SERVER_ACDC_GEOMETRY.md) preserves the original cine
+affine and allows only the documented historical frame-header placeholder with
+exact voxel and pinned payload evidence. [Evaluation preparation](SERVER_EVALUATION_PREP.md)
+keeps reference manifests separate from TRAIN. The [joint data adapter](SERVER_JOINT_DATA.md)
+supports a separate ACDC4 + M&Ms4 budget and explicit 50/50 domain sampling.
+It does not permit an ACDC-L8 checkpoint to become the initialization of a claimed
+joint-L8 run. Missing historical B8 teacher/cache payloads continue to block KD
+and historical diagnostics without blocking supervised S0.

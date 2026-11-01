@@ -45,6 +45,18 @@
       "scalar_selector_default": "original",
       "scalar_selectors": ["original", "larger_tie", "cross_patient_utility", "same_batch_utility"],
       "transfer_utility_documentation": "docs/TRANSFER_UTILITY_RUNBOOK.md",
+      "server_supervised_runner": {
+        "entrypoint": "scripts/run_server_compact.py",
+        "trainer": "self_audit.compact_training.train_compact",
+        "documentation": "docs/SERVER_COMPACT_RUNBOOK.md",
+        "method": "supervised",
+        "teacher_required": false,
+        "steps": 10000,
+        "batch_policy": "profile 8/32/64; lock one 32 or 64 for matched arms",
+        "selection": "VAL Macro4, earliest checkpoint on exact tie; TEST only after best freeze",
+        "backup": "actual payload copy and remote streamed SHA256 verification; retain local on failure",
+        "historical_reproduction": false
+      },
       "patient_training_this_delivery": false
     }
   }

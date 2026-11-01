@@ -14,6 +14,14 @@ HISTORICAL_TRAIN_SHA = "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d9753968
 HISTORICAL_VAL_SHA = "cac4426393ca11959f56df2876869e825443916cdec02c6d95ec8da3fac0ca50"
 L8 = ["patient007", "patient010", "patient011", "patient024", "patient026", "patient041", "patient077", "patient099"]
 OLD_STAGING_SHA = "c4ffe94c921820f0bc3c67586f3ad64f5c6ec02fe2359146c1f2fa8c7b22029d"
+HISTORICAL_FRAME_PLACEHOLDER_AFFINE = (
+    (-1.0, 0.0, 0.0, 0.0),
+    (0.0, -1.0, 0.0, 0.0),
+    (0.0, 0.0, 1.0, 0.0),
+    (0.0, 0.0, 0.0, 1.0),
+)
+HISTORICAL_FRAME_PLACEHOLDER_SFORM_CODE = 2
+HISTORICAL_FRAME_PLACEHOLDER_QFORM_CODE = 0
 
 
 class BoundedRclone(Rclone):
@@ -109,25 +117,122 @@ def manifest_comparison(path, historical_path=None):
     raise FileNotFoundError("exact historical manifest is required to investigate changed bytes")
 
 
-def validate_prepared(raw, prepared, split, historical_val):
+def _affine_sha256(affine):
+    """Hash a 4x4 affine at NIfTI's stored little-endian float32 precision."""
+    import hashlib
+    import numpy as np
+
+    matrix = np.asarray(affine, dtype="<f4")
+    if matrix.shape != (4, 4) or not np.isfinite(matrix).all():
+        raise ValueError("NIfTI affine must be a finite 4x4 matrix")
+    return hashlib.sha256(np.ascontiguousarray(matrix).tobytes(order="C")).hexdigest()
+
+
+def _nifti_form_receipt(image):
+    """Preserve coded NIfTI forms separately from nibabel's selected affine."""
+    def form(name):
+        matrix, code = getattr(image.header, f"get_{name}")(coded=True)
+        return {"code": int(code), "affine": None if matrix is None else matrix.tolist()}
+
+    return {"sform": form("sform"), "qform": form("qform")}
+
+
+def _is_historical_frame_placeholder(frame_image, frame_affine, cine_image):
+    import numpy as np
+
+    expected = np.asarray(HISTORICAL_FRAME_PLACEHOLDER_AFFINE, dtype=np.float64)
+    frame_forms = _nifti_form_receipt(frame_image)
+    cine_forms = _nifti_form_receipt(cine_image)
+    sform = frame_forms["sform"]["affine"]
+    return (
+        np.array_equal(np.asarray(frame_affine, dtype=np.float64), expected)
+        and frame_forms["sform"]["code"] == HISTORICAL_FRAME_PLACEHOLDER_SFORM_CODE
+        and frame_forms["qform"]["code"] == HISTORICAL_FRAME_PLACEHOLDER_QFORM_CODE
+        and sform is not None
+        and np.array_equal(np.asarray(sform, dtype=np.float64), expected)
+        and cine_forms["sform"]["code"] == 0
+        and cine_forms["qform"]["code"] == 0
+    )
+
+
+def _historical_train_semantic_proof(comparison):
+    """Turn the exact-byte or verified path-only witness into an explicit proof."""
+    if comparison.get("exact_bytes") is True:
+        return {
+            "proven": True,
+            "method": "exact_pinned_historical_train_sha256",
+            "expected_sha256": comparison.get("expected_sha256"),
+            "actual_sha256": comparison.get("actual_sha256"),
+            "payload_hashes_unchanged": True,
+        }
+    witness = comparison.get("path_only_witness")
+    if (
+        isinstance(witness, dict)
+        and witness.get("historical_manifest_sha256") == HISTORICAL_TRAIN_SHA
+        and witness.get("payload_hashes_unchanged") is True
+        and witness.get("comparison") ==
+        "complete parsed manifest equality after stripping image/mask parent paths"
+    ):
+        return {
+            "proven": True,
+            "method": "path_only_historical_manifest_semantic_equality",
+            "expected_sha256": HISTORICAL_TRAIN_SHA,
+            "actual_sha256": comparison.get("actual_sha256"),
+            "historical_manifest_sha256": witness["historical_manifest_sha256"],
+            "payload_hashes_unchanged": True,
+            "comparison": witness["comparison"],
+        }
+    return {
+        "proven": False,
+        "method": "none",
+        "expected_sha256": comparison.get("expected_sha256", HISTORICAL_TRAIN_SHA),
+        "actual_sha256": comparison.get("actual_sha256"),
+        "payload_hashes_unchanged": False,
+    }
+
+
+def validate_prepared(raw, prepared, split, historical_val, *,
+                      allow_historical_placeholder_geometry=False):
+    """Validate prepared payloads and their raw NIfTI voxel/geometry lineage.
+
+    The compatibility flag is intentionally opt-in.  It accepts only the
+    recovered frame-file placeholder affine (sform=2, qform=0, diag(-1,-1,1,1))
+    when the raw frame array exactly equals its cine frame, the TRAIN manifest
+    has an exact historical semantic witness, and every pinned VAL identity
+    check passes.  The cine affine remains authoritative.
+    """
     import nibabel as nib
     import numpy as np
     raw, prepared = Path(raw), Path(prepared)
+    if type(allow_historical_placeholder_geometry) is not bool:
+        raise TypeError("allow_historical_placeholder_geometry must be bool")
     train = json.loads((prepared / "train.json").read_text())
     dev = json.loads((prepared / "development.json").read_text())
     assert sorted(x["id"] for x in train["labeled"]) == L8
     assert len(train["unlabeled"]) == 72 and all("masks" not in x for x in train["unlabeled"])
     assert set(x["id"] for x in train["labeled"] + train["unlabeled"]) == set(split["train"])
     assert set(x["id"] for x in dev["patients"]) == set(split["val"])
-    hist = {x["id"]: x for x in json.loads(Path(historical_val).read_text())["patients"]}
+    train_comparison = manifest_comparison(prepared / "train.json")
+    train_semantic_proof = _historical_train_semantic_proof(train_comparison)
+    historical_val = Path(historical_val)
+    historical_val_sha256 = sha256(historical_val)
+    historical_obj = json.loads(historical_val.read_text())
+    historical_rows = historical_obj["patients"]
+    hist = {x["id"]: x for x in historical_rows}
+    assert len(hist) == len(historical_rows) == 18
+    assert set(hist) == set(split["val"])
     assert sha256(historical_val) == HISTORICAL_VAL_SHA
     geometry, files, val_checks = [], [], []
-    native = dict(dev, geometry_provenance="raw_nifti_affine_and_exact_frame_cine_bridge")
+    native = dict(dev, geometry_provenance="raw_cine_affine_and_exact_frame_cine_voxel_bridge")
     native["patients"] = []
+    placeholder_frame_count = 0
+    geometry_limitations = []
     for rec in train["labeled"] + train["unlabeled"] + dev["patients"]:
         pid = rec["id"]
         cine = next((raw / pid).glob(pid + "_4d.nii*"))
         nii = nib.load(cine)
+        cine_affine = np.asarray(nii.affine, dtype=np.float64)
+        cine_forms = _nifti_form_receipt(nii)
         image = prepared / rec["image"]
         arr = np.load(image, mmap_mode="r", allow_pickle=False)
         assert arr.dtype == np.float32 and arr.shape == tuple(reversed(nii.shape))
@@ -135,6 +240,7 @@ def validate_prepared(raw, prepared, split, historical_val):
         assert sha256(image) == rec["image_sha256"]
         files.append({"path": str(image), "sha256": rec["image_sha256"], "bytes": image.stat().st_size})
         frame_checks = []
+        cine_voxels = np.asarray(nii.dataobj)
         for frame, m in rec.get("masks", {}).items():
             mask_path = prepared / m["path"]
             y = np.load(mask_path, mmap_mode="r", allow_pickle=False)
@@ -142,25 +248,111 @@ def validate_prepared(raw, prepared, split, historical_val):
             assert np.isin(y, [0, 1, 2, 3, 255]).all() and sha256(mask_path) == m["sha256"]
             original = next((raw / pid).glob(f"{pid}_frame{int(frame)+1:02d}.nii*"))
             fr = nib.load(original)
-            assert np.allclose(fr.affine, nii.affine, atol=1e-5, rtol=1e-5)
-            assert np.array_equal(np.asarray(fr.dataobj), np.asarray(nii.dataobj)[..., int(frame)])
+            frame_affine = np.asarray(fr.affine, dtype=np.float64)
+            frame_forms = _nifti_form_receipt(fr)
+            exact_array_bridge = bool(np.array_equal(np.asarray(fr.dataobj), cine_voxels[..., int(frame)]))
+            if not exact_array_bridge:
+                raise ValueError(f"{pid} frame {frame}: raw frame voxels differ from the selected cine frame")
+            affine_matches = bool(np.allclose(frame_affine, cine_affine, atol=1e-5, rtol=1e-5))
+            cine_codes_match_placeholder_signature = (
+                cine_forms["sform"]["code"] == 0 and cine_forms["qform"]["code"] == 0
+            )
+            placeholder_signature = _is_historical_frame_placeholder(fr, frame_affine, nii)
+            if not affine_matches:
+                if not allow_historical_placeholder_geometry:
+                    raise ValueError(f"{pid} frame {frame}: frame affine differs from cine affine; compatibility is opt-in")
+                if not placeholder_signature:
+                    raise ValueError(f"{pid} frame {frame}: affine differs outside the exact historical placeholder signature")
+                placeholder_frame_count += 1
+                geometry_limitations.append({"id": pid, "frame": int(frame)})
             files.append({"path": str(mask_path), "sha256": m["sha256"], "bytes": mask_path.stat().st_size})
-            frame_checks.append({"frame": int(frame), "labels": np.unique(y).tolist(), "bridge": "EXACT"})
-        geometry.append({"id": pid, "shape_tzyx": list(arr.shape), "affine": nii.affine.tolist(),
-                         "axes": ["T", "Z", "Y", "X"], "frames": frame_checks, "raw_sha256": sha256(cine)})
+            frame_checks.append({
+                "frame": int(frame),
+                "labels": np.unique(y).tolist(),
+                "frame_affine": frame_affine.tolist(),
+                "frame_affine_sha256": _affine_sha256(frame_affine),
+                "frame_forms": frame_forms,
+                "cine_affine": cine_affine.tolist(),
+                "cine_affine_sha256": _affine_sha256(cine_affine),
+                "cine_forms": cine_forms,
+                "affine_matches_within_1e-5": affine_matches,
+                "historical_placeholder_signature": placeholder_signature,
+                "cine_codes_match_historical_signature": cine_codes_match_placeholder_signature,
+                "exact_array_bridge": exact_array_bridge,
+                "bridge": "EXACT",
+                "bridge_method": "numpy.array_equal(frame.dataobj, cine.dataobj[..., frame_index])",
+                "world_coordinate_limitation": (
+                    "The original frame sidecar carries a placeholder affine; exact voxel equality proves array correspondence only, not independent frame-sidecar world-coordinate alignment. The cine affine is retained as authoritative."
+                    if placeholder_signature and not affine_matches else None
+                ),
+            })
+        raw_cine_sha256 = sha256(cine)
+        geometry.append({"id": pid, "shape_tzyx": list(arr.shape), "affine": cine_affine.tolist(),
+                         "affine_sha256": _affine_sha256(cine_affine),
+                         "forms": cine_forms,
+                         "axes": ["T", "Z", "Y", "X"], "frames": frame_checks,
+                         "raw_sha256": raw_cine_sha256})
         if pid in hist:
             h = hist[pid]
-            val_checks.append({"id": pid, "image_matches": rec["image_sha256"] == h["image_sha256"],
-                 "mask_hashes_match": {f: m["sha256"] for f, m in rec["masks"].items()} == {f: m["sha256"] for f, m in h["masks"].items()},
-                 "raw_matches": sha256(cine) == h["geometry_source_image"]["sha256"],
-                 "affine_matches": bool(np.allclose(nii.affine, h["affine"], atol=1e-5, rtol=1e-5))})
-            native["patients"].append(dict(rec, axes=["T", "Z", "Y", "X"], affine=nii.affine.tolist(),
-                spatial_units="mm", geometry_source_image={"path": str(cine), "sha256": sha256(cine)}))
+            image_hashes = {str(f): sha256(prepared / m["path"]) for f, m in rec["masks"].items()}
+            historical_mask_hashes = {str(f): m["sha256"] for f, m in h["masks"].items()}
+            current_mask_hashes = {str(f): m["sha256"] for f, m in rec["masks"].items()}
+            current_affine_sha256 = _affine_sha256(cine_affine)
+            historical_affine_sha256 = _affine_sha256(h["affine"])
+            affine_close = bool(np.allclose(cine_affine, h["affine"], atol=1e-5, rtol=1e-5))
+            affine_hash_matches = current_affine_sha256 == historical_affine_sha256
+            val_checks.append({
+                "id": pid,
+                "image_sha256": {"prepared": sha256(image), "historical": h["image_sha256"]},
+                "image_matches": sha256(image) == h["image_sha256"] == rec["image_sha256"],
+                "mask_sha256": {"prepared": image_hashes, "manifest": current_mask_hashes,
+                                "historical": historical_mask_hashes},
+                "mask_hashes_match": image_hashes == current_mask_hashes == historical_mask_hashes,
+                "raw_cine_sha256": {"actual": raw_cine_sha256,
+                                    "historical": h["geometry_source_image"]["sha256"]},
+                "raw_matches": raw_cine_sha256 == h["geometry_source_image"]["sha256"],
+                "affine_sha256": {"actual": current_affine_sha256,
+                                  "historical": historical_affine_sha256},
+                "affine_matches": affine_hash_matches and affine_close,
+                "affine_allclose_within_1e-5": affine_close,
+            })
+            native["patients"].append(dict(rec, axes=["T", "Z", "Y", "X"], affine=cine_affine.tolist(),
+                affine_sha256=current_affine_sha256, spatial_units="mm",
+                geometry_source_image={"path": str(cine), "sha256": raw_cine_sha256},
+                frame_geometry_bridge=frame_checks))
     assert len(files) == 98 + 52
+    assert len(val_checks) == 18
     assert all(all(x[k] for k in ("image_matches", "mask_hashes_match", "raw_matches", "affine_matches")) for x in val_checks)
+    if placeholder_frame_count:
+        if not train_semantic_proof["proven"]:
+            raise ValueError("historical frame placeholder compatibility requires an exact historical TRAIN semantic proof")
+        if len(val_checks) != 18 or not all(all(x[k] for k in
+                ("image_matches", "mask_hashes_match", "raw_matches", "affine_matches")) for x in val_checks):
+            raise ValueError("historical frame placeholder compatibility requires all pinned VAL hashes and affines to match")
+    geometry_compatibility = {
+        "opt_in": allow_historical_placeholder_geometry,
+        "mode": "historical_placeholder_with_exact_voxel_bridge" if placeholder_frame_count else "strict_cine_frame_affine_match",
+        "placeholder_frame_count": placeholder_frame_count,
+        "placeholder_affine": [list(row) for row in HISTORICAL_FRAME_PLACEHOLDER_AFFINE],
+        "placeholder_sform_code": HISTORICAL_FRAME_PLACEHOLDER_SFORM_CODE,
+        "placeholder_qform_code": HISTORICAL_FRAME_PLACEHOLDER_QFORM_CODE,
+        "historical_train_semantic_proof": train_semantic_proof,
+        "historical_val_manifest_sha256": historical_val_sha256,
+        "all_18_val_image_mask_raw_affine_hashes_match": len(val_checks) == 18 and all(
+            all(x[k] for k in ("image_matches", "mask_hashes_match", "raw_matches", "affine_matches"))
+            for x in val_checks),
+        "placeholder_world_coordinate_limitation": (
+            "The placeholder affine is not physical-space evidence. Exact frame-to-cine voxel equality establishes array identity only; no resampling or source rewrite is performed, and the cine affine is retained as authoritative."
+            if placeholder_frame_count else None
+        ),
+        "placeholder_frames": geometry_limitations,
+    }
+    native["geometry_compatibility"] = geometry_compatibility
     atomic_json(prepared / "val18_fresh_native.json", native)
     return {"files": files, "geometry": geometry, "historical_val_payload_comparison": val_checks,
-            "train_manifest_comparison": manifest_comparison(prepared / "train.json"),
+            "train_manifest_comparison": train_comparison,
+            "historical_train_semantic_proof": train_semantic_proof,
+            "geometry_compatibility": geometry_compatibility,
             "val_manifest_sha256": sha256(prepared / "val18_fresh_native.json"),
             "development_manifest_sha256": sha256(prepared / "development.json")}
 

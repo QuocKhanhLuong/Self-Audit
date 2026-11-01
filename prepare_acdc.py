@@ -39,6 +39,12 @@ def read_patient_split(path):
     return result
 
 
+def normalize_cine(raw_xyzt):
+    """Apply the existing image-only per-cine normalization and XYZT -> TZYX bridge."""
+    lo, hi = np.percentile(raw_xyzt, [.5, 99.5])
+    return np.clip((raw_xyzt-lo)/max(float(hi-lo), 1e-6), 0, 1).transpose(3, 2, 1, 0).astype(np.float32)
+
+
 def prepare(root, split_path, out, budget, seed, evaluation=False, image_cache=None):
     import nibabel as nib  # Optional preparation dependency; never silently installed.
     root, out = Path(root).resolve(), Path(out).resolve()
@@ -57,8 +63,7 @@ def prepare(root, split_path, out, budget, seed, evaluation=False, image_cache=N
         cine_path = one(folder.glob(f"{pid}_4d.nii*")); cine_hash = digest(cine_path)
         ci = nib.load(cine_path); raw = np.asarray(ci.dataobj)
         if raw.ndim != 4 or not np.isfinite(raw).all(): raise ValueError("invalid raw cine")
-        lo, hi = np.percentile(raw, [.5, 99.5])
-        arr = np.clip((raw-lo)/max(float(hi-lo), 1e-6), 0, 1).transpose(3, 2, 1, 0).astype(np.float32)
+        arr = normalize_cine(raw)
         if image_cache is None:
             ip = out / f"{pid}.npy"; np.save(ip, arr)
             image_ref = ip.name

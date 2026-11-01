@@ -80,14 +80,41 @@ class CompactTrainingData(TrainingData):
     def sample_indices(self, step: int, rng: np.random.Generator) -> Tuple[int, int, int]:
         """Return (li, ai, ui) indices for a training step.
 
-        For K=1 (single labeled patient):
-            li = 0
-            ai = 0 (reused audit patient, no duplicate fake patient)
-            ui = step % len(self.uids)
-        For K >= 2:
-            Preserves exact TrainingData behavior with disjoint li and ai.
+        ACDC-only manifests retain the historic compact sampler exactly.
+        Shared ACDC+MnM manifests alternate domains by outer step, then draw
+        each patient uniformly from that domain's labeled or unlabeled pool.
+        The audit patient is a different labeled patient in the same domain.
+
+        All stochastic patient choices use the caller-owned generator. Its
+        state is included in compact checkpoints, so replay after resume follows
+        the same domain/patient schedule.
         """
-        return super().sample_indices(step, rng)
+        if not self.is_shared:
+            return super().sample_indices(step, rng)
+
+        if type(step) is not int or step < 0:
+            raise ValueError("shared compact sampler requires a nonnegative integer step")
+        if self.domains != ["acdc", "mnm"]:
+            raise ValueError("shared compact sampler requires the canonical ['acdc', 'mnm'] domains")
+
+        # One supervised/audit/U transaction is domain-matched. Alternation
+        # gives exactly 50/50 exposure for any even prefix of outer steps.
+        domain = self.domains[step % 2]
+        labeled_indices = self.domain_indices["labeled"][domain]
+        unlabeled_indices = self.domain_indices["unlabeled"][domain]
+        if len(labeled_indices) < 2:
+            raise ValueError(f"shared compact sampling needs two labeled patients in {domain} for disjoint audit")
+        if not unlabeled_indices:
+            raise ValueError(f"shared compact sampling needs at least one unlabeled patient in {domain}")
+
+        li = labeled_indices[int(rng.integers(len(labeled_indices)))]
+        audit_candidates = [idx for idx in labeled_indices if idx != li]
+        ai = audit_candidates[int(rng.integers(len(audit_candidates)))]
+        ui = unlabeled_indices[int(rng.integers(len(unlabeled_indices)))]
+
+        if self.labeled[li]["id"] == self.labeled[ai]["id"]:
+            raise ValueError("audit patient must be disjoint from supervised patient")
+        return (li, ai, ui)
 
     def stream_whole_labeled_frames(
         self,
