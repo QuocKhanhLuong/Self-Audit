@@ -1,0 +1,168 @@
+✓ Initialized. View run at
+https://modal.com/apps/quockhanhluong/main/ap-nE9MPrESdwb0CnaSdeyrml
+✓ Created objects.
+├── ✓ Uploaded
+│   /Users/alvinluong/orca/workspaces/Self-Audit/modal-assets-staging-20261101/s
+│   cripts/modal_stage_assets.py
+├── ✓ Uploaded
+│   /Users/alvinluong/orca/workspaces/Self-Audit/modal-assets-staging-20261101/s
+│   elf_audit/asset_staging.py
+├── ✓ Created Function stage_assets.
+└── ✓ Created Function verify_assets.
+{
+  "status": "BLOCKED",
+  "missing": [
+    "teacher_weights",
+    "student_runtime",
+    "train_manifest",
+    "manifest_referenced_ACDC_TRAIN_VAL18_prepared_files"
+  ],
+  "error": null,
+  "result": {
+    "findings_recorded": true
+  },
+  "receipt": "/assets/receipts/STAGING.json"
+}
+{
+  "status": "BLOCKED",
+  "missing": [
+    "teacher_weights",
+    "student_runtime",
+    "train_manifest",
+    "manifest_referenced_ACDC_TRAIN_VAL18_prepared_files"
+  ],
+  "persistence_verified": true,
+  "verification": {
+    "container": "ta-01M6B4YEDWDZ2MP5VDAV308TTR",
+    "new_container": true,
+    "files_read_and_hashed": 17,
+    "failures": [],
+    "drive_secret_present": false
+  },
+  "receipt_sha256": "c4ffe94c921820f0bc3c67586f3ad64f5c6ec02fe2359146c1f2fa8c7b22029d",
+  "files": [
+    {
+      "bytes": 9673,
+      "kind": "metadata",
+      "path": "wide_plain_kd_export/MANIFEST.json",
+      "sha256": "197dd4367877c51bc21b91d172f25442549ef9a3d0e422d28118bb07308067de",
+      "source": "KhanhDrive:Self-Audit-v2-artifacts/compact_ACDC_L8_S42_selected_197dd436_20261029/selected_compact_student/MANIFEST.json"
+    },
+    {
+      "bytes": 7576,
+      "kind": "metadata",
+      "path": "receipts/drive/DELIVERY_RECEIPT.json",
+      "sha256": "fd93ac50dfaa9f915f3070c741d19851fdabcceee0b3d978751a494c86a28304",
+      "source": "KhanhDrive:Self-Audit-v2-artifacts/compact_ACDC_L8_S42_selected_197dd436_20261029/evidence/DELIVERY_RECEIPT.json"
+    },
+    {
+      "bytes": 14118,
+      "kind": "metadata",
+      "path": "receipts/drive/B52_ARCHIVE_MANIFEST.json",
+      "sha256": "63bf914a06a75c3a3e9bf543ca9e0abfad11cd0a95c75a7ae774fb700174ac88",
+      "source": "KhanhDrive:Self-Audit-v2-artifacts/Self-Audit-v2_L8-S42_C256-B52_final4_20261021T093324Z/ARCHIVE_MANIFEST.json"
+    },
+    {
+      "bytes": 129,
+      "kind": "runtime_source",
+      "path": "pinned_teacher_runtime/self_audit/__init__.py",
+      "sha256": "1ae542cceedefe1274a0ef07292460fffbb09e678bfc5198755caa9b51a32911",
+      "source": "https://raw.githubusercontent.com/QuocKhanhLuong/Self-Audit/0f54455b67bb11a72fbfe2a8ac6fae4073f3e9ca/self_audit/__init__.py"
+    },
+    {
+      "bytes": 11824,
+      "kind": "runtime_source",
+      "path": "pinned_teacher_runtime/self_audit/control.py",
+      "sha256": "be31bdabbd5389e1989b31c6e7a416e8cf6a3172f72ae67c6d8c0d15a91dbe29",
+      "source": "https://raw.githubusercontent.com/QuocKhanhLuong/Self-Audit/0f54455b67bb11a72fbfe2a8ac6fae4073f3e9ca/self_audit/control.py"
+    },
+    {
+      "bytes": 9307,
+      "kind": "runtime_source",
+      "path": "pinned_teacher_runtime/self_audit/data.py",
+      "sha256": "f6e53d46264fc170898a20ba42fe21f3dbd997e1d38e6a52de3e218e584b0260",
+      "source": "https://raw.githubusercontent.com/QuocKhanhLuong/Self-Audit/0f54455b67bb11a72fbfe2a8ac6fae4073f3e9ca/self_audit/data.py"
+    },
+    {
+      "bytes": 5433,
+      "kind": "runtime_source",
+      "path": "pinned_teacher_runtime/self_audit/decoder_control.py",
+      "sha256": "41ac096a5894503cbaf4e8ad8019d314dbacd205b1261cabbf0013ed151f5d1f",
+      "source": "https://raw.githubusercontent.com/QuocKhanhLuong/Self-Audit/0f54455b67bb11a72fbfe2a8ac6fae4073f3e9ca/self_audit/decoder_control.py"
+    },
+    {
+      "bytes": 20078,
+      "kind": "runtime_source",
+      "path": "pinned_teacher_runtime/self_audit/engine.py",
+      "sha256": "37aa4fd472b4dcd9de7e366063b73e3c6f35038636173baa2ea9a674097f8317",
+      "source": "https://raw.githubusercontent.com/QuocKhanhLuong/Self-Audit/0f54455b67bb11a72fbfe2a8ac6fae4073f3e9ca/self_audit/engine.py"
+    },
+    {
+      "bytes": 5599,
+      "kind": "runtime_source",
+      "path": "pinned_teacher_runtime/self_audit/evaluation.py",
+      "sha256": "abc805c1f94e31be948720882bbeba87fdeaed430bc2cbd219d50293d66c9898",
+      "source": "https://raw.githubusercontent.com/QuocKhanhLuong/Self-Audit/0f54455b67bb11a72fbfe2a8ac6fae4073f3e9ca/self_audit/evaluation.py"
+    },
+    {
+      "bytes": 1444,
+      "kind": "runtime_source",
+      "path": "pinned_teacher_runtime/self_audit/losses.py",
+      "sha256": "b3753b89447f3d83ef5cc40d89f288606104ef9e526cc338a1cd2f17cff93a73",
+      "source": "https://raw.githubusercontent.com/QuocKhanhLuong/Self-Audit/0f54455b67bb11a72fbfe2a8ac6fae4073f3e9ca/self_audit/losses.py"
+    },
+    {
+      "bytes": 26281,
+      "kind": "runtime_source",
+      "path": "pinned_teacher_runtime/self_audit/meta_window.py",
+      "sha256": "2182ac6fbbe64ec48c91541a8d0280ffec47b0df9b95fe5fe876ab8a05c8268d",
+      "source": "https://raw.githubusercontent.com/QuocKhanhLuong/Self-Audit/0f54455b67bb11a72fbfe2a8ac6fae4073f3e9ca/self_audit/meta_window.py"
+    },
+    {
+      "bytes": 8694,
+      "kind": "runtime_source",
+      "path": "pinned_teacher_runtime/self_audit/model.py",
+      "sha256": "80e3b11b46c11d4660aa13d99ecbf30640247c987f5425dcfe62aa1c1f90fc03",
+      "source": "https://raw.githubusercontent.com/QuocKhanhLuong/Self-Audit/0f54455b67bb11a72fbfe2a8ac6fae4073f3e9ca/self_audit/model.py"
+    },
+    {
+      "bytes": 13118,
+      "kind": "runtime_source",
+      "path": "pinned_teacher_runtime/self_audit/window.py",
+      "sha256": "8b661ce007ef692c4575c418b90e89b59b7217f21f098c7ab19863de2e04fa72",
+      "source": "https://raw.githubusercontent.com/QuocKhanhLuong/Self-Audit/0f54455b67bb11a72fbfe2a8ac6fae4073f3e9ca/self_audit/window.py"
+    },
+    {
+      "bytes": 1585,
+      "kind": "runtime_source",
+      "path": "pinned_teacher_runtime/train.py",
+      "sha256": "3d0cc4fa64bb1b6482bbe8dd1f82a7d7691ad25137d87f5dc43011aa0585abb5",
+      "source": "https://raw.githubusercontent.com/QuocKhanhLuong/Self-Audit/0f54455b67bb11a72fbfe2a8ac6fae4073f3e9ca/train.py"
+    },
+    {
+      "bytes": 9662432,
+      "kind": "weights",
+      "path": "wide_plain_kd_export/weights.pt",
+      "sha256": "32a35c1fc3b83d57d083de4ed17ab80bda6ba38a8ebc50133e5aede17ab00380",
+      "source": "KhanhDrive:Self-Audit-v2-artifacts/compact_ACDC_L8_S42_selected_197dd436_20261029/selected_compact_student/weights.pt"
+    },
+    {
+      "bytes": 3845,
+      "kind": "metadata",
+      "path": "b8_recovery/full/final/MANIFEST.json",
+      "sha256": "ae36d026ce26ca188627e6ea4699695e9eb99501312ce05d5324b81e44d3ddaa",
+      "source": "https://raw.githubusercontent.com/QuocKhanhLuong/Self-Audit/8dc9e7446be23e2b8533871c2a1e418b4a115da7/results/compact_acdc_l8_20261029/experiment_20261028/b8_recovery/full/final/MANIFEST.json"
+    },
+    {
+      "bytes": 24506,
+      "kind": "metadata",
+      "path": "manifests/val18_native.json",
+      "sha256": "cac4426393ca11959f56df2876869e825443916cdec02c6d95ec8da3fac0ca50",
+      "source": "https://raw.githubusercontent.com/QuocKhanhLuong/Self-Audit/8dc9e7446be23e2b8533871c2a1e418b4a115da7/results/compact_acdc_l8_20261029/experiment_20261028/val18_native.json"
+    }
+  ],
+  "error": null
+}
+Stopping app - local entrypoint completed.
+✓ App completed. View run at
+https://modal.com/apps/quockhanhluong/main/ap-nE9MPrESdwb0CnaSdeyrml

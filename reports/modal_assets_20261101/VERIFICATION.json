@@ -1,0 +1,124 @@
+{
+  "status": "BLOCKED",
+  "implementation": "IMPLEMENTED",
+  "cpu_staging": "EXECUTED",
+  "volume_persistence": "VERIFIED",
+  "gpu": "NOT_ALLOCATED",
+  "dataset_payload_transfer": "NOT_STARTED",
+  "source_base_commit": "8dc9e7446be23e2b8533871c2a1e418b4a115da7",
+  "branch": "QuocKhanhLuong/modal-assets-staging-20261101",
+  "tested_source_sha256": {
+    "self_audit/asset_staging.py": "345275e0bb7332933c9bfa3e6b379eab388ec10ee4ffd620e96e95d90e889cb5",
+    "scripts/modal_stage_assets.py": "e46da5e2164772cf9e4827b6669db2ad580200d13b89560b816420afeb33c0b4",
+    "tests/test_asset_staging.py": "15bfb9816535fecb3acd876b85a8249c35168c0a89296d0bf996953fbd4684f7"
+  },
+  "created_utc": "2026-11-01T08:57:47.805877+00:00",
+  "environment": {
+    "conda_env": "selfaudit-modal",
+    "python": "3.12.16",
+    "modal": "1.6.3",
+    "torch": "2.15.0",
+    "numpy": "2.5.4",
+    "pytest": "9.2.0"
+  },
+  "remote_image": {
+    "base": "debian_slim",
+    "python": "3.11",
+    "apt_install": [
+      "rclone"
+    ],
+    "gpu": null,
+    "cpu": 1,
+    "memory_mib": 1024
+  },
+  "modal_final_app_url": "https://modal.com/apps/quockhanhluong/main/ap-nE9MPrESdwb0CnaSdeyrml",
+  "volume": "selfaudit-assets",
+  "mount": "/assets",
+  "receipt_path": "/assets/receipts/STAGING.json",
+  "receipt_sha256": "c4ffe94c921820f0bc3c67586f3ad64f5c6ec02fe2359146c1f2fa8c7b22029d",
+  "stage_container": "ta-01M6B4YAYTM9JDDG5AXWS83DWR",
+  "verification": {
+    "container": "ta-01M6B4YEDWDZ2MP5VDAV308TTR",
+    "drive_secret_present": false,
+    "failures": [],
+    "files_read_and_hashed": 17,
+    "new_container": true
+  },
+  "registered_files": 17,
+  "registered_bytes": 9825642,
+  "assets": {
+    "student_manifest": {
+      "bytes": 9673,
+      "kind": "metadata",
+      "path": "wide_plain_kd_export/MANIFEST.json",
+      "sha256": "197dd4367877c51bc21b91d172f25442549ef9a3d0e422d28118bb07308067de",
+      "source": "KhanhDrive:Self-Audit-v2-artifacts/compact_ACDC_L8_S42_selected_197dd436_20261029/selected_compact_student/MANIFEST.json"
+    },
+    "student_weights": {
+      "bytes": 9662432,
+      "kind": "weights",
+      "path": "wide_plain_kd_export/weights.pt",
+      "sha256": "32a35c1fc3b83d57d083de4ed17ab80bda6ba38a8ebc50133e5aede17ab00380",
+      "source": "KhanhDrive:Self-Audit-v2-artifacts/compact_ACDC_L8_S42_selected_197dd436_20261029/selected_compact_student/weights.pt"
+    },
+    "teacher_manifest": {
+      "bytes": 3845,
+      "kind": "metadata",
+      "path": "b8_recovery/full/final/MANIFEST.json",
+      "sha256": "ae36d026ce26ca188627e6ea4699695e9eb99501312ce05d5324b81e44d3ddaa",
+      "source": "https://raw.githubusercontent.com/QuocKhanhLuong/Self-Audit/8dc9e7446be23e2b8533871c2a1e418b4a115da7/results/compact_acdc_l8_20261029/experiment_20261028/b8_recovery/full/final/MANIFEST.json"
+    },
+    "teacher_runtime": {
+      "git_commit": "0f54455b67bb11a72fbfe2a8ac6fae4073f3e9ca",
+      "path": "pinned_teacher_runtime",
+      "sha256": "3c7fa85f00d54a6e087af3cd6c7045351fb72d532f1069bf09d95f9cd72359b7"
+    },
+    "val_manifest": {
+      "bytes": 24506,
+      "kind": "metadata",
+      "path": "manifests/val18_native.json",
+      "sha256": "cac4426393ca11959f56df2876869e825443916cdec02c6d95ec8da3fac0ca50",
+      "source": "https://raw.githubusercontent.com/QuocKhanhLuong/Self-Audit/8dc9e7446be23e2b8533871c2a1e418b4a115da7/results/compact_acdc_l8_20261029/experiment_20261028/val18_native.json"
+    }
+  },
+  "missing": [
+    "teacher_weights",
+    "student_runtime",
+    "train_manifest",
+    "manifest_referenced_ACDC_TRAIN_VAL18_prepared_files"
+  ],
+  "source_findings_file": "SOURCE_FINDINGS.json",
+  "credential_handling": {
+    "credential_file_mode": "0o600",
+    "credential_file_outside_volume": true,
+    "credential_file_removed": true
+  },
+  "tests": {
+    "focused": {
+      "passed": 19,
+      "seconds": 0.91
+    },
+    "full_suite": {
+      "passed": 1064,
+      "warnings": 2,
+      "seconds": 153.19
+    },
+    "check_repo": "PASS"
+  },
+  "logs_sha256": {
+    "pytest.log": "f5e81a26807715d19b788fdd5ff71109b8bfc55c277d4f7470c1cad19545e3ef",
+    "check_repo.log": "f9317b13e55fd8916cf0f91882298e60bc9274551929baa2de5c15e80fd35b83",
+    "focused-tests.log": "fd2892acebec8a567365d5648e74cc98d56f9b112a292d1d2517d893de31487e",
+    "modal-final.log": "72ec1aed1a64fa5103f704e9e147c97715d45da6ae08a1b82a25d9014de7d6a7"
+  },
+  "execution_notes": [
+    "Initial rclone listing failed; retry succeeded. Raw stderr and config/token contents were never printed.",
+    "Initial hostname-based container comparison was insufficient because Modal hostnames match; corrected to MODAL_TASK_ID and re-executed with distinct container IDs.",
+    "A mistyped git-metadata action was BLOCKED; corrected git_metadata execution copied and verified original bytes.",
+    "Fresh selfaudit-modal test environment initially lacked Pillow and matplotlib. Dependencies were installed; final full suite passed in the requested conda environment.",
+    "Only small metadata receipts were copied from Modal back to Mac. Weights and dataset payloads were never transferred through Mac.",
+    "No trainer code modified, active jobs changed, Drive files deleted, datasets downloaded or A100 function launched."
+  ],
+  "raw_modal_log_sha256": "58e59b3a1cd6dbbf2bec1c244ca69d41255c1e8d1e1f8b668906a751b3215607",
+  "log_normalization": "modal-final.log: trailing whitespace removed only"
+}

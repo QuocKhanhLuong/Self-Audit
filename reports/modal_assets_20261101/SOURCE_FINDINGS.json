@@ -1,0 +1,51 @@
+{
+  "scope": "Scoped metadata inventories only; not an exhaustive whole-Drive search.",
+  "teacher_payload": {
+    "status": "NOT_FOUND_IN_INSPECTED_BACKUPS",
+    "required_sha256": "0ae593ecb6b6f9dcb88d0a41d4a77d7b3b3a3edd87396624c3648afb1281f1b6",
+    "historical_server_path": "/workspace/compact-acdc-l8/20261028/b8_recovery/full/final/weights.pt",
+    "volume_target": "/assets/b8_recovery/full/final/weights.pt",
+    "note": "Selected compact backup explicitly excludes teacher. B52 and B8 retraining backups are different identities; not substituted."
+  },
+  "student_runtime": {
+    "status": "MISSING_EXACT_DIRTY_SOURCE_CLOSURE",
+    "required_sha256": "bbfbdab02cf7703904121f39720adcb1dc358b6d76b60fbbcb4366fa30244b3c",
+    "historical_server_path": "/workspace/Self-Audit-compact/{train.py,self_audit/}",
+    "volume_target": "/assets/pinned_compact_runtime",
+    "git_commit_checked": "6a9fa189072ccbe2d41edc8855a79108dd6c1bce",
+    "clean_git_closure": "38d22cdc272c8cec51361535f39b5cf5e1ef4970a9d19fe8a9197c35db1093e8",
+    "note": "Delivery receipt records uncommitted execution-source modifications; clean Git revision is not a substitute."
+  },
+  "train_manifest": {
+    "status": "MISSING_ORIGINAL_BYTES",
+    "required_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+    "historical_server_path": "/workspace/Self-Audit/data/prepared/ACDC_L8_S42/train.json",
+    "volume_target": "/assets/manifests/train.json",
+    "tracked_repository_json_files_checked": 1030,
+    "exact_matches": 0
+  },
+  "ACDC": {
+    "status": "RAW_FOUND_PREPARED_NOT_STAGED",
+    "observed_source": "Dataset/ACDC/training",
+    "listed_raw_training_files": 701,
+    "listed_raw_training_bytes": 4893645924,
+    "prepared_npy_files_in_listing": 0,
+    "raw_payloads_downloaded": 0,
+    "preparation_executed": false,
+    "reason": "Stop before large transfer while exact teacher/compact runtime/TRAIN manifest prerequisites are unresolved. Raw NIfTI is not prepared data. Do not reconstruct manifest bytes by guessing."
+  },
+  "runtime_dependencies": {
+    "status": "NOT_STAGED_NOT_RUNTIME_VERIFIED",
+    "dino_source_commit": "6876159a11b4df116f30f667f8c9888617df0751",
+    "pretrained_weights_sha256": "21b726bb286e037f00a23fb4699fa9bda9c75b6a615bd57ce3013cec1b528d54",
+    "note": "Teacher Python source closure is verified; original historical loader also refers to DINO source/pretrained assets. No model load attempted."
+  },
+  "excluded": {
+    "M&Ms_payloads_downloaded": 0,
+    "TEST50_payloads_downloaded": 0,
+    "GPU_allocated": false,
+    "trainer_modified": false,
+    "zip_deleted_from_Drive": false
+  },
+  "path_policy": "Preserve manifest bytes. Future container aliases must resolve historical absolute paths to matching /assets files; no JSON rewriting."
+}
