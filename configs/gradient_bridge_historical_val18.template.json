@@ -1,0 +1,67 @@
+{
+  "schema": "self_audit.gradient_bridge.runtime.v1",
+  "profile": "historical",
+  "synthetic_fixture": false,
+  "device": "cuda",
+  "threads": 2,
+  "batch_size": 2,
+  "normalization": "prepared",
+  "teacher": {
+    "path": "../assets/b8_recovery/full/final",
+    "manifest_sha256": "ae36d026ce26ca188627e6ea4699695e9eb99501312ce05d5324b81e44d3ddaa",
+    "payload_sha256": "0ae593ecb6b6f9dcb88d0a41d4a77d7b3b3a3edd87396624c3648afb1281f1b6",
+    "runtime_root": "../assets/pinned_teacher_runtime",
+    "runtime_source_sha256": "3c7fa85f00d54a6e087af3cd6c7045351fb72d532f1069bf09d95f9cd72359b7"
+  },
+  "student": {
+    "path": "../assets/wide_plain_kd_export",
+    "manifest_sha256": "197dd4367877c51bc21b91d172f25442549ef9a3d0e422d28118bb07308067de",
+    "payload_sha256": "32a35c1fc3b83d57d083de4ed17ab80bda6ba38a8ebc50133e5aede17ab00380",
+    "runtime_root": "../assets/pinned_compact_runtime",
+    "runtime_source_sha256": "bbfbdab02cf7703904121f39720adcb1dc358b6d76b60fbbcb4366fa30244b3c"
+  },
+  "train_manifest": {
+    "path": "../assets/train.json",
+    "sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4"
+  },
+  "val_manifest": {
+    "path": "../assets/val18_native.json",
+    "sha256": "cac4426393ca11959f56df2876869e825443916cdec02c6d95ec8da3fac0ca50"
+  },
+  "parity": {"logit_atol": 0.000001, "logit_rtol": 0.00001},
+  "fit_p": {
+    "seed": 42,
+    "max_source_ids": 64,
+    "max_train_patients": 8,
+    "max_pixels": 32768,
+    "ridge": 0.0001,
+    "fit_loss": "patient_balanced_pre_refine0_feature_mse",
+    "alignment_mode": "bilinear_align_corners_false_then_1x1_affine",
+    "output_file": "alignment.json"
+  },
+  "kd": {
+    "temperature": 1.0,
+    "coefficient": 1.0,
+    "confidence": 0.7,
+    "class_weights": null,
+    "denominator": "valid_pixel_count"
+  },
+  "directions": {
+    "rho_primary": null,
+    "rho_sensitivity": [],
+    "norm_epsilon": null,
+    "shuffle_seed": 42
+  },
+  "gate": {
+    "schema": "self_audit.gradient_bridge_gate.v1",
+    "minimum_fg_absolute_delta": null,
+    "bootstrap": {"n_resamples": null, "seed": null},
+    "confidence_rule": {
+      "method": "paired_percentile",
+      "level": null,
+      "minimum_defined_fraction": null,
+      "acceptance": "lower_bound_strictly_above_minimum"
+    },
+    "loo_rule": {"method": "all_deltas_at_least_minimum", "require_all_defined": true}
+  }
+}

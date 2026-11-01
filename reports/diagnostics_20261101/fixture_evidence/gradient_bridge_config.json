@@ -1,0 +1,78 @@
+{
+  "batch_size": 2,
+  "device": "cpu",
+  "directions": {
+    "norm_epsilon": 1e-08,
+    "rho_primary": 0.1,
+    "rho_sensitivity": [
+      0.1
+    ],
+    "shuffle_seed": 43
+  },
+  "fit_p": {
+    "alignment_mode": "bilinear_align_corners_false_then_1x1_affine",
+    "fit_loss": "patient_balanced_pre_refine0_feature_mse",
+    "max_pixels": 2048,
+    "max_source_ids": 2,
+    "max_train_patients": 2,
+    "output_file": "P_ALIGNMENT.json",
+    "ridge": 1e-06,
+    "seed": 41
+  },
+  "gate": {
+    "bootstrap": {
+      "n_resamples": 20,
+      "seed": 47
+    },
+    "confidence_rule": {
+      "acceptance": "lower_bound_strictly_above_minimum",
+      "level": 0.95,
+      "method": "paired_percentile",
+      "minimum_defined_fraction": 1.0
+    },
+    "loo_rule": {
+      "method": "all_deltas_at_least_minimum",
+      "require_all_defined": true
+    },
+    "minimum_fg_absolute_delta": 0.0,
+    "schema": "self_audit.gradient_bridge_gate.v1"
+  },
+  "kd": {
+    "class_weights": null,
+    "coefficient": 1.0,
+    "confidence": 0.0,
+    "denominator": "valid_pixel_count",
+    "temperature": 1.0
+  },
+  "normalization": "prepared",
+  "parity": {
+    "logit_atol": 1e-06,
+    "logit_rtol": 1e-05
+  },
+  "profile": "fixture",
+  "schema": "self_audit.gradient_bridge.runtime.v1",
+  "student": {
+    "manifest_sha256": "3ed4a3aaadf131995ba73ad43c5de09882092cc1cef6dd7a8f10427d9ba8fb79",
+    "path": "/private/tmp/selfaudit-diagnostics-root-smoke-20261101-r3_fixture_inputs/student",
+    "payload_sha256": "434cab478554db1564f254b41046b88501128d51dce2dc1b50e4985c416b23f4",
+    "runtime_root": "/Users/alvinluong/orca/workspaces/Self-Audit/context-gradient-diagnostics-20261101",
+    "runtime_source_sha256": "15d48a3758edc84ca3087e4a37d90781d68348f88d2417447cef3963bc0edd80"
+  },
+  "synthetic_fixture": true,
+  "teacher": {
+    "manifest_sha256": "a5a59e3d7af88508d993cf1cbb36dd98aa7ae894977ed7b7ea71a43cbcd7e599",
+    "path": "/private/tmp/selfaudit-diagnostics-root-smoke-20261101-r3_fixture_inputs/teacher",
+    "payload_sha256": "6abede8d9a037331e4447ff4da454269e6354d6b477dc334627ef6740576f29d",
+    "runtime_root": "/Users/alvinluong/orca/workspaces/Self-Audit/context-gradient-diagnostics-20261101",
+    "runtime_source_sha256": "15d48a3758edc84ca3087e4a37d90781d68348f88d2417447cef3963bc0edd80"
+  },
+  "threads": 1,
+  "train_manifest": {
+    "path": "/private/tmp/selfaudit-diagnostics-root-smoke-20261101-r3_fixture_inputs/train/train.json",
+    "sha256": "628d8d2d961690be7390872065f09c2088919ed4e41a5f3f796c6e23df8af90c"
+  },
+  "val_manifest": {
+    "path": "/private/tmp/selfaudit-diagnostics-root-smoke-20261101-r3_fixture_inputs/development/development.json",
+    "sha256": "2c0fbfa913a6181ca4c43044179276a2fa422bd8ee2e4ce19df10507b8287666"
+  }
+}

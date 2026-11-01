@@ -1,0 +1,19 @@
+{
+  "schema": "self_audit.gradient_bridge_gate.v1",
+  "minimum_fg_absolute_delta": null,
+  "bootstrap": {
+    "n_resamples": null,
+    "seed": null
+  },
+  "confidence_rule": {
+    "method": "paired_percentile",
+    "level": null,
+    "minimum_defined_fraction": null,
+    "acceptance": "lower_bound_strictly_above_minimum"
+  },
+  "loo_rule": {
+    "method": "all_deltas_at_least_minimum",
+    "require_all_defined": true
+  },
+  "_template_note": "Required null fields must be selected and locked before VAL access. Deltas are absolute Dice units: 0.01 is one percentage point. This template is not an executable scientific decision rule until completed."
+}

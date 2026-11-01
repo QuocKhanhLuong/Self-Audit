@@ -12,6 +12,7 @@ from self_audit.context_metrics import (
     analyze_frame,
     frame_csv_rows,
     frame_metric_csv_rows,
+    patient_class_common_failure_csv_rows,
     summary_csv_rows,
     validate_frame_record,
 )
@@ -183,6 +184,31 @@ def test_transition_patient_macro_and_pooled_rates_have_distinct_weighting():
     pooled = summary["pooled"]["all"]["comparisons"]["1"]["foreground"]["RV"]["rates"]
     assert macro["teacher_only_fix_per_common_failure"] == {"mean": 0.5, "defined_patients": 2}
     assert pooled["teacher_only_fix_per_common_failure"] == 0.1
+
+
+def test_patient_class_common_failure_table_keeps_edge_interior_rescue_harm_and_fp():
+    gt = np.tile(np.asarray([[[1, 0]]], dtype=np.uint8), (3, 1, 1))
+    baseline = np.zeros_like(gt)
+    teacher_target = gt.copy()
+    teacher_target[:, 0, 1] = 1  # One new FP per slice, reported separately from rescue.
+    student_target = baseline.copy()
+    record = analyze_frame(
+        "patient-a", "ED", gt,
+        predictions(baseline, teacher_target, baseline),
+        predictions(baseline, student_target, baseline),
+    )
+    summary = aggregate_records([record], leave_one_out=False)
+    rows = patient_class_common_failure_csv_rows(summary)
+    edge = next(row for row in rows if row["stratum"] == "edge" and row["lambda"] == 1.0 and row["class_name"] == "RV")
+    interior = next(row for row in rows if row["stratum"] == "interior" and row["lambda"] == 1.0 and row["class_name"] == "RV")
+    assert edge["patient_id"] == "patient-a"
+    assert (edge["valid_voxels"], edge["gt_count"], edge["common_failure"]) == (4, 2, 2)
+    assert (edge["teacher_only_fix"], edge["student_only_fix"], edge["both_fix"], edge["neither_fix"]) == (2, 0, 0, 0)
+    assert edge["teacher_rescue"] == 2 and edge["teacher_harm"] == 0
+    assert edge["teacher_fp_introduced"] == 2 and edge["teacher_fp_removed"] == 0
+    assert edge["teacher_only_fix_per_common_failure"] == 1.0
+    assert (interior["valid_voxels"], interior["gt_count"], interior["common_failure"]) == (2, 1, 1)
+    assert interior["teacher_only_fix"] == 1 and interior["teacher_fp_introduced"] == 1
 
 
 def test_class_absent_frames_are_omitted_from_patient_dice_but_retained_for_fp():

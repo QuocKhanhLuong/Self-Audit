@@ -27,6 +27,7 @@ PROTOCOL_FILES = (
     "scripts/context_prediction_worker.py",
     "scripts/run_context_diagnostic.py",
     "self_audit/context_metrics.py",
+    "self_audit/diagnostic_protocol.py",
 )
 
 
@@ -180,8 +181,11 @@ def _validate_config(config: Mapping[str, Any]) -> dict[str, Any]:
     if not isinstance(config, Mapping):
         raise ValueError("config must be a mapping")
     required = {"schema", "lambdas", "device", "threads", "parity", "val_manifest", "teacher", "student"}
-    if set(config) != required:
-        raise ValueError(f"config keys must be exactly {sorted(required)}")
+    allowed = required | {"synthetic_fixture"}
+    if set(config) not in (required, allowed):
+        raise ValueError(f"config keys must be exactly {sorted(required)} with optional synthetic_fixture")
+    if "synthetic_fixture" in config and type(config["synthetic_fixture"]) is not bool:
+        raise ValueError("synthetic_fixture must be a boolean when provided")
     if config["schema"] != SCHEMA:
         raise ValueError(f"unsupported config schema: {config.get('schema')!r}")
     if config["lambdas"] != [0, 0.5, 1] and config["lambdas"] != [0.0, 0.5, 1.0]:
@@ -461,9 +465,12 @@ def run_worker(
     role: str,
     output: str | Path,
     expected_protocol_sha256: str | None = None,
+    stage: str = "A",
 ) -> dict[str, Any]:
-    """Run one pinned teacher or student diagnostic process and freeze masks."""
+    """Run one pinned teacher or student image-only prediction process."""
     config = _validate_config(config)
+    if stage != "A":
+        raise ValueError("the context prediction worker supports diagnostic stage A only")
     if role not in ROLES:
         raise ValueError("role must be teacher or student")
     output = Path(output).resolve()
@@ -509,6 +516,7 @@ def run_worker(
     }
     receipt = {
         "schema": "self_audit.context_diagnostic.predictions.v1",
+        "stage": stage,
         "role": role,
         "config_schema": SCHEMA,
         "val_manifest_sha256": _require_sha(config["val_manifest"]["sha256"], "val_manifest.sha256"),
@@ -541,12 +549,19 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", required=True)
     parser.add_argument("--config-sha256", required=True)
+    parser.add_argument("--stage", choices=("A",), required=True)
     parser.add_argument("--role", choices=sorted(ROLES), required=True)
     parser.add_argument("--out", required=True)
     parser.add_argument("--protocol-sha256")
     args = parser.parse_args(argv)
     config = _read_config(Path(args.config).resolve(), args.config_sha256)
-    receipt = run_worker(config, args.role, args.out, expected_protocol_sha256=args.protocol_sha256)
+    receipt = run_worker(
+        config,
+        args.role,
+        args.out,
+        expected_protocol_sha256=args.protocol_sha256,
+        stage=args.stage,
+    )
     print(json.dumps({"role": receipt["role"], "coverage": receipt["coverage"], "parity": receipt["parity"]}, sort_keys=True))
     return 0
 

@@ -705,6 +705,58 @@ def summary_csv_rows(summary: Mapping[str, Any]) -> list[dict[str, Any]]:
     return rows
 
 
+def patient_class_common_failure_csv_rows(summary: Mapping[str, Any]) -> list[dict[str, Any]]:
+    """Return patient/class rescue, harm and FP counts by edge/interior stratum.
+
+    Counts are pooled over frames within each patient.  The four common-failure
+    cells retain their explicit denominator, and the broader teacher-rescue /
+    student-wrong opportunity remains a separate supplemental quantity.
+    """
+    rows: list[dict[str, Any]] = []
+    patients = summary.get("patients")
+    if not isinstance(patients, Mapping):
+        raise ValueError("summary must contain patient records")
+    for patient_id, patient in sorted(patients.items()):
+        strata = patient.get("strata")
+        if not isinstance(strata, Mapping):
+            raise ValueError(f"patient {patient_id!r} has no stratum summaries")
+        for stratum in STRATA:
+            if stratum not in strata:
+                raise ValueError(f"patient {patient_id!r} is missing stratum {stratum!r}")
+            for lam in TARGET_LAMBDAS:
+                comparison = strata[stratum]["comparisons"][lam]
+                for name in FOREGROUND_CLASS_NAMES:
+                    transition = comparison["foreground"][name]
+                    counts = transition["counts"]
+                    rates = transition["rates"]
+                    row: dict[str, Any] = {
+                        "patient_id": patient_id,
+                        "stratum": stratum,
+                        "lambda": float(lam),
+                        "class_id": CLASS_NAMES.index(name),
+                        "class_name": name,
+                        "reference_present": transition["reference_present"],
+                        "valid_voxels": counts["valid_voxels"],
+                        "gt_count": counts["gt_count"],
+                        "common_failure": counts["common_failure"],
+                    }
+                    for cell in CELLS:
+                        row[cell] = counts[cell]
+                    for model in MODELS:
+                        for metric in ("rescue", "harm", "baseline_fp", "fp_introduced", "fp_removed"):
+                            key = f"{model}_{metric}"
+                            row[key] = counts[key]
+                    for metric in (
+                        "supplemental_teacher_rescue_student_wrong",
+                        "supplemental_common_failure_teacher_only",
+                        "supplemental_student_regression",
+                    ):
+                        row[metric] = counts[metric]
+                        row.update(rates)
+                    rows.append(row)
+    return rows
+
+
 class ContextMetricsAccumulator:
     """Convenience wrapper retaining only small, JSON-ready frame summaries."""
 

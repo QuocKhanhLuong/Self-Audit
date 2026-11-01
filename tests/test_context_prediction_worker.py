@@ -121,6 +121,7 @@ def test_no_ground_truth_read_and_frozen_coverage_hashes(tmp_path, monkeypatch):
         assert record["image_sha256"] == config["val_manifest"]["sha256"][:0] + json.loads(Path(config["val_manifest"]["path"]).read_text())["patients"][0]["image_sha256"]
     saved = json.loads((out / "PREDICTIONS_FROZEN.json").read_text())
     assert saved["role"] == "student"
+    assert saved["stage"] == "A"
     assert saved["parity"]["mismatches"] == 0
     assert saved["ground_truth_opened_before_freeze"] is False
     assert saved["protocol_sha256"] == worker.protocol_sha256(saved["protocol"])
@@ -146,6 +147,22 @@ def test_protocol_hash_mismatch_rejects_before_model_load(tmp_path, monkeypatch)
     monkeypatch.setattr(worker, "_load_runtime_model", lambda *args: (_ToyModel(), {"synthetic": True}))
     receipt = worker.run_worker(config, "teacher", tmp_path / "accepted", expected_protocol_sha256=expected)
     assert receipt["protocol_sha256"] == expected
+
+
+def test_worker_rejects_non_context_stage_before_model_load(tmp_path, monkeypatch):
+    image = np.zeros((1, 2, 2, 2), dtype=np.float32)
+    config = _fake_config(tmp_path, image, {"0": {"path": "unopened_gt.npy", "sha256": "3" * 64}})
+    called = {"value": False}
+
+    def unexpected_loader(*args):
+        called["value"] = True
+        raise AssertionError("model loader must not run for another diagnostic stage")
+
+    monkeypatch.setattr(worker, "_load_runtime_model", unexpected_loader)
+    with pytest.raises(ValueError, match="stage A only"):
+        worker.run_worker(config, "teacher", tmp_path / "out", stage="B")
+    assert called["value"] is False
+    assert not (tmp_path / "out").exists()
 
 
 def test_patient_id_path_traversal_rejected(tmp_path, monkeypatch):

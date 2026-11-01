@@ -20,6 +20,15 @@
   "training_input_policy": "random_crop_256_image_geometry_only; edge_pad; exclude_padding; no_resize",
   "training_batch_size": 52,
   "evaluation_input_policy": "full_native_cine_no_training_crop",
+  "diagnostics": {
+    "documentation": "docs/DIAGNOSTICS_RUNBOOK.md",
+    "context_entrypoint": "scripts/run_context_diagnostic.py",
+    "gradient_bridge_entrypoint": "scripts/run_gradient_bridge_diagnostic.py",
+    "training_pipeline_unchanged": true,
+    "patient_experiments_this_delivery": false,
+    "prediction_policy": "image_only; freeze both diagnostics before GT scoring",
+    "gate_policy": "D2 must improve native foreground Dice over both D0 and D1 under prelocked criteria; never launches R"
+  },
   "opt_in_modes": {
     "compact": {
       "schema": "self_audit.compact.v1",

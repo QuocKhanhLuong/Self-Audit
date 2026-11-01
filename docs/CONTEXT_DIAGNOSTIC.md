@@ -71,33 +71,69 @@ whose import path selects its pinned historical runtime. The teacher retains the
 strict checkpoint loader; compact retains its export/model-file hash check.
 Required third-party backbone source and paths stored in the teacher checkpoint
 must also exist; an asset-only preflight does not prove successful model loading.
-Pin config bytes with SHA-256 after resolving paths/device. Relative paths are
-relative to the repository working directory, not the config's directory.
-Before inference, the parent also freezes `PROTOCOL.json`: hashes of the worker,
-orchestrator and scorer plus the current Python/PyTorch/NumPy versions, executable,
-device properties and numerical settings. Both workers must match this digest,
-and scoring verifies it again. This records and locks the diagnostic runtime; it
-does not claim to reconstruct the historical hardware/software environment.
+The accepted historical profile pins raw-student teacher payload
+`0ae593ecb6b6f9dcb88d0a41d4a77d7b3b3a3edd87396624c3648afb1281f1b6` and wide
+plain-KD student payload
+`32a35c1fc3b83d57d083de4ed17ab80bda6ba38a8ebc50133e5aede17ab00380`; reproduced
+B8 and EMA states are rejected. Pin config bytes with SHA-256 after resolving
+paths/device. Relative paths are relative to the repository working directory,
+not the config's directory.
+
+Execution is append-once and split into explicit stages. `preflight` checks
+metadata, hashes weights/manifests/images and checks that declared mask paths
+exist; it does not hash or load mask bytes. `lock` calls the shared round
+protocol and writes `protocol-A.lock.json`, binding the config, runtime snapshot,
+image/model assets and code before inference. `predict` runs the image-only
+workers, verifies complete patient/frame/lambda coverage and parity, then writes
+`predictions-A.frozen.json` for every shard and worker receipt. These calls must
+use one new `--round-dir`:
 
 ```bash
-.venv/bin/python scripts/run_context_diagnostic.py \
+python scripts/run_context_diagnostic.py preflight \
   --config configs/context_diagnostic_historical_val18.json \
-  --config-sha256 <actual-config-sha256> \
-  --preflight-only --out <new-preflight.json>
+  --config-sha256 <actual-config-sha256> --round-dir <new-round>
+python scripts/run_context_diagnostic.py lock --stage A \
+  --config configs/context_diagnostic_historical_val18.json \
+  --config-sha256 <actual-config-sha256> --round-dir <same-round>
+python scripts/run_context_diagnostic.py predict --stage A \
+  --config configs/context_diagnostic_historical_val18.json \
+  --config-sha256 <actual-config-sha256> --round-dir <same-round>
 ```
 
-Exit 2 means assets are missing, with an explicit list and no inference. After a
-successful preflight and compute setup, the tracked diagnostic run uses the same
-command without `--preflight-only`, with `--out` naming a new output directory.
-It runs teacher then compact serially, so both do not occupy device memory
-simultaneously. A run must use an approved backend and pinned dependencies; do
-not start an ad-hoc patient job to bypass the project's run tracking.
+Before scoring, lock and freeze B in the same round with the gradient-diagnostic
+entrypoint. Then score A with `score --stage A`; the shared protocol verifies
+both locks and freezes before writing `VAL_EXPOSURE.json`. If B has a concrete
+blocked prerequisite, A may be scored with `--b-blocked-reason "B BLOCKED: …"`.
+That exception is recorded in the exposure ledger, and B cannot be backdated
+into the exposed round. The scorer checks config/protocol bytes, asset hashes,
+worker inventories, prediction shard hashes and shape/coverage before its first
+GT hash or load. It never opens TEST masks.
 
-Outputs: `PROTOCOL.json`, worker logs/inventories, global `PREDICTIONS_FROZEN.json`,
-`FRAME_RECORDS.json`, `RESULT.json`, `frame_transitions.csv`, `frame_metrics.csv`,
-`patient_transitions.csv` and `summary.csv`. The result contains per-patient and leave-one-patient-out
-summaries. Validation failure stops the process rather than silently dropping
-patients. Existing output directories are never overwritten.
+Outputs under `A/` include frame records, patient/class transitions,
+`patient_class_common_failure.csv`, frame metrics and equal-patient/pooled/LOO
+summaries. The common-failure table gives the four cells and denominator beside
+class rescue/harm and FP introduced/removed, separately for edge and interior
+slices. Existing round directories and score outputs are never overwritten.
+
+Run the bounded A-only software smoke with
+`python scripts/run_context_diagnostic.py fixture-smoke --round-dir <new-round>`.
+It builds explicitly synthetic image/mask fixtures, runs the same strict model
+loaders and staged A worker/scorer path on CPU, and records a synthetic-only B
+blocker. Its outputs are software evidence, not patient metrics or model-quality
+results.
+
+The shared builder `self_audit.diagnostic_fixture.build_diagnostic_fixture(new_root)`
+creates separate A and B configs over the same assets. It includes one TRAIN-L
+and one TRAIN-U patient for fit-P, plus two same-geometry development patients
+for cross-patient checks. The teacher is the actual `NativeStudent` with its
+synthetic `TinyEncoder`; the student is an actual `CompactStudent`. Both are
+seeded, untrained random initializations serialized as Torch tensors and loaded
+through the production strict checkpoint/export loaders. The fixture models are
+explicitly marked synthetic and untrained; the fixture does not relax historical
+asset pins or real-profile validation. The shared integration smoke uses the
+returned `context_config_path` and `gradient_bridge_config_path` for A
+preflight/lock/predict, B preflight/fit-P/lock-B/predict, then A score followed
+by B score. It remains synthetic-only software evidence.
 
 Dependencies follow `requirements.txt`; use a private worktree environment.
 Synthetic software checks are not patient results. Tests, source SHA and missing

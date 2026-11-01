@@ -227,3 +227,33 @@ training overhead, included in measured costs. The runtime scope restores its
 decoder dispatch and PyTorch flags on exit. Default recipes, the standalone
 model definition and no-grad deployment remain unchanged. Numerical tests of
 this backend and exact replay do not establish clinical quality or speed gains.
+
+The optional context and gradient bridge diagnostics are described in
+[DIAGNOSTICS_RUNBOOK.md](DIAGNOSTICS_RUNBOOK.md). They do not modify the trainer
+or deployed student. Context compares adjacent spatial slices at a fixed frame
+with lambda 0, 0.5 and 1; sensitivity is reported separately from correct
+rescue, harm and false positives. A negative context finding never gates the
+gradient diagnostic.
+
+The gradient diagnostic fixes one compact bottleneck feature tensor, detached
+student skips, and the native student decoder. A separately TRAIN-aligned
+adapter connects that tensor to a declared frozen teacher decoder suffix;
+the primary bridge has zero raw-detail conditioning. D1 and D2 use native and
+bridge KD gradients respectively. D4/D5 exchange output cotangents, computed
+by autograd of the same masked, normalized KD objective. D3 shuffles the D2
+direction within valid feature support using a local deterministic generator
+and matches its norm and fallback. All resulting features are decoded through
+the native student, including D2. This changes features for diagnosis only;
+it is not a parameter update or a deployable correction mechanism.
+
+Prediction reads images only. Both protocols and all prediction/logit shards
+must be frozen before scoring opens VAL labels. The historical raw B8 and
+wide plain-KD student identities remain pinned to their physical payloads;
+reproduced or EMA weights cannot silently replace them. A blocked B prerequisite
+permits explicitly recorded A-only scoring, after which B cannot be backdated
+into the exposed round. Required primary rho, practical foreground Dice delta,
+uncertainty and leave-one-patient-out rules are chosen before opening VAL.
+Only D2 superiority over both D0 and D1 under those rules can emit
+GO_TO_R_PILOT. Native KD and D4/D5 are explanatory, not additional GO gates.
+No diagnostic command launches R training. Fixture tests are software evidence
+and do not establish patient quality, a mechanism benefit, or inference speed.
