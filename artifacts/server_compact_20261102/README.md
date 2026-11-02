@@ -1,7 +1,7 @@
 # Actual compact checkpoints: S0, S1, S2
 
 Snapshot captured on the RTX PRO 4000 server at **2026-11-02 14:54:27 UTC**.
-All three arms completed **10,000 optimizer steps**. This publication contains
+All three arms completed **10,000 training steps**. This publication contains
 real PyTorch weights, config, provenance, compressed training logs, and the
 existing VAL18 evaluation of each selected checkpoint.
 
@@ -11,6 +11,10 @@ still gated by the active backup/evaluation queue. These are provisional best
 selections, not a completed final comparison. No TEST result is claimed here.
 The original server status receipts remain unchanged (`UPLOAD_PENDING`).
 Git publication does not certify Drive backup.
+
+GitHub readback is **VERIFIED**: a fresh clone fetched all three actual `best.pt`
+blobs, and their full SHA256 and sizes match the server snapshot. See
+`verification/REMOTE_READBACK.json` for the published weights commit and proof.
 
 | Arm | Method | Crop | Training steps | Selected step | VAL Macro4 | VAL foreground Dice |
 |---|---|---:|---:|---:|---:|---:|
