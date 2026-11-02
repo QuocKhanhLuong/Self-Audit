@@ -1,0 +1,22 @@
+{
+  "status": "PASS_SOFTWARE_ONLY",
+  "checked_utc": "2026-11-02T07:19:07.124025+00:00",
+  "base_commit": "4d886bc593952564a6cb5eb9ea99dbaebad0108b",
+  "source_file_sha256": {
+    "self_audit/compact_teacher.py": "2c31ff10a23834564e4051524c67eace891825c6c718a25e07cf79a0c683802f",
+    "self_audit/server_ready_arm.py": "2e8f2e2fdae35df2ac18974668d60336445af3473aff2863654786efc3a9a7c9",
+    "self_audit/server_runner.py": "3631e1811cf7d9439597449ec1e1b111a038eeb6348b75bec228fd918123a3c1",
+    "tests/test_b8_reproduction_bridge.py": "71952b557d44b91d60b796b527603bde08543032ed397cb0b13461d6af96ea2b",
+    "tests/test_server_ready_arm.py": "d369679ab79ff4aefa92641aced3753f14fdb46b27e87ed94362e7c9911df340",
+    "tests/test_server_runner.py": "5267e4b6e85c2ca8aeb91d6ed5245c9e0063288480013257139087ce2c69059a"
+  },
+  "tests": {
+    "command": "python -m pytest -q",
+    "passed": 1186,
+    "warnings": 2,
+    "seconds": 175.66
+  },
+  "repository_check": "PASS",
+  "scope": "S1/S2 backup deferral; exact teacher quality and lineage gates retained; no patient-success claim from tests",
+  "initial_targeted_attempt": "1 assertion regex mismatch and 50 passed; regex corrected; complete suite then passed"
+}

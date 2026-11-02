@@ -334,4 +334,3 @@ Generated joint reference manifests live in `evaluation_views/joint_supervised`,
 beside arm outputs. They must not be ancestors of prediction output directories.
 Existing failed runs require their original exact checkpoint/source pins and a
 separately recorded metadata-only recovery; do not restart them from scratch.
-
