@@ -160,3 +160,41 @@ def test_plan_pins_source_and_assets_before_gpu(tmp_path, monkeypatch):
     monkeypatch.setattr(ready, "source_identity", lambda: {"git_head": "new", "closure_sha256": "a" * 64})
     with pytest.raises(ValueError, match="pinned commit/closure"):
         ready.load_plan(p["path"], p["sha256"])
+
+
+def test_server_backup_deferral_requires_hash_and_own_budget(tmp_path):
+    from self_audit.compact_teacher import (
+        SERVER_KD_DEFERRED_SCHEMA, SERVER_KD_DEFERRED_INSTRUCTION, SERVER_KD_DEFERRED_BUDGET,
+        BACKUP_DEFERRED_AUTHORIZATION_POLICY, BACKUP_DEFERRED_QUALITY_GATE,
+    )
+    auth = {"schema": SERVER_KD_DEFERRED_SCHEMA, "user_instruction": SERVER_KD_DEFERRED_INSTRUCTION,
+            "policy": BACKUP_DEFERRED_AUTHORIZATION_POLICY, "backup_status": "UPLOAD_PENDING",
+            "teacher_plan_sha256": "a" * 64, "time": 1.,
+            "quality_gate_unchanged": BACKUP_DEFERRED_QUALITY_GATE,
+            "training_budget_unchanged": copy.deepcopy(SERVER_KD_DEFERRED_BUDGET)}
+    plan = {"b8_plan": {"sha256": "a" * 64},
+            "backup_deferred_authorization": pin(tmp_path / "auth.json", auth)}
+    assert ready._deferred_authorization(plan) == auth
+    changed = copy.deepcopy(auth)
+    changed["training_budget_unchanged"]["arms"]["S2"] = 160
+    runner.atomic_json(tmp_path / "auth.json", changed)
+    with pytest.raises(ValueError, match="hash mismatch"):
+        ready._deferred_authorization(plan)
+    plan["backup_deferred_authorization"] = pin(tmp_path / "auth.json", changed)
+    with pytest.raises(ValueError, match="authorization does not match"):
+        ready._deferred_authorization(plan)
+
+
+def test_joint_runtime_places_reference_views_outside_run_ancestor(tmp_path, monkeypatch):
+    # Stop at view construction; specifically catch the original placement bug.
+    monkeypatch.setattr(ready, "bind_config", lambda *a: {})
+    monkeypatch.setattr(ready, "assert_gpu_idle", lambda: None)
+    plan = {"output_root": str(tmp_path / "arms"), "joint_train": {}}
+    def views(_plan, destination):
+        run = tmp_path / "arms/joint_supervised/run"
+        assert not run.is_relative_to(destination)
+        assert destination == tmp_path / "arms/evaluation_views/joint_supervised"
+        raise RuntimeError("fixture stop before profile/training")
+    monkeypatch.setattr(ready, "joint_eval_manifests", views)
+    with pytest.raises(RuntimeError, match="fixture stop"):
+        ready.run_arm(plan, "joint_supervised")

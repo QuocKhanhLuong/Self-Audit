@@ -44,6 +44,7 @@ def load_plan(path: str | Path, expected_sha: str) -> dict[str, Any]:
             raise ValueError(f"{key} must be absolute")
     if plan.get("profile") != {"warmup_steps": 2, "measured_steps": 5}:
         raise ValueError("bounded profile is locked to two warmup plus five measured steps")
+    _deferred_authorization(plan)
     return plan
 
 
@@ -61,14 +62,41 @@ def assert_gpu_idle() -> None:
         raise RuntimeError("GPU has an existing compute process; refusing a concurrent launch")
 
 
+def _deferred_authorization(plan: dict[str, Any]) -> dict | None:
+    pin = plan.get("backup_deferred_authorization")
+    if pin is None:
+        return None
+    from .compact_teacher import SERVER_KD_DEFERRED_SCHEMA, validate_backup_deferred_authorization
+    auth = _read_pinned_json(**_pin_args(pin, "backup deferral authorization"))
+    if auth.get("schema") != SERVER_KD_DEFERRED_SCHEMA:
+        raise ValueError("server arms require their own explicit backup deferral authorization")
+    validate_backup_deferred_authorization(auth, plan["b8_plan"]["sha256"])
+    return auth
+
+
+def _teacher_receipt(plan: dict[str, Any]) -> Path:
+    if _deferred_authorization(plan) is not None:
+        pin = plan["local_teacher_receipt"]
+        _read_pinned_json(**_pin_args(pin, "local teacher receipt"))
+        return Path(pin["path"])
+    return Path(plan["teacher_root"]) / "TEACHER_IDENTITY.json"
+
+
 def verify_teacher(plan: dict[str, Any]) -> dict[str, Any]:
     from .compact_teacher import validate_reproduction_receipt, verify_reproduction_source
     root = Path(plan["teacher_root"])
     b8 = _read_pinned_json(**_pin_args(plan["b8_plan"], "B8 plan"))
     status = json.loads((root / "STATUS.json").read_text())
-    if status.get("status") != "TEACHER_COMPLETED_REMOTE_VERIFIED":
+    deferred = _deferred_authorization(plan) is not None
+    if not deferred and status.get("status") != "TEACHER_COMPLETED_REMOTE_VERIFIED":
         raise ValueError("B8 has not completed with verified weight backup")
-    receipt = root / "TEACHER_IDENTITY.json"
+    if deferred and status.get("status") != "UPLOAD_PENDING":
+        raise ValueError("local-only teacher must retain its UPLOAD_PENDING status")
+    receipt = _teacher_receipt(plan)
+    if deferred:
+        evidence = json.loads(receipt.read_text()).get("backup_deferred", {})
+        if evidence.get("authorization") != plan["backup_deferred_authorization"]:
+            raise ValueError("local teacher receipt authorization differs from ready-arm plan")
     identity = validate_reproduction_receipt(
         receipt, expected_receipt_sha256=sha256_file(receipt),
         checkpoint_dir=root / "training/final", raw_student_path=root / "raw_student/raw_student.pt",
@@ -92,11 +120,13 @@ def verify_teacher(plan: dict[str, Any]) -> dict[str, Any]:
 
 def teacher_binding(plan: dict[str, Any]) -> dict[str, Any]:
     identity = verify_teacher(plan)
-    receipt = Path(plan["teacher_root"]) / "TEACHER_IDENTITY.json"
+    receipt = _teacher_receipt(plan)
     result = {"status": "COMPLETED", "metrics": {"Macro4": identity["metrics"]["test50"]["Macro4"]},
               "identity_sha256": canonical_sha256(identity), "teacher_identity": identity,
               "source_receipt": str(receipt), "source_receipt_sha256": sha256_file(receipt),
-              "physical_raw_equals_checkpoint_student": True, "remote_verified": True}
+              "physical_raw_equals_checkpoint_student": True,
+              "remote_verified": identity.get("remote_drive_verified", True),
+              "backup_status": identity.get("backup_status", "VERIFIED")}
     atomic_json(Path(plan["output_root"]) / "TEACHER_BINDING.json", result)
     return result
 
@@ -131,7 +161,7 @@ def build_cache(plan: dict[str, Any]) -> dict[str, Any]:
         raise RuntimeError(f"cache needs {estimate} bytes plus {reserve} reserve; only {free} free")
     assert_gpu_idle()
     b8 = _read_pinned_json(**_pin_args(plan["b8_plan"], "B8 plan"))
-    receipt = root / "TEACHER_IDENTITY.json"
+    receipt = _teacher_receipt(plan)
     argv = [plan["cache_python"], str(ROOT / "scripts/build_compact_teacher_cache.py"),
             "--data-manifest", plan["train"]["path"], "--data-sha256", plan["train"]["sha256"],
             "--output-dir", str(cache), "--checkpoint-dir", str(root / "training/final"),
@@ -221,7 +251,10 @@ def run_arm(plan: dict[str, Any], arm: str) -> dict[str, Any]:
     assert_gpu_idle()
     work.mkdir(parents=True)
     train = plan["joint_train"] if arm == "joint_supervised" else plan["train"]
-    val, test = joint_eval_manifests(plan, work) if arm == "joint_supervised" else (plan["val"], plan["test"])
+    # Evaluator deliberately rejects outputs nested in its input-manifest folder.
+    # Keep generated reference views beside (not above) all run output trees.
+    val, test = (joint_eval_manifests(plan, Path(plan["output_root"]) / "evaluation_views" / arm)
+                 if arm == "joint_supervised" else (plan["val"], plan["test"]))
     config_path = work / "CONFIG.json"
     atomic_json(config_path, config)
     config_sha = sha256_file(config_path)
@@ -241,7 +274,8 @@ def run_arm(plan: dict[str, Any], arm: str) -> dict[str, Any]:
     # Profiles never supply initialization: canonical trainer starts seed 42 anew.
     return run_locked_experiment(lock_path, sha256_file(lock_path), work / "run", device="cuda",
                                  rclone_base=plan["backup_destination"], arm_config_path=config_path,
-                                 arm_config_sha256=config_sha)
+                                 arm_config_sha256=config_sha,
+                                 defer_backup=_deferred_authorization(plan) is not None)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -261,4 +295,8 @@ def main(argv: list[str] | None = None) -> int:
     else:
         result = run_arm(plan, args.action)
     print(json.dumps(result, indent=2, sort_keys=True))
-    return 2 if result.get("status") == "UPLOAD_PENDING" else 0
+    # Deferred backup is deliberately a separate final queue action, not a
+    # failed training stage. Never label its remote backup verified/completed.
+    deferred_complete = (_deferred_authorization(plan) is not None
+                         and result.get("training_complete") is True)
+    return 2 if result.get("status") == "UPLOAD_PENDING" and not deferred_complete else 0

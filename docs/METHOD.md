@@ -292,3 +292,10 @@ the absent historical B8 weights. KD binds the new B8 raw state only after its
 lineage, actual backup and preregistered Macro4 gate pass. Historical diagnostics
 remain blocked on their original identity. Joint checkpoint selection uses an
 equal mean of separately reported ACDC and M&Ms development Macro4 values.
+
+An explicit, separately hash-pinned server S1/S2 authorization may defer Drive
+backup until the finite training queue ends. It preserves the raw-student,
+source/lineage, actual evaluation and Macro4 >= .87 gates; it is not the older
+2,000-step exploratory CPTU policy. Local-only receipts remain `UPLOAD_PENDING`
+and `remote_verified=false`. See the campaign runbook for its fixed 10,000-step
+B32 S1/S2 budget and post-training backup/evaluation state.

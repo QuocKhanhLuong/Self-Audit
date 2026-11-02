@@ -86,6 +86,13 @@ BACKUP_DEFERRED_QUALITY_GATE = (
     "final raw-student historical TEST50 Macro4 >= 0.87; VAL also reported; no tuning"
 )
 BACKUP_DEFERRED_BUDGET = {"steps_per_arm": 2000, "warmup_steps": 1000, "seed": 42}
+SERVER_KD_DEFERRED_SCHEMA = "self_audit.server_kd.backup_deferred_authorization.v1"
+SERVER_KD_DEFERRED_INSTRUCTION = "ko cần lo backup drive, xong r push 1 thể cx được"
+SERVER_KD_DEFERRED_BUDGET = {
+    "steps_per_arm": 10000, "warmup_steps": 1000, "seed": 42,
+    "labeled_batch_size": 32, "unlabeled_batch_size": 32,
+    "arms": {"S1": 160, "S2": 256},
+}
 EXPLORATORY_TEACHER_AUTHORIZATION_SCHEMA = "self_audit.b8.exploratory_teacher_authorization.v1"
 EXPLORATORY_TEACHER_USER_INSTRUCTION = "Chạy bốn arm thăm dò với teacher hiện tại"
 EXPLORATORY_TEACHER_REQUIRED_ARMS = [
@@ -261,6 +268,24 @@ def _validate_exploratory_teacher_authorization(
     return expected_sha.lower()
 
 
+def validate_backup_deferred_authorization(authorization: Mapping[str, Any], teacher_plan_sha: str) -> None:
+    """Two separately authorized budgets; neither changes the teacher quality gate."""
+    server = authorization.get("schema") == SERVER_KD_DEFERRED_SCHEMA
+    instruction = SERVER_KD_DEFERRED_INSTRUCTION if server else BACKUP_DEFERRED_AUTHORIZATION_INSTRUCTION
+    budget = SERVER_KD_DEFERRED_BUDGET if server else BACKUP_DEFERRED_BUDGET
+    if (
+        authorization.get("user_instruction") != instruction
+        or authorization.get("backup_status") != "UPLOAD_PENDING"
+        or authorization.get("policy") != BACKUP_DEFERRED_AUTHORIZATION_POLICY
+        or authorization.get("teacher_plan_sha256") != teacher_plan_sha
+        or authorization.get("quality_gate_unchanged") != BACKUP_DEFERRED_QUALITY_GATE
+        or json.dumps(authorization.get("training_budget_unchanged"), sort_keys=True) != json.dumps(budget, sort_keys=True)
+        or type(authorization.get("time")) not in (int, float)
+        or not np.isfinite(authorization.get("time")) or authorization["time"] <= 0
+    ):
+        raise ValueError("backup-deferred user authorization does not match the locked policy")
+
+
 def _validate_backup_deferred_evidence(
     receipt_data: Mapping[str, Any],
     *,
@@ -357,22 +382,9 @@ def _validate_backup_deferred_evidence(
     if not authorization_path.is_file() or not isinstance(authorization_sha, str) or digest(authorization_path).lower() != authorization_sha.lower():
         raise ValueError("backup-deferred authorization file hash mismatch")
     authorization = json.loads(authorization_path.read_text(encoding="utf-8"))
-    if (
-        authorization.get("user_instruction") != BACKUP_DEFERRED_AUTHORIZATION_INSTRUCTION
-        or authorization.get("backup_status") != "UPLOAD_PENDING"
-        or authorization.get("policy") != BACKUP_DEFERRED_AUTHORIZATION_POLICY
-        or authorization.get("teacher_plan_sha256") != teacher_plan_sha
-        or authorization.get("quality_gate_unchanged") != BACKUP_DEFERRED_QUALITY_GATE
-        or not isinstance(authorization.get("training_budget_unchanged"), Mapping)
-        or set(authorization["training_budget_unchanged"]) != set(BACKUP_DEFERRED_BUDGET)
-        or any(type(authorization["training_budget_unchanged"].get(key)) is not type(value)
-               or authorization["training_budget_unchanged"].get(key) != value
-               for key, value in BACKUP_DEFERRED_BUDGET.items())
-        or type(authorization.get("time")) not in (int, float)
-        or not np.isfinite(authorization.get("time"))
-        or authorization["time"] <= 0
-    ):
-        raise ValueError("backup-deferred user authorization does not match the locked policy")
+    validate_backup_deferred_authorization(authorization, teacher_plan_sha)
+    if authorization.get("schema") == SERVER_KD_DEFERRED_SCHEMA and evidence.get("exploratory_authorization") is not None:
+        raise ValueError("server S1/S2 backup deferral does not authorize a below-gate teacher")
 
     eval_status_ref = evidence.get("evaluation_status")
     if not isinstance(eval_status_ref, Mapping):

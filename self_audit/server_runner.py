@@ -1938,6 +1938,20 @@ def _write_run_status(run_root: Path, status: str, **extra: Any) -> dict[str, An
     return value
 
 
+def _defer_core_backup(run_root: Path, lock_sha256: str) -> dict[str, Any]:
+    """Record zero remote attempts; the finite queue retries after training arms."""
+    result = {
+        "schema": "self_audit.server_compact.backup.v1", "phase": "core",
+        "status": "UPLOAD_PENDING", "remote_verified": False,
+        "local_retained": True, "lock_sha256": lock_sha256, "files_verified": [],
+        "pending": [{"path": "<core-backup>", "attempts": 0,
+                     "reason": "USER_AUTHORIZED_BACKUP_AFTER_TRAINING_QUEUE"}],
+    }
+    atomic_json(run_root / "BACKUP_STATUS_core.json", result)
+    atomic_json(run_root / "BACKUP_STATUS.json", result)
+    return result
+
+
 def _copy_locked_run_receipts(run_root: Path, lock_path: Path, lock: Mapping[str, Any], lock_sha256: str) -> None:
     receipts = [
         (lock_path, run_root / "RUN_LOCK.json", lock_sha256),
@@ -2193,6 +2207,7 @@ def run_locked_experiment(
     backup_client: Any | None = None,
     retry_delay_seconds: float = 15.0,
     root: str | Path = ROOT,
+    defer_backup: bool = False,
 ) -> dict[str, Any]:
     """Train exactly one locked S0, select best on VAL, backup, then optional TEST."""
     lock = verify_protocol_lock(lock_path, lock_sha256, root)
@@ -2288,6 +2303,9 @@ def run_locked_experiment(
                     raise ValueError("no earlier VAL checkpoint is available before core backup")
                 _write_best_artifacts(run_root, lock, checkpoint, checkpoint_manifest_sha256)
                 _write_sha256sums(run_root)
+                if defer_backup:
+                    callback_state["core_backup"] = _defer_core_backup(run_root, lock_sha256)
+                    return
                 _write_run_status(
                     run_root, "BACKUP", training_complete=False, final_checkpoint=str(checkpoint),
                     final_checkpoint_manifest_sha256=checkpoint_manifest_sha256,
@@ -2362,6 +2380,9 @@ def run_locked_experiment(
     if core_backup is None:
         prior_core = run_root / "BACKUP_STATUS_core.json"
         core_backup = json.loads(prior_core.read_text()) if prior_core.is_file() else None
+    if defer_backup and (core_backup or {}).get("status") != "VERIFIED":
+        core_backup = _defer_core_backup(run_root, lock_sha256)
+        failed_in_terminal_callback = True
     if failed_in_terminal_callback:
         best = json.loads((run_root / "BEST.json").read_text())
         return _write_run_status(

@@ -306,3 +306,32 @@ run GPU discovery or start extra GPUs. OOM markers or nonzero exits fail a
 stage; there are no loops, periodic sweeps, implicit retries, or recipe
 rewrites. Manufactured subprocess tests exercise controller behavior only;
 they are not patient or GPU evidence.
+# Explicit S1/S2 local-backup continuation (2026-11-02)
+
+The default still requires remote backup. The separately hash-pinned
+`backup_deferred_authorization` ready-arm field enables the user's request to
+finish S1/S2 before Drive upload. It must use
+`self_audit.server_kd.backup_deferred_authorization.v1`, the exact teacher plan,
+10,000 steps, warmup 1,000, seed 42, labeled/unlabeled batch 32, and S1 crop160 /
+S2 crop256. Its `local_teacher_receipt` points to separately recorded local
+evidence, without rewriting the historical teacher identity or status.
+
+Local B8 verification still checks actual full/raw tensor equality, hashes,
+source closure, L8 lineage, frozen historical VAL18/TEST50 evaluation and the
+unchanged TEST50 Macro4 >= .87 gate. This authorization defers backup only;
+it does not authorize a below-threshold exploratory teacher. Missing/mismatched
+evidence continues to block cache creation and training.
+
+With this opt-in, each arm saves its final full checkpoint and independent
+student export, then records `UPLOAD_PENDING`, `training_complete=true`, and
+zero remote attempts. The next eligible arm may start. Final VAL/best selection,
+TEST scoring and all remote readback verification remain pending until the
+queue's final backup/recovery actions. These actions use the `backup` CLI subcommand; they do
+not retrain. A training-stage completion predicate must use `training_complete`
+and never reinterpret pending upload as `COMPLETED` or `remote_verified=true`.
+
+Generated joint reference manifests live in `evaluation_views/joint_supervised`,
+beside arm outputs. They must not be ancestors of prediction output directories.
+Existing failed runs require their original exact checkpoint/source pins and a
+separately recorded metadata-only recovery; do not restart them from scratch.
+

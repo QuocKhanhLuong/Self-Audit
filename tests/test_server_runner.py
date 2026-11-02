@@ -680,7 +680,8 @@ def _write_eval_manifest(folder: Path, role: str, patient_id: str, *, seed: int)
     return manifest, sha256_file(manifest)
 
 
-def test_failed_core_backup_retry_completes_manufactured_test_without_retraining(monkeypatch, tmp_path):
+@pytest.mark.parametrize("defer_backup", [False, True])
+def test_failed_core_backup_retry_completes_manufactured_test_without_retraining(monkeypatch, tmp_path, defer_backup):
     from self_audit.compact_artifacts import build_compact_model
 
     train_manifest, train_sha = synthetic_compact_fixture(
@@ -791,6 +792,7 @@ def test_failed_core_backup_retry_completes_manufactured_test_without_retraining
     first = run_locked_experiment(
         lock_path, sha256_file(lock_path), run_root, device="cpu", rclone_base="drive:server-runs",
         backup_client=initial_client, retry_delay_seconds=0,
+        defer_backup=defer_backup,
     )
     assert first["status"] == "UPLOAD_PENDING"
     assert first["backup_phase"] == "core"
@@ -799,6 +801,10 @@ def test_failed_core_backup_retry_completes_manufactured_test_without_retraining
     assert not (run_root / "TEST_RESULT.json").exists()
     assert (run_root / "final_export/MANIFEST.json").is_file()
     calls_before_retry = dict(initial_client.calls)
+    if defer_backup:
+        assert calls_before_retry == {}
+        assert first["backup"]["remote_verified"] is False
+        assert first["backup"]["pending"][0]["attempts"] == 0
 
     resumed = retry_backup(
         run_root, rclone_base="drive:server-runs", client=_FakeRclone(),
@@ -820,4 +826,4 @@ def test_failed_core_backup_retry_completes_manufactured_test_without_retraining
     assert "PROVENANCE.json" in remote_paths
     assert "SHA256SUMS.txt" in remote_paths
     assert any(path.endswith("TRAIN_LOG.jsonl") for path in remote_paths)
-    assert calls_before_retry
+    assert bool(calls_before_retry) is not defer_backup

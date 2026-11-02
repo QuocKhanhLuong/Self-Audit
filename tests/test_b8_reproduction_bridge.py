@@ -727,6 +727,34 @@ def test_backup_deferred_receipt_is_explicit_local_only_and_keeps_quality_gate(
         teacher_gate(pending, "plan")
 
 
+@pytest.mark.parametrize("test_macro4", [.885, .869])
+def test_server_kd_deferral_binds_10000_budget_and_does_not_waive_quality(
+    valid_reproduction_receipt_dict, tmp_path, test_macro4,
+):
+    from self_audit.compact_teacher import (
+        SERVER_KD_DEFERRED_SCHEMA, SERVER_KD_DEFERRED_INSTRUCTION, SERVER_KD_DEFERRED_BUDGET,
+    )
+    receipt, _ = _backup_deferred_receipt_fixture(
+        tmp_path, valid_reproduction_receipt_dict, test_macro4=test_macro4)
+    ref = receipt["backup_deferred"]["authorization"]
+    path = Path(ref["path"])
+    auth = json.loads(path.read_text())
+    auth.update(schema=SERVER_KD_DEFERRED_SCHEMA, user_instruction=SERVER_KD_DEFERRED_INSTRUCTION,
+                training_budget_unchanged=copy.deepcopy(SERVER_KD_DEFERRED_BUDGET))
+    path.write_text(json.dumps(auth)); ref["sha256"] = digest(path)
+    if test_macro4 < .87:
+        with pytest.raises(ValueError, match="quality_gate is 'NO_GO'"):
+            validate_reproduction_receipt(receipt)
+        return
+    result = validate_reproduction_receipt(receipt)
+    assert result["verified"] and result["quality_gate"] == "GO"
+    assert result["remote_verified"] is False and result["backup_status"] == "UPLOAD_PENDING"
+    auth["training_budget_unchanged"]["steps_per_arm"] = 2000
+    path.write_text(json.dumps(auth)); ref["sha256"] = digest(path)
+    with pytest.raises(ValueError, match="authorization does not match"):
+        validate_reproduction_receipt(receipt)
+
+
 def test_below_gate_teacher_requires_exact_exploratory_authorization(valid_reproduction_receipt_dict, tmp_path):
     receipt, teacher = _backup_deferred_receipt_fixture(
         tmp_path / "authorized", valid_reproduction_receipt_dict, test_macro4=0.8682269380656147,

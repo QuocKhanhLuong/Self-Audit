@@ -79,7 +79,13 @@
         "teacher": "one separately pinned full-EMA B8 reproduction; retain historical B8 recipe",
         "kd_gate": "new B8 raw student, verified payload/lineage/Drive readback, TEST50 Macro4 >= 0.87",
         "joint_supervised": "random initialization; ACDC4+MNM4; equal-domain VAL selection; independent of teacher",
-        "resume": "explicit exact checkpoint hash; no automatic fresh restart"
+        "resume": "explicit exact checkpoint hash; no automatic fresh restart",
+        "authorized_backup_deferral": {
+          "policy": "hash-pinned S1/S2 10000-step B32 authorization only",
+          "teacher_quality_gate_unchanged": true,
+          "remote_verified": false,
+          "backup_timing": "after finite training queue; retain local weights"
+        }
       }
     }
   }
