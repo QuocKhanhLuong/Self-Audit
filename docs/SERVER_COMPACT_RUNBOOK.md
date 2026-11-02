@@ -57,6 +57,84 @@ by every later comparison using this lock; this CLI itself runs only supervised
 S0. It does not expose loss, crop, seed, step-budget, or batch overrides after
 locking.
 
+## Additional pinned arms
+
+The S0 builder, profile defaults, and `lock.v1` path above retain their existing
+behavior. S1/S2 use separate SHA-pinned arm configs and `lock.v2`; each lock and
+run still contains exactly one 10,000-step arm. The S1/S2 files under
+`configs/server_compact/` are deliberately nonlaunchable templates. Copy one to
+a new config path for the run, then fill its TRAIN manifest SHA, exact L8 IDs,
+new B8 reproduction identity and canonical identity SHA, fixed cache path and
+cache SHA, and teacher lineage. Set `experiment.launchable=true` only after
+those pins exist. The historical B8 hash is not a substitute for the new
+reproduction receipt. The student starts from seed-42 Kaiming initialization;
+the teacher is used only through its fixed soft-target cache.
+
+The pinned S1/S2 recipe matches the archived
+`results/compact_acdc_l8_20261029/experiment_20261028/wide_plain_kd_config.json`
+for KD behavior: `plain_kd`, pseudo LR 0.001, temperature 1.0, coefficient 1.0,
+raw teacher confidence threshold 0.7, and soft cross-entropy normalized by the
+common valid confident pixel count. The teacher confidence threshold is applied
+to raw teacher probabilities before temperature scaling. Both arms use wide
+widths `[32, 64, 128, 256]`, random seed 42, B32/L32/U32, 10,000 total steps
+including the original 1,000 supervised warmup, and the same pinned TRAIN and
+fixed teacher cache. S1 uses crop160; S2 uses crop256. No loss, denominator,
+teacher, or cache fallback is allowed.
+
+Before profiling or locking a KD arm, the runner verifies the arm config bytes,
+teacher identity SHA, full-EMA reproduction receipt, TRAIN label union, fixed
+cache manifest SHA, cache teacher identity, exact TRAIN manifest SHA, and full
+TRAIN-U patient set. The canonical trainer then performs its physical cache
+file/shape checks before any update. A missing or mismatched teacher/cache
+blocks the arm before a run output directory is created.
+
+The arm profile measures one configured B32/crop arm. Its short profile-only
+warmup defaults to two steps and is recorded separately from the locked
+1,000-step recipe warmup; it never warms the real run from profile weights or
+trains 1,000 patient steps just to profile. Its output remains a bounded timing
+receipt and cannot satisfy patient or GPU quality claims.
+
+```bash
+python scripts/run_server_compact.py profile \
+  --arm-config /workspace/server_compact/s1_plain_kd_run.json \
+  --arm-config-sha256 ARM_CONFIG_SHA256 \
+  --train-manifest /workspace/data/train.json \
+  --train-sha256 TRAIN_SHA256 \
+  --device cuda --warmup-steps 2 --measured-steps 5 \
+  --out /workspace/server_compact/profile_s1
+
+python scripts/run_server_compact.py lock \
+  --profile /workspace/server_compact/profile_s1/PROFILE.json \
+  --profile-sha256 PROFILE_SHA256 \
+  --arm-config /workspace/server_compact/s1_plain_kd_run.json \
+  --arm-config-sha256 ARM_CONFIG_SHA256 \
+  --train-manifest /workspace/data/train.json --train-sha256 TRAIN_SHA256 \
+  --val-manifest /workspace/data/val.json --val-sha256 VAL_SHA256 \
+  --test-manifest /workspace/data/test50.json --test-sha256 TEST_SHA256 \
+  --batch-size 32 --out /workspace/server_compact/protocol_lock_s1.json
+
+python scripts/run_server_compact.py run \
+  --lock /workspace/server_compact/protocol_lock_s1.json \
+  --lock-sha256 LOCK_SHA256 \
+  --arm-config /workspace/server_compact/s1_plain_kd_run.json \
+  --arm-config-sha256 ARM_CONFIG_SHA256 \
+  --out /workspace/server_compact/run_s1 \
+  --device cuda --rclone-destination drive:server-compact-runs
+```
+
+Use the same TRAIN, VAL and optional TEST manifests for S1 and S2. The config
+file SHA and its normalized config SHA are both persisted in the lock; changing
+crop, steps, batch, teacher identity, or cache after profiling invalidates it.
+S0/S1/S2 use the same ACDC L8 historical patient IDs, and the reproduced B8
+teacher must have that exact lineage. The separately queued `joint_supervised`
+arm uses the generic supervised config path with crop160, B32, seed42, and
+exactly four ACDC plus the declared MNM4 patients (`A9E3G9`, `B9E0Q1`, `D3F9H9`,
+`E5F5V7`) in one L8 TRAIN manifest. It is supervised-only, has a separate
+TRAIN/VAL cohort, starts from its own random initialization, and cannot consume
+the ACDC-L8 teacher/cache. It is not a KD comparison arm. Its VAL selection is
+equally weighted across the ACDC and MNM domains; optional ACDC TEST50 remains
+after the best VAL checkpoint and predictions are frozen.
+
 ## Run and resume
 
 Use an existing, listable rclone parent path. At step 10,000 the runner writes

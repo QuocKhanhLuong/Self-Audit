@@ -43,7 +43,12 @@
       "quality_threshold": 0.87,
       "documentation": "docs/COMPACT_STUDENT.md",
       "scalar_selector_default": "original",
-      "scalar_selectors": ["original", "larger_tie", "cross_patient_utility", "same_batch_utility"],
+      "scalar_selectors": [
+        "original",
+        "larger_tie",
+        "cross_patient_utility",
+        "same_batch_utility"
+      ],
       "transfer_utility_documentation": "docs/TRANSFER_UTILITY_RUNBOOK.md",
       "server_supervised_runner": {
         "entrypoint": "scripts/run_server_compact.py",
@@ -57,7 +62,25 @@
         "backup": "actual payload copy and remote streamed SHA256 verification; retain local on failure",
         "historical_reproduction": false
       },
-      "patient_training_this_delivery": false
+      "patient_training_this_delivery": false,
+      "server_campaign": {
+        "entrypoint": "scripts/run_server_campaign.py",
+        "binding_entrypoint": "scripts/run_server_ready_arm.py",
+        "documentation": "docs/SERVER_CAMPAIGN_RUNBOOK.md",
+        "execution": "finite sequential queue on one GPU; adopt existing S0 by process identity",
+        "compact_arms": [
+          "S0",
+          "joint_supervised",
+          "S1",
+          "S2"
+        ],
+        "compact_batch": 32,
+        "compact_steps_per_arm": 10000,
+        "teacher": "one separately pinned full-EMA B8 reproduction; retain historical B8 recipe",
+        "kd_gate": "new B8 raw student, verified payload/lineage/Drive readback, TEST50 Macro4 >= 0.87",
+        "joint_supervised": "random initialization; ACDC4+MNM4; equal-domain VAL selection; independent of teacher",
+        "resume": "explicit exact checkpoint hash; no automatic fresh restart"
+      }
     }
   }
 }

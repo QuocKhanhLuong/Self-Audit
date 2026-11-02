@@ -16,6 +16,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+import threading
 import time
 
 
@@ -38,19 +39,22 @@ def atomic_json(path, value):
     os.replace(temporary, path)
 
 
-def command(argv, log, cwd=None):
+def command(argv, log, cwd=None, timeout=None):
     with Path(log).open("a") as stream:
         stream.write(json.dumps({"argv": list(map(str, argv)), "time": time.time()}) + "\n")
         stream.flush()
         subprocess.run(list(map(str, argv)), cwd=cwd, stdout=stream,
-                       stderr=subprocess.STDOUT, check=True)
+                       stderr=subprocess.STDOUT, check=True, timeout=timeout)
 
 
 class DriveBackup:
-    def __init__(self, remote, parent_id, log, attempts=3):
+    def __init__(self, remote, parent_id, log, attempts=3, timeout_seconds=600):
+        if not 0 < timeout_seconds <= 3600:
+            raise ValueError("backup process deadline must be in (0, 3600] seconds")
         self.remote = remote.rstrip("/")
         self.log = Path(log)
         self.attempts = attempts
+        self.timeout_seconds = timeout_seconds
         self.flags = ["--drive-root-folder-id", parent_id, "--retries", "1",
                       "--low-level-retries", "2", "--timeout", "60s", "--tpslimit", "2"]
 
@@ -60,13 +64,30 @@ class DriveBackup:
         with self.log.open("ab") as errors:
             proc = subprocess.Popen(["rclone", "cat", self.remote + "/" + name,
                                      *self.flags], stdout=subprocess.PIPE, stderr=errors)
+            timed_out = threading.Event()
+            def terminate_readback():
+                timed_out.set()
+                try:
+                    proc.kill()
+                except ProcessLookupError:
+                    pass
+            timer = threading.Timer(self.timeout_seconds, terminate_readback)
+            timer.daemon = True
+            timer.start()
             try:
                 for chunk in iter(lambda: proc.stdout.read(8 << 20), b""):
                     h.update(chunk)
                     size += len(chunk)
+                returncode = proc.wait()
             finally:
                 proc.stdout.close()
-            if proc.wait() != 0:
+                timer.cancel()
+                if proc.poll() is None:
+                    proc.kill()
+                proc.wait()
+            if timed_out.is_set():
+                raise subprocess.TimeoutExpired("rclone cat", self.timeout_seconds)
+            if returncode != 0:
                 raise RuntimeError("rclone remote readback failed")
         return size, h.hexdigest()
 
@@ -77,12 +98,13 @@ class DriveBackup:
         for attempt in range(self.attempts):
             try:
                 command(["rclone", "copyto", path, self.remote + "/" + name,
-                         *self.flags], self.log)
+                         *self.flags], self.log, timeout=self.timeout_seconds)
                 remote_size, remote_digest = self.readback(name)
                 if (remote_size, remote_digest) != (size, digest):
                     raise RuntimeError("remote bytes differ from local payload")
                 raw = subprocess.check_output(["rclone", "lsjson", self.remote + "/" + name,
-                                               "--stat", *self.flags], text=True)
+                                               "--stat", *self.flags], text=True,
+                                              timeout=self.timeout_seconds)
                 metadata = json.loads(raw)
                 if metadata["Size"] != size or not metadata.get("ID"):
                     raise RuntimeError("missing Drive size/file ID")
@@ -192,7 +214,8 @@ def run(plan_path, expected_sha, resume=False, preflight_only=False):
         def status(value, **extra):
             atomic_json(state, {"status": value, "time": time.time(), "plan_sha256": expected_sha, **extra})
             print(json.dumps({"status": value, **extra}), flush=True)
-        backup = DriveBackup(plan["drive_remote"], plan["drive_parent_id"], root / "rclone.log")
+        backup = DriveBackup(plan["drive_remote"], plan["drive_parent_id"], root / "rclone.log",
+                             timeout_seconds=plan.get("backup_timeout_seconds", 600))
         try:
             status("PREFLIGHT")
             probe = root / "WRITE_PROBE.json"
@@ -290,7 +313,7 @@ def run(plan_path, expected_sha, resume=False, preflight_only=False):
             handover = Path(plan["handover"])
             current = json.loads(handover.read_text())
             shutil.copyfile(handover, root / ("HANDOVER.before." + sha256(handover) + ".json"))
-            current["b8_reproduction_20261031"] = {"status": "COMPLETED_REMOTE_VERIFIED", "local": str(root),
+            current[plan.get("handover_key", "b8_reproduction_20261031")] = {"status": "COMPLETED_REMOTE_VERIFIED", "local": str(root),
                                                   "identity": str(root / "TEACHER_IDENTITY.json"), **identity}
             atomic_json(handover, current)
             backup.upload_verified(handover, "HANDOVER.json")

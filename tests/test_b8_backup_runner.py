@@ -15,7 +15,9 @@ def test_upload_exit_zero_does_not_certify_remote_bytes(tmp_path, monkeypatch):
     payload = tmp_path / 'weights.pt'
     payload.write_bytes(b'actual weights')
     backup = runner.DriveBackup('KhanhDrive:new', 'parent', tmp_path / 'log', attempts=1)
-    monkeypatch.setattr(runner, 'command', lambda *args: None)
+    def bounded_upload(*args, timeout):
+        assert timeout == 600
+    monkeypatch.setattr(runner, 'command', bounded_upload)
     monkeypatch.setattr(backup, 'readback', lambda name: (14, 'wrong'))
     with pytest.raises(RuntimeError, match='UPLOAD_PENDING'):
         backup.upload_verified(payload, 'weights.pt')
@@ -26,7 +28,9 @@ def test_verified_backup_records_actual_id_size_and_sha(tmp_path, monkeypatch):
     payload = tmp_path / 'weights.pt'
     payload.write_bytes(b'actual weights')
     backup = runner.DriveBackup('KhanhDrive:new', 'parent', tmp_path / 'log', attempts=1)
-    monkeypatch.setattr(runner, 'command', lambda *args: None)
+    def bounded_upload(*args, timeout):
+        assert timeout == 600
+    monkeypatch.setattr(runner, 'command', bounded_upload)
     monkeypatch.setattr(backup, 'readback', lambda name: (payload.stat().st_size, runner.sha256(payload)))
     monkeypatch.setattr(runner.subprocess, 'check_output', lambda *a, **kw: json.dumps({'Size': payload.stat().st_size, 'ID': 'observed-id'}))
     result = backup.upload_verified(payload, 'weights.pt')
@@ -39,6 +43,8 @@ def test_readback_stream_checks_process_exit(tmp_path, monkeypatch):
     class FailedStream:
         stdout = io.BytesIO(b'partial payload')
         def wait(self):
+            return 1
+        def poll(self):
             return 1
     monkeypatch.setattr(runner.subprocess, 'Popen', lambda *a, **kw: FailedStream())
     backup = runner.DriveBackup('KhanhDrive:new', 'parent', tmp_path / 'log', attempts=1)

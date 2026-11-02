@@ -1,0 +1,70 @@
+{
+  "schema": "self_audit.compact.v1",
+  "server_arm": "S2",
+  "experiment": {
+    "id": "server_compact_s2_wide_seed42",
+    "launchable": false,
+    "new_experiment": true,
+    "parent_recipe": "results/compact_acdc_l8_20261029/experiment_20261028/wide_plain_kd_config.json",
+    "note": "Template only. Pin the newly reproduced B8 identity, its fixed TRAIN-U cache, and exact TRAIN-L lineage before enabling launch."
+  },
+  "method": "plain_kd",
+  "selector": "original",
+  "seed": 42,
+  "steps": 10000,
+  "warmup_steps": 1000,
+  "save_every": 1000,
+  "model": {
+    "name": "CompactStudent",
+    "in_channels": 3,
+    "num_classes": 4,
+    "widths": [32, 64, 128, 256],
+    "init": "kaiming_normal"
+  },
+  "crop_size": 256,
+  "batch_size": 32,
+  "labeled_batch_size": 32,
+  "unlabeled_batch_size": 32,
+  "eval_batch_size": 8,
+  "lr": 0.0003,
+  "weight_decay": 0.0001,
+  "pseudo_lr": 0.001,
+  "temperature": 1.0,
+  "coefficient": 1.0,
+  "pseudo_threshold": 0.7,
+  "ridge": 0.000001,
+  "risk_budget": 0.0,
+  "absent_fp_budget": 0.0,
+  "guard_tolerance": 0.000001,
+  "max_trials": 8,
+  "deterministic_algorithms": false,
+  "equal_wall_time": {
+    "enabled": false
+  },
+  "acceptance": {
+    "metric": "Macro4",
+    "min_macro4": 0.87,
+    "target_patient_dice": 0.87
+  },
+  "data": {
+    "manifest_sha256": null,
+    "budget_k": 8,
+    "labeled_ids": []
+  },
+  "teacher": {
+    "source": null,
+    "source_manifest_sha256": null,
+    "source_payload_sha256": null,
+    "source_training_cost": null,
+    "cache_path": null,
+    "cache_sha256": null,
+    "teacher_identity_sha256": null,
+    "teacher_identity": null,
+    "state": "student",
+    "lineage": {
+      "matching_lineage_required": true,
+      "budget_k": 8,
+      "exact_labeled_ids": []
+    }
+  }
+}

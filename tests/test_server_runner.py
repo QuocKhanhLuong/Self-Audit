@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import random
@@ -16,6 +17,7 @@ from self_audit.compact_artifacts import digest, load_exact_compact_checkpoint
 from self_audit.compact_data import synthetic_compact_fixture
 from self_audit.compact_training import train_compact
 from self_audit import compact_training
+from self_audit import server_runner
 from self_audit.server_runner import (
     SubprocessRclone,
     atomic_json,
@@ -25,12 +27,14 @@ from self_audit.server_runner import (
     create_protocol_lock,
     evaluate_checkpoint,
     profile_batches,
+    profile_arm_config,
     retry_backup,
     run_locked_experiment,
     sha256_file,
     source_identity,
     _train_metadata,
     verify_protocol_lock,
+    _validate_server_arm_config,
 )
 
 
@@ -169,12 +173,216 @@ def test_profile_and_protocol_lock_use_manufactured_train(monkeypatch, tmp_path)
         batch_size=32,
     )
     verified = verify_protocol_lock(lock_path, sha256_file(lock_path))
+    assert lock["schema"] == "self_audit.server_compact.lock.v1"
+    assert "arm_config_path" not in lock
     assert verified["config"]["batch_size"] == 32
     assert verified["config"]["labeled_batch_size"] == verified["config"]["unlabeled_batch_size"] == 32
     assert lock["protocol"]["steps"] == 10000
     assert lock["protocol"]["eval_batch_size"] == 8
     assert lock["config"]["eval_batch_size"] == 8
     assert lock["inputs"]["test"] is None
+
+
+def _synthetic_server_kd_config(tmp_path, *, arm_id="S1", crop_size=160):
+    train_manifest, train_sha = synthetic_compact_fixture(
+        tmp_path / "train", seed=41, n_labeled=2, n_unlabeled=2,
+        size=16, num_frames=2, num_slices=2,
+    )
+    train = json.loads(train_manifest.read_text())
+    labeled_ids = [record["id"] for record in train["labeled"]]
+    unlabeled_ids = [record["id"] for record in train["unlabeled"]]
+    identity = {
+        "schema": "self_audit.compact_teacher_identity.v1",
+        "teacher_kind": "synthetic",
+        "inference_state": "student",
+        "training_method": "ema_full",
+        "label_budget": len(labeled_ids),
+        "labeled_ids": labeled_ids,
+        "lineage": {"budget_k": len(labeled_ids), "exact_labeled_ids": labeled_ids},
+    }
+    cache_path = tmp_path / "cache" / "CACHE_MANIFEST.json"
+    atomic_json(cache_path, {
+        "schema": "self_audit.compact_teacher_cache.v1",
+        "native_axes": "TZYX",
+        "num_classes": 4,
+        "train_manifest_sha256": train_sha,
+        "teacher_identity": identity,
+        "patients": {uid: {} for uid in unlabeled_ids},
+    })
+    config = {
+        "schema": "self_audit.compact.v1",
+        "server_arm": arm_id,
+        "experiment": {"id": f"server_compact_{arm_id.lower()}_test", "launchable": True},
+        "method": "plain_kd",
+        "selector": "original",
+        "seed": 42,
+        "steps": 10000,
+        "warmup_steps": 1000,
+        "save_every": 1000,
+        "model": {
+            "name": "CompactStudent", "in_channels": 3, "num_classes": 4,
+            "widths": [32, 64, 128, 256], "init": "kaiming_normal",
+        },
+        "crop_size": crop_size,
+        "batch_size": 32,
+        "labeled_batch_size": 32,
+        "unlabeled_batch_size": 32,
+        "eval_batch_size": 8,
+        "lr": 0.0003,
+        "weight_decay": 0.0001,
+        "pseudo_lr": 0.001,
+        "temperature": 1.0,
+        "coefficient": 1.0,
+        "pseudo_threshold": 0.7,
+        "ridge": 1e-6,
+        "risk_budget": 0.0,
+        "absent_fp_budget": 0.0,
+        "guard_tolerance": 1e-6,
+        "max_trials": 8,
+        "equal_wall_time": {"enabled": False},
+        "acceptance": {"metric": "Macro4", "min_macro4": 0.87},
+        "data": {
+            "manifest_sha256": train_sha,
+            "budget_k": len(labeled_ids),
+            "labeled_ids": labeled_ids,
+        },
+        "teacher": {
+            "cache_path": str(cache_path),
+            "cache_sha256": sha256_file(cache_path),
+            "teacher_identity_sha256": canonical_sha256(identity),
+            "teacher_identity": identity,
+            "lineage": {"budget_k": len(labeled_ids), "exact_labeled_ids": labeled_ids},
+        },
+    }
+    return train_manifest, train_sha, config
+
+
+def test_generic_kd_arm_config_and_profile_lock_are_pinned_and_bounded(monkeypatch, tmp_path):
+    train_manifest, train_sha, config = _synthetic_server_kd_config(tmp_path)
+    config_path = tmp_path / "s1.json"
+    atomic_json(config_path, config)
+    config_sha = sha256_file(config_path)
+    val_path = tmp_path / "val.json"
+    val = {"schema": "self_audit.eval.v2", "role": "development", "synthetic": True,
+           "patients": [{"id": "synthetic_val_001"}]}
+    atomic_json(val_path, val)
+    val_sha = sha256_file(val_path)
+
+    def fake_source_identity(root=server_runner.ROOT):
+        return {"git_head": "1" * 40, "git_status_paths": [], "files": {}, "closure_sha256": "a" * 64}
+
+    observed = {}
+
+    def fake_train(profile_config, manifest, manifest_sha, out, *, device, synthetic, stop_after_step, allow_full_run):
+        observed.update({"steps": profile_config["steps"], "warmup_steps": profile_config["warmup_steps"],
+                         "stop_after_step": stop_after_step, "allow_full_run": allow_full_run})
+        out = Path(out)
+        out.mkdir(parents=True)
+        rows = [{
+            "step": step,
+            "timings": {"step_elapsed_seconds": 0.02},
+            "effective_batch_counts": {"labeled": 32, "unlabeled": 32},
+            "cuda_memory": {"cuda_peak_allocated_bytes": None, "cuda_peak_reserved_bytes": None},
+        } for step in range(stop_after_step)]
+        (out / "TRAIN_LOG.jsonl").write_text("".join(json.dumps(row) + "\n" for row in rows))
+        atomic_json(out / "REPORT.json", {"status": "STOPPED_BOUNDARY", "steps": stop_after_step})
+        return {"status": "STOPPED_BOUNDARY", "steps": stop_after_step}
+
+    monkeypatch.setattr(server_runner, "source_identity", fake_source_identity)
+    monkeypatch.setattr(compact_training, "train_compact", fake_train)
+    profile_dir = tmp_path / "profile"
+    profile = profile_arm_config(
+        profile_dir,
+        arm_config_path=config_path,
+        arm_config_sha256=config_sha,
+        train_manifest=train_manifest,
+        train_sha256=train_sha,
+        synthetic=True,
+        device="cpu",
+        warmup_steps=2,
+        measured_steps=3,
+    )
+    assert observed == {"steps": 5, "warmup_steps": 2, "stop_after_step": 5, "allow_full_run": True}
+    assert profile["recipe_warmup_steps"] == 1000
+    assert profile["profile_warmup_steps"] == 2
+    assert profile["arm_config_sha256"] == config_sha
+
+    lock_path = tmp_path / "lock.json"
+    lock = create_protocol_lock(
+        lock_path,
+        profile_path=profile_dir / "PROFILE.json",
+        profile_sha256=sha256_file(profile_dir / "PROFILE.json"),
+        train_manifest=train_manifest,
+        train_sha256=train_sha,
+        val_manifest=val_path,
+        val_sha256=val_sha,
+        batch_size=32,
+        arm_config_path=config_path,
+        arm_config_sha256=config_sha,
+    )
+    verified = verify_protocol_lock(lock_path, sha256_file(lock_path))
+    assert lock["schema"] == "self_audit.server_compact.lock.v2"
+    assert verified["config"]["crop_size"] == 160
+    assert verified["protocol"]["warmup_steps"] == 1000
+    assert verified["protocol"]["arm_config_sha256"] == config_sha
+    assert verified["protocol"]["kd_loss"] == "soft_cross_entropy"
+    assert verified["protocol"]["kd_denominator"] == "common_valid_confident_pixel_count"
+    run_root = tmp_path / "run_without_arm_pin"
+    with pytest.raises(ValueError, match="generic arm run requires --arm-config"):
+        run_locked_experiment(lock_path, sha256_file(lock_path), run_root, device="cpu",
+                              rclone_base="drive:unused")
+    assert not run_root.exists()
+    with pytest.raises(ValueError, match="differs from the verified protocol lock"):
+        run_locked_experiment(lock_path, sha256_file(lock_path), run_root, device="cpu",
+                              rclone_base="drive:unused", arm_config_path=config_path,
+                              arm_config_sha256="f" * 64)
+    assert not run_root.exists()
+
+
+def test_generic_kd_arm_rejects_mismatched_teacher_crop_batch_and_steps(tmp_path):
+    train_manifest, train_sha, baseline = _synthetic_server_kd_config(tmp_path)
+    config_path = tmp_path / "arm.json"
+
+    variants = []
+    changed = copy.deepcopy(baseline)
+    changed["crop_size"] = 256
+    variants.append((changed, "S1/crop160 or S2/crop256"))
+    changed = copy.deepcopy(baseline)
+    changed.update(batch_size=16, labeled_batch_size=16, unlabeled_batch_size=16)
+    variants.append((changed, "batch, labeled batch, and unlabeled batch must all be 32"))
+    changed = copy.deepcopy(baseline)
+    changed["steps"] = 9999
+    variants.append((changed, "steps and checkpoint cadence must remain 10,000 and 1,000"))
+    changed = copy.deepcopy(baseline)
+    changed["teacher"]["teacher_identity"]["payload_sha256"] = "f" * 64
+    changed["teacher"]["teacher_identity_sha256"] = canonical_sha256(changed["teacher"]["teacher_identity"])
+    variants.append((changed, "cache identity differs"))
+    changed = copy.deepcopy(baseline)
+    changed["teacher"]["cache_path"] = None
+    variants.append((changed, "fixed teacher cache path"))
+
+    for config, message in variants:
+        atomic_json(config_path, config)
+        with pytest.raises((TypeError, ValueError), match=message):
+            _validate_server_arm_config(config_path, sha256_file(config_path), train_manifest, train_sha)
+
+
+def test_server_arm_templates_match_historical_wide_kd_without_old_teacher_pins():
+    root = Path(__file__).resolve().parents[1]
+    s1 = json.loads((root / "configs/server_compact/s1_plain_kd.json").read_text())
+    s2 = json.loads((root / "configs/server_compact/s2_plain_kd.json").read_text())
+    historical = json.loads((root / "results/compact_acdc_l8_20261029/experiment_20261028/wide_plain_kd_config.json").read_text())
+    for config in (s1, s2):
+        assert config["experiment"]["launchable"] is False
+        for key in ("steps", "warmup_steps", "seed", "lr", "weight_decay", "pseudo_lr", "temperature",
+                    "coefficient", "pseudo_threshold"):
+            assert config[key] == historical[key]
+        assert config["batch_size"] == config["labeled_batch_size"] == config["unlabeled_batch_size"] == 32
+        assert config["model"]["widths"] == historical["model"]["widths"]
+        assert config["teacher"]["teacher_identity"] is None
+        assert config["teacher"]["cache_sha256"] is None
+    assert s1["crop_size"] == 160
+    assert s2["crop_size"] == 256
 
 
 def test_canonical_compact_trainer_exact_resume_on_manufactured_data(tmp_path):
@@ -216,7 +424,7 @@ def test_checkpoint_validation_preserves_training_state_and_keeps_earliest_tie(m
     lock = {"config": config,
             "inputs": {"train": {"sha256": "a" * 64}, "val": {"sha256": "b" * 64},
                        "synthetic": True},
-            "protocol": {"batch_size": 32}}
+            "protocol": {"batch_size": 32, "best_rule": "highest VAL class_first_macro4; exact ties keep earliest step"}}
     run_root = tmp_path / "run"
     run_root.mkdir()
     model = torch.nn.Linear(3, 2)

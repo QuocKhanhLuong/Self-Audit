@@ -19,6 +19,7 @@ import statistics
 import subprocess
 import threading
 import time
+from types import SimpleNamespace
 from typing import Any, Callable, Mapping
 import uuid
 
@@ -31,6 +32,13 @@ CHECKPOINT_EVERY = 1000
 NORMALIZATION = "prepared"
 EVALUATION_BATCH_SIZE = 8
 RCLONE_HARD_TIMEOUT_SECONDS = 900.0
+HISTORICAL_WIDE_KD = {
+    "pseudo_lr": 0.001,
+    "temperature": 1.0,
+    "coefficient": 1.0,
+    "pseudo_threshold": 0.7,
+}
+JOINT_SUPERVISED_MNM_IDS = {f"mnm:{pid}" for pid in ("A9E3G9", "B9E0Q1", "D3F9H9", "E5F5V7")}
 
 
 def sha256_file(path: str | Path) -> str:
@@ -81,6 +89,7 @@ def source_identity(root: str | Path = ROOT) -> dict[str, Any]:
         "train.py", "prepare_acdc.py", "scripts/run_server_compact.py", "scripts/export_compact_student.py",
         "scripts/evaluate_compact_student.py", "self_audit/server_runner.py",
         "configs/server_compact/s0_wide_seed42.json",
+        "configs/server_compact/s1_plain_kd.json", "configs/server_compact/s2_plain_kd.json",
         "configs/fresh_s0/supervised_wide_seed42.json", "ACTIVE_PIPELINE.json",
     }
     missing = sorted(required - files.keys())
@@ -189,6 +198,198 @@ def build_s0_config(batch_size: int, root: str | Path = ROOT) -> dict[str, Any]:
     if normalized["method"] != "supervised" or normalized["steps"] != TOTAL_STEPS:
         raise ValueError("server runner only permits one canonical 10,000-step supervised S0")
     return normalized
+
+
+def _cache_manifest_path(cache_path: str | Path) -> Path:
+    path = Path(cache_path).resolve()
+    if path.is_dir():
+        candidates = (path / "CACHE_MANIFEST.json", path / "MANIFEST.json")
+        path = next((candidate for candidate in candidates if candidate.is_file()), candidates[0])
+    return path
+
+
+def _identity_core(identity: Mapping[str, Any]) -> dict[str, Any]:
+    keys = (
+        "teacher_kind", "inference_state", "labeled_ids", "label_budget", "manifest_sha256",
+        "payload_sha256", "source_sha256", "training_method",
+    )
+    return {key: identity.get(key) for key in keys}
+
+
+def _validate_server_arm_config(
+    config_path: str | Path,
+    config_sha256: str,
+    train_manifest: str | Path,
+    train_sha256: str,
+    *,
+    root: str | Path = ROOT,
+) -> tuple[dict[str, Any], dict[str, Any], list[str], list[str], bool]:
+    """Validate an immutable S1/S2-style config and metadata-only TRAIN/teacher lineage."""
+    config_path = Path(config_path).resolve()
+    raw = _read_pinned_json(config_path, config_sha256, "arm config")
+    from .compact_training import validate_compact_config
+
+    config = validate_compact_config(raw, allow_full_run=True)
+    experiment = raw.get("experiment")
+    if not isinstance(experiment, Mapping) or experiment.get("launchable") is not True:
+        raise ValueError("server arm config is a template until experiment.launchable is explicitly true")
+    arm_id = raw.get("server_arm")
+    if not isinstance(arm_id, str) or not arm_id:
+        raise ValueError("server arm config requires a nonempty server_arm identifier")
+    if config["method"] not in {"supervised", "plain_kd"}:
+        raise ValueError("server arm config permits only canonical supervised or plain_kd methods")
+    if config["steps"] != TOTAL_STEPS or config["save_every"] != CHECKPOINT_EVERY:
+        raise ValueError("server arm steps and checkpoint cadence must remain 10,000 and 1,000")
+    if raw.get("stop_steps") not in (None, False) or raw.get("stop_after_step") not in (None, False):
+        raise ValueError("server arm config cannot override its immutable 10,000-step total")
+    if config["seed"] != 42 or config["crop_size"] not in {160, 256}:
+        raise ValueError("server arm seed must be 42 and crop size must be 160 or 256")
+    if config["batch_size"] != 32 or config["labeled_batch_size"] != 32 or config["unlabeled_batch_size"] != 32:
+        raise ValueError("server arm batch, labeled batch, and unlabeled batch must all be 32")
+    if config.get("eval_batch_size") != EVALUATION_BATCH_SIZE:
+        raise ValueError(f"server arm eval_batch_size must be {EVALUATION_BATCH_SIZE}")
+    model = config.get("model", {})
+    if (
+        model.get("name") != "CompactStudent"
+        or model.get("widths") != [32, 64, 128, 256]
+        or model.get("in_channels") != 3
+        or model.get("num_classes") != 4
+        or model.get("init") != "kaiming_normal"
+        or model.get("pretrained") not in (None, False)
+    ):
+        raise ValueError("server arms require wide seed-42 random initialization with no pretrained weights")
+    if any(raw.get(key) not in (None, False) for key in (
+        "initial_checkpoint", "initial_weights", "init_checkpoint", "pretrained_checkpoint", "warm_start", "resume"
+    )) or any(model.get(key) not in (None, False) for key in ("checkpoint_path", "weights_path", "pretrained_checkpoint")):
+        raise ValueError("server arms cannot initialize from trained weights")
+    if config["lr"] != 0.0003 or config["weight_decay"] != 0.0001:
+        raise ValueError("server arm supervised optimizer must match the historical wide recipe")
+    if config["equal_wall_time"].get("enabled") is not False:
+        raise ValueError("server arm equal-wall-time must remain disabled")
+
+    if config["method"] == "plain_kd":
+        expected_crop = {"S1": 160, "S2": 256}.get(arm_id)
+        if expected_crop is None or config["crop_size"] != expected_crop:
+            raise ValueError("plain_kd server_arm must be S1/crop160 or S2/crop256")
+        if config["warmup_steps"] != 1000:
+            raise ValueError("S1/S2 plain_kd requires the historical 1,000-step supervised warmup")
+        for key, expected in HISTORICAL_WIDE_KD.items():
+            if config[key] != expected:
+                raise ValueError(f"historical wide plain_kd requires {key}={expected!r}")
+        if config.get("selector") != "original" or any(key in raw for key in ("class_weights", "denominator", "confidence", "kd")):
+            raise ValueError("plain_kd must retain the historical unweighted common-pixel soft-KD objective")
+    elif config["warmup_steps"] > config["steps"]:
+        raise ValueError("server arm warmup cannot exceed its immutable total step budget")
+
+    train_path = Path(train_manifest).resolve()
+    train, labeled_ids, synthetic = _train_metadata(train_path, train_sha256)
+    unlabeled_ids = [record["id"] for record in train["unlabeled"]]
+    data_cfg = raw.get("data")
+    if not isinstance(data_cfg, Mapping):
+        raise ValueError("server arm config must pin its TRAIN manifest and dense labeled lineage")
+    if (
+        data_cfg.get("manifest_sha256") != train_sha256.lower()
+        or data_cfg.get("budget_k") != len(labeled_ids)
+        or data_cfg.get("labeled_ids") != labeled_ids
+    ):
+        raise ValueError("arm config data lineage must exactly match the hash-pinned TRAIN manifest")
+
+    if arm_id == "joint_supervised":
+        from .server_evaluation import _validate_shared_l4_l4_train
+        _validate_shared_l4_l4_train(train_path, train_sha256)
+        non_mnm_ids = set(labeled_ids) - JOINT_SUPERVISED_MNM_IDS
+        if (
+            config["method"] != "supervised"
+            or config["crop_size"] != 160
+            or len(labeled_ids) != 8
+            or set(labeled_ids) & JOINT_SUPERVISED_MNM_IDS != JOINT_SUPERVISED_MNM_IDS
+            or len(non_mnm_ids) != 4
+            or non_mnm_ids != {f"acdc:patient{pid}" for pid in ("007", "024", "026", "041")}
+        ):
+            raise ValueError("joint_supervised requires crop160 and exactly ACDC4 plus MNM4 in one L8 TRAIN manifest")
+
+    if config["method"] == "supervised":
+        teacher = raw.get("teacher") or {}
+        if not isinstance(teacher, Mapping) or teacher:
+            raise ValueError("supervised server arms cannot consume a teacher or teacher cache")
+        if arm_id != "joint_supervised":
+            raise ValueError("generic supervised arm locks are reserved for joint_supervised; S0 retains its existing lock path")
+        return config, train, labeled_ids, unlabeled_ids, synthetic
+
+    teacher = raw.get("teacher")
+    if not isinstance(teacher, Mapping):
+        raise ValueError("plain_kd server arm requires an explicitly pinned fixed teacher and cache")
+    identity = teacher.get("teacher_identity")
+    identity_sha = teacher.get("teacher_identity_sha256")
+    if not isinstance(identity, Mapping) or identity_sha != canonical_sha256(identity):
+        raise ValueError("teacher identity requires an exact canonical teacher_identity_sha256 pin")
+    teacher_kind = identity.get("teacher_kind")
+    if not synthetic and teacher_kind != "reproduction":
+        raise ValueError("real S1/S2 requires the newly reproduced B8 identity, not a historical baseline")
+    if teacher_kind not in {"reproduction", "synthetic"}:
+        raise ValueError("server plain_kd requires a reproduction identity for real data or synthetic identity for fixtures")
+    if identity.get("training_method") != "ema_full" or identity.get("inference_state") != "student":
+        raise ValueError("server plain_kd requires the historical full-EMA raw-student teacher semantics")
+    teacher_lineage = teacher.get("lineage")
+    if not isinstance(teacher_lineage, Mapping):
+        raise ValueError("fixed teacher label lineage is mandatory")
+    if teacher_lineage.get("budget_k") != len(labeled_ids) or teacher_lineage.get("exact_labeled_ids") != labeled_ids:
+        raise ValueError("fixed teacher label lineage must exactly match the locked TRAIN-L support")
+    declared_identity_sha = teacher.get("source_manifest_sha256")
+    if declared_identity_sha is not None and declared_identity_sha != identity.get("manifest_sha256"):
+        raise ValueError("teacher source manifest SHA differs from the pinned teacher identity")
+    declared_payload_sha = teacher.get("source_payload_sha256")
+    if declared_payload_sha is not None and declared_payload_sha not in {
+        identity.get("payload_sha256"), identity.get("raw_student_sha256")
+    }:
+        raise ValueError("teacher source payload SHA differs from the pinned teacher identity")
+
+    from .compact_teacher import preflight_teacher_lineage, validate_teacher_identity
+
+    lineage_data = SimpleNamespace(manifest=train, lids=labeled_ids)
+    validated_identity = validate_teacher_identity(
+        identity,
+        declared_k=len(labeled_ids),
+        declared_labeled_ids=labeled_ids,
+        data=lineage_data,
+    )
+    preflight_teacher_lineage(
+        teacher_labeled_ids=validated_identity["labeled_ids"],
+        student_labeled_ids=labeled_ids,
+        data=lineage_data,
+        warmstart_labeled_ids=labeled_ids,
+        audit_labeled_ids=labeled_ids,
+        label_budget=len(labeled_ids),
+        declared_labeled_ids=labeled_ids,
+        teacher_kind=validated_identity["teacher_kind"],
+    )
+
+    cache_path = teacher.get("cache_path")
+    cache_sha = teacher.get("cache_sha256")
+    if not isinstance(cache_path, str) or not cache_path:
+        raise ValueError("plain_kd requires a fixed teacher cache path")
+    if not isinstance(cache_sha, str) or not re.fullmatch(r"[0-9a-fA-F]{64}", cache_sha):
+        raise ValueError("plain_kd requires the fixed teacher cache manifest SHA-256")
+    cache_manifest_path = _cache_manifest_path(cache_path)
+    cache = _read_pinned_json(cache_manifest_path, cache_sha, "fixed teacher cache manifest")
+    if cache.get("schema") != "self_audit.compact_teacher_cache.v1":
+        raise ValueError("fixed teacher cache schema is not canonical compact_teacher_cache.v1")
+    if cache.get("native_axes") != "TZYX" or cache.get("num_classes") != 4:
+        raise ValueError("fixed teacher cache must pin native TZYX axes and four canonical classes")
+    if cache.get("train_manifest_sha256") != train_sha256.lower():
+        raise ValueError("fixed teacher cache was not built from the exact locked TRAIN manifest")
+    cache_identity = cache.get("teacher_identity")
+    if not isinstance(cache_identity, Mapping) or _identity_core(cache_identity) != _identity_core(validated_identity):
+        raise ValueError("fixed teacher cache identity differs from the pinned reproduced B8 identity")
+    if not synthetic and (
+        cache_identity.get("verified") is not True
+        or cache_identity.get("physical_payload_status") not in {"VERIFIED_ON_DISK", "REMOTE_DRIVE_VERIFIED"}
+    ):
+        raise ValueError("fixed teacher cache does not carry verified physical teacher provenance")
+    cache_patients = cache.get("patients")
+    if not isinstance(cache_patients, Mapping) or set(cache_patients) != set(unlabeled_ids):
+        raise ValueError("fixed teacher cache must contain exactly every locked TRAIN-U patient")
+    return config, train, labeled_ids, unlabeled_ids, synthetic
 
 
 def profile_batches(
@@ -320,6 +521,146 @@ def profile_batches(
     return profile
 
 
+def profile_arm_config(
+    out_dir: str | Path,
+    *,
+    arm_config_path: str | Path,
+    arm_config_sha256: str,
+    train_manifest: str | Path,
+    train_sha256: str,
+    synthetic: bool = False,
+    device: str = "cuda",
+    warmup_steps: int = 2,
+    measured_steps: int = 5,
+    root: str | Path = ROOT,
+) -> dict[str, Any]:
+    """Measure a short canonical profile of one immutable arm at its configured batch/crop."""
+    if type(warmup_steps) is not int or warmup_steps < 1:
+        raise ValueError("arm profile requires at least one profile-only warmup step")
+    if type(measured_steps) is not int or measured_steps < 1:
+        raise ValueError("arm profile measured_steps must be a positive integer")
+    total = warmup_steps + measured_steps
+    if total > 128:
+        raise ValueError("arm profiling is bounded to at most 128 canonical steps")
+    config_path = Path(arm_config_path).resolve()
+    config_sha256 = arm_config_sha256.lower()
+    config, _train, _lids, _uids, actual_synthetic = _validate_server_arm_config(
+        config_path, config_sha256, train_manifest, train_sha256, root=root,
+    )
+    if bool(synthetic) != actual_synthetic:
+        raise ValueError("--synthetic must agree with the pinned TRAIN manifest")
+    import torch
+
+    if str(device).startswith("cuda") and not torch.cuda.is_available():
+        raise RuntimeError("CUDA profile requested but CUDA is unavailable")
+
+    out = Path(out_dir).resolve()
+    out.mkdir(parents=True, exist_ok=False)
+    train_path = Path(train_manifest).resolve()
+    train_sha256 = train_sha256.lower()
+    profile_out = out / "arm_profile"
+    profile_config = copy.deepcopy(config)
+    profile_config["steps"] = total
+    # This short, profile-only override measures a KD step after a small supervised
+    # warmup. The locked arm retains its full 1,000-step historical warmup.
+    profile_config["warmup_steps"] = warmup_steps
+    try:
+        from .compact_training import train_compact
+
+        report = train_compact(
+            profile_config,
+            train_path,
+            train_sha256,
+            profile_out,
+            device=device,
+            synthetic=actual_synthetic,
+            stop_after_step=total,
+            allow_full_run=True,
+        )
+    except RuntimeError as exc:
+        if "out of memory" not in str(exc).lower():
+            raise
+        allocated = reserved = None
+        if str(device).startswith("cuda") and torch.cuda.is_available():
+            allocated = int(torch.cuda.max_memory_allocated(device))
+            reserved = int(torch.cuda.max_memory_reserved(device))
+            torch.cuda.empty_cache()
+        results = [{
+            "batch_size": config["batch_size"], "status": "OOM", "steps_measured": 0,
+            "profile_warmup_steps": warmup_steps, "step_latency_seconds_median": None,
+            "step_latency_seconds_p95": None, "labeled_slices_per_second": None,
+            "sampled_l_plus_u_slices_per_second": None,
+            "cuda_peak_allocated_bytes": allocated, "cuda_peak_reserved_bytes": reserved,
+            "error": f"{type(exc).__name__}: {exc}", "output": str(profile_out),
+        }]
+    else:
+        if report.get("steps") != total or report.get("status") != "STOPPED_BOUNDARY":
+            raise RuntimeError("canonical arm profile did not stop at its requested boundary")
+        rows = [
+            json.loads(line) for line in (profile_out / "TRAIN_LOG.jsonl").read_text().splitlines()
+            if line.strip()
+        ]
+        measured = rows[warmup_steps:]
+        latencies = [float(row["timings"]["step_elapsed_seconds"]) for row in measured]
+        if len(latencies) != measured_steps or not all(math.isfinite(x) and x > 0 for x in latencies):
+            raise RuntimeError("canonical arm profile lacks finite measured step timings")
+        elapsed = sum(latencies)
+        labeled_draws = sum(int(row["effective_batch_counts"]["labeled"]) for row in measured)
+        all_draws = sum(
+            int(row["effective_batch_counts"]["labeled"]) + int(row["effective_batch_counts"]["unlabeled"])
+            for row in measured
+        )
+        allocated = [row.get("cuda_memory", {}).get("cuda_peak_allocated_bytes") for row in measured]
+        reserved = [row.get("cuda_memory", {}).get("cuda_peak_reserved_bytes") for row in measured]
+        allocated = [int(x) for x in allocated if type(x) is int]
+        reserved = [int(x) for x in reserved if type(x) is int]
+        results = [{
+            "batch_size": config["batch_size"], "status": "MEASURED", "steps_measured": measured_steps,
+            "profile_warmup_steps": warmup_steps,
+            "step_latency_seconds_median": statistics.median(latencies),
+            "step_latency_seconds_p95": _percentile(latencies, 95),
+            "labeled_slices_per_second": labeled_draws / elapsed,
+            "sampled_l_plus_u_slices_per_second": all_draws / elapsed,
+            "cuda_peak_allocated_bytes": max(allocated) if allocated else None,
+            "cuda_peak_reserved_bytes": max(reserved) if reserved else None,
+            "trainer_report_sha256": sha256_file(profile_out / "REPORT.json"),
+            "train_log_sha256": sha256_file(profile_out / "TRAIN_LOG.jsonl"),
+            "output": str(profile_out),
+        }]
+    src = source_identity(root)
+    profile = {
+        "schema": "self_audit.server_compact.profile.v1",
+        "profile_kind": "arm",
+        "status": "PROFILED",
+        "synthetic": actual_synthetic,
+        "train_manifest": str(train_path),
+        "train_manifest_sha256": train_sha256,
+        "profile_device": device,
+        "profile_steps_total": total,
+        "measured_steps_per_batch": measured_steps,
+        "batch_sizes": [config["batch_size"]],
+        "results": results,
+        "arm_id": config["server_arm"],
+        "method": config["method"],
+        "crop_size": config["crop_size"],
+        "recipe_warmup_steps": config["warmup_steps"],
+        "profile_warmup_steps": warmup_steps,
+        "profile_only_random_initialization": True,
+        "arm_config_path": str(config_path),
+        "arm_config_sha256": config_sha256,
+        "arm_config_canonical_sha256": canonical_sha256(config),
+        "teacher_identity_sha256": config.get("teacher", {}).get("teacher_identity_sha256"),
+        "teacher_cache_sha256": config.get("teacher", {}).get("cache_sha256"),
+        "recipe_path": str(config_path),
+        "recipe_sha256": config_sha256,
+        "source": src,
+        "claim_boundary": "short profile-only run with random initialization; no patient quality or full-run evidence",
+    }
+    atomic_json(out / "PROFILE.json", profile)
+    profile["profile_sha256"] = sha256_file(out / "PROFILE.json")
+    return profile
+
+
 def _percentile(values: list[float], q: float) -> float:
     ordered = sorted(values)
     if len(ordered) == 1:
@@ -328,6 +669,180 @@ def _percentile(values: list[float], q: float) -> float:
     low = math.floor(position)
     high = math.ceil(position)
     return ordered[low] + (ordered[high] - ordered[low]) * (position - low)
+
+
+def _server_arm_protocol(config: Mapping[str, Any], arm_config_sha256: str) -> dict[str, Any]:
+    teacher = config.get("teacher", {})
+    protocol = {
+        "arm_id": config["server_arm"],
+        "method": config["method"],
+        "architecture": "CompactStudent",
+        "widths": [32, 64, 128, 256],
+        "pretrained": False,
+        "initialization": "kaiming_normal_seed42",
+        "seed": 42,
+        "crop_size": config["crop_size"],
+        "steps": TOTAL_STEPS,
+        "warmup_steps": config["warmup_steps"],
+        "save_every": CHECKPOINT_EVERY,
+        "batch_size": config["batch_size"],
+        "labeled_batch_size": config["labeled_batch_size"],
+        "unlabeled_batch_size": config["unlabeled_batch_size"],
+        "eval_batch_size": config["eval_batch_size"],
+        "arm_config_sha256": arm_config_sha256.lower(),
+        "teacher_identity_sha256": teacher.get("teacher_identity_sha256"),
+        "teacher_cache_sha256": teacher.get("cache_sha256"),
+        "best_rule": ("highest equal-domain VAL Macro4; exact ties keep earliest step"
+                      if config["server_arm"] == "joint_supervised" else
+                      "highest VAL class_first_macro4; exact ties keep earliest step"),
+        "selection_metric": ("equal_domain_class_first_macro4"
+                             if config["server_arm"] == "joint_supervised" else "class_first_macro4"),
+        "test_policy": "optional TEST only after best selection and frozen best-VAL predictions",
+    }
+    if config["method"] == "plain_kd":
+        protocol["kd_loss"] = "soft_cross_entropy"
+        protocol["kd_denominator"] = "common_valid_confident_pixel_count"
+        protocol["confidence_threshold_domain"] = "raw_teacher_max_probability_before_temperature"
+        protocol["teacher_cache_semantics"] = "FixedTeacherCache; exact TRAIN manifest and full TRAIN-U identity"
+    return protocol
+
+
+def _validate_arm_profile_summary(
+    profile: Mapping[str, Any],
+    config: Mapping[str, Any],
+    *,
+    arm_config_path: Path,
+    arm_config_sha256: str,
+    train_sha256: str,
+) -> None:
+    if (
+        profile.get("schema") != "self_audit.server_compact.profile.v1"
+        or profile.get("profile_kind") != "arm"
+        or profile.get("status") != "PROFILED"
+    ):
+        raise ValueError("generic arm lock requires a completed arm-specific profile receipt")
+    if (
+        profile.get("batch_sizes") != [32]
+        or profile.get("train_manifest_sha256") != train_sha256.lower()
+        or profile.get("arm_config_path") != str(arm_config_path.resolve())
+        or profile.get("arm_config_sha256") != arm_config_sha256.lower()
+        or profile.get("arm_config_canonical_sha256") != canonical_sha256(config)
+        or profile.get("arm_id") != config.get("server_arm")
+        or profile.get("method") != config.get("method")
+        or profile.get("crop_size") != config.get("crop_size")
+        or profile.get("recipe_warmup_steps") != config.get("warmup_steps")
+        or profile.get("teacher_identity_sha256") != config.get("teacher", {}).get("teacher_identity_sha256")
+        or profile.get("teacher_cache_sha256") != config.get("teacher", {}).get("cache_sha256")
+        or profile.get("profile_only_random_initialization") is not True
+    ):
+        raise ValueError("arm profile is not bound to the exact config, batch, crop, teacher, and cache")
+    profile_warmup = profile.get("profile_warmup_steps")
+    measured_steps = profile.get("measured_steps_per_batch")
+    if (
+        type(profile_warmup) is not int or profile_warmup < 1
+        or type(measured_steps) is not int or measured_steps < 1
+        or profile.get("profile_steps_total") != profile_warmup + measured_steps
+        or profile.get("profile_steps_total") > 128
+    ):
+        raise ValueError("arm profile exceeds its bounded warmup and measurement budget")
+    if config.get("method") == "plain_kd" and profile_warmup >= config.get("warmup_steps", 0):
+        raise ValueError("KD profile must use a short profile-only warmup below the locked recipe warmup")
+    result = profile.get("results")
+    if not isinstance(result, list) or len(result) != 1 or not isinstance(result[0], Mapping):
+        raise ValueError("arm profile must contain exactly one B32 result")
+    item = result[0]
+    if item.get("batch_size") != 32 or item.get("status") != "MEASURED" or item.get("steps_measured") != measured_steps:
+        raise ValueError("arm profile must contain a measured B32 result for its declared step count")
+    for key in ("step_latency_seconds_median", "step_latency_seconds_p95", "labeled_slices_per_second"):
+        value = item.get(key)
+        if type(value) not in (int, float) or not math.isfinite(float(value)) or float(value) <= 0:
+            raise ValueError("arm profile must contain finite positive timing and throughput measurements")
+
+
+def _create_arm_protocol_lock(
+    out_path: str | Path,
+    *,
+    profile_path: str | Path,
+    profile_sha256: str,
+    train_manifest: str | Path,
+    train_sha256: str,
+    val_manifest: str | Path,
+    val_sha256: str,
+    batch_size: int,
+    arm_config_path: str | Path,
+    arm_config_sha256: str,
+    test_manifest: str | Path | None = None,
+    test_sha256: str | None = None,
+    root: str | Path = ROOT,
+) -> dict[str, Any]:
+    if batch_size != 32:
+        raise ValueError("generic server arm locks require the common batch size 32")
+    profile_sha256, train_sha256, val_sha256 = (
+        profile_sha256.lower(), train_sha256.lower(), val_sha256.lower()
+    )
+    if test_sha256 is not None:
+        test_sha256 = test_sha256.lower()
+    profile = _read_pinned_json(profile_path, profile_sha256, "profile receipt")
+    config_path = Path(arm_config_path).resolve()
+    config_sha256 = arm_config_sha256.lower()
+    config, train, labeled_ids, _unlabeled_ids, synthetic = _validate_server_arm_config(
+        config_path, config_sha256, train_manifest, train_sha256, root=root,
+    )
+    _validate_arm_profile_summary(
+        profile, config, arm_config_path=config_path,
+        arm_config_sha256=config_sha256, train_sha256=train_sha256,
+    )
+    if profile.get("source", {}).get("closure_sha256") != source_identity(root)["closure_sha256"]:
+        raise ValueError("arm profile source closure differs from current locked server code")
+
+    train_path = Path(train_manifest).resolve()
+    val_path = Path(val_manifest).resolve()
+    val = _eval_metadata(val_path, val_sha256, "VAL", synthetic)
+    train_ids = set(labeled_ids) | {str(record["id"]) for record in train["unlabeled"]}
+    val_ids = {str(record["id"]) for record in val["patients"]}
+    if train_ids & val_ids:
+        raise ValueError("VAL patient IDs overlap the complete TRAIN L/U union")
+    test_input = None
+    if test_manifest is not None or test_sha256 is not None:
+        if test_manifest is None or test_sha256 is None:
+            raise ValueError("optional TEST requires both manifest path and SHA-256")
+        test_path = Path(test_manifest).resolve()
+        test = _eval_metadata(test_path, test_sha256, "TEST", synthetic)
+        test_ids = {str(record["id"]) for record in test["patients"]}
+        if test_ids & (train_ids | val_ids):
+            raise ValueError("TEST IDs must be disjoint from TRAIN and VAL")
+        test_input = {"path": str(test_path), "sha256": test_sha256}
+
+    base_recipe_path = Path(root) / "configs/server_compact/s0_wide_seed42.json"
+    src = source_identity(root)
+    lock = {
+        "schema": "self_audit.server_compact.lock.v2",
+        "status": "LOCKED",
+        "new_experiment": True,
+        "protocol": _server_arm_protocol(config, config_sha256),
+        "config": config,
+        "config_sha256": canonical_sha256(config),
+        "arm_config_path": str(config_path),
+        "arm_config_sha256": config_sha256,
+        "base_recipe_path": str(base_recipe_path.resolve()),
+        "base_recipe_sha256": sha256_file(base_recipe_path),
+        "profile_path": str(Path(profile_path).resolve()),
+        "profile_sha256": profile_sha256,
+        "inputs": {
+            "train": {"path": str(train_path), "sha256": train_sha256},
+            "val": {"path": str(val_path), "sha256": val_sha256},
+            "test": test_input,
+            "synthetic": synthetic,
+        },
+        "source": src,
+        "training_claim_boundary": "VAL is development-only equal-domain checkpoint selection; no VAL/TEST mask enters training or a quality gate",
+    }
+    out_path = Path(out_path).resolve()
+    if out_path.exists():
+        raise FileExistsError(f"protocol lock already exists: {out_path}")
+    atomic_json(out_path, lock)
+    lock["lock_sha256"] = sha256_file(out_path)
+    return lock
 
 
 def create_protocol_lock(
@@ -342,9 +857,29 @@ def create_protocol_lock(
     batch_size: int,
     test_manifest: str | Path | None = None,
     test_sha256: str | None = None,
+    arm_config_path: str | Path | None = None,
+    arm_config_sha256: str | None = None,
     root: str | Path = ROOT,
 ) -> dict[str, Any]:
     """Freeze one B32/B64 choice and exact TRAIN/VAL/optional TEST pins."""
+    if arm_config_path is not None or arm_config_sha256 is not None:
+        if arm_config_path is None or arm_config_sha256 is None:
+            raise ValueError("generic arm lock requires both arm_config_path and arm_config_sha256")
+        return _create_arm_protocol_lock(
+            out_path,
+            profile_path=profile_path,
+            profile_sha256=profile_sha256,
+            train_manifest=train_manifest,
+            train_sha256=train_sha256,
+            val_manifest=val_manifest,
+            val_sha256=val_sha256,
+            test_manifest=test_manifest,
+            test_sha256=test_sha256,
+            batch_size=batch_size,
+            arm_config_path=arm_config_path,
+            arm_config_sha256=arm_config_sha256,
+            root=root,
+        )
     if type(batch_size) is not int or batch_size not in LOCK_BATCHES:
         raise ValueError("protocol lock must select batch 32 or 64")
     profile_sha256 = profile_sha256.lower()
@@ -444,7 +979,8 @@ def create_protocol_lock(
 
 def verify_protocol_lock(path: str | Path, expected_sha256: str, root: str | Path = ROOT) -> dict[str, Any]:
     lock = _read_pinned_json(path, expected_sha256, "protocol lock")
-    if lock.get("schema") != "self_audit.server_compact.lock.v1" or lock.get("status") != "LOCKED":
+    schema = lock.get("schema")
+    if schema not in {"self_audit.server_compact.lock.v1", "self_audit.server_compact.lock.v2"} or lock.get("status") != "LOCKED":
         raise ValueError("protocol lock schema/status invalid")
     if canonical_sha256(lock.get("config")) != lock.get("config_sha256"):
         raise ValueError("protocol config changed after the lock was written")
@@ -453,6 +989,45 @@ def verify_protocol_lock(path: str | Path, expected_sha256: str, root: str | Pat
     current_source = source_identity(root)
     if current_source["closure_sha256"] != lock.get("source", {}).get("closure_sha256"):
         raise ValueError("server source closure changed after protocol lock")
+    if schema == "self_audit.server_compact.lock.v2":
+        arm_config_path = lock.get("arm_config_path")
+        arm_config_sha256 = lock.get("arm_config_sha256")
+        if not isinstance(arm_config_path, str) or not isinstance(arm_config_sha256, str):
+            raise ValueError("generic arm lock is missing its explicit arm config path/SHA pin")
+        train_ref = lock["inputs"]["train"]
+        config, train, labeled_ids, _unlabeled_ids, synthetic = _validate_server_arm_config(
+            arm_config_path, arm_config_sha256, train_ref["path"], train_ref["sha256"], root=root,
+        )
+        if config != lock["config"] or canonical_sha256(config) != lock["config_sha256"]:
+            raise ValueError("locked config differs from the exact SHA-pinned arm config")
+        if lock["protocol"] != _server_arm_protocol(config, arm_config_sha256):
+            raise ValueError("arm protocol summary differs from the immutable arm config")
+        profile_path = lock.get("profile_path")
+        profile_sha256 = lock.get("profile_sha256")
+        if not isinstance(profile_path, str) or not isinstance(profile_sha256, str):
+            raise ValueError("generic arm lock is missing its exact profile receipt pin")
+        profile = _read_pinned_json(profile_path, profile_sha256, "profile receipt")
+        _validate_arm_profile_summary(
+            profile, config, arm_config_path=Path(arm_config_path),
+            arm_config_sha256=arm_config_sha256, train_sha256=train_ref["sha256"],
+        )
+        if profile.get("source", {}).get("closure_sha256") != current_source["closure_sha256"]:
+            raise ValueError("arm profile is not bound to the locked config, TRAIN manifest, and current source")
+        if lock["inputs"].get("synthetic") is not synthetic:
+            raise ValueError("generic arm lock synthetic flag differs from TRAIN")
+        val_ref = lock["inputs"]["val"]
+        val = _eval_metadata(val_ref["path"], val_ref["sha256"], "VAL", synthetic)
+        train_ids = set(labeled_ids) | {str(record["id"]) for record in train["unlabeled"]}
+        val_ids = {str(record["id"]) for record in val["patients"]}
+        if train_ids & val_ids:
+            raise ValueError("TRAIN/VAL patient ID overlap detected")
+        test_ref = lock["inputs"].get("test")
+        if test_ref is not None:
+            test = _eval_metadata(test_ref["path"], test_ref["sha256"], "TEST", synthetic)
+            test_ids = {str(record["id"]) for record in test["patients"]}
+            if test_ids & (train_ids | val_ids):
+                raise ValueError("TRAIN/VAL/TEST patient ID overlap detected")
+        return lock
     batch = lock["protocol"].get("batch_size")
     if batch not in LOCK_BATCHES or lock["config"].get("labeled_batch_size") != batch or lock["config"].get("unlabeled_batch_size") != batch:
         raise ValueError("protocol lock batch fields are inconsistent")
@@ -654,10 +1229,14 @@ def evaluate_checkpoint(
     step = int(manifest.get("step", -1))
     checkpoint_config = dict(manifest.get("config") or {})
     checkpoint_data = checkpoint_config.pop("data", None)
-    if step < 1 or checkpoint_config != lock["config"]:
+    expected_config = dict(lock["config"])
+    expected_data = expected_config.pop("data", None)
+    if step < 1 or checkpoint_config != expected_config:
         raise ValueError("checkpoint step/config differs from the locked server protocol")
     if not isinstance(checkpoint_data, Mapping) or checkpoint_data.get("manifest_sha256") != lock["inputs"]["train"]["sha256"]:
         raise ValueError("checkpoint config does not bind the locked TRAIN manifest")
+    if expected_data is not None and checkpoint_data != expected_data:
+        raise ValueError("checkpoint TRAIN label lineage differs from the immutable arm config")
     entries = _read_validation_log(run_root)
     for entry in entries:
         if int(entry["step"]) == step and entry["checkpoint_manifest_sha256"] == checkpoint_manifest_sha256:
@@ -682,7 +1261,7 @@ def evaluate_checkpoint(
     best_export_meta = json.loads((Path(best["export_path"]) / "MANIFEST.json").read_text())
     atomic_json(run_root / "BEST_SELECTION.json", {
         "schema": "self_audit.server_compact.best_selection.v1",
-        "rule": "highest VAL class_first_macro4; exact ties keep earliest step",
+        "rule": lock["protocol"]["best_rule"],
         "scope": "development checkpoint selection only; no acceptance gate",
         "selected_step": int(best["step"]),
         "selected_macro4": float(best["macro4"]),
@@ -736,10 +1315,15 @@ def _evaluate_checkpoint_payload(
         train_manifest_sha256=inputs["train"]["sha256"],
         out_dir=eval_dir,
         device=device,
-            batch_size=int(lock["protocol"]["eval_batch_size"]),
+        batch_size=int(lock["protocol"]["eval_batch_size"]),
         normalization=NORMALIZATION,
     )
-    macro4 = metrics.get("class_first_macro4")
+    shared_summary = None
+    if lock["config"].get("server_arm") == "joint_supervised":
+        from .server_evaluation import shared_selection_summary
+        shared_summary = shared_selection_summary(metrics)
+        atomic_json(eval_dir / "DOMAIN_EVALUATION.json", shared_summary)
+    macro4 = shared_summary["macro4"] if shared_summary else metrics.get("class_first_macro4")
     if type(macro4) not in (float, int) or not math.isfinite(macro4):
         raise ValueError("VAL did not return a finite class_first_macro4 for checkpoint selection")
     metrics_path = eval_dir / "METRICS.json"
@@ -753,7 +1337,8 @@ def _evaluate_checkpoint_payload(
         "schema": "self_audit.server_compact.validation.v1",
         "status": "VERIFIED",
         "macro4": float(macro4),
-        "foreground_macro": metrics.get("class_first_foreground_macro"),
+        "foreground_macro": shared_summary["foreground_macro"] if shared_summary else metrics.get("class_first_foreground_macro"),
+        "domain_results": shared_summary["domain_results"] if shared_summary else metrics.get("datasets"),
         "synthetic": bool(inputs["synthetic"]),
         "export_path": str(export_dir),
         "export_manifest_sha256": export_sha,
@@ -761,7 +1346,7 @@ def _evaluate_checkpoint_payload(
         "metrics_sha256": sha256_file(metrics_path),
         "predictions_frozen_sha256": sha256_file(frozen_path),
         "prediction_freeze_status": frozen.get("status"),
-        "selection_metric": "class_first_macro4",
+        "selection_metric": shared_summary["selection_metric"] if shared_summary else "class_first_macro4",
         "selection_note": "VAL is development-only; no go/no-go threshold was applied",
     }
 
@@ -769,13 +1354,14 @@ def _evaluate_checkpoint_payload(
 class ProgressWatcher:
     """Read-only per-step tqdm progress with explicit labeled-patient coverage epochs."""
 
-    def __init__(self, log_path: str | Path, *, total: int, start_step: int, labeled_ids: list[str]):
+    def __init__(self, log_path: str | Path, *, total: int, start_step: int, labeled_ids: list[str], label: str = "S0"):
         from tqdm import tqdm
         self.progress_factory = tqdm
         self.log_path = Path(log_path)
         self.total = total
         self.start_step = start_step
         self.labeled_ids = set(labeled_ids)
+        self.label = label
         self.stop_event = threading.Event()
         self.thread = threading.Thread(target=self._run, name="server-compact-progress", daemon=True)
 
@@ -787,7 +1373,7 @@ class ProgressWatcher:
         self.thread.join()
 
     def _run(self) -> None:
-        bar = self.progress_factory(total=self.total, initial=self.start_step, desc="S0", unit="step", dynamic_ncols=True)
+        bar = self.progress_factory(total=self.total, initial=self.start_step, desc=self.label, unit="step", dynamic_ncols=True)
         offset = 0
         last_done = self.start_step
         completed_cycles = 0
@@ -1344,11 +1930,17 @@ def _write_run_status(run_root: Path, status: str, **extra: Any) -> dict[str, An
 
 
 def _copy_locked_run_receipts(run_root: Path, lock_path: Path, lock: Mapping[str, Any], lock_sha256: str) -> None:
-    receipts = (
+    receipts = [
         (lock_path, run_root / "RUN_LOCK.json", lock_sha256),
         (Path(lock["profile_path"]), run_root / "LOCKED_PROFILE.json", lock["profile_sha256"]),
         (Path(lock["base_recipe_path"]), run_root / "LOCKED_BASE_RECIPE.json", lock["base_recipe_sha256"]),
-    )
+    ]
+    if lock.get("arm_config_path") is not None:
+        receipts.append((
+            Path(lock["arm_config_path"]),
+            run_root / "LOCKED_ARM_CONFIG.json",
+            lock["arm_config_sha256"],
+        ))
     for source, destination, expected in receipts:
         if not source.is_file() or sha256_file(source) != expected:
             raise ValueError(f"locked receipt changed or disappeared: {source}")
@@ -1387,6 +1979,9 @@ def _copy_locked_run_receipts(run_root: Path, lock_path: Path, lock: Mapping[str
         "profile_sha256": lock["profile_sha256"],
         "base_recipe_sha256": lock["base_recipe_sha256"],
     }
+    if lock.get("arm_config_path") is not None:
+        provenance["arm_config_path"] = lock["arm_config_path"]
+        provenance["arm_config_sha256"] = lock["arm_config_sha256"]
     provenance_path = run_root / "PROVENANCE.json"
     if provenance_path.exists():
         if json.loads(provenance_path.read_text()) != provenance:
@@ -1584,6 +2179,8 @@ def run_locked_experiment(
     rclone_base: str,
     resume_checkpoint: str | Path | None = None,
     resume_sha256: str | None = None,
+    arm_config_path: str | Path | None = None,
+    arm_config_sha256: str | None = None,
     backup_client: Any | None = None,
     retry_delay_seconds: float = 15.0,
     root: str | Path = ROOT,
@@ -1591,6 +2188,16 @@ def run_locked_experiment(
     """Train exactly one locked S0, select best on VAL, backup, then optional TEST."""
     lock = verify_protocol_lock(lock_path, lock_sha256, root)
     lock_sha256 = lock_sha256.lower()
+    if lock.get("schema") == "self_audit.server_compact.lock.v2":
+        if arm_config_path is None or arm_config_sha256 is None:
+            raise ValueError("generic arm run requires --arm-config and --arm-config-sha256")
+        if (
+            Path(arm_config_path).resolve() != Path(lock["arm_config_path"]).resolve()
+            or arm_config_sha256.lower() != lock["arm_config_sha256"]
+        ):
+            raise ValueError("run arm config path/SHA differs from the verified protocol lock")
+    elif arm_config_path is not None or arm_config_sha256 is not None:
+        raise ValueError("--arm-config is only supported with a generic v2 arm lock; S0 retains its existing CLI")
     run_root = Path(out_dir).resolve()
     if str(device).startswith("cuda"):
         import torch
@@ -1654,7 +2261,8 @@ def run_locked_experiment(
                           resumed_from=str(resume_checkpoint) if resume_checkpoint else None,
                           protocol_lock_sha256=lock_sha256)
         watcher = ProgressWatcher(run_root / "segments" / "active" / "TRAIN_LOG.jsonl",
-                                  total=TOTAL_STEPS, start_step=starting_step, labeled_ids=labeled_ids)
+                                  total=TOTAL_STEPS, start_step=starting_step, labeled_ids=labeled_ids,
+                                  label=cfg.get("server_arm", "S0"))
         # The actual per-segment log path is known before train_compact creates it.
         watcher.log_path = segment_out / "TRAIN_LOG.jsonl"
         callback_errors: list[BaseException] = []

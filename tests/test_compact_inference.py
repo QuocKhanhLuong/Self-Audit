@@ -469,7 +469,8 @@ def test_absent_class_fixture_distinguishes_class_first_and_patient_first():
 # Two-Phase Evaluation & TRAIN Provenance Overlap Tests
 # ==============================================================================
 
-def test_two_phase_evaluation_pipeline_and_freeze(tmp_path):
+@pytest.mark.parametrize("geometry_provenance", [None, "native cine geometry retained", {"parent_manifest_sha256": "b" * 64}])
+def test_two_phase_evaluation_pipeline_and_freeze(tmp_path, geometry_provenance):
     """Verify two-phase frozen evaluation freezes predictions before scoring references."""
     eval_dir = tmp_path / "eval_data"
     eval_dir.mkdir()
@@ -485,6 +486,7 @@ def test_two_phase_evaluation_pipeline_and_freeze(tmp_path):
         "role": "development",
         "synthetic": True,
         "patients": [p1_rec, p2_rec],
+        "geometry_provenance": geometry_provenance,
     })
 
     tr1_rec, _, _, _ = create_synthetic_patient_data(train_dir, "train_pat1", shape=(2, 3, 32, 32))
@@ -531,6 +533,11 @@ def test_two_phase_evaluation_pipeline_and_freeze(tmp_path):
     assert (out_dir / "RECIPE.json").is_file()
     assert (out_dir / "PREDICTIONS_FROZEN.json").is_file()
     assert (out_dir / "METRICS.json").is_file()
+    assert metrics["evaluation_source_manifest_sha256"] == (
+        geometry_provenance["parent_manifest_sha256"]
+        if isinstance(geometry_provenance, dict) else eval_sha
+    )
+    assert metrics["geometry_provenance"] == geometry_provenance
     assert (out_dir / "predictions" / "eval_pat1_pred.npy").is_file()
     assert (out_dir / "predictions" / "eval_pat2_pred.npy").is_file()
 

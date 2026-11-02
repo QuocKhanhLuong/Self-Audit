@@ -1,0 +1,69 @@
+{
+  "base_commit": "ac66aef38cc67d520762f7b9a71427ffe961770b",
+  "checks": [
+    {
+      "command": "python scripts/check_repo.py",
+      "status": "PASS"
+    },
+    {
+      "command": "python -m pytest -q",
+      "elapsed_seconds": 166.25,
+      "log": "reports/pro4000_server_20261102/PYTEST.log",
+      "log_sha256": "d95383d74d3b0f2e62eaa5107c330ca3eb2f92ea408fad295c2e89fcec13bd9a",
+      "passed": 1172,
+      "status": "PASS",
+      "warnings": 2
+    },
+    {
+      "command": "git diff --check",
+      "status": "PASS"
+    }
+  ],
+  "created_utc": "2026-11-02T01:10:32.443233+00:00",
+  "limits": [
+    "No final patient quality result from these tests",
+    "KD/crop256 GPU profiles deferred until exact teacher and fixed cache are ready",
+    "Historical diagnostics still need original B8 payload",
+    "Queue launch tracked separately in server campaign STATE.json"
+  ],
+  "runtime_repair": {
+    "actual_server_resume": "VERIFIED_RUNNING",
+    "resume_from_step": 1000,
+    "scope": "S0 evaluation metadata only; original source and training recipe preserved"
+  },
+  "schema": "self_audit.server_campaign_implementation.v1",
+  "source_files": {
+    "ACTIVE_PIPELINE.json": "54de354adb96cb479812a3dbb8d585231fcc5c76e5a036ea47860dacff3f7b98",
+    "configs/server_compact/joint_supervised.json": "936ba344b39b56e2ed27336c1cea701c8dd2ef3345b46321b0b4e77df9f9ab13",
+    "configs/server_compact/s1_plain_kd.json": "17a5f680f1fab8329e2b91845b9674725d230f25cd45dc82418cf7cc001a7684",
+    "configs/server_compact/s2_plain_kd.json": "a1fbbb646c0a4707ce67a2414bf28cb7c5f13b61daf8e411b366facd657f6ef9",
+    "docs/METHOD.md": "8215d72dbf64805ac6b283fe30dd058b6f7c6e096492a8b4193414e5d62d441c",
+    "docs/SERVER_CAMPAIGN_RUNBOOK.md": "a0c762b6e508a73a3a0c88b75c271d61b53f3198d3db17671d674c3daa37c714",
+    "docs/SERVER_COMPACT_RUNBOOK.md": "6f5b04f6af6d6e1fd88cf5548e07ba8ccfa23602493f84f1ecb83a2a00c04e00",
+    "docs/SERVER_DOMAIN_EVALUATION.md": "11143600a2551c49559d003b800b077cfb01c981cbcb76c93eee153cff3929f4",
+    "scripts/resume_server_s0_repaired_eval.py": "3c13f5153644c0abdb0e26a3ffd369f406bb655944c4732742d8999d85553c2d",
+    "scripts/run_b8_reproduction.py": "a51ae6719d65e95246022b16f5b28c4de0fb54ed98d15338f7ed05c31a98721a",
+    "scripts/run_server_campaign.py": "5aba5acaa0a5e4ce0083c0d466b69a54b7706d1970d2b6939e59b126521cef1f",
+    "scripts/run_server_compact.py": "b3b9a8dcd0376ab3518ff591a785535aa8cd92bbf569c7c55e23e24d65875637",
+    "scripts/run_server_ready_arm.py": "96af0196ac66b480ec9b2e69210ab9dc13e8ad5cae05f7e3b94b80319f9258b4",
+    "self_audit/compact_inference.py": "e6dcc105249c55114621eecfece393de2d6c36b75241373be5f73a4d7c3ce540",
+    "self_audit/server_campaign.py": "ad79210695b9980402f30b69e82d31d7df4435a17198e674bfff902d0e077c83",
+    "self_audit/server_evaluation.py": "02f0b21850de936d446b596bf8719fae567b26f9e708c88d19e275a76cbd5a30",
+    "self_audit/server_ready_arm.py": "fb26f008e5a650421e2cb48add02092aafc8b86488747eb34260906ed5dd5768",
+    "self_audit/server_runner.py": "2439ed892f46703d34123db72d46f194e7a798389437c856c02d8392c51a72a2",
+    "tests/test_b8_backup_deadline.py": "5547213bd0171d094d2bbb77a6355a3576a308904f443498ead30439aa64c61a",
+    "tests/test_b8_backup_runner.py": "fc9fbbbe3cbac8d30a36cdd6fb73cdac3f2612b85e52947d2776edeecc56dba0",
+    "tests/test_compact_inference.py": "0802e272ed312fed635a47ce4ebfdd6b1632237c6267e8c958a0649fde0bf2b4",
+    "tests/test_s0_evaluation_repair.py": "1cb780201f3ff24fbfead05ebeff9ff15766f8fb880b0a4c773f7b4eaf189592",
+    "tests/test_server_campaign.py": "cbc965e1b7b8fdc1b5b62bd38a23cadb302ece497eb4a02b5f8db14f116b3d40",
+    "tests/test_server_domain_evaluation.py": "54944fcefd4ba874baa15f2069aef35d7335e166b966d5fb31045a26a106b43c",
+    "tests/test_server_ready_arm.py": "0af60b73084ebd6fdd9137bcfacc12becb49ee23b29088c17cd884e324e5a7f7",
+    "tests/test_server_runner.py": "808c7387c15475a8ae028804c0b236044a48c473f2dee4fc80b043bbcf148594"
+  },
+  "status": "SOFTWARE_VERIFIED",
+  "warning_scope": [
+    "intentional duplicate-optimizer ownership negative test",
+    "torch.jit.script deprecation in existing decoder JVP test"
+  ],
+  "worker_review": "AGY quota exhausted; Luna fallback exhausted; coordinator completed integration and reproduced final full suite. No worker-only approval used."
+}

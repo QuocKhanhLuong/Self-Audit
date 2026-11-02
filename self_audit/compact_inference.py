@@ -1068,7 +1068,14 @@ def run_two_phase_evaluation(
     metrics["export_manifest_sha256"] = clean_export_sha
     metrics["export_payload_sha256"] = export_meta.get("payload_sha256")
     metrics["evaluation_manifest_sha256"] = actual_manifest_sha
-    metrics["evaluation_source_manifest_sha256"] = manifest_data.get("geometry_provenance", {}).get("parent_manifest_sha256", actual_manifest_sha)
+    geometry_provenance = manifest_data.get("geometry_provenance")
+    # Native prepared manifests may carry a human-readable provenance string.
+    # Only a derived-manifest mapping can name a distinct parent SHA; a string
+    # describes the current manifest and must not be interpreted as a mapping.
+    metrics["evaluation_source_manifest_sha256"] = (
+        geometry_provenance.get("parent_manifest_sha256", actual_manifest_sha)
+        if isinstance(geometry_provenance, dict) else actual_manifest_sha
+    )
     metrics["geometry_provenance"] = manifest_data.get("geometry_provenance")
     metrics["train_manifest_sha256"] = actual_train_sha
     metrics["frames"] = frame_rows

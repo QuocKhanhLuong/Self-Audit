@@ -1,0 +1,51 @@
+{
+  "schema": "self_audit.compact.v1",
+  "experiment": {
+    "id": "server_joint_supervised_acdc4_mnm4_seed42",
+    "launchable": false,
+    "new_experiment": true,
+    "parent_recipe": "configs/fresh_s0/supervised_wide_seed42.json",
+    "note": "New random-init joint supervision; ACDC4+MNM4 total8, equal-domain development selection. No teacher or ACDC-L8 checkpoint."
+  },
+  "method": "supervised",
+  "selector": "original",
+  "seed": 42,
+  "steps": 10000,
+  "warmup_steps": 8,
+  "save_every": 1000,
+  "model": {
+    "name": "CompactStudent",
+    "in_channels": 3,
+    "num_classes": 4,
+    "widths": [
+      32,
+      64,
+      128,
+      256
+    ],
+    "init": "kaiming_normal"
+  },
+  "crop_size": 160,
+  "batch_size": 32,
+  "labeled_batch_size": 32,
+  "unlabeled_batch_size": 32,
+  "lr": 0.0003,
+  "weight_decay": 0.0001,
+  "deterministic_algorithms": false,
+  "equal_wall_time": {
+    "enabled": false
+  },
+  "acceptance": {
+    "metric": "Macro4",
+    "min_macro4": 0.87,
+    "target_patient_dice": 0.87
+  },
+  "teacher": {},
+  "server_arm": "joint_supervised",
+  "eval_batch_size": 8,
+  "data": {
+    "manifest_sha256": null,
+    "budget_k": 8,
+    "labeled_ids": []
+  }
+}

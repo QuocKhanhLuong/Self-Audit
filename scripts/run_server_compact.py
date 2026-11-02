@@ -14,6 +14,7 @@ if str(ROOT) not in sys.path:
 from self_audit.server_runner import (
     backup_artifacts,
     create_protocol_lock,
+    profile_arm_config,
     profile_batches,
     retry_backup,
     run_locked_experiment,
@@ -25,7 +26,7 @@ def parser() -> argparse.ArgumentParser:
     root = argparse.ArgumentParser(description=__doc__)
     commands = root.add_subparsers(dest="command", required=True)
 
-    profile = commands.add_parser("profile", help="measure canonical steps at batch 8/32/64")
+    profile = commands.add_parser("profile", help="measure S0 at B8/B32/B64 or one SHA-pinned arm config")
     profile.add_argument("--out", required=True, type=Path)
     profile.add_argument("--train-manifest", type=Path)
     profile.add_argument("--train-sha256")
@@ -33,6 +34,8 @@ def parser() -> argparse.ArgumentParser:
     profile.add_argument("--device", default="cuda")
     profile.add_argument("--warmup-steps", type=int, default=2)
     profile.add_argument("--measured-steps", type=int, default=5)
+    profile.add_argument("--arm-config", type=Path, help="immutable S1/S2 config for one bounded B32 profile")
+    profile.add_argument("--arm-config-sha256", help="required exact SHA-256 for --arm-config")
 
     lock = commands.add_parser("lock", help="pin one batch 32/64 and the exact manifests")
     lock.add_argument("--profile", required=True, type=Path)
@@ -44,6 +47,8 @@ def parser() -> argparse.ArgumentParser:
     lock.add_argument("--test-manifest", type=Path)
     lock.add_argument("--test-sha256")
     lock.add_argument("--batch-size", required=True, type=int, choices=(32, 64))
+    lock.add_argument("--arm-config", type=Path, help="immutable arm config; omitted to preserve the existing S0 lock path")
+    lock.add_argument("--arm-config-sha256", help="required exact SHA-256 for --arm-config")
     lock.add_argument("--out", required=True, type=Path)
 
     run = commands.add_parser("run", help="run exactly one locked 10,000-step S0")
@@ -54,6 +59,8 @@ def parser() -> argparse.ArgumentParser:
     run.add_argument("--rclone-destination", required=True, help="existing remote parent; a fresh run-specific child is created")
     run.add_argument("--resume-checkpoint", type=Path)
     run.add_argument("--resume-sha256")
+    run.add_argument("--arm-config", type=Path, help="required by generic arm locks; omitted for the existing S0 path")
+    run.add_argument("--arm-config-sha256", help="required exact SHA-256 for --arm-config")
     run.add_argument("--retry-delay-seconds", type=float, default=15.0)
 
     backup = commands.add_parser("backup", help="retry a completed run's pending rclone backup")
@@ -67,15 +74,34 @@ def parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
     if args.command == "profile":
-        result = profile_batches(
-            args.out,
-            train_manifest=args.train_manifest,
-            train_sha256=args.train_sha256,
-            synthetic=args.synthetic,
-            device=args.device,
-            warmup_steps=args.warmup_steps,
-            measured_steps=args.measured_steps,
-        )
+        if args.arm_config is not None or args.arm_config_sha256 is not None:
+            if args.arm_config is None or args.arm_config_sha256 is None:
+                raise ValueError("--arm-config and --arm-config-sha256 must be supplied together")
+            if args.train_manifest is None or args.train_sha256 is None:
+                raise ValueError("arm profile requires a hash-pinned --train-manifest")
+            result = profile_arm_config(
+                args.out,
+                arm_config_path=args.arm_config,
+                arm_config_sha256=args.arm_config_sha256,
+                train_manifest=args.train_manifest,
+                train_sha256=args.train_sha256,
+                synthetic=args.synthetic,
+                device=args.device,
+                warmup_steps=args.warmup_steps,
+                measured_steps=args.measured_steps,
+            )
+        else:
+            if args.arm_config_sha256 is not None:
+                raise ValueError("--arm-config-sha256 requires --arm-config")
+            result = profile_batches(
+                args.out,
+                train_manifest=args.train_manifest,
+                train_sha256=args.train_sha256,
+                synthetic=args.synthetic,
+                device=args.device,
+                warmup_steps=args.warmup_steps,
+                measured_steps=args.measured_steps,
+            )
         result["profile_file"] = str(args.out.resolve() / "PROFILE.json")
         result["profile_sha256"] = sha256_file(args.out.resolve() / "PROFILE.json")
     elif args.command == "lock":
@@ -90,6 +116,8 @@ def main(argv: list[str] | None = None) -> int:
             test_manifest=args.test_manifest,
             test_sha256=args.test_sha256,
             batch_size=args.batch_size,
+            arm_config_path=args.arm_config,
+            arm_config_sha256=args.arm_config_sha256,
         )
         result["lock_file"] = str(args.out.resolve())
         result["lock_sha256"] = sha256_file(args.out.resolve())
@@ -102,6 +130,8 @@ def main(argv: list[str] | None = None) -> int:
             rclone_base=args.rclone_destination,
             resume_checkpoint=args.resume_checkpoint,
             resume_sha256=args.resume_sha256,
+            arm_config_path=args.arm_config,
+            arm_config_sha256=args.arm_config_sha256,
             retry_delay_seconds=args.retry_delay_seconds,
         )
         if result.get("status") == "UPLOAD_PENDING":

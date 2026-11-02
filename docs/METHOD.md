@@ -283,3 +283,12 @@ supports a separate ACDC4 + M&Ms4 budget and explicit 50/50 domain sampling.
 It does not permit an ACDC-L8 checkpoint to become the initialization of a claimed
 joint-L8 run. Missing historical B8 teacher/cache payloads continue to block KD
 and historical diagnostics without blocking supervised S0.
+
+The [finite PRO4000 campaign](SERVER_CAMPAIGN_RUNBOOK.md) keeps that existing
+S0 running and schedules one separately pinned B8 reproduction, an independent
+random-init ACDC4+M&Ms4 supervised student, and eligible S1/S2 plain KD runs.
+This continuation is a new experiment with compact batch 32, not a recovery of
+the absent historical B8 weights. KD binds the new B8 raw state only after its
+lineage, actual backup and preregistered Macro4 gate pass. Historical diagnostics
+remain blocked on their original identity. Joint checkpoint selection uses an
+equal mean of separately reported ACDC and M&Ms development Macro4 values.
