@@ -1,0 +1,256 @@
+{
+  "absent_fp_budget": 0.0,
+  "acceptance": {
+    "metric": "Macro4",
+    "min_macro4": 0.87,
+    "target_patient_dice": 0.87
+  },
+  "batch_size": 32,
+  "coefficient": 1.0,
+  "crop_size": 160,
+  "data": {
+    "manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+    "budget_k": 8,
+    "labeled_ids": [
+      "patient007",
+      "patient010",
+      "patient011",
+      "patient024",
+      "patient026",
+      "patient041",
+      "patient077",
+      "patient099"
+    ]
+  },
+  "deterministic_algorithms": false,
+  "equal_wall_time": {
+    "enabled": false
+  },
+  "eval_batch_size": 8,
+  "experiment": {
+    "id": "server_compact_s1_wide_seed42",
+    "launchable": true,
+    "new_experiment": true,
+    "note": "Template only. Pin the newly reproduced B8 identity, its fixed TRAIN-U cache, and exact TRAIN-L lineage before enabling launch.",
+    "parent_recipe": "results/compact_acdc_l8_20261029/experiment_20261028/wide_plain_kd_config.json"
+  },
+  "guard_tolerance": 1e-06,
+  "labeled_batch_size": 32,
+  "lr": 0.0003,
+  "max_trials": 8,
+  "method": "plain_kd",
+  "model": {
+    "in_channels": 3,
+    "init": "kaiming_normal",
+    "name": "CompactStudent",
+    "num_classes": 4,
+    "widths": [
+      32,
+      64,
+      128,
+      256
+    ]
+  },
+  "probe_batch_size": 8,
+  "probe_seed": 42017,
+  "pseudo_lr": 0.001,
+  "pseudo_threshold": 0.7,
+  "ridge": 1e-06,
+  "risk_budget": 0.0,
+  "same_batch_utility": false,
+  "save_every": 1000,
+  "schema": "self_audit.compact.v1",
+  "seed": 42,
+  "selector": "original",
+  "selector_dice_tolerance": 0.0,
+  "server_arm": "S1",
+  "steps": 10000,
+  "stop_after_step": null,
+  "teacher": {
+    "cache_path": "/workspace/selfaudit-20261101/cache/new_b8_train_u72_float32/CACHE_MANIFEST.json",
+    "cache_sha256": "904c5711e5a93d16731276c3aa4347b6a062426cc856c2420aab09aab168cb91",
+    "lineage": {
+      "budget_k": 8,
+      "exact_labeled_ids": [
+        "patient007",
+        "patient010",
+        "patient011",
+        "patient024",
+        "patient026",
+        "patient041",
+        "patient077",
+        "patient099"
+      ],
+      "matching_lineage_required": true
+    },
+    "source": "/workspace/selfaudit-20261101/runs/ema_full_B8_repro_20261101T171603Z_c06c4c9/training/final",
+    "source_manifest_sha256": "7f8c2f0890746939fb8cf9be357e8a9e229354169e8a93293533589c5c3c5f87",
+    "source_payload_sha256": "c710f62b007198c3f29d70ccfeb6666d7abc166b01bc8f54a594894a6f901e2b",
+    "source_training_cost": {
+      "report": "/workspace/selfaudit-20261101/runs/ema_full_B8_repro_20261101T171603Z_c06c4c9/training/REPORT.json",
+      "wall_seconds": 2941.7360370932147
+    },
+    "state": "student",
+    "teacher_identity": {
+      "backup_deferred": {
+        "authorization": {
+          "path": "/workspace/selfaudit-20261101/kd_local_20261102/BACKUP_DEFERRED_AUTHORIZATION.json",
+          "sha256": "b308d8c681773d4d561bb7f4ca3eb0177ba70f54f0fbf87ca82198734cdc0fe9"
+        },
+        "evaluation_files": {
+          "test50": {
+            "evaluation_manifest_path": "/workspace/selfaudit-20261101/b8_setup/test50_historical_evaluator.json",
+            "evaluation_manifest_sha256": "07f5aed3419649c0c5dd96f84257a937c0eb105a746dd431449299c6a572507b",
+            "frozen_path": "/workspace/selfaudit-20261101/runs/ema_full_B8_repro_20261101T171603Z_c06c4c9/test50_evaluation/PREDICTIONS_FROZEN.json",
+            "frozen_sha256": "ea1812cab90fb53fefc8f07820328ace25ed0bd00c9d9f73f1564b6198db412e",
+            "path": "/workspace/selfaudit-20261101/runs/ema_full_B8_repro_20261101T171603Z_c06c4c9/test50_evaluation/METRICS.json",
+            "recipe_path": "/workspace/selfaudit-20261101/runs/ema_full_B8_repro_20261101T171603Z_c06c4c9/test50_evaluation/RECIPE.json",
+            "recipe_sha256": "11578926104644abba62a26146e50381a35ae6241f39b574400d581cd5feca04",
+            "sha256": "da11f5d95521e006085f30949f811e4051799b1c2a68fe922020695a1617a9de"
+          },
+          "val18": {
+            "evaluation_manifest_path": "/workspace/selfaudit-20261101/prepared/acdc_l8_s42_fresh/val18_fresh_native.json",
+            "evaluation_manifest_sha256": "070fbfd2cf9f25689fd4206ad07ee33003a3b7bd5a6207d47f976a22fadd067a",
+            "frozen_path": "/workspace/selfaudit-20261101/runs/ema_full_B8_repro_20261101T171603Z_c06c4c9/val18_evaluation/PREDICTIONS_FROZEN.json",
+            "frozen_sha256": "2821f0b8c4a5bb4dcfd1c8ca73ad357a82b24f76196dd06dfbd1758ad1966544",
+            "path": "/workspace/selfaudit-20261101/runs/ema_full_B8_repro_20261101T171603Z_c06c4c9/val18_evaluation/METRICS.json",
+            "recipe_path": "/workspace/selfaudit-20261101/runs/ema_full_B8_repro_20261101T171603Z_c06c4c9/val18_evaluation/RECIPE.json",
+            "recipe_sha256": "7a58cea7f4e502491d200b3a79c7418890dc443deb25dae5d4e50a436796823a",
+            "sha256": "e96e48a42c330ec8f2e0bfe6cc9767945b8fc7d9691157253c931119538f5836"
+          }
+        },
+        "evaluation_status": {
+          "path": "/workspace/selfaudit-20261101/kd_local_20261102/EVAL_STATUS.json",
+          "sha256": "11d3bb12a4e0840d8ceea48e5650243b0154c5d28465155c5c16f43eecdca858"
+        },
+        "policy": "LOCAL_HASH_VERIFIED_WITH_USER_AUTHORIZATION",
+        "remote_verified": false,
+        "schema": "self_audit.b8.backup_deferred.v1",
+        "status": "UPLOAD_PENDING",
+        "teacher_config": {
+          "path": "/workspace/selfaudit-20261101/b8_setup/B8_CONFIG_LOCAL.json",
+          "sha256": "73cb72742edb254fb20baa3e438507e5ccedc1d9e50ae2ed220701af9c5eec9b"
+        },
+        "teacher_plan_sha256": "1723e69380cd6657af21bcf4929a54652bffb5f6db98634d6cbd066cd80b0913",
+        "teacher_run": "/workspace/selfaudit-20261101/runs/ema_full_B8_repro_20261101T171603Z_c06c4c9"
+      },
+      "backup_policy": "LOCAL_HASH_VERIFIED_WITH_USER_AUTHORIZATION",
+      "backup_status": "UPLOAD_PENDING",
+      "checkpoint_manifest_sha256": "7f8c2f0890746939fb8cf9be357e8a9e229354169e8a93293533589c5c3c5f87",
+      "checkpoint_payload_sha256": "c710f62b007198c3f29d70ccfeb6666d7abc166b01bc8f54a594894a6f901e2b",
+      "checks_passed": [
+        "lineage_format",
+        "patient_ids_validated",
+        "inference_state_declared",
+        "reproduction_receipt_validated",
+        "macro4_quality_go",
+        "backup_deferred_local_evidence_verified",
+        "actual_manifest_file_verified",
+        "actual_payload_file_verified"
+      ],
+      "evaluation_evidence_files": {
+        "test50": {
+          "evaluation_manifest_path": "/workspace/selfaudit-20261101/b8_setup/test50_historical_evaluator.json",
+          "evaluation_manifest_sha256": "07f5aed3419649c0c5dd96f84257a937c0eb105a746dd431449299c6a572507b",
+          "frozen_path": "/workspace/selfaudit-20261101/runs/ema_full_B8_repro_20261101T171603Z_c06c4c9/test50_evaluation/PREDICTIONS_FROZEN.json",
+          "frozen_sha256": "ea1812cab90fb53fefc8f07820328ace25ed0bd00c9d9f73f1564b6198db412e",
+          "path": "/workspace/selfaudit-20261101/runs/ema_full_B8_repro_20261101T171603Z_c06c4c9/test50_evaluation/METRICS.json",
+          "recipe_path": "/workspace/selfaudit-20261101/runs/ema_full_B8_repro_20261101T171603Z_c06c4c9/test50_evaluation/RECIPE.json",
+          "recipe_sha256": "11578926104644abba62a26146e50381a35ae6241f39b574400d581cd5feca04",
+          "sha256": "da11f5d95521e006085f30949f811e4051799b1c2a68fe922020695a1617a9de"
+        },
+        "val18": {
+          "evaluation_manifest_path": "/workspace/selfaudit-20261101/prepared/acdc_l8_s42_fresh/val18_fresh_native.json",
+          "evaluation_manifest_sha256": "070fbfd2cf9f25689fd4206ad07ee33003a3b7bd5a6207d47f976a22fadd067a",
+          "frozen_path": "/workspace/selfaudit-20261101/runs/ema_full_B8_repro_20261101T171603Z_c06c4c9/val18_evaluation/PREDICTIONS_FROZEN.json",
+          "frozen_sha256": "2821f0b8c4a5bb4dcfd1c8ca73ad357a82b24f76196dd06dfbd1758ad1966544",
+          "path": "/workspace/selfaudit-20261101/runs/ema_full_B8_repro_20261101T171603Z_c06c4c9/val18_evaluation/METRICS.json",
+          "recipe_path": "/workspace/selfaudit-20261101/runs/ema_full_B8_repro_20261101T171603Z_c06c4c9/val18_evaluation/RECIPE.json",
+          "recipe_sha256": "7a58cea7f4e502491d200b3a79c7418890dc443deb25dae5d4e50a436796823a",
+          "sha256": "e96e48a42c330ec8f2e0bfe6cc9767945b8fc7d9691157253c931119538f5836"
+        }
+      },
+      "exploratory_authorized": false,
+      "historical_reference": {
+        "Macro4": 0.8800492397526454,
+        "foreground": 0.8412102397257094
+      },
+      "inference_state": "student",
+      "label_budget": 8,
+      "labeled_ids": [
+        "patient007",
+        "patient010",
+        "patient011",
+        "patient024",
+        "patient026",
+        "patient041",
+        "patient077",
+        "patient099"
+      ],
+      "manifest_sha256": "7f8c2f0890746939fb8cf9be357e8a9e229354169e8a93293533589c5c3c5f87",
+      "metrics": {
+        "test50": {
+          "Macro4": 0.8730696880300775,
+          "class_dice": {
+            "BG": 0.9962677569899492,
+            "LV": 0.8834882005788194,
+            "MYO": 0.8168147613587309,
+            "RV": 0.7957080331928104
+          },
+          "foreground": 0.8320036650434535,
+          "patients": 50
+        },
+        "val18": {
+          "Macro4": 0.889030204696216,
+          "class_dice": {
+            "BG": 0.9968283734858842,
+            "LV": 0.9069406939164525,
+            "MYO": 0.8360581458275489,
+            "RV": 0.8162936055549785
+          },
+          "foreground": 0.8530974817663267,
+          "patients": 18
+        }
+      },
+      "new_reproduction": true,
+      "original_payload_recovered": false,
+      "payload_sha256": "c710f62b007198c3f29d70ccfeb6666d7abc166b01bc8f54a594894a6f901e2b",
+      "physical_payload_status": "VERIFIED_ON_DISK",
+      "quality_gate": "GO",
+      "quality_receipt": {
+        "Macro4": 0.8730696880300775,
+        "exploratory_authorized": false,
+        "foreground": 0.8320036650434535,
+        "quality_gate": "GO",
+        "remote_verified": false
+      },
+      "raw_student_sha256": "d76d693ecb974bcd2c83964491e8f59b4e0d0f5d55c659f80e72618a4b1d1130",
+      "receipt_file_sha256": "bfffa96e452202ba6c1073753da614f235e191932eb19250147e005831044084",
+      "remote_drive_verified": false,
+      "remote_verified": false,
+      "schema": "self_audit.b8.reproduction.v1",
+      "source_commit": "c06c4c9ae08610e047f1e960712f551690de4067",
+      "source_sha256": "07809c252ae67d3ef17b148511c5973296c2367f18284a41766e8248fa3fdc2d",
+      "source_training_cost": {
+        "elapsed_seconds": 2941.7360370932147,
+        "report_sha256": "17865c94a7e72b19e92c9922cfeac2bbcb14d9321545ab48187174a3afc5f769",
+        "scope": "canonical trainer elapsed; setup/download/upload/evaluation costs separate",
+        "source": "/workspace/selfaudit-20261101/runs/ema_full_B8_repro_20261101T171603Z_c06c4c9/training/REPORT.json",
+        "status": "MEASURED_BY_TRAINER",
+        "steps": 10000
+      },
+      "teacher_kind": "reproduction",
+      "test50_status": "EXPOSED_DEVELOPMENT; final checkpoint only; no tuning",
+      "training_method": "ema_full",
+      "verification_status": "VERIFIED",
+      "verified": true
+    },
+    "teacher_identity_sha256": "4ea57de190ee0b0b8df3f3ff8c0458a1cd687c9c5c2f9a919ca50ee4e79b3577"
+  },
+  "temperature": 1.0,
+  "unlabeled_batch_size": 32,
+  "utility_gain_tolerance": 1e-07,
+  "utility_tie_tolerance": 1e-07,
+  "warmup_steps": 1000,
+  "weight_decay": 0.0001
+}

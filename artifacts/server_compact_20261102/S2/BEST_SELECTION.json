@@ -1,0 +1,80 @@
+{
+  "architecture": {
+    "dino_required": false,
+    "in_channels": 3,
+    "init": "kaiming_normal",
+    "init_lineage": "random_kaiming_distinct_from_dino",
+    "model_class": "CompactStudent",
+    "name": "CompactStudent",
+    "norm": "group_norm",
+    "num_classes": 4,
+    "pretrained": false,
+    "widths": [
+      32,
+      64,
+      128,
+      256
+    ]
+  },
+  "best_pt": "/workspace/selfaudit-20261101/kd_local_20261102/arms/S2/run/best.pt",
+  "best_pt_sha256": "dd9ccb0a59ae8260f6aef7098809e63e59b4ae9a7671b5bd1da5f9cf2a56684a",
+  "class_map": {
+    "0": "background",
+    "1": "right_ventricle",
+    "2": "myocardium",
+    "3": "left_ventricle"
+  },
+  "predictions_frozen_path": "/workspace/selfaudit-20261101/kd_local_20261102/arms/S2/run/validation/step_005000_attempt_01/val/PREDICTIONS_FROZEN.json",
+  "predictions_frozen_sha256": "2f2b60124afbaaf3604b208e1f7d9ac282e1b92f4ea841ab3df0579efcf02ff0",
+  "preprocessing": {
+    "context_boundary_mode": "clamp",
+    "context_slices": [
+      -1,
+      0,
+      1
+    ],
+    "default_normalization": "prepared",
+    "input_channels": 3,
+    "normalization_recipes": {
+      "prepared": {
+        "description": "Validates that values are already in [0, 1] without renormalizing.",
+        "mode": "prepared",
+        "renormalize": false,
+        "tolerance": 1e-05,
+        "value_range": [
+          0.0,
+          1.0
+        ]
+      },
+      "raw": {
+        "axes": [
+          "T",
+          "Z",
+          "Y",
+          "X"
+        ],
+        "description": "Per-cine 0.5% and 99.5% percentile intensity scaling to [0, 1].",
+        "epsilon": 1e-06,
+        "mode": "raw",
+        "percentile_scope": "per_cine",
+        "percentiles": [
+          0.5,
+          99.5
+        ],
+        "renormalize": true,
+        "target_range": [
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "rule": "highest VAL class_first_macro4; exact ties keep earliest step",
+  "schema": "self_audit.server_compact.best_selection.v1",
+  "scope": "development checkpoint selection only; no acceptance gate",
+  "selected_checkpoint_manifest_sha256": "e8520886129cdf7a50ea26deb870a88ed245e28189e61ceed845464f08c7d5c3",
+  "selected_export_manifest_sha256": "72e68fc8750690a17205c3503799e747d8bce6e673f912f257147ae70dd9efe9",
+  "selected_macro4": 0.7184355177224724,
+  "selected_step": 5000,
+  "validation_dir": "/workspace/selfaudit-20261101/kd_local_20261102/arms/S2/run/validation/step_005000_attempt_01/val"
+}

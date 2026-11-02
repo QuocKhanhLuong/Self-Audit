@@ -1,0 +1,98 @@
+{
+  "architecture": {
+    "dino_required": false,
+    "in_channels": 3,
+    "init": "kaiming_normal",
+    "init_lineage": "random_kaiming_distinct_from_dino",
+    "model_class": "CompactStudent",
+    "name": "CompactStudent",
+    "norm": "group_norm",
+    "num_classes": 4,
+    "pretrained": false,
+    "widths": [
+      32,
+      64,
+      128,
+      256
+    ]
+  },
+  "best_pt": "/workspace/selfaudit-20261101/runs/s0_acdc_l8_b32_seed42/best.pt",
+  "best_pt_sha256": "80614aba6d36910df2f6fb9801444e94e2cf64623d6be7d9911f77fa8f02283b",
+  "checkpoint_manifest_sha256": "592ab55b18aa30751cf6a75274afd88d6576532d9bfcf550fb4e44b697bd2b07",
+  "checkpoint_path": "/workspace/selfaudit-20261101/runs/s0_acdc_l8_b32_seed42/segments/segment_0002/step_008000",
+  "checkpoint_payload_sha256": "faf9383c2428c0f8151ca622e24c7723b4557cb5dc49d2b3e82abae33a69a653",
+  "class_map": {
+    "0": "background",
+    "1": "right_ventricle",
+    "2": "myocardium",
+    "3": "left_ventricle"
+  },
+  "export_manifest_sha256": "719b2e6af7dcb0f3769d19ece1019efd1cb7e3a191a19cf4e6bc409f4ffde1e8",
+  "export_path": "/workspace/selfaudit-20261101/runs/s0_acdc_l8_b32_seed42/best_export",
+  "foreground_macro": 0.6898516386728967,
+  "full_resume_checkpoint": {
+    "checkpoint_path": "/workspace/selfaudit-20261101/runs/s0_acdc_l8_b32_seed42/segments/segment_0002/final",
+    "config_sha256": "d14c95f71acb2a0695e5974904b5963865a57d831812a03eed689dcc4eb6f078",
+    "manifest_sha256": "b9263aa8b4fcbc9511d40d5b377f7b2d1044bbf2c1c2ba942c2020a618c50d39",
+    "payload_sha256": "4e90249bea4170ad8ae8dca95ddf8e0e3f9dddb26fb1b70480a0731fdbe9a2ee",
+    "schema": "self_audit.server_compact.full_resume.v1",
+    "source_closure_sha256": "8dcce56ed009576337f7dfcf6decc9c2c85c8538f82ec606ad1b96494079ac71",
+    "step": 10000,
+    "train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4"
+  },
+  "predictions_frozen_path": "/workspace/selfaudit-20261101/runs/s0_acdc_l8_b32_seed42/validation/step_008000_attempt_01/val/PREDICTIONS_FROZEN.json",
+  "predictions_frozen_sha256": "5386a74d3ee6d63887aeae12a45b5181694631ab90d76b9afecf537a462bbec7",
+  "preprocessing": {
+    "context_boundary_mode": "clamp",
+    "context_slices": [
+      -1,
+      0,
+      1
+    ],
+    "default_normalization": "prepared",
+    "input_channels": 3,
+    "normalization_recipes": {
+      "prepared": {
+        "description": "Validates that values are already in [0, 1] without renormalizing.",
+        "mode": "prepared",
+        "renormalize": false,
+        "tolerance": 1e-05,
+        "value_range": [
+          0.0,
+          1.0
+        ]
+      },
+      "raw": {
+        "axes": [
+          "T",
+          "Z",
+          "Y",
+          "X"
+        ],
+        "description": "Per-cine 0.5% and 99.5% percentile intensity scaling to [0, 1].",
+        "epsilon": 1e-06,
+        "mode": "raw",
+        "percentile_scope": "per_cine",
+        "percentiles": [
+          0.5,
+          99.5
+        ],
+        "renormalize": true,
+        "target_range": [
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "schema": "self_audit.server_compact.best.v1",
+  "selection_rule": "highest VAL class_first_macro4; exact ties keep earliest step",
+  "selection_scope": "development-only model selection; no quality gate",
+  "status": "SELECTED",
+  "step": 8000,
+  "synthetic": false,
+  "val_macro4": 0.7652113356890722,
+  "val_manifest_sha256": "070fbfd2cf9f25689fd4206ad07ee33003a3b7bd5a6207d47f976a22fadd067a",
+  "val_metrics_sha256": "7374fd7c745a121f9203ba63000ff7c5dc6fe37105734c837c0e75dd6418ea5b",
+  "validation_dir": "/workspace/selfaudit-20261101/runs/s0_acdc_l8_b32_seed42/validation/step_008000_attempt_01/val"
+}

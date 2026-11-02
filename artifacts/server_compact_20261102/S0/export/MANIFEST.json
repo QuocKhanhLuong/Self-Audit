@@ -1,0 +1,252 @@
+{
+  "architecture": {
+    "dino_required": false,
+    "in_channels": 3,
+    "init": "kaiming_normal",
+    "init_lineage": "random_kaiming_distinct_from_dino",
+    "model_class": "CompactStudent",
+    "name": "CompactStudent",
+    "norm": "group_norm",
+    "num_classes": 4,
+    "pretrained": false,
+    "widths": [
+      32,
+      64,
+      128,
+      256
+    ]
+  },
+  "class_map": {
+    "0": "background",
+    "1": "right_ventricle",
+    "2": "myocardium",
+    "3": "left_ventricle"
+  },
+  "config": {
+    "absent_fp_budget": 0.0,
+    "acceptance": {
+      "metric": "Macro4",
+      "min_macro4": 0.87,
+      "target_patient_dice": 0.87
+    },
+    "batch_size": 32,
+    "coefficient": 1.0,
+    "crop_size": 160,
+    "data": null,
+    "deterministic_algorithms": false,
+    "equal_wall_time": {
+      "enabled": false
+    },
+    "eval_batch_size": 8,
+    "experiment": {
+      "id": "server_compact_s0_wide_seed42_20261101",
+      "launchable": true,
+      "new_experiment": true,
+      "note": "Server S0 recipe; selected batch is pinned by protocol_lock.json.",
+      "parent_recipe": "configs/fresh_s0/supervised_wide_seed42.json"
+    },
+    "guard_tolerance": 1e-06,
+    "labeled_batch_size": 32,
+    "lr": 0.0003,
+    "max_trials": 8,
+    "method": "supervised",
+    "model": {
+      "in_channels": 3,
+      "init": "kaiming_normal",
+      "name": "CompactStudent",
+      "num_classes": 4,
+      "widths": [
+        32,
+        64,
+        128,
+        256
+      ]
+    },
+    "probe_batch_size": 8,
+    "probe_seed": 42017,
+    "pseudo_lr": 0.001,
+    "pseudo_threshold": 0.7,
+    "ridge": 1e-06,
+    "risk_budget": 0.0,
+    "same_batch_utility": false,
+    "save_every": 1000,
+    "schema": "self_audit.compact.v1",
+    "seed": 42,
+    "selector": "original",
+    "selector_dice_tolerance": 0.0,
+    "steps": 10000,
+    "stop_after_step": null,
+    "teacher": {},
+    "temperature": 1.0,
+    "unlabeled_batch_size": 32,
+    "utility_gain_tolerance": 1e-07,
+    "utility_tie_tolerance": 1e-07,
+    "warmup_steps": 8,
+    "weight_decay": 0.0001
+  },
+  "dino_required": false,
+  "external_teacher_required": false,
+  "lineage": {
+    "data_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4",
+    "label_budget": 8,
+    "lids": [
+      "patient007",
+      "patient010",
+      "patient011",
+      "patient024",
+      "patient026",
+      "patient041",
+      "patient077",
+      "patient099"
+    ],
+    "synthetic": false,
+    "teacher_identity": null,
+    "uids": [
+      "patient001",
+      "patient002",
+      "patient003",
+      "patient006",
+      "patient008",
+      "patient009",
+      "patient013",
+      "patient016",
+      "patient017",
+      "patient019",
+      "patient020",
+      "patient021",
+      "patient022",
+      "patient023",
+      "patient025",
+      "patient027",
+      "patient031",
+      "patient033",
+      "patient034",
+      "patient035",
+      "patient037",
+      "patient038",
+      "patient039",
+      "patient040",
+      "patient042",
+      "patient043",
+      "patient044",
+      "patient045",
+      "patient046",
+      "patient047",
+      "patient048",
+      "patient049",
+      "patient050",
+      "patient051",
+      "patient052",
+      "patient053",
+      "patient054",
+      "patient056",
+      "patient057",
+      "patient058",
+      "patient059",
+      "patient060",
+      "patient061",
+      "patient062",
+      "patient063",
+      "patient064",
+      "patient066",
+      "patient067",
+      "patient068",
+      "patient069",
+      "patient071",
+      "patient072",
+      "patient073",
+      "patient074",
+      "patient075",
+      "patient078",
+      "patient079",
+      "patient080",
+      "patient081",
+      "patient083",
+      "patient084",
+      "patient085",
+      "patient086",
+      "patient088",
+      "patient090",
+      "patient091",
+      "patient092",
+      "patient093",
+      "patient094",
+      "patient096",
+      "patient097",
+      "patient100"
+    ]
+  },
+  "model_class": "CompactStudent",
+  "model_file_sha256": "5ac969c8e86a71dbd4451010b893693ea657d6a3a567d7d35a500327921448e2",
+  "native_axes": {
+    "patient_volume_cine": [
+      "T",
+      "Z",
+      "Y",
+      "X"
+    ],
+    "slice_batch_tensor": [
+      "B",
+      "C",
+      "H",
+      "W"
+    ]
+  },
+  "parameters_total": 2410596,
+  "parameters_trainable": 2410596,
+  "payload_sha256": "80614aba6d36910df2f6fb9801444e94e2cf64623d6be7d9911f77fa8f02283b",
+  "preprocessing": {
+    "context_boundary_mode": "clamp",
+    "context_slices": [
+      -1,
+      0,
+      1
+    ],
+    "default_normalization": "prepared",
+    "input_channels": 3,
+    "normalization_recipes": {
+      "prepared": {
+        "description": "Validates that values are already in [0, 1] without renormalizing.",
+        "mode": "prepared",
+        "renormalize": false,
+        "tolerance": 1e-05,
+        "value_range": [
+          0.0,
+          1.0
+        ]
+      },
+      "raw": {
+        "axes": [
+          "T",
+          "Z",
+          "Y",
+          "X"
+        ],
+        "description": "Per-cine 0.5% and 99.5% percentile intensity scaling to [0, 1].",
+        "epsilon": 1e-06,
+        "mode": "raw",
+        "percentile_scope": "per_cine",
+        "percentiles": [
+          0.5,
+          99.5
+        ],
+        "renormalize": true,
+        "target_range": [
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "pretrained_weights_required": false,
+  "schema": "self_audit.compact.export.v1",
+  "serialization_bytes": 9662432,
+  "source_checkpoint_manifest_sha256": "592ab55b18aa30751cf6a75274afd88d6576532d9bfcf550fb4e44b697bd2b07",
+  "source_checkpoint_payload_sha256": "faf9383c2428c0f8151ca622e24c7723b4557cb5dc49d2b3e82abae33a69a653",
+  "source_sha256": "eae9af8f799bfe20ae2d874139745520e7bde7a9e1c09b149a7826e3ebb70df9",
+  "synthetic": false,
+  "teacher_included": false,
+  "teacher_memory_included": false,
+  "training_source_sha256": "eae9af8f799bfe20ae2d874139745520e7bde7a9e1c09b149a7826e3ebb70df9",
+  "weights_only_bytes": 9642384
+}

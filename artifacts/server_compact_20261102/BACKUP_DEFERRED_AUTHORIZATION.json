@@ -1,0 +1,21 @@
+{
+  "schema": "self_audit.server_kd.backup_deferred_authorization.v1",
+  "user_instruction": "ko c\u1ea7n lo backup drive, xong r push 1 th\u1ec3 cx \u0111\u01b0\u1ee3c",
+  "context": "train s1 s2 \u0111i ch\u1edd g\u00ec",
+  "backup_status": "UPLOAD_PENDING",
+  "policy": "Proceed with local hash-verified final raw B8; do not claim Drive backup complete.",
+  "teacher_plan_sha256": "1723e69380cd6657af21bcf4929a54652bffb5f6db98634d6cbd066cd80b0913",
+  "time": 1793603471.7596803,
+  "quality_gate_unchanged": "final raw-student historical TEST50 Macro4 >= 0.87; VAL also reported; no tuning",
+  "training_budget_unchanged": {
+    "steps_per_arm": 10000,
+    "warmup_steps": 1000,
+    "seed": 42,
+    "labeled_batch_size": 32,
+    "unlabeled_batch_size": 32,
+    "arms": {
+      "S1": 160,
+      "S2": 256
+    }
+  }
+}
