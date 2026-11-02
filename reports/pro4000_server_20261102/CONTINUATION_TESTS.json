@@ -1,0 +1,41 @@
+{
+  "status": "PASS_SOFTWARE_ONLY",
+  "tested_at_utc": "2026-11-02T05:38:44.334026+00:00",
+  "base_commit": "b698c9355ca2a887bdb653ec025be329aff6d09e",
+  "files": {
+    "self_audit/server_runner.py": "9c3db56e8c9c44ee5f47145a9a814638fa21498d5efd004691c76ef01aea9a42",
+    "scripts/retry_completed_s0_backup.py": "f8ba22545ff4e15d8c35579aa99a64ef48bd210e9cd7eb44318af50e33ed97b7",
+    "tests/test_server_runner.py": "b33d4cd000393f32781dd84cc9186f08490814d5e455b11198f5875598e273fb",
+    "tests/test_completed_s0_backup.py": "54a0cb590987764faefa2c751e8ce668b79a81601f7ed0ed46f3e07ee731c07f"
+  },
+  "python": "/Users/alvinluong/miniforge3/envs/selfaudit-modal/bin/python",
+  "checks": [
+    {
+      "command": "python scripts/check_repo.py",
+      "status": "PASS"
+    },
+    {
+      "command": "python -m pytest -q tests/test_completed_s0_backup.py tests/test_server_runner.py",
+      "passed": 23,
+      "seconds": 3.64
+    },
+    {
+      "command": "python -m pytest -q",
+      "passed": 1181,
+      "warnings": 2,
+      "seconds": 162.37
+    },
+    {
+      "command": "git diff --check",
+      "status": "PASS"
+    }
+  ],
+  "limitations": [
+    "CPU software tests only; no patient quality claim",
+    "Server recovery and new joint run require separate live receipts"
+  ],
+  "warnings": [
+    "intentional duplicate-optimizer-group fixture warning",
+    "torch.jit.script deprecation"
+  ]
+}

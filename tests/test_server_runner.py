@@ -367,6 +367,49 @@ def test_generic_kd_arm_rejects_mismatched_teacher_crop_batch_and_steps(tmp_path
             _validate_server_arm_config(config_path, sha256_file(config_path), train_manifest, train_sha)
 
 
+def test_arm_profile_accepts_canonical_short_budget_completion(monkeypatch, tmp_path):
+    """Exercise the actual trainer, not a mocked STOPPED_BOUNDARY return."""
+    train_path, train_sha = synthetic_compact_fixture(
+        tmp_path / "data", seed=17, n_labeled=2, n_unlabeled=2,
+        size=16, num_frames=2, num_slices=2,
+    )
+    config = compact_training.validate_compact_config(_small_config(10000), allow_full_run=True)
+    config["server_arm"] = "joint_supervised"
+    config_path = tmp_path / "config.json"
+    atomic_json(config_path, config)
+    # Production width/batch/lineage validation has separate tests. Only shrink
+    # this manufactured numerical witness; the canonical training loop is real.
+    monkeypatch.setattr(server_runner, "_validate_server_arm_config",
+                        lambda *a, **k: (copy.deepcopy(config), {}, [], [], True))
+    result = profile_arm_config(tmp_path / "profile", arm_config_path=config_path,
+                                arm_config_sha256=sha256_file(config_path),
+                                train_manifest=train_path, train_sha256=train_sha,
+                                synthetic=True, device="cpu", warmup_steps=1, measured_steps=2)
+    report = json.loads((tmp_path / "profile/arm_profile/REPORT.json").read_text())
+    assert report["status"] == "COMPLETED"
+    assert report["steps"] == report["total_budget"] == 3
+    assert result["results"][0]["status"] == "MEASURED"
+    assert result["profile_steps_total"] == 3
+    assert json.loads(config_path.read_text())["steps"] == 10000
+
+
+@pytest.mark.parametrize("report", [
+    {"status": "COMPLETED", "steps": 3, "total_budget": 10000},
+    {"status": "COMPLETED", "steps": 2, "total_budget": 3},
+    {"status": "STOPPED_EARLY", "steps": 3, "total_budget": 3},
+])
+def test_arm_profile_refuses_inconsistent_completion(monkeypatch, tmp_path, report):
+    train_path, train_sha, config = _synthetic_server_kd_config(tmp_path)
+    path = tmp_path / "config.json"
+    atomic_json(path, config)
+    monkeypatch.setattr(compact_training, "train_compact", lambda *a, **kw: report)
+    with pytest.raises(RuntimeError, match="requested boundary"):
+        profile_arm_config(tmp_path / "profile", arm_config_path=path,
+                           arm_config_sha256=sha256_file(path), train_manifest=train_path,
+                           train_sha256=train_sha, synthetic=True, device="cpu",
+                           warmup_steps=1, measured_steps=2)
+
+
 def test_server_arm_templates_match_historical_wide_kd_without_old_teacher_pins():
     root = Path(__file__).resolve().parents[1]
     s1 = json.loads((root / "configs/server_compact/s1_plain_kd.json").read_text())

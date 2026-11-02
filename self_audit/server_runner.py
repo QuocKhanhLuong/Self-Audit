@@ -594,12 +594,21 @@ def profile_arm_config(
             "error": f"{type(exc).__name__}: {exc}", "output": str(profile_out),
         }]
     else:
-        if report.get("steps") != total or report.get("status") != "STOPPED_BOUNDARY":
+        # This disposable profile has a shortened total budget. The canonical
+        # trainer reports COMPLETED when that exact budget is reached, even
+        # when stop_after_step points to the same boundary. Never confuse this
+        # profile completion with a completed 10,000-step experiment.
+        bounded_status = report.get("status") == "STOPPED_BOUNDARY" or (
+            report.get("status") == "COMPLETED" and report.get("total_budget") == total
+        )
+        if report.get("steps") != total or not bounded_status:
             raise RuntimeError("canonical arm profile did not stop at its requested boundary")
         rows = [
             json.loads(line) for line in (profile_out / "TRAIN_LOG.jsonl").read_text().splitlines()
             if line.strip()
         ]
+        if [row.get("step") for row in rows] != list(range(total)):
+            raise RuntimeError("canonical arm profile has incomplete or inconsistent step coverage")
         measured = rows[warmup_steps:]
         latencies = [float(row["timings"]["step_elapsed_seconds"]) for row in measured]
         if len(latencies) != measured_steps or not all(math.isfinite(x) and x > 0 for x in latencies):
@@ -2443,8 +2452,8 @@ def retry_backup(run_root: str | Path, *, rclone_base: str, client: Any | None =
         best = json.loads((run_root / "BEST.json").read_text())
         test = json.loads((run_root / "TEST_RESULT.json").read_text())
         return _write_run_status(
-            run_root, "COMPLETED", **common, backup=result, best_step=best["step"],
-            best_macro4=best["val_macro4"], test_status="COMPLETED",
+            run_root, "COMPLETED", **{**common, "best_step": best["step"],
+                "best_macro4": best["val_macro4"]}, backup=result, test_status="COMPLETED",
             test_macro4=(test.get("metrics") or {}).get("class_first_macro4"),
         )
     raise ValueError(f"unknown pending backup phase: {phase}")
