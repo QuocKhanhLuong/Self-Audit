@@ -1,0 +1,31 @@
+{
+  "source_git_sha": "cb27cda1e3691359c8c045643d3083fbd3d87415",
+  "utc": "2026-11-02T05:41:02.737138+00:00",
+  "argv": [
+    "/venv/selfaudit-pro4000/bin/python",
+    "/workspace/Self-Audit-continue-20261102/scripts/run_server_campaign.py",
+    "start",
+    "--plan",
+    "/workspace/selfaudit-20261101/campaign_continue_20261102/CAMPAIGN.json",
+    "--plan-sha256",
+    "911675f28eee466abade2464e471990b2d9783b1ae3be8d51e761ac1becb6365"
+  ],
+  "result": {
+    "state_dir": "/workspace/selfaudit-20261101/campaign_continue_20261102/state",
+    "status": "started",
+    "supervisor_pid": 397970
+  },
+  "software_tests": {
+    "linux": {
+      "passed": 42,
+      "seconds": 14.78,
+      "log": "/workspace/selfaudit-20261101/campaign_setup/CONTINUATION_LINUX_TESTS.log"
+    },
+    "full_local": {
+      "passed": 1181,
+      "warnings": 2,
+      "seconds": 162.37
+    }
+  },
+  "no_completed_training_restarted": true
+}
