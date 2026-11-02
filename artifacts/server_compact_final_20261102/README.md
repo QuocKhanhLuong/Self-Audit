@@ -53,3 +53,5 @@ python artifacts/server_compact_final_20261102/verify_exports.py
 ```
 
 **Drive remains `UPLOAD_PENDING`, `remote_verified=false`.** The user authorized backup deferral. Git publication/readback is separate from Drive backup. Original run and failed-backup receipts are preserved.
+
+Git publication at [`eb0dcf78ab271bb8241b3bfee6f9f4b7dc8d201b`](https://github.com/QuocKhanhLuong/Self-Audit/commit/eb0dcf78ab271bb8241b3bfee6f9f4b7dc8d201b) is verified by [GITHUB_READBACK.json](GITHUB_READBACK.json). The GitHub contents API resolved each immutable commit/path, then the raw Git blob API returned all 9,662,432 bytes per selected `best.pt`. Full SHA256 and Git SHA1 matched for all three arms; these are actual payloads, not LFS pointers. [verify_github.py](verify_github.py) reproduces that read-only check.
