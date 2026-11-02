@@ -1,0 +1,105 @@
+{
+  "best": {
+    "architecture": {
+      "dino_required": false,
+      "in_channels": 3,
+      "init": "kaiming_normal",
+      "init_lineage": "random_kaiming_distinct_from_dino",
+      "model_class": "CompactStudent",
+      "name": "CompactStudent",
+      "norm": "group_norm",
+      "num_classes": 4,
+      "pretrained": false,
+      "widths": [
+        32,
+        64,
+        128,
+        256
+      ]
+    },
+    "best_pt": "/workspace/selfaudit-20261101/final_eval_after_git_20261102/S2/best.pt",
+    "best_pt_sha256": "692ffb76b3e0fe82872aa56c38a2c876c0f4d40e24e4dcc5ac19fe5f54c675fd",
+    "checkpoint_manifest_sha256": "2431742cd74730eeb95359c29b7c28a255602428a8e26d215c2ebb23b269ec5d",
+    "checkpoint_path": "/workspace/selfaudit-20261101/kd_local_20261102/arms/S2/run/segments/segment_0001/final",
+    "checkpoint_payload_sha256": "60adb35a294526540900519ad08c0ece3ac16bfb0827001aa7e0f2f0772a8f20",
+    "class_map": {
+      "0": "background",
+      "1": "right_ventricle",
+      "2": "myocardium",
+      "3": "left_ventricle"
+    },
+    "export_manifest_sha256": "f8c1fe3c481a1c4f5b81e35903367b24e3bbb78e9d38c6683a7b3ede7f4ba8d4",
+    "export_path": "/workspace/selfaudit-20261101/final_eval_after_git_20261102/S2/best_export",
+    "foreground_macro": 0.6337612809521124,
+    "full_resume_checkpoint": {
+      "checkpoint_path": "/workspace/selfaudit-20261101/kd_local_20261102/arms/S2/run/segments/segment_0001/final",
+      "config_sha256": "6700c437bacf32761117a0ead67eb9bd43d03c4daf9a3278e40ec2a1830862f1",
+      "manifest_sha256": "2431742cd74730eeb95359c29b7c28a255602428a8e26d215c2ebb23b269ec5d",
+      "payload_sha256": "60adb35a294526540900519ad08c0ece3ac16bfb0827001aa7e0f2f0772a8f20",
+      "schema": "self_audit.server_compact.full_resume.v1",
+      "source_closure_sha256": "00d456de1bcbe96bed0c761e5247505a0482bab791ad1234ac67a90db9a740b7",
+      "step": 10000,
+      "train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4"
+    },
+    "predictions_frozen_path": "/workspace/selfaudit-20261101/final_eval_after_git_20261102/S2/validation/step_010000_attempt_01/val/PREDICTIONS_FROZEN.json",
+    "predictions_frozen_sha256": "3520e4b6ff73d31b13f7096b8dd0289eda8cd03fab96a0b283737f555112da13",
+    "preprocessing": {
+      "context_boundary_mode": "clamp",
+      "context_slices": [
+        -1,
+        0,
+        1
+      ],
+      "default_normalization": "prepared",
+      "input_channels": 3,
+      "normalization_recipes": {
+        "prepared": {
+          "description": "Validates that values are already in [0, 1] without renormalizing.",
+          "mode": "prepared",
+          "renormalize": false,
+          "tolerance": 1e-05,
+          "value_range": [
+            0.0,
+            1.0
+          ]
+        },
+        "raw": {
+          "axes": [
+            "T",
+            "Z",
+            "Y",
+            "X"
+          ],
+          "description": "Per-cine 0.5% and 99.5% percentile intensity scaling to [0, 1].",
+          "epsilon": 1e-06,
+          "mode": "raw",
+          "percentile_scope": "per_cine",
+          "percentiles": [
+            0.5,
+            99.5
+          ],
+          "renormalize": true,
+          "target_range": [
+            0.0,
+            1.0
+          ]
+        }
+      }
+    },
+    "schema": "self_audit.server_compact.best.v1",
+    "selection_rule": "highest VAL class_first_macro4; exact ties keep earliest step",
+    "selection_scope": "development-only model selection; no quality gate",
+    "status": "SELECTED",
+    "step": 10000,
+    "synthetic": false,
+    "val_macro4": 0.7228064812011528,
+    "val_manifest_sha256": "070fbfd2cf9f25689fd4206ad07ee33003a3b7bd5a6207d47f976a22fadd067a",
+    "val_metrics_sha256": "6c57a84fdac0b830ca123b7137891f899ff51d1b1f10911a6766de339a3bfd02",
+    "validation_dir": "/workspace/selfaudit-20261101/final_eval_after_git_20261102/S2/validation/step_010000_attempt_01/val"
+  },
+  "prior_val_artifacts_remain_in_original_run": true,
+  "selected_val_predictions_location": "/workspace/selfaudit-20261101/final_eval_after_git_20261102/S2/validation/step_010000_attempt_01/val/PREDICTIONS_FROZEN.json",
+  "selection_complete": true,
+  "test_used_for_selection": false,
+  "validation_checkpoint_count": 10
+}

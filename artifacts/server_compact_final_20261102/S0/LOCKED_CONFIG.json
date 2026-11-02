@@ -1,0 +1,61 @@
+{
+  "absent_fp_budget": 0.0,
+  "acceptance": {
+    "metric": "Macro4",
+    "min_macro4": 0.87,
+    "target_patient_dice": 0.87
+  },
+  "batch_size": 32,
+  "coefficient": 1.0,
+  "crop_size": 160,
+  "deterministic_algorithms": false,
+  "equal_wall_time": {
+    "enabled": false
+  },
+  "eval_batch_size": 8,
+  "experiment": {
+    "id": "server_compact_s0_wide_seed42_20261101",
+    "launchable": true,
+    "new_experiment": true,
+    "note": "Server S0 recipe; selected batch is pinned by protocol_lock.json.",
+    "parent_recipe": "configs/fresh_s0/supervised_wide_seed42.json"
+  },
+  "guard_tolerance": 1e-06,
+  "labeled_batch_size": 32,
+  "lr": 0.0003,
+  "max_trials": 8,
+  "method": "supervised",
+  "model": {
+    "in_channels": 3,
+    "init": "kaiming_normal",
+    "name": "CompactStudent",
+    "num_classes": 4,
+    "widths": [
+      32,
+      64,
+      128,
+      256
+    ]
+  },
+  "probe_batch_size": 8,
+  "probe_seed": 42017,
+  "pseudo_lr": 0.001,
+  "pseudo_threshold": 0.7,
+  "ridge": 1e-06,
+  "risk_budget": 0.0,
+  "same_batch_utility": false,
+  "save_every": 1000,
+  "schema": "self_audit.compact.v1",
+  "seed": 42,
+  "selector": "original",
+  "selector_dice_tolerance": 0.0,
+  "steps": 10000,
+  "stop_after_step": null,
+  "teacher": {},
+  "temperature": 1.0,
+  "unlabeled_batch_size": 32,
+  "utility_gain_tolerance": 1e-07,
+  "utility_tie_tolerance": 1e-07,
+  "warmup_steps": 8,
+  "weight_decay": 0.0001
+}

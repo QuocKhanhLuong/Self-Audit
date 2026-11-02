@@ -1,0 +1,261 @@
+{
+  "all_students_below_quality_threshold": true,
+  "arms": {
+    "S0": {
+      "best_pt_bytes": 9662432,
+      "best_pt_sha256": "80614aba6d36910df2f6fb9801444e94e2cf64623d6be7d9911f77fa8f02283b",
+      "config_sha256": "d14c95f71acb2a0695e5974904b5963865a57d831812a03eed689dcc4eb6f078",
+      "crop_size": 160,
+      "export_manifest_sha256": "719b2e6af7dcb0f3769d19ece1019efd1cb7e3a191a19cf4e6bc409f4ffde1e8",
+      "full_resume_checkpoint": {
+        "checkpoint_path": "/workspace/selfaudit-20261101/runs/s0_acdc_l8_b32_seed42/segments/segment_0002/final",
+        "config_sha256": "d14c95f71acb2a0695e5974904b5963865a57d831812a03eed689dcc4eb6f078",
+        "manifest_sha256": "b9263aa8b4fcbc9511d40d5b377f7b2d1044bbf2c1c2ba942c2020a618c50d39",
+        "payload_sha256": "4e90249bea4170ad8ae8dca95ddf8e0e3f9dddb26fb1b70480a0731fdbe9a2ee",
+        "schema": "self_audit.server_compact.full_resume.v1",
+        "source_closure_sha256": "8dcce56ed009576337f7dfcf6decc9c2c85c8538f82ec606ad1b96494079ac71",
+        "step": 10000,
+        "train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4"
+      },
+      "inputs": {
+        "synthetic": false,
+        "test": {
+          "path": "/workspace/selfaudit-20261101/prepared/acdc_test50_reference_eval/test.json",
+          "sha256": "6d8ca87a0dbcadd7996936ea91739d0d36935904806367a198a7b39167030a8a"
+        },
+        "train": {
+          "path": "/workspace/selfaudit-20261101/prepared/acdc_l8_s42_fresh/train.json",
+          "sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4"
+        },
+        "val": {
+          "path": "/workspace/selfaudit-20261101/prepared/acdc_l8_s42_fresh/val18_fresh_native.json",
+          "sha256": "070fbfd2cf9f25689fd4206ad07ee33003a3b7bd5a6207d47f976a22fadd067a"
+        }
+      },
+      "method": "supervised",
+      "metrics": {
+        "TEST50": {
+          "class_dice": {
+            "BG": 0.9913227148994843,
+            "LV": 0.7477716899413069,
+            "MYO": 0.656835050681114,
+            "RV": 0.5573425453441334
+          },
+          "foreground": 0.6539830953221848,
+          "frozen_predictions_sha256": "f7bb1f79d67f05ac6767a9346a65b6d1b8d7f807e4ee19613a30e243ee2ad145",
+          "macro4": 0.7383180002165097,
+          "metrics_sha256": "1f943585995aaee57d0c8c0af362a369dbc661c9cacc59d147fb4d0465880ed9",
+          "patients": 50
+        },
+        "VAL18": {
+          "class_dice": {
+            "BG": 0.991290426737599,
+            "LV": 0.7908664468781728,
+            "MYO": 0.6954265129073747,
+            "RV": 0.5832619562331425
+          },
+          "foreground": 0.6898516386728967,
+          "frozen_predictions_sha256": "5386a74d3ee6d63887aeae12a45b5181694631ab90d76b9afecf537a462bbec7",
+          "macro4": 0.7652113356890722,
+          "metrics_sha256": "7374fd7c745a121f9203ba63000ff7c5dc6fe37105734c837c0e75dd6418ea5b",
+          "patients": 18
+        }
+      },
+      "quality_gate": "NO_GO_BELOW_0.87",
+      "selected_checkpoint": {
+        "checkpoint_manifest_sha256": "592ab55b18aa30751cf6a75274afd88d6576532d9bfcf550fb4e44b697bd2b07",
+        "checkpoint_path": "/workspace/selfaudit-20261101/runs/s0_acdc_l8_b32_seed42/segments/segment_0002/step_008000",
+        "checkpoint_payload_sha256": "faf9383c2428c0f8151ca622e24c7723b4557cb5dc49d2b3e82abae33a69a653"
+      },
+      "selected_step": 8000,
+      "source_closure_sha256": "8dcce56ed009576337f7dfcf6decc9c2c85c8538f82ec606ad1b96494079ac71",
+      "training_batch": 32,
+      "training_completed_steps": 10000
+    },
+    "S1": {
+      "best_pt_bytes": 9662432,
+      "best_pt_sha256": "41727ae03d263b223ed8e18876776e681062714a1c58dd90bc01278f0afb46b9",
+      "config_sha256": "17bb6671cba0ca75b7186334af5bccffba012867b6336820e769f9b45549534a",
+      "crop_size": 160,
+      "export_manifest_sha256": "179990dcb2eb086cb3e01f42f03d2a727593dfe909ef416d0c6e10454fde869e",
+      "full_resume_checkpoint": {
+        "checkpoint_path": "/workspace/selfaudit-20261101/kd_local_20261102/arms/S1/run/segments/segment_0001/final",
+        "config_sha256": "17bb6671cba0ca75b7186334af5bccffba012867b6336820e769f9b45549534a",
+        "manifest_sha256": "31d3350f2e0df0949f755fcef35c29755fe1b3f20c2c7421cd6a5250bf991dad",
+        "payload_sha256": "fbe70d9b2d38287e43d5e09fc667d89fef2e684ec034d76061903dc69566e2fe",
+        "schema": "self_audit.server_compact.full_resume.v1",
+        "source_closure_sha256": "00d456de1bcbe96bed0c761e5247505a0482bab791ad1234ac67a90db9a740b7",
+        "step": 10000,
+        "train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4"
+      },
+      "inputs": {
+        "synthetic": false,
+        "test": {
+          "path": "/workspace/selfaudit-20261101/prepared/acdc_test50_reference_eval/test.json",
+          "sha256": "6d8ca87a0dbcadd7996936ea91739d0d36935904806367a198a7b39167030a8a"
+        },
+        "train": {
+          "path": "/workspace/selfaudit-20261101/prepared/acdc_l8_s42_fresh/train.json",
+          "sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4"
+        },
+        "val": {
+          "path": "/workspace/selfaudit-20261101/prepared/acdc_l8_s42_fresh/val18_fresh_native.json",
+          "sha256": "070fbfd2cf9f25689fd4206ad07ee33003a3b7bd5a6207d47f976a22fadd067a"
+        }
+      },
+      "method": "plain_kd",
+      "metrics": {
+        "TEST50": {
+          "class_dice": {
+            "BG": 0.9912043765190655,
+            "LV": 0.7500863786562697,
+            "MYO": 0.6463570133291376,
+            "RV": 0.5991574934550712
+          },
+          "foreground": 0.6652002951468262,
+          "frozen_predictions_sha256": "86c93515d4771496bb6a7c0836be1b34c5f7ed7ca08097925480b23a53abff47",
+          "macro4": 0.746701315489886,
+          "metrics_sha256": "e9e050722b1752ea8212dbe8bd3735ffa9460fa69bb8954265357bbeba6b21e4",
+          "patients": 50
+        },
+        "VAL18": {
+          "class_dice": {
+            "BG": 0.9913262150133648,
+            "LV": 0.7961973249323648,
+            "MYO": 0.6833952747428085,
+            "RV": 0.6095340726009831
+          },
+          "foreground": 0.6963755574253855,
+          "frozen_predictions_sha256": "f9f8bf74bd8896569cbbf5140dae27e4f81ecd303896510434a97f9944ec5ac4",
+          "macro4": 0.7701132218223803,
+          "metrics_sha256": "bb289e1d3783fdfb72fa81d1411f499bc917cb4a113eaf34c3e34f403b1a0525",
+          "patients": 18
+        }
+      },
+      "quality_gate": "NO_GO_BELOW_0.87",
+      "selected_checkpoint": {
+        "checkpoint_manifest_sha256": "de8e5c309244521d14351dda27abb626d8e2f2c576ee3fce5c4ea6819287290b",
+        "checkpoint_path": "/workspace/selfaudit-20261101/kd_local_20261102/arms/S1/run/segments/segment_0001/step_009000",
+        "checkpoint_payload_sha256": "ed029483cbb3551792c0344a6d278126e886a69fdbb439da730d023bf7008803"
+      },
+      "selected_step": 9000,
+      "source_closure_sha256": "00d456de1bcbe96bed0c761e5247505a0482bab791ad1234ac67a90db9a740b7",
+      "training_batch": 32,
+      "training_completed_steps": 10000
+    },
+    "S2": {
+      "best_pt_bytes": 9662432,
+      "best_pt_sha256": "692ffb76b3e0fe82872aa56c38a2c876c0f4d40e24e4dcc5ac19fe5f54c675fd",
+      "config_sha256": "6700c437bacf32761117a0ead67eb9bd43d03c4daf9a3278e40ec2a1830862f1",
+      "crop_size": 256,
+      "export_manifest_sha256": "f8c1fe3c481a1c4f5b81e35903367b24e3bbb78e9d38c6683a7b3ede7f4ba8d4",
+      "full_resume_checkpoint": {
+        "checkpoint_path": "/workspace/selfaudit-20261101/kd_local_20261102/arms/S2/run/segments/segment_0001/final",
+        "config_sha256": "6700c437bacf32761117a0ead67eb9bd43d03c4daf9a3278e40ec2a1830862f1",
+        "manifest_sha256": "2431742cd74730eeb95359c29b7c28a255602428a8e26d215c2ebb23b269ec5d",
+        "payload_sha256": "60adb35a294526540900519ad08c0ece3ac16bfb0827001aa7e0f2f0772a8f20",
+        "schema": "self_audit.server_compact.full_resume.v1",
+        "source_closure_sha256": "00d456de1bcbe96bed0c761e5247505a0482bab791ad1234ac67a90db9a740b7",
+        "step": 10000,
+        "train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4"
+      },
+      "inputs": {
+        "synthetic": false,
+        "test": {
+          "path": "/workspace/selfaudit-20261101/prepared/acdc_test50_reference_eval/test.json",
+          "sha256": "6d8ca87a0dbcadd7996936ea91739d0d36935904806367a198a7b39167030a8a"
+        },
+        "train": {
+          "path": "/workspace/selfaudit-20261101/prepared/acdc_l8_s42_fresh/train.json",
+          "sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4"
+        },
+        "val": {
+          "path": "/workspace/selfaudit-20261101/prepared/acdc_l8_s42_fresh/val18_fresh_native.json",
+          "sha256": "070fbfd2cf9f25689fd4206ad07ee33003a3b7bd5a6207d47f976a22fadd067a"
+        }
+      },
+      "method": "plain_kd",
+      "metrics": {
+        "TEST50": {
+          "class_dice": {
+            "BG": 0.9909311912881339,
+            "LV": 0.753916789190302,
+            "MYO": 0.6139364766979274,
+            "RV": 0.5478045498195259
+          },
+          "foreground": 0.6385526052359184,
+          "frozen_predictions_sha256": "6316b4be8e8fb1143006fe86f605327b79ba956a5af32af65bbaea3ff7b15633",
+          "macro4": 0.7266472517489722,
+          "metrics_sha256": "2a2a0096f736cbbe2a3f62fc6f354564b477c61584c90eeaf351c154b076eedf",
+          "patients": 50
+        },
+        "VAL18": {
+          "class_dice": {
+            "BG": 0.9899420819482745,
+            "LV": 0.744822988061623,
+            "MYO": 0.6160842842506514,
+            "RV": 0.5403765705440625
+          },
+          "foreground": 0.6337612809521124,
+          "frozen_predictions_sha256": "3520e4b6ff73d31b13f7096b8dd0289eda8cd03fab96a0b283737f555112da13",
+          "macro4": 0.7228064812011528,
+          "metrics_sha256": "6c57a84fdac0b830ca123b7137891f899ff51d1b1f10911a6766de339a3bfd02",
+          "patients": 18
+        }
+      },
+      "quality_gate": "NO_GO_BELOW_0.87",
+      "selected_checkpoint": {
+        "checkpoint_manifest_sha256": "2431742cd74730eeb95359c29b7c28a255602428a8e26d215c2ebb23b269ec5d",
+        "checkpoint_path": "/workspace/selfaudit-20261101/kd_local_20261102/arms/S2/run/segments/segment_0001/final",
+        "checkpoint_payload_sha256": "60adb35a294526540900519ad08c0ece3ac16bfb0827001aa7e0f2f0772a8f20"
+      },
+      "selected_step": 10000,
+      "source_closure_sha256": "00d456de1bcbe96bed0c761e5247505a0482bab791ad1234ac67a90db9a740b7",
+      "training_batch": 32,
+      "training_completed_steps": 10000
+    }
+  },
+  "captured_utc": "2026-11-02T15:57:59.355419+00:00",
+  "drive_backup": "UPLOAD_PENDING",
+  "drive_remote_verified": false,
+  "eval_batch_size": 8,
+  "evaluation_completed_utc": "2026-11-02T15:45:12.431224+00:00",
+  "evaluation_status": "COMPLETED",
+  "joint_acdc_mnm": "UNFINISHED_OUT_OF_SCOPE",
+  "matched_device_efficiency": "NOT_RUN",
+  "new_training_steps": 0,
+  "publication_base_commit": "4b18ba391c10a197eece96d60888de1701111bd5",
+  "quality_threshold": 0.87,
+  "runtime_git_head": "543c968504e0ddda8a14813a11b790b0a0f266a5",
+  "schema": "self_audit.server_compact.final_publication.v1",
+  "selection_rule": "highest VAL class_first_macro4; exact ties keep earliest step",
+  "source_files": {
+    "self_audit/compact_artifacts.py": {
+      "evaluation_runtime_sha256": "7827c73f66de129f0e6dbe8acacf1fe55c43050e451433541466d470edc74243",
+      "matches": true,
+      "publication_checkout_sha256": "7827c73f66de129f0e6dbe8acacf1fe55c43050e451433541466d470edc74243"
+    },
+    "self_audit/compact_inference.py": {
+      "evaluation_runtime_sha256": "e6dcc105249c55114621eecfece393de2d6c36b75241373be5f73a4d7c3ce540",
+      "matches": true,
+      "publication_checkout_sha256": "e6dcc105249c55114621eecfece393de2d6c36b75241373be5f73a4d7c3ce540"
+    },
+    "self_audit/compact_model.py": {
+      "evaluation_runtime_sha256": "5ac969c8e86a71dbd4451010b893693ea657d6a3a567d7d35a500327921448e2",
+      "matches": true,
+      "publication_checkout_sha256": "5ac969c8e86a71dbd4451010b893693ea657d6a3a567d7d35a500327921448e2"
+    },
+    "self_audit/evaluation.py": {
+      "evaluation_runtime_sha256": "abc805c1f94e31be948720882bbeba87fdeaed430bc2cbd219d50293d66c9898",
+      "matches": true,
+      "publication_checkout_sha256": "abc805c1f94e31be948720882bbeba87fdeaed430bc2cbd219d50293d66c9898"
+    },
+    "self_audit/server_runner.py": {
+      "evaluation_runtime_sha256": "3631e1811cf7d9439597449ec1e1b111a038eeb6348b75bec228fd918123a3c1",
+      "matches": true,
+      "publication_checkout_sha256": "3631e1811cf7d9439597449ec1e1b111a038eeb6348b75bec228fd918123a3c1"
+    }
+  },
+  "test_interpretation": "EXPOSED_DEVELOPMENT: TEST50 also appears in prior teacher eligibility evidence; no test tuning or selection in this evaluation",
+  "verification_status": "PASS"
+}

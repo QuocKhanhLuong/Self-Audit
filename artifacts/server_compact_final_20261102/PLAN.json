@@ -1,0 +1,675 @@
+{
+  "arms": {
+    "S0": {
+      "final": {
+        "checkpoint_path": "/workspace/selfaudit-20261101/runs/s0_acdc_l8_b32_seed42/segments/segment_0002/final",
+        "config_sha256": "d14c95f71acb2a0695e5974904b5963865a57d831812a03eed689dcc4eb6f078",
+        "manifest_sha256": "b9263aa8b4fcbc9511d40d5b377f7b2d1044bbf2c1c2ba942c2020a618c50d39",
+        "payload_sha256": "4e90249bea4170ad8ae8dca95ddf8e0e3f9dddb26fb1b70480a0731fdbe9a2ee",
+        "schema": "self_audit.server_compact.full_resume.v1",
+        "source_closure_sha256": "8dcce56ed009576337f7dfcf6decc9c2c85c8538f82ec606ad1b96494079ac71",
+        "step": 10000,
+        "train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4"
+      },
+      "lock_sha256": "e82f2740ce548924e4ab1143ba1ad1f8c13df29d1864bd022621675bce596f49",
+      "previous_selection": {
+        "checkpoint_manifest_sha256": "592ab55b18aa30751cf6a75274afd88d6576532d9bfcf550fb4e44b697bd2b07",
+        "checkpoint_path": "/workspace/selfaudit-20261101/runs/s0_acdc_l8_b32_seed42/segments/segment_0002/step_008000",
+        "checkpoint_payload_sha256": "faf9383c2428c0f8151ca622e24c7723b4557cb5dc49d2b3e82abae33a69a653",
+        "export_manifest_sha256": "719b2e6af7dcb0f3769d19ece1019efd1cb7e3a191a19cf4e6bc409f4ffde1e8",
+        "export_path": "/workspace/selfaudit-20261101/runs/s0_acdc_l8_b32_seed42/validation/step_008000_attempt_01/export",
+        "foreground_macro": 0.6898516386728967,
+        "macro4": 0.7652113356890722,
+        "metrics_sha256": "7374fd7c745a121f9203ba63000ff7c5dc6fe37105734c837c0e75dd6418ea5b",
+        "prediction_freeze_status": null,
+        "predictions_frozen_sha256": "5386a74d3ee6d63887aeae12a45b5181694631ab90d76b9afecf537a462bbec7",
+        "schema": "self_audit.server_compact.validation.v1",
+        "selection_metric": "class_first_macro4",
+        "selection_note": "VAL is development-only; no go/no-go threshold was applied",
+        "status": "VERIFIED",
+        "step": 8000,
+        "synthetic": false,
+        "validation_dir": "/workspace/selfaudit-20261101/runs/s0_acdc_l8_b32_seed42/validation/step_008000_attempt_01/val",
+        "validation_manifest_sha256": "070fbfd2cf9f25689fd4206ad07ee33003a3b7bd5a6207d47f976a22fadd067a"
+      },
+      "run_root": "/workspace/selfaudit-20261101/runs/s0_acdc_l8_b32_seed42"
+    },
+    "S1": {
+      "final": {
+        "checkpoint_path": "/workspace/selfaudit-20261101/kd_local_20261102/arms/S1/run/segments/segment_0001/final",
+        "config_sha256": "17bb6671cba0ca75b7186334af5bccffba012867b6336820e769f9b45549534a",
+        "manifest_sha256": "31d3350f2e0df0949f755fcef35c29755fe1b3f20c2c7421cd6a5250bf991dad",
+        "payload_sha256": "fbe70d9b2d38287e43d5e09fc667d89fef2e684ec034d76061903dc69566e2fe",
+        "schema": "self_audit.server_compact.full_resume.v1",
+        "source_closure_sha256": "00d456de1bcbe96bed0c761e5247505a0482bab791ad1234ac67a90db9a740b7",
+        "step": 10000,
+        "train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4"
+      },
+      "lock_sha256": "bd0dea96a0da8440c55232420cddefdf2a8c7ffc024ddff5a737872e288a7f32",
+      "previous_selection": {
+        "checkpoint_manifest_sha256": "de8e5c309244521d14351dda27abb626d8e2f2c576ee3fce5c4ea6819287290b",
+        "checkpoint_path": "/workspace/selfaudit-20261101/kd_local_20261102/arms/S1/run/segments/segment_0001/step_009000",
+        "checkpoint_payload_sha256": "ed029483cbb3551792c0344a6d278126e886a69fdbb439da730d023bf7008803",
+        "domain_results": {
+          "unspecified": {
+            "absent_class_tracking": {
+              "BG": {
+                "absent_false_positive_voxels": 0,
+                "absent_fp_rate": null,
+                "absent_frame_count": 0,
+                "absent_valid_voxels": 0
+              },
+              "LV": {
+                "absent_false_positive_voxels": 0,
+                "absent_fp_rate": null,
+                "absent_frame_count": 0,
+                "absent_valid_voxels": 0
+              },
+              "MYO": {
+                "absent_false_positive_voxels": 0,
+                "absent_fp_rate": null,
+                "absent_frame_count": 0,
+                "absent_valid_voxels": 0
+              },
+              "RV": {
+                "absent_false_positive_voxels": 0,
+                "absent_fp_rate": null,
+                "absent_frame_count": 0,
+                "absent_valid_voxels": 0
+              }
+            },
+            "class_first_foreground_macro": 0.6963755574253855,
+            "class_first_macro4": 0.7701132218223803,
+            "failure_cases": [
+              {
+                "foreground_mean": 0.31507175412937943,
+                "patient": "patient014",
+                "reason": "collapsed_or_low_foreground",
+                "scores": {
+                  "BG": 0.9715823053733875,
+                  "LV": 0.4177279182246007,
+                  "MYO": 0.3547442875258824,
+                  "RV": 0.1727430566376551
+                }
+              },
+              {
+                "foreground_mean": 0.4311159907706273,
+                "patient": "patient087",
+                "reason": "collapsed_or_low_foreground",
+                "scores": {
+                  "BG": 0.9777744055124951,
+                  "LV": 0.6624207299984577,
+                  "MYO": 0.5663450291824792,
+                  "RV": 0.0645822131309451
+                }
+              }
+            ],
+            "macro_patient": {
+              "BG": {
+                "dice": 0.9913262150133648,
+                "present_patients": 18
+              },
+              "LV": {
+                "dice": 0.7961973249323648,
+                "present_patients": 18
+              },
+              "MYO": {
+                "dice": 0.6833952747428085,
+                "present_patients": 18
+              },
+              "RV": {
+                "dice": 0.6095340726009831,
+                "present_patients": 18
+              }
+            },
+            "patient_first_all_class_macro": 0.7701132218223803,
+            "patient_first_foreground_macro": 0.6963755574253853,
+            "patients": {
+              "patient004": {
+                "BG": 0.9966609069634215,
+                "LV": 0.9379229959837786,
+                "MYO": 0.79085789593537,
+                "RV": 0.8228439954231541,
+                "all_class_mean": 0.887071448576431,
+                "foreground_mean": 0.8505416291141009,
+                "frame_count": 2,
+                "valid_voxels": 1187840
+              },
+              "patient005": {
+                "BG": 0.9919990560288361,
+                "LV": 0.9147812632403627,
+                "MYO": 0.7550199256877731,
+                "RV": 0.5663524329173577,
+                "all_class_mean": 0.8070381694685824,
+                "foreground_mean": 0.7453845406151643,
+                "frame_count": 2,
+                "valid_voxels": 1105920
+              },
+              "patient012": {
+                "BG": 0.9953715371128269,
+                "LV": 0.9152964136939694,
+                "MYO": 0.7475720037705309,
+                "RV": 0.5234762217614018,
+                "all_class_mean": 0.7954290440846823,
+                "foreground_mean": 0.728781546408634,
+                "frame_count": 2,
+                "valid_voxels": 942080
+              },
+              "patient014": {
+                "BG": 0.9715823053733875,
+                "LV": 0.4177279182246007,
+                "MYO": 0.3547442875258824,
+                "RV": 0.1727430566376551,
+                "all_class_mean": 0.47919939194038147,
+                "foreground_mean": 0.31507175412937943,
+                "frame_count": 2,
+                "valid_voxels": 1105920
+              },
+              "patient015": {
+                "BG": 0.9905724883971162,
+                "LV": 0.9032239364968953,
+                "MYO": 0.6382344771214655,
+                "RV": 0.45819042934029697,
+                "all_class_mean": 0.7475553328389435,
+                "foreground_mean": 0.6665496143195525,
+                "frame_count": 2,
+                "valid_voxels": 995328
+              },
+              "patient018": {
+                "BG": 0.9953736198546055,
+                "LV": 0.9412630776621693,
+                "MYO": 0.7356064118182242,
+                "RV": 0.8895180402538285,
+                "all_class_mean": 0.8904402873972068,
+                "foreground_mean": 0.8554625099114074,
+                "frame_count": 2,
+                "valid_voxels": 884736
+              },
+              "patient028": {
+                "BG": 0.9899338540433564,
+                "LV": 0.6560403487177059,
+                "MYO": 0.5423343645506262,
+                "RV": 0.5846500906698885,
+                "all_class_mean": 0.6932396644953943,
+                "foreground_mean": 0.5943416013127402,
+                "frame_count": 2,
+                "valid_voxels": 1146880
+              },
+              "patient029": {
+                "BG": 0.9912039496007756,
+                "LV": 0.6946152666137311,
+                "MYO": 0.7186188616317999,
+                "RV": 0.6362120450931409,
+                "all_class_mean": 0.7601625307348618,
+                "foreground_mean": 0.683148724446224,
+                "frame_count": 2,
+                "valid_voxels": 1081344
+              },
+              "patient030": {
+                "BG": 0.9958710502972346,
+                "LV": 0.8270528833377624,
+                "MYO": 0.7351558471771573,
+                "RV": 0.6055381400208987,
+                "all_class_mean": 0.7909044802082632,
+                "foreground_mean": 0.7225822901786062,
+                "frame_count": 2,
+                "valid_voxels": 1105920
+              },
+              "patient032": {
+                "BG": 0.9957416883730015,
+                "LV": 0.7671141796941794,
+                "MYO": 0.8184762727261481,
+                "RV": 0.6814962232378858,
+                "all_class_mean": 0.8157070910078037,
+                "foreground_mean": 0.7556955585527377,
+                "frame_count": 2,
+                "valid_voxels": 1228800
+              },
+              "patient036": {
+                "BG": 0.9939795545371028,
+                "LV": 0.798590183372563,
+                "MYO": 0.7980484440577368,
+                "RV": 0.7573935369200648,
+                "all_class_mean": 0.8370029297218669,
+                "foreground_mean": 0.7846773881167882,
+                "frame_count": 2,
+                "valid_voxels": 884736
+              },
+              "patient065": {
+                "BG": 0.9957354585129101,
+                "LV": 0.8276565286868377,
+                "MYO": 0.6066047086250247,
+                "RV": 0.8415233137775424,
+                "all_class_mean": 0.8178800024005787,
+                "foreground_mean": 0.7585948503631349,
+                "frame_count": 2,
+                "valid_voxels": 752640
+              },
+              "patient070": {
+                "BG": 0.9965673061089513,
+                "LV": 0.8475747892206513,
+                "MYO": 0.8023833439419324,
+                "RV": 0.8145539754181166,
+                "all_class_mean": 0.8652698536724129,
+                "foreground_mean": 0.8215040361935668,
+                "frame_count": 2,
+                "valid_voxels": 638976
+              },
+              "patient082": {
+                "BG": 0.9890491340305516,
+                "LV": 0.8490855462904028,
+                "MYO": 0.7299660018204273,
+                "RV": 0.23844565199304069,
+                "all_class_mean": 0.7016365835336056,
+                "foreground_mean": 0.6058324000346236,
+                "frame_count": 2,
+                "valid_voxels": 1103872
+              },
+              "patient087": {
+                "BG": 0.9777744055124951,
+                "LV": 0.6624207299984577,
+                "MYO": 0.5663450291824792,
+                "RV": 0.0645822131309451,
+                "all_class_mean": 0.5677805944560943,
+                "foreground_mean": 0.4311159907706273,
+                "frame_count": 2,
+                "valid_voxels": 753664
+              },
+              "patient089": {
+                "BG": 0.9955524971214513,
+                "LV": 0.8786118101409908,
+                "MYO": 0.6956055119278123,
+                "RV": 0.7902947424206397,
+                "all_class_mean": 0.8400161404027235,
+                "foreground_mean": 0.7881706881631475,
+                "frame_count": 2,
+                "valid_voxels": 912384
+              },
+              "patient095": {
+                "BG": 0.9911768368672653,
+                "LV": 0.7511711410792508,
+                "MYO": 0.6886451512045798,
+                "RV": 0.75901270441932,
+                "all_class_mean": 0.797501458392604,
+                "foreground_mean": 0.7329429989010502,
+                "frame_count": 2,
+                "valid_voxels": 1128960
+              },
+              "patient098": {
+                "BG": 0.9897262215052753,
+                "LV": 0.7414028363282581,
+                "MYO": 0.5768964066655811,
+                "RV": 0.7647864933825173,
+                "all_class_mean": 0.7682029894704079,
+                "foreground_mean": 0.6943619121254522,
+                "frame_count": 2,
+                "valid_voxels": 774144
+              }
+            },
+            "synthetic": false,
+            "total_valid_voxels": 17734144
+          }
+        },
+        "export_manifest_sha256": "179990dcb2eb086cb3e01f42f03d2a727593dfe909ef416d0c6e10454fde869e",
+        "export_path": "/workspace/selfaudit-20261101/kd_local_20261102/arms/S1/run/validation/step_009000_attempt_01/export",
+        "foreground_macro": 0.6963755574253855,
+        "macro4": 0.7701132218223803,
+        "metrics_sha256": "bb289e1d3783fdfb72fa81d1411f499bc917cb4a113eaf34c3e34f403b1a0525",
+        "prediction_freeze_status": null,
+        "predictions_frozen_sha256": "f9f8bf74bd8896569cbbf5140dae27e4f81ecd303896510434a97f9944ec5ac4",
+        "schema": "self_audit.server_compact.validation.v1",
+        "selection_metric": "class_first_macro4",
+        "selection_note": "VAL is development-only; no go/no-go threshold was applied",
+        "status": "VERIFIED",
+        "step": 9000,
+        "synthetic": false,
+        "validation_dir": "/workspace/selfaudit-20261101/kd_local_20261102/arms/S1/run/validation/step_009000_attempt_01/val",
+        "validation_manifest_sha256": "070fbfd2cf9f25689fd4206ad07ee33003a3b7bd5a6207d47f976a22fadd067a"
+      },
+      "run_root": "/workspace/selfaudit-20261101/kd_local_20261102/arms/S1/run"
+    },
+    "S2": {
+      "final": {
+        "checkpoint_path": "/workspace/selfaudit-20261101/kd_local_20261102/arms/S2/run/segments/segment_0001/final",
+        "config_sha256": "6700c437bacf32761117a0ead67eb9bd43d03c4daf9a3278e40ec2a1830862f1",
+        "manifest_sha256": "2431742cd74730eeb95359c29b7c28a255602428a8e26d215c2ebb23b269ec5d",
+        "payload_sha256": "60adb35a294526540900519ad08c0ece3ac16bfb0827001aa7e0f2f0772a8f20",
+        "schema": "self_audit.server_compact.full_resume.v1",
+        "source_closure_sha256": "00d456de1bcbe96bed0c761e5247505a0482bab791ad1234ac67a90db9a740b7",
+        "step": 10000,
+        "train_manifest_sha256": "e64f3b4009e7250632491ac634e15657692b58d38b97a0a2d975396865e80de4"
+      },
+      "lock_sha256": "276433f7bf8866a2a74b66dff863b59091f889717acba9fdf4ac0876cd068228",
+      "previous_selection": {
+        "checkpoint_manifest_sha256": "e8520886129cdf7a50ea26deb870a88ed245e28189e61ceed845464f08c7d5c3",
+        "checkpoint_path": "/workspace/selfaudit-20261101/kd_local_20261102/arms/S2/run/segments/segment_0001/step_005000",
+        "checkpoint_payload_sha256": "110ad5285f2bf5c3a034e4da6058564fbd5834aade9cc804eea51deb2c2c18ba",
+        "domain_results": {
+          "unspecified": {
+            "absent_class_tracking": {
+              "BG": {
+                "absent_false_positive_voxels": 0,
+                "absent_fp_rate": null,
+                "absent_frame_count": 0,
+                "absent_valid_voxels": 0
+              },
+              "LV": {
+                "absent_false_positive_voxels": 0,
+                "absent_fp_rate": null,
+                "absent_frame_count": 0,
+                "absent_valid_voxels": 0
+              },
+              "MYO": {
+                "absent_false_positive_voxels": 0,
+                "absent_fp_rate": null,
+                "absent_frame_count": 0,
+                "absent_valid_voxels": 0
+              },
+              "RV": {
+                "absent_false_positive_voxels": 0,
+                "absent_fp_rate": null,
+                "absent_frame_count": 0,
+                "absent_valid_voxels": 0
+              }
+            },
+            "class_first_foreground_macro": 0.6278563947428106,
+            "class_first_macro4": 0.7184355177224724,
+            "failure_cases": [
+              {
+                "foreground_mean": 0.14812370473037687,
+                "patient": "patient014",
+                "reason": "collapsed_or_low_foreground",
+                "scores": {
+                  "BG": 0.9689802176132,
+                  "LV": 0.20277685637358422,
+                  "MYO": 0.18522758456272836,
+                  "RV": 0.05636667325481807
+                }
+              },
+              {
+                "foreground_mean": 0.20437260842761398,
+                "patient": "patient087",
+                "reason": "collapsed_or_low_foreground",
+                "scores": {
+                  "BG": 0.9720275076246863,
+                  "LV": 0.2831559238436884,
+                  "MYO": 0.29476310252511984,
+                  "RV": 0.03519879891403383
+                }
+              }
+            ],
+            "macro_patient": {
+              "BG": {
+                "dice": 0.9901728866614581,
+                "present_patients": 18
+              },
+              "LV": {
+                "dice": 0.7404667865450445,
+                "present_patients": 18
+              },
+              "MYO": {
+                "dice": 0.6155729091332117,
+                "present_patients": 18
+              },
+              "RV": {
+                "dice": 0.5275294885501756,
+                "present_patients": 18
+              }
+            },
+            "patient_first_all_class_macro": 0.7184355177224724,
+            "patient_first_foreground_macro": 0.6278563947428105,
+            "patients": {
+              "patient004": {
+                "BG": 0.9925348230632682,
+                "LV": 0.8179676573738296,
+                "MYO": 0.5861187388925972,
+                "RV": 0.6066768189207052,
+                "all_class_mean": 0.7508245095626,
+                "foreground_mean": 0.6702544050623773,
+                "frame_count": 2,
+                "valid_voxels": 1187840
+              },
+              "patient005": {
+                "BG": 0.9890046602200471,
+                "LV": 0.8246503219498127,
+                "MYO": 0.7050629611338727,
+                "RV": 0.34505723544157985,
+                "all_class_mean": 0.7159437946863281,
+                "foreground_mean": 0.6249235061750884,
+                "frame_count": 2,
+                "valid_voxels": 1105920
+              },
+              "patient012": {
+                "BG": 0.9936540006347927,
+                "LV": 0.8410230642320239,
+                "MYO": 0.5297612368234834,
+                "RV": 0.44544455561294277,
+                "all_class_mean": 0.7024707143258107,
+                "foreground_mean": 0.6054096188894834,
+                "frame_count": 2,
+                "valid_voxels": 942080
+              },
+              "patient014": {
+                "BG": 0.9689802176132,
+                "LV": 0.20277685637358422,
+                "MYO": 0.18522758456272836,
+                "RV": 0.05636667325481807,
+                "all_class_mean": 0.3533378329510827,
+                "foreground_mean": 0.14812370473037687,
+                "frame_count": 2,
+                "valid_voxels": 1105920
+              },
+              "patient015": {
+                "BG": 0.9871687559226296,
+                "LV": 0.7559654726076166,
+                "MYO": 0.4248123915951513,
+                "RV": 0.32930878730605245,
+                "all_class_mean": 0.6243138518578626,
+                "foreground_mean": 0.5033622171696067,
+                "frame_count": 2,
+                "valid_voxels": 995328
+              },
+              "patient018": {
+                "BG": 0.9928849640606704,
+                "LV": 0.8418937897595326,
+                "MYO": 0.6849948639837746,
+                "RV": 0.8545198225238446,
+                "all_class_mean": 0.8435733600819556,
+                "foreground_mean": 0.793802825422384,
+                "frame_count": 2,
+                "valid_voxels": 884736
+              },
+              "patient028": {
+                "BG": 0.9950208913281883,
+                "LV": 0.8171311284857985,
+                "MYO": 0.702216553438277,
+                "RV": 0.7050771546855905,
+                "all_class_mean": 0.8048614319844636,
+                "foreground_mean": 0.7414749455365554,
+                "frame_count": 2,
+                "valid_voxels": 1146880
+              },
+              "patient029": {
+                "BG": 0.991737853070225,
+                "LV": 0.7348187344489079,
+                "MYO": 0.7333274856461565,
+                "RV": 0.5983419488431014,
+                "all_class_mean": 0.7645565055020977,
+                "foreground_mean": 0.6888293896460552,
+                "frame_count": 2,
+                "valid_voxels": 1081344
+              },
+              "patient030": {
+                "BG": 0.9949817713144788,
+                "LV": 0.7940018928810231,
+                "MYO": 0.6882430689770984,
+                "RV": 0.5029330758064077,
+                "all_class_mean": 0.745039952244752,
+                "foreground_mean": 0.6617260125548431,
+                "frame_count": 2,
+                "valid_voxels": 1105920
+              },
+              "patient032": {
+                "BG": 0.9918420680781586,
+                "LV": 0.5935883764108212,
+                "MYO": 0.5913555501047414,
+                "RV": 0.41173320056973184,
+                "all_class_mean": 0.6471297987908633,
+                "foreground_mean": 0.5322257090284315,
+                "frame_count": 2,
+                "valid_voxels": 1228800
+              },
+              "patient036": {
+                "BG": 0.9927041866587514,
+                "LV": 0.7402179176735184,
+                "MYO": 0.6541802743370005,
+                "RV": 0.7788735741694,
+                "all_class_mean": 0.7914939882096675,
+                "foreground_mean": 0.724423922059973,
+                "frame_count": 2,
+                "valid_voxels": 884736
+              },
+              "patient065": {
+                "BG": 0.9966777538746934,
+                "LV": 0.8120668317322448,
+                "MYO": 0.7243705660506727,
+                "RV": 0.8193798028465922,
+                "all_class_mean": 0.8381237386260507,
+                "foreground_mean": 0.7852724002098365,
+                "frame_count": 2,
+                "valid_voxels": 752640
+              },
+              "patient070": {
+                "BG": 0.9944103438970875,
+                "LV": 0.8396146788346992,
+                "MYO": 0.7170346638255818,
+                "RV": 0.5445467627159783,
+                "all_class_mean": 0.7739016123183368,
+                "foreground_mean": 0.7003987017920865,
+                "frame_count": 2,
+                "valid_voxels": 638976
+              },
+              "patient082": {
+                "BG": 0.9865704917048302,
+                "LV": 0.8349359182350191,
+                "MYO": 0.6727528846924222,
+                "RV": 0.03382631190526427,
+                "all_class_mean": 0.6320214016343839,
+                "foreground_mean": 0.5138383716109018,
+                "frame_count": 2,
+                "valid_voxels": 1103872
+              },
+              "patient087": {
+                "BG": 0.9720275076246863,
+                "LV": 0.2831559238436884,
+                "MYO": 0.29476310252511984,
+                "RV": 0.03519879891403383,
+                "all_class_mean": 0.3962863332268821,
+                "foreground_mean": 0.20437260842761398,
+                "frame_count": 2,
+                "valid_voxels": 753664
+              },
+              "patient089": {
+                "BG": 0.997295570765333,
+                "LV": 0.8771834568095276,
+                "MYO": 0.7863631430565545,
+                "RV": 0.8115373721683461,
+                "all_class_mean": 0.8680948856999403,
+                "foreground_mean": 0.8250279906781427,
+                "frame_count": 2,
+                "valid_voxels": 912384
+              },
+              "patient095": {
+                "BG": 0.9934588586322795,
+                "LV": 0.8876345758188955,
+                "MYO": 0.7039955918051978,
+                "RV": 0.8145126214277866,
+                "all_class_mean": 0.8499004119210398,
+                "foreground_mean": 0.8020475963506266,
+                "frame_count": 2,
+                "valid_voxels": 1128960
+              },
+              "patient098": {
+                "BG": 0.9921572414429243,
+                "LV": 0.8297755603402596,
+                "MYO": 0.69573170294738,
+                "RV": 0.8021962767909854,
+                "all_class_mean": 0.8299651953803874,
+                "foreground_mean": 0.7759011800262083,
+                "frame_count": 2,
+                "valid_voxels": 774144
+              }
+            },
+            "synthetic": false,
+            "total_valid_voxels": 17734144
+          }
+        },
+        "export_manifest_sha256": "72e68fc8750690a17205c3503799e747d8bce6e673f912f257147ae70dd9efe9",
+        "export_path": "/workspace/selfaudit-20261101/kd_local_20261102/arms/S2/run/validation/step_005000_attempt_01/export",
+        "foreground_macro": 0.6278563947428106,
+        "macro4": 0.7184355177224724,
+        "metrics_sha256": "f2791429426b3ea74990b3cb8436e2e87b6105a5aa021f348c61463f68257ff0",
+        "prediction_freeze_status": null,
+        "predictions_frozen_sha256": "2f2b60124afbaaf3604b208e1f7d9ac282e1b92f4ea841ab3df0579efcf02ff0",
+        "schema": "self_audit.server_compact.validation.v1",
+        "selection_metric": "class_first_macro4",
+        "selection_note": "VAL is development-only; no go/no-go threshold was applied",
+        "status": "VERIFIED",
+        "step": 5000,
+        "synthetic": false,
+        "validation_dir": "/workspace/selfaudit-20261101/kd_local_20261102/arms/S2/run/validation/step_005000_attempt_01/val",
+        "validation_manifest_sha256": "070fbfd2cf9f25689fd4206ad07ee33003a3b7bd5a6207d47f976a22fadd067a"
+      },
+      "run_root": "/workspace/selfaudit-20261101/kd_local_20261102/arms/S2/run"
+    }
+  },
+  "authorization": "User authorized VAL/TEST50 and deferred Drive backup: ko can lo backup drive, xong r push 1 the cx duoc",
+  "eval_batch_size": 8,
+  "new_training_steps": 0,
+  "normalization": "prepared",
+  "old_receipt_pins": {
+    "/workspace/selfaudit-20261101/kd_local_20261102/arms/S1/run/BACKUP_STATUS.json": "e6cfa1027aab6e92fbc458725e34148a40905399b2de5ec328cf3bc9832ec2fc",
+    "/workspace/selfaudit-20261101/kd_local_20261102/arms/S1/run/BACKUP_STATUS_core.json": "e6cfa1027aab6e92fbc458725e34148a40905399b2de5ec328cf3bc9832ec2fc",
+    "/workspace/selfaudit-20261101/kd_local_20261102/arms/S1/run/BEST.json": "aef427638db7bb48884e286604046245186fd39f8280cbead0ddd628347ab89c",
+    "/workspace/selfaudit-20261101/kd_local_20261102/arms/S1/run/BEST_SELECTION.json": "561966b7802c26294a5feb976b87528589a4865a7dc6803b49d46d653e5a6c51",
+    "/workspace/selfaudit-20261101/kd_local_20261102/arms/S1/run/FULL_RESUME_CHECKPOINT.json": "8cffabad61e13febad6f4e26066a390709bc80e1d3312cc6db5c25d8122681a0",
+    "/workspace/selfaudit-20261101/kd_local_20261102/arms/S1/run/RUN_LOCK.json": "bd0dea96a0da8440c55232420cddefdf2a8c7ffc024ddff5a737872e288a7f32",
+    "/workspace/selfaudit-20261101/kd_local_20261102/arms/S1/run/RUN_STATUS.json": "54444b45f690618041bef7f799c65ff40a0f1313be9cfc742d3c08ceee14ca46",
+    "/workspace/selfaudit-20261101/kd_local_20261102/arms/S1/run/VALIDATION_LOG.jsonl": "8841b66b5af92d1605d048864a2200a9f703a1debe4ec3bd26b3fcd9f5a6699f",
+    "/workspace/selfaudit-20261101/kd_local_20261102/arms/S1/run/best.pt": "41727ae03d263b223ed8e18876776e681062714a1c58dd90bc01278f0afb46b9",
+    "/workspace/selfaudit-20261101/kd_local_20261102/arms/S2/run/BACKUP_STATUS.json": "22b30e12c0506fd13058f1adf0e062e3063994058138b754590dc46cfe31363a",
+    "/workspace/selfaudit-20261101/kd_local_20261102/arms/S2/run/BACKUP_STATUS_core.json": "22b30e12c0506fd13058f1adf0e062e3063994058138b754590dc46cfe31363a",
+    "/workspace/selfaudit-20261101/kd_local_20261102/arms/S2/run/BEST.json": "8b10a79e31c528b9ac56c94488dc21d48d0a837aee3d0f876985c5e9b57afcc4",
+    "/workspace/selfaudit-20261101/kd_local_20261102/arms/S2/run/BEST_SELECTION.json": "6d4b4a7895a4aa2b256a3136cdd0f4fd12fba3b733872568b8792e80cea581b2",
+    "/workspace/selfaudit-20261101/kd_local_20261102/arms/S2/run/FULL_RESUME_CHECKPOINT.json": "b594b5ef0a833ba8897a657f19765f4834c1d25c01123b15bbb3b46776a6610d",
+    "/workspace/selfaudit-20261101/kd_local_20261102/arms/S2/run/RUN_LOCK.json": "276433f7bf8866a2a74b66dff863b59091f889717acba9fdf4ac0876cd068228",
+    "/workspace/selfaudit-20261101/kd_local_20261102/arms/S2/run/RUN_STATUS.json": "bff7cae16bfef90cdc7e2f5e7ea4df7c2de0f06c9639a569b26f557e623d644d",
+    "/workspace/selfaudit-20261101/kd_local_20261102/arms/S2/run/VALIDATION_LOG.jsonl": "a77966928460acb66935c26986944c9e4508470c104d5b64ce40ef52bd08fa0d",
+    "/workspace/selfaudit-20261101/kd_local_20261102/arms/S2/run/best.pt": "dd9ccb0a59ae8260f6aef7098809e63e59b4ae9a7671b5bd1da5f9cf2a56684a",
+    "/workspace/selfaudit-20261101/runs/s0_acdc_l8_b32_seed42/BACKUP_STATUS.json": "ae91f6d16329212025c9cdd8e5fff31b2f42d332290f78ab05d00c7ba033b4aa",
+    "/workspace/selfaudit-20261101/runs/s0_acdc_l8_b32_seed42/BACKUP_STATUS_core.json": "ae91f6d16329212025c9cdd8e5fff31b2f42d332290f78ab05d00c7ba033b4aa",
+    "/workspace/selfaudit-20261101/runs/s0_acdc_l8_b32_seed42/BEST.json": "0998cf48064081ddc79fe5c82155c5113b8c06239bf4c45bc1e2866ddc992aa2",
+    "/workspace/selfaudit-20261101/runs/s0_acdc_l8_b32_seed42/BEST_SELECTION.json": "6529b9f910df862624550664eae692abb202f4c5ccf58672c649c470b93025a9",
+    "/workspace/selfaudit-20261101/runs/s0_acdc_l8_b32_seed42/FULL_RESUME_CHECKPOINT.json": "c88deda7ffdc0a8244e8d337ed2f0d0770206916f3642183bbc1c2497cf6cd55",
+    "/workspace/selfaudit-20261101/runs/s0_acdc_l8_b32_seed42/RUN_LOCK.json": "e82f2740ce548924e4ab1143ba1ad1f8c13df29d1864bd022621675bce596f49",
+    "/workspace/selfaudit-20261101/runs/s0_acdc_l8_b32_seed42/RUN_STATUS.json": "226c031232ed7ba112f3d32103695dd464e237cc3e52917877400c3dbfe0323e",
+    "/workspace/selfaudit-20261101/runs/s0_acdc_l8_b32_seed42/VALIDATION_LOG.jsonl": "479a548bc95dd4439319926ec2346b18fabb85d5a149ede5278cf2d325ab43ac",
+    "/workspace/selfaudit-20261101/runs/s0_acdc_l8_b32_seed42/best.pt": "80614aba6d36910df2f6fb9801444e94e2cf64623d6be7d9911f77fa8f02283b"
+  },
+  "runtime_files": {
+    "self_audit/compact_artifacts.py": "7827c73f66de129f0e6dbe8acacf1fe55c43050e451433541466d470edc74243",
+    "self_audit/compact_inference.py": "e6dcc105249c55114621eecfece393de2d6c36b75241373be5f73a4d7c3ce540",
+    "self_audit/compact_model.py": "5ac969c8e86a71dbd4451010b893693ea657d6a3a567d7d35a500327921448e2",
+    "self_audit/evaluation.py": "abc805c1f94e31be948720882bbeba87fdeaed430bc2cbd219d50293d66c9898",
+    "self_audit/server_runner.py": "3631e1811cf7d9439597449ec1e1b111a038eeb6348b75bec228fd918123a3c1"
+  },
+  "runtime_git_head": "543c968504e0ddda8a14813a11b790b0a0f266a5",
+  "s0_metadata_only_compatibility": {
+    "difference": "Handle string geometry_provenance when writing evaluation_source_manifest_sha256; numerical prediction/metric code unchanged",
+    "old_sha256": "8cdb7c216c7a6b2c66e9e095dde369265006d1b28dca007ba7af06104993d4c6",
+    "runtime_sha256": "e6dcc105249c55114621eecfece393de2d6c36b75241373be5f73a4d7c3ce540"
+  },
+  "schema": "self_audit.completed_run_evaluation.v1",
+  "script_sha256": "dbb96e2c1155476fc05ed4f45ee48aa3e1955cb5e896bc4d2725b74750c96f6d",
+  "selection_rule": "highest VAL class_first_macro4; exact ties keep earliest step"
+}
