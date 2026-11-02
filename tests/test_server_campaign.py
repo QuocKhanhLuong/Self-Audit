@@ -287,6 +287,10 @@ def test_detached_controller_restarts_with_only_explicit_hash_verified_resume(tm
         wrapper_pid = stage_state["wrapper_pid"]
         command_pid = execution["command_identity"]["pid"]
         supervisor = state["supervisor"]
+        # /proc identity exists before the child's Python body has run. Wait
+        # for its durable checkpoint, not just for the process to exist.
+        _wait_for(lambda: marker.is_file() and checkpoint.is_file()
+                  and sha256_file(checkpoint) == checkpoint_sha)
         assert marker.read_text(encoding="utf-8") == "initial\n"
         assert checkpoint.is_file() and sha256_file(checkpoint) == checkpoint_sha
 
@@ -317,9 +321,15 @@ def test_detached_controller_restarts_with_only_explicit_hash_verified_resume(tm
             active = current.get("active_stage")
             if active:
                 item = current["stages"][active]
-                for pid in (item.get("wrapper_pid"),):
-                    if pid and process_identity(pid):
-                        os.kill(pid, signal.SIGKILL)
+                execution_file = Path(item.get("execution_path", "missing"))
+                identities = [item.get("wrapper_identity"), current.get("supervisor")]
+                if execution_file.is_file():
+                    identities.insert(0, json.loads(execution_file.read_text()).get("command_identity"))
+                for identity in identities:
+                    if identity:
+                        actual = process_identity(identity["pid"])
+                        if actual and all(actual[k] == identity[k] for k in ("pid", "start_ticks", "cwd", "argv_sha256")):
+                            os.kill(identity["pid"], signal.SIGKILL)
 
 
 def test_teacher_quality_gate_blocks_kd_without_threshold_relaxation(tmp_path: Path):
