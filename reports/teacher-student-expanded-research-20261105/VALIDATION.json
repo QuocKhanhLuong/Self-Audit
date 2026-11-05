@@ -1,0 +1,49 @@
+{
+  "source_head": "9958d421ccae1da3b8527f74da5438dbb9f3f521",
+  "source_hashes": {
+    "ACTIVE_PIPELINE.json": "a451851b96ef382fd8de5f0542a6f44e0db61954c0adb66facec9a0e14ee904b",
+    "docs/METHOD.md": "21ea10c4071c65816299b3b3f96d9167bfea6e5aeae256372908b7fa41f5be2e",
+    "self_audit/model.py": "02baf8a7931c21003fd86bdbeb0f9ec6d02f35e80ddac69d95f88527f5cce18c"
+  },
+  "repo_changes_by_this_task": false,
+  "git_status_after": "?? .DS_Store\n?? CODEX_PROMPT_SELF_AUDIT_DIAGNOSTICS.md\n?? baseline/\n?? reports/astra_rew_research_20260917T163419Z/\n?? reports/candidate_c_novelty_research_20260917T104318Z/\n?? reports/maskfree150/\n?? tests/.DS_Store",
+  "check_repo": {
+    "status": "PASS",
+    "python": "/Users/alvinluong/miniforge3/envs/selfaudit-modal/bin/python"
+  },
+  "pytest": {
+    "status": "PASS",
+    "passed": 43,
+    "warnings": 1,
+    "seconds": 3.39,
+    "warning": "torch.jit.script FutureWarning"
+  },
+  "probes": {
+    "status": "FIXTURE_ONLY",
+    "script_sha256": "2a0fb42f671c0006a775db4059e6c58450df8a6b15e4b111ed0b704144f44636",
+    "results_sha256": "8f7782260876c1462d0924bd5d8d9c05c3b5265ef1d75d5bcbe0b5f867ef4372"
+  },
+  "weights_used": null,
+  "patient_training": "NOT_RUN",
+  "gpu_benchmark": "NOT_RUN",
+  "novelty": "UNRESOLVED",
+  "orx_executable": "/Applications/OpenResearch.app/Contents/MacOS/orx",
+  "orx_project": "a79c6e41-fc84-409c-ba6a-c08229a16a26",
+  "experiment_mutations": false,
+  "initial_hashes": {
+    "geometry": "2cd41367e4efcbb3cb09b0673ba3ee512354f9aaa5975a544ea87f361586c097",
+    "dynamics": "4c2566c2550e154802ce2a7a313a0e24d102dd54e57809c6dc03f997ee0ee1ee",
+    "transport": "c204ef7ea7e919942e3599b65b3d126054be73b09cfd7b1d5ea53300c0903b7b",
+    "compilation": "262b1ebef0b587b6af5ef9c1e7c725b4672ac6306993598bdf7f139e48b36426",
+    "architecture": "cc08fba0d93b8c8359268e8c546e96e444afd12a355448435637a4c3d4c7d612",
+    "teacher": "901c1e4d31172bf3d9758ffb542e22db5a1575aa5b17e1026742f818411908cb"
+  },
+  "pre_evidence_initial_hashes_checked": [
+    "geometry",
+    "dynamics",
+    "architecture",
+    "compilation"
+  ],
+  "all_workers_settled": true,
+  "reclaimable_workers": 0
+}

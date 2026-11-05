@@ -1,0 +1,40 @@
+{
+  "status": "PASS",
+  "scope": "RESEARCH_REPORT_PUBLICATION",
+  "base_source_commit": "9958d421ccae1da3b8527f74da5438dbb9f3f521",
+  "active_pipeline_changed": false,
+  "weights_used": null,
+  "check_repo": {
+    "result": "PASS",
+    "command": "python scripts/check_repo.py"
+  },
+  "pytest": {
+    "passed": 43,
+    "warnings": 1,
+    "seconds": 3.45,
+    "command": "python -m pytest -q",
+    "warning": "torch.jit.script FutureWarning"
+  },
+  "python": "/Users/alvinluong/miniforge3/envs/selfaudit-modal/bin/python",
+  "probe": {
+    "status": "PASS",
+    "scope": "FIXTURE_ONLY",
+    "result_exactly_matches_archived_json": true,
+    "script_sha256": "2a0fb42f671c0006a775db4059e6c58450df8a6b15e4b111ed0b704144f44636",
+    "result_sha256": "8f7782260876c1462d0924bd5d8d9c05c3b5265ef1d75d5bcbe0b5f867ef4372"
+  },
+  "unchanged_import_hashes_verified": 27,
+  "relative_markdown_links_verified": 26,
+  "broken_relative_links": [],
+  "independent_review": "No blocking scientific inconsistency or obvious credential patterns found; original research receipt preserved and publication receipt added.",
+  "historical_receipt": "VALIDATION.json describes the preceding research turn; this file describes publication checks.",
+  "patient_training": "NOT_RUN",
+  "gpu_benchmark": "NOT_RUN",
+  "novelty": "UNRESOLVED",
+  "omitted": [
+    "third-party full texts and PDFs",
+    "raw retrieval transcripts",
+    "review screenshot",
+    "machine-specific packaging script"
+  ]
+}

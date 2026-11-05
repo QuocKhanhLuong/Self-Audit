@@ -1,0 +1,59 @@
+{
+  "status": "FIXTURE_ONLY",
+  "pairwise_not_joint": {
+    "pairwise_a": [
+      "1/2",
+      "1/2",
+      "1/2"
+    ],
+    "pairwise_b": [
+      "1/2",
+      "1/2",
+      "1/2"
+    ],
+    "triple_a": "1/2",
+    "triple_b": "1/4",
+    "meaning": "Pairwise equality does not identify a partition law. No Dice superiority follows."
+  },
+  "joint_law_changes_executable_marginal": {
+    "posterior_a": "61/100",
+    "posterior_b": "139/250",
+    "meaning": "With identical soft image evidence and four named region-label factors, exact circuit marginal differs. This does not show that a student can learn the useful law."
+  },
+  "coarse_partition_ceiling": {
+    "best_pixel_accuracy": 0.8333333333333334,
+    "best_foreground_dice": 0.5,
+    "meaning": "Every classifier constant on these cells misses fine support; an adaptive split or detail renderer is required."
+  },
+  "project_then_solve_is_not_solve_then_project": {
+    "frobenius_gap": 0.5796361847026471,
+    "projected_response": [
+      [
+        3.803986710963458,
+        1.1960132890365462
+      ],
+      [
+        2.392026578073093,
+        2.6079734219269124
+      ]
+    ],
+    "reduced_response": [
+      [
+        3.620689655172415,
+        1.3793103448275867
+      ],
+      [
+        2.758620689655174,
+        2.2413793103448283
+      ]
+    ],
+    "meaning": "Teacher operator coarsening requires response validation or a lumpability assumption."
+  },
+  "not_tested": [
+    "patient Dice",
+    "new student performance",
+    "teacher quality",
+    "GPU latency",
+    "novelty"
+  ]
+}
