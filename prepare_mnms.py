@@ -18,7 +18,6 @@ The output remaps those classes to the repository ontology
 from __future__ import annotations
 
 import argparse
-import json
 from pathlib import Path
 from typing import Any
 
@@ -206,6 +205,8 @@ def prepare(index: str | Path, root: str | Path, out: str | Path, labels: int, s
         "dataset": "mnms", "dataset_release": dataset_release, "label_budget": labels, "label_seed": seed,
         "labeled": groups["labeled"], "unlabeled": groups["unlabeled"],
         "evaluation_ids": [r["patient_id"] for r in val_rows + test_rows],
+        "patient_metadata": {r["patient_id"]: {"vendor": r["vendor"].strip()}
+                             for r in train_rows if r.get("vendor", "").strip()},
         "class_mapping": dict(CLASS_MAPPING),
         "geometry": {"schema": GEOMETRY_MAP_SCHEMA,
                      "by_patient": {r["id"]: geometry_by_patient[r["id"]]
@@ -217,6 +218,8 @@ def prepare(index: str | Path, root: str | Path, out: str | Path, labels: int, s
             "schema": "self_audit.data.v2", "role": "development", "synthetic": False,
             "dataset": "mnms", "dataset_release": dataset_release, "scope": "exposed_development",
             "patients": groups["evaluation"], "class_mapping": dict(CLASS_MAPPING),
+            "patient_metadata": {r["patient_id"]: {"vendor": r["vendor"].strip()}
+                                 for r in val_rows if r.get("vendor", "").strip()},
             "geometry": {"schema": GEOMETRY_MAP_SCHEMA,
                          "by_patient": {r["id"]: geometry_by_patient[r["id"]] for r in groups["evaluation"]}},
         })

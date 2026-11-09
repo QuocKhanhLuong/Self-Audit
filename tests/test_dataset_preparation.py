@@ -45,7 +45,7 @@ def test_mnms_index_preparation_reads_only_selected_and_development_masks(tmp_pa
         registry[str(ip.resolve())] = Image(image)
         fields = {"patient_id": pid, "split": split, "image": ip.name,
                   "ed_frame": "0", "es_frame": "2", "axis_order": "XYZT",
-                  "mask_axis_order": "XYZ", "mask_ed": "", "mask_es": ""}
+                  "mask_axis_order": "XYZ", "mask_ed": "", "mask_es": "", "vendor": "vendor_A"}
         if split in {"train", "val"}:
             for phase in ("ed", "es"):
                 mp = root / f"{pid}_{phase}.nii.gz"
@@ -78,6 +78,8 @@ def test_mnms_index_preparation_reads_only_selected_and_development_masks(tmp_pa
     assert all(set(record) == {"id", "image", "image_sha256", "masks"} for record in train["labeled"])
     assert all(set(record) == {"id", "image", "image_sha256"} for record in train["unlabeled"])
     assert development["patients"][0]["id"] == "P004"
+    assert development["patient_metadata"]["P004"]["vendor"] == "vendor_A"
+    assert set(train["patient_metadata"]) == {"P001", "P002", "P003"}
     assert not any("P005" in path for path in reads)
     remapped = np.load(out / train["labeled"][0]["masks"]["0"]["path"])
     assert 3 in remapped and 1 in remapped

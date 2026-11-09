@@ -4,15 +4,19 @@ import math
 from . import SCHEMA, CLASS_MAPPING
 
 
-def validate_config(config):
+def validate_training_fields(config, *, schema=SCHEMA, method="candidate_a",
+                             protocol="native_2d_25d",
+                             teacher_kinds=("none", "native_v2", "candidate_a"),
+                             augmentations=("aligned_flip", "none")):
+    """Shared training/provenance fields; each track validates its own tensors."""
     c = deepcopy(config)
     fields = {"schema", "method", "stage", "epochs", "seed", "threads", "student_lr",
               "teacher_lr", "weight_decay", "teacher_update_every", "freeze_teacher",
               "use_teacher", "lambda_distance", "model", "teacher_init", "bank",
               "codec", "student", "rollout", "loss", "class_mapping", "augmentation",
               "dataset", "validation_every", "checkpoint_every_epochs"}
-    if set(c) != fields or c["schema"] != SCHEMA or c["method"] != "candidate_a":
-        raise ValueError("expected exact candidate-A v2 config; unknown/missing fields rejected")
+    if set(c) != fields or c["schema"] != schema or c["method"] != method:
+        raise ValueError(f"expected exact {schema} config; unknown/missing fields rejected")
     if c["stage"] not in {"teacher_pretrain", "teacher_warmup", "joint"}:
         raise ValueError("invalid candidate-A stage")
     if c["class_mapping"] != CLASS_MAPPING:
@@ -22,8 +26,8 @@ def validate_config(config):
             raise ValueError(f"invalid {k}")
     if set(c["dataset"]) != {"name", "protocol"} or c["dataset"]["name"] not in {"acdc", "mnms"}:
         raise ValueError("dataset.name must be acdc or mnms")
-    if c["dataset"]["protocol"] != "native_2d_25d":
-        raise ValueError("candidate A currently supports only native_2d_25d")
+    if c["dataset"]["protocol"] != protocol:
+        raise ValueError(f"{method} requires protocol {protocol}")
     if type(c["validation_every"]) is not int or c["validation_every"] < 0:
         raise ValueError("validation_every must be a non-negative integer")
     if type(c["checkpoint_every_epochs"]) is not int or c["checkpoint_every_epochs"] < 0:
@@ -38,9 +42,9 @@ def validate_config(config):
             raise ValueError(f"invalid {k}")
     if c["stage"] != "joint" and (not c["use_teacher"] or c["freeze_teacher"]):
         raise ValueError("teacher training stages require an unfrozen teacher")
-    if c["augmentation"] not in {"aligned_flip", "none"}:
-        raise ValueError("only native aligned flip or no augmentation is supported")
-    if set(c["teacher_init"]) != {"kind", "path", "sha256"} or c["teacher_init"]["kind"] not in {"none", "native_v2", "candidate_a"}:
+    if c["augmentation"] not in augmentations:
+        raise ValueError(f"{method} supports augmentation {augmentations}")
+    if set(c["teacher_init"]) != {"kind", "path", "sha256"} or c["teacher_init"]["kind"] not in teacher_kinds:
         raise ValueError("explicit teacher initialization provenance required")
     if c["teacher_init"]["kind"] != "none" and (not c["teacher_init"]["path"] or len(c["teacher_init"]["sha256"]) != 64):
         raise ValueError("teacher checkpoint path and manifest SHA256 required")
@@ -53,6 +57,11 @@ def validate_config(config):
     for value in c["loss"].values():
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
             raise ValueError("loss weights must be finite and nonnegative")
+    return c
+
+
+def validate_config(config):
+    c = validate_training_fields(config)
     # Dataclass constructors reject unknown nested fields; their own validators
     # establish the finite bank, architecture and action/budget contracts.
     from .bank import BankConfig, QueryBank

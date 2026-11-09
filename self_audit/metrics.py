@@ -96,6 +96,20 @@ def append_jsonl(path: str | Path, rows: Iterable[Mapping]) -> None:
             stream.write(json.dumps(dict(row), sort_keys=True, allow_nan=False) + "\n")
 
 
+def validation_rows(result: dict, *, epoch: int, branch: str) -> list[dict]:
+    """Keep pooled counts/scores and patient macro scores in separate columns."""
+    pooled = np.asarray(result["pooled_confusion"], dtype=np.int64)
+    pooled_rows = {row["class"]: row for row in class_metrics(pooled)}
+    rows = []
+    for class_name, values in result["per_class"].items():
+        row = {"epoch": int(epoch), "split": "validation", "branch": branch,
+               "aggregation": "pooled_voxels", **pooled_rows[class_name]}
+        for metric in ("dice", "f1", "precision", "recall"):
+            row[f"macro_patient_{metric}"] = values.get(metric)
+        rows.append(row)
+    return rows
+
+
 def append_csv(path: str | Path, rows: Iterable[Mapping]) -> None:
     records = [dict(row) for row in rows]
     if not records:
@@ -131,5 +145,4 @@ class ConfusionAccumulator:
 
 
 __all__ = ["CLASS_NAMES", "VALID_LABELS", "confusion_matrix", "class_metrics",
-           "ConfusionAccumulator", "epoch_rows", "append_jsonl", "append_csv"]
-
+           "ConfusionAccumulator", "epoch_rows", "validation_rows", "append_jsonl", "append_csv"]

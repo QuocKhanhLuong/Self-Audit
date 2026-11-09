@@ -1,0 +1,129 @@
+{
+  "schema": "self_audit.candidate_a3d.review_receipt.v1",
+  "status": "PASS_SYNTHETIC_ONLY",
+  "scope": "candidate_a_and_candidate_a3d_software_review",
+  "source_run": "runs/candidate-a3d-verified-20261110",
+  "test_suite": {
+    "pytest": 117,
+    "check_repo": "PASS",
+    "ruff_select_F401_F811_F821": "PASS",
+    "staged_diff_check": "PASS"
+  },
+  "synthetic_matrix": {
+    "status": "PASS_SYNTHETIC_ONLY",
+    "jobs": 88,
+    "profiles": [
+      {
+        "profile": "candidate_a-acdc",
+        "jobs": 21
+      },
+      {
+        "profile": "candidate_a-mnms",
+        "jobs": 21
+      },
+      {
+        "profile": "candidate_a3d-acdc",
+        "jobs": 23
+      },
+      {
+        "profile": "candidate_a3d-mnms",
+        "jobs": 23
+      }
+    ],
+    "patient_training": "NOT_RUN",
+    "gpu_validation": "NOT_RUN"
+  },
+  "source_inventory": {
+    "file": "evidence/CHECKS.json",
+    "file_count": 32,
+    "framework_source_sha256": "f9ad328fd27add333ea296edeb482e0279e752fc85faa334e312c43503573c67",
+    "canonical_mapping_sha256": "0966cc6be0b74db068e1d9225f381d812d7ba92972d7f5db3e527977c8c93a96",
+    "matches_matrix_receipt": true,
+    "matches_mednext_receipt": true,
+    "matches_a2d_export_manifest": true,
+    "matches_a3d_export_manifest": true
+  },
+  "student_export_manifests": {
+    "a2d": {
+      "file": "evidence/a2d_student_MANIFEST.json",
+      "manifest_sha256": "f3e4da71cd0c7721a2a7010d604c1ba6ca89f8b961c4123e68f1badae68f5615",
+      "source_sha256": "f9ad328fd27add333ea296edeb482e0279e752fc85faa334e312c43503573c67",
+      "data_sha256": "c0a2436aef34c19c2b558953bd2210782d399ed51b25040d5522ed0c8c5db4a2",
+      "payload_sha256": "9002b94032eeb65023c14a7a3936ab5442d68b5da83628be880c15035c946003"
+    },
+    "a3d": {
+      "file": "evidence/a3d_student_MANIFEST.json",
+      "manifest_sha256": "d3af40198a24ea96d6bfaf8f9685c0ccd01f050329f2f57adebe0d1f6c8db7ee",
+      "source_sha256": "f9ad328fd27add333ea296edeb482e0279e752fc85faa334e312c43503573c67",
+      "data_sha256": "83d9f70f5ed9598bc7683a04ee6ccfabc2e357aff182d945f22113edb61353dc",
+      "payload_sha256": "97880258d43766fec1e8a5f30aec2ea2986e4ddc44d67f0434aae050bbf89584"
+    }
+  },
+  "student_only_cli": {
+    "file": "evidence/CLI_CHECK.json",
+    "status": "PASS_SYNTHETIC_ONLY",
+    "labels_used": false,
+    "teacher_argument_supplied": false,
+    "output_shape": [
+      4,
+      8,
+      16,
+      16
+    ]
+  },
+  "mednext_adapter": {
+    "file": "evidence/mednext_cpu.json",
+    "status": "PASS_RANDOM_INITIALIZATION_SOFTWARE_ONLY",
+    "upstream_commit": "0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba",
+    "pretrained_weights": "NOT_AVAILABLE",
+    "region_parity_exact": true,
+    "checkpointed_backward_finite": true,
+    "patient_training": "NOT_RUN",
+    "gpu": "NOT_RUN"
+  },
+  "diagnostic": {
+    "file": "evidence/DIAGNOSTIC.json",
+    "status": "COMPLETED_SYNTHETIC",
+    "privileged_values": "quantized_TRAIN_GT",
+    "deployment": "NOT_DEPLOYMENT",
+    "efficacy": "NOT_MEASURED"
+  },
+  "limitations": [
+    "No patient-data training or evaluation",
+    "No GPU validation",
+    "No pretrained MedNeXt weights",
+    "No real ACDC or M&Ms metrics",
+    "RefineFormer challenger unsupported",
+    "No SOTA, 96 Dice, novelty, or teacher-quality claim"
+  ],
+  "evidence_sha256": {
+    "CHECKS.json": "99ea14d285e4ff7d1dee858f409dd7de4b0811dfec45cec33b605f595d717956",
+    "CLI_CHECK.json": "71413f4b3085d4c416e365d9717e96c7a01c1ad797de6ff70dcd73d38a6a2c0e",
+    "DIAGNOSTIC.json": "9bf77b04f29cc5591227bc09a149133aefc3243420aae03ca64b93be3c84742f",
+    "MATRIX_CHECKS.json": "3780a1f90beab87fc61991dc4e160d540373e466cae67dd3ab6c3b8651f1a5a4",
+    "SMOKE_2D_RECEIPT.json": "24fe6d9a4840b78878bd35f36e76e516deee605ef7f323dff7e76aa1a8a5f4e7",
+    "SMOKE_3D_RECEIPT.json": "bdc24b180b91072fecb6123e871ef9210104d466db930b3dc512a31ff842f059",
+    "a2d_student_MANIFEST.json": "f3e4da71cd0c7721a2a7010d604c1ba6ca89f8b961c4123e68f1badae68f5615",
+    "a3d_student_MANIFEST.json": "d3af40198a24ea96d6bfaf8f9685c0ccd01f050329f2f57adebe0d1f6c8db7ee",
+    "check_repo.txt": "d13d68e72595064dc394f86c2824c551bfd311cf05dbce8c6b2de4b3843fe30f",
+    "mednext_cpu.json": "6c4f2f1a6d49d0e8fd940e730a656018ae1e61ace9eabbfe0d8a29f4f23965cb",
+    "metrics/a2d_joint_epochs.jsonl": "c70188be1bf8ef5f14e5b094071b197b4c18895a0c314831fc8ffa24e409f35e",
+    "metrics/a2d_joint_metrics.csv": "4e65a0fdbbf0b8733dbee0226d47921a207d6640cb19b7c716d77a17af2d12d7",
+    "metrics/a3d_joint_epochs.jsonl": "371c3d4fc8a91e4b1235910aef572d424a05bb052ce0608a6a78f7fa0a880df7",
+    "metrics/a3d_joint_metrics.csv": "a9dc30c10724633ae336c3d10c224335a9685ceb8f71b041166553e24cd9fa60",
+    "pytest.txt": "016d0360df3a0de82b9aab21384b881849641c3162a848e356fc39c8d076b854",
+    "ruff.txt": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+  },
+  "csv_normalization": {
+    "evidence/metrics/a3d_joint_metrics.csv": {
+      "operation": "CRLF to LF only; parsed CSV records unchanged",
+      "original_sha256": "c69a473df24f25a9b06aa798078addd8630b9e9f613f2c697e99eca1f08e04fd",
+      "tracked_sha256": "a9dc30c10724633ae336c3d10c224335a9685ceb8f71b041166553e24cd9fa60"
+    },
+    "evidence/metrics/a2d_joint_metrics.csv": {
+      "operation": "CRLF to LF only; parsed CSV records unchanged",
+      "original_sha256": "694301ff95a7bb536bc678ad96bddc6c296b7bf67abe24106df9b8df3ae0721e",
+      "tracked_sha256": "4e65a0fdbbf0b8733dbee0226d47921a207d6640cb19b7c716d77a17af2d12d7"
+    }
+  }
+}

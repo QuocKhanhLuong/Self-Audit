@@ -1,0 +1,99 @@
+{
+  "status": "PASS_SYNTHETIC_ONLY",
+  "patient_training": "NOT_RUN",
+  "gpu_validation": "NOT_RUN",
+  "teacher_pretrained_weights": "NOT_AVAILABLE_LOCALLY",
+  "stages": {
+    "teacher_pretrain": {
+      "schema": "self_audit.candidate_a.v2",
+      "status": "COMPLETED",
+      "synthetic": true,
+      "quality": "NOT_EVALUATED",
+      "stage": "teacher_pretrain",
+      "epochs": 1,
+      "teacher_updates": 4,
+      "student_updates": 0,
+      "teacher_snapshots": 0,
+      "label_budget": 2,
+      "label_reads": [
+        "train_labeled_000",
+        "train_labeled_001"
+      ],
+      "unlabeled_usage": "UNUSED; no U reference paths opened",
+      "metric_files": {
+        "epoch": "epochs.jsonl",
+        "per_class_jsonl": "metrics.jsonl",
+        "per_class_csv": "metrics.csv",
+        "updates": "updates.jsonl"
+      },
+      "validation_manifest_sha256": "fd16225d83f8c893321363a27d9fc815a15d534b8e31a77bc500d93ac845bb77",
+      "final_manifest_sha256": "5436b4cdd1e4728a1cb1f8700c09eed9af5ae37afd6623ccd1c2fee71b3d40f2",
+      "elapsed_seconds": 0.07563083292916417
+    },
+    "teacher_warmup": {
+      "schema": "self_audit.candidate_a.v2",
+      "status": "COMPLETED",
+      "synthetic": true,
+      "quality": "NOT_EVALUATED",
+      "stage": "teacher_warmup",
+      "epochs": 1,
+      "teacher_updates": 4,
+      "student_updates": 0,
+      "teacher_snapshots": 0,
+      "label_budget": 2,
+      "label_reads": [
+        "train_labeled_000",
+        "train_labeled_001"
+      ],
+      "unlabeled_usage": "UNUSED; no U reference paths opened",
+      "metric_files": {
+        "epoch": "epochs.jsonl",
+        "per_class_jsonl": "metrics.jsonl",
+        "per_class_csv": "metrics.csv",
+        "updates": "updates.jsonl"
+      },
+      "validation_manifest_sha256": "fd16225d83f8c893321363a27d9fc815a15d534b8e31a77bc500d93ac845bb77",
+      "final_manifest_sha256": "20d76c7818ad6938a3008f6b4c30b8231051970d3aec14c9d1a44711ffb11ae8",
+      "elapsed_seconds": 0.07152104191482067
+    },
+    "joint": {
+      "schema": "self_audit.candidate_a.v2",
+      "status": "COMPLETED",
+      "synthetic": true,
+      "quality": "NOT_EVALUATED",
+      "stage": "joint",
+      "epochs": 1,
+      "teacher_updates": 4,
+      "student_updates": 4,
+      "teacher_snapshots": 4,
+      "label_budget": 2,
+      "label_reads": [
+        "train_labeled_000",
+        "train_labeled_001"
+      ],
+      "unlabeled_usage": "UNUSED; no U reference paths opened",
+      "metric_files": {
+        "epoch": "epochs.jsonl",
+        "per_class_jsonl": "metrics.jsonl",
+        "per_class_csv": "metrics.csv",
+        "updates": "updates.jsonl"
+      },
+      "validation_manifest_sha256": "fd16225d83f8c893321363a27d9fc815a15d534b8e31a77bc500d93ac845bb77",
+      "final_manifest_sha256": "9580581ca1a65471eea773b16c6beedea84dda78afe63f52cb0d41a3cc31b364",
+      "elapsed_seconds": 0.12439466686919332
+    }
+  },
+  "export": {
+    "path": "/Users/alvinluong/orca/workspaces/Self-Audit/candidate-a-ready-20261110/runs/candidate-a3d-verified-20261110/smoke2d/student",
+    "manifest_sha256": "f3e4da71cd0c7721a2a7010d604c1ba6ca89f8b961c4123e68f1badae68f5615",
+    "payload_sha256": "9002b94032eeb65023c14a7a3936ab5442d68b5da83628be880c15035c946003",
+    "synthetic": true
+  },
+  "export_bitwise_parity": true,
+  "export_payload_keys": [
+    "student"
+  ],
+  "evaluation_metrics": "/Users/alvinluong/orca/workspaces/Self-Audit/candidate-a-ready-20261110/runs/candidate-a3d-verified-20261110/smoke2d/evaluation/METRICS.json",
+  "evaluation_synthetic": true,
+  "output": "/Users/alvinluong/orca/workspaces/Self-Audit/candidate-a-ready-20261110/runs/candidate-a3d-verified-20261110/smoke2d"
+}

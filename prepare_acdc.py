@@ -6,7 +6,6 @@ Evaluation caches require a separate explicit --evaluation authorization.
 """
 from pathlib import Path
 import argparse
-import json
 import re
 import numpy as np
 from self_audit.data import (

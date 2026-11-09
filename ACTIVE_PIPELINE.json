@@ -1,33 +1,45 @@
 {
-  "schema": "self_audit.active_pipeline.candidate_a.v1",
+  "schema": "self_audit.active_pipeline.candidate_family.v2",
   "entrypoint": "train.py",
-  "package": "self_audit.candidate_a",
-  "config_schema": "self_audit.candidate_a.v2",
-  "architecture": "dual_branch_teacher_typed_measurement_code_query_decoder",
-  "model_class": "CandidateAStudent",
+  "evaluation_entrypoint": "evaluate.py",
+  "default_track": "candidate_a",
   "method": "candidate_a",
+  "tracks": {
+    "candidate_a": {
+      "package": "self_audit.candidate_a",
+      "config_schema": "self_audit.candidate_a.v2",
+      "checkpoint_schema": "self_audit.candidate_a.checkpoint.v2",
+      "export_schema": "self_audit.candidate_a.student.v2",
+      "architecture": "dual_branch_teacher_typed_measurement_code_query_decoder",
+      "model_class": "CandidateAStudent",
+      "protocol": "native_2d_25d",
+      "input": "[B,3,H,W]",
+      "geometry": "shape + spacing_yx_mm; in-plane physical distance"
+    },
+    "candidate_a3d": {
+      "package": "self_audit.candidate_a3d",
+      "config_schema": "self_audit.candidate_a3d.v1",
+      "checkpoint_schema": "self_audit.candidate_a3d.checkpoint.v1",
+      "export_schema": "self_audit.candidate_a3d.student.v1",
+      "architecture": "mednext3d_dual_branch_local_typed_measurement_code_query_decoder",
+      "model_class": "CandidateA3DStudent",
+      "protocol": "native_3d",
+      "input": "[B,1,D,H,W]",
+      "geometry": "shape_zyx + spacing_zyx + affine_zyx; manifest stores spacing_zyx_mm; anisotropic 3D distance",
+      "context": "full_volume",
+      "crop": "unsupported_fail_closed",
+      "resampling": "unsupported_fail_closed"
+    }
+  },
   "supervision": "dense budgeted TRAIN labels; U images unused; not no-GT",
-  "schedule": "epochs; each annotated TRAIN frame/slice exactly once per epoch",
-  "metrics": [
-    "dice",
-    "f1",
-    "precision",
-    "recall"
-  ],
-  "class_mapping": [
-    "BG",
-    "RV",
-    "MYO",
-    "LV"
-  ],
-  "inference": "student only; quantized code plus coordinates and public 2D geometry",
-  "datasets": [
-    "acdc",
-    "mnms"
-  ],
+  "schedule": "epochs; each annotated TRAIN frame or full-volume frame exactly once per epoch",
+  "metrics": ["dice", "f1", "precision", "recall"],
+  "class_mapping": ["BG", "RV", "MYO", "LV"],
+  "inference": "student only; quantized code plus coordinates and declared public geometry",
+  "datasets": ["acdc", "mnms"],
   "pretrained_teacher_required_for_patient_joint": true,
   "historical_native_v2_commit": "f01add12524cf73bb15675ecfeadc1014e420210",
   "legacy_frozen_q_commit": "924265f7df604d3dca84dda49578b1a0cf28d821",
   "patient_training_this_delivery": false,
-  "documentation": "docs/CANDIDATE_A.md"
+  "documentation": ["docs/METHOD.md", "docs/CANDIDATE_A.md", "docs/CANDIDATE_A3D.md"]
 }

@@ -1,0 +1,84 @@
+{
+  "status": "PASS_SYNTHETIC_ONLY",
+  "command": [
+    "/Users/alvinluong/miniforge3/envs/selfaudit-modal/bin/python",
+    "scripts/candidate_a3d_infer.py",
+    "--checkpoint",
+    "/Users/alvinluong/orca/workspaces/Self-Audit/candidate-a-ready-20261110/runs/candidate-a3d-verified-20261110/smoke3d/student",
+    "--checkpoint-sha256",
+    "d3af40198a24ea96d6bfaf8f9685c0ccd01f050329f2f57adebe0d1f6c8db7ee",
+    "--image",
+    "/Users/alvinluong/orca/workspaces/Self-Audit/candidate-a-ready-20261110/runs/candidate-a3d-verified-20261110/cli-input/image.npy",
+    "--geometry-json",
+    "/Users/alvinluong/orca/workspaces/Self-Audit/candidate-a-ready-20261110/runs/candidate-a3d-verified-20261110/cli-input/geometry.json",
+    "--out",
+    "/Users/alvinluong/orca/workspaces/Self-Audit/candidate-a-ready-20261110/runs/candidate-a3d-verified-20261110/student-cli",
+    "--device",
+    "cpu"
+  ],
+  "input_image_only": true,
+  "teacher_path_supplied": false,
+  "labels_supplied": false,
+  "metadata": {
+    "checkpoint_sha256": "d3af40198a24ea96d6bfaf8f9685c0ccd01f050329f2f57adebe0d1f6c8db7ee",
+    "image_sha256": "b11edeff7da4be7afd506d2ebdfe50bd82baea02e9d80c3f6557a8bb288c29bb",
+    "geometry": {
+      "shape": [
+        8,
+        16,
+        16
+      ],
+      "spacing_zyx": [
+        2.5,
+        0.7,
+        1.3
+      ],
+      "affine_zyx": [
+        [
+          2.5,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.7,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.3,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "context": "full_volume"
+    },
+    "bytes": 163,
+    "packet_sha256": "d028e435d22183bc0394800b1bec6ea105955968a3639d4d5261f6a42e5815d6",
+    "query_count": 3,
+    "profile_ms": {
+      "rollout_ms": 23.825082927942276,
+      "packet_serialize_ms": 0.2581248991191387,
+      "packet_roundtrip_ms": 0.17033331096172333,
+      "decoder_roundtrip_ms": 1.3145827688276768,
+      "total_ms": 25.568123906850815
+    },
+    "timing_scope": "rollout_ms=encoder+query_value+policy+full_volume_decoder; packet roundtrip and decoder roundtrip are separate",
+    "prediction_model": "student_code_only",
+    "labels_used": false
+  },
+  "output_shape": [
+    4,
+    8,
+    16,
+    16
+  ]
+}

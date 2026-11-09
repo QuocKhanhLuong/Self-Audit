@@ -234,6 +234,3 @@ def parse_frame(value: str, *, frame_base: int, name: str) -> int:
     if frame < 0:
         raise ValueError(f"{name} is below the declared frame base")
     return frame
-
-
-

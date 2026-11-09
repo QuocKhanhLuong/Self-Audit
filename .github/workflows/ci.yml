@@ -17,3 +17,4 @@ jobs:
       - run: python scripts/check_repo.py && python train.py --describe
       - run: python -m pytest -q
       - run: python scripts/smoke_candidate_a.py --out /tmp/self-audit-candidate-a
+      - run: python scripts/smoke_candidate_a3d.py --out /tmp/self-audit-candidate-a3d

@@ -1,0 +1,152 @@
+{
+  "schema": "self_audit.candidate_a3d.gt_code_diagnostic.v1",
+  "status": "COMPLETED_SYNTHETIC",
+  "train_manifest_sha256": "83d9f70f5ed9598bc7683a04ee6ccfabc2e357aff182d945f22113edb61353dc",
+  "checkpoint_manifest_sha256": "d3af40198a24ea96d6bfaf8f9685c0ccd01f050329f2f57adebe0d1f6c8db7ee",
+  "budgets": [
+    {
+      "budget_bits": 2048,
+      "actual_packet_bits": 2024,
+      "query_count": 21,
+      "frames": 4,
+      "per_class": [
+        {
+          "class": "BG",
+          "TP": 0,
+          "FP": 0,
+          "FN": 5918,
+          "reference_present": true,
+          "reference_count": 5918,
+          "support": 5918,
+          "prediction_count": 0,
+          "status": "ok",
+          "dice": 0.0,
+          "f1": 0.0,
+          "precision": null,
+          "recall": 0.0
+        },
+        {
+          "class": "RV",
+          "TP": 0,
+          "FP": 0,
+          "FN": 10,
+          "reference_present": true,
+          "reference_count": 10,
+          "support": 10,
+          "prediction_count": 0,
+          "status": "ok",
+          "dice": 0.0,
+          "f1": 0.0,
+          "precision": null,
+          "recall": 0.0
+        },
+        {
+          "class": "MYO",
+          "TP": 0,
+          "FP": 0,
+          "FN": 1448,
+          "reference_present": true,
+          "reference_count": 1448,
+          "support": 1448,
+          "prediction_count": 0,
+          "status": "ok",
+          "dice": 0.0,
+          "f1": 0.0,
+          "precision": null,
+          "recall": 0.0
+        },
+        {
+          "class": "LV",
+          "TP": 816,
+          "FP": 7376,
+          "FN": 0,
+          "reference_present": true,
+          "reference_count": 816,
+          "support": 816,
+          "prediction_count": 8192,
+          "status": "ok",
+          "dice": 0.1811722912966252,
+          "f1": 0.1811722912966252,
+          "precision": 0.099609375,
+          "recall": 1.0
+        }
+      ],
+      "privileged_values": "quantized_TRAIN_GT",
+      "deployment": "NOT_DEPLOYMENT",
+      "efficacy": "NOT_MEASURED"
+    },
+    {
+      "budget_bits": 4096,
+      "actual_packet_bits": 3104,
+      "query_count": 48,
+      "frames": 4,
+      "per_class": [
+        {
+          "class": "BG",
+          "TP": 0,
+          "FP": 0,
+          "FN": 5918,
+          "reference_present": true,
+          "reference_count": 5918,
+          "support": 5918,
+          "prediction_count": 0,
+          "status": "ok",
+          "dice": 0.0,
+          "f1": 0.0,
+          "precision": null,
+          "recall": 0.0
+        },
+        {
+          "class": "RV",
+          "TP": 0,
+          "FP": 0,
+          "FN": 10,
+          "reference_present": true,
+          "reference_count": 10,
+          "support": 10,
+          "prediction_count": 0,
+          "status": "ok",
+          "dice": 0.0,
+          "f1": 0.0,
+          "precision": null,
+          "recall": 0.0
+        },
+        {
+          "class": "MYO",
+          "TP": 0,
+          "FP": 0,
+          "FN": 1448,
+          "reference_present": true,
+          "reference_count": 1448,
+          "support": 1448,
+          "prediction_count": 0,
+          "status": "ok",
+          "dice": 0.0,
+          "f1": 0.0,
+          "precision": null,
+          "recall": 0.0
+        },
+        {
+          "class": "LV",
+          "TP": 816,
+          "FP": 7376,
+          "FN": 0,
+          "reference_present": true,
+          "reference_count": 816,
+          "support": 816,
+          "prediction_count": 8192,
+          "status": "ok",
+          "dice": 0.1811722912966252,
+          "f1": 0.1811722912966252,
+          "precision": 0.099609375,
+          "recall": 1.0
+        }
+      ],
+      "privileged_values": "quantized_TRAIN_GT",
+      "deployment": "NOT_DEPLOYMENT",
+      "efficacy": "NOT_MEASURED"
+    }
+  ],
+  "selection": "canonical bank prefix fixed across budgets",
+  "warning": "Privileged TRAIN-GT representation diagnostic; not deployment, patient efficacy, or a mathematical upper bound."
+}

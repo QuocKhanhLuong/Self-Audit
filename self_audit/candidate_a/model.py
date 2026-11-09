@@ -214,13 +214,18 @@ class CandidateAStudent(nn.Module):
             raise ValueError("image contains NaN or Inf")
         return self.encoder(x)
 
-    def predict_values(self, features: Tensor) -> Tensor:
+    def predict_values(self, features: Tensor, geometry: Mapping[str, Any] | None = None) -> Tensor:
         """Return raw bounded student values, before codec quantization.
 
         Quantization is performed by :class:`MeasurementCodec` after this
         method returns; model-side quantization would make the bit protocol
         ambiguous.
         """
+        # K1 is shared by the 2-D and native 3-D students.  Geometry has
+        # already been validated against the image at the rollout boundary;
+        # accepting it here keeps the student protocol structural rather than
+        # making K1 branch on a concrete model class.
+        del geometry
         if features.ndim != 4 or features.shape[1] != self.config.width:
             raise ValueError("expected encoder features [B,width,H,W]")
         pooled = features.mean(dim=(-2, -1))

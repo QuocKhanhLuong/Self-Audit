@@ -1,0 +1,856 @@
+{
+  "status": "PASS_SYNTHETIC_ONLY",
+  "patient_training": "NOT_RUN",
+  "source_files": {
+    "self_audit/__init__.py": "6822f8f8a55609332258736eb51627189b6caf9ee4ff56df67b2081033456e9b",
+    "self_audit/candidate_a/__init__.py": "64e28849cfb8638718ffadd8d54af86fd860b2c459472bba7ae67ee3b2231374",
+    "self_audit/candidate_a/bank.py": "51a7b13e4a16edfda94faca660d6aef31e57f4812786ba96afd2cab027ee8f75",
+    "self_audit/candidate_a/codec.py": "4536ae8f64ccf548d1fd68daa4eeaf083d5e11425f90521abbc3ea98cc196ded",
+    "self_audit/candidate_a/config.py": "59e44efe0eed70910a84560a85e2e83bb3d239ecf1219cea439c629328e17071",
+    "self_audit/candidate_a/data.py": "37e8c8ad7cee554171f5429ad281ae09f9cfe381aef74d5523e0bc789365dc01",
+    "self_audit/candidate_a/engine.py": "0b2386e41357c5476cb1d49946eaae8a672989ab464d81580a92e83f659e82b8",
+    "self_audit/candidate_a/evaluation.py": "d4331b92189d10b5a62207cbcfc393a3d7c7d5e5e2cf1232fdce6111a9b60ebf",
+    "self_audit/candidate_a/io.py": "5ca0b5d032b812eb25043f44fb2b4a3fb0f963bd08d1784638d3099139c5b07e",
+    "self_audit/candidate_a/k1.py": "aca7dbab54c53c8b7dae4af640dbe9ee501adb328957dfd1b8e23edeb5a0573a",
+    "self_audit/candidate_a/model.py": "7f42bc9a622c6f33880eb808b842e929a7f81d3f7f46960b6bbe737b6306ee64",
+    "self_audit/candidate_a/teacher.py": "0a000cf69d9014b1466744e71327fc02e8d70ff95024dc85c0beea8e2f7b22ed",
+    "self_audit/candidate_a3d/__init__.py": "d401ef8940d7d41754523e1584414245c43b787c995dbc301e4b9673d6bf3b17",
+    "self_audit/candidate_a3d/bank.py": "bf81c83a8a2799de0192996af13dd5ef347b4792a1f0c134cf8f68b3a7361f39",
+    "self_audit/candidate_a3d/codec.py": "ee80d6270055911965a333cc218350374ead9c6148e61453f5f3291a6608901a",
+    "self_audit/candidate_a3d/config.py": "0fdc2916484bb822bce066c162b1554ffebab5d68963994d725e4ff3178a764a",
+    "self_audit/candidate_a3d/data.py": "0200246c3f90cd82237cc87322e3dc3b228c4d7b7c159f45f4a78cb15068c5ec",
+    "self_audit/candidate_a3d/engine.py": "f71e73d22ff11771a488801d4bf08aa29de352e64870ee2d985983417fd9d519",
+    "self_audit/candidate_a3d/evaluation.py": "f58e350817582f48e6bb0ad2646d5ead971db4254d10e3412d815944585c2908",
+    "self_audit/candidate_a3d/geometry.py": "02ea3809718ff152ce06bbfcda18ef12e64c967116669ebd7807da2caf65794e",
+    "self_audit/candidate_a3d/io.py": "8b924f4d62c6223dd21976d3fd3fda1bb1f20c2cbbfca71a34f6ef996c580971",
+    "self_audit/candidate_a3d/k1.py": "1a0cffad9d8998edfd7aac2adfcb477ec34c042ae60768184b24447003e1c206",
+    "self_audit/candidate_a3d/model.py": "5e9b371e603dd8232185fecf0e0f6cc2330e4115d6fef3ae7be61c0fb265d35f",
+    "self_audit/candidate_a3d/profile.py": "341223f4182e3c619e2aa9acece8218d3f58b427267df54f6c97d1ec82a05221",
+    "self_audit/candidate_a3d/teacher.py": "9a9397f6a8ab84a2c510b7d28018823bfdc5510e4208b4384df7cca76bc510fd",
+    "self_audit/data.py": "98fd52ca7c96d161f76e3e340b00bda909cd4d542e083445bca5eb44bbe82815",
+    "self_audit/losses.py": "51a32b1fb698cf357717d14afc45f6cfeb4827d226272dff2d4fa27c0fda9ed7",
+    "self_audit/metrics.py": "976236a0d31ec007a52bf411201028bbb94c2e3ef92bf31a02aa79b78fd15717",
+    "self_audit/model.py": "da9f379f2d7c48cda78e0265324a6f6911d57ee2d4ff3240e210dce4706a04f0",
+    "self_audit/preparation.py": "81edff80b9d38b296df23af996dbdf086dadc8bf174b21d54b094eab43cc7c78",
+    "train.py": "be37f1491c8f83d9e0417beae66815b4d2328a2deecc6e7fa294af62ac18f234",
+    "evaluate.py": "4b1477125bfb1f31ffa48c8620fb3bbd32286e990a1daa6eb0c7e122fa071693"
+  },
+  "profiles": [
+    {
+      "profile": "candidate_a-acdc",
+      "synthetic": true,
+      "jobs": [
+        {
+          "id": "s7_pretrain",
+          "stage": "teacher_pretrain",
+          "status": "COMPLETED",
+          "student_updates": 0,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "01771e094f545b7b7d9a439f88c378cd8dbee25ac57b0aa9acc6949791f78549"
+        },
+        {
+          "id": "s7_warmup",
+          "stage": "teacher_warmup",
+          "status": "COMPLETED",
+          "student_updates": 0,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "fba302ebfcc75aadd558a29f2d91329c5fabe510b8a3b401d1c71ffa0e569987"
+        },
+        {
+          "id": "s7_full",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "5872f4f4ffe9d08a812227a7d9f03f7efa0f56cdef40a330d363d800acf087f5"
+        },
+        {
+          "id": "s7_teacher_free",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 0,
+          "metric_rows": 8,
+          "final_manifest_sha256": "5ef1d5f38328d06a7fcfa653cbe0cf3e67fa9c0abefc9d2bc4336574af3295a4"
+        },
+        {
+          "id": "s7_teacher_frozen",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 0,
+          "metric_rows": 16,
+          "final_manifest_sha256": "946aa462d430afb4dbed05414030571d3f1085b608d753c57f04b97a56ea1260"
+        },
+        {
+          "id": "s7_teacher_region_proposals",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "a5773e87895a463874ea333c29431cc19f23194cc366e90428458d18d951de8d"
+        },
+        {
+          "id": "s7_teacher_boundary_proposals",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "e620b1b2c5b8e86e0006ee79cb6e2a451f41dee7ca8c70044a97154d3f233279"
+        },
+        {
+          "id": "s7_fixed_queries",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "4fef73eaff9c34a7bade6821054957afca93edf73aad8ef769cf6c8c7644dac9"
+        },
+        {
+          "id": "s7_random_queries",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "80a99b6de207a63a25065ba097ecb8c741d1dfdbccc0bcd0cd53f32718c6e5e2"
+        },
+        {
+          "id": "s7_no_exploration",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "1b6536fc06fdb9fdef90026954824e422e8425fd0405cec0c165cdb056d83b41"
+        },
+        {
+          "id": "s7_no_bit_penalty",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "8c36b8e817664d47cd6421250c3c57468884386db09ded1584c327ac9149464c"
+        },
+        {
+          "id": "s7_region_only",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "783a0e63a09e62bd2458bb07d7ba7f2a40d8b72cbe1ea4f3d007f2720f28a1d5"
+        },
+        {
+          "id": "s7_boundary_only",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "b2576c54d872879704f6e1121e398725b6fc28a5dbc973634c5dcbcfc54eb772"
+        },
+        {
+          "id": "s7_no_region_supervision",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "91f0ae7e8d6b2152920c8fe6e93bdea319f5545d4a855b2c42d2810b75d6aab0"
+        },
+        {
+          "id": "s7_no_boundary_supervision",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "3803a740f662c3b43a3dba2afaedb86b1aec14ead68846e047a865169e8648e3"
+        },
+        {
+          "id": "s7_no_measurement_supervision",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "c438c96d79ed17356a6ed045f8288b5d49cd22c583ac7bb262d2f9b4366af526"
+        },
+        {
+          "id": "s7_r0_only",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "5718a06bac5111d75048b84e02b372637345a84ef81c9e0cefd5c201b0626f9b"
+        },
+        {
+          "id": "s7_values_4bit",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "68d469a57ca01d8845ac5a763ac69af65b0143c71986d16a7bd327d8e9e54da9"
+        },
+        {
+          "id": "s7_values_16bit",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "cbd88970be445837f246d3744ee18b36641d18c8e9af937845edbae333cbe4f7"
+        },
+        {
+          "id": "s7_budget_768bit",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "fa994a6699c22bdc62b9bb2f40310dd9f18d2591389701c6465aa3d12ba29cb6"
+        },
+        {
+          "id": "s7_decoder_half_width",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "d9db59f5786953e09c54f286ea710e9f78030ef2cba9d86b930cd3d10b22fdd7"
+        }
+      ]
+    },
+    {
+      "profile": "candidate_a-mnms",
+      "synthetic": true,
+      "jobs": [
+        {
+          "id": "s7_pretrain",
+          "stage": "teacher_pretrain",
+          "status": "COMPLETED",
+          "student_updates": 0,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "0cb10cc9d0fb5ff7e5db1015989962eaa752df20ae3d71ee59d57f1bd7c389ec"
+        },
+        {
+          "id": "s7_warmup",
+          "stage": "teacher_warmup",
+          "status": "COMPLETED",
+          "student_updates": 0,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "f77bbc16d9515bec5a96d32f7817cbd933c1b405d793e051378e62bd9c178790"
+        },
+        {
+          "id": "s7_full",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "3b49478f4b7b9d7e00067cd05e1432aa74fab357b5b9bc1e82d4730e24b8e579"
+        },
+        {
+          "id": "s7_teacher_free",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 0,
+          "metric_rows": 8,
+          "final_manifest_sha256": "0e8049b2cee8b93e23e5ef9e75343da5e23e3b59973e2feda25a278f61b9af26"
+        },
+        {
+          "id": "s7_teacher_frozen",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 0,
+          "metric_rows": 16,
+          "final_manifest_sha256": "b29cb55a6dbb8243be70f1054c9456517f5c06fe716c2f74ffe97c2f891be91d"
+        },
+        {
+          "id": "s7_teacher_region_proposals",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "124ed6662e55e26efe2151ab4ddb64f0dd499b7c38c0a723ac1e8d368e7fb526"
+        },
+        {
+          "id": "s7_teacher_boundary_proposals",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "7cfa8f168cdb5f9f2bd00c760aa38cd0f60544020aac0fe477d4c6df97a4ba02"
+        },
+        {
+          "id": "s7_fixed_queries",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "068e7e1aca2bae4fd42fe085590a737babf8deeb361ecf27973d4f827ff3b82c"
+        },
+        {
+          "id": "s7_random_queries",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "026da705e2d5ceada44c2cb8b562d894bd8b333e343cd4e9eedbfe96ae4de86b"
+        },
+        {
+          "id": "s7_no_exploration",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "cf782d7739b82c712f25dc8cec68964fe852b10a8ef80b7f53a8314b2d252633"
+        },
+        {
+          "id": "s7_no_bit_penalty",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "c7d669296e621a1632a9b1f95db02a8cbb3fd5434bc06f250c1594faf557da27"
+        },
+        {
+          "id": "s7_region_only",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "685f04d96445381556bf3b64c814e20acfece04293e591be4924fbb9d80c3618"
+        },
+        {
+          "id": "s7_boundary_only",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "8bcd34f6bf4428a0e3abde41f43e08afee9485b65b7b280a68d6a1d5e07a5c48"
+        },
+        {
+          "id": "s7_no_region_supervision",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "4334ecc508b727934189cb085ff56301cf4d4e8dac921ce6065fa10ddec37b7e"
+        },
+        {
+          "id": "s7_no_boundary_supervision",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "77bfa8bc04079252b77b41c4febe1062758cc50293ef9185a7d33197c8b618d8"
+        },
+        {
+          "id": "s7_no_measurement_supervision",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "67af8ca93db07b067acfa97563a3712520c1322f8b9435b7b36100341aa99a01"
+        },
+        {
+          "id": "s7_r0_only",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "463349520b5dc68740f1588b356360bb9ac998ea8f70acf4b8e33cc3dfcc0cb1"
+        },
+        {
+          "id": "s7_values_4bit",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "cc6e35a46b0b1312fad35f56d4d7bbe4f00b40dcc0f85b95fbbbc7da03d517d2"
+        },
+        {
+          "id": "s7_values_16bit",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "16c112f6f1c7dc2647b561da96963a3be623ff2e41e1257687f6778ebac13196"
+        },
+        {
+          "id": "s7_budget_768bit",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "4657b483d270fca79479fa0a57e25d5cbce756e12f93c99b06cf6223f9486210"
+        },
+        {
+          "id": "s7_decoder_half_width",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "2587abf4fa5a048e218679119a98006f3382b1e0761220e7806cb16ecdadb77b"
+        }
+      ]
+    },
+    {
+      "profile": "candidate_a3d-acdc",
+      "synthetic": true,
+      "jobs": [
+        {
+          "id": "s7_pretrain",
+          "stage": "teacher_pretrain",
+          "status": "COMPLETED",
+          "student_updates": 0,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "23db303bc59737e8d6c33f5e83d582a614a6d8260f589e8d567e2c8c000606df"
+        },
+        {
+          "id": "s7_warmup",
+          "stage": "teacher_warmup",
+          "status": "COMPLETED",
+          "student_updates": 0,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "6d93ae703e71a61d67a4c80b04c9f7b771b4e3b4d7f33d6306df0a130030ffab"
+        },
+        {
+          "id": "s7_full",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "3bca56d27428588f073af9980367589519990f293150d033fb14aa07640dc983"
+        },
+        {
+          "id": "s7_teacher_free",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 0,
+          "metric_rows": 8,
+          "final_manifest_sha256": "b270a8c9b7e280003a063042e5c4605a7a51741b33fd8661c3b7f530500a800a"
+        },
+        {
+          "id": "s7_teacher_frozen",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 0,
+          "metric_rows": 16,
+          "final_manifest_sha256": "c5e13ec231a8415d16531acbe15bf78b5bd234b14a46fabbfe8c704dd555f501"
+        },
+        {
+          "id": "s7_teacher_region_proposals",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "83da92a94a591f51bcbb432f39db3cfe93a4543b6594d6a92cc1410381f80d84"
+        },
+        {
+          "id": "s7_teacher_boundary_proposals",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "9b83e47f15b65138a99b232b61cc327cb253bab39f21e9f8f60651eee9082e36"
+        },
+        {
+          "id": "s7_fixed_queries",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "ee614f32ee08eee4b6dcf12d6219e9615284a09df7a6729b3466f0a32630dd9e"
+        },
+        {
+          "id": "s7_random_queries",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "7a17112cfe21b97afafcec544fd1b5e12a7bfef8b75e4b8595f00c1d3b740a38"
+        },
+        {
+          "id": "s7_no_exploration",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "1d32d0a2e9492aba48e8ac911fa03d979df29a56e0b5c6cc847b5f00448613d7"
+        },
+        {
+          "id": "s7_no_bit_penalty",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "4735f542cfeb68f315bf3bc8e9647f1eab8f045568b38a8264ca1f6dd3d09bc0"
+        },
+        {
+          "id": "s7_region_only",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "fc77e5c1461f15e039623d1b48eabe371bf19ba134a1cade43ed9d9c3849d414"
+        },
+        {
+          "id": "s7_boundary_only",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "e910efb30a92df66619467975f2cce71a0ac3390e9ce9dd49514ad38f374404d"
+        },
+        {
+          "id": "s7_no_region_supervision",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "47c18938d8fce74a639cc3c91646867de1e153ccd42d4b311aafca97a3f2fb86"
+        },
+        {
+          "id": "s7_no_boundary_supervision",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "a3d526b3aa242053f1e0af6ac1516c222489dc895965da2782e2431d2f9dd8ae"
+        },
+        {
+          "id": "s7_no_measurement_supervision",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "5425c9888f4c21c5e1665f34b91f629c820e1c8d2fdd97461512126c71f4350b"
+        },
+        {
+          "id": "s7_r0_only",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "921d4c8f95132bfe349ae2242dba6f72458bcb518520f5cf0160e62fe41fb1ac"
+        },
+        {
+          "id": "s7_values_4bit",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "7babedc46a03c46898f706cd5559ec91cbd24eb614586eb70fab4a272cedfaf4"
+        },
+        {
+          "id": "s7_values_16bit",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "f6671437c7eafd4b76fefe6598ee6b060e36f1f7f5d25f25149e94b00bdaeedb"
+        },
+        {
+          "id": "s7_budget_2048bit",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "3bca56d27428588f073af9980367589519990f293150d033fb14aa07640dc983"
+        },
+        {
+          "id": "s7_budget_8192bit",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "dcb9d102f2d89fd9ee0f1f675929c7b80c96afff0339407c9b78c8ab61ead252"
+        },
+        {
+          "id": "s7_decoder_half_width",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "00bc9b9ad2c45c85a9ae2e86d23c768d1719f76342d17c92038f6cc4b30f0182"
+        },
+        {
+          "id": "s7_global_only_queries",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "c82de13fde2d7570b174b369587d86c90800e82332c1f403ec8b343ed1707d68"
+        }
+      ]
+    },
+    {
+      "profile": "candidate_a3d-mnms",
+      "synthetic": true,
+      "jobs": [
+        {
+          "id": "s7_pretrain",
+          "stage": "teacher_pretrain",
+          "status": "COMPLETED",
+          "student_updates": 0,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "b6fa068203a2e958533144c82403fbbc78f1320b87494c284c27bdffa4a779e8"
+        },
+        {
+          "id": "s7_warmup",
+          "stage": "teacher_warmup",
+          "status": "COMPLETED",
+          "student_updates": 0,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "3c74cdc7c02138912f17090ccb99d238b7d7bd712873451283e767bfcc9206fc"
+        },
+        {
+          "id": "s7_full",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "4ee6febfd020874d75c80aa63250de0d89b9a175562947987cc3b36f6879ec6d"
+        },
+        {
+          "id": "s7_teacher_free",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 0,
+          "metric_rows": 8,
+          "final_manifest_sha256": "a30bca26e41bb29054514eeedb797d5c2c4f87cf6201a9231a2154ff9992c80c"
+        },
+        {
+          "id": "s7_teacher_frozen",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 0,
+          "metric_rows": 16,
+          "final_manifest_sha256": "b2233109dc90bcaf402471cf64e09feecea798e93c4e22336ec10cf35daa6433"
+        },
+        {
+          "id": "s7_teacher_region_proposals",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "02740fcb2adb566551efc1dbafcf130388f0e0b25cdbe7a32b0aa3a8b76fc1d3"
+        },
+        {
+          "id": "s7_teacher_boundary_proposals",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "9a79b4ebf758616427819b83488c25301f7f906205b75ecc2fd34961f23e3311"
+        },
+        {
+          "id": "s7_fixed_queries",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "e6bf170bab650c8c86e946f239d554da8b5a03f8124137c8cef0cd09ed1de61f"
+        },
+        {
+          "id": "s7_random_queries",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "ad730c877dd2b67f6f735c890914a2ea4b9f681aa77cdaecc21ef689bd5fcd26"
+        },
+        {
+          "id": "s7_no_exploration",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "d3fcfac43330b6e7b07216fb1319de2dcd2f5a5b4dfeb95c461f35930bc47b71"
+        },
+        {
+          "id": "s7_no_bit_penalty",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "bec58c1ff6241e541f1344adece66c85490804b6a6f906ba399d3a67cf227880"
+        },
+        {
+          "id": "s7_region_only",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "42e718d8ad8d08f7bf46c8ea4b89d452ca21d52a228738a1fc976653d087609f"
+        },
+        {
+          "id": "s7_boundary_only",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "5ac9ab6efcf98d102c134be444c2ba459ba78cee7e5fe685a577f9c133662a59"
+        },
+        {
+          "id": "s7_no_region_supervision",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "b41119ee77c3b332f649ec2ce9b6bceb15fc0e7496e4afb9d2b8259064407f71"
+        },
+        {
+          "id": "s7_no_boundary_supervision",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "fb784b43f83e88c3c68c5de3e90614f83babe0d65578305f03c34e55e4366270"
+        },
+        {
+          "id": "s7_no_measurement_supervision",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "a664af8b28dd12d52a26ba45b497d14c81a68883d8e2b2aed47c0aabd5a3291e"
+        },
+        {
+          "id": "s7_r0_only",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "2c57ac630716d550f95c86497d639fe9e12d8d9270ee54e9f6414a89a22bd585"
+        },
+        {
+          "id": "s7_values_4bit",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "0cc3d71139bf85b44af90caf5724ea3bc24bf2ce450afad4f6f44b4c5c3c8500"
+        },
+        {
+          "id": "s7_values_16bit",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "8eea2b02198ffdb854a02e17d4c3af9451f91a375de6e9dc76a63cde56e5caee"
+        },
+        {
+          "id": "s7_budget_2048bit",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "4ee6febfd020874d75c80aa63250de0d89b9a175562947987cc3b36f6879ec6d"
+        },
+        {
+          "id": "s7_budget_8192bit",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "e2c4f71c84dd39fb6a1626577352371a4d7646b3c82014cfd74ab15237d0d3f4"
+        },
+        {
+          "id": "s7_decoder_half_width",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "92443bc233594f64fce31c86c8a11ac67587edd3deab59c37b1f27c380951860"
+        },
+        {
+          "id": "s7_global_only_queries",
+          "stage": "joint",
+          "status": "COMPLETED",
+          "student_updates": 2,
+          "teacher_updates": 2,
+          "metric_rows": 16,
+          "final_manifest_sha256": "83dacf6e35fadcb0810d2fbdfa284f424f9d4c9b892a2b005540ba549a28d016"
+        }
+      ]
+    }
+  ]
+}

@@ -6,6 +6,13 @@ Each patient is assigned to exactly one source split, and a mask is read only
 when the patient is selected into labeled TRAIN or when `--evaluation` explicitly
 authorizes a development cache.
 
+The same manifest supports both tracks. A retains its native 2D/2.5D cache and
+in-plane distance convention. A-3D reads a complete native `[D,H,W]` frame with
+the recorded `spacing_zyx_mm` and `affine_zyx`; it does not crop or resample in
+the reference protocol. Its SDF is therefore computed from the full frame. A
+cropped or incomplete geometry record fails closed instead of treating a
+structure outside the crop as absent.
+
 ## ACDC
 
 ACDC uses the repository ontology directly: `0=background`, `1=RV`, `2=MYO`,
@@ -37,7 +44,7 @@ requires an index CSV rather than guessing a directory layout. The CSV has one
 row per patient and these columns:
 
 ```text
-patient_id,split,image,ed_frame,es_frame,axis_order,mask_axis_order,mask_ed,mask_es
+patient_id,split,image,ed_frame,es_frame,axis_order,mask_axis_order,mask_ed,mask_es,vendor
 ```
 
 `axis_order` must be the explicit native NIfTI order `XYZT`; `mask_axis_order`
@@ -79,6 +86,10 @@ approved. The resulting geometry records preserve native affine, voxel spacing
 and `T,Z,Y,X` cache order. Sheared/non-orthogonal affine, inconsistent mask
 affine, non-integer labels, unknown labels, and mismatched frame geometry fail
 closed.
+
+The optional `vendor` column is copied into patient metadata for A-3D subgroup
+reports. Missing values remain `unknown`; they are not inferred from filenames
+and do not affect training or split assignment.
 
 The canonical challenge page is https://www.ub.edu/mnms/ and the challenge
 paper is Campello et al., *Multi-Centre, Multi-Vendor and Multi-Disease Cardiac

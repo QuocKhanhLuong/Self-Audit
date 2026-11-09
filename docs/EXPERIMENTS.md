@@ -1,4 +1,34 @@
-# Component ablations
+# Component ablations for A and A-3D
+
+The A matrix remains the 2D/2.5D reference. A-3D has its own hash-pinned
+recipes and never reuses an A checkpoint. Use `--track candidate_a3d` with the
+planner:
+
+```bash
+python scripts/candidate_a_ablations.py plan --track candidate_a3d \
+  --dataset acdc --train /prepared/acdc/train.json \
+  --development /prepared/acdc/development.json \
+  --model-config /private/mednext3d.json --out /runs/a3d-plan \
+  --seeds 42 43 44
+python scripts/candidate_a_ablations.py run \
+  --plan /runs/a3d-plan/PLAN.json --execute --device cuda
+```
+
+The A-3D reference factor is `local_queries=true`; its global-only control is
+`local_queries=false`. Other named controls keep the same student, query bank,
+epoch schedule, label budget, seed and serialized-bit budget within each seed
+block: teacher-free, teacher-frozen, REGION-only, BOUNDARY-only, fixed/random
+selection, no exploration, no bit penalty, no measurement supervision, R0-only,
+value precision and decoder capacity. A teacher backend comparison may include
+RefineFormer3D only after an independently hash-pinned adapter and checkpoint
+have been verified. The config must otherwise fail closed instead of inventing
+an adapter.
+
+For a real-data `teacher_free`-only plan, `--model-config` may be omitted: this
+control explicitly does not instantiate or fall back to a teacher. Any plan
+containing a teacher arm still requires the local, verified backbone/checkpoint
+config; the placeholder MedNeXt fields in `full.json` are never a random-weight
+or unverified-pretraining fallback.
 
 `configs/ablations/candidate_a.json` defines factor overrides on one canonical
 recipe. The planner materializes exact standalone configs and pins hashes, so
@@ -45,3 +75,19 @@ separate prepared manifest. Seeds here are training seeds; they do not silently
 resample the labeled cohort. Schedules are reference experiment settings, not
 validated convergence recipes. No automatic test-set sweep or model selection
 is performed. No interrupted experiment is silently resumed or overwritten.
+
+For A-3D, `configs/ablations/candidate_a3d.json` materializes 21 arms: the 18
+A arms that do not change the budget (including decoder capacity), two
+native-3D budget controls (2048-bit and 8192-bit, replacing A's invalid 768-bit
+arm), and `global_only_queries`. The reference uses
+`local_queries=true`, a 4096-bit packet budget, and a 3-D bank with 2x2x2 REGION
+and BOUNDARY grids. All budgets include the fixed affine-bearing packet header
+and R0; a budget that cannot fit R0 is rejected during planning. The optional
+TRAIN-GT code-capacity diagnostic runs separately with
+`scripts/diagnose_candidate_a3d.py`; it uses quantized TRAIN labels as privileged
+values and is reported only as a representation diagnostic, never as deployment
+or patient efficacy.
+
+The A reference uses a 1024-bit packet budget. A-3D uses 4096 bits; its budget
+arms are 2048 and 8192 bits. Actual bytes, query counts and measured time remain
+the reported quantities, since equal maximum budgets do not imply equal rates.

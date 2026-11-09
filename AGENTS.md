@@ -1,33 +1,44 @@
-# Current source of truth
+# Repository source of truth
 
-Read ACTIVE_PIPELINE.json and docs/METHOD.md. The only trainer is train.py,
-backed by self_audit/candidate_a/. Candidate A uses a declared dense TRAIN label
-budget; U images are currently unused. Do not claim semi-supervised improvement
-or no-GT training. All teacher/K1/measurement target labels count in that budget.
-No U/VAL/TEST mask may influence training, target generation, label-subset
-selection or gates. Development metrics are read-only and do not select a
-checkpoint or stop training.
+Read `ACTIVE_PIPELINE.json` and `docs/METHOD.md` before changing the pipeline.
+`train.py` is the only trainer and dispatches the explicitly declared Candidate
+A or Candidate A-3D track. Keep the two schemas, geometry contracts and
+checkpoint source inventories separate.
 
-Teacher and student receive the same MRI context. Freeze teacher outputs for a
-whole student rollout. K1 trials use the same decoder state and quantized student
-values. Teacher discrepancy only proposes trial IDs. The student acts on the
-whole feasible bank plus STOP. The decoder receives code, coordinates and public
-geometry only. Count R0, IDs, finite value levels, padding and packet metadata.
+Both tracks use a dense labeled TRAIN patient budget. All teacher targets,
+measurement targets and K1 utility labels count inside that budget. U images are
+currently unused. No U/VAL/TEST mask may influence training, target generation,
+label-subset selection, checkpoint choice or stopping. Development metrics are
+read-only. A teacher output is frozen for each complete student rollout and the
+student loss must not update teacher parameters.
 
-An epoch covers every annotated TRAIN frame/slice once. Keep patient splits,
-label budget, sampling/augmentation seeds and code budgets matched across arms.
-Log per-class Dice/F1/precision/recall with TP/FP/FN and absent-class status.
-Physical distances are 2D in-plane; three-slice context does not make them 3D.
-ACDC/M&Ms source ontologies must be explicitly normalized before training.
+The decoder is a code-only boundary: serialized IDs, finite quantized values,
+query coordinates and declared public geometry are its complete inputs. Do not
+introduce a feature concatenation, teacher-feature skip, raw-image bypass or
+unbounded float vector and call it Candidate A/A-3D. K1 must trial quantized
+student values with one decoder state, account for incremental bytes and allow
+STOP from step zero.
 
-Do not revive old joint_guard/EMA or frozen-Q/CineMA trainers. The previous tree
-is recoverable at f01add12524cf73bb15675ecfeadc1014e420210; frozen-Q history remains
-at archive/pre-semisupervised-20261020 (924265f7df604d3dca84dda49578b1a0cf28d821).
-Historical checkpoints require their pinned source; never silently reinterpret
-old configs or checkpoint semantics as the current epoch protocol.
+Track A uses `[B,3,H,W]` and 2D in-plane physical distances. Track A-3D uses
+`[B,1,D,H,W]`, native full-volume frames, `shape_zyx`, runtime `spacing_zyx` and
+`affine_zyx`; its signed distance is anisotropic 3D. The reference A-3D path
+does not crop or resample. A crop, unknown unit, unsupported axis or missing
+geometry must fail closed. A-3D is not a renamed Conv2d model.
 
-Run python scripts/check_repo.py and python -m pytest -q before delivery. Report
-actual tests, source/weight hashes, file paths and missing evidence. Manufactured
-fixtures are not patient/GPU evidence. Do not run full patient training,
-download/accept licenses, change active jobs, or delete local datasets.
-Use isolated worktrees. Never git clean -fdx around user data/checkpoints.
+ACDC and original M&Ms class mapping, ED/ES, source units, affine and patient
+splits are explicit in the preparation manifests. Preserve the existing native
+2D/2.5D track as its own comparison. Use the same declared labels, seeds, model
+capacity, budget and protocol within each ablation factor.
+
+Before delivery run `python scripts/check_repo.py` and `python -m pytest -q`,
+plus the relevant synthetic smoke. Report exact test output, source and weight
+hashes, artifact paths, and missing real-data/GPU evidence. Never claim a target
+Dice/SOTA/novelty result from a fixture or an unverified checkpoint. Do not run
+full patient training, download/accept licenses, alter active jobs, delete local
+datasets, or use `git clean -fdx` around user data.
+
+The old joint_guard/EMA, frozen-Q/CineMA and pre-cleanup trees are historical.
+The pre-cleanup reference is `f01add12524cf73bb15675ecfeadc1014e420210`; frozen-Q
+history is `archive/pre-semisupervised-20261020` at
+`924265f7df604d3dca84dda49578b1a0cf28d821`. Do not mix their checkpoints into
+either current track.

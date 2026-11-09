@@ -1,5 +1,10 @@
 # Candidate A: implementation contract
 
+This document covers the native 2D/2.5D track only. A1, A2 and A3 are three
+pages of one design; A-3D is the separate native full-volume track in
+[CANDIDATE_A3D.md](CANDIDATE_A3D.md). A's three-slice input does not turn its
+in-plane signed distance into a 3D distance.
+
 This is the active training method. See [RUNBOOK.md](RUNBOOK.md) for commands,
 [DATA_PREPARATION.md](DATA_PREPARATION.md) for ACDC/original M&Ms, and
 [EXPERIMENTS.md](EXPERIMENTS.md) for component ablations.

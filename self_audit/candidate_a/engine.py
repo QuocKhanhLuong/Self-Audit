@@ -13,8 +13,8 @@ from self_audit.metrics import (
     ConfusionAccumulator,
     append_csv,
     append_jsonl,
-    class_metrics,
     epoch_rows,
+    validation_rows as _validation_rows,
 )
 from . import CLASS_MAPPING as CANDIDATE_CLASS_MAPPING, SCHEMA
 from .config import validate_config
@@ -89,29 +89,6 @@ def _metric_row_set(epoch: int, accumulators: dict[str, ConfusionAccumulator]) -
     rows: list[dict] = []
     for branch, accumulator in accumulators.items():
         rows.extend(epoch_rows(accumulator.matrix, epoch=epoch, split="train_online", branch=branch))
-    return rows
-
-
-def _validation_rows(result: dict, *, epoch: int, branch: str) -> list[dict]:
-    """Flatten a frozen evaluator result with pooled confusion counts.
-
-    The evaluator's per-class values are macro summaries, while the pooled
-    confusion is the unambiguous source for TP/FP/FN/support in the epoch log.
-    Keeping both makes absent-class semantics explicit without inventing a
-    count from a patient-average metric.
-    """
-
-    per_class = result.get("per_class", {})
-    pooled = np.asarray(result.get("pooled_confusion"), dtype=np.int64)
-    pooled_rows = {row["class"]: row for row in class_metrics(pooled)}
-    rows = []
-    for class_name, values in per_class.items():
-        row = {"epoch": int(epoch), "split": "validation", "branch": branch,
-               "aggregation": "pooled_voxels",
-               "class": class_name, **pooled_rows.get(class_name, {})}
-        for metric in ("dice", "f1", "precision", "recall"):
-            row[f"macro_patient_{metric}"] = values.get(metric)
-        rows.append(row)
     return rows
 
 

@@ -29,10 +29,7 @@ import torch
 from torch import Tensor
 from torch.nn import functional as F
 
-from .bank import QueryBank
-from .codec import MeasurementCodec
 from ..losses import supervised_loss
-from .model import CandidateAStudent
 
 
 STOP_ID = -1
@@ -124,12 +121,12 @@ class RolloutResult:
                 "query_count": self.query_count, "bits": self.code_bits}
 
 
-def _kind_tensor(bank: QueryBank, device: torch.device) -> Tensor:
+def _kind_tensor(bank: Any, device: torch.device) -> Tensor:
     return torch.tensor([1 if bank.query(i).kind == "BOUNDARY" else 0 for i in range(len(bank))],
                         dtype=torch.long, device=device)
 
 
-def query_losses(predicted: Tensor, target: Tensor, bank: QueryBank) -> tuple[Tensor, Tensor]:
+def query_losses(predicted: Tensor, target: Tensor, bank: Any) -> tuple[Tensor, Tensor]:
     predicted = _batch_values(predicted)
     target = _batch_values(target).to(device=predicted.device, dtype=predicted.dtype)
     if predicted.shape != target.shape or predicted.shape[1] != len(bank):
@@ -151,27 +148,53 @@ def _batch_values(value: Tensor) -> Tensor:
     return value
 
 
-def _geometry_parts(geometry: Any) -> tuple[tuple[int, int], tuple[float, float]]:
-    if not isinstance(geometry, Mapping) or "shape" not in geometry or "spacing_yx" not in geometry:
-        raise ValueError("geometry must declare shape=(H,W) and spacing_yx=(dy,dx)")
-    shape_raw, spacing_raw = geometry["shape"], geometry["spacing_yx"]
+def _geometry_parts(geometry: Any) -> tuple[tuple[int, ...], tuple[float, ...]]:
+    """Normalize 2-D or 3-D public geometry for K1 and packet accounting."""
+
+    if not isinstance(geometry, Mapping) or "shape" not in geometry:
+        raise ValueError("geometry must declare shape and a matching spacing tuple")
+    shape_raw = geometry["shape"]
+    if "spacing_yx" in geometry and "spacing_zyx" not in geometry:
+        spacing_raw = geometry["spacing_yx"]
+    elif "spacing_zyx" in geometry and "spacing_yx" not in geometry:
+        spacing_raw = geometry["spacing_zyx"]
+    else:
+        raise ValueError("geometry must declare exactly one of spacing_yx or spacing_zyx")
     if not isinstance(shape_raw, (tuple, list)) or not isinstance(spacing_raw, (tuple, list)):
-        raise ValueError("geometry shape and spacing_yx must be tuples/lists")
-    if len(shape_raw) != 2 or len(spacing_raw) != 2:
-        raise ValueError("geometry must declare shape=(H,W) and spacing_yx=(dy,dx)")
-    if any(type(v) is not int for v in shape_raw):
-        raise ValueError("geometry shape must contain integer H,W")
-    shape = (shape_raw[0], shape_raw[1])
+        raise ValueError("geometry shape and spacing must be tuples/lists")
+    if len(shape_raw) not in (2, 3):
+        raise ValueError("geometry must declare a 2-D or 3-D shape")
+    expected_spacing_key = "spacing_yx" if len(shape_raw) == 2 else "spacing_zyx"
+    actual_spacing_key = "spacing_yx" if "spacing_yx" in geometry else "spacing_zyx"
+    if actual_spacing_key != expected_spacing_key or len(spacing_raw) != len(shape_raw):
+        raise ValueError("2-D geometry requires spacing_yx; 3-D geometry requires spacing_zyx")
+    if any(type(v) is not int or v <= 0 for v in shape_raw):
+        raise ValueError("geometry shape must contain positive integers")
+    shape = tuple(shape_raw)
     try:
-        spacing = (float(spacing_raw[0]), float(spacing_raw[1]))
+        spacing = tuple(float(value) for value in spacing_raw)
     except (TypeError, ValueError) as exc:
-        raise ValueError("geometry spacing_yx must contain finite numbers") from exc
+        raise ValueError("geometry spacing must contain finite numbers") from exc
     if min(shape) <= 0 or not all(math.isfinite(v) and v > 0 for v in spacing):
         raise ValueError("geometry shape/spacing must be positive and finite")
+    if len(shape) == 3:
+        required_3d = {"affine_zyx", "context"}
+        if not required_3d.issubset(geometry) or geometry["context"] != "full_volume":
+            raise ValueError("3-D geometry must declare affine_zyx and context='full_volume'")
     return shape, spacing
 
 
-def _base_ids(codec: MeasurementCodec, config: K1Config) -> tuple[int, ...]:
+def _codec_geometry_kwargs(geometry: Any, shape: tuple[int, ...], spacing: tuple[float, ...]) -> dict[str, Any]:
+    """Map shared K1 geometry to the concrete codec packet contract."""
+    kwargs: dict[str, Any] = {"shape": shape, "spacing": spacing}
+    if len(shape) == 3:
+        if "affine_zyx" not in geometry:
+            raise ValueError("3-D packet accounting requires affine_zyx")
+        kwargs["affine_zyx"] = geometry["affine_zyx"]
+    return kwargs
+
+
+def _base_ids(codec: Any, config: K1Config) -> tuple[int, ...]:
     ids = config.baseline_ids or tuple(codec.base_ids)
     if len(set(ids)) != len(ids) or any(i < 0 or i >= len(codec.bank) for i in ids):
         raise ValueError("R0 IDs must be unique IDs in the measurement bank")
@@ -180,7 +203,7 @@ def _base_ids(codec: MeasurementCodec, config: K1Config) -> tuple[int, ...]:
     return tuple(ids)
 
 
-def _quantize(codec: MeasurementCodec, values: Tensor, ids: Sequence[int], *, ste: bool) -> Tensor:
+def _quantize(codec: Any, values: Tensor, ids: Sequence[int], *, ste: bool) -> Tensor:
     values = _batch_values(values)
     if values.shape[1] != len(ids):
         raise ValueError("value and ID lengths do not match")
@@ -189,21 +212,21 @@ def _quantize(codec: MeasurementCodec, values: Tensor, ids: Sequence[int], *, st
     return codec.quantize_values(values, tuple(int(i) for i in ids), ste=ste).values
 
 
-def _single_quantized(codec: MeasurementCodec, full_values: Tensor, query_id: int, *, ste: bool) -> Tensor:
+def _single_quantized(codec: Any, full_values: Tensor, query_id: int, *, ste: bool) -> Tensor:
     return _quantize(codec, full_values[:, query_id : query_id + 1], (query_id,), ste=ste)[:, 0]
 
 
-def _code_bits(codec: MeasurementCodec, ids: Sequence[int], geometry: Any) -> int:
+def _code_bits(codec: Any, ids: Sequence[int], geometry: Any) -> int:
     shape, spacing = _geometry_parts(geometry)
     # MeasurementCodec.cost is the sole authority for header, fingerprint,
     # IDs, value bits and byte padding.  Value contents do not alter packet
     # length.
-    return int(codec.cost(tuple(ids), shape=shape, spacing=spacing))
+    return int(codec.cost(tuple(ids), **_codec_geometry_kwargs(geometry, shape, spacing)))
 
 
-def _incremental_bits(codec: MeasurementCodec, existing: Sequence[int], query_id: int, geometry: Any) -> int:
+def _incremental_bits(codec: Any, existing: Sequence[int], query_id: int, geometry: Any) -> int:
     shape, spacing = _geometry_parts(geometry)
-    return int(codec.incremental_cost(tuple(existing), int(query_id), shape=shape, spacing=spacing))
+    return int(codec.incremental_cost(tuple(existing), int(query_id), **_codec_geometry_kwargs(geometry, shape, spacing)))
 
 
 def _query_values_for_ids(values: Tensor, ids: Sequence[int], query_ids: Sequence[int]) -> Tensor:
@@ -231,8 +254,8 @@ def _policy_row(logits: Tensor, candidate_ids: Sequence[int], bank_size: int) ->
 
 
 def _feasible_ids(
-    bank: QueryBank,
-    codec: MeasurementCodec,
+    bank: Any,
+    codec: Any,
     geometry: Any,
     *,
     used: Sequence[int],
@@ -253,8 +276,8 @@ def _feasible_ids(
 
 
 def _candidate_ids(
-    bank: QueryBank,
-    codec: MeasurementCodec,
+    bank: Any,
+    codec: Any,
     geometry: Any,
     *,
     used: Sequence[int],
@@ -363,14 +386,14 @@ def _candidate_ids(
 
 
 def trial_utilities(
-    model: CandidateAStudent,
+    model: Any,
     *,
     current_ids: Sequence[int],
     current_values: Tensor,
     candidate_ids: Sequence[int],
     student_values: Tensor,
     labels: Tensor,
-    codec: MeasurementCodec,
+    codec: Any,
     geometry: Any,
     lambda_cost: float = 0.0,
     chunk_size: Optional[int] = None,
@@ -421,7 +444,7 @@ def policy_cross_entropy(policy_logits: Tensor, candidate_ids: Sequence[int], ut
     return loss, target
 
 
-def _teacher_values(teacher: Any, images: Tensor, bank: QueryBank, geometry: Any) -> Tensor:
+def _teacher_values(teacher: Any, images: Tensor, bank: Any, geometry: Any) -> Tensor:
     """Optional teacher adapter; its forward is always isolated from student.
 
     The concrete teacher contract exposes ``region_logits`` and normalized
@@ -432,9 +455,14 @@ def _teacher_values(teacher: Any, images: Tensor, bank: QueryBank, geometry: Any
 
     if teacher is None:
         raise ValueError("teacher is None")
-    del geometry  # geometry is consumed by the typed bank, not the teacher model
     with torch.no_grad():
-        output = teacher(images) if callable(teacher) else teacher
+        if callable(teacher):
+            # Native-volume teachers require the explicit public geometry for
+            # anisotropic SDF conditioning; the established 2-D adapter keeps
+            # its image-only call contract.
+            output = teacher(images, geometry=geometry) if images.ndim == 5 else teacher(images)
+        else:
+            output = teacher
         if not isinstance(output, Mapping) or "region_logits" not in output or "sdf" not in output:
             raise ValueError("teacher output must contain region_logits and sdf")
         region_probs = output["region_logits"].softmax(1)
@@ -442,11 +470,11 @@ def _teacher_values(teacher: Any, images: Tensor, bank: QueryBank, geometry: Any
 
 
 def student_rollout(
-    model: CandidateAStudent,
+    model: Any,
     images: Tensor,
-    bank: QueryBank,
+    bank: Any,
     *,
-    codec: MeasurementCodec,
+    codec: Any,
     geometry: Any,
     labels: Optional[Tensor] = None,
     teacher_values: Optional[Tensor] = None,
@@ -458,21 +486,20 @@ def student_rollout(
 ) -> RolloutResult:
     """Roll out the student, optionally computing the complete student loss."""
 
-    if not isinstance(model, CandidateAStudent):
-        raise TypeError("student_rollout expects CandidateAStudent")
-    if not isinstance(bank, QueryBank) or not isinstance(codec, MeasurementCodec):
-        raise TypeError("student_rollout expects QueryBank and MeasurementCodec")
-    if images.ndim != 4 or images.shape[0] != 1:
-        raise ValueError("candidate-A reference rollout requires B=1 image tensors")
-    if labels is not None and (labels.ndim != 3 or labels.shape[0] != 1):
-        raise ValueError("candidate-A reference rollout requires B=1 labels")
+    if images.ndim not in (4, 5) or images.shape[0] != 1:
+        raise ValueError("reference rollout requires B=1 image tensors with 2-D or 3-D spatial axes")
+    if labels is not None and (labels.ndim != images.ndim - 1 or labels.shape[0] != 1):
+        raise ValueError("labels must have B=1 and the image's spatial axes")
     if labels is None and query_targets is not None:
         raise ValueError("query_targets are training-only and require labels")
     config = config or K1Config()
     if config.bit_budget < 0:
         raise ValueError("bit_budget must be non-negative")
     shape, spacing = _geometry_parts(geometry)
-    del shape, spacing
+    if tuple(images.shape[2:]) != shape:
+        raise ValueError("geometry shape does not match image spatial dimensions")
+    if labels is not None and tuple(labels.shape[1:]) != shape:
+        raise ValueError("geometry shape does not match label spatial dimensions")
     if teacher is not None and teacher_values is not None:
         raise ValueError("pass teacher or teacher_values, not both")
     if teacher is not None:
@@ -487,7 +514,7 @@ def student_rollout(
     features = model.encode(images)
     # Keep raw student values for Lq and proposal ranking.  Quantisation is
     # applied only when a value is written to a code/trial.
-    student_values = model.predict_values(features)
+    student_values = model.predict_values(features, geometry=geometry)
     if student_values.shape[1] != len(bank):
         raise ValueError("student value head must output one value per bank query")
     if not torch.isfinite(student_values).all():

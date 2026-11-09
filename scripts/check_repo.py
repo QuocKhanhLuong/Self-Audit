@@ -6,6 +6,7 @@ import sys
 root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(root))
 from self_audit.candidate_a.config import validate_config
+from self_audit.candidate_a3d.config import validate_config as validate_3d
 active = json.loads((root / "ACTIVE_PIPELINE.json").read_text())
 assert active["method"] == "candidate_a" and active["entrypoint"] == "train.py"
 for relative in ("self_audit/engine.py", "self_audit/control.py", "self_audit/decoder_control.py",
@@ -19,5 +20,11 @@ for relative in ("self_audit/candidate_a/engine.py", "self_audit/candidate_a/tea
 recipes = list((root / "configs/candidate_a").glob("*.json"))
 for recipe in recipes:
     validate_config(json.loads(recipe.read_text()))
+recipes_3d = list((root / "configs/candidate_a3d").glob("*.json"))
+if not recipes_3d:
+    raise SystemExit("MISSING_A3D_RECIPES")
+for recipe in recipes_3d:
+    validate_3d(json.loads(recipe.read_text()))
 print(json.dumps({"status": "PASS", "method": active["method"], "recipes": len(recipes),
+                  "recipes_3d": len(recipes_3d),
                   "supervision": active["supervision"]}))

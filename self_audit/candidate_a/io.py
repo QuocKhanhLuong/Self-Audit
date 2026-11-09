@@ -9,6 +9,9 @@ from . import CLASS_MAPPING
 
 CHECKPOINT_SCHEMA = "self_audit.candidate_a.checkpoint.v2"
 EXPORT_SCHEMA = "self_audit.candidate_a.student.v2"
+CHECKPOINT_3D_SCHEMA = "self_audit.candidate_a3d.checkpoint.v1"
+EXPORT_3D_SCHEMA = "self_audit.candidate_a3d.student.v1"
+SOURCE_PINNED_SCHEMAS = {CHECKPOINT_SCHEMA, EXPORT_SCHEMA, CHECKPOINT_3D_SCHEMA, EXPORT_3D_SCHEMA}
 
 
 def source_inventory():
@@ -23,11 +26,11 @@ def read_checkpoint(folder, expected_sha256):
     if digest(manifest) != expected_sha256:
         raise ValueError("checkpoint manifest hash mismatch")
     meta = json.loads(manifest.read_text())
-    if meta.get("schema") not in {CHECKPOINT_SCHEMA, EXPORT_SCHEMA, "self_audit.checkpoint.v2"}:
+    if meta.get("schema") not in SOURCE_PINNED_SCHEMAS | {"self_audit.checkpoint.v2"}:
         raise ValueError("unsupported checkpoint schema")
     if digest(folder / "weights.pt") != meta["payload_sha256"]:
         raise ValueError("checkpoint payload hash mismatch")
-    if meta["schema"] in {CHECKPOINT_SCHEMA, EXPORT_SCHEMA}:
+    if meta["schema"] in SOURCE_PINNED_SCHEMAS:
         current = source_inventory()
         current_sha = hashlib.sha256(json.dumps(current, sort_keys=True).encode()).hexdigest()
         if meta.get("source_files") != current or meta.get("source_sha256") != current_sha:
@@ -46,16 +49,17 @@ def build_student(config):
     return model, bank, codec
 
 
-def save_checkpoint(folder, *, student, teacher, optimizers, config, data, epoch, updates, provenance):
+def save_checkpoint(folder, *, student, teacher, optimizers, config, data, epoch, updates, provenance,
+                    checkpoint_schema=CHECKPOINT_SCHEMA, model_class="CandidateAStudent"):
     folder = Path(folder)
     folder.mkdir(parents=True, exist_ok=False)
     payload = {"student": student.state_dict(), "teacher": teacher.state_dict() if teacher is not None else None,
                "optimizers": [o.state_dict() for o in optimizers], "torch_rng": torch.get_rng_state()}
     torch.save(payload, folder / "weights.pt")
     sources = source_inventory()
-    meta = {"schema": CHECKPOINT_SCHEMA, "config": config, "epoch": epoch,
+    meta = {"schema": checkpoint_schema, "config": config, "epoch": epoch,
             "completed_sample_updates": updates,
-            "class_mapping": CLASS_MAPPING, "model_class": "CandidateAStudent",
+            "class_mapping": CLASS_MAPPING, "model_class": model_class,
             "labeled_ids": data.lids, "unlabeled_ids": data.uids,
             "label_budget": len(data.lids), "label_reads": sorted(data.label_reads),
             "data_sha256": digest(data.path), "synthetic": bool(data.manifest["synthetic"]),
@@ -70,11 +74,15 @@ def save_checkpoint(folder, *, student, teacher, optimizers, config, data, epoch
 
 def load_student(folder, expected_sha256, device="cpu"):
     payload, meta = read_checkpoint(folder, expected_sha256)
-    if meta["schema"] not in {CHECKPOINT_SCHEMA, EXPORT_SCHEMA} or meta.get("class_mapping") != CLASS_MAPPING:
+    if meta["schema"] not in SOURCE_PINNED_SCHEMAS or meta.get("class_mapping") != CLASS_MAPPING:
         raise ValueError("not a candidate-A student with the declared four-class ontology")
     if device.startswith("cuda") and not torch.cuda.is_available():
         raise RuntimeError("CUDA unavailable; no silent device fallback")
-    model, bank, codec = build_student(meta["config"])
+    if meta["schema"] in {CHECKPOINT_3D_SCHEMA, EXPORT_3D_SCHEMA}:
+        from self_audit.candidate_a3d.io import build_student as factory
+    else:
+        factory = build_student
+    model, bank, codec = factory(meta["config"])
     model.load_state_dict(payload["student"], strict=True)
     return model.to(device).eval(), bank, codec, meta
 
@@ -82,7 +90,7 @@ def load_student(folder, expected_sha256, device="cpu"):
 def export_student(checkpoint, checkpoint_sha256, out):
     # Load and validate exact architecture/state before emitting a new artifact.
     model, _, _, meta = load_student(checkpoint, checkpoint_sha256)
-    if meta["schema"] == CHECKPOINT_SCHEMA and meta["config"]["stage"] != "joint":
+    if meta["schema"] in {CHECKPOINT_SCHEMA, CHECKPOINT_3D_SCHEMA} and meta["config"]["stage"] != "joint":
         raise ValueError("student export requires joint/student training; teacher-only stages leave student untrained")
     out = Path(out).resolve()
     source = Path(checkpoint).resolve()
@@ -95,7 +103,9 @@ def export_student(checkpoint, checkpoint_sha256, out):
     config = {k: meta["config"][k] for k in ("bank", "codec", "student", "rollout", "class_mapping")}
     export = {k: meta[k] for k in ("class_mapping", "model_class", "labeled_ids", "unlabeled_ids",
                                  "label_budget", "synthetic", "quality", "source_files", "source_sha256")}
-    export.update(schema=EXPORT_SCHEMA, config=config, payload_sha256=digest(out / "weights.pt"),
+    export["data_sha256"] = meta["data_sha256"]
+    schema = EXPORT_3D_SCHEMA if meta["schema"] in {CHECKPOINT_3D_SCHEMA, EXPORT_3D_SCHEMA} else EXPORT_SCHEMA
+    export.update(schema=schema, config=config, payload_sha256=digest(out / "weights.pt"),
                   parent_manifest_sha256=checkpoint_sha256, prediction_model="student",
                   teacher_dependency=False, external_backbone_dependency=False)
     write_json(out / "MANIFEST.json", export)

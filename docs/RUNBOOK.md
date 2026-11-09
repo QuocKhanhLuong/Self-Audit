@@ -1,4 +1,13 @@
-# Run Candidate A
+# Run Candidate A or A-3D
+
+The `--config` file selects the track. A recipes use
+`self_audit.candidate_a.v2`; A-3D recipes use `self_audit.candidate_a3d.v1`.
+The command dispatcher rejects a track/checkpoint/schema mismatch. The A-3D
+reference protocol consumes one native full-volume frame as `[1,1,D,H,W]` and
+requires runtime `shape_zyx`, `spacing_zyx`, `affine_zyx` and `context=full_volume`
+(the prepared manifest stores physical spacing as `spacing_zyx_mm`).
+It rejects crop/resample/implicit augmentation. See
+[CANDIDATE_A3D.md](CANDIDATE_A3D.md) for the complete A-3D command sequence.
 
 Install `requirements.txt` in the intended CPU/CUDA environment. Read
 [DATA_PREPARATION.md](DATA_PREPARATION.md) to prepare ACDC or original M&Ms with
