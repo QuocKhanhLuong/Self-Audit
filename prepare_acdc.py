@@ -9,7 +9,14 @@ import argparse
 import json
 import re
 import numpy as np
-from self_audit.data import label_subset, write_json
+from self_audit.data import (
+    CLASS_MAPPING,
+    GEOMETRY_MAP_SCHEMA,
+    GEOMETRY_SCHEMA,
+    label_subset,
+    validate_geometry,
+    write_json,
+)
 from self_audit.model import digest
 
 
@@ -17,6 +24,44 @@ def one(paths):
     paths = list(paths)
     if len(paths) != 1: raise ValueError(f"expected exactly one input, found {len(paths)}")
     return paths[0]
+
+
+def native_geometry_zyx(affine, shape_zyx):
+    """Convert a native XYZ affine to the cached ZYX index order.
+
+    The cache stores ``T,Z,Y,X`` while NIfTI affine columns address
+    ``X,Y,Z``.  The returned affine maps cache ``(z,y,x)`` directly into the
+    same world frame.  We currently reject shear because the candidate-A
+    physical distance target assumes an orthogonal native grid.
+    """
+    source = np.asarray(affine, dtype=np.float64)
+    if source.shape != (4, 4) or not np.isfinite(source).all():
+        raise ValueError("native affine must be finite 4x4")
+    if not np.allclose(source[3], [0., 0., 0., 1.], rtol=0., atol=1e-6):
+        raise ValueError("native affine must be homogeneous")
+    linear = source[:3, :3]
+    spacing_xyz = np.linalg.norm(linear, axis=0)
+    if (spacing_xyz <= 0).any() or not np.isfinite(spacing_xyz).all():
+        raise ValueError("native affine has invalid voxel spacing")
+    directions = linear / spacing_xyz
+    if not np.allclose(directions.T @ directions, np.eye(3), rtol=1e-5, atol=1e-5):
+        raise ValueError("sheared native affine is unsupported")
+    # raw XYZ index = P * cache ZYX index; preserve the original translation.
+    permutation = np.eye(4, dtype=np.float64)
+    permutation[:3, :3] = np.asarray([[0., 0., 1.], [0., 1., 0.], [1., 0., 0.]])
+    affine_zyx = source @ permutation
+    spacing_zyx = spacing_xyz[[2, 1, 0]]
+    geometry = {
+        "schema": GEOMETRY_SCHEMA,
+        "array_axes": ["T", "Z", "Y", "X"],
+        "spatial_axes": ["Z", "Y", "X"],
+        "shape_zyx": [int(x) for x in shape_zyx],
+        "spacing_zyx_mm": [float(x) for x in spacing_zyx],
+        "spacing_yx_mm": [float(x) for x in spacing_zyx[1:]],
+        "affine_zyx": affine_zyx.tolist(),
+        "class_mapping": dict(CLASS_MAPPING),
+    }
+    return validate_geometry(geometry, shape_zyx=shape_zyx)
 
 
 
@@ -50,7 +95,7 @@ def prepare(root, split_path, out, budget, seed, evaluation=False):
     if out.exists() or out == root or root.is_relative_to(out):
         raise ValueError("new separate output directory required")
     out.mkdir(parents=True)
-    groups = {"labeled": [], "unlabeled": [], "evaluation": []}; source_images = {}
+    groups = {"labeled": [], "unlabeled": [], "evaluation": []}; source_images = {}; geometry_by_patient = {}
     ids = split["train"] + (split["val"] if evaluation else [])
     for pid in ids:
         folder = root / pid
@@ -61,6 +106,8 @@ def prepare(root, split_path, out, budget, seed, evaluation=False):
         arr = np.clip((raw-lo)/max(float(hi-lo), 1e-6), 0, 1).transpose(3, 2, 1, 0).astype(np.float32)
         ip = out / f"{pid}.npy"; np.save(ip, arr)
         r = {"id": pid, "image": ip.name, "image_sha256": digest(ip)}
+        native_geometry = native_geometry_zyx(ci.affine, arr.shape[1:])
+        geometry_by_patient[pid] = native_geometry
         role = "evaluation" if pid in split["val"] else ("labeled" if pid in labeled_ids else "unlabeled")
         if role != "unlabeled":
             r["masks"] = {}
@@ -70,10 +117,13 @@ def prepare(root, split_path, out, budget, seed, evaluation=False):
                 frame = nib.load(Path(str(mp).replace("_gt.nii", ".nii")))
                 if mask.shape != frame.shape or not np.allclose(mask.affine, frame.affine):
                     raise ValueError("reference/frame geometry mismatch")
+                if not np.allclose(frame.affine, ci.affine):
+                    raise ValueError("frame/cine geometry mismatch")
+                native_geometry_zyx(frame.affine, arr.shape[1:])
                 if not 0 <= t < raw.shape[3] or not np.array_equal(np.asarray(frame.dataobj), raw[..., t]):
                     raise ValueError("frame/cine exact voxel bridge failed")
                 y = np.asarray(mask.dataobj)
-                if not np.isin(y, [0, 1, 2, 3, 255]).all(): raise ValueError("unknown annotation class")
+                if not np.isin(y, [int(x) for x in CLASS_MAPPING]).all(): raise ValueError("unknown annotation class")
                 op = out / f"{pid}_t{t:03d}_mask.npy"; np.save(op, y.transpose(2, 1, 0).astype(np.uint8))
                 r["masks"][str(t)] = {"path": op.name, "sha256": digest(op)}
             if not r["masks"]: raise ValueError("budgeted/evaluation patient has no reference frames")
@@ -82,15 +132,25 @@ def prepare(root, split_path, out, budget, seed, evaluation=False):
         raise ValueError("duplicate raw patient content across roles; resolve split explicitly, never silently drop")
     train_manifest = {"schema": "self_audit.data.v2", "role": "training", "synthetic": False,
                       "label_budget": budget, "label_seed": seed, "labeled": groups["labeled"],
-                      "unlabeled": groups["unlabeled"], "evaluation_ids": split["val"]+split["test"]}
+                      "unlabeled": groups["unlabeled"], "evaluation_ids": split["val"]+split["test"],
+                      "class_mapping": dict(CLASS_MAPPING),
+                      "geometry": {"schema": GEOMETRY_MAP_SCHEMA,
+                                   "by_patient": {r["id"]: geometry_by_patient[r["id"]]
+                                                   for group in (groups["labeled"], groups["unlabeled"])
+                                                   for r in group}}}
     write_json(out / "train.json", train_manifest)
     if evaluation:
         write_json(out / "development.json", {"schema": "self_audit.data.v2", "role": "development",
-                     "synthetic": False, "patients": groups["evaluation"], "scope": "exposed_development"})
+                     "synthetic": False, "patients": groups["evaluation"], "scope": "exposed_development",
+                     "class_mapping": dict(CLASS_MAPPING),
+                     "geometry": {"schema": GEOMETRY_MAP_SCHEMA,
+                                  "by_patient": {r["id"]: geometry_by_patient[r["id"]] for r in groups["evaluation"]}}})
     write_json(out / "PREPARATION.json", {"source_split_sha256": digest(split_path), "raw_images": source_images,
                "read_mask_patient_ids": labeled_ids + (split["val"] if evaluation else []),
                "unlabeled_mask_reads": 0, "normalization": "per_cine_image_only_percentiles_0.5_99.5",
-               "train_manifest_sha256": digest(out/"train.json"), "evaluation_authorized": evaluation})
+               "train_manifest_sha256": digest(out/"train.json"), "evaluation_authorized": evaluation,
+               "geometry_schema": GEOMETRY_SCHEMA, "geometry_axis_order": ["T", "Z", "Y", "X"],
+               "class_mapping": dict(CLASS_MAPPING)})
     return digest(out / "train.json")
 
 

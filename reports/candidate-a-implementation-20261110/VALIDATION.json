@@ -1,0 +1,90 @@
+{
+  "schema": "self_audit.candidate_a.delivery.v1",
+  "status": "PASS_SYNTHETIC_CONTRACTS_ONLY",
+  "date": "2026-11-10",
+  "base_head": "6b77170e15e62483a5fa6cab7fe7b2d55dda379e",
+  "checks": {
+    "python scripts/check_repo.py": "PASS",
+    "python -m pytest -q": {
+      "passed": 87,
+      "warnings": 1,
+      "warning": "Existing torch.jit.script deprecation in native decoder JVP test",
+      "seconds": 7.62
+    },
+    "synthetic_end_to_end": "PASS; pretrain -> warmup -> joint -> student export -> frozen evaluation",
+    "standalone_cli": [
+      "train.py (all three stages)",
+      "scripts/export_candidate_a.py",
+      "evaluate.py",
+      "scripts/candidate_a_infer.py"
+    ],
+    "export_bitwise_output_parity": true
+  },
+  "python": "3.12.16",
+  "source_sha256": "63f51ad1e3c6caa6efe63a04417f1d4b92cb650d38357fa5aa05b928ff8cc37c",
+  "source_files": {
+    "self_audit/__init__.py": "1ae542cceedefe1274a0ef07292460fffbb09e678bfc5198755caa9b51a32911",
+    "self_audit/candidate_a/__init__.py": "f1c1af0c59ac0beb4bf64995c6aef556fd291b05215ac6abc129c1b36f47641f",
+    "self_audit/candidate_a/bank.py": "5fa8b7ad12fea56b745aaf2c521724a5287e64f638ac238d45f49df157c20978",
+    "self_audit/candidate_a/codec.py": "621b2d74039cfbbe339708251760c378eff6995b013524679ff34be215a58ef7",
+    "self_audit/candidate_a/config.py": "21dd2b5d9938bc9be88e208a482ae8747cff00480d00f6d4c3481def58cd8a20",
+    "self_audit/candidate_a/data.py": "7becc23a0f754776b181173027b3dae0d4bb694de78bd524c5a1c1b39a9ce1d9",
+    "self_audit/candidate_a/engine.py": "99083d40e820114ad679ee9656a89750027b1483668d79736c989ab43ee9d040",
+    "self_audit/candidate_a/evaluation.py": "f1eec4357308d4e8946d4ee5d40c47911c10f3ac7ad1f39b687456a23bcad2c1",
+    "self_audit/candidate_a/io.py": "cb970e606d227b6ac3dd6b140a3756019721d782074511df469cdc09a91fc1b2",
+    "self_audit/candidate_a/k1.py": "2cf8d0f2263bac4d4be269570d1069fd3620974f7a0c4ee54735a075a96c5490",
+    "self_audit/candidate_a/model.py": "a79adc669fbc79bfad268c4b82a7a4633cd1843eeb58d3f417115f6f76ad1586",
+    "self_audit/candidate_a/teacher.py": "987f02197e4b534941739e9cbc46610550d717197f1a30f7e5480342d4e0c591",
+    "self_audit/control.py": "6bedb4165e85b4cc1e507d73858e491a4b7e668601604f216a4472280b723068",
+    "self_audit/data.py": "2b394a74e31dcd9f1325cbc5a7292b8f83967b4e70413219a8fadd4e32e60ffb",
+    "self_audit/decoder_control.py": "b23713c4ca09ea47ee1eee073bfc0b0e31771556d928f19f024bece07b879159",
+    "self_audit/engine.py": "a2c3a7f1370ede64732976203847508368508b0499d6c50db288eceaaef82c95",
+    "self_audit/evaluation.py": "943f2638ce5212cc4879d710d2524889a4c6a84e07b1865d38bab8ba1bc36c19",
+    "self_audit/losses.py": "b4bc8ae600728692c774f410eb86ae0b95e0152eec8ecc5064fc2d80157501c6",
+    "self_audit/model.py": "02baf8a7931c21003fd86bdbeb0f9ec6d02f35e80ddac69d95f88527f5cce18c",
+    "train.py": "3b17e7c9594ea9dd43734c2a5f15e065100e296cbfbd1bbd8499fd187a627ebd",
+    "evaluate.py": "ca6f4dff722470599feb15066caf3a6357a4639b0a1c6236acbfc70bfbdd613c"
+  },
+  "synthetic_checkpoints": {
+    "teacher_pretrain": {
+      "manifest_sha256": "474b32880341e374920b39505d0f337614624c2de7761f6625b1b03da5502e6a",
+      "weights_sha256": "e6e7ae900581d966ab9d2ddd4e1a7bfa411126bbad4ad784aeb920674428eb87",
+      "synthetic": true
+    },
+    "teacher_warmup": {
+      "manifest_sha256": "00493f75462669d5a2c28dfb9f3687d13b94ec6d647f07e94915a5003a78b0ad",
+      "weights_sha256": "1f793e5652c11b3a2ee6480b7e8f8b8ac3297eaac4545ded5fdfddfeb9e1ae73",
+      "synthetic": true
+    },
+    "joint": {
+      "manifest_sha256": "72367b41e7afae859fd6cdf27fe4bd305799dee385b666cff8df79b72c586107",
+      "weights_sha256": "98575448caa06e6a2bf5356a19221cb51905abc446cc0a7734357accdfb7e3c9",
+      "synthetic": true
+    }
+  },
+  "synthetic_student_export": {
+    "path": "/Users/alvinluong/orca/workspaces/Self-Audit/candidate-a-20261110/runs/candidate-a-smoke-20261110-final/student",
+    "manifest_sha256": "0da4e21d959cbf43c1a5e0f68e0b0ee7b1895ba3349af0da01870bdf13827cc8",
+    "payload_sha256": "97667895728a78285bb6157711f2fbdf8fafe6f8f3d849c74a6c4b5fa854fbb0",
+    "synthetic": true
+  },
+  "local_artifacts": "/Users/alvinluong/orca/workspaces/Self-Audit/candidate-a-20261110/runs/candidate-a-smoke-20261110-final",
+  "patient_training": "NOT_RUN",
+  "patient_evaluation": "NOT_RUN",
+  "gpu_validation": "NOT_RUN",
+  "available_pretrained_teacher": "NONE_COMPATIBLE_LOCALLY",
+  "sota_or_96_dice": "NOT_ESTABLISHED",
+  "not_implemented": [
+    "raw M&Ms preparation adapter; native geometry/class-mapped manifest required",
+    "optimizer/RNG resume across runs; teacher stage transfer is supported"
+  ],
+  "protocol_decisions": [
+    "explicit opt-in method, native joint_guard remains default",
+    "2D physical cell-interface distances with three-slice input context",
+    "dense labeled TRAIN only; U unused; 255 measurement targets rejected",
+    "finite per-query byte-padded levels with 32-bit IDs and all packet metadata charged",
+    "hard discrete selection; STE through quantized values; no feature bypass",
+    "exact hashed TRAIN cohort across teacher stages; pinned code required at checkpoint load",
+    "fixed/random controls disable K1 utility computation; teacher-free learned control retains TRAIN utility supervision"
+  ]
+}

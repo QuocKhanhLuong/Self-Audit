@@ -43,3 +43,7 @@ source/weights. There is no random, legacy-model, dataset or checkpoint fallback
 Historical code, results and exact layer reference are recoverable at
 `archive/pre-semisupervised-20261020` (`924265f7df604d3dca84dda49578b1a0cf28d821`).
 They were not rewritten. Use a separate worktree for reproduction.
+
+## Candidate A (opt-in experimental method)
+
+See [implementation and train/evaluate/export instructions](docs/CANDIDATE_A.md) for the dual-branch teacher, typed REGION/BOUNDARY bank, finite-bit student code and K1 query policy. Run `python scripts/smoke_candidate_a.py --out /tmp/self-audit-a-smoke` for the manufactured CPU integration check. No patient/SOTA result is implied.

@@ -1,0 +1,76 @@
+{
+  "status": "PASS_SYNTHETIC_ONLY",
+  "patient_training": "NOT_RUN",
+  "gpu_validation": "NOT_RUN",
+  "teacher_pretrained_weights": "NOT_AVAILABLE_LOCALLY",
+  "stages": {
+    "teacher_pretrain": {
+      "schema": "self_audit.candidate_a.v1",
+      "status": "COMPLETED",
+      "synthetic": true,
+      "quality": "NOT_EVALUATED",
+      "stage": "teacher_pretrain",
+      "steps": 1,
+      "teacher_updates": 1,
+      "student_updates": 0,
+      "teacher_snapshots": 0,
+      "label_budget": 2,
+      "label_reads": [
+        "train_labeled_000"
+      ],
+      "unlabeled_usage": "UNUSED; no U reference paths opened",
+      "final_manifest_sha256": "474b32880341e374920b39505d0f337614624c2de7761f6625b1b03da5502e6a",
+      "elapsed_seconds": 0.06353312497958541
+    },
+    "teacher_warmup": {
+      "schema": "self_audit.candidate_a.v1",
+      "status": "COMPLETED",
+      "synthetic": true,
+      "quality": "NOT_EVALUATED",
+      "stage": "teacher_warmup",
+      "steps": 1,
+      "teacher_updates": 1,
+      "student_updates": 0,
+      "teacher_snapshots": 0,
+      "label_budget": 2,
+      "label_reads": [
+        "train_labeled_000"
+      ],
+      "unlabeled_usage": "UNUSED; no U reference paths opened",
+      "final_manifest_sha256": "00493f75462669d5a2c28dfb9f3687d13b94ec6d647f07e94915a5003a78b0ad",
+      "elapsed_seconds": 0.021413249894976616
+    },
+    "joint": {
+      "schema": "self_audit.candidate_a.v1",
+      "status": "COMPLETED",
+      "synthetic": true,
+      "quality": "NOT_EVALUATED",
+      "stage": "joint",
+      "steps": 2,
+      "teacher_updates": 2,
+      "student_updates": 2,
+      "teacher_snapshots": 2,
+      "label_budget": 2,
+      "label_reads": [
+        "train_labeled_000",
+        "train_labeled_001"
+      ],
+      "unlabeled_usage": "UNUSED; no U reference paths opened",
+      "final_manifest_sha256": "72367b41e7afae859fd6cdf27fe4bd305799dee385b666cff8df79b72c586107",
+      "elapsed_seconds": 0.06295420788228512
+    }
+  },
+  "export": {
+    "path": "/Users/alvinluong/orca/workspaces/Self-Audit/candidate-a-20261110/runs/candidate-a-smoke-20261110-final/student",
+    "manifest_sha256": "0da4e21d959cbf43c1a5e0f68e0b0ee7b1895ba3349af0da01870bdf13827cc8",
+    "payload_sha256": "97667895728a78285bb6157711f2fbdf8fafe6f8f3d849c74a6c4b5fa854fbb0",
+    "synthetic": true
+  },
+  "export_bitwise_parity": true,
+  "export_payload_keys": [
+    "student"
+  ],
+  "evaluation_metrics": "/Users/alvinluong/orca/workspaces/Self-Audit/candidate-a-20261110/runs/candidate-a-smoke-20261110-final/evaluation/METRICS.json",
+  "evaluation_synthetic": true,
+  "output": "/Users/alvinluong/orca/workspaces/Self-Audit/candidate-a-20261110/runs/candidate-a-smoke-20261110-final"
+}

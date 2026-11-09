@@ -1,0 +1,66 @@
+"""Versioned, explicit recipe for the typed-measurement experiment."""
+from copy import deepcopy
+import math
+from . import SCHEMA, CLASS_MAPPING
+
+
+def validate_config(config):
+    c = deepcopy(config)
+    fields = {"schema", "method", "stage", "steps", "seed", "threads", "student_lr",
+              "teacher_lr", "weight_decay", "teacher_update_every", "freeze_teacher",
+              "use_teacher", "lambda_distance", "model", "teacher_init", "bank",
+              "codec", "student", "rollout", "loss", "class_mapping", "augmentation"}
+    if set(c) != fields or c["schema"] != SCHEMA or c["method"] != "candidate_a":
+        raise ValueError("expected exact candidate-A v1 config; unknown/missing fields rejected")
+    if c["stage"] not in {"teacher_pretrain", "teacher_warmup", "joint"}:
+        raise ValueError("invalid candidate-A stage")
+    if c["class_mapping"] != CLASS_MAPPING:
+        raise ValueError("required class mapping: BG=0 RV=1 MYO=2 LV=3")
+    for k in ("steps", "seed", "threads", "teacher_update_every"):
+        if type(c[k]) is not int or c[k] < (0 if k == "seed" else 1):
+            raise ValueError(f"invalid {k}")
+    for k in ("student_lr", "teacher_lr", "weight_decay", "lambda_distance"):
+        if isinstance(c[k], bool) or not isinstance(c[k], (int, float)) or not math.isfinite(c[k]) or c[k] < 0:
+            raise ValueError(f"invalid {k}")
+    if min(c["student_lr"], c["teacher_lr"]) <= 0:
+        raise ValueError("learning rates must be positive")
+    for k in ("freeze_teacher", "use_teacher"):
+        if type(c[k]) is not bool:
+            raise ValueError(f"invalid {k}")
+    if c["stage"] != "joint" and (not c["use_teacher"] or c["freeze_teacher"]):
+        raise ValueError("teacher training stages require an unfrozen teacher")
+    if c["augmentation"] not in {"aligned_flip", "none"}:
+        raise ValueError("only native aligned flip or no augmentation is supported")
+    if set(c["teacher_init"]) != {"kind", "path", "sha256"} or c["teacher_init"]["kind"] not in {"none", "native_v2", "candidate_a"}:
+        raise ValueError("explicit teacher initialization provenance required")
+    if c["teacher_init"]["kind"] != "none" and (not c["teacher_init"]["path"] or len(c["teacher_init"]["sha256"]) != 64):
+        raise ValueError("teacher checkpoint path and manifest SHA256 required")
+    if set(c["model"]) != {"backbone", "source_repo", "source_commit", "weights", "weights_sha256"}:
+        raise ValueError("native teacher backbone provenance fields required")
+    if set(c["codec"]) != {"value_bits"}:
+        raise ValueError("codec requires value_bits")
+    if set(c["loss"]) != {"region", "boundary", "policy"}:
+        raise ValueError("separate region/boundary/policy weights required")
+    for value in c["loss"].values():
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
+            raise ValueError("loss weights must be finite and nonnegative")
+    # Dataclass constructors reject unknown nested fields; their own validators
+    # establish the finite bank, architecture and action/budget contracts.
+    from .bank import BankConfig, QueryBank
+    from .codec import MeasurementCodec
+    from .model import StudentConfig
+    from .k1 import K1Config
+    bank = QueryBank(BankConfig(**c["bank"]))
+    if bank.config.classes != (1, 2, 3):
+        raise ValueError("candidate A uses the native RV/MYO/LV foreground ontology")
+    codec = MeasurementCodec(bank, **c["codec"])
+    StudentConfig(**c["student"])
+    rollout = K1Config(**c["rollout"])
+    if type(rollout.bit_budget) is not int or rollout.bit_budget <= 0:
+        raise ValueError("a finite positive complete packet bit budget is mandatory")
+    base = tuple(rollout.baseline_ids)
+    if len(set(base)) != len(base) or any(type(j) is not int or not 0 <= j < len(bank) for j in base):
+        raise ValueError("R0 must be fixed unique bank indices")
+    if codec.cost(base) > rollout.bit_budget:
+        raise ValueError("R0 plus packet metadata exceeds bit budget")
+    return c

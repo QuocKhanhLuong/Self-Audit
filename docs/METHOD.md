@@ -140,3 +140,7 @@ A small labeled subset may not represent anatomical diversity. Experiments must
 use nested patient budgets and repeated subset seeds; compare extra labeled-only
 optimization at reported compute, and retain standard stronger SSL baselines.
 Final quality is evaluated from frozen predictions outside TRAIN, separately.
+
+## Opt-in candidate A
+
+`train.py --config configs/candidate_a/full.json` dispatches to the separately versioned typed-measurement experiment. Its dual-branch teacher, finite-bit student code, K1 selection and code-only query decoder are documented in [CANDIDATE_A.md](CANDIDATE_A.md). This candidate uses only the declared labeled TRAIN subset, with U unused. It does not inherit the native joint_guard/EMA transaction or its audit claims. The default pipeline above remains unchanged. Synthetic contracts are not patient efficacy evidence.

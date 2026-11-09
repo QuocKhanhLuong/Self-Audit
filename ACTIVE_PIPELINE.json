@@ -16,5 +16,18 @@
   "guard": "extra pseudo displacement only; no hidden AdamW transformation",
   "legacy_archive": "archive/pre-semisupervised-20261020",
   "legacy_commit": "924265f7df604d3dca84dda49578b1a0cf28d821",
-  "patient_training_this_delivery": false
+  "patient_training_this_delivery": false,
+  "opt_in_experimental_methods": {
+    "candidate_a": {
+      "schema": "self_audit.candidate_a.v1",
+      "entrypoint": "train.py",
+      "config": "configs/candidate_a/full.json",
+      "documentation": "docs/CANDIDATE_A.md",
+      "architecture": "typed_measurement_code_query_decoder",
+      "supervision": "dense budgeted TRAIN subset; U unused in this reference",
+      "status": "IMPLEMENTED_SYNTHETIC_CONTRACTS_ONLY",
+      "inherits_joint_guard_guarantees": false,
+      "patient_training_this_delivery": false
+    }
+  }
 }
