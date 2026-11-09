@@ -21,10 +21,10 @@ from ..data import (
 class CandidateAData:
     """Strict geometry-bearing view over the canonical ``TrainingData`` API.
 
-    ``sample_labeled`` returns ``(x, y, spacing_yx_mm, patient_id)`` where
-    ``x`` is ``[1,3,H,W]`` and ``y`` is ``[1,H,W]``.  The base sampler remains
-    responsible for deterministic frame/slice selection and label accounting.
-    ``sample_unlabeled`` returns ``(x, spacing_yx_mm, patient_id)``.
+    ``labeled_slice_keys`` returns compact deterministic frame/slice references;
+    ``load_labeled_slice`` materializes one ``[1,3,H,W]`` input and
+    ``[1,H,W]`` target on demand.  This keeps the epoch plan bounded by index
+    metadata instead of retaining every tensor in memory.
     """
 
     def __init__(self, manifest, expected_sha256, *, synthetic=False):
@@ -50,17 +50,13 @@ class CandidateAData:
     def spacing_yx_for(self, patient_id):
         return self.base.spacing_yx_for(patient_id, required=True)
 
-    def sample_labeled(self, index, rng, *, foreground_probability=.5):
-        x, y, metadata = self.base.sample_labeled(
-            index, rng, foreground_probability=foreground_probability
-        )
-        patient_id = metadata["patient"]
-        return x, y, self.spacing_yx_for(patient_id), patient_id
+    def labeled_slice_keys(self):
+        return self.base.labeled_slice_keys()
 
-    def sample_unlabeled(self, index, rng):
-        x, metadata = self.base.sample_unlabeled(index, rng)
+    def load_labeled_slice(self, key):
+        x, y, metadata = self.base.load_labeled_slice(key)
         patient_id = metadata["patient"]
-        return x, self.spacing_yx_for(patient_id), patient_id
+        return x, y, self.spacing_yx_for(patient_id), metadata
 
 
 def _synthetic_geometry(shape_zyx, spacing_zyx=(2.5, 0.7, 1.3)):
@@ -142,6 +138,7 @@ def synthetic_candidate_a_fixture(
             "schema": "self_audit.data.v2",
             "role": "training",
             "synthetic": True,
+            "dataset": "synthetic",
             "label_budget": n_labeled,
             "labeled": labeled,
             "unlabeled": unlabeled,
@@ -160,6 +157,7 @@ def synthetic_candidate_a_fixture(
             "schema": "self_audit.data.v2",
             "role": "development",
             "synthetic": True,
+            "dataset": "synthetic",
             "scope": "candidate_a_synthetic",
             "patients": evaluation,
             "class_mapping": dict(CLASS_MAPPING),

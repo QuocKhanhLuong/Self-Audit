@@ -1,4 +1,4 @@
-"""Dense labeled native loss and reproducible, aligned intensity augmentation."""
+"""Shared dense segmentation loss and aligned spatial augmentation."""
 import torch
 from torch.nn import functional as F
 
@@ -18,13 +18,6 @@ def supervised_loss(logits, labels):
     present = y[:, 1:].sum(dims) > 0
     dl = (1 - dice[1:][present]).mean() if present.any() else logits.sum() * 0
     return ce + dl
-
-
-def strong_intensity(x, rng):
-    """No spatial misregistration: output remains in teacher coordinates."""
-    gamma = float(rng.uniform(.8, 1.2))
-    noise = torch.from_numpy(rng.normal(0, .03, tuple(x.shape))).to(device=x.device, dtype=x.dtype)
-    return (x.pow(gamma) + noise).clamp(0, 1)
 
 
 def aligned_flip(x, y, rng):

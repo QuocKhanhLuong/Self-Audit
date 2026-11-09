@@ -29,12 +29,14 @@ def run_smoke(out):
     for name in ("teacher_pretrain", "teacher_warmup", "joint"):
         c = copy.deepcopy(config)
         c["stage"] = name
-        c["steps"] = 2 if name == "joint" else 1
+        c["epochs"] = 1
         path = out / (name + ".json")
         write_json(path, c)
         command = [sys.executable, str(root / "train.py"), "--config", str(path),
             "--data", str(fixture["train"]), "--data-sha256", fixture["train_sha256"],
-            "--out", str(out / name), "--device", "cpu", "--synthetic"]
+            "--out", str(out / name), "--device", "cpu", "--synthetic",
+            "--validation-data", str(fixture["evaluation"]),
+            "--validation-data-sha256", fixture["evaluation_sha256"]]
         if previous is not None:
             command += ["--teacher-checkpoint", str(previous), "--teacher-checkpoint-sha256", digest(previous / "MANIFEST.json")]
         result = subprocess.run(command, cwd=root, check=True, capture_output=True, text=True)

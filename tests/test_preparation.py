@@ -16,7 +16,9 @@ def test_existing_split_variants_agree(tmp_path):
 def test_preparation_opens_only_budgeted_masks_with_mock_reader(tmp_path,monkeypatch):
     root=tmp_path/'raw';root.mkdir();registry={};reads=[]
     class Image:
-        def __init__(self,a):self.dataobj=a;self.affine=np.eye(4);self.shape=a.shape
+        def __init__(self,a):
+            self.dataobj=a;self.affine=np.eye(4);self.shape=a.shape
+            self.header=types.SimpleNamespace(get_xyzt_units=lambda: ('mm', None))
     rng=np.random.default_rng(2)
     for i in range(1,5):
         pid=f'patient{i:03d}';d=root/pid;d.mkdir();a=rng.integers(0,100,(5,6,2,2),dtype=np.int16)

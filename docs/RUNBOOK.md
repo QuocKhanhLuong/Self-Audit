@@ -1,96 +1,64 @@
-# Runbook: v2 only
+# Run Candidate A
 
-Use a fresh worktree and an appropriate installed official PyTorch CUDA wheel.
-Do not update a checkout used by an active job, reset local files, or run git clean.
+Install `requirements.txt` in the intended CPU/CUDA environment. Read
+[DATA_PREPARATION.md](DATA_PREPARATION.md) to prepare ACDC or original M&Ms with
+native geometry and locked patient splits. Copy `configs/backbone.example.json`
+to a local JSON and supply the actual DINOv3 source commit, local weight path and
+SHA256. A local compatible pretrained teacher is not bundled.
 
-```bash
-git fetch origin main
-git worktree add --detach ../Self-Audit-semi-v2 origin/main
-cd ../Self-Audit-semi-v2
-python train.py --describe
-python scripts/check_repo.py
-python -m pip install -r requirements.txt
-python -m pytest -q
-```
-
-## Data and annotation budget
-
-Use your locked patient split. The parser supports explicit train/val/test lists,
-existing *_patients fields/nested patient lists, or frozen locked_splits metadata;
-conflicting representations fail. This reuses split metadata, NOT historical Q.
-The old dataset copy had duplicate content in two VAL IDs. Prefer the explicitly
-reviewed locked split for that copy; this code will not silently drop patients.
+All hashes below refer to the corresponding `MANIFEST.json` or data JSON file.
+Use a new output directory outside source data. For a patient cohort, more than
+128 planned updates requires `--allow-full-run`.
 
 ```bash
-python prepare_acdc.py --root /ABS/ACDC/training \
-  --split /ABS/locked_patient_split.json --labels 8 --seed 42 \
-  --out /ABS/cache/L8_S42
+python train.py --config configs/candidate_a/teacher_pretrain.json \
+  --model-config /private/backbone.json --data /prepared/acdc/train.json \
+  --data-sha256 "$TRAIN_SHA" --validation-data /prepared/acdc/development.json \
+  --validation-data-sha256 "$DEV_SHA" --out /runs/pretrain --device cuda --allow-full-run
+python train.py --config configs/candidate_a/teacher_warmup.json \
+  --model-config /private/backbone.json --data /prepared/acdc/train.json \
+  --data-sha256 "$TRAIN_SHA" --validation-data /prepared/acdc/development.json \
+  --validation-data-sha256 "$DEV_SHA" --teacher-checkpoint /runs/pretrain/final \
+  --teacher-checkpoint-sha256 "$PRETRAIN_SHA" --out /runs/warmup --device cuda --allow-full-run
+python train.py --config configs/candidate_a/full.json \
+  --model-config /private/backbone.json --data /prepared/acdc/train.json \
+  --data-sha256 "$TRAIN_SHA" --validation-data /prepared/acdc/development.json \
+  --validation-data-sha256 "$DEV_SHA" --teacher-checkpoint /runs/warmup/final \
+  --teacher-checkpoint-sha256 "$WARMUP_SHA" --out /runs/joint --device cuda --allow-full-run
 ```
 
-This reads GT only for the selected eight TRAIN patients. U gets complete cine
-images without GT, ED/ES selection or reference-derived ROI. `train.json` lists
-only image paths for U and pins every cached payload. `PREPARATION.json` records
-source hashes and actual mask-access patients. A failure leaves an incomplete new
-cache for inspection; it is not success. Do not overwrite an existing cache.
+For M&Ms use the planner to generate the same recipes with `dataset.name=mnms`;
+do not relabel ACDC data as M&Ms. `validation_every=1` logs development every epoch;
+set it to 0 explicitly for TRAIN-only logging. `checkpoint_every_epochs` controls
+periodic checkpoints; the final checkpoint is always saved. This is stage transfer,
+not optimizer/RNG resume.
 
-Add `--evaluation` only when separately authorizing development reference
-preparation. This makes `development.json`; the trainer never consumes it.
-NIfTI parsing uses nibabel. The output grid is native; no resizing/foreground
-resampling is hidden. The frame/cine exact voxel bridge must hold for GT alignment.
-
-## Backbone source and weights
-
-Copy `configs/backbone.example.json` to a local file and fill absolute source repo,
-exact git source commit, local DINOv3 ConvNeXt-Tiny pretrained weights and SHA256.
-Source must have no tracked modifications; weights must match. No downloads,
-external terms acceptance, supervised segmentation weights or random fallbacks are
-performed. Satisfy the pinned official source's dependencies explicitly.
+`metrics.csv` and `metrics.jsonl` contain epoch, split, model branch, class,
+Dice/F1/precision/recall, TP/FP/FN, support and absent-class status. TRAIN rows use
+online predictions across that epoch. Validation rows use frozen epoch-end model
+predictions. These metric columns are pooled over voxels and agree with the row's
+counts (`aggregation=pooled_voxels`); validation also records the separate
+`macro_patient_dice/f1/precision/recall` averages. `epochs.jsonl` summarizes epoch coverage/loss/timing;
+`updates.jsonl` records the exact patient/frame/slice and code size for each update.
+Teacher-only stages evaluate teacher branches; joint stages evaluate the student.
+Undefined values are null/empty, never silently perfect scores. Dice and F1 are
+equal for the one-vs-rest binary definition used per class.
 
 ```bash
-BANK_JSON=/ABS/cache/L8_S42/train.json
-DATA_SHA=$(python -c 'import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest())' "$BANK_JSON")
-python train.py --config configs/pilot.json --model-config /ABS/BACKBONE.json \
-  --data "$BANK_JSON" --data-sha256 "$DATA_SHA" \
-  --out /ABS/runs/semi_v2_pilot --device cuda
+python scripts/export_candidate_a.py --checkpoint /runs/joint/final \
+  --checkpoint-sha256 "$JOINT_SHA" --out /exports/student
+python evaluate.py --checkpoint /exports/student --checkpoint-sha256 "$EXPORT_SHA" \
+  --data /prepared/acdc/development.json --data-sha256 "$DEV_SHA" \
+  --out /runs/frozen-evaluation --device cuda
+python scripts/candidate_a_infer.py --checkpoint /exports/student \
+  --checkpoint-sha256 "$EXPORT_SHA" --image /inputs/context_3xHxW.npy \
+  --spacing-yx "$DY_MM" "$DX_MM" --out /predictions/example --device cuda
 ```
 
-Review STARTUP, REPORT and steps.jsonl. There must be real supervised native
-gradients, distinct supervised/audit patient IDs, correct label budget, genuine
-weight provenance and explicit accepted/rejected transactions. A successful
-software pilot is not a quality claim. `configs/full.json` uses decoder scope;
-its JVP/runtime must be profiled before the expensive run.
+Exports have student weights only, require no teacher checkpoint, and load against
+the pinned source. Evaluation freezes predictions before opening reference masks.
+Code bytes, query counts and measured inference time are reported with their scope.
+Packet roundtrip checks are included in the measured reference path.
 
-```bash
-python train.py --config configs/full.json --model-config /ABS/BACKBONE.json \
-  --data "$BANK_JSON" --data-sha256 "$DATA_SHA" \
-  --out /ABS/runs/semi_v2_full --device cuda --allow-full-run
-```
-
-No exact resume is implemented. The checkpoint contains states for audit and
-inspection, but resuming is not silently approximated. Preserve incomplete runs.
-The same local pinned backbone and source are currently required on reload.
-
-## Frozen evaluation
-
-Use the final checkpoint manifest SHA printed in REPORT.json. Evaluation hashes
-all full-cine predictions before opening any reference mask arrays. This does
-not make repeatedly used VAL an unseen confirmation set.
-
-```bash
-python evaluate.py --checkpoint /ABS/runs/semi_v2_full/final \
-  --checkpoint-sha256 VERIFIED_MANIFEST_SHA \
-  --data /ABS/cache/L8_S42/development.json --data-sha256 VERIFIED_DATA_SHA \
-  --out /ABS/runs/semi_v2_eval --device cuda
-```
-
-Default output is dense raw segmentation. `--threshold` is an optional separately
-reported gate, never a way to discard false negatives from evaluation. No weights,
-class mapping or thresholds are fitted during evaluation.
-
-```bash
-python experiments/plan.py --out /ABS/plans/semi_v2 --steps 10000
-```
-
-The resulting MATRIX.json contains templates. Resolve and verify hashes, review
-the annotation/compute budget, and execute selected commands yourself/Astra. The
-planner has no automatic execution path.
+Use [EXPERIMENTS.md](EXPERIMENTS.md) for hash-pinned ablation plans on either dataset.
+Do not treat CPU fixture checks as patient/GPU performance or a 96-Dice result.

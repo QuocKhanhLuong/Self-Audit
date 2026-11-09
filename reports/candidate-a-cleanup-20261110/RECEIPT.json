@@ -1,0 +1,48 @@
+{
+  "status": "PASS_SYNTHETIC_ONLY",
+  "base_commit": "f01add12524cf73bb15675ecfeadc1014e420210",
+  "track": "candidate_a native_2d_25d; baseline before subsequent A-3D extension",
+  "python": "3.12.16 (main, Oct 26 2026, 11:31:43) [Clang 21.1.8 ]",
+  "packages": {
+    "torch": "2.15.0",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "nibabel": "5.4.2"
+  },
+  "source_sha256": "0bdbee768b7d7e1109bacc9f14c95954b40777422966beb7484c0379db9e9192",
+  "source_files": {
+    "self_audit/__init__.py": "6822f8f8a55609332258736eb51627189b6caf9ee4ff56df67b2081033456e9b",
+    "self_audit/candidate_a/__init__.py": "64e28849cfb8638718ffadd8d54af86fd860b2c459472bba7ae67ee3b2231374",
+    "self_audit/candidate_a/bank.py": "51a7b13e4a16edfda94faca660d6aef31e57f4812786ba96afd2cab027ee8f75",
+    "self_audit/candidate_a/codec.py": "4536ae8f64ccf548d1fd68daa4eeaf083d5e11425f90521abbc3ea98cc196ded",
+    "self_audit/candidate_a/config.py": "74de22b80e0e459003a55e89bfeb3b135182de0866065a6ab2874be8ed40a015",
+    "self_audit/candidate_a/data.py": "37e8c8ad7cee554171f5429ad281ae09f9cfe381aef74d5523e0bc789365dc01",
+    "self_audit/candidate_a/engine.py": "3510e0dd311bb0577c1ae3926e2d1e40c7c5a4fcd676825f67b59e79c5eb82c9",
+    "self_audit/candidate_a/evaluation.py": "d4331b92189d10b5a62207cbcfc393a3d7c7d5e5e2cf1232fdce6111a9b60ebf",
+    "self_audit/candidate_a/io.py": "fca809ba1f3c7a0a877ef51ee437f2d6acc9667b3c75470e4ce98641cabed348",
+    "self_audit/candidate_a/k1.py": "7e3f7dbab8bd36edd6805fca9bea84f42a3a4481b4ced47e4235f0c1aa7bb38c",
+    "self_audit/candidate_a/model.py": "7e2278be0b7c8a3420a2bbe9ac895fecbd1666c5c1f06b5a4049c867503b5a70",
+    "self_audit/candidate_a/teacher.py": "0a000cf69d9014b1466744e71327fc02e8d70ff95024dc85c0beea8e2f7b22ed",
+    "self_audit/data.py": "98fd52ca7c96d161f76e3e340b00bda909cd4d542e083445bca5eb44bbe82815",
+    "self_audit/losses.py": "95f76c6ae0e2d4a4e5469a73282813262325199e691547296927a47f91e1ae79",
+    "self_audit/metrics.py": "8d844e94679b00545428eda47d5c34f12ca1afbfdf63f7cb8999695f83cac4ad",
+    "self_audit/model.py": "da9f379f2d7c48cda78e0265324a6f6911d57ee2d4ff3240e210dce4706a04f0",
+    "self_audit/preparation.py": "7b6763e58127bfe5f1c9e9bdd1047146046f12ab86e919afa8485a596b13340a",
+    "train.py": "493860aa20bee7ec3deb9b64c114a2ec320e5f6584763799d07655b217f9e3a1",
+    "evaluate.py": "4cb23f367f7a01c82c055279a6afd09057875dc35a7d57b2c962eea836764fae"
+  },
+  "export": {
+    "path": "/Users/alvinluong/orca/workspaces/Self-Audit/candidate-a-ready-20261110/runs/candidate-a-ready-validation-20261110/smoke/student",
+    "manifest_sha256": "07731ef96a17883e7fed6c3e29df9aecf7c5d08ef70082afdabbb9c1fc90884e",
+    "payload_sha256": "9002b94032eeb65023c14a7a3936ab5442d68b5da83628be880c15035c946003",
+    "synthetic": true
+  },
+  "export_bitwise_parity": true,
+  "smoke_directory": "/Users/alvinluong/orca/workspaces/Self-Audit/candidate-a-ready-20261110/runs/candidate-a-ready-validation-20261110/smoke",
+  "matrix_directory": "/Users/alvinluong/orca/workspaces/Self-Audit/candidate-a-ready-20261110/runs/candidate-a-ready-validation-20261110",
+  "pytest": "72 passed in 7.03s",
+  "ablation_jobs": 42,
+  "patient_training": "NOT_RUN",
+  "gpu_validation": "NOT_RUN",
+  "pretrained_segmentation_teacher_validation": "NOT_RUN"
+}

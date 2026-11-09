@@ -61,11 +61,6 @@ class QuantizedValues:
     levels: torch.Tensor
     values: torch.Tensor
 
-    @property
-    def dequantized(self) -> torch.Tensor:
-        return self.values
-
-
 @dataclass(frozen=True)
 class CodePacket:
     """Decoded, validated integer packet metadata."""
@@ -368,26 +363,19 @@ class MeasurementCodec:
     def incremental_cost(
         self,
         existing_ids: Sequence[int] | torch.Tensor,
-        new_id: int | None = None,
+        new_id: int,
         *,
         shape: Sequence[int] = (1, 1),
         spacing: Sequence[float] = (1.0, 1.0),
     ) -> int:
         """Actual byte-padded cost increase.
 
-        The preferred form is ``incremental_cost(existing_ids, new_id)`` for a
-        K1 trial.  ``incremental_cost(n)`` is also provided as the count-based
-        ``cost(n) - cost(n-1)`` convenience requested by the protocol.
+        The explicit ``incremental_cost(existing_ids, new_id)`` form is used
+        for K1 trials so the exact selected IDs and fixed R0 packet are
+        accounted for.
         """
-
-        if new_id is None and isinstance(existing_ids, (int, float)) and not isinstance(existing_ids, bool):
-            n = int(existing_ids)
-            if n < 0 or n != existing_ids:
-                raise ValueError("query count must be a non-negative integer")
-            return self.cost(n, shape=shape, spacing=spacing) - (self.cost(n - 1, shape=shape, spacing=spacing) if n else 0)
-
         existing = self._validate_ids(existing_ids)
-        if new_id is None or isinstance(new_id, bool) or int(new_id) != new_id:
+        if isinstance(new_id, bool) or int(new_id) != new_id:
             raise ValueError("new_id must be an integer")
         new_id = int(new_id)
         if new_id in existing or new_id in self.base_ids:
@@ -407,6 +395,3 @@ class MeasurementCodec:
         if isinstance(budget_bits, bool) or int(budget_bits) != budget_bits or int(budget_bits) < 0:
             raise ValueError("budget_bits must be a non-negative integer")
         return self.cost(ids, shape=shape, spacing=spacing) <= int(budget_bits)
-
-    is_feasible = fits
-    feasible = fits

@@ -12,11 +12,42 @@ decoded in chunks to keep the ``H*W`` cross-attention matrix bounded.
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
+import hashlib
 from typing import Any, Mapping, Sequence
 
 import torch
 from torch import Tensor, nn
+
+from .bank import QueryBank
+
+
+def _embedding_with_stable_rng(num_embeddings: int, embedding_dim: int) -> nn.Embedding:
+    """Build a bank-sized table without shifting shared initialization.
+
+    Ablations change the number of query rows.  Saving/restoring the CPU RNG
+    around each variable-size table keeps the initialization of the common
+    encoder, value head and decoder parameters identical for a matched seed.
+    The row order remains the bank's deterministic semantic order.
+    """
+
+    state = torch.random.get_rng_state()
+    try:
+        return nn.Embedding(num_embeddings, embedding_dim)
+    finally:
+        torch.random.set_rng_state(state)
+
+
+def _semantic_embedding(query_ids: Sequence[str], embedding_dim: int) -> nn.Embedding:
+    """Create ID rows from query semantics, independent of bank row numbering."""
+
+    embedding = _embedding_with_stable_rng(len(query_ids), embedding_dim)
+    with torch.no_grad():
+        for row, query_id in enumerate(query_ids):
+            seed = int.from_bytes(hashlib.sha256(query_id.encode("utf-8")).digest()[:8], "big")
+            generator = torch.Generator(device="cpu").manual_seed(seed)
+            embedding.weight[row].copy_(torch.randn(embedding_dim, generator=generator))
+    return embedding
 
 
 @dataclass(frozen=True)
@@ -41,15 +72,12 @@ class StudentConfig:
             raise ValueError("chunk_size must be positive")
 
 
-def _kind_code(kind: Any) -> int:
-    text = str(kind).upper()
-    return int(text in {"BOUNDARY", "B", "1"} or "BOUND" in text or "DIST" in text)
-
-
-def _query_id(query: Any) -> Any:
-    if isinstance(query, Mapping):
-        return query.get("id", query.get("query_id"))
-    return getattr(query, "id", getattr(query, "query_id", query))
+def _kind_code(kind: str) -> int:
+    if kind == "REGION":
+        return 0
+    if kind == "BOUNDARY":
+        return 1
+    raise ValueError(f"unknown query kind: {kind!r}")
 
 
 class CandidateAStudent(nn.Module):
@@ -64,47 +92,24 @@ class CandidateAStudent(nn.Module):
         Architecture-only :class:`StudentConfig`.
     """
 
-    def __init__(self, bank: Any, config: StudentConfig) -> None:
+    def __init__(self, bank: QueryBank, config: StudentConfig) -> None:
         super().__init__()
         if not isinstance(config, StudentConfig):
             raise TypeError("config must be StudentConfig; bank/codec/rollout fields do not belong here")
+        if not isinstance(bank, QueryBank):
+            raise TypeError("bank must be a QueryBank")
         self.bank = bank
         self.config = config
-        try:
-            queries = tuple(bank)
-        except TypeError as exc:
-            raise TypeError("bank must be a finite iterable of query records") from exc
+        queries = tuple(bank)
         if not queries:
             raise ValueError("query bank must not be empty")
-        self.query_ids = tuple(_query_id(q) for q in queries)
-        if any(q is None for q in self.query_ids) or len(set(self.query_ids)) != len(self.query_ids):
-            raise ValueError("bank query IDs must be unique and non-null")
+        self.query_ids = tuple(q.query_id for q in queries)
         self._id_to_index = {query_id: index for index, query_id in enumerate(self.query_ids)}
         self.num_queries = len(self.query_ids)
-        self.query_kinds = torch.tensor([_kind_code(getattr(q, "kind", q.get("kind", q.get("type")))
-                                                  if isinstance(q, Mapping)
-                                                  else getattr(q, "kind", getattr(q, "type", "REGION")))
-                                        for q in queries], dtype=torch.long)
-        try:
-            descriptors = bank.descriptors(device="cpu", dtype=torch.float32)
-        except TypeError:
-            descriptors = bank.descriptors()
-        descriptors = torch.as_tensor(descriptors, dtype=torch.float32)
-        if descriptors.ndim != 2 or descriptors.shape[0] != self.num_queries:
-            raise ValueError(f"bank descriptors must have shape [{self.num_queries}, D]")
-        # QueryBank controls may intentionally restrict the foreground class
-        # set.  Its canonical layout is ``type(2), class(C), (u,v,scale)``;
-        # embed C<3 controls into the fixed three-class student descriptor
-        # without inventing a location/type value.  Arbitrary dimensions are
-        # rejected rather than silently truncated.
-        if descriptors.shape[1] != 8:
-            class_count = descriptors.shape[1] - 5
-            if class_count not in (1, 2) or descriptors.shape[1] < 6:
-                raise ValueError(f"bank descriptors must have fixed canonical dimension 8 (received {tuple(descriptors.shape)})")
-            canonical = torch.zeros((self.num_queries, 8), dtype=descriptors.dtype)
-            canonical[:, : 2 + class_count] = descriptors[:, : 2 + class_count]
-            canonical[:, 5:] = descriptors[:, 2 + class_count :]
-            descriptors = canonical
+        self.query_kinds = torch.tensor([_kind_code(q.kind) for q in queries], dtype=torch.long)
+        descriptors = bank.descriptors(device="cpu", dtype=torch.float32)
+        if descriptors.shape != (self.num_queries, 8):
+            raise ValueError(f"bank descriptors must have canonical shape [{self.num_queries}, 8]")
         if not torch.isfinite(descriptors).all():
             raise ValueError("bank descriptors must be finite")
         self.register_buffer("query_descriptors", descriptors, persistent=True)
@@ -123,9 +128,9 @@ class CandidateAStudent(nn.Module):
         # The policy and decoder use learned ID/type descriptors in addition
         # to the fixed bank metadata.  IDs are index-backed internally while
         # public K1 code IDs remain the bank's stable strings.
-        self.id_embedding = nn.Embedding(self.num_queries, d)
+        self.id_embedding = _semantic_embedding(self.query_ids, d)
         self.type_embedding = nn.Embedding(2, d)
-        self.policy_id_embedding = nn.Embedding(self.num_queries, w)
+        self.policy_id_embedding = _semantic_embedding(self.query_ids, w)
         self.policy_type_embedding = nn.Embedding(2, w)
         self.value_embedding = nn.Sequential(nn.Linear(1, d), nn.GELU(), nn.Linear(d, d))
         self.policy_value_embedding = nn.Sequential(nn.Linear(1, w), nn.GELU(), nn.Linear(w, w))
@@ -151,6 +156,8 @@ class CandidateAStudent(nn.Module):
             raw = list(ids)
         result = []
         for query_id in raw:
+            if isinstance(query_id, bool):
+                raise ValueError("query IDs must be integer indices or bank query strings")
             if query_id in self._id_to_index:
                 result.append(self._id_to_index[query_id])
             elif isinstance(query_id, int) and 0 <= query_id < self.num_queries:
@@ -175,8 +182,6 @@ class CandidateAStudent(nn.Module):
             rows = [code_ids] * batch
         result = []
         for row in rows:
-            if isinstance(row, Tensor):
-                row = row[row >= 0] if row.ndim == 1 and row.dtype in (torch.int8, torch.int16, torch.int32, torch.int64) else row
             result.append(self._indices(row, device=device))
         return result
 
@@ -209,18 +214,13 @@ class CandidateAStudent(nn.Module):
             raise ValueError("image contains NaN or Inf")
         return self.encoder(x)
 
-    features = encode
-
-    def predict_values(self, features: Tensor, *, quantize: bool | None = None) -> Tensor:
+    def predict_values(self, features: Tensor) -> Tensor:
         """Return raw bounded student values, before codec quantization.
 
-        ``quantize`` is accepted only as a source-compatibility shim for an
-        older K1 caller that passed ``quantize=False``.  Quantization is always
-        performed by ``MeasurementCodec``; ``quantize=True`` is rejected so a
-        second model-side codec cannot silently enter the training path.
+        Quantization is performed by :class:`MeasurementCodec` after this
+        method returns; model-side quantization would make the bit protocol
+        ambiguous.
         """
-        if quantize is True:
-            raise ValueError("student values are raw; use MeasurementCodec.quantize_values")
         if features.ndim != 4 or features.shape[1] != self.config.width:
             raise ValueError("expected encoder features [B,width,H,W]")
         pooled = features.mean(dim=(-2, -1))
@@ -333,8 +333,6 @@ class CandidateAStudent(nn.Module):
                chunk_size: int | None = None) -> Tensor:
         """Decode only IDs, quantized values and public geometry to logits."""
         device = next(self.parameters()).device
-        if isinstance(code_values, Tensor):
-            device = code_values.device
         if isinstance(code_ids, Tensor) and code_ids.ndim == 2:
             batch = code_ids.shape[0]
         elif isinstance(code_ids, Sequence) and not isinstance(code_ids, (str, bytes)) and code_ids and isinstance(code_ids[0], (list, tuple, Tensor)):
@@ -364,23 +362,3 @@ class CandidateAStudent(nn.Module):
             flat = torch.cat(pieces, dim=0)
             outputs.append(flat.transpose(0, 1).reshape(self.config.num_classes, h, w))
         return torch.stack(outputs, dim=0)
-
-    # -------------------------------------------------------------- export aid
-    def export_student(self) -> dict[str, Any]:
-        """Teacher-free in-memory export; filesystem/checkpoint policy is in io.py."""
-        return {"format": "candidate_a_student_v1", "config": asdict(self.config),
-                "state_dict": {k: v.detach().cpu() for k, v in self.state_dict().items()}}
-
-    @classmethod
-    def from_export(cls, payload: Mapping[str, Any], bank: Any, *, map_location: str | torch.device = "cpu") -> "CandidateAStudent":
-        if payload.get("format") not in (None, "candidate_a_student_v1"):
-            raise ValueError("unsupported student export format")
-        model = cls(bank, StudentConfig(**payload["config"]))
-        state = {k: v.to(map_location) if isinstance(v, Tensor) else v for k, v in payload["state_dict"].items()}
-        model.load_state_dict(state, strict=True)
-        return model
-
-
-# Existing candidate-A integration names this class CandidateStudent.
-CandidateStudent = CandidateAStudent
-StudentModel = CandidateAStudent

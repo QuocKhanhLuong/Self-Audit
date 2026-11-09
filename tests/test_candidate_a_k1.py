@@ -1,6 +1,7 @@
 """Focused K1 contracts; all fixtures are manufactured CPU tensors."""
 
 import torch
+import pytest
 from types import MethodType
 
 from self_audit.candidate_a.bank import BankConfig, QueryBank
@@ -107,6 +108,23 @@ def test_student_only_action_is_independent_of_teacher_proposal_settings():
     assert first.code_ids == second.code_ids
 
 
+@pytest.mark.parametrize("bad_value", [float("nan"), float("inf"), float("-inf")])
+def test_nonfinite_feasible_action_cannot_enter_rollout(bad_value):
+    bank = tiny_bank(); codec = MeasurementCodec(bank, value_bits=4, base_ids=(0,))
+    model = tiny_student(bank, codec)
+
+    def policy(self, features, code_ids, code_values, remaining_bits=None):
+        row = torch.zeros((1, len(bank) + 1), device=features.device)
+        row[:, 1] = bad_value
+        return row
+
+    model.policy_logits = MethodType(policy, model)
+    with pytest.raises(FloatingPointError):
+        student_rollout(model, torch.rand(1, 3, 6, 7), bank, codec=codec, geometry=geom(),
+                        config=K1Config(max_steps=1, student_topk=0, teacher_topk=0,
+                                        random_candidates=0, bit_budget=1024, baseline_ids=(0,)))
+
+
 class SpyDecoder:
     def __init__(self, codec):
         self.codec = codec
@@ -128,7 +146,7 @@ def test_trial_uses_quantized_student_value_and_one_decoder_state():
     labels = torch.ones(1, 6, 7, dtype=torch.long)
     utilities = trial_utilities(
         spy, current_ids=(0,), current_values=current, candidate_ids=(1, STOP_ID),
-        student_values=student_values, labels=labels, bank=bank, codec=codec,
+        student_values=student_values, labels=labels, codec=codec,
         geometry=geom(), lambda_cost=0.0,
     )
     expected = codec.quantize_values(student_values[:, 1:2], (1,), ste=False).values[:, 0]
@@ -186,3 +204,77 @@ def test_random_control_disables_policy_loss_and_student_only_inference_has_no_t
     )
     assert inference.final_logits.shape == (1, 4, 6, 7)
     assert inference.code_values.shape[1] == inference.query_count
+
+
+def test_teacher_adapter_consumes_dual_branch_logits_without_geometry_argument():
+    bank = tiny_bank(); codec = MeasurementCodec(bank, value_bits=4, base_ids=(0,))
+    model = tiny_student(bank, codec).eval()
+    x = torch.rand(1, 3, 6, 7)
+
+    class Teacher:
+        def __call__(self, image):
+            shape = image.shape[-2:]
+            return {
+                "region_logits": torch.zeros(1, 4, *shape),
+                "boundary_logits": torch.zeros(1, 4, *shape),
+                "sdf": torch.zeros(1, 4, *shape),
+            }
+
+    result = student_rollout(model, x, bank, codec=codec, geometry=geom(),
+                             config=K1Config(max_steps=1, bit_budget=1024, baseline_ids=(0,)),
+                             teacher=Teacher())
+    assert result.final_logits.shape == (1, 4, 6, 7)
+
+
+def test_teacher_proposal_type_ablation_filters_only_teacher_candidates():
+    bank = tiny_bank(); codec = MeasurementCodec(bank, value_bits=4, base_ids=(0,))
+    model = tiny_student(bank, codec).eval()
+    x = torch.rand(1, 3, 6, 7)
+    values = model.predict_values(model.encode(x)).detach()
+    teacher_values = values.clone()
+    boundary_id = next(q.index for q in bank if q.kind == "BOUNDARY")
+    teacher_values[:, boundary_id] += 1.0
+    result = student_rollout(
+        model, x, bank, codec=codec, geometry=geom(), teacher_values=teacher_values,
+        config=K1Config(max_steps=1, candidate_limit=2, teacher_topk=1, student_topk=0,
+                        random_candidates=0, teacher_proposal_types=("REGION",), bit_budget=1024,
+                        baseline_ids=(0,)),
+    )
+    assert all(bank.query(i).kind == "REGION" for i in result.traces[0].candidate_ids if i != STOP_ID)
+
+
+def test_candidate_streams_round_robin_each_teacher_type_student_and_random():
+    bank = tiny_bank(); codec = MeasurementCodec(bank, value_bits=4, base_ids=(0,))
+    model = tiny_student(bank, codec).eval()
+    x = torch.rand(1, 3, 6, 7)
+    features = model.encode(x)
+    student_values = model.predict_values(features).detach()
+    teacher_values = student_values.clone()
+    region_id = next(q.index for q in bank if q.kind == "REGION" and q.index != 0)
+    boundary_id = next(q.index for q in bank if q.kind == "BOUNDARY")
+    region_value = student_values[:, region_id]
+    teacher_values[:, region_id] = torch.where(
+        region_value < 0.9, region_value + 0.1, region_value - 0.1
+    )
+    boundary_value = student_values[:, boundary_id]
+    teacher_values[:, boundary_id] = torch.where(
+        boundary_value >= 0, -torch.ones_like(boundary_value), torch.ones_like(boundary_value)
+    )
+
+    def policy(self, features, code_ids, code_values, remaining_bits=None):
+        row = torch.full((1, len(bank) + 1), -100.0, device=features.device)
+        row[:, 2] = 100.0  # student stream's distinct top query
+        return row
+
+    model.policy_logits = MethodType(policy, model)
+    result = student_rollout(
+        model, x, bank, codec=codec, geometry=geom(), teacher_values=teacher_values,
+        config=K1Config(max_steps=1, candidate_limit=5, teacher_topk=1,
+                        student_topk=1, random_candidates=1, seed=0,
+                        bit_budget=1024, baseline_ids=(0,)),
+    )
+    non_stop = tuple(i for i in result.traces[0].candidate_ids if i != STOP_ID)
+    assert len(non_stop) == 4
+    assert set(non_stop) == {region_id, boundary_id, 2, 5}
+    assert bank.query(region_id).kind == "REGION"
+    assert bank.query(boundary_id).kind == "BOUNDARY"

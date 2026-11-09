@@ -25,13 +25,10 @@ from torch import Tensor, nn
 from torch.nn import functional as F
 
 from ..losses import supervised_loss
-from ..model import Residual, build_model
+from ..model import CenterDifference, Residual, TinyEncoder, build_backbone
 
 
 CLASS_NAMES = ("BG", "RV", "MYO", "LV")
-TEACHER_CHECKPOINT_SCHEMAS = frozenset(
-    {"self_audit.teacher.v1", "self_audit.candidate_a.teacher.v1"}
-)
 
 
 def _as_config(modelconfig: Mapping[str, Any] | str | Path) -> dict[str, Any]:
@@ -171,13 +168,13 @@ class DualBranchTeacher(nn.Module):
         super().__init__()
         if num_classes != 4:
             raise ValueError("Candidate A requires exactly four classes")
-        if len(widths) != 4 or any(int(w) <= 0 or int(w) % 8 for w in widths):
+        if len(widths) != 4 or any(type(w) is not int or w <= 0 or w % 8 for w in widths):
             raise ValueError("teacher widths must be four positive multiples of 8")
         self.encoder = encoder
         self.input_adapter = input_adapter
         self.widths = tuple(int(w) for w in widths)
         self.num_classes = int(num_classes)
-        self.class_mapping = tuple(class_mapping)
+        self.class_mapping = _canonical_mapping(class_mapping, field="class_mapping")
         self.segmentation_ready = False
         self._encoder_frozen = False
 
@@ -233,11 +230,6 @@ class DualBranchTeacher(nn.Module):
             )
         return shared, raw, (height, width)
 
-    def encode_shared(self, x: Tensor) -> Tensor:
-        """Return the common feature while executing the encoder exactly once."""
-
-        return self._shared_features(x)[0]
-
     def train(self, mode: bool = True) -> "DualBranchTeacher":
         """Preserve warm-up encoder freezing across caller ``train()`` calls."""
 
@@ -246,11 +238,6 @@ class DualBranchTeacher(nn.Module):
             self.encoder.eval()
             self.encoder.requires_grad_(False)
         return self
-
-    def set_stage(self, stage: str, freeze: bool = False) -> "DualBranchTeacher":
-        """Method form of :func:`set_teacher_stage` for runtime callers."""
-
-        return set_teacher_stage(self, stage, freeze=freeze)
 
     def forward(self, x: Tensor) -> dict[str, Tensor]:
         shared, raw, original_shape = self._shared_features(x)
@@ -275,7 +262,7 @@ def _copy_native_module_state(
     *,
     label: str,
 ) -> None:
-    """Copy one compatible module from a ``NativeStudent`` state dict."""
+    """Copy one compatible module from a legacy native state dict."""
 
     source = {key[len(prefix):]: value for key, value in native_state.items() if key.startswith(prefix)}
     expected = module.state_dict()
@@ -297,7 +284,7 @@ def _load_native_initialization(
     class_mapping: tuple[str, ...],
     mapping_explicit: bool,
 ) -> dict[str, Any]:
-    """Load shared modules from an already hash-verified NativeStudent state.
+    """Load shared modules from an already hash-verified legacy native state.
 
     The native v2 checkpoint has no ontology field in its historical manifest.
     Therefore the caller must provide ``class_mapping`` explicitly for this
@@ -335,94 +322,19 @@ def _load_native_initialization(
     }
 
 
-def _load_teacher_state(
-    teacher: DualBranchTeacher,
-    state: Mapping[str, Tensor],
-    metadata: Mapping[str, Any],
-    *,
-    class_mapping: tuple[str, ...],
-) -> dict[str, Any]:
-    schema = metadata.get("schema")
-    if schema not in TEACHER_CHECKPOINT_SCHEMAS:
-        raise ValueError("unsupported or missing Candidate-A teacher checkpoint schema")
-    if metadata.get("model_class") != "DualBranchTeacher":
-        raise ValueError("teacher checkpoint model_class must be DualBranchTeacher")
-    declared_mapping = metadata.get("class_mapping")
-    if declared_mapping is None:
-        raise ValueError("teacher checkpoint lacks explicit class_mapping")
-    if _canonical_mapping(declared_mapping, field="teacher checkpoint class_mapping") != class_mapping:
-        raise ValueError("teacher checkpoint class mapping conflicts with configuration")
-    if int(metadata.get("num_classes", 4)) != 4:
-        raise ValueError("teacher checkpoint class count is incompatible")
-    try:
-        teacher.load_state_dict(dict(state), strict=True)
-    except RuntimeError as exc:
-        raise ValueError(f"teacher checkpoint architecture mismatch: {exc}") from exc
-    teacher.segmentation_ready = True
-    return {
-        "model_class": "DualBranchTeacher",
-        "schema": schema,
-        "state_scope": "full_teacher",
-        "class_mapping": list(class_mapping),
-        "hash_verification": "performed_by_caller_or_build_teacher_file_loader",
-    }
-
-
-def _read_teacher_checkpoint(
-    checkpoint: str | Path,
-    config: Mapping[str, Any],
-) -> tuple[Mapping[str, Tensor], Mapping[str, Any], dict[str, Any]]:
-    """Read a file checkpoint when explicitly requested.
-
-    The canonical v2 native loader normally verifies manifest and payload
-    hashes before calling :func:`build_teacher`; this convenience path still
-    requires a config SHA256 and the Candidate-A schema, and never accepts a
-    native v2 student/EMA file as a teacher checkpoint.
-    """
-
-    path = Path(checkpoint).expanduser().resolve()
-    if not path.is_file():
-        raise FileNotFoundError(f"teacher checkpoint not found: {path}")
-    expected = config.get("segmentation_checkpoint_sha256")
-    if not isinstance(expected, str) or len(expected) != 64:
-        raise ValueError("segmentation_checkpoint_sha256 is required for file loading")
-    import hashlib
-
-    hasher = hashlib.sha256()
-    with path.open("rb") as stream:
-        for block in iter(lambda: stream.read(1024 * 1024), b""):
-            hasher.update(block)
-    actual = hasher.hexdigest()
-    if actual != expected:
-        raise ValueError("segmentation checkpoint hash mismatch")
-    try:
-        payload = torch.load(path, map_location="cpu", weights_only=True)
-    except TypeError:  # pragma: no cover - compatibility with older torch
-        payload = torch.load(path, map_location="cpu")
-    if not isinstance(payload, Mapping):
-        raise ValueError("teacher checkpoint must contain a dictionary")
-    if payload.get("schema") == "self_audit.checkpoint.v2":
-        raise ValueError("native v2 student/EMA checkpoint is not a Candidate-A teacher checkpoint")
-    state = payload.get("state_dict")
-    if not isinstance(state, Mapping):
-        raise ValueError("teacher checkpoint must contain state_dict")
-    return state, payload, {"path": str(path), "sha256": actual}
-
-
 def build_teacher(
     modelconfig: Mapping[str, Any] | str | Path,
     *,
     synthetic: bool = False,
     native_state: Mapping[str, Tensor] | None = None,
     native_metadata: Mapping[str, Any] | None = None,
-    segmentation_checkpoint: str | Path | Mapping[str, Any] | None = None,
 ) -> tuple[DualBranchTeacher, dict[str, Any]]:
     """Build Candidate-A teacher and return ``(teacher, provenance)``.
 
-    ``build_model`` performs existing hash-pinned DINOv3 validation.  A
-    missing segmentation checkpoint is allowed for the explicit teacher
-    pretrain stage; provenance then says that only the backbone is pretrained.
-    ``native_state`` is an already verified NativeStudent state.  It initializes
+    ``build_backbone`` performs existing hash-pinned DINOv3 validation.  A
+    teacher branches are initialized from the verified backbone and require
+    supervised Candidate-A pretraining before joint student updates.
+    ``native_state`` is an already verified legacy native state.  It initializes
     shared encoder/projection modules only, while the two Candidate-A branches
     and heads remain new trainable parameters.
     """
@@ -439,16 +351,15 @@ def build_teacher(
         else CLASS_NAMES
     )
 
-    base, backbone_meta = build_model(config, synthetic=synthetic)
-    widths = tuple(int(layer.out_channels) for layer in base.lateral)
+    encoder, backbone_meta = build_backbone(config, synthetic=synthetic)
+    widths = (8, 16, 24, 32) if tuple(encoder.channels) == TinyEncoder.channels else (96, 128, 192, 256)
     teacher = DualBranchTeacher(
-        base.encoder,
-        base.input_adapter,
+        encoder,
+        CenterDifference(),
         widths=widths,
         num_classes=classes,
         class_mapping=class_mapping,
     )
-    del base
 
     native_meta: dict[str, Any] | None = None
     if native_state is not None:
@@ -462,27 +373,6 @@ def build_teacher(
             mapping_explicit=mapping_explicit,
         )
 
-    full_meta: dict[str, Any] | None = None
-    if segmentation_checkpoint is None:
-        segmentation_checkpoint = config.get("segmentation_checkpoint")
-    if segmentation_checkpoint is not None:
-        if isinstance(segmentation_checkpoint, Mapping):
-            payload = dict(segmentation_checkpoint)
-            state = payload.get("state_dict")
-            if not isinstance(state, Mapping):
-                raise ValueError("segmentation_checkpoint mapping must contain state_dict")
-            metadata = payload.get("metadata", payload)
-            if not isinstance(metadata, Mapping):
-                raise ValueError("segmentation checkpoint metadata must be a mapping")
-            full_meta = _load_teacher_state(teacher, state, metadata, class_mapping=class_mapping)
-        else:
-            state, payload, file_meta = _read_teacher_checkpoint(segmentation_checkpoint, config)
-            metadata = payload.get("metadata", payload)
-            if not isinstance(metadata, Mapping):
-                raise ValueError("segmentation checkpoint metadata must be a mapping")
-            full_meta = _load_teacher_state(teacher, state, metadata, class_mapping=class_mapping)
-            full_meta.update(file_meta)
-
     provenance = {
         "model_class": "DualBranchTeacher",
         "architecture": "shared_native_encoder_region_context_boundary_detail_sdf",
@@ -490,15 +380,10 @@ def build_teacher(
         "class_mapping": list(class_mapping),
         "class_mapping_source": "explicit_config" if mapping_explicit else "active_v2_fixed_ontology",
         "backbone_pretrained": bool(backbone_meta.get("pretrained", False)),
-        "segmentation_pretrained": full_meta is not None,
-        "pretrained_claim": (
-            "hash_pinned_candidate_a_segmentation_teacher"
-            if full_meta is not None
-            else "backbone_initialization_only;segmentation_training_required"
-        ),
+        "segmentation_pretrained": False,
+        "pretrained_claim": "backbone_initialization_only;segmentation_training_required",
         "backbone": backbone_meta,
         "native_initialization": native_meta,
-        "segmentation_checkpoint": full_meta,
         "synthetic": bool(synthetic),
     }
     teacher.provenance = copy.deepcopy(provenance)
@@ -593,7 +478,6 @@ def set_teacher_stage(teacher: DualBranchTeacher, stage: str, freeze: bool = Fal
 
 __all__ = [
     "CLASS_NAMES",
-    "TEACHER_CHECKPOINT_SCHEMAS",
     "DualBranchTeacher",
     "build_teacher",
     "set_teacher_stage",

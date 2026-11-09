@@ -30,15 +30,18 @@ def test_sheared_geometry_is_rejected():
         native_geometry_zyx(affine, (2, 3, 4))
 
 
-def test_candidate_wrapper_returns_anisotropic_spacing_and_is_deterministic(tmp_path):
+def test_candidate_wrapper_returns_anisotropic_spacing_and_deterministic_slice_keys(tmp_path):
     fixture = synthetic_candidate_a_fixture(tmp_path / "fixture")
     data = CandidateAData(fixture["train"], fixture["train_sha256"], synthetic=True)
-    x1, y1, spacing1, patient1 = data.sample_labeled(0, np.random.default_rng(77))
-    x2, y2, spacing2, patient2 = data.sample_labeled(0, np.random.default_rng(77))
+    keys1 = data.labeled_slice_keys()
+    keys2 = data.labeled_slice_keys()
+    assert keys1 == keys2
+    x1, y1, spacing1, metadata1 = data.load_labeled_slice(keys1[0])
+    x2, y2, spacing2, metadata2 = data.load_labeled_slice(keys2[0])
     np.testing.assert_array_equal(x1.numpy(), x2.numpy())
     np.testing.assert_array_equal(y1.numpy(), y2.numpy())
     assert spacing1 == (0.7, 1.3) and spacing2 == spacing1
-    assert patient1 == patient2
+    assert metadata1 == metadata2
     assert tuple(x1.shape) == (1, 3, 12, 13)
     assert tuple(y1.shape) == (1, 12, 13)
 
@@ -71,6 +74,35 @@ def test_u_mask_and_class_mapping_contract_remain_strict(tmp_path):
     write_json(bad_mapping, manifest)
     with pytest.raises(ValueError, match="class_mapping"):
         TrainingData(bad_mapping, digest(bad_mapping), synthetic=True)
+
+
+def test_mask_frame_keys_are_canonical_and_unique(tmp_path):
+    fixture = synthetic_candidate_a_fixture(tmp_path / "fixture")
+    manifest = json.loads(fixture["train"].read_text())
+    record = manifest["labeled"][0]
+    first = record["masks"].pop("0")
+    record["masks"]["01"] = first
+    malformed = fixture["train"].parent / "malformed_frames.json"
+    write_json(malformed, manifest)
+    with pytest.raises(ValueError, match="canonical decimal"):
+        TrainingData(malformed, digest(malformed), synthetic=True)
+
+
+def test_dense_epoch_preflight_rejects_ignore_pixels(tmp_path):
+    fixture = synthetic_candidate_a_fixture(tmp_path / "fixture")
+    manifest = json.loads(fixture["train"].read_text())
+    record = manifest["labeled"][0]
+    mask_record = record["masks"]["0"]
+    mask_path = fixture["train"].parent / mask_record["path"]
+    mask = np.load(mask_path)
+    mask[0, 0, 0] = 255
+    np.save(mask_path, mask)
+    mask_record["sha256"] = digest(mask_path)
+    malformed = fixture["train"].parent / "ignore_pixel.json"
+    write_json(malformed, manifest)
+    data = CandidateAData(malformed, digest(malformed), synthetic=True)
+    with pytest.raises(ValueError, match="dense TRAIN masks"):
+        data.labeled_slice_keys()
 
 
 def test_fixture_train_and_evaluation_ids_are_disjoint(tmp_path):

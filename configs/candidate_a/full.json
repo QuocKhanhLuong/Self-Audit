@@ -1,8 +1,8 @@
 {
-  "schema": "self_audit.candidate_a.v1",
+  "schema": "self_audit.candidate_a.v2",
   "method": "candidate_a",
   "stage": "joint",
-  "steps": 32,
+  "epochs": 100,
   "seed": 42,
   "threads": 2,
   "student_lr": 0.0003,
@@ -30,6 +30,12 @@
     "MYO",
     "LV"
   ],
+  "dataset": {
+    "name": "acdc",
+    "protocol": "native_2d_25d"
+  },
+  "validation_every": 1,
+  "checkpoint_every_epochs": 1,
   "augmentation": "aligned_flip",
   "bank": {
     "classes": [
@@ -67,7 +73,7 @@
   },
   "rollout": {
     "max_steps": 8,
-    "candidate_limit": 8,
+    "candidate_limit": 9,
     "teacher_topk": 2,
     "student_topk": 2,
     "random_candidates": 2,
@@ -82,7 +88,11 @@
     "seed": 42,
     "policy_mode": "learned",
     "sample_policy": true,
-    "policy_enabled": true
+    "policy_enabled": true,
+    "teacher_proposal_types": [
+      "REGION",
+      "BOUNDARY"
+    ]
   },
   "loss": {
     "region": 1.0,

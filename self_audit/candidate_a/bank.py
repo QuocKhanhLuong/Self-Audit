@@ -35,14 +35,6 @@ _MEASUREMENT_TYPES = ("REGION", "BOUNDARY")
 _IGNORE_INDEX = 255
 
 
-def _as_pair(value: Sequence[int | float], name: str) -> tuple[float, float]:
-    if isinstance(value, torch.Tensor):
-        value = value.detach().cpu().tolist()
-    if len(value) != 2:
-        raise ValueError(f"{name} must contain exactly two values")
-    return float(value[0]), float(value[1])
-
-
 def _grid_pair(value: Sequence[int], name: str) -> tuple[int, int]:
     if isinstance(value, torch.Tensor):
         value = value.detach().cpu().tolist()
@@ -124,10 +116,6 @@ class Query:
     v: float
     scale: float
     query_id: str
-
-    @property
-    def id(self) -> str:
-        return self.query_id
 
     def canonical(self) -> dict:
         return {
@@ -287,18 +275,9 @@ class QueryBank:
         canonical = {"config": self.config.canonical(), "queries": [q.canonical() for q in self.queries]}
         encoded = json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode("utf-8")
         self.fingerprint = hashlib.sha256(encoded).hexdigest()
-        # Explicit aliases keep the bank usable by the reference student while
-        # preserving ``len(bank)`` as the canonical count.  No learned or
-        # encoder-derived state is attached here.
-        self.num_queries = len(self.queries)
 
     def __len__(self) -> int:
         return len(self.queries)
-
-    def query_types(self) -> tuple[str, ...]:
-        """Per-query measurement kinds for the student policy."""
-
-        return tuple(q.kind for q in self.queries)
 
     def __iter__(self):
         return iter(self.queries)

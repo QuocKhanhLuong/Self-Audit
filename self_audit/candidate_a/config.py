@@ -6,19 +6,28 @@ from . import SCHEMA, CLASS_MAPPING
 
 def validate_config(config):
     c = deepcopy(config)
-    fields = {"schema", "method", "stage", "steps", "seed", "threads", "student_lr",
+    fields = {"schema", "method", "stage", "epochs", "seed", "threads", "student_lr",
               "teacher_lr", "weight_decay", "teacher_update_every", "freeze_teacher",
               "use_teacher", "lambda_distance", "model", "teacher_init", "bank",
-              "codec", "student", "rollout", "loss", "class_mapping", "augmentation"}
+              "codec", "student", "rollout", "loss", "class_mapping", "augmentation",
+              "dataset", "validation_every", "checkpoint_every_epochs"}
     if set(c) != fields or c["schema"] != SCHEMA or c["method"] != "candidate_a":
-        raise ValueError("expected exact candidate-A v1 config; unknown/missing fields rejected")
+        raise ValueError("expected exact candidate-A v2 config; unknown/missing fields rejected")
     if c["stage"] not in {"teacher_pretrain", "teacher_warmup", "joint"}:
         raise ValueError("invalid candidate-A stage")
     if c["class_mapping"] != CLASS_MAPPING:
         raise ValueError("required class mapping: BG=0 RV=1 MYO=2 LV=3")
-    for k in ("steps", "seed", "threads", "teacher_update_every"):
+    for k in ("epochs", "seed", "threads", "teacher_update_every"):
         if type(c[k]) is not int or c[k] < (0 if k == "seed" else 1):
             raise ValueError(f"invalid {k}")
+    if set(c["dataset"]) != {"name", "protocol"} or c["dataset"]["name"] not in {"acdc", "mnms"}:
+        raise ValueError("dataset.name must be acdc or mnms")
+    if c["dataset"]["protocol"] != "native_2d_25d":
+        raise ValueError("candidate A currently supports only native_2d_25d")
+    if type(c["validation_every"]) is not int or c["validation_every"] < 0:
+        raise ValueError("validation_every must be a non-negative integer")
+    if type(c["checkpoint_every_epochs"]) is not int or c["checkpoint_every_epochs"] < 0:
+        raise ValueError("checkpoint_every_epochs must be a non-negative integer")
     for k in ("student_lr", "teacher_lr", "weight_decay", "lambda_distance"):
         if isinstance(c[k], bool) or not isinstance(c[k], (int, float)) or not math.isfinite(c[k]) or c[k] < 0:
             raise ValueError(f"invalid {k}")

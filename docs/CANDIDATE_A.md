@@ -1,83 +1,109 @@
-# Candidate A: typed measurement code
+# Candidate A: implementation contract
 
-This opt-in implementation follows A1–A3 of the supplied design. It is a new experimental method behind `train.py`, selected by `method: candidate_a`. The default native v2 `joint_guard` trainer and its transaction/EMA semantics remain separate. Candidate A currently uses the declared dense labeled TRAIN subset; U images are recorded for split integrity but are **unused**. It is neither no-GT training nor a validated semi-supervised improvement.
+This is the active training method. See [RUNBOOK.md](RUNBOOK.md) for commands,
+[DATA_PREPARATION.md](DATA_PREPARATION.md) for ACDC/original M&Ms, and
+[EXPERIMENTS.md](EXPERIMENTS.md) for component ablations.
 
-The teacher proposes useful measurement IDs. It does not supply code values or fused feature tensors to the student decoder. No result here establishes novelty, patient accuracy, SOTA, 96 Dice, or clinical usefulness.
+## Tensors and geometry
 
-## Inputs and geometry
+- Cached cine: `[T,Z,Y,X]`, normalized by per-cine 0.5/99.5 percentiles.
+- Teacher/student input: identical `[1,3,H,W]`, three neighboring slices with
+  replicated end slices. Target: central `[1,H,W]` dense mask.
+- Ontology: BG=0, RV=1, MYO=2, LV=3. Source M&Ms semantic IDs are remapped explicitly.
+- Teacher outputs: region and boundary logits `[1,4,H,W]`, normalized SDF
+  `[1,4,H,W]`. Branch processing is separate; the boundary path retains native detail.
+- Student predicted measurement values: `[1,Q]`. The reference rollout supports
+  one image at a time; full-volume evaluation loops over frames/slices.
 
-The existing cache is normalized `[T,Z,Y,X]`. Both teacher and student receive the **same** `[1,3,H,W]` context (`z-1,z,z+1`, replicated at volume ends), and predict the central `[1,H,W]` mask. Labels retain `0=BG, 1=RV, 2=MYO, 3=LV`. The native aligned horizontal flip is applied jointly to image and label; positive in-plane axis lengths remain unchanged. There is no resize/resampling or label-dependent query placement.
+Native in-plane spacing and orthogonal affine are required. No resize, ROI from
+GT, or inferred isotropic spacing is used. Horizontal flip applies to both image
+and label; lengths remain unchanged. SDFs are **2D in-plane** physical distances
+to observed pixel-cell interface segments, with half-pixel edges and anisotropic
+spacing. They are negative inside, positive outside, normalized by the fixed
+`radius_mm`, then clipped to `[-1,1]`. No FOV edge is invented as an anatomical
+boundary. Absent classes give REGION=0 and BOUNDARY=+1; full-FOV classes give
+BOUNDARY=-1. Measurement targets require dense labels and reject ignore=255.
 
-`prepare_acdc.py` now writes a top-level patient geometry map containing native ZYX affine, shape, spacing in mm and class mapping. Old native v2 manifests remain accepted by the original trainer. Candidate A rejects missing geometry, inconsistent class mapping, sheared/non-orthogonal axes and nonpositive spacing. Re-prepare old caches from their original metadata; do not invent unit spacing. M&Ms needs a separately verified adapter to this same manifest/ontology; this delivery does not claim a raw M&Ms importer.
+## Bank, code and decoder
 
-Distances are **2D in-plane**, in mm, matching this repository's slice prediction protocol. They are not 3D SDFs. Foreground masks are unions of pixel cells. Distance is to the nearest observed interface segment, with half-pixel edges and anisotropic spacing, negative inside and positive outside, divided by fixed `radius_mm` and clipped to `[-1,1]`. An absent class has REGION=0 and BOUNDARY=+1. A class filling the FOV has BOUNDARY=-1 because no observed in-FOV interface exists. The FOV edge is not invented as an anatomical boundary. Query targets reject ignore=255: this reference requires dense labeled slices for measurement supervision, rather than treating unknown voxels as background.
+`BankConfig` defines a reproducible finite bank by type, foreground class,
+normalized grid center and scale. REGION averages class occupancy in a fixed
+FOV fraction. BOUNDARY samples a fixed grid location. IDs and descriptors are
+independent of image/encoder/labels. The bank fingerprint pins this protocol.
 
-## Representation and gradient paths
+The student predicts raw bounded values and its policy chooses unused affordable
+queries or STOP. Fixed `baseline_ids` form R0 and consume budget. The code contains
+only **student** quantized values and IDs. Teacher or GT values never replace them.
 
-The finite bank is reconstructed from `BankConfig`: type, foreground class, normalized grid center and region scale. REGION queries average a fixed FOV fraction; BOUNDARY queries sample the fixed normalized location on the current native grid. IDs and descriptors depend only on configuration. Configuration and query definitions are SHA256 fingerprinted.
+The packet uses a 57-byte header, 8-byte checksum, 32-bit query ID and
+`ceil(value_bits/8)` bytes for each value. Its complete cost is
+`8 * (65 + N * (4 + ceil(value_bits/8)))` bits, including shape, float32 spacing,
+count, bank fingerprint, precision, protocol metadata and padding. This format is
+byte padded, not entropy compression. Four-bit and eight-bit levels each occupy
+one value byte. `incremental_cost` measures actual packet growth.
 
-The student encoder produces image features for its value head and policy. Its value vector is `[1,Q]`; REGION values are bounded to `[0,1]`, BOUNDARY values to `[-1,1]`. The code consists of selected integer IDs and **student** values. Fixed `baseline_ids` form R0 and consume budget. The decoder takes only IDs, quantized values, output shape, spacing and coordinates. Its attention over measurement tokens is a reference implementation choice, not a novelty claim. No encoder skip or raw-image bypass reaches the decoder.
+The query decoder reads IDs, dequantized values, native shape, spacing and pixel
+coordinates only. It has no encoder features, skip connection or raw-image bypass.
+A learned null token supports an explicitly empty R0. Pixel queries are decoded
+in chunks. Tokens are canonicalized so packet serialization preserves output.
 
-Uniform finite-level quantization uses `value_bits`. Training uses a straight-through estimator: forward values are exactly dequantized integer levels; backward passes gradients to the bounded value prediction. Hard query choices receive no segmentation gradient. CE + present-foreground Dice trains the decoder and, through nonempty selected code values, the value head and encoder. GT measurement MAE supervises all configured queries; BOUNDARY MAE is divided by its range 2, REGION by 1. Candidate-renormalized policy CE trains selection. STOP may be chosen before adding any adaptive query; decoding still uses R0 (or the learned null token when R0 is explicitly empty).
+## K1 and gradient flow
 
-Packets contain integer value levels, IDs, shape, spacing, count, protocol fields, bank fingerprint and integrity checksum. The v1 format uses a 57-byte header, an 8-byte checksum, a 32-bit ID and `ceil(value_bits/8)` bytes per selected value. Thus total storage is `8 * (65 + N * (4 + ceil(value_bits/8)))` bits; unused bits in each value byte are padding and are still charged. This simple format is not entropy compression. All serialized bytes, including metadata and padding, count toward `bit_budget`. `codec.cost` measures packet size; `incremental_cost` measures the actual padded difference for a new ID. Evaluation reports serialized bytes, not a nominal latent dimension. The decoder reads dequantized levels, including during utility trials and exported inference.
+Teacher REGION probabilities and boundary SDF provide per-type normalized
+teacher/student discrepancies. Discrepancy ranks trial proposals only. Each enabled
+teacher branch has a separate `teacher_topk` quota; branch, student and random
+streams are interleaved and deduplicated before adding STOP. The reference limit
+fits all quotas plus STOP. For each feasible
+trial, the same decoder/state evaluates current code and code plus one quantized
+student value. Utility is TRAIN CE+Dice improvement minus `cost_lambda * added_bits`;
+STOP utility is exactly zero. Targets are detached and policy CE is renormalized
+on the tested candidates. Actual rollout actions always use the full feasible
+bank plus STOP. Inference never computes labeled utilities or needs the teacher.
 
-## Teacher and K1
+Student loss is CE + present-foreground Dice plus independently weighted REGION
+MAE, BOUNDARY MAE/2 and policy CE. Uniform quantization uses STE: forward values
+are exact finite dequantized levels; backward reaches the value head/encoder.
+Discrete IDs receive no segmentation gradient. Policy CE learns the selection
+policy. Ground-truth measurement losses supervise all configured measurements,
+not encoder feature matching. No student loss updates teacher parameters.
 
-The teacher shares the native hash-pinned backbone, then has separate region and boundary processing. The boundary path preserves spatial detail and predicts segmentation plus normalized per-class SDF. Teacher CE+Dice losses apply to both segmentation branches; SDF MAE uses `lambda_distance`. Only teacher losses update teacher parameters.
+Teacher loss sums CE+Dice on both branches and normalized SDF MAE. Teacher stages:
+pretrain/load, warm-up with shared encoder frozen, then alternating teacher/student
+updates. One detached teacher snapshot is fixed for each student rollout. A frozen
+teacher arm skips teacher updates. Backbone pretraining is recorded separately
+from cardiac segmentation pretraining; neither implies measured SOTA.
 
-The stages are `teacher_pretrain`, `teacher_warmup`, and `joint`. A real run starts from a verified local backbone or compatible segmentation checkpoint; no download or random fallback occurs. Pretraining learns the segmentation branches from the dense TRAIN budget. Warm-up freezes the shared encoder and trains branch parameters. Joint training updates the teacher at `teacher_update_every` cadence, then computes one detached teacher snapshot for that complete student rollout. The `teacher_frozen` control skips teacher updates. Teacher stages must use exactly the same hashed TRAIN manifest and labeled/U cohort; all pretraining labels count in the joint run's declared label budget.
+## Epochs, provenance and measurements
 
-At each visited student state, teacher discrepancy proposes IDs separately by measurement type (normalized by range); student proposals, random exploration and STOP supplement them. Duplicate or unaffordable IDs are removed before selection. For each trial the same decoder parameters and quantized **student** values compute segmentation loss before/after; utility subtracts `cost_lambda * incremental_bits`. STOP utility is exactly zero. Utility targets are detached. Policy probabilities are renormalized over the actually tested candidate subset for its loss. Rollout actions come from the student's policy over the full feasible bank, not the utility oracle. Inference uses the student alone and performs no labeled utility trials.
+An epoch visits every annotated TRAIN frame/slice once in deterministic shuffled
+order. Data/augmentation RNG is separate from action sampling. Shared parameter
+initialization is preserved across bank-size ablations where shapes agree.
+Training uses only the declared dense TRAIN budget; U images are currently unused.
+The fully labeled setting permits an empty U list. No validation/test labels feed
+training targets, policy utilities, label subset selection or stopping rules.
 
-## Commands
+`metrics.csv`/`metrics.jsonl` log each epoch/split/branch/class with Dice, F1,
+precision, recall, support, TP/FP/FN and absent-class status. TRAIN rows are online
+predictions, not a fixed final-epoch model evaluation. Development predictions are
+frozen and hashed before references are opened. Teacher-only stages evaluate the
+teacher branches; joint stages evaluate student-only predictions. Null represents
+undefined metrics. Per-class binary Dice and F1 are mathematically identical.
+The main metric columns use pooled voxel counts; validation's separate
+`macro_patient_*` fields average patient scores without mixing them with pooled
+TP/FP/FN. Each patient's frame scores are averaged first.
 
-Use the repository environment with `requirements.txt`. All commands below run from the repository root. Outputs must be new folders outside the input data directory. Full patient training was **not run** in this delivery.
+Checkpoint source and payload hashes are verified. Teacher stage transfer requires
+the same exact TRAIN manifest and budget. Student exports contain only student
+weights/configuration and have no teacher-weight dependency. Optimizer/RNG resume
+is not implemented. Final-epoch selection is fixed; development logs do not select
+a checkpoint. Boundary evaluation is explicitly 2D and reports empty-class cases.
+If a reference slice contains ignore pixels (255), its boundary metrics are null
+with status `ignored_reference_pixels`; voxel metrics still exclude those pixels.
+Dense TRAIN masks must contain only 0..3 and are checked before any update.
+Inference timing includes the reference packet roundtrip verification path; it is
+measured, not inferred from parameter count.
 
-First prepare ACDC with the existing `prepare_acdc.py` CLI (`python prepare_acdc.py --help`). Preserve TRAIN/development/test separation and retain the emitted hashes. Set a local model JSON with `backbone=dinov3_convnext_tiny`, local `source_repo`, pinned `source_commit`, `weights`, and `weights_sha256`. Local weights/source are required; none are bundled. `TRAIN_SHA` and checkpoint SHA values below are the SHA256 of their JSON manifests.
-
-```bash
-python train.py --config configs/candidate_a/teacher_pretrain.json \
-  --model-config /path/to/local_model.json \
-  --data /path/to/train.json --data-sha256 "$TRAIN_SHA" \
-  --out /path/to/runs/a-pretrain --device cuda
-
-python train.py --config configs/candidate_a/teacher_warmup.json \
-  --model-config /path/to/local_model.json \
-  --teacher-checkpoint /path/to/runs/a-pretrain/final \
-  --teacher-checkpoint-sha256 "$PRETRAIN_SHA" \
-  --data /path/to/train.json --data-sha256 "$TRAIN_SHA" \
-  --out /path/to/runs/a-warmup --device cuda
-
-python train.py --config configs/candidate_a/full.json \
-  --model-config /path/to/local_model.json \
-  --teacher-checkpoint /path/to/runs/a-warmup/final \
-  --teacher-checkpoint-sha256 "$WARMUP_SHA" \
-  --data /path/to/train.json --data-sha256 "$TRAIN_SHA" \
-  --out /path/to/runs/a-joint --device cuda
-
-python scripts/export_candidate_a.py --checkpoint /path/to/runs/a-joint/final \
-  --checkpoint-sha256 "$JOINT_SHA" --out /path/to/export/student
-
-python evaluate.py --checkpoint /path/to/export/student \
-  --checkpoint-sha256 "$EXPORT_SHA" --data /path/to/development.json \
-  --data-sha256 "$DEV_SHA" --out /path/to/evaluation/a --device cuda
-
-python scripts/candidate_a_infer.py --checkpoint /path/to/export/student \
-  --checkpoint-sha256 "$EXPORT_SHA" --image /path/to/context_3xHxW.npy \
-  --spacing-yx "$DY_MM" "$DX_MM" --out /path/to/inference/a --device cuda
-```
-
-To initialize from a native v2 segmentation checkpoint, pass `--teacher-checkpoint-kind native_v2` with its folder/hash. Architecture/state shapes, provenance, ontology and the exact TRAIN-manifest hash are checked before loading. An older checkpoint from a geometry-less/different manifest is rejected; it needs a separately verified provenance migration, which is not performed here. Historical frozen-Q/CineMA checkpoints are unsupported. DINO backbone pretraining alone is not pretrained cardiac segmentation; the recorded provenance distinguishes these cases.
-
-Configurations are small reference recipes, not optimized accuracy schedules. Increase `steps` explicitly for experiments; `train.py` requires `--allow-full-run` above 128 steps. Stage transfers initialize teacher weights only; optimizer/RNG resume is not supported. Student export embeds all student weights and reconstructible inference configuration, with no teacher checkpoint or external backbone dependency. Candidate-A loaders also require the pinned source inventory recorded at training; use the matching repository commit.
-
-## Controls and evidence
-
-`configs/candidate_a/` includes full, teacher-free direct measurement learning, fixed/random selection, REGION-only, BOUNDARY-only, frozen teacher, teacher stages and CPU smoke. Teacher-free K1 retains student/random candidates and TRAIN-label utility supervision; this isolates teacher proposals. Fixed/random selection disables policy loss. Budgets, value precision, student widths, input schedules and label cohorts are held fixed in these recipes. REGION/BOUNDARY-only banks change available measurements; actual parameter count, code length, query count and measured time are reported. Equal maximum bit budgets do not imply equal realized code length or equal total teacher-training compute. Record those differences in comparisons.
-
-Evaluation freezes and hashes full-cine predictions before opening held-out reference masks. It reports per-class patient Dice, explicitly 2D physical boundary metrics, actual packet size/query count and measured inference time. Exposed development scores remain development evidence. No inference speed is inferred from parameter count.
-
-Run `python scripts/smoke_candidate_a.py --out /tmp/self-audit-a-smoke` for the complete CPU check. Exact checks and outcomes are recorded in the delivery validation receipt. Synthetic masks test software contracts; they provide no patient/GPU efficacy evidence. No compatible local teacher checkpoint or patient dataset was used for this delivery.
-
-Validation for this delivery is recorded in [VALIDATION.json](../reports/candidate-a-implementation-20261110/VALIDATION.json): repository check PASS; 87 tests passed (one existing PyTorch deprecation warning); CPU synthetic stages/export/evaluation passed. Check the receipt for exact source and synthetic weight hashes.
+The legacy native-v2 and initial Candidate A step-based trees are recoverable via
+[MIGRATION.md](MIGRATION.md). Their historical validation receipts do not certify
+this revision. Current delivery tests/receipts are linked from the cleanup report.
+No patient/GPU result, 96 Dice or novelty certification is claimed.

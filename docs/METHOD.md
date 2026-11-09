@@ -1,146 +1,29 @@
-# Method and theory: one compatible pipeline
+# Active method: Candidate A
 
-Status: implemented research candidate, not proven publication novelty or patient
-efficacy. Primary setting: a budgeted dense-labeled TRAIN subset L and image-only
-U. Audit examples rotate within L and are patient-disjoint from the supervised
-minibatch **within each transaction**, not a held-out statistical validation set.
+`train.py` is the only training entry point. Its versioned recipe is
+`self_audit.candidate_a.v2`. The old joint_guard/EMA optimizer is retired from the
+active tree. Current implementation details are in [CANDIDATE_A.md](CANDIDATE_A.md).
 
-## Questions and choices
+1. Both teacher and student receive the same normalized three-slice MRI context.
+2. Shared teacher features feed separate broad-context region and native-detail
+   boundary branches. Teacher losses use budgeted TRAIN segmentation and SDF targets.
+3. The fixed bank identifies measurements by type, class, location and scale.
+   Student values, finite-level quantization and actual packet bytes form the code.
+4. K1 proposes a bounded utility-trial set. Utilities use the same decoder state,
+   quantized student values and TRAIN segmentation improvement minus added bits.
+   Detached utilities teach the candidate-renormalized policy. Actual actions
+   use the entire feasible bank plus STOP.
+5. The decoder has no image-feature bypass. Student segmentation gradients reach
+   its encoder/value head through STE code values; discrete query IDs are not
+   differentiated. Teacher parameters receive no student gradients.
 
-1. Where do names/boundaries come from? Dense native CE + present-foreground Dice
-   on L. A verified pretrained encoder is initialization, not a semantic oracle.
-   No historical image-rule Q bank is needed.
-2. Which U information is useful? An EMA copy proposes class labels on a clean
-   view. A stronger intensity-only view preserves pixel coordinates. A fixed
-   confidence threshold generates candidates, not a correctness certificate.
-3. How should multiple candidates interact? Joint local function-response
-   allocation, followed by actual per-class audit-risk checks on the update.
-4. When may the teacher learn the result? Once, after the student state is final.
-   Rejected proposals must not contaminate the next target or optimizer state.
+An epoch traverses every labeled TRAIN frame/slice once, with a reproducible
+shuffled order. TRAIN metrics aggregate online predictions. Development metrics
+are separately frozen/scored at the epoch boundary. Neither validation nor test
+labels create targets, select a checkpoint, tune a gate or stop training.
+Final-epoch selection is fixed. Exposed development remains development evidence.
 
-Backbone/EMA/CE/Dice are standard choices, not contributions. A conventional
-native decoder is used rather than enforcing an obsolete coarse constraint.
-The earlier exact D/U split remains a historical experiment, not a hidden path.
-
-## State and information timeline
-
-At iteration t, draw supervised (Xs,ys), an audit slice (Xa,ya) from a different
-budgeted TRAIN patient, and unlabeled Xu. A labeled-only AdamW-body/SGD-head step
-produces theta_s. This is the counterfactual reference. The body includes the
-input adapter, encoder and native decoder. Head SGD has no momentum or decay.
-
-Freeze teacher phi_t while generating q=softmax(T_phi_t(Xu)). Partition accepted
-pixels by pseudo argmax class. For source j, with a COMMON accepted denominator Z:
-
-    L_U,j = sum_{i:accepted and class=j} CE(q_hard,i, p_theta(Xu,strong)_i) / Z
-    d_j = -eta_U grad_B L_U,j | theta_s.
-
-Thus sum d_j equals the ordinary SGD pseudo-step on the SAME parameter block B.
-No source is duplicated; class identities give at most four canonical directions.
-There is no inverse-frequency amplification or hidden U ground-truth selection.
-Head and decoder scopes are distinct declared ablations. Full EMA updating all
-parameters is a stronger comparator, not attributed to allocation alone.
-
-Audit each foreground class one-versus-rest. A present class allocates half mass
-to positives and half to negatives, patient-normalized. An absent class measures
-false positives only, with positive count=0 reported. Ignore=255 has zero weight.
-This explicitly observes BG-to-MYO errors; an interior-only audit would miss them.
-A single slice remains limited support: it is not an audit of all patients/volumes.
-
-## Local joint solve
-
-For each group c define r_c=sqrt(W_c)(y_c-p_s,c),
-V_c=sqrt(W_c) J_c [d_1 ... d_m]. The local squared-probability risk is
-
-    E_c(alpha) = 1/2 ||r_c - V_c alpha||^2.
-
-Solve for 0<=alpha_j<=1:
-
-    min mean_c E_c(alpha) + lambda/2 ||alpha||^2
-    subject to E_c(alpha) <= E_c(0) + epsilon_c for all c.
-
-The groups include negative pixels. The objective is a local Brier proxy, not
-Dice, confidence or a probability that a source is correct. Define A_c=V_c'V_c,
-b_c=V_c'r_c and e_c=||r_c||^2/2, reducing the solve to small GxMxM moments.
-
-### Existence and exact specializations
-
-Alpha=0 is feasible. The box is compact, constraints are convex, and lambda>0
-makes the objective strictly convex. Hence the finite mathematical problem has
-one minimizer. This does not guarantee a nonzero accepted update. The numerical
-SLSQP implementation is checked independently for feasibility and improvement
-against zero, and fails closed to zero on solver failure. It is not a proof that
-a floating-point solver found the exact optimum.
-
-Without active constraints, stacked appropriately normalized V,r give
-alpha=(V'V+lambda I)^(-1)V'r. This is classical ridge regression, not a new theorem.
-For a single direction a_c=||v_c||^2,b_c=r_c'v_c, the group upper bound is
-(b_c+sqrt(b_c^2+2a_c epsilon_c))/a_c when a_c>0. Intersect those intervals with
-[0,1] and clamp mean(b)/(mean(a)+lambda). For a_c=0, b_c must also be0.
-Clipping the vector ridge solution coordinatewise is NOT the multi-source solve.
-
-Cross terms alpha_j alpha_k V_j'V_k retain useful compensation among sources.
-The manufactured example V=[[.5,.15],[-.07,.02]], r=(.8,.1) has optimum
-alpha=(2/7,1) at lambda=.001 and zero budgets. Risks change (.32,.005) to
-(.128596939,.005). Independently discarding direction1 gives (.21125,.0032).
-This proves an interaction can matter, not superiority on medical data.
-
-The coefficient penalty is not invariant to duplicated columns. The implemented
-fixed class grouping and duplicate-ID rejection are part of the contract.
-Do not create multiple copies/crops of one source as independent candidates.
-
-## Parameter response and finite-step compatibility
-
-For a 1x1 affine head, candidate logit changes dz are exact on frozen features.
-The probability derivative is dp=p*(dz-sum_c p_c dz_c). The head path uses this
-formula; tests compare it to autograd. For the native decoder, torch.func JVPs
-measure the actual parameter-to-probability response at theta_s in eval mode.
-Native image features are not replaced by a theoretical infinite-width kernel.
-
-Probability linearization has error R_c(alpha): actual risk differs from the
-local risk by at most ||r_c-V_c alpha|| ||R_c|| + ||R_c||^2/2. Consequently a
-feasible local solution alone is insufficient. Evaluate the EXACT function at
-
-    theta_trial = theta_s + scale * sum_j alpha_j d_j,
-    scale in {1,1/2,...}.
-
-The full method accepts only finite trial predictions with actual group risks
-<= reference + declared budget + numeric tolerance, and nonincreasing mean risk
-up to tolerance. Otherwise backtrack, then retain theta_s if all trials fail.
-All trials are functional; no optimizer.step is called and no candidate updates
-EMA. Commit the selected displacement directly, then update EMA once.
-
-The guarantee concerns the extra pseudo step on the CURRENT TRAIN audit measure.
-The supervised step, later iterations, EMA output, unseen patients and Dice do
-not inherit it. Positive budgets/tolerances permit corresponding small changes;
-there is no unclaimed global debt bound. Pseudo directions touching decoder
-parameters coexist with supervised AdamW state but are not sent through AdamW;
-future optimizer effects are not certified. Both guarded/control arms use that
-same split-step convention. All sources can be rejected, which is not efficacy.
-
-## What self-learning means here
-
-Labeled supervision trains the entire native segmentation model, including detail
-features. EMA proposals provide extra updates to the selected head/decoder block.
-In decoder scope, U can change the feature decoder and native detail path, not
-only final probabilities. The encoder continues to learn from labeled examples;
-U-to-encoder learning is represented by the separate full-EMA comparator.
-No learned auditor, geometry naming, image refiner or recurrent controller is
-required. These omissions remove incompatible objectives, not useful test data.
-
-## Critical statistical boundaries
-
-The audit set is optimization data. Rotating disjoint-in-step patients reduces
-immediate same-batch reuse but does not create an unseen risk estimate. Missing
-class positives, overfitting the labeled subset, zero-update stalls, teacher
-bias, threshold sensitivity and long-term EMA drift must be measured. No true
-external generalization guarantee follows. All audit labels are charged to L.
-
-A small labeled subset may not represent anatomical diversity. Experiments must
-use nested patient budgets and repeated subset seeds; compare extra labeled-only
-optimization at reported compute, and retain standard stronger SSL baselines.
-Final quality is evaluated from frozen predictions outside TRAIN, separately.
-
-## Opt-in candidate A
-
-`train.py --config configs/candidate_a/full.json` dispatches to the separately versioned typed-measurement experiment. Its dual-branch teacher, finite-bit student code, K1 selection and code-only query decoder are documented in [CANDIDATE_A.md](CANDIDATE_A.md). This candidate uses only the declared labeled TRAIN subset, with U unused. It does not inherit the native joint_guard/EMA transaction or its audit claims. The default pipeline above remains unchanged. Synthetic contracts are not patient efficacy evidence.
+Source and weight hashes bind checkpoints to their implementation. All teacher
+stage labels count in the same exact hashed TRAIN manifest. ACDC/M&Ms labels are
+normalized explicitly to BG=0, RV=1, MYO=2, LV=3. Distances are 2D physical in-plane
+cell-interface distances; neighboring input slices do not imply a 3D SDF.

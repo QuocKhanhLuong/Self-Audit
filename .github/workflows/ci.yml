@@ -1,4 +1,4 @@
-name: semi-supervised-v2
+name: candidate-a-contracts
 on: [push, pull_request]
 jobs:
   cpu-contracts:
@@ -16,4 +16,4 @@ jobs:
       - run: python -m pip install -r requirements.txt
       - run: python scripts/check_repo.py && python train.py --describe
       - run: python -m pytest -q
-      - run: python experiments/run_mechanisms.py --out /tmp/self-audit-mechanisms
+      - run: python scripts/smoke_candidate_a.py --out /tmp/self-audit-candidate-a

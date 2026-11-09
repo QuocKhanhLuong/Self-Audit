@@ -1,5 +1,6 @@
 """Actual CLI stages, export and held-out synthetic evaluation integration."""
 import copy
+import csv
 import json
 import shutil
 from pathlib import Path
@@ -25,10 +26,29 @@ def test_cli_stages_export_and_frozen_evaluation(smoke):
     assert receipt["export_payload_keys"] == ["student"]
     assert receipt["stages"]["teacher_pretrain"]["student_updates"] == 0
     assert receipt["stages"]["teacher_warmup"]["student_updates"] == 0
-    assert receipt["stages"]["joint"]["teacher_snapshots"] == 2
+    assert receipt["stages"]["joint"]["teacher_snapshots"] > 0
+    assert (out / "joint" / "metrics.csv").is_file()
     frozen = out / "evaluation" / "PREDICTIONS_FROZEN.json"
     assert frozen.is_file()
     assert receipt["patient_training"] == "NOT_RUN"
+
+
+def test_epoch_plan_covers_each_annotated_frame_slice_and_logs_all_classes(smoke):
+    out, _ = smoke
+    epoch = json.loads((out / "joint" / "epochs.jsonl").read_text().splitlines()[0])
+    # Fixture shape is T=1, Z=2 with two labeled patients: 1*2*2 updates.
+    assert epoch["updates"] == 4
+    with (out / "joint" / "metrics.csv").open() as stream:
+        rows = list(csv.DictReader(stream))
+    assert rows
+    branches = {row["branch"] for row in rows}
+    assert {"student", "teacher_region", "teacher_boundary"}.issubset(branches)
+    assert {row["class"] for row in rows} == {"BG", "RV", "MYO", "LV"}
+    for stage in ("teacher_pretrain", "teacher_warmup"):
+        validation_rows = list(csv.DictReader((out / stage / "metrics.csv").open()))
+        assert {row["branch"] for row in validation_rows if row["split"] == "validation"} == {
+            "teacher_region", "teacher_boundary"
+        }
 
 
 def test_frozen_teacher_and_warmup_encoder(smoke, tmp_path, monkeypatch):
@@ -40,7 +60,7 @@ def test_frozen_teacher_and_warmup_encoder(smoke, tmp_path, monkeypatch):
     assert all(torch.equal(pre["teacher"][k], warm["teacher"][k]) for k in encoder_keys)
     assert any(not torch.equal(pre["teacher"][k], warm["teacher"][k]) for k in pre["teacher"] if k not in encoder_keys)
     c = json.loads((out / "joint.json").read_text())
-    c.update(steps=1, freeze_teacher=True)
+    c.update(epochs=1, freeze_teacher=True, validation_every=0)
     c["teacher_init"] = {"kind": "candidate_a", "path": str(out / "teacher_warmup" / "final"),
         "sha256": digest(out / "teacher_warmup" / "final" / "MANIFEST.json")}
     from self_audit.candidate_a.teacher import DualBranchTeacher
@@ -57,10 +77,11 @@ def test_frozen_teacher_and_warmup_encoder(smoke, tmp_path, monkeypatch):
     monkeypatch.setattr(CandidateAStudent, "encode", observe_student)
     report = train(c, out / "data" / "train.json", digest(out / "data" / "train.json"), tmp_path / "frozen", device="cpu", synthetic=True)
     state, _ = read_checkpoint(tmp_path / "frozen" / "final", report["final_manifest_sha256"])
-    assert report["teacher_updates"] == 0 and report["student_updates"] == 1
+    assert report["teacher_updates"] == 0 and report["student_updates"] > 0
     assert all(torch.equal(warm["teacher"][k], state["teacher"][k]) for k in warm["teacher"])
-    assert len(seen["student"]) == 1 and len(seen["teacher"]) == 1
-    assert torch.equal(seen["teacher"][0], seen["student"][0])
+    assert len(seen["student"]) == report["student_updates"]
+    assert len(seen["teacher"]) == report["teacher_snapshots"]
+    assert all(torch.equal(a, b) for a, b in zip(seen["teacher"], seen["student"]))
 
 
 def test_config_has_finite_total_budget_and_native_classes():
@@ -87,6 +108,7 @@ def test_teacher_stage_rejects_changed_training_manifest(smoke, tmp_path):
     meta["data_sha256"] = "0" * 64
     mp.write_text(json.dumps(meta))
     c = json.loads((out / "joint.json").read_text())
+    c["validation_every"] = 0
     c["teacher_init"] = {"kind": "candidate_a", "path": str(checkpoint), "sha256": digest(mp)}
     with pytest.raises(ValueError, match="exact hashed TRAIN manifest"):
         train(c, out / "data" / "train.json", digest(out / "data" / "train.json"),

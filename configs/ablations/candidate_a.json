@@ -1,0 +1,153 @@
+{
+  "schema": "self_audit.candidate_a.ablations.v1",
+  "arms": [
+    {
+      "name": "full",
+      "factor": "reference",
+      "overrides": {}
+    },
+    {
+      "name": "teacher_free",
+      "factor": "teacher",
+      "overrides": {
+        "use_teacher": false,
+        "freeze_teacher": true,
+        "rollout.teacher_topk": 0
+      }
+    },
+    {
+      "name": "teacher_frozen",
+      "factor": "teacher",
+      "overrides": {
+        "freeze_teacher": true
+      }
+    },
+    {
+      "name": "teacher_region_proposals",
+      "factor": "teacher",
+      "overrides": {
+        "rollout.teacher_proposal_types": [
+          "REGION"
+        ]
+      }
+    },
+    {
+      "name": "teacher_boundary_proposals",
+      "factor": "teacher",
+      "overrides": {
+        "rollout.teacher_proposal_types": [
+          "BOUNDARY"
+        ]
+      }
+    },
+    {
+      "name": "fixed_queries",
+      "factor": "K1",
+      "overrides": {
+        "rollout.policy_mode": "fixed",
+        "rollout.policy_enabled": false,
+        "rollout.sample_policy": false
+      }
+    },
+    {
+      "name": "random_queries",
+      "factor": "K1",
+      "overrides": {
+        "rollout.policy_mode": "random",
+        "rollout.policy_enabled": false,
+        "rollout.sample_policy": false
+      }
+    },
+    {
+      "name": "no_exploration",
+      "factor": "K1",
+      "overrides": {
+        "rollout.random_candidates": 0
+      }
+    },
+    {
+      "name": "no_bit_penalty",
+      "factor": "K1",
+      "overrides": {
+        "rollout.cost_lambda": 0.0
+      }
+    },
+    {
+      "name": "region_only",
+      "factor": "representation",
+      "overrides": {
+        "bank.types": [
+          "REGION"
+        ]
+      }
+    },
+    {
+      "name": "boundary_only",
+      "factor": "representation",
+      "overrides": {
+        "bank.types": [
+          "BOUNDARY"
+        ]
+      }
+    },
+    {
+      "name": "no_region_supervision",
+      "factor": "loss",
+      "overrides": {
+        "loss.region": 0.0
+      }
+    },
+    {
+      "name": "no_boundary_supervision",
+      "factor": "loss",
+      "overrides": {
+        "loss.boundary": 0.0
+      }
+    },
+    {
+      "name": "no_measurement_supervision",
+      "factor": "loss",
+      "overrides": {
+        "loss.region": 0.0,
+        "loss.boundary": 0.0
+      }
+    },
+    {
+      "name": "r0_only",
+      "factor": "code",
+      "overrides": {
+        "rollout.max_steps": 0,
+        "rollout.policy_enabled": false
+      }
+    },
+    {
+      "name": "values_4bit",
+      "factor": "code",
+      "overrides": {
+        "codec.value_bits": 4
+      }
+    },
+    {
+      "name": "values_16bit",
+      "factor": "code",
+      "overrides": {
+        "codec.value_bits": 16
+      }
+    },
+    {
+      "name": "budget_768bit",
+      "factor": "code",
+      "overrides": {
+        "rollout.bit_budget": 768
+      }
+    },
+    {
+      "name": "decoder_half_width",
+      "factor": "capacity",
+      "overrides": {},
+      "multipliers": {
+        "student.decoder_dim": 0.5
+      }
+    }
+  ]
+}

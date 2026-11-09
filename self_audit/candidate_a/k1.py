@@ -21,10 +21,9 @@ the exact same policy/STOP/budget path is used without a teacher.
 
 from __future__ import annotations
 
-from contextlib import contextmanager
 from dataclasses import dataclass
 import math
-from typing import Any, Iterable, Mapping, Optional, Sequence
+from typing import Any, Mapping, Optional, Sequence
 
 import torch
 from torch import Tensor
@@ -32,6 +31,7 @@ from torch.nn import functional as F
 
 from .bank import QueryBank
 from .codec import MeasurementCodec
+from ..losses import supervised_loss
 from .model import CandidateAStudent
 
 
@@ -42,8 +42,8 @@ STOP_ID = -1
 class K1Config:
     """Finite K1 rollout recipe.
 
-    ``budget_bits`` is the complete serialized packet budget, including the
-    fixed R0 packet/header.  ``base_ids`` defaults to ``codec.base_ids``.  The
+    ``bit_budget`` is the complete serialized packet budget, including the
+    fixed R0 packet/header.  ``baseline_ids`` defaults to ``codec.base_ids``. The
     three proposal counts bound the candidate set; STOP always occupies one
     slot and is valid at step zero.
     """
@@ -61,24 +61,7 @@ class K1Config:
     policy_mode: str = "learned"  # learned, random, fixed
     sample_policy: bool = False
     policy_enabled: bool = True
-
-    # Names used by the first design note; properties keep old callers source
-    # compatible without introducing another configuration object.
-    @property
-    def budget_bits(self) -> int:
-        return self.bit_budget
-
-    @property
-    def lambda_cost(self) -> float:
-        return self.cost_lambda
-
-    @property
-    def base_ids(self) -> tuple[int, ...]:
-        return self.baseline_ids
-
-    @property
-    def policy_loss(self) -> bool:
-        return self.policy_enabled
+    teacher_proposal_types: tuple[str, ...] = ("REGION", "BOUNDARY")
 
     def __post_init__(self) -> None:
         if type(self.bit_budget) is not int or self.bit_budget < 0:
@@ -87,20 +70,24 @@ class K1Config:
             raise ValueError("max_steps must be a non-negative integer")
         if type(self.candidate_limit) is not int or self.candidate_limit < 1:
             raise ValueError("candidate_limit must be at least one for STOP")
-        if min(self.teacher_topk, self.student_topk, self.random_candidates) < 0:
+        counts = (self.teacher_topk, self.student_topk, self.random_candidates)
+        if any(type(value) is not int or value < 0 for value in counts):
             raise ValueError("proposal counts must be non-negative")
         if not math.isfinite(self.temperature) or self.temperature <= 0:
             raise ValueError("temperature must be finite and positive")
         if not math.isfinite(self.cost_lambda) or self.cost_lambda < 0:
             raise ValueError("cost_lambda must be finite and non-negative")
+        if type(self.sample_policy) is not bool or type(self.policy_enabled) is not bool:
+            raise ValueError("sample_policy and policy_enabled must be boolean")
+        teacher_proposal_types = tuple(str(kind).upper() for kind in self.teacher_proposal_types)
+        if not teacher_proposal_types or len(set(teacher_proposal_types)) != len(teacher_proposal_types) \
+                or any(kind not in {"REGION", "BOUNDARY"} for kind in teacher_proposal_types):
+            raise ValueError("teacher_proposal_types must be a non-empty subset of REGION and BOUNDARY")
+        object.__setattr__(self, "teacher_proposal_types", teacher_proposal_types)
         if len(set(self.baseline_ids)) != len(self.baseline_ids) or any(type(i) is not int or i < 0 for i in self.baseline_ids):
             raise ValueError("baseline_ids must be unique non-negative integer bank IDs")
         if self.policy_mode not in {"learned", "random", "fixed"}:
             raise ValueError("policy_mode must be learned, random, or fixed")
-
-
-# The config validator used by the repository's trainer calls this name.
-RolloutConfig = K1Config
 
 
 @dataclass
@@ -137,46 +124,9 @@ class RolloutResult:
                 "query_count": self.query_count, "bits": self.code_bits}
 
 
-def segmentation_loss(logits: Tensor, labels: Tensor, ignore_index: int = 255) -> Tensor:
-    """Native CE + foreground Dice loss used for utility and final loss."""
-
-    if logits.ndim != 4 or labels.ndim != 3 or logits.shape[0] != labels.shape[0] or logits.shape[2:] != labels.shape[1:]:
-        raise ValueError("expected logits [B,C,H,W] and labels [B,H,W]")
-    valid = labels != ignore_index
-    if not bool(valid.any()):
-        raise ValueError("empty labelled support")
-    ce = F.cross_entropy(logits, labels, ignore_index=ignore_index)
-    classes = logits.shape[1]
-    safe = labels.clamp_min(0).clamp_max(classes - 1)
-    target = F.one_hot(safe, classes).permute(0, 3, 1, 2).to(logits.dtype)
-    valid = valid[:, None].to(logits.dtype)
-    target = target * valid
-    probs = logits.softmax(1) * valid
-    dims = (0, 2, 3)
-    dice = (2 * (probs * target).sum(dims) + 1e-5) / (probs.sum(dims) + target.sum(dims) + 1e-5)
-    if classes > 1:
-        present = target[:, 1:].sum((0, 2, 3)) > 0
-        dice_loss = (1 - dice[1:][present]).mean() if bool(present.any()) else logits.sum() * 0
-    else:
-        dice_loss = logits.sum() * 0
-    return ce + dice_loss
-
-
 def _kind_tensor(bank: QueryBank, device: torch.device) -> Tensor:
     return torch.tensor([1 if bank.query(i).kind == "BOUNDARY" else 0 for i in range(len(bank))],
                         dtype=torch.long, device=device)
-
-
-def normalized_query_mae(predicted: Tensor, target: Tensor, bank: QueryBank) -> Tensor:
-    """Mean absolute query error with REGION /1 and BOUNDARY /2 scales."""
-
-    predicted = _batch_values(predicted)
-    target = _batch_values(target).to(device=predicted.device, dtype=predicted.dtype)
-    if predicted.shape != target.shape or predicted.shape[1] != len(bank):
-        raise ValueError("query prediction/target tensors must be [B,len(bank)]")
-    kinds = _kind_tensor(bank, predicted.device)
-    scale = torch.where(kinds == 1, torch.full_like(kinds, 2.0), torch.ones_like(kinds))
-    return (predicted.sub(target).abs() / scale[None]).mean()
 
 
 def query_losses(predicted: Tensor, target: Tensor, bank: QueryBank) -> tuple[Tensor, Tensor]:
@@ -221,8 +171,8 @@ def _geometry_parts(geometry: Any) -> tuple[tuple[int, int], tuple[float, float]
     return shape, spacing
 
 
-def _base_ids(model: CandidateAStudent, codec: MeasurementCodec, config: K1Config) -> tuple[int, ...]:
-    ids = config.base_ids or tuple(codec.base_ids)
+def _base_ids(codec: MeasurementCodec, config: K1Config) -> tuple[int, ...]:
+    ids = config.baseline_ids or tuple(codec.base_ids)
     if len(set(ids)) != len(ids) or any(i < 0 or i >= len(codec.bank) for i in ids):
         raise ValueError("R0 IDs must be unique IDs in the measurement bank")
     if tuple(codec.base_ids) and tuple(ids) != tuple(codec.base_ids):
@@ -243,12 +193,11 @@ def _single_quantized(codec: MeasurementCodec, full_values: Tensor, query_id: in
     return _quantize(codec, full_values[:, query_id : query_id + 1], (query_id,), ste=ste)[:, 0]
 
 
-def _code_bits(codec: MeasurementCodec, ids: Sequence[int], values: Tensor, geometry: Any) -> int:
+def _code_bits(codec: MeasurementCodec, ids: Sequence[int], geometry: Any) -> int:
     shape, spacing = _geometry_parts(geometry)
     # MeasurementCodec.cost is the sole authority for header, fingerprint,
-    # IDs, value bits and byte padding.  Values do not alter packet length but
-    # are kept in the signature to make accidental omission explicit.
-    del values
+    # IDs, value bits and byte padding.  Value contents do not alter packet
+    # length.
     return int(codec.cost(tuple(ids), shape=shape, spacing=spacing))
 
 
@@ -273,11 +222,11 @@ def _policy_row(logits: Tensor, candidate_ids: Sequence[int], bank_size: int) ->
     row = logits[0]
     if row.numel() != bank_size + 1:
         raise ValueError("CandidateAStudent policy must return Q+1 logits")
-    if torch.isnan(row).any():
-        raise FloatingPointError("policy logits contain NaN")
+    if torch.isnan(row).any() or torch.isposinf(row).any():
+        raise FloatingPointError("policy logits contain NaN or +Inf")
     selected = torch.stack([row[bank_size] if query_id == STOP_ID else row[int(query_id)] for query_id in candidate_ids])
-    if torch.isnan(selected).any():
-        raise FloatingPointError("candidate policy logits contain NaN")
+    if torch.isnan(selected).any() or torch.isposinf(selected).any():
+        raise FloatingPointError("candidate policy logits contain NaN or +Inf")
     return selected
 
 
@@ -322,13 +271,13 @@ def _candidate_ids(
         raise ValueError("candidate_limit must be at least one")
     feasible = _feasible_ids(
         bank, codec, geometry, used=used, current_bits=current_bits,
-        bit_budget=config.budget_bits,
+        bit_budget=config.bit_budget,
     )
     if not feasible:
         return (STOP_ID,)
     feasible_set = set(feasible)
-    chosen: list[int] = []
     max_queries = config.candidate_limit - 1
+    chosen: list[int] = []
 
     if not torch.isfinite(student_values).all():
         raise FloatingPointError("student proposal values contain NaN or Inf")
@@ -337,8 +286,15 @@ def _candidate_ids(
         if query_id in feasible_set and query_id not in chosen and len(chosen) < max_queries:
             chosen.append(query_id)
 
+    # Build bounded proposal streams first.  The streams are interleaved below
+    # so a large teacher list cannot consume the complete candidate budget
+    # before student and random exploration get a chance to contribute.
+    streams: list[list[int]] = []
+    stream_limits: list[int] = []
+
     # Teacher values are proposal-only.  Normalize discrepancies by the query
-    # type before sorting, as REGION and signed-distance scales differ.
+    # type before sorting, as REGION and signed-distance scales differ.  Each
+    # enabled measurement type gets its own top-k stream.
     if teacher_values is not None and config.teacher_topk:
         teacher_values = _batch_values(teacher_values).detach()
         if teacher_values.shape != student_values.shape:
@@ -348,70 +304,62 @@ def _candidate_ids(
         kind = _kind_tensor(bank, student_values.device)
         scale = torch.where(kind == 1, torch.full_like(kind, 2.0), torch.ones_like(kind))
         discrepancy = (teacher_values - student_values.detach()).abs().mean(0) / scale
-        ranked = sorted(feasible, key=lambda i: (-float(discrepancy[i]), i))
-        for query_id in ranked[: config.teacher_topk]:
-            add(query_id)
+        for measurement_type in config.teacher_proposal_types:
+            ranked = sorted(
+                (i for i in feasible if bank.query(i).kind == measurement_type),
+                key=lambda i: (-float(discrepancy[i]), i),
+            )
+            streams.append(ranked)
+            stream_limits.append(config.teacher_topk)
 
     if config.student_topk:
         if policy_logits.ndim != 2 or policy_logits.shape != (1, len(bank) + 1):
             raise ValueError("student policy logits must have shape [1,Q+1]")
-        if torch.isnan(policy_logits).any():
-            raise FloatingPointError("student policy logits contain NaN")
+        if torch.isnan(policy_logits).any() or torch.isposinf(policy_logits).any():
+            raise FloatingPointError("student policy logits contain NaN or +Inf")
         row = policy_logits[0]
         ranked = sorted(feasible, key=lambda i: (-float(row[i].detach()), i))
-        for query_id in ranked[: config.student_topk]:
-            add(query_id)
+        streams.append(ranked)
+        stream_limits.append(config.student_topk)
 
     if config.random_candidates:
         order = torch.randperm(len(feasible), generator=generator).tolist()
-        for position in order[: config.random_candidates]:
-            add(feasible[position])
+        # Keep the complete permutation so duplicates already selected by
+        # another source can be skipped without losing the random quota.
+        streams.append([feasible[position] for position in order])
+        stream_limits.append(config.random_candidates)
 
+    # Round-robin source streams.  A stream advances past duplicates without
+    # spending its quota, ensuring random exploration remains distinct whenever
+    # an unused feasible query exists.
+    positions = [0] * len(streams)
+    counts = [0] * len(streams)
+    while len(chosen) < max_queries:
+        made_progress = False
+        for stream_index, stream in enumerate(streams):
+            if counts[stream_index] >= stream_limits[stream_index]:
+                continue
+            while positions[stream_index] < len(stream):
+                query_id = stream[positions[stream_index]]
+                positions[stream_index] += 1
+                if query_id not in feasible_set or query_id in chosen:
+                    continue
+                chosen.append(query_id)
+                counts[stream_index] += 1
+                made_progress = True
+                break
+            if len(chosen) == max_queries:
+                break
+        if not made_progress:
+            break
+
+    # Fill a partially occupied budget deterministically from the remaining
+    # feasible bank.  This does not affect source quotas above.
     for query_id in feasible:
         add(query_id)
         if len(chosen) == max_queries:
             break
     return tuple(chosen + [STOP_ID])
-
-
-def build_candidate_set(
-    bank: QueryBank,
-    codec: MeasurementCodec,
-    geometry: Any,
-    *,
-    used_ids: Sequence[int],
-    current_bits: int,
-    config: K1Config,
-    student_values: Tensor,
-    teacher_values: Optional[Tensor] = None,
-    policy_logits: Optional[Tensor] = None,
-    generator: Optional[torch.Generator] = None,
-) -> tuple[int, ...]:
-    """Public K1 candidate builder used by focused tests and controls."""
-
-    if policy_logits is None:
-        raise ValueError("policy_logits are required for the student proposal source")
-    rng = generator or torch.Generator(device="cpu").manual_seed(config.seed)
-    return _candidate_ids(
-        bank, codec, geometry, used=used_ids, current_bits=current_bits,
-        config=config, student_values=student_values.detach(),
-        teacher_values=None if teacher_values is None else teacher_values.detach(),
-        policy_logits=policy_logits.detach(), generator=rng,
-    )
-
-
-@contextmanager
-def _same_rng() -> Iterable[None]:
-    """Keep dropout/random decoder behaviour identical across utility trials."""
-
-    cpu = torch.random.get_rng_state()
-    cuda = torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None
-    try:
-        yield
-    finally:
-        torch.random.set_rng_state(cpu)
-        if cuda is not None:
-            torch.cuda.set_rng_state_all(cuda)
 
 
 def trial_utilities(
@@ -422,7 +370,6 @@ def trial_utilities(
     candidate_ids: Sequence[int],
     student_values: Tensor,
     labels: Tensor,
-    bank: QueryBank,
     codec: MeasurementCodec,
     geometry: Any,
     lambda_cost: float = 0.0,
@@ -439,9 +386,9 @@ def trial_utilities(
     if not torch.isfinite(current_values).all() or not torch.isfinite(student_values).all():
         raise FloatingPointError("utility inputs contain NaN or Inf")
     utilities: list[Tensor] = []
-    with torch.no_grad(), _same_rng():
+    with torch.no_grad():
         base = model.decode(tuple(current_ids), current_values.detach(), geometry, chunk_size=chunk_size)
-        base_loss = segmentation_loss(base, labels)
+        base_loss = supervised_loss(base, labels)
         for query_id in candidate_ids:
             if query_id == STOP_ID:
                 utilities.append(base_loss.detach() * 0)
@@ -449,7 +396,7 @@ def trial_utilities(
             value = _single_quantized(codec, student_values, int(query_id), ste=False)
             trial_values = torch.cat((current_values.detach(), value[:, None]), dim=1)
             trial = model.decode(tuple(current_ids) + (int(query_id),), trial_values, geometry, chunk_size=chunk_size)
-            trial_loss = segmentation_loss(trial, labels)
+            trial_loss = supervised_loss(trial, labels)
             cost = _incremental_bits(codec, current_ids, int(query_id), geometry)
             utilities.append((base_loss - trial_loss - lambda_cost * cost).detach())
     result = torch.stack(utilities).detach()
@@ -462,7 +409,7 @@ def policy_cross_entropy(policy_logits: Tensor, candidate_ids: Sequence[int], ut
                          *, bank_size: int, temperature: float) -> tuple[Tensor, Tensor]:
     """CE on candidate-restricted logits and detached softmax utility target."""
 
-    if temperature <= 0:
+    if not math.isfinite(float(temperature)) or temperature <= 0:
         raise ValueError("temperature must be positive")
     if torch.isnan(policy_logits).any() or not torch.isfinite(utilities).all():
         raise FloatingPointError("policy target/logits contain NaN or Inf")
@@ -485,8 +432,9 @@ def _teacher_values(teacher: Any, images: Tensor, bank: QueryBank, geometry: Any
 
     if teacher is None:
         raise ValueError("teacher is None")
+    del geometry  # geometry is consumed by the typed bank, not the teacher model
     with torch.no_grad():
-        output = teacher(images, geometry=geometry) if callable(teacher) else teacher
+        output = teacher(images) if callable(teacher) else teacher
         if not isinstance(output, Mapping) or "region_logits" not in output or "sdf" not in output:
             raise ValueError("teacher output must contain region_logits and sdf")
         region_probs = output["region_logits"].softmax(1)
@@ -553,25 +501,25 @@ def student_rollout(
         if not torch.isfinite(query_targets).all():
             raise FloatingPointError("query_targets contain NaN or Inf")
 
-    base_ids = _base_ids(model, codec, config)
+    base_ids = _base_ids(codec, config)
     if base_ids:
         code_values = _quantize(codec, _query_values_for_ids(student_values, range(len(bank)), base_ids), base_ids, ste=labels is not None)
     else:
         code_values = student_values[:, :0]
     code_ids = list(base_ids)
-    current_bits = _code_bits(codec, code_ids, code_values, geometry)
-    if current_bits > config.budget_bits:
+    current_bits = _code_bits(codec, code_ids, geometry)
+    if current_bits > config.bit_budget:
         raise ValueError("fixed R0 code exceeds budget_bits")
     rng = generator or torch.Generator(device="cpu").manual_seed(config.seed)
     traces: list[CandidateTrace] = []
     policy_terms: list[Tensor] = []
 
     for step in range(config.max_steps):
-        remaining = config.budget_bits - current_bits
+        remaining = config.bit_budget - current_bits
         policy_all = model.policy_logits(features, tuple(code_ids), code_values, remaining_bits=remaining)
         feasible_ids = _feasible_ids(
             bank, codec, geometry, used=code_ids, current_bits=current_bits,
-            bit_budget=config.budget_bits,
+            bit_budget=config.bit_budget,
         )
         action_ids = tuple(feasible_ids + [STOP_ID])
         candidate_ids = _candidate_ids(
@@ -581,8 +529,8 @@ def student_rollout(
         )
         restricted = _policy_row(policy_all, candidate_ids, len(bank))
         action_logits = _policy_row(policy_all, action_ids, len(bank))
-        if not torch.isfinite(action_logits).any():
-            raise FloatingPointError("full feasible policy has no finite action logit")
+        if not torch.isfinite(action_logits).all():
+            raise FloatingPointError("full feasible policy contains a non-finite action logit")
         utilities = torch.zeros(len(candidate_ids), device=student_values.device, dtype=student_values.dtype)
         target = None
         make_trials = labels is not None and not (
@@ -592,10 +540,10 @@ def student_rollout(
             utilities = trial_utilities(
                 model, current_ids=tuple(code_ids), current_values=code_values.detach(),
                 candidate_ids=candidate_ids, student_values=student_values.detach(), labels=labels,
-                bank=bank, codec=codec, geometry=geometry, lambda_cost=config.lambda_cost,
+                codec=codec, geometry=geometry, lambda_cost=config.cost_lambda,
                 chunk_size=chunk_size,
             ).to(device=student_values.device, dtype=student_values.dtype)
-            if config.policy_loss and config.policy_mode == "learned":
+            if config.policy_enabled and config.policy_mode == "learned":
                 loss, target = policy_cross_entropy(policy_all, candidate_ids, utilities,
                                                     bank_size=len(bank), temperature=config.temperature)
                 policy_terms.append(loss)
@@ -626,7 +574,7 @@ def student_rollout(
         selected_cost = 0
         if selected_id != STOP_ID:
             selected_cost = _incremental_bits(codec, code_ids, selected_id, geometry)
-            if current_bits + selected_cost > config.budget_bits:
+            if current_bits + selected_cost > config.bit_budget:
                 raise RuntimeError("selected query exceeded the pre-masked bit budget")
         traces.append(CandidateTrace(
             step=step, state_ids=tuple(code_ids), state_bits=current_bits,
@@ -644,7 +592,7 @@ def student_rollout(
     final_logits = model.decode(tuple(code_ids), code_values, geometry, chunk_size=chunk_size)
     if not torch.isfinite(final_logits).all():
         raise FloatingPointError("student decoder returned NaN or Inf")
-    seg = segmentation_loss(final_logits, labels) if labels is not None else None
+    seg = supervised_loss(final_logits, labels) if labels is not None else None
     region = boundary = None
     if query_targets is not None:
         region, boundary = query_losses(student_values, query_targets, bank)
@@ -663,44 +611,16 @@ def student_rollout(
     )
 
 
-def student_objective(*args: Any, **kwargs: Any) -> RolloutResult:
-    return student_rollout(*args, **kwargs)
-
-
-def student_loss(*args: Any, **kwargs: Any) -> Tensor:
-    """Return the scalar unweighted ``L_S`` for a labelled rollout."""
-
-    result = student_rollout(*args, **kwargs)
-    if result.total_loss is None:
-        raise ValueError("student_loss requires labels/query targets")
-    return result.total_loss
-
-
-def training_step(*args: Any, **kwargs: Any) -> dict[str, Any]:
-    result = student_rollout(*args, **kwargs)
-    return {
-        "loss": result.total_loss,
-        "total_loss": result.total_loss,
-        "segmentation_loss": result.segmentation_loss,
-        "region_query_loss": result.region_query_loss,
-        "boundary_query_loss": result.boundary_query_loss,
-        "policy_loss": result.policy_loss,
-        "rollout": result,
-    }
-
-
 def infer_student(*args: Any, **kwargs: Any) -> RolloutResult:
     kwargs = dict(kwargs)
-    kwargs.pop("labels", None)
-    kwargs.pop("teacher", None)
-    kwargs.pop("teacher_values", None)
-    kwargs.pop("query_targets", None)
+    for forbidden in ("labels", "teacher", "teacher_values", "query_targets"):
+        value = kwargs.pop(forbidden, None)
+        if value is not None:
+            raise ValueError(f"infer_student does not accept training-only argument {forbidden}")
     return student_rollout(*args, **kwargs)
 
 
 __all__ = [
-    "STOP_ID", "K1Config", "RolloutConfig", "CandidateTrace", "RolloutResult",
-    "segmentation_loss", "normalized_query_mae", "query_losses", "trial_utilities",
-    "policy_cross_entropy", "build_candidate_set", "student_rollout", "student_objective", "student_loss", "training_step",
-    "infer_student",
+    "STOP_ID", "K1Config", "CandidateTrace", "RolloutResult",
+    "query_losses", "trial_utilities", "policy_cross_entropy", "student_rollout", "infer_student",
 ]

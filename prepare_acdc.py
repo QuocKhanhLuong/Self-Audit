@@ -14,10 +14,12 @@ from self_audit.data import (
     GEOMETRY_MAP_SCHEMA,
     GEOMETRY_SCHEMA,
     label_subset,
-    validate_geometry,
     write_json,
 )
 from self_audit.model import digest
+from self_audit.preparation import native_geometry_zyx as _native_geometry_zyx
+from self_audit.preparation import read_patient_split as _read_patient_split
+from self_audit.preparation import affine_in_mm, spatial_unit
 
 
 def one(paths):
@@ -27,64 +29,17 @@ def one(paths):
 
 
 def native_geometry_zyx(affine, shape_zyx):
-    """Convert a native XYZ affine to the cached ZYX index order.
-
-    The cache stores ``T,Z,Y,X`` while NIfTI affine columns address
-    ``X,Y,Z``.  The returned affine maps cache ``(z,y,x)`` directly into the
-    same world frame.  We currently reject shear because the candidate-A
-    physical distance target assumes an orthogonal native grid.
-    """
-    source = np.asarray(affine, dtype=np.float64)
-    if source.shape != (4, 4) or not np.isfinite(source).all():
-        raise ValueError("native affine must be finite 4x4")
-    if not np.allclose(source[3], [0., 0., 0., 1.], rtol=0., atol=1e-6):
-        raise ValueError("native affine must be homogeneous")
-    linear = source[:3, :3]
-    spacing_xyz = np.linalg.norm(linear, axis=0)
-    if (spacing_xyz <= 0).any() or not np.isfinite(spacing_xyz).all():
-        raise ValueError("native affine has invalid voxel spacing")
-    directions = linear / spacing_xyz
-    if not np.allclose(directions.T @ directions, np.eye(3), rtol=1e-5, atol=1e-5):
-        raise ValueError("sheared native affine is unsupported")
-    # raw XYZ index = P * cache ZYX index; preserve the original translation.
-    permutation = np.eye(4, dtype=np.float64)
-    permutation[:3, :3] = np.asarray([[0., 0., 1.], [0., 1., 0.], [1., 0., 0.]])
-    affine_zyx = source @ permutation
-    spacing_zyx = spacing_xyz[[2, 1, 0]]
-    geometry = {
-        "schema": GEOMETRY_SCHEMA,
-        "array_axes": ["T", "Z", "Y", "X"],
-        "spatial_axes": ["Z", "Y", "X"],
-        "shape_zyx": [int(x) for x in shape_zyx],
-        "spacing_zyx_mm": [float(x) for x in spacing_zyx],
-        "spacing_yx_mm": [float(x) for x in spacing_zyx[1:]],
-        "affine_zyx": affine_zyx.tolist(),
-        "class_mapping": dict(CLASS_MAPPING),
-    }
-    return validate_geometry(geometry, shape_zyx=shape_zyx)
+    """Compatibility wrapper for the shared native geometry validator."""
+    return _native_geometry_zyx(affine, shape_zyx)
 
 
 
 def read_patient_split(path):
-    obj = json.loads(Path(path).read_text()); result = {}
-    for role in ("train", "val", "test"):
-        variants = []
-        for key in (role, role + "_patients"):
-            if isinstance(obj.get(key), list): variants.append(obj[key])
-        for key in ("splits", "locked_splits"):
-            group = obj.get(key, {}).get(role) if isinstance(obj.get(key), dict) else None
-            if isinstance(group, dict): group = group.get("patients")
-            if isinstance(group, list): variants.append(group)
-        if not variants:
-            if role != "test": raise ValueError("missing patient-level split")
-            result[role] = []; continue
-        if any(sorted(v) != sorted(variants[0]) for v in variants):
-            raise ValueError("conflicting split representations")
-        result[role] = list(variants[0])
-    return result
+    """Compatibility wrapper for the shared patient split reader."""
+    return _read_patient_split(path)
 
 
-def prepare(root, split_path, out, budget, seed, evaluation=False):
+def prepare(root, split_path, out, budget, seed, evaluation=False, spatial_unit_override=None):
     import nibabel as nib  # Optional preparation dependency; never silently installed.
     root, out = Path(root).resolve(), Path(out).resolve()
     split = read_patient_split(split_path)
@@ -95,7 +50,7 @@ def prepare(root, split_path, out, budget, seed, evaluation=False):
     if out.exists() or out == root or root.is_relative_to(out):
         raise ValueError("new separate output directory required")
     out.mkdir(parents=True)
-    groups = {"labeled": [], "unlabeled": [], "evaluation": []}; source_images = {}; geometry_by_patient = {}
+    groups = {"labeled": [], "unlabeled": [], "evaluation": []}; source_images = {}; geometry_by_patient = {}; spatial_units = {}
     ids = split["train"] + (split["val"] if evaluation else [])
     for pid in ids:
         folder = root / pid
@@ -106,7 +61,9 @@ def prepare(root, split_path, out, budget, seed, evaluation=False):
         arr = np.clip((raw-lo)/max(float(hi-lo), 1e-6), 0, 1).transpose(3, 2, 1, 0).astype(np.float32)
         ip = out / f"{pid}.npy"; np.save(ip, arr)
         r = {"id": pid, "image": ip.name, "image_sha256": digest(ip)}
-        native_geometry = native_geometry_zyx(ci.affine, arr.shape[1:])
+        unit = spatial_unit(ci, spatial_unit_override)
+        spatial_units[pid] = unit
+        native_geometry = native_geometry_zyx(affine_in_mm(ci.affine, unit), arr.shape[1:])
         geometry_by_patient[pid] = native_geometry
         role = "evaluation" if pid in split["val"] else ("labeled" if pid in labeled_ids else "unlabeled")
         if role != "unlabeled":
@@ -119,7 +76,10 @@ def prepare(root, split_path, out, budget, seed, evaluation=False):
                     raise ValueError("reference/frame geometry mismatch")
                 if not np.allclose(frame.affine, ci.affine):
                     raise ValueError("frame/cine geometry mismatch")
-                native_geometry_zyx(frame.affine, arr.shape[1:])
+                frame_unit = spatial_unit(frame, spatial_unit_override)
+                if frame_unit != unit:
+                    raise ValueError("frame/cine spatial units differ; normalize source headers explicitly")
+                native_geometry_zyx(affine_in_mm(frame.affine, frame_unit), arr.shape[1:])
                 if not 0 <= t < raw.shape[3] or not np.array_equal(np.asarray(frame.dataobj), raw[..., t]):
                     raise ValueError("frame/cine exact voxel bridge failed")
                 y = np.asarray(mask.dataobj)
@@ -131,6 +91,7 @@ def prepare(root, split_path, out, budget, seed, evaluation=False):
     if len(set(source_images.values())) != len(source_images):
         raise ValueError("duplicate raw patient content across roles; resolve split explicitly, never silently drop")
     train_manifest = {"schema": "self_audit.data.v2", "role": "training", "synthetic": False,
+                      "dataset": "acdc",
                       "label_budget": budget, "label_seed": seed, "labeled": groups["labeled"],
                       "unlabeled": groups["unlabeled"], "evaluation_ids": split["val"]+split["test"],
                       "class_mapping": dict(CLASS_MAPPING),
@@ -141,15 +102,17 @@ def prepare(root, split_path, out, budget, seed, evaluation=False):
     write_json(out / "train.json", train_manifest)
     if evaluation:
         write_json(out / "development.json", {"schema": "self_audit.data.v2", "role": "development",
-                     "synthetic": False, "patients": groups["evaluation"], "scope": "exposed_development",
+                     "synthetic": False, "dataset": "acdc", "patients": groups["evaluation"], "scope": "exposed_development",
                      "class_mapping": dict(CLASS_MAPPING),
                      "geometry": {"schema": GEOMETRY_MAP_SCHEMA,
                                   "by_patient": {r["id"]: geometry_by_patient[r["id"]] for r in groups["evaluation"]}}})
-    write_json(out / "PREPARATION.json", {"source_split_sha256": digest(split_path), "raw_images": source_images,
+    write_json(out / "PREPARATION.json", {"schema": "self_audit.preparation.acdc.v1", "dataset": "acdc",
+               "source_split_sha256": digest(split_path), "raw_images": source_images,
                "read_mask_patient_ids": labeled_ids + (split["val"] if evaluation else []),
                "unlabeled_mask_reads": 0, "normalization": "per_cine_image_only_percentiles_0.5_99.5",
                "train_manifest_sha256": digest(out/"train.json"), "evaluation_authorized": evaluation,
                "geometry_schema": GEOMETRY_SCHEMA, "geometry_axis_order": ["T", "Z", "Y", "X"],
+               "spatial_unit_override": spatial_unit_override, "spatial_units": spatial_units,
                "class_mapping": dict(CLASS_MAPPING)})
     return digest(out / "train.json")
 
@@ -159,4 +122,5 @@ if __name__ == "__main__":
     p.add_argument("--root", required=True); p.add_argument("--split", required=True)
     p.add_argument("--out", required=True); p.add_argument("--labels", type=int, default=8)
     p.add_argument("--seed", type=int, default=42); p.add_argument("--evaluation", action="store_true")
-    a = p.parse_args(); print(prepare(a.root, a.split, a.out, a.labels, a.seed, a.evaluation))
+    p.add_argument("--spatial-unit", choices=("mm", "m", "micron"))
+    a = p.parse_args(); print(prepare(a.root, a.split, a.out, a.labels, a.seed, a.evaluation, a.spatial_unit))

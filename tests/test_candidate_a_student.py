@@ -55,14 +55,15 @@ def test_decoder_has_no_feature_argument_and_empty_code_uses_null_token():
     assert torch.isfinite(output).all()
 
 
-def test_teacher_free_export_load_matches_decoder():
+def test_teacher_free_state_load_matches_decoder():
     torch.manual_seed(8)
     m = model().eval()
     ids = (m.query_ids[0], m.query_ids[3])
     values = torch.tensor([[0.25, -0.5]])
     geometry = {"shape": (5, 7), "spacing_yx": (1.0, 1.0)}
     expected = m.decode(ids, values, geometry)
-    restored = CandidateAStudent.from_export(m.export_student(), bank()).eval()
+    restored = model().eval()
+    restored.load_state_dict(m.state_dict(), strict=True)
     actual = restored.decode(ids, values, geometry)
     torch.testing.assert_close(expected, actual)
     assert all("teacher" not in key.lower() for key in restored.state_dict())
@@ -94,3 +95,42 @@ def test_decoder_is_code_only_and_serialized_quantized_code_is_geometry_stable()
         again = m.decode(packet.ids, restored_values,
                           {"shape": packet.shape, "spacing_yx": packet.spacing})
         torch.testing.assert_close(after, again, atol=0, rtol=0)
+
+
+def test_bank_ablation_preserves_common_seeded_student_parameters():
+    """Changing bank size must not silently change shared initialization."""
+    full = bank()
+    region_only = QueryBank(BankConfig(
+        region_grid=(1, 1), boundary_grid=(1, 1), region_scales=(1.0,),
+        types=("REGION",),
+    ))
+    boundary_only = QueryBank(BankConfig(
+        region_grid=(1, 1), boundary_grid=(1, 1), region_scales=(1.0,),
+        types=("BOUNDARY",),
+    ))
+    assert len(full) == 6 and len(region_only) == 3 and len(boundary_only) == 3
+    torch.manual_seed(101)
+    full_model = CandidateAStudent(full, StudentConfig(width=8, decoder_dim=8, num_heads=2))
+    torch.manual_seed(101)
+    region_model = CandidateAStudent(region_only, StudentConfig(width=8, decoder_dim=8, num_heads=2))
+    torch.manual_seed(101)
+    boundary_model = CandidateAStudent(boundary_only, StudentConfig(width=8, decoder_dim=8, num_heads=2))
+    bank_dependent = {"query_descriptors", "query_kinds", "id_embedding.weight", "policy_id_embedding.weight"}
+    full_state = full_model.state_dict()
+    shared = [key for key in full_state if key not in bank_dependent]
+    assert shared
+    for subset_model in (region_model, boundary_model):
+        subset_state = subset_model.state_dict()
+        assert all(key in subset_state for key in shared)
+        for key in shared:
+            torch.testing.assert_close(full_state[key], subset_state[key], msg=f"seed drift in {key}")
+
+    full_by_id = {query.query_id: index for index, query in enumerate(full)}
+    for subset, subset_model in ((region_only, region_model), (boundary_only, boundary_model)):
+        subset_by_id = {query.query_id: index for index, query in enumerate(subset)}
+        for query_id, subset_index in subset_by_id.items():
+            full_index = full_by_id[query_id]
+            torch.testing.assert_close(full_model.id_embedding.weight[full_index],
+                                       subset_model.id_embedding.weight[subset_index])
+            torch.testing.assert_close(full_model.policy_id_embedding.weight[full_index],
+                                       subset_model.policy_id_embedding.weight[subset_index])

@@ -7,8 +7,8 @@ from self_audit.model import digest
 from self_audit.data import write_json
 from . import CLASS_MAPPING
 
-CHECKPOINT_SCHEMA = "self_audit.candidate_a.checkpoint.v1"
-EXPORT_SCHEMA = "self_audit.candidate_a.student.v1"
+CHECKPOINT_SCHEMA = "self_audit.candidate_a.checkpoint.v2"
+EXPORT_SCHEMA = "self_audit.candidate_a.student.v2"
 
 
 def source_inventory():
@@ -46,14 +46,15 @@ def build_student(config):
     return model, bank, codec
 
 
-def save_checkpoint(folder, *, student, teacher, optimizers, config, data, step, provenance):
+def save_checkpoint(folder, *, student, teacher, optimizers, config, data, epoch, updates, provenance):
     folder = Path(folder)
     folder.mkdir(parents=True, exist_ok=False)
     payload = {"student": student.state_dict(), "teacher": teacher.state_dict() if teacher is not None else None,
                "optimizers": [o.state_dict() for o in optimizers], "torch_rng": torch.get_rng_state()}
     torch.save(payload, folder / "weights.pt")
     sources = source_inventory()
-    meta = {"schema": CHECKPOINT_SCHEMA, "config": config, "step": step,
+    meta = {"schema": CHECKPOINT_SCHEMA, "config": config, "epoch": epoch,
+            "completed_sample_updates": updates,
             "class_mapping": CLASS_MAPPING, "model_class": "CandidateAStudent",
             "labeled_ids": data.lids, "unlabeled_ids": data.uids,
             "label_budget": len(data.lids), "label_reads": sorted(data.label_reads),

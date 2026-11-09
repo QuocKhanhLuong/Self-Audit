@@ -1,10 +1,9 @@
 import copy
-import hashlib
 
 import pytest
 import torch
 
-from self_audit.model import build_model
+from self_audit.model import CenterDifference, Residual, TinyEncoder
 from self_audit.candidate_a.teacher import (
     CLASS_NAMES,
     DualBranchTeacher,
@@ -20,6 +19,24 @@ def recipe():
         "class_mapping": list(CLASS_NAMES),
         "num_classes": 4,
     }
+
+
+def legacy_native_state_fixture():
+    """Construct a known legacy state without instantiating the removed native model."""
+    encoder = TinyEncoder()
+    adapter = CenterDifference()
+    widths = (8, 16, 24, 32)
+    lateral = torch.nn.ModuleList(torch.nn.Conv2d(c, d, 1) for c, d in zip(encoder.channels, widths))
+    up = torch.nn.ModuleList(torch.nn.Conv2d(widths[i + 1], widths[i], 1) for i in range(3))
+    refine = torch.nn.ModuleList(torch.nn.Sequential(Residual(d), Residual(d)) for d in widths)
+    head = torch.nn.Conv2d(widths[0], 4, 1)
+    modules = (("encoder.", encoder), ("input_adapter.", adapter), ("lateral.", lateral),
+               ("up.", up), ("refine.", refine))
+    state = {f"{prefix}{key}": value.detach().clone()
+             for prefix, module in modules for key, value in module.state_dict().items()}
+    state["head.weight"] = head.weight.detach().clone()
+    state["head.bias"] = head.bias.detach().clone()
+    return state
 
 
 def test_teacher_shared_encoder_and_separate_branches_receive_gradients():
@@ -100,8 +117,7 @@ def test_stage_controls_encoder_without_disabling_new_branches():
 
 
 def test_native_initialization_requires_explicit_ontology_and_four_class_head():
-    base, _ = build_model({"backbone": "tiny_test"}, synthetic=True)
-    state = copy.deepcopy(base.state_dict())
+    state = legacy_native_state_fixture()
     metadata = {"model_class": "NativeStudent"}
     with pytest.raises(ValueError, match="explicit class_mapping"):
         build_teacher({"backbone": "tiny_test"}, synthetic=True, native_state=state, native_metadata=metadata)
@@ -113,43 +129,10 @@ def test_native_initialization_requires_explicit_ontology_and_four_class_head():
     assert provenance["segmentation_pretrained"] is False
     torch.testing.assert_close(
         teacher.encoder.stages[0].weight,
-        base.encoder.stages[0].weight,
+        state["encoder.stages.0.weight"],
     )
 
     bad_state = copy.deepcopy(state)
     bad_state["head.weight"] = bad_state["head.weight"][:3]
     with pytest.raises(ValueError, match="exactly four classes"):
         build_teacher(recipe(), synthetic=True, native_state=bad_state, native_metadata=metadata)
-
-
-def test_full_teacher_checkpoint_schema_and_hash_are_strict(tmp_path):
-    teacher, _ = build_teacher(recipe(), synthetic=True)
-    payload = {
-        "schema": "self_audit.teacher.v1",
-        "model_class": "DualBranchTeacher",
-        "num_classes": 4,
-        "class_mapping": list(CLASS_NAMES),
-        "state_dict": teacher.state_dict(),
-    }
-    checkpoint = tmp_path / "teacher.pt"
-    torch.save(payload, checkpoint)
-    hasher = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
-    config = recipe() | {"segmentation_checkpoint_sha256": hasher}
-    loaded, provenance = build_teacher(config, synthetic=True, segmentation_checkpoint=checkpoint)
-    assert provenance["segmentation_pretrained"] is True
-    assert loaded.segmentation_ready is True
-
-    bad_config = recipe() | {"segmentation_checkpoint_sha256": "0" * 64}
-    with pytest.raises(ValueError, match="hash mismatch"):
-        build_teacher(bad_config, synthetic=True, segmentation_checkpoint=checkpoint)
-
-    native_payload = payload | {"schema": "self_audit.checkpoint.v2"}
-    native_checkpoint = tmp_path / "native.pt"
-    torch.save(native_payload, native_checkpoint)
-    native_hash = hashlib.sha256(native_checkpoint.read_bytes()).hexdigest()
-    with pytest.raises(ValueError, match="native v2"):
-        build_teacher(
-            recipe() | {"segmentation_checkpoint_sha256": native_hash},
-            synthetic=True,
-            segmentation_checkpoint=native_checkpoint,
-        )

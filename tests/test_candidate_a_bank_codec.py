@@ -153,7 +153,6 @@ def test_actual_budget_cost_includes_r0_and_geometry_and_incremental_cost():
     one = codec.cost((1,), shape=(32, 32), spacing=(2.0, 1.0))
     assert base > 0 and one > base
     assert codec.incremental_cost((), 1, shape=(32, 32), spacing=(2.0, 1.0)) == one - base
-    assert codec.incremental_cost(1, shape=(32, 32), spacing=(2.0, 1.0)) == one - base
     assert codec.incremental_cost((1,), 1) == 0
     assert codec.fits((1,), one, shape=(32, 32), spacing=(2.0, 1.0))
     with pytest.raises(ValueError, match="budget"):

@@ -23,8 +23,8 @@ def write_json(path, data):
 
 
 def label_subset(patient_ids, count, seed):
-    if len(set(patient_ids)) != len(patient_ids) or not 2 <= count < len(patient_ids):
-        raise ValueError("need unique TRAIN IDs and 2 <= label budget < TRAIN patients")
+    if len(set(patient_ids)) != len(patient_ids) or not 2 <= count <= len(patient_ids):
+        raise ValueError("need unique TRAIN IDs and 2 <= label budget <= TRAIN patients")
     return sorted(sorted(patient_ids, key=lambda p: hashlib.sha256(f"{seed}:{p}".encode()).hexdigest())[:count])
 
 
@@ -110,8 +110,8 @@ class TrainingData:
             raise ValueError("synthetic/patient identity mismatch")
         self.labeled, self.unlabeled = m["labeled"], m["unlabeled"]
         self.lids, self.uids = [r["id"] for r in self.labeled], [r["id"] for r in self.unlabeled]
-        if len(self.lids) < 2 or not self.uids or len(set(self.lids + self.uids)) != len(self.lids + self.uids):
-            raise ValueError("nonempty disjoint patient sets and at least two labeled patients required")
+        if len(self.lids) < 2 or len(set(self.lids + self.uids)) != len(self.lids + self.uids):
+            raise ValueError("disjoint patient sets and at least two labeled patients required")
         if set(self.lids + self.uids) & set(m.get("evaluation_ids", [])):
             raise ValueError("TRAIN/evaluation patient overlap")
         if m.get("label_budget") != len(self.lids):
@@ -139,9 +139,17 @@ class TrainingData:
             if r["id"] in self.geometry:
                 self.geometry[r["id"]] = validate_geometry(self.geometry[r["id"]], shape_zyx=a.shape[1:])
             if "masks" in r:
+                frame_numbers = []
                 for t, mask in r["masks"].items():
-                    if not 0 <= int(t) < a.shape[0] or set(mask) != {"path", "sha256"}:
+                    try:
+                        frame = int(t)
+                    except (TypeError, ValueError) as exc:
+                        raise ValueError("labeled mask frame keys must be canonical decimal strings") from exc
+                    if not isinstance(t, str) or str(frame) != t:
+                        raise ValueError("labeled mask frame keys must be canonical decimal strings")
+                    if not 0 <= frame < a.shape[0] or frame in frame_numbers or set(mask) != {"path", "sha256"}:
                         raise ValueError("invalid labeled frame")
+                    frame_numbers.append(frame)
                     # Hash access is allowed only for the budgeted labeled pool.
                     if digest(self.resolve(mask["path"])) != mask["sha256"]:
                         raise ValueError("labeled mask hash mismatch")
@@ -176,59 +184,39 @@ class TrainingData:
         inds = [max(0, z - 1), z, min(cine.shape[1] - 1, z + 1)]
         return torch.from_numpy(np.array(cine[t, inds], dtype=np.float32, copy=True))[None]
 
-    def sample_labeled(self, index, rng, *, foreground_probability=.5):
-        r = self.labeled[index]
-        cine = self.array(r["image"], r["image_sha256"])
-        frame = sorted(r["masks"], key=int)[int(rng.integers(len(r["masks"])))]
-        rec = r["masks"][frame]
-        mask = self.array(rec["path"], rec["sha256"])
-        if mask.shape != cine.shape[1:] or not np.isin(mask, [0, 1, 2, 3, 255]).all():
-            raise ValueError("mask shape/ontology mismatch")
-        self.label_reads.add(r["id"])
-        foreground = np.flatnonzero(((mask > 0) & (mask < 4)).reshape(len(mask), -1).any(1))
-        z = int(rng.choice(foreground)) if len(foreground) and rng.random() < foreground_probability else int(rng.integers(len(mask)))
-        x = self.context(cine, int(frame), z)
-        y = torch.from_numpy(np.array(mask[z], dtype=np.int64, copy=True))[None]
-        return x, y, {"patient": r["id"], "frame": int(frame), "slice": z}
+    def labeled_slice_keys(self) -> list[tuple[int, int, int]]:
+        """Return compact ``(record_index, frame, slice)`` TRAIN references."""
+        keys: list[tuple[int, int, int]] = []
+        for record_index, record in enumerate(self.labeled):
+            cine = self.array(record["image"], record["image_sha256"])
+            for frame_key in sorted(record["masks"], key=int):
+                frame = int(frame_key)
+                mask_record = record["masks"][frame_key]
+                mask = self.array(mask_record["path"], mask_record["sha256"])
+                if mask.shape != cine.shape[1:] or not np.isin(mask, [0, 1, 2, 3]).all():
+                    raise ValueError("Candidate A dense TRAIN masks must use labels 0..3 with no ignore pixels")
+                keys.extend((record_index, frame, z) for z in range(mask.shape[0]))
+        if not keys:
+            raise ValueError("labeled TRAIN manifest has no annotated frame/slice samples")
+        return keys
 
-    def sample_labeled_with_geometry(self, index, rng, *, foreground_probability=.5, require_geometry=False):
-        """Existing sample plus validated geometry; sample_labeled stays unchanged."""
-        x, y, meta = self.sample_labeled(index, rng, foreground_probability=foreground_probability)
-        return x, y, self.geometry_for(meta["patient"], required=require_geometry), meta
-
-    def sample_unlabeled(self, index, rng):
-        r = self.unlabeled[index]
-        cine = self.array(r["image"], r["image_sha256"])
-        t, z = int(rng.integers(len(cine))), int(rng.integers(cine.shape[1]))
-        return self.context(cine, t, z), {"patient": r["id"], "frame": t, "slice": z}
-
-    def sample_unlabeled_with_geometry(self, index, rng, *, require_geometry=False):
-        x, meta = self.sample_unlabeled(index, rng)
-        return x, self.geometry_for(meta["patient"], required=require_geometry), meta
-
-
-def synthetic_fixture(folder, seed=11, n_labeled=3, n_unlabeled=3, size=32):
-    """Manufactured objects only. Never evidence of cardiac accuracy."""
-    folder = Path(folder); folder.mkdir(parents=True, exist_ok=False)
-    rng = np.random.default_rng(seed)
-    yy, xx = np.mgrid[:size, :size]
-    labeled, unlabeled = [], []
-    for j in range(n_labeled + n_unlabeled):
-        cy, cx = size * (.5 + rng.uniform(-.08, .08)), size * (.5 + rng.uniform(-.08, .08))
-        radius = np.sqrt((yy - cy)**2 + (xx - cx)**2)
-        y = np.zeros((size, size), np.uint8)
-        y[radius < size * .27] = 2
-        y[radius < size * .18] = 3
-        y[(yy - cy)**2 + (xx - (cx - size * .29))**2 < (size * .12)**2] = 1
-        image = np.clip(np.choose(y, [.1, .8, .45, .9]) + rng.normal(0, .04, y.shape), 0, 1).astype(np.float32)[None, None]
-        pid = f"synthetic_{j:03d}"; ip = folder / f"{pid}.npy"; np.save(ip, image)
-        r = {"id": pid, "image": ip.name, "image_sha256": digest(ip)}
-        if j < n_labeled:
-            mp = folder / f"{pid}_mask.npy"; np.save(mp, y[None])
-            r["masks"] = {"0": {"path": mp.name, "sha256": digest(mp)}}; labeled.append(r)
-        else:
-            unlabeled.append(r)
-    manifest = folder / "train.json"
-    write_json(manifest, {"schema": "self_audit.data.v2", "role": "training", "synthetic": True,
-                         "label_budget": n_labeled, "labeled": labeled, "unlabeled": unlabeled, "evaluation_ids": []})
-    return manifest, digest(manifest)
+    def load_labeled_slice(self, key: tuple[int, int, int]):
+        """Materialize one key returned by :meth:`labeled_slice_keys`."""
+        if len(key) != 3:
+            raise ValueError("labeled slice key must be (record_index, frame, slice)")
+        record_index, frame, slice_index = (int(value) for value in key)
+        if not 0 <= record_index < len(self.labeled):
+            raise IndexError("labeled slice record index is outside TRAIN")
+        record = self.labeled[record_index]
+        frame_key = str(frame)
+        if frame_key not in record["masks"]:
+            raise IndexError("labeled slice frame is not annotated")
+        cine = self.array(record["image"], record["image_sha256"])
+        mask_record = record["masks"][frame_key]
+        mask = self.array(mask_record["path"], mask_record["sha256"])
+        if mask.shape != cine.shape[1:] or not 0 <= slice_index < mask.shape[0]:
+            raise IndexError("labeled slice is outside cached geometry")
+        self.label_reads.add(record["id"])
+        x = self.context(cine, frame, slice_index)
+        y = torch.from_numpy(np.array(mask[slice_index], dtype=np.int64, copy=True))[None]
+        return x, y, {"patient": record["id"], "frame": frame, "slice": slice_index}

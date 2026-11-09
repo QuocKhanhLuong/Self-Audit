@@ -1,16 +1,24 @@
 #!/usr/bin/env python3
-import argparse,json
-from pathlib import Path
-if __name__=='__main__':
-    p=argparse.ArgumentParser(description='Frozen v2 development/external evaluation, no training')
-    p.add_argument('--checkpoint',required=True);p.add_argument('--checkpoint-sha256',required=True)
-    p.add_argument('--data',required=True);p.add_argument('--data-sha256',required=True)
-    p.add_argument('--out',required=True);p.add_argument('--device',default='cuda');p.add_argument('--threshold',type=float)
-    a=p.parse_args()
-    meta=json.loads((Path(a.checkpoint)/'MANIFEST.json').read_text())
-    if meta.get('schema','').startswith('self_audit.candidate_a.'):
-        from self_audit.candidate_a.evaluation import evaluate
-    else:
-        from self_audit.evaluation import evaluate
-    r=evaluate(a.checkpoint,a.checkpoint_sha256,a.data,a.data_sha256,a.out,a.device,a.threshold)
-    print(json.dumps(r['macro_patient'],indent=2))
+"""Evaluate a frozen Candidate A student; never train or select a checkpoint."""
+import argparse
+import json
+from self_audit.candidate_a.evaluation import evaluate
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--checkpoint", required=True)
+    parser.add_argument("--checkpoint-sha256", required=True)
+    parser.add_argument("--data", required=True)
+    parser.add_argument("--data-sha256", required=True)
+    parser.add_argument("--out", required=True)
+    parser.add_argument("--device", default="cuda")
+    parser.add_argument("--threshold", type=float)
+    args = parser.parse_args()
+    result = evaluate(args.checkpoint, args.checkpoint_sha256, args.data, args.data_sha256,
+                      args.out, args.device, args.threshold)
+    print(json.dumps(result["macro_patient"], indent=2))
+
+
+if __name__ == "__main__":
+    main()
