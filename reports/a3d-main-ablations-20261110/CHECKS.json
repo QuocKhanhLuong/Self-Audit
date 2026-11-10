@@ -1,0 +1,32 @@
+[
+  {
+    "name": "check_repo",
+    "command": [
+      "/Users/alvinluong/miniforge3/envs/selfaudit-modal/bin/python",
+      "scripts/check_repo.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "pytest",
+    "command": [
+      "/Users/alvinluong/miniforge3/envs/selfaudit-modal/bin/python",
+      "-m",
+      "pytest",
+      "-q"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "ruff",
+    "command": [
+      "ruff",
+      "check",
+      "--select",
+      "F401,F811,F821",
+      "scripts/candidate_a_ablations.py",
+      "tests/test_candidate_a3d_ablations.py"
+    ],
+    "exit_code": 0
+  }
+]

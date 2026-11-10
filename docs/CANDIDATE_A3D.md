@@ -116,7 +116,12 @@ policy timing is not currently instrumented.
 
 ## Train, evaluate and export
 
-Use the same preparation commands as A, then choose the A-3D recipes:
+Use the same preparation commands as A. The recommended contribution check is
+the one-seed four-arm plan in [EXPERIMENTS.md](EXPERIMENTS.md): `full`,
+`teacher_free`, `fixed_queries` and `global_only_queries`. It runs the two
+shared teacher stages once and then four matched student runs. The manual
+commands below are useful when running only the reference `full` arm or when
+transferring an explicitly named checkpoint between stages.
 
 Start from `configs/backbone3d.example.json`, replace the source path with an
 already available clean MedNeXt checkout at the pinned commit, and add a local
@@ -196,8 +201,10 @@ The independent implementation review is recorded in
 | A3D-11 | Full timing and bytes | phase timing and serialized packet receipt |
 | A3D-12 | Bounded claims | separate fixtures, checkpoints and patient results |
 
-At the current software revision, the synthetic contract receipt records 117
-passing tests and 88 synthetic matrix jobs. These checks cover shapes,
+At the current software revision, the historical synthetic contract receipt
+records 117 passing tests and 88 jobs from the earlier full matrix. The primary
+server experiment is the smaller one-seed four-arm plan described above. These
+checks cover shapes,
 geometry, serialization, gradients, export and pipeline lifecycle only. They do
 not establish teacher quality or segmentation efficacy. Locked ACDC/M&Ms patient
 runs, verified pretrained MedNeXt weights, CUDA profiling, SOTA/96 Dice and

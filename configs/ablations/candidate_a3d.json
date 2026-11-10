@@ -1,5 +1,6 @@
 {
   "schema": "self_audit.candidate_a3d.ablations.v1",
+  "default_arms": ["full", "teacher_free", "fixed_queries", "global_only_queries"],
   "arms": [
     {"name": "full", "factor": "reference", "overrides": {}},
     {"name": "teacher_free", "factor": "teacher", "overrides": {"use_teacher": false, "freeze_teacher": true, "rollout.teacher_topk": 0}},

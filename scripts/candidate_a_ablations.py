@@ -70,7 +70,7 @@ def arm_config(base, arm, *, validate=validate_candidate_a):
 
 
 def create_plan(*, dataset, train_manifest, development_manifest, model_config, out,
-                seeds=(42, 43, 44), arms=None, epochs=100, pretrain_epochs=100,
+                seeds=(42,), arms=None, epochs=100, pretrain_epochs=100,
                 warmup_epochs=10, synthetic=False, track="candidate_a"):
     modules = _track_modules(track)
     folder = Path(out).resolve()
@@ -103,7 +103,10 @@ def create_plan(*, dataset, train_manifest, development_manifest, model_config, 
     base["epochs"] = epochs
     if dev_path is None:
         base["validation_every"] = 0
-    definitions = json.loads(modules["ablations"].read_text())["arms"]
+    catalogue = json.loads(modules["ablations"].read_text())
+    definitions = catalogue["arms"]
+    if arms is None:
+        arms = catalogue.get("default_arms")
     if arms is not None:
         if not arms or len(set(arms)) != len(arms) or set(arms) - {a["name"] for a in definitions}:
             raise ValueError("unknown, empty or duplicate ablation selection")
@@ -151,6 +154,7 @@ def create_plan(*, dataset, train_manifest, development_manifest, model_config, 
             "development": str(dev_path) if dev_path else None,
             "development_sha256": digest(dev_path) if dev_path else None,
             "label_budget": len(data.lids), "training_seeds": list(seeds), "source_files": modules["source_inventory"](),
+            "ablation_arms": [definition["name"] for definition in definitions],
             "comparison_contract": "same data, label budget, epoch schedule and seed within each seed block; changed capacity/bit precision declared by factor",
             "selection": "final epoch only; no test access or validation-based checkpoint selection", "jobs": jobs}
     write_json(folder / "PLAN.json", plan)
@@ -198,7 +202,7 @@ def run_plan(path, *, execute=False, device="cuda"):
     return result
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
     plan = commands.add_parser("plan")
@@ -207,8 +211,8 @@ def main():
     plan.add_argument("--development")
     plan.add_argument("--model-config")
     plan.add_argument("--out", required=True)
-    plan.add_argument("--seeds", type=int, nargs="+", default=[42, 43, 44])
-    plan.add_argument("--arms", nargs="+")
+    plan.add_argument("--seeds", type=int, nargs="+", default=[42], help="training seeds (default: 42)")
+    plan.add_argument("--arms", nargs="+", help="explicit catalogue arms; A-3D defaults to its four main comparisons")
     plan.add_argument("--epochs", type=int, default=100)
     plan.add_argument("--pretrain-epochs", type=int, default=100)
     plan.add_argument("--warmup-epochs", type=int, default=10)
@@ -218,7 +222,7 @@ def main():
     run.add_argument("--plan", required=True)
     run.add_argument("--execute", action="store_true")
     run.add_argument("--device", default="cuda")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     if args.command == "plan":
         path = create_plan(dataset=args.dataset, train_manifest=args.train,
             development_manifest=args.development, model_config=args.model_config, out=args.out,

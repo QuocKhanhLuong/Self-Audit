@@ -1,0 +1,26 @@
+{
+  "status": "PASS_SYNTHETIC_ONLY",
+  "default_seed": 42,
+  "main_arms": [
+    "full",
+    "teacher_free",
+    "fixed_queries",
+    "global_only_queries"
+  ],
+  "student_variants_per_dataset": 4,
+  "shared_teacher_stages_per_dataset": 2,
+  "checks": "119 passed; check_repo and Ruff passed",
+  "synthetic_completed_jobs": 12,
+  "runtime_source_sha256": "f9ad328fd27add333ea296edeb482e0279e752fc85faa334e312c43503573c67",
+  "runtime_source_unchanged_from": "2011c21afc0905af472c229652b15d4576e966c6",
+  "changed_files_sha256": {
+    "configs/ablations/candidate_a3d.json": "381eedf3f484382b49b4c17ea332713582218dd4e50be7e3ce21f2193d2cfb8c",
+    "scripts/candidate_a_ablations.py": "ed87e0d49ad387409137cdd763aa04707134769498954258d67a490f0009d384",
+    "tests/test_candidate_a3d_ablations.py": "e7afb3ff2ffd5456fef0eee74ad5ff78f17cd45a7810ef223021b048f81e04e8",
+    "docs/EXPERIMENTS.md": "c093c87ce87a58234b056fc00b30ed7e897a3c7a18b4d90d9e2bcc1e3d66e0e4",
+    "docs/CANDIDATE_A3D.md": "35c14d979863898362340e4095126e4183f27314f46ba3867cf3d7d60cb0d23b",
+    "docs/RUNBOOK.md": "0f57ecde13f2ef956ec39db50910d0b78cd5f0dd2bd65abbc40a317dcd191d7b"
+  },
+  "patient_training": "NOT_RUN",
+  "gpu": "NOT_RUN"
+}

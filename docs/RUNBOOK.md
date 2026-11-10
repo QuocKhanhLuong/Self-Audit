@@ -9,6 +9,12 @@ requires runtime `shape_zyx`, `spacing_zyx`, `affine_zyx` and `context=full_volu
 It rejects crop/resample/implicit augmentation. See
 [CANDIDATE_A3D.md](CANDIDATE_A3D.md) for the complete A-3D command sequence.
 
+For the main A-3D contribution check, use the one-seed plan in
+[EXPERIMENTS.md](EXPERIMENTS.md) with `--seeds 42` and the four arms
+`full teacher_free fixed_queries global_only_queries`. That plan creates two
+shared teacher stages plus four matched student runs per dataset. The larger
+21-arm catalogue is reserved for secondary diagnostics.
+
 Install `requirements.txt` in the intended CPU/CUDA environment. Read
 [DATA_PREPARATION.md](DATA_PREPARATION.md) to prepare ACDC or original M&Ms with
 native geometry and locked patient splits. Copy `configs/backbone.example.json`

@@ -1,0 +1,181 @@
+{
+  "status": "PASS_SYNTHETIC_ONLY",
+  "profiles": [
+    {
+      "dataset_profile": "acdc",
+      "synthetic": true,
+      "seeds": [
+        42
+      ],
+      "arms": [
+        "full",
+        "teacher_free",
+        "fixed_queries",
+        "global_only_queries"
+      ],
+      "jobs": [
+        {
+          "id": "s42_pretrain",
+          "status": "COMPLETED",
+          "teacher_updates": 2,
+          "student_updates": 0,
+          "config_sha256": "dd8b97382f26437589de043127f53404b80bc701bc5b5565ee65eb94b6632bfe",
+          "manifest_sha256": "eb5529351df3a3019e6dc7b7a88edb90e82ab70fc7dd569860830dd1bd0998df",
+          "payload_sha256": "fd2d2098bb2db087514dfc5858bdb99b433564ad340ba39214de4857277bd083"
+        },
+        {
+          "id": "s42_warmup",
+          "status": "COMPLETED",
+          "teacher_updates": 2,
+          "student_updates": 0,
+          "config_sha256": "d4d44e6f4b78f951047c46e7d9eb60f265c7c036f9d72132657c463fbb8e4c12",
+          "manifest_sha256": "6ac082bac7c60fbf383560b7cf6e9a41b0ef4f9e6022ec0334717be2e2750c3c",
+          "payload_sha256": "87b5c69363f4efe0673d5fc17226e472017ee564222ec3aee6fc178f7de3a706"
+        },
+        {
+          "id": "s42_full",
+          "status": "COMPLETED",
+          "teacher_updates": 2,
+          "student_updates": 2,
+          "config_sha256": "6b5d28670708c50118887a7e7a55889404432779c18f1c2fa874614c24f42393",
+          "manifest_sha256": "b5d5dc23971ba789b19198fea8c7d29f7ad853b7bfeef2b9de8a16d67253d12a",
+          "payload_sha256": "d810ba49ccb17baadb35e058b2054b80298a428f7ae1b0ddb38902018c66fe53"
+        },
+        {
+          "id": "s42_teacher_free",
+          "status": "COMPLETED",
+          "teacher_updates": 0,
+          "student_updates": 2,
+          "config_sha256": "bae5b1a38930e642e1952ec10563ad789fab23ffde292edead88beba46c8035a",
+          "manifest_sha256": "a8b57564fe193e4175126110363ea8ed92687900063bdf8bc6bc06b289adaedc",
+          "payload_sha256": "67f693db057016ebd23b191528c3cce6ae16d5f3d41af6e0af1111dee64c5545"
+        },
+        {
+          "id": "s42_fixed_queries",
+          "status": "COMPLETED",
+          "teacher_updates": 2,
+          "student_updates": 2,
+          "config_sha256": "85e8b6e173b45809da54f9db85c0edea46bd73e1d1fffa1d103119a8eb690442",
+          "manifest_sha256": "e6d03713cf2bc8d85ca4e46e776a6704c86c98d08b117604503c1cdbfba4839d",
+          "payload_sha256": "891e56816f47cfb44284c3aa28678991fc1c45433380a251cad93a63a830ee90"
+        },
+        {
+          "id": "s42_global_only_queries",
+          "status": "COMPLETED",
+          "teacher_updates": 2,
+          "student_updates": 2,
+          "config_sha256": "0fb48775947b01b2132fd32d154b45134470a9b8e90709d63c83cb0805464ab1",
+          "manifest_sha256": "8cedb92509f3a0d0e33bb9a09bd07f8281cc9a48d1565228f40e694aa0e6d1c3",
+          "payload_sha256": "14694ab069771c452c0aa6897e34ad24c051da6071e20b4676df6ff7b7fad741"
+        }
+      ],
+      "train_manifest_sha256": "ef88cc2c7a5db122976ae8f1fe8edd9669bc2b173cbcab1eca79b87c1bf79c49"
+    },
+    {
+      "dataset_profile": "mnms",
+      "synthetic": true,
+      "seeds": [
+        42
+      ],
+      "arms": [
+        "full",
+        "teacher_free",
+        "fixed_queries",
+        "global_only_queries"
+      ],
+      "jobs": [
+        {
+          "id": "s42_pretrain",
+          "status": "COMPLETED",
+          "teacher_updates": 2,
+          "student_updates": 0,
+          "config_sha256": "317b5d9e3b0f0bc58e16f0648cdbaad21768d524bb770c8f97f39a4ca4ab27b3",
+          "manifest_sha256": "1ffe9dd4d26cb1774bf7ce62fbf2a915c2e668b29e55807287fd4c750ad6c72a",
+          "payload_sha256": "fd2d2098bb2db087514dfc5858bdb99b433564ad340ba39214de4857277bd083"
+        },
+        {
+          "id": "s42_warmup",
+          "status": "COMPLETED",
+          "teacher_updates": 2,
+          "student_updates": 0,
+          "config_sha256": "1c6d15f7ad44583cc5b09856f64d7659384faf2c7eedc18c89be20c373e51cf5",
+          "manifest_sha256": "12029bcb2f2f621f11f086845a24c690841a9bb9c7cfc6c899a0d6501df21eb4",
+          "payload_sha256": "87b5c69363f4efe0673d5fc17226e472017ee564222ec3aee6fc178f7de3a706"
+        },
+        {
+          "id": "s42_full",
+          "status": "COMPLETED",
+          "teacher_updates": 2,
+          "student_updates": 2,
+          "config_sha256": "e3d9620dd450eb1f45b66a8cb949604bdbb2534170060dcbbf4efd0d8bf28aff",
+          "manifest_sha256": "f7455826c803a5e3e8d3309a645c9581603956f28f79e6d3204bba7fae80fce6",
+          "payload_sha256": "d810ba49ccb17baadb35e058b2054b80298a428f7ae1b0ddb38902018c66fe53"
+        },
+        {
+          "id": "s42_teacher_free",
+          "status": "COMPLETED",
+          "teacher_updates": 0,
+          "student_updates": 2,
+          "config_sha256": "0a7fedd11ca4118bd8edd252bae7b745b38fc14f1468a9e5d8ed552d6e78dccf",
+          "manifest_sha256": "0b7784cd3da086a866ed53c3b7cd78c103c4dde77fe930432555e336127d4dea",
+          "payload_sha256": "67f693db057016ebd23b191528c3cce6ae16d5f3d41af6e0af1111dee64c5545"
+        },
+        {
+          "id": "s42_fixed_queries",
+          "status": "COMPLETED",
+          "teacher_updates": 2,
+          "student_updates": 2,
+          "config_sha256": "73866dcc7f47f2c332ca0cfe82520f5c776e47294c62223a0a7d9ed72092922a",
+          "manifest_sha256": "a508e8c3ff3108f3ec602728dda10395b69c0ef752548904356a7f602cf5794a",
+          "payload_sha256": "891e56816f47cfb44284c3aa28678991fc1c45433380a251cad93a63a830ee90"
+        },
+        {
+          "id": "s42_global_only_queries",
+          "status": "COMPLETED",
+          "teacher_updates": 2,
+          "student_updates": 2,
+          "config_sha256": "1403781eed73e1203620ee4339a8a0e070cac6d80ebe4cd4029f677f17021ffc",
+          "manifest_sha256": "cf68253f6adced891eb4252e919eec30edbf0e4fd918837ca05e08f58d6f8f46",
+          "payload_sha256": "14694ab069771c452c0aa6897e34ad24c051da6071e20b4676df6ff7b7fad741"
+        }
+      ],
+      "train_manifest_sha256": "ef88cc2c7a5db122976ae8f1fe8edd9669bc2b173cbcab1eca79b87c1bf79c49"
+    }
+  ],
+  "source_files": {
+    "self_audit/__init__.py": "6822f8f8a55609332258736eb51627189b6caf9ee4ff56df67b2081033456e9b",
+    "self_audit/candidate_a/__init__.py": "64e28849cfb8638718ffadd8d54af86fd860b2c459472bba7ae67ee3b2231374",
+    "self_audit/candidate_a/bank.py": "51a7b13e4a16edfda94faca660d6aef31e57f4812786ba96afd2cab027ee8f75",
+    "self_audit/candidate_a/codec.py": "4536ae8f64ccf548d1fd68daa4eeaf083d5e11425f90521abbc3ea98cc196ded",
+    "self_audit/candidate_a/config.py": "59e44efe0eed70910a84560a85e2e83bb3d239ecf1219cea439c629328e17071",
+    "self_audit/candidate_a/data.py": "37e8c8ad7cee554171f5429ad281ae09f9cfe381aef74d5523e0bc789365dc01",
+    "self_audit/candidate_a/engine.py": "0b2386e41357c5476cb1d49946eaae8a672989ab464d81580a92e83f659e82b8",
+    "self_audit/candidate_a/evaluation.py": "d4331b92189d10b5a62207cbcfc393a3d7c7d5e5e2cf1232fdce6111a9b60ebf",
+    "self_audit/candidate_a/io.py": "5ca0b5d032b812eb25043f44fb2b4a3fb0f963bd08d1784638d3099139c5b07e",
+    "self_audit/candidate_a/k1.py": "aca7dbab54c53c8b7dae4af640dbe9ee501adb328957dfd1b8e23edeb5a0573a",
+    "self_audit/candidate_a/model.py": "7f42bc9a622c6f33880eb808b842e929a7f81d3f7f46960b6bbe737b6306ee64",
+    "self_audit/candidate_a/teacher.py": "0a000cf69d9014b1466744e71327fc02e8d70ff95024dc85c0beea8e2f7b22ed",
+    "self_audit/candidate_a3d/__init__.py": "d401ef8940d7d41754523e1584414245c43b787c995dbc301e4b9673d6bf3b17",
+    "self_audit/candidate_a3d/bank.py": "bf81c83a8a2799de0192996af13dd5ef347b4792a1f0c134cf8f68b3a7361f39",
+    "self_audit/candidate_a3d/codec.py": "ee80d6270055911965a333cc218350374ead9c6148e61453f5f3291a6608901a",
+    "self_audit/candidate_a3d/config.py": "0fdc2916484bb822bce066c162b1554ffebab5d68963994d725e4ff3178a764a",
+    "self_audit/candidate_a3d/data.py": "0200246c3f90cd82237cc87322e3dc3b228c4d7b7c159f45f4a78cb15068c5ec",
+    "self_audit/candidate_a3d/engine.py": "f71e73d22ff11771a488801d4bf08aa29de352e64870ee2d985983417fd9d519",
+    "self_audit/candidate_a3d/evaluation.py": "f58e350817582f48e6bb0ad2646d5ead971db4254d10e3412d815944585c2908",
+    "self_audit/candidate_a3d/geometry.py": "02ea3809718ff152ce06bbfcda18ef12e64c967116669ebd7807da2caf65794e",
+    "self_audit/candidate_a3d/io.py": "8b924f4d62c6223dd21976d3fd3fda1bb1f20c2cbbfca71a34f6ef996c580971",
+    "self_audit/candidate_a3d/k1.py": "1a0cffad9d8998edfd7aac2adfcb477ec34c042ae60768184b24447003e1c206",
+    "self_audit/candidate_a3d/model.py": "5e9b371e603dd8232185fecf0e0f6cc2330e4115d6fef3ae7be61c0fb265d35f",
+    "self_audit/candidate_a3d/profile.py": "341223f4182e3c619e2aa9acece8218d3f58b427267df54f6c97d1ec82a05221",
+    "self_audit/candidate_a3d/teacher.py": "9a9397f6a8ab84a2c510b7d28018823bfdc5510e4208b4384df7cca76bc510fd",
+    "self_audit/data.py": "98fd52ca7c96d161f76e3e340b00bda909cd4d542e083445bca5eb44bbe82815",
+    "self_audit/losses.py": "51a32b1fb698cf357717d14afc45f6cfeb4827d226272dff2d4fa27c0fda9ed7",
+    "self_audit/metrics.py": "976236a0d31ec007a52bf411201028bbb94c2e3ef92bf31a02aa79b78fd15717",
+    "self_audit/model.py": "da9f379f2d7c48cda78e0265324a6f6911d57ee2d4ff3240e210dce4706a04f0",
+    "self_audit/preparation.py": "81edff80b9d38b296df23af996dbdf086dadc8bf174b21d54b094eab43cc7c78",
+    "train.py": "be37f1491c8f83d9e0417beae66815b4d2328a2deecc6e7fa294af62ac18f234",
+    "evaluate.py": "4b1477125bfb1f31ffa48c8620fb3bbd32286e990a1daa6eb0c7e122fa071693"
+  },
+  "patient_training": "NOT_RUN",
+  "gpu": "NOT_RUN"
+}
