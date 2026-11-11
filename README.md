@@ -21,6 +21,7 @@ semi-supervised improvement claim follows from this software implementation.
 - [Train, epoch logs, export and evaluation](docs/RUNBOOK.md)
 - [A/A-3D ablation plans](docs/EXPERIMENTS.md)
 - [A-3D few-shot label-budget sweep](docs/FEWSHOT.md)
+- [Run the ACDC k=8 teacher-free semi-supervised arm](docs/TEACHER_FREE_K8.md)
 - [Removed code and historical reproduction](docs/MIGRATION.md)
 - [Portable design sources](docs/design/README.md)
 
