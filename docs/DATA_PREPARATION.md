@@ -36,6 +36,30 @@ each NIfTI header and converted to millimetres. If a source header has no
 usable unit, pass `--spatial-unit mm|m|micron`; the override is recorded in
 `PREPARATION.json`. No unit is silently assumed.
 
+The default `--frame-geometry-policy strict` requires the frame and mask
+affines to match the cine affine. Some ACDC releases preserve the correct
+voxel spacing and data while exporting frame/mask headers with an index-space
+affine. That case may be prepared only with the explicit
+`--frame-geometry-policy verified-cine-bridge` opt-in:
+
+```bash
+python prepare_acdc.py --root /data/ACDC/training \
+  --split /data/splits/acdc_locked.json --out /data/prepared/acdc \
+  --labels 10 --seed 42 --evaluation --spatial-unit mm \
+  --frame-geometry-policy verified-cine-bridge
+```
+
+The bridge is accepted only when the selected frame voxels are exactly equal
+to the corresponding cine time frame, frame and mask shapes and affines agree,
+and all three declared voxel spacings agree after unit conversion. The cine
+affine remains the sole geometry source; no header is rewritten, resampling is
+performed, or location is inferred from shape. Unknown frame/mask units may be
+inherited from a known cine unit only after the exact voxel bridge succeeds.
+`PREPARATION.json` records the policy, every accepted affine mismatch, source
+file/header hashes, raw affine matrices, resolved units, spacing and bridge
+checks. A failed strict preparation must not be replaced by a compatibility
+cache without this explicit policy and receipt.
+
 ## Original M&Ms (2020), not M&Ms-2
 
 The original 2020 M&Ms challenge provides LV, MYO and RV labels at ED and ES.

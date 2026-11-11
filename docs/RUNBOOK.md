@@ -15,6 +15,19 @@ For the main A-3D contribution check, use the one-seed plan in
 shared teacher stages plus four matched student runs per dataset. The larger
 21-arm catalogue is reserved for secondary diagnostics.
 
+The dedicated few-shot protocol is documented in
+[FEWSHOT.md](FEWSHOT.md). Its canonical profile runs all 21 A-3D arms at
+`k=2,5,8,10` labeled TRAIN patients, with `full` first at each `k`; this is 92
+jobs per dataset and 184 jobs for ACDC plus M&Ms. The dedicated entrypoint is
+`scripts/candidate_a_fewshot.py`; it creates one top-level `FEWSHOT_PLAN.json`
+plus four child plans and refuses to resume an existing output directory. Use
+the commands in `FEWSHOT.md` rather than adding an ad-hoc label flag to the
+main ablation planner.
+For ACDC plus M&Ms priority ordering, pass both root plans to
+`scripts/candidate_a_campaign.py`; its `campaign_state.json` runs all teacher
+stages and `full` arms first, then the remaining arms. The child runner alone
+executes one k at a time and does not provide that global ordering.
+
 Install `requirements.txt` in the intended CPU/CUDA environment. Read
 [DATA_PREPARATION.md](DATA_PREPARATION.md) to prepare ACDC or original M&Ms with
 native geometry and locked patient splits. Copy `configs/backbone.example.json`

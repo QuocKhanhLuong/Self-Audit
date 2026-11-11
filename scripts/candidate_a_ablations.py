@@ -6,11 +6,11 @@ Only the canonical train.py is invoked, with one shared teacher preparation
 per seed and the same TRAIN/development manifests for every arm.
 """
 import argparse
-from copy import deepcopy
 import json
-from pathlib import Path
 import subprocess
 import sys
+from copy import deepcopy
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -71,7 +71,8 @@ def arm_config(base, arm, *, validate=validate_candidate_a):
 
 def create_plan(*, dataset, train_manifest, development_manifest, model_config, out,
                 seeds=(42,), arms=None, epochs=100, pretrain_epochs=100,
-                warmup_epochs=10, synthetic=False, track="candidate_a"):
+                warmup_epochs=10, synthetic=False, track="candidate_a",
+                checkpoint_every_epochs=None, decoder_chunk_size=None):
     modules = _track_modules(track)
     folder = Path(out).resolve()
     if folder.exists():
@@ -101,6 +102,18 @@ def create_plan(*, dataset, train_manifest, development_manifest, model_config, 
         base["model"] = json.loads(Path(model_config).read_text())
     base["dataset"] = {"name": dataset, "protocol": "native_3d" if track == "candidate_a3d" else profile["protocol"]}
     base["epochs"] = epochs
+    if checkpoint_every_epochs is not None:
+        if (isinstance(checkpoint_every_epochs, bool)
+                or not isinstance(checkpoint_every_epochs, int)
+                or checkpoint_every_epochs < 0):
+            raise ValueError("checkpoint_every_epochs must be a non-negative integer")
+        base["checkpoint_every_epochs"] = checkpoint_every_epochs
+    if decoder_chunk_size is not None:
+        if (isinstance(decoder_chunk_size, bool)
+                or not isinstance(decoder_chunk_size, int)
+                or decoder_chunk_size < 1):
+            raise ValueError("decoder_chunk_size must be a positive integer")
+        base["student"]["chunk_size"] = decoder_chunk_size
     if dev_path is None:
         base["validation_every"] = 0
     catalogue = json.loads(modules["ablations"].read_text())
@@ -157,6 +170,11 @@ def create_plan(*, dataset, train_manifest, development_manifest, model_config, 
             "ablation_arms": [definition["name"] for definition in definitions],
             "comparison_contract": "same data, label budget, epoch schedule and seed within each seed block; changed capacity/bit precision declared by factor",
             "selection": "final epoch only; no test access or validation-based checkpoint selection", "jobs": jobs}
+    if checkpoint_every_epochs is not None or decoder_chunk_size is not None:
+        plan["runtime_overrides"] = {
+            "checkpoint_every_epochs": checkpoint_every_epochs,
+            "decoder_chunk_size": decoder_chunk_size,
+        }
     write_json(folder / "PLAN.json", plan)
     return folder / "PLAN.json"
 
@@ -216,6 +234,10 @@ def main(argv=None):
     plan.add_argument("--epochs", type=int, default=100)
     plan.add_argument("--pretrain-epochs", type=int, default=100)
     plan.add_argument("--warmup-epochs", type=int, default=10)
+    plan.add_argument("--checkpoint-every-epochs", type=int,
+                      help="override periodic checkpoint cadence; 0 keeps final only")
+    plan.add_argument("--decoder-chunk-size", type=int,
+                      help="override student decoder chunk size")
     plan.add_argument("--synthetic", action="store_true")
     plan.add_argument("--track", choices=("candidate_a", "candidate_a3d"), default="candidate_a")
     run = commands.add_parser("run")
@@ -227,7 +249,9 @@ def main(argv=None):
         path = create_plan(dataset=args.dataset, train_manifest=args.train,
             development_manifest=args.development, model_config=args.model_config, out=args.out,
             seeds=args.seeds, arms=args.arms, epochs=args.epochs, pretrain_epochs=args.pretrain_epochs,
-            warmup_epochs=args.warmup_epochs, synthetic=args.synthetic, track=args.track)
+            warmup_epochs=args.warmup_epochs, synthetic=args.synthetic, track=args.track,
+            checkpoint_every_epochs=args.checkpoint_every_epochs,
+            decoder_chunk_size=args.decoder_chunk_size)
         print(json.dumps({"plan": str(path), "sha256": digest(path), "status": "NOT_RUN"}))
     else:
         print(json.dumps(run_plan(args.plan, execute=args.execute, device=args.device), indent=2))

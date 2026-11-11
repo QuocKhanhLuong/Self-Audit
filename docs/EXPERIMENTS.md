@@ -51,6 +51,12 @@ secondary sweep; it is not the primary ablation run.
 Report these as single-seed comparisons; they do not estimate variation across
 training seeds.
 
+For the expanded label-budget campaign, see [FEWSHOT.md](FEWSHOT.md). It uses
+the nested `k=2,5,8,10` TRAIN-patient sweep at seed 42 and all 21 A-3D arms;
+the four `full` runs are prioritized before interpreting the remaining arms.
+This campaign is separate from the compact four-arm contribution comparison
+above.
+
 For a plan-only validation, omit `--execute`. Every output directory must be
 new; the runner refuses to overwrite a previous or partial experiment.
 

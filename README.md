@@ -15,6 +15,7 @@ SOTA or 96-Dice claim follows from this software implementation.
 - [ACDC and original M&Ms data preparation](docs/DATA_PREPARATION.md)
 - [Train, epoch logs, export and evaluation](docs/RUNBOOK.md)
 - [A/A-3D ablation plans](docs/EXPERIMENTS.md)
+- [A-3D few-shot label-budget sweep](docs/FEWSHOT.md)
 - [Removed code and historical reproduction](docs/MIGRATION.md)
 - [Portable design sources](docs/design/README.md)
 
