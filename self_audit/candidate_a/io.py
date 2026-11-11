@@ -50,13 +50,24 @@ def build_student(config):
 
 
 def save_checkpoint(folder, *, student, teacher, optimizers, config, data, epoch, updates, provenance,
-                    checkpoint_schema=CHECKPOINT_SCHEMA, model_class="CandidateAStudent"):
+                    checkpoint_schema=CHECKPOINT_SCHEMA, model_class="CandidateAStudent",
+                    training_state=None):
     folder = Path(folder)
     folder.mkdir(parents=True, exist_ok=False)
     payload = {"student": student.state_dict(), "teacher": teacher.state_dict() if teacher is not None else None,
                "optimizers": [o.state_dict() for o in optimizers], "torch_rng": torch.get_rng_state()}
+    if training_state is not None:
+        if not isinstance(training_state, dict):
+            raise TypeError("training_state must be a mapping when supplied")
+        # EMA state is optional and training-only.  It remains in the checkpoint
+        # payload so a future resume path can restore it, while student exports
+        # continue to contain only the student weights below.
+        payload["training_state"] = training_state
     torch.save(payload, folder / "weights.pt")
     sources = source_inventory()
+    semi = config.get("semi_supervised") if isinstance(config, dict) else None
+    semi_enabled = isinstance(semi, dict) and bool(semi.get("enabled", False))
+    unlabeled_reads = sorted(str(item) for item in getattr(data, "unlabeled_image_reads", set()))
     meta = {"schema": checkpoint_schema, "config": config, "epoch": epoch,
             "completed_sample_updates": updates,
             "class_mapping": CLASS_MAPPING, "model_class": model_class,
@@ -66,7 +77,12 @@ def save_checkpoint(folder, *, student, teacher, optimizers, config, data, epoch
             "teacher_provenance": provenance, "source_files": sources,
             "source_sha256": hashlib.sha256(json.dumps(sources, sort_keys=True).encode()).hexdigest(),
             "payload_sha256": digest(folder / "weights.pt"), "quality": "NOT_EVALUATED",
-            "supervision": "dense labeled TRAIN subset; U images unused by this candidate",
+            "supervision": ("dense labeled TRAIN subset plus image-only U consistency; no U masks"
+                            if semi_enabled else
+                            "dense labeled TRAIN subset; U images unused by this candidate"),
+            "unlabeled_usage": ("image_only_consistency_no_masks" if semi_enabled else "unused"),
+            "unlabeled_image_reads": unlabeled_reads,
+            "training_state": "included" if training_state is not None else "absent",
             "resume": "NOT_SUPPORTED; teacher stage transfer supported", "prediction_model": "student"}
     write_json(folder / "MANIFEST.json", meta)
     return digest(folder / "MANIFEST.json")

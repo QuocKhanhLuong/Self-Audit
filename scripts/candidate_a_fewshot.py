@@ -12,7 +12,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from scripts.candidate_a_ablations import create_plan, run_plan
+from scripts.candidate_a_ablations import _load_semi_config, create_plan, run_plan
 from self_audit.data import write_json
 from self_audit.fewshot import build_subset_manifest
 from self_audit.model import digest
@@ -123,7 +123,8 @@ def _path_hash(path: Path) -> dict[str, str]:
 def _validate_child_plan(child_path: Path, *, expected_train: Path, expected_dev: Path,
                          k: int, arms: list[str], seed: int,
                          checkpoint_every_epochs: int | None | object = _UNSET,
-                         decoder_chunk_size: int | None | object = _UNSET) -> dict[str, Any]:
+                         decoder_chunk_size: int | None | object = _UNSET,
+                         semi_supervised: dict[str, Any] | None | object = _UNSET) -> dict[str, Any]:
     expected_train, expected_dev = _resolve(expected_train), _resolve(expected_dev)
     child = _load_json(child_path)
     if child.get("schema") != "self_audit.candidate_a3d.plan.v1" or child.get("track") != "candidate_a3d":
@@ -164,6 +165,11 @@ def _validate_child_plan(child_path: Path, *, expected_train: Path, expected_dev
             student = config.get("student")
             if not isinstance(student, dict) or student.get("chunk_size") != decoder_chunk_size:
                 raise ValueError(f"child recipe decoder override mismatch: {config_path}")
+        if semi_supervised is not _UNSET and config.get("semi_supervised") != semi_supervised:
+            raise ValueError(f"child recipe semi-supervised block mismatch: {config_path}")
+    if semi_supervised is not _UNSET:
+        if child.get("semi_supervised") != semi_supervised:
+            raise ValueError(f"child plan semi-supervised block mismatch: {child_path}")
     return child
 
 
@@ -171,7 +177,8 @@ def create_fewshot_plan(*, dataset: str, train_manifest: str | Path,
                         development_manifest: str | Path, model_config: str | Path | None,
                         out: str | Path, config: str | Path = DEFAULT_CONFIG,
                         synthetic: bool = False, checkpoint_every_epochs: int | None = None,
-                        decoder_chunk_size: int | None = None) -> Path:
+                        decoder_chunk_size: int | None = None,
+                        semi_config: str | Path | None = None) -> Path:
     if dataset not in {"acdc", "mnms"}:
         raise ValueError("dataset must be acdc or mnms")
     campaign = _resolve(out)
@@ -189,6 +196,7 @@ def create_fewshot_plan(*, dataset: str, train_manifest: str | Path,
         raise ValueError("campaign output must be separate from the development cache")
     model_path = _resolve(model_config) if model_config is not None else None
     _validate_model_config(model_path, synthetic=synthetic)
+    semi_path, semi_sha256, semi_block = _load_semi_config(semi_config, track="candidate_a3d")
     arms = list(settings["arms"])
     checkpoint_every = (settings["checkpoint_every_epochs"]
                         if checkpoint_every_epochs is None else checkpoint_every_epochs)
@@ -217,10 +225,12 @@ def create_fewshot_plan(*, dataset: str, train_manifest: str | Path,
             model_config=model_path, out=child_path.parent, seeds=[settings["seed"]],
             arms=arms, epochs=settings["epochs"], pretrain_epochs=settings["pretrain_epochs"],
             warmup_epochs=settings["warmup_epochs"], synthetic=synthetic,
-            checkpoint_every_epochs=checkpoint_every, decoder_chunk_size=decoder_chunk)
+            checkpoint_every_epochs=checkpoint_every, decoder_chunk_size=decoder_chunk,
+            semi_config=semi_path)
         child = _validate_child_plan(child_plan_path, expected_train=manifest_path,
             expected_dev=development_path, k=k, arms=arms, seed=settings["seed"],
-            checkpoint_every_epochs=checkpoint_every, decoder_chunk_size=decoder_chunk)
+            checkpoint_every_epochs=checkpoint_every, decoder_chunk_size=decoder_chunk,
+            semi_supervised=semi_block if semi_path is not None else _UNSET)
         manifests.append({"k": k, "selected_ids": selected_ids, **_path_hash(manifest_path)})
         children.append({"k": k, "plan": str(child_plan_path), "plan_sha256": digest(child_plan_path),
                          "jobs": len(child["jobs"]), "manifest_sha256": digest(manifest_path)})
@@ -236,6 +246,9 @@ def create_fewshot_plan(*, dataset: str, train_manifest: str | Path,
         },
         "source_development": _path_hash(development_path),
         "model_config": _path_hash(model_path) if model_path is not None else None,
+        "semi_config": ({"path": str(semi_path), "sha256": semi_sha256}
+                        if semi_path is not None else None),
+        "semi_supervised": semi_block,
         "weights_policy": "weights:null; each k has independent supervised teacher pretrain",
         "selection": "nested_sha256_ranked_source_labeled_patients", "unit": "dense_labeled_train_patients",
         "arms_per_k": len(arms), "jobs_per_k": len(arms) + 2,
@@ -295,6 +308,15 @@ def _verify_root_plan(path: Path) -> dict[str, Any]:
         if digest(_resolve(item["path"])) != item["sha256"]:
             raise ValueError("model config changed after planning")
         _validate_model_config(_resolve(item["path"]), synthetic=bool(plan.get("synthetic", False)))
+    semi_descriptor = plan.get("semi_config")
+    if semi_descriptor is not None:
+        if not isinstance(semi_descriptor, dict):
+            raise ValueError("few-shot semi_config provenance is invalid")
+        semi_path, semi_sha256, semi_block = _load_semi_config(semi_descriptor.get("path"), track="candidate_a3d")
+        if semi_sha256 != semi_descriptor.get("sha256") or semi_block != plan.get("semi_supervised"):
+            raise ValueError("few-shot semi-supervised config changed after planning")
+    elif plan.get("semi_supervised") is not None:
+        raise ValueError("few-shot semi-supervised block has no pinned source config")
     if len(plan.get("child_plans", [])) != 4:
         raise ValueError("few-shot plan must contain four child plans")
     seen = set()
@@ -316,7 +338,8 @@ def _verify_root_plan(path: Path) -> dict[str, Any]:
             expected_dev=_resolve(plan["source_development"]["path"]),
             k=k, arms=plan["arms"], seed=plan["seed"],
             checkpoint_every_epochs=plan["checkpoint_every_epochs"],
-            decoder_chunk_size=plan["decoder_chunk_size"])
+            decoder_chunk_size=plan["decoder_chunk_size"],
+            semi_supervised=plan.get("semi_supervised", _UNSET))
     return plan
 
 
@@ -357,6 +380,7 @@ def main(argv: list[str] | None = None) -> None:
                              help="override periodic checkpoint cadence; 0 keeps final only")
     plan_parser.add_argument("--decoder-chunk-size", type=int,
                              help="override student decoder chunk size")
+    plan_parser.add_argument("--semi-config", help="pinned JSON file containing the A-3D semi_supervised block")
     plan_parser.add_argument("--synthetic", action="store_true")
     run_parser = commands.add_parser("run")
     run_parser.add_argument("--plan", required=True)
@@ -368,7 +392,8 @@ def main(argv: list[str] | None = None) -> None:
             development_manifest=args.development, model_config=args.model_config,
             out=args.out, config=args.config, synthetic=args.synthetic,
             checkpoint_every_epochs=args.checkpoint_every_epochs,
-            decoder_chunk_size=args.decoder_chunk_size)
+            decoder_chunk_size=args.decoder_chunk_size,
+            semi_config=args.semi_config)
         print(json.dumps({"status": "NOT_RUN", "plan": str(plan), "sha256": digest(plan)}))
     else:
         print(json.dumps(run_fewshot_plan(args.plan, execute=args.execute, device=args.device), indent=2))

@@ -69,11 +69,41 @@ def arm_config(base, arm, *, validate=validate_candidate_a):
     return validate(config)
 
 
+def _load_semi_config(path, *, track):
+    """Load and normalize the opt-in A-3D semi-supervised block.
+
+    The CLI takes a JSON file so the exact bytes can be pinned in a plan.  For
+    convenience the file may contain either the block itself or an object with
+    a single ``semi_supervised`` key.  Candidate A (2-D) deliberately rejects
+    this option rather than silently accepting an A-3D recipe.
+    """
+    if path is None:
+        return None, None, None
+    if track != "candidate_a3d":
+        raise ValueError("--semi-config is supported only for track=candidate_a3d")
+    from self_audit.candidate_a3d.config import _validate_semi_supervised
+
+    path = Path(path).resolve()
+    if not path.is_file():
+        raise ValueError(f"semi-supervised config does not exist: {path}")
+    try:
+        payload = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(f"invalid semi-supervised JSON: {path}") from exc
+    if not isinstance(payload, dict):
+        raise ValueError("semi-supervised JSON must contain one object")
+    block = payload.get("semi_supervised", payload)
+    normalized = _validate_semi_supervised(block)
+    return path, digest(path), normalized
+
+
 def create_plan(*, dataset, train_manifest, development_manifest, model_config, out,
                 seeds=(42,), arms=None, epochs=100, pretrain_epochs=100,
                 warmup_epochs=10, synthetic=False, track="candidate_a",
-                checkpoint_every_epochs=None, decoder_chunk_size=None):
+                checkpoint_every_epochs=None, decoder_chunk_size=None,
+                semi_config=None):
     modules = _track_modules(track)
+    semi_path, semi_sha256, semi_block = _load_semi_config(semi_config, track=track)
     folder = Path(out).resolve()
     if folder.exists():
         raise ValueError("plan output must be a new directory")
@@ -101,6 +131,11 @@ def create_plan(*, dataset, train_manifest, development_manifest, model_config, 
     if model_config is not None:
         base["model"] = json.loads(Path(model_config).read_text())
     base["dataset"] = {"name": dataset, "protocol": "native_3d" if track == "candidate_a3d" else profile["protocol"]}
+    if semi_block is not None:
+        # Put the same normalized block in the base recipe before arm overrides
+        # are applied.  Therefore teacher stages and every arm, including the
+        # teacher-free control, carry exactly the same U-consistency protocol.
+        base["semi_supervised"] = deepcopy(semi_block)
     base["epochs"] = epochs
     if checkpoint_every_epochs is not None:
         if (isinstance(checkpoint_every_epochs, bool)
@@ -170,6 +205,9 @@ def create_plan(*, dataset, train_manifest, development_manifest, model_config, 
             "ablation_arms": [definition["name"] for definition in definitions],
             "comparison_contract": "same data, label budget, epoch schedule and seed within each seed block; changed capacity/bit precision declared by factor",
             "selection": "final epoch only; no test access or validation-based checkpoint selection", "jobs": jobs}
+    if semi_path is not None:
+        plan["semi_config"] = {"path": str(semi_path), "sha256": semi_sha256}
+        plan["semi_supervised"] = deepcopy(semi_block)
     if checkpoint_every_epochs is not None or decoder_chunk_size is not None:
         plan["runtime_overrides"] = {
             "checkpoint_every_epochs": checkpoint_every_epochs,
@@ -195,7 +233,17 @@ def run_plan(path, *, execute=False, device="cuda"):
         known.add(job["id"])
         if digest(job["config"]) != job["config_sha256"]:
             raise ValueError("ablation recipe changed after planning")
-        modules["validate"](json.loads(Path(job["config"]).read_text()))
+        recipe = json.loads(Path(job["config"]).read_text())
+        modules["validate"](recipe)
+        if plan.get("semi_supervised") is not None and recipe.get("semi_supervised") != plan["semi_supervised"]:
+            raise ValueError("semi-supervised block differs between A-3D jobs")
+    semi_descriptor = plan.get("semi_config")
+    if semi_descriptor is not None:
+        if track != "candidate_a3d" or not isinstance(semi_descriptor, dict):
+            raise ValueError("invalid A-3D semi-supervised config provenance")
+        semi_path, semi_sha256, semi_block = _load_semi_config(semi_descriptor.get("path"), track=track)
+        if semi_sha256 != semi_descriptor.get("sha256") or semi_block != plan.get("semi_supervised"):
+            raise ValueError("semi-supervised config changed after planning")
     if not execute:
         return {"status": "PLAN_VALIDATED_NOT_RUN", "dataset": plan["dataset"], "jobs": len(plan["jobs"])}
     # Never overwrite partial or previous experiments, or silently resume them.
@@ -238,6 +286,7 @@ def main(argv=None):
                       help="override periodic checkpoint cadence; 0 keeps final only")
     plan.add_argument("--decoder-chunk-size", type=int,
                       help="override student decoder chunk size")
+    plan.add_argument("--semi-config", help="pinned JSON file containing the A-3D semi_supervised block")
     plan.add_argument("--synthetic", action="store_true")
     plan.add_argument("--track", choices=("candidate_a", "candidate_a3d"), default="candidate_a")
     run = commands.add_parser("run")
@@ -251,7 +300,7 @@ def main(argv=None):
             seeds=args.seeds, arms=args.arms, epochs=args.epochs, pretrain_epochs=args.pretrain_epochs,
             warmup_epochs=args.warmup_epochs, synthetic=args.synthetic, track=args.track,
             checkpoint_every_epochs=args.checkpoint_every_epochs,
-            decoder_chunk_size=args.decoder_chunk_size)
+            decoder_chunk_size=args.decoder_chunk_size, semi_config=args.semi_config)
         print(json.dumps({"plan": str(path), "sha256": digest(path), "status": "NOT_RUN"}))
     else:
         print(json.dumps(run_plan(args.plan, execute=args.execute, device=args.device), indent=2))
