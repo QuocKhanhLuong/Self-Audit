@@ -87,4 +87,3 @@ def test_semi_supervised_config_is_explicit_and_strict():
     zero_weight["semi_supervised"]["teacher_weight"] = 0.0
     with pytest.raises(ValueError, match="teacher_weight"):
         validate_config(zero_weight)
-

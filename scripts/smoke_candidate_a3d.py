@@ -34,7 +34,8 @@ def run_smoke(out: str | Path, semi_config: str | Path | None = None) -> dict:
     )
     config = json.loads((root / "configs/candidate_a3d/smoke.json").read_text())
     if semi_config is not None:
-        config["semi_supervised"] = json.loads(Path(semi_config).read_text())
+        semi_recipe = json.loads(Path(semi_config).read_text())
+        config["semi_supervised"] = semi_recipe.get("semi_supervised", semi_recipe)
     stages: dict[str, dict] = {}
     previous = None
     for stage in ("teacher_pretrain", "teacher_warmup", "joint"):

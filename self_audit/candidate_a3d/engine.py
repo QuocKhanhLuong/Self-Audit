@@ -89,7 +89,8 @@ def _teacher(config: dict, *, synthetic: bool):
             raise ValueError("candidate-A3D teacher checkpoint has no teacher state")
     elif init["kind"] != "none":
         raise ValueError(f"unsupported A-3D teacher initialization kind: {init['kind']}")
-    teacher_config = {**config["model"], "class_mapping": config["class_mapping"]}
+    teacher_config = {**config["model"], "class_mapping": config["class_mapping"],
+                      "checkpoint_boundary": bool(config.get("semi_supervised", {}).get("enabled", False))}
     teacher, provenance = build_teacher3d(
         teacher_config, synthetic=synthetic,
     )
@@ -395,6 +396,7 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
         "semi_supervised": semi if semi_enabled else {"enabled": False},
         "unlabeled_policy_targets": "NONE; K1 utility and policy targets use L only",
         "ema_stage_initialization": "reset from online stage initialization",
+        "boundary_activation_checkpointing": semi_enabled,
         "geometry_protocol": "native full_volume [D,H,W], spacing_zyx and affine_zyx",
         "quality": "NOT_EVALUATED",
     })
@@ -419,6 +421,7 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
                 rollout_stats: list[dict[str, float]] = []
                 u_rows = []
                 epoch_teacher_losses = []
+                counts_at_epoch_start = dict(counts)
                 for update_index, key in enumerate(plan):
                     x, y, geometry, sample = _sample_parts(data, key)
                     if semi_enabled:
@@ -548,6 +551,10 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
                 append_csv(metric_csv, rows)
                 epoch_record = {
                     "epoch": epoch, "updates": len(plan),
+                    "logical_sample_updates": len(plan),
+                    "optimizer_updates": {name: counts[name] - counts_at_epoch_start[name]
+                        for name in ("teacher_updates", "student_updates",
+                                     "teacher_unlabeled_updates", "student_unlabeled_updates")},
                     "mean_student_loss": float(np.mean(epoch_losses)) if epoch_losses else None,
                     "mean_teacher_loss": float(np.mean(epoch_teacher_losses)) if epoch_teacher_losses else None,
                     "mean_code_bits": float(np.mean([item["code_bits"] for item in rollout_stats])) if rollout_stats else None,

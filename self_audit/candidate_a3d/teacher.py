@@ -545,7 +545,8 @@ class DualBranchTeacher3D(nn.Module):
 
     def __init__(self, encoder: nn.Module, *, input_channels: int = 1,
                  num_classes: int = 4, class_mapping: Sequence[str] = CLASS_NAMES,
-                 boundary_width: int | None = None, backbone_meta: Mapping[str, Any] | None = None) -> None:
+                 boundary_width: int | None = None, backbone_meta: Mapping[str, Any] | None = None,
+                 checkpoint_boundary: bool = False) -> None:
         super().__init__()
         if num_classes != 4:
             raise ValueError("A-3D requires exactly four classes")
@@ -554,6 +555,9 @@ class DualBranchTeacher3D(nn.Module):
         self.num_classes = int(num_classes)
         self.class_mapping = _class_mapping(class_mapping)
         self.backbone_meta = copy.deepcopy(dict(backbone_meta or {}))
+        if type(checkpoint_boundary) is not bool:
+            raise ValueError("checkpoint_boundary must be a boolean")
+        self.checkpoint_boundary = checkpoint_boundary
         self._frozen_modules: tuple[str, ...] = ()
         self._stage = "teacher_pretrain"
         # A real MedNeXt adapter owns its complete original segmentation
@@ -636,7 +640,19 @@ class DualBranchTeacher3D(nn.Module):
             _finite("MedNeXt region logits", region)
         else:
             region = self.region_path(features)
-        boundary, sdf = self.boundary_path(features[0], features[-1], spacing_zyx)
+        if self.checkpoint_boundary and torch.is_grad_enabled():
+            # The non-reentrant implementation supports warm-up, where the
+            # frozen encoder produces tensors without ``requires_grad`` while
+            # the boundary parameters still need gradients.  Inference and
+            # teacher snapshots run without grad and therefore keep the normal
+            # single-pass path.
+            boundary, sdf = torch_checkpoint.checkpoint(
+                self.boundary_path,
+                features[0], features[-1], spacing_zyx,
+                use_reentrant=False,
+            )
+        else:
+            boundary, sdf = self.boundary_path(features[0], features[-1], spacing_zyx)
         region = region[..., : original_shape[0], : original_shape[1], : original_shape[2]]
         boundary = boundary[..., : original_shape[0], : original_shape[1], : original_shape[2]]
         sdf = sdf[..., : original_shape[0], : original_shape[1], : original_shape[2]]
@@ -687,6 +703,7 @@ def build_teacher3d(model_config: Mapping[str, Any] | str | Path,
         encoder, input_channels=input_channels,
         class_mapping=CLASS_NAMES, boundary_width=config.get("boundary_width"),
         backbone_meta=backbone_meta,
+        checkpoint_boundary=config.get("checkpoint_boundary", False),
     )
     if checkpoint_state is not None:
         if checkpoint_metadata is None:
@@ -707,6 +724,7 @@ def build_teacher3d(model_config: Mapping[str, Any] | str | Path,
         "quality": quality, "synthetic": bool(synthetic),
         "padding_policy": teacher.padding_policy,
         "padding_multiple": teacher.padding_multiple,
+        "checkpoint_boundary": teacher.checkpoint_boundary,
         "accuracy_claim": "NOT_MEASURED",
         "class_mapping_trust": "metadata_self_declared_semantic_permutation_not_empirically_verified",
     }
