@@ -12,11 +12,16 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
+import sys
 import time
 from collections.abc import Mapping
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from scripts.candidate_a_offload import offload_remote_job
 
