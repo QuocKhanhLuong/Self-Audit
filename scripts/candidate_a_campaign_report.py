@@ -27,6 +27,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from scripts.candidate_a_offload import OFFLOAD_RECEIPT_NAME, validate_offload_receipt
 from self_audit.model import digest
 
 SCHEMA = "self_audit.candidate_a3d.campaign_report.v1"
@@ -231,18 +232,39 @@ def _artifact_status(
     report: Mapping[str, Any] | None,
     manifest_path: Path,
     payload_path: Path,
+    *,
+    state_job: Mapping[str, Any] | None = None,
+    plan: Mapping[str, Any] | None = None,
 ) -> str:
-    if manifest is None or report is None or not manifest_path.is_file() or not payload_path.is_file():
+    if manifest is None or report is None or not manifest_path.is_file():
         return "MISSING_OR_INVALID"
     if report.get("status") != "COMPLETED":
         return "INVALID"
     expected_payload = manifest.get("payload_sha256")
-    if not isinstance(expected_payload, str) or _path_hash(payload_path) != expected_payload:
-        return "INVALID"
     expected_manifest = report.get("final_manifest_sha256")
     if expected_manifest is not None and expected_manifest != _path_hash(manifest_path):
         return "INVALID"
-    return "PASS"
+    if payload_path.is_file():
+        return "PASS" if isinstance(expected_payload, str) and _path_hash(payload_path) == expected_payload else "INVALID"
+    if (state_job is None or plan is None or state_job.get("stage") != "joint"):
+        return "MISSING_OR_INVALID"
+    if report.get("stage") != "joint":
+        return "INVALID"
+    expected = {
+        "job_key": state_job.get("key"), "dataset": state_job.get("dataset"),
+        "k": state_job.get("k"), "arm": state_job.get("arm"), "stage": "joint",
+        "config_sha256": state_job.get("config_sha256"),
+        "source_sha256": manifest.get("source_sha256"),
+        "data_sha256": plan.get("train_sha256"),
+        "manifest_sha256": _path_hash(manifest_path),
+        "report_sha256": _path_hash(payload_path.parent.parent / "REPORT.json"),
+        "payload_sha256": expected_payload,
+    }
+    valid, _reason = validate_offload_receipt(
+        payload_path.parent / OFFLOAD_RECEIPT_NAME, expected=expected, verify_local=False)
+    if valid:
+        return "OFFLOADED"
+    return "MISSING_OR_INVALID"
 
 
 def _delta(current: Mapping[str, Any], full: Mapping[str, Any] | None) -> dict[str, Any] | None:
@@ -293,7 +315,17 @@ def _row(state_job: Mapping[str, Any], state: Mapping[str, Any]) -> dict[str, An
     payload_hash = manifest.get("payload_sha256") if manifest else None
     if payload_hash is None and payload_path.is_file():
         payload_hash = _path_hash(payload_path)
-    artifact_status = _artifact_status(manifest, report, final_manifest, payload_path)
+    offload_path = final_manifest.parent / OFFLOAD_RECEIPT_NAME
+    offload_receipt: dict[str, Any] | None = None
+    if offload_path.is_file():
+        try:
+            offload_receipt = _read_json(offload_path)
+        except (OSError, ValueError, json.JSONDecodeError):
+            offload_receipt = None
+    artifact_status = _artifact_status(
+        manifest, report, final_manifest, payload_path,
+        state_job=state_job, plan=child,
+    )
     row: dict[str, Any] = {
         "key": state_job.get("key"),
         "dataset": state_job.get("dataset"),
@@ -313,6 +345,10 @@ def _row(state_job: Mapping[str, Any], state: Mapping[str, Any]) -> dict[str, An
         "source_sha256": source_hash,
         "checkpoint_manifest_sha256": checkpoint_hash,
         "checkpoint_payload_sha256": payload_hash,
+        "offload_receipt_path": str(offload_path) if offload_path.is_file() else None,
+        "offload_receipt_sha256": _path_hash(offload_path),
+        "offload_local_backup_path": (offload_receipt or {}).get("local_backup_path"),
+        "offload_local_payload_sha256": (offload_receipt or {}).get("local_backup_sha256"),
         "validation_epoch": metrics.get("epoch"),
         "validation_path": str(validation_path) if validation_path else None,
         "validation_status": metrics.get("validation"),
@@ -363,6 +399,7 @@ CSV_FIELDS = (
     "key", "dataset", "k", "seed", "arm", "stage", "phase", "status", "synthetic",
     "artifact_status", "config_sha256", "data_sha256", "development_sha256", "source_sha256",
     "checkpoint_manifest_sha256", "checkpoint_payload_sha256", "validation_epoch", "validation_status",
+    "offload_receipt_sha256", "offload_local_backup_path", "offload_local_payload_sha256",
     "train_elapsed_seconds", "student_only_rollout_total_ms", "student_only_rollout_mean_ms",
     "peak_vram_allocated_bytes",
     "peak_vram_reserved_bytes", "code_total_bytes", "code_mean_bytes", "code_packets",

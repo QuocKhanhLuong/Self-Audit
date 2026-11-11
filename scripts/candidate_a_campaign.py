@@ -36,6 +36,7 @@ from scripts.candidate_a_fewshot import (
     _validate_child_plan,
     _verify_root_plan,
 )
+from scripts.candidate_a_offload import OFFLOAD_RECEIPT_NAME, validate_offload_receipt
 from self_audit.candidate_a3d import CLASS_NAMES
 from self_audit.candidate_a3d.io import source_inventory
 from self_audit.model import digest
@@ -209,6 +210,11 @@ def build_schedule(paths: Iterable[str | Path]) -> dict[str, Any]:
                 "attempt": 0,
                 "config": str(_resolve(item["job"]["config"])),
                 "config_sha256": item["job"]["config_sha256"],
+                # Keep the training manifest hash in the durable state as an
+                # independent provenance anchor for remote offload.  A remote
+                # receipt must not be allowed to bind only to a self-consistent
+                # but tampered checkpoint manifest.
+                "data_sha256": item["child"]["train_sha256"],
                 "status": "PENDING",
                 "started_at": None,
                 "finished_at": None,
@@ -243,8 +249,8 @@ def _artifact_status(state_job: dict[str, Any], *, record: dict[str, Any], plan:
     manifest_path, payload_path, report_path = final / "MANIFEST.json", final / "weights.pt", out / "REPORT.json"
     if not out.is_dir() or not final.is_dir():
         return False, "missing output/final directory"
-    if not manifest_path.is_file() or not payload_path.is_file() or not report_path.is_file():
-        return False, "missing final MANIFEST.json, weights.pt or REPORT.json"
+    if not manifest_path.is_file() or not report_path.is_file():
+        return False, "missing final MANIFEST.json or REPORT.json"
     try:
         manifest = _read_json(manifest_path)
         report = _read_json(report_path)
@@ -260,7 +266,26 @@ def _artifact_status(state_job: dict[str, Any], *, record: dict[str, Any], plan:
         return False, "REPORT.json epoch count differs from the planned recipe"
     if report.get("final_manifest_sha256") != digest(manifest_path):
         return False, "REPORT.json final manifest hash mismatch"
-    if manifest.get("payload_sha256") != digest(payload_path):
+    if not payload_path.is_file():
+        # Only a completed joint student can be externally offloaded.  Teacher
+        # checkpoints remain local because subsequent jobs load them directly.
+        if record["stage"] != "joint":
+            return False, "missing teacher-stage checkpoint payload"
+        expected = {
+            "job_key": state_job["key"], "dataset": state_job["dataset"],
+            "k": state_job["k"], "arm": state_job["arm"], "stage": record["stage"],
+            "config_sha256": state_job["config_sha256"],
+            "source_sha256": manifest.get("source_sha256"),
+            "data_sha256": plan["train_sha256"],
+            "manifest_sha256": digest(manifest_path),
+            "report_sha256": digest(report_path),
+            "payload_sha256": manifest.get("payload_sha256"),
+        }
+        valid, reason = validate_offload_receipt(
+            final / OFFLOAD_RECEIPT_NAME, expected=expected, verify_local=False)
+        if not valid:
+            return False, f"missing checkpoint payload and invalid offload receipt: {reason}"
+    elif manifest.get("payload_sha256") != digest(payload_path):
         return False, "checkpoint payload hash mismatch"
     if manifest.get("schema") != "self_audit.candidate_a3d.checkpoint.v1":
         return False, "checkpoint schema is not the A-3D checkpoint schema"
@@ -304,6 +329,7 @@ def _state_matches(existing: dict[str, Any], fresh: dict[str, Any]) -> bool:
         return False
     return all(old[key].get("planned_out", old[key].get("out")) == new[key]["planned_out"]
                and old[key].get("config_sha256") == new[key]["config_sha256"]
+               and old[key].get("data_sha256") == new[key]["data_sha256"]
                for key in new)
 
 
