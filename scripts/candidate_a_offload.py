@@ -29,7 +29,7 @@ import sys
 import tempfile
 from collections.abc import Mapping
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -93,6 +93,22 @@ def _safe_relative(path: Path, root: Path) -> Path:
         return path.relative_to(root)
     except ValueError as exc:
         raise ValueError(f"path is outside declared root: {path}") from exc
+
+
+def _remote_is_within(path: str, root: str) -> bool:
+    """Check remote POSIX paths lexically; do not resolve them on macOS.
+
+    The server paths do not exist in the local filesystem, and on macOS
+    ``Path.resolve`` rewrites ``/home`` through a local system symlink.  Remote
+    containment must therefore use POSIX path semantics until the remote
+    transaction performs its own realpath and symlink checks.
+    """
+
+    try:
+        PurePosixPath(path).relative_to(PurePosixPath(root))
+    except ValueError:
+        return False
+    return True
 
 
 def _slug(job_key: str) -> str:
@@ -602,8 +618,7 @@ def offload_remote_job(
     _validate_host(remote_host)
     if not remote_state_path or not remote_state_path.startswith("/"):
         raise ValueError("remote campaign state path must be absolute")
-    root = Path(remote_campaign_root.rstrip("/"))
-    if Path(out).resolve() != Path(remote_campaign_root).resolve() and not Path(out).resolve().is_relative_to(root):
+    if not _remote_is_within(out, remote_campaign_root):
         raise ValueError("job output is outside the declared remote campaign root")
     remote_final = f"{out.rstrip('/')}/final"
     slug = _slug(job_key)
