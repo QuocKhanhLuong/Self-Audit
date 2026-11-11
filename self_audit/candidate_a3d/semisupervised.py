@@ -165,7 +165,6 @@ def strong_intensity(
         raise ValueError("intensity_noise_std must be non-negative")
     batch = int(image.shape[0])
     # Per-example factors, broadcast over C and native D/H/W.
-    shape = (batch,) + (1,) * (image.ndim - 1)
     random_device = torch.device("cpu")
     if generator is not None:
         # ``torch.Generator.device`` is available on supported PyTorch builds;
@@ -175,7 +174,10 @@ def strong_intensity(
     gamma = (gamma_low + (gamma_high - gamma_low) * uniform).to(device=image.device, dtype=image.dtype)
     perturbed = image.clamp(0.0, 1.0).pow(gamma)
     if noise_std:
-        noise = torch.randn(shape, generator=generator, device=random_device, dtype=torch.float32)
+        # Noise is voxel-wise.  A ``[B,1,1,1,1]`` draw would be one global
+        # brightness offset per volume and would not provide a spatial
+        # consistency perturbation.
+        noise = torch.randn(image.shape, generator=generator, device=random_device, dtype=torch.float32)
         perturbed = perturbed + noise.to(device=image.device, dtype=image.dtype) * noise_std
     return perturbed.clamp(0.0, 1.0)
 
@@ -231,21 +233,35 @@ def consistency_loss(
     selected = confidence >= threshold
     foreground = selected & target_class.ne(0)
     background = selected & target_class.eq(0)
-    weights = torch.zeros_like(confidence)
-    weights[foreground] = 1.0
-    weights[background] = background_weight
-    per_voxel = (student_prob - target_prob).pow(2).mean(dim=1)
-    denominator = weights.sum()
-    if float(denominator.detach()) == 0.0:
-        loss = student_logits.sum() * 0.0
+    # Aggregate each predicted class separately.  A denominator made from the
+    # selected voxel weights would cancel ``background_weight`` on all-
+    # background images and let the largest support dominate.  The fixed
+    # denominator keeps the configured background cap effective and makes the
+    # loss comparable as confidence coverage changes.
+    class_terms: list[Tensor] = []
+    class_coverage: dict[str, float] = {}
+    per_class_error = (student_prob - target_prob).pow(2).mean(dim=1)
+    for class_id in range(student_logits.shape[1]):
+        support = selected & target_class.eq(class_id)
+        class_coverage[str(class_id)] = float(support.float().mean().detach())
+        if bool(support.any()):
+            weight = background_weight if class_id == 0 else 1.0
+            class_terms.append(per_class_error[support].mean() * weight)
+    # One unit for each foreground class and the configured capped background
+    # term.  Empty supports contribute zero to the numerator but remain in the
+    # fixed normalizer, avoiding a hidden all-background rescaling.
+    normalizer = float((student_logits.shape[1] - 1) + background_weight)
+    if class_terms:
+        loss = torch.stack(class_terms).sum() / normalizer
     else:
-        loss = (per_voxel * weights).sum() / denominator
+        loss = student_logits.sum() * 0.0
     total = float(selected.numel())
     stats = {
         "selected_fraction": float(selected.float().mean().detach()),
         "foreground_coverage": float(foreground.float().mean().detach()),
         "background_coverage": float(background.float().mean().detach()),
         "selected_foreground_fraction": float(foreground.sum().detach() / selected.sum().clamp_min(1)),
+        "class_coverage": class_coverage,
         "loss": float(loss.detach()),
         "selected_voxels": float(selected.sum().detach()),
         "total_voxels": total,

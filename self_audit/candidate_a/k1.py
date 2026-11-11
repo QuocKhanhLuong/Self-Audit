@@ -483,6 +483,7 @@ def student_rollout(
     config: Optional[K1Config] = None,
     generator: Optional[torch.Generator] = None,
     chunk_size: Optional[int] = None,
+    quantize_ste: Optional[bool] = None,
 ) -> RolloutResult:
     """Roll out the student, optionally computing the complete student loss."""
 
@@ -492,6 +493,11 @@ def student_rollout(
         raise ValueError("labels must have B=1 and the image's spatial axes")
     if labels is None and query_targets is not None:
         raise ValueError("query_targets are training-only and require labels")
+    # Unlabeled consistency needs gradients through finite quantized values,
+    # independently of whether supervised labels/utility targets are present.
+    if quantize_ste is not None and type(quantize_ste) is not bool:
+        raise TypeError("quantize_ste must be bool or None")
+    use_ste = labels is not None if quantize_ste is None else quantize_ste
     config = config or K1Config()
     if config.bit_budget < 0:
         raise ValueError("bit_budget must be non-negative")
@@ -530,7 +536,7 @@ def student_rollout(
 
     base_ids = _base_ids(codec, config)
     if base_ids:
-        code_values = _quantize(codec, _query_values_for_ids(student_values, range(len(bank)), base_ids), base_ids, ste=labels is not None)
+        code_values = _quantize(codec, _query_values_for_ids(student_values, range(len(bank)), base_ids), base_ids, ste=use_ste)
     else:
         code_values = student_values[:, :0]
     code_ids = list(base_ids)
@@ -611,7 +617,7 @@ def student_rollout(
         ))
         if selected_id == STOP_ID:
             break
-        value = _single_quantized(codec, student_values, selected_id, ste=labels is not None)
+        value = _single_quantized(codec, student_values, selected_id, ste=use_ste)
         code_ids.append(selected_id)
         code_values = torch.cat((code_values, value[:, None]), dim=1)
         current_bits += selected_cost
@@ -640,6 +646,8 @@ def student_rollout(
 
 def infer_student(*args: Any, **kwargs: Any) -> RolloutResult:
     kwargs = dict(kwargs)
+    if kwargs.pop("quantize_ste", False):
+        raise ValueError("infer_student does not accept training-only quantize_ste")
     for forbidden in ("labels", "teacher", "teacher_values", "query_targets"):
         value = kwargs.pop(forbidden, None)
         if value is not None:

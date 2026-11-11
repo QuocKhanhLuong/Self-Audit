@@ -22,7 +22,7 @@ from self_audit.data import write_json
 from self_audit.model import digest
 
 
-def run_smoke(out: str | Path) -> dict:
+def run_smoke(out: str | Path, semi_config: str | Path | None = None) -> dict:
     out = Path(out).resolve()
     out.mkdir(parents=True, exist_ok=False)
     root = Path(__file__).resolve().parents[1]
@@ -33,6 +33,8 @@ def run_smoke(out: str | Path) -> dict:
         shape_tzyx=(2, 8, 16, 16),
     )
     config = json.loads((root / "configs/candidate_a3d/smoke.json").read_text())
+    if semi_config is not None:
+        config["semi_supervised"] = json.loads(Path(semi_config).read_text())
     stages: dict[str, dict] = {}
     previous = None
     for stage in ("teacher_pretrain", "teacher_warmup", "joint"):
@@ -102,6 +104,7 @@ def run_smoke(out: str | Path) -> dict:
         "patient_training": "NOT_RUN", "gpu_validation": "NOT_RUN",
         "mednext_weights": "NOT_AVAILABLE_LOCALLY",
         "stages": stages, "export": exported,
+        "semi_supervised": config.get("semi_supervised", {"enabled": False}),
         "export_bitwise_parity": True, "export_payload_keys": sorted(payload),
         "evaluation_metrics": str(out / "evaluation" / "EPOCH_METRICS.json"),
         "evaluation_synthetic": evaluation["synthetic"], "output": str(out),
@@ -113,4 +116,6 @@ def run_smoke(out: str | Path) -> dict:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", required=True, help="new output folder")
-    print(json.dumps(run_smoke(parser.parse_args().out), indent=2))
+    parser.add_argument("--semi-config", help="optional A-3D image-only U consistency JSON block")
+    args = parser.parse_args()
+    print(json.dumps(run_smoke(args.out, args.semi_config), indent=2))

@@ -28,11 +28,19 @@
       "geometry": "shape_zyx + spacing_zyx + affine_zyx; manifest stores spacing_zyx_mm; anisotropic 3D distance",
       "context": "full_volume",
       "crop": "unsupported_fail_closed",
-      "resampling": "unsupported_fail_closed"
+      "resampling": "unsupported_fail_closed",
+      "semi_supervised": {
+        "config": "configs/candidate_a3d/semi_supervised.json",
+        "enabled_by": "explicit profile/CLI selection",
+        "unlabeled_source": "image-only TRAIN U",
+        "targets": "detached student EMA consistency only",
+        "forbidden": ["U masks", "U SDF ground truth", "U K1 utility labels"],
+        "geometry": "unchanged native full-volume protocol"
+      }
     }
   },
-  "supervision": "dense budgeted TRAIN labels; U images unused; not no-GT",
-  "schedule": "epochs; each annotated TRAIN frame or full-volume frame exactly once per epoch",
+  "supervision": "default dense budgeted TRAIN labels with U unused; optional A-3D semi profile uses image-only TRAIN U for detached EMA consistency only; no U masks/SDF ground truth/K1 utility labels",
+  "schedule": "default epochs visit each annotated TRAIN frame/full-volume frame once; optional A-3D semi profile uses fixed labeled-patient steps with deterministic labeled/U cycles",
   "metrics": ["dice", "f1", "precision", "recall"],
   "class_mapping": ["BG", "RV", "MYO", "LV"],
   "inference": "student only; quantized code plus coordinates and declared public geometry",

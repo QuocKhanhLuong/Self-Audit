@@ -51,6 +51,51 @@ secondary sweep; it is not the primary ablation run.
 Report these as single-seed comparisons; they do not estimate variation across
 training seeds.
 
+## Optional A-3D semi-supervised comparison
+
+The semi-supervised profile is a separate, opt-in factor and does not alter the
+compact labeled-only plan above. It keeps the same bank, packet, code-only
+decoder, native geometry and labeled CE+Dice/measurement/K1 losses. The only new
+term is detached consistency on image-only TRAIN U. A student self-EMA helper
+is present in every arm, including `teacher_free`; that arm still removes the
+dual-branch teacher proposal path, not the EMA helper. U masks, U SDF ground
+truth and U K1 utility labels are never read.
+
+```bash
+SEMI_CONFIG=configs/candidate_a3d/semi_supervised.json
+DATASET=acdc
+DATA=/prepared/$DATASET
+PLAN=/runs/${DATASET}-a3d-semi-s42
+
+python scripts/candidate_a_ablations.py plan --track candidate_a3d \
+  --dataset "$DATASET" --train "$DATA/train.json" \
+  --development "$DATA/development.json" \
+  --model-config /private/mednext3d.json --semi-config "$SEMI_CONFIG" \
+  --out "$PLAN" --seeds 42 \
+  --arms full teacher_free fixed_queries global_only_queries \
+  --epochs 100 --pretrain-epochs 100 --warmup-epochs 10
+python scripts/candidate_a_ablations.py run \
+  --plan "$PLAN/PLAN.json" --execute --device cuda
+```
+
+The semi schedule resolves `steps_per_epoch: 0` to one fixed update per
+labeled TRAIN patient (80 for the prepared ACDC protocol) and uses that count
+for every few-shot `k`. Each update samples one labeled frame and one U frame;
+the original M&Ms plan records its own resolved labeled-patient count rather
+than reusing 80.
+the deterministic U cycle covers all U patients/native cine frames while the
+labeled cycle repeats in balanced order. Gamma/noise is intensity-only, so
+native geometry is unchanged. The 10-epoch consistency ramp and seed 42 are
+fixed across arms. This is 100 x 80 updates at ACDC, not the older `k=2`
+shorthand of 100 x 4 updates. A new pretrain, warm-up or joint stage starts a
+fresh EMA state; the profile is not a resume protocol.
+
+For the expanded `k=2,5,8,10` campaign, pass `--semi-config "$SEMI_CONFIG"`
+to `scripts/candidate_a_fewshot.py plan` and use a new output directory. Keep
+the full-priority supervisor ordering and the existing all-21-arm catalogue;
+the semi option adds U consistency but does not create additional arms or
+change the primary four-arm comparison.
+
 For the expanded label-budget campaign, see [FEWSHOT.md](FEWSHOT.md). It uses
 the nested `k=2,5,8,10` TRAIN-patient sweep at seed 42 and all 21 A-3D arms;
 the four `full` runs are prioritized before interpreting the remaining arms.

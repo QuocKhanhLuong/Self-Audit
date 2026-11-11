@@ -8,16 +8,24 @@ from typing import Any
 import numpy as np
 import torch
 
-from ..data import CLASS_MAPPING, GEOMETRY_MAP_SCHEMA, GEOMETRY_SCHEMA, TrainingData, digest, write_json
+from ..data import (
+    CLASS_MAPPING,
+    GEOMETRY_MAP_SCHEMA,
+    GEOMETRY_SCHEMA,
+    TrainingData,
+    digest,
+    write_json,
+)
 from .geometry import VolumeGeometry3D
 
 
 class CandidateA3DData:
-    """Strict full-volume loader for annotated TRAIN frames.
+    """Strict full-volume loader for annotated and image-only TRAIN frames.
 
     The cache remains ``[T,D,H,W]``.  A sample is copied to ``image`` shape
     ``[1,1,D,H,W]`` and ``labels`` shape ``[1,D,H,W]``.  No crop, resample,
-    interpolation, or hidden patch coordinate is performed.
+    interpolation, or hidden patch coordinate is performed.  Unlabeled frames
+    have a separate API and never materialize a mask path.
     """
 
     def __init__(self, manifest, expected_sha256, *, synthetic: bool = False):
@@ -29,6 +37,9 @@ class CandidateA3DData:
         self.lids = self.base.lids
         self.uids = self.base.uids
         self.label_reads = self.base.label_reads
+        # Keep image-only access auditable separately from the dense TRAIN
+        # label budget.  This set is intentionally not part of ``label_reads``.
+        self.unlabeled_image_reads: set[str] = set()
         self.geometry: dict[str, VolumeGeometry3D] = {}
         for record in self.labeled + self.unlabeled:
             patient = record["id"]
@@ -90,6 +101,58 @@ class CandidateA3DData:
         runtime_geometry = geometry.as_dict()
         metadata = {"patient": record["id"], "frame": frame}
         return x, y, runtime_geometry, metadata
+
+    def unlabeled_frame_keys(self) -> list[tuple[int, int]]:
+        """Return native ``(unlabeled_record_index, frame)`` image-only keys.
+
+        The frame list is derived from the cached cine shape, never from a
+        mask or ED/ES metadata.  The record index is relative to
+        :attr:`unlabeled`, which keeps labeled and unlabeled key namespaces
+        explicit at call sites.
+        """
+        keys: list[tuple[int, int]] = []
+        for record_index, record in enumerate(self.unlabeled):
+            cine = self.base.array(record["image"], record["image_sha256"])
+            if cine.ndim != 4 or cine.shape[0] < 1:
+                raise ValueError("unlabeled A-3D image must have TZYX shape")
+            geometry = self.geometry[record["id"]]
+            if tuple(cine.shape[1:]) != tuple(geometry.shape):
+                raise ValueError("unlabeled A-3D image does not match native geometry")
+            keys.extend((record_index, frame) for frame in range(cine.shape[0]))
+        if not keys:
+            raise ValueError("TRAIN manifest has no image-only frames")
+        return keys
+
+    def load_unlabeled_frame(
+        self, key: tuple[int, int]
+    ) -> tuple[torch.Tensor, dict[str, Any], dict[str, Any]]:
+        """Materialize one image-only native frame without opening a mask.
+
+        The returned tuple is ``(image, geometry, metadata)``.  This method
+        deliberately has no labels argument or mask fallback, so callers
+        cannot accidentally create SDF, measurement, or K1 targets from U.
+        """
+        if len(key) != 2:
+            raise ValueError("unlabeled A-3D volume key must be (record_index, frame)")
+        record_index, frame = (int(value) for value in key)
+        if not 0 <= record_index < len(self.unlabeled):
+            raise IndexError("unlabeled A-3D record index is outside TRAIN")
+        record = self.unlabeled[record_index]
+        if set(record) != {"id", "image", "image_sha256"}:
+            raise ValueError("unlabeled record must contain image only, never reference paths")
+        cine = self.base.array(record["image"], record["image_sha256"])
+        geometry = self.geometry[record["id"]]
+        if cine.ndim != 4 or tuple(cine.shape[1:]) != tuple(geometry.shape):
+            raise ValueError("unlabeled A-3D sample is not a native full-volume cine")
+        if not 0 <= frame < cine.shape[0]:
+            raise IndexError("unlabeled A-3D frame is outside cached geometry")
+        x = torch.from_numpy(np.array(cine[frame], dtype=np.float32, copy=True))[None, None]
+        if not torch.isfinite(x).all() or bool((x < 0).any()) or bool((x > 1).any()):
+            raise ValueError("unlabeled A-3D image must be finite and normalized to [0,1]")
+        self.unlabeled_image_reads.add(record["id"])
+        runtime_geometry = geometry.as_dict()
+        metadata = {"patient": record["id"], "frame": frame}
+        return x, runtime_geometry, metadata
 
 def _synthetic_geometry(shape_zyx: tuple[int, int, int], spacing=(2.5, 0.7, 1.3)) -> dict[str, Any]:
     affine = np.eye(4, dtype=np.float64)
@@ -184,6 +247,7 @@ synthetic_candidate_a3d_fixture = synthetic_fixture
 
 
 __all__ = [
-    "CandidateA3DData", "synthetic_fixture",
+    "CandidateA3DData",
     "synthetic_candidate_a3d_fixture",
+    "synthetic_fixture",
 ]

@@ -174,11 +174,119 @@ def _validate_pretraining_provenance(provenance: Mapping[str, Any], data: Any,
         raise ValueError("teacher pretraining class mapping does not match the native ontology")
 
 
+def _repeat_shuffled(items, count, rng):
+    """Balanced cycles; every item is visited before a new cycle starts."""
+    result = []
+    while len(result) < count:
+        result.extend(items[int(i)] for i in rng.permutation(len(items)))
+    return result[:count]
+
+
+def _semi_epoch_plan(frame_keys, unlabeled_keys, steps, rng, visits):
+    """Use TRAIN images only; U frame selection never depends on annotations."""
+    by_patient = {}
+    for record, frame in unlabeled_keys:
+        by_patient.setdefault(record, []).append((record, frame))
+    if not by_patient or steps < max(len(frame_keys), len(by_patient)):
+        raise ValueError("semi epoch must cover all labeled frames and every U patient")
+    labeled = _repeat_shuffled(frame_keys, steps, rng)
+    patients = _repeat_shuffled(sorted(by_patient), steps, rng)
+    unlabeled = []
+    for patient in patients:
+        frames = by_patient[patient]
+        unlabeled.append(frames[visits.get(patient, 0) % len(frames)])
+        visits[patient] = visits.get(patient, 0) + 1
+    return labeled, unlabeled
+
+
+def _unlabeled_update(*, data, key, student, student_ema, student_optimizer,
+                      teacher, teacher_ema, teacher_optimizer, teacher_parameters,
+                      update_teacher, bank, codec, rollout_config, config, epoch,
+                      device, augmentation_generator, rollout_generator, counts):
+    """Image-only consistency; no label loader, GT target or K1 utility path."""
+    from .k1 import student_rollout
+    from .semisupervised import (
+        ramp_weight, strong_intensity, student_unlabeled_loss,
+        teacher_consistency_loss, update_ema,
+    )
+
+    semi = config["semi_supervised"]
+    image, geometry, sample = data.load_unlabeled_frame(key)
+    strong = strong_intensity(image, semi, generator=augmentation_generator).to(device)
+    weak = image.to(device)
+    weight = ramp_weight(epoch, semi)
+    row = {"sample": sample, "ramp_weight": weight}
+    counts["unlabeled_samples"] += 1
+    if update_teacher and teacher_optimizer is not None:
+        teacher_ema.eval()
+        with torch.no_grad():
+            target = _validate_teacher_output(teacher_ema(weak, geometry=geometry), tuple(weak.shape[-3:]))
+        teacher.train()
+        if config["stage"] == "teacher_warmup":
+            teacher.encoder.eval()
+        teacher_optimizer.zero_grad(set_to_none=True)
+        online = _validate_teacher_output(teacher(strong, geometry=geometry), tuple(strong.shape[-3:]))
+        raw_loss, stats = teacher_consistency_loss(online, target, semi)
+        loss = weight * raw_loss
+        if not torch.isfinite(loss):
+            raise FloatingPointError("nonfinite teacher U consistency loss")
+        applied = float(loss.detach()) > 0.0
+        if applied:
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(teacher_parameters, 5., error_if_nonfinite=True)
+            teacher_optimizer.step()
+            update_ema(teacher_ema, teacher, semi["ema_decay"])
+            counts["teacher_unlabeled_updates"] += 1
+        teacher_optimizer.zero_grad(set_to_none=True)
+        row.update(teacher_unlabeled_loss=float(loss.detach()),
+                   teacher_unlabeled_update=applied, teacher_consistency=stats)
+        del loss, raw_loss, online, target
+    if config["stage"] == "joint":
+        # Both passes select from the feasible bank without GT or mentor values.
+        # Random-query controls use the same random stream for weak/strong views.
+        random_state = rollout_generator.get_state()
+        student_ema.eval()
+        with torch.no_grad():
+            target = student_rollout(
+                student_ema, weak, bank, codec=codec, geometry=geometry,
+                config=rollout_config, generator=rollout_generator,
+            )
+        rollout_generator.set_state(random_state)
+        student.train()
+        student_optimizer.zero_grad(set_to_none=True)
+        online = student_rollout(
+            student, strong, bank, codec=codec, geometry=geometry,
+            config=rollout_config, generator=rollout_generator, quantize_ste=True,
+        )
+        raw_loss, stats = student_unlabeled_loss(online.final_logits, target.final_logits, semi)
+        loss = weight * raw_loss
+        if not torch.isfinite(loss):
+            raise FloatingPointError("nonfinite student U consistency loss")
+        applied = float(loss.detach()) > 0.0
+        if applied:
+            loss.backward()
+            if teacher is not None and any(p.grad is not None for p in teacher.parameters()):
+                raise RuntimeError("student U loss reached main teacher parameters")
+            torch.nn.utils.clip_grad_norm_(student.parameters(), 5., error_if_nonfinite=True)
+            student_optimizer.step()
+            update_ema(student_ema, student, semi["ema_decay"])
+            counts["student_unlabeled_updates"] += 1
+        student_optimizer.zero_grad(set_to_none=True)
+        if any(trace.target_probs is not None for trace in online.traces):
+            raise RuntimeError("U rollout unexpectedly created a policy utility target")
+        row.update(student_unlabeled_loss=float(loss.detach()),
+                   student_unlabeled_update=applied, student_consistency=stats,
+                   student_code_bits=int(online.code_bits), student_query_count=int(online.query_count),
+                   policy_targets=0, ground_truth_reads=0)
+    return row
+
+
 def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=False,
           validation_manifest=None, validation_sha256=None):
     from .data import CandidateA3DData
     from .k1 import K1Config, student_rollout
     from .teacher import teacher_loss
+    from .semisupervised import make_ema, strong_intensity, update_ema
 
     config = validate_config(config)
     if config["validation_every"] and not (validation_manifest and validation_sha256):
@@ -193,6 +301,10 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
         raise ValueError("synthetic A-3D smoke must use tiny_test3d")
 
     data = CandidateA3DData(manifest, manifest_sha256, synthetic=synthetic)
+    semi = config.get("semi_supervised", {})
+    semi_enabled = semi.get("enabled", False)
+    if semi_enabled and not data.uids:
+        raise ValueError("semi-supervised training requires image-only U patients")
     dataset = data.manifest.get("dataset")
     if synthetic:
         if dataset != "synthetic":
@@ -248,6 +360,27 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
     if not frame_keys:
         raise ValueError("A-3D TRAIN manifest has no annotated frames")
 
+    unlabeled_keys = list(data.unlabeled_frame_keys()) if semi_enabled else []
+    semi_steps = ((semi["steps_per_epoch"] or max(len(frame_keys), len(data.lids) + len(data.uids)))
+                  if semi_enabled else len(frame_keys))
+    if semi_enabled and semi_steps < max(len(frame_keys), len(data.uids)):
+        raise ValueError("semi steps_per_epoch must cover all labeled frames and U patients")
+    teacher_ema = make_ema(teacher, semi["ema_decay"]) if semi_enabled and teacher_optimizer is not None else None
+    student_ema = make_ema(student, semi["ema_decay"]) if semi_enabled and config["stage"] == "joint" else None
+    augmentation_generator = torch.Generator(device="cpu").manual_seed(config["seed"] + 2000)
+    unlabeled_generator = torch.Generator(device="cpu").manual_seed(config["seed"] + 3000)
+    u_visits = {}
+
+    def training_state():
+        if not semi_enabled:
+            return None
+        return {"student_ema": student_ema.state_dict() if student_ema is not None else None,
+                "teacher_ema": teacher_ema.state_dict() if teacher_ema is not None else None,
+                "ema_initialization": "online weights at start of each stage; no resume",
+                "semi_updates": dict(counts), "unlabeled_frame_visits": dict(u_visits),
+                "augmentation_rng": augmentation_generator.get_state(),
+                "unlabeled_rollout_rng": unlabeled_generator.get_state()}
+
     out.mkdir(parents=True)
     write_json(out / "CONFIG.json", config)
     write_json(out / "STARTUP.json", {
@@ -256,34 +389,48 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
         "student_parameters": sum(p.numel() for p in student.parameters()),
         "teacher_parameters": sum(p.numel() for p in teacher.parameters()) if teacher is not None else 0,
         "label_budget": len(data.lids),
-        "supervision": "dense labeled TRAIN frames only; U unused",
+        "supervision": ("semi-supervised: dense L labels plus image-only U EMA consistency"
+                        if semi_enabled else "dense labeled TRAIN frames only; U unused"),
+        "unlabeled_patient_count": len(data.uids), "updates_per_epoch": semi_steps,
+        "semi_supervised": semi if semi_enabled else {"enabled": False},
+        "unlabeled_policy_targets": "NONE; K1 utility and policy targets use L only",
+        "ema_stage_initialization": "reset from online stage initialization",
         "geometry_protocol": "native full_volume [D,H,W], spacing_zyx and affine_zyx",
         "quality": "NOT_EVALUATED",
     })
 
     start = time.perf_counter()
-    counts = {"teacher_updates": 0, "student_updates": 0, "teacher_snapshots": 0}
+    counts = {"teacher_updates": 0, "student_updates": 0, "teacher_snapshots": 0,
+              "unlabeled_samples": 0, "teacher_unlabeled_updates": 0, "student_unlabeled_updates": 0}
     metric_jsonl, metric_csv = out / "metrics.jsonl", out / "metrics.csv"
     epoch_log, update_log = out / "epochs.jsonl", out / "updates.jsonl"
     global_update = 0
     try:
         with epoch_log.open("x") as epoch_stream, update_log.open("x") as update_stream:
             for epoch in range(1, config["epochs"] + 1):
-                order = rng.permutation(len(frame_keys))
-                plan = [frame_keys[int(index)] for index in order]
+                if semi_enabled:
+                    plan, u_plan = _semi_epoch_plan(frame_keys, unlabeled_keys, semi_steps, rng, u_visits)
+                else:
+                    order = rng.permutation(len(frame_keys))
+                    plan = [frame_keys[int(index)] for index in order]
+                    u_plan = []
                 accumulators: dict[str, ConfusionAccumulator] = {}
                 epoch_losses: list[float] = []
                 rollout_stats: list[dict[str, float]] = []
+                u_rows = []
+                epoch_teacher_losses = []
                 for update_index, key in enumerate(plan):
                     x, y, geometry, sample = _sample_parts(data, key)
+                    if semi_enabled:
+                        x = strong_intensity(x, semi, generator=augmentation_generator)
                     x, y = x.to(device), y.to(device)
                     shape = tuple(int(v) for v in x.shape[-3:])
                     row = {"epoch": epoch, "update": update_index + 1,
                            "sample": sample, "geometry": geometry}
                     teacher_metrics_recorded = False
-                    if teacher_optimizer is not None and (
-                            config["stage"] != "joint"
-                            or global_update % config["teacher_update_every"] == 0):
+                    update_teacher = (teacher_optimizer is not None and (
+                        config["stage"] != "joint" or global_update % config["teacher_update_every"] == 0))
+                    if update_teacher:
                         teacher.train()
                         if config["stage"] == "teacher_warmup":
                             teacher.encoder.eval()
@@ -302,9 +449,13 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
                         teacher_total.backward()
                         torch.nn.utils.clip_grad_norm_(teacher_parameters, 5., error_if_nonfinite=True)
                         teacher_optimizer.step()
+                        if teacher_ema is not None:
+                            update_ema(teacher_ema, teacher, semi["ema_decay"])
                         teacher_optimizer.zero_grad(set_to_none=True)
                         row["teacher_loss"] = float(teacher_total.detach())
                         counts["teacher_updates"] += 1
+                        epoch_teacher_losses.append(row["teacher_loss"])
+                        del teacher_total, sdf_target
 
                     if config["stage"] == "joint":
                         teacher_values = None
@@ -340,6 +491,9 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
                             raise RuntimeError("A-3D student loss reached teacher parameters")
                         norm = torch.nn.utils.clip_grad_norm_(student.parameters(), 5., error_if_nonfinite=True)
                         student_optimizer.step()
+                        if student_ema is not None:
+                            update_ema(student_ema, student, semi["ema_decay"])
+                        student_optimizer.zero_grad(set_to_none=True)
                         counts["student_updates"] += 1
                         traces = tuple(result.traces)
                         region_count = sum(
@@ -370,6 +524,20 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
                         accumulators["student"].update(
                             y.detach().cpu().numpy(), result.final_logits.detach().argmax(1).cpu().numpy())
                         epoch_losses.append(float(loss.detach()))
+                        del result, loss, targets, traces
+                    if teacher is not None:
+                        del outputs
+                    del x, y
+                    if semi_enabled:
+                        u_row = _unlabeled_update(
+                            data=data, key=u_plan[update_index], student=student, student_ema=student_ema,
+                            student_optimizer=student_optimizer, teacher=teacher, teacher_ema=teacher_ema,
+                            teacher_optimizer=teacher_optimizer, teacher_parameters=teacher_parameters,
+                            update_teacher=update_teacher, bank=bank, codec=codec, rollout_config=rollout_config,
+                            config=config, epoch=epoch, device=device, augmentation_generator=augmentation_generator,
+                            rollout_generator=unlabeled_generator, counts=counts)
+                        row["unlabeled"] = u_row
+                        u_rows.append(u_row)
                     row["elapsed_seconds"] = time.perf_counter() - start
                     update_stream.write(json.dumps(row, allow_nan=False, default=str) + "\n")
                     update_stream.flush()
@@ -381,6 +549,7 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
                 epoch_record = {
                     "epoch": epoch, "updates": len(plan),
                     "mean_student_loss": float(np.mean(epoch_losses)) if epoch_losses else None,
+                    "mean_teacher_loss": float(np.mean(epoch_teacher_losses)) if epoch_teacher_losses else None,
                     "mean_code_bits": float(np.mean([item["code_bits"] for item in rollout_stats])) if rollout_stats else None,
                     "mean_query_count": float(np.mean([item["query_count"] for item in rollout_stats])) if rollout_stats else None,
                     "stop_fraction": float(np.mean([item["stop_selected"] for item in rollout_stats])) if rollout_stats else None,
@@ -389,6 +558,19 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
                     "metric_rows": len(rows), "metrics_file": metric_csv.name,
                     "elapsed_seconds": time.perf_counter() - start,
                 }
+                if semi_enabled:
+                    epoch_record["semi_supervised"] = {
+                        "unlabeled_samples": len(u_rows),
+                        "unlabeled_patients": sorted({item["sample"]["patient"] for item in u_rows}),
+                        "labeled_frame_visits": len(plan), "unique_labeled_frames": len(set(plan)),
+                        "teacher_unlabeled_updates": sum(item.get("teacher_unlabeled_update", False) for item in u_rows),
+                        "student_unlabeled_updates": sum(item.get("student_unlabeled_update", False) for item in u_rows),
+                    }
+                    for name in ("teacher_unlabeled_loss", "student_unlabeled_loss"):
+                        values = [item[name] for item in u_rows if name in item]
+                        epoch_record["semi_supervised"]["mean_" + name] = float(np.mean(values)) if values else None
+                    if set(epoch_record["semi_supervised"]["unlabeled_patients"]) != set(data.uids):
+                        raise RuntimeError("semi epoch failed to visit every U patient")
                 if validation_manifest and epoch % config["validation_every"] == 0:
                     validation_out = out / "validation" / f"epoch_{epoch:04d}"
                     if config["stage"] == "joint":
@@ -423,20 +605,24 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
                         out / f"epoch_{epoch:04d}", student=student, teacher=teacher,
                         optimizers=[student_optimizer] + ([teacher_optimizer] if teacher_optimizer else []),
                         config=config, data=data, epoch=epoch, updates=global_update,
-                        provenance=provenance,
+                        provenance=provenance, training_state=training_state(),
                     )
         sha = save_checkpoint(
             out / "final", student=student, teacher=teacher,
             optimizers=[student_optimizer] + ([teacher_optimizer] if teacher_optimizer else []),
             config=config, data=data, epoch=config["epochs"], updates=global_update,
-            provenance=provenance,
+            provenance=provenance, training_state=training_state(),
         )
         report = {
             "schema": SCHEMA, "status": "COMPLETED", "synthetic": synthetic,
             "quality": "NOT_EVALUATED", "stage": config["stage"],
             "epochs": config["epochs"], **counts,
             "label_budget": len(data.lids), "label_reads": sorted(data.label_reads),
-            "unlabeled_usage": "UNUSED; no U reference paths opened",
+            "unlabeled_usage": ("TRAIN images only; self-EMA consistency; no U masks or K1 utility"
+                                if semi_enabled else "UNUSED; no U reference paths opened"),
+            "unlabeled_image_reads": sorted(data.unlabeled_image_reads),
+            "semi_supervised": semi if semi_enabled else {"enabled": False},
+            "updates_per_epoch": semi_steps,
             "metric_files": {"epoch": epoch_log.name, "per_class_jsonl": metric_jsonl.name,
                              "per_class_csv": metric_csv.name, "updates": update_log.name},
             "validation_manifest_sha256": validation_sha256,

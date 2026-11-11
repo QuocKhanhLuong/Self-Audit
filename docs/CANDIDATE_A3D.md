@@ -114,6 +114,37 @@ roundtripped packet are timed separately. `total_ms` sums those measured phases;
 it excludes checkpoint loading and file I/O. Per-component encoder/value-head/
 policy timing is not currently instrumented.
 
+## Optional semi-supervised profile
+
+The standalone recipe
+`configs/candidate_a3d/semi_supervised.json` enables an additional
+image-only-TRAIN consistency term without changing the A-3D representation.
+Labeled frames still produce the existing CE+Dice, measurement and K1 utility
+losses. U frames have no mask reference and produce no ground-truth SDF or K1
+utility target. A student self-EMA copy emits detached weak-view region,
+boundary and soft-SDF predictions; the online student is trained on an
+intensity-only strong view using gamma `[0.7, 1.5]` and noise standard deviation
+`0.03`, with confidence threshold `0.7`, background weight `0.1` and a
+10-epoch linear ramp. No spatial crop, resampling or affine change is applied.
+
+The EMA helper exists in every arm, including `teacher_free`; it is not the
+dual-branch teacher. `teacher_free` therefore removes labeled teacher guidance
+only. The dual-branch teacher remains unchanged for the labeled query proposal
+path. EMA parameters are detached and updated after each online optimizer step;
+new pretrain, warm-up and joint stages reset their own EMA state rather than
+resuming an optimizer/RNG state.
+
+With `steps_per_epoch: 0`, the runner resolves one fixed update per labeled
+TRAIN patient (80 on the prepared ACDC split) and pins that count across
+few-shot `k`. Each update pairs one labeled frame with one U frame. A
+deterministic U cycle reaches every U patient and native cine frame in an epoch;
+the labeled cycle repeats frames in balanced order. This is a label-budget
+curve with a fixed update budget, not a compute-matched curve. It replaces the
+older `k=2` shorthand of 100 epochs x 4 updates with 100 x 80 updates for ACDC.
+The original M&Ms plan records its own fixed labeled-patient count rather than
+silently borrowing the ACDC value.
+The bank, packet, decoder and native-geometry contracts above are unchanged.
+
 ## Train, evaluate and export
 
 Use the same preparation commands as A. The recommended contribution check is
@@ -122,6 +153,29 @@ the one-seed four-arm plan in [EXPERIMENTS.md](EXPERIMENTS.md): `full`,
 shared teacher stages once and then four matched student runs. The manual
 commands below are useful when running only the reference `full` arm or when
 transferring an explicitly named checkpoint between stages.
+
+To plan the optional semi-supervised A-3D comparison, pass the standalone
+profile explicitly. The profile is a complete validated A-3D recipe so the
+repository check can validate it; the local MedNeXt source/weights remain
+external and must be supplied with `--model-config`.
+
+```bash
+SEMI_CONFIG=configs/candidate_a3d/semi_supervised.json
+python scripts/candidate_a_ablations.py plan --track candidate_a3d \
+  --dataset acdc --train /prepared/acdc/train.json \
+  --development /prepared/acdc/development.json \
+  --model-config /private/mednext3d.json \
+  --semi-config "$SEMI_CONFIG" --out /runs/acdc-a3d-semi-s42 \
+  --seeds 42 --arms full teacher_free fixed_queries global_only_queries \
+  --epochs 100 --pretrain-epochs 100 --warmup-epochs 10
+python scripts/candidate_a_ablations.py run \
+  --plan /runs/acdc-a3d-semi-s42/PLAN.json --execute --device cuda
+```
+
+For the expanded few-shot planner, pass the same `--semi-config` to
+`scripts/candidate_a_fewshot.py plan`; keep the root and child output
+directories new. The semi profile is optional and A-3D-only; do not pass it to
+the native 2D/2.5D Candidate A track.
 
 Start from `configs/backbone3d.example.json`, replace the source path with an
 already available clean MedNeXt checkout at the pinned commit, and add a local

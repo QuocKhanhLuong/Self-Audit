@@ -8,9 +8,13 @@ decode a mask from that code alone?
 - [Candidate A, native 2D/2.5D](docs/CANDIDATE_A.md)
 - [Candidate A-3D, native full-volume](docs/CANDIDATE_A3D.md)
 
-Training uses dense budgeted TRAIN labels. An epoch visits every annotated
-frame/slice once. U images are unused. No no-GT, semi-supervised improvement,
-SOTA or 96-Dice claim follows from this software implementation.
+The default recipes use dense budgeted TRAIN labels and visit every annotated
+frame/slice once per epoch; U images are unused. A-3D has a separate opt-in
+semi-supervised profile at
+[`configs/candidate_a3d/semi_supervised.json`](configs/candidate_a3d/semi_supervised.json).
+That profile uses image-only TRAIN U for detached EMA consistency only; it never
+opens U masks or creates U SDF/K1 targets. No efficacy, SOTA, 96-Dice or
+semi-supervised improvement claim follows from this software implementation.
 
 - [ACDC and original M&Ms data preparation](docs/DATA_PREPARATION.md)
 - [Train, epoch logs, export and evaluation](docs/RUNBOOK.md)

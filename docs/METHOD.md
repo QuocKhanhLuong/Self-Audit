@@ -11,10 +11,13 @@ definition or a checkpoint namespace.
 | A-3D | `self_audit.candidate_a3d.v1` | `[B,1,D,H,W]` native full-volume frame | runtime `shape_zyx`, `spacing_zyx`, `affine_zyx`; manifest stores `spacing_zyx_mm`; 3D physical distance | implementation track; efficacy not measured |
 
 `train.py` and `evaluate.py` dispatch by the declared method/config schema. A
-checkpoint from one track cannot be loaded into the other. Both tracks use only
-the dense labeled TRAIN budget; image-only U records are not targets. Development
-and test masks are opened only after the relevant frozen prediction artifact is
-written and hashed, and never choose a checkpoint or stop training.
+checkpoint from one track cannot be loaded into the other. The default recipes
+use only the dense labeled TRAIN budget; image-only U records are not targets.
+An explicitly selected A-3D semi-supervised profile additionally reads
+image-only TRAIN U for detached EMA consistency, never for masks, SDF ground
+truth or K1 utility labels. Development and test masks are opened only after the
+relevant frozen prediction artifact is written and hashed, and never choose a
+checkpoint or stop training.
 
 ## Shared method contract
 
@@ -38,6 +41,37 @@ public geometry. It never receives encoder features, the source image, a teacher
 tensor or a hidden cache. Decoding is chunked for memory, while timing reports
 the full encoder, query head, policy, packet roundtrip and mask decoder path.
 
+## Optional A-3D semi-supervised profile
+
+`configs/candidate_a3d/semi_supervised.json` is an opt-in A-3D joint-training
+profile. It does not redesign the measurement bank, signed-distance target,
+K1, packet or decoder. Labeled TRAIN frames keep the existing segmentation,
+measurement and detached utility targets. An image-only TRAIN U update supplies
+only a consistency target: a frozen EMA copy produces weak-view region,
+boundary and soft-SDF outputs, while the online student receives an
+intensity-only strong view (gamma sampled from `[0.7, 1.5]` plus Gaussian noise
+with standard deviation `0.03`). Confidence gating uses threshold `0.7` and
+background weight `0.1`; the consistency weight ramps linearly for 10 epochs.
+No U mask is opened, and U never creates a ground-truth SDF or K1 utility
+label.
+
+The EMA copy is a student self-EMA helper present in every arm, including
+`teacher_free`. It is not the dual-branch teacher and does not turn
+`teacher_free` into a teacher-guided arm. The dual-branch teacher remains the
+labeled-query proposal mechanism. EMA parameters are detached, updated after
+the online step, and reset for each new pretrain/warm-up/joint stage; a stage is
+not an optimizer/RNG resume.
+
+Each semi-supervised update samples one labeled frame and one U frame. The
+deterministic U cycle covers all U patients and their native cine frames during
+an epoch; labeled frames repeat through balanced cycles. `steps_per_epoch: 0`
+means the runner resolves one fixed update per labeled TRAIN patient (80 on the
+prepared ACDC protocol) and reuses that resolved count for every few-shot `k`.
+The original M&Ms plan records its own resolved count rather than reusing the
+ACDC value.
+Thus the old shorthand of 100 epochs with four updates at `k=2` is not this
+profile: the current ACDC setting is 100 x 80 updates for every `k`.
+
 ## A track
 
 A visits every annotated TRAIN frame/slice once per epoch. The three-slice input
@@ -53,6 +87,9 @@ A-3D reads one native full-volume frame at a time. The default implementation
 does not crop or resample before creating targets; unsupported cropped inputs
 must fail closed rather than treating a truncated structure as absent. Both
 networks receive the same `[B,1,D,H,W]` tensor and the same native geometry.
+The optional semi-supervised schedule above changes only the source of an
+additional U consistency term; it does not change this native geometry or the
+labeled A-3D contract.
 
 The reference teacher backend is a local, hash-pinned MedNeXt-L 3D k3 adapter
 using the verified native MedNeXt-v1 stage sequence and original region path; it

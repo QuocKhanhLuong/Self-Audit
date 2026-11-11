@@ -28,6 +28,43 @@ For ACDC plus M&Ms priority ordering, pass both root plans to
 stages and `full` arms first, then the remaining arms. The child runner alone
 executes one k at a time and does not provide that global ordering.
 
+## Optional A-3D semi-supervised run
+
+The opt-in profile at `configs/candidate_a3d/semi_supervised.json` adds only
+detached EMA consistency on image-only TRAIN U. It keeps the native full-volume
+geometry, typed measurement bank, code-only decoder and all labeled
+segmentation/measurement/K1 losses. No U mask, U SDF ground truth or U K1
+utility target is read. The EMA helper is present for every arm, including
+`teacher_free`; it is a student self-EMA, not the dual-branch teacher.
+
+Plan the same compact four-arm comparison with:
+
+```bash
+SEMI_CONFIG=configs/candidate_a3d/semi_supervised.json
+python scripts/candidate_a_ablations.py plan --track candidate_a3d \
+  --dataset acdc --train /prepared/acdc/train.json \
+  --development /prepared/acdc/development.json \
+  --model-config /private/mednext3d.json --semi-config "$SEMI_CONFIG" \
+  --out /runs/acdc-a3d-semi-s42 --seeds 42 \
+  --arms full teacher_free fixed_queries global_only_queries \
+  --epochs 100 --pretrain-epochs 100 --warmup-epochs 10
+python scripts/candidate_a_ablations.py run \
+  --plan /runs/acdc-a3d-semi-s42/PLAN.json --execute --device cuda
+```
+
+For the few-shot planner, pass the same `--semi-config` to
+`scripts/candidate_a_fewshot.py plan` and keep the root/child output paths
+new. `steps_per_epoch: 0` resolves to a fixed update count equal to the
+labeled TRAIN patient count (80 on prepared ACDC), reused across `k=2,5,8,10`.
+For original M&Ms, use and record that dataset's own resolved count; do not
+reuse 80 by convention.
+Each update pairs one labeled frame and one U frame; U patients/native frames
+are traversed by a deterministic cycle and labeled frames repeat in balanced
+cycles. Intensity-only gamma/noise preserves geometry. This means 100 x 80
+updates at ACDC for every `k`, replacing the old `k=2` shorthand of 100 x 4;
+it is not compute-matched across label budgets. The EMA state resets at each
+new stage, and this workflow does not resume interrupted optimizer/RNG state.
+
 Install `requirements.txt` in the intended CPU/CUDA environment. Read
 [DATA_PREPARATION.md](DATA_PREPARATION.md) to prepare ACDC or original M&Ms with
 native geometry and locked patient splits. Copy `configs/backbone.example.json`
