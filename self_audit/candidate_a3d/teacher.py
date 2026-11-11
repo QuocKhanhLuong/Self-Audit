@@ -546,7 +546,8 @@ class DualBranchTeacher3D(nn.Module):
     def __init__(self, encoder: nn.Module, *, input_channels: int = 1,
                  num_classes: int = 4, class_mapping: Sequence[str] = CLASS_NAMES,
                  boundary_width: int | None = None, backbone_meta: Mapping[str, Any] | None = None,
-                 checkpoint_boundary: bool = False) -> None:
+                 checkpoint_boundary: bool = False,
+                 offload_saved_tensors: bool = False) -> None:
         super().__init__()
         if num_classes != 4:
             raise ValueError("A-3D requires exactly four classes")
@@ -557,7 +558,10 @@ class DualBranchTeacher3D(nn.Module):
         self.backbone_meta = copy.deepcopy(dict(backbone_meta or {}))
         if type(checkpoint_boundary) is not bool:
             raise ValueError("checkpoint_boundary must be a boolean")
+        if type(offload_saved_tensors) is not bool:
+            raise ValueError("offload_saved_tensors must be a boolean")
         self.checkpoint_boundary = checkpoint_boundary
+        self.offload_saved_tensors = offload_saved_tensors
         self._frozen_modules: tuple[str, ...] = ()
         self._stage = "teacher_pretrain"
         # A real MedNeXt adapter owns its complete original segmentation
@@ -607,7 +611,7 @@ class DualBranchTeacher3D(nn.Module):
         padded = F.pad(x, (0, padding[2], 0, padding[1], 0, padding[0]), mode="replicate")
         return padded, shape
 
-    def forward(self, x: Tensor, *, geometry: Any) -> dict[str, Tensor]:
+    def _forward_impl(self, x: Tensor, *, geometry: Any) -> dict[str, Tensor]:
         original_shape = self._check_input(x)
         spacing_zyx = _geometry_spacing(
             geometry, original_shape, device=x.device, dtype=x.dtype,
@@ -658,6 +662,16 @@ class DualBranchTeacher3D(nn.Module):
         sdf = sdf[..., : original_shape[0], : original_shape[1], : original_shape[2]]
         return {"region_logits": region, "boundary_logits": boundary, "sdf": sdf}
 
+    def forward(self, x: Tensor, *, geometry: Any) -> dict[str, Tensor]:
+        # ``save_on_cpu`` moves tensors captured by autograd (including the
+        # checkpointed boundary inputs) to host memory until backward needs
+        # them.  It is deliberately restricted to the grad-enabled training
+        # path: EMA snapshots and inference remain ordinary no-grad forwards.
+        if self.offload_saved_tensors and torch.is_grad_enabled():
+            with torch.autograd.graph.save_on_cpu(pin_memory=x.is_cuda):
+                return self._forward_impl(x, geometry=geometry)
+        return self._forward_impl(x, geometry=geometry)
+
     def train(self, mode: bool = True) -> DualBranchTeacher3D:
         super().train(mode)
         if mode:
@@ -704,6 +718,7 @@ def build_teacher3d(model_config: Mapping[str, Any] | str | Path,
         class_mapping=CLASS_NAMES, boundary_width=config.get("boundary_width"),
         backbone_meta=backbone_meta,
         checkpoint_boundary=config.get("checkpoint_boundary", False),
+        offload_saved_tensors=config.get("offload_saved_tensors", False),
     )
     if checkpoint_state is not None:
         if checkpoint_metadata is None:
@@ -725,6 +740,7 @@ def build_teacher3d(model_config: Mapping[str, Any] | str | Path,
         "padding_policy": teacher.padding_policy,
         "padding_multiple": teacher.padding_multiple,
         "checkpoint_boundary": teacher.checkpoint_boundary,
+        "offload_saved_tensors": teacher.offload_saved_tensors,
         "accuracy_claim": "NOT_MEASURED",
         "class_mapping_trust": "metadata_self_declared_semantic_permutation_not_empirically_verified",
     }

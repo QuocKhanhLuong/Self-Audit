@@ -90,7 +90,8 @@ def _teacher(config: dict, *, synthetic: bool):
     elif init["kind"] != "none":
         raise ValueError(f"unsupported A-3D teacher initialization kind: {init['kind']}")
     teacher_config = {**config["model"], "class_mapping": config["class_mapping"],
-                      "checkpoint_boundary": bool(config.get("semi_supervised", {}).get("enabled", False))}
+                      "checkpoint_boundary": bool(config.get("semi_supervised", {}).get("enabled", False)),
+                      "offload_saved_tensors": bool(config.get("semi_supervised", {}).get("enabled", False))}
     teacher, provenance = build_teacher3d(
         teacher_config, synthetic=synthetic,
     )
@@ -397,6 +398,7 @@ def train(config, manifest, manifest_sha256, out, *, device="cuda", synthetic=Fa
         "unlabeled_policy_targets": "NONE; K1 utility and policy targets use L only",
         "ema_stage_initialization": "reset from online stage initialization",
         "boundary_activation_checkpointing": semi_enabled,
+        "teacher_saved_activations": "cpu_offload_fp32" if semi_enabled else "device_default",
         "geometry_protocol": "native full_volume [D,H,W], spacing_zyx and affine_zyx",
         "quality": "NOT_EVALUATED",
     })

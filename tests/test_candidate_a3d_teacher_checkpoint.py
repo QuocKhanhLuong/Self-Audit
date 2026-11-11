@@ -10,13 +10,14 @@ import torch
 from self_audit.candidate_a3d.teacher import build_teacher3d, set_teacher_stage
 
 
-def _config(*, checkpoint_boundary: bool = False) -> dict:
+def _config(*, checkpoint_boundary: bool = False, offload_saved_tensors: bool = False) -> dict:
     return {
         "backbone": "tiny_test3d",
         "input_channels": 1,
         "feature_channels": [8, 16, 24, 32],
         "class_mapping": ["BG", "RV", "MYO", "LV"],
         "checkpoint_boundary": checkpoint_boundary,
+        "offload_saved_tensors": offload_saved_tensors,
     }
 
 
@@ -89,3 +90,55 @@ def test_boundary_checkpoint_matches_warmup_with_frozen_encoder() -> None:
 def test_checkpoint_boundary_flag_is_strict() -> None:
     with pytest.raises(ValueError, match="checkpoint_boundary"):
         build_teacher3d({**_config(), "checkpoint_boundary": 1}, synthetic=True)
+
+
+def test_save_on_cpu_matches_full_forward_and_gradients() -> None:
+    plain, _ = build_teacher3d(_config(), synthetic=True)
+    offloaded, _ = build_teacher3d(
+        _config(checkpoint_boundary=True, offload_saved_tensors=True), synthetic=True,
+    )
+    offloaded.load_state_dict(copy.deepcopy(plain.state_dict()), strict=True)
+    plain.train()
+    offloaded.train()
+    x = torch.rand(1, 1, 5, 7, 9)
+    geometry = _geometry(tuple(x.shape[-3:]))
+    expected = plain(x, geometry=geometry)
+    actual = offloaded(x, geometry=geometry)
+    for key in ("region_logits", "boundary_logits", "sdf"):
+        torch.testing.assert_close(actual[key], expected[key], rtol=0.0, atol=0.0)
+    expected["boundary_logits"].square().mean().backward()
+    actual["boundary_logits"].square().mean().backward()
+    for (name_plain, parameter_plain), (name_offloaded, parameter_offloaded) in zip(
+        plain.named_parameters(), offloaded.named_parameters(), strict=True,
+    ):
+        assert name_plain == name_offloaded
+        if parameter_plain.grad is None or parameter_offloaded.grad is None:
+            assert parameter_plain.grad is None and parameter_offloaded.grad is None
+        else:
+            torch.testing.assert_close(parameter_offloaded.grad, parameter_plain.grad, rtol=0.0, atol=0.0)
+
+
+def test_save_on_cpu_matches_warmup_with_frozen_encoder() -> None:
+    plain, _ = build_teacher3d(_config(), synthetic=True)
+    offloaded, _ = build_teacher3d(
+        _config(checkpoint_boundary=True, offload_saved_tensors=True), synthetic=True,
+    )
+    offloaded.load_state_dict(copy.deepcopy(plain.state_dict()), strict=True)
+    set_teacher_stage(plain, "teacher_warmup")
+    set_teacher_stage(offloaded, "teacher_warmup")
+    x = torch.rand(1, 1, 5, 7, 9)
+    geometry = _geometry(tuple(x.shape[-3:]))
+    expected = plain(x, geometry=geometry)
+    actual = offloaded(x, geometry=geometry)
+    for key in ("region_logits", "boundary_logits", "sdf"):
+        torch.testing.assert_close(actual[key], expected[key], rtol=0.0, atol=0.0)
+    expected["boundary_logits"].square().mean().backward()
+    actual["boundary_logits"].square().mean().backward()
+    assert all(parameter.grad is None for parameter in plain.encoder.parameters())
+    assert all(parameter.grad is None for parameter in offloaded.encoder.parameters())
+    assert any(parameter.grad is not None for parameter in offloaded.boundary_path.parameters())
+
+
+def test_save_on_cpu_flag_is_strict() -> None:
+    with pytest.raises(ValueError, match="offload_saved_tensors"):
+        build_teacher3d({**_config(), "offload_saved_tensors": 1}, synthetic=True)
