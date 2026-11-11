@@ -689,8 +689,15 @@ def offload_remote_job(
                         transfer={"method": "scp+ssh_transaction", "remote_host": remote_host})
         # The local copy must be complete before the server transaction is
         # allowed to delete its payload.
-        _write_json_atomic(temporary / OFFLOAD_RECEIPT_NAME, {"schema": OFFLOAD_SCHEMA, "status": "OFFLOADED", **expected})
-        ok, reason = validate_offload_receipt(temporary / OFFLOAD_RECEIPT_NAME, expected=expected, verify_local=True)
+        # Validate against the temporary paths first; after the durable rename,
+        # the transaction receipt is rebound to the final backup paths.
+        local_expected = dict(expected)
+        local_expected["local_backup_path"] = str((temporary / "final" / "weights.pt").resolve())
+        local_expected["student_export"] = {**export_meta, "path": str(local_export.resolve())}
+        _write_json_atomic(temporary / OFFLOAD_RECEIPT_NAME,
+                           {"schema": OFFLOAD_SCHEMA, "status": "OFFLOADED", **local_expected})
+        ok, reason = validate_offload_receipt(
+            temporary / OFFLOAD_RECEIPT_NAME, expected=local_expected, verify_local=True)
         if not ok:
             raise ValueError(reason)
         if not execute:
