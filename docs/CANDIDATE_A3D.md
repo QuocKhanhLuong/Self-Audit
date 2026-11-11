@@ -120,30 +120,58 @@ The standalone recipe
 `configs/candidate_a3d/semi_supervised.json` enables an additional
 image-only-TRAIN consistency term without changing the A-3D representation.
 Labeled frames still produce the existing CE+Dice, measurement and K1 utility
-losses. U frames have no mask reference and produce no ground-truth SDF or K1
+losses. U frames have no mask reference and produce no U GT-derived SDF or K1
 utility target. A student self-EMA copy emits detached weak-view region,
 boundary and soft-SDF predictions; the online student is trained on an
-intensity-only strong view using gamma `[0.7, 1.5]` and noise standard deviation
-`0.03`, with confidence threshold `0.7`, background weight `0.1` and a
-10-epoch linear ramp. No spatial crop, resampling or affine change is applied.
+intensity-only weak/strong views using gamma `[0.7, 1.5]` and voxel-noise
+standard deviation `0.03`, with confidence threshold `0.7`, background weight
+`0.1` and a 10-epoch linear ramp. The consistency discrepancy uses the fixed
+normalizer `C_foreground + background_weight * C_background`; it is soft and
+does not create hard pseudo masks. No spatial crop, resampling or affine change
+is applied.
 
 The EMA helper exists in every arm, including `teacher_free`; it is not the
-dual-branch teacher. `teacher_free` therefore removes labeled teacher guidance
-only. The dual-branch teacher remains unchanged for the labeled query proposal
-path. EMA parameters are detached and updated after each online optimizer step;
-new pretrain, warm-up and joint stages reset their own EMA state rather than
-resuming an optimizer/RNG state.
+dual-branch teacher. `teacher_free` removes labeled teacher guidance and the
+dual-branch teacher U objective; `teacher_frozen` keeps the frozen labeled
+teacher but also omits its U objective. The student self-EMA U objective remains
+in joint training. EMA parameters are detached and updated after each online
+optimizer step; new pretrain, warm-up and joint stages reset their own EMA state
+rather than resuming an optimizer/RNG state.
 
-With `steps_per_epoch: 0`, the runner resolves one fixed update per labeled
-TRAIN patient (80 on the prepared ACDC split) and pins that count across
-few-shot `k`. Each update pairs one labeled frame with one U frame. A
-deterministic U cycle reaches every U patient and native cine frame in an epoch;
-the labeled cycle repeats frames in balanced order. This is a label-budget
-curve with a fixed update budget, not a compute-matched curve. It replaces the
-older `k=2` shorthand of 100 epochs x 4 updates with 100 x 80 updates for ACDC.
+With `steps_per_epoch: 0`, the runner resolves a fixed logical-update count as
+`max(number_of_labeled_frames, number_of_TRAIN_patients)` (80 on the prepared
+ACDC split) and pins that count across few-shot `k`, while requiring coverage of
+every labeled frame and every U patient. Each logical update pairs one labeled
+frame step with one U-patient step. A deterministic U cycle visits each U
+patient once per cycle and chooses one native cine frame cyclically for that
+visit; it does not promise to consume every cine frame in one epoch. Labeled
+frames repeat in a balanced cycle. This is a label-budget curve with a fixed
+logical-update budget, not a compute-matched curve. It replaces the older `k=2`
+shorthand of 100 epochs x 4 updates with 100 x 80 logical updates for ACDC.
+Report logical sample updates separately from optimizer updates: each logical
+update can contain labeled and U optimizer steps, and teacher-free/frozen arms
+omit their dual-branch teacher U objective while retaining the student self-EMA
+U objective in joint training.
 The original M&Ms plan records its own fixed labeled-patient count rather than
 silently borrowing the ACDC value.
 The bank, packet, decoder and native-geometry contracts above are unchanged.
+
+### Memory note and evidence boundary
+
+The initial semi profile OOMed on a 32 GB device for the forced largest patient
+`057`, volume `[8,512,428]`, before padding. The production profile now enables
+both non-reentrant boundary activation checkpointing and
+`offload_saved_tensors` teacher `save_on_cpu(pin_memory=True)` offload, with
+`PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`. Memory receipt `595a1b3`
+passes on that forced case after padding to `[32,512,432]`: peak allocated CUDA
+memory was `31,145,414,144` bytes (`29.006 GiB`), reserved memory was
+`31,954,305,024` bytes (`29.759 GiB`), and host RSS was `21,476,491,264`
+bytes (about `20.0 GiB`). The worst U engine time was `13.21 s`; the forced
+student backward added `1.68 s`. The checkpointed boundary path was checked for
+output and gradient parity, including warm-up, with the same architecture,
+native geometry and FP32 computation. This is real-GPU memory/performance
+evidence for the software profile, not segmentation efficacy: no U ground-truth
+was used, patient efficacy remains `UNKNOWN`, and no SOTA/96-Dice claim follows.
 
 ## Train, evaluate and export
 
@@ -255,12 +283,12 @@ The independent implementation review is recorded in
 | A3D-11 | Full timing and bytes | phase timing and serialized packet receipt |
 | A3D-12 | Bounded claims | separate fixtures, checkpoints and patient results |
 
-At the current software revision, the historical synthetic contract receipt
-records 117 passing tests and 88 jobs from the earlier full matrix. The primary
-server experiment is the smaller one-seed four-arm plan described above. These
-checks cover shapes,
-geometry, serialization, gradients, export and pipeline lifecycle only. They do
-not establish teacher quality or segmentation efficacy. Locked ACDC/M&Ms patient
-runs, verified pretrained MedNeXt weights, CUDA profiling, SOTA/96 Dice and
-novelty evidence remain `NOT_RUN`/`UNKNOWN`; the code does not report them as
-results.
+The older synthetic/review receipt records 117 passing tests and 88 jobs from
+the earlier full matrix; its `CUDA profiling: NOT_RUN` statement is historical
+and does not describe the current memory receipt above. The primary server
+experiment is still the smaller one-seed four-arm plan described above. These
+checks and the current GPU receipt cover software contracts and memory/runtime
+behavior only; they do not establish teacher quality or segmentation efficacy.
+Locked ACDC/M&Ms patient efficacy, verified pretrained MedNeXt quality,
+SOTA/96-Dice and novelty evidence remain `UNKNOWN`/`NOT_RUN`; the code does not
+report them as results.

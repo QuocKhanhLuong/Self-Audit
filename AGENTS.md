@@ -8,8 +8,9 @@ checkpoint source inventories separate.
 Both tracks use a dense labeled TRAIN patient budget for segmentation,
 measurement and K1 utility targets. The default recipes keep image-only U
 unused. The optional A-3D semi-supervised profile may read image-only TRAIN U
-records for detached EMA consistency only: no U mask, SDF target or K1 utility
-label is allowed, and no U/VAL/TEST mask may influence training, label-subset
+records for detached EMA consistency only: no U mask, U GT-derived SDF target
+or K1 utility label is allowed. EMA SDF consistency is permitted, and no
+U/VAL/TEST mask may influence training, label-subset
 selection, checkpoint choice or stopping. Development metrics are read-only. A
 teacher output is frozen for each complete labeled student rollout and the
 student loss must not update teacher parameters; the semi profile's EMA target
@@ -35,18 +36,21 @@ capacity, budget and protocol within each ablation factor.
 
 The A-3D semi-supervised profile is opt-in via
 `configs/candidate_a3d/semi_supervised.json`. It keeps the labeled loss and K1
-rollout unchanged. Each update pairs one labeled frame with one image-only U
-frame; the U cycle covers every U patient and deterministic cine-frame cycle,
-while labeled frames repeat through balanced cycles. `steps_per_epoch: 0`
-resolves to a fixed count of labeled TRAIN patients for the prepared dataset
-(80 on the ACDC protocol), and that count is held fixed across few-shot `k`.
+rollout unchanged. Each logical update pairs one labeled-frame step with one
+image-only U-patient visit; the U cycle visits every U patient once per cycle
+and chooses one native cine frame cyclically for that visit, while labeled
+frames repeat through balanced cycles. `steps_per_epoch: 0` resolves to
+`max(number_of_labeled_frames, number_of_TRAIN_patients)` (80 on the ACDC
+protocol), subject to covering every labeled frame and U patient, and that
+logical-update count is held fixed across few-shot `k`.
 For original M&Ms, the plan records its own resolved labeled-patient count;
 the ACDC value is not silently reused.
-Weak/strong U views use intensity-only gamma/noise perturbations, preserving
-native geometry. Every arm, including `teacher_free`, retains its student EMA
-helper; `teacher_free` removes the dual-branch teacher guidance only. EMA state
-is stage-local and reset at a new pretrain/warm-up/joint stage; interrupted
-resume is not implied.
+Weak/strong labeled and U views use intensity-only gamma/voxel-noise
+perturbations, preserving native geometry. Report logical sample updates and
+optimizer updates separately. Every arm, including `teacher_free`, retains its
+student EMA helper; `teacher_free`/`teacher_frozen` remove the dual-branch
+teacher U objective by factor. EMA state is stage-local and reset at a new
+pretrain/warm-up/joint stage; interrupted resume is not implied.
 
 Before delivery run `python scripts/check_repo.py` and `python -m pytest -q`,
 plus the relevant synthetic smoke. Report exact test output, source and weight

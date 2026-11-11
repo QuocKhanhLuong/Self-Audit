@@ -13,7 +13,8 @@ frame/slice once per epoch; U images are unused. A-3D has a separate opt-in
 semi-supervised profile at
 [`configs/candidate_a3d/semi_supervised.json`](configs/candidate_a3d/semi_supervised.json).
 That profile uses image-only TRAIN U for detached EMA consistency only; it never
-opens U masks or creates U SDF/K1 targets. No efficacy, SOTA, 96-Dice or
+opens U masks or creates U GT-derived SDF/K1 targets; detached EMA soft SDF
+consistency is allowed. No efficacy, SOTA, 96-Dice or
 semi-supervised improvement claim follows from this software implementation.
 
 - [ACDC and original M&Ms data preparation](docs/DATA_PREPARATION.md)

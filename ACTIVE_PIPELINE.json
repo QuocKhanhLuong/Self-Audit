@@ -34,13 +34,13 @@
         "enabled_by": "explicit profile/CLI selection",
         "unlabeled_source": "image-only TRAIN U",
         "targets": "detached student EMA consistency only",
-        "forbidden": ["U masks", "U SDF ground truth", "U K1 utility labels"],
+        "forbidden": ["U masks", "U GT-derived SDF targets", "U K1 utility labels"],
         "geometry": "unchanged native full-volume protocol"
       }
     }
   },
-  "supervision": "default dense budgeted TRAIN labels with U unused; optional A-3D semi profile uses image-only TRAIN U for detached EMA consistency only; no U masks/SDF ground truth/K1 utility labels",
-  "schedule": "default epochs visit each annotated TRAIN frame/full-volume frame once; optional A-3D semi profile uses fixed labeled-patient steps with deterministic labeled/U cycles",
+  "supervision": "default dense budgeted TRAIN labels with U unused; optional A-3D semi profile uses image-only TRAIN U for detached EMA consistency only; no U masks/GT-derived SDF targets/K1 utility labels",
+  "schedule": "default epochs visit each annotated TRAIN frame/full-volume frame once; optional A-3D semi profile uses fixed logical steps max(labeled frames, TRAIN patients) with deterministic labeled/U cycles",
   "metrics": ["dice", "f1", "precision", "recall"],
   "class_mapping": ["BG", "RV", "MYO", "LV"],
   "inference": "student only; quantized code plus coordinates and declared public geometry",

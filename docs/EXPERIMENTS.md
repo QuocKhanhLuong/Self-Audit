@@ -58,8 +58,9 @@ compact labeled-only plan above. It keeps the same bank, packet, code-only
 decoder, native geometry and labeled CE+Dice/measurement/K1 losses. The only new
 term is detached consistency on image-only TRAIN U. A student self-EMA helper
 is present in every arm, including `teacher_free`; that arm still removes the
-dual-branch teacher proposal path, not the EMA helper. U masks, U SDF ground
-truth and U K1 utility labels are never read.
+dual-branch teacher proposal path, not the EMA helper. U masks, U GT-derived
+SDF targets and U K1 utility labels are never read; detached EMA soft SDF
+consistency remains allowed.
 
 ```bash
 SEMI_CONFIG=configs/candidate_a3d/semi_supervised.json
@@ -78,17 +79,28 @@ python scripts/candidate_a_ablations.py run \
   --plan "$PLAN/PLAN.json" --execute --device cuda
 ```
 
-The semi schedule resolves `steps_per_epoch: 0` to one fixed update per
-labeled TRAIN patient (80 for the prepared ACDC protocol) and uses that count
-for every few-shot `k`. Each update samples one labeled frame and one U frame;
-the original M&Ms plan records its own resolved labeled-patient count rather
-than reusing 80.
-the deterministic U cycle covers all U patients/native cine frames while the
-labeled cycle repeats in balanced order. Gamma/noise is intensity-only, so
-native geometry is unchanged. The 10-epoch consistency ramp and seed 42 are
-fixed across arms. This is 100 x 80 updates at ACDC, not the older `k=2`
-shorthand of 100 x 4 updates. A new pretrain, warm-up or joint stage starts a
-fresh EMA state; the profile is not a resume protocol.
+The semi schedule resolves `steps_per_epoch: 0` to
+`max(number_of_labeled_frames, number_of_TRAIN_patients)` (80 for the prepared
+ACDC protocol), subject to covering every labeled frame and U patient, and uses
+that logical-update count for every few-shot `k`. Each logical update samples
+one labeled frame and one U-patient visit. The U cycle visits every U patient
+once per cycle and chooses one native cine frame cyclically for that visit; it
+does not promise every cine frame in one epoch. The labeled cycle repeats in
+balanced order. The original M&Ms plan records its own resolved count rather
+than reusing 80. Gamma/noise is intensity-only on labeled and U views, so
+native geometry is unchanged. Report logical sample updates separately from
+optimizer updates and include labeled/U/teacher/student counts. The 10-epoch
+consistency ramp and seed 42 are fixed across arms. This is 100 x 80 logical
+updates at ACDC, not the older `k=2` shorthand of 100 x 4 optimizer updates.
+A new pretrain, warm-up or joint stage starts a fresh EMA state; the profile is
+not a resume protocol.
+
+`teacher_free` and `teacher_frozen` remove the dual-branch teacher U objective
+by factor, so optimizer counts and wall time need not match the other semi arms.
+The previous labeled-only run is not a causal semi-supervised control because
+its schedule and augmentation differ. A matched control must rerun the same
+arm, seed, resolved logical-update count and intensity augmentation with U
+consistency disabled.
 
 For the expanded `k=2,5,8,10` campaign, pass `--semi-config "$SEMI_CONFIG"`
 to `scripts/candidate_a_fewshot.py plan` and use a new output directory. Keep

@@ -40,6 +40,31 @@ changes. Epoch counts stay fixed, so updates and labeled data increase with
 `k`. Report this as a label-budget curve rather than a compute-matched scaling
 study.
 
+The optional A-3D semi-supervised variant is enabled with
+`--semi-config configs/candidate_a3d/semi_supervised.json`. It keeps the same
+21-arm catalogue and seed, but adds image-only TRAIN consistency under one
+hash-pinned schedule. The planner accepts either the complete profile file or a
+JSON object containing its `semi_supervised` block and stores the normalized
+block plus file hash in the root and child plans. The labeled A-3D losses and
+K1 utility targets remain unchanged; U never contributes a mask, a GT-derived
+SDF target or a K1 utility label. Detached EMA soft SDF consistency is allowed.
+
+For semi-supervised runs, `steps_per_epoch: 0` resolves to
+`max(number_of_labeled_frames, number_of_TRAIN_patients)` (80 on the prepared
+ACDC split), subject to covering every labeled frame and every U patient. A
+logical update consists of one labeled-frame step plus one optional U-frame
+step. The U side visits each U patient once per logical update cycle and chooses
+one native cine frame cyclically for that visit; it does not promise to visit
+every cine frame in one epoch. Labeled frames repeat in a deterministic,
+balanced cycle. Report `logical_sample_updates` separately from optimizer
+updates and include labeled/U/teacher-EMA/student-EMA counts; 80 is not itself
+an optimizer-step count. The same resolved schedule and intensity-only gamma
+plus voxel-noise augmentation apply across the 21 semi arms. `teacher_free`
+and `teacher_frozen` remove the dual-branch teacher U objective by factor, so
+their student self-EMA U objective remains in joint training, but optimizer
+counts need not match other arms; report measured counts and time rather than
+assuming equal compute.
+
 ## Jobs and outputs
 
 For each dataset, the canonical plan contains 92 jobs:
@@ -101,14 +126,20 @@ DATASET=acdc
 DATA=/data/prepared/$DATASET
 MODEL=/server/config/mednext3d.json
 OUT=/server/runs/${DATASET}-a3d-fewshot-s42
+SEMI_CONFIG=configs/candidate_a3d/semi_supervised.json
 
 python scripts/candidate_a_fewshot.py plan \
   --dataset "$DATASET" \
   --train "$DATA/train.json" \
   --development "$DATA/development.json" \
   --model-config "$MODEL" \
+  --semi-config "$SEMI_CONFIG" \
   --out "$OUT"
 ```
+
+Omit `--semi-config` for the labeled-only campaign. The semi config should be
+the repository profile `configs/candidate_a3d/semi_supervised.json` (or an
+equivalent hash-pinned copy on the server), not an untracked ad-hoc flag.
 
 To select the profile explicitly, add
 `--config configs/fewshot/candidate_a3d.json` to the `plan` command. Omit
@@ -188,9 +219,21 @@ against an unverified or active evaluation directory.
 Save the existing per-class Dice, F1, recall and precision for TRAIN and frozen
 development predictions. Include pooled voxel counts, macro-patient columns,
 realized packet bytes, query counts and measured inference time. Also record the
-number of labeled patients, annotated frames/volumes and optimizer updates for
-each `k`. Compare the same development cohort across all four points. Do not
-select a `k`, checkpoint or stopping epoch from test masks.
+number of labeled patients, annotated frames/volumes, logical sample updates,
+and optimizer updates for each `k`. For semi-supervised jobs, break the update
+receipt down into labeled-frame visits, U-patient visits, teacher/student
+labeled optimizer steps and teacher/student U-consistency steps. Compare the
+same development cohort across all four points. Do not select a `k`, checkpoint
+or stopping epoch from test masks.
+
+The semi consistency statistic is a soft probability discrepancy over the
+confidence-selected voxels. Its normalizer is fixed as
+`C_foreground + background_weight * C_background`; it does not create hard
+pseudo masks. The labeled and U views use only intensity gamma/voxel-noise
+augmentation. A labeled-only run from the earlier campaign is not a causal
+semi-supervised control because its update count and augmentation differ. A
+matched control must rerun the same arm, seed, resolved schedule and
+augmentation with U consistency disabled.
 
 The sweep has one seed, so it reports point estimates only and does not support
 across-seed uncertainty. It does not establish SOTA, 96 Dice, teacher quality,

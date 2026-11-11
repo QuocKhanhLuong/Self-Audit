@@ -14,8 +14,9 @@ definition or a checkpoint namespace.
 checkpoint from one track cannot be loaded into the other. The default recipes
 use only the dense labeled TRAIN budget; image-only U records are not targets.
 An explicitly selected A-3D semi-supervised profile additionally reads
-image-only TRAIN U for detached EMA consistency, never for masks, SDF ground
-truth or K1 utility labels. Development and test masks are opened only after the
+image-only TRAIN U for detached EMA consistency, never for masks, U GT-derived
+SDF targets or K1 utility labels. EMA-predicted soft SDF consistency is allowed.
+Development and test masks are opened only after the
 relevant frozen prediction artifact is written and hashed, and never choose a
 checkpoint or stop training.
 
@@ -49,28 +50,45 @@ K1, packet or decoder. Labeled TRAIN frames keep the existing segmentation,
 measurement and detached utility targets. An image-only TRAIN U update supplies
 only a consistency target: a frozen EMA copy produces weak-view region,
 boundary and soft-SDF outputs, while the online student receives an
-intensity-only strong view (gamma sampled from `[0.7, 1.5]` plus Gaussian noise
-with standard deviation `0.03`). Confidence gating uses threshold `0.7` and
-background weight `0.1`; the consistency weight ramps linearly for 10 epochs.
-No U mask is opened, and U never creates a ground-truth SDF or K1 utility
-label.
+intensity-only weak/strong views (gamma sampled from `[0.7, 1.5]` plus voxel
+noise with standard deviation `0.03`). The labeled and U views use this
+intensity-only augmentation; no spatial operation changes geometry. Confidence
+gating uses threshold `0.7` and background weight `0.1`; the soft probability
+discrepancy is normalized by `C_foreground + background_weight * C_background`
+and never becomes a hard pseudo mask. The consistency weight ramps linearly for
+10 epochs. No U mask is opened, and U never creates a GT-derived SDF or K1
+utility label; the EMA soft SDF is only a detached consistency prediction.
 
 The EMA copy is a student self-EMA helper present in every arm, including
 `teacher_free`. It is not the dual-branch teacher and does not turn
-`teacher_free` into a teacher-guided arm. The dual-branch teacher remains the
-labeled-query proposal mechanism. EMA parameters are detached, updated after
-the online step, and reset for each new pretrain/warm-up/joint stage; a stage is
-not an optimizer/RNG resume.
+`teacher_free` into a teacher-guided arm. In teacher-guided arms, the
+dual-branch teacher remains the labeled-query proposal mechanism; `teacher_free`
+removes that path. EMA parameters are detached, updated after the online step,
+and reset for each new pretrain/warm-up/joint stage; a stage is not an
+optimizer/RNG resume.
 
-Each semi-supervised update samples one labeled frame and one U frame. The
-deterministic U cycle covers all U patients and their native cine frames during
-an epoch; labeled frames repeat through balanced cycles. `steps_per_epoch: 0`
-means the runner resolves one fixed update per labeled TRAIN patient (80 on the
-prepared ACDC protocol) and reuses that resolved count for every few-shot `k`.
-The original M&Ms plan records its own resolved count rather than reusing the
-ACDC value.
-Thus the old shorthand of 100 epochs with four updates at `k=2` is not this
-profile: the current ACDC setting is 100 x 80 updates for every `k`.
+Each logical semi update samples one labeled frame and one U-patient visit.
+The U cycle visits every U patient once per cycle and selects one native cine
+frame cyclically for each visit; it does not imply that every cine frame is
+consumed in one epoch. Labeled frames repeat through balanced cycles.
+`steps_per_epoch: 0` resolves to
+`max(number_of_labeled_frames, number_of_TRAIN_patients)` (80 on the prepared
+ACDC protocol), subject to covering every labeled frame and U patient, and
+reuses that resolved count for every few-shot `k`. The original M&Ms plan
+records its own count rather than reusing the ACDC value. Report logical sample
+updates separately from optimizer updates, including labeled/U and
+teacher/student EMA counts. Thus the old shorthand of 100 epochs with four
+updates at `k=2` is not this profile: the current ACDC setting is 100 x 80
+logical updates for every `k`.
+
+Within the semi 21-arm campaign, all arms share this schedule and augmentation.
+`teacher_free` and `teacher_frozen` omit the dual-branch teacher U objective by
+factor, while the student self-EMA U objective remains in joint training; their
+optimizer counts and wall time may therefore differ and must be reported rather
+than assumed equal. A previous labeled-only run is not a
+causal semi-supervised control because its schedule and augmentation differ. A
+matched control must rerun the same arm, seed, resolved logical-update count
+and augmentation with U consistency disabled.
 
 ## A track
 

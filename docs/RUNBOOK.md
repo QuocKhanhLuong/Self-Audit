@@ -33,8 +33,8 @@ executes one k at a time and does not provide that global ordering.
 The opt-in profile at `configs/candidate_a3d/semi_supervised.json` adds only
 detached EMA consistency on image-only TRAIN U. It keeps the native full-volume
 geometry, typed measurement bank, code-only decoder and all labeled
-segmentation/measurement/K1 losses. No U mask, U SDF ground truth or U K1
-utility target is read. The EMA helper is present for every arm, including
+segmentation/measurement/K1 losses. No U mask, U GT-derived SDF target or U K1
+utility target is read; detached EMA soft SDF consistency is allowed. The EMA helper is present for every arm, including
 `teacher_free`; it is a student self-EMA, not the dual-branch teacher.
 
 Plan the same compact four-arm comparison with:
@@ -54,16 +54,26 @@ python scripts/candidate_a_ablations.py run \
 
 For the few-shot planner, pass the same `--semi-config` to
 `scripts/candidate_a_fewshot.py plan` and keep the root/child output paths
-new. `steps_per_epoch: 0` resolves to a fixed update count equal to the
-labeled TRAIN patient count (80 on prepared ACDC), reused across `k=2,5,8,10`.
-For original M&Ms, use and record that dataset's own resolved count; do not
-reuse 80 by convention.
-Each update pairs one labeled frame and one U frame; U patients/native frames
-are traversed by a deterministic cycle and labeled frames repeat in balanced
-cycles. Intensity-only gamma/noise preserves geometry. This means 100 x 80
-updates at ACDC for every `k`, replacing the old `k=2` shorthand of 100 x 4;
-it is not compute-matched across label budgets. The EMA state resets at each
-new stage, and this workflow does not resume interrupted optimizer/RNG state.
+new. `steps_per_epoch: 0` resolves to
+`max(number_of_labeled_frames, number_of_TRAIN_patients)` (80 on prepared
+ACDC), subject to covering every labeled frame and U patient, and is reused
+across `k=2,5,8,10`. For original M&Ms, use and record that dataset's own
+resolved count; do not reuse 80 by convention. Each logical update pairs one
+labeled frame step with one U-patient visit; the U cycle visits every U patient
+once per cycle and chooses one native cine frame cyclically for that visit.
+Labeled frames repeat in balanced cycles. Intensity-only gamma/voxel-noise is
+applied to labeled and U views without changing geometry. Record logical sample
+updates separately from optimizer updates, including labeled/U and
+teacher/student counts. This means 100 x 80 logical updates at ACDC for every
+`k`, replacing the old `k=2` shorthand of 100 x 4 optimizer updates; it is not
+compute-matched across label budgets. The EMA state resets at each new stage,
+and this workflow does not resume interrupted optimizer/RNG state.
+
+`teacher_free` and `teacher_frozen` omit the dual-branch teacher U objective by
+factor, so their optimizer counts and wall time can differ. A previous
+labeled-only run is not a causal semi-supervised control because its schedule
+and augmentation differ; a matched U-disabled control must use this same
+resolved schedule and augmentation.
 
 Install `requirements.txt` in the intended CPU/CUDA environment. Read
 [DATA_PREPARATION.md](DATA_PREPARATION.md) to prepare ACDC or original M&Ms with
