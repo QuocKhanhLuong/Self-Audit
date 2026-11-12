@@ -121,3 +121,33 @@ def test_campaign_nested_validator_accepts_explicit_evidence(evidence, tmp_path,
     assert before == {path: Path(path).read_bytes() for path in roles.values()}
     with pytest.raises(ValueError, match="missing few-shot lineage"):
         campaign._validate_nested_train_lineage({"acdc": roles}, datasets=("acdc",), selected_ks=(5, 8, 10), seed=42)
+
+
+def test_real_plan_readiness_uses_external_proof_and_rechecks_pins(evidence, tmp_path, monkeypatch):
+    from scripts import q3d_campaign as campaign
+    source, spec = evidence
+    roles = {}
+    for k in (5, 8, 10):
+        path = tmp_path / f"view{k}.json"
+        path.write_text(json.dumps(_view(source, k)))
+        roles[f"k{k}:train"] = str(path)
+        if k == 8:
+            monkeypatch.setattr(campaign, "K8_LOCKED_TRAIN_MANIFEST_SHA256", campaign._sha256(path))
+    dev = tmp_path / "dev.json"
+    dev.write_text(json.dumps({"schema": "self_audit.data.v2", "role": "development"}))
+    roles["development"] = str(dev)
+    monkeypatch.setattr(campaign, "K8_LOCKED_DEV_MANIFEST_SHA256", campaign._sha256(dev))
+    monkeypatch.setattr(campaign, "validate_real_teacher_provenance", lambda config: None)
+    before = {path: Path(path).read_bytes() for path in roles.values()}
+    plan_path = campaign.create_campaign_plan(
+        out=tmp_path / "plan", datasets=("acdc",), protocols=("A",),
+        runs=campaign.DEFAULT_REDUCED_RUNS, manifest_inputs={"acdc": roles},
+        lineage_reference=spec,
+    )
+    plan = campaign.validate_campaign_plan(plan_path)
+    assert plan["shared_stage_dag"]["stage_job_counts"] == {"T": 3, "Q": 3, "P": 3, "J": 6}
+    assert all(job["readiness"] == "READY" for job in plan["stage_jobs"])
+    assert before == {path: Path(path).read_bytes() for path in roles.values()}
+    Path(spec["reference_path"]).write_text("{}")
+    with pytest.raises(ValueError, match="SHA-256 mismatch"):
+        campaign.validate_campaign_plan(plan_path)

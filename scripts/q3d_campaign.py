@@ -388,6 +388,7 @@ def _read_training_manifest(config: Mapping[str, Any]) -> dict[str, Any] | None:
 
 def _manifest_loader_block_reason(
     record: Mapping[str, Any], *, expected_role: str, expected_k: int | None = None,
+    lineage_context: Mapping[str, Any] | None = None,
 ) -> str | None:
     """Report schema/loader incompatibility without rewriting a pinned file."""
 
@@ -414,6 +415,13 @@ def _manifest_loader_block_reason(
                 f"(label_budget={manifest.get('label_budget')!r}, K={expected_k})"
             )
         lineage = manifest.get("fewshot")
+        if lineage_context is not None:
+            try:
+                verified = validate_external_view(manifest, k=expected_k, context=lineage_context)
+            except ValueError as exc:
+                return f"external few-shot lineage is invalid: {exc}"
+            if not isinstance(lineage, Mapping):
+                lineage = verified
         if not isinstance(lineage, Mapping):
             return "training manifest is missing few-shot lineage metadata"
         selected = lineage.get("selected_ids")
@@ -512,12 +520,16 @@ def _read_a3d_template(*, dataset: str, seed: int, train_manifest: Mapping[str, 
 
 
 def _job_readiness(config: Mapping[str, Any], *, synthetic: bool, stage: str,
-                   a3d_update_match: bool | None = None) -> tuple[str, str | None]:
+                   a3d_update_match: bool | None = None,
+                   lineage_reference: Mapping[str, Any] | None = None) -> tuple[str, str | None]:
     if synthetic:
         if config["arm"] == "a3d_teacher_free" and a3d_update_match is not True:
             return "NOT_RUN", "A-3D teacher_free requires an exact synthetic J budget"
         return "SMOKE_READY", None
     teacher = config["model"]["teacher"]
+    lineage_context = (load_external_lineage(
+        lineage_reference, dataset=config["dataset"]["name"], seed=config["seed"],
+    ) if lineage_reference is not None else None)
     for role in ("train", "development"):
         if config["dataset"]["manifests"][role]["status"] != "READY":
             return "NOT_RUN", f"{role} manifest path and SHA-256 are not configured"
@@ -525,6 +537,7 @@ def _job_readiness(config: Mapping[str, Any], *, synthetic: bool, stage: str,
             config["dataset"]["manifests"][role],
             expected_role="training" if role == "train" else "development",
             expected_k=int(config["protocol"]["k"]) if role == "train" else None,
+            lineage_context=lineage_context if role == "train" else None,
         )
         if loader_reason is not None:
             return "NOT_RUN", f"{role} manifest loader contract is not ready: {loader_reason}"
@@ -614,7 +627,8 @@ def _add_experiment(plan: dict[str, Any], *, setting: str, dataset: str, protoco
         if stage == "T" and protocol == "A":
             train_ref = config["dataset"]["manifests"]["train"]
         readiness, reason = _job_readiness(config, synthetic=synthetic, stage=stage,
-                                           a3d_update_match=a3d_update_match)
+                                           a3d_update_match=a3d_update_match,
+                                           lineage_reference=plan.get("external_lineage_reference"))
         stage_job = {
             "id": stage_job_id,
             "experiment_id": experiment_id,
@@ -822,7 +836,10 @@ def _shared_stage_dag(plan: dict[str, Any], out_root: Path) -> None:
             if q_key in producer_ids:
                 dependencies.append(producer_ids[q_key])
                 input_stages.append("Q")
-        readiness, reason = _job_readiness(config, synthetic=bool(plan["selection"]["synthetic"]), stage=stage)
+        readiness, reason = _job_readiness(
+            config, synthetic=bool(plan["selection"]["synthetic"]), stage=stage,
+            lineage_reference=plan.get("external_lineage_reference"),
+        )
         stage_job = copy.deepcopy(original)
         stage_job.update({
             "id": job_id,
@@ -1182,6 +1199,8 @@ def create_campaign_plan(*, out: str | Path, datasets: tuple[str, ...] = ("acdc"
             "novelty_claim": "NOT_CLAIMED",
         },
     }
+    if lineage_reference is not None:
+        plan["external_lineage_reference"] = copy.deepcopy(dict(lineage_reference))
     settings_by_group = [("primary", PRIMARY_SETTINGS)]
     if include_secondary:
         settings_by_group.append(("secondary", SECONDARY_SETTINGS if share_stages else LEGACY_SECONDARY_SETTINGS))
@@ -1634,6 +1653,17 @@ def validate_campaign_plan(path: str | Path) -> dict[str, Any]:
         if not config_path.is_file() or _sha256(config_path) != experiment["config_sha256"]:
             raise ValueError(f"campaign recipe missing or changed: {config_path}")
         config = load_config(config_path)
+        if plan.get("external_lineage_reference") is not None:
+            context = load_external_lineage(
+                plan["external_lineage_reference"], dataset=config["dataset"]["name"],
+                seed=config["seed"],
+            )
+            reason = _manifest_loader_block_reason(
+                config["dataset"]["manifests"]["train"], expected_role="training",
+                expected_k=config["protocol"]["k"], lineage_context=context,
+            )
+            if reason is not None:
+                raise ValueError(reason)
         if (config["arm"] != experiment["arm"] or config["dataset"]["name"] != experiment["dataset"]
                 or config["protocol"]["variant"] != experiment["protocol"]
                 or config["protocol"]["k"] != experiment["k"]):
