@@ -6,7 +6,9 @@ distillation separate from the legacy A-3D ``teacher_loss`` contract.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping
+from numbers import Real
 from typing import Any
 
 import torch
@@ -315,13 +317,219 @@ def tokenizer_stage_loss(
     return total, {name: value.detach() for name, value in terms.items()}
 
 
+_Q3D_CLASS_COUNT = 4
+_Q3D_WEIGHTED_ARMS = {"C1", "V1", "V1-U"}
+
+
+def weighted_class_balanced_reduce(
+    per_cell_loss: Tensor,
+    cls: Tensor,
+    w_cell: Tensor,
+    omega: float,
+) -> tuple[Tensor, dict[str, Any]]:
+    """Reduce per-cell losses with exact class balancing and a frame weight.
+
+    ``per_cell_loss`` is either ``[D,H,W]`` or ``[B,D,H,W]``.  ``cls`` and
+    ``w_cell`` are shared over the frames and must both be ``[D,H,W]``.  For
+    each frame, every class whose detached cell-weight total is positive gets
+    one equally weighted class mean.  Classes with zero total are excluded;
+    if no class has support, the return value is a graph-connected zero.
+
+    ``counts`` and ``class_weight_totals`` are maps from class ID to the
+    detached sum of cell weights.  ``cell_counts`` keeps unweighted counts.
+    ``omega`` is applied after class balancing, so a patient weight cannot
+    cancel in a class denominator.
+    """
+
+    if not isinstance(per_cell_loss, Tensor) or not isinstance(cls, Tensor) \
+            or not isinstance(w_cell, Tensor):
+        raise TypeError("per_cell_loss, cls, and w_cell must be tensors")
+    if per_cell_loss.ndim not in (3, 4):
+        raise ValueError("per_cell_loss must have shape [D,H,W] or [B,D,H,W]")
+    if any(int(size) <= 0 for size in per_cell_loss.shape):
+        raise ValueError("per_cell_loss dimensions must be positive")
+    spatial_shape = tuple(per_cell_loss.shape[-3:])
+    if cls.ndim != 3 or tuple(cls.shape) != spatial_shape:
+        raise ValueError("cls must have the shared [D,H,W] shape")
+    if w_cell.ndim != 3 or tuple(w_cell.shape) != spatial_shape:
+        raise ValueError("w_cell must have the shared [D,H,W] shape")
+    if cls.device != per_cell_loss.device or w_cell.device != per_cell_loss.device:
+        raise ValueError("per_cell_loss, cls, and w_cell must share a device")
+    if not per_cell_loss.dtype.is_floating_point or per_cell_loss.dtype.is_complex:
+        raise TypeError("per_cell_loss must be a floating-point tensor")
+    if cls.dtype == torch.bool or cls.dtype.is_floating_point or cls.dtype.is_complex:
+        raise TypeError("cls must be an integer tensor")
+    if w_cell.dtype == torch.bool or w_cell.dtype.is_complex:
+        raise TypeError("w_cell must be a real numeric tensor")
+    if not bool(torch.isfinite(per_cell_loss).all()):
+        raise FloatingPointError("per_cell_loss contains NaN or Inf")
+    if not bool(torch.isfinite(w_cell).all()):
+        raise FloatingPointError("w_cell contains NaN or Inf")
+    if bool((w_cell < 0).any()):
+        raise ValueError("w_cell must be nonnegative")
+    if bool(((cls < 0) | (cls >= _Q3D_CLASS_COUNT)).any()):
+        raise ValueError("cls contains an ID outside BG/RV/MYO/LV (0..3)")
+    if isinstance(omega, Tensor):
+        if omega.ndim != 0:
+            raise ValueError("omega must be a scalar")
+        omega = omega.detach().item()
+    if isinstance(omega, bool) or not isinstance(omega, Real):
+        raise TypeError("omega must be a real scalar")
+    omega_value = float(omega)
+    if not math.isfinite(omega_value) or omega_value < 0.0:
+        raise ValueError("omega must be finite and nonnegative")
+
+    # Float64 weights preserve a positive support such as 1e-200 even when
+    # the loss itself is float32.  This is still an exact epsilon-free divide.
+    compute_dtype = torch.float64 if per_cell_loss.dtype == torch.float64 else torch.float32
+    values = per_cell_loss.to(dtype=compute_dtype)
+    detached_weights = w_cell.detach().to(dtype=torch.float64)
+    detached_classes = cls.detach().long()
+    weight_totals: dict[int, float] = {}
+    cell_counts: dict[int, int] = {}
+    active: list[int] = []
+    excluded: list[int] = []
+    class_frame_means: list[Tensor] = []
+    flattened_values = values.flatten(start_dim=1) if values.ndim == 4 else None
+    flattened_classes = detached_classes.reshape(-1)
+
+    for class_id in range(_Q3D_CLASS_COUNT):
+        selected = detached_classes.eq(class_id)
+        count = int(selected.sum().item())
+        cell_counts[class_id] = count
+        total_weight_tensor = detached_weights[selected].sum()
+        total_weight = float(total_weight_tensor.item())
+        if not math.isfinite(total_weight):
+            raise FloatingPointError("nonfinite class weight total")
+        weight_totals[class_id] = total_weight
+        if total_weight <= 0.0:
+            excluded.append(class_id)
+            continue
+        active.append(class_id)
+        normalized_weights = detached_weights[selected] / total_weight_tensor
+        if values.ndim == 3:
+            class_frame_means.append((values[selected] * normalized_weights).sum())
+        else:
+            mask = flattened_classes.eq(class_id)
+            class_frame_means.append(
+                (flattened_values[:, mask] * normalized_weights).sum(dim=1)
+            )
+
+    if not class_frame_means:
+        # Multiplication before reduction avoids overflow from a finite but
+        # very large loss tensor while retaining the autograd graph.
+        base_loss_tensor = (values * 0.0).sum()
+    elif values.ndim == 3:
+        base_loss_tensor = torch.stack(class_frame_means).mean()
+    else:
+        # Stack [class, batch], average classes per frame, then average frames.
+        base_loss_tensor = torch.stack(class_frame_means, dim=0).mean(dim=0).mean()
+    if not bool(torch.isfinite(base_loss_tensor)):
+        raise FloatingPointError("nonfinite weighted class-balanced base loss")
+    loss = base_loss_tensor * omega_value
+    if not bool(torch.isfinite(loss)):
+        raise FloatingPointError("nonfinite weighted class-balanced loss")
+    weight_totals = dict(weight_totals)
+    stats: dict[str, Any] = {
+        "active_classids": active,
+        "excluded_classids": excluded,
+        "counts": weight_totals,
+        "class_weight_totals": dict(weight_totals),
+        "cell_counts": cell_counts,
+        "base_loss": float(base_loss_tensor.detach().item()),
+        "omega": omega_value,
+    }
+    return loss, stats
+
+
+def cohort_omega(
+    w_pat: Mapping[Any, float],
+    arm: str,
+) -> dict[str, Any]:
+    """Build patient weights and diagnostics for one locked Q-3D cohort.
+
+    C1 and V1 normalize physiology scores by their cohort mean after requiring
+    positive mean and effective-sample-size fraction ``ESS/N >= 0.25``.  V1-U
+    emits unit patient weights but applies the same gate, making it an
+    eligibility-matched control.  L always emits unit weights and skips the U
+    gate.  Source diagnostics are retained separately from emitted omega.
+    """
+
+    if not isinstance(w_pat, Mapping):
+        raise TypeError("w_pat must be a nonempty patient-to-weight mapping")
+    if not w_pat:
+        raise ValueError("w_pat cohort must be nonempty")
+    if not isinstance(arm, str):
+        raise TypeError("arm must be a string")
+    arm_key = arm.strip().upper().replace("_", "-")
+    if arm_key == "V1U":
+        arm_key = "V1-U"
+    if arm_key not in {"L", "C1", "V1", "V1-U"}:
+        raise ValueError("arm must be one of L, C1, V1, or V1-U")
+
+    patients = list(w_pat)
+    source_values: list[float] = []
+    for patient in patients:
+        value = w_pat[patient]
+        if isinstance(value, bool) or not isinstance(value, Real):
+            raise TypeError(f"w_pat[{patient!r}] must be a real scalar")
+        value_float = float(value)
+        if not math.isfinite(value_float) or value_float < 0.0:
+            raise ValueError("w_pat values must be finite and nonnegative")
+        source_values.append(value_float)
+
+    n = len(source_values)
+    scale = max(source_values)
+    if scale > 0.0:
+        scaled = [value / scale for value in source_values]
+        scaled_total = math.fsum(scaled)
+        scaled_squared_total = math.fsum(value * value for value in scaled)
+        mean_scaled = scaled_total / n
+        mean_w_pat = scale * mean_scaled
+        ess = scaled_total * scaled_total / scaled_squared_total
+    else:
+        scaled = [0.0] * n
+        mean_scaled = 0.0
+        mean_w_pat = 0.0
+        ess = 0.0
+    ess_fraction = ess / n
+
+    if arm_key in _Q3D_WEIGHTED_ARMS and (mean_w_pat <= 0.0 or ess_fraction < 0.25):
+        raise ValueError("physiology cohort fails mean_w_pat>0 and ESS/N>=0.25 gate")
+
+    if arm_key in {"L", "V1-U"}:
+        emitted = [1.0] * n
+    elif source_values and all(value == source_values[0] and value > 0.0 for value in source_values):
+        # Preserve the literal IEEE-754 one-bit value for equal weights.
+        emitted = [1.0] * n
+    else:
+        # The ratio is evaluated on scaled values to avoid underflow for
+        # Gaussian-tail weights or overflow for large finite diagnostics.
+        emitted = [value / mean_scaled for value in scaled]
+    omega = dict(zip(patients, emitted))
+    mean_omega = math.fsum(emitted) / n
+    max_omega = max(emitted)
+    zero_fraction = sum(value == 0.0 for value in emitted) / n
+    return {
+        "omega": omega,
+        "mean_w_pat": float(mean_w_pat),
+        "ess": float(ess),
+        "ess_fraction": float(ess_fraction),
+        "mean_omega": float(mean_omega),
+        "max_omega": float(max_omega),
+        "zero_fraction": float(zero_fraction),
+    }
+
+
 __all__ = [
     "balanced_near_far_sdf_loss",
     "codekd_loss",
+    "cohort_omega",
     "commitment_loss",
     "feature_kd_loss",
     "mean_teacher_consistency_loss",
     "q3d_teacher_loss",
     "student_supervised_loss",
     "tokenizer_stage_loss",
+    "weighted_class_balanced_reduce",
 ]

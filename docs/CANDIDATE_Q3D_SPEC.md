@@ -22,7 +22,7 @@ Nguồn tổng hợp: atlas `teacher_student_paper_architecture_vi.pdf` (10 tran
 
 **Non-goals (không làm trong Q-3D):** policy chọn query K1, packet/bit codec, đồ thị trạng thái tim, cascade T+S, teacher thời gian, test-time adaptation, đếm bit. A-3D giữ nguyên làm baseline; không sửa file nào trong `self_audit/candidate_a3d/` ngoài import.
 
-**Trạng thái bằng chứng:** toàn bộ là thiết kế. Chưa có kết quả bệnh nhân, chưa đo GPU, chưa chứng nhận novelty. Mọi số trong spec là giá trị khởi điểm, không phải giá trị đã tune.
+**[AMEND] Trạng thái bản sửa 2026-11-12:** P0–P5 theo hợp đồng sửa này đều `NOT_RUN`; kiểm tra hàm thuần CPU/synthetic chỉ là `SOFTWARE_ONLY`. Main đã có triển khai Q3D tại `28e1a36be014a0d75272d5aca3fff18e482d3593`; kiểm tra lịch sử không chứng minh triển khai đó đáp ứng bản sửa. Chưa có kết quả bệnh nhân, GPU hay novelty. Đợt này chỉ sửa spec và khóa helper loss, không sửa engine, student, tokenizer hoặc train.
 
 ## 2. Kiến trúc tổng thể và hợp đồng tensor
 
@@ -54,12 +54,12 @@ Ký hiệu: B batch, D số lát native, H×W in-plane native, h = ceil(H/16), w
 | `x` | \[B,1,D,H,W\], float trong \[0,1\] | `CandidateA3DData` | Hợp đồng hiện có; có `geometry` (spacing\_zyx mm, affine) |
 | `region_logits`, `boundary_logits` | \[B,4,D,H,W\] | `DualBranchTeacher3D` | Giữ nguyên |
 | `sdf_T` | \[B,4,D,H,W\] | `DualBranchTeacher3D` | Code hiện có 4 kênh; atlas ghi 3 kênh — giữ 4 để không sửa teacher |
-| `F_T_src` | \[B,C\_T,D\_p/8,H\_p/8,W\_p/8\] | MedNeXt decoder level stride 8 | C\_T phải đọc từ `adapter.channels`; D\_p, H\_p, W\_p là kích thước sau padding của teacher |
+| `F_T_src` | \[B,C\_T,D\_p/8,H\_p/8,W\_p/8\] | [FIX] (§3) MedNeXt encoder `x_res_3`, stride 8 | C\_T phải đọc từ `adapter.channels`; D\_p, H\_p, W\_p là kích thước sau padding của teacher |
 | `F_T_aln` | \[B,C\_T,D,h,w\] | Mục 4 | Teacher đã căn về lưới stage 4 của student |
 | `u_T`, `u_S` | \[B,64,D,h,w\], chuẩn hóa L2 theo kênh | Adapter A\_T, A\_S |  |
 | `C0` | \[256,64\], chuẩn hóa L2 | Tokenizer, mục 5 | Đóng băng sau tokenizer stage |
 | `pi_T`, `pi_S` | \[B,256,D,h,w\] | Softmax cosine/τ | Phân bố gán mềm trên C0 |
-| `cls_T4` | \[B,D,h,w\], int | argmax của region prob teacher, avg-pool về lưới stage 4 | Dùng để cân bằng lớp trong codeKD |
+| `cls_T4` | \[B,D,h,w\], int | [FIX] (§4) argmax phân suất region teacher trên ô S4 có tâm đúng pha | Dùng để cân bằng lớp trong codeKD |
 | `logits_S` | \[B,4,D,H,W\] | Student | Đầu ra deploy duy nhất |
 | `sdf_S` | \[B,4,D,H,W\] | Student, head phụ | Chỉ khi train; bỏ khi export |
 
@@ -67,7 +67,7 @@ Lưu ý về trục z: teacher pad mọi trục tới ≥ 32 và bội số củ
 
 ## 3. Teacher: MedNeXt một encoder, hai head
 
-Teacher dùng lại `DualBranchTeacher3D` và `teacher_loss` hiện có, chỉ thêm ba thứ: init pretrained đã khai báo, augmentation, và hook lấy feature nguồn cho tokenizer.
+**[FIX]** Teacher dùng lại `DualBranchTeacher3D`, `supervised_loss` và `bank.sdf_targets`; near/far thuộc `q3d_teacher_loss` trong `self_audit/candidate_q3d/losses.py`. Không sửa hoặc merge vào `candidate_a3d.teacher_loss`. Feature main lấy trực tiếp từ encoder; hook dành cho ablation decoder.
 
 **Cấu trúc (fact từ code):** một `MedNeXtL3DAdapter` làm encoder chung. Nhánh region là đường segmentation gốc của MedNeXt. Nhánh boundary (`_BoundaryPath3D`) đọc `features[0]` và `features[-1]`, ra `boundary_logits` và `sdf`. Hai head có lỗi tương quan vì chung trunk, nên không dùng sự đồng thuận của chúng làm tín hiệu kiểm chứng.
 
@@ -76,10 +76,10 @@ Teacher dùng lại `DualBranchTeacher3D` và `teacher_loss` hiện có, chỉ t
 - Encoder và nhánh region từ checkpoint MedNeXt pretrained mà run k=2 hiện đang dùng. Config phải ghi `weights` và `weights_sha256`, nguồn dữ liệu pretrain, và có chồng lên ACDC/M&Ms hay không.
 - Nhánh boundary khởi tạo random.
 
-**Loss (giữ hợp đồng `teacher_loss`):**
+**[FIX] Loss riêng Q3D (`q3d_teacher_loss`):**
 
 - CE + Dice foreground cho `region_logits` và cho `boundary_logits`.
-- SDF cân bằng gần/xa biên theo atlas trang 2: target là khoảng cách có dấu theo mm chia R = 5 mm, kẹp về \[−1, 1\]; vùng gần là |d| < 2,5 mm; trung bình riêng vùng gần và vùng xa rồi gộp với α = 0,5; tập rỗng thì chuẩn hóa lại trọng số; lớp vắng có target +1. Nếu bản near/far trên server chưa có trên `main`, phase P1 phải merge nó trước.
+- SDF cân bằng gần/xa biên theo atlas trang 2: target là khoảng cách có dấu theo mm chia R = 5 mm, kẹp về \[−1, 1\]; vùng gần là |d| < 2,5 mm; trung bình riêng vùng gần và vùng xa rồi gộp với α = 0,5; tập rỗng thì chuẩn hóa lại trọng số; lớp vắng có target +1. **[FIX]** P1 kiểm tra/triển khai trong Q3D, tái dùng `supervised_loss` và target của `bank.sdf_targets`, không merge near/far vào baseline.
 
 **Lịch fine-tune (stage T):**
 
@@ -88,34 +88,36 @@ Teacher dùng lại `DualBranchTeacher3D` và `teacher_loss` hiện có, chỉ t
 | T-a | 5% đầu | Nhánh boundary; encoder và nhánh region đóng băng | 1e-3 |
 | T-b | Phần còn lại | Tất cả | Encoder 1e-4, hai head 1e-3, warmup 5% rồi cosine |
 
+**[AMEND] Param group T-b:** head region là `teacher.encoder.model.out_0`; head boundary là nhánh boundary; các tham số còn lại thuộc encoder/trunk, không trùng giữa các group.
+
 Tổng 8.000 update (100 epoch × 80 update, giống semi profile hiện tại), chỉ trên L. Weight decay 1e-4. Augmentation theo mục 9. Chọn checkpoint theo DEV FG Dice patient-macro đã khóa trước; DEV chỉ dùng để chọn checkpoint, không dùng để tune loss.
 
 **Trong stage joint:** teacher đóng băng hoàn toàn (`freeze_teacher: true`), chạy `torch.no_grad()` ở chế độ eval. Teacher online (cập nhật trên L, LR × 0,1, tokenizer vẫn đóng băng) là ablation O1, có đo churn của phép gán mã.
 
-**Feature nguồn cho tokenizer:** output của decoder block MedNeXt ở stride 8 (block đầu tiên sau bottleneck). Lấy qua `_native_forward_with_features`, không thêm forward thứ hai. Bottleneck stride 16 là nguồn thay thế, dùng làm ablation. Tên module cụ thể phải xác nhận trong adapter trước khi code.
+**[FIX] Feature nguồn cho tokenizer:** main dùng encoder `x_res_3`, stride 8, có sẵn tại `features[3]`, không cần hook hoặc forward thứ hai. `_native_forward_with_features` trả `(features, region_logits)`; `features` chỉ gồm `(x_res_0, x_res_1, x_res_2, x_res_3, bottleneck)`, không có decoder. Output `dec_block_3` stride 8 chuyển thành ablation; bottleneck stride 16 vẫn là S1. Nếu dùng hook, hook child cuối của `dec_block_3` vì `iterative_checkpoint` lặp theo child, bỏ qua forward của container. Test assert hook fire đúng một lần mỗi forward và đúng shape/kênh. P0 xác nhận dispatch checkpoint và tên child thực tế từ source đã pin.
 
 ## 4. Căn chỉnh vật lý teacher → lưới stage 4 của student
 
 Teacher và student nhận cùng một volume trên cùng native grid, nên căn chỉnh vật lý rút về ánh xạ chỉ số voxel chính xác; không cần affine. Affine chỉ cần nếu sau này hai mạng nhận hai grid khác nhau.
 
-**Quy ước ô (cả hai mạng pad ở phía cuối bằng replicate rồi crop về):**
+**[FIX] Pha của mạng:** lấy tâm pixel native chỉ số 0 tại tọa độ 0. Với down conv k3 s2 p1, tâm ô stride tích lũy s nằm tại `s·k`, không phải `s·k + s/2`. Theo từng trục, bắt đầu bước lưới j = 1, offset o = 0; qua kernel k, stride a, padding trái p, dilation d:
 
-- Teacher stride 8: ô (k, j, i) phủ voxel native \[8k, 8k+8) × \[8j, 8j+8) × \[8i, 8i+8).
-- Student stage 4, stride (1,16,16): ô (z, j, i) phủ lát z và pixel \[16j, 16j+16) × \[16i, 16i+16).
+```text
+o_new = o + (d·(k−1)/2 − p)·j
+j_new = a·j
+```
 
-**Phép căn `align_teacher_to_student4(F_T_src, native_shape) -> F_T_aln`:**
+**[FIX] Hợp đồng align:** `align_teacher_to_student4(F_T_src, native_shape, teacher_phase, student_phase)` nhận bước lưới/offset của từng mạng suy từ chuỗi kernel/stride/padding thật, kể cả padding đầu vào. Tâm student k có tọa độ native `x = o_S + j_S·k`; lấy mẫu hoặc nội suy teacher tại `(x−o_T)/j_T`. Khai báo xử lý biên, crop về `[D,h,w]`, luôn `detach()`. Không đổi grid ảnh native.
 
-1. In-plane: trung bình 2×2 ô teacher thành một ô student (avg-pool kernel 2, stride 2). Chính xác về vị trí vì 16 = 2 × 8.
-2. Theo z: nội suy tuyến tính tại tâm từng lát native. Lát z ứng với tọa độ ô teacher (z + 0,5)/8 − 0,5, kẹp về \[0, số ô − 1\].
-3. Crop về \[D, h, w\].
-4. Luôn `detach()`; không gradient nào đi vào teacher.
+**[FIX] Lý do:** khi hai offset bằng 0, avg-pool 2×2 teacher stride 8 đặt tâm tại `16k+4`, lệch +4 px in-plane so với student `16k`. Công thức z cũ `(z+0,5)/8−0,5` lệch −0,4375 (≈0,44) ô teacher so với `z/8`. Không dùng hai công thức cũ. P0 đọc MedNeXt v1 tại source_repo/source_commit đã pin và ghi kernel/stride/padding stem, down_0..3, kể cả nhánh residual. Source đối chiếu: `MIC-DKFZ/MedNeXt@0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba`.
 
-Hạn chế: ô teacher chứa cả lát thật và lát pad replicate (ví dụ D = 10 thì ô z thứ hai gồm lát 8–9 thật và 10–15 là bản sao). Phép căn không sửa được việc này. Nếu P0 cho thấy độ phân giải z quá thô, dùng feature teacher stride 4 làm nguồn (ablation).
+**[FIX] Hạn chế:** receptive field teacher có thể chứa lát pad replicate; căn đúng pha không phục hồi độ phân giải z đã mất. Nguồn stride 4 vẫn là ablation.
 
-**Unit test bắt buộc:**
+**[FIX] Unit test bắt buộc ở P2:**
 
 - Feature hằng → kết quả hằng.
-- Feature tuyến tính theo chỉ số voxel → đúng giá trị tại tâm ô student, sai số ≤ 1e-5.
+- **[FIX]** Feature tuyến tính theo tọa độ native → đúng tâm student, sai số ≤ 1e-5 trong miền nội suy; kiểm riêng quy tắc biên.
+- **[FIX] Network-phase probe:** cho ramp tọa độ native đi qua đúng chuỗi stem/down của student và MedNeXt đã pin, dùng kernel hộp đối xứng chuẩn hóa, giữ kernel/stride/padding thật. So tâm ô đo được với hàm align, sai số ≤ 0,5 px. Đo miền có receptive field nằm trong dữ liệu thật để padding không bẻ cong ramp; kiểm riêng biên. Probe phải phát hiện lệch 4 px và 0,4375 ô của công thức cũ.
 - Shape đúng với D trong {6, 9, 10, 13, 20} và H, W lẻ.
 - `F_T_aln.requires_grad` là False.
 
@@ -144,13 +146,15 @@ Codebook do teacher định nghĩa rồi đóng băng; student chỉ học dự 
 
 - Commitment: β = 0,25 nhân khoảng cách bình phương giữa u\_T và mã được gán (đã detach).
 - Tái tạo: L1 giữa R\_T(mã) và F\_T\_aln đã detach, chia độ lệch chuẩn theo kênh của F\_T\_aln. Straight-through: forward dùng mã, gradient đi về u\_T.
-- Giải phẫu: cross-entropy mềm giữa H\_A(mã) và phân suất lớp của ô, lấy từ xác suất region của teacher avg-pool về lưới stage 4. Mục đích: mã mang giải phẫu, không chỉ texture. Trọng số 0,5.
+- Giải phẫu: cross-entropy mềm giữa H\_A(mã) và phân suất lớp của ô, **[FIX] (§4)** lấy từ xác suất region teacher trên ô S4 có tâm đúng pha. Mục đích: mã mang giải phẫu, không chỉ texture. Trọng số 0,5.
 
 **Stage Q:** 1.000 update trên L và U (ảnh U là image-only, đúng hợp đồng hiện tại), sau stage T.
 
 **Metrics ghi mỗi 50 update:** perplexity của phân bố sử dụng mã, số mã chết, số mã chiếm đa số trong mỗi lớp teacher, churn (tỉ lệ ô đổi mã cứng giữa hai snapshot).
 
 **Gate trước khi sang stage joint** (giá trị khởi điểm, khóa trước khi chạy): perplexity ≥ 32; mã chết ≤ 25%; mỗi lớp RV, MYO, LV có ≥ 4 mã mà phần lớn khối lượng rơi vào lớp đó. Không đạt thì dừng và báo cáo, không nới gate.
+
+**[AMEND] Báo cáo P0 về support lớp:** chỉ trên GT của L, đo tỉ lệ ô mà mỗi lớp thắng argmax phân suất lớp tại lưới S4 đúng pha (§4); báo số ô, tần suất BG/RV/MYO/LV, tie chọn chỉ số lớp nhỏ nhất. **[OPEN] Nếu MYO < 2% tổng số ô**, gate “≥ 4 mã MYO” và cân bằng lớp MYO phải được xem lại trước P2. Dừng để xem xét thiết kế, không tự đổi ngưỡng hoặc dùng U/DEV/TEST GT.
 
 ## 6. Student UNETR++-lite
 
@@ -205,13 +209,27 @@ Student học từ bốn loss: hai loss có nhãn trên L, codeKD trên U (và L
 
 Tổng stage joint: S1 + λ\_d · S2 + r(t) · λ\_k · S3 + S4.
 
-**codeKD (S3).** Tại mỗi ô stage 4, đo KL từ phân bố gán mã của teacher sang của student. Nhân trọng số w của ô. Lấy trung bình có trọng số riêng trong từng lớp teacher của ô (`cls_T4`), rồi trung bình đều giữa các lớp có mặt, kể cả BG với trọng số bằng các lớp khác:
+**[FIX] codeKD (S3), theo từng frame f của bệnh nhân p.** Đặt `ell_i = KL(sg(pi_T(i)) || pi_S(i))`; chỉ w_cell tham gia trung bình trong lớp:
 
 ```latex
-L_{\mathrm{codeKD}}=\frac{1}{|\mathcal{C}_x|}\sum_{c\in\mathcal{C}_x}\frac{\sum_{p:\,\mathrm{cls}_T(p)=c} w_p\,\mathrm{KL}\big(\mathrm{sg}(\pi_T(p))\,\|\,\pi_S(p)\big)}{\sum_{p:\,\mathrm{cls}_T(p)=c} w_p+\epsilon}
+s_{f,c}=\sum_{i:\mathrm{cls}_{T,f}(i)=c}w_{\mathrm{cell},f,i},\qquad
+\mathcal C_f=\{c:s_{f,c}>0\},
+B_f=\frac{1}{|\mathcal C_f|}\sum_{c\in\mathcal C_f}
+\frac{\sum_{i:\mathrm{cls}_{T,f}(i)=c}w_{\mathrm{cell},f,i}\,\ell_i}{s_{f,c}},
+\qquad L_f=\omega_p B_f.
 ```
 
-Cân bằng lớp là bắt buộc: phần lớn ô là nền, không cân bằng thì KL bị mã nền chi phối. Không dùng trọng số nền 0,1 như `consistency_loss` hiện tại, vì cơ chế đó nghiêng về foreground. Lớp có tổng w = 0 bị bỏ và ghi log; không cho trọng số tự tắt cả loss.
+**[FIX]** Không có epsilon hay w_pat trong mẫu số. Trung bình đều các lớp có tổng w_cell > 0, kể cả BG. Lớp có tổng bằng 0 bị loại khỏi C_f và ghi log, không pha loãng mẫu số. Nếu C_f rỗng, trả loss 0 hữu hạn vẫn giữ autograd graph, gradient student bằng 0 như nhánh rỗng của `consistency_loss`.
+
+**[FIX] Lý do:** công thức cũ đặt w_cell·w_pat ở cả tử và mẫu nên triệt tiêu trọng số bệnh nhân. Probe CPU/synthetic cho loss/grad xấp xỉ 1,000× (làm tròn ba chữ số) khi w_pat ∈ {1, 0.1, 1e-4}; epsilon chỉ phá tính bất biến gần 0. Nó thực chất tạo cổng cứng ẩn ở r_SV ≈ 6–7τ, phụ thuộc tổng support/epsilon. Đây là `SOFTWARE_ONLY`, không phải bằng chứng bệnh nhân.
+
+**[AMEND] Ramp:** `r(t) = min(1, t/800)`, t là số optimizer update đã hoàn thành trước update hiện tại (0-based), tăng từ 0 tới 1 trong 10% của 8.000 update J. Resume lưu t. Không dùng `candidate_a3d.semisupervised.ramp_weight` vì hàm đó nhận epoch. Một cặp L/U tích lũy hai luồng rồi một optimizer step: 8.000 cặp L/U = 8.000 optimizer step.
+
+**[AMEND] Hợp đồng hàm thuần trước P0–P5:**
+
+- `weighted_class_balanced_reduce(per_cell_loss, cls, w_cell, omega) -> (loss, stats)` nhận loss `[D,h,w]` hoặc `[B,D,h,w]`; cls/w_cell cùng `[D,h,w]`. Khi có B, áp map chung cho từng frame rồi mean các loss frame; cohort thật với map khác nhau gọi riêng từng frame. Validate shape, finite, lớp nguyên BG/RV/MYO/LV, w_cell ≥ 0 và omega ≥ 0; weights detach. Stats ghi lớp active/excluded, tổng trọng số lớp, base loss và omega.
+- `cohort_omega(w_pat, arm) -> dict` trả `omega` (patient → float), `mean_w_pat`, `ess`, `ess_fraction`, `mean_omega`, `max_omega`, `zero_fraction`. Đầu vào U không rỗng, weights finite/nonnegative. V1/C1 và V1-u dùng cùng cohort U đủ gate §8; V1-u chỉ bỏ trọng số tương đối. `arm="L"` trả omega = 1 và không áp gate U. Không trộn L/U trong một đầu vào.
+- `tests/test_candidate_q3d_weighting.py` khóa tỉ lệ loss/grad 1:0,1:0; anti-regression công thức cũ; ví dụ tay; zero-support không pha loãng; all-zero giữ graph; mean omega/ESS/gate; L/V1-u; weights bằng nhau cho V1/V1-u trùng từng bit. Chỉ thêm helpers, giữ API loss đang có trên main; tích hợp vào engine thuộc P4 `NOT_RUN`.
 
 **Đường gradient:**
 
@@ -222,7 +240,7 @@ Cân bằng lớp là bắt buộc: phần lớn ô là nền, không cân bằn
 
 ## 8. Trọng số w: độ chắc của teacher × độ nhất quán sinh lý
 
-Mỗi ô trên U nhận trọng số w = w\_cell × w\_pat. w\_cell đo teacher chắc tại chỗ; w\_pat đo mask teacher của cả bệnh nhân có hợp sinh lý hay không. w\_pat không học từ K bệnh nhân có nhãn và không dùng metadata ED/ES.
+**[FIX]** w_cell chỉ dùng trong reducer theo lớp (§7); omega nhân bên ngoài. w_pat đo tính nhất quán sinh lý của mask teacher, không học từ K bệnh nhân có nhãn và không dùng metadata ED/ES. **Frame L: omega = 1 ở mọi arm. U V1/C1: omega_p = w_pat(p)/mean_U(w_pat). U V1-u: omega ≡ 1.** Mean tính một lần trên toàn bộ bệnh nhân U trong cache đóng băng, không theo minibatch/frame, không chuẩn hóa lại ở từng lớp.
 
 **w\_cell:** trung bình trên các voxel của ô của xác suất lớn nhất trong `region_logits` teacher. Nếu nhỏ hơn 0,7 thì w\_cell = 0, ngược lại bằng chính giá trị đó (0,7 là ngưỡng đang dùng trong semi profile).
 
@@ -238,7 +256,9 @@ Mỗi ô trên U nhận trọng số w = w\_cell × w\_pat. w\_cell đo teacher 
 
 **Cổng theo dataset:** cờ `physio.stroke_balance` trong config. Tắt cho dataset có hở van ba lá hoặc thông liên nhĩ theo thiết kế (M&Ms-2), khi đó chỉ còn thành phần khối cơ tim. Dataset chỉ có ED/ES (không có cine) vẫn tính được nếu biết hai frame; dataset không có nhãn RV thì tắt thành phần tống máu.
 
-**Cache:** mỗi bệnh nhân một dòng JSON gồm id, SHA checkpoint teacher, đường thể tích theo frame, chỉ số ED/ES, r\_SV, r\_M, w\_pat; file cache có SHA-256. Teacher đóng băng nên chỉ tính một lần trước stage joint; ablation O1 tính lại mỗi 10 epoch.
+**[FIX] Cache:** mỗi bệnh nhân một dòng JSON gồm id, SHA checkpoint teacher, đường thể tích theo frame, chỉ số ED/ES, r\_SV, r\_M, w\_pat; metadata cache ghi cohort U, N_U, mean_U(w_pat), ESS, ESS/N_U; file cache có SHA-256. Teacher đóng băng nên chỉ tính một lần trước joint; O1 tính lại mỗi 10 epoch và mỗi snapshot mới phải tính lại mean/gate.
+
+**[FIX] Gate trước joint, khóa trước khi dùng kết quả:** chỉ dùng w_pat trên U: `mean_U(w_pat) > 0` và `ESS/N_U = (Σw)²/(N_U·Σw²) ≥ 0,25`. Không đạt thì dừng, không nới. **Log mỗi run:** mean(omega) (phải bằng 1 trên mỗi vòng U đầy đủ, mỗi bệnh nhân góp một lần), max omega, tỉ lệ omega = 0, ESS và ESS/N_U. L không tham gia mẫu số U. Gate không dùng kết quả arm hoặc DEV/TEST. V1-u dùng cùng cohort đủ gate để so sánh trọng số tương đối công bằng.
 
 **Chẩn đoán (chỉ báo cáo):** tính w\_pat trên bệnh nhân DEV và báo tương quan Spearman với Dice RV và HD95 thật của teacher. Không dùng số này để chọn τ.
 
@@ -300,11 +320,11 @@ Bốn arm chính trả lời ba câu hỏi: VQ có hơn KD liên tục không, t
 | Arm | Interface | Teacher signal | w\_pat | Trả lời |
 | --- | --- | --- | --- | --- |
 | C0 | Liên tục, không có đường mã | Không | — | Mốc student thuần |
-| C1 | Liên tục; A\_S khớp F\_T\_aln bằng khoảng cách cosine, cân bằng lớp, cùng w | KD feature liên tục | Sinh lý | VQ có cần không (so V1) |
-| V1 | VQ, C0 teacher đóng băng | codeKD | Sinh lý | **Đề xuất** |
-| V1-u | Như V1 | codeKD | ≡ 1 | Sinh lý có cần không |
+| C1 | [FIX] Liên tục; A\_S khớp F\_T\_aln bằng cosine, cùng reducer §7 và omega với V1 | KD feature liên tục | U chuẩn hóa; L = 1 | VQ có cần không (so V1) |
+| V1 | VQ, C0 teacher đóng băng | codeKD | [FIX] U chuẩn hóa; L = 1 | **Đề xuất** |
+| V1-u | Như V1 | codeKD | [FIX] omega ≡ 1 trên cả L/U | Sinh lý có cần không |
 
-Ablation phụ, chỉ chạy khi bốn arm chính xong: V0 (VQ, không codeKD; hoàn tất bảng 2×2 của atlas), B1 (decoder chỉ đọc mã), E1 (EPA support thích nghi), O1 (teacher online), S1 (nguồn teacher là bottleneck stride 16).
+Ablation phụ, chỉ chạy khi bốn arm chính xong: V0 (VQ, không codeKD; hoàn tất bảng 2×2 của atlas), B1 (decoder chỉ đọc mã), E1 (EPA support thích nghi), O1 (teacher online), S1 (nguồn teacher là bottleneck stride 16). **[FIX] (§3)** Thêm ablation nguồn decoder `dec_block_3` stride 8; main dùng encoder `x_res_3`.
 
 **Baseline:** A-3D `teacher_free` hiện có; Mean Teacher với cùng UNETR++-lite (dùng hạ tầng EMA có sẵn); MedNeXt-L supervised chỉ với K nhãn, báo như mốc nặng.
 
@@ -331,12 +351,16 @@ Code mới nằm trong `self_audit/candidate_q3d/` và `configs/candidate_q3d/`;
 
 | Phase | Mục tiêu | File chính | Acceptance | Dừng khi |
 | --- | --- | --- | --- | --- |
-| P0 | Kiểm tra read-only, không train | `scripts/q3d_preflight.py` | Báo cáo JSON: tên module decoder stride 8 và C\_T của MedNeXt; bản near/far SDF có trên `main` chưa; phân bố D và spacing mỗi dataset; r\_SV và r\_M trên GT của L; số tham số student | Thiếu module hoặc C\_T khác spec: dừng, báo cáo |
-| P1 | Student UNETR++-lite + arm C0 supervised | `student.py`, `config.py`, `engine.py` (nhánh C0) | Test shape với H, W lẻ và D ∈ {6, 9, 10, 13, 20}; pad rồi crop trả đúng kích thước; đổi giá trị vùng pad không làm đổi output vùng hợp lệ; ≤ 10M tham số; báo latency GPU/CPU; C0 chạy được trên synthetic fixture và smoke ACDC | Vượt 10M sau khi đã giảm kênh theo mục 6 |
-| P2 | Căn chỉnh vật lý + tokenizer | `alignment.py`, `tokenizer.py`, `teacher_features.py` (forward hook, không sửa `teacher.py`) | Test của mục 4; EMA codebook, dead-code restart, đóng băng; tính đủ metric và gate mục 5 | Gate tokenizer không đạt trên ACDC |
-| P3 | Cache sinh lý | `physiology.py`, `scripts/q3d_physio_cache.py` | Cine tổng hợp hình ellipsoid có thể tích biết trước: đúng ED/ES, r\_SV, r\_M, guard; cache có SHA | — |
-| P4 | Stage joint + arm C1, V1, V1-u | `losses.py`, `engine.py`, `configs/candidate_q3d/{c0,c1,v1,v1u}.json` | Teacher, A\_T, C0 không đổi từng bit sau một bước; codeKD cân bằng lớp đúng trên ví dụ tay; ramp đúng; resume giữ nguyên kết quả | Loss NaN hoặc perplexity student sập |
+| P0 | [FIX] [AMEND] Read-only, không train | `scripts/q3d_preflight.py` | JSON: source_repo/commit MedNeXt v1; kernel/stride/padding stem và down_0..3, pha native; x_res_3/C_T; iterative_checkpoint và child cuối dec_block_3; near/far thuộc Q3D; D/spacing; r_SV/r_M GT L; tham số student; tần suất argmax phân suất GT L ở S4 đúng pha (§5) | Thiếu module/C_T sai: dừng; [OPEN] MYO < 2%: xem lại coverage/balancing trước P2, không tự nới |
+| P1 | [AMEND] Đăng ký track riêng, student + C0, q3d_teacher_loss | `student.py`, `config.py`, `engine.py` (nhánh C0), `losses.py` | Test shape với H, W lẻ và D ∈ {6, 9, 10, 13, 20}; pad rồi crop trả đúng kích thước; đổi giá trị vùng pad không làm đổi output vùng hợp lệ; ≤ 10M tham số; báo latency GPU/CPU; C0 chạy được trên synthetic fixture và smoke ACDC; đăng ký track như dưới | Vượt 10M sau khi đã giảm kênh theo mục 6 |
+| P2 | [FIX] Căn chỉnh theo pha + tokenizer | `alignment.py`, `tokenizer.py`, `teacher_features.py` (main lấy x_res_3; hook child cuối chỉ cho ablation) | Test §4 gồm network-phase probe ≤ 0,5 px; hook fire đúng một lần/forward và đúng shape; EMA codebook, dead-code restart, đóng băng; metric/gate §5 | Gate tokenizer không đạt trên ACDC |
+| P3 | [FIX] Cache sinh lý và mean/ESS U | `physiology.py`, `scripts/q3d_physio_cache.py` | Cine ellipsoid tổng hợp: đúng ED/ES, r_SV, r_M, guard; cache SHA và mean/ESS; omega/gate §8 đúng | Mean U = 0 hoặc ESS/N_U < 0,25 |
+| P4 | [FIX] Stage joint + arm C1, V1, V1-u | `losses.py`, `engine.py`, `configs/candidate_q3d/{c0,c1,v1,v1u}.json` | Teacher/A_T/C0 không đổi từng bit; reducer/omega đúng §7–8, C1 cùng hợp đồng; zero support giữ graph; ramp theo optimizer update; resume giữ nguyên kết quả | Loss NaN hoặc perplexity student sập |
 | P5 | Evaluate + export | `evaluation.py` (chỉ số lâm sàng), `export.py` | Cold-load không import teacher, trùng từng bit; bảng chi phí; manifest export | — |
+
+**[AMEND] Đăng ký track thuộc P1 (chưa làm trong đợt khóa helper):** `train.py` dispatch method `candidate_q3d`; `ACTIVE_PIPELINE.json` có `tracks.candidate_q3d`, inference “student only; dense path + frozen code interface”; `scripts/check_repo.py` validate `configs/candidate_q3d`. Q3D là track riêng, không phải A/A-3D, nên dense decoder không vi phạm điều khoản code-only decoder của A/A-3D trong AGENTS.md. Main đã có đăng ký track; xác nhận đầy đủ theo bản sửa thuộc P1 `NOT_RUN`. Near/far chỉ thuộc Q3D, không sửa baseline.
+
+**[AMEND] Phạm vi lần sửa này:** spec và hai helper thuần/test CPU là `SOFTWARE_ONLY`; P0–P5, network-phase probe, GPU, dữ liệu thật và campaign theo bản sửa đều `NOT_RUN`. Giữ API Q3D đang có; checker chỉ thêm tên test khóa hợp đồng vào allowlist.
 
 **Campaign sau P5:** ACDC K = 5 cho bốn arm chính trước, rồi K = 10, rồi K = 2; sau đó M&Ms và test chéo. Một seed.
 
@@ -351,6 +375,12 @@ Code mới nằm trong `self_audit/candidate_q3d/` và `configs/candidate_q3d/`;
 - Độ phân giải z của feature teacher stride 8 có đủ không (mục 4); nếu không, chuyển nguồn sang stride 4.
 - τ\_SV và τ\_M thực tế trên GT; dung sai sinh lý ở các nhóm bệnh của ACDC.
 - M&Ms còn bị chặn bởi 34 affine; cần sửa trước campaign M&Ms.
+
+**[OPEN] Giả thuyết cần kiểm tra, không đổi design:**
+
+- g ≈ 0 có thể khiến decoder bỏ qua mã. Log g và `‖g·W_q(z)‖/‖F4‖` mỗi 400 optimizer update, khai báo trường hợp mẫu số bằng 0. Nếu ratio < 0,05 thì không claim về interface.
+- Prior sinh lý có thể phạt bệnh lý: báo w_pat theo nhóm bệnh ACDC trên DEV, chỉ báo cáo, không tune gate/ngưỡng.
+- Commitment S4 có thể xung đột với codeKD trên U; chưa đổi loss/trọng số.
 
 **Spec này không claim:**
 
@@ -373,3 +403,19 @@ Code mới nằm trong `self_audit/candidate_q3d/` và `configs/candidate_q3d/`;
 | [M&Ms-2 dataset](https://zenodo.org/record/4573984) | Bệnh lý làm sai cân bằng tống máu |
 
 Nguồn nội bộ: atlas `teacher_student_paper_architecture_vi.pdf`; ghi chú "Thay graph bằng representation lượng tử hóa"; các bản nghiên cứu vòng 1–3 trong Project, thư mục `research/2026-11-11-novelty-foundations/`.
+
+
+## Thay đổi 2026-11-12
+
+Lịch sử thiết kế gốc ngày 11/11 được giữ trong git. Đối chiếu source baseline tại main `28e1a36`; kiểm tra lịch sử không thay thế kiểm chứng hợp đồng mới.
+
+- **[FIX] A1 — §7:** thay w_cell·w_pat trong tử/mẫu và epsilon bằng mean lớp có support rồi nhân omega ngoài; zero support giữ graph. Ghi lại lỗi triệt tiêu/cổng ẩn.
+- **[FIX] A2 — §8/§11 (hợp đồng §7):** L = 1; U V1/C1 chuẩn hóa mean cache, V1-u = 1; gate mean/ESS và log; C1 cùng reducer/omega.
+- **[FIX] A3 — §4, P0/P2 §12:** thay tâm nửa ô, avg-pool lệch 4 px và z lệch 0,4375 ô bằng pha mạng thật; inventory source và network-phase probe.
+- **[FIX] A4 — §3 (tensor §2, ablation §11, P0/P2 §12):** main decoder stride 8 đổi sang encoder x_res_3; decoder thành ablation, hook child cuối một lần/forward.
+- **[FIX] A5 — §3/§12:** near/far thuộc q3d_teacher_loss, tái dùng supervised_loss/bank.sdf_targets; không merge baseline.
+- **[AMEND] A6 — §12 P1:** đăng ký track Q3D riêng, inference dense + frozen code interface, dispatch/config validation; chưa triển khai trong đợt khóa helper.
+- **[AMEND] A7 — §7/§3:** ramp optimizer update; 8.000 cặp L/U = 8.000 step; region head encoder.model.out_0.
+- **[AMEND] A8 — §5/§12 P0; [OPEN]:** tần suất argmax phân suất GT L ở S4 đúng pha; MYO < 2% phải xem lại coverage/balancing trước P2, không tự đổi ngưỡng.
+- **[OPEN] A9 — §13:** decoder bỏ qua mã, prior phạt bệnh lý, commitment xung đột codeKD; logging/giới hạn claim, chưa đổi design.
+- **[AMEND] Phần mềm — §1/§7/§12:** hai helper và test SOFTWARE_ONLY, giữ API main hiện có; P0–P5 bản sửa/GPU/dữ liệu thật NOT_RUN. Prompt chưa cung cấp nội dung riêng mang nhãn F5–F8; đã đối chiếu các mệnh đề code cụ thể ở A3–A7, không tự gán nhãn fact.

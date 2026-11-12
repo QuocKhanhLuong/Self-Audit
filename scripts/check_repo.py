@@ -82,7 +82,9 @@ def main() -> int:
         path.name for path in (ROOT / "tests").glob("test*.py")
         if path.name != "__init__.py"
     )
-    old_tests = [name for name in tests if not name.startswith("test_q3d")]
+    contract_tests = {"test_candidate_q3d_weighting.py"}
+    old_tests = [name for name in tests
+                 if not name.startswith("test_q3d") and name not in contract_tests]
     _require(not old_tests, f"NON_Q3D_TESTS_REMAIN: {old_tests}")
 
     recipes_a = list((ROOT / "configs/candidate_a").glob("*.json"))
