@@ -20,6 +20,12 @@ import torch
 from torch import Tensor, nn
 
 from . import CHECKPOINT_SCHEMA
+from .quality import (
+    WAIVER_EVENTS_KEY,
+    WAIVER_STATE_KEY,
+    validate_quality_waiver,
+    waiver_from_state,
+)
 
 
 _STAGES = ("T", "Q", "P")
@@ -56,7 +62,14 @@ _ARTIFACT_STATE_KEYS = {
     "stage_artifact_hashes",
     "shared_codebook_sha256",
     "shared_codebook_metadata",
+    WAIVER_STATE_KEY,
+    WAIVER_EVENTS_KEY,
+    "exploratory_tokenizer_waiver_used",
 }
+_EXPLORATORY_OVERRIDE_STATUS = "EXPLORATORY_QUALITY_WAIVER"
+_EXPLORATORY_OVERRIDE_SCOPE = "exploratory_quality_waiver"
+_WAIVER_CONTENT_HASH = "exploratory_quality_waiver_sha256"
+_WAIVER_FLAG = "--q3d-exploratory-quality-waiver"
 
 
 def _canonical_sha256(value: Any) -> str:
@@ -550,20 +563,151 @@ def _loaded_stage(
     completed = payload.get("completed_stages")
     if not isinstance(completed, list) or stage not in completed:
         raise ValueError(f"{stage} stage checkpoint is not complete")
+    payload_policy = _payload_waiver(payload, f"{stage} stage artifact")
+    if stage == "T" and payload_policy is not None:
+        raise ValueError("T stage artifacts have no waivable gate and cannot be exploratory")
+    _validate_waiver_content_hash(stage, content_hashes, payload_policy)
     ref = _artifact_ref(stage, manifest_path, checkpoint_path, checkpoint_sha, identity)
+    if payload_policy is not None:
+        ref["exploratory"] = True
+        ref[WAIVER_STATE_KEY] = copy.deepcopy(payload_policy)
     return checkpoint_path, content_hashes, payload, ref
+
+
+def _payload_waiver(payload: Mapping[str, Any], label: str) -> dict[str, Any] | None:
+    """Return the exploratory waiver a stage payload truthfully declares.
+
+    The ``exploratory`` marker and the policy must agree exactly; a payload
+    cannot claim to be exploratory without its policy, nor carry a policy while
+    claiming to be a normal artifact.
+    """
+
+    try:
+        policy = validate_quality_waiver(payload.get(WAIVER_STATE_KEY))
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{label} has a malformed exploratory quality waiver: {exc}") from exc
+    marker = payload.get("exploratory")
+    if policy is None:
+        if marker not in (None, False):
+            raise ValueError(f"{label} declares exploratory=True without its waiver policy")
+        return None
+    if marker is not True:
+        raise ValueError(f"{label} carries an exploratory waiver but is not marked exploratory=True")
+    return policy
+
+
+def _require_matching_waiver(
+    payload_policy: Mapping[str, Any] | None,
+    request_policy: Mapping[str, Any] | None,
+    label: str,
+) -> None:
+    if payload_policy is None:
+        return
+    if request_policy is None:
+        raise RuntimeError(
+            f"{label} is an exploratory quality-waived artifact; importing or exporting it "
+            f"requires the same explicit {_WAIVER_FLAG} REASON"
+        )
+    if dict(payload_policy) != dict(request_policy):
+        raise RuntimeError(f"{label} exploratory waiver differs from the explicitly supplied waiver")
+
+
+def _request_waiver(state: Mapping[str, Any]) -> dict[str, Any] | None:
+    try:
+        return waiver_from_state(state)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"Q-3D run state has a malformed exploratory quality waiver: {exc}") from exc
+
+
+def _validate_waiver_content_hash(
+    stage: str, content_hashes: Mapping[str, Any], payload_policy: Mapping[str, Any] | None,
+) -> None:
+    recorded = content_hashes.get(_WAIVER_CONTENT_HASH)
+    if payload_policy is None:
+        if recorded is not None:
+            raise ValueError(f"{stage} stage manifest declares a waiver its checkpoint does not carry")
+        return
+    if recorded != _canonical_sha256(dict(payload_policy)):
+        raise ValueError(f"{stage} stage manifest does not seal its checkpoint exploratory waiver")
+
+
+def _validate_exploratory_tokenizer_waiver(
+    config: Mapping[str, Any],
+    state: Mapping[str, Any],
+    gate: Mapping[str, Any],
+    override: Mapping[str, Any],
+    request_policy: Mapping[str, Any] | None,
+) -> None:
+    payload_policy = _payload_waiver(state, "Q stage artifact")
+    if payload_policy is None:
+        raise RuntimeError("Q stage exploratory gate override lacks its persisted waiver policy")
+    _require_matching_waiver(payload_policy, request_policy, "Q stage artifact")
+    if "tokenizer_gate" not in payload_policy["scope"]:
+        raise RuntimeError("Q stage exploratory waiver does not cover the tokenizer gate")
+    if state.get("synthetic_gate_override_used") is True:
+        raise RuntimeError("Q stage artifact cannot combine the synthetic override and a waiver")
+    if gate.get("status") == "PASS" or gate.get("passed") is not False:
+        raise RuntimeError("Q stage exploratory waiver requires a measured failed tokenizer gate")
+    missing = gate.get("missing")
+    if isinstance(missing, (list, tuple)) and "initialized_codebook" in missing:
+        raise RuntimeError("Q stage exploratory waiver cannot accept an uninitialized codebook")
+    runtime = config.get("runtime", {})
+    synthetic = isinstance(runtime, Mapping) and runtime.get("synthetic") is True
+    expected_scope = "SOFTWARE_ONLY_SYNTHETIC" if synthetic else "EXPLORATORY_TRAIN_EXECUTION"
+    if (
+        override.get("continuation_allowed") is not True
+        or override.get("evidence_scope") != expected_scope
+        or override.get("original_gate") != dict(gate)
+        or override.get("waiver") != payload_policy
+    ):
+        raise RuntimeError("Q stage exploratory gate override does not match its measured gate/policy")
+    metadata = state.get("tokenizer_artifact")
+    if not isinstance(metadata, Mapping):
+        raise RuntimeError("Q stage exploratory waiver lacks frozen tokenizer metadata")
+    if (
+        metadata.get("initialized") is not True
+        or metadata.get("frozen") is not True
+        or metadata.get("exploratory") is not True
+        or metadata.get(WAIVER_STATE_KEY) != payload_policy
+        or metadata.get("gate") != dict(gate)
+        or metadata.get("synthetic_gate_override")
+    ):
+        raise RuntimeError(
+            "Q stage tokenizer metadata does not record the frozen initialized C0, the measured "
+            "failed gate, and the exact exploratory waiver"
+        )
 
 
 def _validate_tokenizer_gate(
     config: Mapping[str, Any], state: Mapping[str, Any], *, explicit_override_requested: bool,
+    request_policy: Mapping[str, Any] | None = None,
 ) -> None:
     gate = state.get("gate")
     if not isinstance(gate, Mapping) or type(gate.get("passed")) is not bool:
         raise ValueError("Q stage artifact is missing its measured tokenizer gate")
-    if gate["passed"]:
-        return
-    runtime = config.get("runtime", {})
+    payload_policy = _payload_waiver(state, "Q stage artifact")
+    _require_matching_waiver(payload_policy, request_policy, "Q stage artifact")
     override = state.get("gate_override")
+    exploratory_override = (
+        isinstance(override, Mapping) and override.get("status") == _EXPLORATORY_OVERRIDE_STATUS
+    )
+    metadata = state.get("tokenizer_artifact")
+    metadata_waiver = metadata.get(WAIVER_STATE_KEY) if isinstance(metadata, Mapping) else None
+    if gate["passed"]:
+        # A PASS is never combined with a waiver override; a waiver can only
+        # continue past a measured failure, so this would be a forged gate.
+        if gate.get("status") not in (None, "PASS") or exploratory_override \
+                or state.get("exploratory_tokenizer_waiver_used") is True:
+            raise ValueError("Q stage artifact gate claims PASS inconsistently with its override")
+        if metadata_waiver is not None:
+            raise ValueError("Q stage tokenizer metadata carries a waiver for a passing gate")
+        return
+    if exploratory_override:
+        _validate_exploratory_tokenizer_waiver(config, state, gate, override, request_policy)
+        return
+    if metadata_waiver is not None or state.get("exploratory_tokenizer_waiver_used") is True:
+        raise RuntimeError("Q stage artifact claims a tokenizer waiver without its override record")
+    runtime = config.get("runtime", {})
     allowed = bool(
         isinstance(runtime, Mapping)
         and runtime.get("synthetic") is True
@@ -577,11 +721,30 @@ def _validate_tokenizer_gate(
         raise RuntimeError("Q-3D tokenizer gate failed; shared Q artifact cannot enter J")
 
 
-def _validate_physiology_gate(state: Mapping[str, Any], config: Mapping[str, Any]) -> None:
+def _validate_physiology_gate(
+    state: Mapping[str, Any], config: Mapping[str, Any], *,
+    request_policy: Mapping[str, Any] | None = None,
+) -> None:
     gate = state.get("physiology_support_gate")
     if not isinstance(gate, Mapping):
         raise ValueError("P stage artifact is missing its measured physiology support gate")
+    payload_policy = _payload_waiver(state, "P stage artifact")
+    _require_matching_waiver(payload_policy, request_policy, "P stage artifact")
+    exploratory_scope = gate.get("override_scope") == _EXPLORATORY_OVERRIDE_SCOPE
     if gate.get("passed") is True:
+        if exploratory_scope or str(gate.get("status", "")).startswith("NO_GO"):
+            raise ValueError("P stage physiology gate claims PASS inconsistently with its override")
+        return
+    if exploratory_scope:
+        if payload_policy is None or "physiology_support" not in payload_policy["scope"]:
+            raise RuntimeError("P stage exploratory physiology override lacks its waiver policy")
+        status = gate.get("status")
+        if (
+            gate.get("override_used") is not True
+            or not isinstance(status, str) or not status.startswith("NO_GO")
+            or state.get("synthetic_gate_override_used") is True
+        ):
+            raise RuntimeError("P stage exploratory physiology override does not keep its measured NO_GO")
         return
     runtime = config.get("runtime", {})
     if not (
@@ -748,6 +911,9 @@ def _adopt_existing_export(
         raise ValueError(f"existing {stage} artifact teacher identity differs from live T")
     if hashes.get("checkpoint_sha256") not in {None, _file_sha256(checkpoint_path)}:
         raise ValueError(f"existing {stage} manifest checkpoint hash differs from its content hashes")
+    request_policy = _request_waiver(state)
+    payload_policy = _payload_waiver(payload, f"existing {stage} artifact")
+    _require_matching_waiver(payload_policy, request_policy, f"existing {stage} artifact")
 
     if stage == "T":
         selected = payload.get("best_teacher_state")
@@ -761,6 +927,7 @@ def _adopt_existing_export(
         _validate_tokenizer_gate(
             config, payload,
             explicit_override_requested=bool(state.get("synthetic_gate_override_requested", False)),
+            request_policy=_request_waiver(state),
         )
         tokenizer_state = payload.get("tokenizer_state")
         metadata = payload.get("tokenizer_artifact")
@@ -786,7 +953,7 @@ def _adopt_existing_export(
             if _state_mapping_sha256(live_tokenizer_state) != _state_mapping_sha256(tokenizer_state):
                 raise ValueError("live Q-3D tokenizer state differs from existing Q artifact")
     else:
-        _validate_physiology_gate(payload, config)
+        _validate_physiology_gate(payload, config, request_policy=_request_waiver(state))
         cache_state = payload.get("physiology_cache")
         rows = payload.get("physiology_rows")
         if not isinstance(cache_state, Mapping) or not isinstance(rows, Mapping):
@@ -861,6 +1028,7 @@ def import_stage_artifacts(
 
     identity_data = engine._data_identity_without_labels(data)
     identity = stage_identity(config, identity_data)
+    request_policy = _request_waiver(state)
     # Validate every supplied manifest first. No model or mutable state is
     # changed until the whole bundle, including its dependency hashes, passes.
     loaded: dict[str, tuple[Path, Mapping[str, Any], dict[str, Any], dict[str, Any]]] = {}
@@ -910,6 +1078,7 @@ def import_stage_artifacts(
         _validate_tokenizer_gate(
             config, q_payload,
             explicit_override_requested=bool(state.get("synthetic_gate_override_requested", False)),
+            request_policy=request_policy,
         )
         if not isinstance(q_payload.get("tokenizer_state"), Mapping):
             raise ValueError("Q stage artifact lacks tokenizer_state")
@@ -937,7 +1106,7 @@ def import_stage_artifacts(
 
     if "P" in loaded:
         p_path, p_hashes, p_payload, _p_ref = loaded["P"]
-        _validate_physiology_gate(p_payload, config)
+        _validate_physiology_gate(p_payload, config, request_policy=request_policy)
         cache_state = p_payload.get("physiology_cache")
         rows = p_payload.get("physiology_rows")
         if not isinstance(cache_state, Mapping) or not isinstance(rows, Mapping):
@@ -1052,6 +1221,8 @@ def import_stage_artifacts(
         state["gate"] = copy.deepcopy(dict(q_payload["gate"]))
         state["gate_override"] = copy.deepcopy(q_payload.get("gate_override"))
         state["synthetic_gate_override_used"] = bool(q_payload.get("synthetic_gate_override_used", False))
+        if q_payload.get("exploratory_tokenizer_waiver_used") is True:
+            state["exploratory_tokenizer_waiver_used"] = True
         state["shared_codebook_sha256"] = codebook_sha
         state["shared_codebook_metadata"] = copy.deepcopy(dict(q_payload["tokenizer_artifact"]))
         state["completed_updates_total"] = max(
@@ -1087,6 +1258,10 @@ def import_stage_artifacts(
         if isinstance(weighting, Mapping) and not weighting.get("gate_passed") \
                 and not weighting.get("override_used"):
             raise RuntimeError("Q-3D physiology cohort gate failed; imported P cannot enter J")
+        if isinstance(weighting, Mapping) and not weighting.get("gate_passed") \
+                and weighting.get("override_scope") == _EXPLORATORY_OVERRIDE_SCOPE \
+                and request_policy is None:
+            raise RuntimeError("imported P cohort weighting relies on an exploratory waiver")
         imported_stages.append("P")
 
     # Load shared tensors only after every manifest and cache has validated.
@@ -1209,6 +1384,11 @@ def export_stage_artifact(
         snapshot.pop("shared_codebook_metadata", None)
         snapshot.pop("stage_artifacts", None)
         snapshot.pop("stage_artifact_hashes", None)
+        # T has no waivable quality gate; it stays a normal artifact even when
+        # produced or re-published inside an exploratory run.
+        snapshot.pop(WAIVER_STATE_KEY, None)
+        snapshot.pop(WAIVER_EVENTS_KEY, None)
+        snapshot.pop("exploratory_tokenizer_waiver_used", None)
         metrics = snapshot.get("metrics")
         if isinstance(metrics, list):
             snapshot["metrics"] = [
@@ -1235,6 +1415,18 @@ def export_stage_artifact(
         "data_identity_sha256": _canonical_sha256(identity_data),
         "teacher_state_sha256": teacher_sha,
     }
+    request_policy = _request_waiver(state)
+    if stage != "T" and request_policy is not None:
+        # Q/P produced under an explicit waiver are exploratory artifacts. The
+        # policy is sealed into the checkpoint and the manifest content hashes
+        # (not the identity/source config, so config hashes stay unchanged).
+        snapshot[WAIVER_STATE_KEY] = copy.deepcopy(request_policy)
+        snapshot["exploratory"] = True
+        content_hashes[_WAIVER_CONTENT_HASH] = _canonical_sha256(request_policy)
+    else:
+        snapshot.pop(WAIVER_STATE_KEY, None)
+        snapshot.pop(WAIVER_EVENTS_KEY, None)
+        snapshot.pop("exploratory", None)
     if stage == "Q":
         if tokenizer is not None:
             tokenizer_state = copy.deepcopy(tokenizer.state_dict())
@@ -1249,6 +1441,16 @@ def export_stage_artifact(
             raise ValueError(f"{stage} stage artifact C0 is not the frozen Q codebook")
         snapshot["tokenizer_state"] = copy.deepcopy(dict(tokenizer_state))
         snapshot["tokenizer_artifact"] = copy.deepcopy(dict(tokenizer_meta))
+        frozen_record = state.get("tokenizer_artifact")
+        if isinstance(frozen_record, Mapping) and frozen_record.get(WAIVER_STATE_KEY) is not None:
+            # Live metadata carries only codebook identity. Keep the frozen
+            # waiver record (measured failed gate + exact policy) from the
+            # gate decision, but only for this exact C0.
+            if frozen_record.get("sha256") != codebook_sha:
+                raise ValueError(f"{stage} stage waiver record belongs to a different C0")
+            for key in ("gate", "exploratory", WAIVER_STATE_KEY):
+                if key in frozen_record:
+                    snapshot["tokenizer_artifact"][key] = copy.deepcopy(frozen_record[key])
         snapshot["shared_codebook_sha256"] = codebook_sha
         content_hashes["codebook_sha256"] = codebook_sha
         sampling_phase = _sampling_phase(config, teacher)
@@ -1258,6 +1460,7 @@ def export_stage_artifact(
             _validate_tokenizer_gate(
                 config, snapshot,
                 explicit_override_requested=bool(snapshot.get("synthetic_gate_override_requested", False)),
+                request_policy=request_policy,
             )
     elif stage == "P":
         if codebook_sha is not None:
@@ -1268,7 +1471,7 @@ def export_stage_artifact(
             content_hashes["codebook_sha256"] = codebook_sha
 
     if stage == "P":
-        _validate_physiology_gate(snapshot, config)
+        _validate_physiology_gate(snapshot, config, request_policy=request_policy)
         cache_state = snapshot.get("physiology_cache")
         rows = snapshot.get("physiology_rows")
         if not isinstance(cache_state, Mapping) or not isinstance(rows, Mapping):
@@ -1349,6 +1552,9 @@ def export_stage_artifact(
     document = _manifest_document(verified if isinstance(verified, Mapping) else result)
     actual_checkpoint, actual_sha = _checkpoint_details(document, manifest_path, verified)
     ref = _artifact_ref(stage, manifest_path, actual_checkpoint, actual_sha, identity)
+    if WAIVER_STATE_KEY in snapshot:
+        ref["exploratory"] = True
+        ref[WAIVER_STATE_KEY] = copy.deepcopy(snapshot[WAIVER_STATE_KEY])
     _record_artifact_ref(state, ref)
     return ref
 

@@ -1826,7 +1826,8 @@ def _prepare_synthetic_run(plan_path: Path, experiment: Mapping[str, Any],
 def _job_command(experiment: Mapping[str, Any], *, config_path: Path,
                  train_ref: Mapping[str, Any], dev_ref: Mapping[str, Any],
                  device: str, synthetic: bool, stage: str | None = None,
-                 stage_artifacts: Mapping[str, str] | None = None) -> list[str]:
+                 stage_artifacts: Mapping[str, str] | None = None,
+                 exploratory_quality_waiver: str | None = None) -> list[str]:
     command = [sys.executable, str(ROOT / "train.py"), "--config", str(config_path),
                "--out", experiment["output"], "--device", device]
     if stage is not None:
@@ -1839,6 +1840,14 @@ def _job_command(experiment: Mapping[str, Any], *, config_path: Path,
             command.append("--synthetic-teacher-fixture")
     else:
         command.append("--allow-full-run")
+    if exploratory_quality_waiver is not None:
+        from self_audit.candidate_q3d.campaign_runtime import (
+            EXPLORATORY_WAIVER_FLAG,
+            exploratory_waiver_policy,
+        )
+
+        policy = exploratory_waiver_policy(exploratory_quality_waiver)
+        command.extend([EXPLORATORY_WAIVER_FLAG, policy["reason"]])
     return command
 
 
@@ -1860,8 +1869,17 @@ def _read_state(state_path: Path, plan: Mapping[str, Any], plan_sha: str) -> dic
 def execute_campaign(path: str | Path, *, execute: bool = False, setting: str = "all",
                      k: tuple[int, ...] | None = None, through_stage: str = "J",
                      device: str = "cuda",
-                     runner: Any = subprocess.run) -> dict[str, Any]:
-    """Validate or explicitly execute selected settings; the trainer owns stage transitions."""
+                     runner: Any = subprocess.run,
+                     exploratory_quality_waiver: str | None = None) -> dict[str, Any]:
+    """Validate or explicitly execute selected settings; the trainer owns stage transitions.
+
+    ``exploratory_quality_waiver`` is an explicit operator reason forwarded as
+    ``--q3d-exploratory-quality-waiver`` to Q3D trainer commands; ``None``
+    keeps the default strict gate behaviour.
+    """
+    from self_audit.candidate_q3d.campaign_runtime import exploratory_waiver_policy
+
+    waiver_policy = exploratory_waiver_policy(exploratory_quality_waiver)
     plan_path = Path(path).expanduser().resolve()
     plan = validate_campaign_plan(plan_path)
     if setting != "all" and setting not in ARMS and setting not in SECONDARY_SETTINGS:
@@ -1876,11 +1894,15 @@ def execute_campaign(path: str | Path, *, execute: bool = False, setting: str = 
         plan["experiments"], setting=setting, k=k,
     )
     if not execute:
-        return {"status": "PLAN_VALIDATED_NOT_RUN", "plan": str(plan_path),
-                "selected_setting": setting,
-                "selected_k": selected_ks,
-                "through_stage": through_stage,
-                "patient_training": "NOT_RUN", "jobs": len(plan["stage_jobs"])}
+        result = {"status": "PLAN_VALIDATED_NOT_RUN", "plan": str(plan_path),
+                  "selected_setting": setting,
+                  "selected_k": selected_ks,
+                  "through_stage": through_stage,
+                  "patient_training": "NOT_RUN", "jobs": len(plan["stage_jobs"])}
+        if waiver_policy is not None:
+            result["exploratory"] = True
+            result["exploratory_quality_waiver"] = waiver_policy
+        return result
     if plan["selection"].get("shared_stage_dag"):
         from self_audit.candidate_q3d.campaign_runtime import execute_shared_campaign
 
@@ -1888,6 +1910,7 @@ def execute_campaign(path: str | Path, *, execute: bool = False, setting: str = 
             plan_path, plan, setting=setting, k=k, through_stage=through_stage,
             device=device, runner=runner,
             api=sys.modules[__name__],
+            **({"exploratory_quality_waiver": waiver_policy["reason"]} if waiver_policy is not None else {}),
         )
     synthetic = bool(plan["selection"]["synthetic"])
     if not synthetic and device == "cpu":
@@ -1921,8 +1944,14 @@ def execute_campaign(path: str | Path, *, execute: bool = False, setting: str = 
             train_ref, dev_ref = fixture_refs["train"], fixture_refs["development"]
         elif experiment_jobs[0]["method"] == "candidate_q3d":
             load_config(experiment["config_path"], real_run=True)
-        command = _job_command(experiment, config_path=run_config, train_ref=train_ref,
-                               dev_ref=dev_ref, device=device, synthetic=synthetic)
+        command = _job_command(
+            experiment, config_path=run_config, train_ref=train_ref,
+            dev_ref=dev_ref, device=device, synthetic=synthetic,
+            exploratory_quality_waiver=(
+                waiver_policy["reason"]
+                if waiver_policy is not None and experiment_jobs[0]["method"] == "candidate_q3d" else None
+            ),
+        )
         output = Path(experiment["output"])
         output.mkdir(parents=True, exist_ok=False)
         state["experiments"][experiment["id"]] = {"status": "RUNNING", "command": command, "exit_code": None}
@@ -1966,20 +1995,41 @@ def execute_campaign(path: str | Path, *, execute: bool = False, setting: str = 
             "completed_stages": completed_stages,
             "stdout_tail": stdout[-4000:],
         }
+        from self_audit.candidate_q3d.campaign_runtime import exploratory_marker, _require_waiver_for
+
+        receipt_marker = exploratory_marker(receipt) if isinstance(receipt, Mapping) else None
+        if receipt_marker is not None and waiver_policy is None:
+            raise RuntimeError(f"trainer returned an exploratory receipt without an explicit waiver: {experiment['id']}")
+        _require_waiver_for(receipt_marker, waiver_policy, f"trainer receipt {experiment['id']}")
+        if receipt_marker is not None:
+            state["experiments"][experiment["id"]]["exploratory"] = True
+            state["experiments"][experiment["id"]]["exploratory_quality_waiver"] = (
+                receipt_marker["policy"] or waiver_policy
+            )
         for job in experiment_jobs:
             stage_status = "COMPLETED" if job["stage"] in completed_stages else "NOT_COMPLETED"
             state["jobs"][job["id"]] = {
                 "status": stage_status, "command": command, "exit_code": 0,
                 "completed_by": "single trainer invocation",
             }
+            if receipt_marker is not None:
+                state["jobs"][job["id"]].update({
+                    "exploratory": True,
+                    "exploratory_quality_waiver": receipt_marker["policy"] or waiver_policy,
+                    "receipt": copy.deepcopy(receipt),
+                })
         _write_json(state_path, state)
         if completed_stages != expected_stages:
             raise RuntimeError(f"trainer did not report all planned stages for {experiment['id']}")
         completed.append(experiment["id"])
-    return {"status": "COMPLETED", "plan": str(plan_path), "run_state": str(state_path),
-            "completed_settings": completed, "selected_k": selected_ks,
-            "through_stage": through_stage,
-            "patient_training": "SYNTHETIC_ONLY" if synthetic else "EXECUTED"}
+    summary = {"status": "COMPLETED", "plan": str(plan_path), "run_state": str(state_path),
+               "completed_settings": completed, "selected_k": selected_ks,
+               "through_stage": through_stage,
+               "patient_training": "SYNTHETIC_ONLY" if synthetic else "EXECUTED"}
+    if waiver_policy is not None:
+        summary["exploratory"] = True
+        summary["exploratory_quality_waiver"] = waiver_policy
+    return summary
 
 
 def _parse_teacher_provenance(args: argparse.Namespace) -> dict[str, Any] | None:
@@ -2054,6 +2104,11 @@ def main(argv: list[str] | None = None) -> None:
         help="execute selected shared stages up to this stage (default: J)",
     )
     run_parser.add_argument("--device", default="cuda", choices=("cpu", "cuda"))
+    run_parser.add_argument(
+        "--q3d-exploratory-quality-waiver", metavar="REASON", default=None,
+        help="explicit exploratory opt-in: continue past NO_GO tokenizer/physiology/KD support gates; "
+             "measurements stay NO_GO and results are marked exploratory (default: strict)",
+    )
     args = parser.parse_args(argv)
     if args.command == "plan":
         lineage_values = (args.lineage_reference, args.lineage_reference_sha256,
@@ -2103,10 +2158,15 @@ def main(argv: list[str] | None = None) -> None:
         )
         print(json.dumps({"status": "NOT_RUN", "plan": str(plan_path), "sha256": _sha256(plan_path)}, indent=2))
     else:
+        waiver = args.q3d_exploratory_quality_waiver
+        if waiver is not None and not waiver.strip():
+            parser.error("--q3d-exploratory-quality-waiver requires a nonempty REASON")
         result = execute_campaign(
             args.plan, execute=args.execute, setting=args.setting,
             k=tuple(args.k) if args.k is not None else None,
             through_stage=args.through_stage, device=args.device,
+            **({"exploratory_quality_waiver": args.q3d_exploratory_quality_waiver}
+               if args.q3d_exploratory_quality_waiver is not None else {}),
         )
         print(json.dumps(result, indent=2))
 

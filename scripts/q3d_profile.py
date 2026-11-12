@@ -219,10 +219,15 @@ def _gpu_profile(model: nn.Module, image: torch.Tensor, geometry: dict[str, Any]
 def profile_artifact(artifact_path: str | Path, output_path: str | Path, *,
                      input_path: str | Path | None = None,
                      shape_zyx: tuple[int, int, int] = (10, 64, 64),
-                     request_gpu: bool = False, warmup: int = 2, repeats: int = 5) -> dict[str, Any]:
+                     request_gpu: bool = False, warmup: int = 2, repeats: int = 5,
+                     exploratory_quality_waiver: str | None = None) -> dict[str, Any]:
     if warmup < 0 or repeats < 1:
         raise ValueError("profile warmup must be nonnegative and repeats must be positive")
-    model, metadata = load_export(artifact_path, device="cpu")
+    model, metadata = load_export(
+        artifact_path, device="cpu",
+        **({"exploratory_quality_waiver": exploratory_quality_waiver}
+           if exploratory_quality_waiver is not None else {}),
+    )
     image, geometry = _input_file(input_path) if input_path is not None else _synthetic_input(shape_zyx)
     cpu = _cpu_profile(model, image, geometry, warmup=warmup, repeats=repeats)
     gpu = _gpu_profile(model, image, geometry, warmup=warmup, repeats=repeats) if request_gpu else {
@@ -234,6 +239,9 @@ def profile_artifact(artifact_path: str | Path, output_path: str | Path, *,
     result = {
         "schema": "q3d.profile.v1",
         "artifact_sha256": metadata["artifact_sha256"],
+        **{key: metadata[key] for key in (
+            "exploratory", "exploratory_quality_waiver", "measured_quality_gates",
+        ) if key in metadata},
         "arm": metadata["arm"],
         "parameters": {"status": "COMPUTED", "value": parameters, "unit": "parameters"},
         "input": {"source": "EXTERNAL_NATIVE_NPZ" if input_path else "SYNTHETIC_SOFTWARE_FIXTURE",
@@ -259,10 +267,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--gpu", action="store_true", help="request bf16 CUDA latency and peak VRAM")
     parser.add_argument("--warmup", type=int, default=2)
     parser.add_argument("--repeats", type=int, default=5)
+    parser.add_argument("--q3d-exploratory-quality-waiver", metavar="REASON",
+                        help="exact explicit reason recorded in an exploratory artifact")
     args = parser.parse_args(argv)
     result = profile_artifact(args.artifact, args.output, input_path=args.input,
                               shape_zyx=tuple(args.shape), request_gpu=args.gpu,
-                              warmup=args.warmup, repeats=args.repeats)
+                              warmup=args.warmup, repeats=args.repeats,
+                              **({"exploratory_quality_waiver": args.q3d_exploratory_quality_waiver}
+                                 if args.q3d_exploratory_quality_waiver is not None else {}))
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0
 

@@ -50,7 +50,8 @@ def _q3d_training_patient_ids(path: str | Path, expected_sha256: str) -> tuple[s
 def _evaluate_q3d_export(checkpoint: str, checkpoint_sha: str, data_manifest: str,
                          data_sha: str, out: str, device: str = "cuda",
                          threshold: float | None = None, *, train_manifest: str | None = None,
-                         train_sha: str | None = None, split: str | None = None) -> dict[str, Any]:
+                         train_sha: str | None = None, split: str | None = None,
+                         exploratory_quality_waiver: str | None = None) -> dict[str, Any]:
     if threshold is not None:
         raise ValueError("Q3D evaluation uses four-class argmax and does not accept --threshold")
     if not train_manifest or not train_sha:
@@ -73,11 +74,24 @@ def _evaluate_q3d_export(checkpoint: str, checkpoint_sha: str, data_manifest: st
     from self_audit.candidate_q3d.evaluation import evaluate_manifest
 
     train_ids = _q3d_training_patient_ids(train_manifest, train_sha)
-    model, _metadata = load_export(artifact_path, expected_sha256=checkpoint_sha, device=device)
-    return evaluate_manifest(
+    model, metadata = load_export(
+        artifact_path, expected_sha256=checkpoint_sha, device=device,
+        **({"exploratory_quality_waiver": exploratory_quality_waiver}
+           if exploratory_quality_waiver is not None else {}),
+    )
+    result = evaluate_manifest(
         model, data_manifest, data_sha, out, device=device, split=split,
         train_patient_ids=train_ids,
     )
+    if metadata.get("exploratory") is True:
+        from self_audit.candidate_q3d.export import _write_json_atomic
+
+        result.update({key: metadata[key] for key in (
+            "exploratory", "exploratory_quality_waiver", "measured_quality_gates",
+        )})
+        result["artifact_sha256"] = checkpoint_sha
+        _write_json_atomic(Path(out).resolve() / "Q3D_METRICS.json", result)
+    return result
 
 
 def _evaluate_configured_baseline(checkpoint: str, checkpoint_sha: str, config_path: str,
@@ -135,12 +149,16 @@ def main() -> None:
     parser.add_argument("--config", help="Nested Q3D baseline config for A3D or teacher-supervised checkpoint evaluation")
     parser.add_argument("--train-data", help="Q3D-only hash-pinned TRAIN manifest for overlap checks")
     parser.add_argument("--train-data-sha256", help="SHA-256 of the Q3D TRAIN manifest")
+    parser.add_argument("--q3d-exploratory-quality-waiver", metavar="REASON",
+                        help="exact explicit reason recorded in a Q3D exploratory student export")
     parser.add_argument("--split", choices=["dev", "test", "external_test"],
                         help="Optional expected Q3D manifest role")
     args = parser.parse_args()
 
     checkpoint_path = Path(args.checkpoint)
     if args.config:
+        if args.q3d_exploratory_quality_waiver is not None:
+            parser.error("--q3d-exploratory-quality-waiver requires a Q3D student export")
         if args.threshold is not None or args.train_data or args.train_data_sha256:
             parser.error("--threshold and --train-data options cannot be combined with Q3D baseline --config")
         try:
@@ -160,12 +178,21 @@ def main() -> None:
                 args.checkpoint, args.checkpoint_sha256, args.data, args.data_sha256,
                 args.out, args.device, args.threshold, train_manifest=args.train_data,
                 train_sha=args.train_data_sha256, split=args.split,
+                **({"exploratory_quality_waiver": args.q3d_exploratory_quality_waiver}
+                   if args.q3d_exploratory_quality_waiver is not None else {}),
             )
         except (OSError, TypeError, ValueError) as exc:
             parser.error(str(exc))
-        print(json.dumps(result["patient_macro"], indent=2))
+        summary = dict(result["patient_macro"])
+        if result.get("exploratory") is True:
+            summary.update({key: result[key] for key in (
+                "exploratory", "exploratory_quality_waiver", "measured_quality_gates",
+            )})
+        print(json.dumps(summary, indent=2))
         return
 
+    if args.q3d_exploratory_quality_waiver is not None:
+        parser.error("--q3d-exploratory-quality-waiver requires a Q3D student export")
     if args.train_data or args.train_data_sha256 or args.split:
         parser.error("--train-data and --split are Q3D-only options")
     manifest = Path(args.checkpoint) / "MANIFEST.json"

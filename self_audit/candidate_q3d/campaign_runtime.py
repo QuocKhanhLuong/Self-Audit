@@ -8,12 +8,96 @@ from __future__ import annotations
 
 import copy
 import csv
+import hashlib
 import math
 import json
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
 from .artifacts import file_sha256, load_stage_manifest
+from .quality import WAIVER_SCHEMA, WAIVER_SCOPE, WAIVER_STATE_KEY, quality_waiver, validate_quality_waiver
+
+EXPLORATORY_WAIVER_SCHEMA = WAIVER_SCHEMA
+EXPLORATORY_WAIVER_SCOPE = WAIVER_SCOPE
+EXPLORATORY_WAIVER_FLAG = "--q3d-exploratory-quality-waiver"
+# Stage manifests seal a waived checkpoint's policy under this content hash.
+EXPLORATORY_WAIVER_CONTENT_HASH = "exploratory_quality_waiver_sha256"
+
+
+def exploratory_waiver_policy(reason: Any) -> dict[str, Any] | None:
+    """Return the shared explicit-opt-in waiver policy for ``reason``.
+
+    ``None`` keeps the default strict behaviour. The policy is the engine's
+    canonical :func:`quality.quality_waiver`; it never changes a gate
+    measurement, only records that an operator explicitly continued past it.
+    """
+
+    try:
+        return quality_waiver(reason)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{EXPLORATORY_WAIVER_FLAG} requires a nonempty REASON string: {exc}") from exc
+
+
+def waiver_policy_sha256(policy: Mapping[str, Any]) -> str:
+    """Canonical policy digest, identical to the stage-manifest content hash."""
+
+    payload = json.dumps(dict(policy), sort_keys=True, separators=(",", ":"), allow_nan=False)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def exploratory_marker(document: Any) -> dict[str, Any] | None:
+    """Read an artifact/receipt exploratory declaration without trusting it as PASS.
+
+    Returns ``None`` for normal documents and ``{"exploratory": True,
+    "policy": <waiver or None>, "policy_sha256": <digest or None>}`` for
+    explicitly waived ones. Stage manifests declare a waiver only through
+    ``content_hashes.exploratory_quality_waiver_sha256``. Contradictory
+    declarations fail closed instead of being silently treated as normal.
+    """
+
+    if not isinstance(document, Mapping):
+        return None
+    flag = document.get("exploratory")
+    try:
+        waiver = validate_quality_waiver(document.get(WAIVER_STATE_KEY))
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"exploratory_quality_waiver metadata is malformed: {exc}") from exc
+    content_hashes = document.get("content_hashes")
+    sealed = content_hashes.get(EXPLORATORY_WAIVER_CONTENT_HASH) if isinstance(content_hashes, Mapping) else None
+    if sealed is None:
+        sealed = document.get(EXPLORATORY_WAIVER_CONTENT_HASH)
+    if sealed is not None and (not isinstance(sealed, str) or len(sealed) != 64):
+        raise ValueError("exploratory waiver content hash is malformed")
+    if flag is not None and type(flag) is not bool:
+        raise ValueError("exploratory marker must be a boolean")
+    if flag is None and waiver is None and sealed is None:
+        return None
+    if flag is False:
+        if waiver is not None or sealed is not None:
+            raise ValueError("document declares an exploratory waiver but exploratory=false")
+        return None
+    if waiver is not None and sealed is not None and waiver_policy_sha256(waiver) != sealed:
+        raise ValueError("exploratory waiver policy does not match its sealed content hash")
+    return {
+        "exploratory": True,
+        "policy": waiver,
+        "policy_sha256": waiver_policy_sha256(waiver) if waiver is not None else sealed,
+    }
+
+
+def _require_waiver_for(marker: dict[str, Any] | None, policy: dict[str, Any] | None, label: str) -> None:
+    """Waived state is reusable only with the same explicit reason (engine contract)."""
+
+    if marker is None:
+        return
+    if policy is None:
+        raise ValueError(
+            f"{label} is exploratory (quality gates waived); resume/import requires the same explicit "
+            f"{EXPLORATORY_WAIVER_FLAG} REASON"
+        )
+    recorded = marker.get("policy_sha256")
+    if recorded is not None and recorded != waiver_policy_sha256(policy):
+        raise ValueError(f"{label} exploratory waiver differs from the explicitly supplied REASON")
 
 
 def _identity_matches(actual: Mapping[str, Any], expected: Mapping[str, Any]) -> bool:
@@ -76,6 +160,11 @@ def _verified_output(job: Mapping[str, Any], *, pinned_sha: str | None = None) -
     if manifest["stage"] != job["stage"]:
         raise ValueError("shared producer manifest stage mismatch")
     verified = {"path": str(path), "sha256": digest, "content_hashes": manifest["content_hashes"]}
+    marker = exploratory_marker(manifest) or exploratory_marker(raw)
+    if marker is not None:
+        verified["exploratory"] = True
+        verified["exploratory_quality_waiver"] = marker["policy"]
+        verified[EXPLORATORY_WAIVER_CONTENT_HASH] = marker["policy_sha256"]
     if "teacher_quality" in manifest:
         verified["teacher_quality"] = copy.deepcopy(manifest["teacher_quality"])
     return verified
@@ -223,6 +312,33 @@ def _selected_c0_score(
     return None
 
 
+def _job_exploratory_policy(job_id: Any, state: Mapping[str, Any]) -> dict[str, Any] | None:
+    """Return the exploratory marker recorded for one completed job, if any."""
+
+    if not isinstance(job_id, str):
+        return None
+    job_state = state.get("jobs", {}).get(job_id, {})
+    if not isinstance(job_state, Mapping) or job_state.get("status") != "COMPLETED":
+        return None
+    for document in (job_state, job_state.get("receipt"), job_state.get("artifact")):
+        marker = exploratory_marker(document)
+        if marker is not None:
+            return marker
+    return None
+
+
+def _experiment_exploratory(experiment: Mapping[str, Any], state: Mapping[str, Any],
+                            stages: Sequence[str]) -> list[dict[str, Any]]:
+    producers = experiment.get("stage_artifact_producers", {})
+    markers = []
+    if isinstance(producers, Mapping):
+        for stage in stages:
+            marker = _job_exploratory_policy(producers.get(stage), state)
+            if marker is not None:
+                markers.append({"stage": stage, "job_id": producers.get(stage), **marker})
+    return markers
+
+
 def collect_campaign_results(
     plan_path: str | Path,
     *,
@@ -247,6 +363,7 @@ def collect_campaign_results(
     jobs = {job["id"]: job for job in plan.get("stage_jobs", []) if isinstance(job, Mapping) and isinstance(job.get("id"), str)}
     experiments = [item for item in plan.get("experiments", []) if isinstance(item, Mapping)]
     identities: dict[tuple[Any, ...], dict[str, Any]] = {}
+    exploratory_sources: list[dict[str, Any]] = []
     for experiment in experiments:
         key = tuple(experiment.get(name) for name in ("dataset", "protocol", "k", "seed"))
         if any(value is None for value in key):
@@ -256,7 +373,13 @@ def collect_campaign_results(
             "teacher_dev_fg_dice": None, "teacher_dev_per_class": None,
             "teacher_status": "NOT_RUN", "c0_dev_fg_dice": None,
             "c0_status": "NOT_RUN", "delta_c0_minus_teacher": None,
+            "teacher_exploratory": False, "c0_exploratory": False, "exploratory": False,
         })
+        # A waived V1/C1 run still makes this campaign row exploratory when
+        # its reused T is strict and C0 has not run yet.
+        experiment_markers = _experiment_exploratory(experiment, state, ("T", "Q", "P", "J"))
+        row["exploratory"] = bool(row["exploratory"] or experiment_markers)
+        exploratory_sources.extend(experiment_markers)
         if experiment.get("setting") == "c0":
             score = _selected_c0_score(
                 experiment, jobs, state,
@@ -265,6 +388,10 @@ def collect_campaign_results(
             if score is not None:
                 row["c0_dev_fg_dice"] = score
                 row["c0_status"] = "MEASURED"
+                markers = _experiment_exploratory(experiment, state, ("T", "Q", "P", "J"))
+                if markers:
+                    row["c0_exploratory"] = True
+                    exploratory_sources.extend(markers)
         if experiment.get("setting") in {"v1", "v1u", "c1", "teacher_supervised"}:
             score, quality, status = _teacher_quality_for_experiment(
                 experiment, jobs, state,
@@ -274,18 +401,33 @@ def collect_campaign_results(
                 row["teacher_dev_fg_dice"] = score
                 row["teacher_dev_per_class"] = quality.get("teacher_dev_per_class") if quality else None
                 row["teacher_status"] = status
+                markers = _experiment_exploratory(experiment, state, ("T",)) if status == "MEASURED" else []
+                row["teacher_exploratory"] = bool(markers)
+                exploratory_sources.extend(markers)
     rows = []
     for row in identities.values():
+        row["exploratory"] = bool(row["exploratory"] or row["teacher_exploratory"] or row["c0_exploratory"])
         if row["teacher_status"] == "MEASURED" and row["c0_status"] == "MEASURED":
             row["delta_c0_minus_teacher"] = row["c0_dev_fg_dice"] - row["teacher_dev_fg_dice"]
         rows.append(row)
     rows.sort(key=lambda row: (str(row["dataset"]), str(row["protocol"]), int(row["k"]), int(row["seed"])))
-    return {
+    report = {
         "schema": "self_audit.candidate_q3d.campaign_results.v1",
         "status": "MEASURED" if any(row["teacher_status"] == "MEASURED" or row["c0_status"] == "MEASURED" for row in rows) else "NOT_RUN",
         "join_key": ["dataset", "protocol", "k", "seed"],
         "rows": rows,
+        "exploratory": any(row["exploratory"] for row in rows),
     }
+    if report["exploratory"]:
+        unique: dict[str, dict[str, Any]] = {}
+        for item in exploratory_sources:
+            unique.setdefault(str(item["job_id"]), item)
+        report["exploratory_policy"] = (
+            "EXPLORATORY_QUALITY_GATES_WAIVED: gate measurements remain NO_GO/false; "
+            "scores are not normal contract evidence"
+        )
+        report["exploratory_sources"] = [unique[key] for key in sorted(unique)]
+    return report
 
 
 def write_campaign_results(report: Mapping[str, Any], out_dir: str | Path) -> dict[str, str]:
@@ -297,6 +439,13 @@ def write_campaign_results(report: Mapping[str, Any], out_dir: str | Path) -> di
     json_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     fields = ["dataset", "protocol", "k", "seed", "teacher_dev_fg_dice", "teacher_status",
               "c0_dev_fg_dice", "c0_status", "delta_c0_minus_teacher", "teacher_dev_per_class"]
+    exploratory = bool(report.get("exploratory")) or any(
+        isinstance(row, Mapping) and row.get("exploratory") for row in report.get("rows", [])
+    )
+    if exploratory:
+        # Strict reports keep the historical header byte-for-byte; waived
+        # reports append explicit markers so no row can be read as normal.
+        fields = [*fields, "exploratory", "teacher_exploratory", "c0_exploratory"]
     csv_path = output / "RESULTS.csv"
     with csv_path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
@@ -309,13 +458,22 @@ def write_campaign_results(report: Mapping[str, Any], out_dir: str | Path) -> di
     lines = [
         "# Q3D campaign results", "",
         "Scores are selected validation metrics only; missing artifacts remain `NOT_RUN`.", "",
+        *([
+            "**EXPLORATORY: quality gates were explicitly waived. Gate measurements remain NO_GO; "
+            "rows marked `exploratory` are not normal contract evidence.**", "",
+        ] if exploratory else []),
         "| dataset | protocol | K | seed | teacher val FG Dice@K | teacher status | C0 val FG Dice@K | C0 status | C0 - teacher |",
         "|---|---:|---:|---:|---:|---|---:|---|---:|",
     ]
+    if exploratory:
+        lines[-2] = lines[-2][:-2] + " | evidence |"
+        lines[-1] = lines[-1] + "---|"
     for row in report.get("rows", []):
         values = [row.get("dataset"), row.get("protocol"), row.get("k"), row.get("seed"),
                   row.get("teacher_dev_fg_dice"), row.get("teacher_status"),
                   row.get("c0_dev_fg_dice"), row.get("c0_status"), row.get("delta_c0_minus_teacher")]
+        if exploratory:
+            values.append("EXPLORATORY" if row.get("exploratory") else "")
         lines.append("| " + " | ".join("" if value is None else str(value) for value in values) + " |")
     md_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return {"json": str(json_path), "csv": str(csv_path), "markdown": str(md_path)}
@@ -331,6 +489,7 @@ def execute_shared_campaign(
     device: str,
     runner: Any,
     api: Any,
+    exploratory_quality_waiver: str | None = None,
 ) -> dict[str, Any]:
     """Run each needed producer once, then launch only each selected J stage.
 
@@ -338,7 +497,12 @@ def execute_shared_campaign(
     producers can be reused across later setting selections only after their
     stored manifest SHA and every recursive checkpoint dependency revalidate.
     Interrupted/failed jobs require an explicit recovery outside this launcher.
+
+    ``exploratory_quality_waiver`` (default ``None``: strict) forwards the
+    explicit operator reason to every launched trainer command. Reusing or
+    importing any exploratory producer artifact requires that reason again.
     """
+    waiver_policy = exploratory_waiver_policy(exploratory_quality_waiver)
     synthetic = bool(plan["selection"]["synthetic"])
     if not synthetic and device != "cuda":
         raise ValueError("real campaign execution requires explicit CUDA")
@@ -402,7 +566,11 @@ def execute_shared_campaign(
         if job["readiness"] != ("SMOKE_READY" if synthetic else "READY"):
             raise ValueError(f"execution blocked for {job_id}: {job['reason']}")
         if status == "COMPLETED" and job.get("artifact_output"):
-            _verified_output(job, pinned_sha=state["jobs"][job_id]["artifact"]["sha256"])
+            reused = _verified_output(job, pinned_sha=state["jobs"][job_id]["artifact"]["sha256"])
+            _require_waiver_for(exploratory_marker(reused), waiver_policy, f"completed shared stage {job_id}")
+        if status == "COMPLETED":
+            _require_waiver_for(_job_exploratory_policy(job_id, state), waiver_policy,
+                                f"completed shared stage {job_id}")
 
     runtime_configs: dict[str, Path] = {}
     fixture_refs = state.setdefault("synthetic_cohorts", {})
@@ -444,15 +612,21 @@ def execute_shared_campaign(
             if upstream_state["status"] != "COMPLETED":
                 raise ValueError("shared dependency has not completed")
             artifact = _verified_output(jobs[upstream_id], pinned_sha=upstream_state["artifact"]["sha256"])
+            _require_waiver_for(exploratory_marker(artifact), waiver_policy, f"imported stage artifact {upstream_id}")
             if Path(reference["path"]).resolve() != Path(artifact["path"]):
                 raise ValueError("planned shared dependency path changed")
             inputs[stage], pins[stage] = artifact["path"], artifact["sha256"]
+        waiver_kwargs = (
+            {"exploratory_quality_waiver": waiver_policy["reason"]}
+            if waiver_policy is not None and job["method"] == "candidate_q3d" else {}
+        )
         command = api._job_command(
             experiment, config_path=config_path,
             train_ref=job["train_manifest"], dev_ref=job["development_manifest"],
             device=device, synthetic=synthetic,
             stage=job["stage"] if job["method"] == "candidate_q3d" else None,
             stage_artifacts=inputs,
+            **waiver_kwargs,
         )
         for stage, digest in sorted(pins.items()):
             command.extend(["--q3d-stage-artifact-sha", f"{stage}={digest}"])
@@ -463,6 +637,8 @@ def execute_shared_campaign(
             "status": "RUNNING", "command": command, "exit_code": None,
             "input_manifest_sha256": pins,
         }
+        if waiver_kwargs:
+            state["jobs"][job_id]["exploratory_quality_waiver_requested"] = copy.deepcopy(waiver_policy)
         api._write_json(state_path, state)
         try:
             result = runner(command, cwd=api.ROOT, check=False, capture_output=True, text=True)
@@ -483,6 +659,12 @@ def execute_shared_campaign(
                 raise RuntimeError(
                     f"real campaign rejected a synthetic receipt: {job_id}"
                 )
+            receipt_marker = exploratory_marker(receipt)
+            if receipt_marker is not None and not waiver_kwargs:
+                raise RuntimeError(
+                    f"trainer returned an exploratory receipt without an explicit waiver: {job_id}"
+                )
+            _require_waiver_for(receipt_marker, waiver_policy, f"trainer receipt {job_id}")
             reported = receipt.get("completed_stages", [])
             if experiment.get("arm") == "a3d_teacher_free" or job["method"] != "candidate_q3d":
                 reported = reported or ["J"]
@@ -495,6 +677,16 @@ def execute_shared_campaign(
             })
             if job.get("artifact_output"):
                 record["artifact"] = _verified_output(job)
+                artifact_marker = exploratory_marker(record["artifact"])
+                if artifact_marker is not None and not waiver_kwargs:
+                    raise RuntimeError(
+                        f"trainer produced an exploratory artifact without an explicit waiver: {job_id}"
+                    )
+                _require_waiver_for(artifact_marker, waiver_policy, f"produced artifact {job_id}")
+                receipt_marker = receipt_marker or artifact_marker
+            if receipt_marker is not None:
+                record["exploratory"] = True
+                record["exploratory_quality_waiver"] = receipt_marker["policy"] or copy.deepcopy(waiver_policy)
         except Exception as exc:
             state["jobs"][job_id].update({"status": "FAILED", "error": str(exc)})
             api._write_json(state_path, state)
@@ -524,10 +716,16 @@ def execute_shared_campaign(
             "completed_stages": completed_stages, "stage_artifacts": artifact_refs,
             "evaluation": "NOT_RUN", "baseline_reuse": experiment.get("baseline_reuse"),
         }
+        experiment_markers = [
+            job["id"] for job in experiment_jobs if _job_exploratory_policy(job["id"], state) is not None
+        ]
+        if experiment_markers:
+            state["experiments"][experiment["id"]]["exploratory"] = True
+            state["experiments"][experiment["id"]]["exploratory_jobs"] = experiment_markers
     api._write_json(state_path, state)
     results = collect_campaign_results(plan_path, plan=plan, state=state)
     result_paths = write_campaign_results(results, plan_path.parent / "results")
-    return {
+    summary = {
         "status": "COMPLETED" if len(completed_settings) == len(selected) else "PARTIAL",
         "plan": str(plan_path), "run_state": str(state_path),
         "selected_settings": [item["id"] for item in selected],
@@ -537,3 +735,7 @@ def execute_shared_campaign(
         "results": result_paths,
         "patient_training": "SYNTHETIC_ONLY" if synthetic else "EXECUTED",
     }
+    if waiver_policy is not None or results.get("exploratory"):
+        summary["exploratory"] = True
+        summary["exploratory_quality_waiver"] = copy.deepcopy(waiver_policy)
+    return summary

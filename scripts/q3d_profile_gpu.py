@@ -79,6 +79,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--device", default="cuda:0", help="CUDA device used for both stages")
     parser.add_argument("--allow-real-profile", action="store_true",
                         help="explicitly authorize the bounded real-data GPU profile")
+    parser.add_argument("--q3d-exploratory-quality-waiver", metavar="REASON", default=None,
+                        help="explicit exploratory opt-in: accept quality-gate-waived T/Q/P artifacts and "
+                             "forward the reason to the engine; the report is marked exploratory "
+                             "(default: strict)")
     return parser
 
 
@@ -105,6 +109,7 @@ def main(argv: list[str] | None = None) -> int:
             device=args.device,
             allow_real_profile=args.allow_real_profile,
             measured_stages=measured_stages,
+            exploratory_quality_waiver=args.q3d_exploratory_quality_waiver,
         )
     except ProfilePrerequisiteError as exc:
         print(f"Q3D Phase D NOT_RUN: {exc}", file=sys.stderr)
@@ -114,6 +119,7 @@ def main(argv: list[str] | None = None) -> int:
         "evidence_status": report.get("evidence_status"),
         "report": str(Path(args.report).expanduser().resolve()),
         "failure": report.get("failure"),
+        **({"exploratory": True} if report.get("exploratory") else {}),
     }, sort_keys=True))
     return 0 if report.get("status") == "COMPLETED" else 2
 

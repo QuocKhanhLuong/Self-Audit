@@ -44,11 +44,14 @@ def _load_input(path: str | Path) -> tuple[torch.Tensor, dict]:
 
 
 def infer(artifact_path: str | Path, input_path: str | Path, output_path: str | Path, *,
-          device: str = "cpu", expected_artifact_sha256: str | None = None) -> dict:
+          device: str = "cpu", expected_artifact_sha256: str | None = None,
+          exploratory_quality_waiver: str | None = None) -> dict:
     if device.startswith("cuda") and not torch.cuda.is_available():
         raise RuntimeError("CUDA was requested but is unavailable; no device fallback is allowed")
     model, metadata = load_export(
-        artifact_path, expected_sha256=expected_artifact_sha256, device=device
+        artifact_path, expected_sha256=expected_artifact_sha256, device=device,
+        **({"exploratory_quality_waiver": exploratory_quality_waiver}
+           if exploratory_quality_waiver is not None else {}),
     )
     image, geometry = _load_input(input_path)
     with torch.inference_mode():
@@ -60,6 +63,9 @@ def infer(artifact_path: str | Path, input_path: str | Path, output_path: str | 
     mask = logits_np.argmax(axis=0).astype(np.uint8)
     target = Path(output_path).resolve()
     target.parent.mkdir(parents=True, exist_ok=True)
+    exploratory = {key: metadata[key] for key in (
+        "exploratory", "exploratory_quality_waiver", "measured_quality_gates",
+    ) if key in metadata}
     with target.open("wb") as stream:
         np.savez_compressed(
             stream,
@@ -70,10 +76,13 @@ def infer(artifact_path: str | Path, input_path: str | Path, output_path: str | 
             affine_zyx=np.asarray(geometry["affine_zyx"], dtype=np.float64),
             context=np.asarray(geometry["context"]),
             class_mapping=np.asarray(json.dumps({"0": "BG", "1": "RV", "2": "MYO", "3": "LV"})),
+            **({"exploratory_metadata": np.asarray(json.dumps(exploratory, allow_nan=False))}
+               if exploratory else {}),
         )
     output_sha = hashlib.sha256(target.read_bytes()).hexdigest()
     return {"output": str(target), "sha256": output_sha, "shape": list(mask.shape),
             "artifact_sha256": metadata["artifact_sha256"], "device": device,
+            **exploratory,
             "evidence_status": "INFERENCE_ONLY_NO_LABELS_READ"}
 
 
@@ -84,9 +93,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output", required=True, help="output NPZ path")
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--artifact-sha256")
+    parser.add_argument("--q3d-exploratory-quality-waiver", metavar="REASON",
+                        help="exact explicit reason recorded in an exploratory artifact")
     args = parser.parse_args(argv)
     result = infer(args.artifact, args.input, args.output, device=args.device,
-                   expected_artifact_sha256=args.artifact_sha256)
+                   expected_artifact_sha256=args.artifact_sha256,
+                   **({"exploratory_quality_waiver": args.q3d_exploratory_quality_waiver}
+                      if args.q3d_exploratory_quality_waiver is not None else {}))
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0
 

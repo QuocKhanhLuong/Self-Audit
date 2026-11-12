@@ -4,6 +4,8 @@ Nov 11, 2026 · Alvin · bản gốc có thể sửa: [Claude Doc](https://claud
 
 val = development set cũ (DEV18); key nội bộ giữ tên development.
 
+**[AMEND — exploratory, 2026-11-12]** Người dùng yêu cầu tiếp tục toàn bộ pipeline dù không đạt các gate chất lượng. Lượt chạy có `--q3d-exploratory-quality-waiver REASON` ghi rõ exploratory trong checkpoint, stage artifact, kết quả và export; mọi số đo/gate `NO_GO` vẫn giữ nguyên, không đổi thành `PASS`. Chính sách này áp dụng cho gate tokenizer (§5), support/ESS sinh lý (§8), và thiếu support KD (§7); mặc định không có flag vẫn dừng theo hợp đồng strict. Nếu mean w_pat dương nhưng ESS thấp, tiếp tục với trọng số tương đối chuẩn hóa đã đo; nếu mean bằng 0, dùng omega = 1 và ghi rõ fallback đồng đều. Nhánh KD không có support trả loss 0 và ghi nhận, không chặn toàn bộ J. Giữ dữ liệu, split, SHA, provenance, số update và các kiểm tra hữu hạn/hình học; không dùng thêm GT. Resume/import phải cung cấp đúng lý do waiver đã lưu. Kết quả exploratory không được gộp thành bằng chứng đã đạt thiết kế strict.
+
 ## 1. Phạm vi và quyết định đã chốt
 
 Q-3D là một candidate mới, nằm cạnh A-3D, theo hợp đồng **chỉ student chạy khi deploy**. Teacher nnFoundationCNN ResEnc-L hai nhánh chỉ dùng lúc train. Tri thức truyền qua một codebook chung được neo theo teacher (codeKD) trên ảnh không nhãn, có trọng số theo độ nhất quán sinh lý. Student là UNETR++ rút gọn, giữ đường dense cho biên.
@@ -407,6 +409,8 @@ Nguồn nội bộ: atlas `teacher_student_paper_architecture_vi.pdf`; ghi chú 
 
 
 ## Lịch sử thay đổi 2026-11-12
+
+**[AMEND] Tiếp tục exploratory theo yêu cầu người dùng:** các gate chất lượng không chặn full T/Q/P/J khi có waiver tường minh; giữ nguyên gate fail và ghi từng fallback như mô tả đầu spec. K8 T đã hoàn tất 8.000 update; Q tại 1.000 update có perplexity 20,8747, dead-code fraction 0,6328125, coverage RV/MYO/LV = 3/0/5 nên strict `NO_GO`. Lượt tiếp tục dùng checkpoint Q đó, không huấn luyện lại T/Q. Thứ tự K8 → K5 → K10 → ablation K8 giữ nguyên; giám sát tự động mỗi 7 phút. Đây là amendment sau khi đã thấy gate fail, phải được công khai trong báo cáo.
 
 **[AMEND] Theo yêu cầu log từng epoch:** thêm quan sát per-class VAL ở §9, T mỗi 2K update và J mỗi vòng U, giữ lịch chọn checkpoint 400 update. Áp dụng tiếp từ checkpoint có SHA bằng quy trình recovery tường minh; log lịch sử trước amendment giữ nguyên, mọi đoạn replay phải được lưu riêng và ghi nhận. Thay đổi này không đổi config/manifest/optimizer hay ngưỡng.
 

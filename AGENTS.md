@@ -68,6 +68,14 @@ real run. An explicitly synthetic smoke may continue through P/J using the
 engine's smoke-only override, but it must report the measured gate result and
 the override; the override must be unreachable for real configs.
 
+Explicit user amendment (2026-11-12): an opt-in
+`--q3d-exploratory-quality-waiver REASON` may continue the full real pipeline
+through failed tokenizer, physiology-support, and zero-KD-support quality gates.
+Keep the measured gate failures, record each waiver/fallback, and label the run,
+stage artifacts and export exploratory. The default remains strict. This policy
+does not alter data identity, provenance, finite-value, shape, or no-GT contracts.
+Resume/import requires the same explicit waiver reason.
+
 Q3D teacher is nnFoundationCNN ResEnc-L with a strict pretrained encoder and
 new decoder/heads. Only this teacher uses full-volume z-score; native geometry
 and the student input contract stay unchanged. No random-weight fallback.

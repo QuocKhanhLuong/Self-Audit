@@ -23,7 +23,10 @@ from self_audit.candidate_q3d.export import (  # noqa: E402
 def export(checkpoint: str | Path, output: str | Path, *, checkpoint_sha256: str | None = None,
            config_path: str | Path | None = None,
            code_commit: str | None = None, cost_report_path: str | Path | None = None,
-           verify_volumes: list[str] | None = None) -> dict:
+           verify_volumes: list[str] | None = None,
+           exploratory_quality_waiver: str | None = None) -> dict:
+    waiver_kwargs = ({"exploratory_quality_waiver": exploratory_quality_waiver}
+                     if exploratory_quality_waiver is not None else {})
     cost_report = None
     if cost_report_path is not None:
         cost_report = json.loads(Path(cost_report_path).read_text())
@@ -47,10 +50,14 @@ def export(checkpoint: str | Path, output: str | Path, *, checkpoint_sha256: str
             raise ValueError("profiled Q-3D artifact provenance differs from the requested checkpoint/config")
         model, artifact_metadata = load_export(
             artifact_path, expected_sha256=cost_report["artifact_sha256"], device="cpu",
+            **waiver_kwargs,
         )
         if (artifact_metadata.get("source_checkpoint_sha256") != source_checkpoint_sha256
                 or artifact_metadata.get("source_config_sha256") != source_config_sha256):
             raise ValueError("profiled Q-3D artifact metadata provenance mismatch")
+        for key in ("exploratory", "exploratory_quality_waiver", "measured_quality_gates"):
+            if manifest.get(key) != artifact_metadata.get(key):
+                raise ValueError("profiled Q-3D manifest exploratory metadata differs from artifact")
         if code_commit is not None:
             manifest["code_commit"] = code_commit
         parameters = int(sum(parameter.numel() for parameter in model.parameters()))
@@ -67,12 +74,13 @@ def export(checkpoint: str | Path, output: str | Path, *, checkpoint_sha256: str
         artifact_path, manifest, model = export_checkpoint(
             checkpoint, output, expected_checkpoint_sha256=checkpoint_sha256,
             config_path=config_path, code_commit=code_commit,
+            **waiver_kwargs,
         )
         if cost_report is not None and cost_report["artifact_sha256"] != manifest["artifact_sha256"]:
             raise ValueError(
                 "cost report is for other artifact bytes; profile the newly exported artifact and retry"
             )
-    cold_load = verify_cold_load(model, artifact_path, verify_volumes or [])
+    cold_load = verify_cold_load(model, artifact_path, verify_volumes or [], **waiver_kwargs)
     manifest["cold_load"] = cold_load
     _write_json_atomic(manifest_path, manifest)
     return manifest
@@ -85,6 +93,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--checkpoint-sha256")
     parser.add_argument("--config", help="exact JSON recipe for a Q-3D engine resume checkpoint")
     parser.add_argument("--code-commit")
+    parser.add_argument("--q3d-exploratory-quality-waiver", metavar="REASON",
+                        help="exact explicit reason recorded in an exploratory checkpoint")
     parser.add_argument("--cost-report", help="q3d_profile.py JSON for this artifact")
     parser.add_argument("--verify-volume", action="append", default=[],
                         help="native NPZ input; supply exactly three to verify cold-load parity")
@@ -92,7 +102,9 @@ def main(argv: list[str] | None = None) -> int:
     result = export(args.checkpoint, args.output, checkpoint_sha256=args.checkpoint_sha256,
                     config_path=args.config,
                     code_commit=args.code_commit, cost_report_path=args.cost_report,
-                    verify_volumes=args.verify_volume)
+                    verify_volumes=args.verify_volume,
+                    **({"exploratory_quality_waiver": args.q3d_exploratory_quality_waiver}
+                       if args.q3d_exploratory_quality_waiver is not None else {}))
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0
 

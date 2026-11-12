@@ -39,6 +39,16 @@ from .losses import (
     student_supervised_loss,
     weighted_class_balanced_reduce,
 )
+from .quality import (
+    WAIVER_EVENTS_KEY,
+    WAIVER_STATE_KEY,
+    bind_quality_waiver,
+    exploratory_relative_omega,
+    quality_waiver,
+    record_waiver_event,
+    waiver_covers,
+    waiver_from_state,
+)
 
 
 _CLASS_NAMES = ("BG", "RV", "MYO", "LV")
@@ -1539,6 +1549,38 @@ def _freeze_tokenizer_for_synthetic_override(
     }
 
 
+def _freeze_tokenizer_for_exploratory_waiver(
+    tokenizer: nn.Module, actual_gate: Mapping[str, Any], policy: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Freeze A_T/C0 after a failed measured gate under an explicit waiver.
+
+    The measured gate is copied verbatim (still ``passed=False``); the
+    returned artifact metadata names the waiver so no consumer can read it
+    as a PASS.
+    """
+
+    if not bool(getattr(tokenizer, "codebook_initialized", False)):
+        raise RuntimeError("exploratory tokenizer waiver cannot freeze an uninitialized codebook")
+    if actual_gate.get("status") == "PASS" or actual_gate.get("passed") is not False:
+        raise ValueError("exploratory tokenizer waiver is only valid when the measured gate failed")
+    if not hasattr(tokenizer, "is_frozen"):
+        raise TypeError("exploratory tokenizer waiver requires the canonical TeacherTokenizer API")
+    tokenizer.is_frozen.fill_(True)
+    if hasattr(tokenizer, "reconstructor"):
+        tokenizer.reconstructor = None
+    if hasattr(tokenizer, "anatomy_head"):
+        tokenizer.anatomy_head = None
+    tokenizer.requires_grad_(False)
+    tokenizer.eval()
+    metadata = tokenizer.artifact_metadata()
+    return {
+        **metadata,
+        "gate": copy.deepcopy(dict(actual_gate)),
+        "exploratory_quality_waiver": copy.deepcopy(dict(policy)),
+        "exploratory": True,
+    }
+
+
 def _run_tokenizer_stage(
     config: Mapping[str, Any],
     *,
@@ -1750,7 +1792,33 @@ def _run_tokenizer_stage(
         _record_metric(state, output_dir / "metrics.jsonl", {
             "stage": stage, "event": "synthetic_gate_override", "original_gate": gate,
         })
-    if not gate.get("passed") and not state["synthetic_gate_override_used"]:
+    waiver_policy = waiver_from_state(state)
+    exploratory_waiver_used = bool(
+        not gate.get("passed")
+        and not state["synthetic_gate_override_used"]
+        and waiver_covers(state, "tokenizer_gate")
+    )
+    state["exploratory_tokenizer_waiver_used"] = exploratory_waiver_used
+    if exploratory_waiver_used:
+        assert waiver_policy is not None
+        state["gate_override"] = {
+            "status": "EXPLORATORY_QUALITY_WAIVER",
+            "continuation_allowed": True,
+            "evidence_scope": (
+                "SOFTWARE_ONLY_SYNTHETIC" if bool(config["runtime"]["synthetic"])
+                else "EXPLORATORY_TRAIN_EXECUTION"
+            ),
+            "original_gate": copy.deepcopy(gate),
+            "waiver": copy.deepcopy(waiver_policy),
+        }
+        event = record_waiver_event(state, {
+            "event": "tokenizer_gate_waived", "stage": stage,
+            "measured_gate": copy.deepcopy(gate),
+        })
+        _record_metric(state, output_dir / "metrics.jsonl", {
+            "stage": stage, **event,
+        })
+    if not gate.get("passed") and not state["synthetic_gate_override_used"] and not exploratory_waiver_used:
         _capture_run_state(
             state, teacher=teacher, student=student, tokenizer=tokenizer, ema_model=ema_model,
             spatial_rng=spatial_rng, intensity_generator=intensity_generator, stage_rng=stage_rng,
@@ -1761,10 +1829,13 @@ def _run_tokenizer_stage(
         raise RuntimeError(f"Q-3D tokenizer gate failed; joint stage stopped: {gate}")
     if state.get("synthetic_gate_override_used"):
         freeze_result = _freeze_tokenizer_for_synthetic_override(tokenizer, gate)
+    elif exploratory_waiver_used:
+        assert waiver_policy is not None
+        freeze_result = _freeze_tokenizer_for_exploratory_waiver(tokenizer, gate, waiver_policy)
     else:
         freeze_result = tokenizer.freeze()
     if not tokenizer.codebook_frozen:
-        raise RuntimeError("Q-3D tokenizer failed to freeze after passing its gate")
+        raise RuntimeError("Q-3D tokenizer failed to freeze after its gate decision")
     if getattr(student, "use_vq", False):
         student.install_codebook({"codes": tokenizer.C0.detach(), **tokenizer.artifact_metadata()})
     state["tokenizer_artifact"] = freeze_result
@@ -1954,7 +2025,17 @@ def _cohort_weighting_metadata(
         and state.get("synthetic_gate_override_requested") is True
     )
     override_used = bool(override_allowed and all_zero and not gate_passed)
-    if gate_passed:
+    exploratory = None
+    if not gate_passed and not override_used and waiver_covers(state, "physiology_support"):
+        exploratory = exploratory_relative_omega(w_pat, policy_arm)
+    if exploratory is not None:
+        emitted = {str(patient): float(value) for patient, value in exploratory["omega"].items()}
+        mean_omega = float(exploratory["mean_omega"])
+        max_omega = float(exploratory["max_omega"])
+        zero_fraction = float(exploratory["zero_fraction"])
+        override_used = True
+        override_policy = f"exploratory_{exploratory['fallback']}"
+    elif gate_passed:
         emitted = {str(patient): float(value) for patient, value in computed["omega"].items()}
         mean_omega = float(computed["mean_omega"])
         max_omega = float(computed["max_omega"])
@@ -1986,7 +2067,11 @@ def _cohort_weighting_metadata(
         "ess": float(raw["ess"]),
         "ess_fraction": float(raw["ess_fraction"]),
         "override_used": override_used,
-        "override_scope": "synthetic_smoke_only" if override_used else None,
+        "override_scope": (
+            "exploratory_quality_waiver" if exploratory is not None
+            else ("synthetic_smoke_only" if override_used else None)
+        ),
+        "override_policy": override_policy,
         "gate_error": gate_error,
     }
     metadata = {
@@ -2007,6 +2092,7 @@ def _cohort_weighting_metadata(
         "gate_passed": gate_passed,
         "override_used": override_used,
         "override_policy": override_policy,
+        "override_scope": gate["override_scope"],
     }
     existing = state.get("physiology_cohort_weighting")
     if require_existing:
@@ -2134,8 +2220,18 @@ def _require_positive_u_physiology_support(
     assert metadata is not None
     gate = copy.deepcopy(metadata["gate"])
     state.setdefault("physiology_support_gates", []).append(gate)
-    if gate["override_used"]:
+    if gate["override_used"] and gate.get("override_scope") == "synthetic_smoke_only":
         state["synthetic_gate_override_used"] = True
+    if gate.get("override_scope") == "exploratory_quality_waiver":
+        record_waiver_event(state, {
+            "event": "physiology_support_waived", "context": context,
+            "status": gate["status"], "passed": gate["passed"],
+            "fallback": metadata["override_policy"],
+            "mean_w_pat": gate["mean_w_pat"], "ess": gate["ess"],
+            "ess_fraction": gate["ess_fraction"],
+            "mean_omega": metadata["mean_omega"], "max_omega": metadata["max_omega"],
+            "zero_fraction": metadata["zero_fraction"],
+        })
     return gate
 
 
@@ -2833,7 +2929,9 @@ def _run_joint_stage(
                     # O1 may refresh after this update. The completed cycle
                     # must report the weights its frames actually consumed.
                     u_cycle_weighting = copy.deepcopy(state.get("physiology_cohort_weighting"))
-                    if (not is_o1 and u_cycle_weighting["gate_passed"]
+                    if (not is_o1 and (u_cycle_weighting["gate_passed"]
+                                       or u_cycle_weighting.get("override_scope")
+                                       == "exploratory_quality_waiver")
                             and not math.isclose(u_cycle_record["realized_mean_omega"], 1.0,
                                                  rel_tol=0.0, abs_tol=1e-12)):
                         raise RuntimeError("complete frozen U permutation must have realized_mean_omega = 1")
@@ -3126,7 +3224,16 @@ def _run_joint_stage(
             return cursor
 
     if wants_distillation and int(state.get("j_kd_supported_branches", 0)) == 0:
-        raise RuntimeError("Q-3D global KD collapse: no labeled or unlabeled branch had positive distillation support")
+        if not waiver_covers(state, "kd_support"):
+            raise RuntimeError(
+                "Q-3D global KD collapse: no labeled or unlabeled branch had positive distillation support"
+            )
+        state["exploratory_zero_distillation"] = True
+        event = record_waiver_event(state, {
+            "event": "kd_support_waived_zero_distillation", "stage": stage,
+            "j_kd_supported_branches": 0, "optimizer_updates": int(state.get("j_optimizer_updates", 0)),
+        })
+        _record_metric(state, output_dir / "metrics.jsonl", {"stage": stage, **event})
     if state.get("best_student_state") is None:
         raise RuntimeError("Q-3D joint stage completed without a VAL-selected student checkpoint")
     student.load_state_dict(state["best_student_state"], strict=True)
@@ -3266,8 +3373,15 @@ def run_training(
     dev_evaluator=None,
     stage: str | None = None,
     stage_artifacts: Mapping[str, str] | None = None,
+    exploratory_quality_waiver: str | None = None,
 ) -> dict[str, Any]:
     """Execute the configured Q-3D stages with hash-bound exact resume.
+
+    ``exploratory_quality_waiver`` is an explicit, nonempty reason that lets a
+    run continue past the tokenizer gate, U physiology support gate and global
+    KD-support stop.  Measured gates are never rewritten; every waiver use is
+    recorded.  It must be supplied again on every resume/import of waived
+    state.  ``None`` (default) keeps strict behavior.
 
     Real execution remains fail-closed on manifest, teacher-source, weight,
     and provenance validation. Synthetic runs are explicitly labeled and
@@ -3280,6 +3394,7 @@ def run_training(
     normalized = validate_config(config, real_run=not synthetic)
     if type(synthetic_gate_override) is not bool:
         raise TypeError("synthetic_gate_override must be a boolean")
+    waiver_policy = quality_waiver(exploratory_quality_waiver)
     arm = str(normalized["arm"])
     supported = {"c0", "c1", "v1", "v1u", "v0", "b1", "e1", "o1", "s1", "mean_teacher"}
     if arm not in supported:
@@ -3379,6 +3494,12 @@ def run_training(
             ]
 
     state["synthetic_gate_override_requested"] = bool(synthetic_gate_override)
+    # Bind the explicit waiver after loading state and before any stage
+    # artifact export/import reads the state's gate decisions.
+    bind_quality_waiver(
+        state, waiver_policy,
+        context="Q-3D resume" if resume_from is not None else "Q-3D run start",
+    )
     # A stage checkpoint can reach disk before its immutable artifact receipt.
     # Recover that publication boundary before proceeding to a dependent stage.
     # The exporter verifies/adopts an existing manifest and safely regenerates
@@ -3398,6 +3519,26 @@ def run_training(
         import_stage_artifacts(
             normalized, q3d_data, state, teacher, tokenizer, output, stage_artifacts,
         )
+        imported_override = state.get("gate_override")
+        if (isinstance(imported_override, Mapping)
+                and imported_override.get("status") == "EXPLORATORY_QUALITY_WAIVER"):
+            if waiver_policy is None:
+                raise RuntimeError(
+                    "imported Q artifact froze a failed tokenizer gate under an exploratory "
+                    "quality waiver; importing it requires an explicit waiver reason"
+                )
+            if imported_override.get("waiver") != waiver_policy:
+                raise RuntimeError(
+                    "imported Q artifact exploratory waiver reason differs from the supplied reason"
+                )
+            if (state.get("gate", {}) or {}).get("passed") is not False:
+                raise RuntimeError("imported exploratory Q artifact must keep its measured failed gate")
+            state["exploratory_tokenizer_waiver_used"] = True
+            record_waiver_event(state, {
+                "event": "tokenizer_gate_waiver_imported",
+                "artifact_waiver_reason": (imported_override.get("waiver") or {}).get("reason"),
+                "measured_gate": copy.deepcopy(state.get("gate")),
+            })
     if stage is not None:
         required = [item for item in stages_for_arm(arm)
                     if _STAGE_ORDER.index(item) < _STAGE_ORDER.index(stage)]
@@ -3518,6 +3659,11 @@ def run_training(
         "tokenizer": tokenizer_metadata,
         "tokenizer_gate": state.get("gate"),
         "synthetic_gate_override_used": bool(state.get("synthetic_gate_override_used", False)),
+        "exploratory": waiver_from_state(state) is not None,
+        "exploratory_quality_waiver": waiver_from_state(state),
+        "exploratory_quality_waiver_events": copy.deepcopy(list(state.get(WAIVER_EVENTS_KEY, []))),
+        "exploratory_tokenizer_waiver_used": bool(state.get("exploratory_tokenizer_waiver_used", False)),
+        "exploratory_zero_distillation": bool(state.get("exploratory_zero_distillation", False)),
         "physiology_support_gate": state.get("physiology_support_gate"),
         "physiology_support_gates": list(state.get("physiology_support_gates", [])),
         "physiology_cohort_weighting": state.get("physiology_cohort_weighting"),

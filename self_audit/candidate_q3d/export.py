@@ -22,10 +22,150 @@ import torch
 
 from self_audit.data import CLASS_MAPPING
 from . import CHECKPOINT_SCHEMA
+from .quality import (
+    WAIVER_EVENTS_KEY,
+    WAIVER_STATE_KEY,
+    quality_waiver,
+    validate_quality_waiver,
+)
 
 EXPORT_SCHEMA = "q3d.student_export.v1"
 ENGINE_RESUME_SCHEMAS = {CHECKPOINT_SCHEMA}
 _FORBIDDEN_STATE_PARTS = {"teacher", "sdf", "cache", "optimizer", "tokenizer_teacher", "physiology"}
+_WAIVER_FLAG = "--q3d-exploratory-quality-waiver"
+_EXPLORATORY_OVERRIDE_STATUS = "EXPLORATORY_QUALITY_WAIVER"
+_EXPLORATORY_METADATA_KEYS = ("exploratory", WAIVER_STATE_KEY, "measured_quality_gates")
+
+
+def _supplied_waiver(reason: str | None) -> dict[str, Any] | None:
+    try:
+        return quality_waiver(reason)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{_WAIVER_FLAG} requires a nonempty REASON string") from exc
+
+
+def _json_copy(value: Any, label: str) -> Any:
+    try:
+        return json.loads(json.dumps(value, sort_keys=True, allow_nan=False))
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"Q-3D {label} is not finite JSON metadata") from exc
+
+
+def _gate_summary(gate: Any, label: str) -> Any:
+    """Copy one measured gate verbatim, minus per-patient weight tables."""
+    if gate is None:
+        return None
+    if not isinstance(gate, Mapping):
+        raise ValueError(f"Q-3D checkpoint {label} must be a mapping")
+    return _json_copy({key: value for key, value in gate.items() if key != "patient_weights"}, label)
+
+
+def _checkpoint_exploratory(payload: Mapping[str, Any],
+                            supplied: Mapping[str, Any] | None) -> dict[str, Any] | None:
+    """Return truthful exploratory export metadata, or ``None`` for a normal checkpoint.
+
+    A waived checkpoint exports only with the exact explicit policy; measured
+    gates are copied verbatim (never rewritten to PASS) and a synthetic
+    override can never masquerade as, or be combined with, a waiver.
+    """
+    try:
+        policy = validate_quality_waiver(payload.get(WAIVER_STATE_KEY))
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"Q-3D checkpoint exploratory waiver is malformed: {exc}") from exc
+    marker = payload.get("exploratory")
+    gate = payload.get("gate")
+    override = payload.get("gate_override")
+    exploratory_override = (
+        isinstance(override, Mapping) and override.get("status") == _EXPLORATORY_OVERRIDE_STATUS
+    )
+    tokenizer_artifact = payload.get("tokenizer_artifact")
+    metadata_policy = (tokenizer_artifact.get(WAIVER_STATE_KEY)
+                       if isinstance(tokenizer_artifact, Mapping) else None)
+    if policy is None:
+        if (marker not in (None, False) or exploratory_override or metadata_policy is not None
+                or payload.get("exploratory_tokenizer_waiver_used") is True):
+            raise ValueError("Q-3D checkpoint declares an exploratory waiver without its policy")
+        if supplied is not None:
+            raise ValueError(f"{_WAIVER_FLAG} was supplied but the checkpoint is not exploratory")
+        return None
+    if marker not in (None, True):
+        raise ValueError("Q-3D checkpoint carries a waiver but is marked exploratory=false")
+    if supplied is None:
+        raise RuntimeError(
+            "Q-3D checkpoint was trained under an exploratory quality waiver; export requires "
+            f"the same explicit {_WAIVER_FLAG} REASON"
+        )
+    if dict(supplied) != policy:
+        raise RuntimeError("Q-3D checkpoint exploratory waiver differs from the supplied REASON")
+    if payload.get("synthetic_gate_override_used") is True or (
+        isinstance(override, Mapping) and override.get("status") == "SYNTHETIC_TEST_OVERRIDE"
+    ):
+        raise ValueError("Q-3D checkpoint cannot combine the synthetic override and a waiver")
+    if isinstance(gate, Mapping) and gate.get("passed") is False:
+        if isinstance(tokenizer_artifact, Mapping) and tokenizer_artifact.get("frozen") is True:
+            if (
+                not exploratory_override
+                or override.get("original_gate") != dict(gate)
+                or override.get("waiver") != policy
+                or metadata_policy != policy
+                or tokenizer_artifact.get("exploratory") is not True
+                or tokenizer_artifact.get("gate") != dict(gate)
+                or tokenizer_artifact.get("initialized") is not True
+            ):
+                raise ValueError(
+                    "Q-3D waived checkpoint tokenizer metadata does not record the measured "
+                    "failed gate and the exact waiver"
+                )
+    elif isinstance(gate, Mapping) and gate.get("passed") is True:
+        if exploratory_override or metadata_policy is not None or gate.get("status") not in (None, "PASS"):
+            raise ValueError("Q-3D checkpoint tokenizer gate claims PASS inconsistently with a waiver")
+    gates = payload.get("physiology_support_gates", [])
+    if not isinstance(gates, (list, tuple)):
+        raise ValueError("Q-3D checkpoint physiology_support_gates must be a list")
+    measured = {
+        "tokenizer_gate": _gate_summary(gate, "tokenizer gate"),
+        "physiology_support_gate": _gate_summary(
+            payload.get("physiology_support_gate"), "physiology support gate"),
+        "physiology_support_gates": [
+            _gate_summary(item, "physiology support gate") for item in gates
+        ],
+        "kd_support": _json_copy({
+            "j_kd_supported_branches": payload.get("j_kd_supported_branches"),
+            "exploratory_zero_distillation": payload.get("exploratory_zero_distillation"),
+        }, "KD support"),
+    }
+    return {
+        "exploratory": True,
+        WAIVER_STATE_KEY: copy.deepcopy(policy),
+        "measured_quality_gates": measured,
+        "events": _json_copy(list(payload.get(WAIVER_EVENTS_KEY, []) or []), "waiver events"),
+    }
+
+
+def _artifact_exploratory(metadata: Mapping[str, Any],
+                          supplied: Mapping[str, Any] | None) -> dict[str, Any] | None:
+    """Validate a deploy artifact's exploratory declaration against the explicit policy."""
+    try:
+        policy = validate_quality_waiver(metadata.get(WAIVER_STATE_KEY))
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"Q-3D artifact exploratory waiver is malformed: {exc}") from exc
+    marker = metadata.get("exploratory")
+    if policy is None:
+        if marker not in (None, False) or "measured_quality_gates" in metadata:
+            raise ValueError("Q-3D artifact declares exploratory metadata without its waiver policy")
+        if supplied is not None:
+            raise ValueError(f"{_WAIVER_FLAG} was supplied but the artifact is not exploratory")
+        return None
+    if marker is not True or not isinstance(metadata.get("measured_quality_gates"), Mapping):
+        raise ValueError("Q-3D exploratory artifact lacks exploratory=True or its measured gates")
+    if supplied is None:
+        raise RuntimeError(
+            "Q-3D artifact is exploratory (quality gates waived); loading it requires the same "
+            f"explicit {_WAIVER_FLAG} REASON"
+        )
+    if dict(supplied) != policy:
+        raise RuntimeError("Q-3D artifact exploratory waiver differs from the supplied REASON")
+    return policy
 
 
 def _sha256_file(path: str | Path) -> str:
@@ -322,8 +462,11 @@ def export_checkpoint(checkpoint_path: str | Path, output_path: str | Path, *,
                       expected_checkpoint_sha256: str | None = None,
                       config_path: str | Path | None = None,
                       code_commit: str | None = None,
-                      cost_report: Mapping[str, Any] | None = None) -> tuple[Path, dict[str, Any], torch.nn.Module]:
+                      cost_report: Mapping[str, Any] | None = None,
+                      exploratory_quality_waiver: str | None = None,
+                      ) -> tuple[Path, dict[str, Any], torch.nn.Module]:
     """Build a deploy-only artifact from a frozen Q-3D training checkpoint."""
+    supplied_waiver = _supplied_waiver(exploratory_quality_waiver)
     payload, checkpoint_sha = _load_payload(checkpoint_path, expected_checkpoint_sha256)
     if payload.get("schema") in {
         "self_audit.candidate_q3d.resume.v1", "self_audit.candidate_q3d.resume.v2",
@@ -382,6 +525,7 @@ def export_checkpoint(checkpoint_path: str | Path, output_path: str | Path, *,
         if (len(sidecar_parts) != 2 or sidecar_parts[0] != checkpoint_sha
                 or sidecar_parts[1] != checkpoint_file.name):
             raise ValueError("Q-3D engine resume checkpoint sidecar SHA-256 mismatch")
+    exploratory = _checkpoint_exploratory(payload, supplied_waiver)
     state = _extract_state(payload)
     source_state = _source_student_state(payload)
     head_channels = _continuous_head_channels(source_state)
@@ -438,6 +582,10 @@ def export_checkpoint(checkpoint_path: str | Path, output_path: str | Path, *,
             "deploy_parameter_count": int(model_parameters),
         },
     }
+    if exploratory is not None:
+        artifact["metadata"].update({
+            key: copy.deepcopy(exploratory[key]) for key in _EXPLORATORY_METADATA_KEYS
+        })
     fd, temporary_name = tempfile.mkstemp(prefix=f".{output.name}.", suffix=".tmp", dir=output.parent)
     os.close(fd)
     temporary = Path(temporary_name)
@@ -486,6 +634,9 @@ def export_checkpoint(checkpoint_path: str | Path, output_path: str | Path, *,
         "output_contract": "raw 4-class logits on the native full-volume grid",
         "software_only": True,
     }
+    if exploratory is not None:
+        manifest.update(copy.deepcopy(exploratory))
+        manifest["exploratory_quality_waiver_events"] = manifest.pop("events")
     manifest_path = output.with_suffix(output.suffix + ".manifest.json")
     _write_json_atomic(manifest_path, manifest)
     return output, manifest, deploy_model
@@ -506,8 +657,15 @@ def _write_json_atomic(path: Path, value: Mapping[str, Any]) -> None:
 
 def load_export(artifact_path: str | Path, *, expected_sha256: str | None = None,
                 device: str | torch.device = "cpu",
-                dtype: torch.dtype | None = None) -> tuple[torch.nn.Module, dict[str, Any]]:
-    """Cold-load a student-only artifact; no teacher factory is available here."""
+                dtype: torch.dtype | None = None,
+                exploratory_quality_waiver: str | None = None,
+                ) -> tuple[torch.nn.Module, dict[str, Any]]:
+    """Cold-load a student-only artifact; no teacher factory is available here.
+
+    Exploratory (quality-waived) artifacts load only with the exact explicit
+    waiver REASON; default loads reject them.
+    """
+    supplied_waiver = _supplied_waiver(exploratory_quality_waiver)
     path = Path(artifact_path).resolve()
     artifact_sha = _sha256_file(path)
     if expected_sha256 is not None and artifact_sha != expected_sha256:
@@ -527,6 +685,9 @@ def load_export(artifact_path: str | Path, *, expected_sha256: str | None = None
         raise ValueError("Q-3D deploy artifact contains a forbidden state key")
     if any("continuous_feature_head" in key.lower() for key in artifact["state_dict"]):
         raise ValueError("Q-3D deploy artifact contains the train-only C1 feature head")
+    if not isinstance(artifact["metadata"], Mapping):
+        raise ValueError("Q-3D artifact metadata must be a mapping")
+    _artifact_exploratory(artifact["metadata"], supplied_waiver)
     modules_before = set(sys.modules)
     model = _construct_deploy_model(
         artifact["config"], artifact["state_dict"], device=device, dtype=dtype
@@ -612,8 +773,10 @@ def _logits_sha256(logits: torch.Tensor) -> str:
 
 
 def verify_cold_load(model: torch.nn.Module, artifact_path: str | Path,
-                     volume_paths: Sequence[str | Path], *, device: str = "cpu") -> dict[str, Any]:
+                     volume_paths: Sequence[str | Path], *, device: str = "cpu",
+                     exploratory_quality_waiver: str | None = None) -> dict[str, Any]:
     """Run a fresh interpreter on exactly three declared native volumes and compare logits bitwise."""
+    _supplied_waiver(exploratory_quality_waiver)
     if len(volume_paths) != 3:
         return {"status": "NOT_RUN_REQUIRES_EXACTLY_THREE_VOLUMES", "volumes": len(volume_paths)}
     artifact = Path(artifact_path).resolve()
@@ -630,8 +793,9 @@ def verify_cold_load(model: torch.nn.Module, artifact_path: str | Path,
         expected_hashes.append(_logits_sha256(logits))
     runtime = _cold_load_runtime(model, images)
     code = r'''import json, os, sys
-artifact_path, device, runtime_json, *volume_paths = sys.argv[1:]
+artifact_path, device, runtime_json, waiver_json, *volume_paths = sys.argv[1:]
 runtime = json.loads(runtime_json)
+waiver_reason = json.loads(waiver_json)
 if runtime["cublas_workspace_config"] is None:
     os.environ.pop("CUBLAS_WORKSPACE_CONFIG", None)
 else:
@@ -644,7 +808,8 @@ from self_audit.candidate_q3d.export import (
 _configure_cold_load_runtime(runtime)
 
 model, metadata = load_export(artifact_path, device=device,
-                              dtype=_runtime_dtype(runtime["model_dtype"]))
+                              dtype=_runtime_dtype(runtime["model_dtype"]),
+                              exploratory_quality_waiver=waiver_reason)
 actual_input_dtypes = []
 with torch.inference_mode():
     output = []
@@ -674,6 +839,7 @@ if forbidden:
     raise RuntimeError("teacher module imported in cold-load process: " + repr(forbidden))
 print(json.dumps({"hashes": output, "teacher_modules": forbidden,
                   "artifact_sha256": metadata["artifact_sha256"],
+                  "exploratory": metadata.get("exploratory") is True,
                   "runtime": {"num_threads": torch.get_num_threads(),
                               "num_interop_threads": torch.get_num_interop_threads(),
                               "default_dtype": str(torch.get_default_dtype()).removeprefix("torch."),
@@ -699,6 +865,7 @@ print(json.dumps({"hashes": output, "teacher_modules": forbidden,
         child_env["CUBLAS_WORKSPACE_CONFIG"] = str(runtime["cublas_workspace_config"])
     completed = subprocess.run(
         [sys.executable, "-c", code, str(artifact), device, json.dumps(runtime, sort_keys=True),
+         json.dumps(exploratory_quality_waiver),
          *[str(Path(p).resolve()) for p in volume_paths]],
         cwd=root, env=child_env, check=False, capture_output=True, text=True,
     )
@@ -712,10 +879,13 @@ print(json.dumps({"hashes": output, "teacher_modules": forbidden,
     if (cold.get("teacher_modules") or cold.get("hashes") != expected_hashes
             or cold.get("runtime") != expected_child_runtime):
         raise RuntimeError("Q-3D cold-load logits differ bitwise or imported a teacher module")
-    return {"status": "PASSED_BITWISE_THREE_NATIVE_VOLUMES",
-            "volumes": 3, "logit_sha256": expected_hashes,
-            "cold_load_artifact_sha256": cold.get("artifact_sha256"),
-            "teacher_modules_imported": []}
+    result = {"status": "PASSED_BITWISE_THREE_NATIVE_VOLUMES",
+              "volumes": 3, "logit_sha256": expected_hashes,
+              "cold_load_artifact_sha256": cold.get("artifact_sha256"),
+              "teacher_modules_imported": []}
+    if cold.get("exploratory") is True:
+        result["exploratory"] = True
+    return result
 
 
 __all__ = ["EXPORT_SCHEMA", "export_checkpoint", "load_export", "verify_cold_load"]

@@ -15,9 +15,17 @@ import shutil
 import statistics
 import tempfile
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Callable, Mapping
+
+from .campaign_runtime import (
+    EXPLORATORY_WAIVER_CONTENT_HASH,
+    EXPLORATORY_WAIVER_FLAG,
+    exploratory_marker,
+    exploratory_waiver_policy,
+    waiver_policy_sha256,
+)
 
 PROFILE_UPDATE_LIMIT = 20
 PRODUCTION_STAGE_BUDGETS = {"T": 8000, "Q": 1000, "P": 1, "J": 8000}
@@ -58,6 +66,9 @@ class StageArtifact:
     stage: str
     manifest_path: Path
     manifest_sha256: str
+    exploratory: bool = False
+    exploratory_quality_waiver: dict[str, Any] | None = field(default=None, compare=False, hash=False)
+    exploratory_policy_sha256: str | None = None
 
     def engine_binding(self) -> dict[str, str]:
         return {
@@ -65,11 +76,16 @@ class StageArtifact:
             "manifest_sha256": self.manifest_sha256,
         }
 
-    def as_dict(self) -> dict[str, str]:
-        return {
+    def as_dict(self) -> dict[str, Any]:
+        record: dict[str, Any] = {
             "manifest_path": str(self.manifest_path),
             "manifest_sha256": self.manifest_sha256,
         }
+        if self.exploratory:
+            record["exploratory"] = True
+            record["exploratory_quality_waiver"] = self.exploratory_quality_waiver
+            record[EXPLORATORY_WAIVER_CONTENT_HASH] = self.exploratory_policy_sha256
+        return record
 
 
 @dataclass(frozen=True)
@@ -91,6 +107,7 @@ class ProfileInputs:
     development_geometry_evidence: dict[str, Any] = field(default_factory=dict)
     phase_evidence: dict[str, Any] = field(default_factory=dict)
     geometry_policy: str = "strict"
+    exploratory_quality_waiver: dict[str, Any] | None = None
 
 
 def sha256_file(path: str | Path) -> str:
@@ -498,10 +515,46 @@ def largest_train_patients(train_manifest: Mapping[str, Any]) -> tuple[PatientVo
     return largest_l, largest_u, largest_train
 
 
+def _waiver_policy(reason: Any) -> dict[str, Any] | None:
+    try:
+        return exploratory_waiver_policy(reason)
+    except ValueError as exc:
+        raise ProfilePrerequisiteError(str(exc)) from exc
+
+
+def _require_artifact_waivers(
+    artifacts: Mapping[str, StageArtifact], policy: Mapping[str, Any] | None,
+) -> None:
+    waived = sorted(stage for stage, artifact in artifacts.items() if artifact.exploratory)
+    if waived and policy is None:
+        raise ProfilePrerequisiteError(
+            f"stage artifacts {waived} are exploratory (quality gates waived); profiling them requires "
+            f"the same explicit {EXPLORATORY_WAIVER_FLAG} REASON"
+        )
+    if policy is not None:
+        expected = waiver_policy_sha256(policy)
+        mismatched = sorted(
+            stage for stage in waived
+            if artifacts[stage].exploratory_policy_sha256 not in (None, expected)
+            or (artifacts[stage].exploratory_quality_waiver is not None
+                and exploratory_marker(artifacts[stage].as_dict())["policy_sha256"] != expected)
+        )
+        if mismatched:
+            raise ProfilePrerequisiteError(
+                f"stage artifacts {mismatched} were waived with a different {EXPLORATORY_WAIVER_FLAG} REASON"
+            )
+
+
 def parse_stage_artifact_bindings(
     paths: list[str], hashes: list[str],
+    *, exploratory_quality_waiver: str | None = None,
 ) -> dict[str, StageArtifact]:
-    """Parse and hash-check explicit T/Q/P stage-manifest bindings."""
+    """Parse and hash-check explicit T/Q/P stage-manifest bindings.
+
+    Exploratory (quality-gate-waived) artifacts are accepted only with an
+    explicit waiver reason, and their label is carried into the report.
+    """
+    policy = _waiver_policy(exploratory_quality_waiver)
     def parse(items: list[str], label: str) -> dict[str, str]:
         parsed: dict[str, str] = {}
         for item in items:
@@ -536,7 +589,17 @@ def parse_stage_artifact_bindings(
             raise ProfilePrerequisiteError(
                 f"stage artifact binding {stage} points to manifest stage {document.get('stage')!r}"
             )
-        result[stage] = StageArtifact(stage, path, actual)
+        try:
+            marker = exploratory_marker(document)
+        except ValueError as exc:
+            raise ProfilePrerequisiteError(f"{stage} stage artifact: {exc}") from exc
+        result[stage] = StageArtifact(
+            stage, path, actual,
+            exploratory=marker is not None,
+            exploratory_quality_waiver=marker["policy"] if marker is not None else None,
+            exploratory_policy_sha256=marker["policy_sha256"] if marker is not None else None,
+        )
+    _require_artifact_waivers(result, policy)
     return result
 
 
@@ -593,9 +656,12 @@ def load_profile_inputs(
     development_repair_report_sha256: str,
     phase_receipt_path: str | Path,
     phase_receipt_sha256: str,
+    exploratory_quality_waiver: str | None = None,
 ) -> ProfileInputs:
     """Validate real manifests, independent repair evidence, phase and teacher provenance."""
     measured_stages = _validate_measured_stages(measured_stages)
+    waiver_policy = _waiver_policy(exploratory_quality_waiver)
+    _require_artifact_waivers(stage_artifacts, waiver_policy)
     if "J" in measured_stages:
         if set(stage_artifacts) != set(_REQUIRED_STAGE_ARTIFACTS):
             raise ProfilePrerequisiteError(
@@ -755,6 +821,7 @@ def load_profile_inputs(
         },
         phase_evidence=phase_summary,
         geometry_policy=train_geometry_policy,
+        exploratory_quality_waiver=waiver_policy,
     )
 
 
@@ -987,6 +1054,11 @@ def run_engine_stage(
             )
     elif stage != "T":
         raise ValueError(f"unsupported GPU profile stage {stage!r}")
+    waiver = inputs.exploratory_quality_waiver
+    if stage == "J":
+        _require_artifact_waivers(inputs.stage_artifacts, waiver)
+    # Forward the reason only on explicit opt-in so the strict call is unchanged.
+    waiver_kwargs = {"exploratory_quality_waiver": waiver["reason"]} if waiver is not None else {}
     with _engine_profile_hooks(
         engine_module, stage, measurement, inputs.largest_l.patient_id,
         inputs.largest_u.patient_id, optimizer_type,
@@ -1002,6 +1074,7 @@ def run_engine_stage(
                 synthetic_gate_override=False,
                 stage=stage,
                 stage_artifacts=artifacts,
+                **waiver_kwargs,
             )
         except Exception as exc:
             try:
@@ -1181,11 +1254,13 @@ def _run_profile_core(
     evidence_inputs: Mapping[str, Any] | None = None,
     software_only: bool = False,
     measured_stages: tuple[str, ...] = ("T", "J"),
+    exploratory_quality_waiver: str | None = None,
 ) -> dict[str, Any]:
     """Shared execution core; software test mode cannot create GPU evidence."""
     import torch
 
     measured_stages = _validate_measured_stages(measured_stages)
+    waiver_policy = _waiver_policy(exploratory_quality_waiver)
     if not device.startswith("cuda"):
         raise ProfilePrerequisiteError("Q3D Phase D profiling requires a CUDA device")
     torch_module = torch_module or torch
@@ -1225,11 +1300,19 @@ def _run_profile_core(
         },
         "temporary_output_cleanup_policy": "persist report, then remove only this invocation's owned temporary tree",
     }
+    if waiver_policy is not None:
+        # evidence_status keeps its normal meaning; the explicit marker says
+        # gate measurements stayed NO_GO and the profile is exploratory.
+        report_doc["exploratory"] = True
+        report_doc["exploratory_quality_waiver"] = waiver_policy
     temporary_root: Path | None = None
     try:
         if inputs is None:
             if "J" in measured_stages:
-                parsed = parse_stage_artifact_bindings(artifact_paths, artifact_hashes)
+                parsed = parse_stage_artifact_bindings(
+                    artifact_paths, artifact_hashes,
+                    exploratory_quality_waiver=exploratory_quality_waiver,
+                )
             else:
                 if artifact_paths or artifact_hashes:
                     raise ProfilePrerequisiteError(
@@ -1238,6 +1321,7 @@ def _run_profile_core(
                 parsed = {}
             inputs = load_profile_inputs(
                 config_path, parsed, measured_stages=measured_stages, **dict(evidence_inputs or {}),
+                exploratory_quality_waiver=exploratory_quality_waiver,
             )
         elif "J" in measured_stages and set(inputs.stage_artifacts) != set(_REQUIRED_STAGE_ARTIFACTS):
             raise ProfilePrerequisiteError(
@@ -1245,6 +1329,15 @@ def _run_profile_core(
             )
         elif "J" not in measured_stages and inputs.stage_artifacts:
             raise ProfilePrerequisiteError("T-only profiling does not accept unused T/Q/P artifact bindings")
+        if waiver_policy is not None and inputs.exploratory_quality_waiver is None:
+            inputs = replace(inputs, exploratory_quality_waiver=waiver_policy)
+        elif waiver_policy is None and inputs.exploratory_quality_waiver is not None:
+            raise ProfilePrerequisiteError(
+                f"profile inputs carry an exploratory waiver; pass {EXPLORATORY_WAIVER_FLAG} REASON explicitly"
+            )
+        elif inputs.exploratory_quality_waiver != waiver_policy:
+            raise ProfilePrerequisiteError("profile inputs carry a different exploratory waiver REASON")
+        _require_artifact_waivers(inputs.stage_artifacts, inputs.exploratory_quality_waiver)
         report_doc.update({
             "config_path": str(inputs.config_path),
             "config_sha256": inputs.config_sha256,
@@ -1303,6 +1396,15 @@ def _run_profile_core(
                     raise RuntimeError("engine returned with an unfinished optimizer update")
                 if result.get("runtime_synthetic") is not False:
                     raise ProfilePrerequisiteError("engine reported synthetic runtime during profiling")
+                result_marker = exploratory_marker(result)
+                if result_marker is not None and waiver_policy is None:
+                    raise ProfilePrerequisiteError(
+                        "engine reported an exploratory result without an explicit waiver"
+                    )
+                if result_marker is not None and result_marker["policy_sha256"] not in (
+                    None, waiver_policy_sha256(waiver_policy),
+                ):
+                    raise ProfilePrerequisiteError("engine reported a different exploratory waiver REASON")
                 if len(measurement.records) != PROFILE_UPDATE_LIMIT:
                     raise RuntimeError(
                         f"engine completed {len(measurement.records)} profiled optimizer updates; expected {PROFILE_UPDATE_LIMIT}"
@@ -1348,6 +1450,11 @@ def _run_profile_core(
                     status="SOFTWARE_ONLY_COMPLETED" if software_only else "COMPLETED",
                     metric_records=metric_records, measured_phase=measured_phase,
                 )
+                if result_marker is not None:
+                    report_doc["stage_results"][stage]["exploratory"] = True
+                    report_doc["stage_results"][stage]["exploratory_quality_waiver"] = (
+                        result_marker["policy"] or waiver_policy
+                    )
             except Exception as exc:
                 measurement.fail_active_update()
                 exc_metrics = getattr(exc, "q3d_profile_metrics", None)
@@ -1425,6 +1532,7 @@ def run_profile(
     device: str = "cuda:0",
     allow_real_profile: bool = False,
     measured_stages: tuple[str, ...] = ("T", "J"),
+    exploratory_quality_waiver: str | None = None,
 ) -> dict[str, Any]:
     """Run the canonical engine on real data; all software dependencies are fixed internally."""
     measured_stages = _validate_measured_stages(measured_stages)
@@ -1455,6 +1563,7 @@ def run_profile(
         evidence_inputs=evidence_inputs,
         software_only=False,
         measured_stages=measured_stages,
+        exploratory_quality_waiver=exploratory_quality_waiver,
     )
 
 
@@ -1470,6 +1579,7 @@ def run_profile_software_test(
     repo_root: str | Path | None = None,
     clock: Callable[[], float] = time.perf_counter,
     measured_stages: tuple[str, ...] = ("T", "J"),
+    exploratory_quality_waiver: str | None = None,
 ) -> dict[str, Any]:
     """Explicit SOFTWARE_ONLY harness for synthetic unit tests; never emits GPU_PROFILE."""
     measured_stages = _validate_measured_stages(measured_stages)
@@ -1490,6 +1600,7 @@ def run_profile_software_test(
         clock=clock,
         software_only=True,
         measured_stages=measured_stages,
+        exploratory_quality_waiver=exploratory_quality_waiver,
     )
 
 

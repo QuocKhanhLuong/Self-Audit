@@ -102,11 +102,19 @@ def _train_q3d(args: argparse.Namespace, parser: argparse.ArgumentParser,
         except (TypeError, ValueError, FileNotFoundError) as exc:
             parser.error(f"real Q3D teacher provenance is incomplete: {exc}")
 
+    waiver = getattr(args, "q3d_exploratory_quality_waiver", None)
+    if waiver is not None:
+        if not isinstance(waiver, str) or not waiver.strip():
+            parser.error("--q3d-exploratory-quality-waiver requires a nonempty REASON")
+        waiver = waiver.strip()
+
     baseline_runners = {
         "a3d_teacher_free": "run_a3d_teacher_free",
         "teacher_supervised": "run_teacher_supervised",
     }
     if validated["arm"] in baseline_runners:
+        if waiver is not None:
+            parser.error("--q3d-exploratory-quality-waiver applies only to Q3D student arms")
         if synthetic_teacher_fixture:
             parser.error("--synthetic-teacher-fixture applies only to Q3D student arms")
         try:
@@ -138,6 +146,9 @@ def _train_q3d(args: argparse.Namespace, parser: argparse.ArgumentParser,
         artifact_inputs[key] = {"manifest_path": artifact_inputs[key], "manifest_sha256": value}
         pinned_stages.add(key)
 
+    # The waiver keyword is forwarded only on explicit opt-in so the default
+    # strict call is unchanged; the engine keeps every gate measurement.
+    waiver_kwargs = {"exploratory_quality_waiver": waiver} if waiver is not None else {}
     return train(
         validated,
         args.out,
@@ -146,6 +157,7 @@ def _train_q3d(args: argparse.Namespace, parser: argparse.ArgumentParser,
         synthetic_gate_override=validated["runtime"]["synthetic_gate_override"],
         stage=getattr(args, "q3d_stage", None),
         stage_artifacts=artifact_inputs or None,
+        **waiver_kwargs,
     )
 
 
@@ -201,6 +213,12 @@ def main() -> None:
     parser.add_argument("--q3d-stage", choices=("T", "Q", "P", "J"))
     parser.add_argument("--q3d-stage-artifact", action="append", metavar="STAGE=MANIFEST")
     parser.add_argument("--q3d-stage-artifact-sha", action="append", metavar="STAGE=SHA256")
+    parser.add_argument(
+        "--q3d-exploratory-quality-waiver", metavar="REASON", default=None,
+        help="Q3D only: explicit exploratory opt-in to continue past NO_GO tokenizer/physiology/KD "
+             "support gates; measurements stay NO_GO and outputs are marked exploratory "
+             "(required again on every resume/import of waived state)",
+    )
     parser.add_argument("--model-config", help="Baseline-only local backbone source and weight provenance JSON")
     parser.add_argument("--teacher-checkpoint", help="Baseline-only verified initialization folder")
     parser.add_argument("--teacher-checkpoint-sha256", help="Baseline-only MANIFEST.json SHA256")
@@ -241,6 +259,8 @@ def main() -> None:
             synthetic_teacher_fixture=bool(args.synthetic_teacher_fixture),
         )
     elif method in {"candidate_a", "candidate_a3d"}:
+        if args.q3d_exploratory_quality_waiver is not None:
+            parser.error("--q3d-exploratory-quality-waiver applies only to candidate_q3d configs")
         result = _train_baseline(args, parser, config, method)
     else:
         parser.error("config.method must be candidate_a, candidate_a3d, or candidate_q3d")
