@@ -1,0 +1,240 @@
+{
+  "schema": "self_audit.q3d_resenc.geometry_audit.v1",
+  "status": "PASS_WITH_NATIVE_GEOMETRY_AMBIGUITY",
+  "audit_mode": "read_only",
+  "scope": "ACDC locked K8 TRAIN manifest metadata; ResEnc-L six-stage stride proposal",
+  "repository": {
+    "worktree": "/Users/alvinluong/orca/workspaces/Self-Audit/q3d-resenc-20261112",
+    "base_commit": "37851c71355a4c82b52c0de64533bba1615f0436",
+    "repo_edits": "NONE",
+    "training": "NOT_RUN",
+    "dataset_operations": "NONE"
+  },
+  "manifest": {
+    "path": "/Users/alvinluong/Self-Audit-runs/vast-a3d-semi-20261111/team-k8-ablations/manifests/k8_train.json",
+    "sha256": "e524c7531079996232fe71cdfe982a46a5950d49d91a8203eee396b0e67434a3",
+    "fresh_hash_check": "PASS",
+    "schema": "self_audit.manifest.v1",
+    "geometry_schema": "self_audit.geometry_map.v1 / self_audit.geometry.native_zyx.v1",
+    "metadata_only": true,
+    "masks_opened": false,
+    "image_arrays_opened": false
+  },
+  "train_population": {
+    "patient_count": 80,
+    "labeled_l8_count": 8,
+    "unlabeled_count": 72,
+    "patient_id_source": "manifest.labeled[].id + manifest.unlabeled[].id",
+    "geometry_source": "manifest.geometry.by_patient[id]",
+    "axis_order": ["Z", "Y", "X"],
+    "unit": "mm for spacing; voxels for shape",
+    "note": "Statistics use all 80 TRAIN entries. The L8-only statistic is retained as a sensitivity reference and does not replace the TRAIN statistic."
+  },
+  "geometry_statistics": {
+    "all_train": {
+      "median_spacing_zyx_mm": [1.0, 1.0, 1.0],
+      "median_shape_zyx_voxels": [9.0, 256.0, 216.0],
+      "largest_volume_by_voxel_count": {
+        "patient_id": "patient057",
+        "shape_zyx": [8, 512, 428],
+        "voxel_count": 1753088,
+        "spacing_zyx_mm": [1.0, 1.0, 1.0]
+      },
+      "spacing_counts": [
+        {"spacing_zyx_mm": [1.0, 1.0, 1.0], "patient_count": 52},
+        {"spacing_zyx_mm": [10.0, 1.3671875, 1.3671875], "patient_count": 12},
+        {"spacing_zyx_mm": [10.0, 1.5625, 1.5625], "patient_count": 7},
+        {"spacing_zyx_mm": [10.0, 1.7578125, 1.7578125], "patient_count": 2},
+        {"spacing_zyx_mm": [10.0, 1.875, 1.875], "patient_count": 1},
+        {"spacing_zyx_mm": [10.0, 1.6796875, 1.6796875], "patient_count": 1},
+        {"spacing_zyx_mm": [10.0, 1.40625, 1.40625], "patient_count": 1},
+        {"spacing_zyx_mm": [10.0, 1.4453125, 1.4453125], "patient_count": 2},
+        {"spacing_zyx_mm": [10.0, 1.484375, 1.484375], "patient_count": 1},
+        {"spacing_zyx_mm": [10.0, 1.640625, 1.640625], "patient_count": 1}
+      ]
+    },
+    "labeled_l8_reference": {
+      "patient_count": 8,
+      "median_spacing_zyx_mm": [1.0, 1.0, 1.0],
+      "largest_volume_by_voxel_count": {
+        "patient_id": "patient026",
+        "shape_zyx": [10, 256, 216],
+        "voxel_count": 552960,
+        "spacing_zyx_mm": [10.0, 1.3671875, 1.3671875]
+      }
+    }
+  },
+  "k8_lineage_proof": {
+    "locked_fewshot_plan_path": "/Users/alvinluong/Self-Audit-runs/vast-a3d-semi-20261111/launch-snapshot/acdc/FEWSHOT_PLAN.json",
+    "locked_fewshot_plan_sha256": "ad8abf69ef9a0f237ccecd7bb04c7b9ff19fa7d6c1025b37620ba29774fe2b92",
+    "selector": "nested_sha256_ranked_source_labeled_patients",
+    "seed": 42,
+    "source_train_sha256": "4982655478334405a538c5ced3fe5093c4305c0c9ba7c758a6f54e20247a1cb5",
+    "source_development_sha256": "ba46934afe8ea5c47dd798019bee233c97c98320b358e2d40165e87a651dc7df",
+    "k8_manifest_sha256": "e524c7531079996232fe71cdfe982a46a5950d49d91a8203eee396b0e67434a3",
+    "eligible_labeled_ids": ["patient003", "patient007", "patient010", "patient011", "patient024", "patient026", "patient041", "patient054", "patient077", "patient099"],
+    "selected_ids": ["patient007", "patient010", "patient011", "patient024", "patient026", "patient041", "patient077", "patient099"],
+    "selector_reproduction": {
+      "k5": ["patient007", "patient011", "patient024", "patient026", "patient041"],
+      "k8": ["patient007", "patient010", "patient011", "patient024", "patient026", "patient041", "patient077", "patient099"],
+      "k10": ["patient003", "patient007", "patient010", "patient011", "patient024", "patient026", "patient041", "patient054", "patient077", "patient099"],
+      "nested_k5_subset_k8_subset_k10": "PASS"
+    },
+    "historical_k5_manifest": {
+      "expected_sha256": "060facb4ab94b1162f27acf079ff2395212d5f554d8b97a959ac4be7088ed5bd",
+      "bytes_available_for_rehash": false,
+      "rehash": "NOT_AVAILABLE"
+    },
+    "historical_k10_manifest": {
+      "expected_sha256": "2571423531406d920b90c6023e6d8a5456de1e448c9e660b87755f81b1d8f396",
+      "bytes_available_for_rehash": false,
+      "rehash": "NOT_AVAILABLE"
+    },
+    "development_manifest": {
+      "expected_sha256": "ba46934afe8ea5c47dd798019bee233c97c98320b358e2d40165e87a651dc7df",
+      "bytes_available_for_rehash": false,
+      "rehash": "NOT_AVAILABLE"
+    }
+  },
+  "pinned_primary_source": {
+    "repository": "MIC-DKFZ/nnUNet",
+    "commit": "c04f7ec8bbffaf3ebc3b26aa2c89042e8a8e368b",
+    "commit_url": "https://github.com/MIC-DKFZ/nnUNet/commit/c04f7ec8bbffaf3ebc3b26aa2c89042e8a8e368b",
+    "files": [
+      {
+        "path": "nnunetv2/experiment_planning/experiment_planners/residual_unets/residual_encoder_unet_planners.py",
+        "url": "https://raw.githubusercontent.com/MIC-DKFZ/nnUNet/c04f7ec8bbffaf3ebc3b26aa2c89042e8a8e368b/nnunetv2/experiment_planning/experiment_planners/residual_unets/residual_encoder_unet_planners.py",
+        "relevant_lines": "26-27, 65-81, 87-92, 200-221, 248-253"
+      },
+      {
+        "path": "nnunetv2/experiment_planning/experiment_planners/network_topology.py",
+        "url": "https://raw.githubusercontent.com/MIC-DKFZ/nnUNet/c04f7ec8bbffaf3ebc3b26aa2c89042e8a8e368b/nnunetv2/experiment_planning/experiment_planners/network_topology.py",
+        "relevant_lines": "27-97"
+      },
+      {
+        "path": "nnunetv2/experiment_planning/experiment_planners/default_experiment_planner.py",
+        "url": "https://raw.githubusercontent.com/MIC-DKFZ/nnUNet/c04f7ec8bbffaf3ebc3b26aa2c89042e8a8e368b/nnunetv2/experiment_planning/experiment_planners/default_experiment_planner.py",
+        "relevant_lines": "140-176, 222-245, 384-401"
+      }
+    ],
+    "observed_rules": {
+      "target_spacing": "Default planner starts from the 50th percentile spacing, with a special anisotropy adjustment only when the target spacing and target voxel shape satisfy both anisotropy tests.",
+      "topology": "get_pool_and_conv_props pools axes only when feature-map size and spacing-factor constraints allow it; the returned patch is padded to divisibility by 2^num_pool per axis.",
+      "resenc_l": "ResEnc-L is a 24 GB target planner with encoder block counts beginning (1, 3, 4, 6, 6, 6) and decoder block counts (1, 1, 1, 1, 1) for six stages.",
+      "six_stage_reference": "The pinned source's executable example uses six 3D stages, features (32, 64, 128, 256, 320, 320), and strides (1,2,2,2,2,2) in compact tuple notation."
+    }
+  },
+  "stride_proposal": {
+    "stage_count": 6,
+    "planner_inputs_from_manifest": {
+      "spacing_zyx_mm": [1.0, 1.0, 1.0],
+      "median_shape_zyx_voxels": [9.0, 256.0, 216.0],
+      "min_feature_map_size": 4,
+      "max_numpool_argument": 999999,
+      "effective_pool_count_zyx": [1, 5, 5],
+      "shape_must_be_divisible_by_zyx": [2, 32, 32],
+      "padded_median_patch_shape_zyx": [10, 256, 224]
+    },
+    "encoder_blocks": [1, 3, 4, 6, 6, 6],
+    "decoder_blocks": [1, 1, 1, 1, 1],
+    "features_per_stage": [32, 64, 128, 256, 320, 320],
+    "official_planner_stride_result_on_median_native_metadata_zyx": [
+      [1, 1, 1],
+      [2, 2, 2],
+      [1, 2, 2],
+      [1, 2, 2],
+      [1, 2, 2],
+      [1, 2, 2]
+    ],
+    "calculation": "Applying pinned get_pool_and_conv_props(spacing=[1,1,1], patch_size=[9,256,216], min_feature_map_size=4) gives one all-axis pool followed by four Y/X-only pools. The output list has six stage entries: one stem entry plus five pooling entries.",
+    "native_geometry_status": "LOCKED_FOR_DECLARED_K8_METADATA",
+    "native_geometry_limitation": "This schedule is locked only for the observed K8 manifest metadata and the declared B=1 native high-side padding policy; it is not extrapolated to other datasets or undocumented batching policies."
+  },
+  "pretrain_lock": {
+    "status": "PASS_STRICT_ENCODER",
+    "checkpoint_path": "/Users/alvinluong/Self-Audit-runs/q3d-resenc-20261112/checkpoint_final.pth",
+    "checkpoint_sha256": "ac262d3e8c226c79f9567fddc34d38e011284730ddf2294b5c6c319ce2f22bbd",
+    "checkpoint_bytes": 409579442,
+    "hf_revision": "f443c09319988e833b3d9589bf95909e4443d7b2",
+    "architecture": "ResEncL",
+    "checkpoint_registry_stride_schedule_zyx": [[1, 1, 1], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2], [2, 2, 2]],
+    "native_planner_probe_stride_schedule_zyx": [[1, 1, 1], [2, 2, 2], [1, 2, 2], [1, 2, 2], [1, 2, 2], [1, 2, 2]],
+    "stride_schedule_compatibility": "NOT_IDENTICAL; probe is a geometry adaptation with shape-compatible encoder weights, not the exact pretraining architecture",
+    "source_pretrain_dataset": "Dataset000_Pretrain",
+    "source_pretrain_plan": "nnsslPlans/noresample",
+    "pretrain_patch_size_zyx": [192, 192, 192],
+    "pretrain_spacing": "noresample",
+    "normalization": "ZScoreNormalization",
+    "encoder_key_count": 448,
+    "missing_keys": [],
+    "unexpected_keys": [],
+    "weights_ready_for_encoder_initialization": true,
+    "caveat": "The checkpoint provenance locks the upstream pretraining artifact, not ACDC efficacy. No fine-tuning or patient-data run was performed in this audit."
+  },
+  "erf_probe": {
+    "script_path": "/Users/alvinluong/Self-Audit-runs/q3d-resenc-20261112/erf_probe.py",
+    "script_sha256": "f074df03edd2828e6a63d7416fa7421b5ea2ea7f17196b8c02e71208b93d2636",
+    "receipt_json_path": "/Users/alvinluong/Self-Audit-runs/q3d-resenc-20261112/erf_probe.json",
+    "receipt_json_sha256": "2f05888b45ff3bfbf19f90bd91abbd4f0b2ab193b37375c5d875950117d2a14e",
+    "receipt_md_path": "/Users/alvinluong/Self-Audit-runs/q3d-resenc-20261112/erf_probe.md",
+    "status": "PASS",
+    "device": "CPU",
+    "cuda_available": false,
+    "samples": 16,
+    "random_zscore_input": true,
+    "patient_data_used": false,
+    "torch_version": "2.14.0",
+    "dynamic_network_architectures_version": "0.4.4",
+    "padding_mode": "replicate",
+    "checkpoint_pin_status": "PASS",
+    "logical_shape_zyx": [33, 97, 97],
+    "model_input_shape_zyx": [34, 128, 128],
+    "padding_after_zyx": [1, 31, 31],
+    "stage": "encoder.stages[3]",
+    "stride_schedule_zyx": [[1, 1, 1], [2, 2, 2], [1, 2, 2], [1, 2, 2], [1, 2, 2], [1, 2, 2]],
+    "cumulative_stride_zyx": [2, 8, 8],
+    "channel_aggregation": "signed_mean_all_stage_channels",
+    "signed_mean_centroid_offset_voxels_zyx": [0.7005635499954224, 2.5819993019104004, 2.4083452224731445],
+    "signed_mean_centroid_offset_voxels_zyx": [0.67213374376297, 1.9470438957214355, 1.722203016281128],
+    "absolute_mean_centroid_offset_voxels_zyx": [0.67213374376297, 1.9470438957214355, 1.722203016281128],
+    "threshold_voxels": 2.0,
+    "threshold_gate": "PASS",
+    "max_individual_absolute_offset_voxels": 5.1299591064453125,
+    "max_individual_offset_role": "reported_only_not_gate",
+    "mean_r90_voxels": 48.42252540588379,
+    "mean_r95_voxels": 52.678202867507935,
+    "alignment_correction": "The final probe uses the actual teacher replicate high-side padding after Z-score, to [34,128,128] from cumulative stride [2,32,32], with logical center cell [8,6,6] and nominal phase [16,48,48]. This is a preprocessing correction, not threshold tuning.",
+    "interpretation": "Absolute mean offset is within 2 voxels on all axes. Maximum individual offset is reported only and is not a gate. This is synthetic architecture evidence, not patient efficacy or GPU evidence."
+  },
+  "erf_probe_previous_diagnostics": {
+    "full_zero_padding_receipt_script": "/Users/alvinluong/Self-Audit-runs/q3d-resenc-20261112/erf_probe_full_zero_padding.py",
+    "full_zero_padding_receipt_json": "/Users/alvinluong/Self-Audit-runs/q3d-resenc-20261112/erf_probe_full_zero_padding.json",
+    "full_zero_padding_receipt_json_sha256": "053497c1e2065b2236ebc24a320f010447176a567082d1609f56cc8c90a586a7",
+    "full_zero_padding_status": "HISTORICAL_NONCALIBRATION",
+    "full_zero_padding_reason": "It used constant-zero padding instead of the teacher's replicate padding. It is retained and excluded from the final phase lock; the change is a correctness correction, not threshold tuning.",
+    "stage3_padding_receipt_script": "/Users/alvinluong/Self-Audit-runs/q3d-resenc-20261112/erf_probe_stage3_padding.py",
+    "stage3_padding_receipt_json": "/Users/alvinluong/Self-Audit-runs/q3d-resenc-20261112/erf_probe_stage3_padding.json",
+    "stage3_padding_receipt_json_sha256": "5b7fef7a0bda02d34730626dd483160a2477c54eeac1e780510a624125abf616",
+    "stage3_padding_status": "HISTORICAL_NONCALIBRATION",
+    "stage3_padding_reason": "It padded only to stage-3 cumulative stride [2,8,8], giving model input [34,104,104] rather than the full-teacher context [34,128,128]. Retained for audit and excluded from final phase lock.",
+    "even_unaligned_receipt": "/Users/alvinluong/Self-Audit-runs/q3d-resenc-20261112/erf_probe_even_unaligned.json",
+    "all_previous_diagnostics_role": "NONCALIBRATION"
+  },
+  "erf_probe_first_unaligned_receipt": {
+    "script_path": "/Users/alvinluong/Self-Audit-runs/q3d-resenc-20261112/erf_probe_even_unaligned.py",
+    "script_sha256": "e476219788cb5f7bf07d676e6947c8b40ba682330264f01c4dc887b883f9c757",
+    "receipt_json_path": "/Users/alvinluong/Self-Audit-runs/q3d-resenc-20261112/erf_probe_even_unaligned.json",
+    "receipt_json_sha256": "5db8044da577a377a70e0dd32369a110801f3aae5eb7d4d4044b01e42e8aa126",
+    "receipt_md_path": "/Users/alvinluong/Self-Audit-runs/q3d-resenc-20261112/erf_probe_even_unaligned.md",
+    "receipt_log_path": "/Users/alvinluong/Self-Audit-runs/q3d-resenc-20261112/erf_probe_even_unaligned.log",
+    "status": "HISTORICAL_UNALIGNED_DIAGNOSTIC",
+    "logical_shape_zyx": [32, 96, 96],
+    "reason_not_final": "Its selected cell nominal phase [16,48,48] was not the geometric center of the logical input [32,96,96]; preserved for audit, excluded from the final lock."
+  },
+  "ambiguities_and_stop_gates": [
+    "The manifest contains native shapes and spacings but no cropped/resampled fingerprint. The pinned planner requires a patch size, median shape after the planner's spacing transform, feature-map minimum, and VRAM target to compute an exact topology.",
+    "The median TRAIN spacing is isotropic because 52/80 metadata entries are [1,1,1] mm, but 28/80 entries retain z spacing 10 mm. The pinned planner run on the median shape yields only one Z pool and five Y/X pools; this diagnostic does not certify a single fixed native patch/collation policy for every patient.",
+    "The exact stride result is locked for the declared observed K8 metadata with B=1 native high-side padding. The pretraining artifact is no-resample, so silently importing a resampling-style plan would violate the current native protocol.",
+    "No source data, masks, validation/test metadata, or pretraining dataset was opened during this audit."
+  ]
+}

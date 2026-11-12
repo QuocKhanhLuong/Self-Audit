@@ -1,0 +1,83 @@
+{
+    "architecture_plans": {
+        "arch_class_name": "ResEncL",
+        "arch_kwargs": null,
+        "arch_kwargs_requiring_import": null
+    },
+    "pretrain_plan": {
+        "dataset_name": "Dataset000_Pretrain",
+        "plans_name": "nnsslPlans",
+        "original_median_spacing_after_transp": [
+            1,
+            1,
+            1
+        ],
+        "image_reader_writer": "SimpleITKIO",
+        "transpose_forward": [
+            0,
+            1,
+            2
+        ],
+        "transpose_backward": [
+            0,
+            1,
+            2
+        ],
+        "configurations": {
+            "noresample": {
+                "data_identifier": "nnsslPlans_noresample",
+                "preprocessor_name": "DefaultPreprocessor",
+                "spacing_style": "noresample",
+                "normalization_schemes": [
+                    "ZScoreNormalization"
+                ],
+                "use_mask_for_norm": [
+                    false
+                ],
+                "resampling_fn_data": "resample_data_or_seg_to_shape",
+                "resampling_fn_data_kwargs": {
+                    "is_seg": false,
+                    "order": 3,
+                    "order_z": 0,
+                    "force_separate_z": null
+                },
+                "resampling_fn_mask": "resample_data_or_seg_to_shape",
+                "resampling_fn_mask_kwargs": {
+                    "is_seg": true,
+                    "order": 1,
+                    "order_z": 0,
+                    "force_separate_z": null
+                },
+                "spacing": null,
+                "patch_size": [
+                    192,
+                    192,
+                    192
+                ]
+            }
+        },
+        "experiment_planner_used": "ExperimentPlanner"
+    },
+    "pretrain_num_input_channels": 1,
+    "recommended_downstream_patchsize": [
+        192,
+        192,
+        192
+    ],
+    "key_to_encoder": "encoder.stages",
+    "key_to_stem": "encoder.stem",
+    "keys_to_in_proj": [
+        "encoder.stem.convs.0.conv",
+        "encoder.stem.convs.0.all_modules.0"
+    ],
+    "key_to_lpe": null,
+    "citations": [
+        {
+            "type": "Model",
+            "name": "nnFoundation",
+            "bibtex_citations": [
+                "@misc{harsy2026nnfoundation3dfoundationmodels,\n      title={nnFoundation: 3D Foundation Models for Radiology}, \n      author={Constantin Ulrich Harsy and Tassilo Wald and Karol Gotkowski and Yannick Kirchhoff and Marcel Knopp and Maximilian Rokuss and Elisa Stegmeier and Philipp Schader and Dasha Trofimova and Raphael Stock and Kim-Celine Kahl and Stephen Schaumann and Selen Erkan and David Zimmerer and Stefan Denner and Moritz Langenberg and Sebastian Ziegler and Katharina Eckstein and Maximilian Fischer and Jonathan Suprijadi and Bálint Kovács and Benjamin Hamm and Anand Deshpande and Dimitrios Bounias and Nico Disch and Shuhan Xiao and Jessica Kächele and Jan Sellner and Rajesh Baidya and Jeremias Traub and Lars Krämer and Maximilian Zenk and Tim Rädsch and Stefan Dvoretskii and Robin Peretzke and Jonathan Deissler and Alexandra Ertl and Partha Ghosh and Kris Dreher and Stefan Dinkelacker and Annika Reinke and Evangelia Christodoulou and Numan Saeed and Yoland Savriama and Santiago Estrada and David Kügler and Laura Alexandra Daza Barragan and Cristina Isabel Gonzalez Osorio and Jan Peeken and Michael Baumgartner and Marvin Teichmann and Guillaume Chabin and Matthias Kirchler and Valentin Koch and for the ALFA study and Markus Hohenhaus and Dimitri Koslov and Nina Decker and Mohammad Yaqub and Arnd Heuser and Martin Reuter and Julia A. Schnabel and Tobias Heimann and Florin Ghesu and Paul Brachmann and Claus P. Heußel and Alexander Radbruch and Gianluca Brugnara and Aditya Rastogi and Martha Foltyn-Dumitru and Heinz-Peter Schlemmer and Ignaz Reicht and Julius C. Holzschuh and Michael Bach and Bram Stieltjes and Kai Schlamp and Lena Maier-Hein and Marco Nolden and Ralf Floca and Paul F. Jäger and Philipp Vollmuth and Fabian Isensee and Klaus H. Maier-Hein},\n      year={2026},\n      eprint={2609.26924},\n      archivePrefix={arXiv},\n      primaryClass={cs.CV},\n      url={https://arxiv.org/abs/2609.26924}, \n}"
+            ]
+        }
+    ]
+}

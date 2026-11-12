@@ -1,0 +1,979 @@
+{
+  "schema": "self_audit.q3d_resenc.erf_probe.v1",
+  "status": "PASS",
+  "decision_rule": {
+    "metric": "absolute mean centroid offset per axis from nominal main-convolution phase",
+    "threshold_voxels": 2.0,
+    "gate": "all(abs(mean_offset_axis)) <= threshold; maximum individual offset is reported only",
+    "interpretation": "A measured mean offset above threshold requires using the measured manifest/phase contract; it is not replaced by a theoretical skip-path offset."
+  },
+  "compute": {
+    "device": "cpu",
+    "cuda_available": false,
+    "threads": 4,
+    "samples": 16,
+    "seed_start": 42,
+    "random_zscore_input": true,
+    "patient_data": "NOT_USED",
+    "shape_zyx": [
+      33,
+      97,
+      97
+    ],
+    "bounded_interior_rationale": "The requested logical shape [33,97,97] is used for exact native center alignment; high-side padding to the stride-compatible model shape is required by the external residual AvgPool/stride-2 shape contract. This is not a patient-volume or full-patch claim."
+  },
+  "model": {
+    "architecture": "ResEncL",
+    "registry_path": "/Users/alvinluong/Self-Audit-runs/q3d-resenc-20261112/architecture_registry.py",
+    "registry_sha256": "3fbe0fc4da69a403ca99c5c82af680d57ea375b35458913bc6b6eaab70b19610",
+    "checkpoint_path": "/Users/alvinluong/Self-Audit-runs/q3d-resenc-20261112/checkpoint_final.pth",
+    "checkpoint_sha256": "ac262d3e8c226c79f9567fddc34d38e011284730ddf2294b5c6c319ce2f22bbd",
+    "stage_index": 3,
+    "stage_name": "encoder.stages[3]",
+    "stride_schedule_zyx": [
+      [
+        1,
+        1,
+        1
+      ],
+      [
+        2,
+        2,
+        2
+      ],
+      [
+        1,
+        2,
+        2
+      ],
+      [
+        1,
+        2,
+        2
+      ],
+      [
+        1,
+        2,
+        2
+      ],
+      [
+        1,
+        2,
+        2
+      ]
+    ],
+    "cumulative_stride_zyx": [
+      2,
+      8,
+      8
+    ],
+    "phase_reference": "nominal main convolution path; o=0 with symmetric k3/p1 and cumulative stride; actual residual/AvgPool paths are included in the gradient",
+    "checkpoint_load": {
+      "top_level_keys": [
+        "citations",
+        "network_weights",
+        "nnssl_adaptation_plan"
+      ],
+      "encoder_state_key_count": 448,
+      "missing_encoder_keys": [],
+      "unexpected_encoder_keys": [],
+      "non_encoder_missing_keys": 508
+    }
+  },
+  "summary": {
+    "mean_centroid_offset_voxels": [
+      0.5716968774795532,
+      1.7267353534698486,
+      0.867565393447876
+    ],
+    "absolute_mean_centroid_offset_voxels": [
+      0.5716968774795532,
+      1.7267353534698486,
+      0.867565393447876
+    ],
+    "mean_abs_centroid_offset_voxels": [
+      0.5716968774795532,
+      1.7419636249542236,
+      1.0990855693817139
+    ],
+    "max_abs_centroid_offset_voxels": 2.9461212158203125,
+    "p95_abs_centroid_offset_voxels": 2.5704643726348877,
+    "mean_r50_voxels": 26.024686098098755,
+    "mean_r90_voxels": 46.619975566864014,
+    "mean_r95_voxels": 50.878989458084106,
+    "max_r95_voxels": 51.4781494140625
+  },
+  "samples": [
+    {
+      "seed": 42,
+      "input_shape_zyx": [
+        33,
+        97,
+        97
+      ],
+      "model_input_shape_zyx": [
+        34,
+        104,
+        104
+      ],
+      "padding_after_zyx": [
+        1,
+        7,
+        7
+      ],
+      "feature_shape": [
+        1,
+        256,
+        17,
+        13,
+        13
+      ],
+      "cell_index_zyx": [
+        8,
+        6,
+        6
+      ],
+      "channel_aggregation": "signed_mean_all_stage_channels",
+      "channel_count": 256,
+      "nominal_main_phase_center_voxels": [
+        16.0,
+        48.0,
+        48.0
+      ],
+      "gradient_centroid_voxels": [
+        16.525938034057617,
+        49.64352798461914,
+        49.12952423095703
+      ],
+      "centroid_offset_from_nominal_main_phase_voxels": [
+        0.5259380340576172,
+        1.6435279846191406,
+        1.1295242309570312
+      ],
+      "max_abs_offset_voxels": 1.6435279846191406,
+      "r50_voxels": 25.787593841552734,
+      "r90_voxels": 46.36809158325195,
+      "r95_voxels": 50.49752426147461,
+      "gradient_mass": 2.4271740913391113,
+      "forward_seconds": 0.6566220419990714,
+      "backward_seconds": 0.9245892079998157
+    },
+    {
+      "seed": 43,
+      "input_shape_zyx": [
+        33,
+        97,
+        97
+      ],
+      "model_input_shape_zyx": [
+        34,
+        104,
+        104
+      ],
+      "padding_after_zyx": [
+        1,
+        7,
+        7
+      ],
+      "feature_shape": [
+        1,
+        256,
+        17,
+        13,
+        13
+      ],
+      "cell_index_zyx": [
+        8,
+        6,
+        6
+      ],
+      "channel_aggregation": "signed_mean_all_stage_channels",
+      "channel_count": 256,
+      "nominal_main_phase_center_voxels": [
+        16.0,
+        48.0,
+        48.0
+      ],
+      "gradient_centroid_voxels": [
+        16.688121795654297,
+        50.94612121582031,
+        48.03007507324219
+      ],
+      "centroid_offset_from_nominal_main_phase_voxels": [
+        0.6881217956542969,
+        2.9461212158203125,
+        0.0300750732421875
+      ],
+      "max_abs_offset_voxels": 2.9461212158203125,
+      "r50_voxels": 26.019224166870117,
+      "r90_voxels": 46.054317474365234,
+      "r95_voxels": 50.19960021972656,
+      "gradient_mass": 2.7351417541503906,
+      "forward_seconds": 0.6600437080014672,
+      "backward_seconds": 0.926362958001846
+    },
+    {
+      "seed": 44,
+      "input_shape_zyx": [
+        33,
+        97,
+        97
+      ],
+      "model_input_shape_zyx": [
+        34,
+        104,
+        104
+      ],
+      "padding_after_zyx": [
+        1,
+        7,
+        7
+      ],
+      "feature_shape": [
+        1,
+        256,
+        17,
+        13,
+        13
+      ],
+      "cell_index_zyx": [
+        8,
+        6,
+        6
+      ],
+      "channel_aggregation": "signed_mean_all_stage_channels",
+      "channel_count": 256,
+      "nominal_main_phase_center_voxels": [
+        16.0,
+        48.0,
+        48.0
+      ],
+      "gradient_centroid_voxels": [
+        16.452777862548828,
+        49.310386657714844,
+        47.02863311767578
+      ],
+      "centroid_offset_from_nominal_main_phase_voxels": [
+        0.4527778625488281,
+        1.3103866577148438,
+        -0.9713668823242188
+      ],
+      "max_abs_offset_voxels": 1.3103866577148438,
+      "r50_voxels": 26.153392791748047,
+      "r90_voxels": 46.850826263427734,
+      "r95_voxels": 51.04899597167969,
+      "gradient_mass": 2.2255961894989014,
+      "forward_seconds": 0.6410327090015926,
+      "backward_seconds": 0.9385113749995071
+    },
+    {
+      "seed": 45,
+      "input_shape_zyx": [
+        33,
+        97,
+        97
+      ],
+      "model_input_shape_zyx": [
+        34,
+        104,
+        104
+      ],
+      "padding_after_zyx": [
+        1,
+        7,
+        7
+      ],
+      "feature_shape": [
+        1,
+        256,
+        17,
+        13,
+        13
+      ],
+      "cell_index_zyx": [
+        8,
+        6,
+        6
+      ],
+      "channel_aggregation": "signed_mean_all_stage_channels",
+      "channel_count": 256,
+      "nominal_main_phase_center_voxels": [
+        16.0,
+        48.0,
+        48.0
+      ],
+      "gradient_centroid_voxels": [
+        16.489816665649414,
+        48.39947509765625,
+        48.67726135253906
+      ],
+      "centroid_offset_from_nominal_main_phase_voxels": [
+        0.48981666564941406,
+        0.39947509765625,
+        0.6772613525390625
+      ],
+      "max_abs_offset_voxels": 0.6772613525390625,
+      "r50_voxels": 24.819347381591797,
+      "r90_voxels": 46.62617111206055,
+      "r95_voxels": 51.12729263305664,
+      "gradient_mass": 2.7137997150421143,
+      "forward_seconds": 0.6051549170006183,
+      "backward_seconds": 0.8968111670001235
+    },
+    {
+      "seed": 46,
+      "input_shape_zyx": [
+        33,
+        97,
+        97
+      ],
+      "model_input_shape_zyx": [
+        34,
+        104,
+        104
+      ],
+      "padding_after_zyx": [
+        1,
+        7,
+        7
+      ],
+      "feature_shape": [
+        1,
+        256,
+        17,
+        13,
+        13
+      ],
+      "cell_index_zyx": [
+        8,
+        6,
+        6
+      ],
+      "channel_aggregation": "signed_mean_all_stage_channels",
+      "channel_count": 256,
+      "nominal_main_phase_center_voxels": [
+        16.0,
+        48.0,
+        48.0
+      ],
+      "gradient_centroid_voxels": [
+        16.50914764404297,
+        50.602203369140625,
+        47.119205474853516
+      ],
+      "centroid_offset_from_nominal_main_phase_voxels": [
+        0.5091476440429688,
+        2.602203369140625,
+        -0.8807945251464844
+      ],
+      "max_abs_offset_voxels": 2.602203369140625,
+      "r50_voxels": 26.72077751159668,
+      "r90_voxels": 47.05316162109375,
+      "r95_voxels": 51.088157653808594,
+      "gradient_mass": 2.383678436279297,
+      "forward_seconds": 0.6342968749995634,
+      "backward_seconds": 0.9457260420022067
+    },
+    {
+      "seed": 47,
+      "input_shape_zyx": [
+        33,
+        97,
+        97
+      ],
+      "model_input_shape_zyx": [
+        34,
+        104,
+        104
+      ],
+      "padding_after_zyx": [
+        1,
+        7,
+        7
+      ],
+      "feature_shape": [
+        1,
+        256,
+        17,
+        13,
+        13
+      ],
+      "cell_index_zyx": [
+        8,
+        6,
+        6
+      ],
+      "channel_aggregation": "signed_mean_all_stage_channels",
+      "channel_count": 256,
+      "nominal_main_phase_center_voxels": [
+        16.0,
+        48.0,
+        48.0
+      ],
+      "gradient_centroid_voxels": [
+        16.434600830078125,
+        49.86815643310547,
+        49.41081619262695
+      ],
+      "centroid_offset_from_nominal_main_phase_voxels": [
+        0.434600830078125,
+        1.8681564331054688,
+        1.4108161926269531
+      ],
+      "max_abs_offset_voxels": 1.8681564331054688,
+      "r50_voxels": 27.184555053710938,
+      "r90_voxels": 47.11687469482422,
+      "r95_voxels": 51.28352737426758,
+      "gradient_mass": 2.550414800643921,
+      "forward_seconds": 0.6918221250016359,
+      "backward_seconds": 0.9945591659998172
+    },
+    {
+      "seed": 48,
+      "input_shape_zyx": [
+        33,
+        97,
+        97
+      ],
+      "model_input_shape_zyx": [
+        34,
+        104,
+        104
+      ],
+      "padding_after_zyx": [
+        1,
+        7,
+        7
+      ],
+      "feature_shape": [
+        1,
+        256,
+        17,
+        13,
+        13
+      ],
+      "cell_index_zyx": [
+        8,
+        6,
+        6
+      ],
+      "channel_aggregation": "signed_mean_all_stage_channels",
+      "channel_count": 256,
+      "nominal_main_phase_center_voxels": [
+        16.0,
+        48.0,
+        48.0
+      ],
+      "gradient_centroid_voxels": [
+        16.525400161743164,
+        48.790958404541016,
+        49.78831481933594
+      ],
+      "centroid_offset_from_nominal_main_phase_voxels": [
+        0.5254001617431641,
+        0.7909584045410156,
+        1.7883148193359375
+      ],
+      "max_abs_offset_voxels": 1.7883148193359375,
+      "r50_voxels": 25.179357528686523,
+      "r90_voxels": 46.054317474365234,
+      "r95_voxels": 50.56678771972656,
+      "gradient_mass": 2.6010243892669678,
+      "forward_seconds": 0.6196656249994703,
+      "backward_seconds": 0.9156055829989782
+    },
+    {
+      "seed": 49,
+      "input_shape_zyx": [
+        33,
+        97,
+        97
+      ],
+      "model_input_shape_zyx": [
+        34,
+        104,
+        104
+      ],
+      "padding_after_zyx": [
+        1,
+        7,
+        7
+      ],
+      "feature_shape": [
+        1,
+        256,
+        17,
+        13,
+        13
+      ],
+      "cell_index_zyx": [
+        8,
+        6,
+        6
+      ],
+      "channel_aggregation": "signed_mean_all_stage_channels",
+      "channel_count": 256,
+      "nominal_main_phase_center_voxels": [
+        16.0,
+        48.0,
+        48.0
+      ],
+      "gradient_centroid_voxels": [
+        16.666969299316406,
+        50.291927337646484,
+        49.200927734375
+      ],
+      "centroid_offset_from_nominal_main_phase_voxels": [
+        0.6669692993164062,
+        2.2919273376464844,
+        1.200927734375
+      ],
+      "max_abs_offset_voxels": 2.2919273376464844,
+      "r50_voxels": 25.15949058532715,
+      "r90_voxels": 46.58325958251953,
+      "r95_voxels": 51.078372955322266,
+      "gradient_mass": 2.8952622413635254,
+      "forward_seconds": 0.6060902910030563,
+      "backward_seconds": 0.9556654169973626
+    },
+    {
+      "seed": 50,
+      "input_shape_zyx": [
+        33,
+        97,
+        97
+      ],
+      "model_input_shape_zyx": [
+        34,
+        104,
+        104
+      ],
+      "padding_after_zyx": [
+        1,
+        7,
+        7
+      ],
+      "feature_shape": [
+        1,
+        256,
+        17,
+        13,
+        13
+      ],
+      "cell_index_zyx": [
+        8,
+        6,
+        6
+      ],
+      "channel_aggregation": "signed_mean_all_stage_channels",
+      "channel_count": 256,
+      "nominal_main_phase_center_voxels": [
+        16.0,
+        48.0,
+        48.0
+      ],
+      "gradient_centroid_voxels": [
+        16.791608810424805,
+        49.27085876464844,
+        48.439823150634766
+      ],
+      "centroid_offset_from_nominal_main_phase_voxels": [
+        0.7916088104248047,
+        1.2708587646484375,
+        0.4398231506347656
+      ],
+      "max_abs_offset_voxels": 1.2708587646484375,
+      "r50_voxels": 25.3968505859375,
+      "r90_voxels": 46.14108657836914,
+      "r95_voxels": 50.33885192871094,
+      "gradient_mass": 2.255511999130249,
+      "forward_seconds": 0.6197285420021217,
+      "backward_seconds": 0.9479298330006714
+    },
+    {
+      "seed": 51,
+      "input_shape_zyx": [
+        33,
+        97,
+        97
+      ],
+      "model_input_shape_zyx": [
+        34,
+        104,
+        104
+      ],
+      "padding_after_zyx": [
+        1,
+        7,
+        7
+      ],
+      "feature_shape": [
+        1,
+        256,
+        17,
+        13,
+        13
+      ],
+      "cell_index_zyx": [
+        8,
+        6,
+        6
+      ],
+      "channel_aggregation": "signed_mean_all_stage_channels",
+      "channel_count": 256,
+      "nominal_main_phase_center_voxels": [
+        16.0,
+        48.0,
+        48.0
+      ],
+      "gradient_centroid_voxels": [
+        16.885526657104492,
+        50.2530517578125,
+        49.429161071777344
+      ],
+      "centroid_offset_from_nominal_main_phase_voxels": [
+        0.8855266571044922,
+        2.2530517578125,
+        1.4291610717773438
+      ],
+      "max_abs_offset_voxels": 2.2530517578125,
+      "r50_voxels": 26.795522689819336,
+      "r90_voxels": 46.968074798583984,
+      "r95_voxels": 51.12729263305664,
+      "gradient_mass": 2.012965202331543,
+      "forward_seconds": 0.6182567920004658,
+      "backward_seconds": 0.9557071249982982
+    },
+    {
+      "seed": 52,
+      "input_shape_zyx": [
+        33,
+        97,
+        97
+      ],
+      "model_input_shape_zyx": [
+        34,
+        104,
+        104
+      ],
+      "padding_after_zyx": [
+        1,
+        7,
+        7
+      ],
+      "feature_shape": [
+        1,
+        256,
+        17,
+        13,
+        13
+      ],
+      "cell_index_zyx": [
+        8,
+        6,
+        6
+      ],
+      "channel_aggregation": "signed_mean_all_stage_channels",
+      "channel_count": 256,
+      "nominal_main_phase_center_voxels": [
+        16.0,
+        48.0,
+        48.0
+      ],
+      "gradient_centroid_voxels": [
+        17.17017364501953,
+        50.51152038574219,
+        49.10795593261719
+      ],
+      "centroid_offset_from_nominal_main_phase_voxels": [
+        1.1701736450195312,
+        2.5115203857421875,
+        1.1079559326171875
+      ],
+      "max_abs_offset_voxels": 2.5115203857421875,
+      "r50_voxels": 25.573423385620117,
+      "r90_voxels": 46.314144134521484,
+      "r95_voxels": 50.93132781982422,
+      "gradient_mass": 2.051518440246582,
+      "forward_seconds": 0.6677220830024453,
+      "backward_seconds": 1.0056575829985377
+    },
+    {
+      "seed": 53,
+      "input_shape_zyx": [
+        33,
+        97,
+        97
+      ],
+      "model_input_shape_zyx": [
+        34,
+        104,
+        104
+      ],
+      "padding_after_zyx": [
+        1,
+        7,
+        7
+      ],
+      "feature_shape": [
+        1,
+        256,
+        17,
+        13,
+        13
+      ],
+      "cell_index_zyx": [
+        8,
+        6,
+        6
+      ],
+      "channel_aggregation": "signed_mean_all_stage_channels",
+      "channel_count": 256,
+      "nominal_main_phase_center_voxels": [
+        16.0,
+        48.0,
+        48.0
+      ],
+      "gradient_centroid_voxels": [
+        16.331600189208984,
+        49.7755012512207,
+        50.170257568359375
+      ],
+      "centroid_offset_from_nominal_main_phase_voxels": [
+        0.3316001892089844,
+        1.7755012512207031,
+        2.170257568359375
+      ],
+      "max_abs_offset_voxels": 2.170257568359375,
+      "r50_voxels": 26.419689178466797,
+      "r90_voxels": 46.216880798339844,
+      "r95_voxels": 50.2493782043457,
+      "gradient_mass": 2.8107311725616455,
+      "forward_seconds": 0.6535566669990658,
+      "backward_seconds": 0.9827420420006092
+    },
+    {
+      "seed": 54,
+      "input_shape_zyx": [
+        33,
+        97,
+        97
+      ],
+      "model_input_shape_zyx": [
+        34,
+        104,
+        104
+      ],
+      "padding_after_zyx": [
+        1,
+        7,
+        7
+      ],
+      "feature_shape": [
+        1,
+        256,
+        17,
+        13,
+        13
+      ],
+      "cell_index_zyx": [
+        8,
+        6,
+        6
+      ],
+      "channel_aggregation": "signed_mean_all_stage_channels",
+      "channel_count": 256,
+      "nominal_main_phase_center_voxels": [
+        16.0,
+        48.0,
+        48.0
+      ],
+      "gradient_centroid_voxels": [
+        16.431711196899414,
+        49.5982666015625,
+        48.99576950073242
+      ],
+      "centroid_offset_from_nominal_main_phase_voxels": [
+        0.43171119689941406,
+        1.5982666015625,
+        0.9957695007324219
+      ],
+      "max_abs_offset_voxels": 1.5982666015625,
+      "r50_voxels": 27.386127471923828,
+      "r90_voxels": 46.968074798583984,
+      "r95_voxels": 51.146846771240234,
+      "gradient_mass": 3.395061731338501,
+      "forward_seconds": 0.6459842920012306,
+      "backward_seconds": 0.969971375001478
+    },
+    {
+      "seed": 55,
+      "input_shape_zyx": [
+        33,
+        97,
+        97
+      ],
+      "model_input_shape_zyx": [
+        34,
+        104,
+        104
+      ],
+      "padding_after_zyx": [
+        1,
+        7,
+        7
+      ],
+      "feature_shape": [
+        1,
+        256,
+        17,
+        13,
+        13
+      ],
+      "cell_index_zyx": [
+        8,
+        6,
+        6
+      ],
+      "channel_aggregation": "signed_mean_all_stage_channels",
+      "channel_count": 256,
+      "nominal_main_phase_center_voxels": [
+        16.0,
+        48.0,
+        48.0
+      ],
+      "gradient_centroid_voxels": [
+        16.272008895874023,
+        49.73994064331055,
+        48.864017486572266
+      ],
+      "centroid_offset_from_nominal_main_phase_voxels": [
+        0.27200889587402344,
+        1.7399406433105469,
+        0.8640174865722656
+      ],
+      "max_abs_offset_voxels": 1.7399406433105469,
+      "r50_voxels": 26.438608169555664,
+      "r90_voxels": 46.76537322998047,
+      "r95_voxels": 51.04899597167969,
+      "gradient_mass": 2.401153087615967,
+      "forward_seconds": 0.6908427920025133,
+      "backward_seconds": 1.0532670409993443
+    },
+    {
+      "seed": 56,
+      "input_shape_zyx": [
+        33,
+        97,
+        97
+      ],
+      "model_input_shape_zyx": [
+        34,
+        104,
+        104
+      ],
+      "padding_after_zyx": [
+        1,
+        7,
+        7
+      ],
+      "feature_shape": [
+        1,
+        256,
+        17,
+        13,
+        13
+      ],
+      "cell_index_zyx": [
+        8,
+        6,
+        6
+      ],
+      "channel_aggregation": "signed_mean_all_stage_channels",
+      "channel_count": 256,
+      "nominal_main_phase_center_voxels": [
+        16.0,
+        48.0,
+        48.0
+      ],
+      "gradient_centroid_voxels": [
+        16.45020866394043,
+        47.878173828125,
+        48.666908264160156
+      ],
+      "centroid_offset_from_nominal_main_phase_voxels": [
+        0.4502086639404297,
+        -0.121826171875,
+        0.6669082641601562
+      ],
+      "max_abs_offset_voxels": 0.6669082641601562,
+      "r50_voxels": 25.573423385620117,
+      "r90_voxels": 47.16990661621094,
+      "r95_voxels": 51.4781494140625,
+      "gradient_mass": 2.5374176502227783,
+      "forward_seconds": 0.6257547499990324,
+      "backward_seconds": 1.0014567500002158
+    },
+    {
+      "seed": 57,
+      "input_shape_zyx": [
+        33,
+        97,
+        97
+      ],
+      "model_input_shape_zyx": [
+        34,
+        104,
+        104
+      ],
+      "padding_after_zyx": [
+        1,
+        7,
+        7
+      ],
+      "feature_shape": [
+        1,
+        256,
+        17,
+        13,
+        13
+      ],
+      "cell_index_zyx": [
+        8,
+        6,
+        6
+      ],
+      "channel_aggregation": "signed_mean_all_stage_channels",
+      "channel_count": 256,
+      "nominal_main_phase_center_voxels": [
+        16.0,
+        48.0,
+        48.0
+      ],
+      "gradient_centroid_voxels": [
+        16.52153968811035,
+        50.74769592285156,
+        49.82239532470703
+      ],
+      "centroid_offset_from_nominal_main_phase_voxels": [
+        0.5215396881103516,
+        2.7476959228515625,
+        1.8223953247070312
+      ],
+      "max_abs_offset_voxels": 2.7476959228515625,
+      "r50_voxels": 25.787593841552734,
+      "r90_voxels": 46.66904830932617,
+      "r95_voxels": 50.85272979736328,
+      "gradient_mass": 1.6004257202148438,
+      "forward_seconds": 0.6326002909991075,
+      "backward_seconds": 1.0834009159989364
+    }
+  ],
+  "limitations": [
+    "The input is synthetic random Z-score noise, not ACDC anatomy; this is software/architecture evidence only.",
+    "The probe differentiates the encoder stage-3 center cell and does not measure decoder or patient-dependent effective fields.",
+    "InstanceNorm and residual skip paths are included in the actual external architecture; their mixed paths can shift the empirical centroid relative to the nominal main phase.",
+    "The bounded logical shape is smaller than the full theoretical stage-3 support on some axes, so edge truncation can bias the empirical mass and must be checked again on the declared deployment patch/volume policy.",
+    "This CPU run does not provide GPU VRAM or throughput evidence."
+  ]
+}

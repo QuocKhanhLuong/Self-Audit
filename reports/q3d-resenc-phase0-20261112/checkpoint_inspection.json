@@ -1,0 +1,100 @@
+{
+  "status": "PASS_STRICT_ENCODER",
+  "hf_revision": "f443c09319988e833b3d9589bf95909e4443d7b2",
+  "weights_path": "/Users/alvinluong/Self-Audit-runs/q3d-resenc-20261112/checkpoint_final.pth",
+  "weights_sha256": "ac262d3e8c226c79f9567fddc34d38e011284730ddf2294b5c6c319ce2f22bbd",
+  "bytes": 409579442,
+  "top_level_keys": [
+    "network_weights",
+    "citations",
+    "nnssl_adaptation_plan"
+  ],
+  "nnssl_adaptation_plan": {
+    "architecture_plans": {
+      "arch_class_name": "ResEncL",
+      "arch_kwargs": null,
+      "arch_kwargs_requiring_import": null
+    },
+    "pretrain_plan": {
+      "dataset_name": "Dataset000_Pretrain",
+      "plans_name": "nnsslPlans",
+      "original_median_spacing_after_transp": [
+        1,
+        1,
+        1
+      ],
+      "image_reader_writer": "SimpleITKIO",
+      "transpose_forward": [
+        0,
+        1,
+        2
+      ],
+      "transpose_backward": [
+        0,
+        1,
+        2
+      ],
+      "configurations": {
+        "noresample": {
+          "data_identifier": "nnsslPlans_noresample",
+          "preprocessor_name": "DefaultPreprocessor",
+          "spacing_style": "noresample",
+          "normalization_schemes": [
+            "ZScoreNormalization"
+          ],
+          "use_mask_for_norm": [
+            false
+          ],
+          "resampling_fn_data": "resample_data_or_seg_to_shape",
+          "resampling_fn_data_kwargs": {
+            "is_seg": false,
+            "order": 3,
+            "order_z": 0,
+            "force_separate_z": null
+          },
+          "resampling_fn_mask": "resample_data_or_seg_to_shape",
+          "resampling_fn_mask_kwargs": {
+            "is_seg": true,
+            "order": 1,
+            "order_z": 0,
+            "force_separate_z": null
+          },
+          "spacing": null,
+          "patch_size": [
+            192,
+            192,
+            192
+          ]
+        }
+      },
+      "experiment_planner_used": "ExperimentPlanner"
+    },
+    "pretrain_num_input_channels": 1,
+    "recommended_downstream_patchsize": [
+      192,
+      192,
+      192
+    ],
+    "key_to_encoder": "encoder.stages",
+    "key_to_stem": "encoder.stem",
+    "keys_to_in_proj": [
+      "encoder.stem.convs.0.conv",
+      "encoder.stem.convs.0.all_modules.0"
+    ],
+    "key_to_lpe": null
+  },
+  "prefix_counts": {
+    "encoder.stem": 8,
+    "encoder.stages": 440,
+    "decoder.encoder": 448,
+    "decoder.stages": 40,
+    "decoder.transpconvs": 10,
+    "decoder.seg_layers": 10
+  },
+  "encoder_key_count": 448,
+  "missing_keys": [],
+  "unexpected_keys": [],
+  "model_parameter_count": 102351380,
+  "source_sha256": "3fbe0fc4da69a403ca99c5c82af680d57ea375b35458913bc6b6eaab70b19610",
+  "state_dict_inventory": "checkpoint_keys_shapes.json"
+}
