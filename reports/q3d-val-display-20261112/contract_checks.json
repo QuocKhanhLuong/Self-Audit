@@ -1,0 +1,281 @@
+{
+  "evidence_status": "SOFTWARE_ONLY",
+  "baseline_commit": "3b8e3ab42d8cf5d729e7924ba2a91bb77a39013c",
+  "source_commit": "60124f456855047802529e2f52e04e37b63e0aad",
+  "all_production_ast_identical_except_string_literals": true,
+  "recipe_sha256_before": {
+    "reports/q3d-resenc-plan-v2-20261112/recipes/acdc_a_k10_seed42_v1.json": "17780f8037d3e3276bb14fe4ef8e42d40e478abe8b8d46a7c03b54124f012942",
+    "reports/q3d-resenc-plan-v2-20261112/recipes/acdc_a_k5_seed42_v1.json": "48978954a11f824a48cd1e007f4fc7bdf17cdf0c9a20a593e9078eafda37c08b",
+    "reports/q3d-resenc-plan-v2-20261112/recipes/acdc_a_k8_seed42_c0.json": "eacb5a23c9f265c1391d27c02b58c1a6cf46341b501aab895690a8ac93e22b1b",
+    "reports/q3d-resenc-plan-v2-20261112/recipes/acdc_a_k8_seed42_c1.json": "caae30e898f426171891a80dfc1406b08d79ae6d425b8ba9edfc42609f25c798",
+    "reports/q3d-resenc-plan-v2-20261112/recipes/acdc_a_k8_seed42_teacher_supervised.json": "74440125026bac851737715773c8d43cc81ae21273a7ce81a5d843548a897643",
+    "reports/q3d-resenc-plan-v2-20261112/recipes/acdc_a_k8_seed42_v1.json": "727d778acaab0f675148f495de9c643fc6514af74f0223f90de213ac874f6302",
+    "reports/q3d-resenc-plan-v2-20261112/recipes/acdc_a_k8_seed42_v1u.json": "32972464239f06060bfca8e72cb3029d30cc1093e91ad23e698cd7f5c5409db4"
+  },
+  "recipe_sha256_after": {
+    "reports/q3d-resenc-plan-v2-20261112/recipes/acdc_a_k10_seed42_v1.json": "17780f8037d3e3276bb14fe4ef8e42d40e478abe8b8d46a7c03b54124f012942",
+    "reports/q3d-resenc-plan-v2-20261112/recipes/acdc_a_k5_seed42_v1.json": "48978954a11f824a48cd1e007f4fc7bdf17cdf0c9a20a593e9078eafda37c08b",
+    "reports/q3d-resenc-plan-v2-20261112/recipes/acdc_a_k8_seed42_c0.json": "eacb5a23c9f265c1391d27c02b58c1a6cf46341b501aab895690a8ac93e22b1b",
+    "reports/q3d-resenc-plan-v2-20261112/recipes/acdc_a_k8_seed42_c1.json": "caae30e898f426171891a80dfc1406b08d79ae6d425b8ba9edfc42609f25c798",
+    "reports/q3d-resenc-plan-v2-20261112/recipes/acdc_a_k8_seed42_teacher_supervised.json": "74440125026bac851737715773c8d43cc81ae21273a7ce81a5d843548a897643",
+    "reports/q3d-resenc-plan-v2-20261112/recipes/acdc_a_k8_seed42_v1.json": "727d778acaab0f675148f495de9c643fc6514af74f0223f90de213ac874f6302",
+    "reports/q3d-resenc-plan-v2-20261112/recipes/acdc_a_k8_seed42_v1u.json": "32972464239f06060bfca8e72cb3029d30cc1093e91ad23e698cd7f5c5409db4"
+  },
+  "recipe_hashes_unchanged": true,
+  "server_access": "NOT_PERFORMED",
+  "server_deployment": "NOT_RUN",
+  "display_string_changes": [
+    {
+      "file": "scripts/q3d_campaign.py",
+      "line": 335,
+      "before": "Keep the reduced ACDC K budgets on one existing DEV manifest.\n\n    The K=8 development hash is the only locked DEV byte available to the\n    campaign.  K=5/K=10 may reuse that exact file, but no new DEV hash or\n    patient selection is invented here.  Missing inputs remain NOT_RUN.\n    ",
+      "after": "Keep the reduced ACDC K budgets on one existing VAL manifest.\n\n    The K=8 development hash is the only locked VAL byte available to the\n    campaign.  K=5/K=10 may reuse that exact file, but no new VAL hash or\n    patient selection is invented here.  Missing inputs remain NOT_RUN.\n    "
+    },
+    {
+      "file": "scripts/q3d_campaign.py",
+      "line": 354,
+      "before": " DEVELOPMENT must reuse the locked K=8 manifest SHA-256; no alternative DEV bytes may be introduced",
+      "after": " VALIDATION must reuse the locked K=8 manifest SHA-256; no alternative VAL bytes may be introduced"
+    },
+    {
+      "file": "scripts/q3d_diagnostics.py",
+      "line": 2,
+      "before": "Run read-only Q-3D DEV codebook and physiology diagnostics.",
+      "after": "Run read-only Q-3D VAL codebook and physiology diagnostics."
+    },
+    {
+      "file": "scripts/q3d_physio_cache.py",
+      "line": 2,
+      "before": "Build a protocol-bound, SHA-sealed Q-3D physiology cache for TRAIN U.\n\nFor real runs, load a verified Q-3D research checkpoint after stage T (and Q\nfor VQ arms), before J. Online O1 refreshes are managed by the trainer. The synthetic-only\ndefault builds the repository's tiny smoke teacher and seals its exact state\nhash.  This command never trains, reads a U mask, or accesses DEV/TEST data.\n",
+      "after": "Build a protocol-bound, SHA-sealed Q-3D physiology cache for TRAIN U.\n\nFor real runs, load a verified Q-3D research checkpoint after stage T (and Q\nfor VQ arms), before J. Online O1 refreshes are managed by the trainer. The synthetic-only\ndefault builds the repository's tiny smoke teacher and seals its exact state\nhash.  This command never trains, reads a U mask, or accesses VAL/TEST data.\n"
+    },
+    {
+      "file": "scripts/q3d_physio_cache.py",
+      "line": 168,
+      "before": "teacher checkpoint is not the frozen DEV-selected T snapshot",
+      "after": "teacher checkpoint is not the frozen VAL-selected T snapshot"
+    },
+    {
+      "file": "scripts/q3d_preflight.py",
+      "line": 2,
+      "before": "Read-only Q-3D P0 diagnostics; unavailable evidence stays NOT_RUN.\n\nThis command inspects one validated nested recipe, local source/weight paths,\nthe declared train manifest and model source. It never downloads assets,\nmodifies a manifest, trains a model, or reads DEV/TEST labels.\n",
+      "after": "Read-only Q-3D P0 diagnostics; unavailable evidence stays NOT_RUN.\n\nThis command inspects one validated nested recipe, local source/weight paths,\nthe declared train manifest and model source. It never downloads assets,\nmodifies a manifest, trains a model, or reads VAL/TEST labels.\n"
+    },
+    {
+      "file": "scripts/q3d_profile_gpu.py",
+      "line": 2,
+      "before": "Phase D: bounded real-data Q3D T/J GPU profile.\n\nExample (run only after the corrected K8 manifests and real T/Q/P artifacts\nare available, along with separate TRAIN/DEV geometry repair evidence and a\ngeometry-bound ERF phase receipt):\n\n    python scripts/q3d_profile_gpu.py --config /path/to/acdc-k8-v1.json       --stage-artifact T=/path/to/T.json --stage-artifact Q=/path/to/Q.json       --stage-artifact P=/path/to/P.json       --stage-artifact-sha T=<sha256> --stage-artifact-sha Q=<sha256>       --stage-artifact-sha P=<sha256>       --train-source-manifest /path/to/source-train.json       --train-source-manifest-sha256 <sha256> --train-repair-report /path/to/train-repair.json       --train-repair-report-sha256 <sha256>       --dev-source-manifest /path/to/source-dev.json --dev-source-manifest-sha256 <sha256>       --dev-repair-report /path/to/dev-repair.json --dev-repair-report-sha256 <sha256>       --phase-receipt /path/to/geometry-reprobe.json --phase-receipt-sha256 <sha256>       --report /tmp/q3d-phase-d.json       --scratch-root /tmp --device cuda:0 --allow-real-profile\n\nThis command retains the recipe's full 8,000-update T/J budgets and applies\nthe engine's update_limit=20 API separately to each measured stage. ``--stage\nT`` can profile the teacher before T/Q/P artifacts exist; ``--stage J`` and\nthe default ``--stage all`` require exact completed T/Q/P artifacts. It never\nruns Q/P or accepts synthetic gate overrides.\n",
+      "after": "Phase D: bounded real-data Q3D T/J GPU profile.\n\nExample (run only after the corrected K8 manifests and real T/Q/P artifacts\nare available, along with separate TRAIN/VAL geometry repair evidence and a\ngeometry-bound ERF phase receipt):\n\n    python scripts/q3d_profile_gpu.py --config /path/to/acdc-k8-v1.json       --stage-artifact T=/path/to/T.json --stage-artifact Q=/path/to/Q.json       --stage-artifact P=/path/to/P.json       --stage-artifact-sha T=<sha256> --stage-artifact-sha Q=<sha256>       --stage-artifact-sha P=<sha256>       --train-source-manifest /path/to/source-train.json       --train-source-manifest-sha256 <sha256> --train-repair-report /path/to/train-repair.json       --train-repair-report-sha256 <sha256>       --dev-source-manifest /path/to/source-dev.json --dev-source-manifest-sha256 <sha256>       --dev-repair-report /path/to/dev-repair.json --dev-repair-report-sha256 <sha256>       --phase-receipt /path/to/geometry-reprobe.json --phase-receipt-sha256 <sha256>       --report /tmp/q3d-phase-d.json       --scratch-root /tmp --device cuda:0 --allow-real-profile\n\nThis command retains the recipe's full 8,000-update T/J budgets and applies\nthe engine's update_limit=20 API separately to each measured stage. ``--stage\nT`` can profile the teacher before T/Q/P artifacts exist; ``--stage J`` and\nthe default ``--stage all`` require exact completed T/Q/P artifacts. It never\nruns Q/P or accepts synthetic gate overrides.\n"
+    },
+    {
+      "file": "scripts/q3d_profile_gpu.py",
+      "line": 65,
+      "before": "source DEV18 manifest used by its independent geometry repair",
+      "after": "source VAL18 manifest used by its independent geometry repair"
+    },
+    {
+      "file": "scripts/q3d_profile_gpu.py",
+      "line": 67,
+      "before": "source DEV18 manifest SHA-256",
+      "after": "source VAL18 manifest SHA-256"
+    },
+    {
+      "file": "scripts/q3d_profile_gpu.py",
+      "line": 69,
+      "before": "successful, hash-bound DEV18 geometry repair report",
+      "after": "successful, hash-bound VAL18 geometry repair report"
+    },
+    {
+      "file": "scripts/q3d_profile_gpu.py",
+      "line": 71,
+      "before": "DEV18 repair report SHA-256",
+      "after": "VAL18 repair report SHA-256"
+    },
+    {
+      "file": "scripts/q3d_watch_metrics.py",
+      "line": 2,
+      "before": "Read-only compact view of per-class Q3D development metrics.",
+      "after": "Read-only compact view of per-class Q3D validation metrics."
+    },
+    {
+      "file": "scripts/q3d_watch_metrics.py",
+      "line": 28,
+      "before": "%  FG ",
+      "after": "%  val FG Dice "
+    },
+    {
+      "file": "scripts/q3d_watch_metrics.py",
+      "line": 43,
+      "before": "DEV patient-macro Dice (%) — measured values only; epoch=- means no epoch was recorded.",
+      "after": "VAL patient-macro Dice (%) — measured values only; epoch=- means no epoch was recorded."
+    },
+    {
+      "file": "self_audit/candidate_q3d/campaign_runtime.py",
+      "line": 147,
+      "before": "Read only explicit student DEV selection fields from a trainer receipt.",
+      "after": "Read only explicit student VAL selection fields from a trainer receipt."
+    },
+    {
+      "file": "self_audit/candidate_q3d/campaign_runtime.py",
+      "line": 232,
+      "before": "Collect teacher DEV quality beside the selected C0 DEV score.\n\n    The join key is exactly ``(dataset, protocol, k, seed)``.  Teacher quality\n    is read only from the verified shared T manifest, while C0 quality is read\n    from its completed J receipt/checkpoint.  Missing or unselected artifacts\n    stay ``None`` with ``NOT_RUN`` status; no score is inferred from another K\n    or from a different arm.\n    ",
+      "after": "Collect teacher VAL quality beside the selected C0 VAL score.\n\n    The join key is exactly ``(dataset, protocol, k, seed)``.  Teacher quality\n    is read only from the verified shared T manifest, while C0 quality is read\n    from its completed J receipt/checkpoint.  Missing or unselected artifacts\n    stay ``None`` with ``NOT_RUN`` status; no score is inferred from another K\n    or from a different arm.\n    "
+    },
+    {
+      "file": "self_audit/candidate_q3d/campaign_runtime.py",
+      "line": 311,
+      "before": "Scores are selected development metrics only; missing artifacts remain `NOT_RUN`.",
+      "after": "Scores are selected validation metrics only; missing artifacts remain `NOT_RUN`."
+    },
+    {
+      "file": "self_audit/candidate_q3d/campaign_runtime.py",
+      "line": 312,
+      "before": "| dataset | protocol | K | seed | teacher DEV Dice@K | teacher status | C0 DEV Dice@K | C0 status | C0 - teacher |",
+      "after": "| dataset | protocol | K | seed | teacher val FG Dice@K | teacher status | C0 val FG Dice@K | C0 status | C0 - teacher |"
+    },
+    {
+      "file": "self_audit/candidate_q3d/engine.py",
+      "line": 800,
+      "before": "Read DEV masks only for the locked patient-macro checkpoint selector.",
+      "after": "Read VAL masks only for the locked patient-macro checkpoint selector."
+    },
+    {
+      "file": "self_audit/candidate_q3d/engine.py",
+      "line": 944,
+      "before": "Summarize whether the last three actual T DEV scores strictly rise.",
+      "after": "Summarize whether the last three actual T VAL scores strictly rise."
+    },
+    {
+      "file": "self_audit/candidate_q3d/engine.py",
+      "line": 1144,
+      "before": "Extra DEV observations must not perturb training RNG or mixed module modes.",
+      "after": "Extra VAL observations must not perturb training RNG or mixed module modes."
+    },
+    {
+      "file": "self_audit/candidate_q3d/engine.py",
+      "line": 1179,
+      "before": "Print sparse teacher DEV diagnostics without corrupting JSON stdout.",
+      "after": "Print sparse teacher VAL diagnostics without corrupting JSON stdout."
+    },
+    {
+      "file": "self_audit/candidate_q3d/engine.py",
+      "line": 806,
+      "before": "development output_kind must be student or teacher",
+      "after": "validation output_kind must be student or teacher"
+    },
+    {
+      "file": "self_audit/candidate_q3d/engine.py",
+      "line": 876,
+      "before": "DEV checkpoint selection has no patient with foreground support",
+      "after": "VAL checkpoint selection has no patient with foreground support"
+    },
+    {
+      "file": "self_audit/candidate_q3d/engine.py",
+      "line": 1164,
+      "before": "epoch DEV score is nonfinite",
+      "after": "epoch VAL score is nonfinite"
+    },
+    {
+      "file": "self_audit/candidate_q3d/engine.py",
+      "line": 1196,
+      "before": " | DEV patient_macro_fg_dice=",
+      "after": " | VAL patient_macro_fg_dice="
+    },
+    {
+      "file": "self_audit/candidate_q3d/engine.py",
+      "line": 1257,
+      "before": "active Q-3D teacher stage requires a pinned DEV manifest for checkpoint selection",
+      "after": "active Q-3D teacher stage requires a pinned VAL manifest for checkpoint selection"
+    },
+    {
+      "file": "self_audit/candidate_q3d/engine.py",
+      "line": 1417,
+      "before": "Q-3D teacher stage completed without a DEV-selected checkpoint",
+      "after": "Q-3D teacher stage completed without a VAL-selected checkpoint"
+    },
+    {
+      "file": "self_audit/candidate_q3d/engine.py",
+      "line": 2640,
+      "before": "active Q-3D student stage requires a pinned DEV manifest for checkpoint selection",
+      "after": "active Q-3D student stage requires a pinned VAL manifest for checkpoint selection"
+    },
+    {
+      "file": "self_audit/candidate_q3d/engine.py",
+      "line": 3131,
+      "before": "Q-3D joint stage completed without a DEV-selected student checkpoint",
+      "after": "Q-3D joint stage completed without a VAL-selected student checkpoint"
+    },
+    {
+      "file": "self_audit/candidate_q3d/engine.py",
+      "line": 1336,
+      "before": "DEV checkpoint-selection score is nonfinite",
+      "after": "VAL checkpoint-selection score is nonfinite"
+    },
+    {
+      "file": "self_audit/candidate_q3d/engine.py",
+      "line": 3089,
+      "before": "Q-3D student DEV selection score is nonfinite",
+      "after": "Q-3D student VAL selection score is nonfinite"
+    },
+    {
+      "file": "self_audit/candidate_q3d/engine.py",
+      "line": 826,
+      "before": "DEV patient ",
+      "after": "VAL patient "
+    },
+    {
+      "file": "self_audit/candidate_q3d/engine.py",
+      "line": 834,
+      "before": "DEV mask records require path and sha256 with optional phase",
+      "after": "VAL mask records require path and sha256 with optional phase"
+    },
+    {
+      "file": "self_audit/candidate_q3d/engine.py",
+      "line": 853,
+      "before": "DEV mask must be a full native BG/RV/MYO/LV volume",
+      "after": "VAL mask must be a full native BG/RV/MYO/LV volume"
+    },
+    {
+      "file": "self_audit/candidate_q3d/engine.py",
+      "line": 838,
+      "before": "DEV mask phase must be ED or ES",
+      "after": "VAL mask phase must be ED or ES"
+    },
+    {
+      "file": "self_audit/candidate_q3d/engine.py",
+      "line": 850,
+      "before": "DEV mask hash mismatch for ",
+      "after": "VAL mask hash mismatch for "
+    },
+    {
+      "file": "self_audit/candidate_q3d/engine.py",
+      "line": 847,
+      "before": "DEV mask phase ",
+      "after": "VAL mask phase "
+    },
+    {
+      "file": "self_audit/candidate_q3d/evaluation.py",
+      "line": 1,
+      "before": "Native-volume Q-3D evaluation and paired decision gates.\n\nEvaluation consumes one full native frame at a time.  Development and test\nlabels are only opened after every requested prediction has been materialized\nand hashed.  Physical distances use the declared anisotropic ZYX spacing.\n",
+      "after": "Native-volume Q-3D evaluation and paired decision gates.\n\nEvaluation consumes one full native frame at a time.  Validation and test\nlabels are only opened after every requested prediction has been materialized\nand hashed.  Physical distances use the declared anisotropic ZYX spacing.\n"
+    },
+    {
+      "file": "self_audit/candidate_q3d/evaluation.py",
+      "line": 288,
+      "before": "Report DEV w_pat versus RV Dice; refuse to calculate this diagnostic on TEST.",
+      "after": "Report VAL w_pat versus RV Dice; refuse to calculate this diagnostic on TEST."
+    },
+    {
+      "file": "self_audit/candidate_q3d/evaluation.py",
+      "line": 290,
+      "before": "physiologic w_pat correlation is a DEV-only diagnostic",
+      "after": "physiologic w_pat correlation is a VAL-only diagnostic"
+    },
+    {
+      "file": "self_audit/candidate_q3d/evaluation.py",
+      "line": 779,
+      "before": "teacher/student code agreement is a DEV-only diagnostic",
+      "after": "teacher/student code agreement is a VAL-only diagnostic"
+    }
+  ]
+}
