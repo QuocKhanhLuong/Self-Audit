@@ -32,7 +32,7 @@ RESENC_INSPECTION = Path(os.environ.get(
 ))
 RESENC_ERF_RECEIPT = Path(os.environ.get(
     "Q3D_RESENC_ERF_RECEIPT",
-    str(ROOT / "reports/q3d-resenc-phase0-20261112/erf_probe.json"),
+    str(ROOT / "reports/q3d-resenc-pixdim-20261112/erf_probe.json"),
 ))
 RESENC_ARCHITECTURE = "ResEncL"
 RESENC_ERF_SAMPLES = 16
@@ -883,24 +883,70 @@ def _resenc_receipt_network_inventory(
         raise ValueError("Phase-0 ERF receipt architecture is not ResEncL")
     if model.get("checkpoint_sha256") != expected_sha256:
         raise ValueError("Phase-0 ERF receipt checkpoint SHA-256 differs from the configured pin")
-    samples = int(compute.get("samples", 0))
+    try:
+        from self_audit.candidate_q3d.geometry_planning import CANONICAL_PROBE_CONTRACT
+        from self_audit.candidate_q3d.config import NNFOUNDATION_DEFAULT_ENCODER_STRIDES
+    except ImportError as exc:
+        raise ValueError("canonical geometry-planning ERF contract is unavailable") from exc
+    canonical = CANONICAL_PROBE_CONTRACT
+    canonical_schedule = [
+        [int(axis) for axis in stage] for stage in NNFOUNDATION_DEFAULT_ENCODER_STRIDES
+    ]
+    probe_contract = receipt.get("geometry_reprobe", {}).get("probe_contract") \
+        if isinstance(receipt.get("geometry_reprobe"), dict) else None
+    if not isinstance(probe_contract, dict):
+        raise ValueError("Phase-0 ERF receipt is missing its geometry-planning probe contract")
+    canonical_fields = (
+        "samples", "seed_start", "seed_end_inclusive", "shape_zyx", "stage_index",
+        "channel_aggregation", "padding_mode", "decision_threshold_voxels",
+    )
+    if any(field not in canonical for field in canonical_fields):
+        raise ValueError("canonical geometry-planning ERF contract is incomplete")
+    for field in canonical_fields:
+        if probe_contract.get(field) != canonical[field]:
+            raise ValueError(f"Phase-0 ERF receipt probe contract {field} differs from geometry planning")
+    if probe_contract.get("stride_schedule_zyx") != canonical_schedule:
+        raise ValueError("Phase-0 ERF receipt probe contract stride schedule differs from Q3D config")
+
+    samples = compute.get("samples")
     threshold = float(decision.get("threshold_voxels", 0.0))
+    signed_mean_offset = summary.get("mean_centroid_offset_voxels")
     mean_offset = summary.get("absolute_mean_centroid_offset_voxels")
     stride = model.get("cumulative_stride_zyx")
     full_stride = model.get("full_teacher_cumulative_stride_zyx")
     shape = compute.get("shape_zyx")
     schedule = model.get("stride_schedule_zyx")
     expected_schedule = diagnostic_options.get("expected_stride_schedule_zyx")
-    if samples < 16 or not math.isfinite(threshold) or threshold <= 0 \
+    receipt_samples = receipt.get("samples")
+    expected_seeds = list(range(
+        int(canonical["seed_start"]), int(canonical["seed_end_inclusive"]) + 1,
+    ))
+    if not isinstance(receipt_samples, list):
+        raise ValueError("Phase-0 ERF receipt does not contain its canonical sample rows")
+    actual_seeds = [row.get("seed") if isinstance(row, dict) else None for row in receipt_samples]
+    if samples != canonical["samples"] or len(receipt_samples) != canonical["samples"] \
+            or actual_seeds != expected_seeds:
+        raise ValueError("Phase-0 ERF receipt must contain the exact canonical 16 seeds 42-57")
+    if compute.get("seed_start") != canonical["seed_start"]:
+        raise ValueError("Phase-0 ERF receipt seed start differs from the canonical contract")
+    if not math.isfinite(threshold) or threshold <= 0 \
             or not isinstance(mean_offset, list) or len(mean_offset) != 3 \
+            or not isinstance(signed_mean_offset, list) or len(signed_mean_offset) != 3 \
             or not isinstance(stride, list) or len(stride) != 3 \
             or not isinstance(full_stride, list) or len(full_stride) != 3 \
             or not isinstance(shape, list) or len(shape) != 3 \
             or not isinstance(schedule, list) or len(schedule) != 6 \
-            or not all(math.isfinite(float(value)) for value in mean_offset):
+            or not all(math.isfinite(float(value)) for value in mean_offset + signed_mean_offset):
         raise ValueError("Phase-0 ERF receipt does not satisfy the locked sample/geometry contract")
     if compute.get("padding_mode") != "replicate":
         raise ValueError("Phase-0 ERF receipt must use full-teacher replicate padding")
+    if shape != canonical["shape_zyx"]:
+        raise ValueError("Phase-0 ERF receipt input shape differs from the canonical contract")
+    if any(
+        not isinstance(row, dict) or row.get("input_shape_zyx") != canonical["shape_zyx"]
+        for row in receipt_samples
+    ):
+        raise ValueError("Phase-0 ERF sample rows do not use the canonical input shape")
     if any(int(value) <= 0 or int(value) % 2 == 0 for value in shape):
         raise ValueError("Phase-0 ERF receipt input shape must be positive and odd")
     if any(int(value) <= 0 for value in stride + full_stride):
@@ -911,18 +957,35 @@ def _resenc_receipt_network_inventory(
         for value in schedule
     ):
         raise ValueError("Phase-0 ERF receipt has an invalid stride schedule")
+    if schedule != canonical_schedule:
+        raise ValueError("Phase-0 ERF receipt stride schedule differs from Q3D config")
     if expected_schedule is not None and schedule != expected_schedule:
         raise ValueError("Phase-0 ERF receipt stride schedule differs from the configured teacher")
+    cumulative_from_schedule = [
+        math.prod(int(stage[axis]) for stage in schedule[: int(canonical["stage_index"]) + 1])
+        for axis in range(3)
+    ]
+    full_cumulative_from_schedule = [
+        math.prod(int(stage[axis]) for stage in schedule)
+        for axis in range(3)
+    ]
+    if stride != cumulative_from_schedule or full_stride != full_cumulative_from_schedule:
+        raise ValueError("Phase-0 ERF receipt cumulative strides disagree with its actual schedule")
     if compute.get("random_zscore_input") is not True or compute.get("patient_data") != "NOT_USED":
         raise ValueError("Phase-0 ERF receipt does not prove random Z-score, patient-free inputs")
-    if int(model.get("stage_index", -1)) != 3 or model.get("stage_name") != "encoder.stages[3]":
+    if int(model.get("stage_index", -1)) != canonical["stage_index"] \
+            or model.get("stage_name") != f"encoder.stages[{canonical['stage_index']}]":
         raise ValueError("Phase-0 ERF receipt does not target encoder stage 3")
-    receipt_samples = receipt.get("samples")
-    if not isinstance(receipt_samples, list) or len(receipt_samples) < samples:
-        raise ValueError("Phase-0 ERF receipt does not contain all declared sample rows")
     if threshold != float(diagnostic_options.get("erf_threshold", threshold)):
         raise ValueError("Phase-0 ERF receipt threshold differs from the requested diagnostic threshold")
-    if any(abs(float(value)) > threshold for value in mean_offset):
+    if threshold != float(canonical["decision_threshold_voxels"]):
+        raise ValueError("Phase-0 ERF receipt threshold differs from geometry planning")
+    if any(
+        not math.isclose(abs(float(signed)), float(absolute), rel_tol=0.0, abs_tol=1e-6)
+        for signed, absolute in zip(signed_mean_offset, mean_offset)
+    ):
+        raise ValueError("Phase-0 ERF receipt signed and absolute mean offsets disagree")
+    if any(abs(float(value)) > threshold for value in signed_mean_offset):
         raise ValueError("Phase-0 ERF receipt mean offset does not pass its declared threshold")
     return {
         "status": "PHASE0_RECEIPT_ONLY",
@@ -951,6 +1014,7 @@ def _resenc_receipt_network_inventory(
             "erf_summary": {
                 "samples": samples,
                 "shape_zyx": [int(value) for value in shape],
+                "signed_mean_centroid_offset_voxels": [float(value) for value in signed_mean_offset],
                 "absolute_mean_centroid_offset_voxels": [float(value) for value in mean_offset],
                 "threshold_voxels": threshold,
             },

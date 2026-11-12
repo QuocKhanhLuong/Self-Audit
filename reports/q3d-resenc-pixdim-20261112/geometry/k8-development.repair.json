@@ -1,0 +1,4048 @@
+{
+  "schema": "self_audit.q3d.geometry_repair.v1",
+  "status": "success",
+  "source_manifest_path": "/root/mount_data/prepared/ACDC/k8/development.json",
+  "source_manifest_sha256_expected": "ba46934afe8ea5c47dd798019bee233c97c98320b358e2d40165e87a651dc7df",
+  "geometry_policy": "acdc_pixdim_native_v1",
+  "axis_map": "XYZ->ZYX",
+  "audit_only": false,
+  "cine_mapping": {
+    "source": "/root/mount_data/receipts/q3d-pixdim-20261112/k8-development.cine-map.json",
+    "sha256": "07d5a493eda54fd5989cd5881983bbb92e6ed7b94e5dd8edc4483a379695a0ac",
+    "provenance": "Exact patient ID and original CINE filename in restored ACDC raw training/testing; original Drive byte integrity audited separately; no voxel bridge is claimed here.",
+    "voxel_bridge_status": "NOT_VERIFIED",
+    "shape_match_is_not_voxel_equivalence": true
+  },
+  "unit_declarations_by_patient": {
+    "patient012": {
+      "unit": "mm",
+      "provenance": "Explicit user-approved ACDC pixdim amendment 2026-11-12; physical acquisition units in mm per official https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html ; unknown header unit is declared, not inferred silently."
+    },
+    "patient014": {
+      "unit": "mm",
+      "provenance": "Explicit user-approved ACDC pixdim amendment 2026-11-12; physical acquisition units in mm per official https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html ; unknown header unit is declared, not inferred silently."
+    },
+    "patient015": {
+      "unit": "mm",
+      "provenance": "Explicit user-approved ACDC pixdim amendment 2026-11-12; physical acquisition units in mm per official https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html ; unknown header unit is declared, not inferred silently."
+    },
+    "patient018": {
+      "unit": "mm",
+      "provenance": "Explicit user-approved ACDC pixdim amendment 2026-11-12; physical acquisition units in mm per official https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html ; unknown header unit is declared, not inferred silently."
+    },
+    "patient036": {
+      "unit": "mm",
+      "provenance": "Explicit user-approved ACDC pixdim amendment 2026-11-12; physical acquisition units in mm per official https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html ; unknown header unit is declared, not inferred silently."
+    },
+    "patient070": {
+      "unit": "mm",
+      "provenance": "Explicit user-approved ACDC pixdim amendment 2026-11-12; physical acquisition units in mm per official https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html ; unknown header unit is declared, not inferred silently."
+    },
+    "patient082": {
+      "unit": "mm",
+      "provenance": "Explicit user-approved ACDC pixdim amendment 2026-11-12; physical acquisition units in mm per official https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html ; unknown header unit is declared, not inferred silently."
+    },
+    "patient087": {
+      "unit": "mm",
+      "provenance": "Explicit user-approved ACDC pixdim amendment 2026-11-12; physical acquisition units in mm per official https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html ; unknown header unit is declared, not inferred silently."
+    },
+    "patient089": {
+      "unit": "mm",
+      "provenance": "Explicit user-approved ACDC pixdim amendment 2026-11-12; physical acquisition units in mm per official https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html ; unknown header unit is declared, not inferred silently."
+    },
+    "patient095": {
+      "unit": "mm",
+      "provenance": "Explicit user-approved ACDC pixdim amendment 2026-11-12; physical acquisition units in mm per official https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html ; unknown header unit is declared, not inferred silently."
+    },
+    "patient098": {
+      "unit": "mm",
+      "provenance": "Explicit user-approved ACDC pixdim amendment 2026-11-12; physical acquisition units in mm per official https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html ; unknown header unit is declared, not inferred silently."
+    }
+  },
+  "audit_rows": [
+    {
+      "patient_id": "patient004",
+      "geometry_policy": "acdc_pixdim_native_v1",
+      "cine_path": "/root/mount_data/datasets/ACDC/raw/training/patient004/patient004_4d.nii",
+      "manifest_shape_zyx": [
+        10,
+        256,
+        232
+      ],
+      "manifest_spacing_zyx_mm": [
+        10.0,
+        1.3671875,
+        1.3671875
+      ],
+      "manifest_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.3671875,
+          157.91015625
+        ],
+        [
+          0.0,
+          1.3671875,
+          0.0,
+          -174.31640625
+        ],
+        [
+          10.0,
+          0.0,
+          0.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "source_file_sha256": "64c3e1d1d9a8c4669ad468fe51fcecfab0e863e13f92519dbdc37f11c5ef576c",
+      "source_header_sha256": "1d604ab4b4491837a25514dcdfab8732b198dec804ebb18492addcfaecb0d598",
+      "source_shape_xyzt": [
+        232,
+        256,
+        10,
+        28
+      ],
+      "raw_pixdim_xyz_native": [
+        1.3671875,
+        1.3671875,
+        10.0
+      ],
+      "header_zooms_xyz_native": [
+        1.3671875,
+        1.3671875,
+        10.0
+      ],
+      "header_zooms_xyz_mm": [
+        1.3671875,
+        1.3671875,
+        10.0
+      ],
+      "sform_code": 0,
+      "sform_affine_xyz": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "qform_code": 0,
+      "qform_affine_xyz": [
+        [
+          1.3671875,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.3671875,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_xyz": [
+        [
+          -1.3671875,
+          0.0,
+          0.0,
+          157.91015625
+        ],
+        [
+          0.0,
+          1.3671875,
+          0.0,
+          -174.31640625
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_source": "nibabel_base_affine_uncoded_derived",
+      "reconstructed_affine_xyz": [
+        [
+          -1.3671875,
+          0.0,
+          0.0,
+          157.91015625
+        ],
+        [
+          0.0,
+          1.3671875,
+          0.0,
+          -174.31640625
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "geometry_policy_waivers": [
+        "UNCODED_FORMS_USE_NIBABEL_BASE_AFFINE"
+      ],
+      "geometry_nonclaims": [
+        "SCANNER_WORLD_POSE_NOT_INDEPENDENTLY_VERIFIED",
+        "UNCODED_AFFINE_IS_DERIVED_NATIVE_IMAGE_COORDINATE_CONVENTION"
+      ],
+      "affine_coordinate_convention": "derived_native_image_coordinate_convention",
+      "scanner_world_pose_status": "NOT_INDEPENDENTLY_VERIFIED",
+      "original_spatial_unit": "mm",
+      "resolved_spatial_unit": "mm",
+      "unit_resolution": "nifti_header",
+      "unit_provenance": null,
+      "cine_mapping_source": "/root/mount_data/receipts/q3d-pixdim-20261112/k8-development.cine-map.json",
+      "cine_mapping_sha256": "07d5a493eda54fd5989cd5881983bbb92e6ed7b94e5dd8edc4483a379695a0ac",
+      "cine_mapping_provenance": "Exact patient ID and original CINE filename in restored ACDC raw training/testing; original Drive byte integrity audited separately; no voxel bridge is claimed here.",
+      "voxel_bridge_status": "NOT_VERIFIED",
+      "repaired_spacing_zyx_mm": [
+        10.0,
+        1.3671875,
+        1.3671875
+      ],
+      "repaired_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.3671875,
+          157.91015625
+        ],
+        [
+          0.0,
+          1.3671875,
+          0.0,
+          -174.31640625
+        ],
+        [
+          10.0,
+          0.0,
+          0.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "errors": []
+    },
+    {
+      "patient_id": "patient005",
+      "geometry_policy": "acdc_pixdim_native_v1",
+      "cine_path": "/root/mount_data/datasets/ACDC/raw/training/patient005/patient005_4d.nii",
+      "manifest_shape_zyx": [
+        10,
+        216,
+        256
+      ],
+      "manifest_spacing_zyx_mm": [
+        10.0,
+        1.40625,
+        1.40625
+      ],
+      "manifest_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.40625,
+          179.296875
+        ],
+        [
+          0.0,
+          1.40625,
+          0.0,
+          -151.171875
+        ],
+        [
+          10.0,
+          0.0,
+          0.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "source_file_sha256": "6ca2f6b6570a0c94de58388036da49d1570aa76e31ff6abac3cc28fca623f054",
+      "source_header_sha256": "e808bc28a9d97cb5bcb36cd9851c38d81ecca082a1436cee89203c97c31d407b",
+      "source_shape_xyzt": [
+        256,
+        216,
+        10,
+        30
+      ],
+      "raw_pixdim_xyz_native": [
+        1.40625,
+        1.40625,
+        10.0
+      ],
+      "header_zooms_xyz_native": [
+        1.40625,
+        1.40625,
+        10.0
+      ],
+      "header_zooms_xyz_mm": [
+        1.40625,
+        1.40625,
+        10.0
+      ],
+      "sform_code": 0,
+      "sform_affine_xyz": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "qform_code": 0,
+      "qform_affine_xyz": [
+        [
+          1.40625,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.40625,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_xyz": [
+        [
+          -1.40625,
+          0.0,
+          0.0,
+          179.296875
+        ],
+        [
+          0.0,
+          1.40625,
+          0.0,
+          -151.171875
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_source": "nibabel_base_affine_uncoded_derived",
+      "reconstructed_affine_xyz": [
+        [
+          -1.40625,
+          0.0,
+          0.0,
+          179.296875
+        ],
+        [
+          0.0,
+          1.40625,
+          0.0,
+          -151.171875
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "geometry_policy_waivers": [
+        "UNCODED_FORMS_USE_NIBABEL_BASE_AFFINE"
+      ],
+      "geometry_nonclaims": [
+        "SCANNER_WORLD_POSE_NOT_INDEPENDENTLY_VERIFIED",
+        "UNCODED_AFFINE_IS_DERIVED_NATIVE_IMAGE_COORDINATE_CONVENTION"
+      ],
+      "affine_coordinate_convention": "derived_native_image_coordinate_convention",
+      "scanner_world_pose_status": "NOT_INDEPENDENTLY_VERIFIED",
+      "original_spatial_unit": "mm",
+      "resolved_spatial_unit": "mm",
+      "unit_resolution": "nifti_header",
+      "unit_provenance": null,
+      "cine_mapping_source": "/root/mount_data/receipts/q3d-pixdim-20261112/k8-development.cine-map.json",
+      "cine_mapping_sha256": "07d5a493eda54fd5989cd5881983bbb92e6ed7b94e5dd8edc4483a379695a0ac",
+      "cine_mapping_provenance": "Exact patient ID and original CINE filename in restored ACDC raw training/testing; original Drive byte integrity audited separately; no voxel bridge is claimed here.",
+      "voxel_bridge_status": "NOT_VERIFIED",
+      "repaired_spacing_zyx_mm": [
+        10.0,
+        1.40625,
+        1.40625
+      ],
+      "repaired_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.40625,
+          179.296875
+        ],
+        [
+          0.0,
+          1.40625,
+          0.0,
+          -151.171875
+        ],
+        [
+          10.0,
+          0.0,
+          0.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "errors": []
+    },
+    {
+      "patient_id": "patient012",
+      "geometry_policy": "acdc_pixdim_native_v1",
+      "cine_path": "/root/mount_data/datasets/ACDC/raw/training/patient012/patient012_4d.nii",
+      "manifest_shape_zyx": [
+        10,
+        256,
+        184
+      ],
+      "manifest_spacing_zyx_mm": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "manifest_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "source_file_sha256": "4efa1926d9e325e3dc741421a1044cb24b064993e8a535605bc52fc9338cf9a1",
+      "source_header_sha256": "3d13ef4877737ca0ba47ff42e3006cc57dd0d490ace6c905023ae358a35156e8",
+      "source_shape_xyzt": [
+        184,
+        256,
+        10,
+        30
+      ],
+      "raw_pixdim_xyz_native": [
+        1.5625,
+        1.5625,
+        10.0
+      ],
+      "header_zooms_xyz_native": [
+        1.5625,
+        1.5625,
+        10.0
+      ],
+      "header_zooms_xyz_mm": [
+        1.5625,
+        1.5625,
+        10.0
+      ],
+      "sform_code": 2,
+      "sform_affine_xyz": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "qform_code": 0,
+      "qform_affine_xyz": [
+        [
+          -1.5625,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.5625,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_xyz": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_source": "sform",
+      "reconstructed_affine_xyz": [
+        [
+          -1.5625,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.5625,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "geometry_policy_waivers": [
+        "AFFINE_COLUMN_LENGTHS_DISAGREE_WITH_PIXDIM"
+      ],
+      "geometry_nonclaims": [
+        "SCANNER_WORLD_POSE_NOT_INDEPENDENTLY_VERIFIED"
+      ],
+      "affine_coordinate_convention": "coded_nifti_world",
+      "scanner_world_pose_status": "NOT_INDEPENDENTLY_VERIFIED",
+      "original_spatial_unit": "unknown",
+      "resolved_spatial_unit": "mm",
+      "unit_resolution": "explicit_declaration",
+      "unit_provenance": "Explicit user-approved ACDC pixdim amendment 2026-11-12; physical acquisition units in mm per official https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html ; unknown header unit is declared, not inferred silently.",
+      "cine_mapping_source": "/root/mount_data/receipts/q3d-pixdim-20261112/k8-development.cine-map.json",
+      "cine_mapping_sha256": "07d5a493eda54fd5989cd5881983bbb92e6ed7b94e5dd8edc4483a379695a0ac",
+      "cine_mapping_provenance": "Exact patient ID and original CINE filename in restored ACDC raw training/testing; original Drive byte integrity audited separately; no voxel bridge is claimed here.",
+      "voxel_bridge_status": "NOT_VERIFIED",
+      "repaired_spacing_zyx_mm": [
+        10.0,
+        1.5625,
+        1.5625
+      ],
+      "repaired_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.5625,
+          0.0
+        ],
+        [
+          0.0,
+          -1.5625,
+          0.0,
+          0.0
+        ],
+        [
+          10.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "errors": []
+    },
+    {
+      "patient_id": "patient014",
+      "geometry_policy": "acdc_pixdim_native_v1",
+      "cine_path": "/root/mount_data/datasets/ACDC/raw/training/patient014/patient014_4d.nii",
+      "manifest_shape_zyx": [
+        10,
+        216,
+        256
+      ],
+      "manifest_spacing_zyx_mm": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "manifest_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "source_file_sha256": "71877150dfb01d4929b269cad2f281b85cf381691346f402488f3aef9e5637fe",
+      "source_header_sha256": "dc6a3d095c906715220edb1d7a8daae234298552719b2bbaddac5d046fcb55c2",
+      "source_shape_xyzt": [
+        256,
+        216,
+        10,
+        30
+      ],
+      "raw_pixdim_xyz_native": [
+        1.3671900033950806,
+        1.3671900033950806,
+        10.0
+      ],
+      "header_zooms_xyz_native": [
+        1.3671900033950806,
+        1.3671900033950806,
+        10.0
+      ],
+      "header_zooms_xyz_mm": [
+        1.3671900033950806,
+        1.3671900033950806,
+        10.0
+      ],
+      "sform_code": 2,
+      "sform_affine_xyz": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "qform_code": 0,
+      "qform_affine_xyz": [
+        [
+          -1.3671900033950806,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.3671900033950806,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_xyz": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_source": "sform",
+      "reconstructed_affine_xyz": [
+        [
+          -1.3671900033950806,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.3671900033950806,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "geometry_policy_waivers": [
+        "AFFINE_COLUMN_LENGTHS_DISAGREE_WITH_PIXDIM"
+      ],
+      "geometry_nonclaims": [
+        "SCANNER_WORLD_POSE_NOT_INDEPENDENTLY_VERIFIED"
+      ],
+      "affine_coordinate_convention": "coded_nifti_world",
+      "scanner_world_pose_status": "NOT_INDEPENDENTLY_VERIFIED",
+      "original_spatial_unit": "unknown",
+      "resolved_spatial_unit": "mm",
+      "unit_resolution": "explicit_declaration",
+      "unit_provenance": "Explicit user-approved ACDC pixdim amendment 2026-11-12; physical acquisition units in mm per official https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html ; unknown header unit is declared, not inferred silently.",
+      "cine_mapping_source": "/root/mount_data/receipts/q3d-pixdim-20261112/k8-development.cine-map.json",
+      "cine_mapping_sha256": "07d5a493eda54fd5989cd5881983bbb92e6ed7b94e5dd8edc4483a379695a0ac",
+      "cine_mapping_provenance": "Exact patient ID and original CINE filename in restored ACDC raw training/testing; original Drive byte integrity audited separately; no voxel bridge is claimed here.",
+      "voxel_bridge_status": "NOT_VERIFIED",
+      "repaired_spacing_zyx_mm": [
+        10.0,
+        1.3671900033950806,
+        1.3671900033950806
+      ],
+      "repaired_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.3671900033950806,
+          0.0
+        ],
+        [
+          0.0,
+          -1.3671900033950806,
+          0.0,
+          0.0
+        ],
+        [
+          10.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "errors": []
+    },
+    {
+      "patient_id": "patient015",
+      "geometry_policy": "acdc_pixdim_native_v1",
+      "cine_path": "/root/mount_data/datasets/ACDC/raw/training/patient015/patient015_4d.nii",
+      "manifest_shape_zyx": [
+        9,
+        216,
+        256
+      ],
+      "manifest_spacing_zyx_mm": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "manifest_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "source_file_sha256": "ef57f73182de2be7d859fc25b8e9be7c8f2aaf0b230e5d9a3ed267b881057500",
+      "source_header_sha256": "71832344fda93b7d6afcf4e7d9317613007d4adac327989af177aa654d889db7",
+      "source_shape_xyzt": [
+        256,
+        216,
+        9,
+        21
+      ],
+      "raw_pixdim_xyz_native": [
+        1.3671900033950806,
+        1.3671900033950806,
+        10.0
+      ],
+      "header_zooms_xyz_native": [
+        1.3671900033950806,
+        1.3671900033950806,
+        10.0
+      ],
+      "header_zooms_xyz_mm": [
+        1.3671900033950806,
+        1.3671900033950806,
+        10.0
+      ],
+      "sform_code": 2,
+      "sform_affine_xyz": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "qform_code": 0,
+      "qform_affine_xyz": [
+        [
+          -1.3671900033950806,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.3671900033950806,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_xyz": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_source": "sform",
+      "reconstructed_affine_xyz": [
+        [
+          -1.3671900033950806,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.3671900033950806,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "geometry_policy_waivers": [
+        "AFFINE_COLUMN_LENGTHS_DISAGREE_WITH_PIXDIM"
+      ],
+      "geometry_nonclaims": [
+        "SCANNER_WORLD_POSE_NOT_INDEPENDENTLY_VERIFIED"
+      ],
+      "affine_coordinate_convention": "coded_nifti_world",
+      "scanner_world_pose_status": "NOT_INDEPENDENTLY_VERIFIED",
+      "original_spatial_unit": "unknown",
+      "resolved_spatial_unit": "mm",
+      "unit_resolution": "explicit_declaration",
+      "unit_provenance": "Explicit user-approved ACDC pixdim amendment 2026-11-12; physical acquisition units in mm per official https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html ; unknown header unit is declared, not inferred silently.",
+      "cine_mapping_source": "/root/mount_data/receipts/q3d-pixdim-20261112/k8-development.cine-map.json",
+      "cine_mapping_sha256": "07d5a493eda54fd5989cd5881983bbb92e6ed7b94e5dd8edc4483a379695a0ac",
+      "cine_mapping_provenance": "Exact patient ID and original CINE filename in restored ACDC raw training/testing; original Drive byte integrity audited separately; no voxel bridge is claimed here.",
+      "voxel_bridge_status": "NOT_VERIFIED",
+      "repaired_spacing_zyx_mm": [
+        10.0,
+        1.3671900033950806,
+        1.3671900033950806
+      ],
+      "repaired_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.3671900033950806,
+          0.0
+        ],
+        [
+          0.0,
+          -1.3671900033950806,
+          0.0,
+          0.0
+        ],
+        [
+          10.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "errors": []
+    },
+    {
+      "patient_id": "patient018",
+      "geometry_policy": "acdc_pixdim_native_v1",
+      "cine_path": "/root/mount_data/datasets/ACDC/raw/training/patient018/patient018_4d.nii",
+      "manifest_shape_zyx": [
+        8,
+        256,
+        216
+      ],
+      "manifest_spacing_zyx_mm": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "manifest_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "source_file_sha256": "5c3e33cd656c7060ac75e353a7ae430e89979789afc6bf6fb52e7983406c78fd",
+      "source_header_sha256": "1240c001eea9d1062629093f995ee9853f47de58b61f26e94da78af2eacc6c0d",
+      "source_shape_xyzt": [
+        216,
+        256,
+        8,
+        13
+      ],
+      "raw_pixdim_xyz_native": [
+        1.3671900033950806,
+        1.3671900033950806,
+        10.0
+      ],
+      "header_zooms_xyz_native": [
+        1.3671900033950806,
+        1.3671900033950806,
+        10.0
+      ],
+      "header_zooms_xyz_mm": [
+        1.3671900033950806,
+        1.3671900033950806,
+        10.0
+      ],
+      "sform_code": 2,
+      "sform_affine_xyz": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "qform_code": 0,
+      "qform_affine_xyz": [
+        [
+          -1.3671900033950806,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.3671900033950806,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_xyz": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_source": "sform",
+      "reconstructed_affine_xyz": [
+        [
+          -1.3671900033950806,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.3671900033950806,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "geometry_policy_waivers": [
+        "AFFINE_COLUMN_LENGTHS_DISAGREE_WITH_PIXDIM"
+      ],
+      "geometry_nonclaims": [
+        "SCANNER_WORLD_POSE_NOT_INDEPENDENTLY_VERIFIED"
+      ],
+      "affine_coordinate_convention": "coded_nifti_world",
+      "scanner_world_pose_status": "NOT_INDEPENDENTLY_VERIFIED",
+      "original_spatial_unit": "unknown",
+      "resolved_spatial_unit": "mm",
+      "unit_resolution": "explicit_declaration",
+      "unit_provenance": "Explicit user-approved ACDC pixdim amendment 2026-11-12; physical acquisition units in mm per official https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html ; unknown header unit is declared, not inferred silently.",
+      "cine_mapping_source": "/root/mount_data/receipts/q3d-pixdim-20261112/k8-development.cine-map.json",
+      "cine_mapping_sha256": "07d5a493eda54fd5989cd5881983bbb92e6ed7b94e5dd8edc4483a379695a0ac",
+      "cine_mapping_provenance": "Exact patient ID and original CINE filename in restored ACDC raw training/testing; original Drive byte integrity audited separately; no voxel bridge is claimed here.",
+      "voxel_bridge_status": "NOT_VERIFIED",
+      "repaired_spacing_zyx_mm": [
+        10.0,
+        1.3671900033950806,
+        1.3671900033950806
+      ],
+      "repaired_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.3671900033950806,
+          0.0
+        ],
+        [
+          0.0,
+          -1.3671900033950806,
+          0.0,
+          0.0
+        ],
+        [
+          10.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "errors": []
+    },
+    {
+      "patient_id": "patient028",
+      "geometry_policy": "acdc_pixdim_native_v1",
+      "cine_path": "/root/mount_data/datasets/ACDC/raw/training/patient028/patient028_4d.nii",
+      "manifest_shape_zyx": [
+        10,
+        256,
+        224
+      ],
+      "manifest_spacing_zyx_mm": [
+        10.0,
+        1.5625,
+        1.5625
+      ],
+      "manifest_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.5625,
+          174.21875
+        ],
+        [
+          0.0,
+          1.5625,
+          0.0,
+          -199.21875
+        ],
+        [
+          10.0,
+          0.0,
+          0.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "source_file_sha256": "ba4e10324e81d9ddc9b27d81676d24843e6d4c27b65c0a0a71defe95b687a070",
+      "source_header_sha256": "ecb3bfd0eb0aab701c0fe06e1d981a8fe9efd0f8d80fc21aecdf425c4c05fae0",
+      "source_shape_xyzt": [
+        224,
+        256,
+        10,
+        28
+      ],
+      "raw_pixdim_xyz_native": [
+        1.5625,
+        1.5625,
+        10.0
+      ],
+      "header_zooms_xyz_native": [
+        1.5625,
+        1.5625,
+        10.0
+      ],
+      "header_zooms_xyz_mm": [
+        1.5625,
+        1.5625,
+        10.0
+      ],
+      "sform_code": 0,
+      "sform_affine_xyz": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "qform_code": 0,
+      "qform_affine_xyz": [
+        [
+          1.5625,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.5625,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_xyz": [
+        [
+          -1.5625,
+          0.0,
+          0.0,
+          174.21875
+        ],
+        [
+          0.0,
+          1.5625,
+          0.0,
+          -199.21875
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_source": "nibabel_base_affine_uncoded_derived",
+      "reconstructed_affine_xyz": [
+        [
+          -1.5625,
+          0.0,
+          0.0,
+          174.21875
+        ],
+        [
+          0.0,
+          1.5625,
+          0.0,
+          -199.21875
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "geometry_policy_waivers": [
+        "UNCODED_FORMS_USE_NIBABEL_BASE_AFFINE"
+      ],
+      "geometry_nonclaims": [
+        "SCANNER_WORLD_POSE_NOT_INDEPENDENTLY_VERIFIED",
+        "UNCODED_AFFINE_IS_DERIVED_NATIVE_IMAGE_COORDINATE_CONVENTION"
+      ],
+      "affine_coordinate_convention": "derived_native_image_coordinate_convention",
+      "scanner_world_pose_status": "NOT_INDEPENDENTLY_VERIFIED",
+      "original_spatial_unit": "mm",
+      "resolved_spatial_unit": "mm",
+      "unit_resolution": "nifti_header",
+      "unit_provenance": null,
+      "cine_mapping_source": "/root/mount_data/receipts/q3d-pixdim-20261112/k8-development.cine-map.json",
+      "cine_mapping_sha256": "07d5a493eda54fd5989cd5881983bbb92e6ed7b94e5dd8edc4483a379695a0ac",
+      "cine_mapping_provenance": "Exact patient ID and original CINE filename in restored ACDC raw training/testing; original Drive byte integrity audited separately; no voxel bridge is claimed here.",
+      "voxel_bridge_status": "NOT_VERIFIED",
+      "repaired_spacing_zyx_mm": [
+        10.0,
+        1.5625,
+        1.5625
+      ],
+      "repaired_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.5625,
+          174.21875
+        ],
+        [
+          0.0,
+          1.5625,
+          0.0,
+          -199.21875
+        ],
+        [
+          10.0,
+          0.0,
+          0.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "errors": []
+    },
+    {
+      "patient_id": "patient029",
+      "geometry_policy": "acdc_pixdim_native_v1",
+      "cine_path": "/root/mount_data/datasets/ACDC/raw/training/patient029/patient029_4d.nii",
+      "manifest_shape_zyx": [
+        11,
+        256,
+        192
+      ],
+      "manifest_spacing_zyx_mm": [
+        10.0,
+        1.3671875,
+        1.3671875
+      ],
+      "manifest_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.3671875,
+          130.56640625
+        ],
+        [
+          0.0,
+          1.3671875,
+          0.0,
+          -174.31640625
+        ],
+        [
+          10.0,
+          0.0,
+          0.0,
+          -50.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "source_file_sha256": "acf83e2715f94e930373a7a079f757be11bcf8d66cbec8fb423f49435dff83d9",
+      "source_header_sha256": "e7c072c9f25e4f090b2c9ed4b8a0b5f6d58fe8299e2ace4d5eb8b3c81ce1b760",
+      "source_shape_xyzt": [
+        192,
+        256,
+        11,
+        30
+      ],
+      "raw_pixdim_xyz_native": [
+        1.3671875,
+        1.3671875,
+        10.0
+      ],
+      "header_zooms_xyz_native": [
+        1.3671875,
+        1.3671875,
+        10.0
+      ],
+      "header_zooms_xyz_mm": [
+        1.3671875,
+        1.3671875,
+        10.0
+      ],
+      "sform_code": 0,
+      "sform_affine_xyz": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "qform_code": 0,
+      "qform_affine_xyz": [
+        [
+          1.3671875,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.3671875,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_xyz": [
+        [
+          -1.3671875,
+          0.0,
+          0.0,
+          130.56640625
+        ],
+        [
+          0.0,
+          1.3671875,
+          0.0,
+          -174.31640625
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -50.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_source": "nibabel_base_affine_uncoded_derived",
+      "reconstructed_affine_xyz": [
+        [
+          -1.3671875,
+          0.0,
+          0.0,
+          130.56640625
+        ],
+        [
+          0.0,
+          1.3671875,
+          0.0,
+          -174.31640625
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -50.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "geometry_policy_waivers": [
+        "UNCODED_FORMS_USE_NIBABEL_BASE_AFFINE"
+      ],
+      "geometry_nonclaims": [
+        "SCANNER_WORLD_POSE_NOT_INDEPENDENTLY_VERIFIED",
+        "UNCODED_AFFINE_IS_DERIVED_NATIVE_IMAGE_COORDINATE_CONVENTION"
+      ],
+      "affine_coordinate_convention": "derived_native_image_coordinate_convention",
+      "scanner_world_pose_status": "NOT_INDEPENDENTLY_VERIFIED",
+      "original_spatial_unit": "mm",
+      "resolved_spatial_unit": "mm",
+      "unit_resolution": "nifti_header",
+      "unit_provenance": null,
+      "cine_mapping_source": "/root/mount_data/receipts/q3d-pixdim-20261112/k8-development.cine-map.json",
+      "cine_mapping_sha256": "07d5a493eda54fd5989cd5881983bbb92e6ed7b94e5dd8edc4483a379695a0ac",
+      "cine_mapping_provenance": "Exact patient ID and original CINE filename in restored ACDC raw training/testing; original Drive byte integrity audited separately; no voxel bridge is claimed here.",
+      "voxel_bridge_status": "NOT_VERIFIED",
+      "repaired_spacing_zyx_mm": [
+        10.0,
+        1.3671875,
+        1.3671875
+      ],
+      "repaired_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.3671875,
+          130.56640625
+        ],
+        [
+          0.0,
+          1.3671875,
+          0.0,
+          -174.31640625
+        ],
+        [
+          10.0,
+          0.0,
+          0.0,
+          -50.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "errors": []
+    },
+    {
+      "patient_id": "patient030",
+      "geometry_policy": "acdc_pixdim_native_v1",
+      "cine_path": "/root/mount_data/datasets/ACDC/raw/training/patient030/patient030_4d.nii",
+      "manifest_shape_zyx": [
+        10,
+        256,
+        216
+      ],
+      "manifest_spacing_zyx_mm": [
+        10.0,
+        1.4453125,
+        1.4453125
+      ],
+      "manifest_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.4453125,
+          155.37109375
+        ],
+        [
+          0.0,
+          1.4453125,
+          0.0,
+          -184.27734375
+        ],
+        [
+          10.0,
+          0.0,
+          0.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "source_file_sha256": "3e0267979dfaf04619a5585582d667e25014fe689d69b054ee21a94244527386",
+      "source_header_sha256": "6e24cc714e59e1f3afabdbc4965a9daf57d90a086f7888fe47d94bbe5d5008b5",
+      "source_shape_xyzt": [
+        216,
+        256,
+        10,
+        35
+      ],
+      "raw_pixdim_xyz_native": [
+        1.4453125,
+        1.4453125,
+        10.0
+      ],
+      "header_zooms_xyz_native": [
+        1.4453125,
+        1.4453125,
+        10.0
+      ],
+      "header_zooms_xyz_mm": [
+        1.4453125,
+        1.4453125,
+        10.0
+      ],
+      "sform_code": 0,
+      "sform_affine_xyz": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "qform_code": 0,
+      "qform_affine_xyz": [
+        [
+          1.4453125,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.4453125,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_xyz": [
+        [
+          -1.4453125,
+          0.0,
+          0.0,
+          155.37109375
+        ],
+        [
+          0.0,
+          1.4453125,
+          0.0,
+          -184.27734375
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_source": "nibabel_base_affine_uncoded_derived",
+      "reconstructed_affine_xyz": [
+        [
+          -1.4453125,
+          0.0,
+          0.0,
+          155.37109375
+        ],
+        [
+          0.0,
+          1.4453125,
+          0.0,
+          -184.27734375
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "geometry_policy_waivers": [
+        "UNCODED_FORMS_USE_NIBABEL_BASE_AFFINE"
+      ],
+      "geometry_nonclaims": [
+        "SCANNER_WORLD_POSE_NOT_INDEPENDENTLY_VERIFIED",
+        "UNCODED_AFFINE_IS_DERIVED_NATIVE_IMAGE_COORDINATE_CONVENTION"
+      ],
+      "affine_coordinate_convention": "derived_native_image_coordinate_convention",
+      "scanner_world_pose_status": "NOT_INDEPENDENTLY_VERIFIED",
+      "original_spatial_unit": "mm",
+      "resolved_spatial_unit": "mm",
+      "unit_resolution": "nifti_header",
+      "unit_provenance": null,
+      "cine_mapping_source": "/root/mount_data/receipts/q3d-pixdim-20261112/k8-development.cine-map.json",
+      "cine_mapping_sha256": "07d5a493eda54fd5989cd5881983bbb92e6ed7b94e5dd8edc4483a379695a0ac",
+      "cine_mapping_provenance": "Exact patient ID and original CINE filename in restored ACDC raw training/testing; original Drive byte integrity audited separately; no voxel bridge is claimed here.",
+      "voxel_bridge_status": "NOT_VERIFIED",
+      "repaired_spacing_zyx_mm": [
+        10.0,
+        1.4453125,
+        1.4453125
+      ],
+      "repaired_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.4453125,
+          155.37109375
+        ],
+        [
+          0.0,
+          1.4453125,
+          0.0,
+          -184.27734375
+        ],
+        [
+          10.0,
+          0.0,
+          0.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "errors": []
+    },
+    {
+      "patient_id": "patient032",
+      "geometry_policy": "acdc_pixdim_native_v1",
+      "cine_path": "/root/mount_data/datasets/ACDC/raw/training/patient032/patient032_4d.nii",
+      "manifest_shape_zyx": [
+        10,
+        256,
+        240
+      ],
+      "manifest_spacing_zyx_mm": [
+        10.0,
+        1.5625,
+        1.5625
+      ],
+      "manifest_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.5625,
+          186.71875
+        ],
+        [
+          0.0,
+          1.5625,
+          0.0,
+          -199.21875
+        ],
+        [
+          10.0,
+          0.0,
+          0.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "source_file_sha256": "f3f7bf4b7543ab49ba9419178c51d4d711b04261369f69a4a182940eedcc7fe5",
+      "source_header_sha256": "0996c50274046249fa38bf81baf94262cf228e18778ffe2fd4a88d4098d630cc",
+      "source_shape_xyzt": [
+        240,
+        256,
+        10,
+        30
+      ],
+      "raw_pixdim_xyz_native": [
+        1.5625,
+        1.5625,
+        10.0
+      ],
+      "header_zooms_xyz_native": [
+        1.5625,
+        1.5625,
+        10.0
+      ],
+      "header_zooms_xyz_mm": [
+        1.5625,
+        1.5625,
+        10.0
+      ],
+      "sform_code": 0,
+      "sform_affine_xyz": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "qform_code": 0,
+      "qform_affine_xyz": [
+        [
+          1.5625,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.5625,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_xyz": [
+        [
+          -1.5625,
+          0.0,
+          0.0,
+          186.71875
+        ],
+        [
+          0.0,
+          1.5625,
+          0.0,
+          -199.21875
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_source": "nibabel_base_affine_uncoded_derived",
+      "reconstructed_affine_xyz": [
+        [
+          -1.5625,
+          0.0,
+          0.0,
+          186.71875
+        ],
+        [
+          0.0,
+          1.5625,
+          0.0,
+          -199.21875
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "geometry_policy_waivers": [
+        "UNCODED_FORMS_USE_NIBABEL_BASE_AFFINE"
+      ],
+      "geometry_nonclaims": [
+        "SCANNER_WORLD_POSE_NOT_INDEPENDENTLY_VERIFIED",
+        "UNCODED_AFFINE_IS_DERIVED_NATIVE_IMAGE_COORDINATE_CONVENTION"
+      ],
+      "affine_coordinate_convention": "derived_native_image_coordinate_convention",
+      "scanner_world_pose_status": "NOT_INDEPENDENTLY_VERIFIED",
+      "original_spatial_unit": "mm",
+      "resolved_spatial_unit": "mm",
+      "unit_resolution": "nifti_header",
+      "unit_provenance": null,
+      "cine_mapping_source": "/root/mount_data/receipts/q3d-pixdim-20261112/k8-development.cine-map.json",
+      "cine_mapping_sha256": "07d5a493eda54fd5989cd5881983bbb92e6ed7b94e5dd8edc4483a379695a0ac",
+      "cine_mapping_provenance": "Exact patient ID and original CINE filename in restored ACDC raw training/testing; original Drive byte integrity audited separately; no voxel bridge is claimed here.",
+      "voxel_bridge_status": "NOT_VERIFIED",
+      "repaired_spacing_zyx_mm": [
+        10.0,
+        1.5625,
+        1.5625
+      ],
+      "repaired_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.5625,
+          186.71875
+        ],
+        [
+          0.0,
+          1.5625,
+          0.0,
+          -199.21875
+        ],
+        [
+          10.0,
+          0.0,
+          0.0,
+          -45.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "errors": []
+    },
+    {
+      "patient_id": "patient036",
+      "geometry_policy": "acdc_pixdim_native_v1",
+      "cine_path": "/root/mount_data/datasets/ACDC/raw/training/patient036/patient036_4d.nii",
+      "manifest_shape_zyx": [
+        8,
+        256,
+        216
+      ],
+      "manifest_spacing_zyx_mm": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "manifest_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "source_file_sha256": "547f9ad57cdf48a2c71a459683f9f20327e49cb313b54d2b1ca2aa73c4b43c74",
+      "source_header_sha256": "f7251b2c132004be95ae1d38e1446113deb38811102cdceb5e376521981e2495",
+      "source_shape_xyzt": [
+        216,
+        256,
+        8,
+        35
+      ],
+      "raw_pixdim_xyz_native": [
+        1.4453099966049194,
+        1.4453099966049194,
+        10.0
+      ],
+      "header_zooms_xyz_native": [
+        1.4453099966049194,
+        1.4453099966049194,
+        10.0
+      ],
+      "header_zooms_xyz_mm": [
+        1.4453099966049194,
+        1.4453099966049194,
+        10.0
+      ],
+      "sform_code": 2,
+      "sform_affine_xyz": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "qform_code": 0,
+      "qform_affine_xyz": [
+        [
+          -1.4453099966049194,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.4453099966049194,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_xyz": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_source": "sform",
+      "reconstructed_affine_xyz": [
+        [
+          -1.4453099966049194,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.4453099966049194,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "geometry_policy_waivers": [
+        "AFFINE_COLUMN_LENGTHS_DISAGREE_WITH_PIXDIM"
+      ],
+      "geometry_nonclaims": [
+        "SCANNER_WORLD_POSE_NOT_INDEPENDENTLY_VERIFIED"
+      ],
+      "affine_coordinate_convention": "coded_nifti_world",
+      "scanner_world_pose_status": "NOT_INDEPENDENTLY_VERIFIED",
+      "original_spatial_unit": "unknown",
+      "resolved_spatial_unit": "mm",
+      "unit_resolution": "explicit_declaration",
+      "unit_provenance": "Explicit user-approved ACDC pixdim amendment 2026-11-12; physical acquisition units in mm per official https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html ; unknown header unit is declared, not inferred silently.",
+      "cine_mapping_source": "/root/mount_data/receipts/q3d-pixdim-20261112/k8-development.cine-map.json",
+      "cine_mapping_sha256": "07d5a493eda54fd5989cd5881983bbb92e6ed7b94e5dd8edc4483a379695a0ac",
+      "cine_mapping_provenance": "Exact patient ID and original CINE filename in restored ACDC raw training/testing; original Drive byte integrity audited separately; no voxel bridge is claimed here.",
+      "voxel_bridge_status": "NOT_VERIFIED",
+      "repaired_spacing_zyx_mm": [
+        10.0,
+        1.4453099966049194,
+        1.4453099966049194
+      ],
+      "repaired_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.4453099966049194,
+          0.0
+        ],
+        [
+          0.0,
+          -1.4453099966049194,
+          0.0,
+          0.0
+        ],
+        [
+          10.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "errors": []
+    },
+    {
+      "patient_id": "patient065",
+      "geometry_policy": "acdc_pixdim_native_v1",
+      "cine_path": "/root/mount_data/datasets/ACDC/raw/training/patient065/patient065_4d.nii",
+      "manifest_shape_zyx": [
+        8,
+        224,
+        210
+      ],
+      "manifest_spacing_zyx_mm": [
+        10.0,
+        1.875,
+        1.875
+      ],
+      "manifest_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.875,
+          195.9375
+        ],
+        [
+          0.0,
+          1.875,
+          0.0,
+          -209.0625
+        ],
+        [
+          10.0,
+          0.0,
+          0.0,
+          -35.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "source_file_sha256": "759985bc3aa008b75d1f6af9961d8cc75e1eda6f96492d2e2a3828553b8acece",
+      "source_header_sha256": "acda2a69fd3a287923a6754aaa1c81dd463c245316dc71e2ea8ee05c9335ad84",
+      "source_shape_xyzt": [
+        210,
+        224,
+        8,
+        30
+      ],
+      "raw_pixdim_xyz_native": [
+        1.875,
+        1.875,
+        10.0
+      ],
+      "header_zooms_xyz_native": [
+        1.875,
+        1.875,
+        10.0
+      ],
+      "header_zooms_xyz_mm": [
+        1.875,
+        1.875,
+        10.0
+      ],
+      "sform_code": 0,
+      "sform_affine_xyz": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "qform_code": 0,
+      "qform_affine_xyz": [
+        [
+          1.875,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.875,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_xyz": [
+        [
+          -1.875,
+          0.0,
+          0.0,
+          195.9375
+        ],
+        [
+          0.0,
+          1.875,
+          0.0,
+          -209.0625
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -35.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_source": "nibabel_base_affine_uncoded_derived",
+      "reconstructed_affine_xyz": [
+        [
+          -1.875,
+          0.0,
+          0.0,
+          195.9375
+        ],
+        [
+          0.0,
+          1.875,
+          0.0,
+          -209.0625
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          -35.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "geometry_policy_waivers": [
+        "UNCODED_FORMS_USE_NIBABEL_BASE_AFFINE"
+      ],
+      "geometry_nonclaims": [
+        "SCANNER_WORLD_POSE_NOT_INDEPENDENTLY_VERIFIED",
+        "UNCODED_AFFINE_IS_DERIVED_NATIVE_IMAGE_COORDINATE_CONVENTION"
+      ],
+      "affine_coordinate_convention": "derived_native_image_coordinate_convention",
+      "scanner_world_pose_status": "NOT_INDEPENDENTLY_VERIFIED",
+      "original_spatial_unit": "mm",
+      "resolved_spatial_unit": "mm",
+      "unit_resolution": "nifti_header",
+      "unit_provenance": null,
+      "cine_mapping_source": "/root/mount_data/receipts/q3d-pixdim-20261112/k8-development.cine-map.json",
+      "cine_mapping_sha256": "07d5a493eda54fd5989cd5881983bbb92e6ed7b94e5dd8edc4483a379695a0ac",
+      "cine_mapping_provenance": "Exact patient ID and original CINE filename in restored ACDC raw training/testing; original Drive byte integrity audited separately; no voxel bridge is claimed here.",
+      "voxel_bridge_status": "NOT_VERIFIED",
+      "repaired_spacing_zyx_mm": [
+        10.0,
+        1.875,
+        1.875
+      ],
+      "repaired_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.875,
+          195.9375
+        ],
+        [
+          0.0,
+          1.875,
+          0.0,
+          -209.0625
+        ],
+        [
+          10.0,
+          0.0,
+          0.0,
+          -35.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "errors": []
+    },
+    {
+      "patient_id": "patient070",
+      "geometry_policy": "acdc_pixdim_native_v1",
+      "cine_path": "/root/mount_data/datasets/ACDC/raw/training/patient070/patient070_4d.nii",
+      "manifest_shape_zyx": [
+        6,
+        256,
+        208
+      ],
+      "manifest_spacing_zyx_mm": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "manifest_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "source_file_sha256": "057275cab8927f8d01a910f00646ea3a3e8fa96b440425778b55647288b6c836",
+      "source_header_sha256": "38e89e77344ea835b5234121c390c55e8e8eed3181626a0ba455ddc899945461",
+      "source_shape_xyzt": [
+        208,
+        256,
+        6,
+        28
+      ],
+      "raw_pixdim_xyz_native": [
+        1.5625,
+        1.5625,
+        10.0
+      ],
+      "header_zooms_xyz_native": [
+        1.5625,
+        1.5625,
+        10.0
+      ],
+      "header_zooms_xyz_mm": [
+        1.5625,
+        1.5625,
+        10.0
+      ],
+      "sform_code": 2,
+      "sform_affine_xyz": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "qform_code": 0,
+      "qform_affine_xyz": [
+        [
+          -1.5625,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.5625,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_xyz": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_source": "sform",
+      "reconstructed_affine_xyz": [
+        [
+          -1.5625,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.5625,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "geometry_policy_waivers": [
+        "AFFINE_COLUMN_LENGTHS_DISAGREE_WITH_PIXDIM"
+      ],
+      "geometry_nonclaims": [
+        "SCANNER_WORLD_POSE_NOT_INDEPENDENTLY_VERIFIED"
+      ],
+      "affine_coordinate_convention": "coded_nifti_world",
+      "scanner_world_pose_status": "NOT_INDEPENDENTLY_VERIFIED",
+      "original_spatial_unit": "unknown",
+      "resolved_spatial_unit": "mm",
+      "unit_resolution": "explicit_declaration",
+      "unit_provenance": "Explicit user-approved ACDC pixdim amendment 2026-11-12; physical acquisition units in mm per official https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html ; unknown header unit is declared, not inferred silently.",
+      "cine_mapping_source": "/root/mount_data/receipts/q3d-pixdim-20261112/k8-development.cine-map.json",
+      "cine_mapping_sha256": "07d5a493eda54fd5989cd5881983bbb92e6ed7b94e5dd8edc4483a379695a0ac",
+      "cine_mapping_provenance": "Exact patient ID and original CINE filename in restored ACDC raw training/testing; original Drive byte integrity audited separately; no voxel bridge is claimed here.",
+      "voxel_bridge_status": "NOT_VERIFIED",
+      "repaired_spacing_zyx_mm": [
+        10.0,
+        1.5625,
+        1.5625
+      ],
+      "repaired_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.5625,
+          0.0
+        ],
+        [
+          0.0,
+          -1.5625,
+          0.0,
+          0.0
+        ],
+        [
+          10.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "errors": []
+    },
+    {
+      "patient_id": "patient082",
+      "geometry_policy": "acdc_pixdim_native_v1",
+      "cine_path": "/root/mount_data/datasets/ACDC/raw/training/patient082/patient082_4d.nii",
+      "manifest_shape_zyx": [
+        16,
+        154,
+        224
+      ],
+      "manifest_spacing_zyx_mm": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "manifest_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "source_file_sha256": "f7df5fdb0a5840371d7b9ed5e741fd262797d2143a86e9d406933ef90d4b7236",
+      "source_header_sha256": "085f8fc921d004f86ec541e4e73a65333feb5ac8bcdcd60e7b81f9318f851d4e",
+      "source_shape_xyzt": [
+        224,
+        154,
+        16,
+        17
+      ],
+      "raw_pixdim_xyz_native": [
+        1.7857099771499634,
+        1.7857099771499634,
+        5.0
+      ],
+      "header_zooms_xyz_native": [
+        1.7857099771499634,
+        1.7857099771499634,
+        5.0
+      ],
+      "header_zooms_xyz_mm": [
+        1.7857099771499634,
+        1.7857099771499634,
+        5.0
+      ],
+      "sform_code": 2,
+      "sform_affine_xyz": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "qform_code": 0,
+      "qform_affine_xyz": [
+        [
+          -1.7857099771499634,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.7857099771499634,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          5.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_xyz": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_source": "sform",
+      "reconstructed_affine_xyz": [
+        [
+          -1.7857099771499634,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.7857099771499634,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          5.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "geometry_policy_waivers": [
+        "AFFINE_COLUMN_LENGTHS_DISAGREE_WITH_PIXDIM"
+      ],
+      "geometry_nonclaims": [
+        "SCANNER_WORLD_POSE_NOT_INDEPENDENTLY_VERIFIED"
+      ],
+      "affine_coordinate_convention": "coded_nifti_world",
+      "scanner_world_pose_status": "NOT_INDEPENDENTLY_VERIFIED",
+      "original_spatial_unit": "unknown",
+      "resolved_spatial_unit": "mm",
+      "unit_resolution": "explicit_declaration",
+      "unit_provenance": "Explicit user-approved ACDC pixdim amendment 2026-11-12; physical acquisition units in mm per official https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html ; unknown header unit is declared, not inferred silently.",
+      "cine_mapping_source": "/root/mount_data/receipts/q3d-pixdim-20261112/k8-development.cine-map.json",
+      "cine_mapping_sha256": "07d5a493eda54fd5989cd5881983bbb92e6ed7b94e5dd8edc4483a379695a0ac",
+      "cine_mapping_provenance": "Exact patient ID and original CINE filename in restored ACDC raw training/testing; original Drive byte integrity audited separately; no voxel bridge is claimed here.",
+      "voxel_bridge_status": "NOT_VERIFIED",
+      "repaired_spacing_zyx_mm": [
+        5.0,
+        1.7857099771499634,
+        1.7857099771499634
+      ],
+      "repaired_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.7857099771499634,
+          0.0
+        ],
+        [
+          0.0,
+          -1.7857099771499634,
+          0.0,
+          0.0
+        ],
+        [
+          5.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "errors": []
+    },
+    {
+      "patient_id": "patient087",
+      "geometry_policy": "acdc_pixdim_native_v1",
+      "cine_path": "/root/mount_data/datasets/ACDC/raw/training/patient087/patient087_4d.nii",
+      "manifest_shape_zyx": [
+        8,
+        184,
+        256
+      ],
+      "manifest_spacing_zyx_mm": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "manifest_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "source_file_sha256": "6739809a950671235328a274f34fb3d5e62ee3a25654ed73710b3d86876263fd",
+      "source_header_sha256": "b22d4be23c3fba6383d63020e90a83f8378295b1abeb20d5a2df85d7253f378e",
+      "source_shape_xyzt": [
+        256,
+        184,
+        8,
+        28
+      ],
+      "raw_pixdim_xyz_native": [
+        1.4453099966049194,
+        1.4453099966049194,
+        10.0
+      ],
+      "header_zooms_xyz_native": [
+        1.4453099966049194,
+        1.4453099966049194,
+        10.0
+      ],
+      "header_zooms_xyz_mm": [
+        1.4453099966049194,
+        1.4453099966049194,
+        10.0
+      ],
+      "sform_code": 2,
+      "sform_affine_xyz": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "qform_code": 0,
+      "qform_affine_xyz": [
+        [
+          -1.4453099966049194,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.4453099966049194,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_xyz": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_source": "sform",
+      "reconstructed_affine_xyz": [
+        [
+          -1.4453099966049194,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.4453099966049194,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "geometry_policy_waivers": [
+        "AFFINE_COLUMN_LENGTHS_DISAGREE_WITH_PIXDIM"
+      ],
+      "geometry_nonclaims": [
+        "SCANNER_WORLD_POSE_NOT_INDEPENDENTLY_VERIFIED"
+      ],
+      "affine_coordinate_convention": "coded_nifti_world",
+      "scanner_world_pose_status": "NOT_INDEPENDENTLY_VERIFIED",
+      "original_spatial_unit": "unknown",
+      "resolved_spatial_unit": "mm",
+      "unit_resolution": "explicit_declaration",
+      "unit_provenance": "Explicit user-approved ACDC pixdim amendment 2026-11-12; physical acquisition units in mm per official https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html ; unknown header unit is declared, not inferred silently.",
+      "cine_mapping_source": "/root/mount_data/receipts/q3d-pixdim-20261112/k8-development.cine-map.json",
+      "cine_mapping_sha256": "07d5a493eda54fd5989cd5881983bbb92e6ed7b94e5dd8edc4483a379695a0ac",
+      "cine_mapping_provenance": "Exact patient ID and original CINE filename in restored ACDC raw training/testing; original Drive byte integrity audited separately; no voxel bridge is claimed here.",
+      "voxel_bridge_status": "NOT_VERIFIED",
+      "repaired_spacing_zyx_mm": [
+        10.0,
+        1.4453099966049194,
+        1.4453099966049194
+      ],
+      "repaired_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.4453099966049194,
+          0.0
+        ],
+        [
+          0.0,
+          -1.4453099966049194,
+          0.0,
+          0.0
+        ],
+        [
+          10.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "errors": []
+    },
+    {
+      "patient_id": "patient089",
+      "geometry_policy": "acdc_pixdim_native_v1",
+      "cine_path": "/root/mount_data/datasets/ACDC/raw/training/patient089/patient089_4d.nii",
+      "manifest_shape_zyx": [
+        6,
+        288,
+        264
+      ],
+      "manifest_spacing_zyx_mm": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "manifest_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "source_file_sha256": "695ddf3e54711114df72a5c9b5bf5c2e7e2cdcb6c4420363942bb51876b2d728",
+      "source_header_sha256": "10cecab02c1aeadb975d544e18fc8f7905cd0c64dace486e414b6e0143a224ea",
+      "source_shape_xyzt": [
+        264,
+        288,
+        6,
+        30
+      ],
+      "raw_pixdim_xyz_native": [
+        1.4583300352096558,
+        1.4583300352096558,
+        10.0
+      ],
+      "header_zooms_xyz_native": [
+        1.4583300352096558,
+        1.4583300352096558,
+        10.0
+      ],
+      "header_zooms_xyz_mm": [
+        1.4583300352096558,
+        1.4583300352096558,
+        10.0
+      ],
+      "sform_code": 2,
+      "sform_affine_xyz": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "qform_code": 0,
+      "qform_affine_xyz": [
+        [
+          -1.4583300352096558,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.4583300352096558,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_xyz": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_source": "sform",
+      "reconstructed_affine_xyz": [
+        [
+          -1.4583300352096558,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.4583300352096558,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "geometry_policy_waivers": [
+        "AFFINE_COLUMN_LENGTHS_DISAGREE_WITH_PIXDIM"
+      ],
+      "geometry_nonclaims": [
+        "SCANNER_WORLD_POSE_NOT_INDEPENDENTLY_VERIFIED"
+      ],
+      "affine_coordinate_convention": "coded_nifti_world",
+      "scanner_world_pose_status": "NOT_INDEPENDENTLY_VERIFIED",
+      "original_spatial_unit": "unknown",
+      "resolved_spatial_unit": "mm",
+      "unit_resolution": "explicit_declaration",
+      "unit_provenance": "Explicit user-approved ACDC pixdim amendment 2026-11-12; physical acquisition units in mm per official https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html ; unknown header unit is declared, not inferred silently.",
+      "cine_mapping_source": "/root/mount_data/receipts/q3d-pixdim-20261112/k8-development.cine-map.json",
+      "cine_mapping_sha256": "07d5a493eda54fd5989cd5881983bbb92e6ed7b94e5dd8edc4483a379695a0ac",
+      "cine_mapping_provenance": "Exact patient ID and original CINE filename in restored ACDC raw training/testing; original Drive byte integrity audited separately; no voxel bridge is claimed here.",
+      "voxel_bridge_status": "NOT_VERIFIED",
+      "repaired_spacing_zyx_mm": [
+        10.0,
+        1.4583300352096558,
+        1.4583300352096558
+      ],
+      "repaired_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.4583300352096558,
+          0.0
+        ],
+        [
+          0.0,
+          -1.4583300352096558,
+          0.0,
+          0.0
+        ],
+        [
+          10.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "errors": []
+    },
+    {
+      "patient_id": "patient095",
+      "geometry_policy": "acdc_pixdim_native_v1",
+      "cine_path": "/root/mount_data/datasets/ACDC/raw/training/patient095/patient095_4d.nii",
+      "manifest_shape_zyx": [
+        14,
+        224,
+        180
+      ],
+      "manifest_spacing_zyx_mm": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "manifest_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "source_file_sha256": "0d890435d3e28a214f39c28e7984d5af9fe6739380b573d8de87bef1ed46a273",
+      "source_header_sha256": "8dd99860db67f86e87ee52cf37e2642af72a82c05671a5a8ec84ce0bbcc69d4d",
+      "source_shape_xyzt": [
+        180,
+        224,
+        14,
+        30
+      ],
+      "raw_pixdim_xyz_native": [
+        1.5625,
+        1.5625,
+        5.0
+      ],
+      "header_zooms_xyz_native": [
+        1.5625,
+        1.5625,
+        5.0
+      ],
+      "header_zooms_xyz_mm": [
+        1.5625,
+        1.5625,
+        5.0
+      ],
+      "sform_code": 2,
+      "sform_affine_xyz": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "qform_code": 0,
+      "qform_affine_xyz": [
+        [
+          -1.5625,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.5625,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          5.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_xyz": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_source": "sform",
+      "reconstructed_affine_xyz": [
+        [
+          -1.5625,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.5625,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          5.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "geometry_policy_waivers": [
+        "AFFINE_COLUMN_LENGTHS_DISAGREE_WITH_PIXDIM"
+      ],
+      "geometry_nonclaims": [
+        "SCANNER_WORLD_POSE_NOT_INDEPENDENTLY_VERIFIED"
+      ],
+      "affine_coordinate_convention": "coded_nifti_world",
+      "scanner_world_pose_status": "NOT_INDEPENDENTLY_VERIFIED",
+      "original_spatial_unit": "unknown",
+      "resolved_spatial_unit": "mm",
+      "unit_resolution": "explicit_declaration",
+      "unit_provenance": "Explicit user-approved ACDC pixdim amendment 2026-11-12; physical acquisition units in mm per official https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html ; unknown header unit is declared, not inferred silently.",
+      "cine_mapping_source": "/root/mount_data/receipts/q3d-pixdim-20261112/k8-development.cine-map.json",
+      "cine_mapping_sha256": "07d5a493eda54fd5989cd5881983bbb92e6ed7b94e5dd8edc4483a379695a0ac",
+      "cine_mapping_provenance": "Exact patient ID and original CINE filename in restored ACDC raw training/testing; original Drive byte integrity audited separately; no voxel bridge is claimed here.",
+      "voxel_bridge_status": "NOT_VERIFIED",
+      "repaired_spacing_zyx_mm": [
+        5.0,
+        1.5625,
+        1.5625
+      ],
+      "repaired_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.5625,
+          0.0
+        ],
+        [
+          0.0,
+          -1.5625,
+          0.0,
+          0.0
+        ],
+        [
+          5.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "errors": []
+    },
+    {
+      "patient_id": "patient098",
+      "geometry_policy": "acdc_pixdim_native_v1",
+      "cine_path": "/root/mount_data/datasets/ACDC/raw/training/patient098/patient098_4d.nii",
+      "manifest_shape_zyx": [
+        7,
+        256,
+        216
+      ],
+      "manifest_spacing_zyx_mm": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "manifest_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "source_file_sha256": "3fd92a6ca1101d4e84832d792624200959a785b8f25f1ea368624b9d6f6ce97b",
+      "source_header_sha256": "ba0891d6002fb08d74a5470ccc7820c9c43acde494a069db958f8132e95a3a15",
+      "source_shape_xyzt": [
+        216,
+        256,
+        7,
+        22
+      ],
+      "raw_pixdim_xyz_native": [
+        1.25,
+        1.25,
+        10.0
+      ],
+      "header_zooms_xyz_native": [
+        1.25,
+        1.25,
+        10.0
+      ],
+      "header_zooms_xyz_mm": [
+        1.25,
+        1.25,
+        10.0
+      ],
+      "sform_code": 2,
+      "sform_affine_xyz": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "qform_code": 0,
+      "qform_affine_xyz": [
+        [
+          -1.25,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.25,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_xyz": [
+        [
+          -1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "selected_affine_source": "sform",
+      "reconstructed_affine_xyz": [
+        [
+          -1.25,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          -1.25,
+          0.0,
+          -0.0
+        ],
+        [
+          0.0,
+          0.0,
+          10.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "geometry_policy_waivers": [
+        "AFFINE_COLUMN_LENGTHS_DISAGREE_WITH_PIXDIM"
+      ],
+      "geometry_nonclaims": [
+        "SCANNER_WORLD_POSE_NOT_INDEPENDENTLY_VERIFIED"
+      ],
+      "affine_coordinate_convention": "coded_nifti_world",
+      "scanner_world_pose_status": "NOT_INDEPENDENTLY_VERIFIED",
+      "original_spatial_unit": "unknown",
+      "resolved_spatial_unit": "mm",
+      "unit_resolution": "explicit_declaration",
+      "unit_provenance": "Explicit user-approved ACDC pixdim amendment 2026-11-12; physical acquisition units in mm per official https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html ; unknown header unit is declared, not inferred silently.",
+      "cine_mapping_source": "/root/mount_data/receipts/q3d-pixdim-20261112/k8-development.cine-map.json",
+      "cine_mapping_sha256": "07d5a493eda54fd5989cd5881983bbb92e6ed7b94e5dd8edc4483a379695a0ac",
+      "cine_mapping_provenance": "Exact patient ID and original CINE filename in restored ACDC raw training/testing; original Drive byte integrity audited separately; no voxel bridge is claimed here.",
+      "voxel_bridge_status": "NOT_VERIFIED",
+      "repaired_spacing_zyx_mm": [
+        10.0,
+        1.25,
+        1.25
+      ],
+      "repaired_affine_zyx": [
+        [
+          0.0,
+          0.0,
+          -1.25,
+          0.0
+        ],
+        [
+          0.0,
+          -1.25,
+          0.0,
+          0.0
+        ],
+        [
+          10.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "errors": []
+    }
+  ],
+  "errors": [],
+  "receipt": {
+    "schema": "self_audit.q3d.geometry_repair_receipt.v1",
+    "status": "success",
+    "geometry_only": true,
+    "geometry_policy": "acdc_pixdim_native_v1",
+    "source_manifest_sha256": "ba46934afe8ea5c47dd798019bee233c97c98320b358e2d40165e87a651dc7df",
+    "repaired_manifest_sha256": "c83031b6deaf275f830401f8da9ba9a0e30530620633106a3a62cc6d492b1f7b",
+    "patient_ids": [
+      "patient004",
+      "patient005",
+      "patient012",
+      "patient014",
+      "patient015",
+      "patient018",
+      "patient028",
+      "patient029",
+      "patient030",
+      "patient032",
+      "patient036",
+      "patient065",
+      "patient070",
+      "patient082",
+      "patient087",
+      "patient089",
+      "patient095",
+      "patient098"
+    ],
+    "axis_map": "XYZ->ZYX",
+    "cine_mapping_source": "/root/mount_data/receipts/q3d-pixdim-20261112/k8-development.cine-map.json",
+    "cine_mapping_sha256": "07d5a493eda54fd5989cd5881983bbb92e6ed7b94e5dd8edc4483a379695a0ac",
+    "cine_mapping_provenance": "Exact patient ID and original CINE filename in restored ACDC raw training/testing; original Drive byte integrity audited separately; no voxel bridge is claimed here.",
+    "voxel_bridge_status": "NOT_VERIFIED"
+  },
+  "source_manifest_sha256_actual": "ba46934afe8ea5c47dd798019bee233c97c98320b358e2d40165e87a651dc7df"
+}

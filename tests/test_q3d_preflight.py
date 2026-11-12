@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import math
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -8,6 +10,8 @@ import torch
 from torch import nn
 
 import scripts.q3d_preflight as preflight
+from self_audit.candidate_q3d.config import NNFOUNDATION_DEFAULT_ENCODER_STRIDES
+from self_audit.candidate_q3d.geometry_planning import CANONICAL_PROBE_CONTRACT
 
 
 def _conv(kernel, stride, padding):
@@ -21,14 +25,14 @@ class _ResEncEncoderFixture(nn.Module):
     def __init__(self):
         super().__init__()
         self.stem = _conv(3, 1, 1)
-        self.stages = nn.ModuleList([
-            nn.ModuleList([_conv(3, 1, 1)]),
-            nn.ModuleList([_conv(3, 2, 1), _conv(3, 1, 1)]),
-            nn.ModuleList([_conv(3, 2, 1), _conv(3, 1, 1)]),
-            nn.ModuleList([_conv(3, 2, 1), _conv(3, 1, 1)]),
-            nn.ModuleList([_conv(3, 2, 1), _conv(3, 1, 1)]),
-            nn.ModuleList([_conv(3, 2, 1), _conv(3, 1, 1)]),
-        ])
+        self.strides = tuple(tuple(stage) for stage in NNFOUNDATION_DEFAULT_ENCODER_STRIDES)
+        stages = []
+        for stage_index, stride in enumerate(self.strides):
+            blocks = [_conv(3, stride, 1)]
+            if stage_index:
+                blocks.append(_conv(3, 1, 1))
+            stages.append(nn.ModuleList(blocks))
+        self.stages = nn.ModuleList(stages)
 
 
 class _ResEncTeacherFixture(nn.Module):
@@ -77,6 +81,57 @@ def _toy_student_for_phase():
         stage3=SimpleNamespace(down=slot((1, 2, 2))),
         stage4=SimpleNamespace(down=slot((1, 2, 2))),
     )
+
+
+def _canonical_erf_receipt_payload() -> dict:
+    contract = dict(CANONICAL_PROBE_CONTRACT)
+    schedule = [list(stage) for stage in NNFOUNDATION_DEFAULT_ENCODER_STRIDES]
+    stage_index = int(contract["stage_index"])
+    cumulative = [
+        math.prod(stage[axis] for stage in schedule[: stage_index + 1])
+        for axis in range(3)
+    ]
+    full_cumulative = [
+        math.prod(stage[axis] for stage in schedule)
+        for axis in range(3)
+    ]
+    shape = list(contract["shape_zyx"])
+    offsets = [0.6737596988677979, 1.7588436603546143, 1.2107672691345215]
+    return {
+        "schema": "self_audit.q3d_resenc.erf_probe.v1",
+        "status": "PASS",
+        "model": {
+            "architecture": "ResEncL",
+            "checkpoint_sha256": preflight.RESENC_CHECKPOINT_SHA256,
+            "stride_schedule_zyx": schedule,
+            "cumulative_stride_zyx": cumulative,
+            "full_teacher_cumulative_stride_zyx": full_cumulative,
+            "stage_index": stage_index,
+            "stage_name": f"encoder.stages[{stage_index}]",
+        },
+        "compute": {
+            "samples": contract["samples"],
+            "seed_start": contract["seed_start"],
+            "shape_zyx": shape,
+            "padding_mode": contract["padding_mode"],
+            "random_zscore_input": True,
+            "patient_data": contract["patient_data"],
+        },
+        "decision_rule": {"threshold_voxels": contract["decision_threshold_voxels"]},
+        "summary": {
+            "mean_centroid_offset_voxels": offsets,
+            "absolute_mean_centroid_offset_voxels": offsets,
+        },
+        "samples": [
+            {"seed": seed, "input_shape_zyx": shape}
+            for seed in range(
+                contract["seed_start"], contract["seed_end_inclusive"] + 1,
+            )
+        ],
+        "geometry_reprobe": {
+            "probe_contract": {**contract, "stride_schedule_zyx": schedule},
+        },
+    }
 
 
 class _LOnlyDataFixture:
@@ -149,6 +204,13 @@ def test_resenc_inventory_reports_actual_encoder_and_cpu_diagnostics() -> None:
     assert inventory["status"] == "ACTUAL_RESENC_MODULES_INSPECTED"
     assert inventory["architecture"] == "ResEncL"
     assert inventory["encoder_conv_count"] == 12
+    assert all(item["kernel_zyx"] == [3, 3, 3] for item in inventory["encoder_convs"])
+    expected_conv_strides = [[1, 1, 1]]
+    for stage_index, stride in enumerate(NNFOUNDATION_DEFAULT_ENCODER_STRIDES):
+        expected_conv_strides.append(list(stride))
+        if stage_index:
+            expected_conv_strides.append([1, 1, 1])
+    assert [item["stride_zyx"] for item in inventory["encoder_convs"]] == expected_conv_strides
     assert inventory["geometry"]["status"] == "MEASURED"
     assert inventory["phase"]["status"] == "PASS"
     assert inventory["erf"] == {"status": "MEASURED", "samples": 16, "threshold": 2.0}
@@ -223,15 +285,17 @@ def test_resenc_inventory_executes_worker_owned_erf_api(monkeypatch) -> None:
     assert inventory["phase"]["status"] == "EMPIRICAL_MAIN_PHASE_SELECTED"
 
 
-def test_preflight_uses_repo_receipt_without_promoting_missing_weights() -> None:
+def test_preflight_uses_canonical_receipt_without_promoting_missing_weights(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    receipt_path = tmp_path / "erf_probe.json"
+    receipt_path.write_text(json.dumps(_canonical_erf_receipt_payload()), encoding="utf-8")
+    monkeypatch.setattr(preflight, "RESENC_ERF_RECEIPT", receipt_path)
     result = preflight._teacher_diagnostics({
         "model": {
             "teacher": {
                 "architecture": "nnfoundation_resenc_l",
-                "encoder_strides": [
-                    [1, 1, 1], [2, 2, 2], [1, 2, 2],
-                    [1, 2, 2], [1, 2, 2], [1, 2, 2],
-                ],
+                "encoder_strides": [list(stage) for stage in NNFOUNDATION_DEFAULT_ENCODER_STRIDES],
             },
             "student": {"input_channels": 1},
         },
@@ -242,6 +306,65 @@ def test_preflight_uses_repo_receipt_without_promoting_missing_weights() -> None
     assert result["checkpoint"]["strict_encoder"]["status"] == "PASS_RECEIPT_ONLY"
     assert result["resenc_source_inventory"]["status"] == "PHASE0_RECEIPT_VERIFIED"
     assert result["resenc_source_inventory"]["network"]["erf"]["status"] == "PASS_RECEIPT_ONLY"
+    phase = result["resenc_source_inventory"]["network"]["phase"]
+    assert phase["selected_phase"] == {
+        "step_zyx": [2, 8, 8], "offset_zyx": [0.0, 0.0, 0.0],
+    }
+    assert phase["erf_summary"]["signed_mean_centroid_offset_voxels"] == [
+        0.6737596988677979, 1.7588436603546143, 1.2107672691345215,
+    ]
+    assert result["resenc_source_inventory"]["network"]["erf"]["receipt_path"] == str(receipt_path)
+
+
+@pytest.mark.parametrize(
+    ("mutation", "message"),
+    [
+        ("sample_count", "exact canonical 16 seeds 42-57"),
+        ("seed_sequence", "exact canonical 16 seeds 42-57"),
+        ("input_shape", "input shape differs from the canonical contract"),
+        ("aggregation", "channel_aggregation differs from geometry planning"),
+        ("stage", "does not target encoder stage 3"),
+        ("padding", "replicate padding"),
+        ("stride_schedule", "stride schedule differs from Q3D config"),
+    ],
+)
+def test_phase0_receipt_rejects_noncanonical_erf_semantics(
+    tmp_path: Path, mutation: str, message: str,
+) -> None:
+    payload = _canonical_erf_receipt_payload()
+    if mutation == "sample_count":
+        payload["compute"]["samples"] = 15
+    elif mutation == "seed_sequence":
+        payload["samples"][0]["seed"] = 43
+    elif mutation == "input_shape":
+        payload["compute"]["shape_zyx"] = [33, 95, 97]
+    elif mutation == "aggregation":
+        payload["geometry_reprobe"]["probe_contract"]["channel_aggregation"] = "mean_absolute"
+    elif mutation == "stage":
+        payload["model"]["stage_index"] = 2
+    elif mutation == "padding":
+        payload["compute"]["padding_mode"] = "zeros"
+    elif mutation == "stride_schedule":
+        payload["model"]["stride_schedule_zyx"] = [
+            [1, 1, 1], [2, 2, 2], [1, 2, 2],
+            [1, 2, 2], [1, 2, 2], [1, 2, 2],
+        ]
+    else:
+        raise AssertionError(f"unknown fixture mutation: {mutation}")
+    receipt_path = tmp_path / "erf_probe.json"
+    receipt_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(ValueError, match=message):
+        preflight._resenc_receipt_network_inventory(
+            receipt_path,
+            expected_sha256=preflight.RESENC_CHECKPOINT_SHA256,
+            diagnostic_options={
+                "erf_threshold": 2.0,
+                "expected_stride_schedule_zyx": [
+                    list(stage) for stage in NNFOUNDATION_DEFAULT_ENCODER_STRIDES
+                ],
+            },
+        )
 
 
 def test_teacher_weights_runtime_binding_is_resolved(monkeypatch, tmp_path) -> None:

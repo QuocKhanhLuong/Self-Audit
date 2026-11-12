@@ -1,0 +1,75 @@
+{
+  "status": "PASS",
+  "geometry_policy": "acdc_pixdim_native_v1",
+  "manifests": [
+    {
+      "source": "/root/mount_data/prepared/ACDC/k5/train.json",
+      "source_sha256": "08e52386ca3c4194bb13cc3b70db38783c01c97f56ef62276bea9637139e7a4e",
+      "output": "/root/mount_data/prepared/ACDC/k5/train.q3d-pixdim.json",
+      "output_sha256": "305b88f403f62798f4daa725e2b16035e13b0b35bcefb2a56ff60c555750a3c1",
+      "patient_count": 80,
+      "report": "/root/mount_data/receipts/q3d-pixdim-20261112/k5-train.repair.json",
+      "report_sha256": "3118b80eeab8567e4da46fd57e13e79ace7f94b0135d3dfeed97ba21edf44014",
+      "non_geometry_unchanged": true
+    },
+    {
+      "source": "/root/mount_data/prepared/ACDC/k8/train.json",
+      "source_sha256": "175e99e455f35f61453dcb6711b32d6682571ec082374740f9dbfa44576a5944",
+      "output": "/root/mount_data/prepared/ACDC/k8/train.q3d-pixdim.json",
+      "output_sha256": "60dd11747570f3ac183e8636050a3ac3d73651cb43b37deba9ff7422b442a433",
+      "patient_count": 80,
+      "report": "/root/mount_data/receipts/q3d-pixdim-20261112/k8-train.repair.json",
+      "report_sha256": "29cc6ab00ceec2f3fb8fa950733e2d286de6a54158a87564e2aa29d9b39b6436",
+      "non_geometry_unchanged": true
+    },
+    {
+      "source": "/root/mount_data/prepared/ACDC/k10/train.json",
+      "source_sha256": "4982655478334405a538c5ced3fe5093c4305c0c9ba7c758a6f54e20247a1cb5",
+      "output": "/root/mount_data/prepared/ACDC/k10/train.q3d-pixdim.json",
+      "output_sha256": "482f0d60b587fe6e377958a021717114bebb79fcc48ee39d8209e5ef6c67620a",
+      "patient_count": 80,
+      "report": "/root/mount_data/receipts/q3d-pixdim-20261112/k10-train.repair.json",
+      "report_sha256": "0001c33d9b5ed92f6ec4ed40658e88da7e4220cc80573d5ed5eae425a6b8c92d",
+      "non_geometry_unchanged": true
+    },
+    {
+      "source": "/root/mount_data/prepared/ACDC/k5/development.json",
+      "source_sha256": "ba46934afe8ea5c47dd798019bee233c97c98320b358e2d40165e87a651dc7df",
+      "output": "/root/mount_data/prepared/ACDC/k5/development.q3d-pixdim.json",
+      "output_sha256": "c83031b6deaf275f830401f8da9ba9a0e30530620633106a3a62cc6d492b1f7b",
+      "patient_count": 18,
+      "report": "/root/mount_data/receipts/q3d-pixdim-20261112/k5-development.repair.json",
+      "report_sha256": "b13d05b3df80b358780671a26791569e73d60210dc0223a3f179adc13e937ce3",
+      "non_geometry_unchanged": true
+    },
+    {
+      "source": "/root/mount_data/prepared/ACDC/k8/development.json",
+      "source_sha256": "ba46934afe8ea5c47dd798019bee233c97c98320b358e2d40165e87a651dc7df",
+      "output": "/root/mount_data/prepared/ACDC/k8/development.q3d-pixdim.json",
+      "output_sha256": "c83031b6deaf275f830401f8da9ba9a0e30530620633106a3a62cc6d492b1f7b",
+      "patient_count": 18,
+      "report": "/root/mount_data/receipts/q3d-pixdim-20261112/k8-development.repair.json",
+      "report_sha256": "5f66d29d0c08e749a0ce6772860add37a31e30d06dad2802ab276b7c5bf2c98d",
+      "non_geometry_unchanged": true
+    },
+    {
+      "source": "/root/mount_data/prepared/ACDC/k10/development.json",
+      "source_sha256": "ba46934afe8ea5c47dd798019bee233c97c98320b358e2d40165e87a651dc7df",
+      "output": "/root/mount_data/prepared/ACDC/k10/development.q3d-pixdim.json",
+      "output_sha256": "c83031b6deaf275f830401f8da9ba9a0e30530620633106a3a62cc6d492b1f7b",
+      "patient_count": 18,
+      "report": "/root/mount_data/receipts/q3d-pixdim-20261112/k10-development.repair.json",
+      "report_sha256": "46c260147bbc089ea1b0a38aabafd66f0c5af3746c2672c5bf99f81ec8665247",
+      "non_geometry_unchanged": true
+    }
+  ],
+  "train80_reference": {
+    "path": "/root/mount_data/prepared/ACDC/k10/train80.q3d-pixdim.json",
+    "sha256": "482f0d60b587fe6e377958a021717114bebb79fcc48ee39d8209e5ef6c67620a",
+    "same_bytes_as": "/root/mount_data/prepared/ACDC/k10/train.q3d-pixdim.json",
+    "label_visibility": "K10; this is a TRAIN80 cohort reference, not 80 labeled patients"
+  },
+  "split_selector_voxels_labels": "UNCHANGED_FROM_RESTORED_SOURCE",
+  "prior_restoration_changes": "See separate RESTORATION_LINEAGE.json; this amendment does not attribute pre-existing path/order/metadata changes to geometry.",
+  "a3d_caveat": "Historical A-3D k8 runs used the old manifest geometry; SDF/mm-dependent results may be affected. No baseline rerun."
+}

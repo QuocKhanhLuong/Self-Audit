@@ -27,13 +27,13 @@ def _reduced_plan(tmp_path: Path) -> tuple[Path, dict]:
 def test_reduced_catalogue_has_exact_shared_producers_and_six_joints(tmp_path: Path) -> None:
     _, plan = _reduced_plan(tmp_path)
     assert plan["selection"]["runs"] == [
-        ["v1", 8], ["v1u", 8], ["c1", 8], ["c0", 8], ["v1", 5], ["v1", 10],
+        ["v1", 8], ["v1", 5], ["v1", 10], ["v1u", 8], ["c1", 8], ["c0", 8],
     ]
     assert plan["selection"]["k_order"] == [8, 5, 10]
 
     primary = [item for item in plan["experiments"] if item["group"] == "primary"]
     assert [(item["setting"], item["k"]) for item in primary] == [
-        ("v1", 8), ("v1u", 8), ("c1", 8), ("c0", 8), ("v1", 5), ("v1", 10),
+        ("v1", 8), ("v1", 5), ("v1", 10), ("v1u", 8), ("c1", 8), ("c0", 8),
     ]
     dag = plan["shared_stage_dag"]
     assert dag["stage_job_counts"] == {"T": 3, "Q": 3, "P": 3, "J": 6}
@@ -176,7 +176,7 @@ def test_bare_cli_uses_the_six_run_catalogue(tmp_path: Path, capsys) -> None:
     assert '"status": "NOT_RUN"' in output
     plan = validate_campaign_plan(tmp_path / "cli-default" / "PLAN.json")
     assert plan["selection"]["runs"] == [
-        ["v1", 8], ["v1u", 8], ["c1", 8], ["c0", 8], ["v1", 5], ["v1", 10],
+        ["v1", 8], ["v1", 5], ["v1", 10], ["v1u", 8], ["c1", 8], ["c0", 8],
     ]
     assert plan["selection"]["datasets"] == ["acdc"]
     assert plan["selection"]["protocols"] == ["A"]

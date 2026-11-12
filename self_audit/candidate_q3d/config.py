@@ -29,8 +29,8 @@ ARMS = PRIMARY_ARMS + SECONDARY_ARMS + BASELINE_ARMS
 K_VALUES = (2, 5, 8, 10)
 DEFAULT_SEED = 42
 DEFAULT_STAGE_UPDATES = {"T": 8000, "Q": 1000, "P": 1, "J": 8000}
-K8_LOCKED_TRAIN_MANIFEST_SHA256 = "e524c7531079996232fe71cdfe982a46a5950d49d91a8203eee396b0e67434a3"
-K8_LOCKED_DEV_MANIFEST_SHA256 = "ba46934afe8ea5c47dd798019bee233c97c98320b358e2d40165e87a651dc7df"
+K8_LOCKED_TRAIN_MANIFEST_SHA256 = "60dd11747570f3ac183e8636050a3ac3d73651cb43b37deba9ff7422b442a433"
+K8_LOCKED_DEV_MANIFEST_SHA256 = "c83031b6deaf275f830401f8da9ba9a0e30530620633106a3a62cc6d492b1f7b"
 
 # Phase-0 provenance for the actual external checkpoint.  Keep the local
 # path outside the repository; it is resolved by the recipe loader and is
@@ -56,14 +56,15 @@ NNFOUNDATION_NNUNET_COMMIT = "c04f7ec8bbffaf3ebc3b26aa2c89042e8a8e368b"
 # decision becomes part of the recipe hash.  This is a stride-only adaptation
 # of the public encoder; tensor shapes stay compatible with the checkpoint.
 NNFOUNDATION_DEFAULT_ENCODER_STRIDES = [
-    [1, 1, 1], [2, 2, 2], [1, 2, 2], [1, 2, 2], [1, 2, 2], [1, 2, 2],
+    [1, 1, 1], [1, 2, 2], [1, 2, 2], [2, 2, 2], [1, 2, 2], [1, 2, 2],
 ]
 NNFOUNDATION_DEFAULT_PHASE_OFFSETS = {
     "encoder_stride8": [0.0, 0.0, 0.0],
     "encoder_stride16": [0.0, 0.0, 0.0],
 }
-NNFOUNDATION_PHASE_RECEIPT_PATH = "reports/q3d-resenc-phase0-20261112/erf_probe.json"
-NNFOUNDATION_PHASE_RECEIPT_SHA256 = "2f05888b45ff3bfbf19f90bd91abbd4f0b2ab193b37375c5d875950117d2a14e"
+NNFOUNDATION_PHASE_RECEIPT_PATH = "reports/q3d-resenc-pixdim-20261112/erf_probe.json"
+NNFOUNDATION_PHASE_RECEIPT_SHA256 = "36f44d7f85cd3872168b01339353fb17787099d309e167ea5d64ffbc1721b72b"
+NNFOUNDATION_SIGNED_MEAN_OFFSET_ZYX = [0.6737596988677979, 1.7588436603546143, 1.2107672691345215]
 NNFOUNDATION_PHASE_MEASUREMENT = {
     "receipt_path": NNFOUNDATION_PHASE_RECEIPT_PATH,
     "receipt_sha256": NNFOUNDATION_PHASE_RECEIPT_SHA256,
@@ -74,7 +75,7 @@ NNFOUNDATION_PHASE_MEASUREMENT = {
     "encoder_stride8": {
         "status": "MEASURED_WITHIN_THRESHOLD",
         "offset_zyx": [0.0, 0.0, 0.0],
-        "measured_mean_offset_zyx": [0.67213374376297, 1.9470438957214355, 1.722203016281128],
+        "measured_mean_offset_zyx": NNFOUNDATION_SIGNED_MEAN_OFFSET_ZYX,
         "policy": "lock_nominal_phase_when_signed_mean_is_within_threshold",
     },
     "encoder_stride16": {
@@ -767,7 +768,7 @@ def _validate_model(value: Any, *, arm: str) -> dict[str, Any]:
         }, "model.teacher.phase_measurement.encoder_stride8")
         if (main_measurement["status"] != "MEASURED_WITHIN_THRESHOLD"
                 or main_measurement["offset_zyx"] != NNFOUNDATION_DEFAULT_PHASE_OFFSETS["encoder_stride8"]
-                or main_measurement["measured_mean_offset_zyx"] != [0.67213374376297, 1.9470438957214355, 1.722203016281128]
+                or main_measurement["measured_mean_offset_zyx"] != NNFOUNDATION_SIGNED_MEAN_OFFSET_ZYX
                 or main_measurement["policy"] != "lock_nominal_phase_when_signed_mean_is_within_threshold"):
             raise ValueError("encoder_stride8 phase measurement does not match the locked ERF receipt")
         s1_measurement = _exact_mapping(phase_measurement["encoder_stride16"], {
@@ -926,7 +927,11 @@ def validate_real_teacher_provenance(config: Mapping[str, Any]) -> None:
     teacher = config["model"]["teacher"]
     if teacher.get("architecture") != NNFOUNDATION_ARCHITECTURE:
         raise ValueError("real teacher stage requires nnFoundation ResEnc-L provenance")
-    _validate_encoder_strides(teacher.get("encoder_strides"))
+    strides = _validate_encoder_strides(teacher.get("encoder_strides"))
+    if strides != NNFOUNDATION_DEFAULT_ENCODER_STRIDES:
+        raise ValueError(
+            "real teacher provenance requires the locked geometry-derived Phase-0 encoder_strides"
+        )
     pins = teacher.get("dependency_pins")
     expected_pins = {
         "dynamic_network_architectures": NNFOUNDATION_DNA_VERSION,
@@ -1043,6 +1048,12 @@ def validate_config(config: Mapping[str, Any], *, real_run: bool = False) -> dic
         if dev_sha != K8_LOCKED_DEV_MANIFEST_SHA256:
             raise ValueError("ACDC K=8 DEVELOPMENT manifest SHA-256 does not match the locked campaign input")
     model = _validate_model(raw["model"], arm=arm)
+    if (not runtime["synthetic"]
+            and model["teacher"]["architecture"] == NNFOUNDATION_ARCHITECTURE
+            and model["teacher"]["encoder_strides"] != NNFOUNDATION_DEFAULT_ENCODER_STRIDES):
+        raise ValueError(
+            "real nnFoundation encoder_strides must match the locked geometry-derived Phase-0 schedule"
+        )
     training = _validate_training(raw["training"], arm=arm, runtime=raw["runtime"])
     tokenizer = dict(_exact_mapping(raw["tokenizer"], {
         "enabled", "initialization_volumes", "codebook_size", "dimension", "adapter_hidden", "temperature", "commitment_beta",

@@ -14,6 +14,12 @@ import pytest
 from scripts import q3d_campaign
 from scripts.q3d_campaign import create_campaign_plan, execute_campaign, validate_campaign_plan
 from self_audit.candidate_q3d.config import (
+    K8_LOCKED_DEV_MANIFEST_SHA256,
+    K8_LOCKED_TRAIN_MANIFEST_SHA256,
+    NNFOUNDATION_DEFAULT_ENCODER_STRIDES,
+    NNFOUNDATION_PHASE_RECEIPT_PATH,
+    NNFOUNDATION_PHASE_RECEIPT_SHA256,
+    NNFOUNDATION_SIGNED_MEAN_OFFSET_ZYX,
     PRIMARY_ARMS,
     SECONDARY_ARMS,
     canonical_config,
@@ -52,9 +58,7 @@ def test_canonical_json_recipes_are_strict_and_preserve_pinned_settings() -> Non
         assert config["tokenizer"]["initialization_volumes"] == 200
         assert config["augmentation"]["intensity_probability_unlabeled_student"] == 1.0
         if config["model"]["teacher"]["architecture"] == "nnfoundation_resenc_l":
-            assert config["model"]["teacher"]["encoder_strides"] == [
-                [1, 1, 1], [2, 2, 2], [1, 2, 2], [1, 2, 2], [1, 2, 2], [1, 2, 2],
-            ]
+            assert config["model"]["teacher"]["encoder_strides"] == NNFOUNDATION_DEFAULT_ENCODER_STRIDES
             assert config["model"]["teacher"]["phase_offsets"] == {
                 "encoder_stride8": [0.0, 0.0, 0.0],
                 "encoder_stride16": [0.0, 0.0, 0.0],
@@ -67,10 +71,10 @@ def test_canonical_json_recipes_are_strict_and_preserve_pinned_settings() -> Non
             assert config["model"]["teacher"]["pretrained"]["overlap_acdc"] is False
             assert config["model"]["teacher"]["pretrained"]["overlap_mnms"] is False
             phase = config["model"]["teacher"]["phase_measurement"]
-            assert phase["receipt_sha256"] == (
-                "2f05888b45ff3bfbf19f90bd91abbd4f0b2ab193b37375c5d875950117d2a14e"
-            )
+            assert phase["receipt_path"] == NNFOUNDATION_PHASE_RECEIPT_PATH
+            assert phase["receipt_sha256"] == NNFOUNDATION_PHASE_RECEIPT_SHA256
             assert phase["encoder_stride8"]["offset_zyx"] == [0.0, 0.0, 0.0]
+            assert phase["encoder_stride8"]["measured_mean_offset_zyx"] == NNFOUNDATION_SIGNED_MEAN_OFFSET_ZYX
             assert phase["encoder_stride16"]["status"] == "NOT_MEASURED"
             assert "not_inherited" in phase["encoder_stride16"]["policy"]
     assert load_config(config_dir / "s1.json")["model"]["teacher"]["feature_stride"] == 16
@@ -129,6 +133,42 @@ def test_q3d_feature_source_selection_is_explicit_and_consistent() -> None:
 
     with pytest.raises(ValueError, match="feature_stride must be 8 or 16"):
         canonical_config("v1", source_stride=4)
+
+
+def test_real_resenc_schedule_and_phase_receipt_are_locked_but_synthetic_schedule_is_customizable() -> None:
+    config = canonical_config("v1")
+    assert config["model"]["teacher"]["encoder_strides"] == NNFOUNDATION_DEFAULT_ENCODER_STRIDES
+
+    altered_real = copy.deepcopy(config)
+    altered_real["model"]["teacher"]["encoder_strides"][1] = [2, 2, 2]
+    with pytest.raises(ValueError, match="locked geometry-derived Phase-0 schedule"):
+        validate_config(altered_real)
+    with pytest.raises(ValueError, match="locked geometry-derived Phase-0 encoder_strides"):
+        validate_real_teacher_provenance(altered_real)
+
+    altered_measurement = copy.deepcopy(config)
+    altered_measurement["model"]["teacher"]["phase_measurement"]["encoder_stride8"][
+        "measured_mean_offset_zyx"
+    ] = [0.0, 0.0, 0.0]
+    with pytest.raises(ValueError, match="locked ERF receipt"):
+        validate_config(altered_measurement)
+
+    synthetic = copy.deepcopy(config)
+    synthetic["runtime"]["synthetic"] = True
+    synthetic_strides = [
+        [1, 1, 1], [1, 2, 2], [1, 2, 2], [1, 2, 2], [1, 2, 2], [1, 2, 2],
+    ]
+    synthetic["model"]["teacher"]["encoder_strides"] = synthetic_strides
+    assert validate_config(synthetic)["model"]["teacher"]["encoder_strides"] == synthetic_strides
+
+
+def test_k8_manifest_constants_bind_the_geometry_repaired_receipts() -> None:
+    assert K8_LOCKED_TRAIN_MANIFEST_SHA256 == (
+        "60dd11747570f3ac183e8636050a3ac3d73651cb43b37deba9ff7422b442a433"
+    )
+    assert K8_LOCKED_DEV_MANIFEST_SHA256 == (
+        "c83031b6deaf275f830401f8da9ba9a0e30530620633106a3a62cc6d492b1f7b"
+    )
 
 
 def test_config_rejects_unknown_root_and_nested_fields() -> None:

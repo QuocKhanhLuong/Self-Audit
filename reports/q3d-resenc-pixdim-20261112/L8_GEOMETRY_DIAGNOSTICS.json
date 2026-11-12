@@ -1,0 +1,368 @@
+{
+  "status": "PASS",
+  "evidence_status": "REAL_LABELED_DATA_GEOMETRY_DIAGNOSTIC_NO_TRAINING",
+  "scope": "Only the two supplied GT frames of each L8 patient; no full-cine GT, no U/DEV/TEST masks",
+  "manifest": "/root/mount_data/prepared/ACDC/k8/train.q3d-pixdim.json",
+  "manifest_sha256": "60dd11747570f3ac183e8636050a3ac3d73651cb43b37deba9ff7422b442a433",
+  "student_phase": [
+    [
+      1,
+      16,
+      16
+    ],
+    [
+      0.0,
+      0.0,
+      0.0
+    ]
+  ],
+  "stage4_class_coverage": {
+    "status": "MEASURED_TRAIN_L_GROUND_TRUTH",
+    "label_scope": "L only; no U, DEV or TEST labels",
+    "class_order": [
+      "BG",
+      "RV",
+      "MYO",
+      "LV"
+    ],
+    "total_s4_cells": 29664,
+    "labeled_frame_count": 16,
+    "labeled_patient_count": 8,
+    "class_counts": {
+      "BG": 28607,
+      "RV": 368,
+      "MYO": 245,
+      "LV": 444
+    },
+    "class_fractions": {
+      "BG": 0.9643675836030206,
+      "RV": 0.012405609492988134,
+      "MYO": 0.008259169363538295,
+      "LV": 0.014967637540453074
+    },
+    "tie_break_class_id": 0,
+    "tie_break_rule": "argmax chooses the lowest class index",
+    "myo_review": {
+      "status": "OPEN",
+      "threshold_fraction": 0.02,
+      "observed_fraction": 0.008259169363538295,
+      "threshold_changed": false,
+      "reason": "MYO support is below 2%; review class coverage and balancing before P2"
+    }
+  },
+  "physiology_options": {
+    "tau_sv": 0.15,
+    "tau_m": 0.1,
+    "stroke_balance": true,
+    "has_rv": true,
+    "minimum_lv_ed_ml": 10.0,
+    "ef_range_percent": [
+      5.0,
+      90.0
+    ],
+    "certainty_threshold": 0.7
+  },
+  "labeled_patients": [
+    {
+      "patient_id": "patient007",
+      "frames": [
+        {
+          "frame_key": "(0, 0)",
+          "spacing_zyx_mm": [
+            10.0,
+            1.875,
+            1.875
+          ],
+          "volumes_ml": [
+            16694.7890625,
+            294.29296875,
+            183.69140625,
+            309.7265625
+          ]
+        },
+        {
+          "frame_key": "(0, 6)",
+          "spacing_zyx_mm": [
+            10.0,
+            1.875,
+            1.875
+          ],
+          "volumes_ml": [
+            16807.25390625,
+            213.99609375,
+            183.97265625,
+            277.27734375
+          ]
+        }
+      ],
+      "lv_ed_ml": 309.7265625,
+      "lv_es_ml": 277.27734375,
+      "lv_ef_percent": 10.476730987514188,
+      "volume_ef_guard_reasons": []
+    },
+    {
+      "patient_id": "patient010",
+      "frames": [
+        {
+          "frame_key": "(1, 0)",
+          "spacing_zyx_mm": [
+            10.0,
+            1.5625,
+            1.5625
+          ],
+          "volumes_ml": [
+            12275.9521484375,
+            261.7919921875,
+            164.306640625,
+            297.94921875
+          ]
+        },
+        {
+          "frame_key": "(1, 12)",
+          "spacing_zyx_mm": [
+            10.0,
+            1.5625,
+            1.5625
+          ],
+          "volumes_ml": [
+            12375.1708984375,
+            198.486328125,
+            160.44921875,
+            265.8935546875
+          ]
+        }
+      ],
+      "lv_ed_ml": 297.94921875,
+      "lv_es_ml": 265.8935546875,
+      "lv_ef_percent": 10.758767617174698,
+      "volume_ef_guard_reasons": []
+    },
+    {
+      "patient_id": "patient011",
+      "frames": [
+        {
+          "frame_key": "(2, 0)",
+          "spacing_zyx_mm": [
+            10.0,
+            1.4843800067901611,
+            1.4843800067901611
+          ],
+          "volumes_ml": [
+            10438.862229195907,
+            156.88094112455516,
+            132.68778475450435,
+            237.01801737034265
+          ]
+        },
+        {
+          "frame_key": "(2, 7)",
+          "spacing_zyx_mm": [
+            10.0,
+            1.4843800067901611,
+            1.4843800067901611
+          ],
+          "volumes_ml": [
+            10489.055316819748,
+            131.4538897119517,
+            137.0945527636211,
+            207.84521314998997
+          ]
+        }
+      ],
+      "lv_ed_ml": 237.01801737034265,
+      "lv_es_ml": 207.84521314998997,
+      "lv_ef_percent": 12.308264385981223,
+      "volume_ef_guard_reasons": []
+    },
+    {
+      "patient_id": "patient024",
+      "frames": [
+        {
+          "frame_key": "(3, 0)",
+          "spacing_zyx_mm": [
+            10.0,
+            1.5625,
+            1.5625
+          ],
+          "volumes_ml": [
+            10085.888671875,
+            89.4775390625,
+            129.58984375,
+            95.0439453125
+          ]
+        },
+        {
+          "frame_key": "(3, 8)",
+          "spacing_zyx_mm": [
+            10.0,
+            1.5625,
+            1.5625
+          ],
+          "volumes_ml": [
+            10167.48046875,
+            40.91796875,
+            165.087890625,
+            26.513671875
+          ]
+        }
+      ],
+      "lv_ed_ml": 95.0439453125,
+      "lv_es_ml": 26.513671875,
+      "lv_ef_percent": 72.10377600821988,
+      "volume_ef_guard_reasons": []
+    },
+    {
+      "patient_id": "patient026",
+      "frames": [
+        {
+          "frame_key": "(4, 0)",
+          "spacing_zyx_mm": [
+            10.0,
+            1.3671875,
+            1.3671875
+          ],
+          "volumes_ml": [
+            9798.411178588867,
+            126.58233642578125,
+            259.0526580810547,
+            151.89132690429688
+          ]
+        },
+        {
+          "frame_key": "(4, 11)",
+          "spacing_zyx_mm": [
+            10.0,
+            1.3671875,
+            1.3671875
+          ],
+          "volumes_ml": [
+            9941.04995727539,
+            52.73017883300781,
+            266.24908447265625,
+            75.90827941894531
+          ]
+        }
+      ],
+      "lv_ed_ml": 151.89132690429688,
+      "lv_es_ml": 75.90827941894531,
+      "lv_ef_percent": 50.02461235540241,
+      "volume_ef_guard_reasons": []
+    },
+    {
+      "patient_id": "patient041",
+      "frames": [
+        {
+          "frame_key": "(5, 0)",
+          "spacing_zyx_mm": [
+            10.0,
+            1.7857099771499634,
+            1.7857099771499634
+          ],
+          "volumes_ml": [
+            6324.1722881365395,
+            87.21258935018145,
+            84.9804572644364,
+            103.60281637979506
+          ]
+        },
+        {
+          "frame_key": "(5, 10)",
+          "spacing_zyx_mm": [
+            10.0,
+            1.7857099771499634,
+            1.7857099771499634
+          ],
+          "volumes_ml": [
+            6387.628614574149,
+            47.671963831269196,
+            98.43702498135653,
+            66.23054774417801
+          ]
+        }
+      ],
+      "lv_ed_ml": 103.60281637979506,
+      "lv_es_ml": 66.23054774417801,
+      "lv_ef_percent": 36.07263773468759,
+      "volume_ef_guard_reasons": []
+    },
+    {
+      "patient_id": "patient077",
+      "frames": [
+        {
+          "frame_key": "(6, 0)",
+          "spacing_zyx_mm": [
+            10.0,
+            1.40625,
+            1.40625
+          ],
+          "volumes_ml": [
+            8278.156494140625,
+            161.347412109375,
+            92.548828125,
+            134.947265625
+          ]
+        },
+        {
+          "frame_key": "(6, 8)",
+          "spacing_zyx_mm": [
+            10.0,
+            1.40625,
+            1.40625
+          ],
+          "volumes_ml": [
+            8448.303955078125,
+            76.115478515625,
+            98.303466796875,
+            44.277099609375
+          ]
+        }
+      ],
+      "lv_ed_ml": 134.947265625,
+      "lv_es_ml": 44.277099609375,
+      "lv_ef_percent": 67.18933177022274,
+      "volume_ef_guard_reasons": []
+    },
+    {
+      "patient_id": "patient099",
+      "frames": [
+        {
+          "frame_key": "(7, 0)",
+          "spacing_zyx_mm": [
+            5.0,
+            1.7857099771499634,
+            1.7857099771499634
+          ],
+          "volumes_ml": [
+            8366.605034194481,
+            200.3657422968428,
+            92.585650156582,
+            140.40110819336337
+          ]
+        },
+        {
+          "frame_key": "(7, 8)",
+          "spacing_zyx_mm": [
+            5.0,
+            1.7857099771499634,
+            1.7857099771499634
+          ],
+          "volumes_ml": [
+            8497.025323204442,
+            136.63837124882173,
+            92.23488654310779,
+            74.05895384489813
+          ]
+        }
+      ],
+      "lv_ed_ml": 140.40110819336337,
+      "lv_es_ml": 74.05895384489813,
+      "lv_ef_percent": 47.25187372246195,
+      "volume_ef_guard_reasons": []
+    }
+  ],
+  "nonclaims": [
+    "No teacher physiology weight estimated",
+    "No clinical normality or efficacy claim",
+    "No threshold modified"
+  ]
+}

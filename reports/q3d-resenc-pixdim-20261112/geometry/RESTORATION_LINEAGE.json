@@ -1,0 +1,44 @@
+{
+  "historical_sha256": "e524c7531079996232fe71cdfe982a46a5950d49d91a8203eee396b0e67434a3",
+  "restored_sha256": "175e99e455f35f61453dcb6711b32d6682571ec082374740f9dbfa44576a5944",
+  "checks": {
+    "labeled_ids_unchanged": true,
+    "labeled_records_hashes_labels_equal_after_path_relocation": true,
+    "labeled_list_order_equal": true,
+    "unlabeled_ids_unchanged": true,
+    "unlabeled_records_hashes_labels_equal_after_path_relocation": true,
+    "unlabeled_list_order_equal": false
+  },
+  "historical_fewshot": {
+    "source_manifest": "/home/guest/quockhanh/mount_data/prepared/ACDC/train.json",
+    "source_sha256": "4982655478334405a538c5ced3fe5093c4305c0c9ba7c758a6f54e20247a1cb5",
+    "selection": "sha256(seed:patient_id) over source labeled IDs",
+    "eligible_labeled_ids": [
+      "patient003",
+      "patient007",
+      "patient010",
+      "patient011",
+      "patient024",
+      "patient026",
+      "patient041",
+      "patient054",
+      "patient077",
+      "patient099"
+    ],
+    "selected_ids": [
+      "patient007",
+      "patient010",
+      "patient011",
+      "patient024",
+      "patient026",
+      "patient041",
+      "patient077",
+      "patient099"
+    ],
+    "unit": "dense_labeled_train_patients",
+    "seed": 42,
+    "k": 8
+  },
+  "restored_fewshot": null,
+  "note": "Existing restoration relocated absolute paths to equivalent local filenames and changed U record order/selector metadata. Geometry-only repair will preserve the restored source verbatim except geometry. Cohort and all patient array/mask hashes match historical K8 bypatient."
+}

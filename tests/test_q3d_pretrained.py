@@ -9,7 +9,7 @@ import pytest
 import torch
 
 from self_audit.candidate_q3d.config import canonical_config
-from self_audit.candidate_q3d.pretrained import build_q3d_teacher
+from self_audit.candidate_q3d.pretrained import _require_phase_measurement, build_q3d_teacher
 from self_audit.candidate_q3d.teacher_resenc import Q3DResEncTeacher
 
 CHECKPOINT = Path("/Users/alvinluong/Self-Audit-runs/q3d-resenc-20261112/checkpoint_final.pth")
@@ -44,6 +44,46 @@ def test_synthetic_teacher_uses_resenc_class_and_same_seed_state() -> None:
     assert second_provenance["weight_inventory"]["source"] == "synthetic_resenc_fixture"
     assert first.state_dict().keys() == second.state_dict().keys()
     assert all(torch.equal(first.state_dict()[key], second.state_dict()[key]) for key in first.state_dict())
+
+
+def test_synthetic_teacher_keeps_explicit_custom_stride_schedule() -> None:
+    config = _synthetic_config()
+    custom_strides = [
+        [1, 1, 1], [1, 2, 2], [1, 2, 2], [1, 2, 2], [1, 2, 2], [1, 2, 2],
+    ]
+    config["model"]["teacher"]["encoder_strides"] = custom_strides
+
+    teacher, provenance = build_q3d_teacher(config, synthetic=True)
+
+    assert [list(value) for value in teacher.encoder_strides] == custom_strides
+    assert provenance["synthetic"] is True
+    assert provenance["weight_inventory"]["evidence_scope"] == "SOFTWARE_ONLY"
+
+
+def test_real_provenance_binds_geometry_repaired_stride_and_erf_receipt() -> None:
+    config = _real_config()
+    teacher = config["model"]["teacher"]
+    measurement = _require_phase_measurement(teacher)
+
+    assert measurement["receipt_path"] == "reports/q3d-resenc-pixdim-20261112/erf_probe.json"
+    assert measurement["receipt_sha256"] == (
+        "36f44d7f85cd3872168b01339353fb17787099d309e167ea5d64ffbc1721b72b"
+    )
+    assert measurement["encoder_stride8"]["measured_mean_offset_zyx"] == [
+        0.6737596988677979, 1.7588436603546143, 1.2107672691345215,
+    ]
+
+    changed_schedule = copy.deepcopy(teacher)
+    changed_schedule["encoder_strides"][1] = [2, 2, 2]
+    with pytest.raises(ValueError, match="locked geometry-derived Phase-0 schedule"):
+        _require_phase_measurement(changed_schedule)
+
+    stale_measurement = copy.deepcopy(teacher)
+    stale_measurement["phase_measurement"]["encoder_stride8"][
+        "measured_mean_offset_zyx"
+    ] = [0.67213374376297, 1.9470438957214355, 1.722203016281128]
+    with pytest.raises(ValueError, match="phase contract"):
+        _require_phase_measurement(stale_measurement)
 
 
 def test_real_hash_mismatch_fails_before_loading() -> None:
@@ -87,7 +127,7 @@ def test_real_checkpoint_loads_strict_encoder_only_when_phase0_weight_is_present
     assert all(key.startswith("region_decoder.encoder.") for key in inventory["loaded_alias_keys"])
     assert all(not key.startswith("region_decoder.encoder.") for key in inventory["region_decoder_random_keys"])
     assert provenance["backbone"]["phase_measurement"]["receipt_sha256"] == (
-        "2f05888b45ff3bfbf19f90bd91abbd4f0b2ab193b37375c5d875950117d2a14e"
+        "36f44d7f85cd3872168b01339353fb17787099d309e167ea5d64ffbc1721b72b"
     )
 
 

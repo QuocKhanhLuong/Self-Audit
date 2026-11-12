@@ -40,8 +40,12 @@ _OVERLAP_NOTE = "According to Table D7; not independently verified."
 _LICENSE = "CC-BY-SA-4.0"
 _WEIGHTS_SHA256 = "ac262d3e8c226c79f9567fddc34d38e011284730ddf2294b5c6c319ce2f22bbd"
 _WEIGHTS_ENV = "Q3D_NNFOUNDATION_WEIGHTS"
-_PHASE_RECEIPT_PATH = "reports/q3d-resenc-phase0-20261112/erf_probe.json"
-_PHASE_RECEIPT_SHA256 = "2f05888b45ff3bfbf19f90bd91abbd4f0b2ab193b37375c5d875950117d2a14e"
+_CANONICAL_REAL_ENCODER_STRIDES = [
+    [1, 1, 1], [1, 2, 2], [1, 2, 2], [2, 2, 2], [1, 2, 2], [1, 2, 2],
+]
+_PHASE_RECEIPT_PATH = "reports/q3d-resenc-pixdim-20261112/erf_probe.json"
+_PHASE_RECEIPT_SHA256 = "36f44d7f85cd3872168b01339353fb17787099d309e167ea5d64ffbc1721b72b"
+_PHASE_SIGNED_MEAN_OFFSET_ZYX = [0.6737596988677979, 1.7588436603546143, 1.2107672691345215]
 _DNA_VERSION = "0.4.4"
 _NNSSL_COMMIT = "3d774e942256bd70e5e264c6b94fa38e25f7ed74"
 _NNUNET_COMMIT = "c04f7ec8bbffaf3ebc3b26aa2c89042e8a8e368b"
@@ -169,6 +173,10 @@ def _require_dependency_pins(teacher_config: Mapping[str, Any]) -> None:
 def _require_phase_measurement(teacher_config: Mapping[str, Any]) -> dict[str, Any]:
     """Require the locked stage-3 ERF receipt without inventing stage-4 data."""
 
+    if _teacher_strides(teacher_config) != _CANONICAL_REAL_ENCODER_STRIDES:
+        raise ValueError(
+            "real nnFoundation encoder_strides must match the locked geometry-derived Phase-0 schedule"
+        )
     phase = teacher_config.get("phase_measurement")
     if not isinstance(phase, Mapping):
         raise ValueError("nnFoundation teacher requires the locked ERF phase measurement")
@@ -185,6 +193,8 @@ def _require_phase_measurement(teacher_config: Mapping[str, Any]) -> dict[str, A
     s1 = phase.get("encoder_stride16")
     if (not isinstance(main, Mapping) or main.get("status") != "MEASURED_WITHIN_THRESHOLD"
             or main.get("offset_zyx") != [0.0, 0.0, 0.0]
+            or main.get("measured_mean_offset_zyx") != _PHASE_SIGNED_MEAN_OFFSET_ZYX
+            or main.get("policy") != "lock_nominal_phase_when_signed_mean_is_within_threshold"
             or not isinstance(s1, Mapping)
             or s1.get("status") != "NOT_MEASURED"
             or s1.get("offset_zyx") != [0.0, 0.0, 0.0]

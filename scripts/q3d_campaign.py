@@ -26,6 +26,8 @@ from self_audit.candidate_q3d.config import (
     ARMS,
     BASELINE_ARMS,
     DEFAULT_SEED,
+    K8_LOCKED_DEV_MANIFEST_SHA256,
+    K8_LOCKED_TRAIN_MANIFEST_SHA256,
     K_VALUES,
     PRIMARY_ARMS,
     SECONDARY_ARMS,
@@ -40,15 +42,7 @@ from self_audit.candidate_q3d.config import (
     validate_real_teacher_provenance,
 )
 from self_audit.candidate_q3d.campaign_runtime import select_campaign_experiments
-
-try:
-    from self_audit.candidate_q3d.config import (
-        K8_LOCKED_DEV_MANIFEST_SHA256,
-        K8_LOCKED_TRAIN_MANIFEST_SHA256,
-    )
-except ImportError:  # transition guard until the K=8 config contract lands
-    K8_LOCKED_TRAIN_MANIFEST_SHA256 = "e524c7531079996232fe71cdfe982a46a5950d49d91a8203eee396b0e67434a3"
-    K8_LOCKED_DEV_MANIFEST_SHA256 = "ba46934afe8ea5c47dd798019bee233c97c98320b358e2d40165e87a651dc7df"
+from self_audit.candidate_q3d.lineage import load_external_lineage, validate_external_view
 
 PLAN_SCHEMA = "self_audit.candidate_q3d.campaign.v1"
 STATE_SCHEMA = "self_audit.candidate_q3d.campaign_state.v1"
@@ -60,7 +54,7 @@ PRIMARY_SETTINGS = PRIMARY_ARMS
 SECONDARY_SETTINGS = SECONDARY_ARMS + ("v1_residual2",)
 LEGACY_SECONDARY_SETTINGS = SECONDARY_SETTINGS
 DEFAULT_REDUCED_RUNS = (
-    "v1@8", "v1u@8", "c1@8", "c0@8", "v1@5", "v1@10",
+    "v1@8", "v1@5", "v1@10", "v1u@8", "c1@8", "c0@8",
 )
 _TEACHER_SUPERVISED = "teacher_supervised"
 _EXPLICIT_RUN_SETTINGS = PRIMARY_SETTINGS + SECONDARY_SETTINGS
@@ -235,6 +229,7 @@ def _set_manifest_inputs(config: dict[str, Any], manifest_inputs: Mapping[str, M
 def _validate_nested_train_lineage(
     manifest_inputs: Mapping[str, Mapping[str, str]],
     *, datasets: tuple[str, ...], selected_ks: tuple[int, ...], seed: int,
+    lineage_reference: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Fail closed when K-specific selectors do not document one nested cohort."""
     audit: dict[str, Any] = {
@@ -243,6 +238,8 @@ def _validate_nested_train_lineage(
         "records": [],
     }
     for dataset in datasets:
+        external = (load_external_lineage(lineage_reference, dataset=dataset, seed=seed)
+                    if lineage_reference is not None else None)
         roles = manifest_inputs.get(dataset, {})
         selected_by_k: dict[int, set[str]] = {}
         source_hashes: set[str] = set()
@@ -281,6 +278,12 @@ def _validate_nested_train_lineage(
                 continue
             record["status"] = "READY"
             lineage = payload.get("fewshot")
+            if external is not None:
+                verified = validate_external_view(payload, k=k, context=external)
+                record["external_lineage_evidence"] = verified["external_evidence"]
+                record["selector_validation"] = verified["validation"]
+                if not isinstance(lineage, Mapping):
+                    lineage = verified
             if not isinstance(lineage, Mapping):
                 # The locked K=8 artifact is immutable campaign evidence. If an
                 # older copy lacks lineage metadata, retain its exact bytes and
@@ -1080,7 +1083,8 @@ def create_campaign_plan(*, out: str | Path, datasets: tuple[str, ...] = ("acdc"
                          include_secondary: bool = True, include_baselines: bool = True,
                          synthetic: bool = False, smoke_updates: int | None = None,
                          share_stages: bool = True,
-                         runs: tuple[Any, ...] | list[Any] | None = None) -> Path:
+                         runs: tuple[Any, ...] | list[Any] | None = None,
+                         lineage_reference: Mapping[str, Any] | None = None) -> Path:
     """Build a hash-pinned campaign plan and per-experiment nested recipes."""
     if not datasets or any(name not in {"acdc", "mnms"} for name in datasets):
         raise ValueError("datasets must explicitly select acdc and/or mnms")
@@ -1101,6 +1105,8 @@ def create_campaign_plan(*, out: str | Path, datasets: tuple[str, ...] = ("acdc"
     if synthetic and smoke_updates is None:
         smoke_updates = 1
     explicit_runs = None if runs is None else _normalize_run_specs(runs)
+    if lineage_reference is not None and explicit_runs is None:
+        raise ValueError("external lineage evidence requires an explicit run catalogue")
     if explicit_runs is not None:
         if not include_secondary or not include_baselines or not share_stages:
             raise ValueError(
@@ -1124,6 +1130,7 @@ def create_campaign_plan(*, out: str | Path, datasets: tuple[str, ...] = ("acdc"
         nested_lineage_audit = _validate_nested_train_lineage(
             manifest_inputs, datasets=datasets,
             selected_ks=tuple(dict.fromkeys(k for _, k in explicit_runs)), seed=seed,
+            lineage_reference=lineage_reference,
         )
     teacher_provenance = copy.deepcopy(dict(teacher_provenance)) if teacher_provenance is not None else None
     out_root = Path(out).expanduser().resolve()
@@ -1213,18 +1220,17 @@ def create_campaign_plan(*, out: str | Path, datasets: tuple[str, ...] = ("acdc"
             if dataset not in datasets:
                 continue
             for protocol in protocols:
-                for k in ordered_ks:
-                    for setting in settings_by_k[k]:
-                        _add_experiment(
-                            plan, setting=setting, dataset=dataset, protocol=protocol, k=k, seed=seed,
-                            out_root=out_root, manifest_inputs=manifest_inputs, cross_inputs=cross_inputs,
-                            teacher_provenance=teacher_provenance, synthetic=synthetic,
-                                smoke_updates=smoke_updates,
-                            enforce_k8_lock=(
-                                not synthetic and dataset == "acdc" and protocol == "A"
-                                and k == 8 and seed == DEFAULT_SEED
-                            ),
-                        )
+                for setting, k in explicit_runs:
+                    _add_experiment(
+                        plan, setting=setting, dataset=dataset, protocol=protocol, k=k, seed=seed,
+                        out_root=out_root, manifest_inputs=manifest_inputs, cross_inputs=cross_inputs,
+                        teacher_provenance=teacher_provenance, synthetic=synthetic,
+                        smoke_updates=smoke_updates,
+                        enforce_k8_lock=(
+                            not synthetic and dataset == "acdc" and protocol == "A"
+                            and k == 8 and seed == DEFAULT_SEED
+                        ),
+                    )
         if 8 in settings_by_k:
             for dataset in ("acdc", "mnms"):
                 if dataset not in datasets:
@@ -1602,11 +1608,27 @@ def validate_campaign_plan(path: str | Path) -> dict[str, Any]:
     }
     setting_rank = {group: {name: index for index, name in enumerate(values)}
                      for group, values in settings_by_group.items()}
-    exp_keys = [(dataset_rank[item["dataset"]], group_rank[item["group"]],
-                 protocol_rank[item["protocol"]], k_rank[item["k"]],
-                 setting_rank[item["group"]][item["setting"]]) for item in experiments]
-    if exp_keys != sorted(exp_keys):
-        raise ValueError("campaign ordering must put ACDC first, selected K values in declared order, and secondaries after primaries")
+    if selection.get("runs") is not None:
+        declared_runs = _normalize_run_specs(list(selection["runs"]))
+        expected_order = [
+            (dataset, protocol, setting, k)
+            for dataset in plan["ordering"]["dataset_order"]
+            for protocol in selection["protocols"] for setting, k in declared_runs
+        ]
+        if any(k == 8 for _, k in declared_runs):
+            expected_order += [(dataset, protocol, _TEACHER_SUPERVISED, 8)
+                               for dataset in plan["ordering"]["dataset_order"]
+                               for protocol in selection["protocols"]]
+        actual_order = [(item["dataset"], item["protocol"], item["setting"], item["k"])
+                        for item in experiments]
+        if actual_order != expected_order:
+            raise ValueError("campaign ordering must preserve the explicit run catalogue")
+    else:
+        exp_keys = [(dataset_rank[item["dataset"]], group_rank[item["group"]],
+                     protocol_rank[item["protocol"]], k_rank[item["k"]],
+                     setting_rank[item["group"]][item["setting"]]) for item in experiments]
+        if exp_keys != sorted(exp_keys):
+            raise ValueError("campaign ordering must put ACDC first, selected K values in declared order, and secondaries after primaries")
     for experiment in experiments:
         config_path = Path(experiment["config_path"])
         if not config_path.is_file() or _sha256(config_path) != experiment["config_sha256"]:
@@ -1960,6 +1982,10 @@ def main(argv: list[str] | None = None) -> None:
     plan_parser.add_argument("--protocol", choices=("A", "B", "both"), default="A")
     plan_parser.add_argument("--k", nargs="+", type=int, choices=CAMPAIGN_K_VALUES, default=list(CAMPAIGN_K_ORDER))
     plan_parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
+    plan_parser.add_argument("--lineage-reference")
+    plan_parser.add_argument("--lineage-reference-sha256")
+    plan_parser.add_argument("--lineage-source")
+    plan_parser.add_argument("--lineage-source-sha256")
     plan_parser.add_argument(
         "--manifest", action="append", default=[], metavar="DATASET[:K]:ROLE=PATH",
         help="pin a manifest globally or for one K (for example acdc:8:train=PATH)",
@@ -2000,6 +2026,16 @@ def main(argv: list[str] | None = None) -> None:
     run_parser.add_argument("--device", default="cuda", choices=("cpu", "cuda"))
     args = parser.parse_args(argv)
     if args.command == "plan":
+        lineage_values = (args.lineage_reference, args.lineage_reference_sha256,
+                          args.lineage_source, args.lineage_source_sha256)
+        if any(lineage_values) and not all(lineage_values):
+            parser.error("external lineage requires both reference/source paths and SHA-256 pins")
+        lineage_reference = ({
+            "reference_path": args.lineage_reference,
+            "reference_sha256": args.lineage_reference_sha256,
+            "source_path": args.lineage_source,
+            "source_sha256": args.lineage_source_sha256,
+        } if all(lineage_values) else None)
         if args.runs and (
             args.primary_only or args.without_baselines or args.independent_stages or args.legacy_catalogue
         ):
@@ -2033,6 +2069,7 @@ def main(argv: list[str] | None = None) -> None:
             synthetic=args.synthetic, smoke_updates=args.smoke_updates,
             share_stages=not args.independent_stages,
             runs=tuple(run_values) if run_values else None,
+            lineage_reference=lineage_reference,
         )
         print(json.dumps({"status": "NOT_RUN", "plan": str(plan_path), "sha256": _sha256(plan_path)}, indent=2))
     else:

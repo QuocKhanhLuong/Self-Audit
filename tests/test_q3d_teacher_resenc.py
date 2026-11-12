@@ -41,8 +41,10 @@ def test_default_resenc_matches_pinned_shape_and_keys() -> None:
     encoder = build_res_enc_l()
     alias = build_resenc_l()
     assert tuple(encoder.encoder.output_channels) == (32, 64, 128, 256, 320, 320)
-    assert tuple(encoder.encoder.strides[0]) == (1, 1, 1)
-    assert tuple(encoder.encoder.strides[-1]) == (2, 2, 2)
+    assert tuple(tuple(stride) for stride in encoder.encoder.strides) == (
+        (1, 1, 1), (2, 2, 2), (2, 2, 2),
+        (2, 2, 2), (2, 2, 2), (2, 2, 2),
+    )
     assert len(encoder.encoder.state_dict()) == 448
     assert all(key.startswith(("stem.", "stages.")) for key in encoder.encoder.state_dict())
     assert any(key.startswith("decoder.") for key in encoder.state_dict())
