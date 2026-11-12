@@ -7,6 +7,8 @@ this delivery does not execute a patient or synthetic campaign.
 from __future__ import annotations
 
 import copy
+import csv
+import math
 import json
 from pathlib import Path
 from typing import Any, Mapping
@@ -30,7 +32,250 @@ def _verified_output(job: Mapping[str, Any], *, pinned_sha: str | None = None) -
     manifest = load_stage_manifest(path, identity=identity)
     if manifest["stage"] != job["stage"]:
         raise ValueError("shared producer manifest stage mismatch")
-    return {"path": str(path), "sha256": digest, "content_hashes": manifest["content_hashes"]}
+    verified = {"path": str(path), "sha256": digest, "content_hashes": manifest["content_hashes"]}
+    if "teacher_quality" in manifest:
+        verified["teacher_quality"] = copy.deepcopy(manifest["teacher_quality"])
+    return verified
+
+
+def _finite_score(value: Any) -> float | None:
+    """Normalize a reporting score without turning missing data into zero."""
+
+    try:
+        score = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(score) or not 0.0 <= score <= 1.0:
+        return None
+    return score
+
+
+def _receipt_is_synthetic(receipt: Mapping[str, Any]) -> bool:
+    return (
+        receipt.get("status") == "COMPLETED_SOFTWARE_ONLY"
+        or receipt.get("runtime_synthetic") is True
+        or receipt.get("evidence_status") == "SOFTWARE_ONLY_SYNTHETIC"
+        or receipt.get("evidence") == "SOFTWARE_ONLY"
+    )
+
+
+def _teacher_quality_for_experiment(
+    experiment: Mapping[str, Any],
+    jobs: Mapping[str, Mapping[str, Any]],
+    state: Mapping[str, Any],
+    *, synthetic: bool = False,
+) -> tuple[float | None, dict[str, Any] | None, str]:
+    producer_id = experiment.get("stage_artifact_producers", {}).get("T")
+    if not isinstance(producer_id, str) or producer_id not in jobs:
+        return None, None, "NOT_RUN"
+    job = jobs[producer_id]
+    job_state = state.get("jobs", {}).get(producer_id, {})
+    if job_state.get("status") != "COMPLETED":
+        return None, None, "NOT_RUN"
+    receipt = job_state.get("receipt")
+    if receipt is not None:
+        if not isinstance(receipt, Mapping) or receipt.get("status") not in {
+            "COMPLETED", "COMPLETED_SOFTWARE_ONLY",
+        }:
+            raise ValueError(f"teacher stage has a failed or malformed receipt: {producer_id}")
+        if not synthetic and _receipt_is_synthetic(receipt):
+            raise ValueError(f"real result collection rejected a synthetic teacher receipt: {producer_id}")
+    artifact_state = job_state.get("artifact") if isinstance(job_state, Mapping) else None
+    pinned_sha = artifact_state.get("sha256") if isinstance(artifact_state, Mapping) else None
+    manifest_path = job.get("artifact_output", {}).get("manifest_path")
+    if not isinstance(manifest_path, str) or not Path(manifest_path).is_file():
+        return None, None, "NOT_RUN"
+    if not isinstance(pinned_sha, str):
+        raise ValueError(f"completed teacher stage has no pinned artifact SHA-256: {producer_id}")
+    try:
+        verified = _verified_output(job, pinned_sha=pinned_sha)
+    except FileNotFoundError as exc:
+        raise ValueError(f"completed teacher stage references a missing checkpoint: {producer_id}") from exc
+    quality = verified.get("teacher_quality")
+    if not isinstance(quality, Mapping):
+        return None, None, "NOT_RUN"
+    score = _finite_score(quality.get("teacher_dev_fg_dice"))
+    if score is None:
+        return None, dict(quality), "NOT_RUN"
+    return score, dict(quality), "MEASURED"
+
+
+def _score_from_mapping(value: Mapping[str, Any]) -> float | None:
+    """Read only explicit student DEV selection fields from a trainer receipt."""
+
+    for key in ("student_dev_fg_dice", "best_student_score", "development_patient_macro_fg_dice"):
+        score = _finite_score(value.get(key))
+        if score is not None:
+            return score
+    development = value.get("development")
+    if isinstance(development, Mapping):
+        metric = development.get("metric")
+        if metric in {None, "development_patient_macro_fg_dice"}:
+            score = _finite_score(development.get("score"))
+            if score is not None:
+                return score
+    return None
+
+
+def _selected_c0_score(
+    experiment: Mapping[str, Any],
+    jobs: Mapping[str, Mapping[str, Any]],
+    state: Mapping[str, Any],
+    *, synthetic: bool = False,
+) -> float | None:
+    producer_id = experiment.get("stage_artifact_producers", {}).get("J")
+    if not isinstance(producer_id, str) or producer_id not in jobs:
+        return None
+    job = jobs[producer_id]
+    job_state = state.get("jobs", {}).get(producer_id, {})
+    if job_state.get("status") != "COMPLETED":
+        return None
+    for source in (job_state, state.get("experiments", {}).get(experiment.get("id"), {})):
+        if isinstance(source, Mapping):
+            receipt = source.get("receipt")
+            if isinstance(receipt, Mapping):
+                if not synthetic and _receipt_is_synthetic(receipt):
+                    raise ValueError(
+                        f"real result collection rejected a synthetic student receipt: {producer_id}"
+                    )
+                score = _score_from_mapping(receipt)
+                if score is not None:
+                    return score
+            score = _score_from_mapping(source)
+            if score is not None:
+                return score
+    output = job.get("output")
+    if not isinstance(output, str):
+        return None
+    output_dir = Path(output).expanduser().resolve()
+    checkpoint = output_dir / "latest.pt"
+    if checkpoint.is_file():
+        try:
+            import torch
+
+            try:
+                payload = torch.load(checkpoint, map_location="cpu", weights_only=True)
+            except TypeError:  # pragma: no cover - older torch compatibility
+                payload = torch.load(checkpoint, map_location="cpu")
+        except Exception:  # noqa: BLE001 - an absent/legacy checkpoint is NOT_RUN
+            payload = None
+        if isinstance(payload, Mapping):
+            score = _score_from_mapping(payload)
+            if score is not None:
+                return score
+    metrics_path = output_dir / "metrics.jsonl"
+    if metrics_path.is_file():
+        last_score: float | None = None
+        for line in metrics_path.read_text(encoding="utf-8").splitlines():
+            try:
+                record = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(record, Mapping) and record.get("stage") == "J" \
+                    and record.get("event") == "development_selection":
+                score = _score_from_mapping(record)
+                if score is not None:
+                    last_score = score
+        return last_score
+    return None
+
+
+def collect_campaign_results(
+    plan_path: str | Path,
+    *,
+    plan: Mapping[str, Any] | None = None,
+    state: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Collect teacher DEV quality beside the selected C0 DEV score.
+
+    The join key is exactly ``(dataset, protocol, k, seed)``.  Teacher quality
+    is read only from the verified shared T manifest, while C0 quality is read
+    from its completed J receipt/checkpoint.  Missing or unselected artifacts
+    stay ``None`` with ``NOT_RUN`` status; no score is inferred from another K
+    or from a different arm.
+    """
+
+    resolved_plan = Path(plan_path).expanduser().resolve()
+    if plan is None:
+        plan = json.loads(resolved_plan.read_text(encoding="utf-8"))
+    if state is None:
+        state_path = resolved_plan.parent / "RUN_STATE.json"
+        state = json.loads(state_path.read_text(encoding="utf-8")) if state_path.is_file() else {"jobs": {}, "experiments": {}}
+    jobs = {job["id"]: job for job in plan.get("stage_jobs", []) if isinstance(job, Mapping) and isinstance(job.get("id"), str)}
+    experiments = [item for item in plan.get("experiments", []) if isinstance(item, Mapping)]
+    identities: dict[tuple[Any, ...], dict[str, Any]] = {}
+    for experiment in experiments:
+        key = tuple(experiment.get(name) for name in ("dataset", "protocol", "k", "seed"))
+        if any(value is None for value in key):
+            continue
+        row = identities.setdefault(key, {
+            "dataset": key[0], "protocol": key[1], "k": key[2], "seed": key[3],
+            "teacher_dev_fg_dice": None, "teacher_dev_per_class": None,
+            "teacher_status": "NOT_RUN", "c0_dev_fg_dice": None,
+            "c0_status": "NOT_RUN", "delta_c0_minus_teacher": None,
+        })
+        if experiment.get("setting") == "c0":
+            score = _selected_c0_score(
+                experiment, jobs, state,
+                synthetic=bool(plan.get("selection", {}).get("synthetic", False)),
+            )
+            if score is not None:
+                row["c0_dev_fg_dice"] = score
+                row["c0_status"] = "MEASURED"
+        if experiment.get("setting") in {"v1", "v1u", "c1", "teacher_supervised"}:
+            score, quality, status = _teacher_quality_for_experiment(
+                experiment, jobs, state,
+                synthetic=bool(plan.get("selection", {}).get("synthetic", False)),
+            )
+            if status == "MEASURED" or row["teacher_status"] == "NOT_RUN":
+                row["teacher_dev_fg_dice"] = score
+                row["teacher_dev_per_class"] = quality.get("teacher_dev_per_class") if quality else None
+                row["teacher_status"] = status
+    rows = []
+    for row in identities.values():
+        if row["teacher_status"] == "MEASURED" and row["c0_status"] == "MEASURED":
+            row["delta_c0_minus_teacher"] = row["c0_dev_fg_dice"] - row["teacher_dev_fg_dice"]
+        rows.append(row)
+    rows.sort(key=lambda row: (str(row["dataset"]), str(row["protocol"]), int(row["k"]), int(row["seed"])))
+    return {
+        "schema": "self_audit.candidate_q3d.campaign_results.v1",
+        "status": "MEASURED" if any(row["teacher_status"] == "MEASURED" or row["c0_status"] == "MEASURED" for row in rows) else "NOT_RUN",
+        "join_key": ["dataset", "protocol", "k", "seed"],
+        "rows": rows,
+    }
+
+
+def write_campaign_results(report: Mapping[str, Any], out_dir: str | Path) -> dict[str, str]:
+    """Write a compact JSON, CSV, and Markdown view of a collected report."""
+
+    output = Path(out_dir).expanduser().resolve()
+    output.mkdir(parents=True, exist_ok=True)
+    json_path = output / "RESULTS.json"
+    json_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    fields = ["dataset", "protocol", "k", "seed", "teacher_dev_fg_dice", "teacher_status",
+              "c0_dev_fg_dice", "c0_status", "delta_c0_minus_teacher", "teacher_dev_per_class"]
+    csv_path = output / "RESULTS.csv"
+    with csv_path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader()
+        for row in report.get("rows", []):
+            serial = dict(row)
+            serial["teacher_dev_per_class"] = json.dumps(serial.get("teacher_dev_per_class"), sort_keys=True)
+            writer.writerow({field: serial.get(field) for field in fields})
+    md_path = output / "RESULTS.md"
+    lines = [
+        "# Q3D campaign results", "",
+        "Scores are selected development metrics only; missing artifacts remain `NOT_RUN`.", "",
+        "| dataset | protocol | K | seed | teacher DEV Dice@K | teacher status | C0 DEV Dice@K | C0 status | C0 - teacher |",
+        "|---|---:|---:|---:|---:|---|---:|---|---:|",
+    ]
+    for row in report.get("rows", []):
+        values = [row.get("dataset"), row.get("protocol"), row.get("k"), row.get("seed"),
+                  row.get("teacher_dev_fg_dice"), row.get("teacher_status"),
+                  row.get("c0_dev_fg_dice"), row.get("c0_status"), row.get("delta_c0_minus_teacher")]
+        lines.append("| " + " | ".join("" if value is None else str(value) for value in values) + " |")
+    md_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return {"json": str(json_path), "csv": str(csv_path), "markdown": str(md_path)}
 
 
 def execute_shared_campaign(
@@ -161,13 +406,26 @@ def execute_shared_campaign(
             receipt = json.loads(stdout)
             if receipt.get("status") not in {"COMPLETED", "COMPLETED_SOFTWARE_ONLY"}:
                 raise RuntimeError(f"trainer returned an incomplete stage: {job_id}")
+            synthetic_receipt = (
+                receipt.get("status") == "COMPLETED_SOFTWARE_ONLY"
+                or receipt.get("runtime_synthetic") is True
+                or receipt.get("evidence_status") == "SOFTWARE_ONLY_SYNTHETIC"
+                or receipt.get("evidence") == "SOFTWARE_ONLY"
+            )
+            if not synthetic and synthetic_receipt:
+                raise RuntimeError(
+                    f"real campaign rejected a synthetic receipt: {job_id}"
+                )
             reported = receipt.get("completed_stages", [])
             if experiment.get("arm") == "a3d_teacher_free" or job["method"] != "candidate_q3d":
                 reported = reported or ["J"]
             if job["stage"] not in reported:
                 raise RuntimeError(f"trainer did not complete planned stage: {job_id}")
             record = state["jobs"][job_id]
-            record.update({"status": "COMPLETED", "exit_code": 0, "stdout_tail": stdout[-4000:]})
+            record.update({
+                "status": "COMPLETED", "exit_code": 0, "stdout_tail": stdout[-4000:],
+                "receipt": copy.deepcopy(receipt),
+            })
             if job.get("artifact_output"):
                 record["artifact"] = _verified_output(job)
         except Exception as exc:
@@ -188,8 +446,11 @@ def execute_shared_campaign(
             "evaluation": "NOT_RUN", "baseline_reuse": experiment.get("baseline_reuse"),
         }
     api._write_json(state_path, state)
+    results = collect_campaign_results(plan_path, plan=plan, state=state)
+    result_paths = write_campaign_results(results, plan_path.parent / "results")
     return {
         "status": "COMPLETED", "plan": str(plan_path), "run_state": str(state_path),
         "completed_settings": [item["id"] for item in selected],
+        "results": result_paths,
         "patient_training": "SYNTHETIC_ONLY" if synthetic else "EXECUTED",
     }

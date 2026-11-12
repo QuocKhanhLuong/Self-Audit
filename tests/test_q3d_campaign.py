@@ -21,10 +21,10 @@ def _shared_plan(tmp_path: Path) -> tuple[Path, dict]:
 def test_shared_campaign_builds_one_tqp_source_per_feature_variant(tmp_path: Path) -> None:
     _, plan = _shared_plan(tmp_path)
     dag = plan["shared_stage_dag"]
-    assert len(plan["experiments"]) == 15
-    assert dag["stage_job_counts"] == {"T": 1, "Q": 5, "P": 5, "J": 14}
-    assert dag["shared_producer_counts"] == {"T": 1, "Q": 5, "P": 5}
-    assert len(plan["stage_jobs"]) == 25
+    assert len(plan["experiments"]) == 13
+    assert dag["stage_job_counts"] == {"T": 1, "Q": 3, "P": 3, "J": 12}
+    assert dag["shared_producer_counts"] == {"T": 1, "Q": 3, "P": 3}
+    assert len(plan["stage_jobs"]) == 19
 
     jobs = {job["id"]: job for job in plan["stage_jobs"]}
     assert sum(job["stage"] == "T" for job in plan["stage_jobs"]) == 1
@@ -61,7 +61,7 @@ def test_v1_v1u_share_exact_refs_and_source_ablations_split_qp_only(tmp_path: Pa
         }
     assert experiments["c1"]["expected_stage_artifacts"]["Q"]["producer_job_id"] == v1["Q"]
 
-    for setting in ("o1", "s1", "v1_stride4", "v1_decoder_stride8"):
+    for setting in ("o1", "s1"):
         refs = experiments[setting]["stage_artifact_producers"]
         assert refs["T"] == v1["T"]
         assert refs["Q"] != v1["Q"]
@@ -76,7 +76,7 @@ def test_v1_v1u_share_exact_refs_and_source_ablations_split_qp_only(tmp_path: Pa
     assert plan["shared_stage_dag"]["shared_consumer_references"][0]["consumer_settings"] == [
         "c1", "v1", "v1u", "e1",
     ]
-    assert len(plan["shared_stage_dag"]["source_ablation_references"]) == 4
+    assert len(plan["shared_stage_dag"]["source_ablation_references"]) == 2
 
 
 def test_campaign_plan_default_is_shared_and_reports_full_catalogue_counts(tmp_path: Path) -> None:
@@ -84,57 +84,19 @@ def test_campaign_plan_default_is_shared_and_reports_full_catalogue_counts(tmp_p
     plan = validate_campaign_plan(path)
     dag = plan["shared_stage_dag"]
     assert plan["selection"]["shared_stage_dag"] is True
-    assert dag["stage_job_counts"] == {"T": 3, "Q": 15, "P": 15, "J": 42}
+    assert dag["stage_job_counts"] == {"T": 3, "Q": 9, "P": 9, "J": 36}
     assert dag["expected_v1_v1u_shared_reference_count"] == 3
     assert len(dag["expected_v1_v1u_shared_references"]) == 3
 
 
-def test_real_unresolved_phase_sources_are_blocked_and_synthetic_proxy_stays_ready(
-    tmp_path: Path,
-) -> None:
-    real_path = create_campaign_plan(
-        out=tmp_path / "real-plan", datasets=("acdc",), protocols=("A",), ks=(5,),
-        include_baselines=False,
-    )
-    real = validate_campaign_plan(real_path)
-    real_jobs = {job["id"]: job for job in real["stage_jobs"]}
-    real_experiments = {item["setting"]: item for item in real["experiments"]}
-    for setting in ("v1_stride4", "v1_decoder_stride8"):
-        experiment = real_experiments[setting]
-        for stage in ("Q", "P", "J"):
-            job = real_jobs[experiment["stage_artifact_producers"][stage]]
-            assert job["readiness"] == "NOT_RUN"
-            assert "BLOCKED: OPEN feature-grid phase contract" in job["reason"]
-        teacher_job = real_jobs[experiment["stage_artifact_producers"]["T"]]
-        assert "OPEN feature-grid phase contract" not in (teacher_job["reason"] or "")
-    for setting in ("v1", "s1"):
-        experiment = real_experiments[setting]
-        for stage in ("Q", "P", "J"):
-            job = real_jobs[experiment["stage_artifact_producers"][stage]]
-            assert "OPEN feature-grid phase contract" not in (job["reason"] or "")
-
-    synthetic_path = create_campaign_plan(
-        out=tmp_path / "synthetic-plan", datasets=("acdc",), protocols=("A",), ks=(5,),
-        include_baselines=False, synthetic=True, smoke_updates=1,
-    )
-    synthetic = validate_campaign_plan(synthetic_path)
-    synthetic_jobs = {job["id"]: job for job in synthetic["stage_jobs"]}
-    synthetic_experiments = {item["setting"]: item for item in synthetic["experiments"]}
-    for setting in ("v1_stride4", "v1_decoder_stride8"):
-        experiment = synthetic_experiments[setting]
-        for stage in ("Q", "P", "J"):
-            job = synthetic_jobs[experiment["stage_artifact_producers"][stage]]
-            assert job["readiness"] == "SMOKE_READY"
-            assert "OPEN feature-grid phase contract" not in (job["reason"] or "")
-
-
-def test_mednext_supervised_baseline_reuses_t_without_retraining(tmp_path: Path) -> None:
+def test_teacher_supervised_baseline_reuses_t_without_retraining(tmp_path: Path) -> None:
     _, plan = _shared_plan(tmp_path)
-    baseline = next(item for item in plan["experiments"] if item["setting"] == "mednext_supervised")
+    baseline = next(item for item in plan["experiments"] if item["setting"] == "teacher_supervised")
     t_producer = next(job for job in plan["stage_jobs"] if job["stage"] == "T")
     assert baseline["stage_artifact_producers"]["T"] == t_producer["id"]
-    assert baseline["baseline_reuse"]["independent_teacher_training"] == "NOT_RUN"
-    assert baseline["baseline_reuse"]["independent_baseline"] == "NOT_RUN"
+    assert baseline["baseline_reuse"]["independent_teacher_training"] is False
+    assert baseline["baseline_reuse"]["independent_baseline"] is False
+    assert baseline["baseline_reuse"]["status"] == "NOT_RUN"
     assert baseline["launch_mapping"]["status"] == "REUSE_SHARED_T_NOT_RUN"
     assert len([job for job in plan["stage_jobs"] if job["stage"] == "T"]) == 1
 

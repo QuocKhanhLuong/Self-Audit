@@ -37,16 +37,33 @@ from self_audit.candidate_q3d.config import (
     stages_for_arm,
     validate_budget_update_equality,
     validate_config,
+    validate_real_teacher_provenance,
 )
+
+try:
+    from self_audit.candidate_q3d.config import (
+        K8_LOCKED_DEV_MANIFEST_SHA256,
+        K8_LOCKED_TRAIN_MANIFEST_SHA256,
+    )
+except ImportError:  # transition guard until the K=8 config contract lands
+    K8_LOCKED_TRAIN_MANIFEST_SHA256 = "e524c7531079996232fe71cdfe982a46a5950d49d91a8203eee396b0e67434a3"
+    K8_LOCKED_DEV_MANIFEST_SHA256 = "ba46934afe8ea5c47dd798019bee233c97c98320b358e2d40165e87a651dc7df"
 
 PLAN_SCHEMA = "self_audit.candidate_q3d.campaign.v1"
 STATE_SCHEMA = "self_audit.candidate_q3d.campaign_state.v1"
 SHARED_DAG_SCHEMA = "self_audit.candidate_q3d.shared_stage_dag.v1"
 DEFAULT_REPORT_DIR = ROOT / "reports/q3d-implementation-20261112/campaign"
 CAMPAIGN_K_ORDER = (5, 10, 2)
+SUPPORTED_K_ORDER = (8, 5, 10, 2)
 PRIMARY_SETTINGS = PRIMARY_ARMS
-SECONDARY_SETTINGS = SECONDARY_ARMS + ("v1_stride4", "v1_residual2", "v1_decoder_stride8")
-LEGACY_SECONDARY_SETTINGS = SECONDARY_ARMS + ("v1_stride4", "v1_residual2")
+SECONDARY_SETTINGS = SECONDARY_ARMS + ("v1_residual2",)
+LEGACY_SECONDARY_SETTINGS = SECONDARY_SETTINGS
+DEFAULT_REDUCED_RUNS = (
+    "v1@8", "v1u@8", "c1@8", "c0@8", "v1@5", "v1@10",
+)
+_TEACHER_SUPERVISED = "teacher_supervised"
+_EXPLICIT_RUN_SETTINGS = PRIMARY_SETTINGS + SECONDARY_SETTINGS
+CAMPAIGN_K_VALUES = tuple(sorted(set(K_VALUES) | {8}))
 SYNTHETIC_CONFIDENT_TEACHER_ARMS = {"c1", "v1", "v1u", "v0", "b1", "e1", "o1", "s1"}
 BASELINE_LAUNCHES = {
     "mean_teacher": {
@@ -65,11 +82,11 @@ BASELINE_LAUNCHES = {
         "update_match": "requires exact J budget from K-manifest labeled-frame count",
         "status": "IMPLEMENTED",
     },
-    "mednext_supervised": {
-        "runner": "self_audit.candidate_q3d.baselines.run_mednext_supervised",
+    "teacher_supervised": {
+        "runner": "self_audit.candidate_q3d.baselines.run_teacher_supervised",
         "entrypoint": "train.py",
         "method": "candidate_q3d",
-        "arm": "mednext_supervised",
+        "arm": "teacher_supervised",
         "status": "IMPLEMENTED",
     },
 }
@@ -123,25 +140,216 @@ def _parse_manifest_flags(values: list[str], *, cross: bool = False) -> dict[str
             parsed.setdefault(key, {})["test"] = path
         else:
             if ":" not in key:
-                raise ValueError("manifest key must be DATASET:ROLE")
-            dataset, role = key.split(":", 1)
+                raise ValueError("manifest key must be DATASET:ROLE or DATASET:K:ROLE")
+            parts = key.split(":")
+            if len(parts) == 2:
+                dataset, role = parts
+                manifest_key = role
+            elif len(parts) == 3:
+                dataset, k_text, role = parts
+                try:
+                    k = int(k_text)
+                except ValueError as exc:
+                    raise ValueError(f"manifest K must be one of {CAMPAIGN_K_VALUES}") from exc
+                if k not in CAMPAIGN_K_VALUES:
+                    raise ValueError(f"manifest K must be one of {CAMPAIGN_K_VALUES}")
+                manifest_key = f"k{k}:{role}"
+            else:
+                raise ValueError("manifest key must be DATASET:ROLE or DATASET:K:ROLE")
             if dataset not in {"acdc", "mnms"} or role not in {"train", "teacher_train", "development", "test"}:
-                raise ValueError("manifest key must be acdc|mnms:train|teacher_train|development|test")
-            parsed.setdefault(dataset, {})[role] = path
+                raise ValueError("manifest key must be acdc|mnms:ROLE or acdc|mnms:K:ROLE")
+            parsed.setdefault(dataset, {})[manifest_key] = path
     return parsed
 
 
+def _normalize_run_specs(values: tuple[Any, ...] | list[Any]) -> tuple[tuple[str, int], ...]:
+    """Parse an explicit ``setting@K`` catalogue and reject duplicates."""
+    if not values:
+        raise ValueError("--runs requires at least one SETTING@K pair")
+    parsed: list[tuple[str, int]] = []
+    seen: set[tuple[str, int]] = set()
+    for raw in values:
+        if isinstance(raw, str):
+            token = raw.strip()
+            if token.count("@") != 1:
+                raise ValueError(f"run must use SETTING@K syntax: {raw!r}")
+            setting, k_text = (part.strip() for part in token.split("@", 1))
+            try:
+                k = int(k_text)
+            except ValueError as exc:
+                raise ValueError(f"run K must be an integer in {CAMPAIGN_K_VALUES}: {raw!r}") from exc
+        elif isinstance(raw, (tuple, list)) and len(raw) == 2:
+            setting, k = raw
+        else:
+            raise ValueError(f"run must use SETTING@K syntax: {raw!r}")
+        if not isinstance(setting, str) or setting not in _EXPLICIT_RUN_SETTINGS:
+            raise ValueError(f"unsupported run setting {setting!r}; choose a Q-3D student setting")
+        if type(k) is not int or k not in CAMPAIGN_K_VALUES:
+            raise ValueError(f"unsupported run K {k!r}; choose one of {CAMPAIGN_K_VALUES}")
+        pair = (setting, k)
+        if pair in seen:
+            raise ValueError(f"duplicate run pair: {setting}@{k}")
+        seen.add(pair)
+        parsed.append(pair)
+    return tuple(parsed)
+
+
 def _set_manifest_inputs(config: dict[str, Any], manifest_inputs: Mapping[str, Mapping[str, str]],
-                         cross_inputs: Mapping[str, Mapping[str, str]]) -> None:
+                         cross_inputs: Mapping[str, Mapping[str, str]],
+                         *, enforce_k8_lock: bool = False) -> None:
     dataset_name = config["dataset"]["name"]
-    for role, path_value in manifest_inputs.get(dataset_name, {}).items():
-        config["dataset"]["manifests"][role] = _manifest_ref(path_value)
+    k = config["protocol"]["k"]
+    roles = manifest_inputs.get(dataset_name, {})
+    for role in ("train", "teacher_train", "development", "test"):
+        specific_key = f"k{k}:{role}"
+        has_k_specific_train = any(key.startswith("k") and key.endswith(":train") for key in roles)
+        path_value = roles.get(specific_key)
+        if path_value is None and not (role == "train" and has_k_specific_train):
+            path_value = roles.get(role)
+        if path_value is None:
+            continue
+        reference = _manifest_ref(path_value)
+        if enforce_k8_lock and dataset_name == "acdc" and k == 8:
+            expected_sha = {"train": K8_LOCKED_TRAIN_MANIFEST_SHA256,
+                            "development": K8_LOCKED_DEV_MANIFEST_SHA256}.get(role)
+            if expected_sha is not None and reference["sha256"] != expected_sha:
+                raise ValueError(f"ACDC K=8 {role.upper()} manifest SHA-256 does not match the locked campaign input")
+        if enforce_k8_lock and role == "train" and specific_key not in roles and path_value == roles.get("train"):
+            payload = _read_json(Path(reference["path"]))
+            declared_budget = payload.get("label_budget")
+            if type(declared_budget) is int and declared_budget != k:
+                raise ValueError(
+                    f"global TRAIN manifest label_budget={declared_budget} cannot serve K={k}; "
+                    "provide DATASET:K:train explicitly"
+                )
+        config["dataset"]["manifests"][role] = reference
     known = {item["dataset"]: item for item in config["dataset"]["cross_evaluation"][:2]}
     for target, roles in cross_inputs.items():
         if "test" in roles:
             known[target]["manifest"] = _manifest_ref(roles["test"])
     if config["dataset"]["manifests"]["test"]["status"] == "READY":
         known[dataset_name]["manifest"] = copy.deepcopy(config["dataset"]["manifests"]["test"])
+
+
+def _validate_nested_train_lineage(
+    manifest_inputs: Mapping[str, Mapping[str, str]],
+    *, datasets: tuple[str, ...], selected_ks: tuple[int, ...], seed: int,
+) -> dict[str, Any]:
+    """Fail closed when K-specific selectors do not document one nested cohort."""
+    audit: dict[str, Any] = {
+        "status": "PASS",
+        "schema_loader_status": "READY",
+        "records": [],
+    }
+    for dataset in datasets:
+        roles = manifest_inputs.get(dataset, {})
+        selected_by_k: dict[int, set[str]] = {}
+        source_hashes: set[str] = set()
+        for k in sorted(selected_ks):
+            path_value = roles.get(f"k{k}:train")
+            if path_value is None:
+                if audit["status"] == "PASS":
+                    audit["status"] = "PARTIAL_NOT_RUN"
+                audit["records"].append({
+                    "dataset": dataset,
+                    "k": k,
+                    "path": None,
+                    "schema": None,
+                    "role": "training",
+                    "status": "NOT_RUN",
+                    "reason": "K-specific TRAIN manifest was not supplied; nesting was not inferred",
+                })
+                continue
+            path = Path(path_value).expanduser().resolve()
+            if dataset == "acdc" and k == 8:
+                if _manifest_ref(path)["sha256"] != K8_LOCKED_TRAIN_MANIFEST_SHA256:
+                    raise ValueError("ACDC K=8 TRAIN manifest SHA-256 does not match the locked campaign input")
+            payload = _read_json(path)
+            schema = payload.get("schema")
+            role = payload.get("role")
+            record = {"dataset": dataset, "k": k, "path": str(path), "schema": schema, "role": role}
+            audit["records"].append(record)
+            if schema != "self_audit.data.v2" or role != "training":
+                audit["status"] = "NOT_RUN"
+                audit["schema_loader_status"] = "NOT_RUN"
+                record["status"] = "NOT_RUN"
+                record["reason"] = (
+                    "manifest schema/role is not accepted by the Q3D data loader; "
+                    "locked bytes were retained without transformation"
+                )
+                continue
+            record["status"] = "READY"
+            lineage = payload.get("fewshot")
+            if not isinstance(lineage, Mapping):
+                # The locked K=8 artifact is immutable campaign evidence. If an
+                # older copy lacks lineage metadata, retain its exact bytes and
+                # report the cohort relationship as unknown rather than
+                # synthesising metadata or silently selecting patients again.
+                if (dataset == "acdc" and k == 8
+                        and _manifest_ref(path)["sha256"] == K8_LOCKED_TRAIN_MANIFEST_SHA256):
+                    audit["status"] = "PARTIAL_NOT_RUN" if audit["status"] == "PASS" else audit["status"]
+                    record["status"] = "NOT_RUN"
+                    record["reason"] = (
+                        "locked K=8 manifest has no few-shot lineage metadata; "
+                        "nested cohort relation was not inferred"
+                    )
+                    continue
+                raise ValueError(f"K={k} TRAIN manifest is missing few-shot lineage metadata")
+            if payload.get("label_budget") != k or lineage.get("k") != k or lineage.get("seed") != seed:
+                raise ValueError(f"K={k} TRAIN manifest label budget/seed does not match the selector")
+            selected = lineage.get("selected_ids")
+            if (not isinstance(selected, list) or len(selected) != k or len(selected) != len(set(selected))
+                    or any(not isinstance(item, str) or not item for item in selected)):
+                raise ValueError(f"K={k} TRAIN manifest has invalid selected_ids lineage")
+            labeled = payload.get("labeled")
+            labeled_ids = [item.get("id") for item in labeled
+                           if isinstance(item, Mapping) and isinstance(item.get("id"), str)] \
+                if isinstance(labeled, list) else []
+            if (len(labeled_ids) != len(labeled or [])
+                    or set(labeled_ids) != set(selected)):
+                raise ValueError(
+                    f"K={k} TRAIN manifest labeled IDs do not match few-shot selected_ids lineage"
+                )
+            selected_by_k[k] = set(selected)
+            source_sha = lineage.get("source_sha256")
+            if not isinstance(source_sha, str) or len(source_sha) != 64:
+                raise ValueError(f"K={k} TRAIN manifest has no source manifest SHA-256 lineage")
+            source_hashes.add(source_sha)
+        if len(source_hashes) > 1:
+            raise ValueError(f"{dataset} K-specific TRAIN manifests do not share one source manifest")
+        ordered = sorted(selected_by_k)
+        for lower, upper in zip(ordered, ordered[1:]):
+            if not selected_by_k[lower].issubset(selected_by_k[upper]):
+                raise ValueError(f"{dataset} few-shot TRAIN cohorts are not nested: K={lower} is not subset of K={upper}")
+    return audit
+
+
+def _validate_reduced_development_pins(
+    manifest_inputs: Mapping[str, Mapping[str, str]], *, datasets: tuple[str, ...],
+    protocols: tuple[str, ...], selected_ks: tuple[int, ...], seed: int,
+) -> None:
+    """Keep the reduced ACDC K budgets on one existing DEV manifest.
+
+    The K=8 development hash is the only locked DEV byte available to the
+    campaign.  K=5/K=10 may reuse that exact file, but no new DEV hash or
+    patient selection is invented here.  Missing inputs remain NOT_RUN.
+    """
+
+    if seed != DEFAULT_SEED or "acdc" not in datasets or "A" not in protocols:
+        return
+    roles = manifest_inputs.get("acdc", {})
+    for k in selected_ks:
+        if k not in {5, 8, 10}:
+            continue
+        path_value = roles.get(f"k{k}:development") or roles.get("development")
+        if path_value is None:
+            continue
+        reference = _manifest_ref(path_value)
+        if reference["sha256"] != K8_LOCKED_DEV_MANIFEST_SHA256:
+            raise ValueError(
+                f"ACDC reduced K={k} DEVELOPMENT must reuse the locked K=8 manifest "
+                "SHA-256; no alternative DEV bytes may be introduced"
+            )
 
 
 def _set_teacher_provenance(config: dict[str, Any], provenance: Mapping[str, Any] | None) -> None:
@@ -155,17 +363,6 @@ def _set_teacher_provenance(config: dict[str, Any], provenance: Mapping[str, Any
         "overlap_acdc", "overlap_mnms",
     )):
         source["provenance_status"] = "READY"
-
-
-def _set_teacher_source(config: dict[str, Any], *, source_repo: str | None,
-                        source_commit: str | None) -> None:
-    teacher = config["model"]["teacher"]
-    if teacher["architecture"] != "mednext_l_k3":
-        return
-    if source_repo is not None:
-        teacher["source_repo"] = str(Path(source_repo).expanduser().resolve())
-    if source_commit is not None:
-        teacher["source_commit"] = source_commit
 
 
 def _read_training_manifest(config: Mapping[str, Any]) -> dict[str, Any] | None:
@@ -185,6 +382,51 @@ def _read_training_manifest(config: Mapping[str, Any]) -> dict[str, Any] | None:
     return manifest
 
 
+def _manifest_loader_block_reason(
+    record: Mapping[str, Any], *, expected_role: str, expected_k: int | None = None,
+) -> str | None:
+    """Report schema/loader incompatibility without rewriting a pinned file."""
+
+    if record.get("status") != "READY":
+        return None
+    path_value = record.get("path")
+    if not isinstance(path_value, str):
+        return "manifest path is not a readable file"
+    try:
+        manifest = _read_json(Path(path_value))
+    except (OSError, ValueError) as exc:
+        return f"manifest cannot be read by the Q3D loader: {exc}"
+    if manifest.get("schema") != "self_audit.data.v2" or manifest.get("role") != expected_role:
+        return (
+            "manifest schema/role is not accepted by the Q3D data loader "
+            f"(schema={manifest.get('schema')!r}, role={manifest.get('role')!r}, "
+            f"expected_schema='self_audit.data.v2', expected_role={expected_role!r}); "
+            "pinned bytes were retained without transformation"
+        )
+    if expected_role == "training":
+        if expected_k is not None and manifest.get("label_budget") != expected_k:
+            return (
+                "training manifest label_budget does not match configured K "
+                f"(label_budget={manifest.get('label_budget')!r}, K={expected_k})"
+            )
+        lineage = manifest.get("fewshot")
+        if not isinstance(lineage, Mapping):
+            return "training manifest is missing few-shot lineage metadata"
+        selected = lineage.get("selected_ids")
+        labeled = manifest.get("labeled")
+        labeled_ids = [item.get("id") for item in labeled
+                       if isinstance(item, Mapping) and isinstance(item.get("id"), str)] \
+            if isinstance(labeled, list) else []
+        if (not isinstance(selected, list) or not selected
+                or len(selected) != len(set(selected))
+                or any(not isinstance(item, str) or not item for item in selected)
+                or (expected_k is not None and len(selected) != expected_k)
+                or len(labeled_ids) != len(labeled or [])
+                or set(labeled_ids) != set(selected)):
+            return "training manifest labeled IDs do not match few-shot selected_ids lineage"
+    return None
+
+
 def _a3d_labeled_frame_count(manifest: Mapping[str, Any]) -> int:
     labeled = manifest.get("labeled")
     if not isinstance(labeled, list) or not labeled:
@@ -199,18 +441,14 @@ def _a3d_labeled_frame_count(manifest: Mapping[str, Any]) -> int:
 
 
 def _setting_recipe(setting: str, *, dataset: str, protocol: str, k: int, seed: int,
-                    smoke: bool, smoke_updates: int | None,
-                    teacher_source_repo: str | None = None,
-                    teacher_source_commit: str | None = None) -> dict[str, Any]:
-    arm = "v1" if setting in {"v1_stride4", "v1_residual2", "v1_decoder_stride8"} else setting
-    source_stride = 4 if setting == "v1_stride4" else (16 if setting == "s1" else 8)
-    feature_source = "decoder_stride8" if setting == "v1_decoder_stride8" else None
+                    smoke: bool, smoke_updates: int | None) -> dict[str, Any]:
+    arm = "v1" if setting == "v1_residual2" else setting
+    source_stride = 16 if setting == "s1" else 8
     config = canonical_config(
         arm, dataset=dataset, protocol=protocol, k=k, seed=seed,
-        source_stride=source_stride, feature_source=feature_source,
+        source_stride=source_stride,
         residual2=setting == "v1_residual2",
     )
-    _set_teacher_source(config, source_repo=teacher_source_repo, source_commit=teacher_source_commit)
     if smoke:
         config["runtime"]["synthetic"] = True
         config["runtime"]["device"] = "cpu"
@@ -276,30 +514,29 @@ def _job_readiness(config: Mapping[str, Any], *, synthetic: bool, stage: str,
             return "NOT_RUN", "A-3D teacher_free requires an exact synthetic J budget"
         return "SMOKE_READY", None
     teacher = config["model"]["teacher"]
-    feature_source = teacher.get("feature_source")
-    if stage in {"Q", "P", "J"} and feature_source in {
-        "stride4_decoder_block", "decoder_stride8",
-    }:
-        return (
-            "NOT_RUN",
-            "BLOCKED: OPEN feature-grid phase contract for the real "
-            f"{feature_source} source; decoder up/skip low-side padding phases differ",
-        )
     for role in ("train", "development"):
         if config["dataset"]["manifests"][role]["status"] != "READY":
             return "NOT_RUN", f"{role} manifest path and SHA-256 are not configured"
+        loader_reason = _manifest_loader_block_reason(
+            config["dataset"]["manifests"][role],
+            expected_role="training" if role == "train" else "development",
+            expected_k=int(config["protocol"]["k"]) if role == "train" else None,
+        )
+        if loader_reason is not None:
+            return "NOT_RUN", f"{role} manifest loader contract is not ready: {loader_reason}"
     if (stage == "T" and config["protocol"]["variant"] == "B"
-            and config["arm"] != "mednext_supervised"
+            and config["arm"] != _TEACHER_SUPERVISED
             and config["dataset"]["manifests"]["teacher_train"]["status"] != "READY"):
         return "NOT_RUN", "Protocol B teacher training requires a separate all-TRAIN manifest"
     if config["arm"] == "a3d_teacher_free" and a3d_update_match is not True:
         return "NOT_RUN", "A-3D teacher_free labeled-frame count cannot match the declared J budget exactly"
-    if stage in {"T", "Q", "P", "J"} and config["arm"] in {
-        "c1", "v1", "v1u", "v0", "b1", "e1", "o1", "s1", "mednext_supervised",
+    if stage in {"T", "Q", "P", "J"} and config["model"]["teacher"].get("architecture") not in {
+        None, "none", "ema_student", "candidate_a3d",
     }:
-        source = config["model"]["teacher"]["pretrained"]
-        if not isinstance(source, Mapping) or source.get("provenance_status") != "READY":
-            return "NOT_RUN", "pretrained teacher path/hash/dataset/overlap provenance is not configured"
+        try:
+            validate_real_teacher_provenance(config)
+        except (OSError, TypeError, ValueError) as exc:
+            return "NOT_RUN", f"pretrained teacher provenance is not ready: {exc}"
     return "READY", None
 
 
@@ -307,13 +544,11 @@ def _add_experiment(plan: dict[str, Any], *, setting: str, dataset: str, protoco
                     seed: int, out_root: Path, manifest_inputs: Mapping[str, Mapping[str, str]],
                     cross_inputs: Mapping[str, Mapping[str, str]], teacher_provenance: Mapping[str, Any] | None,
                     synthetic: bool, smoke_updates: int | None,
-                    teacher_source_repo: str | None, teacher_source_commit: str | None) -> None:
+                    enforce_k8_lock: bool = False) -> None:
     experiment_id = _experiment_id(dataset, protocol, k, seed, setting)
     config = _setting_recipe(setting, dataset=dataset, protocol=protocol, k=k, seed=seed,
-                             smoke=synthetic, smoke_updates=smoke_updates,
-                             teacher_source_repo=teacher_source_repo,
-                             teacher_source_commit=teacher_source_commit)
-    _set_manifest_inputs(config, manifest_inputs, cross_inputs)
+                             smoke=synthetic, smoke_updates=smoke_updates)
+    _set_manifest_inputs(config, manifest_inputs, cross_inputs, enforce_k8_lock=enforce_k8_lock)
     _set_teacher_provenance(config, teacher_provenance)
     config = validate_config(config)
     config_path = out_root / "recipes" / f"{experiment_id}.json"
@@ -500,17 +735,18 @@ def _shared_stage_dag(plan: dict[str, Any], out_root: Path) -> None:
         for experiment in plan["experiments"]
     }
     groups: dict[tuple[str, tuple[Any, ...], tuple[str, int, str] | None], list[dict[str, Any]]] = {}
-    mednext_consumers: dict[tuple[Any, ...], list[dict[str, Any]]] = {}
+    teacher_supervised_consumers: dict[tuple[Any, ...], list[dict[str, Any]]] = {}
     source_by_experiment: dict[str, tuple[str, int, str]] = {}
 
     for experiment in plan["experiments"]:
         config = configs[experiment["id"]]
         identity = identities[experiment["id"]]
         id_key = _identity_key(identity)
-        if experiment["setting"] == "mednext_supervised":
-            mednext_consumers.setdefault(id_key, []).append(experiment)
+        if experiment["setting"] == _TEACHER_SUPERVISED:
+            teacher_supervised_consumers.setdefault(id_key, []).append(experiment)
             continue
-        if config["model"]["teacher"]["architecture"] != "mednext_l_k3":
+        teacher_architecture = config["model"]["teacher"].get("architecture")
+        if teacher_architecture in {None, "none", "ema_student", "candidate_a3d"}:
             continue
         source_key = _artifact_source(config, experiment["setting"])
         source_by_experiment[experiment["id"]] = source_key
@@ -621,36 +857,37 @@ def _shared_stage_dag(plan: dict[str, Any], out_root: Path) -> None:
             producer_for_experiment[member["id"]][stage] = job_id
 
         if stage == "T":
-            for baseline in mednext_consumers.get(id_key, []):
+            for baseline in teacher_supervised_consumers.get(id_key, []):
                 producer_for_experiment[baseline["id"]]["T"] = job_id
                 stage_job["experiment_ids"].append(baseline["id"])
                 stage_job["consumer_settings"].append(baseline["setting"])
 
-    # A single shared T stage is the only supervised MedNeXt training run per
-    # dataset/protocol/K/seed. The named heavy baseline reuses its region head;
-    # it does not schedule a second teacher training job.
+    # A single shared T stage is the only supervised teacher training run per
+    # dataset/protocol/K/seed. The named supervised baseline reuses its region
+    # head; it does not schedule a second teacher training job.
     for baseline in plan["experiments"]:
-        if baseline["setting"] != "mednext_supervised":
+        if baseline["setting"] != _TEACHER_SUPERVISED:
             continue
         t_job_id = producer_for_experiment[baseline["id"]].get("T")
         if t_job_id is None:
-            raise ValueError(f"MedNeXt supervised baseline has no shared T producer: {baseline['id']}")
+            raise ValueError(f"teacher-supervised baseline has no shared T producer: {baseline['id']}")
         baseline["baseline_reuse"] = {
             "kind": "shared_q3d_teacher_region_head",
             "source_stage_job_id": t_job_id,
-            "independent_teacher_training": "NOT_RUN",
-            "independent_baseline": "NOT_RUN",
-            "scope": "Shared Q3D T region head reused for baseline export/evaluation; not an independent MedNeXt training result.",
+            "independent_teacher_training": False,
+            "independent_baseline": False,
+            "status": "NOT_RUN",
+            "scope": "Shared Q3D T region head reused for baseline export/evaluation; not an independent teacher training result.",
             "protocol_b_note": (
                 "Shared T uses the all-TRAIN teacher view under Protocol B and does not establish "
-                "the independent K-labeled MedNeXt baseline."
+                "the independent K-labeled teacher baseline."
             ),
         }
         baseline["launch_mapping"] = {
             "runner": "shared Q3D T artifact export/evaluation",
             "entrypoint": "evaluate.py",
             "method": "candidate_q3d",
-            "arm": "mednext_supervised",
+            "arm": _TEACHER_SUPERVISED,
             "source_stage_job_id": t_job_id,
             "status": "REUSE_SHARED_T_NOT_RUN",
         }
@@ -741,7 +978,7 @@ def _shared_stage_dag(plan: dict[str, Any], out_root: Path) -> None:
             "manifest_sha256": {stage: None for stage in ("T", "Q", "P")},
             "status": "NOT_RUN",
         })
-        for variant in ("o1", "s1", "v1_stride4", "v1_decoder_stride8"):
+        for variant in ("o1", "s1"):
             other = by_setting_key.get((*identity_tuple, variant))
             if other is None:
                 continue
@@ -794,7 +1031,7 @@ def _shared_stage_dag(plan: dict[str, Any], out_root: Path) -> None:
         "expected_v1_v1u_shared_reference_count": len(shared_pairs),
         "shared_consumer_references": shared_consumer_references,
         "source_ablation_references": source_ablation_refs,
-        "mednext_supervised_reuse": "Shared Q3D T region-head export/evaluation; no separate T training job.",
+        "teacher_supervised_reuse": "Shared Q3D T region-head export/evaluation; no separate T training job.",
         "hash_policy": "Manifest paths are fixed at planning time; manifest SHA-256 values stay null until producer completion.",
     }
 
@@ -839,11 +1076,10 @@ def create_campaign_plan(*, out: str | Path, datasets: tuple[str, ...] = ("acdc"
                          manifest_inputs: Mapping[str, Mapping[str, str]] | None = None,
                          cross_inputs: Mapping[str, Mapping[str, str]] | None = None,
                          teacher_provenance: Mapping[str, Any] | None = None,
-                         teacher_source_repo: str | None = None,
-                         teacher_source_commit: str | None = None,
                          include_secondary: bool = True, include_baselines: bool = True,
                          synthetic: bool = False, smoke_updates: int | None = None,
-                         share_stages: bool = True) -> Path:
+                         share_stages: bool = True,
+                         runs: tuple[Any, ...] | list[Any] | None = None) -> Path:
     """Build a hash-pinned campaign plan and per-experiment nested recipes."""
     if not datasets or any(name not in {"acdc", "mnms"} for name in datasets):
         raise ValueError("datasets must explicitly select acdc and/or mnms")
@@ -853,8 +1089,8 @@ def create_campaign_plan(*, out: str | Path, datasets: tuple[str, ...] = ("acdc"
         raise ValueError("protocols must be A and/or B")
     if len(set(protocols)) != len(protocols):
         raise ValueError("protocols cannot contain duplicates")
-    if not ks or any(type(k) is not int or k not in K_VALUES for k in ks):
-        raise ValueError("K values must be selected from 2, 5, and 10")
+    if not ks or any(type(k) is not int or k not in CAMPAIGN_K_VALUES for k in ks):
+        raise ValueError(f"K values must be selected from {CAMPAIGN_K_VALUES}")
     if type(seed) is not int or seed < 0:
         raise ValueError("seed must be nonnegative")
     if smoke_updates is not None and (type(smoke_updates) is not int or smoke_updates < 1):
@@ -863,8 +1099,31 @@ def create_campaign_plan(*, out: str | Path, datasets: tuple[str, ...] = ("acdc"
         raise ValueError("smoke update overrides require --synthetic")
     if synthetic and smoke_updates is None:
         smoke_updates = 1
+    explicit_runs = None if runs is None else _normalize_run_specs(runs)
+    if explicit_runs is not None:
+        if not include_secondary or not include_baselines or not share_stages:
+            raise ValueError(
+                "explicit runs cannot be combined with --primary-only, --without-baselines, "
+                "or --independent-stages; use the run catalogue to select jobs"
+            )
+        selected_run_ks = tuple(dict.fromkeys(k for _, k in explicit_runs))
+        if ks != CAMPAIGN_K_ORDER and set(selected_run_ks) != set(ks):
+            raise ValueError(
+                "explicit runs and --k disagree; omit --k or pass exactly the K values used by runs"
+            )
+        ks = selected_run_ks
     manifest_inputs = copy.deepcopy(dict(manifest_inputs or {}))
     cross_inputs = copy.deepcopy(dict(cross_inputs or {}))
+    nested_lineage_audit: dict[str, Any] | None = None
+    if explicit_runs is not None:
+        _validate_reduced_development_pins(
+            manifest_inputs, datasets=datasets, protocols=protocols,
+            selected_ks=tuple(dict.fromkeys(k for _, k in explicit_runs)), seed=seed,
+        )
+        nested_lineage_audit = _validate_nested_train_lineage(
+            manifest_inputs, datasets=datasets,
+            selected_ks=tuple(dict.fromkeys(k for _, k in explicit_runs)), seed=seed,
+        )
     teacher_provenance = copy.deepcopy(dict(teacher_provenance)) if teacher_provenance is not None else None
     out_root = Path(out).expanduser().resolve()
     if out_root.exists():
@@ -879,21 +1138,35 @@ def create_campaign_plan(*, out: str | Path, datasets: tuple[str, ...] = ("acdc"
             "datasets": list(datasets),
             "dataset_order": [name for name in ("acdc", "mnms") if name in datasets],
             "protocols": list(protocols),
-            "k_order": [k for k in CAMPAIGN_K_ORDER if k in ks],
+            "k_order": list(
+                tuple(dict.fromkeys(k for _, k in explicit_runs))
+                if explicit_runs is not None
+                else (k for k in SUPPORTED_K_ORDER if k in ks)
+            ),
             "seed": seed,
             "synthetic": synthetic,
             "smoke_updates": smoke_updates,
             "shared_stage_dag": bool(share_stages),
-            "primary_settings": list(PRIMARY_SETTINGS),
-            "secondary_settings": list(
+            "primary_settings": list(
+                dict.fromkeys(setting for setting, _ in explicit_runs)
+                if explicit_runs is not None else PRIMARY_SETTINGS
+            ),
+            "secondary_settings": [] if explicit_runs is not None else list(
                 SECONDARY_SETTINGS if share_stages else LEGACY_SECONDARY_SETTINGS
             ) if include_secondary else [],
-            "baseline_settings": list(BASELINE_ARMS) if include_baselines else [],
+            "baseline_settings": (
+                [_TEACHER_SUPERVISED]
+                if explicit_runs is not None and 8 in {k for _, k in explicit_runs}
+                else [] if explicit_runs is not None
+                else list(BASELINE_ARMS) if include_baselines else []
+            ),
         },
         "experiments": [],
         "stage_jobs": [],
         "cross_evaluation": [],
         "baseline_launches": copy.deepcopy(BASELINE_LAUNCHES),
+        "evaluation_jobs": [],
+        "external_references": [],
         "evidence": {
             "patient_training": "NOT_RUN",
             "gpu_validation": "NOT_RUN",
@@ -906,23 +1179,139 @@ def create_campaign_plan(*, out: str | Path, datasets: tuple[str, ...] = ("acdc"
         settings_by_group.append(("secondary", SECONDARY_SETTINGS if share_stages else LEGACY_SECONDARY_SETTINGS))
     if include_baselines:
         settings_by_group.append(("baseline", BASELINE_ARMS))
-    ordered_ks = [k for k in CAMPAIGN_K_ORDER if k in ks]
+    ordered_ks = list(
+        tuple(dict.fromkeys(k for _, k in explicit_runs))
+        if explicit_runs is not None
+        else (k for k in SUPPORTED_K_ORDER if k in ks)
+    )
     if len(ordered_ks) != len(set(ks)):
         raise ValueError("K values contain duplicates or unsupported ordering entries")
-    for dataset in ("acdc", "mnms"):
-        if dataset not in datasets:
-            continue
-        for group, settings in settings_by_group:
+    if explicit_runs is None:
+        for dataset in ("acdc", "mnms"):
+            if dataset not in datasets:
+                continue
+            for group, settings in settings_by_group:
+                for protocol in protocols:
+                    for k in ordered_ks:
+                        for setting in settings:
+                            _add_experiment(
+                                plan, setting=setting, dataset=dataset, protocol=protocol, k=k, seed=seed,
+                                out_root=out_root, manifest_inputs=manifest_inputs, cross_inputs=cross_inputs,
+                                teacher_provenance=teacher_provenance, synthetic=synthetic,
+                                smoke_updates=smoke_updates,
+                                enforce_k8_lock=(
+                                    not synthetic and dataset == "acdc" and protocol == "A"
+                                    and k == 8 and seed == DEFAULT_SEED
+                                ),
+                            )
+    else:
+        settings_by_k: dict[int, list[str]] = {}
+        for setting, k in explicit_runs:
+            settings_by_k.setdefault(k, []).append(setting)
+        for dataset in ("acdc", "mnms"):
+            if dataset not in datasets:
+                continue
             for protocol in protocols:
                 for k in ordered_ks:
-                    for setting in settings:
+                    for setting in settings_by_k[k]:
                         _add_experiment(
                             plan, setting=setting, dataset=dataset, protocol=protocol, k=k, seed=seed,
                             out_root=out_root, manifest_inputs=manifest_inputs, cross_inputs=cross_inputs,
                             teacher_provenance=teacher_provenance, synthetic=synthetic,
-                            smoke_updates=smoke_updates, teacher_source_repo=teacher_source_repo,
-                            teacher_source_commit=teacher_source_commit,
+                                smoke_updates=smoke_updates,
+                            enforce_k8_lock=(
+                                not synthetic and dataset == "acdc" and protocol == "A"
+                                and k == 8 and seed == DEFAULT_SEED
+                            ),
                         )
+        if 8 in settings_by_k:
+            for dataset in ("acdc", "mnms"):
+                if dataset not in datasets:
+                    continue
+                for protocol in protocols:
+                    _add_experiment(
+                        plan, setting=_TEACHER_SUPERVISED, dataset=dataset, protocol=protocol, k=8,
+                        seed=seed, out_root=out_root, manifest_inputs=manifest_inputs,
+                        cross_inputs=cross_inputs, teacher_provenance=teacher_provenance,
+                        synthetic=synthetic, smoke_updates=smoke_updates,
+                        enforce_k8_lock=(
+                            not synthetic and dataset == "acdc" and protocol == "A" and seed == DEFAULT_SEED
+                        ),
+                    )
+                    plan["external_references"].append({
+                        "id": f"{dataset}_{protocol.lower()}_k8_seed{seed}_a3d_teacher_free",
+                        "dataset": dataset,
+                        "protocol": protocol,
+                        "k": 8,
+                        "seed": seed,
+                        "setting": "a3d_teacher_free",
+                        "status": "NOT_RUN",
+                        "reason": (
+                            "reference only; no A-3D run is scheduled unless an actual equivalent "
+                            "execution is separately proven"
+                        ),
+                        "launch_mapping": {
+                            **copy.deepcopy(BASELINE_LAUNCHES["a3d_teacher_free"]),
+                            "status": "REFERENCE_ONLY_NOT_RUN",
+                        },
+                    })
+    if explicit_runs is not None:
+        plan["selection"].update({
+            "runs": [list(pair) for pair in explicit_runs],
+            "locked_k8_train_manifest_sha256": K8_LOCKED_TRAIN_MANIFEST_SHA256,
+            "locked_k8_development_manifest_sha256": K8_LOCKED_DEV_MANIFEST_SHA256,
+        })
+        k8_roles = manifest_inputs.get("acdc", {})
+        k8_train_provided = bool(k8_roles.get("k8:train") or k8_roles.get("train"))
+        selected_k_values = tuple(dict.fromkeys(k for _, k in explicit_runs))
+        development_manifest_pins = []
+        for selected_k in selected_k_values:
+            development_path = k8_roles.get(f"k{selected_k}:development") or k8_roles.get("development")
+            development_manifest_pins.append({
+                "k": selected_k,
+                **(_manifest_ref(development_path) if development_path is not None else {
+                    "path": None, "sha256": None, "status": "NOT_RUN",
+                    "reason": "development manifest was not supplied",
+                }),
+            })
+        if not k8_train_provided:
+            lineage_status = "K8_LOCKED_NOT_PROVIDED"
+        elif nested_lineage_audit is None or nested_lineage_audit.get("schema_loader_status") != "READY":
+            lineage_status = "K8_LOCKED_NOT_RUN"
+        elif (nested_lineage_audit.get("status") != "PASS"
+              or sum(bool(k8_roles.get(f"k{k}:train")) for k in selected_k_values)
+              != len(selected_k_values)):
+            lineage_status = "K8_LOCKED_PARTIAL_NOT_RUN"
+        else:
+            lineage_status = "K8_LOCKED_READY"
+        plan["lineage_audit"] = {
+            "schema": "q3d.campaign.lineage_audit.v1",
+            "status": lineage_status,
+            "seed": seed,
+            "dataset": "acdc",
+            "expected_k8_train_sha256": K8_LOCKED_TRAIN_MANIFEST_SHA256,
+            "expected_k8_development_sha256": K8_LOCKED_DEV_MANIFEST_SHA256,
+            "nested_k_specific_train_manifests": sum(
+                bool(k8_roles.get(f"k{k}:train")) for k in selected_k_values
+            ),
+            "nested_validation": (
+                "PASS"
+                if (nested_lineage_audit is not None
+                    and nested_lineage_audit.get("status") == "PASS"
+                    and sum(bool(k8_roles.get(f"k{k}:train")) for k in selected_k_values) == len(selected_k_values))
+                else "PARTIAL_NOT_RUN"
+            ),
+            "schema_loader_status": (
+                nested_lineage_audit.get("schema_loader_status", "NOT_RUN")
+                if nested_lineage_audit is not None else "NOT_RUN"
+            ),
+            "manifest_contracts": (
+                nested_lineage_audit.get("records", [])
+                if nested_lineage_audit is not None else []
+            ),
+            "development_manifest_pins": development_manifest_pins,
+            "note": "K-specific manifests are never inferred from K=8; absent K manifests remain NOT_RUN",
+        }
     _add_cross_evaluation_records(plan, datasets=list(datasets), cross_inputs=cross_inputs,
                                   manifest_inputs=manifest_inputs)
     plan["ordering"] = {
@@ -934,6 +1323,28 @@ def create_campaign_plan(*, out: str | Path, datasets: tuple[str, ...] = ("acdc"
     }
     if share_stages:
         _shared_stage_dag(plan, out_root)
+    if explicit_runs is not None:
+        for experiment in plan["experiments"]:
+            if experiment["setting"] != _TEACHER_SUPERVISED:
+                continue
+            source_stage_job_id = experiment["stage_artifact_producers"].get("T")
+            if source_stage_job_id is None:
+                raise ValueError("teacher-supervised evaluation is missing its shared T producer")
+            plan["evaluation_jobs"].append({
+                "id": f"{experiment['id']}.eval_teacher_head",
+                "dataset": experiment["dataset"],
+                "protocol": experiment["protocol"],
+                "k": experiment["k"],
+                "seed": experiment["seed"],
+                "setting": _TEACHER_SUPERVISED,
+                "stage": "T",
+                "head": "region",
+                "student_joint_updates": 0,
+                "source_stage_job_id": source_stage_job_id,
+                "independent_baseline": False,
+                "status": "NOT_RUN",
+                "reason": "evaluation-only teacher-head reference; no duplicate T producer or J job",
+            })
     plan_path = out_root / "PLAN.json"
     _write_json(plan_path, plan)
     validate_campaign_plan(plan_path)
@@ -1039,8 +1450,8 @@ def _validate_shared_stage_dag(plan: Mapping[str, Any]) -> None:
         for job in jobs if job.get("kind") == "shared_stage_producer" and job["stage"] == "T"
     }):
         raise ValueError("shared campaign has duplicate T producers for a data/protocol/K/seed identity")
-    if any(job.get("setting") == "mednext_supervised" and job["stage"] == "T" for job in jobs):
-        raise ValueError("MedNeXt supervised baseline must reuse shared T instead of retraining it")
+    if any(job.get("setting") == _TEACHER_SUPERVISED and job["stage"] == "T" for job in jobs):
+        raise ValueError("teacher-supervised baseline must reuse shared T instead of retraining it")
 
     experiments = plan["experiments"]
     experiment_by_setting = {
@@ -1068,10 +1479,10 @@ def _validate_shared_stage_dag(plan: Mapping[str, Any]) -> None:
         for stage, reference in experiment.get("expected_stage_artifacts", {}).items():
             if reference.get("producer_job_id") != expected_ids.get(stage) or reference.get("sha256") is not None:
                 raise ValueError(f"{experiment['id']} has a stale or fabricated {stage} reference")
-        if experiment["setting"] == "mednext_supervised":
+        if experiment["setting"] == _TEACHER_SUPERVISED:
             reuse = experiment.get("baseline_reuse")
             if not isinstance(reuse, Mapping) or reuse.get("source_stage_job_id") != expected_ids.get("T"):
-                raise ValueError("MedNeXt supervised baseline must explicitly reuse the shared T artifact")
+                raise ValueError("teacher-supervised baseline must explicitly reuse the shared T artifact")
         if "J" in experiment["stages"]:
             joint_id = expected_ids["J"]
             joint = job_by_id[joint_id]
@@ -1111,7 +1522,7 @@ def _validate_shared_stage_dag(plan: Mapping[str, Any]) -> None:
             if v1["stage_artifact_producers"].get(stage) != v1u["stage_artifact_producers"].get(stage):
                 raise ValueError(f"V1 and V1-u do not share the same {stage} producer")
         t_id = v1["stage_artifact_producers"]["T"]
-        for variant in ("o1", "s1", "v1_stride4", "v1_decoder_stride8"):
+        for variant in ("o1", "s1"):
             other = experiment_by_setting.get((*identity, variant))
             if other is None:
                 continue
@@ -1194,7 +1605,7 @@ def validate_campaign_plan(path: str | Path) -> dict[str, Any]:
                  protocol_rank[item["protocol"]], k_rank[item["k"]],
                  setting_rank[item["group"]][item["setting"]]) for item in experiments]
     if exp_keys != sorted(exp_keys):
-        raise ValueError("campaign ordering must put ACDC first, K=5/10/2, and secondaries after primaries")
+        raise ValueError("campaign ordering must put ACDC first, selected K values in declared order, and secondaries after primaries")
     for experiment in experiments:
         config_path = Path(experiment["config_path"])
         if not config_path.is_file() or _sha256(config_path) != experiment["config_sha256"]:
@@ -1224,6 +1635,47 @@ def validate_campaign_plan(path: str | Path) -> dict[str, Any]:
                     if previous and stage_rank[job_by_id[previous]["stage"]] >= stage_rank[record["stage"]]:
                         raise ValueError("stage order must be T then Q then P then J")
                     previous = record["id"]
+    explicit_runs = selection.get("runs")
+    if explicit_runs is not None:
+        parsed_runs = _normalize_run_specs(list(explicit_runs))
+        primary_pairs = [
+            (item["setting"], item["k"])
+            for item in experiments if item["group"] == "primary"
+        ]
+        expected_pairs = list(parsed_runs) * len(selection["datasets"]) * len(selection["protocols"])
+        if len(primary_pairs) != len(expected_pairs) or set(primary_pairs) != set(expected_pairs):
+            raise ValueError("explicit run catalogue does not match the planned primary experiments")
+        if selection.get("secondary_settings"):
+            raise ValueError("explicit run plans cannot contain secondary settings")
+        expected_baselines = [_TEACHER_SUPERVISED] if 8 in {k for _, k in parsed_runs} else []
+        if selection.get("baseline_settings") != expected_baselines:
+            raise ValueError("explicit run baseline selection is stale")
+        evaluation_jobs = plan.get("evaluation_jobs", [])
+        expected_evaluations = len(selection["datasets"]) * len(selection["protocols"])
+        if 8 not in {k for _, k in parsed_runs}:
+            expected_evaluations = 0
+        if len(evaluation_jobs) != expected_evaluations:
+            raise ValueError("explicit run plan has an incomplete teacher-head evaluation catalogue")
+        for evaluation in evaluation_jobs:
+            if (evaluation.get("stage"), evaluation.get("head"), evaluation.get("student_joint_updates")) != (
+                "T", "region", 0
+            ):
+                raise ValueError("teacher-head evaluation must be T/region with zero J updates")
+            if evaluation.get("independent_baseline") is not False or evaluation.get("status") != "NOT_RUN":
+                raise ValueError("teacher-head evaluation must remain a non-independent NOT_RUN reference")
+            source = job_by_id.get(evaluation.get("source_stage_job_id"))
+            if source is None or source.get("stage") != "T" or source.get("kind") != "shared_stage_producer":
+                raise ValueError("teacher-head evaluation must reference a shared T producer")
+            identity = (source["dataset"], source["protocol"], source["k"], source["seed"])
+            if (evaluation.get("dataset"), evaluation.get("protocol"), evaluation.get("k"), evaluation.get("seed")) != identity:
+                raise ValueError("teacher-head evaluation identity differs from its T producer")
+        for reference in plan.get("external_references", []):
+            if reference.get("setting") != "a3d_teacher_free" or reference.get("status") != "NOT_RUN":
+                raise ValueError("A-3D reference must remain an external NOT_RUN record")
+            if reference.get("launch_mapping", {}).get("status") != "REFERENCE_ONLY_NOT_RUN":
+                raise ValueError("A-3D reference launch mapping must remain reference-only")
+            if any(item["setting"] == "a3d_teacher_free" for item in experiments):
+                raise ValueError("A-3D reference-only setting must not create an experiment job")
     comparisons: dict[tuple[str, str, int, int], list[dict[str, Any]]] = {}
     for experiment in experiments:
         if experiment["setting"] in PRIMARY_ARMS + SECONDARY_ARMS:
@@ -1443,7 +1895,7 @@ def execute_campaign(path: str | Path, *, execute: bool = False, setting: str = 
         if isinstance(receipt, Mapping) and receipt.get("status") in {"COMPLETED", "COMPLETED_SOFTWARE_ONLY"}:
             if experiment["arm"] == "a3d_teacher_free":
                 reported = reported or ["J"]
-            elif experiment["arm"] == "mednext_supervised":
+            elif experiment["arm"] == _TEACHER_SUPERVISED:
                 reported = reported or ["T"]
         expected_stages = experiment["stages"]
         completed_stages = [stage_name for stage_name in expected_stages if stage_name in reported]
@@ -1496,20 +1948,29 @@ def main(argv: list[str] | None = None) -> None:
     plan_parser.add_argument("--out", default=str(DEFAULT_REPORT_DIR))
     plan_parser.add_argument("--dataset", choices=("acdc", "mnms", "both"), default="acdc")
     plan_parser.add_argument("--protocol", choices=("A", "B", "both"), default="A")
-    plan_parser.add_argument("--k", nargs="+", type=int, choices=K_VALUES, default=list(CAMPAIGN_K_ORDER))
+    plan_parser.add_argument("--k", nargs="+", type=int, choices=CAMPAIGN_K_VALUES, default=list(CAMPAIGN_K_ORDER))
     plan_parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
-    plan_parser.add_argument("--manifest", action="append", default=[], metavar="DATASET:ROLE=PATH")
+    plan_parser.add_argument(
+        "--manifest", action="append", default=[], metavar="DATASET[:K]:ROLE=PATH",
+        help="pin a manifest globally or for one K (for example acdc:8:train=PATH)",
+    )
     plan_parser.add_argument("--cross-eval-manifest", action="append", default=[], metavar="DATASET=PATH")
     plan_parser.add_argument("--teacher-weights")
     plan_parser.add_argument("--teacher-weights-sha256")
     plan_parser.add_argument("--teacher-weights-source-url")
-    plan_parser.add_argument("--teacher-source-repo")
-    plan_parser.add_argument("--teacher-source-commit")
     plan_parser.add_argument("--pretraining-dataset")
     plan_parser.add_argument("--overlap-acdc", choices=("yes", "no"))
     plan_parser.add_argument("--overlap-mnms", choices=("yes", "no"))
     plan_parser.add_argument("--primary-only", action="store_true")
     plan_parser.add_argument("--without-baselines", action="store_true")
+    plan_parser.add_argument(
+        "--runs", nargs="+", metavar="SETTING@K",
+        help="explicit six-run catalogue; bare ACDC/A/seed-42 uses the same catalogue",
+    )
+    plan_parser.add_argument(
+        "--legacy-catalogue", action="store_true",
+        help="retain the historical full catalogue when --runs is omitted",
+    )
     plan_parser.add_argument("--independent-stages", action="store_true",
                              help="retain the legacy per-arm T/Q/P chains instead of shared artifacts")
     plan_parser.add_argument("--synthetic", action="store_true")
@@ -1521,6 +1982,20 @@ def main(argv: list[str] | None = None) -> None:
     run_parser.add_argument("--device", default="cuda", choices=("cpu", "cuda"))
     args = parser.parse_args(argv)
     if args.command == "plan":
+        if args.runs and (
+            args.primary_only or args.without_baselines or args.independent_stages or args.legacy_catalogue
+        ):
+            parser.error(
+                "--runs cannot be combined with --primary-only, --without-baselines, "
+                "--independent-stages, or --legacy-catalogue"
+            )
+        legacy_selection_flags = (
+            args.primary_only or args.without_baselines or args.independent_stages
+            or args.legacy_catalogue or tuple(args.k) != CAMPAIGN_K_ORDER
+        )
+        run_values = args.runs
+        if run_values is None and not legacy_selection_flags:
+            run_values = list(DEFAULT_REDUCED_RUNS)
         dataset_names = ("acdc", "mnms") if args.dataset == "both" else (args.dataset,)
         protocol_names = ("A", "B") if args.protocol == "both" else (args.protocol,)
         manifest_inputs = _parse_manifest_flags(args.manifest)
@@ -1536,11 +2011,10 @@ def main(argv: list[str] | None = None) -> None:
             out=args.out, datasets=dataset_names, protocols=protocol_names, ks=tuple(args.k), seed=args.seed,
             manifest_inputs=manifest_inputs, cross_inputs=cross_inputs,
             teacher_provenance=_parse_teacher_provenance(args),
-            teacher_source_repo=args.teacher_source_repo,
-            teacher_source_commit=args.teacher_source_commit,
             include_secondary=not args.primary_only, include_baselines=not args.without_baselines,
             synthetic=args.synthetic, smoke_updates=args.smoke_updates,
             share_stages=not args.independent_stages,
+            runs=tuple(run_values) if run_values else None,
         )
         print(json.dumps({"status": "NOT_RUN", "plan": str(plan_path), "sha256": _sha256(plan_path)}, indent=2))
     else:
