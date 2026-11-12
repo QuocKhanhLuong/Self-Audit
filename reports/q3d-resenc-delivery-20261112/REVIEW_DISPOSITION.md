@@ -12,3 +12,11 @@ Claude reviews were read-only against concurrent working-tree snapshots. Their r
 | Campaign | Explicit six-run DAG, true labeled-ID nesting, schema/K readiness, receipt type checks, teacher quality beside matching C0 | Missing or legacy manifest inputs remain NOT_RUN; no new patient cohort fabricated |
 
 The external ERF probe was corrected to reproduce the delivered preprocessing (logical center, full stride padding, replicate mode), with all prior variants preserved as NONCALIBRATION. Final mean offsets satisfy the predeclared point-estimate rule. Its near-threshold Y value is reported without altering that rule.
+
+## Independent post-push review
+
+[Claude reviewed remote main `6c5065262dddf2ee872b4dcabf4324f78a83df86`](claude-postpush-review.md) and independently loaded the actual encoder, checked native forward/crop, live-convolution phases, alias integrity, and frozen baseline diffs. Verdict: **no blocking findings**.
+
+The three actionable cleanup notes were addressed afterwards: remove the unreachable old bottleneck source alias; require `teacher_boundary_lr == teacher_head_lr` as an explicit compatibility alias for the shared heads group; add a regression equating feature phase to `grid_phase` over the actual anisotropic main convolutions. The canonical six-run configs and PLAN bytes are unchanged. Full tests and all-arm smoke were rerun after these fixes.
+
+The reviewer also noted a local file hash/load timing window and mixed-device state-dict robustness edge case. These remain non-blocking limitations; the normal path uses a pinned local checkpoint and a CPU-mapped state dictionary. No efficacy or GPU claim was inferred.

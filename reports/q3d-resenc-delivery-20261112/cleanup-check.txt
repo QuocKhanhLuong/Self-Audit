@@ -2,3 +2,5 @@ Command: rg -i "mednext" self_audit/candidate_q3d scripts/q3d_* tests/test_q3d_*
 stdout: <empty>
 stderr: <empty>
 exit_code: 1 (no matches)
+Post-push: removed unreachable bottleneck_stride16 alias. A negative test intentionally verifies rejection of the unsupported former decoder source.
+Frozen baseline diff and historical shared PLAN remain unchanged after post-push cleanup.

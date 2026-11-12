@@ -5,8 +5,8 @@ Implemented the replacement request: Q3D uses the pinned **nnFoundationCNN ResEn
 ## Verification on final implementation
 
 - `python scripts/check_repo.py`: **PASS**, 13 Q3D recipes; [raw output](check_repo.json).
-- `python -m pytest -q`: **511 passed**, including the opt-in real checkpoint strict-load and pinned nnssl factory parity tests. [Verbatim output](pytest-final.txt).
-- `python scripts/smoke_q3d.py --out /tmp/self-audit-q3d-resenc-final-20261112 --all-arms`: **13/13 completed**; [receipt](smoke-all-arms.json). The synthetic tokenizer gate remains NOT_READY for short usage history/dead-code evidence; the explicitly synthetic override was used. No real-config gate was relaxed.
+- `python -m pytest -q`: **513 passed**, including the opt-in real checkpoint strict-load and pinned nnssl factory parity tests. [Verbatim output](pytest-final.txt).
+- `python scripts/smoke_q3d.py --out /tmp/self-audit-q3d-resenc-postpush-20261112 --all-arms`: **13/13 completed**; [receipt](smoke-all-arms.json). The synthetic tokenizer gate remains NOT_READY for short usage history/dead-code evidence; the explicitly synthetic override was used. No real-config gate was relaxed.
 - Actual pretrained CPU preflight with `--run-erf --erf-samples 16`: checkpoint hash, 448 strict encoder keys, architecture and empirical phase pass. Overall `NOT_READY` refers only to missing TRAIN/GT diagnostics, not teacher provenance. [Receipt](preflight-runtime.json).
 - Actual runtime ERF helper agrees with the independent Phase-0 probe to about 1e-6 for its mean offsets. [Runtime receipt](runtime-erf.json).
 - [Required cleanup grep](cleanup-check.txt): empty, exit 1 means no matches. [Frozen baseline diff](baseline-check.txt): empty.
@@ -22,8 +22,8 @@ Exact pytest output:
 ........................................................................ [ 70%]
 ........................................................................ [ 84%]
 ........................................................................ [ 98%]
-.......                                                                  [100%]
-511 passed in 199.71s (0:03:19)
+.........                                                                [100%]
+513 passed in 199.09s (0:03:19)
 ```
 
 The optional verification environment supplied `Q3D_NNFOUNDATION_CHECKPOINT`, `Q3D_NNSSL_REGISTRY` and `Q3D_NNFOUNDATION_WEIGHTS` pointing to the downloaded pinned checkpoint and source file outside Git. Normal recipes use the portable `${Q3D_NNFOUNDATION_WEIGHTS}` binding; never commit the weight file.
@@ -59,7 +59,7 @@ K8 TRAIN SHA is exact. Existing selector reproduces L5 ⊂ L8 ⊂ L10 from locke
 
 T warmup freezes only the encoder; optimizer groups deduplicate encoder aliases. T artifacts seal selected DEV patient-macro quality separately from the final learning curve. Student export cold-load remains isolated from all teacher modules and DNA/nnssl.
 
-Claude reviewed teacher, config, runtime, cleanup, preflight and campaign workers, plus Phase-0 geometry; [dispositions](REVIEW_DISPOSITION.md) and the raw review files preserve findings from concurrent snapshots. The post-push independent review is recorded separately once completed.
+Claude reviewed teacher, config, runtime, cleanup, preflight and campaign workers, plus Phase-0 geometry; [dispositions](REVIEW_DISPOSITION.md) and the raw review files preserve findings from concurrent snapshots. [Independent post-push review](claude-postpush-review.md) found no blocking issues; its three actionable cleanup notes were fixed and the full suite/all-arm smoke rerun. The remaining local file timing/mixed-device edge cases are explicitly recorded in the review disposition.
 
 ## NOT_RUN and interpretation limits
 
