@@ -1,0 +1,449 @@
+{
+  "arm": "teacher_supervised",
+  "augmentation": {
+    "flip_x_probability": 0.5,
+    "flip_y_probability": 0.5,
+    "gamma_range": [
+      0.7,
+      1.5
+    ],
+    "intensity_probability_labeled": 0.5,
+    "intensity_probability_unlabeled_student": 1.0,
+    "preserve_native_geometry": true,
+    "recompute_sdf_after_spatial_transform": true,
+    "rotate90_probability": 0.5,
+    "rotate90_requires_equal_spacing": true,
+    "spatial_transform_shared": true,
+    "unlabeled_teacher_intensity_augmentation": false,
+    "voxel_noise_std": 0.03
+  },
+  "baselines": {
+    "a3d_teacher_free": {
+      "arm": "a3d_teacher_free",
+      "budget_stage": "J",
+      "config_template": "configs/candidate_a3d/teacher_free_acdc_k8.json",
+      "entrypoint": "train.py",
+      "evaluation_name": "a3d_teacher_free",
+      "method": "candidate_q3d",
+      "resume_scope": "trainer_output_state",
+      "runner": "self_audit.candidate_q3d.baselines.run_a3d_teacher_free",
+      "status": "IMPLEMENTED"
+    },
+    "mean_teacher": {
+      "arm": "mean_teacher",
+      "budget_stage": "J",
+      "entrypoint": "train.py",
+      "evaluation_name": "mean_teacher_student",
+      "method": "candidate_q3d",
+      "runner": "self_audit.candidate_q3d.engine.train",
+      "status": "ENGINE_ARM"
+    },
+    "teacher_supervised": {
+      "arm": "teacher_supervised",
+      "budget_stage": "T",
+      "entrypoint": "train.py",
+      "evaluation_name": "teacher_supervised",
+      "method": "candidate_q3d",
+      "resume_from": null,
+      "resume_scope": "latest_checkpoint_in_output",
+      "runner": "self_audit.candidate_q3d.baselines.run_teacher_supervised",
+      "status": "IMPLEMENTED"
+    }
+  },
+  "checkpoint": {
+    "isolate_dataset": true,
+    "isolate_k": true,
+    "isolate_protocol": true,
+    "isolate_seed": true,
+    "namespace": "q3d/acdc/protocol-a/k8/seed-42",
+    "resume_scope": "stage_checkpoint_only",
+    "stage_outputs": {
+      "J": "q3d/acdc/protocol-a/k8/seed-42/teacher_supervised/j",
+      "P": "q3d/acdc/protocol-a/k8/seed-42/teacher_supervised/p",
+      "Q": "q3d/acdc/protocol-a/k8/seed-42/teacher_supervised/q",
+      "T": "q3d/acdc/protocol-a/k8/seed-42/teacher_supervised/t"
+    }
+  },
+  "dataset": {
+    "class_mapping": [
+      "BG",
+      "RV",
+      "MYO",
+      "LV"
+    ],
+    "cross_evaluation": [
+      {
+        "dataset": "acdc",
+        "manifest": {
+          "path": null,
+          "sha256": null,
+          "status": "NOT_RUN"
+        }
+      },
+      {
+        "dataset": "mnms",
+        "manifest": {
+          "path": null,
+          "sha256": null,
+          "status": "NOT_RUN"
+        }
+      },
+      {
+        "dataset": null,
+        "manifest": {
+          "path": null,
+          "sha256": null,
+          "status": "NOT_RUN"
+        },
+        "status": "NOT_RUN"
+      },
+      {
+        "dataset": null,
+        "manifest": {
+          "path": null,
+          "sha256": null,
+          "status": "NOT_RUN"
+        },
+        "status": "NOT_RUN"
+      }
+    ],
+    "deferred_cmr_datasets": [
+      {
+        "name": null,
+        "reason": "dataset identity not specified in Q-3D spec",
+        "status": "NOT_RUN"
+      },
+      {
+        "name": null,
+        "reason": "dataset identity not specified in Q-3D spec",
+        "status": "NOT_RUN"
+      }
+    ],
+    "manifests": {
+      "development": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "teacher_train": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "test": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "train": {
+        "path": "/Users/alvinluong/Self-Audit-runs/vast-a3d-semi-20261111/team-k8-ablations/manifests/k8_train.json",
+        "sha256": "e524c7531079996232fe71cdfe982a46a5950d49d91a8203eee396b0e67434a3",
+        "status": "READY"
+      }
+    },
+    "name": "acdc",
+    "release": "acdc"
+  },
+  "losses": {
+    "background_class_equal_weight": true,
+    "balanced_sdf": 1.0,
+    "boundary_ce_dice": 1.0,
+    "codekd": 0.0,
+    "codekd_class_balance": true,
+    "codekd_ramp_fraction": 0.1,
+    "commitment_beta": 0.25,
+    "continuous_feature_kd": 0.0,
+    "l_u_auxiliary_reduction": "mean",
+    "labeled_supervised_coefficient": 1.0,
+    "region_ce_dice": 1.0,
+    "sdf_near_boundary_mm": 2.5,
+    "sdf_near_far_alpha": 0.5,
+    "sdf_radius_mm": 5.0,
+    "skip_zero_weight_classes": true,
+    "supervised_divide_by_stream_count": false,
+    "teacher_confidence_weighting": true,
+    "uniform_w": null,
+    "w_mode": "none"
+  },
+  "method": "candidate_q3d",
+  "model": {
+    "student": {
+      "architecture": "nnfoundation_resenc_l_supervised",
+      "classes": [
+        "BG",
+        "RV",
+        "MYO",
+        "LV"
+      ],
+      "code_gate_init": 0.0,
+      "crop": false,
+      "decoder_inputs": [
+        "native_volume"
+      ],
+      "dense_skip": true,
+      "epa_heads": 4,
+      "epa_pool_zyx": [
+        4,
+        4,
+        4
+      ],
+      "epa_support": "uniform_fixed",
+      "input_channels": 1,
+      "input_shape": "[B,1,D,H,W]",
+      "max_parameters": 10000000,
+      "native_grid": true,
+      "resample": false,
+      "residual2": {
+        "enabled": false,
+        "zero_init": true
+      },
+      "sdf_head_train_only": true,
+      "stage_channels": [
+        16,
+        32,
+        64,
+        128,
+        256
+      ],
+      "z_stride": 1
+    },
+    "teacher": {
+      "architecture": "nnfoundation_resenc_l",
+      "dependency_pins": {
+        "dynamic_network_architectures": "0.4.4",
+        "nnssl_commit": "3d774e942256bd70e5e264c6b94fa38e25f7ed74",
+        "nnunet_commit": "c04f7ec8bbffaf3ebc3b26aa2c89042e8a8e368b"
+      },
+      "encoder_blocks": [
+        1,
+        3,
+        4,
+        6,
+        6,
+        6
+      ],
+      "encoder_channels": [
+        32,
+        64,
+        128,
+        256,
+        320,
+        320
+      ],
+      "encoder_strides": [
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          1,
+          2,
+          2
+        ],
+        [
+          1,
+          2,
+          2
+        ],
+        [
+          1,
+          2,
+          2
+        ],
+        [
+          1,
+          2,
+          2
+        ]
+      ],
+      "feature_channels": 256,
+      "feature_source": "encoder_stride8",
+      "feature_stride": 8,
+      "freeze_joint": true,
+      "heads": [
+        "region",
+        "boundary_sdf"
+      ],
+      "online_joint": false,
+      "phase_measurement": {
+        "encoder_stride16": {
+          "offset_zyx": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "policy": "theoretical_zero_reference_not_inherited_from_encoder_stride8",
+          "status": "NOT_MEASURED"
+        },
+        "encoder_stride8": {
+          "measured_mean_offset_zyx": [
+            0.67213374376297,
+            1.9470438957214355,
+            1.722203016281128
+          ],
+          "offset_zyx": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "policy": "lock_nominal_phase_when_signed_mean_is_within_threshold",
+          "status": "MEASURED_WITHIN_THRESHOLD"
+        },
+        "method": "gradient_erf_mean_centroid",
+        "receipt_path": "reports/q3d-resenc-phase0-20261112/erf_probe.json",
+        "receipt_sha256": "2f05888b45ff3bfbf19f90bd91abbd4f0b2ab193b37375c5d875950117d2a14e",
+        "samples": 16,
+        "status": "PASS",
+        "threshold_voxels": 2.0
+      },
+      "phase_offsets": {
+        "encoder_stride16": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "encoder_stride8": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "pretrained": {
+        "class_mapping": [
+          "BG",
+          "RV",
+          "MYO",
+          "LV"
+        ],
+        "class_mapping_scope": "downstream_segmentation_contract",
+        "license": "CC-BY-SA-4.0",
+        "overlap_acdc": false,
+        "overlap_mnms": false,
+        "overlap_note": "According to Table D7; not independently verified.",
+        "pretraining_dataset": "nnFoundation (~2.1M CT/MR/PET, 125 sources; arXiv 2609.26924 Table D7)",
+        "provenance_status": "READY",
+        "weights_path": "/Users/alvinluong/Self-Audit-runs/q3d-resenc-20261112/checkpoint_final.pth",
+        "weights_sha256": "ac262d3e8c226c79f9567fddc34d38e011284730ddf2294b5c6c319ce2f22bbd",
+        "weights_source_url": "https://huggingface.co/MIC-DKFZ/nnFoundationCNN/resolve/f443c09319988e833b3d9589bf95909e4443d7b2/checkpoint_final.pth"
+      },
+      "shared_trunk": true
+    }
+  },
+  "physiology": {
+    "cache_refresh_joint_epochs": null,
+    "certainty_threshold": 0.7,
+    "ef_range_percent": [
+      5.0,
+      90.0
+    ],
+    "enabled": false,
+    "minimum_lv_ed_ml": 10.0,
+    "stroke_balance": true,
+    "tau_myocardium": 0.1,
+    "tau_stroke_volume": 0.15,
+    "use_ed_es_metadata": false
+  },
+  "protocol": {
+    "cache_isolation_key": "q3d/acdc/protocol-a/k8/seed-42",
+    "k": 8,
+    "seed": 42,
+    "student_label_budget": "k",
+    "teacher_label_budget": "k",
+    "unlabeled_source": "remaining_train_image_only",
+    "variant": "A"
+  },
+  "runtime": {
+    "allow_unverified_teacher": false,
+    "device": "cuda",
+    "smoke_initialization_volumes": null,
+    "smoke_update_overrides": {
+      "J": null,
+      "P": null,
+      "Q": null,
+      "T": null
+    },
+    "synthetic": false,
+    "synthetic_gate_override": false
+  },
+  "schema": "self_audit.candidate_q3d.v1",
+  "seed": 42,
+  "tokenizer": {
+    "adapter_hidden": 128,
+    "anatomy_loss_weight": 0.5,
+    "codebook_frozen_after_stage": "Q",
+    "codebook_size": 256,
+    "commitment_beta": 0.25,
+    "dead_code_fraction": 0.001,
+    "dimension": 64,
+    "ema_decay": 0.99,
+    "enabled": false,
+    "initialization_volumes": 200,
+    "maximum_dead_code_fraction": 0.25,
+    "minimum_class_codes": 4,
+    "minimum_perplexity": 32.0,
+    "source_feature": "encoder_stride8",
+    "temperature": 0.1,
+    "usage_window_updates": 200
+  },
+  "training": {
+    "batch_per_stream": 1,
+    "checkpoint_evaluation_interval": 400,
+    "checkpoint_evaluation_unit": "L_only_updates",
+    "checkpoint_selection": "development_patient_macro_fg_dice",
+    "gradient_accumulation": 1,
+    "gradient_accumulation_unit": "stream_microbatches_per_optimizer_step",
+    "gradient_clip_norm": 1.0,
+    "stage_modes": {
+      "J": "updates",
+      "P": "single_forward_pass",
+      "Q": "updates",
+      "T": "updates"
+    },
+    "stage_optimizer_updates": {
+      "J": 8000,
+      "P": 0,
+      "Q": 1000,
+      "T": 8000
+    },
+    "stage_stream_microbatches": {
+      "J": 8000,
+      "P": null,
+      "Q": 1000,
+      "T": 8000
+    },
+    "stage_update_units": {
+      "J": "L_only_updates",
+      "P": "full_U_patient_cine_passes",
+      "Q": "optimizer_updates_after_separate_init_pass",
+      "T": "optimizer_updates"
+    },
+    "stage_updates": {
+      "J": 8000,
+      "P": 1,
+      "Q": 1000,
+      "T": 8000
+    },
+    "stages": [
+      "T",
+      "Q",
+      "P",
+      "J"
+    ],
+    "student_lr": 0.0003,
+    "student_optimizer": "AdamW",
+    "teacher_boundary_lr": 0.001,
+    "teacher_encoder_lr": 0.0001,
+    "teacher_frozen_joint": true,
+    "teacher_head_lr": 0.001,
+    "teacher_joint_lr_multiplier": 0.1,
+    "teacher_warmup_fraction": 0.05,
+    "warmup_fraction": 0.05,
+    "weight_decay": 0.0001
+  }
+}

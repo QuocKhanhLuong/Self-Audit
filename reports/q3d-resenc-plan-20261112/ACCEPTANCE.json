@@ -1,0 +1,135 @@
+{
+  "status": "PASS_PLAN_STRUCTURE_SOFTWARE_ONLY",
+  "source_commit": "5a06b4d",
+  "plan_sha256": "137bd22bf9d267b7113a1219790eeba338649c230d9e3489fabe54316984cf3e",
+  "stage_counts": {
+    "T": 3,
+    "Q": 3,
+    "P": 3,
+    "J": 6
+  },
+  "execution_order": [
+    "shared.acdc_a_k8_seed42.teacher.t",
+    "shared.acdc_a_k8_seed42.encoder_stride8_s8_frozen_teacher.q",
+    "shared.acdc_a_k8_seed42.encoder_stride8_s8_frozen_teacher.p",
+    "acdc_a_k8_seed42_v1.j",
+    "acdc_a_k8_seed42_v1u.j",
+    "acdc_a_k8_seed42_c1.j",
+    "acdc_a_k8_seed42_c0.j",
+    "shared.acdc_a_k5_seed42.teacher.t",
+    "shared.acdc_a_k5_seed42.encoder_stride8_s8_frozen_teacher.q",
+    "shared.acdc_a_k5_seed42.encoder_stride8_s8_frozen_teacher.p",
+    "acdc_a_k5_seed42_v1.j",
+    "shared.acdc_a_k10_seed42.teacher.t",
+    "shared.acdc_a_k10_seed42.encoder_stride8_s8_frozen_teacher.q",
+    "shared.acdc_a_k10_seed42.encoder_stride8_s8_frozen_teacher.p",
+    "acdc_a_k10_seed42_v1.j"
+  ],
+  "shared_k8_producers": {
+    "T": {
+      "id": "shared.acdc_a_k8_seed42.teacher.t",
+      "source_config_sha256": "63cfe95f96c79d9a1d5a1014b8cf4802ed8d638569f17ae14fc92694149ae619",
+      "artifact_sha256": null,
+      "artifact_status": "NOT_RUN"
+    },
+    "Q": {
+      "id": "shared.acdc_a_k8_seed42.encoder_stride8_s8_frozen_teacher.q",
+      "source_config_sha256": "22e19f5a05ee04e87c08ff68bd980e545c303b536430972d9639bdf57cc606fd",
+      "artifact_sha256": null,
+      "artifact_status": "NOT_RUN"
+    },
+    "P": {
+      "id": "shared.acdc_a_k8_seed42.encoder_stride8_s8_frozen_teacher.p",
+      "source_config_sha256": "52e31890e40c2f7a8b1318cbaa4c75728dfc1609dff68b7555a49f89ee18a600",
+      "artifact_sha256": null,
+      "artifact_status": "NOT_RUN"
+    }
+  },
+  "teacher_provenance": {
+    "acdc_a_k8_seed42_v1": "PASS_PINNED_FILE_AND_PHASE_RECEIPT",
+    "acdc_a_k8_seed42_v1u": "PASS_PINNED_FILE_AND_PHASE_RECEIPT",
+    "acdc_a_k8_seed42_c1": "PASS_PINNED_FILE_AND_PHASE_RECEIPT",
+    "acdc_a_k5_seed42_v1": "PASS_PINNED_FILE_AND_PHASE_RECEIPT",
+    "acdc_a_k10_seed42_v1": "PASS_PINNED_FILE_AND_PHASE_RECEIPT",
+    "acdc_a_k8_seed42_teacher_supervised": "PASS_PINNED_FILE_AND_PHASE_RECEIPT"
+  },
+  "nested_selector": {
+    "status": "PASS_SELECTOR_REPRODUCTION",
+    "selector": "self_audit.data.label_subset",
+    "seed": 42,
+    "eligible_ids": [
+      "patient003",
+      "patient007",
+      "patient010",
+      "patient011",
+      "patient024",
+      "patient026",
+      "patient041",
+      "patient054",
+      "patient077",
+      "patient099"
+    ],
+    "subsets": {
+      "5": [
+        "patient007",
+        "patient011",
+        "patient024",
+        "patient026",
+        "patient041"
+      ],
+      "8": [
+        "patient007",
+        "patient010",
+        "patient011",
+        "patient024",
+        "patient026",
+        "patient041",
+        "patient077",
+        "patient099"
+      ],
+      "10": [
+        "patient003",
+        "patient007",
+        "patient010",
+        "patient011",
+        "patient024",
+        "patient026",
+        "patient041",
+        "patient054",
+        "patient077",
+        "patient099"
+      ]
+    },
+    "k8_matches_locked_manifest": true,
+    "note": "K5/K10 IDs reproduced from locked eligible pool; their manifest bytes and DEV bytes are not available here."
+  },
+  "a3d_teacher_free_k8": {
+    "status": "NOT_RUN",
+    "reference_only": true,
+    "receipt_path": "/Users/alvinluong/Self-Audit-runs/vast-a3d-semi-20261111/team-k8-ablations/K8_PROVENANCE_RECEIPT.json",
+    "receipt_sha256": "6aa1c4b8772b2c8f1a1962debfebc5dcb046f99eb922535fc0a307c7332395a8",
+    "receipt_status": "INFO_HANDOFF_ONLY_NOT_RUN",
+    "reason": "Handoff receipt only; no completed k8 teacher-free checkpoint and no demonstrated budget equivalence. No job created."
+  },
+  "not_run_reasons": [
+    "development manifest path and SHA-256 are not configured",
+    "train manifest path and SHA-256 are not configured"
+  ],
+  "teacher_supervised": [
+    {
+      "dataset": "acdc",
+      "head": "region",
+      "id": "acdc_a_k8_seed42_teacher_supervised.eval_teacher_head",
+      "independent_baseline": false,
+      "k": 8,
+      "protocol": "A",
+      "reason": "evaluation-only teacher-head reference; no duplicate T producer or J job",
+      "seed": 42,
+      "setting": "teacher_supervised",
+      "source_stage_job_id": "shared.acdc_a_k8_seed42.teacher.t",
+      "stage": "T",
+      "status": "NOT_RUN",
+      "student_joint_updates": 0
+    }
+  ]
+}
