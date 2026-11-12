@@ -11,6 +11,7 @@ import hashlib
 import json
 import os
 import re
+import zipfile
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -39,6 +40,24 @@ _TEACHER_QUALITY_KEYS = {
     "teacher_terminal_dev_per_class",
     "dev_curve_still_improving",
 }
+
+
+def _looks_like_torch_archive(path: Path) -> bool:
+    """Identify a torch.save archive before attempting safe deserialization.
+
+    The manifest unit fixtures intentionally use plain bytes rather than a
+    checkpoint archive.  Those remain legacy/non-stage fixtures.  A real
+    ``torch.save`` checkpoint is a zip archive; retain the local-file-header
+    check as well so a damaged central directory cannot turn an unreadable
+    checkpoint into an apparently valid manifest.
+    """
+
+    try:
+        with path.open("rb") as handle:
+            prefix = handle.read(4)
+        return zipfile.is_zipfile(path) or prefix in {b"PK\x03\x04", b"PK\x05\x06", b"PK\x07\x08"}
+    except OSError:
+        return False
 
 
 def _canonical_json(value: Any) -> bytes:
@@ -113,6 +132,7 @@ def _teacher_quality_from_checkpoint(path: Path, *, stage: str) -> dict[str, Any
 
     if stage != "T":
         return None
+    torch_archive = _looks_like_torch_archive(path)
     try:
         import torch
 
@@ -120,7 +140,14 @@ def _teacher_quality_from_checkpoint(path: Path, *, stage: str) -> dict[str, Any
             payload = torch.load(path, map_location="cpu", weights_only=True)
         except TypeError:  # pragma: no cover - older torch compatibility
             payload = torch.load(path, map_location="cpu")
-    except Exception:  # noqa: BLE001 - legacy low-level fixtures may be raw bytes
+    except Exception as exc:  # noqa: BLE001 - classify archive vs plain fixture below
+        if torch_archive:
+            raise ValueError(
+                "T stage checkpoint is an unreadable PyTorch archive; refusing "
+                "to publish an unsealed teacher-quality manifest"
+            ) from exc
+        # Deliberate plain-byte fixtures in the manifest tests are not actual
+        # Q3D stage checkpoints and therefore have no quality receipt to seal.
         return None
     if not isinstance(payload, Mapping):
         return None

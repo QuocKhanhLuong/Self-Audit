@@ -169,3 +169,24 @@ def test_published_t_without_quality_fails_closed(tmp_path) -> None:
             content_hashes={"teacher_state_sha256": "0" * 64},
         )
 
+
+def test_unreadable_torch_archive_cannot_publish_t_manifest(tmp_path) -> None:
+    from self_audit.candidate_q3d.artifacts import write_stage_manifest
+
+    checkpoint = tmp_path / "corrupt-T.pt"
+    # Keep the torch zip local-file signature while making the archive
+    # unreadable.  This must not be treated like the deliberate plain-byte
+    # fixtures used by the generic manifest tests.
+    checkpoint.write_bytes(b"PK\x03\x04corrupt checkpoint")
+    identity = {"dataset": "acdc", "protocol": "A", "k": 8, "seed": 42}
+    with pytest.raises(ValueError, match="unreadable PyTorch archive"):
+        write_stage_manifest(
+            tmp_path / "T.artifact.json",
+            stage="T",
+            checkpoint_path=checkpoint,
+            identity=identity,
+            source_config={"stage": "T", "identity": identity},
+            dependencies={},
+            content_hashes={"teacher_state_sha256": "0" * 64},
+        )
+
