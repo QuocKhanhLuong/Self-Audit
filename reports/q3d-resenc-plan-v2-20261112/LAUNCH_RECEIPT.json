@@ -1,0 +1,68 @@
+{
+  "observed_utc": "2026-11-12T13:36:37.085756+00:00",
+  "evidence": "REAL_GPU_TRAINING_STARTED_NOT_EFFICACY",
+  "queue": {
+    "status": "RUNNING",
+    "updated_utc": "2026-11-12T13:35:23.446796+00:00",
+    "code_commit": "9b40989a58a72d7058c9f139e00e8230924bf1a9",
+    "plan_sha256": "be8cd9689584389e655007b6a6fec8f3b647dc6e61f51713f3dfe41d26bb9ec4",
+    "setting": "v1",
+    "k": 8,
+    "through_stage": "P"
+  },
+  "supervisor": "q3d-campaign                     RUNNING   pid 55397, uptime 0:01:14",
+  "gpu": "name, memory.used [MiB], memory.total [MiB], utilization.gpu [%]\nNVIDIA RTX PRO 4000 Blackwell, 3055 MiB, 24467 MiB, 15 %",
+  "metric_path": "/root/mount_data/runs/q3d-resenc-pixdim-20261112/campaign-v2/runs/shared/shared.acdc_a_k8_seed42.teacher.t/metrics.jsonl",
+  "latest_metric": {
+    "boundary_loss": 0.8952726125717163,
+    "learning_rates": [
+      0.001
+    ],
+    "logical_updates": 138,
+    "loss": 2.111757278442383,
+    "optimizer_updates": 138,
+    "phase": "T-a",
+    "region_loss": 0.9567545056343079,
+    "sdf_near_far_loss": 0.2597300410270691,
+    "stage": "T",
+    "update": 138
+  },
+  "metric_records_observed": 138,
+  "plan_sha256": "be8cd9689584389e655007b6a6fec8f3b647dc6e61f51713f3dfe41d26bb9ec4",
+  "run_order": [
+    [
+      "v1",
+      8
+    ],
+    [
+      "v1",
+      5
+    ],
+    [
+      "v1",
+      10
+    ],
+    [
+      "v1u",
+      8
+    ],
+    [
+      "c1",
+      8
+    ],
+    [
+      "c0",
+      8
+    ]
+  ],
+  "pending": [
+    "T completion",
+    "Q",
+    "P",
+    "J GPU profile",
+    "J K8",
+    "K5",
+    "K10",
+    "K8 ablations"
+  ]
+}

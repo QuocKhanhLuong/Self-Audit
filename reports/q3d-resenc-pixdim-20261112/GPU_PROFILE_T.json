@@ -1,0 +1,755 @@
+{
+  "campaign_estimate": {
+    "coverage": {
+      "J_codekd_ramp_updates": 800,
+      "J_lr_warmup_updates": 400,
+      "J_measured_phase": "learning_rate_warmup_and_codekd_ramp",
+      "J_measured_updates": 0,
+      "P": "NOT_RUN",
+      "Q": "NOT_RUN",
+      "T_a_full_budget_updates": 400,
+      "T_a_measured_updates": 20,
+      "T_b_main_teacher": "NOT_RUN",
+      "T_b_main_teacher_updates": 7600,
+      "evaluation": "NOT_RUN",
+      "selected_measured_stages": [
+        "T"
+      ],
+      "stage_status": {
+        "J": "NOT_RUN",
+        "P": "NOT_RUN",
+        "Q": "NOT_RUN",
+        "T": "COMPLETED"
+      }
+    },
+    "full_campaign_seconds": null,
+    "interpretation": "Partial measured-rate projection only, not a mathematical lower bound. Only selected measured portions are projected; unmeasured T-b, Q, P, and evaluation remain NOT_RUN, so no full campaign duration is reported.",
+    "measured_portion_projections_seconds": {
+      "J_v1_8000_updates_from_first_20_J_rate": null,
+      "T_a_warmup_400_updates_from_measured_T_a_rate": 193.10069806408137,
+      "partial_projected_subtotal_seconds": 193.10069806408137
+    },
+    "measured_rates_seconds_per_update": {
+      "J_initial_ramp": null,
+      "T_a": 0.4827517451602034
+    },
+    "observed_profile_update_seconds": 9.655034903204069,
+    "status": "PARTIAL_PROJECTION"
+  },
+  "config_path": "/root/mount_data/runs/q3d-resenc-pixdim-20261112/campaign/recipes/acdc_a_k8_seed42_v1.json",
+  "config_sha256": "727d778acaab0f675148f495de9c643fc6514af74f0223f90de213ac874f6302",
+  "development_geometry_evidence": {
+    "arrays_or_headers_read_by_profiler": false,
+    "audit_rows_passed": 18,
+    "corrected_manifest": {
+      "path": "/root/mount_data/prepared/ACDC/k8/development.q3d-pixdim.json",
+      "sha256": "c83031b6deaf275f830401f8da9ba9a0e30530620633106a3a62cc6d492b1f7b"
+    },
+    "corrected_manifest_sha256": "c83031b6deaf275f830401f8da9ba9a0e30530620633106a3a62cc6d492b1f7b",
+    "geometry_policy": "acdc_pixdim_native_v1",
+    "patient_count": 18,
+    "repair_receipt_validation": {
+      "geometry_only": true,
+      "geometry_policy": "acdc_pixdim_native_v1",
+      "patient_count": 18,
+      "repaired_manifest_sha256": "c83031b6deaf275f830401f8da9ba9a0e30530620633106a3a62cc6d492b1f7b",
+      "source_manifest_sha256": "ba46934afe8ea5c47dd798019bee233c97c98320b358e2d40165e87a651dc7df",
+      "valid": true
+    },
+    "repair_report": {
+      "path": "/root/mount_data/receipts/q3d-pixdim-20261112/k8-development.repair.json",
+      "sha256": "5f66d29d0c08e749a0ce6772860add37a31e30d06dad2802ab276b7c5bf2c98d"
+    },
+    "source_manifest": {
+      "path": "/root/mount_data/prepared/ACDC/k8/development.json",
+      "sha256": "ba46934afe8ea5c47dd798019bee233c97c98320b358e2d40165e87a651dc7df"
+    },
+    "source_manifest_sha256": "ba46934afe8ea5c47dd798019bee233c97c98320b358e2d40165e87a651dc7df",
+    "status": "PASS"
+  },
+  "development_manifest": {
+    "path": "/root/mount_data/prepared/ACDC/k8/development.q3d-pixdim.json",
+    "sha256": "c83031b6deaf275f830401f8da9ba9a0e30530620633106a3a62cc6d492b1f7b"
+  },
+  "evidence_status": "GPU_PROFILE",
+  "execution_mode": "REAL_CUDA_PROFILE",
+  "geometry_policy": "acdc_pixdim_native_v1",
+  "gpu": {
+    "autocast_dtype": "bfloat16",
+    "compute_capability": [
+      12,
+      0
+    ],
+    "device": "cuda:0",
+    "model": "NVIDIA RTX PRO 4000 Blackwell",
+    "optimizer_parameter_dtype_source": "observed from live optimizer parameter groups during each measured update",
+    "timing_method": "perf_counter; synchronize before update and after optimizer.step"
+  },
+  "phase_evidence": {
+    "evidence_class": "SOFTWARE_ONLY_SYNTHETIC_ARCHITECTURE_PROBE",
+    "manifest_lineage": {
+      "arrays_or_headers_read_by_this_command": false,
+      "geometry_policy": "acdc_pixdim_native_v1",
+      "geometry_source": "repaired_manifest.geometry.by_patient",
+      "repair_receipt_schema": "self_audit.q3d.geometry_repair_receipt.v1",
+      "repair_receipt_status": "success",
+      "repair_receipt_validation": {
+        "geometry_only": true,
+        "geometry_policy": "acdc_pixdim_native_v1",
+        "patient_count": 80,
+        "repaired_manifest_sha256": "60dd11747570f3ac183e8636050a3ac3d73651cb43b37deba9ff7422b442a433",
+        "source_manifest_sha256": "175e99e455f35f61453dcb6711b32d6682571ec082374740f9dbfa44576a5944",
+        "valid": true
+      },
+      "repair_report_path": "/root/mount_data/receipts/q3d-pixdim-20261112/k8-train.repair.json",
+      "repair_report_sha256": "29cc6ab00ceec2f3fb8fa950733e2d286de6a54158a87564e2aa29d9b39b6436",
+      "repaired_manifest_path": "/root/mount_data/prepared/ACDC/k8/train.q3d-pixdim.json",
+      "repaired_manifest_sha256": "60dd11747570f3ac183e8636050a3ac3d73651cb43b37deba9ff7422b442a433",
+      "source_manifest_path": "/root/mount_data/prepared/ACDC/k8/train.json",
+      "source_manifest_sha256": "175e99e455f35f61453dcb6711b32d6682571ec082374740f9dbfa44576a5944",
+      "train_patient_count": 80
+    },
+    "path": "/root/Self-Audit/reports/q3d-resenc-pixdim-20261112/erf_probe.json",
+    "phase_proposal": {
+      "absolute_mean_offset_zyx_voxels": [
+        0.6737596988677979,
+        1.7588436603546143,
+        1.2107672691345215
+      ],
+      "config_lock": "NOT_CREATED_ROOT_OWNS_LOCK",
+      "gate_metric": "all(abs(signed_mean_centroid_offset_axis) <= threshold_voxels)",
+      "maximum_individual_absolute_offset_voxels": 3.921062469482422,
+      "maximum_individual_is_diagnostic_only": true,
+      "maximum_individual_used_for_gate": false,
+      "per_axis_pass_zyx": [
+        true,
+        true,
+        true
+      ],
+      "proposed_correction_zyx_voxels": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "proposed_phase": "main_convolution_phase",
+      "signed_mean_offset_zyx_voxels": [
+        0.6737596988677979,
+        1.7588436603546143,
+        1.2107672691345215
+      ],
+      "status": "MAIN_PHASE_ZERO_CORRECTION_PROPOSED",
+      "threshold_voxels": 2.0
+    },
+    "sha256": "36f44d7f85cd3872168b01339353fb17787099d309e167ea5d64ffbc1721b72b",
+    "status": "MAIN_PHASE_ZERO_CORRECTION_PROPOSED"
+  },
+  "production_stage_budgets": {
+    "J": 8000,
+    "P": 1,
+    "Q": 1000,
+    "T": 8000
+  },
+  "profile_device": "cuda:0",
+  "profile_update_limit": 20,
+  "schema": "self_audit.candidate_q3d.phase_d_profile.v1",
+  "selected_patients": {
+    "T_U_supervision": "forbidden; protocol A teacher samples only L",
+    "largest_L_for_T_and_J": {
+      "patient_id": "patient026",
+      "pool": "L",
+      "shape_zyx": [
+        10,
+        256,
+        216
+      ],
+      "voxel_count_per_frame": 552960
+    },
+    "largest_U_for_J_image_only": {
+      "patient_id": "patient057",
+      "pool": "U",
+      "shape_zyx": [
+        8,
+        512,
+        428
+      ],
+      "voxel_count_per_frame": 1753088
+    },
+    "largest_train_by_native_voxel_count": {
+      "patient_id": "patient057",
+      "pool": "U",
+      "shape_zyx": [
+        8,
+        512,
+        428
+      ],
+      "voxel_count_per_frame": 1753088
+    }
+  },
+  "selected_stages": [
+    "T"
+  ],
+  "stage_artifact_inputs": {},
+  "stage_results": {
+    "J": {
+      "reason": "stage was not selected for this profile",
+      "stage": "J",
+      "status": "NOT_RUN"
+    },
+    "P": {
+      "reason": "the profile tool does not execute this production stage",
+      "stage": "P",
+      "status": "NOT_RUN"
+    },
+    "Q": {
+      "reason": "the profile tool does not execute this production stage",
+      "stage": "Q",
+      "status": "NOT_RUN"
+    },
+    "T": {
+      "engine_metric_records": [
+        {
+          "boundary_loss": 2.813264846801758,
+          "learning_rates": [
+            0.001
+          ],
+          "logical_updates": 1,
+          "loss": 6.05881929397583,
+          "optimizer_updates": 1,
+          "phase": "T-a",
+          "region_loss": 2.4769811630249023,
+          "sdf_near_far_loss": 0.7685734033584595,
+          "stage": "T",
+          "update": 1
+        },
+        {
+          "boundary_loss": 1.6729872226715088,
+          "learning_rates": [
+            0.001
+          ],
+          "logical_updates": 2,
+          "loss": 4.677052974700928,
+          "optimizer_updates": 2,
+          "phase": "T-a",
+          "region_loss": 2.4356751441955566,
+          "sdf_near_far_loss": 0.5683904886245728,
+          "stage": "T",
+          "update": 2
+        },
+        {
+          "boundary_loss": 1.3836445808410645,
+          "learning_rates": [
+            0.001
+          ],
+          "logical_updates": 3,
+          "loss": 4.226620197296143,
+          "optimizer_updates": 3,
+          "phase": "T-a",
+          "region_loss": 2.337405204772949,
+          "sdf_near_far_loss": 0.5055702328681946,
+          "stage": "T",
+          "update": 3
+        },
+        {
+          "boundary_loss": 1.329155683517456,
+          "learning_rates": [
+            0.001
+          ],
+          "logical_updates": 4,
+          "loss": 4.064859390258789,
+          "optimizer_updates": 4,
+          "phase": "T-a",
+          "region_loss": 2.2384696006774902,
+          "sdf_near_far_loss": 0.4972342848777771,
+          "stage": "T",
+          "update": 4
+        },
+        {
+          "boundary_loss": 1.3228994607925415,
+          "learning_rates": [
+            0.001
+          ],
+          "logical_updates": 5,
+          "loss": 3.9303221702575684,
+          "optimizer_updates": 5,
+          "phase": "T-a",
+          "region_loss": 2.1075644493103027,
+          "sdf_near_far_loss": 0.4998583197593689,
+          "stage": "T",
+          "update": 5
+        },
+        {
+          "boundary_loss": 1.271240472793579,
+          "learning_rates": [
+            0.001
+          ],
+          "logical_updates": 6,
+          "loss": 3.88708233833313,
+          "optimizer_updates": 6,
+          "phase": "T-a",
+          "region_loss": 2.1326255798339844,
+          "sdf_near_far_loss": 0.4832163453102112,
+          "stage": "T",
+          "update": 6
+        },
+        {
+          "boundary_loss": 1.2455099821090698,
+          "learning_rates": [
+            0.001
+          ],
+          "logical_updates": 7,
+          "loss": 3.8036253452301025,
+          "optimizer_updates": 7,
+          "phase": "T-a",
+          "region_loss": 2.076510190963745,
+          "sdf_near_far_loss": 0.48160529136657715,
+          "stage": "T",
+          "update": 7
+        },
+        {
+          "boundary_loss": 1.2611160278320312,
+          "learning_rates": [
+            0.001
+          ],
+          "logical_updates": 8,
+          "loss": 3.668607711791992,
+          "optimizer_updates": 8,
+          "phase": "T-a",
+          "region_loss": 1.985243558883667,
+          "sdf_near_far_loss": 0.42224806547164917,
+          "stage": "T",
+          "update": 8
+        },
+        {
+          "boundary_loss": 1.2283406257629395,
+          "learning_rates": [
+            0.001
+          ],
+          "logical_updates": 9,
+          "loss": 3.6022231578826904,
+          "optimizer_updates": 9,
+          "phase": "T-a",
+          "region_loss": 1.9342944622039795,
+          "sdf_near_far_loss": 0.4395880103111267,
+          "stage": "T",
+          "update": 9
+        },
+        {
+          "boundary_loss": 1.2139687538146973,
+          "learning_rates": [
+            0.001
+          ],
+          "logical_updates": 10,
+          "loss": 3.545832872390747,
+          "optimizer_updates": 10,
+          "phase": "T-a",
+          "region_loss": 1.9098044633865356,
+          "sdf_near_far_loss": 0.4220598340034485,
+          "stage": "T",
+          "update": 10
+        },
+        {
+          "boundary_loss": 1.209059715270996,
+          "learning_rates": [
+            0.001
+          ],
+          "logical_updates": 11,
+          "loss": 3.4634921550750732,
+          "optimizer_updates": 11,
+          "phase": "T-a",
+          "region_loss": 1.8953297138214111,
+          "sdf_near_far_loss": 0.35910263657569885,
+          "stage": "T",
+          "update": 11
+        },
+        {
+          "boundary_loss": 1.2556474208831787,
+          "learning_rates": [
+            0.001
+          ],
+          "logical_updates": 12,
+          "loss": 3.627166271209717,
+          "optimizer_updates": 12,
+          "phase": "T-a",
+          "region_loss": 1.9440267086029053,
+          "sdf_near_far_loss": 0.4274921417236328,
+          "stage": "T",
+          "update": 12
+        },
+        {
+          "boundary_loss": 1.192000150680542,
+          "learning_rates": [
+            0.001
+          ],
+          "logical_updates": 13,
+          "loss": 3.462155818939209,
+          "optimizer_updates": 13,
+          "phase": "T-a",
+          "region_loss": 1.9052280187606812,
+          "sdf_near_far_loss": 0.36492788791656494,
+          "stage": "T",
+          "update": 13
+        },
+        {
+          "boundary_loss": 1.184843897819519,
+          "learning_rates": [
+            0.001
+          ],
+          "logical_updates": 14,
+          "loss": 3.3516018390655518,
+          "optimizer_updates": 14,
+          "phase": "T-a",
+          "region_loss": 1.8386693000793457,
+          "sdf_near_far_loss": 0.32808852195739746,
+          "stage": "T",
+          "update": 14
+        },
+        {
+          "boundary_loss": 1.1881473064422607,
+          "learning_rates": [
+            0.001
+          ],
+          "logical_updates": 15,
+          "loss": 3.4151618480682373,
+          "optimizer_updates": 15,
+          "phase": "T-a",
+          "region_loss": 1.892688512802124,
+          "sdf_near_far_loss": 0.33432602882385254,
+          "stage": "T",
+          "update": 15
+        },
+        {
+          "boundary_loss": 1.164481282234192,
+          "learning_rates": [
+            0.001
+          ],
+          "logical_updates": 16,
+          "loss": 3.4273011684417725,
+          "optimizer_updates": 16,
+          "phase": "T-a",
+          "region_loss": 1.8818516731262207,
+          "sdf_near_far_loss": 0.38096824288368225,
+          "stage": "T",
+          "update": 16
+        },
+        {
+          "boundary_loss": 1.1257909536361694,
+          "learning_rates": [
+            0.001
+          ],
+          "logical_updates": 17,
+          "loss": 3.2737672328948975,
+          "optimizer_updates": 17,
+          "phase": "T-a",
+          "region_loss": 1.8203456401824951,
+          "sdf_near_far_loss": 0.32763081789016724,
+          "stage": "T",
+          "update": 17
+        },
+        {
+          "boundary_loss": 1.137666940689087,
+          "learning_rates": [
+            0.001
+          ],
+          "logical_updates": 18,
+          "loss": 3.3221867084503174,
+          "optimizer_updates": 18,
+          "phase": "T-a",
+          "region_loss": 1.8367365598678589,
+          "sdf_near_far_loss": 0.34778326749801636,
+          "stage": "T",
+          "update": 18
+        },
+        {
+          "boundary_loss": 1.1189205646514893,
+          "learning_rates": [
+            0.001
+          ],
+          "logical_updates": 19,
+          "loss": 3.2730371952056885,
+          "optimizer_updates": 19,
+          "phase": "T-a",
+          "region_loss": 1.8218663930892944,
+          "sdf_near_far_loss": 0.33225035667419434,
+          "stage": "T",
+          "update": 19
+        },
+        {
+          "boundary_loss": 1.091515302658081,
+          "learning_rates": [
+            0.001
+          ],
+          "logical_updates": 20,
+          "loss": 3.1700453758239746,
+          "optimizer_updates": 20,
+          "phase": "T-a",
+          "region_loss": 1.8065929412841797,
+          "sdf_near_far_loss": 0.2719372510910034,
+          "stage": "T",
+          "update": 20
+        }
+      ],
+      "failed_update": null,
+      "full_recipe_updates": 8000,
+      "mean_seconds_per_update": 0.4827517451602034,
+      "measured_phase": "T-a",
+      "measured_updates": 20,
+      "median_seconds_per_update": 0.5134321500081569,
+      "optimizer_parameter_dtypes": [
+        "torch.float32"
+      ],
+      "peak_allocated_bytes": 2998038016,
+      "peak_reserved_bytes": 3326083072,
+      "requested_profile_updates": 20,
+      "selection_trace": [
+        {
+          "labeled_patient": "patient026",
+          "unlabeled_patient": null
+        },
+        {
+          "labeled_patient": "patient026",
+          "unlabeled_patient": null
+        },
+        {
+          "labeled_patient": "patient011",
+          "unlabeled_patient": null
+        },
+        {
+          "labeled_patient": "patient041",
+          "unlabeled_patient": null
+        },
+        {
+          "labeled_patient": "patient010",
+          "unlabeled_patient": null
+        },
+        {
+          "labeled_patient": "patient011",
+          "unlabeled_patient": null
+        },
+        {
+          "labeled_patient": "patient077",
+          "unlabeled_patient": null
+        },
+        {
+          "labeled_patient": "patient041",
+          "unlabeled_patient": null
+        },
+        {
+          "labeled_patient": "patient024",
+          "unlabeled_patient": null
+        },
+        {
+          "labeled_patient": "patient026",
+          "unlabeled_patient": null
+        },
+        {
+          "labeled_patient": "patient041",
+          "unlabeled_patient": null
+        },
+        {
+          "labeled_patient": "patient010",
+          "unlabeled_patient": null
+        },
+        {
+          "labeled_patient": "patient011",
+          "unlabeled_patient": null
+        },
+        {
+          "labeled_patient": "patient099",
+          "unlabeled_patient": null
+        },
+        {
+          "labeled_patient": "patient007",
+          "unlabeled_patient": null
+        },
+        {
+          "labeled_patient": "patient024",
+          "unlabeled_patient": null
+        },
+        {
+          "labeled_patient": "patient011",
+          "unlabeled_patient": null
+        },
+        {
+          "labeled_patient": "patient099",
+          "unlabeled_patient": null
+        },
+        {
+          "labeled_patient": "patient007",
+          "unlabeled_patient": null
+        },
+        {
+          "labeled_patient": "patient041",
+          "unlabeled_patient": null
+        }
+      ],
+      "stage": "T",
+      "status": "COMPLETED",
+      "updates": [
+        {
+          "peak_allocated_bytes": 2329861632,
+          "peak_reserved_bytes": 2569011200,
+          "update": 1,
+          "wall_seconds": 1.1274682371877134
+        },
+        {
+          "peak_allocated_bytes": 2992229888,
+          "peak_reserved_bytes": 3244294144,
+          "update": 2,
+          "wall_seconds": 0.5794470438268036
+        },
+        {
+          "peak_allocated_bytes": 2993458688,
+          "peak_reserved_bytes": 3317694464,
+          "update": 3,
+          "wall_seconds": 0.51868512108922
+        },
+        {
+          "peak_allocated_bytes": 1851499520,
+          "peak_reserved_bytes": 3319791616,
+          "update": 4,
+          "wall_seconds": 0.2086066158954054
+        },
+        {
+          "peak_allocated_bytes": 2986642944,
+          "peak_reserved_bytes": 3319791616,
+          "update": 5,
+          "wall_seconds": 0.5392422270961106
+        },
+        {
+          "peak_allocated_bytes": 2993442304,
+          "peak_reserved_bytes": 3319791616,
+          "update": 6,
+          "wall_seconds": 0.5146107079926878
+        },
+        {
+          "peak_allocated_bytes": 2627000832,
+          "peak_reserved_bytes": 3319791616,
+          "update": 7,
+          "wall_seconds": 0.4368064671289176
+        },
+        {
+          "peak_allocated_bytes": 1851141120,
+          "peak_reserved_bytes": 3321888768,
+          "update": 8,
+          "wall_seconds": 0.20508848689496517
+        },
+        {
+          "peak_allocated_bytes": 2619781632,
+          "peak_reserved_bytes": 3321888768,
+          "update": 9,
+          "wall_seconds": 0.43352086702361703
+        },
+        {
+          "peak_allocated_bytes": 2994048512,
+          "peak_reserved_bytes": 3321888768,
+          "update": 10,
+          "wall_seconds": 0.553074253955856
+        },
+        {
+          "peak_allocated_bytes": 1852958720,
+          "peak_reserved_bytes": 3321888768,
+          "update": 11,
+          "wall_seconds": 0.2091573451180011
+        },
+        {
+          "peak_allocated_bytes": 2989787648,
+          "peak_reserved_bytes": 3321888768,
+          "update": 12,
+          "wall_seconds": 0.5521460201125592
+        },
+        {
+          "peak_allocated_bytes": 2992475648,
+          "peak_reserved_bytes": 3321888768,
+          "update": 13,
+          "wall_seconds": 0.5230783310253173
+        },
+        {
+          "peak_allocated_bytes": 2998038016,
+          "peak_reserved_bytes": 3321888768,
+          "update": 14,
+          "wall_seconds": 0.5475788859184831
+        },
+        {
+          "peak_allocated_bytes": 2771803648,
+          "peak_reserved_bytes": 3321888768,
+          "update": 15,
+          "wall_seconds": 0.4840921291615814
+        },
+        {
+          "peak_allocated_bytes": 2628663808,
+          "peak_reserved_bytes": 3321888768,
+          "update": 16,
+          "wall_seconds": 0.4413812789134681
+        },
+        {
+          "peak_allocated_bytes": 2990337536,
+          "peak_reserved_bytes": 3321888768,
+          "update": 17,
+          "wall_seconds": 0.512253592023626
+        },
+        {
+          "peak_allocated_bytes": 2993229312,
+          "peak_reserved_bytes": 3321888768,
+          "update": 18,
+          "wall_seconds": 0.5653809639625251
+        },
+        {
+          "peak_allocated_bytes": 2772047872,
+          "peak_reserved_bytes": 3321888768,
+          "update": 19,
+          "wall_seconds": 0.48387079406529665
+        },
+        {
+          "peak_allocated_bytes": 1850821120,
+          "peak_reserved_bytes": 3326083072,
+          "update": 20,
+          "wall_seconds": 0.21954553481191397
+        }
+      ]
+    }
+  },
+  "status": "COMPLETED",
+  "temporary_output_cleanup_policy": "persist report, then remove only this invocation's owned temporary tree",
+  "train_geometry_evidence": {
+    "corrected_manifest": {
+      "path": "/root/mount_data/prepared/ACDC/k8/train.q3d-pixdim.json",
+      "sha256": "60dd11747570f3ac183e8636050a3ac3d73651cb43b37deba9ff7422b442a433"
+    },
+    "geometry_policy": "acdc_pixdim_native_v1",
+    "proposal_manifest_lineage": {
+      "arrays_or_headers_read_by_this_command": false,
+      "geometry_policy": "acdc_pixdim_native_v1",
+      "geometry_source": "repaired_manifest.geometry.by_patient",
+      "repair_receipt_schema": "self_audit.q3d.geometry_repair_receipt.v1",
+      "repair_receipt_status": "success",
+      "repair_receipt_validation": {
+        "geometry_only": true,
+        "geometry_policy": "acdc_pixdim_native_v1",
+        "patient_count": 80,
+        "repaired_manifest_sha256": "60dd11747570f3ac183e8636050a3ac3d73651cb43b37deba9ff7422b442a433",
+        "source_manifest_sha256": "175e99e455f35f61453dcb6711b32d6682571ec082374740f9dbfa44576a5944",
+        "valid": true
+      },
+      "repair_report_path": "/root/mount_data/receipts/q3d-pixdim-20261112/k8-train.repair.json",
+      "repair_report_sha256": "29cc6ab00ceec2f3fb8fa950733e2d286de6a54158a87564e2aa29d9b39b6436",
+      "repaired_manifest_path": "/root/mount_data/prepared/ACDC/k8/train.q3d-pixdim.json",
+      "repaired_manifest_sha256": "60dd11747570f3ac183e8636050a3ac3d73651cb43b37deba9ff7422b442a433",
+      "source_manifest_path": "/root/mount_data/prepared/ACDC/k8/train.json",
+      "source_manifest_sha256": "175e99e455f35f61453dcb6711b32d6682571ec082374740f9dbfa44576a5944",
+      "train_patient_count": 80
+    },
+    "proposal_status": "PROPOSAL_ONLY_NOT_LOCKED",
+    "repair_report": {
+      "path": "/root/mount_data/receipts/q3d-pixdim-20261112/k8-train.repair.json",
+      "sha256": "29cc6ab00ceec2f3fb8fa950733e2d286de6a54158a87564e2aa29d9b39b6436"
+    },
+    "source_manifest": {
+      "path": "/root/mount_data/prepared/ACDC/k8/train.json",
+      "sha256": "175e99e455f35f61453dcb6711b32d6682571ec082374740f9dbfa44576a5944"
+    }
+  },
+  "train_manifest": {
+    "path": "/root/mount_data/prepared/ACDC/k8/train.q3d-pixdim.json",
+    "sha256": "60dd11747570f3ac183e8636050a3ac3d73651cb43b37deba9ff7422b442a433"
+  }
+}
