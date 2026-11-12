@@ -2,6 +2,8 @@
 
 Nov 11, 2026 · Alvin · bản gốc có thể sửa: [Claude Doc](https://claude.ai/artifact/A3tMfHzcbdpHqAQ9pkwZXE). Trạng thái: thiết kế, chưa có kết quả thực nghiệm.
 
+val = development set cũ (DEV18); key nội bộ giữ tên development.
+
 ## 1. Phạm vi và quyết định đã chốt
 
 Q-3D là một candidate mới, nằm cạnh A-3D, theo hợp đồng **chỉ student chạy khi deploy**. Teacher nnFoundationCNN ResEnc-L hai nhánh chỉ dùng lúc train. Tri thức truyền qua một codebook chung được neo theo teacher (codeKD) trên ảnh không nhãn, có trọng số theo độ nhất quán sinh lý. Student là UNETR++ rút gọn, giữ đường dense cho biên.
@@ -71,7 +73,7 @@ Ký hiệu: B batch, D số lát native, H×W in-plane native, h = ceil(H/16), w
 
 `build_resenc_l(strides)` sao tham số `get_res_enc_l` của [nnssl tại pin](https://github.com/MIC-DKFZ/nnssl/blob/3d774e942256bd70e5e264c6b94fa38e25f7ed74/src/nnssl/architectures/architecture_registry.py), dùng `dynamic_network_architectures==0.4.4`: 6 stage, kênh [32,64,128,256,320,320], số residual block [1,3,4,6,6,6], kernel 3, InstanceNorm3d affine eps=1e-5 và LeakyReLU. Strides là cấu hình khóa từ Phase 0; thay stride không thay shape tensor weights.
 
-**[AMEND] Khóa sau sửa spacing:** dùng strides `[(1,1,1),(1,2,2),(1,2,2),(2,2,2),(1,2,2),(1,2,2)]` suy từ median TRAIN đã sửa theo §4. Giữ nguyên kernel/weights, native voxel và padding multiple (2,32,32); chỉ chuyển vị trí downsample z theo luật planner đã pin.
+**[AMEND] Khóa sau sửa spacing:** dùng strides `[(1,1,1),(1,2,2),(1,2,2),(2,2,2),(1,2,2),(1,2,2)]` suy từ median train đã sửa theo §4. Giữ nguyên kernel/weights, native voxel và padding multiple (2,32,32); chỉ chuyển vị trí downsample z theo luật planner đã pin.
 
 **Pretrained encoder:** HF `MIC-DKFZ/nnFoundationCNN`, revision `f443c09319988e833b3d9589bf95909e4443d7b2`, `checkpoint_final.pth`, SHA-256 `ac262d3e8c226c79f9567fddc34d38e011284730ddf2294b5c6c319ce2f22bbd`. Nạp bằng `torch.load(weights_only=True)`, kiểm `arch_class_name=ResEncL`, `key_to_stem=encoder.stem`, `key_to_encoder=encoder.stages`, rồi strict load toàn encoder. Không bỏ các alias `all_modules.*` cần cho strict load. Bỏ mọi checkpoint key `decoder.*`, kể cả alias `decoder.encoder.*`; decoder, segmentation head và boundary khởi tạo mới. Hai lần build cùng seed phải giống state.
 
@@ -88,7 +90,7 @@ Ký hiệu: B batch, D số lát native, H×W in-plane native, h = ceil(H/16), w
 | T-a | 5% đầu | Decoder + region head + boundary; encoder đóng băng | 1e-3 |
 | T-b | Phần còn lại | Toàn mạng | Encoder 1e-4; decoder/heads 1e-3; warmup LR 5% rồi cosine |
 
-Các group không trùng parameter identity; phải loại alias encoder trong decoder. `teacher_boundary_lr` được giữ làm alias tương thích và bắt buộc bằng `teacher_head_lr`, vì boundary thuộc chung group heads; không có LR boundary bị bỏ qua âm thầm. Chọn checkpoint theo DEV FG Dice patient-macro hiện có. Mỗi 400 update log loss TRAIN và DEV FG/RV/MYO/LV của nhánh region. Manifest T lưu `teacher_dev_fg_dice`, per-class tại checkpoint được chọn, và `dev_curve_still_improving` từ ba lần DEV cuối (tăng nghiêm ngặt, thiếu ba điểm thì chưa xác định). Chỉ báo cáo, không tự tăng budget. Joint đóng băng teacher/adapter/codebook; O1 giữ là code ablation ngoài campaign.
+Các group không trùng parameter identity; phải loại alias encoder trong decoder. `teacher_boundary_lr` được giữ làm alias tương thích và bắt buộc bằng `teacher_head_lr`, vì boundary thuộc chung group heads; không có LR boundary bị bỏ qua âm thầm. Chọn checkpoint theo VAL FG Dice patient-macro hiện có. Mỗi 400 update log loss train và VAL FG/RV/MYO/LV của nhánh region. Manifest T lưu `teacher_dev_fg_dice`, per-class tại checkpoint được chọn, và `dev_curve_still_improving` từ ba lần VAL cuối (tăng nghiêm ngặt, thiếu ba điểm thì chưa xác định). Chỉ báo cáo, không tự tăng budget. Joint đóng băng teacher/adapter/codebook; O1 giữ là code ablation ngoài campaign.
 
 **Feature source:** main `encoder_stride8` = stage 3, 256 kênh; tên stride là theo in-plane, stride z lấy từ config. S1 `encoder_stride16` = stage 4, 320 kênh. Không còn nguồn decoder, stride4 hay bottleneck teacher cũ. Synthetic dùng chính `Q3DResEncTeacher` với kênh/block nhỏ, cùng forward/load/phase contracts; không chứng minh hiệu quả bệnh nhân.
 
@@ -98,13 +100,13 @@ Các group không trùng parameter identity; phải loại alias encoder trong d
 
 **[AMEND]** Giữ native grid của cả hai mạng. Lưới nhánh chính ResEnc được suy theo từng trục từ chuỗi kernel/stride/padding thật: `j_new=j*a`, `o_new=o+((k-1)*d/2-p)*j`. High-side input padding không đổi gốc tọa độ. Student stage 4 giữ stride (1,16,16). Không dùng phép avg-pool teacher stride8 để giả làm lưới student: tâm sẽ lệch.
 
-Residual skip dùng avgpool khi downsample nên không tự giả định cùng lattice với nhánh conv chính. Phase 0 phải ghi bước/offset nhánh chính đến stage 3, độ lệch cực đại của skip lattice, và đo gradient ERF trên encoder pretrained: một cell stage 3, input ngẫu nhiên z-score, trung bình ít nhất 16 mẫu. Báo input shape, cell/channel aggregation, seed và tâm khối gradient. Luật khóa trước: lệch không quá 2 voxel trên mọi trục dùng pha nhánh chính; vượt ngưỡng dùng offset đo được, lưu manifest. Không chọn pha theo DEV/test.
+Residual skip dùng avgpool khi downsample nên không tự giả định cùng lattice với nhánh conv chính. Phase 0 phải ghi bước/offset nhánh chính đến stage 3, độ lệch cực đại của skip lattice, và đo gradient ERF trên encoder pretrained: một cell stage 3, input ngẫu nhiên z-score, trung bình ít nhất 16 mẫu. Báo input shape, cell/channel aggregation, seed và tâm khối gradient. Luật khóa trước: lệch không quá 2 voxel trên mọi trục dùng pha nhánh chính; vượt ngưỡng dùng offset đo được, lưu manifest. Không chọn pha theo VAL/test.
 
-Strides z suy từ median spacing TRAIN bằng luật planner ResEnc mặc định được pin, giữ nguyên native shape. Báo rõ các điều kiện min-feature-map/shape của planner; không âm thầm resample hay đổi kernel để làm vừa. Quyết định strides/phase khóa trước training và nằm trong config/artifact identity. Nội suy feature dùng bước và offset thực, crop về lưới student, output detach.
+Strides z suy từ median spacing train bằng luật planner ResEnc mặc định được pin, giữ nguyên native shape. Báo rõ các điều kiện min-feature-map/shape của planner; không âm thầm resample hay đổi kernel để làm vừa. Quyết định strides/phase khóa trước training và nằm trong config/artifact identity. Nội suy feature dùng bước và offset thực, crop về lưới student, output detach.
 
-**[AMEND — LỊCH SỬ trước sửa spacing] Phase 0:** median TRAIN metadata ZYX spacing (1,1,1) mm, native shape (9,256,216); 52/80 records có unit spacing và raw headers chưa đối chiếu độc lập. Strides cũ `[(1,1,1),(2,2,2),(1,2,2),(1,2,2),(1,2,2),(1,2,2)]`, receipt SHA `2f05888b45ff3bfbf19f90bd91abbd4f0b2ab193b37375c5d875950117d2a14e`, mean offset=(0.6721337438,1.9470438957,1.7222030163) voxel được giữ làm lịch sử; không dùng để khóa geometry mới. Các probe khác center/padding vẫn giữ NONCALIBRATION.
+**[AMEND — LỊCH SỬ trước sửa spacing] Phase 0:** median train metadata ZYX spacing (1,1,1) mm, native shape (9,256,216); 52/80 records có unit spacing và raw headers chưa đối chiếu độc lập. Strides cũ `[(1,1,1),(2,2,2),(1,2,2),(1,2,2),(1,2,2),(1,2,2)]`, receipt SHA `2f05888b45ff3bfbf19f90bd91abbd4f0b2ab193b37375c5d875950117d2a14e`, mean offset=(0.6721337438,1.9470438957,1.7222030163) voxel được giữ làm lịch sử; không dùng để khóa geometry mới. Các probe khác center/padding vẫn giữ NONCALIBRATION.
 
-**[AMEND] Khóa geometry sau pixdim:** median TRAIN ZYX spacing=(10,1.5625,1.5625) mm, median shape=(9,256,216), median z=10 mm, dị hướng=6.4. Pinned topology/min feature-map 4 cho strides mới tại §3, full padding multiple=(2,32,32). Main stage3 step=(2,8,8), offset=(0,0,0); pure skip displacement cực đại=(0.5,3.5,3.5). Canonical CPU probe vẫn dùng 16 seed42–57, logical (33,97,97), replicate-pad (34,128,128), cell (8,6,6), signed mean 256 channels: signed mean offset=(0.6737596988677979,1.7588436603546143,1.2107672691345215) voxel, mọi trục ≤2, nên khóa **main phase, correction zero**. Max individual offset=3.921062469482422 chỉ là diagnostic. Receipt `reports/q3d-resenc-pixdim-20261112/erf_probe.json`, SHA `36f44d7f85cd3872168b01339353fb17787099d309e167ea5d64ffbc1721b72b`, là bằng chứng **SOFTWARE_ONLY** trên input ngẫu nhiên, không phải chất lượng bệnh nhân. S1 ngoài campaign giữ analytical stage4 phase, chưa đo ERF riêng. GPU profile/training **NOT_RUN** tại thời điểm khóa này.
+**[AMEND] Khóa geometry sau pixdim:** median train ZYX spacing=(10,1.5625,1.5625) mm, median shape=(9,256,216), median z=10 mm, dị hướng=6.4. Pinned topology/min feature-map 4 cho strides mới tại §3, full padding multiple=(2,32,32). Main stage3 step=(2,8,8), offset=(0,0,0); pure skip displacement cực đại=(0.5,3.5,3.5). Canonical CPU probe vẫn dùng 16 seed42–57, logical (33,97,97), replicate-pad (34,128,128), cell (8,6,6), signed mean 256 channels: signed mean offset=(0.6737596988677979,1.7588436603546143,1.2107672691345215) voxel, mọi trục ≤2, nên khóa **main phase, correction zero**. Max individual offset=3.921062469482422 chỉ là diagnostic. Receipt `reports/q3d-resenc-pixdim-20261112/erf_probe.json`, SHA `36f44d7f85cd3872168b01339353fb17787099d309e167ea5d64ffbc1721b72b`, là bằng chứng **SOFTWARE_ONLY** trên input ngẫu nhiên, không phải chất lượng bệnh nhân. S1 ngoài campaign giữ analytical stage4 phase, chưa đo ERF riêng. GPU profile/training **NOT_RUN** tại thời điểm khóa này.
 
 Tests: source isotropic khớp tham số và state keys/shapes upstream; pha nhánh chính từ conv thật; constant/ramp align và H/W lẻ; anisotropic stride/padding/crop đúng; gradients teacher bị chặn ở joint. ERF random-input là chẩn đoán hình học của weights, không phải chứng minh receptive field trên MRI bệnh nhân hay gate chất lượng segmentation.
 
@@ -143,7 +145,7 @@ Codebook do teacher định nghĩa rồi đóng băng; student chỉ học dự 
 
 **Gate trước khi sang stage joint** (giá trị khởi điểm, khóa trước khi chạy): perplexity ≥ 32; mã chết ≤ 25%; mỗi lớp RV, MYO, LV có ≥ 4 mã mà phần lớn khối lượng rơi vào lớp đó. Không đạt thì dừng và báo cáo, không nới gate.
 
-**[AMEND] Báo cáo P0 về support lớp:** chỉ trên GT của L, đo tỉ lệ ô mà mỗi lớp thắng argmax phân suất lớp tại lưới S4 đúng pha (§4); báo số ô, tần suất BG/RV/MYO/LV, tie chọn chỉ số lớp nhỏ nhất. **[OPEN] Nếu MYO < 2% tổng số ô**, gate “≥ 4 mã MYO” và cân bằng lớp MYO phải được xem lại trước P2. Dừng để xem xét thiết kế, không tự đổi ngưỡng hoặc dùng U/DEV/TEST GT.
+**[AMEND] Báo cáo P0 về support lớp:** chỉ trên GT của L, đo tỉ lệ ô mà mỗi lớp thắng argmax phân suất lớp tại lưới S4 đúng pha (§4); báo số ô, tần suất BG/RV/MYO/LV, tie chọn chỉ số lớp nhỏ nhất. **[OPEN] Nếu MYO < 2% tổng số ô**, gate “≥ 4 mã MYO” và cân bằng lớp MYO phải được xem lại trước P2. Dừng để xem xét thiết kế, không tự đổi ngưỡng hoặc dùng U/val/test GT.
 
 ## 6. Student UNETR++-lite
 
@@ -247,23 +249,23 @@ B_f=\frac{1}{|\mathcal C_f|}\sum_{c\in\mathcal C_f}
 
 **[FIX] Cache:** mỗi bệnh nhân một dòng JSON gồm id, SHA checkpoint teacher, đường thể tích theo frame, chỉ số ED/ES, r\_SV, r\_M, w\_pat; metadata cache ghi cohort U, N_U, mean_U(w_pat), ESS, ESS/N_U; file cache có SHA-256. Teacher đóng băng nên chỉ tính một lần trước joint; O1 tính lại mỗi 10 epoch và mỗi snapshot mới phải tính lại mean/gate.
 
-**[FIX] Gate trước joint, khóa trước khi dùng kết quả:** chỉ dùng w_pat trên U: `mean_U(w_pat) > 0` và `ESS/N_U = (Σw)²/(N_U·Σw²) ≥ 0,25`. Không đạt thì dừng, không nới. **Log mỗi run:** mean(omega) (phải bằng 1 trên mỗi vòng U đầy đủ, mỗi bệnh nhân góp một lần), max omega, tỉ lệ omega = 0, ESS và ESS/N_U. L không tham gia mẫu số U. Gate không dùng kết quả arm hoặc DEV/TEST. V1-u dùng cùng cohort đủ gate để so sánh trọng số tương đối công bằng.
+**[FIX] Gate trước joint, khóa trước khi dùng kết quả:** chỉ dùng w_pat trên U: `mean_U(w_pat) > 0` và `ESS/N_U = (Σw)²/(N_U·Σw²) ≥ 0,25`. Không đạt thì dừng, không nới. **Log mỗi run:** mean(omega) (phải bằng 1 trên mỗi vòng U đầy đủ, mỗi bệnh nhân góp một lần), max omega, tỉ lệ omega = 0, ESS và ESS/N_U. L không tham gia mẫu số U. Gate không dùng kết quả arm hoặc val/test. V1-u dùng cùng cohort đủ gate để so sánh trọng số tương đối công bằng.
 
 **[FIX] Log vòng U thực tế:** `realized_mean_omega` là trung bình các omega engine đã dùng trong đúng một hoán vị U (§9), không sao chép mean của cache. Lưu các quan sát giữa vòng trong checkpoint; khi vòng đủ, V1/C1 có gate hợp lệ phải đạt 1 với sai số tuyệt đối ≤ 1e-12. Ghi thêm max/zero fraction thực tế và các SHA snapshot đã dùng. O1 vẫn refresh theo lịch đã khóa; nếu đổi snapshot giữa vòng thì giữ toàn bộ quan sát, ghi các SHA và mean thực tế, không ép mean của vòng trộn snapshot thành 1. Synthetic override gate phải được ghi rõ và không được diễn giải là đạt hợp đồng dữ liệu thật.
 
-**Chẩn đoán (chỉ báo cáo):** tính w\_pat trên bệnh nhân DEV và báo tương quan Spearman với Dice RV và HD95 thật của teacher. Không dùng số này để chọn τ.
+**Chẩn đoán (chỉ báo cáo):** tính w\_pat trên bệnh nhân val và báo tương quan Spearman với Dice RV và HD95 thật của teacher. Không dùng số này để chọn τ.
 
 ## 9. Dữ liệu, protocol nhãn và lịch train
 
-Protocol chính là A: K bệnh nhân có nhãn cho cả hệ, phần TRAIN còn lại U image-only. **[AMEND] Campaign hiện tại: ACDC seed42, so sánh đóng góp ở K8; V1@5 và V1@10 chỉ là đường cong số nhãn.** K2 vẫn hợp lệ trong config nhưng không thuộc campaign.
+Protocol chính là A: K bệnh nhân có nhãn cho cả hệ, phần train còn lại U image-only. **[AMEND] Campaign hiện tại: ACDC seed42, so sánh đóng góp ở K8; V1@5 và V1@10 chỉ là đường cong số nhãn.** K2 vẫn hợp lệ trong config nhưng không thuộc campaign.
 
 **Protocol:**
 
 |  | A (chính) | B (tham chiếu) |
 | --- | --- | --- |
-| Teacher dùng GT | K bệnh nhân | Toàn bộ TRAIN |
+| Teacher dùng GT | K bệnh nhân | Toàn bộ train |
 | Student dùng GT | Cùng K | K bệnh nhân |
-| U | TRAIN còn lại, image-only | TRAIN còn lại, image-only với student |
+| U | train còn lại, image-only | train còn lại, image-only với student |
 | Claim | Hiệu quả ít nhãn của cả hệ | Trần khi teacher mạnh |
 
 Không chia sẻ checkpoint, cache sinh lý hay codebook giữa A và B. Provenance nnFoundation ngoài phải khai báo ở cả hai; overlap theo Table D7 chưa được kiểm độc lập.
@@ -293,9 +295,9 @@ Không chia sẻ checkpoint, cache sinh lý hay codebook giữa A và B. Provena
 | P | Tính cache sinh lý trên U (mục 8) | Một lượt forward | Đóng băng |
 | J | Student joint (mục 7) | 8.000 | Đóng băng |
 
-Chọn checkpoint student theo DEV FG Dice patient-macro, đánh giá mỗi 400 update. Mỗi stage ghi checkpoint, SHA-256 và có thể resume.
+Chọn checkpoint student theo VAL FG Dice patient-macro, đánh giá mỗi 400 update. Mỗi stage ghi checkpoint, SHA-256 và có thể resume.
 
-**[AMEND] Log theo epoch quy ước (người dùng chọn ngày 2026-11-12):** T báo DEV Dice patient-macro từng lớp RV/MYO/LV và FG mean sau mỗi `2K` optimizer update (K8: 16); đây là số lượt rút frame ngẫu nhiên, không bảo đảm đã ghé mọi frame. J báo sau mỗi hoán vị bệnh nhân U đầy đủ (K8: 72); C0 không dùng U nên báo mỗi `2K` lượt L. Event `development_epoch` ghi epoch, update và định nghĩa vòng. Đây chỉ là quan sát: chọn checkpoint, lịch LR, loss/ramp, sampler, cache refresh và mọi gate vẫn giữ nguyên, chọn checkpoint mỗi 400 update và update cuối. Khi hai lịch trùng nhau chỉ forward DEV một lần. Đánh giá phụ khôi phục RNG và mode của từng submodule; không thêm nhãn vào TRAIN. Không suy ngược hay tạo metric cho các epoch đã qua trước khi bật log.
+**[AMEND] Log theo epoch quy ước (người dùng chọn ngày 2026-11-12):** T báo VAL Dice patient-macro từng lớp RV/MYO/LV và FG mean sau mỗi `2K` optimizer update (K8: 16); đây là số lượt rút frame ngẫu nhiên, không bảo đảm đã ghé mọi frame. J báo sau mỗi hoán vị bệnh nhân U đầy đủ (K8: 72); C0 không dùng U nên báo mỗi `2K` lượt L. Event `development_epoch` ghi epoch, update và định nghĩa vòng. Đây chỉ là quan sát: chọn checkpoint, lịch LR, loss/ramp, sampler, cache refresh và mọi gate vẫn giữ nguyên, chọn checkpoint mỗi 400 update và update cuối. Khi hai lịch trùng nhau chỉ forward VAL một lần. Đánh giá phụ khôi phục RNG và mode của từng submodule; không thêm nhãn vào train. Không suy ngược hay tạo metric cho các epoch đã qua trước khi bật log.
 
 **[AMEND] Chia sẻ stage B4:** mỗi tổ hợp `(dataset, protocol, K, seed)` chỉ sinh một T và một Q/P chung cho nguồn main. V1 và V1-u dùng cùng teacher, codebook C0 và cache có SHA; C1 dùng cùng T/P và chỉ đọc metadata codebook để xác minh cache. O1 và S1 dùng Q/P riêng nhưng chia sẻ T; hai nguồn feature riêng teacher cũ đã xóa. J nhận manifest stage đã hoàn tất, xác minh SHA, nguồn feature và cohort; không tự train lại T/Q. PLAN chưa chạy chỉ ghi dependency và SHA `NOT_RUN`, không tạo SHA giả.
 
@@ -307,7 +309,7 @@ Artifact export chỉ chứa tham số student, adapter A\_S, W\_q, scalar g và
 - **Output:** `logits_S` \[1,4,D,H,W\] trên native grid, argmax ra mask BG/RV/MYO/LV.
 - **Bỏ khi export:** head SDF, R\_T, H\_A, A\_T, cache sinh lý.
 - **Không có lúc test:** teacher, nhãn support, optimizer, test-time adaptation, cine của bệnh nhân.
-- **Kiểm tra cold-load:** nạp artifact vào process mới không import module teacher; dự đoán phải trùng từng bit với dự đoán lúc train-time eval trên 3 volume DEV.
+- **Kiểm tra cold-load:** nạp artifact vào process mới không import module teacher; dự đoán phải trùng từng bit với dự đoán lúc train-time eval trên 3 volume val.
 - **Manifest export:** SHA-256 artifact, SHA C0 và version, commit code, tham số, latency GPU/CPU đo được.
 
 ## 11. Ablation, baseline, metrics và quy tắc quyết định
@@ -323,9 +325,9 @@ Bốn arm chính trả lời ba câu hỏi: VQ có hơn KD liên tục không, t
 
 **[AMEND] Phạm vi 6 run:** `v1@8 v1u@8 c1@8 c0@8 v1@5 v1@10`. T/Q/P main dùng chung tại mỗi K=5,8,10: tổng 3 T, 3 Q, 3 P, 6 J. V1/V1u@8 dùng cùng SHA producer T/Q/P; C1@8 cùng T/P. C0 không cần producer. V1@5 và V1@10 chỉ mô tả đường cong theo ngân sách nhãn, không có claim so sánh ablation. Tất cả v0, b1, e1, o1, s1, v1_residual2 và mean_teacher là `NOT_PLANNED`, vẫn giữ code/test. Hai arm nguồn feature riêng teacher cũ bị xóa khỏi Q3D.
 
-**Baseline:** `teacher_supervised@8` đánh giá region head của shared T@8, 0 J, `independent_baseline=false`. A-3D teacher-free@8 chỉ reference khi có bằng chứng cùng manifest/seed/budget và checkpoint; không chứng minh được thì NOT_RUN, không tạo job. Bảng cuối đặt teacher DEV Dice@K cạnh C0@K.
+**Baseline:** `teacher_supervised@8` đánh giá region head của shared T@8, 0 J, `independent_baseline=false`. A-3D teacher-free@8 chỉ reference khi có bằng chứng cùng manifest/seed/budget và checkpoint; không chứng minh được thì NOT_RUN, không tạo job. Bảng cuối đặt teacher VAL Dice@K cạnh C0@K.
 
-**Manifest khóa:** K8 TRAIN `e524c7531079996232fe71cdfe982a46a5950d49d91a8203eee396b0e67434a3`, DEV18 `ba46934afe8ea5c47dd798019bee233c97c98320b358e2d40165e87a651dc7df`. L5 ⊂ L8 ⊂ L10 được kiểm bằng selector hiện có; sai SHA hoặc nesting phải dừng Phase4. Không tạo lại L8 hay đọc U/DEV/TEST masks cho training.
+**Manifest khóa:** K8 train `e524c7531079996232fe71cdfe982a46a5950d49d91a8203eee396b0e67434a3`, VAL18 `ba46934afe8ea5c47dd798019bee233c97c98320b358e2d40165e87a651dc7df`. L5 ⊂ L8 ⊂ L10 được kiểm bằng selector hiện có; sai SHA hoặc nesting phải dừng Phase4. Không tạo lại L8 hay đọc U/val/test masks cho training.
 
 **Metrics:**
 
@@ -334,8 +336,8 @@ Bốn arm chính trả lời ba câu hỏi: VQ có hơn KD liên tục không, t
 - Chỉ số lâm sàng trên ED/ES của bệnh nhân test: sai số EDV, ESV, EF của LV và RV; sai số khối cơ tim (thể tích MYO × 1,05 g/mL).
 - Harm rate so với C0: tỉ lệ bệnh nhân có FG Dice giảm hơn 0,02.
 - Chi phí: tham số, FLOPs, VRAM đỉnh, latency GPU và CPU trên một volume.
-- Codebook: perplexity, mã chết, tỉ lệ mã cứng của student trùng teacher trên DEV.
-- Sinh lý: tương quan Spearman giữa w\_pat và Dice RV thật trên DEV.
+- Codebook: perplexity, mã chết, tỉ lệ mã cứng của student trùng teacher trên val.
+- Sinh lý: tương quan Spearman giữa w\_pat và Dice RV thật trên val.
 
 **[AMEND] Quy tắc quyết định chỉ tại K8 (khóa trước khi chạy; giữ nguyên ngưỡng):** so sánh paired theo bệnh nhân trên TEST, kèm tỉ lệ bệnh nhân thắng và bootstrap CI 95% theo bệnh nhân.
 
@@ -350,7 +352,7 @@ Code mới nằm trong `self_audit/candidate_q3d/` và `configs/candidate_q3d/`;
 
 | Phase | Mục tiêu | File chính | Acceptance | Dừng khi |
 | --- | --- | --- | --- | --- |
-| P0 | [FIX] [AMEND] Read-only, không train | `scripts/q3d_preflight.py` | JSON: HF revision/checkpoint SHA, strict stem/stages và keys/shapes ResEnc; median TRAIN spacing/strides; pha main và skip lattice; ERF ≥16 mẫu với luật 2 voxel; VRAM forward hoặc NOT_RUN; near/far thuộc Q3D; r_SV/r_M GT L; tham số student; class support S4 | Thiếu module/C_T sai: dừng; [OPEN] MYO < 2%: xem lại coverage/balancing trước P2, không tự nới |
+| P0 | [FIX] [AMEND] Read-only, không train | `scripts/q3d_preflight.py` | JSON: HF revision/checkpoint SHA, strict stem/stages và keys/shapes ResEnc; median train spacing/strides; pha main và skip lattice; ERF ≥16 mẫu với luật 2 voxel; VRAM forward hoặc NOT_RUN; near/far thuộc Q3D; r_SV/r_M GT L; tham số student; class support S4 | Thiếu module/C_T sai: dừng; [OPEN] MYO < 2%: xem lại coverage/balancing trước P2, không tự nới |
 | P1 | [AMEND] Đăng ký track riêng, student + C0, q3d_teacher_loss | `student.py`, `config.py`, `engine.py` (nhánh C0), `losses.py` | Test shape với H, W lẻ và D ∈ {6, 9, 10, 13, 20}; pad rồi crop trả đúng kích thước; đổi giá trị vùng pad không làm đổi output vùng hợp lệ; ≤ 10M tham số; báo latency GPU/CPU; C0 chạy được trên synthetic fixture và smoke ACDC; đăng ký track như dưới | Vượt 10M sau khi đã giảm kênh theo mục 6 |
 | P2 | [FIX] Căn chỉnh theo pha + tokenizer | `alignment.py`, `tokenizer.py`, `teacher_features.py` (main encoder stage3, S1 stage4) | Test §4 gồm phase main/skip/ERF và anisotropic shape; EMA codebook, dead-code restart, đóng băng; metric/gate §5 | Gate tokenizer không đạt trên ACDC |
 | P3 | [FIX] Cache sinh lý và mean/ESS U | `physiology.py`, `scripts/q3d_physio_cache.py` | Cine ellipsoid tổng hợp: đúng ED/ES, r_SV, r_M, guard; cache SHA và mean/ESS; omega/gate §8 đúng | Mean U = 0 hoặc ESS/N_U < 0,25 |
@@ -378,7 +380,7 @@ Code mới nằm trong `self_audit/candidate_q3d/` và `configs/candidate_q3d/`;
 **[OPEN] Giả thuyết cần kiểm tra, không đổi design:**
 
 - g ≈ 0 có thể khiến decoder bỏ qua mã. Log g và `‖g·W_q(z)‖/‖F4‖` mỗi 400 optimizer update, khai báo trường hợp mẫu số bằng 0. Nếu ratio < 0,05 thì không claim về interface.
-- Prior sinh lý có thể phạt bệnh lý: báo w_pat theo nhóm bệnh ACDC trên DEV, chỉ báo cáo, không tune gate/ngưỡng.
+- Prior sinh lý có thể phạt bệnh lý: báo w_pat theo nhóm bệnh ACDC trên val, chỉ báo cáo, không tune gate/ngưỡng.
 - Commitment S4 có thể xung đột với codeKD trên U; chưa đổi loss/trọng số.
 
 **Spec này không claim:**
@@ -406,11 +408,11 @@ Nguồn nội bộ: atlas `teacher_student_paper_architecture_vi.pdf`; ghi chú 
 
 ## Lịch sử thay đổi 2026-11-12
 
-**[AMEND] Theo yêu cầu log từng epoch:** thêm quan sát per-class DEV ở §9, T mỗi 2K update và J mỗi vòng U, giữ lịch chọn checkpoint 400 update. Áp dụng tiếp từ checkpoint có SHA bằng quy trình recovery tường minh; log lịch sử trước amendment giữ nguyên, mọi đoạn replay phải được lưu riêng và ghi nhận. Thay đổi này không đổi config/manifest/optimizer hay ngưỡng.
+**[AMEND] Theo yêu cầu log từng epoch:** thêm quan sát per-class VAL ở §9, T mỗi 2K update và J mỗi vòng U, giữ lịch chọn checkpoint 400 update. Áp dụng tiếp từ checkpoint có SHA bằng quy trình recovery tường minh; log lịch sử trước amendment giữ nguyên, mọi đoạn replay phải được lưu riêng và ghi nhận. Thay đổi này không đổi config/manifest/optimizer hay ngưỡng.
 
-**[AMEND] Sau đối chiếu Drive nguyên gốc:** 150/150 CINE tải riêng có SHA giống bản server, đọc đủ voxel hữu hạn; 114 header mâu thuẫn affine/pixdim, trong đó 112 thuộc TRAIN80/DEV18/TEST50 đã khóa. Sửa metadata-only các view, giữ L5 ⊂ L8 ⊂ L10; ghi chú kết quả SDF/mm A-3D lịch sử có thể bị ảnh hưởng, không chạy lại baseline. §3–§4 khóa stride/pha mới bằng canonical probe cùng seed/ngưỡng; §5 ghi OPEN support MYO và review trước P2. GPU/profile/campaign chưa chạy ở thời điểm amendment này.
+**[AMEND] Sau đối chiếu Drive nguyên gốc:** 150/150 CINE tải riêng có SHA giống bản server, đọc đủ voxel hữu hạn; 114 header mâu thuẫn affine/pixdim, trong đó 112 thuộc train80/VAL18/test50 đã khóa. Sửa metadata-only các view, giữ L5 ⊂ L8 ⊂ L10; ghi chú kết quả SDF/mm A-3D lịch sử có thể bị ảnh hưởng, không chạy lại baseline. §3–§4 khóa stride/pha mới bằng canonical probe cùng seed/ngưỡng; §5 ghi OPEN support MYO và review trước P2. GPU/profile/campaign chưa chạy ở thời điểm amendment này.
 
-**[AMEND] Sau audit header và xác nhận người dùng:** cho phép policy ACDC pixdim riêng tại §4 để sửa metadata geometry, giữ default strict và toàn bộ voxel/split/selector/nhãn. Phải tái tính median TRAIN, stride, ERF, physiology GT L và profile trước stage tương ứng; không tái sử dụng receipt pha hoặc manifest SHA lịch sử như bằng chứng cho geometry mới. Quyền launch và thứ tự K8 → K5 → K10 → ablation K8 được cập nhật tại §12. Các phép đo chưa thực hiện vẫn NOT_RUN.
+**[AMEND] Sau audit header và xác nhận người dùng:** cho phép policy ACDC pixdim riêng tại §4 để sửa metadata geometry, giữ default strict và toàn bộ voxel/split/selector/nhãn. Phải tái tính median train, stride, ERF, physiology GT L và profile trước stage tương ứng; không tái sử dụng receipt pha hoặc manifest SHA lịch sử như bằng chứng cho geometry mới. Quyền launch và thứ tự K8 → K5 → K10 → ablation K8 được cập nhật tại §12. Các phép đo chưa thực hiện vẫn NOT_RUN.
 
 **[AMEND] Các mục A3/A4 và ghi chú pha MedNeXt bên dưới là lịch sử teacher cũ, đã được §3–§4 ResEnc thay thế. Không còn là đường code active.**
 
@@ -434,3 +436,5 @@ Lịch sử thiết kế gốc ngày 11/11 được giữ trong git. Đối chi�
 - **[FIX] Vòng U sau `aa4b09a` — §8/§9:** thay lấy bệnh nhân U có hoàn lại bằng hoán vị từng vòng; log mean omega thực sự đã dùng và lưu trạng thái giữa vòng; giữ nguyên L/C0, bỏ bộ đếm coverage cũ, từ chối resume v2. Test không ghi vào receipt đã commit; suite chạy trong repo copy phải để `git status --porcelain` rỗng. Bằng chứng CPU/synthetic là `SOFTWARE_ONLY`; dữ liệu thật/GPU/campaign `NOT_RUN`.
 
 **[AMEND] Migration ResEnc:** xóa đường Q3D MedNeXt/pretrained source checkout, TinyEncoder proxy và hai arm nguồn stride4/decoder; không sửa baseline A/A-3D hoặc reports lịch sử. Chỉ chấp nhận encoder nnFoundation ResEnc-L READY. `teacher_supervised` thay tên baseline teacher cũ và chỉ đánh giá shared T. Phương án optimizer chính vẫn AdamW ở §3; [recipe nnU-Net tại pin](https://github.com/MIC-DKFZ/nnUNet/blob/c04f7ec8bbffaf3ebc3b26aa2c89042e8a8e368b/nnunetv2/training/nnUNetTrainer/pretraining/pretrainedTrainer.py) dùng SGD LR1e-3, momentum0.99, Nesterov, warmup toàn mạng50 epoch là **phương án thay thế NOT_PLANNED**, không chạy hay trộn với lịch chính. Weights CC-BY-SA-4.0, cần giữ attribution/license; không tuyên bố đã chứng minh độc lập nguồn overlap.
+
+**[AMEND] Thuật ngữ hiển thị train/val/test:** từ amendment này, mọi nhãn và câu mô tả hướng tới người đọc dùng `train`, `val` và `test`; `VAL18` là tên hiển thị của development set cũ. Không đổi key nội bộ `development`, các key `teacher_dev_fg_dice`/`dev_curve_still_improving`, event `development_epoch`, role manifest, tên file, CLI flag, schema, receipt, checkpoint metadata, SHA hay dữ liệu lịch sử trong `reports/`. Các dòng lịch sử được đổi nhãn hiển thị tương ứng, không thay đổi ý nghĩa bằng chứng.

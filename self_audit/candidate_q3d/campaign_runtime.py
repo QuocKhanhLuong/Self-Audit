@@ -144,7 +144,7 @@ def _teacher_quality_for_experiment(
 
 
 def _score_from_mapping(value: Mapping[str, Any]) -> float | None:
-    """Read only explicit student DEV selection fields from a trainer receipt."""
+    """Read only explicit student VAL selection fields from a trainer receipt."""
 
     for key in ("student_dev_fg_dice", "best_student_score", "development_patient_macro_fg_dice"):
         score = _finite_score(value.get(key))
@@ -229,7 +229,7 @@ def collect_campaign_results(
     plan: Mapping[str, Any] | None = None,
     state: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Collect teacher DEV quality beside the selected C0 DEV score.
+    """Collect teacher VAL quality beside the selected C0 VAL score.
 
     The join key is exactly ``(dataset, protocol, k, seed)``.  Teacher quality
     is read only from the verified shared T manifest, while C0 quality is read
@@ -308,8 +308,8 @@ def write_campaign_results(report: Mapping[str, Any], out_dir: str | Path) -> di
     md_path = output / "RESULTS.md"
     lines = [
         "# Q3D campaign results", "",
-        "Scores are selected development metrics only; missing artifacts remain `NOT_RUN`.", "",
-        "| dataset | protocol | K | seed | teacher DEV Dice@K | teacher status | C0 DEV Dice@K | C0 status | C0 - teacher |",
+        "Scores are selected validation metrics only; missing artifacts remain `NOT_RUN`.", "",
+        "| dataset | protocol | K | seed | teacher val FG Dice@K | teacher status | C0 val FG Dice@K | C0 status | C0 - teacher |",
         "|---|---:|---:|---:|---:|---|---:|---|---:|",
     ]
     for row in report.get("rows", []):

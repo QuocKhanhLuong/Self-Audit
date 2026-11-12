@@ -2,7 +2,7 @@
 """Phase D: bounded real-data Q3D T/J GPU profile.
 
 Example (run only after the corrected K8 manifests and real T/Q/P artifacts
-are available, along with separate TRAIN/DEV geometry repair evidence and a
+are available, along with separate TRAIN/VAL geometry repair evidence and a
 geometry-bound ERF phase receipt):
 
     python scripts/q3d_profile_gpu.py --config /path/to/acdc-k8-v1.json \
@@ -62,13 +62,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--train-repair-report-sha256", required=True,
                         help="K8 TRAIN repair report SHA-256")
     parser.add_argument("--dev-source-manifest", required=True,
-                        help="source DEV18 manifest used by its independent geometry repair")
+                        help="source VAL18 manifest used by its independent geometry repair")
     parser.add_argument("--dev-source-manifest-sha256", required=True,
-                        help="source DEV18 manifest SHA-256")
+                        help="source VAL18 manifest SHA-256")
     parser.add_argument("--dev-repair-report", required=True,
-                        help="successful, hash-bound DEV18 geometry repair report")
+                        help="successful, hash-bound VAL18 geometry repair report")
     parser.add_argument("--dev-repair-report-sha256", required=True,
-                        help="DEV18 repair report SHA-256")
+                        help="VAL18 repair report SHA-256")
     parser.add_argument("--phase-receipt", required=True,
                         help="canonical ERF receipt with geometry_reprobe lineage for corrected TRAIN")
     parser.add_argument("--phase-receipt-sha256", required=True,

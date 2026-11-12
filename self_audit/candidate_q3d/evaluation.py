@@ -1,6 +1,6 @@
 """Native-volume Q-3D evaluation and paired decision gates.
 
-Evaluation consumes one full native frame at a time.  Development and test
+Evaluation consumes one full native frame at a time.  Validation and test
 labels are only opened after every requested prediction has been materialized
 and hashed.  Physical distances use the declared anisotropic ZYX spacing.
 """
@@ -285,9 +285,9 @@ def _spearman(values_x: Sequence[float], values_y: Sequence[float]) -> dict[str,
 
 
 def physiology_spearman(rows: Sequence[Mapping[str, Any]], *, split: str) -> dict[str, Any]:
-    """Report DEV w_pat versus RV Dice; refuse to calculate this diagnostic on TEST."""
+    """Report VAL w_pat versus RV Dice; refuse to calculate this diagnostic on TEST."""
     if split.lower() not in {"dev", "development"}:
-        raise ValueError("physiologic w_pat correlation is a DEV-only diagnostic")
+        raise ValueError("physiologic w_pat correlation is a VAL-only diagnostic")
     return _spearman(
         [float(row["w_pat"]) for row in rows],
         [float(row["rv_dice"]) for row in rows],
@@ -776,7 +776,7 @@ def evaluate_manifest(model: torch.nn.Module, manifest_path: str | Path, manifes
                         "teacher_student_status": "NOT_RUN_NO_FROZEN_TEACHER_CODES_SUPPLIED"}
     if teacher_codes_by_frame is not None and student_codes_by_frame:
         if role != "development":
-            raise ValueError("teacher/student code agreement is a DEV-only diagnostic")
+            raise ValueError("teacher/student code agreement is a VAL-only diagnostic")
         student_aligned: list[np.ndarray] = []
         teacher_aligned: list[np.ndarray] = []
         for key, teacher_code_value in teacher_codes_by_frame.items():

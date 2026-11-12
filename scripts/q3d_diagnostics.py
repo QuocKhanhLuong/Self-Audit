@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run read-only Q-3D DEV codebook and physiology diagnostics."""
+"""Run read-only Q-3D VAL codebook and physiology diagnostics."""
 
 from __future__ import annotations
 

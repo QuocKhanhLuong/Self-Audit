@@ -332,10 +332,10 @@ def _validate_reduced_development_pins(
     manifest_inputs: Mapping[str, Mapping[str, str]], *, datasets: tuple[str, ...],
     protocols: tuple[str, ...], selected_ks: tuple[int, ...], seed: int,
 ) -> None:
-    """Keep the reduced ACDC K budgets on one existing DEV manifest.
+    """Keep the reduced ACDC K budgets on one existing VAL manifest.
 
-    The K=8 development hash is the only locked DEV byte available to the
-    campaign.  K=5/K=10 may reuse that exact file, but no new DEV hash or
+    The K=8 development hash is the only locked VAL byte available to the
+    campaign.  K=5/K=10 may reuse that exact file, but no new VAL hash or
     patient selection is invented here.  Missing inputs remain NOT_RUN.
     """
 
@@ -351,8 +351,8 @@ def _validate_reduced_development_pins(
         reference = _manifest_ref(path_value)
         if reference["sha256"] != K8_LOCKED_DEV_MANIFEST_SHA256:
             raise ValueError(
-                f"ACDC reduced K={k} DEVELOPMENT must reuse the locked K=8 manifest "
-                "SHA-256; no alternative DEV bytes may be introduced"
+                f"ACDC reduced K={k} VALIDATION must reuse the locked K=8 manifest "
+                "SHA-256; no alternative VAL bytes may be introduced"
             )
 
 

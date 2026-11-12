@@ -4,7 +4,7 @@
 For real runs, load a verified Q-3D research checkpoint after stage T (and Q
 for VQ arms), before J. Online O1 refreshes are managed by the trainer. The synthetic-only
 default builds the repository's tiny smoke teacher and seals its exact state
-hash.  This command never trains, reads a U mask, or accesses DEV/TEST data.
+hash.  This command never trains, reads a U mask, or accesses VAL/TEST data.
 """
 
 from __future__ import annotations
@@ -165,7 +165,7 @@ def _load_post_t_teacher(config, checkpoint_path, expected_sha256, device):
     teacher.to(device).eval().requires_grad_(False)
     expected_state_sha = payload.get("teacher_best_sha256")
     if not isinstance(expected_state_sha, str) or expected_state_sha != _model_state_sha256(teacher):
-        raise ValueError("teacher checkpoint is not the frozen DEV-selected T snapshot")
+        raise ValueError("teacher checkpoint is not the frozen VAL-selected T snapshot")
     teacher._q3d_cache_codebook_sha256 = None
     if normalized["tokenizer"]["enabled"]:
         if "Q" not in completed or not isinstance(payload.get("tokenizer_state"), Mapping):

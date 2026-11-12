@@ -67,7 +67,7 @@ def test_post_t_cli_cache_uses_engine_model_and_source_identity(tmp_path):
 
 @pytest.mark.parametrize('change,match', [
     ('stage', 'completed stage T'), ('config', 'config identity'),
-    ('cohort', 'protocol/cohort'), ('state', 'DEV-selected'),
+    ('cohort', 'protocol/cohort'), ('state', 'VAL-selected'),
 ])
 def test_post_t_loader_rejects_wrong_stage_config_cohort_or_snapshot(tmp_path, change, match):
     config, _, _, payload, checkpoint, _ = _snapshot(tmp_path)

@@ -321,7 +321,11 @@ def test_result_collector_joins_selected_teacher_quality_and_c0_dev_score(tmp_pa
 
     paths = write_campaign_results(report, tmp_path / "results")
     assert set(paths) == {"json", "csv", "markdown"}
-    assert "teacher DEV Dice@K" in Path(paths["markdown"]).read_text(encoding="utf-8")
+    markdown = Path(paths["markdown"]).read_text(encoding="utf-8")
+    assert "teacher val FG Dice@K" in markdown
+    assert "C0 val FG Dice@K" in markdown
+    assert "DEV" not in markdown
+    assert json.loads(Path(paths["json"]).read_text(encoding="utf-8")) == report
     assert "c0_dev_fg_dice" in Path(paths["csv"]).read_text(encoding="utf-8")
 
 

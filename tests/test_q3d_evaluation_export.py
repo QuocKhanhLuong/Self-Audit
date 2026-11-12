@@ -216,7 +216,7 @@ def test_codebook_and_dev_physiology_diagnostics() -> None:
          {"w_pat": 0.9, "rv_dice": 0.95}], split="development"
     )
     assert corr["rho"] == pytest.approx(1.0)
-    with pytest.raises(ValueError, match="DEV-only"):
+    with pytest.raises(ValueError, match="VAL-only"):
         physiology_spearman([], split="test")
 
 

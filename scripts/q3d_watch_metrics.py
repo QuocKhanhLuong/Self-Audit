@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only compact view of per-class Q3D development metrics."""
+"""Read-only compact view of per-class Q3D validation metrics."""
 from __future__ import annotations
 
 import argparse
@@ -28,7 +28,7 @@ def metric_line(job, record):
         f"{job['setting']:>5} K={job['k']:<2} {record['stage']} "
         f"epoch={epoch if epoch is not None else '-':>4} update={record['update']:>5} | "
         f"RV {_percent(classes.get('RV'))}%  MYO {_percent(classes.get('MYO'))}%  "
-        f"LV {_percent(classes.get('LV'))}%  FG {_percent(record.get('score'))}%"
+        f"LV {_percent(classes.get('LV'))}%  val FG Dice {_percent(record.get('score'))}%"
     )
 
 
@@ -40,7 +40,7 @@ def main():
     plan = json.loads(args.plan.read_text())
     jobs = {Path(job['output']) / 'metrics.jsonl': job for job in plan['stage_jobs']}
     positions = {}
-    print('DEV patient-macro Dice (%) — measured values only; epoch=- means no epoch was recorded.', flush=True)
+    print('VAL patient-macro Dice (%) — measured values only; epoch=- means no epoch was recorded.', flush=True)
     while True:
         for path, job in jobs.items():
             if not path.exists():

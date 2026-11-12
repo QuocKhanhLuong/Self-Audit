@@ -884,7 +884,7 @@ def import_stage_artifacts(
     if not loaded:
         return state
 
-    # The T checkpoint carries the DEV-selected teacher weights. Later stages
+    # The T checkpoint carries the VAL-selected teacher weights. Later stages
     # must be bitwise tied to that exact teacher snapshot.
     teacher_state: Mapping[str, Any] | None = None
     teacher_sha: str | None = None
@@ -1195,7 +1195,7 @@ def export_stage_artifact(
     if stage == "T":
         # A T artifact is a teacher-only hand-off.  A full run may already
         # have instantiated a tokenizer, so explicitly remove Q/P state and
-        # retain only the T metric history needed to verify DEV selection.
+        # retain only the T metric history needed to verify VAL selection.
         snapshot.pop("tokenizer_state", None)
         snapshot.pop("tokenizer_artifact", None)
         snapshot.pop("gate", None)

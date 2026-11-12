@@ -797,7 +797,7 @@ def _development_fg_dice(
     output_kind: str,
     device: torch.device,
 ) -> dict[str, Any]:
-    """Read DEV masks only for the locked patient-macro checkpoint selector."""
+    """Read VAL masks only for the locked patient-macro checkpoint selector."""
 
     from ..candidate_a3d.evaluation import _validated_manifest, _volume_input
     from ..candidate_a3d.geometry import VolumeGeometry3D
@@ -823,7 +823,7 @@ def _development_fg_dice(
                 ).as_dict()
                 masks = record.get("masks")
                 if not isinstance(masks, Mapping) or not masks:
-                    raise ValueError(f"DEV patient {patient_id!r} has no frozen annotated frames")
+                    raise ValueError(f"VAL patient {patient_id!r} has no frozen annotated frames")
                 frame_dice_rows: list[dict[str, Any]] = []
                 for frame_key, mask_record in sorted(masks.items(), key=lambda row: int(row[0])):
                     required_mask_keys = {"path", "sha256"}
@@ -831,11 +831,11 @@ def _development_fg_dice(
                     if (not isinstance(mask_record, Mapping)
                             or not required_mask_keys.issubset(mask_record)
                             or not set(mask_record).issubset(allowed_mask_keys)):
-                        raise ValueError("DEV mask records require path and sha256 with optional phase")
+                        raise ValueError("VAL mask records require path and sha256 with optional phase")
                     if "phase" in mask_record:
                         phase = mask_record["phase"]
                         if phase not in ("ED", "ES"):
-                            raise ValueError("DEV mask phase must be ED or ES")
+                            raise ValueError("VAL mask phase must be ED or ES")
                         phases = record.get("phases")
                         try:
                             phase_frame = int(phases[phase]) if isinstance(phases, Mapping) else None
@@ -844,13 +844,13 @@ def _development_fg_dice(
                             phase_frame = None
                             mask_frame = None
                         if phase_frame is None or mask_frame is None or phase_frame != mask_frame:
-                            raise ValueError(f"DEV mask phase {phase} does not match its declared frame")
+                            raise ValueError(f"VAL mask phase {phase} does not match its declared frame")
                     mask_path = resolve(mask_record["path"])
                     if _file_sha256(mask_path) != mask_record["sha256"]:
-                        raise ValueError(f"DEV mask hash mismatch for {patient_id} frame {frame_key}")
+                        raise ValueError(f"VAL mask hash mismatch for {patient_id} frame {frame_key}")
                     target = np.load(mask_path, allow_pickle=False)
                     if target.shape != image.shape[1:] or not np.isin(target, (0, 1, 2, 3)).all():
-                        raise ValueError("DEV mask must be a full native BG/RV/MYO/LV volume")
+                        raise ValueError("VAL mask must be a full native BG/RV/MYO/LV volume")
                     x = _volume_input(image, int(frame_key), device)
                     if output_kind == "teacher":
                         outputs = model(x, geometry=geometry)
@@ -873,7 +873,7 @@ def _development_fg_dice(
     finally:
         model.train(was_training)
     if not per_patient:
-        raise ValueError("DEV checkpoint selection has no patient with foreground support")
+        raise ValueError("VAL checkpoint selection has no patient with foreground support")
     patient_scores = per_patient
     per_class = {
         name: float(np.mean([
@@ -941,7 +941,7 @@ def _assert_snapshot_unchanged(module: nn.Module | None, snapshot: Mapping[str, 
 
 
 def _teacher_curve_status(history: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
-    """Summarize whether the last three actual T DEV scores strictly rise."""
+    """Summarize whether the last three actual T VAL scores strictly rise."""
 
     points: list[dict[str, Any]] = []
     for item in history:
@@ -1141,7 +1141,7 @@ def _record_metric(state: dict[str, Any], metrics_path: Path, record: Mapping[st
 
 
 def _observational_development(model, manifest, *, data, config, device, output_kind, evaluator):
-    """Extra DEV observations must not perturb training RNG or mixed module modes."""
+    """Extra VAL observations must not perturb training RNG or mixed module modes."""
     rng = _rng_state()
     modes = [(module, module.training) for module in model.modules()]
     try:
@@ -1161,7 +1161,7 @@ def _record_epoch_development(state, output_dir, *, stage, update, epoch, epoch_
                               epoch_updates, dev, selection_point):
     score = float(dev["score"])
     if not math.isfinite(score):
-        raise FloatingPointError("epoch DEV score is nonfinite")
+        raise FloatingPointError("epoch VAL score is nonfinite")
     _record_metric(state, output_dir / "metrics.jsonl", {
         "stage": stage, "event": "development_epoch", "update": update,
         "epoch": epoch, "epoch_definition": epoch_definition, "epoch_updates": epoch_updates,
@@ -1176,7 +1176,7 @@ def _log_teacher_development(
     config: Mapping[str, Any], *, update: int, update_budget: int,
     train_loss: float, dev: Mapping[str, Any],
 ) -> None:
-    """Print sparse teacher DEV diagnostics without corrupting JSON stdout."""
+    """Print sparse teacher VAL diagnostics without corrupting JSON stdout."""
 
     def shown(value: Any) -> str:
         try:
@@ -1195,7 +1195,7 @@ def _log_teacher_development(
     print(
         f"[Q3D {dataset} protocol={protocol} k={k} seed={seed}] "
         f"T update={update}/{update_budget} | train_loss={shown(train_loss)} | "
-        f"DEV patient_macro_fg_dice={shown(dev.get('score'))} | "
+        f"VAL patient_macro_fg_dice={shown(dev.get('score'))} | "
         f"RV={shown(per_class.get('RV'))} "
         f"MYO={shown(per_class.get('MYO'))} "
         f"LV={shown(per_class.get('LV'))}",
@@ -1254,7 +1254,7 @@ def _run_teacher_stage(
     interval = int(config["training"]["checkpoint_evaluation_interval"])
     dev_manifest = config["dataset"]["manifests"]["development"]
     if not isinstance(dev_manifest, Mapping) or not dev_manifest.get("path") or not dev_manifest.get("sha256"):
-        raise ValueError("active Q-3D teacher stage requires a pinned DEV manifest for checkpoint selection")
+        raise ValueError("active Q-3D teacher stage requires a pinned VAL manifest for checkpoint selection")
     epoch_updates = 2 * int(config["protocol"]["k"])
     while cursor < update_budget:
         current_phase = "T-a" if cursor < warmup_updates else "T-b"
@@ -1333,7 +1333,7 @@ def _run_teacher_stage(
                 dev = dict(dev_evaluator(teacher, dev_manifest, "teacher", device))
             score = float(dev["score"])
             if not math.isfinite(score):
-                raise FloatingPointError("DEV checkpoint-selection score is nonfinite")
+                raise FloatingPointError("VAL checkpoint-selection score is nonfinite")
             per_class = dev.get("per_class")
             if isinstance(per_class, Mapping):
                 normalized_per_class: dict[str, float | None] = {}
@@ -1414,7 +1414,7 @@ def _run_teacher_stage(
             return cursor
 
     if state.get("best_teacher_state") is None:
-        raise RuntimeError("Q-3D teacher stage completed without a DEV-selected checkpoint")
+        raise RuntimeError("Q-3D teacher stage completed without a VAL-selected checkpoint")
     state["teacher_dev_fg_dice"] = (
         float(state["best_teacher_score"])
         if state.get("best_teacher_score") is not None else None
@@ -2637,7 +2637,7 @@ def _run_joint_stage(
     checkpoint_every = _checkpoint_every(config, smoke=smoke, has_update_limit=update_limit_active)
     dev_manifest = config["dataset"]["manifests"]["development"]
     if not isinstance(dev_manifest, Mapping) or not dev_manifest.get("path") or not dev_manifest.get("sha256"):
-        raise ValueError("active Q-3D student stage requires a pinned DEV manifest for checkpoint selection")
+        raise ValueError("active Q-3D student stage requires a pinned VAL manifest for checkpoint selection")
     learning = config["losses"]
     ramp_updates = max(1, int(math.ceil(update_budget * float(learning["codekd_ramp_fraction"]))))
     sdf_lambda = float(learning["balanced_sdf"])
@@ -3086,7 +3086,7 @@ def _run_joint_stage(
                 dev = dict(dev_evaluator(student, dev_manifest, "student", device))
             score = float(dev["score"])
             if not math.isfinite(score):
-                raise FloatingPointError("Q-3D student DEV selection score is nonfinite")
+                raise FloatingPointError("Q-3D student VAL selection score is nonfinite")
             if state.get("best_student_score") is None or score > float(state["best_student_score"]):
                 state["best_student_score"] = score
                 state["best_student_state"] = copy.deepcopy(student.state_dict())
@@ -3128,7 +3128,7 @@ def _run_joint_stage(
     if wants_distillation and int(state.get("j_kd_supported_branches", 0)) == 0:
         raise RuntimeError("Q-3D global KD collapse: no labeled or unlabeled branch had positive distillation support")
     if state.get("best_student_state") is None:
-        raise RuntimeError("Q-3D joint stage completed without a DEV-selected student checkpoint")
+        raise RuntimeError("Q-3D joint stage completed without a VAL-selected student checkpoint")
     student.load_state_dict(state["best_student_state"], strict=True)
     if is_o1 and teacher is not None:
         # The deployed Student has no teacher dependency; retaining the final
