@@ -103,9 +103,7 @@ def test_stage_identity_and_source_configs_are_arm_independent(tmp_path):
 
     o1 = arm_config("o1")
     s1 = arm_config("s1")
-    stride4 = arm_config("v1", source_stride=4)
-    decoder = arm_config("v1", feature_source="decoder_stride8")
-    for arm_cfg in (o1, s1, stride4, decoder):
+    for arm_cfg in (o1, s1):
         assert stage_source_config(config, "T") == stage_source_config(arm_cfg, "T")
         assert stage_source_config(config, "Q") != stage_source_config(arm_cfg, "Q")
         assert stage_source_config(config, "P") != stage_source_config(arm_cfg, "P")

@@ -359,19 +359,24 @@ def test_resenc_feature_source_selects_declared_encoder_stages_only() -> None:
 
 def test_p0_preflight_reports_resenc_source_and_patient_diagnostics_scope() -> None:
     from pathlib import Path
-    from scripts.q3d_preflight import RESENC_CHECKPOINT
 
     root = Path(__file__).resolve().parents[1]
     report = build_report(root / "configs/candidate_q3d/v1.json")
     assert report["config_validation"]["status"] == "PASS"
     assert report["status"] == "NOT_READY"
-    if RESENC_CHECKPOINT.is_file():
-        assert report["teacher_feature"]["source_status"] == "ACTUAL_RESENC_MODULES_INSPECTED"
+    checkpoint_status = report["teacher_feature"]["checkpoint"]["status"]
+    source_status = report["teacher_feature"]["source_status"]
+    if checkpoint_status == "HASH_VERIFIED_FILE_PRESENT":
+        assert source_status == "ACTUAL_RESENC_MODULES_INSPECTED"
         assert report["teacher_feature"]["weights"]["status"] == "HASH_VERIFIED_FILE_PRESENT"
+    elif source_status == "PHASE0_RECEIPT_ONLY":
+        assert checkpoint_status == "NOT_RUN_CHECKPOINT_MISSING"
+        assert report["teacher_feature"]["weights"]["status"] == "NOT_RUN_CHECKPOINT_MISSING"
     else:
-        assert report["teacher_feature"]["source_status"] == "NOT_RUN"
+        assert source_status == "NOT_RUN"
         assert report["teacher_feature"]["weights"]["status"] in {
             "NOT_RUN_WEIGHTS_FILE_MISSING", "NOT_RUN_NO_WEIGHTS_PATH_OR_SHA",
+            "NOT_RUN_CHECKPOINT_MISSING",
         }
     assert report["datasets"]["acdc"]["status"] == "NOT_RUN"
     assert report["datasets"]["mnms"]["status"] == "NOT_RUN"
