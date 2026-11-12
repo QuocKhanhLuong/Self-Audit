@@ -7,6 +7,7 @@ import json
 import os
 import subprocess
 import sys
+import struct
 from pathlib import Path
 
 import numpy as np
@@ -320,6 +321,7 @@ def _write_valid_repair_fixture(tmp_path: Path):
         "schema": RECEIPT_SCHEMA,
         "status": "success",
         "geometry_only": True,
+        "geometry_policy": "strict",
         "source_manifest_sha256": source_sha,
         "repaired_manifest_sha256": repaired_sha,
         "patient_ids": patient_ids,
@@ -334,15 +336,23 @@ def _write_valid_repair_fixture(tmp_path: Path):
         audit_rows.append(
             {
                 "patient_id": patient_id,
+                "geometry_policy": "strict",
                 "source_file_sha256": "a" * 64,
                 "source_header_sha256": "b" * 64,
                 "source_shape_xyzt": [216, 256, 9, 30],
+                "raw_pixdim_xyz_native": [1.5, 1.5, 10.0],
                 "header_zooms_xyz_native": [1.5, 1.5, 10.0],
                 "header_zooms_xyz_mm": [1.5, 1.5, 10.0],
                 "sform_code": 2,
                 "qform_code": 0,
                 "sform_affine_xyz": np.asarray(repaired_geometry[patient_id]["affine_zyx"])[:, [2, 1, 0, 3]].tolist(),
                 "selected_affine_xyz": np.asarray(repaired_geometry[patient_id]["affine_zyx"])[:, [2, 1, 0, 3]].tolist(),
+                "selected_affine_source": "sform",
+                "reconstructed_affine_xyz": np.asarray(repaired_geometry[patient_id]["affine_zyx"])[:, [2, 1, 0, 3]].tolist(),
+                "geometry_policy_waivers": [],
+                "geometry_nonclaims": ["SCANNER_WORLD_POSE_NOT_INDEPENDENTLY_VERIFIED"],
+                "affine_coordinate_convention": "coded_nifti_world",
+                "scanner_world_pose_status": "NOT_INDEPENDENTLY_VERIFIED",
                 "resolved_spatial_unit": "mm",
                 "unit_resolution": "nifti_header",
                 "unit_provenance": None,
@@ -361,6 +371,7 @@ def _write_valid_repair_fixture(tmp_path: Path):
     report = {
         "schema": REPAIR_SCHEMA,
         "status": "success",
+        "geometry_policy": "strict",
         "source_manifest_path": str(source_path.resolve()),
         "source_manifest_sha256_expected": source_sha,
         "source_manifest_sha256_actual": source_sha,
@@ -469,6 +480,118 @@ def test_prepare_proposal_validates_repair_receipt_rows_and_mapping_hashes(tmp_p
     report["audit_rows"][0]["cine_mapping_sha256"] = "d" * 64
     _write_json(report_path, report)
     with pytest.raises(ValueError, match="mapping SHA-256 differs from receipt"):
+        prepare_geometry_proposal(
+            source_manifest_path=source_path,
+            repaired_manifest_path=repaired_path,
+            repair_report_path=report_path,
+        )
+
+
+def test_pixdim_policy_repair_report_with_coded_conflict_and_uncoded_affine_feeds_proposal(
+    tmp_path, monkeypatch,
+):
+    import nibabel as nib
+    from self_audit.candidate_q3d.geometry_repair import (
+        ACDC_PIXDIM_NATIVE_V1,
+        repair_manifest_geometry,
+    )
+    from self_audit.candidate_q3d.geometry_planning import prepare_geometry_proposal
+
+    source_path, _unused_repaired, _unused_report, _fixture = _write_valid_repair_fixture(tmp_path)
+    shape_xyzt = (216, 256, 9, 1)
+    known_bad_affine = np.asarray(
+        [
+            [1.25, 0.0, 0.0, 10.0],
+            [0.0, 0.75, 0.0, 20.0],
+            [0.0, 0.0, 2.5, 30.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ]
+    )
+    known_bad = nib.Nifti1Image(np.zeros(shape_xyzt, dtype=np.uint8), known_bad_affine)
+    known_bad.set_sform(known_bad_affine, code=2)
+    known_bad.set_qform(known_bad_affine, code=0)
+    known_bad.header.set_xyzt_units(xyz="mm", t="sec")
+    known_bad.header["pixdim"][1:5] = [1.5, 1.5, 10.0, 1.0]
+    known_bad_path = tmp_path / "fixture-001.nii"
+    nib.save(known_bad, known_bad_path)
+    raw_nifti = bytearray(known_bad_path.read_bytes())
+    byteorder = "<" if struct.unpack_from("<i", raw_nifti, 0)[0] == 348 else ">"
+    struct.pack_into(byteorder + "3f", raw_nifti, 80, 1.5, 1.5, 10.0)
+    known_bad_path.write_bytes(raw_nifti)
+
+    uncoded_affine = np.diag([1.5, 1.5, 10.0, 1.0])
+    uncoded = nib.Nifti1Image(np.zeros(shape_xyzt, dtype=np.uint8), uncoded_affine)
+    uncoded.set_sform(uncoded_affine, code=0)
+    uncoded.set_qform(uncoded_affine, code=0)
+    uncoded.header.set_xyzt_units(xyz="unknown", t="sec")
+    uncoded.header["pixdim"][1:5] = [1.5, 1.5, 10.0, 1.0]
+    uncoded_path = tmp_path / "fixture-002.nii"
+    nib.save(uncoded, uncoded_path)
+
+    cine_map = {"fixture-001": str(known_bad_path), "fixture-002": str(uncoded_path)}
+    cine_map_path = tmp_path / "actual-cine-map.json"
+    cine_map_sha = _write_json(cine_map_path, cine_map)
+    repaired_path = tmp_path / "pixdim-repaired.json"
+    report_path = tmp_path / "pixdim-repair-report.json"
+
+    def no_arrays(*_args, **_kwargs):
+        pytest.fail("pixdim repair or proposal read a voxel array")
+
+    monkeypatch.setattr(nib.arrayproxy.ArrayProxy, "__array__", no_arrays)
+    report = repair_manifest_geometry(
+        source_path,
+        hashlib.sha256(source_path.read_bytes()).hexdigest(),
+        cine_map,
+        axis_map="XYZ->ZYX",
+        cine_mapping_source=str(cine_map_path),
+        cine_mapping_sha256=cine_map_sha,
+        cine_mapping_provenance="SOFTWARE_ONLY generated NIfTI fixtures",
+        report_json_path=report_path,
+        report_csv_path=tmp_path / "pixdim-audit.csv",
+        output_manifest_path=repaired_path,
+        unit_declarations_by_patient={
+            "fixture-002": {"unit": "mm", "provenance": "synthetic explicit mm declaration"}
+        },
+        audit_only=False,
+        geometry_policy=ACDC_PIXDIM_NATIVE_V1,
+    )
+
+    assert report["status"] == "success", report["errors"]
+    assert report["geometry_policy"] == ACDC_PIXDIM_NATIVE_V1
+    assert all(row["geometry_policy"] == ACDC_PIXDIM_NATIVE_V1 for row in report["audit_rows"])
+    assert report["audit_rows"][0]["geometry_policy_waivers"] == [
+        "AFFINE_COLUMN_LENGTHS_DISAGREE_WITH_PIXDIM"
+    ]
+    assert report["audit_rows"][1]["selected_affine_source"] == "nibabel_base_affine_uncoded_derived"
+    assert report["audit_rows"][1]["unit_resolution"] == "explicit_declaration"
+
+    source_manifest = json.loads(source_path.read_text(encoding="utf-8"))
+    repaired_manifest = json.loads(repaired_path.read_text(encoding="utf-8"))
+    assert {key: value for key, value in repaired_manifest.items() if key != "geometry"} == {
+        key: value for key, value in source_manifest.items() if key != "geometry"
+    }
+    proposal = prepare_geometry_proposal(
+        source_manifest_path=source_path,
+        repaired_manifest_path=repaired_path,
+        repair_report_path=report_path,
+    )
+    assert proposal["geometry_policy"] == ACDC_PIXDIM_NATIVE_V1
+    assert proposal["manifest_lineage"]["geometry_policy"] == ACDC_PIXDIM_NATIVE_V1
+    assert proposal["geometry"]["median_spacing_zyx_mm"] == [10.0, 1.5, 1.5]
+
+    report["audit_rows"][0]["reconstructed_affine_xyz"][0][3] += 4.0
+    _write_json(report_path, report)
+    with pytest.raises(ValueError, match="reconstructed affine"):
+        prepare_geometry_proposal(
+            source_manifest_path=source_path,
+            repaired_manifest_path=repaired_path,
+            repair_report_path=report_path,
+        )
+
+    report["audit_rows"][0]["reconstructed_affine_xyz"][0][3] -= 4.0
+    report["audit_rows"][1]["geometry_policy"] = "strict"
+    _write_json(report_path, report)
+    with pytest.raises(ValueError, match="geometry_policy differs from report"):
         prepare_geometry_proposal(
             source_manifest_path=source_path,
             repaired_manifest_path=repaired_path,

@@ -39,6 +39,7 @@ from self_audit.candidate_q3d.config import (
     validate_config,
     validate_real_teacher_provenance,
 )
+from self_audit.candidate_q3d.campaign_runtime import select_campaign_experiments
 
 try:
     from self_audit.candidate_q3d.config import (
@@ -1805,6 +1806,7 @@ def _read_state(state_path: Path, plan: Mapping[str, Any], plan_sha: str) -> dic
 
 
 def execute_campaign(path: str | Path, *, execute: bool = False, setting: str = "all",
+                     k: tuple[int, ...] | None = None, through_stage: str = "J",
                      device: str = "cuda",
                      runner: Any = subprocess.run) -> dict[str, Any]:
     """Validate or explicitly execute selected settings; the trainer owns stage transitions."""
@@ -1814,15 +1816,25 @@ def execute_campaign(path: str | Path, *, execute: bool = False, setting: str = 
         raise ValueError(f"unknown setting: {setting}")
     if device not in {"cpu", "cuda"}:
         raise ValueError("device must be cpu or cuda")
+    if through_stage not in {"T", "Q", "P", "J"}:
+        raise ValueError("through-stage must be one of T, Q, P, J")
+    if through_stage != "J" and not plan["selection"].get("shared_stage_dag"):
+        raise ValueError("partial stage execution requires a shared-stage campaign plan")
+    selected, selected_ks = select_campaign_experiments(
+        plan["experiments"], setting=setting, k=k,
+    )
     if not execute:
         return {"status": "PLAN_VALIDATED_NOT_RUN", "plan": str(plan_path),
                 "selected_setting": setting,
+                "selected_k": selected_ks,
+                "through_stage": through_stage,
                 "patient_training": "NOT_RUN", "jobs": len(plan["stage_jobs"])}
     if plan["selection"].get("shared_stage_dag"):
         from self_audit.candidate_q3d.campaign_runtime import execute_shared_campaign
 
         return execute_shared_campaign(
-            plan_path, plan, setting=setting, device=device, runner=runner,
+            plan_path, plan, setting=setting, k=k, through_stage=through_stage,
+            device=device, runner=runner,
             api=sys.modules[__name__],
         )
     synthetic = bool(plan["selection"]["synthetic"])
@@ -1834,10 +1846,6 @@ def execute_campaign(path: str | Path, *, execute: bool = False, setting: str = 
     jobs_by_experiment: dict[str, list[dict[str, Any]]] = {}
     for job in plan["stage_jobs"]:
         jobs_by_experiment.setdefault(job["experiment_id"], []).append(job)
-    selected = [experiment for experiment in plan["experiments"]
-                if setting == "all" or experiment["setting"] == setting]
-    if not selected:
-        raise ValueError("selection did not match any campaign settings")
     # Validate the complete selection before creating run outputs or invoking
     # any trainer, so an unavailable baseline cannot leave an ``all`` campaign
     # half launched after earlier settings have already consumed resources.
@@ -1917,7 +1925,9 @@ def execute_campaign(path: str | Path, *, execute: bool = False, setting: str = 
             raise RuntimeError(f"trainer did not report all planned stages for {experiment['id']}")
         completed.append(experiment["id"])
     return {"status": "COMPLETED", "plan": str(plan_path), "run_state": str(state_path),
-            "completed_settings": completed, "patient_training": "SYNTHETIC_ONLY" if synthetic else "EXECUTED"}
+            "completed_settings": completed, "selected_k": selected_ks,
+            "through_stage": through_stage,
+            "patient_training": "SYNTHETIC_ONLY" if synthetic else "EXECUTED"}
 
 
 def _parse_teacher_provenance(args: argparse.Namespace) -> dict[str, Any] | None:
@@ -1979,6 +1989,14 @@ def main(argv: list[str] | None = None) -> None:
     run_parser.add_argument("--plan", required=True)
     run_parser.add_argument("--execute", action="store_true")
     run_parser.add_argument("--setting", default="all", choices=("all", *ARMS, *SECONDARY_SETTINGS))
+    run_parser.add_argument(
+        "--k", nargs="+", type=int, choices=CAMPAIGN_K_VALUES, metavar="K",
+        help="select one or more K values; omit to include every K in the selected setting",
+    )
+    run_parser.add_argument(
+        "--through-stage", choices=("T", "Q", "P", "J"), default="J",
+        help="execute selected shared stages up to this stage (default: J)",
+    )
     run_parser.add_argument("--device", default="cuda", choices=("cpu", "cuda"))
     args = parser.parse_args(argv)
     if args.command == "plan":
@@ -2018,8 +2036,11 @@ def main(argv: list[str] | None = None) -> None:
         )
         print(json.dumps({"status": "NOT_RUN", "plan": str(plan_path), "sha256": _sha256(plan_path)}, indent=2))
     else:
-        result = execute_campaign(args.plan, execute=args.execute, setting=args.setting,
-                                  device=args.device)
+        result = execute_campaign(
+            args.plan, execute=args.execute, setting=args.setting,
+            k=tuple(args.k) if args.k is not None else None,
+            through_stage=args.through_stage, device=args.device,
+        )
         print(json.dumps(result, indent=2))
 
 

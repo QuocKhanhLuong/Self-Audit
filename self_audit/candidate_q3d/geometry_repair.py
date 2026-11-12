@@ -35,8 +35,13 @@ from ..preparation import (
 REPAIR_SCHEMA = "self_audit.q3d.geometry_repair.v1"
 RECEIPT_SCHEMA = "self_audit.q3d.geometry_repair_receipt.v1"
 _AXIS_MAP = "XYZ->ZYX"
+STRICT_GEOMETRY_POLICY = "strict"
+ACDC_PIXDIM_NATIVE_V1 = "acdc_pixdim_native_v1"
+_GEOMETRY_POLICIES = {STRICT_GEOMETRY_POLICY, ACDC_PIXDIM_NATIVE_V1}
+_NO_CODED_AFFINE_ERROR = "NIfTI has no coded authoritative sform or qform geometry"
 _CSV_FIELDS = (
     "patient_id",
+    "geometry_policy",
     "cine_path",
     "source_file_sha256",
     "source_header_sha256",
@@ -44,6 +49,7 @@ _CSV_FIELDS = (
     "manifest_spacing_zyx_mm",
     "manifest_affine_zyx",
     "source_shape_xyzt",
+    "raw_pixdim_xyz_native",
     "header_zooms_xyz_native",
     "header_zooms_xyz_mm",
     "sform_code",
@@ -51,6 +57,12 @@ _CSV_FIELDS = (
     "qform_code",
     "qform_affine_xyz",
     "selected_affine_xyz",
+    "selected_affine_source",
+    "reconstructed_affine_xyz",
+    "geometry_policy_waivers",
+    "geometry_nonclaims",
+    "affine_coordinate_convention",
+    "scanner_world_pose_status",
     "original_spatial_unit",
     "resolved_spatial_unit",
     "unit_resolution",
@@ -63,6 +75,42 @@ _CSV_FIELDS = (
     "repaired_affine_zyx",
     "errors",
 )
+
+
+def _validate_geometry_policy(value: Any) -> str:
+    if not isinstance(value, str) or value not in _GEOMETRY_POLICIES:
+        raise ValueError(
+            "geometry_policy must be 'strict' or 'acdc_pixdim_native_v1'"
+        )
+    return value
+
+
+def _reconstruct_pixdim_affine(affine_xyz: Any, pixdim_xyz: Any) -> np.ndarray:
+    """Keep selected orientation/translation and replace axis scales by pixdim."""
+    try:
+        affine = np.asarray(affine_xyz, dtype=np.float64)
+        pixdim = np.asarray(pixdim_xyz, dtype=np.float64)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("selected affine and raw pixdim must be numeric") from exc
+    if affine.shape != (4, 4) or not np.isfinite(affine).all():
+        raise ValueError("selected NIfTI affine must be a finite 4x4 matrix")
+    if not np.allclose(affine[3], [0.0, 0.0, 0.0, 1.0], rtol=0.0, atol=1e-6):
+        raise ValueError("selected NIfTI affine must be homogeneous")
+    if pixdim.shape != (3,) or not np.isfinite(pixdim).all() or (pixdim <= 0).any():
+        raise ValueError("raw NIfTI pixdim must contain three finite positive values")
+    if np.allclose(pixdim, np.ones(3), rtol=0.0, atol=1e-6):
+        raise ValueError("raw pixdim [1,1,1] is not accepted as authoritative geometry")
+    linear = affine[:3, :3]
+    lengths = np.linalg.norm(linear, axis=0)
+    if not np.isfinite(lengths).all() or (lengths <= 0).any():
+        raise ValueError("selected NIfTI affine has a degenerate spatial axis")
+    directions = linear / lengths
+    if not np.allclose(directions.T @ directions, np.eye(3), rtol=1e-5, atol=1e-5):
+        raise ValueError("sheared selected NIfTI affine is unsupported")
+    reconstructed = np.eye(4, dtype=np.float64)
+    reconstructed[:3, :3] = directions * pixdim[np.newaxis, :]
+    reconstructed[:3, 3] = affine[:3, 3]
+    return reconstructed
 
 
 def _sha256_file(path: Path) -> str:
@@ -225,10 +273,12 @@ def _patient_geometry(
     cine_path: Path,
     manifest_geometry: Any,
     unit_declarations: Mapping[str, Mapping[str, Any]],
+    geometry_policy: str,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Read one source header and return its replacement geometry and audit row."""
     row: dict[str, Any] = {
         "patient_id": patient_id,
+        "geometry_policy": geometry_policy,
         "cine_path": str(cine_path),
         "manifest_shape_zyx": None,
         "manifest_spacing_zyx_mm": None,
@@ -236,6 +286,7 @@ def _patient_geometry(
         "source_file_sha256": None,
         "source_header_sha256": None,
         "source_shape_xyzt": None,
+        "raw_pixdim_xyz_native": None,
         "header_zooms_xyz_native": None,
         "header_zooms_xyz_mm": None,
         "sform_code": None,
@@ -243,6 +294,12 @@ def _patient_geometry(
         "qform_code": None,
         "qform_affine_xyz": None,
         "selected_affine_xyz": None,
+        "selected_affine_source": None,
+        "reconstructed_affine_xyz": None,
+        "geometry_policy_waivers": [],
+        "geometry_nonclaims": ["SCANNER_WORLD_POSE_NOT_INDEPENDENTLY_VERIFIED"],
+        "affine_coordinate_convention": None,
+        "scanner_world_pose_status": "NOT_INDEPENDENTLY_VERIFIED",
         "original_spatial_unit": None,
         "resolved_spatial_unit": None,
         "unit_resolution": None,
@@ -309,8 +366,29 @@ def _patient_geometry(
         issues.append(f"cannot read NIfTI header zooms: {exc}")
     if zooms.shape != (3,) or not np.isfinite(zooms).all() or (zooms <= 0).any():
         issues.append("NIfTI header zooms must be finite and positive")
-    elif np.allclose(zooms, np.ones(3), rtol=0.0, atol=1e-6):
+    elif geometry_policy == STRICT_GEOMETRY_POLICY and np.allclose(
+        zooms, np.ones(3), rtol=0.0, atol=1e-6
+    ):
         issues.append("NIfTI header spacing [1,1,1] is not accepted as authoritative geometry")
+
+    raw_pixdim = np.asarray([], dtype=np.float64)
+    try:
+        pixdim_values = np.asarray(header["pixdim"], dtype=np.float64)
+        if pixdim_values.ndim == 1 and pixdim_values.size >= 4:
+            raw_pixdim = pixdim_values[1:4]
+            row["raw_pixdim_xyz_native"] = raw_pixdim.tolist()
+    except Exception:
+        # Preserve strict-mode behavior. The opt-in policy reports this below.
+        pass
+    if geometry_policy == ACDC_PIXDIM_NATIVE_V1:
+        if raw_pixdim.shape != (3,) or not np.isfinite(raw_pixdim).all() or (raw_pixdim <= 0).any():
+            issues.append("raw NIfTI pixdim must contain three finite positive spatial values")
+        elif np.allclose(raw_pixdim, np.ones(3), rtol=0.0, atol=1e-6):
+            issues.append("raw pixdim [1,1,1] is not accepted as authoritative geometry")
+        elif zooms.shape == (3,) and np.isfinite(zooms).all() and not np.allclose(
+            zooms, raw_pixdim, rtol=1e-6, atol=1e-7
+        ):
+            issues.append("NIfTI header zooms disagree with raw pixdim")
 
     try:
         units = header.get_xyzt_units()
@@ -324,6 +402,14 @@ def _patient_geometry(
         resolved_unit, unit_resolution, unit_provenance = _resolve_units(
             patient_id, original_unit, unit_declarations
         )
+        if (
+            geometry_policy == ACDC_PIXDIM_NATIVE_V1
+            and unit_resolution == "explicit_declaration"
+            and resolved_unit != "mm"
+        ):
+            raise ValueError(
+                "acdc_pixdim_native_v1 requires an explicit mm unit declaration when header units are unknown"
+            )
         row["resolved_spatial_unit"] = resolved_unit
         row["unit_resolution"] = unit_resolution
         row["unit_provenance"] = unit_provenance
@@ -333,6 +419,23 @@ def _patient_geometry(
         issues.append(str(exc))
 
     forms, selected, form_errors = _header_forms(header)
+    uses_uncoded_base_affine = False
+    if (
+        geometry_policy == ACDC_PIXDIM_NATIVE_V1
+        and selected is None
+        and forms["sform"]["code"] == 0
+        and forms["qform"]["code"] == 0
+    ):
+        # Nibabel's fallback is permitted only under the named opt-in policy.
+        form_errors = [error for error in form_errors if error != _NO_CODED_AFFINE_ERROR]
+        try:
+            base_affine = np.asarray(image.affine, dtype=np.float64)
+            if base_affine.shape != (4, 4):
+                raise ValueError("nibabel base affine must be 4x4")
+            selected = {"name": "nibabel_base_affine_uncoded_derived", "affine": base_affine}
+            uses_uncoded_base_affine = True
+        except Exception as exc:
+            form_errors.append(f"cannot read nibabel base affine for uncoded forms: {exc}")
     issues.extend(form_errors)
     for name in ("sform", "qform"):
         row[f"{name}_code"] = forms[name]["code"]
@@ -342,25 +445,53 @@ def _patient_geometry(
     affine = None if selected is None else selected["affine"]
     if affine is not None:
         row["selected_affine_xyz"] = affine.tolist()
-        if not np.isfinite(affine).all():
-            issues.append("authoritative NIfTI affine must be finite")
-        elif not np.allclose(affine[3], [0.0, 0.0, 0.0, 1.0], rtol=0.0, atol=1e-6):
-            issues.append("authoritative NIfTI affine must be homogeneous")
-        elif np.allclose(affine, np.eye(4), rtol=0.0, atol=1e-8):
-            issues.append("identity affine is not accepted as authoritative geometry")
+        row["selected_affine_source"] = selected["name"]
+        row["affine_coordinate_convention"] = (
+            "derived_native_image_coordinate_convention"
+            if uses_uncoded_base_affine else "coded_nifti_world"
+        )
+        if uses_uncoded_base_affine:
+            row["geometry_policy_waivers"].append("UNCODED_FORMS_USE_NIBABEL_BASE_AFFINE")
+            row["geometry_nonclaims"].append(
+                "UNCODED_AFFINE_IS_DERIVED_NATIVE_IMAGE_COORDINATE_CONVENTION"
+            )
+        if geometry_policy == ACDC_PIXDIM_NATIVE_V1:
+            if raw_pixdim.shape == (3,) and np.isfinite(raw_pixdim).all() and (raw_pixdim > 0).all():
+                try:
+                    selected_linear = np.asarray(affine, dtype=np.float64)[:3, :3]
+                    selected_lengths = np.linalg.norm(selected_linear, axis=0)
+                    if np.isfinite(selected_lengths).all() and (selected_lengths > 0).all() \
+                            and not np.allclose(selected_lengths, raw_pixdim, rtol=1e-5, atol=1e-6):
+                        row["geometry_policy_waivers"].append(
+                            "AFFINE_COLUMN_LENGTHS_DISAGREE_WITH_PIXDIM"
+                        )
+                    reconstructed_affine = _reconstruct_pixdim_affine(affine, raw_pixdim)
+                    row["reconstructed_affine_xyz"] = reconstructed_affine.tolist()
+                    affine = reconstructed_affine
+                except Exception as exc:
+                    issues.append(str(exc))
         else:
-            linear = affine[:3, :3]
-            lengths = np.linalg.norm(linear, axis=0)
-            if not np.isfinite(lengths).all() or (lengths <= 0).any():
-                issues.append("authoritative NIfTI affine has a degenerate spatial axis")
+            if not np.isfinite(affine).all():
+                issues.append("authoritative NIfTI affine must be finite")
+            elif not np.allclose(affine[3], [0.0, 0.0, 0.0, 1.0], rtol=0.0, atol=1e-6):
+                issues.append("authoritative NIfTI affine must be homogeneous")
+            elif np.allclose(affine, np.eye(4), rtol=0.0, atol=1e-8):
+                issues.append("identity affine is not accepted as authoritative geometry")
             else:
-                if zooms.shape == (3,) and np.isfinite(zooms).all() and not np.allclose(
-                    lengths, zooms, rtol=1e-5, atol=1e-6
-                ):
-                    issues.append("NIfTI header zooms disagree with authoritative affine column lengths")
-                directions = linear / lengths
-                if not np.allclose(directions.T @ directions, np.eye(3), rtol=1e-5, atol=1e-5):
-                    issues.append("sheared authoritative NIfTI affine is unsupported")
+                linear = affine[:3, :3]
+                lengths = np.linalg.norm(linear, axis=0)
+                if not np.isfinite(lengths).all() or (lengths <= 0).any():
+                    issues.append("authoritative NIfTI affine has a degenerate spatial axis")
+                else:
+                    if zooms.shape == (3,) and np.isfinite(zooms).all() and not np.allclose(
+                        lengths, zooms, rtol=1e-5, atol=1e-6
+                    ):
+                        issues.append("NIfTI header zooms disagree with authoritative affine column lengths")
+                    directions = linear / lengths
+                    if not np.allclose(directions.T @ directions, np.eye(3), rtol=1e-5, atol=1e-5):
+                        issues.append("sheared authoritative NIfTI affine is unsupported")
+            if not issues:
+                row["reconstructed_affine_xyz"] = np.asarray(affine, dtype=np.float64).tolist()
 
     if expected_shape is None:
         issues.append("manifest spatial shape is required for geometry repair")
@@ -379,7 +510,12 @@ def _patient_geometry(
     return geometry, row
 
 
-def validate_audit_geometry(row: Mapping[str, Any], geometry: Mapping[str, Any]) -> None:
+def validate_audit_geometry(
+    row: Mapping[str, Any],
+    geometry: Mapping[str, Any],
+    *,
+    geometry_policy: str = STRICT_GEOMETRY_POLICY,
+) -> None:
     """Bind a serialized header audit to the full corrected affine, without I/O.
 
     Original NIfTI file hashes and prepared array hashes describe different
@@ -395,6 +531,131 @@ def validate_audit_geometry(row: Mapping[str, Any], geometry: Mapping[str, Any])
         if not np.allclose(value[3], [0, 0, 0, 1], rtol=0, atol=1e-6):
             raise ValueError(f"audit {key} must be homogeneous")
         return value
+
+    policy = _validate_geometry_policy(geometry_policy)
+    if row.get("geometry_policy", STRICT_GEOMETRY_POLICY) != policy:
+        raise ValueError("audit geometry_policy differs from the requested geometry policy")
+
+    if policy == ACDC_PIXDIM_NATIVE_V1:
+        codes: dict[str, int] = {}
+        forms: dict[str, np.ndarray] = {}
+        for name in ("sform", "qform"):
+            code = row.get(f"{name}_code")
+            if type(code) is not int or code < 0:
+                raise ValueError(f"audit {name} code must be declared")
+            codes[name] = code
+            if code > 0:
+                forms[name] = matrix(f"{name}_affine_xyz")
+        if len(forms) == 2 and not np.allclose(
+            forms["sform"], forms["qform"], rtol=1e-5, atol=1e-5
+        ):
+            raise ValueError("audit coded sform and qform disagree")
+        selected = matrix("selected_affine_xyz")
+        if forms:
+            source = "sform" if "sform" in forms else "qform"
+            if row.get("selected_affine_source") != source:
+                raise ValueError("audit selected affine source differs from coded authority")
+            authoritative = forms[source]
+            if not np.allclose(selected, authoritative, rtol=1e-5, atol=1e-6):
+                raise ValueError("audit selected affine differs from coded authoritative affine")
+            convention = "coded_nifti_world"
+            expected_waivers: list[str] = []
+        else:
+            if codes != {"sform": 0, "qform": 0}:
+                raise ValueError("audit has invalid coded affine state")
+            if row.get("selected_affine_source") != "nibabel_base_affine_uncoded_derived":
+                raise ValueError("audit uncoded forms lack the declared nibabel base affine")
+            convention = "derived_native_image_coordinate_convention"
+            expected_waivers = ["UNCODED_FORMS_USE_NIBABEL_BASE_AFFINE"]
+
+        try:
+            pixdim = np.asarray(row.get("raw_pixdim_xyz_native"), dtype=np.float64)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("audit raw pixdim must be numeric") from exc
+        if pixdim.shape != (3,) or not np.isfinite(pixdim).all() or (pixdim <= 0).any():
+            raise ValueError("audit raw pixdim must contain three finite positive values")
+        if np.allclose(pixdim, np.ones(3), rtol=0.0, atol=1e-6):
+            raise ValueError("audit raw pixdim [1,1,1] is not accepted")
+        zooms = np.asarray(row.get("header_zooms_xyz_native"), dtype=np.float64)
+        if zooms.shape != (3,) or not np.isfinite(zooms).all() or (zooms <= 0).any():
+            raise ValueError("audit native header zooms must be finite and positive")
+        if not np.allclose(zooms, pixdim, rtol=1e-6, atol=1e-7):
+            raise ValueError("audit native header zooms disagree with raw pixdim")
+        selected_lengths = np.linalg.norm(selected[:3, :3], axis=0)
+        if selected_lengths.shape != (3,) or not np.isfinite(selected_lengths).all() \
+                or (selected_lengths <= 0).any():
+            raise ValueError("audit selected affine has a degenerate spatial axis")
+        if not np.allclose(selected_lengths, pixdim, rtol=1e-5, atol=1e-6):
+            expected_waivers.append("AFFINE_COLUMN_LENGTHS_DISAGREE_WITH_PIXDIM")
+        if row.get("geometry_policy_waivers") != expected_waivers:
+            raise ValueError("audit geometry policy waivers differ from original header conflicts")
+        if row.get("affine_coordinate_convention") != convention:
+            raise ValueError("audit affine coordinate convention is inconsistent")
+        nonclaims = row.get("geometry_nonclaims")
+        required_nonclaims = ["SCANNER_WORLD_POSE_NOT_INDEPENDENTLY_VERIFIED"]
+        if not forms:
+            required_nonclaims.append(
+                "UNCODED_AFFINE_IS_DERIVED_NATIVE_IMAGE_COORDINATE_CONVENTION"
+            )
+        if nonclaims != required_nonclaims:
+            raise ValueError("audit geometry nonclaims are missing or inconsistent")
+        if row.get("scanner_world_pose_status") != "NOT_INDEPENDENTLY_VERIFIED":
+            raise ValueError("audit must not claim a verified scanner-world pose")
+
+        reconstructed = _reconstruct_pixdim_affine(selected, pixdim)
+        recorded_reconstruction = matrix("reconstructed_affine_xyz")
+        if not np.allclose(
+            reconstructed, recorded_reconstruction, rtol=1e-7, atol=1e-8
+        ):
+            raise ValueError("audit reconstructed affine differs from recomputed pixdim affine")
+        unit = row.get("resolved_spatial_unit")
+        if unit not in SPATIAL_UNIT_SCALE_MM:
+            raise ValueError("audit resolved spatial unit is unsupported")
+        resolution = row.get("unit_resolution")
+        original_unit = row.get("original_spatial_unit")
+        if resolution == "explicit_declaration":
+            provenance = row.get("unit_provenance")
+            if not isinstance(provenance, str) or not provenance.strip() or unit != "mm":
+                raise ValueError("audit explicit unit declaration must provide mm provenance")
+            try:
+                spatial_unit(None, original_unit)
+            except ValueError:
+                pass
+            else:
+                raise ValueError("audit explicit unit declaration is only valid for unknown header units")
+        elif resolution != "nifti_header":
+            raise ValueError("audit unit resolution is unknown")
+        else:
+            try:
+                header_unit = spatial_unit(None, original_unit)
+            except ValueError as exc:
+                raise ValueError("audit header unit is unknown without explicit provenance") from exc
+            if header_unit != unit:
+                raise ValueError("audit resolved unit differs from NIfTI header units")
+        converted_zooms = np.asarray(row.get("header_zooms_xyz_mm"), dtype=np.float64)
+        expected_zooms_mm = pixdim * SPATIAL_UNIT_SCALE_MM[unit]
+        if converted_zooms.shape != (3,) or not np.allclose(
+            converted_zooms, expected_zooms_mm, rtol=1e-5, atol=1e-6
+        ):
+            raise ValueError("audit converted pixdim disagrees with declared unit")
+        source_shape = row.get("source_shape_xyzt")
+        if not isinstance(source_shape, list) or len(source_shape) != 4 \
+                or any(type(value) is not int or value <= 0 for value in source_shape):
+            raise ValueError("audit source shape must contain positive native XYZT dimensions")
+        expected_shape = tuple(reversed(source_shape[:3]))
+        normalized = validate_geometry_record(geometry)
+        if tuple(normalized["shape_zyx"]) != expected_shape:
+            raise ValueError("audit source shape differs from corrected native geometry")
+        expected_geometry = native_geometry_zyx(
+            affine_in_mm(reconstructed, unit), expected_shape, source_axis_order="XYZ",
+        )
+        if not np.allclose(
+            expected_geometry["affine_zyx"], normalized["affine_zyx"], rtol=1e-7, atol=1e-7
+        ) or not np.allclose(
+            expected_geometry["spacing_zyx_mm"], normalized["spacing_zyx_mm"], rtol=1e-7, atol=1e-7
+        ):
+            raise ValueError("audit pixdim reconstruction differs from corrected geometry")
+        return
 
     forms = {}
     for name in ("sform", "qform"):
@@ -482,12 +743,14 @@ def repair_manifest_geometry(
     output_manifest_path: str | Path | None = None,
     unit_declarations_by_patient: Mapping[str, Mapping[str, Any]] | None = None,
     audit_only: bool = True,
+    geometry_policy: str = STRICT_GEOMETRY_POLICY,
 ) -> dict[str, Any]:
     """Audit or build a new manifest using source CINE header geometry.
 
     The default pass only writes JSON and CSV diagnostics. A rejected batch
     never writes a corrected manifest. Output files must all be new paths.
     """
+    geometry_policy = _validate_geometry_policy(geometry_policy)
     source_path = Path(source_manifest_path)
     output_path = None if output_manifest_path is None else Path(output_manifest_path)
     json_path = Path(report_json_path)
@@ -510,6 +773,7 @@ def repair_manifest_geometry(
         "status": "rejected",
         "source_manifest_path": str(source_path),
         "source_manifest_sha256_expected": source_manifest_sha256,
+        "geometry_policy": geometry_policy,
         "axis_map": axis_map,
         "audit_only": bool(audit_only),
         "cine_mapping": {
@@ -591,6 +855,7 @@ def repair_manifest_geometry(
                 cine_path,
                 old_geometry.get(patient_id),
                 declarations,
+                geometry_policy,
             )
             row["cine_mapping_source"] = cine_mapping_source
             row["cine_mapping_sha256"] = cine_mapping_sha256
@@ -628,6 +893,7 @@ def repair_manifest_geometry(
             "schema": RECEIPT_SCHEMA,
             "status": "success",
             "geometry_only": True,
+            "geometry_policy": geometry_policy,
             "source_manifest_sha256": actual_source_sha,
             "repaired_manifest_sha256": repaired_sha,
             "patient_ids": [record["id"] for record in records],
@@ -646,6 +912,7 @@ def repair_manifest_geometry(
             "schema": RECEIPT_SCHEMA,
             "status": "audit_only",
             "geometry_only": True,
+            "geometry_policy": geometry_policy,
             "source_manifest_sha256": actual_source_sha,
             "patient_ids": [record["id"] for record in records],
             "axis_map": axis_map,
@@ -696,6 +963,7 @@ def validate_geometry_repair_receipt(
     *,
     source_manifest_sha256: str,
     repaired_manifest_sha256: str,
+    geometry_policy: str = STRICT_GEOMETRY_POLICY,
 ) -> dict[str, Any]:
     """Purely validate a repair receipt and a geometry-only manifest change.
 
@@ -708,6 +976,10 @@ def validate_geometry_repair_receipt(
         raise ValueError("invalid or unsuccessful geometry repair receipt")
     if receipt.get("geometry_only") is not True:
         raise ValueError("receipt must declare a geometry-only change")
+    expected_policy = _validate_geometry_policy(geometry_policy)
+    receipt_policy = receipt.get("geometry_policy", STRICT_GEOMETRY_POLICY)
+    if receipt_policy != expected_policy:
+        raise ValueError("receipt geometry_policy differs from the requested geometry policy")
     if receipt.get("source_manifest_sha256") != source_manifest_sha256:
         raise ValueError("receipt source manifest SHA-256 mismatch")
     if receipt.get("repaired_manifest_sha256") != repaired_manifest_sha256:
@@ -768,4 +1040,5 @@ def validate_geometry_repair_receipt(
         "repaired_manifest_sha256": repaired_manifest_sha256,
         "patient_count": len(source_geometry),
         "geometry_only": True,
+        "geometry_policy": expected_policy,
     }

@@ -11,13 +11,56 @@ import csv
 import math
 import json
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Iterable, Mapping, Sequence
 
 from .artifacts import file_sha256, load_stage_manifest
 
 
 def _identity_matches(actual: Mapping[str, Any], expected: Mapping[str, Any]) -> bool:
     return all(actual.get(key) == expected.get(key) for key in ("dataset", "protocol", "k", "seed"))
+
+
+def select_campaign_experiments(
+    experiments: Iterable[Mapping[str, Any]],
+    *,
+    setting: str,
+    k: Sequence[int] | None = None,
+) -> tuple[list[Mapping[str, Any]], list[int]]:
+    """Select campaign roots by setting and optional K before DAG closure."""
+    candidates = [
+        item for item in experiments
+        if setting == "all" or item.get("setting") == setting
+    ]
+    if not candidates:
+        raise ValueError(f"selection did not match campaign experiments for setting={setting!r}")
+
+    requested: tuple[int, ...] | None = None
+    if k is not None:
+        values = tuple(k)
+        if not values:
+            raise ValueError("K selection cannot be empty; omit --k to select every K")
+        if any(not isinstance(value, int) or isinstance(value, bool) for value in values):
+            raise ValueError("K selection values must be integers")
+        requested = tuple(sorted(set(values)))
+        available = {
+            item.get("k") for item in candidates
+            if isinstance(item.get("k"), int) and not isinstance(item.get("k"), bool)
+        }
+        unmatched = [value for value in requested if value not in available]
+        if unmatched:
+            raise ValueError(
+                f"no campaign experiments match setting={setting!r} for requested K={unmatched}; "
+                f"available K={sorted(available)}"
+            )
+        candidates = [item for item in candidates if item.get("k") in requested]
+
+    selected_ks = sorted({
+        item["k"] for item in candidates
+        if isinstance(item.get("k"), int) and not isinstance(item.get("k"), bool)
+    })
+    if not selected_ks:
+        raise ValueError("selected campaign experiments do not declare integer K values")
+    return candidates, selected_ks
 
 
 def _verified_output(job: Mapping[str, Any], *, pinned_sha: str | None = None) -> dict[str, Any]:
@@ -283,6 +326,8 @@ def execute_shared_campaign(
     plan: Mapping[str, Any],
     *,
     setting: str,
+    k: Sequence[int] | None = None,
+    through_stage: str = "J",
     device: str,
     runner: Any,
     api: Any,
@@ -297,11 +342,14 @@ def execute_shared_campaign(
     synthetic = bool(plan["selection"]["synthetic"])
     if not synthetic and device != "cuda":
         raise ValueError("real campaign execution requires explicit CUDA")
+    stage_order = ("T", "Q", "P", "J")
+    if through_stage not in stage_order:
+        raise ValueError(f"through-stage must be one of {stage_order}")
     jobs = {job["id"]: job for job in plan["stage_jobs"]}
     experiments = {item["id"]: item for item in plan["experiments"]}
-    selected = [item for item in experiments.values() if setting == "all" or item["setting"] == setting]
-    if not selected:
-        raise ValueError("selection did not match any campaign settings")
+    selected, selected_ks = select_campaign_experiments(
+        experiments.values(), setting=setting, k=k,
+    )
     state_path = plan_path.parent / "RUN_STATE.json"
     state = api._read_state(state_path, plan, api._sha256(plan_path))
 
@@ -322,10 +370,29 @@ def execute_shared_campaign(
         ordered.append(job_id)
 
     for experiment in selected:
-        if state["experiments"][experiment["id"]]["status"] != "NOT_RUN":
-            raise ValueError(f"setting already has a run-state record: {experiment['id']}")
-        for job_id in experiment["stage_job_ids"]:
-            visit(job_id)
+        if state["experiments"][experiment["id"]]["status"] not in {"NOT_RUN", "PARTIAL"}:
+            raise ValueError(f"setting already has a completed run-state record: {experiment['id']}")
+        root_id = experiment.get("stage_artifact_producers", {}).get("J")
+        if root_id is None:
+            root_id = next(
+                (job_id for job_id in experiment.get("stage_job_ids", [])
+                 if job_id in jobs and jobs[job_id]["stage"] == "J"),
+                None,
+            )
+        if root_id is None:
+            # Explicit comparison baselines (for example teacher_supervised)
+            # may end at T. Preserve their declared producer roots.
+            roots = experiment.get("stage_job_ids", [])
+            if not roots:
+                raise ValueError(f"campaign experiment has no stage roots: {experiment['id']}")
+            for job_id in roots:
+                visit(job_id)
+        else:
+            visit(root_id)
+    stage_rank = {stage: index for index, stage in enumerate(stage_order)}
+    ordered = [job_id for job_id in ordered if stage_rank[jobs[job_id]["stage"]] <= stage_rank[through_stage]]
+    if not ordered:
+        raise ValueError(f"no campaign stages are available through {through_stage} for the selected roots")
     # Validate the entire dependency closure before launching anything.
     for job_id in ordered:
         job = jobs[job_id]
@@ -434,23 +501,39 @@ def execute_shared_campaign(
             raise
         api._write_json(state_path, state)
 
+    completed_settings = []
     for experiment in selected:
-        artifact_refs = {
-            stage: state["jobs"][producer]["artifact"]
-            for stage, producer in experiment["stage_artifact_producers"].items()
-            if stage in {"T", "Q", "P"}
-        }
+        experiment_jobs = [jobs[job_id] for job_id in experiment["stage_job_ids"]]
+        completed_stages = [
+            stage for stage in experiment.get("stages", stage_order)
+            if any(job["stage"] == stage and state["jobs"][job["id"]]["status"] == "COMPLETED"
+                   for job in experiment_jobs)
+        ]
+        is_complete = all(state["jobs"][job["id"]]["status"] == "COMPLETED" for job in experiment_jobs)
+        if is_complete:
+            completed_settings.append(experiment["id"])
+        artifact_refs = {}
+        for stage, producer in experiment.get("stage_artifact_producers", {}).items():
+            if stage in {"T", "Q", "P"} and state["jobs"].get(producer, {}).get("status") == "COMPLETED":
+                artifact = state["jobs"][producer].get("artifact")
+                if artifact is not None:
+                    artifact_refs[stage] = artifact
         state["experiments"][experiment["id"]] = {
-            "status": "COMPLETED", "exit_code": 0,
-            "completed_stages": experiment["stages"], "stage_artifacts": artifact_refs,
+            "status": "COMPLETED" if is_complete else "PARTIAL",
+            "exit_code": 0 if is_complete else None,
+            "completed_stages": completed_stages, "stage_artifacts": artifact_refs,
             "evaluation": "NOT_RUN", "baseline_reuse": experiment.get("baseline_reuse"),
         }
     api._write_json(state_path, state)
     results = collect_campaign_results(plan_path, plan=plan, state=state)
     result_paths = write_campaign_results(results, plan_path.parent / "results")
     return {
-        "status": "COMPLETED", "plan": str(plan_path), "run_state": str(state_path),
-        "completed_settings": [item["id"] for item in selected],
+        "status": "COMPLETED" if len(completed_settings) == len(selected) else "PARTIAL",
+        "plan": str(plan_path), "run_state": str(state_path),
+        "selected_settings": [item["id"] for item in selected],
+        "completed_settings": completed_settings,
+        "selected_k": selected_ks,
+        "through_stage": through_stage,
         "results": result_paths,
         "patient_training": "SYNTHETIC_ONLY" if synthetic else "EXECUTED",
     }

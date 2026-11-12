@@ -20,7 +20,9 @@ geometry-bound ERF phase receipt):
       --scratch-root /tmp --device cuda:0 --allow-real-profile
 
 This command retains the recipe's full 8,000-update T/J budgets and applies
-the engine's update_limit=20 API separately to each measured stage. It never
+the engine's update_limit=20 API separately to each measured stage. ``--stage
+T`` can profile the teacher before T/Q/P artifacts exist; ``--stage J`` and
+the default ``--stage all`` require exact completed T/Q/P artifacts. It never
 runs Q/P or accepts synthetic gate overrides.
 """
 
@@ -45,6 +47,8 @@ from self_audit.candidate_q3d.profiling import (  # noqa: E402
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", required=True, help="real ACDC protocol-A K8 V1 recipe with pinned corrected manifests")
+    parser.add_argument("--stage", choices=("T", "J", "all"), default="all",
+                        help="profile T before T/Q/P, J after verified T/Q/P, or both (default: all)")
     parser.add_argument("--stage-artifact", action="append", default=[], metavar="STAGE=PATH",
                         help="SHA-pinned real stage manifest; supply T, Q and P")
     parser.add_argument("--stage-artifact-sha", action="append", default=[], metavar="STAGE=SHA256",
@@ -80,6 +84,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    measured_stages = {"T": ("T",), "J": ("J",), "all": ("T", "J")}[args.stage]
     try:
         report = run_profile(
             config_path=args.config,
@@ -99,6 +104,7 @@ def main(argv: list[str] | None = None) -> int:
             scratch_root=args.scratch_root,
             device=args.device,
             allow_real_profile=args.allow_real_profile,
+            measured_stages=measured_stages,
         )
     except ProfilePrerequisiteError as exc:
         print(f"Q3D Phase D NOT_RUN: {exc}", file=sys.stderr)

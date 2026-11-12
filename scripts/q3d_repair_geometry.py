@@ -18,7 +18,11 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from self_audit.candidate_q3d.geometry_repair import repair_manifest_geometry
+from self_audit.candidate_q3d.geometry_repair import (
+    ACDC_PIXDIM_NATIVE_V1,
+    STRICT_GEOMETRY_POLICY,
+    repair_manifest_geometry,
+)
 
 
 def _sha256(path: Path) -> str:
@@ -57,6 +61,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--report-csv", required=True, type=Path)
     parser.add_argument("--unit-declarations-json", type=Path,
                         help="JSON patient map to {unit, provenance}; required for unknown header units")
+    parser.add_argument(
+        "--geometry-policy",
+        choices=(STRICT_GEOMETRY_POLICY, ACDC_PIXDIM_NATIVE_V1),
+        default=STRICT_GEOMETRY_POLICY,
+        help="geometry interpretation policy; pixdim reconstruction requires explicit opt-in",
+    )
     parser.add_argument("--write-corrected-manifest", action="store_true",
                         help="explicitly emit a new manifest after this manifest passes audit")
     parser.add_argument("--output-manifest", type=Path,
@@ -88,9 +98,11 @@ def main(argv: list[str] | None = None) -> int:
         output_manifest_path=args.output_manifest,
         unit_declarations_by_patient=declarations,
         audit_only=not args.write_corrected_manifest,
+        geometry_policy=args.geometry_policy,
     )
     print(json.dumps({
         "status": report["status"],
+        "geometry_policy": report["geometry_policy"],
         "audit_rows": len(report["audit_rows"]),
         "errors": len(report["errors"]),
         "report_json": str(args.report_json),

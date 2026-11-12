@@ -92,6 +92,8 @@ Các group không trùng parameter identity; phải loại alias encoder trong d
 
 ## 4. Căn chỉnh pha và phép đo ERF
 
+**[AMEND] Geometry ACDC theo pixdim (người dùng chấp thuận ngày 2026-11-12):** audit header gốc ghi nhận sform có scale đơn vị mâu thuẫn với pixdim và một số CINE không có form được code. Policy riêng `acdc_pixdim_native_v1` được phép lấy độ dài voxel từ pixdim hữu hạn, dương, khác (1,1,1), với đơn vị mm được khai báo có provenance khi header không ghi đơn vị; nguồn đơn vị là [mô tả acquisition ACDC chính thức](https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html). Dựng lại affine bằng các hướng trục trực giao đã chuẩn hóa của affine nibabel chọn, nhân độ dài pixdim theo từng trục và giữ translation sau đổi đơn vị. Khi không có form được code, chỉ policy này được dùng base affine của nibabel và phải ghi rõ. Đây là quy ước tọa độ ảnh native được dựng lại, **không xác nhận scanner-world pose**. Ghi nguyên sform/qform/affine gốc, affine dựng lại, policy, provenance đơn vị và mọi xung đột đã được amendment cho phép. Vẫn dừng khi thiếu header, pixdim không hợp lệ, trục suy biến/shear hoặc hướng của các form được code mâu thuẫn. Default strict không đổi; không sửa NIfTI, voxel, nhãn, patient ID, selector hay split. Manifest mới chỉ đổi geometry, phải có receipt và SHA mới. Khóa stride/pha lịch sử bên dưới bị thay thế cho dữ liệu đã sửa và phải đo lại theo cùng seed/ngưỡng trước training; kết quả mới hiện **NOT_RUN**.
+
 **[AMEND]** Giữ native grid của cả hai mạng. Lưới nhánh chính ResEnc được suy theo từng trục từ chuỗi kernel/stride/padding thật: `j_new=j*a`, `o_new=o+((k-1)*d/2-p)*j`. High-side input padding không đổi gốc tọa độ. Student stage 4 giữ stride (1,16,16). Không dùng phép avg-pool teacher stride8 để giả làm lưới student: tâm sẽ lệch.
 
 Residual skip dùng avgpool khi downsample nên không tự giả định cùng lattice với nhánh conv chính. Phase 0 phải ghi bước/offset nhánh chính đến stage 3, độ lệch cực đại của skip lattice, và đo gradient ERF trên encoder pretrained: một cell stage 3, input ngẫu nhiên z-score, trung bình ít nhất 16 mẫu. Báo input shape, cell/channel aggregation, seed và tâm khối gradient. Luật khóa trước: lệch không quá 2 voxel trên mọi trục dùng pha nhánh chính; vượt ngưỡng dùng offset đo được, lưu manifest. Không chọn pha theo DEV/test.
@@ -351,7 +353,7 @@ Code mới nằm trong `self_audit/candidate_q3d/` và `configs/candidate_q3d/`;
 
 **[AMEND — LỊCH SỬ trước migration ResEnc] Phạm vi bằng chứng:** khóa helper tại `b31eb9f` và tích hợp weighting vào engine chỉ có kiểm chứng CPU/synthetic (`SOFTWARE_ONLY`). Toàn bộ acceptance P0–P5, network-phase probe, GPU, dữ liệu thật và campaign vẫn `NOT_RUN`; không coi riêng test weighting là hoàn thành P4. Baseline A/A-3D được giữ nguyên.
 
-**[AMEND] Campaign sau P5:** đúng sáu J, thứ tự `v1@8 v1u@8 c1@8 c0@8 v1@5 v1@10`, ACDC Protocol A seed42; PLAN mới tại `reports/q3d-resenc-plan-20261112/`. Lịch rộng cũ không còn là mặc định; reports cũ giữ nguyên.
+**[AMEND] Campaign sau P5 và sửa geometry:** đúng sáu J, thứ tự người dùng cập nhật `v1@8 v1@5 v1@10 v1u@8 c1@8 c0@8`, ACDC Protocol A seed42; PLAN v2 tại `reports/q3d-resenc-plan-v2-20261112/`, plan cũ giữ nguyên. T/Q/P vẫn chia sẻ một lần mỗi K. Người dùng đã cho phép launch sau kiểm tra và yêu cầu window log trên server; không cần xin lại quyền launch. Chỉ các stage có đủ prerequisite và gate mới được chạy; thiếu artifact, gate fail hoặc OOM phải dừng, không đổi ngưỡng/kiến trúc/crop. Lịch rộng cũ không còn là mặc định; reports cũ giữ nguyên.
 
 **Yêu cầu báo cáo mỗi phase:** commit SHA đã push và xác nhận trên remote; danh sách test và kết quả; mọi mục chưa làm ghi `NOT_RUN` hoặc `SOFTWARE_ONLY`; không thay dữ liệu thật bằng synthetic mà không ghi rõ; không đổi config, cohort hay metric sau khi xem kết quả.
 
@@ -395,6 +397,8 @@ Nguồn nội bộ: atlas `teacher_student_paper_architecture_vi.pdf`; ghi chú 
 
 
 ## Lịch sử thay đổi 2026-11-12
+
+**[AMEND] Sau audit header và xác nhận người dùng:** cho phép policy ACDC pixdim riêng tại §4 để sửa metadata geometry, giữ default strict và toàn bộ voxel/split/selector/nhãn. Phải tái tính median TRAIN, stride, ERF, physiology GT L và profile trước stage tương ứng; không tái sử dụng receipt pha hoặc manifest SHA lịch sử như bằng chứng cho geometry mới. Quyền launch và thứ tự K8 → K5 → K10 → ablation K8 được cập nhật tại §12. Các phép đo chưa thực hiện vẫn NOT_RUN.
 
 **[AMEND] Các mục A3/A4 và ghi chú pha MedNeXt bên dưới là lịch sử teacher cũ, đã được §3–§4 ResEnc thay thế. Không còn là đường code active.**
 

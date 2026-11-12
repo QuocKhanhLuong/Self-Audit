@@ -22,10 +22,19 @@ from typing import Any, Callable, Mapping
 PROFILE_UPDATE_LIMIT = 20
 PRODUCTION_STAGE_BUDGETS = {"T": 8000, "Q": 1000, "P": 1, "J": 8000}
 _REQUIRED_STAGE_ARTIFACTS = ("T", "Q", "P")
+_PROFILE_STAGE_SELECTIONS = (("T",), ("J",), ("T", "J"))
 
 
 class ProfilePrerequisiteError(ValueError):
     """A profile prerequisite is missing or does not match the locked recipe."""
+
+
+def _validate_measured_stages(measured_stages: tuple[str, ...]) -> tuple[str, ...]:
+    if not isinstance(measured_stages, tuple) or measured_stages not in _PROFILE_STAGE_SELECTIONS:
+        raise ProfilePrerequisiteError(
+            "measured_stages must be one of ('T',), ('J',), or ('T', 'J')"
+        )
+    return measured_stages
 
 
 @dataclass(frozen=True)
@@ -81,6 +90,7 @@ class ProfileInputs:
     train_geometry_evidence: dict[str, Any] = field(default_factory=dict)
     development_geometry_evidence: dict[str, Any] = field(default_factory=dict)
     phase_evidence: dict[str, Any] = field(default_factory=dict)
+    geometry_policy: str = "strict"
 
 
 def sha256_file(path: str | Path) -> str:
@@ -151,6 +161,13 @@ def _geometry_records(manifest: Mapping[str, Any], *, label: str) -> tuple[list[
     return [dict(row) for row in patients], dict(by_patient)
 
 
+def _audit_geometry_policy(container: Mapping[str, Any], *, label: str) -> str:
+    policy = container.get("geometry_policy", "strict")
+    if not isinstance(policy, str) or policy not in {"strict", "acdc_pixdim_native_v1"}:
+        raise ProfilePrerequisiteError(f"{label} has an unsupported geometry_policy")
+    return policy
+
+
 def _validate_repair_audit_rows(
     source_manifest: Mapping[str, Any],
     repaired_manifest: Mapping[str, Any],
@@ -176,6 +193,10 @@ def _validate_repair_audit_rows(
     receipt = repair_report.get("receipt")
     if not isinstance(receipt, Mapping):
         raise ProfilePrerequisiteError(f"{label} repair report has no validated repair receipt")
+    receipt_policy = _audit_geometry_policy(receipt, label=f"{label} repair receipt")
+    report_policy = _audit_geometry_policy(repair_report, label=f"{label} repair report")
+    if receipt_policy != report_policy:
+        raise ProfilePrerequisiteError(f"{label} geometry_policy differs between repair receipt and report")
     source_path = repair_report.get("source_manifest_path")
     if (not isinstance(source_path, str)
             or Path(source_path).expanduser().resolve() != source_manifest_path.resolve()):
@@ -192,6 +213,7 @@ def _validate_repair_audit_rows(
             receipt,
             source_manifest_sha256=source_sha,
             repaired_manifest_sha256=repaired_sha,
+            geometry_policy=receipt_policy,
         )
     except (KeyError, TypeError, ValueError) as exc:
         raise ProfilePrerequisiteError(f"{label} geometry repair receipt is invalid: {exc}") from exc
@@ -216,6 +238,11 @@ def _validate_repair_audit_rows(
         raise ProfilePrerequisiteError(f"{label} audit rows must exactly cover its patient IDs")
     for patient_id in source_by_id:
         row = audit_by_id[patient_id]
+        row_policy = _audit_geometry_policy(row, label=f"{label} audit row {patient_id}")
+        if row_policy != receipt_policy:
+            raise ProfilePrerequisiteError(
+                f"{label} geometry_policy differs between repair receipt and audit row {patient_id}"
+            )
         old = source_geometry[patient_id]
         new = repaired_geometry[patient_id]
         if row.get("errors") != []:
@@ -265,7 +292,7 @@ def _validate_repair_audit_rows(
             raise ProfilePrerequisiteError(f"{label} audit row {patient_id} header zooms differ from corrected geometry")
         try:
             validate_geometry_record(new)
-            validate_audit_geometry(row, new)
+            validate_audit_geometry(row, new, geometry_policy=receipt_policy)
         except (KeyError, TypeError, ValueError) as exc:
             raise ProfilePrerequisiteError(
                 f"{label} corrected geometry/header audit for {patient_id} is invalid: {exc}"
@@ -277,6 +304,7 @@ def _validate_repair_audit_rows(
         "repair_receipt_validation": receipt_validation,
         "patient_count": len(source_by_id),
         "audit_rows_passed": len(audit_by_id),
+        "geometry_policy": receipt_policy,
         "arrays_or_headers_read_by_profiler": False,
     }
 
@@ -554,6 +582,7 @@ def load_profile_inputs(
     config_path: str | Path,
     stage_artifacts: Mapping[str, StageArtifact],
     *,
+    measured_stages: tuple[str, ...] = ("T", "J"),
     source_train_manifest_path: str | Path,
     source_train_manifest_sha256: str,
     train_repair_report_path: str | Path,
@@ -566,6 +595,14 @@ def load_profile_inputs(
     phase_receipt_sha256: str,
 ) -> ProfileInputs:
     """Validate real manifests, independent repair evidence, phase and teacher provenance."""
+    measured_stages = _validate_measured_stages(measured_stages)
+    if "J" in measured_stages:
+        if set(stage_artifacts) != set(_REQUIRED_STAGE_ARTIFACTS):
+            raise ProfilePrerequisiteError(
+                "J profiling requires exact verified T/Q/P stage artifact bindings; Q gate and P cache are mandatory"
+            )
+    elif stage_artifacts:
+        raise ProfilePrerequisiteError("T-only profiling does not accept unused T/Q/P artifact bindings")
     from .config import load_config, validate_real_teacher_provenance
 
     source = Path(config_path).expanduser().resolve()
@@ -661,6 +698,9 @@ def load_profile_inputs(
         source_manifest_sha256=source_dev_sha,
         repaired_manifest_sha256=dev_sha,
     )
+    train_geometry_policy = _audit_geometry_policy(train_proposal, label="ACDC TRAIN geometry proposal")
+    if train_geometry_policy != dev_validation["geometry_policy"]:
+        raise ProfilePrerequisiteError("ACDC TRAIN and DEV geometry_policy differ")
     if dev_report_sha != sha256_file(dev_report_path):
         raise ProfilePrerequisiteError("ACDC DEV18 repair report SHA-256 changed during validation")
 
@@ -705,6 +745,7 @@ def load_profile_inputs(
             "repair_report": {"path": str(train_report_path), "sha256": train_report_sha},
             "proposal_status": train_proposal["status"],
             "proposal_manifest_lineage": lineage,
+            "geometry_policy": train_geometry_policy,
         },
         development_geometry_evidence={
             "source_manifest": {"path": str(source_dev_path), "sha256": source_dev_sha},
@@ -713,6 +754,7 @@ def load_profile_inputs(
             **dev_validation,
         },
         phase_evidence=phase_summary,
+        geometry_policy=train_geometry_policy,
     )
 
 
@@ -1044,9 +1086,12 @@ def _stage_report(
 
 
 def measured_campaign_estimate(
-    stage_results: Mapping[str, Mapping[str, Any]], config: Mapping[str, Any],
+    stage_results: Mapping[str, Mapping[str, Any]],
+    config: Mapping[str, Any],
+    measured_stages: tuple[str, ...] = ("T", "J"),
 ) -> dict[str, Any]:
     """Project measured portions only; never invent Q/P/T-b/evaluation timings."""
+    measured_stages = _validate_measured_stages(measured_stages)
     t_result = stage_results.get("T", {})
     j_result = stage_results.get("J", {})
     t_updates = t_result.get("updates", [])
@@ -1080,6 +1125,11 @@ def measured_campaign_estimate(
         },
         "measured_rates_seconds_per_update": {"T_a": t_mean, "J_initial_ramp": j_mean},
         "coverage": {
+            "selected_measured_stages": list(measured_stages),
+            "stage_status": {
+                stage: stage_results.get(stage, {}).get("status", "NOT_RUN")
+                for stage in ("T", "Q", "P", "J")
+            },
             "T_a_full_budget_updates": t_a_budget,
             "T_a_measured_updates": len(t_times),
             "T_b_main_teacher_updates": PRODUCTION_STAGE_BUDGETS["T"] - t_a_budget,
@@ -1094,8 +1144,8 @@ def measured_campaign_estimate(
         },
         "full_campaign_seconds": None,
         "interpretation": (
-            "Partial measured-rate projection only, not a mathematical lower bound. The subtotal projects "
-            "T-a and J from measured rates; T-b, Q, P, and evaluation are NOT_RUN, so no full campaign "
+            "Partial measured-rate projection only, not a mathematical lower bound. Only selected measured "
+            "portions are projected; unmeasured T-b, Q, P, and evaluation remain NOT_RUN, so no full campaign "
             "duration is reported."
         ),
     }
@@ -1130,10 +1180,12 @@ def _run_profile_core(
     clock: Callable[[], float] = time.perf_counter,
     evidence_inputs: Mapping[str, Any] | None = None,
     software_only: bool = False,
+    measured_stages: tuple[str, ...] = ("T", "J"),
 ) -> dict[str, Any]:
     """Shared execution core; software test mode cannot create GPU evidence."""
     import torch
 
+    measured_stages = _validate_measured_stages(measured_stages)
     if not device.startswith("cuda"):
         raise ProfilePrerequisiteError("Q3D Phase D profiling requires a CUDA device")
     torch_module = torch_module or torch
@@ -1153,17 +1205,46 @@ def _run_profile_core(
         "status": "NOT_RUN",
         "evidence_status": "SOFTWARE_ONLY" if software_only else "NOT_RUN",
         "execution_mode": "SOFTWARE_ONLY_TEST_HARNESS" if software_only else "REAL_CUDA_PROFILE",
+        "selected_stages": list(measured_stages),
         "profile_update_limit": PROFILE_UPDATE_LIMIT,
         "production_stage_budgets": dict(PRODUCTION_STAGE_BUDGETS),
         "profile_device": device,
-        "stage_results": {},
+        "stage_results": {
+            stage: {
+                "stage": stage,
+                "status": "NOT_RUN",
+                "reason": (
+                    "stage was selected but profiling did not start"
+                    if stage in measured_stages
+                    else "stage was not selected for this profile"
+                    if stage in {"T", "J"}
+                    else "the profile tool does not execute this production stage"
+                ),
+            }
+            for stage in ("T", "Q", "P", "J")
+        },
         "temporary_output_cleanup_policy": "persist report, then remove only this invocation's owned temporary tree",
     }
     temporary_root: Path | None = None
     try:
         if inputs is None:
-            parsed = parse_stage_artifact_bindings(artifact_paths, artifact_hashes)
-            inputs = load_profile_inputs(config_path, parsed, **dict(evidence_inputs or {}))
+            if "J" in measured_stages:
+                parsed = parse_stage_artifact_bindings(artifact_paths, artifact_hashes)
+            else:
+                if artifact_paths or artifact_hashes:
+                    raise ProfilePrerequisiteError(
+                        "T-only profiling does not accept unused T/Q/P artifact bindings"
+                    )
+                parsed = {}
+            inputs = load_profile_inputs(
+                config_path, parsed, measured_stages=measured_stages, **dict(evidence_inputs or {}),
+            )
+        elif "J" in measured_stages and set(inputs.stage_artifacts) != set(_REQUIRED_STAGE_ARTIFACTS):
+            raise ProfilePrerequisiteError(
+                "J profiling requires exact verified T/Q/P stage artifact bindings; Q gate and P cache are mandatory"
+            )
+        elif "J" not in measured_stages and inputs.stage_artifacts:
+            raise ProfilePrerequisiteError("T-only profiling does not accept unused T/Q/P artifact bindings")
         report_doc.update({
             "config_path": str(inputs.config_path),
             "config_sha256": inputs.config_sha256,
@@ -1180,6 +1261,7 @@ def _run_profile_core(
             },
             "train_geometry_evidence": inputs.train_geometry_evidence,
             "development_geometry_evidence": inputs.development_geometry_evidence,
+            "geometry_policy": inputs.geometry_policy,
             "phase_evidence": inputs.phase_evidence,
             "selected_patients": {
                 "largest_train_by_native_voxel_count": inputs.largest_train.as_dict(),
@@ -1204,7 +1286,7 @@ def _run_profile_core(
         if stage_runner is None:
             stage_runner = run_engine_stage
 
-        for stage in ("T", "J"):
+        for stage in measured_stages:
             measurement = UpdateMeasurement(device, cuda_api=cuda_api, clock=clock)
             stage_output = temporary_root / stage
             metric_records: list[dict[str, Any]] = []
@@ -1289,14 +1371,14 @@ def _run_profile_core(
         complete = all(
             report_doc["stage_results"].get(stage, {}).get("status")
             == ("SOFTWARE_ONLY_COMPLETED" if software_only else "COMPLETED")
-            for stage in ("T", "J")
+            for stage in measured_stages
         )
         if software_only:
             report_doc["status"] = "SOFTWARE_ONLY" if complete else "SOFTWARE_ONLY_FAILURE"
         else:
             report_doc["status"] = "COMPLETED" if complete else "FAILED"
         report_doc["campaign_estimate"] = measured_campaign_estimate(
-            report_doc["stage_results"], inputs.config,
+            report_doc["stage_results"], inputs.config, measured_stages,
         )
     except Exception as exc:
         if software_only:
@@ -1310,7 +1392,7 @@ def _run_profile_core(
             "retry_attempted": False,
         }
         report_doc["campaign_estimate"] = measured_campaign_estimate(
-            report_doc["stage_results"], inputs.config if inputs is not None else {},
+            report_doc["stage_results"], inputs.config if inputs is not None else {}, measured_stages,
         )
     finally:
         # The durable report is published before only this invocation's fresh
@@ -1342,8 +1424,10 @@ def run_profile(
     scratch_root: str | Path,
     device: str = "cuda:0",
     allow_real_profile: bool = False,
+    measured_stages: tuple[str, ...] = ("T", "J"),
 ) -> dict[str, Any]:
     """Run the canonical engine on real data; all software dependencies are fixed internally."""
+    measured_stages = _validate_measured_stages(measured_stages)
     if not allow_real_profile:
         raise ProfilePrerequisiteError("pass --allow-real-profile to execute this CUDA-only real-data command")
     if not device.startswith("cuda"):
@@ -1370,6 +1454,7 @@ def run_profile(
         stage_runner=run_engine_stage,
         evidence_inputs=evidence_inputs,
         software_only=False,
+        measured_stages=measured_stages,
     )
 
 
@@ -1384,8 +1469,10 @@ def run_profile_software_test(
     device: str = "cuda:0",
     repo_root: str | Path | None = None,
     clock: Callable[[], float] = time.perf_counter,
+    measured_stages: tuple[str, ...] = ("T", "J"),
 ) -> dict[str, Any]:
     """Explicit SOFTWARE_ONLY harness for synthetic unit tests; never emits GPU_PROFILE."""
+    measured_stages = _validate_measured_stages(measured_stages)
     if stage_runner is run_engine_stage:
         raise ProfilePrerequisiteError("SOFTWARE_ONLY test harness refuses the canonical real engine runner")
     return _run_profile_core(
@@ -1402,6 +1489,7 @@ def run_profile_software_test(
         torch_module=torch_module,
         clock=clock,
         software_only=True,
+        measured_stages=measured_stages,
     )
 
 

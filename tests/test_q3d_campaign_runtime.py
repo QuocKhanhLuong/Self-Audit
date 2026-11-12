@@ -11,40 +11,66 @@ from self_audit.candidate_q3d.artifacts import file_sha256, write_stage_manifest
 from self_audit.candidate_q3d.campaign_runtime import (
     collect_campaign_results,
     execute_shared_campaign,
+    select_campaign_experiments,
     write_campaign_results,
 )
 
 
-def _fixture(tmp_path):
-    identity = {"dataset": "acdc", "protocol": "A", "k": 2, "seed": 19}
+def _fixture(tmp_path, *, ks=(2,)):
     jobs, experiments = [], []
-    for stage in ("T", "Q", "P"):
-        dependencies = [] if stage == "T" else (["T"] if stage == "Q" else ["T", "Q"])
-        jobs.append({
-            "id": stage, "stage": stage, "dependencies": dependencies,
-            "experiment_id": "v1", "method": "candidate_q3d", "readiness": "READY", "reason": None,
-            "output": str(tmp_path / stage), "artifact_identity": identity,
-            "train_manifest": {}, "development_manifest": {},
-            "artifact_output": {"manifest_path": str(tmp_path / stage / f"{stage}.artifact.json")},
-            "stage_artifact_inputs": {dep: {"producer_job_id": dep, "path": str(tmp_path / dep / f"{dep}.artifact.json")}
-                                      for dep in dependencies},
-        })
-    for setting in ("v1", "v1u"):
-        config_path = tmp_path / f"{setting}.json"
-        config_path.write_text(json.dumps({"method": "candidate_q3d", "arm": setting}))
-        experiments.append({
-            "id": setting, "setting": setting, "arm": setting, **identity,
-            "stages": ["T", "Q", "P", "J"], "stage_job_ids": ["T", "Q", "P", f"{setting}.J"],
-            "stage_artifact_producers": {"T": "T", "Q": "Q", "P": "P", "J": f"{setting}.J"},
-            "config_path": str(config_path), "output": str(tmp_path / setting),
-        })
-        jobs.append({
-            "id": f"{setting}.J", "stage": "J", "dependencies": ["T", "Q", "P"],
-            "experiment_id": setting, "method": "candidate_q3d", "readiness": "READY", "reason": None,
-            "output": str(tmp_path / setting), "train_manifest": {}, "development_manifest": {},
-            "stage_artifact_inputs": {stage: {"producer_job_id": stage, "path": str(tmp_path / stage / f"{stage}.artifact.json")}
-                                      for stage in ("T", "Q", "P")},
-        })
+    multi_k = len(ks) > 1
+    for k in ks:
+        identity = {"dataset": "acdc", "protocol": "A", "k": k, "seed": 19}
+        producer_ids = {stage: f"{stage}{k}" if multi_k else stage for stage in ("T", "Q", "P")}
+        for stage in ("T", "Q", "P"):
+            dependencies = [] if stage == "T" else (
+                [producer_ids["T"]] if stage == "Q" else [producer_ids["T"], producer_ids["Q"]]
+            )
+            job_id = producer_ids[stage]
+            output = tmp_path / job_id
+            jobs.append({
+                "id": job_id, "stage": stage, "dependencies": dependencies,
+                "experiment_id": f"v1@{k}" if multi_k else "v1",
+                "method": "candidate_q3d", "readiness": "READY", "reason": None,
+                "output": str(output), "artifact_identity": identity,
+                "train_manifest": {}, "development_manifest": {},
+                "artifact_output": {"manifest_path": str(output / f"{stage}.artifact.json")},
+                "stage_artifact_inputs": {
+                    parent[0]: {
+                        "producer_job_id": parent[1],
+                        "path": str(tmp_path / parent[1] / f"{parent[0]}.artifact.json"),
+                    }
+                    for parent in (("T", producer_ids["T"]), ("Q", producer_ids["Q"]))
+                    if parent[1] in dependencies
+                },
+            })
+        for setting in ("v1", "v1u"):
+            experiment_id = f"{setting}@{k}" if multi_k else setting
+            joint_id = f"{experiment_id}.J"
+            config_path = tmp_path / f"{experiment_id}.json"
+            config_path.write_text(json.dumps({"method": "candidate_q3d", "arm": setting}))
+            stage_job_ids = [*producer_ids.values(), joint_id]
+            experiments.append({
+                "id": experiment_id, "setting": setting, "arm": setting, **identity,
+                "stages": ["T", "Q", "P", "J"], "stage_job_ids": stage_job_ids,
+                "stage_artifact_producers": {
+                    **{stage: producer_ids[stage] for stage in ("T", "Q", "P")},
+                    "J": joint_id,
+                },
+                "config_path": str(config_path), "output": str(tmp_path / experiment_id),
+            })
+            jobs.append({
+                "id": joint_id, "stage": "J", "dependencies": list(producer_ids.values()),
+                "experiment_id": experiment_id, "method": "candidate_q3d", "readiness": "READY", "reason": None,
+                "output": str(tmp_path / experiment_id), "train_manifest": {}, "development_manifest": {},
+                "stage_artifact_inputs": {
+                    stage: {
+                        "producer_job_id": producer_ids[stage],
+                        "path": str(tmp_path / producer_ids[stage] / f"{stage}.artifact.json"),
+                    }
+                    for stage in ("T", "Q", "P")
+                },
+            })
     plan = {"selection": {"synthetic": False}, "experiments": experiments, "stage_jobs": jobs}
     plan_path = tmp_path / "PLAN.json"
     plan_path.write_text(json.dumps(plan))
@@ -73,19 +99,21 @@ def _fixture(tmp_path):
     )
     commands = []
 
+    jobs_by_output = {job["output"]: job for job in jobs}
+
     def runner(command, **_kwargs):
         commands.append(command)
         stage = command[command.index("--stage") + 1]
         output = Path(command[command.index("--out") + 1])
+        job = jobs_by_output[str(output)]
         output.mkdir()
         if stage in {"T", "Q", "P"}:
             checkpoint = output / "checkpoint.pt"
             checkpoint.write_bytes(f"manufactured {stage} checkpoint".encode())
-            parents = [] if stage == "T" else (["T"] if stage == "Q" else ["T", "Q"])
             dependencies = {}
-            for parent in parents:
-                path = tmp_path / parent / f"{parent}.artifact.json"
-                dependencies[parent] = {"path": str(path), "sha256": file_sha256(path)}
+            for parent_stage, reference in job["stage_artifact_inputs"].items():
+                path = Path(reference["path"])
+                dependencies[parent_stage] = {"path": str(path), "sha256": file_sha256(path)}
             hashes = {"teacher_state_sha256": "a" * 64}
             if stage == "Q":
                 hashes["codebook_sha256"] = "b" * 64
@@ -93,7 +121,7 @@ def _fixture(tmp_path):
             if stage == "P":
                 hashes["cache_sha256"] = "c" * 64
             write_stage_manifest(output / f"{stage}.artifact.json", stage=stage,
-                                 checkpoint_path=checkpoint, identity=identity, source_config={},
+                                 checkpoint_path=checkpoint, identity=job["artifact_identity"], source_config={},
                                  dependencies=dependencies, content_hashes=hashes)
         return SimpleNamespace(returncode=0, stdout=json.dumps({"status": "COMPLETED", "completed_stages": [stage]}))
 
@@ -113,6 +141,91 @@ def test_mock_shared_runner_reuses_tqp_and_pins_identical_manifests(tmp_path):
     assert len(pins[0]) == 3
     state = json.loads((tmp_path / "RUN_STATE.json").read_text())
     assert state["experiments"]["v1"]["stage_artifacts"] == state["experiments"]["v1u"]["stage_artifacts"]
+
+
+def test_mock_shared_runner_selects_k_roots_before_dependency_closure_and_reuses_artifacts(tmp_path):
+    path, plan, api, runner, commands = _fixture(tmp_path, ks=(5, 8, 10))
+    teacher_only = execute_shared_campaign(
+        path, plan, setting="v1", k=(8,), through_stage="T",
+        device="cuda", runner=runner, api=api,
+    )
+    assert teacher_only["status"] == "PARTIAL"
+    assert teacher_only["selected_k"] == [8]
+    assert teacher_only["through_stage"] == "T"
+    assert [cmd[cmd.index("--out") + 1].rsplit("/", 1)[-1] for cmd in commands] == ["T8"]
+    state = json.loads((tmp_path / "RUN_STATE.json").read_text())
+    assert all(state["jobs"][job_id]["status"] == "NOT_RUN" for job_id in ("T5", "Q5", "P5", "T10", "Q10", "P10"))
+    assert state["jobs"]["v1@5.J"]["status"] == "NOT_RUN"
+    assert state["jobs"]["v1@10.J"]["status"] == "NOT_RUN"
+
+    producers = execute_shared_campaign(
+        path, plan, setting="v1", k=(8,), through_stage="P",
+        device="cuda", runner=runner, api=api,
+    )
+    assert producers["status"] == "PARTIAL"
+    assert producers["selected_k"] == [8]
+    assert producers["through_stage"] == "P"
+    assert [cmd[cmd.index("--out") + 1].rsplit("/", 1)[-1] for cmd in commands] == [
+        "T8", "Q8", "P8",
+    ]
+
+    completed_v1 = execute_shared_campaign(
+        path, plan, setting="v1", k=(8,), device="cuda", runner=runner, api=api,
+    )
+    assert completed_v1["status"] == "COMPLETED"
+    assert completed_v1["selected_k"] == [8]
+    assert completed_v1["through_stage"] == "J"
+    assert [cmd[cmd.index("--out") + 1].rsplit("/", 1)[-1] for cmd in commands] == [
+        "T8", "Q8", "P8", "v1@8",
+    ]
+
+    second = execute_shared_campaign(
+        path, plan, setting="v1u", k=(8,), device="cuda", runner=runner, api=api,
+    )
+    assert second["selected_k"] == [8]
+    assert [cmd[cmd.index("--out") + 1].rsplit("/", 1)[-1] for cmd in commands] == [
+        "T8", "Q8", "P8", "v1@8", "v1u@8",
+    ]
+    joint_commands = commands[-2:]
+    pins = [[cmd[i + 1] for i, value in enumerate(cmd) if value == "--q3d-stage-artifact-sha"]
+            for cmd in joint_commands]
+    assert pins[0] == pins[1]
+    assert len(pins[0]) == 3
+    state = json.loads((tmp_path / "RUN_STATE.json").read_text())
+    assert state["experiments"]["v1@8"]["stage_artifacts"] == state["experiments"]["v1u@8"]["stage_artifacts"]
+
+
+def test_k_selector_supports_multiple_values_and_rejects_empty_or_unmatched_selection(tmp_path):
+    path, plan, api, runner, commands = _fixture(tmp_path, ks=(5, 8, 10))
+    selected, selected_ks = select_campaign_experiments(plan["experiments"], setting="v1", k=(10, 5))
+    assert [item["id"] for item in selected] == ["v1@5", "v1@10"]
+    assert selected_ks == [5, 10]
+
+    with pytest.raises(ValueError, match="cannot be empty"):
+        execute_shared_campaign(path, plan, setting="v1", k=(), device="cuda", runner=runner, api=api)
+    with pytest.raises(ValueError, match="no campaign experiments match"):
+        execute_shared_campaign(path, plan, setting="v1", k=(2,), device="cuda", runner=runner, api=api)
+    assert not (tmp_path / "RUN_STATE.json").exists()
+    assert commands == []
+
+
+def test_run_cli_parses_one_or_more_k_values(monkeypatch, tmp_path):
+    from scripts import q3d_campaign
+
+    called = {}
+
+    def execute_campaign(path, **kwargs):
+        called.update(kwargs)
+        return {"status": "PLAN_VALIDATED_NOT_RUN"}
+
+    monkeypatch.setattr(q3d_campaign, "execute_campaign", execute_campaign)
+    q3d_campaign.main([
+        "run", "--plan", str(tmp_path / "PLAN.json"), "--setting", "v1", "--k", "8", "10",
+        "--through-stage", "P",
+    ])
+    assert called["setting"] == "v1"
+    assert called["k"] == (8, 10)
+    assert called["through_stage"] == "P"
 
 
 def test_mock_shared_runner_rejects_changed_producer_before_next_arm(tmp_path):

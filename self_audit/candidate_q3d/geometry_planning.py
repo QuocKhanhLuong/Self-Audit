@@ -333,7 +333,11 @@ def prepare_geometry_proposal(
     report_path, repair_report, report_sha = _read_json_object(
         repair_report_path, label="geometry repair report"
     )
-    from .geometry_repair import REPAIR_SCHEMA
+    from .geometry_repair import (
+        ACDC_PIXDIM_NATIVE_V1,
+        REPAIR_SCHEMA,
+        STRICT_GEOMETRY_POLICY,
+    )
 
     if repair_report.get("schema") != REPAIR_SCHEMA or repair_report.get("status") != "success":
         raise ValueError("geometry repair report must be a successful geometry_repair.v1 report")
@@ -341,9 +345,14 @@ def prepare_geometry_proposal(
         raise ValueError("audit-only repair reports cannot authorize a corrected geometry proposal")
     if repair_report.get("errors") != []:
         raise ValueError("geometry repair report must have no errors")
+    geometry_policy = repair_report.get("geometry_policy", STRICT_GEOMETRY_POLICY)
+    if geometry_policy not in {STRICT_GEOMETRY_POLICY, ACDC_PIXDIM_NATIVE_V1}:
+        raise ValueError("geometry repair report must declare a supported geometry_policy")
     receipt = repair_report.get("receipt")
     if not isinstance(receipt, dict):
         raise ValueError("successful geometry repair report must contain its receipt")
+    if receipt.get("geometry_policy", STRICT_GEOMETRY_POLICY) != geometry_policy:
+        raise ValueError("repair report geometry_policy differs from its receipt")
     audit_rows = repair_report.get("audit_rows")
     if not isinstance(audit_rows, list):
         raise ValueError("geometry repair report must contain audited patient rows")
@@ -363,6 +372,7 @@ def prepare_geometry_proposal(
         receipt,
         source_manifest_sha256=source_sha,
         repaired_manifest_sha256=repaired_sha,
+        geometry_policy=geometry_policy,
     )
     train_ids, by_patient = _manifest_geometry_records(
         repaired_manifest, label="repaired TRAIN manifest"
@@ -417,6 +427,8 @@ def prepare_geometry_proposal(
         row = rows_by_id[patient_id]
         if row.get("errors") != []:
             raise ValueError(f"repair report audit row for {patient_id} contains errors")
+        if row.get("geometry_policy", STRICT_GEOMETRY_POLICY) != geometry_policy:
+            raise ValueError(f"audit row geometry_policy differs from report for {patient_id}")
         if row.get("cine_mapping_source") != receipt.get("cine_mapping_source"):
             raise ValueError(f"audit row mapping source differs from receipt for {patient_id}")
         if row.get("cine_mapping_sha256") != receipt.get("cine_mapping_sha256"):
@@ -440,6 +452,8 @@ def prepare_geometry_proposal(
             provenance = row.get("unit_provenance")
             if not isinstance(provenance, str) or not provenance.strip():
                 raise ValueError(f"audit row for {patient_id} lacks explicit unit provenance")
+            if geometry_policy == ACDC_PIXDIM_NATIVE_V1 and row.get("resolved_spatial_unit") != "mm":
+                raise ValueError(f"audit row for {patient_id} must explicitly declare unknown units as mm")
         elif resolution != "nifti_header":
             raise ValueError(f"audit row for {patient_id} has unknown unit resolution")
         old_shape = source_by_patient[patient_id].get("shape_zyx")
@@ -473,7 +487,7 @@ def prepare_geometry_proposal(
                 or any(not math.isclose(left, right, rel_tol=1e-5, abs_tol=1e-6)
                        for left, right in zip(reversed_zooms, repaired_spacing)):
             raise ValueError(f"header zooms disagree with repaired spacing for {patient_id}")
-        validate_audit_geometry(row, new_geometry)
+        validate_audit_geometry(row, new_geometry, geometry_policy=geometry_policy)
 
     geometry_rows: list[dict[str, Any]] = []
     for patient_id in train_ids:
@@ -495,6 +509,7 @@ def prepare_geometry_proposal(
         "schema": "self_audit.q3d_resenc.geometry_reprobe_proposal.v1",
         "status": "PROPOSAL_ONLY_NOT_LOCKED",
         "evidence_class": "SOFTWARE_ONLY_METADATA_PROPOSAL",
+        "geometry_policy": geometry_policy,
         "manifest_lineage": {
             "source_manifest_path": str(source_path),
             "source_manifest_sha256": source_sha,
@@ -505,6 +520,7 @@ def prepare_geometry_proposal(
             "repair_receipt_schema": receipt.get("schema"),
             "repair_receipt_status": receipt.get("status"),
             "repair_receipt_validation": receipt_validation,
+            "geometry_policy": geometry_policy,
             "train_patient_count": len(train_ids),
             "geometry_source": "repaired_manifest.geometry.by_patient",
             "arrays_or_headers_read_by_this_command": False,

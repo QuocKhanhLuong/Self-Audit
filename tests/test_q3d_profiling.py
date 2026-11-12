@@ -170,7 +170,11 @@ class FakeSampler:
         }
 
 
-def _inputs() -> profiling.ProfileInputs:
+def _inputs(*, include_stage_artifacts: bool = True) -> profiling.ProfileInputs:
+    stage_artifacts = {
+        stage: profiling.StageArtifact(stage, Path(f"/tmp/{stage}-profile-fixture.json"), "c" * 64)
+        for stage in ("T", "Q", "P")
+    } if include_stage_artifacts else {}
     return profiling.ProfileInputs(
         config={
             "training": {
@@ -189,7 +193,7 @@ def _inputs() -> profiling.ProfileInputs:
         largest_l=profiling.PatientVolume("L-largest", (12, 64, 64), 12 * 64 * 64, "L"),
         largest_u=profiling.PatientVolume("U-largest", (14, 80, 80), 14 * 80 * 80, "U"),
         largest_train=profiling.PatientVolume("U-largest", (14, 80, 80), 14 * 80 * 80, "TRAIN"),
-        stage_artifacts={},
+        stage_artifacts=stage_artifacts,
         labeled_patient_ids=("L-small", "L-largest"),
         unlabeled_patient_ids=("U-largest", "U-middle", "U-small"),
     )
@@ -207,6 +211,15 @@ def test_largest_stream_selection_uses_native_volume_metadata_and_keeps_u_image_
     manifest["unlabeled"][0]["masks"] = {"0": {"path": "forbidden.npy", "sha256": "0" * 64}}
     with pytest.raises(profiling.ProfilePrerequisiteError, match="image-only"):
         profiling.largest_train_patients(manifest)
+
+
+def test_measured_stages_requires_a_supported_ordered_tuple():
+    assert profiling._validate_measured_stages(("T",)) == ("T",)
+    assert profiling._validate_measured_stages(("J",)) == ("J",)
+    assert profiling._validate_measured_stages(("T", "J")) == ("T", "J")
+    for invalid in (["T"], ("J", "T"), ("T", "Q"), ("T", "T")):
+        with pytest.raises(profiling.ProfilePrerequisiteError, match="measured_stages"):
+            profiling._validate_measured_stages(invalid)
 
 
 def test_t_selector_is_l_only_and_j_sampler_includes_largest_u_first():
@@ -324,7 +337,7 @@ def test_j_fails_before_engine_when_verified_t_q_p_inputs_are_missing():
 
     with pytest.raises(profiling.ProfilePrerequisiteError, match="T/Q/P"):
         profiling.run_engine_stage(
-            _inputs(), "J", Path("/tmp/profile-j"),
+            _inputs(include_stage_artifacts=False), "J", Path("/tmp/profile-j"),
             profiling.UpdateMeasurement("cuda:0", cuda_api=FakeCuda()),
             device="cuda:0", engine_module=FakeEngine, optimizer_type=FakeOptimizer,
         )
@@ -563,6 +576,7 @@ def test_dev_repair_audit_uses_full_affine_and_allows_distinct_source_hashes(tmp
         "cine_mapping_sha256": receipt["cine_mapping_sha256"],
         "cine_mapping_provenance": receipt["cine_mapping_provenance"],
         "resolved_spatial_unit": "mm",
+        "original_spatial_unit": "mm",
         "unit_resolution": "nifti_header",
         "unit_provenance": None,
         "manifest_shape_zyx": shape,
@@ -600,7 +614,46 @@ def test_dev_repair_audit_uses_full_affine_and_allows_distinct_source_hashes(tmp
         repaired_manifest_sha256=repaired_sha,
     )
     assert summary["status"] == "PASS"
+    assert summary["geometry_policy"] == "strict"
     assert row["source_file_sha256"] != source["patients"][0]["image_sha256"]
+
+    pixdim_report = copy.deepcopy(repair_report)
+    pixdim_report["geometry_policy"] = "acdc_pixdim_native_v1"
+    pixdim_report["receipt"]["geometry_policy"] = "acdc_pixdim_native_v1"
+    pixdim_row = pixdim_report["audit_rows"][0]
+    pixdim_row.update({
+        "geometry_policy": "acdc_pixdim_native_v1",
+        "raw_pixdim_xyz_native": [0.7, 0.8, 2.0],
+        "selected_affine_source": "sform",
+        "reconstructed_affine_xyz": affine_xyz,
+        "geometry_policy_waivers": [],
+        "affine_coordinate_convention": "coded_nifti_world",
+        "geometry_nonclaims": ["SCANNER_WORLD_POSE_NOT_INDEPENDENTLY_VERIFIED"],
+        "scanner_world_pose_status": "NOT_INDEPENDENTLY_VERIFIED",
+    })
+    pixdim_summary = profiling._validate_repair_audit_rows(
+        source,
+        repaired,
+        pixdim_report,
+        label="ACDC DEV18 pixdim fixture",
+        source_manifest_path=source_path,
+        source_manifest_sha256=source_sha,
+        repaired_manifest_sha256=repaired_sha,
+    )
+    assert pixdim_summary["geometry_policy"] == "acdc_pixdim_native_v1"
+
+    policy_mismatch = copy.deepcopy(repair_report)
+    policy_mismatch["receipt"]["geometry_policy"] = "acdc_pixdim_native_v1"
+    with pytest.raises(profiling.ProfilePrerequisiteError, match="geometry_policy differs"):
+        profiling._validate_repair_audit_rows(
+            source,
+            repaired,
+            policy_mismatch,
+            label="ACDC DEV18 fixture",
+            source_manifest_path=source_path,
+            source_manifest_sha256=source_sha,
+            repaired_manifest_sha256=repaired_sha,
+        )
 
     corrupted = copy.deepcopy(repair_report)
     corrupted["audit_rows"][0]["selected_affine_xyz"][0][3] = 9.0
@@ -672,10 +725,94 @@ def test_software_harness_success_cannot_emit_gpu_profile_evidence(tmp_path):
     assert report["status"] == "SOFTWARE_ONLY"
     assert report["evidence_status"] == "SOFTWARE_ONLY"
     assert "gpu" not in report
-    assert all(result["status"] == "SOFTWARE_ONLY_COMPLETED" for result in report["stage_results"].values())
+    assert report["selected_stages"] == ["T", "J"]
+    assert all(report["stage_results"][stage]["status"] == "SOFTWARE_ONLY_COMPLETED" for stage in ("T", "J"))
+    assert report["stage_results"]["Q"]["status"] == "NOT_RUN"
+    assert report["stage_results"]["P"]["status"] == "NOT_RUN"
     assert report["stage_results"]["T"]["measured_phase"] == "T-a"
     assert report["stage_results"]["T"]["measured_updates"] == 20
     assert report["stage_results"]["J"]["measured_updates"] == 20
+
+
+def test_t_only_profile_runs_without_t_q_p_artifacts_and_marks_other_stages_not_run(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    scratch = tmp_path / "scratch"
+    scratch.mkdir()
+    calls = []
+    cuda = FakeCuda()
+
+    def teacher_runner(inputs, stage, _output_dir, measurement, *, device):
+        assert not inputs.stage_artifacts
+        assert stage == "T"
+        calls.append(stage)
+        metrics = []
+        for index in range(20):
+            measurement.begin_update()
+            measurement.selection_trace.append({
+                "labeled_patient": "L-largest" if index == 0 else "L-small",
+                "unlabeled_patient": None,
+            })
+            measurement.finish_update()
+            metrics.append({"stage": "T", "update": index + 1, "phase": "T-a"})
+        return {"runtime_synthetic": False, "profile_metrics": metrics}
+
+    report = profiling.run_profile_software_test(
+        inputs=_inputs(include_stage_artifacts=False),
+        stage_runner=teacher_runner,
+        report_path=tmp_path / "teacher-only.json",
+        scratch_root=scratch,
+        cuda_api=cuda,
+        torch_module=FakeTorch(cuda),
+        repo_root=repo,
+        clock=FakeClock(),
+        measured_stages=("T",),
+    )
+
+    assert calls == ["T"]
+    assert report["status"] == "SOFTWARE_ONLY"
+    assert report["evidence_status"] == "SOFTWARE_ONLY"
+    assert "gpu" not in report
+    assert report["selected_stages"] == ["T"]
+    assert report["stage_results"]["T"]["status"] == "SOFTWARE_ONLY_COMPLETED"
+    assert report["stage_results"]["J"]["status"] == "NOT_RUN"
+    assert report["stage_results"]["Q"]["status"] == "NOT_RUN"
+    assert report["stage_results"]["P"]["status"] == "NOT_RUN"
+    assert report["campaign_estimate"]["full_campaign_seconds"] is None
+    assert report["campaign_estimate"]["coverage"]["stage_status"]["J"] == "NOT_RUN"
+
+
+def test_j_only_profile_rejects_missing_t_q_p_artifacts_before_runner(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    scratch = tmp_path / "scratch"
+    scratch.mkdir()
+    calls = []
+    cuda = FakeCuda()
+
+    def should_not_run(*_args, **_kwargs):
+        calls.append(True)
+        raise AssertionError("profile stage runner must not start without T/Q/P")
+
+    report = profiling.run_profile_software_test(
+        inputs=_inputs(include_stage_artifacts=False),
+        stage_runner=should_not_run,
+        report_path=tmp_path / "missing-artifacts.json",
+        scratch_root=scratch,
+        cuda_api=cuda,
+        torch_module=FakeTorch(cuda),
+        repo_root=repo,
+        measured_stages=("J",),
+    )
+
+    assert calls == []
+    assert report["status"] == "SOFTWARE_ONLY_FAILURE"
+    assert report["evidence_status"] == "SOFTWARE_ONLY"
+    assert "gpu" not in report
+    assert report["selected_stages"] == ["J"]
+    assert report["stage_results"]["J"]["status"] == "NOT_RUN"
+    assert report["failure"]["stage"] == "preflight"
+    assert "T/Q/P" in report["failure"]["message"]
 
 
 def test_cli_help_bootstraps_from_unrelated_cwd_without_pythonpath(tmp_path):
@@ -698,6 +835,7 @@ def test_cli_help_bootstraps_from_unrelated_cwd_without_pythonpath(tmp_path):
 
     assert completed.returncode == 0, completed.stderr
     assert "--allow-real-profile" in completed.stdout
+    assert "--stage {T,J,all}" in completed.stdout
     assert "--stage-artifact-sha" in completed.stdout
     assert "--dev-repair-report-sha256" in completed.stdout
     assert "--phase-receipt-sha256" in completed.stdout

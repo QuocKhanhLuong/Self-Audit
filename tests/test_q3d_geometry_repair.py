@@ -11,7 +11,10 @@ import pytest
 
 from self_audit.data import CLASS_MAPPING, GEOMETRY_MAP_SCHEMA, GEOMETRY_SCHEMA
 from self_audit.candidate_q3d.geometry_repair import (
+    ACDC_PIXDIM_NATIVE_V1,
+    STRICT_GEOMETRY_POLICY,
     repair_manifest_geometry,
+    validate_audit_geometry,
     validate_geometry_record,
     validate_geometry_repair_receipt,
 )
@@ -112,6 +115,7 @@ def _call(
     output_manifest: Path | None = None,
     audit_only: bool = True,
     unit_declarations: dict | None = None,
+    geometry_policy: str = STRICT_GEOMETRY_POLICY,
 ):
     mapping_source, mapping_sha, mapping_provenance = _mapping_inputs(tmp_path, cine_paths)
     return repair_manifest_geometry(
@@ -127,6 +131,7 @@ def _call(
         output_manifest_path=output_manifest,
         unit_declarations_by_patient=unit_declarations,
         audit_only=audit_only,
+        geometry_policy=geometry_policy,
     )
 
 
@@ -137,6 +142,7 @@ def _forbid_voxel_reads(monkeypatch: pytest.MonkeyPatch) -> None:
         def __init__(self, image):
             self.header = image.header
             self.shape = image.shape
+            self.affine = image.affine
 
         @property
         def dataobj(self):
@@ -272,6 +278,120 @@ def test_missing_authoritative_sform_and_qform_fails_closed(tmp_path: Path, monk
     assert report["audit_rows"][0]["qform_code"] == 0
 
 
+@pytest.mark.parametrize("case", ["pixdim_conflict", "uncoded"])
+def test_pixdim_policy_repairs_scale_or_uses_uncoded_base_affine_without_voxel_reads(
+    tmp_path: Path, monkeypatch, case: str,
+):
+    if case == "pixdim_conflict":
+        cine = _write_nifti(
+            tmp_path / "patient001_4d.nii.gz",
+            qform_code=0,
+            zooms=(1.75, 0.75, 2.5, 1.0),
+        )
+    else:
+        cine = _write_nifti(
+            tmp_path / "patient001_4d.nii.gz",
+            sform_code=0,
+            qform_code=0,
+        )
+    manifest_path = _write_manifest(tmp_path, _manifest())
+    output_path = tmp_path / "corrected.json"
+    _forbid_voxel_reads(monkeypatch)
+
+    report = _call(
+        tmp_path,
+        manifest_path,
+        {"patient001": cine},
+        output_manifest=output_path,
+        audit_only=False,
+        geometry_policy=ACDC_PIXDIM_NATIVE_V1,
+    )
+
+    row = report["audit_rows"][0]
+    assert report["status"] == "success"
+    assert report["geometry_policy"] == ACDC_PIXDIM_NATIVE_V1
+    assert report["receipt"]["geometry_policy"] == ACDC_PIXDIM_NATIVE_V1
+    assert row["geometry_policy"] == ACDC_PIXDIM_NATIVE_V1
+    expected_pixdim = [1.75, 0.75, 2.5] if case == "pixdim_conflict" else [1.25, 0.75, 2.5]
+    assert row["raw_pixdim_xyz_native"] == pytest.approx(expected_pixdim)
+    assert row["errors"] == []
+    if case == "pixdim_conflict":
+        assert row["geometry_policy_waivers"] == [
+            "AFFINE_COLUMN_LENGTHS_DISAGREE_WITH_PIXDIM"
+        ]
+        assert row["selected_affine_source"] == "sform"
+        expected = _AFFINE_XYZ.copy()
+        expected[:3, :3] = np.diag([1.75, 0.75, 2.5])
+        assert np.allclose(np.asarray(row["reconstructed_affine_xyz"]), expected)
+    else:
+        assert row["geometry_policy_waivers"][0] == "UNCODED_FORMS_USE_NIBABEL_BASE_AFFINE"
+        assert row["selected_affine_source"] == "nibabel_base_affine_uncoded_derived"
+        assert row["affine_coordinate_convention"] == "derived_native_image_coordinate_convention"
+        assert "UNCODED_AFFINE_IS_DERIVED_NATIVE_IMAGE_COORDINATE_CONVENTION" in row[
+            "geometry_nonclaims"
+        ]
+        assert row["scanner_world_pose_status"] == "NOT_INDEPENDENTLY_VERIFIED"
+
+    repaired = json.loads(output_path.read_text(encoding="utf-8"))
+    assert {key: value for key, value in repaired.items() if key != "geometry"} == {
+        key: value for key, value in _manifest().items() if key != "geometry"
+    }
+    corrected = repaired["geometry"]["by_patient"]["patient001"]
+    validate_audit_geometry(row, corrected, geometry_policy=ACDC_PIXDIM_NATIVE_V1)
+    validation = validate_geometry_repair_receipt(
+        _manifest(),
+        repaired,
+        report["receipt"],
+        source_manifest_sha256=_sha(manifest_path),
+        repaired_manifest_sha256=_sha(output_path),
+        geometry_policy=ACDC_PIXDIM_NATIVE_V1,
+    )
+    assert validation["geometry_policy"] == ACDC_PIXDIM_NATIVE_V1
+
+
+def test_pixdim_policy_rejects_unit_pixdim_and_bad_policy_or_affine_tampering(tmp_path, monkeypatch):
+    cine = _write_nifti(
+        tmp_path / "patient001_4d.nii.gz",
+        qform_code=0,
+        zooms=(1.0, 1.0, 1.0, 1.0),
+    )
+    manifest_path = _write_manifest(tmp_path, _manifest())
+    _forbid_voxel_reads(monkeypatch)
+    report = _call(
+        tmp_path,
+        manifest_path,
+        {"patient001": cine},
+        geometry_policy=ACDC_PIXDIM_NATIVE_V1,
+    )
+    assert report["status"] == "rejected"
+    assert any("raw pixdim [1,1,1]" in error for error in report["audit_rows"][0]["errors"])
+
+    # Independently verify that a policy report cannot bless an altered affine.
+    second_dir = tmp_path / "second"
+    second_dir.mkdir()
+    good = _write_nifti(
+        second_dir / "patient002_4d.nii.gz",
+        qform_code=0,
+        zooms=(1.75, 0.75, 2.5, 1.0),
+    )
+    manifest_path = _write_manifest(second_dir, _manifest(("patient002",)), "source.json")
+    valid = _call(
+        second_dir,
+        manifest_path,
+        {"patient002": good},
+        geometry_policy=ACDC_PIXDIM_NATIVE_V1,
+    )
+    row = valid["audit_rows"][0]
+    tampered = json.loads(json.dumps(row))
+    tampered["reconstructed_affine_xyz"][0][3] += 10.0
+    geometry = _manifest(("patient002",))["geometry"]["by_patient"]["patient002"]
+    with pytest.raises(ValueError, match="reconstructed affine"):
+        validate_audit_geometry(tampered, geometry, geometry_policy=ACDC_PIXDIM_NATIVE_V1)
+    tampered["geometry_policy"] = STRICT_GEOMETRY_POLICY
+    with pytest.raises(ValueError, match="geometry_policy"):
+        validate_audit_geometry(tampered, geometry, geometry_policy=ACDC_PIXDIM_NATIVE_V1)
+
+
 def test_missing_nifti_header_is_reported(tmp_path: Path, monkeypatch):
     cine = _write_nifti(tmp_path / "patient001_4d.nii.gz")
     manifest_path = _write_manifest(tmp_path, _manifest())
@@ -316,6 +436,92 @@ def test_unknown_units_need_explicit_declaration_with_provenance(tmp_path: Path,
     assert accepted["status"] == "audit_only_pass"
     assert accepted["audit_rows"][0]["unit_resolution"] == "explicit_declaration"
     assert accepted["audit_rows"][0]["unit_provenance"] == "synthetic explicit unit declaration"
+
+
+def test_pixdim_policy_requires_unknown_units_to_be_explicitly_declared_mm(tmp_path, monkeypatch):
+    cine = _write_nifti(tmp_path / "patient001_4d.nii.gz", unit="unknown", qform_code=0)
+    _forbid_voxel_reads(monkeypatch)
+
+    missing_dir = tmp_path / "missing"
+    missing_dir.mkdir()
+    missing_manifest = _write_manifest(missing_dir, _manifest())
+    missing = _call(
+        missing_dir, missing_manifest,
+        {"patient001": cine}, geometry_policy=ACDC_PIXDIM_NATIVE_V1,
+    )
+    assert missing["status"] == "rejected"
+    assert any("explicit unit declaration" in item for item in missing["audit_rows"][0]["errors"])
+
+    mm_dir = tmp_path / "declared_mm"
+    mm_dir.mkdir()
+    mm_manifest = _write_manifest(mm_dir, _manifest())
+    mm = _call(
+        mm_dir,
+        mm_manifest,
+        {"patient001": cine},
+        geometry_policy=ACDC_PIXDIM_NATIVE_V1,
+        unit_declarations={"patient001": {"unit": "mm", "provenance": "synthetic explicit mm declaration"}},
+    )
+    assert mm["status"] == "audit_only_pass"
+    assert mm["audit_rows"][0]["resolved_spatial_unit"] == "mm"
+    assert mm["audit_rows"][0]["unit_provenance"] == "synthetic explicit mm declaration"
+
+    m_dir = tmp_path / "declared_m"
+    m_dir.mkdir()
+    m_manifest = _write_manifest(m_dir, _manifest())
+    meters = _call(
+        m_dir,
+        m_manifest,
+        {"patient001": cine},
+        geometry_policy=ACDC_PIXDIM_NATIVE_V1,
+        unit_declarations={"patient001": {"unit": "m", "provenance": "synthetic non-mm declaration"}},
+    )
+    assert meters["status"] == "rejected"
+    assert any("requires an explicit mm unit declaration" in item for item in meters["audit_rows"][0]["errors"])
+
+
+def test_pixdim_policy_rejects_shear_and_conflicting_coded_orientation(tmp_path, monkeypatch):
+    sheared_affine = np.asarray(
+        [
+            [1.25, 0.1, 0.0, 10.0],
+            [0.0, np.sqrt(0.75**2 - 0.1**2), 0.0, 20.0],
+            [0.0, 0.0, 2.5, 30.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ]
+    )
+    sheared = _write_nifti(
+        tmp_path / "patient001_4d.nii.gz", affine=sheared_affine, qform_code=0,
+    )
+    manifest_path = _write_manifest(tmp_path, _manifest())
+    _forbid_voxel_reads(monkeypatch)
+    rejected = _call(
+        tmp_path,
+        manifest_path,
+        {"patient001": sheared},
+        geometry_policy=ACDC_PIXDIM_NATIVE_V1,
+    )
+    assert rejected["status"] == "rejected"
+    assert any("sheared" in item for item in rejected["audit_rows"][0]["errors"])
+
+    conflict_dir = tmp_path / "orientation_conflict"
+    conflict_dir.mkdir()
+    conflict_affine = _AFFINE_XYZ.copy()
+    conflict_affine[:3, 0] *= -1
+    image = nib.Nifti1Image(np.zeros((4, 5, 6, 2), dtype=np.float32), _AFFINE_XYZ)
+    image.set_sform(_AFFINE_XYZ, code=2)
+    image.set_qform(conflict_affine, code=2)
+    image.header.set_xyzt_units(xyz="mm", t="sec")
+    conflict_path = conflict_dir / "patient001_4d.nii.gz"
+    nib.save(image, str(conflict_path))
+    conflict_manifest = _write_manifest(conflict_dir, _manifest())
+    report = _call(
+        conflict_dir,
+        conflict_manifest,
+        {"patient001": conflict_path},
+        geometry_policy=ACDC_PIXDIM_NATIVE_V1,
+    )
+    assert report["status"] == "rejected"
+    assert any("coded sform and qform disagree" in item for item in report["audit_rows"][0]["errors"])
 
 
 def test_shape_mismatch_and_bad_patient_prevent_any_manifest_output(tmp_path: Path, monkeypatch):

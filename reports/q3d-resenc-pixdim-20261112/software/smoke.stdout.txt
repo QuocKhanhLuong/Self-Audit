@@ -1,0 +1,1158 @@
+[Q3D acdc protocol=A k=2 seed=42] T update=1/1 | train_loss=18.761194 | DEV patient_macro_fg_dice=0.135218 | RV=0.001949 MYO=0.169611 LV=0.234094
+[Q3D acdc protocol=A k=2 seed=42] T update=1/1 | train_loss=18.761194 | DEV patient_macro_fg_dice=0.135218 | RV=0.001949 MYO=0.169611 LV=0.234094
+[Q3D acdc protocol=A k=2 seed=42] T update=1/1 | train_loss=18.761194 | DEV patient_macro_fg_dice=0.135218 | RV=0.001949 MYO=0.169611 LV=0.234094
+[Q3D acdc protocol=A k=2 seed=42] T update=1/1 | train_loss=18.761194 | DEV patient_macro_fg_dice=0.135218 | RV=0.001949 MYO=0.169611 LV=0.234094
+[Q3D acdc protocol=A k=2 seed=42] T update=1/1 | train_loss=5.106824 | DEV patient_macro_fg_dice=0.087106 | RV=0.001132 MYO=0.260185 LV=0.000000
+[Q3D acdc protocol=A k=2 seed=42] T update=1/1 | train_loss=18.761194 | DEV patient_macro_fg_dice=0.135218 | RV=0.001949 MYO=0.169611 LV=0.234094
+[Q3D acdc protocol=A k=2 seed=42] T update=1/1 | train_loss=18.761194 | DEV patient_macro_fg_dice=0.135218 | RV=0.001949 MYO=0.169611 LV=0.234094
+[Q3D acdc protocol=A k=2 seed=42] T update=1/1 | train_loss=18.761194 | DEV patient_macro_fg_dice=0.135218 | RV=0.001949 MYO=0.169611 LV=0.234094
+[Q3D acdc protocol=A k=2 seed=42] T update=1/1 | train_loss=18.761194 | DEV patient_macro_fg_dice=0.135218 | RV=0.001949 MYO=0.169611 LV=0.234094
+{"completed_stages": ["J"], "recipe": "a3d_teacher_free", "status": "COMPLETED_DECLARED_SYNTHETIC_STAGES", "tokenizer_gate": {"passed": null, "status": "NOT_APPLICABLE"}}
+{"completed_stages": ["T", "Q", "P", "J"], "recipe": "b1", "status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE", "tokenizer_gate": {"missing": ["dead_code_fraction", "200-update_usage_history"], "passed": false, "status": "NOT_READY", "thresholds": {"max_dead_code_fraction": 0.25, "min_class_codes": 4, "min_perplexity": 32.0}}}
+{"completed_stages": ["J"], "recipe": "c0", "status": "COMPLETED_DECLARED_SYNTHETIC_STAGES", "tokenizer_gate": {"passed": null, "status": "NOT_APPLICABLE"}}
+{"completed_stages": ["T", "P", "J"], "recipe": "c1", "status": "COMPLETED_DECLARED_SYNTHETIC_STAGES", "tokenizer_gate": {"passed": null, "status": "NOT_APPLICABLE"}}
+{"completed_stages": ["T", "Q", "P", "J"], "recipe": "e1", "status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE", "tokenizer_gate": {"missing": ["dead_code_fraction", "200-update_usage_history"], "passed": false, "status": "NOT_READY", "thresholds": {"max_dead_code_fraction": 0.25, "min_class_codes": 4, "min_perplexity": 32.0}}}
+{"completed_stages": ["T"], "recipe": "teacher_supervised", "status": "COMPLETED_DECLARED_SYNTHETIC_STAGES", "tokenizer_gate": {"passed": null, "status": "NOT_APPLICABLE"}}
+{"completed_stages": ["J"], "recipe": "mean_teacher", "status": "COMPLETED_DECLARED_SYNTHETIC_STAGES", "tokenizer_gate": {"passed": null, "status": "NOT_APPLICABLE"}}
+{"completed_stages": ["T", "Q", "P", "J"], "recipe": "o1", "status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE", "tokenizer_gate": {"missing": ["dead_code_fraction", "200-update_usage_history"], "passed": false, "status": "NOT_READY", "thresholds": {"max_dead_code_fraction": 0.25, "min_class_codes": 4, "min_perplexity": 32.0}}}
+{"completed_stages": ["T", "Q", "P", "J"], "recipe": "s1", "status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE", "tokenizer_gate": {"missing": ["dead_code_fraction", "200-update_usage_history"], "passed": false, "status": "NOT_READY", "thresholds": {"max_dead_code_fraction": 0.25, "min_class_codes": 4, "min_perplexity": 32.0}}}
+{"completed_stages": ["T", "Q", "J"], "recipe": "v0", "status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE", "tokenizer_gate": {"missing": ["dead_code_fraction", "200-update_usage_history"], "passed": false, "status": "NOT_READY", "thresholds": {"max_dead_code_fraction": 0.25, "min_class_codes": 4, "min_perplexity": 32.0}}}
+{"completed_stages": ["T", "Q", "P", "J"], "recipe": "v1", "status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE", "tokenizer_gate": {"missing": ["dead_code_fraction", "200-update_usage_history"], "passed": false, "status": "NOT_READY", "thresholds": {"max_dead_code_fraction": 0.25, "min_class_codes": 4, "min_perplexity": 32.0}}}
+{"completed_stages": ["T", "Q", "P", "J"], "recipe": "v1_residual2", "status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE", "tokenizer_gate": {"missing": ["dead_code_fraction", "200-update_usage_history"], "passed": false, "status": "NOT_READY", "thresholds": {"max_dead_code_fraction": 0.25, "min_class_codes": 4, "min_perplexity": 32.0}}}
+{"completed_stages": ["T", "Q", "P", "J"], "recipe": "v1u", "status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE", "tokenizer_gate": {"missing": ["dead_code_fraction", "200-update_usage_history"], "passed": false, "status": "NOT_READY", "thresholds": {"max_dead_code_fraction": 0.25, "min_class_codes": 4, "min_perplexity": 32.0}}}
+{
+  "schema": "self_audit.candidate_q3d.smoke_all.v1",
+  "status": "COMPLETED_ALL_SYNTHETIC_RECIPES",
+  "evidence_status": "SOFTWARE_ONLY_SYNTHETIC",
+  "recipe_statuses": {
+    "a3d_teacher_free": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+    "b1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "c0": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+    "c1": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+    "e1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "teacher_supervised": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+    "mean_teacher": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+    "o1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "s1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "v0": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "v1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "v1_residual2": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "v1u": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE"
+  },
+  "shared_v1_v1u_stages": {
+    "producer": "v1",
+    "producer_stage_order": [
+      "T",
+      "Q",
+      "P"
+    ],
+    "artifacts": {
+      "T": {
+        "path": "/private/tmp/q3d-pixdim-smoke-20261112/_shared_v1_tqp/T/T.artifact.json",
+        "manifest_sha256": "289af8ca402f82c88fb5410813065e5022fb2950f743eed92d09dcd11653d2a1",
+        "stage_artifact_hashes": {
+          "manifest_sha256": "289af8ca402f82c88fb5410813065e5022fb2950f743eed92d09dcd11653d2a1",
+          "checkpoint_sha256": "d43894efac66655346b06c7acf1bd7cbbdac035d0797c3460ac88ce1322825cb"
+        },
+        "producer_status": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+        "producer_requested_stage": "T",
+        "producer_active_stages": [
+          "T"
+        ],
+        "producer_completed_stages": [
+          "T"
+        ]
+      },
+      "Q": {
+        "path": "/private/tmp/q3d-pixdim-smoke-20261112/_shared_v1_tqp/Q/Q.artifact.json",
+        "manifest_sha256": "f5e9563f0e2bf8a5262a544f4eb1399dacfb7aacdf547e2061ca80c55ad23346",
+        "stage_artifact_hashes": {
+          "manifest_sha256": "f5e9563f0e2bf8a5262a544f4eb1399dacfb7aacdf547e2061ca80c55ad23346",
+          "checkpoint_sha256": "620d81078d649fb34f4d901433d73c7749dc1f20e0e4ee1800d14b13dc4b0ff2"
+        },
+        "producer_status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+        "producer_requested_stage": "Q",
+        "producer_active_stages": [
+          "Q"
+        ],
+        "producer_completed_stages": [
+          "T",
+          "Q"
+        ]
+      },
+      "P": {
+        "path": "/private/tmp/q3d-pixdim-smoke-20261112/_shared_v1_tqp/P/P.artifact.json",
+        "manifest_sha256": "0dcff8763e19fa1a62350e1e9a6f4e73852a16b9a79c3b1dc41eac1859399cda",
+        "stage_artifact_hashes": {
+          "manifest_sha256": "0dcff8763e19fa1a62350e1e9a6f4e73852a16b9a79c3b1dc41eac1859399cda",
+          "checkpoint_sha256": "c04541ab049fb226f6aceba42585cecfdaf804ff90b60e0bd199eb2228479f1c"
+        },
+        "producer_status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+        "producer_requested_stage": "P",
+        "producer_active_stages": [
+          "P"
+        ],
+        "producer_completed_stages": [
+          "T",
+          "Q",
+          "P"
+        ]
+      }
+    },
+    "stage_reports": {
+      "T": "/private/tmp/q3d-pixdim-smoke-20261112/_shared_v1_tqp/T.smoke.json",
+      "Q": "/private/tmp/q3d-pixdim-smoke-20261112/_shared_v1_tqp/Q.smoke.json",
+      "P": "/private/tmp/q3d-pixdim-smoke-20261112/_shared_v1_tqp/P.smoke.json"
+    },
+    "all_producer_stages_completed": true,
+    "gate": {
+      "status": "NOT_READY",
+      "passed": false,
+      "missing": [
+        "dead_code_fraction",
+        "200-update_usage_history"
+      ],
+      "thresholds": {
+        "min_perplexity": 32.0,
+        "max_dead_code_fraction": 0.25,
+        "min_class_codes": 4
+      }
+    },
+    "synthetic_gate_override_requested": true,
+    "synthetic_gate_override_used": true,
+    "consumer_stages": {
+      "v1": "J",
+      "v1u": "J"
+    },
+    "consumers": {
+      "v1": {
+        "requested_stage": "J",
+        "engine_active_stages": [
+          "J"
+        ],
+        "stage_artifact_inputs": {
+          "P": {
+            "path": "/private/tmp/q3d-pixdim-smoke-20261112/_shared_v1_tqp/P/P.artifact.json",
+            "manifest_sha256": "0dcff8763e19fa1a62350e1e9a6f4e73852a16b9a79c3b1dc41eac1859399cda"
+          },
+          "Q": {
+            "path": "/private/tmp/q3d-pixdim-smoke-20261112/_shared_v1_tqp/Q/Q.artifact.json",
+            "manifest_sha256": "f5e9563f0e2bf8a5262a544f4eb1399dacfb7aacdf547e2061ca80c55ad23346"
+          },
+          "T": {
+            "path": "/private/tmp/q3d-pixdim-smoke-20261112/_shared_v1_tqp/T/T.artifact.json",
+            "manifest_sha256": "289af8ca402f82c88fb5410813065e5022fb2950f743eed92d09dcd11653d2a1"
+          }
+        },
+        "stage_artifact_hashes": {
+          "T": {
+            "manifest_sha256": "289af8ca402f82c88fb5410813065e5022fb2950f743eed92d09dcd11653d2a1",
+            "checkpoint_sha256": "d43894efac66655346b06c7acf1bd7cbbdac035d0797c3460ac88ce1322825cb"
+          },
+          "Q": {
+            "manifest_sha256": "f5e9563f0e2bf8a5262a544f4eb1399dacfb7aacdf547e2061ca80c55ad23346",
+            "checkpoint_sha256": "620d81078d649fb34f4d901433d73c7749dc1f20e0e4ee1800d14b13dc4b0ff2"
+          },
+          "P": {
+            "manifest_sha256": "0dcff8763e19fa1a62350e1e9a6f4e73852a16b9a79c3b1dc41eac1859399cda",
+            "checkpoint_sha256": "c04541ab049fb226f6aceba42585cecfdaf804ff90b60e0bd199eb2228479f1c"
+          }
+        }
+      },
+      "v1u": {
+        "requested_stage": "J",
+        "engine_active_stages": [
+          "J"
+        ],
+        "stage_artifact_inputs": {
+          "P": {
+            "path": "/private/tmp/q3d-pixdim-smoke-20261112/_shared_v1_tqp/P/P.artifact.json",
+            "manifest_sha256": "0dcff8763e19fa1a62350e1e9a6f4e73852a16b9a79c3b1dc41eac1859399cda"
+          },
+          "Q": {
+            "path": "/private/tmp/q3d-pixdim-smoke-20261112/_shared_v1_tqp/Q/Q.artifact.json",
+            "manifest_sha256": "f5e9563f0e2bf8a5262a544f4eb1399dacfb7aacdf547e2061ca80c55ad23346"
+          },
+          "T": {
+            "path": "/private/tmp/q3d-pixdim-smoke-20261112/_shared_v1_tqp/T/T.artifact.json",
+            "manifest_sha256": "289af8ca402f82c88fb5410813065e5022fb2950f743eed92d09dcd11653d2a1"
+          }
+        },
+        "stage_artifact_hashes": {
+          "T": {
+            "manifest_sha256": "289af8ca402f82c88fb5410813065e5022fb2950f743eed92d09dcd11653d2a1",
+            "checkpoint_sha256": "d43894efac66655346b06c7acf1bd7cbbdac035d0797c3460ac88ce1322825cb"
+          },
+          "Q": {
+            "manifest_sha256": "f5e9563f0e2bf8a5262a544f4eb1399dacfb7aacdf547e2061ca80c55ad23346",
+            "checkpoint_sha256": "620d81078d649fb34f4d901433d73c7749dc1f20e0e4ee1800d14b13dc4b0ff2"
+          },
+          "P": {
+            "manifest_sha256": "0dcff8763e19fa1a62350e1e9a6f4e73852a16b9a79c3b1dc41eac1859399cda",
+            "checkpoint_sha256": "c04541ab049fb226f6aceba42585cecfdaf804ff90b60e0bd199eb2228479f1c"
+          }
+        }
+      }
+    },
+    "manifest_identity_passed": true,
+    "content_identity_passed": true,
+    "identity_passed": true,
+    "physiology_omega_validation": {
+      "v1": {
+        "omega": {
+          "train_unlabeled_000": 1.0742504461410438,
+          "train_unlabeled_001": 0.9257495538589562
+        },
+        "computed_mean_omega": 1.0,
+        "reported_mean_omega": 1.0,
+        "gate_passed": true,
+        "override_used": false
+      },
+      "v1u": {
+        "omega": {
+          "train_unlabeled_000": 1.0,
+          "train_unlabeled_001": 1.0
+        },
+        "computed_mean_omega": 1.0,
+        "reported_mean_omega": 1.0,
+        "gate_passed": true,
+        "override_used": false
+      },
+      "shared_patient_ids": true,
+      "omega_differs": true,
+      "v1_is_nonuniform": true,
+      "v1u_is_uniform": true,
+      "means_are_one": true,
+      "gates_passed_without_override": true,
+      "passed": true
+    }
+  },
+  "runs": {
+    "a3d_teacher_free": {
+      "report": "/private/tmp/q3d-pixdim-smoke-20261112/a3d_teacher_free.smoke.json",
+      "config": "/private/tmp/q3d-pixdim-smoke-20261112/a3d_teacher_free.config.json",
+      "config_sha256": "3e82d62bf63838d6b0355c1b71cd4b27fb8be93bcca928e772258c55a3fbe068",
+      "completed_stages": [
+        "J"
+      ],
+      "expected_stages": [
+        "J"
+      ],
+      "expected_completed_stages": [
+        "J"
+      ],
+      "requested_stage": null,
+      "engine_active_stages": null,
+      "stage_artifact_inputs": {},
+      "stage_artifact_hashes": {},
+      "tokenizer_gate": {
+        "status": "NOT_APPLICABLE",
+        "passed": null
+      },
+      "synthetic_gate_override_requested": false,
+      "synthetic_gate_override_used": false,
+      "physiology_cohort_weighting": null,
+      "engine_error": null
+    },
+    "b1": {
+      "report": "/private/tmp/q3d-pixdim-smoke-20261112/b1.smoke.json",
+      "config": "/private/tmp/q3d-pixdim-smoke-20261112/b1.config.json",
+      "config_sha256": "070feeac6831fd723777c46752a48250e2750f07448c2f70fef8b644efe5fc86",
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "requested_stage": null,
+      "engine_active_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "stage_artifact_inputs": {},
+      "stage_artifact_hashes": {},
+      "tokenizer_gate": {
+        "status": "NOT_READY",
+        "passed": false,
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "thresholds": {
+          "min_perplexity": 32.0,
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4
+        }
+      },
+      "synthetic_gate_override_requested": true,
+      "synthetic_gate_override_used": true,
+      "physiology_cohort_weighting": {
+        "schema": "self_audit.candidate_q3d.runtime_cohort_weighting.v1",
+        "source": "U",
+        "source_cohort": "U",
+        "arm": "V1",
+        "patient_ids": [
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ],
+        "w_pat": {
+          "train_unlabeled_000": 0.9483836053009851,
+          "train_unlabeled_001": 0.8172821362545306
+        },
+        "omega": {
+          "train_unlabeled_000": 1.0742504461410438,
+          "train_unlabeled_001": 0.9257495538589562
+        },
+        "mean_w_pat": 0.8828328707777578,
+        "ess": 1.9890341983719577,
+        "ess_fraction": 0.9945170991859789,
+        "mean_omega": 1.0,
+        "max_omega": 1.0742504461410438,
+        "zero_fraction": 0.0,
+        "gate": {
+          "context": "J physiology cache reload",
+          "status": "PASS_POSITIVE_U_SUPPORT",
+          "passed": true,
+          "patient_weights": {
+            "train_unlabeled_000": 0.9483836053009851,
+            "train_unlabeled_001": 0.8172821362545306
+          },
+          "positive_patient_count": 2,
+          "patient_count": 2,
+          "mean_w_pat": 0.8828328707777578,
+          "ess": 1.9890341983719577,
+          "ess_fraction": 0.9945170991859789,
+          "override_used": false,
+          "override_scope": null,
+          "gate_error": null
+        },
+        "gate_passed": true,
+        "override_used": false,
+        "override_policy": null
+      },
+      "engine_error": null
+    },
+    "c0": {
+      "report": "/private/tmp/q3d-pixdim-smoke-20261112/c0.smoke.json",
+      "config": "/private/tmp/q3d-pixdim-smoke-20261112/c0.config.json",
+      "config_sha256": "29470ac1e3279c6311a74981256857302fa519fd453df534ff10cd9ad429e5e6",
+      "completed_stages": [
+        "J"
+      ],
+      "expected_stages": [
+        "J"
+      ],
+      "expected_completed_stages": [
+        "J"
+      ],
+      "requested_stage": null,
+      "engine_active_stages": [
+        "J"
+      ],
+      "stage_artifact_inputs": {},
+      "stage_artifact_hashes": {},
+      "tokenizer_gate": {
+        "status": "NOT_APPLICABLE",
+        "passed": null
+      },
+      "synthetic_gate_override_requested": false,
+      "synthetic_gate_override_used": false,
+      "physiology_cohort_weighting": null,
+      "engine_error": null
+    },
+    "c1": {
+      "report": "/private/tmp/q3d-pixdim-smoke-20261112/c1.smoke.json",
+      "config": "/private/tmp/q3d-pixdim-smoke-20261112/c1.config.json",
+      "config_sha256": "4d88e2125d36041429c10ca8e1c7cb6385462e4c5c29d85b45c8d70c7a074c80",
+      "completed_stages": [
+        "T",
+        "P",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "P",
+        "J"
+      ],
+      "expected_completed_stages": [
+        "T",
+        "P",
+        "J"
+      ],
+      "requested_stage": null,
+      "engine_active_stages": [
+        "T",
+        "P",
+        "J"
+      ],
+      "stage_artifact_inputs": {},
+      "stage_artifact_hashes": {},
+      "tokenizer_gate": {
+        "status": "NOT_APPLICABLE",
+        "passed": null
+      },
+      "synthetic_gate_override_requested": false,
+      "synthetic_gate_override_used": false,
+      "physiology_cohort_weighting": {
+        "schema": "self_audit.candidate_q3d.runtime_cohort_weighting.v1",
+        "source": "U",
+        "source_cohort": "U",
+        "arm": "C1",
+        "patient_ids": [
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ],
+        "w_pat": {
+          "train_unlabeled_000": 0.9483836053009851,
+          "train_unlabeled_001": 0.8172821362545306
+        },
+        "omega": {
+          "train_unlabeled_000": 1.0742504461410438,
+          "train_unlabeled_001": 0.9257495538589562
+        },
+        "mean_w_pat": 0.8828328707777578,
+        "ess": 1.9890341983719577,
+        "ess_fraction": 0.9945170991859789,
+        "mean_omega": 1.0,
+        "max_omega": 1.0742504461410438,
+        "zero_fraction": 0.0,
+        "gate": {
+          "context": "J physiology cache reload",
+          "status": "PASS_POSITIVE_U_SUPPORT",
+          "passed": true,
+          "patient_weights": {
+            "train_unlabeled_000": 0.9483836053009851,
+            "train_unlabeled_001": 0.8172821362545306
+          },
+          "positive_patient_count": 2,
+          "patient_count": 2,
+          "mean_w_pat": 0.8828328707777578,
+          "ess": 1.9890341983719577,
+          "ess_fraction": 0.9945170991859789,
+          "override_used": false,
+          "override_scope": null,
+          "gate_error": null
+        },
+        "gate_passed": true,
+        "override_used": false,
+        "override_policy": null
+      },
+      "engine_error": null
+    },
+    "e1": {
+      "report": "/private/tmp/q3d-pixdim-smoke-20261112/e1.smoke.json",
+      "config": "/private/tmp/q3d-pixdim-smoke-20261112/e1.config.json",
+      "config_sha256": "daeba24432c1176a0cfe3239723303749d29f71f501d07a4657d1fbf0c8ed1ae",
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "requested_stage": null,
+      "engine_active_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "stage_artifact_inputs": {},
+      "stage_artifact_hashes": {},
+      "tokenizer_gate": {
+        "status": "NOT_READY",
+        "passed": false,
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "thresholds": {
+          "min_perplexity": 32.0,
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4
+        }
+      },
+      "synthetic_gate_override_requested": true,
+      "synthetic_gate_override_used": true,
+      "physiology_cohort_weighting": {
+        "schema": "self_audit.candidate_q3d.runtime_cohort_weighting.v1",
+        "source": "U",
+        "source_cohort": "U",
+        "arm": "V1",
+        "patient_ids": [
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ],
+        "w_pat": {
+          "train_unlabeled_000": 0.9483836053009851,
+          "train_unlabeled_001": 0.8172821362545306
+        },
+        "omega": {
+          "train_unlabeled_000": 1.0742504461410438,
+          "train_unlabeled_001": 0.9257495538589562
+        },
+        "mean_w_pat": 0.8828328707777578,
+        "ess": 1.9890341983719577,
+        "ess_fraction": 0.9945170991859789,
+        "mean_omega": 1.0,
+        "max_omega": 1.0742504461410438,
+        "zero_fraction": 0.0,
+        "gate": {
+          "context": "J physiology cache reload",
+          "status": "PASS_POSITIVE_U_SUPPORT",
+          "passed": true,
+          "patient_weights": {
+            "train_unlabeled_000": 0.9483836053009851,
+            "train_unlabeled_001": 0.8172821362545306
+          },
+          "positive_patient_count": 2,
+          "patient_count": 2,
+          "mean_w_pat": 0.8828328707777578,
+          "ess": 1.9890341983719577,
+          "ess_fraction": 0.9945170991859789,
+          "override_used": false,
+          "override_scope": null,
+          "gate_error": null
+        },
+        "gate_passed": true,
+        "override_used": false,
+        "override_policy": null
+      },
+      "engine_error": null
+    },
+    "teacher_supervised": {
+      "report": "/private/tmp/q3d-pixdim-smoke-20261112/teacher_supervised.smoke.json",
+      "config": "/private/tmp/q3d-pixdim-smoke-20261112/teacher_supervised.config.json",
+      "config_sha256": "28d1408093c5c123085bdd04cc0c1d645f99f50ca49a80024ce4c9882e86e532",
+      "completed_stages": [
+        "T"
+      ],
+      "expected_stages": [
+        "T"
+      ],
+      "expected_completed_stages": [
+        "T"
+      ],
+      "requested_stage": null,
+      "engine_active_stages": null,
+      "stage_artifact_inputs": {},
+      "stage_artifact_hashes": {},
+      "tokenizer_gate": {
+        "status": "NOT_APPLICABLE",
+        "passed": null
+      },
+      "synthetic_gate_override_requested": false,
+      "synthetic_gate_override_used": false,
+      "physiology_cohort_weighting": null,
+      "engine_error": null
+    },
+    "mean_teacher": {
+      "report": "/private/tmp/q3d-pixdim-smoke-20261112/mean_teacher.smoke.json",
+      "config": "/private/tmp/q3d-pixdim-smoke-20261112/mean_teacher.config.json",
+      "config_sha256": "c8509c900f8d51a310ac307930d55f94fc3e7b2d3bed61606ff0337d080d4fe8",
+      "completed_stages": [
+        "J"
+      ],
+      "expected_stages": [
+        "J"
+      ],
+      "expected_completed_stages": [
+        "J"
+      ],
+      "requested_stage": null,
+      "engine_active_stages": [
+        "J"
+      ],
+      "stage_artifact_inputs": {},
+      "stage_artifact_hashes": {},
+      "tokenizer_gate": {
+        "status": "NOT_APPLICABLE",
+        "passed": null
+      },
+      "synthetic_gate_override_requested": false,
+      "synthetic_gate_override_used": false,
+      "physiology_cohort_weighting": null,
+      "engine_error": null
+    },
+    "o1": {
+      "report": "/private/tmp/q3d-pixdim-smoke-20261112/o1.smoke.json",
+      "config": "/private/tmp/q3d-pixdim-smoke-20261112/o1.config.json",
+      "config_sha256": "93d9c4d849c913a480557684c2db729de7ade6c06e1867d16bfc0aaeeebed735",
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "requested_stage": null,
+      "engine_active_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "stage_artifact_inputs": {},
+      "stage_artifact_hashes": {},
+      "tokenizer_gate": {
+        "status": "NOT_READY",
+        "passed": false,
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "thresholds": {
+          "min_perplexity": 32.0,
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4
+        }
+      },
+      "synthetic_gate_override_requested": true,
+      "synthetic_gate_override_used": true,
+      "physiology_cohort_weighting": {
+        "schema": "self_audit.candidate_q3d.runtime_cohort_weighting.v1",
+        "source": "U",
+        "source_cohort": "U",
+        "arm": "V1",
+        "patient_ids": [
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ],
+        "w_pat": {
+          "train_unlabeled_000": 0.9483836053009851,
+          "train_unlabeled_001": 0.8172821362545306
+        },
+        "omega": {
+          "train_unlabeled_000": 1.0742504461410438,
+          "train_unlabeled_001": 0.9257495538589562
+        },
+        "mean_w_pat": 0.8828328707777578,
+        "ess": 1.9890341983719577,
+        "ess_fraction": 0.9945170991859789,
+        "mean_omega": 1.0,
+        "max_omega": 1.0742504461410438,
+        "zero_fraction": 0.0,
+        "gate": {
+          "context": "J physiology cache reload",
+          "status": "PASS_POSITIVE_U_SUPPORT",
+          "passed": true,
+          "patient_weights": {
+            "train_unlabeled_000": 0.9483836053009851,
+            "train_unlabeled_001": 0.8172821362545306
+          },
+          "positive_patient_count": 2,
+          "patient_count": 2,
+          "mean_w_pat": 0.8828328707777578,
+          "ess": 1.9890341983719577,
+          "ess_fraction": 0.9945170991859789,
+          "override_used": false,
+          "override_scope": null,
+          "gate_error": null
+        },
+        "gate_passed": true,
+        "override_used": false,
+        "override_policy": null
+      },
+      "engine_error": null
+    },
+    "s1": {
+      "report": "/private/tmp/q3d-pixdim-smoke-20261112/s1.smoke.json",
+      "config": "/private/tmp/q3d-pixdim-smoke-20261112/s1.config.json",
+      "config_sha256": "cb1e25b9047c6599951f7a72a2869563a83e9e3316a05088d246a4b030ffcdb4",
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "requested_stage": null,
+      "engine_active_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "stage_artifact_inputs": {},
+      "stage_artifact_hashes": {},
+      "tokenizer_gate": {
+        "status": "NOT_READY",
+        "passed": false,
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "thresholds": {
+          "min_perplexity": 32.0,
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4
+        }
+      },
+      "synthetic_gate_override_requested": true,
+      "synthetic_gate_override_used": true,
+      "physiology_cohort_weighting": {
+        "schema": "self_audit.candidate_q3d.runtime_cohort_weighting.v1",
+        "source": "U",
+        "source_cohort": "U",
+        "arm": "V1",
+        "patient_ids": [
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ],
+        "w_pat": {
+          "train_unlabeled_000": 0.9483836053009851,
+          "train_unlabeled_001": 0.8172821362545306
+        },
+        "omega": {
+          "train_unlabeled_000": 1.0742504461410438,
+          "train_unlabeled_001": 0.9257495538589562
+        },
+        "mean_w_pat": 0.8828328707777578,
+        "ess": 1.9890341983719577,
+        "ess_fraction": 0.9945170991859789,
+        "mean_omega": 1.0,
+        "max_omega": 1.0742504461410438,
+        "zero_fraction": 0.0,
+        "gate": {
+          "context": "J physiology cache reload",
+          "status": "PASS_POSITIVE_U_SUPPORT",
+          "passed": true,
+          "patient_weights": {
+            "train_unlabeled_000": 0.9483836053009851,
+            "train_unlabeled_001": 0.8172821362545306
+          },
+          "positive_patient_count": 2,
+          "patient_count": 2,
+          "mean_w_pat": 0.8828328707777578,
+          "ess": 1.9890341983719577,
+          "ess_fraction": 0.9945170991859789,
+          "override_used": false,
+          "override_scope": null,
+          "gate_error": null
+        },
+        "gate_passed": true,
+        "override_used": false,
+        "override_policy": null
+      },
+      "engine_error": null
+    },
+    "v0": {
+      "report": "/private/tmp/q3d-pixdim-smoke-20261112/v0.smoke.json",
+      "config": "/private/tmp/q3d-pixdim-smoke-20261112/v0.config.json",
+      "config_sha256": "daae2e772c9f25d272f0ee78bfd158d2258f6aae735bd3bad9af8301cd0ff46b",
+      "completed_stages": [
+        "T",
+        "Q",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "Q",
+        "J"
+      ],
+      "expected_completed_stages": [
+        "T",
+        "Q",
+        "J"
+      ],
+      "requested_stage": null,
+      "engine_active_stages": [
+        "T",
+        "Q",
+        "J"
+      ],
+      "stage_artifact_inputs": {},
+      "stage_artifact_hashes": {},
+      "tokenizer_gate": {
+        "status": "NOT_READY",
+        "passed": false,
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "thresholds": {
+          "min_perplexity": 32.0,
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4
+        }
+      },
+      "synthetic_gate_override_requested": true,
+      "synthetic_gate_override_used": true,
+      "physiology_cohort_weighting": null,
+      "engine_error": null
+    },
+    "v1": {
+      "report": "/private/tmp/q3d-pixdim-smoke-20261112/v1.smoke.json",
+      "config": "/private/tmp/q3d-pixdim-smoke-20261112/v1.config.json",
+      "config_sha256": "7a86a39ae9aa53ca1e7d05d15ecbd126eee4c48ae9545fbf6527c973cbc3494b",
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "requested_stage": "J",
+      "engine_active_stages": [
+        "J"
+      ],
+      "stage_artifact_inputs": {
+        "P": {
+          "path": "/private/tmp/q3d-pixdim-smoke-20261112/_shared_v1_tqp/P/P.artifact.json",
+          "manifest_sha256": "0dcff8763e19fa1a62350e1e9a6f4e73852a16b9a79c3b1dc41eac1859399cda"
+        },
+        "Q": {
+          "path": "/private/tmp/q3d-pixdim-smoke-20261112/_shared_v1_tqp/Q/Q.artifact.json",
+          "manifest_sha256": "f5e9563f0e2bf8a5262a544f4eb1399dacfb7aacdf547e2061ca80c55ad23346"
+        },
+        "T": {
+          "path": "/private/tmp/q3d-pixdim-smoke-20261112/_shared_v1_tqp/T/T.artifact.json",
+          "manifest_sha256": "289af8ca402f82c88fb5410813065e5022fb2950f743eed92d09dcd11653d2a1"
+        }
+      },
+      "stage_artifact_hashes": {
+        "P": {
+          "manifest_sha256": "0dcff8763e19fa1a62350e1e9a6f4e73852a16b9a79c3b1dc41eac1859399cda",
+          "checkpoint_sha256": "c04541ab049fb226f6aceba42585cecfdaf804ff90b60e0bd199eb2228479f1c"
+        },
+        "Q": {
+          "manifest_sha256": "f5e9563f0e2bf8a5262a544f4eb1399dacfb7aacdf547e2061ca80c55ad23346",
+          "checkpoint_sha256": "620d81078d649fb34f4d901433d73c7749dc1f20e0e4ee1800d14b13dc4b0ff2"
+        },
+        "T": {
+          "manifest_sha256": "289af8ca402f82c88fb5410813065e5022fb2950f743eed92d09dcd11653d2a1",
+          "checkpoint_sha256": "d43894efac66655346b06c7acf1bd7cbbdac035d0797c3460ac88ce1322825cb"
+        }
+      },
+      "tokenizer_gate": {
+        "status": "NOT_READY",
+        "passed": false,
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "thresholds": {
+          "min_perplexity": 32.0,
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4
+        }
+      },
+      "synthetic_gate_override_requested": true,
+      "synthetic_gate_override_used": true,
+      "physiology_cohort_weighting": {
+        "schema": "self_audit.candidate_q3d.runtime_cohort_weighting.v1",
+        "source": "U",
+        "source_cohort": "U",
+        "arm": "V1",
+        "patient_ids": [
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ],
+        "w_pat": {
+          "train_unlabeled_000": 0.9483836053009851,
+          "train_unlabeled_001": 0.8172821362545306
+        },
+        "omega": {
+          "train_unlabeled_000": 1.0742504461410438,
+          "train_unlabeled_001": 0.9257495538589562
+        },
+        "mean_w_pat": 0.8828328707777578,
+        "ess": 1.9890341983719577,
+        "ess_fraction": 0.9945170991859789,
+        "mean_omega": 1.0,
+        "max_omega": 1.0742504461410438,
+        "zero_fraction": 0.0,
+        "gate": {
+          "context": "J physiology cache reload",
+          "status": "PASS_POSITIVE_U_SUPPORT",
+          "passed": true,
+          "patient_weights": {
+            "train_unlabeled_000": 0.9483836053009851,
+            "train_unlabeled_001": 0.8172821362545306
+          },
+          "positive_patient_count": 2,
+          "patient_count": 2,
+          "mean_w_pat": 0.8828328707777578,
+          "ess": 1.9890341983719577,
+          "ess_fraction": 0.9945170991859789,
+          "override_used": false,
+          "override_scope": null,
+          "gate_error": null
+        },
+        "gate_passed": true,
+        "override_used": false,
+        "override_policy": null
+      },
+      "engine_error": null
+    },
+    "v1_residual2": {
+      "report": "/private/tmp/q3d-pixdim-smoke-20261112/v1_residual2.smoke.json",
+      "config": "/private/tmp/q3d-pixdim-smoke-20261112/v1_residual2.config.json",
+      "config_sha256": "b3b54bb8f33bcb0b481cadd1c6f2683779ee0ff361d9e469bcde2fe81b3eef6d",
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "requested_stage": null,
+      "engine_active_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "stage_artifact_inputs": {},
+      "stage_artifact_hashes": {},
+      "tokenizer_gate": {
+        "status": "NOT_READY",
+        "passed": false,
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "thresholds": {
+          "min_perplexity": 32.0,
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4
+        }
+      },
+      "synthetic_gate_override_requested": true,
+      "synthetic_gate_override_used": true,
+      "physiology_cohort_weighting": {
+        "schema": "self_audit.candidate_q3d.runtime_cohort_weighting.v1",
+        "source": "U",
+        "source_cohort": "U",
+        "arm": "V1",
+        "patient_ids": [
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ],
+        "w_pat": {
+          "train_unlabeled_000": 0.9483836053009851,
+          "train_unlabeled_001": 0.8172821362545306
+        },
+        "omega": {
+          "train_unlabeled_000": 1.0742504461410438,
+          "train_unlabeled_001": 0.9257495538589562
+        },
+        "mean_w_pat": 0.8828328707777578,
+        "ess": 1.9890341983719577,
+        "ess_fraction": 0.9945170991859789,
+        "mean_omega": 1.0,
+        "max_omega": 1.0742504461410438,
+        "zero_fraction": 0.0,
+        "gate": {
+          "context": "J physiology cache reload",
+          "status": "PASS_POSITIVE_U_SUPPORT",
+          "passed": true,
+          "patient_weights": {
+            "train_unlabeled_000": 0.9483836053009851,
+            "train_unlabeled_001": 0.8172821362545306
+          },
+          "positive_patient_count": 2,
+          "patient_count": 2,
+          "mean_w_pat": 0.8828328707777578,
+          "ess": 1.9890341983719577,
+          "ess_fraction": 0.9945170991859789,
+          "override_used": false,
+          "override_scope": null,
+          "gate_error": null
+        },
+        "gate_passed": true,
+        "override_used": false,
+        "override_policy": null
+      },
+      "engine_error": null
+    },
+    "v1u": {
+      "report": "/private/tmp/q3d-pixdim-smoke-20261112/v1u.smoke.json",
+      "config": "/private/tmp/q3d-pixdim-smoke-20261112/v1u.config.json",
+      "config_sha256": "63a5cb62d1dc91a754c76d5820a834e5c8ddc6ecc74b2d152aa55322ac42344d",
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "requested_stage": "J",
+      "engine_active_stages": [
+        "J"
+      ],
+      "stage_artifact_inputs": {
+        "P": {
+          "path": "/private/tmp/q3d-pixdim-smoke-20261112/_shared_v1_tqp/P/P.artifact.json",
+          "manifest_sha256": "0dcff8763e19fa1a62350e1e9a6f4e73852a16b9a79c3b1dc41eac1859399cda"
+        },
+        "Q": {
+          "path": "/private/tmp/q3d-pixdim-smoke-20261112/_shared_v1_tqp/Q/Q.artifact.json",
+          "manifest_sha256": "f5e9563f0e2bf8a5262a544f4eb1399dacfb7aacdf547e2061ca80c55ad23346"
+        },
+        "T": {
+          "path": "/private/tmp/q3d-pixdim-smoke-20261112/_shared_v1_tqp/T/T.artifact.json",
+          "manifest_sha256": "289af8ca402f82c88fb5410813065e5022fb2950f743eed92d09dcd11653d2a1"
+        }
+      },
+      "stage_artifact_hashes": {
+        "P": {
+          "manifest_sha256": "0dcff8763e19fa1a62350e1e9a6f4e73852a16b9a79c3b1dc41eac1859399cda",
+          "checkpoint_sha256": "c04541ab049fb226f6aceba42585cecfdaf804ff90b60e0bd199eb2228479f1c"
+        },
+        "Q": {
+          "manifest_sha256": "f5e9563f0e2bf8a5262a544f4eb1399dacfb7aacdf547e2061ca80c55ad23346",
+          "checkpoint_sha256": "620d81078d649fb34f4d901433d73c7749dc1f20e0e4ee1800d14b13dc4b0ff2"
+        },
+        "T": {
+          "manifest_sha256": "289af8ca402f82c88fb5410813065e5022fb2950f743eed92d09dcd11653d2a1",
+          "checkpoint_sha256": "d43894efac66655346b06c7acf1bd7cbbdac035d0797c3460ac88ce1322825cb"
+        }
+      },
+      "tokenizer_gate": {
+        "status": "NOT_READY",
+        "passed": false,
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "thresholds": {
+          "min_perplexity": 32.0,
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4
+        }
+      },
+      "synthetic_gate_override_requested": true,
+      "synthetic_gate_override_used": true,
+      "physiology_cohort_weighting": {
+        "schema": "self_audit.candidate_q3d.runtime_cohort_weighting.v1",
+        "source": "U",
+        "source_cohort": "U",
+        "arm": "V1-U",
+        "patient_ids": [
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ],
+        "w_pat": {
+          "train_unlabeled_000": 0.9483836053009851,
+          "train_unlabeled_001": 0.8172821362545306
+        },
+        "omega": {
+          "train_unlabeled_000": 1.0,
+          "train_unlabeled_001": 1.0
+        },
+        "mean_w_pat": 0.8828328707777578,
+        "ess": 1.9890341983719577,
+        "ess_fraction": 0.9945170991859789,
+        "mean_omega": 1.0,
+        "max_omega": 1.0,
+        "zero_fraction": 0.0,
+        "gate": {
+          "context": "J physiology cache reload",
+          "status": "PASS_POSITIVE_U_SUPPORT",
+          "passed": true,
+          "patient_weights": {
+            "train_unlabeled_000": 0.9483836053009851,
+            "train_unlabeled_001": 0.8172821362545306
+          },
+          "positive_patient_count": 2,
+          "patient_count": 2,
+          "mean_w_pat": 0.8828328707777578,
+          "ess": 1.9890341983719577,
+          "ess_fraction": 0.9945170991859789,
+          "override_used": false,
+          "override_scope": null,
+          "gate_error": null
+        },
+        "gate_passed": true,
+        "override_used": false,
+        "override_policy": null
+      },
+      "engine_error": null
+    }
+  },
+  "patient_metrics_claimed": false,
+  "gpu_evidence": "NOT_RUN",
+  "real_data_evidence": "NOT_RUN",
+  "report": "/private/tmp/q3d-pixdim-smoke-20261112.smoke.json"
+}
