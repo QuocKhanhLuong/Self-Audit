@@ -13,6 +13,7 @@ import json
 import math
 import os
 import random
+import sys
 import tempfile
 import time
 from collections.abc import Mapping, Sequence
@@ -23,7 +24,6 @@ from typing import Any
 import numpy as np
 import torch
 from torch import Tensor, nn
-from torch.nn import functional as F
 
 from . import CHECKPOINT_SCHEMA
 from .alignment import align_teacher_to_student4
@@ -44,7 +44,7 @@ from .losses import (
 _CLASS_NAMES = ("BG", "RV", "MYO", "LV")
 STATE_SCHEMA = CHECKPOINT_SCHEMA
 _VQ_ARMS = {"v1", "v1u", "v0", "b1", "e1", "o1", "s1"}
-_TEACHER_ARMS = {"c1", *_VQ_ARMS, "mednext_supervised"}
+_TEACHER_ARMS = {"c1", *_VQ_ARMS, "teacher_supervised"}
 _STAGE_ORDER = ("T", "Q", "P", "J")
 _MEAN_TEACHER_DECAY = 0.99
 _STUDENT_CODE_COLLAPSE_WINDOW = 200
@@ -314,6 +314,43 @@ def _student_arm(arm: str) -> str:
     }.get(arm, "")
 
 
+def _teacher_feature_channels(config: Mapping[str, Any], teacher: nn.Module | None) -> int | None:
+    # Prefer the live module's declared lattice width.  Synthetic ResEnc
+    # fixtures intentionally shrink [32,64,128,256,320,320] to
+    # [4,8,12,16,20,20], while the recipe keeps the real architecture's
+    # channel contract for hashing and readiness checks.
+    encoder = getattr(teacher, "encoder", None) if teacher is not None else None
+    if isinstance(teacher, nn.Module):
+        direct = getattr(teacher, "feature_channels", None)
+        if isinstance(direct, int) and direct > 0:
+            return direct
+        encoder_channels = getattr(teacher, "encoder_channels", None)
+        stride = config["model"]["teacher"].get("feature_stride")
+        index = {4: 2, 8: 3, 16: 4}.get(stride)
+        if isinstance(encoder_channels, (list, tuple)) and index is not None and index < len(encoder_channels):
+            value = int(encoder_channels[index])
+            if value > 0:
+                return value
+    if isinstance(encoder, nn.Module):
+        direct = getattr(encoder, "feature_channels", None)
+        if isinstance(direct, int) and direct > 0:
+            return direct
+    declared = config["model"]["teacher"].get("feature_channels")
+    if declared is not None:
+        return int(declared)
+    if not isinstance(encoder, nn.Module):
+        return None
+    channels = getattr(encoder, "channels", None)
+    if not isinstance(channels, (list, tuple)):
+        return None
+    stride = config["model"]["teacher"].get("feature_stride")
+    index = {4: 2, 8: 3, 16: 4}.get(stride)
+    if index is None or index >= len(channels):
+        return None
+    value = int(channels[index])
+    return value if value > 0 else None
+
+
 def _student_config(config: Mapping[str, Any], teacher: nn.Module | None = None) -> dict[str, Any]:
     raw = config["model"]["student"]
     if raw["architecture"] != "unetrpp_lite_3d":
@@ -321,20 +358,12 @@ def _student_config(config: Mapping[str, Any], teacher: nn.Module | None = None)
     arm = _student_arm(str(config["arm"]))
     if not arm:
         raise ValueError(f"Q-3D arm {config['arm']!r} does not use UNETR++-lite")
-    configured_teacher_channels = config["model"]["teacher"].get("feature_channels")
-    teacher_feature_channels = (
-        None if configured_teacher_channels is None else int(configured_teacher_channels)
-    )
+    teacher_feature_channels = _teacher_feature_channels(config, teacher)
     if arm == "C1" and teacher_feature_channels is None:
         raise ValueError("C1 requires model.teacher.feature_channels for exact feature matching")
     if arm == "C1" and bool(config["runtime"]["synthetic"]) and teacher is not None:
-        channels = getattr(getattr(teacher, "encoder", None), "channels", None)
-        channel_index = {4: 2, 8: 3, 16: 3}.get(config["model"]["teacher"]["feature_stride"])
-        if channels is None or channel_index is None or channel_index >= len(channels):
+        if teacher_feature_channels is None:
             raise ValueError("synthetic C1 teacher cannot declare its captured feature channels")
-        teacher_feature_channels = int(channels[channel_index])
-        if teacher_feature_channels <= 0:
-            raise ValueError("synthetic C1 teacher feature channel count must be positive")
     return {
         "student": {
             "arm": arm,
@@ -387,9 +416,8 @@ def _tokenizer_config(config: Mapping[str, Any], *, smoke: bool = False) -> dict
 def _build_teacher(config: Mapping[str, Any], *, synthetic: bool) -> tuple[nn.Module, dict[str, Any]]:
     from .pretrained import build_q3d_teacher
 
-    raw = config["model"]["teacher"]
-    if raw["architecture"] != "mednext_l_k3":
-        raise ValueError(f"Q-3D stage requires MedNeXt-L k3, got {raw['architecture']!r}")
+    # The builder owns the strict ResEnc-L architecture/checkpoint contract;
+    # the engine only consumes its declared dual-head teacher interface.
     return build_q3d_teacher(config, synthetic=synthetic)
 
 
@@ -400,18 +428,9 @@ def _build_tokenizer(
         return None
     from .tokenizer import TeacherTokenizer
 
-    source = f"stride{config['model']['teacher']['feature_stride']}"
-    if hasattr(teacher.encoder, "channels"):
-        # The explicitly synthetic tiny teacher exposes four feature stages
-        # (stem plus three down blocks, rather than five MedNeXt stages).
-        channel_index = (
-            {"stride4": 2, "stride8": 3, "stride16": 3}[source]
-            if bool(config["runtime"]["synthetic"])
-            else {"stride4": 2, "stride8": 3, "stride16": 4}[source]
-        )
-        channels = int(teacher.encoder.channels[channel_index])
-    else:
-        raise ValueError("Q-3D tokenizer requires a verified teacher encoder channel declaration")
+    channels = _teacher_feature_channels(config, teacher)
+    if channels is None:
+        raise ValueError("Q-3D tokenizer requires a verified teacher feature channel declaration")
     tokenizer = TeacherTokenizer(channels, _tokenizer_config(config, smoke=smoke))
     return tokenizer.to(device)
 
@@ -460,17 +479,37 @@ def _build_models(
     if teacher is not None:
         from .alignment import student_grid_phase
 
-        if arm != "mednext_supervised":
+        if arm != "teacher_supervised":
             teacher._q3d_student_phase = student_grid_phase(student)
-        if bool(config["runtime"]["synthetic"]) and config["model"]["teacher"]["feature_stride"] == 16:
-            teacher._q3d_stride16_pool = nn.AvgPool3d((1, 2, 2), stride=(1, 2, 2))
     return teacher, student, tokenizer, provenance
 
 
 def _teacher_stage(teacher: nn.Module, stage: str, *, freeze: bool) -> None:
-    from ..candidate_a3d.teacher import set_teacher_stage
+    """Apply the dual-head teacher train/eval contract without baseline imports."""
 
-    set_teacher_stage(teacher, stage, freeze=freeze)
+    aliases = {"teacher_pretrain": "pretrain", "teacher_warmup": "warmup"}
+    stage = aliases.get(stage, stage)
+    setter = getattr(teacher, "set_teacher_stage", None)
+    if not callable(setter):
+        setter = getattr(teacher, "set_stage", None)
+    if callable(setter):
+        try:
+            setter(stage, freeze=freeze)
+        except TypeError:
+            setter(stage)
+        return
+    if stage not in {"pretrain", "warmup", "joint"}:
+        raise ValueError("teacher stage must be pretrain, warmup or joint")
+    teacher.requires_grad_(not freeze)
+    if freeze:
+        teacher.eval()
+        return
+    teacher.train()
+    if stage == "warmup":
+        encoder = getattr(teacher, "encoder", None)
+        if isinstance(encoder, nn.Module):
+            encoder.requires_grad_(False)
+            encoder.eval()
 
 
 def _sample_parts(data: Q3DData, key: Any, *, teacher: bool = False) -> tuple[Tensor, Tensor, dict[str, Any], dict[str, Any]]:
@@ -563,57 +602,6 @@ def _teacher_outputs(
         "teacher_phase": teacher_feature_phase(teacher, source, synthetic=synthetic),
         "student_phase": student_phase,
     }
-    if synthetic:
-        # Observe the tiny encoder's feature tuple without a module hook or
-        # second forward. The teacher's own forward remains authoritative.
-        encoder = getattr(teacher, "encoder", None)
-        index = {"stride4": 2, "stride4_decoder_block": 2,
-                 "stride8": 3, "encoder_stride8": 3, "decoder_stride8": 3,
-                 "stride16": 3, "bottleneck_stride16": 3}.get(source)
-        if not callable(getattr(encoder, "forward_features", None)) or index is None:
-            raise ValueError("synthetic teacher cannot supply the requested feature stride")
-        native_shape = tuple(int(value) for value in image.shape[-3:])
-        padded_hw = tuple(((value + 15) // 16) * 16 for value in native_shape[1:])
-        padded_image = F.pad(
-            image,
-            (0, padded_hw[1] - native_shape[2], 0, padded_hw[0] - native_shape[1], 0, 0),
-            mode="replicate",
-        )
-        padded_geometry = dict(geometry)
-        padded_geometry["shape"] = (native_shape[0], *padded_hw)
-        captured: list[Tensor] = []
-        original = encoder.forward_features
-        had_override = "forward_features" in encoder.__dict__
-        old_override = encoder.__dict__.get("forward_features")
-
-        def capture_features(value):
-            features = original(value)
-            captured.append(features[index].detach())
-            return features
-
-        encoder.forward_features = capture_features
-        try:
-            with torch.no_grad():
-                output = teacher(padded_image, geometry=padded_geometry)
-        finally:
-            if had_override:
-                encoder.forward_features = old_override
-            else:
-                del encoder.forward_features
-        if len(captured) != 1:
-            raise RuntimeError("synthetic teacher feature tuple did not run exactly once")
-        feature = captured[0]
-        if source in {"stride16", "bottleneck_stride16"}:
-            # The tiny explicit software fixture has no native stride-16
-            # stage; average-pool its stride-8 output only for synthetic S1
-            # plumbing checks. Real S1 always uses the verified bottleneck.
-            feature = teacher._q3d_stride16_pool(feature)
-        native_outputs = {
-            name: value[..., :native_shape[0], :native_shape[1], :native_shape[2]]
-            for name, value in output.items()
-        }
-        return {**native_outputs, "feature": feature, **phases}
-
     from .teacher_features import forward_teacher_with_features
 
     return {**forward_teacher_with_features(teacher, image, geometry=geometry, source=source), **phases}
@@ -622,7 +610,7 @@ def _teacher_outputs(
 def _features_to_student_grid(
     feature: Tensor, native_shape: Sequence[int], source: str, *, teacher_phase, student_phase,
 ) -> Tensor:
-    if source in {"stride16", "bottleneck_stride16"}:
+    if source in {"stride16", "bottleneck_stride16", "encoder_stride16"}:
         return _align_stride16(feature, native_shape, teacher_phase=teacher_phase, student_phase=student_phase)
     return align_teacher_to_student4(feature, native_shape, teacher_phase, student_phase)
 
@@ -662,10 +650,53 @@ def _make_teacher_optimizer(teacher: nn.Module, config: Mapping[str, Any], *, wa
     training = config["training"]
     decay = float(training["weight_decay"])
     if warmup:
-        return _make_optimizer(teacher.boundary_path.parameters(), lr=float(training["teacher_boundary_lr"]), weight_decay=decay)
+        return _make_optimizer(
+            _teacher_head_parameters(teacher),
+            lr=float(training["teacher_head_lr"]),
+            weight_decay=decay,
+        )
     return torch.optim.AdamW(
         _teacher_parameter_groups(teacher, config, multiplier=1.0), weight_decay=decay,
     )
+
+
+def _unique_parameters(parameters: Any) -> list[nn.Parameter]:
+    seen: set[int] = set()
+    result: list[nn.Parameter] = []
+    for parameter in parameters:
+        if not isinstance(parameter, nn.Parameter) or id(parameter) in seen:
+            continue
+        seen.add(id(parameter))
+        if parameter.requires_grad:
+            result.append(parameter)
+    return result
+
+
+def _teacher_head_parameters(teacher: nn.Module) -> list[nn.Parameter]:
+    """Return decoder/region/boundary parameters without registered aliases."""
+
+    encoder = getattr(teacher, "encoder", None)
+    encoder_ids = {
+        id(parameter) for parameter in encoder.parameters()
+    } if isinstance(encoder, nn.Module) else set()
+    preferred = (
+        "decoder", "region_path", "region_decoder", "region_head",
+        "segmentation_head", "boundary_path", "boundary_head",
+    )
+    selected: list[nn.Parameter] = []
+    for root in preferred:
+        module = getattr(teacher, root, None)
+        if isinstance(module, nn.Module):
+            selected.extend(module.parameters())
+    # If the new wrapper uses a differently named decoder, include every
+    # top-level child other than the shared encoder.  Decoder.encoder aliases
+    # are removed by the encoder-id exclusion below.
+    if not selected:
+        for root, module in teacher.named_children():
+            if root != "encoder":
+                selected.extend(module.parameters())
+    return [parameter for parameter in _unique_parameters(selected)
+            if id(parameter) not in encoder_ids]
 
 
 def _teacher_parameter_groups(
@@ -674,39 +705,20 @@ def _teacher_parameter_groups(
     *,
     multiplier: float,
 ) -> list[dict[str, Any]]:
-    """Separate the real MedNeXt region decoder from its encoder trunk.
+    """Build disjoint encoder and decoder/head groups for the ResEnc teacher.
 
-    The upstream MedNeXt adapter keeps up/decoder/out_0 inside
-    ``teacher.encoder.model``. Treating the whole adapter as trunk would assign
-    its region head the trunk learning rate, even though ``region_path`` is an
-    Identity module for the real teacher.
+    Some ResEnc decoder implementations register a reference to the shared
+    encoder (``decoder.encoder``). Group membership is therefore by parameter
+    identity, never by name, so no tensor is optimized twice.
     """
     training = config["training"]
-    region_names = {
-        "up_3", "dec_block_3", "up_2", "dec_block_2", "up_1", "dec_block_1",
-        "up_0", "dec_block_0", "out_0",
-    }
-    encoder_trunk: list[nn.Parameter] = []
-    region_head: list[nn.Parameter] = []
-    for name, parameter in teacher.encoder.named_parameters():
-        if not parameter.requires_grad:
-            continue
-        root_name = name.split(".")
-        # Native MedNeXt parameters are named model.<module>.*. Synthetic
-        # encoders have no matching names, so their complete encoder remains
-        # in the trunk group.
-        if len(root_name) >= 2 and root_name[0] == "model" and root_name[1] in region_names:
-            region_head.append(parameter)
-        else:
-            encoder_trunk.append(parameter)
-    region_head.extend(parameter for parameter in teacher.region_path.parameters() if parameter.requires_grad)
-    region_head.extend(parameter for parameter in teacher.boundary_path.parameters() if parameter.requires_grad)
-
-    # Defensive de-duplication also protects alternate teacher wrappers whose
-    # region path aliases encoder-owned modules.
-    seen: set[int] = set()
-    trunk = [parameter for parameter in encoder_trunk if not (id(parameter) in seen or seen.add(id(parameter)))]
-    head = [parameter for parameter in region_head if not (id(parameter) in seen or seen.add(id(parameter)))]
+    encoder = getattr(teacher, "encoder", None)
+    if not isinstance(encoder, nn.Module):
+        raise ValueError("Q-3D teacher must expose an encoder module")
+    trunk = _unique_parameters(encoder.parameters())
+    trunk_ids = {id(parameter) for parameter in trunk}
+    all_parameters = _unique_parameters(teacher.parameters())
+    head = [parameter for parameter in all_parameters if id(parameter) not in trunk_ids]
     groups: list[dict[str, Any]] = []
     for parameters, base_lr, name in (
         (trunk, float(training["teacher_encoder_lr"]), "teacher_trunk"),
@@ -776,6 +788,7 @@ def _development_fg_dice(
     from .evaluation import aggregate_patient_class_dice, frame_class_dice
 
     per_patient: dict[str, float] = {}
+    per_patient_class: dict[str, dict[str, float]] = {}
     interface_rows: list[dict[str, Any]] = []
     was_training = model.training
     model.eval()
@@ -826,18 +839,34 @@ def _development_fg_dice(
                         interface_rows.append(_code_interface_diagnostics(model, outputs))
                     prediction = logits.argmax(1)[0].cpu().numpy()
                     frame_dice_rows.append(frame_class_dice(target, prediction))
-                patient_dice = aggregate_patient_class_dice(frame_dice_rows)["fg_dice"]
+                patient_aggregate = aggregate_patient_class_dice(frame_dice_rows)
+                patient_dice = patient_aggregate["fg_dice"]
                 if patient_dice is not None:
                     per_patient[patient_id] = float(patient_dice)
+                    per_patient_class[patient_id] = {
+                        name: float(value["dice"])
+                        for name, value in patient_aggregate["dice_by_class"].items()
+                        if value["dice"] is not None
+                    }
     finally:
         model.train(was_training)
     if not per_patient:
         raise ValueError("DEV checkpoint selection has no patient with foreground support")
     patient_scores = per_patient
+    per_class = {
+        name: float(np.mean([
+            patient_values[name] for patient_values in per_patient_class.values()
+            if name in patient_values
+        ]))
+        if any(name in patient_values for patient_values in per_patient_class.values()) else None
+        for name in _CLASS_NAMES[1:]
+    }
     return {
         "metric": "development_patient_macro_fg_dice",
         "score": float(np.mean(list(patient_scores.values()))),
         "patients": patient_scores,
+        "per_class": per_class,
+        "patient_per_class": per_patient_class,
         "patient_count": len(patient_scores),
         "code_interface": {
             "frames": interface_rows,
@@ -889,6 +918,36 @@ def _assert_snapshot_unchanged(module: nn.Module | None, snapshot: Mapping[str, 
             raise RuntimeError(f"frozen Q-3D {name} state changed during joint training: {key}")
 
 
+def _teacher_curve_status(history: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """Summarize whether the last three actual T DEV scores strictly rise."""
+
+    points: list[dict[str, Any]] = []
+    for item in history:
+        if not isinstance(item, Mapping):
+            continue
+        update = item.get("update")
+        score = item.get("score")
+        if type(update) is not int or update < 1:
+            continue
+        try:
+            score_value = float(score)
+        except (TypeError, ValueError):
+            continue
+        if not math.isfinite(score_value):
+            continue
+        points.append({"update": update, "score": score_value})
+    points.sort(key=lambda item: item["update"])
+    last = points[-3:]
+    if len(last) < 3:
+        return {"status": "INSUFFICIENT", "value": None, "points": copy.deepcopy(last)}
+    scores = [item["score"] for item in last]
+    return {
+        "status": "MEASURED",
+        "value": bool(scores[0] < scores[1] < scores[2]),
+        "points": copy.deepcopy(last),
+    }
+
+
 def _initial_run_state(config_sha256: str, data_identity: Mapping[str, Any]) -> dict[str, Any]:
     return {
         "schema": STATE_SCHEMA,
@@ -906,6 +965,20 @@ def _initial_run_state(config_sha256: str, data_identity: Mapping[str, Any]) -> 
         "ema_state": None,
         "best_teacher_state": None,
         "best_teacher_score": None,
+        "best_teacher_dev_per_class": None,
+        "best_teacher_dev_update": None,
+        "teacher_dev_history": [],
+        "teacher_dev_fg_dice": None,
+        "teacher_dev_per_class": None,
+        "teacher_selected_dev_update": None,
+        "teacher_terminal_dev_fg_dice": None,
+        "teacher_terminal_dev_per_class": None,
+        "teacher_dev_curve_still_improving": {
+            "status": "INSUFFICIENT", "value": None, "points": [],
+        },
+        "dev_curve_still_improving": {
+            "status": "INSUFFICIENT", "value": None, "points": [],
+        },
         "best_student_state": None,
         "best_student_score": None,
         "physiology_rows": None,
@@ -1045,6 +1118,38 @@ def _record_metric(state: dict[str, Any], metrics_path: Path, record: Mapping[st
     _jsonl_append(metrics_path, value)
 
 
+def _log_teacher_development(
+    config: Mapping[str, Any], *, update: int, update_budget: int,
+    train_loss: float, dev: Mapping[str, Any],
+) -> None:
+    """Print sparse teacher DEV diagnostics without corrupting JSON stdout."""
+
+    def shown(value: Any) -> str:
+        try:
+            numeric = float(value)
+        except (TypeError, ValueError):
+            return "NA"
+        return f"{numeric:.6f}" if math.isfinite(numeric) else "NA"
+
+    dataset = config.get("dataset", {}).get("name", "unknown")
+    protocol = config.get("protocol", {}).get("variant", "?")
+    k = config.get("protocol", {}).get("k", "?")
+    seed = config.get("seed", "?")
+    per_class = dev.get("per_class")
+    if not isinstance(per_class, Mapping):
+        per_class = {}
+    print(
+        f"[Q3D {dataset} protocol={protocol} k={k} seed={seed}] "
+        f"T update={update}/{update_budget} | train_loss={shown(train_loss)} | "
+        f"DEV patient_macro_fg_dice={shown(dev.get('score'))} | "
+        f"RV={shown(per_class.get('RV'))} "
+        f"MYO={shown(per_class.get('MYO'))} "
+        f"LV={shown(per_class.get('LV'))}",
+        file=sys.stderr,
+        flush=True,
+    )
+
+
 def _run_teacher_stage(
     config: Mapping[str, Any],
     *,
@@ -1073,6 +1178,18 @@ def _run_teacher_stage(
         state["stage"] = stage
         state["stage_cursor"] = 0
         cursor = 0
+    state.setdefault("best_teacher_dev_per_class", None)
+    state.setdefault("best_teacher_dev_update", None)
+    state.setdefault("teacher_dev_history", [])
+    state.setdefault("teacher_dev_fg_dice", None)
+    state.setdefault("teacher_dev_per_class", None)
+    state.setdefault("teacher_selected_dev_update", None)
+    state.setdefault("teacher_terminal_dev_fg_dice", None)
+    state.setdefault("teacher_terminal_dev_per_class", None)
+    state.setdefault("teacher_dev_curve_still_improving", {
+        "status": "INSUFFICIENT", "value": None, "points": [],
+    })
+    state.setdefault("dev_curve_still_improving", copy.deepcopy(state["teacher_dev_curve_still_improving"]))
     warmup_updates = int(math.ceil(update_budget * float(config["training"]["teacher_warmup_fraction"])))
     warmup_updates = min(update_budget, max(0, warmup_updates))
     optimizer: torch.optim.Optimizer | None = None
@@ -1161,15 +1278,60 @@ def _run_teacher_stage(
             score = float(dev["score"])
             if not math.isfinite(score):
                 raise FloatingPointError("DEV checkpoint-selection score is nonfinite")
+            per_class = dev.get("per_class")
+            if isinstance(per_class, Mapping):
+                normalized_per_class: dict[str, float | None] = {}
+                for name, value in per_class.items():
+                    if name not in _CLASS_NAMES[1:]:
+                        continue
+                    try:
+                        value_float = float(value) if value is not None else None
+                    except (TypeError, ValueError):
+                        value_float = None
+                    normalized_per_class[name] = (
+                        value_float if value_float is not None and math.isfinite(value_float) else None
+                    )
+                per_class = normalized_per_class
+            else:
+                per_class = None
+            history = []
+            for item in state.get("teacher_dev_history", []):
+                if not isinstance(item, Mapping) or item.get("update") == cursor:
+                    continue
+                if type(item.get("update")) is not int or item["update"] < 1:
+                    continue
+                try:
+                    old_score = float(item.get("score"))
+                except (TypeError, ValueError):
+                    continue
+                if math.isfinite(old_score):
+                    history.append({"update": item["update"], "score": old_score})
+            history.append({"update": cursor, "score": score})
+            history.sort(key=lambda item: int(item["update"]))
+            state["teacher_dev_history"] = history
+            state["teacher_terminal_dev_fg_dice"] = score
+            state["teacher_terminal_dev_per_class"] = copy.deepcopy(per_class)
+            state["teacher_dev_curve_still_improving"] = _teacher_curve_status(history)
+            state["dev_curve_still_improving"] = copy.deepcopy(state["teacher_dev_curve_still_improving"])
             if state.get("best_teacher_score") is None or score > float(state["best_teacher_score"]):
                 state["best_teacher_score"] = score
                 state["best_teacher_state"] = copy.deepcopy(teacher.state_dict())
+                state["best_teacher_dev_per_class"] = copy.deepcopy(per_class)
+                state["best_teacher_dev_update"] = cursor
             _record_metric(state, output_dir / "metrics.jsonl", {
                 "stage": stage, "event": "development_selection", "update": cursor,
                 "score": score, "best_score": float(state["best_teacher_score"]),
+                "teacher_dev_fg_dice": score,
+                "teacher_dev_per_class": copy.deepcopy(per_class),
+                "train_loss": float(record["loss"]),
+                "dev_curve_still_improving": copy.deepcopy(state["teacher_dev_curve_still_improving"]),
                 "patient_count": int(dev.get("patient_count", len(dev.get("patients", {})))),
                 "code_interface": dev.get("code_interface", {"status": "NOT_RUN_CUSTOM_EVALUATOR"}),
             })
+            _log_teacher_development(
+                config, update=cursor, update_budget=update_budget,
+                train_loss=float(record["loss"]), dev=dev,
+            )
         if cursor % checkpoint_every == 0 or cursor == update_budget:
             _save_optimizer_state(state, optimizer_key, optimizer)
             _capture_run_state(
@@ -1185,6 +1347,16 @@ def _run_teacher_stage(
 
     if state.get("best_teacher_state") is None:
         raise RuntimeError("Q-3D teacher stage completed without a DEV-selected checkpoint")
+    state["teacher_dev_fg_dice"] = (
+        float(state["best_teacher_score"])
+        if state.get("best_teacher_score") is not None else None
+    )
+    state["teacher_dev_per_class"] = copy.deepcopy(state.get("best_teacher_dev_per_class"))
+    state["teacher_selected_dev_update"] = state.get("best_teacher_dev_update")
+    state["teacher_dev_curve_still_improving"] = _teacher_curve_status(
+        state.get("teacher_dev_history", [])
+    )
+    state["dev_curve_still_improving"] = copy.deepcopy(state["teacher_dev_curve_still_improving"])
     teacher.load_state_dict(state["best_teacher_state"], strict=True)
     state["completed_stages"].append(stage)
     state["stage"] = None
@@ -2353,7 +2525,7 @@ def _run_joint_stage(
     if wants_codekd and (teacher is None or tokenizer is None or not tokenizer.codebook_frozen):
         raise ValueError("codeKD stage J requires frozen teacher tokenizer outputs from stage Q")
     if wants_feature_kd and teacher is None:
-        raise ValueError("C1 continuous feature KD requires the frozen MedNeXt teacher")
+        raise ValueError("C1 continuous feature KD requires the frozen ResEnc teacher")
     if is_mean_teacher and ema_model is None:
         raise RuntimeError("Mean Teacher baseline is missing its student EMA model")
 
@@ -3251,6 +3423,12 @@ def run_training(
         "data_identity": data_identity,
         "teacher_provenance": provenance.get("teacher"),
         "teacher_state_sha256": _state_sha256(teacher) if teacher is not None else None,
+        "teacher_dev_fg_dice": state.get("teacher_dev_fg_dice"),
+        "teacher_dev_per_class": copy.deepcopy(state.get("teacher_dev_per_class")),
+        "teacher_selected_dev_update": state.get("teacher_selected_dev_update"),
+        "teacher_terminal_dev_fg_dice": state.get("teacher_terminal_dev_fg_dice"),
+        "teacher_terminal_dev_per_class": copy.deepcopy(state.get("teacher_terminal_dev_per_class")),
+        "dev_curve_still_improving": copy.deepcopy(state.get("teacher_dev_curve_still_improving")),
         "student_state_sha256": _state_sha256(student),
         "tokenizer": tokenizer_metadata,
         "tokenizer_gate": state.get("gate"),

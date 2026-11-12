@@ -30,6 +30,15 @@ _MANIFEST_KEYS = {
     "content_hashes",
     "payload_sha256",
 }
+_OPTIONAL_MANIFEST_KEYS = {"teacher_quality"}
+_TEACHER_QUALITY_KEYS = {
+    "teacher_dev_fg_dice",
+    "teacher_dev_per_class",
+    "teacher_selected_dev_update",
+    "teacher_terminal_dev_fg_dice",
+    "teacher_terminal_dev_per_class",
+    "dev_curve_still_improving",
+}
 
 
 def _canonical_json(value: Any) -> bytes:
@@ -97,6 +106,44 @@ def _normalize_source_config(source_config: Mapping[str, Any]) -> dict[str, Any]
     normalized = dict(source_config)
     _canonical_json(normalized)
     return normalized
+
+
+def _teacher_quality_from_checkpoint(path: Path, *, stage: str) -> dict[str, Any] | None:
+    """Extract reporting-only T quality from a completed engine snapshot."""
+
+    if stage != "T":
+        return None
+    try:
+        import torch
+
+        try:
+            payload = torch.load(path, map_location="cpu", weights_only=True)
+        except TypeError:  # pragma: no cover - older torch compatibility
+            payload = torch.load(path, map_location="cpu")
+    except Exception:  # noqa: BLE001 - legacy low-level fixtures may be raw bytes
+        return None
+    if not isinstance(payload, Mapping):
+        return None
+    # A published T stage checkpoint is a Q3D engine snapshot.  Such a
+    # checkpoint must carry the complete teacher-quality receipt; silently
+    # omitting it would make the immutable manifest look complete while the
+    # required DEV/curve evidence was never sealed.  Raw-byte fixtures and
+    # legacy non-stage checkpoints remain supported by returning None.
+    is_published_t = stage == "T" and payload.get("stage_artifact_stage") == "T"
+    missing = _TEACHER_QUALITY_KEYS - set(payload)
+    if is_published_t and missing:
+        raise ValueError(
+            "published T checkpoint is missing teacher-quality fields: "
+            f"{sorted(missing)}"
+        )
+    quality = {key: payload[key] for key in _TEACHER_QUALITY_KEYS if key in payload}
+    if not quality:
+        return None
+    try:
+        _canonical_json(quality)
+    except ValueError as exc:
+        raise ValueError("T teacher quality metadata must be canonical JSON data") from exc
+    return quality
 
 
 def _normalize_dependencies(
@@ -201,6 +248,10 @@ def write_stage_manifest(
     checkpoint = Path(checkpoint_path).expanduser().resolve(strict=True)
     if not checkpoint.is_file():
         raise ValueError(f"stage checkpoint must be a file: {checkpoint}")
+    teacher_quality = _teacher_quality_from_checkpoint(checkpoint, stage=stage)
+    normalized_hashes = dict(normalized_hashes)
+    if teacher_quality is not None:
+        normalized_hashes["teacher_quality_sha256"] = _canonical_sha256(teacher_quality)
     manifest: dict[str, Any] = {
         "schema": STAGE_MANIFEST_SCHEMA,
         "stage": stage,
@@ -211,6 +262,8 @@ def write_stage_manifest(
         "dependencies": normalized_dependencies,
         "content_hashes": normalized_hashes,
     }
+    if teacher_quality is not None:
+        manifest["teacher_quality"] = teacher_quality
     manifest["payload_sha256"] = _manifest_payload_sha256(manifest)
     manifest_path = Path(path).expanduser().resolve()
     _write_immutable_json(manifest_path, manifest)
@@ -233,7 +286,11 @@ def _load_stage_manifest(
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ValueError(f"invalid Q-3D stage manifest {manifest_path}: {exc}") from exc
-    if not isinstance(manifest, Mapping) or set(manifest) != _MANIFEST_KEYS:
+    if not isinstance(manifest, Mapping):
+        raise ValueError("Q-3D stage manifest has missing or unknown fields")
+    manifest_keys = set(manifest)
+    if manifest_keys - (_MANIFEST_KEYS | _OPTIONAL_MANIFEST_KEYS) \
+            or (_MANIFEST_KEYS - manifest_keys):
         raise ValueError("Q-3D stage manifest has missing or unknown fields")
     if manifest.get("schema") != STAGE_MANIFEST_SCHEMA:
         raise ValueError("unsupported Q-3D stage manifest schema")
@@ -259,6 +316,7 @@ def _load_stage_manifest(
     expected_checkpoint_sha = _sha256(checkpoint.get("sha256"), "checkpoint.sha256")
     if not checkpoint_file.is_file() or file_sha256(checkpoint_file) != expected_checkpoint_sha:
         raise ValueError("Q-3D stage checkpoint file SHA-256 mismatch")
+    checkpoint_quality = _teacher_quality_from_checkpoint(checkpoint_file, stage=stage)
     dependencies = _normalize_dependencies_for_load(
         stage,
         manifest.get("dependencies"),
@@ -276,6 +334,27 @@ def _load_stage_manifest(
         "dependencies": dependencies,
         "content_hashes": hashes,
     }
+    if "teacher_quality" in manifest:
+        if stage != "T":
+            raise ValueError("teacher_quality metadata is only valid on the T stage manifest")
+        teacher_quality = manifest.get("teacher_quality")
+        if not isinstance(teacher_quality, Mapping):
+            raise ValueError("T teacher_quality must be a mapping")
+        teacher_quality = dict(teacher_quality)
+        unknown_quality = set(teacher_quality) - _TEACHER_QUALITY_KEYS
+        if unknown_quality:
+            raise ValueError(f"T teacher_quality has unknown fields: {sorted(unknown_quality)}")
+        _canonical_json(teacher_quality)
+        expected_quality_sha = hashes.get("teacher_quality_sha256")
+        if expected_quality_sha != _canonical_sha256(teacher_quality):
+            raise ValueError("T teacher_quality SHA-256 mismatch")
+        if checkpoint_quality is not None and teacher_quality != checkpoint_quality:
+            raise ValueError("T teacher_quality differs from the checkpoint payload")
+        normalized["teacher_quality"] = teacher_quality
+    elif checkpoint_quality is not None:
+        # The checkpoint has a quality receipt, so its manifest must expose
+        # and hash the same receipt for downstream consumers.
+        raise ValueError("T stage manifest omits teacher_quality from a published checkpoint")
     payload_sha = _sha256(manifest.get("payload_sha256"), "payload_sha256")
     if _manifest_payload_sha256(normalized) != payload_sha:
         raise ValueError("Q-3D stage manifest canonical payload SHA-256 mismatch")

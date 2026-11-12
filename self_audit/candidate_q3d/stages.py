@@ -31,6 +31,17 @@ _ARTIFACT_STATE_KEYS = {
     "teacher_state",
     "best_teacher_state",
     "best_teacher_score",
+    "best_teacher_dev_per_class",
+    "best_teacher_dev_update",
+    "teacher_dev_history",
+    "teacher_dev_fg_dice",
+    "teacher_dev_per_class",
+    "teacher_selected_dev_update",
+    "teacher_terminal_dev_fg_dice",
+    "teacher_terminal_dev_per_class",
+    "teacher_dev_curve_still_improving",
+    "dev_curve_still_improving",
+    "metrics",
     "teacher_best_sha256",
     "tokenizer_state",
     "tokenizer_artifact",
@@ -210,6 +221,8 @@ def _teacher_provenance(config: Mapping[str, Any]) -> dict[str, Any]:
     teacher = _submapping(model.get("teacher"), "model.teacher")
     keys = (
         "architecture", "heads", "source_repo", "source_commit", "pretrained",
+        "encoder_strides", "phase_offsets", "encoder_channels", "encoder_blocks",
+        "dependency_pins",
     )
     return {key: copy.deepcopy(teacher.get(key)) for key in keys}
 
@@ -257,7 +270,7 @@ def stage_source_config(config: Mapping[str, Any], stage: str) -> dict[str, Any]
             "teacher_training": _select(training, (
                 "teacher_warmup_fraction", "teacher_boundary_lr", "teacher_encoder_lr",
                 "teacher_head_lr", "weight_decay", "gradient_clip_norm",
-                "checkpoint_selection", "checkpoint_evaluation_interval",
+                "warmup_fraction", "checkpoint_selection", "checkpoint_evaluation_interval",
             )),
             "losses": _select(losses, (
                 "region_ce_dice", "boundary_ce_dice", "balanced_sdf", "sdf_radius_mm",
@@ -268,7 +281,8 @@ def stage_source_config(config: Mapping[str, Any], stage: str) -> dict[str, Any]
     elif stage == "Q":
         teacher_keys = (
             "architecture", "feature_stride", "feature_source", "feature_channels",
-            "source_repo", "source_commit", "pretrained",
+            "source_repo", "source_commit", "pretrained", "encoder_strides", "phase_offsets",
+            "encoder_channels", "encoder_blocks", "dependency_pins",
         )
         # EPA attention/decoder choices do not alter the teacher feature grid
         # consumed by Q.  Bind only dimensions and the actual Q-stage phase.
@@ -314,7 +328,8 @@ def stage_source_config(config: Mapping[str, Any], stage: str) -> dict[str, Any]
             "teacher_variant": "o1_online" if str(config.get("arm", "")).lower() == "o1" else "frozen_teacher",
             "teacher_source": _select(teacher, (
                 "architecture", "heads", "source_repo", "source_commit", "pretrained",
-                "feature_source", "feature_stride", "feature_channels",
+                "feature_source", "feature_stride", "feature_channels", "encoder_strides",
+                "phase_offsets", "encoder_channels", "encoder_blocks", "dependency_pins",
             )),
             "physiology": physiology_contract,
             "update_budget": resolved_updates.get("P"),
@@ -1018,6 +1033,15 @@ def import_stage_artifacts(
         state["best_teacher_state"] = copy.deepcopy(dict(teacher_state or {}))
         state["teacher_best_sha256"] = teacher_sha
         state["best_teacher_score"] = t_payload.get("best_teacher_score")
+        for key in (
+            "best_teacher_dev_per_class", "best_teacher_dev_update",
+            "teacher_dev_history", "teacher_dev_fg_dice", "teacher_dev_per_class",
+            "teacher_selected_dev_update", "teacher_terminal_dev_fg_dice",
+            "teacher_terminal_dev_per_class", "teacher_dev_curve_still_improving",
+            "dev_curve_still_improving",
+        ):
+            if key in t_payload:
+                state[key] = copy.deepcopy(t_payload[key])
         state["completed_updates_total"] = int(t_payload.get("completed_updates_total", 0) or 0)
         imported_stages.append("T")
     if "Q" in loaded:
@@ -1169,6 +1193,30 @@ def export_stage_artifact(
     snapshot["config_sha256"] = _canonical_sha256(source_config)
 
     if stage == "T":
+        # A T artifact is a teacher-only hand-off.  A full run may already
+        # have instantiated a tokenizer, so explicitly remove Q/P state and
+        # retain only the T metric history needed to verify DEV selection.
+        snapshot.pop("tokenizer_state", None)
+        snapshot.pop("tokenizer_artifact", None)
+        snapshot.pop("gate", None)
+        snapshot.pop("gate_override", None)
+        snapshot.pop("synthetic_gate_override_used", None)
+        snapshot.pop("synthetic_gate_override_requested", None)
+        snapshot.pop("physiology_rows", None)
+        snapshot.pop("physiology_cache", None)
+        snapshot.pop("physiology_support_gate", None)
+        snapshot.pop("shared_codebook_sha256", None)
+        snapshot.pop("shared_codebook_metadata", None)
+        snapshot.pop("stage_artifacts", None)
+        snapshot.pop("stage_artifact_hashes", None)
+        metrics = snapshot.get("metrics")
+        if isinstance(metrics, list):
+            snapshot["metrics"] = [
+                copy.deepcopy(row) for row in metrics
+                if isinstance(row, Mapping) and row.get("stage") == "T"
+            ]
+        else:
+            snapshot["metrics"] = []
         selected = snapshot.get("best_teacher_state")
         if not isinstance(selected, Mapping):
             selected = snapshot.get("teacher_state")

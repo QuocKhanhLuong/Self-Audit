@@ -1,7 +1,7 @@
 """Runnable Q-3D baselines with isolated artifacts and evidence labels.
 
 The A-3D baseline delegates to the frozen public Candidate A-3D trainer. The
-heavy MedNeXt baseline delegates its T-only loop to the Q-3D engine so model,
+teacher-supervised ResEnc baseline delegates its T-only loop to the Q-3D engine so model,
 loss, checkpoint, and resume behavior stay in one implementation.
 """
 
@@ -18,7 +18,7 @@ from . import CHECKPOINT_SCHEMA
 
 _ROOT = Path(__file__).resolve().parents[2]
 _A3D_REPORT_SCHEMA = "self_audit.candidate_q3d.baseline.a3d_teacher_free.v1"
-_MEDNEXT_REPORT_SCHEMA = "self_audit.candidate_q3d.baseline.mednext_supervised.v1"
+_TEACHER_REPORT_SCHEMA = "self_audit.candidate_q3d.baseline.teacher_supervised.v1"
 _A3D_CHECKPOINT_SCHEMA = "self_audit.candidate_a3d.checkpoint.v1"
 
 
@@ -121,7 +121,9 @@ def _prepare_a3d_config(
     raw["rollout"]["seed"] = int(config["seed"])
     raw["dataset"]["name"] = config["dataset"]["name"]
     raw["dataset"]["protocol"] = "native_3d"
-    raw["model"]["backbone"] = "tiny_test3d" if smoke else "mednext_l_k3"
+    # Preserve the frozen Candidate A-3D template's real backbone declaration;
+    # this baseline runner must not hard-code a retired teacher architecture.
+    raw["model"]["backbone"] = "tiny_test3d" if smoke else raw["model"].get("backbone")
     raw["use_teacher"] = False
     raw["freeze_teacher"] = True
     raw["teacher_init"] = {"kind": "none", "path": "", "sha256": ""}
@@ -237,7 +239,7 @@ def run_a3d_teacher_free(
     return report
 
 
-def _run_mednext_t_only(
+def _run_teacher_t_only(
     config: Mapping[str, Any],
     data: Any,
     output_dir: Path,
@@ -256,17 +258,17 @@ def _run_mednext_t_only(
 
     target_device = torch.device(device)
     if target_device.type == "cuda" and not torch.cuda.is_available():
-        raise RuntimeError("MedNeXt baseline requested CUDA but CUDA is unavailable")
+        raise RuntimeError("teacher-supervised baseline requested CUDA but CUDA is unavailable")
     if target_device.type not in {"cpu", "cuda"}:
-        raise ValueError("MedNeXt baseline supports CPU or CUDA only")
+        raise ValueError("teacher-supervised baseline supports CPU or CUDA only")
     if bool(config["runtime"]["synthetic"]) != smoke or (smoke and target_device.type != "cpu"):
-        raise ValueError("synthetic MedNeXt proxy requires explicit SOFTWARE_ONLY CPU mode")
+        raise ValueError("synthetic ResEnc proxy requires explicit SOFTWARE_ONLY CPU mode")
     if config["tokenizer"]["enabled"]:
-        raise ValueError("MedNeXt supervised baseline must not construct or run a tokenizer")
+        raise ValueError("teacher-supervised baseline must not construct or run a tokenizer")
     if data.protocol != "A" or data.label_budget != int(config["protocol"]["k"]):
-        raise ValueError("MedNeXt baseline data must be an explicit K-only logical Protocol-A view")
+        raise ValueError("teacher-supervised baseline data must be an explicit K-only logical Protocol-A view")
     if set(data.teacher_patients) != set(data.labeled_patients):
-        raise ValueError("MedNeXt baseline teacher pool must contain exactly the student K labeled patients")
+        raise ValueError("teacher-supervised baseline teacher pool must contain exactly the student K labeled patients")
 
     seed = int(config["seed"])
     torch.backends.cudnn.deterministic = True
@@ -285,7 +287,7 @@ def _run_mednext_t_only(
     if resume_from is None and root_checkpoint.is_file():
         resume_from = root_checkpoint
     if resume_from is None and any(output_dir.iterdir()):
-        raise FileExistsError("MedNeXt baseline output contains no resumable latest.pt")
+        raise FileExistsError("teacher-supervised baseline output contains no resumable latest.pt")
 
     teacher, student, tokenizer, provenance = engine._build_models(
         config,
@@ -295,9 +297,9 @@ def _run_mednext_t_only(
         tokenizer=None,
     )
     if teacher is None or tokenizer is not None or not isinstance(student, nn.Identity):
-        raise RuntimeError("MedNeXt T-only construction unexpectedly created a student or tokenizer")
+        raise RuntimeError("teacher-supervised T-only construction unexpectedly created a student or tokenizer")
     if provenance.get("teacher") is None:
-        raise RuntimeError("MedNeXt T-only construction did not retain teacher provenance")
+        raise RuntimeError("teacher-supervised T-only construction did not retain teacher provenance")
 
     if resume_from is None:
         state = engine._initial_run_state(config_sha256, data_identity)
@@ -307,7 +309,7 @@ def _run_mednext_t_only(
         )
         completed = list(state.get("completed_stages", []))
         if any(stage != "T" for stage in completed) or state.get("stage") not in {None, "T"}:
-            raise ValueError("MedNeXt baseline resume checkpoint contains stages outside T")
+            raise ValueError("teacher-supervised baseline resume checkpoint contains stages outside T")
         engine._restore_run_state(
             state,
             teacher=teacher,
@@ -320,7 +322,14 @@ def _run_mednext_t_only(
         )
 
     baseline_metadata = {
-        "schema": _MEDNEXT_REPORT_SCHEMA,
+        "schema": _TEACHER_REPORT_SCHEMA,
+        # This public runner is a standalone compatibility path.  Campaign
+        # plans do not launch it: they bind the teacher-supervised reference
+        # to a shared T producer and set independent_baseline=false only in
+        # that verified reuse record.
+        "independent_baseline": "NOT_RUN",
+        "shared_teacher_stage": "NOT_REUSED",
+        "stage_contract": "T_ONLY_STANDALONE",
         "parent_config_sha256": config_sha256,
         "parent_protocol": config["protocol"]["variant"],
         "baseline_supervision_protocol": "K_only",
@@ -336,12 +345,12 @@ def _run_mednext_t_only(
     saved_metadata = state.get("baseline_metadata")
     if saved_metadata is not None:
         if any(saved_metadata.get(key) != value for key, value in baseline_metadata.items()):
-            raise ValueError("MedNeXt resume baseline metadata differs from the parent config or K pool")
+            raise ValueError("teacher-supervised resume baseline metadata differs from the parent config or K pool")
         baseline_metadata.update(saved_metadata)
     state["baseline_metadata"] = baseline_metadata
 
     if state.get("stage") not in {None, "T"}:
-        raise ValueError("MedNeXt baseline checkpoint is not at a resumable T-stage boundary")
+        raise ValueError("teacher-supervised baseline checkpoint is not at a resumable T-stage boundary")
     completed_stages = list(state.get("completed_stages", []))
     if "T" not in completed_stages:
         completed = engine._run_teacher_stage(
@@ -367,23 +376,23 @@ def _run_mednext_t_only(
         completed = int(state.get("stage_cursor", update_budget) or update_budget)
         best = state.get("best_teacher_state")
         if not isinstance(best, Mapping):
-            raise ValueError("completed MedNeXt resume checkpoint has no DEV-selected teacher weights")
+            raise ValueError("completed teacher-supervised resume checkpoint has no DEV-selected teacher weights")
         teacher.load_state_dict(best, strict=True)
 
     if completed != update_budget or state.get("best_teacher_state") is None:
-        raise RuntimeError("MedNeXt T-only run did not complete its declared DEV-selected budget")
+        raise RuntimeError("teacher-supervised T-only run did not complete its declared DEV-selected budget")
     if "T" not in state.get("completed_stages", []):
-        raise RuntimeError("MedNeXt T-only helper returned before the T stage was marked complete")
+        raise RuntimeError("teacher-supervised T-only helper returned before the T stage was marked complete")
 
     selections = [
         row for row in state.get("metrics", [])
         if row.get("stage") == "T" and row.get("event") == "development_selection"
     ]
     if not selections:
-        raise RuntimeError("MedNeXt T-only run has no DEV checkpoint-selection record")
+        raise RuntimeError("teacher-supervised T-only run has no DEV checkpoint-selection record")
     best_selection = max(selections, key=lambda row: float(row["score"]))
     if float(best_selection["score"]) != float(state["best_teacher_score"]):
-        raise RuntimeError("MedNeXt selected score differs from its DEV selection history")
+        raise RuntimeError("teacher-supervised selected score differs from its DEV selection history")
 
     teacher_state_sha256 = engine._state_sha256(teacher)
     state["baseline_metadata"].update({
@@ -391,6 +400,12 @@ def _run_mednext_t_only(
         "optimizer_updates": int(completed),
         "best_development_score": float(state["best_teacher_score"]),
         "best_development_update": int(best_selection["update"]),
+        "teacher_dev_fg_dice": state.get("teacher_dev_fg_dice"),
+        "teacher_dev_per_class": state.get("teacher_dev_per_class"),
+        "teacher_selected_dev_update": state.get("teacher_selected_dev_update"),
+        "teacher_terminal_dev_fg_dice": state.get("teacher_terminal_dev_fg_dice"),
+        "teacher_terminal_dev_per_class": state.get("teacher_terminal_dev_per_class"),
+        "dev_curve_still_improving": state.get("dev_curve_still_improving"),
         "development_selection": "development_patient_macro_fg_dice",
         "best_teacher_state_sha256": teacher_state_sha256,
     })
@@ -410,6 +425,12 @@ def _run_mednext_t_only(
         },
         "best_development_score": float(state["best_teacher_score"]),
         "best_development_update": int(best_selection["update"]),
+        "teacher_dev_fg_dice": state.get("teacher_dev_fg_dice"),
+        "teacher_dev_per_class": state.get("teacher_dev_per_class"),
+        "teacher_selected_dev_update": state.get("teacher_selected_dev_update"),
+        "teacher_terminal_dev_fg_dice": state.get("teacher_terminal_dev_fg_dice"),
+        "teacher_terminal_dev_per_class": state.get("teacher_terminal_dev_per_class"),
+        "dev_curve_still_improving": state.get("dev_curve_still_improving"),
         "development_selection": "development_patient_macro_fg_dice",
         "source_pretraining_hashes": teacher_source,
         "resume_from": str(resume_from) if resume_from else None,
@@ -420,23 +441,23 @@ def _run_mednext_t_only(
     }
 
 
-def _validate_mednext_pretraining(config: Mapping[str, Any]) -> dict[str, Any]:
+def _validate_teacher_pretraining(config: Mapping[str, Any]) -> dict[str, Any]:
     from .config import validate_real_teacher_provenance
 
     validate_real_teacher_provenance(config)
     teacher = config["model"]["teacher"]
     pretrained = teacher["pretrained"]
     source_repo, source_commit = teacher.get("source_repo"), teacher.get("source_commit")
-    if teacher.get("architecture") != "mednext_l_k3":
-        raise ValueError("MedNeXt supervised baseline requires compatible mednext_l_k3 weights")
+    if teacher.get("architecture") != "nnfoundation_resenc_l":
+        raise ValueError("teacher-supervised baseline requires compatible nnfoundation ResEnc-L weights")
     if not isinstance(source_repo, str) or not source_repo.strip() or not isinstance(source_commit, str) or not source_commit.strip():
-        raise ValueError("real MedNeXt baseline requires validated source_repo and source_commit")
+        raise ValueError("real teacher-supervised baseline requires validated source_repo and source_commit")
     pretraining_dataset = pretrained.get("pretraining_dataset")
     overlap_acdc, overlap_mnms = pretrained.get("overlap_acdc"), pretrained.get("overlap_mnms")
     if not isinstance(pretraining_dataset, str) or not pretraining_dataset.strip():
-        raise ValueError("real MedNeXt baseline requires declared pretraining_dataset")
+        raise ValueError("real teacher-supervised baseline requires declared pretraining_dataset")
     if type(overlap_acdc) is not bool or type(overlap_mnms) is not bool:
-        raise ValueError("real MedNeXt baseline requires explicit ACDC and M&Ms overlap provenance")
+        raise ValueError("real teacher-supervised baseline requires explicit ACDC and M&Ms overlap provenance")
     return {
         "source_repo": source_repo,
         "source_commit": source_commit,
@@ -448,44 +469,50 @@ def _validate_mednext_pretraining(config: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def run_mednext_supervised(
+def run_teacher_supervised(
     config: Mapping[str, Any],
     output_dir: str | Path,
     *,
     device: str,
     smoke: bool = False,
 ) -> dict[str, Any]:
-    """Run the heavy MedNeXt teacher as a K-only Q-3D T-stage baseline."""
+    """Run the shared ResEnc teacher as a K-only Q-3D T-stage baseline."""
 
     normalized, synthetic = _validated_config(
-        config, arm="mednext_supervised", device=device, smoke=smoke,
+        config, arm="teacher_supervised", device=device, smoke=smoke,
     )
     train_path, train_sha256 = _manifest(normalized, "train")
     development_path, development_sha256 = _manifest(normalized, "development")
     budget = _stage_budget(normalized, "T", smoke=smoke)
     k = int(normalized["protocol"]["k"])
 
+    if not synthetic:
+        raise ValueError(
+            "teacher-supervised real evaluation must reuse the campaign's shared T artifact; "
+            "no standalone teacher training job is permitted"
+        )
+
     from ..candidate_a3d.data import CandidateA3DData
 
     data = CandidateA3DData(train_path, train_sha256, synthetic=synthetic)
     if len(data.lids) != k:
-        raise ValueError(f"MedNeXt supervised baseline requires exactly K={k} labeled TRAIN patients")
-    provenance = None if synthetic else _validate_mednext_pretraining(normalized)
+        raise ValueError(f"teacher-supervised baseline requires exactly K={k} labeled TRAIN patients")
+    provenance = None if synthetic else _validate_teacher_pretraining(normalized)
     output = Path(output_dir).expanduser().resolve()
     resume_from: Path | None = None
-    baseline_settings = normalized.get("baselines", {}).get("mednext_supervised", {})
+    baseline_settings = normalized.get("baselines", {}).get("teacher_supervised", {})
     configured_resume = baseline_settings.get("resume_from") if isinstance(baseline_settings, Mapping) else None
     if configured_resume:
         resume_from = Path(configured_resume).expanduser().resolve()
     elif (output / "latest.pt").is_file():
         resume_from = output / "latest.pt"
     elif output.exists() and any(output.iterdir()):
-        raise FileExistsError("MedNeXt baseline output has files but no resumable latest.pt")
+        raise FileExistsError("teacher-supervised baseline output has files but no resumable latest.pt")
 
     from .data import Q3DData
 
     k_only_data = Q3DData(data, protocol="A")
-    helper_result = _run_mednext_t_only(
+    helper_result = _run_teacher_t_only(
         normalized,
         k_only_data,
         output,
@@ -498,29 +525,32 @@ def run_mednext_supervised(
     optimizer_updates = int(helper_result.get("optimizer_updates", -1))
     if logical_updates != budget or optimizer_updates != budget:
         raise RuntimeError(
-            "MedNeXt T-only update accounting differs from its declared budget: "
+            "teacher-supervised T-only update accounting differs from its declared budget: "
             f"logical={logical_updates}, optimizer={optimizer_updates}, expected={budget}"
         )
     checkpoint_path = helper_result.get("checkpoint_path", helper_result.get("checkpoint"))
     checkpoint_sha256 = helper_result.get("checkpoint_sha256")
     if not isinstance(checkpoint_path, str) or not isinstance(checkpoint_sha256, str) or len(checkpoint_sha256) != 64:
-        raise RuntimeError("MedNeXt T-only helper did not return checkpoint path and SHA-256")
+        raise RuntimeError("teacher-supervised T-only helper did not return checkpoint path and SHA-256")
     checkpoint_file = Path(checkpoint_path).expanduser().resolve()
     if not checkpoint_file.is_file():
-        raise RuntimeError("MedNeXt T-only helper checkpoint path is not a file")
+        raise RuntimeError("teacher-supervised T-only helper checkpoint path is not a file")
     if _sha256_file(checkpoint_file) != checkpoint_sha256:
-        raise RuntimeError("MedNeXt T-only checkpoint SHA-256 differs from its bytes")
+        raise RuntimeError("teacher-supervised T-only checkpoint SHA-256 differs from its bytes")
     forward_counts = helper_result.get("training_forward_counts") or {
         "labeled": logical_updates, "teacher": logical_updates, "unlabeled": 0,
     }
     if int(forward_counts.get("unlabeled", 0)) != 0:
-        raise RuntimeError("MedNeXt supervised T stage must not forward image-only U")
+        raise RuntimeError("teacher-supervised T stage must not forward image-only U")
     report = {
-        "schema": _MEDNEXT_REPORT_SCHEMA,
+        "schema": _TEACHER_REPORT_SCHEMA,
         "status": "COMPLETED_SOFTWARE_ONLY" if synthetic else "COMPLETED",
         "evidence": "SOFTWARE_ONLY" if synthetic else "REAL_DATA_TRAINING",
         "method": "candidate_q3d",
-        "arm": "mednext_supervised",
+        "arm": "teacher_supervised",
+        "independent_baseline": "NOT_RUN",
+        "shared_teacher_stage": "NOT_REUSED",
+        "stage_contract": "T_ONLY_STANDALONE",
         "checkpoint_schema": helper_result.get("checkpoint_schema"),
         "checkpoint_path": str(checkpoint_file),
         "checkpoint_sha256": checkpoint_sha256,
@@ -543,12 +573,18 @@ def run_mednext_supervised(
         "source_hashes": {
             "baseline_runner": _sha256_file(Path(__file__)),
             "q3d_engine": _sha256_file(_ROOT / "self_audit/candidate_q3d/engine.py"),
-            "q3d_teacher": _sha256_file(_ROOT / "self_audit/candidate_a3d/teacher.py"),
+            "q3d_teacher": _sha256_file(_ROOT / "self_audit/candidate_q3d/teacher_resenc.py"),
             "q3d_config": _sha256_file(_ROOT / "self_audit/candidate_q3d/config.py"),
         },
         "development_selection": helper_result.get("development_selection", "patient_macro_fg_dice"),
+        "teacher_dev_fg_dice": helper_result.get("best_development_score"),
+        "teacher_dev_per_class": helper_result.get("teacher_dev_per_class"),
+        "teacher_selected_dev_update": helper_result.get("best_development_update"),
+        "teacher_terminal_dev_fg_dice": helper_result.get("teacher_terminal_dev_fg_dice"),
+        "teacher_terminal_dev_per_class": helper_result.get("teacher_terminal_dev_per_class"),
+        "dev_curve_still_improving": helper_result.get("dev_curve_still_improving"),
         "evaluation": {
-            "kind": "heavy_mednext_region_baseline",
+            "kind": "teacher_supervised_region_baseline",
             "manifest_sha256": development_sha256,
             "artifact_path": str(Path(checkpoint_path).resolve()),
             "separate_from_student_export": True,
@@ -563,7 +599,7 @@ def run_mednext_supervised(
     return report
 
 
-def evaluate_mednext_baseline(
+def evaluate_teacher_supervised_baseline(
     checkpoint_path: str | Path,
     checkpoint_sha256: str,
     config: Mapping[str, Any],
@@ -574,7 +610,7 @@ def evaluate_mednext_baseline(
     device: str = "cpu",
     split: str = "dev",
 ) -> dict[str, Any]:
-    """Evaluate the DEV-selected heavy MedNeXt region checkpoint separately."""
+    """Evaluate the DEV-selected shared ResEnc region checkpoint separately."""
 
     import torch
     from torch import nn
@@ -586,8 +622,8 @@ def evaluate_mednext_baseline(
     from .evaluation import evaluate_manifest
 
     normalized = validate_config(config, real_run=False)
-    if normalized.get("arm") != "mednext_supervised":
-        raise ValueError("heavy MedNeXt evaluation requires arm=mednext_supervised")
+    if normalized.get("arm") != "teacher_supervised":
+        raise ValueError("teacher-supervised evaluation requires arm=teacher_supervised")
     synthetic = bool(normalized["runtime"]["synthetic"])
     if synthetic and device != "cpu":
         raise ValueError("SOFTWARE_ONLY heavy baseline evaluation is CPU-only")
@@ -600,7 +636,7 @@ def evaluate_mednext_baseline(
     train_path, train_sha = _manifest(normalized, "train")
     split_key = {"dev": "development", "development": "development", "test": "test"}.get(split)
     if split_key is None:
-        raise ValueError("heavy MedNeXt evaluation split must be dev, development, or test")
+        raise ValueError("teacher-supervised evaluation split must be dev, development, or test")
     declared_path, declared_sha = _manifest(normalized, split_key)
     requested_path = Path(data_manifest).expanduser().resolve()
     if requested_path != declared_path or data_sha256 != declared_sha:
@@ -608,76 +644,104 @@ def evaluate_mednext_baseline(
 
     artifact = Path(checkpoint_path).expanduser().resolve()
     if not artifact.is_file() or _sha256_file(artifact) != checkpoint_sha256:
-        raise ValueError("heavy MedNeXt checkpoint bytes or SHA-256 do not match")
-    sidecar = artifact.with_suffix(artifact.suffix + ".sha256")
-    try:
-        sidecar_sha256 = sidecar.read_text(encoding="ascii").split()[0]
-    except (OSError, IndexError) as exc:
-        raise ValueError("heavy MedNeXt checkpoint requires its SHA-256 sidecar") from exc
-    if sidecar_sha256 != checkpoint_sha256:
-        raise ValueError("heavy MedNeXt checkpoint sidecar SHA-256 mismatch")
+        raise ValueError("teacher-supervised checkpoint bytes or SHA-256 do not match")
     try:
         payload = torch.load(artifact, map_location="cpu", weights_only=True)
     except (OSError, RuntimeError, ValueError) as exc:
-        raise ValueError("heavy MedNeXt checkpoint is not a safe Q-3D resume.v3 payload") from exc
+        raise ValueError("teacher-supervised checkpoint is not a safe Q-3D resume.v3 payload") from exc
     if not isinstance(payload, Mapping) or payload.get("schema") != CHECKPOINT_SCHEMA:
-        raise ValueError("heavy MedNeXt evaluation requires Q-3D resume.v3 checkpoint schema")
+        raise ValueError("teacher-supervised evaluation requires Q-3D resume.v3 checkpoint schema")
 
     config_sha256 = engine._object_sha256(normalized)
-    if payload.get("config_sha256") != config_sha256:
-        raise ValueError("heavy MedNeXt checkpoint parent config SHA-256 mismatch")
+    shared_t = payload.get("stage_artifact_stage") == "T"
+    sidecar = artifact.with_suffix(artifact.suffix + ".sha256")
+    if sidecar.is_file():
+        try:
+            sidecar_sha256 = sidecar.read_text(encoding="ascii").split()[0]
+        except (OSError, IndexError) as exc:
+            raise ValueError("teacher-supervised checkpoint SHA-256 sidecar is malformed") from exc
+        if sidecar_sha256 != checkpoint_sha256:
+            raise ValueError("teacher-supervised checkpoint sidecar SHA-256 mismatch")
+    elif not shared_t:
+        # Standalone baseline checkpoints are passed around with their sidecar;
+        # shared immutable T artifacts already receive the SHA from their stage
+        # manifest and need not mutate that artifact directory with a second
+        # mutable receipt.
+        raise ValueError("teacher-supervised checkpoint requires its SHA-256 sidecar")
+    if shared_t:
+        # A shared T artifact is sealed against the arm-independent T source
+        # contract, not the consumer's full arm config.
+        from .stages import stage_source_config
+
+        source_sha256 = engine._object_sha256(stage_source_config(normalized, "T"))
+        if payload.get("config_sha256") != source_sha256:
+            raise ValueError("shared T checkpoint source-config SHA-256 mismatch")
+    elif payload.get("config_sha256") != config_sha256:
+        raise ValueError("teacher-supervised checkpoint parent config SHA-256 mismatch")
     train_data = CandidateA3DData(train_path, train_sha, synthetic=synthetic)
     k_only_data = Q3DData(train_data, protocol="A")
     if len(k_only_data.labeled_patients) != int(normalized["protocol"]["k"]):
-        raise ValueError("heavy MedNeXt evaluation TRAIN data does not match parent K")
+        raise ValueError("teacher-supervised evaluation TRAIN data does not match parent K")
     data_identity = engine._data_identity_without_labels(k_only_data)
     if payload.get("data_identity") != data_identity:
-        raise ValueError("heavy MedNeXt checkpoint K-only data identity mismatch")
+        raise ValueError("teacher-supervised checkpoint K-only data identity mismatch")
 
-    metadata = payload.get("baseline_metadata")
-    if not isinstance(metadata, Mapping):
-        raise ValueError("resume.v3 checkpoint lacks heavy MedNeXt baseline metadata")
     expected_patient_ids = sorted(k_only_data.labeled_patients)
-    if (metadata.get("schema") != _MEDNEXT_REPORT_SCHEMA
-            or metadata.get("parent_config_sha256") != config_sha256
-            or metadata.get("parent_protocol") != normalized["protocol"]["variant"]
-            or metadata.get("baseline_supervision_protocol") != "K_only"
-            or metadata.get("label_budget") != int(normalized["protocol"]["k"])
-            or metadata.get("labeled_patient_ids") != expected_patient_ids
-            or metadata.get("teacher_train_manifest_used") is not False
-            or metadata.get("stage") != "T"
-            or metadata.get("train_manifest_sha256") != train_sha
-            or metadata.get("development_manifest_sha256") != normalized["dataset"]["manifests"]["development"]["sha256"]):
-        raise ValueError("heavy MedNeXt checkpoint baseline identity differs from the requested evaluation")
+    metadata = payload.get("baseline_metadata")
+    if shared_t:
+        if metadata is not None:
+            raise ValueError("shared T checkpoint must not carry standalone baseline metadata")
+        data_identity_sha = payload.get("data_identity_sha256")
+        if data_identity_sha != engine._object_sha256(data_identity):
+            raise ValueError("shared T checkpoint data-identity hash differs from the requested evaluation")
+    else:
+        if not isinstance(metadata, Mapping):
+            raise ValueError("resume.v3 checkpoint lacks teacher-supervised baseline metadata")
+        if (metadata.get("schema") != _TEACHER_REPORT_SCHEMA
+                or metadata.get("parent_config_sha256") != config_sha256
+                or metadata.get("parent_protocol") != normalized["protocol"]["variant"]
+                or metadata.get("baseline_supervision_protocol") != "K_only"
+                or metadata.get("label_budget") != int(normalized["protocol"]["k"])
+                or metadata.get("labeled_patient_ids") != expected_patient_ids
+                or metadata.get("teacher_train_manifest_used") is not False
+                or metadata.get("stage") != "T"
+                or metadata.get("train_manifest_sha256") != train_sha
+                or metadata.get("development_manifest_sha256") != normalized["dataset"]["manifests"]["development"]["sha256"]):
+            raise ValueError("teacher-supervised checkpoint baseline identity differs from the requested evaluation")
     if payload.get("completed_stages") != ["T"] or payload.get("stage") is not None:
-        raise ValueError("heavy MedNeXt checkpoint must contain completed T only, with no Q/P/J stages")
+        raise ValueError("teacher-supervised checkpoint must contain completed T only, with no Q/P/J stages")
     if payload.get("tokenizer_state") is not None or payload.get("ema_state") is not None:
-        raise ValueError("heavy MedNeXt checkpoint must not carry a tokenizer or EMA student")
+        raise ValueError("teacher-supervised checkpoint must not carry a tokenizer or EMA student")
     best_teacher_state = payload.get("best_teacher_state")
     if not isinstance(best_teacher_state, Mapping):
-        raise ValueError("heavy MedNeXt checkpoint lacks its DEV-selected best_teacher_state")
+        raise ValueError("teacher-supervised checkpoint lacks its DEV-selected best_teacher_state")
     selections = [
         row for row in payload.get("metrics", [])
         if isinstance(row, Mapping) and row.get("stage") == "T" and row.get("event") == "development_selection"
     ]
     if not selections:
-        raise ValueError("heavy MedNeXt checkpoint has no DEV selection history")
+        raise ValueError("teacher-supervised checkpoint has no DEV selection history")
     best_selection = max(selections, key=lambda row: float(row["score"]))
     best_score = float(payload.get("best_teacher_score"))
+    metadata_score = best_score if shared_t else metadata.get("best_development_score")
+    metadata_update = int(best_selection["update"]) if shared_t else metadata.get("best_development_update")
     if (float(best_selection["score"]) != best_score
-            or metadata.get("best_development_score") != best_score
-            or metadata.get("best_development_update") != int(best_selection["update"])):
-        raise ValueError("heavy MedNeXt best_teacher_state is not the recorded DEV-selected checkpoint")
+            or metadata_score != best_score
+            or metadata_update != int(best_selection["update"])):
+        raise ValueError("teacher-supervised best_teacher_state is not the recorded DEV-selected checkpoint")
 
-    source_hashes = metadata.get("source_pretraining_hashes")
+    source_hashes = (
+        {"shared_t": True, "source_config_sha256": payload.get("config_sha256")}
+        if shared_t else metadata.get("source_pretraining_hashes")
+    )
     if not isinstance(source_hashes, Mapping):
-        raise ValueError("heavy MedNeXt checkpoint lacks source/pretraining hashes")
-    if not synthetic:
-        expected_source = _validate_mednext_pretraining(normalized)
+        raise ValueError("teacher-supervised checkpoint lacks source/pretraining hashes")
+    if not synthetic and not shared_t:
+        expected_source = _validate_teacher_pretraining(normalized)
         if source_hashes.get("weights_sha256") != expected_source["weights_sha256"]:
-            raise ValueError("heavy MedNeXt checkpoint pretrained-weight hash differs from config")
+            raise ValueError("teacher-supervised checkpoint pretrained-weight hash differs from config")
         if source_hashes.get("source_commit") not in {None, expected_source["source_commit"]}:
-            raise ValueError("heavy MedNeXt checkpoint source commit differs from config")
+            raise ValueError("teacher-supervised checkpoint source commit differs from config")
 
     teacher, student, tokenizer, provenance = engine._build_models(
         normalized,
@@ -687,11 +751,12 @@ def evaluate_mednext_baseline(
         tokenizer=None,
     )
     if teacher is None or tokenizer is not None or not isinstance(student, nn.Identity):
-        raise RuntimeError("heavy MedNeXt evaluation unexpectedly constructed a student or tokenizer")
+        raise RuntimeError("teacher-supervised evaluation unexpectedly constructed a student or tokenizer")
     teacher.load_state_dict(best_teacher_state, strict=True)
     teacher_state_sha256 = engine._state_sha256(teacher)
-    if metadata.get("best_teacher_state_sha256") != teacher_state_sha256:
-        raise ValueError("heavy MedNeXt DEV-selected teacher state SHA-256 mismatch")
+    expected_teacher_state_sha = payload.get("teacher_best_sha256") if shared_t else metadata.get("best_teacher_state_sha256")
+    if expected_teacher_state_sha != teacher_state_sha256:
+        raise ValueError("teacher-supervised DEV-selected teacher state SHA-256 mismatch")
 
     class RegionLogitsAdapter(nn.Module):
         def __init__(self, model: nn.Module) -> None:
@@ -702,7 +767,7 @@ def evaluate_mednext_baseline(
             output = self.model(image, geometry=geometry)
             logits = output.get("region_logits") if isinstance(output, Mapping) else None
             if not torch.is_tensor(logits):
-                raise ValueError("MedNeXt region baseline did not return region_logits")
+                raise ValueError("teacher-supervised region baseline did not return region_logits")
             return {"logits": logits}
 
     result = evaluate_manifest(
@@ -717,14 +782,18 @@ def evaluate_mednext_baseline(
     )
     output = Path(output_dir).expanduser().resolve()
     report = {
-        "schema": "self_audit.candidate_q3d.mednext_supervised.evaluation.v1",
-        "artifact_kind": "heavy_mednext_region_baseline",
+        "schema": "self_audit.candidate_q3d.teacher_supervised.evaluation.v1",
+        "artifact_kind": "teacher_supervised_region_baseline",
         "student_export": False,
         "checkpoint_schema": CHECKPOINT_SCHEMA,
         "checkpoint_path": str(artifact),
         "checkpoint_sha256": checkpoint_sha256,
         "parent_config_sha256": config_sha256,
         "parent_protocol": normalized["protocol"]["variant"],
+        "independent_baseline": False if shared_t else "NOT_RUN",
+        "shared_teacher_stage": "T" if shared_t else "NOT_REUSED",
+        "stage_contract": "T0J" if shared_t else "T_ONLY_STANDALONE",
+        "shared_t_source_config_sha256": payload.get("config_sha256") if shared_t else None,
         "baseline_supervision_protocol": "K_only",
         "teacher_train_manifest_used": False,
         "label_budget_k": int(normalized["protocol"]["k"]),
@@ -734,6 +803,12 @@ def evaluate_mednext_baseline(
         "training_patient_ids_for_overlap_check": list(k_only_data.train_patients),
         "dev_selected_update": int(best_selection["update"]),
         "dev_selected_fg_dice": best_score,
+        "teacher_dev_fg_dice": payload.get("teacher_dev_fg_dice", best_score),
+        "teacher_dev_per_class": payload.get("teacher_dev_per_class"),
+        "teacher_selected_dev_update": payload.get("teacher_selected_dev_update", best_selection["update"]),
+        "teacher_terminal_dev_fg_dice": payload.get("teacher_terminal_dev_fg_dice"),
+        "teacher_terminal_dev_per_class": payload.get("teacher_terminal_dev_per_class"),
+        "dev_curve_still_improving": payload.get("dev_curve_still_improving"),
         "teacher_state_sha256": teacher_state_sha256,
         "source_pretraining_hashes": dict(source_hashes),
         "evaluation": result,
@@ -858,5 +933,5 @@ def evaluate_a3d_teacher_free_baseline(
     return result
 
 
-__all__ = ["evaluate_a3d_teacher_free_baseline", "evaluate_mednext_baseline",
-           "run_a3d_teacher_free", "run_mednext_supervised"]
+__all__ = ["evaluate_a3d_teacher_free_baseline", "evaluate_teacher_supervised_baseline",
+           "run_a3d_teacher_free", "run_teacher_supervised"]

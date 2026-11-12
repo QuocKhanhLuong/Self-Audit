@@ -22,11 +22,18 @@ IDENTITY = {
     "seed": 42,
     "train_manifest_sha256": hashlib.sha256(b"training cohort").hexdigest(),
 }
-T_SOURCE = {"teacher_architecture": "mednext_l_k3", "teacher_source_commit": "pinned"}
+T_SOURCE = {
+    "teacher_architecture": "nnfoundation_resenc_l",
+    "teacher_source_commit": "pinned",
+    "encoder_strides": [[1, 1, 1], [2, 2, 2], [1, 2, 2], [1, 2, 2]],
+    "phase_offsets": {"encoder_stride8": [0.0, 0.0, 0.0]},
+}
 Q_SOURCE = {
-    "teacher_architecture": "mednext_l_k3",
+    "teacher_architecture": "nnfoundation_resenc_l",
     "feature_source": "encoder_stride8",
     "feature_stride": 8,
+    "encoder_strides": [[1, 1, 1], [2, 2, 2], [1, 2, 2], [1, 2, 2]],
+    "phase_offsets": {"encoder_stride8": [0.0, 0.0, 0.0]},
 }
 P_SOURCE = {"physiology_cache": "TRAIN_U", "feature_source": "encoder_stride8"}
 
