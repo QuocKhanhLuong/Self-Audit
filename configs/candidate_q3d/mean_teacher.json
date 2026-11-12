@@ -38,15 +38,15 @@
       "runner": "self_audit.candidate_q3d.engine.train",
       "status": "ENGINE_ARM"
     },
-    "mednext_supervised": {
-      "arm": "mednext_supervised",
+    "teacher_supervised": {
+      "arm": "teacher_supervised",
       "budget_stage": "T",
       "entrypoint": "train.py",
-      "evaluation_name": "mednext_supervised",
+      "evaluation_name": "teacher_supervised",
       "method": "candidate_q3d",
       "resume_from": null,
       "resume_scope": "latest_checkpoint_in_output",
-      "runner": "self_audit.candidate_q3d.baselines.run_mednext_supervised",
+      "runner": "self_audit.candidate_q3d.baselines.run_teacher_supervised",
       "status": "IMPLEMENTED"
     }
   },
@@ -209,16 +209,20 @@
     },
     "teacher": {
       "architecture": "ema_student",
+      "dependency_pins": null,
+      "encoder_blocks": null,
+      "encoder_channels": null,
+      "encoder_strides": null,
       "feature_channels": null,
       "feature_source": null,
       "feature_stride": null,
       "freeze_joint": true,
       "heads": [],
       "online_joint": false,
+      "phase_measurement": null,
+      "phase_offsets": null,
       "pretrained": null,
-      "shared_trunk": false,
-      "source_commit": null,
-      "source_repo": null
+      "shared_trunk": false
     }
   },
   "physiology": {

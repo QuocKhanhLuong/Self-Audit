@@ -1,9 +1,11 @@
 """Strict configuration contract for the research-only Q-3D candidate.
 
-The JSON recipes intentionally preserve unknown dataset and pretrained-weight
-provenance as NOT_RUN.  A plan can therefore be inspected without claiming
-that a real-data run is ready; execution validates every required path and
-hash before it launches a teacher stage.
+Q-3D uses the hash-pinned nnFoundationCNN ResEnc-L encoder for every real
+teacher arm.  The public recipe carries the complete provenance declaration;
+``validate_config(..., real_run=True)`` additionally checks local files and
+the locked ACDC K=8 manifest identities.  Synthetic smoke recipes use the
+same ResEnc teacher class with a deliberately smaller six-stage fixture and
+never weaken the real-run checks.
 """
 
 from __future__ import annotations
@@ -12,8 +14,8 @@ import copy
 import hashlib
 import json
 import math
+import os
 import re
-import subprocess
 from pathlib import Path
 from typing import Any, Mapping
 from urllib.parse import urlparse
@@ -22,17 +24,71 @@ SCHEMA = "self_audit.candidate_q3d.v1"
 METHOD = "candidate_q3d"
 PRIMARY_ARMS = ("c0", "c1", "v1", "v1u")
 SECONDARY_ARMS = ("v0", "b1", "e1", "o1", "s1")
-BASELINE_ARMS = ("mean_teacher", "a3d_teacher_free", "mednext_supervised")
+BASELINE_ARMS = ("mean_teacher", "a3d_teacher_free", "teacher_supervised")
 ARMS = PRIMARY_ARMS + SECONDARY_ARMS + BASELINE_ARMS
-K_VALUES = (2, 5, 10)
+K_VALUES = (2, 5, 8, 10)
 DEFAULT_SEED = 42
 DEFAULT_STAGE_UPDATES = {"T": 8000, "Q": 1000, "P": 1, "J": 8000}
-UPSTREAM_MEDNEXT_COMMIT = "0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba"
-DEFAULT_MEDNEXT_SOURCE_REPO: str | None = None
+K8_LOCKED_TRAIN_MANIFEST_SHA256 = "e524c7531079996232fe71cdfe982a46a5950d49d91a8203eee396b0e67434a3"
+K8_LOCKED_DEV_MANIFEST_SHA256 = "ba46934afe8ea5c47dd798019bee233c97c98320b358e2d40165e87a651dc7df"
+
+# Phase-0 provenance for the actual external checkpoint.  Keep the local
+# path outside the repository; it is resolved by the recipe loader and is
+# required only for a real run.
+NNFOUNDATION_ARCHITECTURE = "nnfoundation_resenc_l"
+NNFOUNDATION_HF_REPO = "MIC-DKFZ/nnFoundationCNN"
+NNFOUNDATION_HF_REVISION = "f443c09319988e833b3d9589bf95909e4443d7b2"
+NNFOUNDATION_WEIGHTS_SOURCE_URL = (
+    "https://huggingface.co/MIC-DKFZ/nnFoundationCNN/resolve/"
+    f"{NNFOUNDATION_HF_REVISION}/checkpoint_final.pth"
+)
+NNFOUNDATION_WEIGHTS_SHA256 = "ac262d3e8c226c79f9567fddc34d38e011284730ddf2294b5c6c319ce2f22bbd"
+NNFOUNDATION_WEIGHTS_ENV = "Q3D_NNFOUNDATION_WEIGHTS"
+NNFOUNDATION_DEFAULT_WEIGHTS_PATH = "${Q3D_NNFOUNDATION_WEIGHTS}"
+NNFOUNDATION_PRETRAINING_DATASET = "nnFoundation (~2.1M CT/MR/PET, 125 sources; arXiv 2609.26924 Table D7)"
+NNFOUNDATION_LICENSE = "CC-BY-SA-4.0"
+NNFOUNDATION_OVERLAP_NOTE = "According to Table D7; not independently verified."
+NNFOUNDATION_DNA_VERSION = "0.4.4"
+NNFOUNDATION_NNSSL_COMMIT = "3d774e942256bd70e5e264c6b94fa38e25f7ed74"
+NNFOUNDATION_NNUNET_COMMIT = "c04f7ec8bbffaf3ebc3b26aa2c89042e8a8e368b"
+
+# ResEnc-L's six stages are explicit in the config so the Phase-0 anisotropic
+# decision becomes part of the recipe hash.  This is a stride-only adaptation
+# of the public encoder; tensor shapes stay compatible with the checkpoint.
+NNFOUNDATION_DEFAULT_ENCODER_STRIDES = [
+    [1, 1, 1], [2, 2, 2], [1, 2, 2], [1, 2, 2], [1, 2, 2], [1, 2, 2],
+]
+NNFOUNDATION_DEFAULT_PHASE_OFFSETS = {
+    "encoder_stride8": [0.0, 0.0, 0.0],
+    "encoder_stride16": [0.0, 0.0, 0.0],
+}
+NNFOUNDATION_PHASE_RECEIPT_PATH = "reports/q3d-resenc-phase0-20261112/erf_probe.json"
+NNFOUNDATION_PHASE_RECEIPT_SHA256 = "2f05888b45ff3bfbf19f90bd91abbd4f0b2ab193b37375c5d875950117d2a14e"
+NNFOUNDATION_PHASE_MEASUREMENT = {
+    "receipt_path": NNFOUNDATION_PHASE_RECEIPT_PATH,
+    "receipt_sha256": NNFOUNDATION_PHASE_RECEIPT_SHA256,
+    "status": "PASS",
+    "method": "gradient_erf_mean_centroid",
+    "samples": 16,
+    "threshold_voxels": 2.0,
+    "encoder_stride8": {
+        "status": "MEASURED_WITHIN_THRESHOLD",
+        "offset_zyx": [0.0, 0.0, 0.0],
+        "measured_mean_offset_zyx": [0.67213374376297, 1.9470438957214355, 1.722203016281128],
+        "policy": "lock_nominal_phase_when_signed_mean_is_within_threshold",
+    },
+    "encoder_stride16": {
+        "status": "NOT_MEASURED",
+        "offset_zyx": [0.0, 0.0, 0.0],
+        "policy": "theoretical_zero_reference_not_inherited_from_encoder_stride8",
+    },
+}
+NNFOUNDATION_ENCODER_CHANNELS = [32, 64, 128, 256, 320, 320]
+NNFOUNDATION_ENCODER_BLOCKS = [1, 3, 4, 6, 6, 6]
 _EXPECTED_CLASSES = ["BG", "RV", "MYO", "LV"]
-_FEATURE_CHANNELS = {4: 128, 8: 256, 16: 512}
+_FEATURE_CHANNELS = {8: 256, 16: 320}
 _HEX_SHA256 = re.compile(r"^[0-9a-f]{64}$")
-_OFFICIAL_WEIGHT_HOSTS = {"github.com", "raw.githubusercontent.com", "zenodo.org", "huggingface.co"}
+_OFFICIAL_WEIGHT_HOSTS = {"huggingface.co"}
 
 _ROOT_KEYS = {
     "schema", "method", "arm", "seed", "dataset", "protocol", "model",
@@ -61,14 +117,14 @@ _BASELINE_CATALOG = {
         "evaluation_name": "a3d_teacher_free",
         "resume_scope": "trainer_output_state",
     },
-    "mednext_supervised": {
+    "teacher_supervised": {
         "entrypoint": "train.py",
         "method": METHOD,
-        "arm": "mednext_supervised",
-        "runner": "self_audit.candidate_q3d.baselines.run_mednext_supervised",
+        "arm": "teacher_supervised",
+        "runner": "self_audit.candidate_q3d.baselines.run_teacher_supervised",
         "status": "IMPLEMENTED",
         "budget_stage": "T",
-        "evaluation_name": "mednext_supervised",
+        "evaluation_name": "teacher_supervised",
         "resume_from": None,
         "resume_scope": "latest_checkpoint_in_output",
     },
@@ -97,7 +153,7 @@ _ARM_SETTINGS: dict[str, dict[str, Any]] = {
                      "tokenizer": False, "stages": ("J",)},
     "a3d_teacher_free": {"interface": "candidate_a3d", "teacher_signal": "none", "physiology": False,
                          "tokenizer": False, "stages": ("J",)},
-    "mednext_supervised": {"interface": "mednext_supervised", "teacher_signal": "none",
+    "teacher_supervised": {"interface": "teacher_supervised", "teacher_signal": "none",
                            "physiology": False, "tokenizer": False, "stages": ("T",)},
 }
 
@@ -107,11 +163,11 @@ def _manifest() -> dict[str, Any]:
 
 
 def _joint_stream_count(arm: str) -> int:
-    return 1 if arm in {"c0", "a3d_teacher_free", "mednext_supervised"} else 2
+    return 1 if arm in {"c0", "a3d_teacher_free", "teacher_supervised"} else 2
 
 
 def _joint_update_unit(arm: str) -> str:
-    return ("L_only_updates" if arm in {"c0", "a3d_teacher_free", "mednext_supervised"}
+    return ("L_only_updates" if arm in {"c0", "a3d_teacher_free", "teacher_supervised"}
             else "paired_L_U_updates")
 
 
@@ -145,36 +201,36 @@ def _base_config(arm: str, *, dataset: str = "acdc", protocol: str = "A",
     target = "mnms" if dataset == "acdc" else "acdc"
     cache_namespace = f"q3d/{dataset}/protocol-{protocol.lower()}/k{k}/seed-{seed}"
     settings = _ARM_SETTINGS[arm]
-    teacher_used = arm in {"c1", "v1", "v1u", "v0", "b1", "e1", "o1", "s1", "mednext_supervised"}
+    teacher_used = arm in {"c1", "v1", "v1u", "v0", "b1", "e1", "o1", "s1", "teacher_supervised"}
     source_stride = (16 if arm == "s1" else 8) if source_stride is None else source_stride
+    if teacher_used and source_stride not in _FEATURE_CHANNELS:
+        raise ValueError("feature_stride must be 8 or 16")
     if feature_source is None:
         feature_source = (
-            {4: "stride4_decoder_block", 8: "encoder_stride8", 16: "bottleneck_stride16"}[source_stride]
+            {8: "encoder_stride8", 16: "encoder_stride16"}[source_stride]
             if teacher_used else None
         )
     teacher_online = arm == "o1"
     code_only = arm == "b1"
     adaptive_epa = arm == "e1"
     teacher_architecture = (
-        "mednext_l_k3" if teacher_used else
+        NNFOUNDATION_ARCHITECTURE if teacher_used else
         "ema_student" if arm == "mean_teacher" else
         "candidate_a3d" if arm == "a3d_teacher_free" else "none"
     )
     student_architecture = (
-        "mednext_l_k3_supervised" if arm == "mednext_supervised" else
+        "nnfoundation_resenc_l_supervised" if arm == "teacher_supervised" else
         "candidate_a3d" if arm == "a3d_teacher_free" else "unetrpp_lite_3d"
     )
     if student_architecture == "candidate_a3d":
         decoder_inputs = ["native_volume"]
     elif settings["interface"] == "vq":
         decoder_inputs = ["codes"] if code_only else ["F4", "codes"]
+    elif arm == "teacher_supervised":
+        decoder_inputs = ["native_volume"]
     else:
         decoder_inputs = ["F4"] if student_architecture == "unetrpp_lite_3d" else ["native_volume"]
-    setting_namespace = (
-        "v1_stride4" if arm == "v1" and source_stride == 4 else
-        "v1_decoder_stride8" if arm == "v1" and source_stride == 8 and feature_source == "decoder_stride8" else
-        "v1_residual2" if arm == "v1" and residual2 else arm
-    )
+    setting_namespace = "v1_residual2" if arm == "v1" and residual2 else arm
     codekd_enabled = arm in {"v1", "v1u", "b1", "e1", "o1", "s1"}
     w_mode = "uniform" if arm == "v1u" else ("physiology" if settings["physiology"] else "none")
     stage_updates = copy.deepcopy(DEFAULT_STAGE_UPDATES)
@@ -238,25 +294,51 @@ def _base_config(arm: str, *, dataset: str = "acdc", protocol: str = "A",
             },
             "teacher": {
                 "architecture": teacher_architecture,
-                "heads": ["region", "boundary_sdf"] if teacher_architecture == "mednext_l_k3" else [],
-                "feature_stride": source_stride if teacher_architecture == "mednext_l_k3" else None,
-                "feature_source": feature_source if teacher_architecture == "mednext_l_k3" else None,
-                "feature_channels": _FEATURE_CHANNELS[source_stride] if teacher_architecture == "mednext_l_k3" else None,
-                "source_repo": DEFAULT_MEDNEXT_SOURCE_REPO if teacher_architecture == "mednext_l_k3" else None,
-                "source_commit": UPSTREAM_MEDNEXT_COMMIT if teacher_architecture == "mednext_l_k3" else None,
+                "heads": ["region", "boundary_sdf"] if teacher_architecture == NNFOUNDATION_ARCHITECTURE else [],
+                "feature_stride": source_stride if teacher_architecture == NNFOUNDATION_ARCHITECTURE else None,
+                "feature_source": feature_source if teacher_architecture == NNFOUNDATION_ARCHITECTURE else None,
+                "feature_channels": _FEATURE_CHANNELS[source_stride] if teacher_architecture == NNFOUNDATION_ARCHITECTURE else None,
+                "encoder_strides": copy.deepcopy(
+                    NNFOUNDATION_DEFAULT_ENCODER_STRIDES
+                    if teacher_architecture == NNFOUNDATION_ARCHITECTURE else None
+                ),
+                "phase_offsets": copy.deepcopy(
+                    NNFOUNDATION_DEFAULT_PHASE_OFFSETS
+                    if teacher_architecture == NNFOUNDATION_ARCHITECTURE else None
+                ),
+                "phase_measurement": copy.deepcopy(
+                    NNFOUNDATION_PHASE_MEASUREMENT
+                    if teacher_architecture == NNFOUNDATION_ARCHITECTURE else None
+                ),
+                "encoder_channels": copy.deepcopy(
+                    NNFOUNDATION_ENCODER_CHANNELS
+                    if teacher_architecture == NNFOUNDATION_ARCHITECTURE else None
+                ),
+                "encoder_blocks": copy.deepcopy(
+                    NNFOUNDATION_ENCODER_BLOCKS
+                    if teacher_architecture == NNFOUNDATION_ARCHITECTURE else None
+                ),
+                "dependency_pins": ({
+                    "dynamic_network_architectures": NNFOUNDATION_DNA_VERSION,
+                    "nnssl_commit": NNFOUNDATION_NNSSL_COMMIT,
+                    "nnunet_commit": NNFOUNDATION_NNUNET_COMMIT,
+                } if teacher_architecture == NNFOUNDATION_ARCHITECTURE else None),
                 "freeze_joint": not teacher_online,
                 "online_joint": teacher_online,
-                "shared_trunk": teacher_architecture == "mednext_l_k3",
+                "shared_trunk": teacher_architecture == NNFOUNDATION_ARCHITECTURE,
                 "pretrained": ({
-                    "weights_path": None,
-                    "weights_sha256": None,
-                    "weights_source_url": None,
-                    "pretraining_dataset": None,
-                    "overlap_acdc": None,
-                    "overlap_mnms": None,
+                    "weights_path": NNFOUNDATION_DEFAULT_WEIGHTS_PATH,
+                    "weights_sha256": NNFOUNDATION_WEIGHTS_SHA256,
+                    "weights_source_url": NNFOUNDATION_WEIGHTS_SOURCE_URL,
+                    "pretraining_dataset": NNFOUNDATION_PRETRAINING_DATASET,
+                    "overlap_acdc": False,
+                    "overlap_mnms": False,
+                    "overlap_note": NNFOUNDATION_OVERLAP_NOTE,
+                    "license": NNFOUNDATION_LICENSE,
                     "class_mapping": list(_EXPECTED_CLASSES),
-                    "provenance_status": "NOT_FOUND_OFFICIAL",
-                } if teacher_architecture == "mednext_l_k3" else None),
+                    "class_mapping_scope": "downstream_segmentation_contract",
+                    "provenance_status": "READY",
+                } if teacher_architecture == NNFOUNDATION_ARCHITECTURE else None),
             },
         },
         "training": {
@@ -414,6 +496,30 @@ def _finite_number(value: Any, name: str, *, minimum: float | None = None,
         raise ValueError(f"{name} must be <= {maximum}")
 
 
+def _resolve_bound_path(value: Any, *, field: str) -> Path:
+    """Resolve an external runtime binding without putting a host path in recipes."""
+
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{field} must be a non-empty path or runtime binding")
+    text = value.strip()
+    binding = "${Q3D_NNFOUNDATION_WEIGHTS}"
+    if text == binding:
+        resolved = os.environ.get(NNFOUNDATION_WEIGHTS_ENV)
+        if not resolved:
+            raise ValueError(
+                f"{field} uses {binding}; set {NNFOUNDATION_WEIGHTS_ENV} for a real run"
+            )
+        return Path(resolved).expanduser()
+    return Path(text).expanduser()
+
+
+def _resolve_repo_path(value: Any, *, field: str) -> Path:
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{field} must be a non-empty repository-relative path")
+    path = Path(value.strip()).expanduser()
+    return path if path.is_absolute() else Path(__file__).resolve().parents[2] / path
+
+
 def _validate_official_weight_url(value: Any) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ValueError("weights_source_url must be an explicit HTTPS URL")
@@ -421,28 +527,32 @@ def _validate_official_weight_url(value: Any) -> str:
     host = (parsed.hostname or "").lower()
     official_host = any(host == root or host.endswith("." + root) for root in _OFFICIAL_WEIGHT_HOSTS)
     if (parsed.scheme != "https" or not official_host or parsed.username or parsed.password):
-        raise ValueError("weights_source_url must use official GitHub, Zenodo, or Hugging Face HTTPS hosting")
+        raise ValueError("weights_source_url must use the pinned Hugging Face HTTPS resolve URL")
     return value.strip()
 
 
-def _verify_mednext_source_checkout(source_repo: str, source_commit: str) -> Path:
-    path = Path(source_repo).expanduser().resolve()
-    if not path.is_dir():
-        raise ValueError(f"verified MedNeXt source checkout is missing: {path}")
-    head = subprocess.run(
-        ["git", "-C", str(path), "rev-parse", "HEAD"],
-        check=False, capture_output=True, text=True,
-    )
-    if head.returncode != 0 or head.stdout.strip() != source_commit:
-        actual = head.stdout.strip() if head.returncode == 0 else "unavailable"
-        raise ValueError(f"MedNeXt source checkout commit mismatch: expected {source_commit}, got {actual}")
-    status = subprocess.run(
-        ["git", "-C", str(path), "status", "--porcelain"],
-        check=False, capture_output=True, text=True,
-    )
-    if status.returncode != 0 or status.stdout.strip():
-        raise ValueError("MedNeXt source checkout must be clean")
-    return path
+def _validate_nnfoundation_weight_url(value: Any) -> str:
+    """Require the exact immutable HF checkpoint URL used by Phase 0."""
+
+    url = _validate_official_weight_url(value)
+    if url != NNFOUNDATION_WEIGHTS_SOURCE_URL:
+        raise ValueError("weights_source_url must pin the nnFoundationCNN checkpoint revision")
+    return url
+
+
+def _validate_encoder_strides(value: Any, name: str = "encoder_strides") -> list[list[int]]:
+    if not isinstance(value, list) or len(value) != 6:
+        raise ValueError(f"{name} must declare six z,y,x stride triples")
+    result: list[list[int]] = []
+    for index, item in enumerate(value):
+        if not isinstance(item, list) or len(item) != 3:
+            raise ValueError(f"{name}[{index}] must contain three positive integers")
+        if any(type(axis) is not int or axis <= 0 for axis in item):
+            raise ValueError(f"{name}[{index}] must contain three positive integers")
+        result.append(list(item))
+    if result[0] != [1, 1, 1]:
+        raise ValueError(f"{name}[0] must be [1,1,1] for the ResEnc stem")
+    return result
 
 
 def _validate_runtime(value: Any) -> dict[str, Any]:
@@ -554,20 +664,20 @@ def _validate_model(value: Any, *, arm: str) -> dict[str, Any]:
         "dense_skip", "sdf_head_train_only", "max_parameters", "native_grid", "crop", "resample",
     }
     student = dict(_exact_mapping(model["student"], student_keys, "model.student"))
-    if student["architecture"] not in {"unetrpp_lite_3d", "mednext_l_k3_supervised", "candidate_a3d"}:
+    if student["architecture"] not in {"unetrpp_lite_3d", "nnfoundation_resenc_l_supervised", "candidate_a3d"}:
         raise ValueError("unsupported Q-3D student/baseline architecture")
     if student["input_shape"] != "[B,1,D,H,W]" or student["input_channels"] != 1:
         raise ValueError("Q-3D accepts native [B,1,D,H,W]")
     if student["classes"] != ["BG", "RV", "MYO", "LV"]:
         raise ValueError("student class mapping mismatch")
     expected_student_arch = (
-        "mednext_l_k3_supervised" if arm == "mednext_supervised" else
+        "nnfoundation_resenc_l_supervised" if arm == "teacher_supervised" else
         "candidate_a3d" if arm == "a3d_teacher_free" else "unetrpp_lite_3d"
     )
     if student["architecture"] != expected_student_arch:
         raise ValueError(f"{arm} requires student architecture {expected_student_arch}")
     expected_decoder_inputs = (
-        ["native_volume"] if arm in {"a3d_teacher_free", "mednext_supervised"} else
+        ["native_volume"] if arm in {"a3d_teacher_free", "teacher_supervised"} else
         ["codes"] if arm == "b1" else
         ["F4", "codes"] if _ARM_SETTINGS[arm]["interface"] == "vq" else ["F4"]
     )
@@ -605,84 +715,134 @@ def _validate_model(value: Any, *, arm: str) -> dict[str, Any]:
         if student["code_gate_init"] != 0.0:
             raise ValueError("the code injection gate must start at zero")
     teacher_keys = {
-        "architecture", "heads", "feature_stride", "feature_source", "feature_channels", "source_repo",
-        "source_commit", "freeze_joint", "online_joint", "shared_trunk", "pretrained",
+        "architecture", "heads", "feature_stride", "feature_source", "feature_channels",
+        "encoder_strides", "phase_offsets", "phase_measurement", "encoder_channels", "encoder_blocks", "dependency_pins",
+        "freeze_joint", "online_joint", "shared_trunk", "pretrained",
     }
     teacher = dict(_exact_mapping(model["teacher"], teacher_keys, "model.teacher"))
     expected_teacher_arch = (
-        "mednext_l_k3" if arm in {"c1", "v1", "v1u", "v0", "b1", "e1", "o1", "s1", "mednext_supervised"} else
+        NNFOUNDATION_ARCHITECTURE if arm in {"c1", "v1", "v1u", "v0", "b1", "e1", "o1", "s1", "teacher_supervised"} else
         "ema_student" if arm == "mean_teacher" else
         "candidate_a3d" if arm == "a3d_teacher_free" else "none"
     )
     if teacher["architecture"] != expected_teacher_arch:
         raise ValueError(f"{arm} requires teacher architecture {expected_teacher_arch}")
-    if teacher["architecture"] not in {"mednext_l_k3", "ema_student", "candidate_a3d", "none"}:
+    if teacher["architecture"] not in {NNFOUNDATION_ARCHITECTURE, "ema_student", "candidate_a3d", "none"}:
         raise ValueError("unsupported teacher architecture")
-    if teacher["architecture"] == "mednext_l_k3":
+    if teacher["architecture"] == NNFOUNDATION_ARCHITECTURE:
         if teacher["heads"] != ["region", "boundary_sdf"] or type(teacher["shared_trunk"]) is not bool:
-            raise ValueError("MedNeXt teacher must declare two heads on one shared trunk")
-        if teacher["feature_stride"] not in {4, 8, 16}:
-            raise ValueError("teacher feature_stride must be 4, 8, or 16")
-        expected_feature_source = {
-            4: "stride4_decoder_block",
-            16: "bottleneck_stride16",
-        }.get(teacher["feature_stride"])
-        if teacher["feature_stride"] == 8:
-            if teacher["feature_source"] not in {"encoder_stride8", "decoder_stride8"}:
-                raise ValueError("stride-8 teacher feature_source must be encoder_stride8 or decoder_stride8")
-            if teacher["feature_source"] == "decoder_stride8" and arm != "v1":
-                raise ValueError("decoder_stride8 is reserved for the V1 source ablation")
-        elif teacher["feature_source"] != expected_feature_source:
-            raise ValueError("teacher feature_source must name the selected stride's explicit source")
+            raise ValueError("nnFoundation teacher must declare region and boundary heads on one shared trunk")
+        if teacher["feature_stride"] not in {8, 16}:
+            raise ValueError("nnFoundation teacher feature_stride must be 8 or 16")
+        expected_feature_source = {8: "encoder_stride8", 16: "encoder_stride16"}[teacher["feature_stride"]]
+        if teacher["feature_source"] != expected_feature_source:
+            raise ValueError("nnFoundation feature_source must match the selected encoder stage")
         if teacher["feature_channels"] != _FEATURE_CHANNELS[teacher["feature_stride"]]:
-            raise ValueError("teacher feature_channels must match the selected verified stride adapter")
-        if teacher["source_repo"] is not None and (
-            not isinstance(teacher["source_repo"], str) or not teacher["source_repo"].strip()
-        ):
-            raise ValueError("MedNeXt teacher source_repo must be a non-empty path or null placeholder")
-        if teacher["source_commit"] != UPSTREAM_MEDNEXT_COMMIT:
-            raise ValueError(f"MedNeXt source_commit must be the verified upstream commit {UPSTREAM_MEDNEXT_COMMIT}")
+            raise ValueError("nnFoundation feature_channels must match stage 3 (256) or stage 4 (320)")
+        encoder_strides = _validate_encoder_strides(teacher["encoder_strides"])
+        phase_offsets = _exact_mapping(teacher["phase_offsets"], {
+            "encoder_stride8", "encoder_stride16",
+        }, "model.teacher.phase_offsets")
+        for source, offset in phase_offsets.items():
+            if (not isinstance(offset, list) or len(offset) != 3
+                    or any(isinstance(item, bool) or not isinstance(item, (int, float))
+                           or not math.isfinite(float(item)) for item in offset)):
+                raise ValueError(f"model.teacher.phase_offsets.{source} must contain three finite numbers")
+        phase_measurement = _exact_mapping(teacher["phase_measurement"], {
+            "receipt_path", "receipt_sha256", "status", "method", "samples", "threshold_voxels",
+            "encoder_stride8", "encoder_stride16",
+        }, "model.teacher.phase_measurement")
+        if phase_measurement["receipt_path"] != NNFOUNDATION_PHASE_RECEIPT_PATH:
+            raise ValueError("model.teacher.phase_measurement must point to the locked ERF receipt")
+        if (not isinstance(phase_measurement["receipt_sha256"], str)
+                or not _HEX_SHA256.fullmatch(phase_measurement["receipt_sha256"])
+                or phase_measurement["receipt_sha256"] != NNFOUNDATION_PHASE_RECEIPT_SHA256):
+            raise ValueError("model.teacher.phase_measurement receipt SHA-256 is not the locked ERF receipt")
+        if phase_measurement["status"] != "PASS" or phase_measurement["method"] != "gradient_erf_mean_centroid":
+            raise ValueError("model.teacher.phase_measurement must declare the passing gradient-ERF measurement")
+        if phase_measurement["samples"] != 16 or phase_measurement["threshold_voxels"] != 2.0:
+            raise ValueError("model.teacher.phase_measurement sampling and threshold are locked")
+        main_measurement = _exact_mapping(phase_measurement["encoder_stride8"], {
+            "status", "offset_zyx", "measured_mean_offset_zyx", "policy",
+        }, "model.teacher.phase_measurement.encoder_stride8")
+        if (main_measurement["status"] != "MEASURED_WITHIN_THRESHOLD"
+                or main_measurement["offset_zyx"] != NNFOUNDATION_DEFAULT_PHASE_OFFSETS["encoder_stride8"]
+                or main_measurement["measured_mean_offset_zyx"] != [0.67213374376297, 1.9470438957214355, 1.722203016281128]
+                or main_measurement["policy"] != "lock_nominal_phase_when_signed_mean_is_within_threshold"):
+            raise ValueError("encoder_stride8 phase measurement does not match the locked ERF receipt")
+        s1_measurement = _exact_mapping(phase_measurement["encoder_stride16"], {
+            "status", "offset_zyx", "policy",
+        }, "model.teacher.phase_measurement.encoder_stride16")
+        if (s1_measurement["status"] != "NOT_MEASURED"
+                or s1_measurement["offset_zyx"] != NNFOUNDATION_DEFAULT_PHASE_OFFSETS["encoder_stride16"]
+                or s1_measurement["policy"] != "theoretical_zero_reference_not_inherited_from_encoder_stride8"):
+            raise ValueError("encoder_stride16 phase must be explicitly unmeasured and independent")
+        if teacher["encoder_channels"] != NNFOUNDATION_ENCODER_CHANNELS:
+            raise ValueError("nnFoundation encoder channels must be [32,64,128,256,320,320]")
+        if teacher["encoder_blocks"] != NNFOUNDATION_ENCODER_BLOCKS:
+            raise ValueError("nnFoundation residual block counts must be [1,3,4,6,6,6]")
+        pins = _exact_mapping(teacher["dependency_pins"], {
+            "dynamic_network_architectures", "nnssl_commit", "nnunet_commit",
+        }, "model.teacher.dependency_pins")
+        if dict(pins) != {
+            "dynamic_network_architectures": NNFOUNDATION_DNA_VERSION,
+            "nnssl_commit": NNFOUNDATION_NNSSL_COMMIT,
+            "nnunet_commit": NNFOUNDATION_NNUNET_COMMIT,
+        }:
+            raise ValueError("nnFoundation dependency pins do not match Phase 0")
         if teacher["feature_stride"] == 16 and arm != "s1":
             raise ValueError("stride-16 teacher source is reserved for S1")
-        if teacher["feature_stride"] == 4 and arm not in {"v1", "c1"}:
-            raise ValueError("stride-4 source is an explicitly named C1/V1 source ablation")
         if type(teacher["freeze_joint"]) is not bool or type(teacher["online_joint"]) is not bool:
             raise ValueError("teacher joint mode flags must be boolean")
         if teacher["online_joint"] != (arm == "o1") or teacher["freeze_joint"] == teacher["online_joint"]:
             raise ValueError("only O1 updates the teacher online; all other teacher arms freeze it")
         pretrained = _exact_mapping(teacher["pretrained"], {
             "weights_path", "weights_sha256", "weights_source_url", "pretraining_dataset",
-            "overlap_acdc", "overlap_mnms", "class_mapping", "provenance_status",
+            "overlap_acdc", "overlap_mnms", "overlap_note", "license",
+            "class_mapping", "class_mapping_scope", "provenance_status",
         }, "model.teacher.pretrained")
-        if pretrained["provenance_status"] not in {"READY", "NOT_RUN", "NOT_FOUND_OFFICIAL"}:
-            raise ValueError("teacher provenance_status must be READY, NOT_RUN, or NOT_FOUND_OFFICIAL")
+        if pretrained["provenance_status"] not in {"READY", "NOT_RUN"}:
+            raise ValueError("teacher provenance_status must be READY or NOT_RUN")
         if pretrained["class_mapping"] != _EXPECTED_CLASSES:
-            raise ValueError(f"teacher pretrained class_mapping must be {_EXPECTED_CLASSES}")
+            raise ValueError(f"teacher downstream class_mapping must be {_EXPECTED_CLASSES}")
+        if pretrained["class_mapping_scope"] != "downstream_segmentation_contract":
+            raise ValueError("teacher pretrained class_mapping must be declared as downstream-only")
         source_url = pretrained["weights_source_url"]
         if source_url is not None:
-            _validate_official_weight_url(source_url)
+            _validate_nnfoundation_weight_url(source_url)
         if pretrained["provenance_status"] == "READY":
             if not isinstance(pretrained["weights_path"], str) or not pretrained["weights_path"].strip():
                 raise ValueError("READY pretrained provenance requires weights_path")
             if not isinstance(pretrained["weights_sha256"], str) or not _HEX_SHA256.fullmatch(pretrained["weights_sha256"]):
                 raise ValueError("READY pretrained provenance requires a lowercase weights_sha256")
             if source_url is None:
-                raise ValueError("READY pretrained provenance requires an official HTTPS weights_source_url")
+                raise ValueError("READY pretrained provenance requires the pinned HF resolve URL")
             if not isinstance(pretrained["pretraining_dataset"], str) or not pretrained["pretraining_dataset"].strip():
                 raise ValueError("READY pretrained provenance requires pretraining_dataset")
             for field in ("overlap_acdc", "overlap_mnms"):
                 if type(pretrained[field]) is not bool:
                     raise ValueError(f"READY pretrained provenance requires explicit {field}")
+            if pretrained["pretraining_dataset"] != NNFOUNDATION_PRETRAINING_DATASET:
+                raise ValueError("READY pretraining_dataset must match the Phase-0 Table D7 declaration")
+            if pretrained["overlap_acdc"] or pretrained["overlap_mnms"]:
+                raise ValueError("nnFoundation provenance declares no ACDC/M&Ms overlap")
+            if pretrained["overlap_note"] != NNFOUNDATION_OVERLAP_NOTE:
+                raise ValueError("READY overlap_note must state that Table D7 overlap is not independently verified")
+            if pretrained["license"] != NNFOUNDATION_LICENSE:
+                raise ValueError("READY weights license must be CC-BY-SA-4.0")
         elif any(pretrained[field] is not None for field in (
             "weights_path", "weights_sha256", "weights_source_url", "pretraining_dataset",
-            "overlap_acdc", "overlap_mnms",
+            "overlap_acdc", "overlap_mnms", "overlap_note", "license",
         )):
             raise ValueError("non-READY pretrained provenance must keep unavailable weights and overlap facts null")
     else:
         if (teacher["feature_stride"] is not None or teacher["feature_channels"] is not None
-                or teacher["feature_source"] is not None or teacher["source_repo"] is not None or teacher["source_commit"] is not None
-                or teacher["pretrained"] is not None):
-            raise ValueError("non-MedNeXt baselines cannot carry MedNeXt feature or checkpoint provenance")
+                or teacher["feature_source"] is not None or teacher["encoder_strides"] is not None
+                or teacher["phase_offsets"] is not None
+                or teacher["phase_measurement"] is not None
+                or teacher["encoder_channels"] is not None or teacher["encoder_blocks"] is not None
+                or teacher["dependency_pins"] is not None or teacher["pretrained"] is not None):
+            raise ValueError("non-nnFoundation baselines cannot carry encoder or checkpoint provenance")
     return {"student": student, "teacher": teacher}
 
 
@@ -754,18 +914,22 @@ def _validate_training(value: Any, *, arm: str, runtime: Mapping[str, Any]) -> d
 
 
 def validate_real_teacher_provenance(config: Mapping[str, Any]) -> None:
-    """Require and verify every pretrained MedNeXt fact needed by a real run."""
+    """Require and verify every nnFoundation fact needed by a real run."""
     arm = config.get("arm")
-    if arm not in {"c1", "v1", "v1u", "v0", "b1", "e1", "o1", "s1", "mednext_supervised"}:
+    if arm not in {"c1", "v1", "v1u", "v0", "b1", "e1", "o1", "s1", "teacher_supervised"}:
         return
     teacher = config["model"]["teacher"]
-    if teacher.get("architecture") != "mednext_l_k3":
-        raise ValueError("real teacher stage requires MedNeXt-L k3 provenance")
-    source_repo = teacher.get("source_repo")
-    source_commit = teacher.get("source_commit")
-    if not isinstance(source_repo, str) or source_commit != UPSTREAM_MEDNEXT_COMMIT:
-        raise ValueError("real teacher requires the pinned official MedNeXt source_repo/source_commit")
-    _verify_mednext_source_checkout(source_repo, source_commit)
+    if teacher.get("architecture") != NNFOUNDATION_ARCHITECTURE:
+        raise ValueError("real teacher stage requires nnFoundation ResEnc-L provenance")
+    _validate_encoder_strides(teacher.get("encoder_strides"))
+    pins = teacher.get("dependency_pins")
+    expected_pins = {
+        "dynamic_network_architectures": NNFOUNDATION_DNA_VERSION,
+        "nnssl_commit": NNFOUNDATION_NNSSL_COMMIT,
+        "nnunet_commit": NNFOUNDATION_NNUNET_COMMIT,
+    }
+    if not isinstance(pins, Mapping) or dict(pins) != expected_pins:
+        raise ValueError("real teacher dependency pins do not match Phase 0")
     source = teacher.get("pretrained")
     if not isinstance(source, Mapping):
         raise ValueError("real teacher stage requires pretrained weights provenance")
@@ -773,11 +937,15 @@ def validate_real_teacher_provenance(config: Mapping[str, Any]) -> None:
         raise ValueError(f"real teacher weights are unavailable: {source.get('provenance_status')}")
     path_value = source.get("weights_path")
     digest = source.get("weights_sha256")
-    _validate_official_weight_url(source.get("weights_source_url"))
+    _validate_nnfoundation_weight_url(source.get("weights_source_url"))
     pretraining_dataset = source.get("pretraining_dataset")
     overlap_acdc, overlap_mnms = source.get("overlap_acdc"), source.get("overlap_mnms")
     if source.get("class_mapping") != _EXPECTED_CLASSES:
         raise ValueError(f"real teacher class_mapping must be {_EXPECTED_CLASSES}; classifier reinitialization is forbidden")
+    if source.get("class_mapping_scope") != "downstream_segmentation_contract":
+        raise ValueError(
+            "real teacher class_mapping must be declared as a downstream segmentation contract"
+        )
     if not isinstance(path_value, str) or not path_value.strip():
         raise ValueError("real teacher stage requires an explicit pretrained weights path")
     if not isinstance(digest, str) or not _HEX_SHA256.fullmatch(digest):
@@ -786,7 +954,27 @@ def validate_real_teacher_provenance(config: Mapping[str, Any]) -> None:
         raise ValueError("real teacher stage requires the pretrained dataset declaration")
     if type(overlap_acdc) is not bool or type(overlap_mnms) is not bool:
         raise ValueError("real teacher stage requires explicit true/false overlap declarations for ACDC and M&Ms")
-    weight_path = Path(path_value).expanduser()
+    if pretraining_dataset != NNFOUNDATION_PRETRAINING_DATASET:
+        raise ValueError("real teacher pretraining_dataset differs from the Phase-0 Table D7 declaration")
+    if overlap_acdc or overlap_mnms:
+        raise ValueError("real teacher provenance declares no ACDC/M&Ms overlap")
+    if source.get("overlap_note") != NNFOUNDATION_OVERLAP_NOTE:
+        raise ValueError("real teacher overlap_note must state that Table D7 was not independently verified")
+    if source.get("license") != NNFOUNDATION_LICENSE:
+        raise ValueError("real teacher weights license must be CC-BY-SA-4.0")
+    phase = teacher.get("phase_measurement")
+    if phase != NNFOUNDATION_PHASE_MEASUREMENT:
+        raise ValueError("real teacher stage requires the locked ERF phase receipt")
+    phase_path = _resolve_repo_path(phase.get("receipt_path"), field="ERF phase receipt path")
+    if not phase_path.is_file():
+        raise ValueError(f"ERF phase receipt does not exist: {phase_path}")
+    phase_hasher = hashlib.sha256()
+    with phase_path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            phase_hasher.update(chunk)
+    if phase_hasher.hexdigest() != NNFOUNDATION_PHASE_RECEIPT_SHA256:
+        raise ValueError("ERF phase receipt SHA-256 does not match its locked declaration")
+    weight_path = _resolve_bound_path(path_value, field="model.teacher.pretrained.weights_path")
     if not weight_path.is_file():
         raise ValueError(f"pretrained weight file does not exist: {weight_path}")
     hasher = hashlib.sha256()
@@ -828,7 +1016,7 @@ def validate_config(config: Mapping[str, Any], *, real_run: bool = False) -> dic
     protocol_keys = {"variant", "k", "teacher_label_budget", "student_label_budget", "unlabeled_source", "seed", "cache_isolation_key"}
     protocol = dict(_exact_mapping(raw["protocol"], protocol_keys, "protocol"))
     if protocol["variant"] not in {"A", "B"} or type(protocol["k"]) is not int or protocol["k"] not in K_VALUES:
-        raise ValueError("protocol must use A/B and K in {2,5,10}")
+        raise ValueError("protocol must use A/B and K in {2,5,8,10}")
     if protocol["seed"] != raw["seed"] or protocol["student_label_budget"] != "k":
         raise ValueError("protocol seed and student labeled budget must match the config")
     expected_teacher_budget = "k" if protocol["variant"] == "A" else "all_train"
@@ -841,6 +1029,14 @@ def validate_config(config: Mapping[str, Any], *, real_run: bool = False) -> dic
     expected_namespace = f"q3d/{dataset['name']}/protocol-{protocol['variant'].lower()}/k{protocol['k']}/seed-{raw['seed']}"
     if protocol["cache_isolation_key"] != expected_namespace:
         raise ValueError("protocol cache namespace must isolate dataset/protocol/K/seed")
+    if (real_run and not runtime["synthetic"] and dataset["name"] == "acdc"
+            and protocol["variant"] == "A" and protocol["k"] == 8 and raw["seed"] == 42):
+        train_sha = dataset["manifests"]["train"]["sha256"]
+        dev_sha = dataset["manifests"]["development"]["sha256"]
+        if train_sha != K8_LOCKED_TRAIN_MANIFEST_SHA256:
+            raise ValueError("ACDC K=8 TRAIN manifest SHA-256 does not match the locked campaign input")
+        if dev_sha != K8_LOCKED_DEV_MANIFEST_SHA256:
+            raise ValueError("ACDC K=8 DEVELOPMENT manifest SHA-256 does not match the locked campaign input")
     model = _validate_model(raw["model"], arm=arm)
     training = _validate_training(raw["training"], arm=arm, runtime=raw["runtime"])
     tokenizer = dict(_exact_mapping(raw["tokenizer"], {
@@ -957,16 +1153,12 @@ def validate_config(config: Mapping[str, Any], *, real_run: bool = False) -> dic
     teacher_stride = model["teacher"]["feature_stride"]
     teacher_feature_source = model["teacher"]["feature_source"]
     residual2_enabled = model["student"]["residual2"]["enabled"]
-    setting_namespace = (
-        "v1_stride4" if arm == "v1" and teacher_stride == 4 else
-        "v1_decoder_stride8" if arm == "v1" and teacher_stride == 8 and teacher_feature_source == "decoder_stride8" else
-        "v1_residual2" if arm == "v1" and residual2_enabled else arm
-    )
+    setting_namespace = "v1_residual2" if arm == "v1" and residual2_enabled else arm
     expected_outputs = {name: f"{expected_namespace}/{setting_namespace}/{name.lower()}" for name in ("T", "Q", "P", "J")}
     if checkpoint["stage_outputs"] != expected_outputs or checkpoint["resume_scope"] != "stage_checkpoint_only":
         raise ValueError("checkpoint stage paths/resume scope must preserve cache isolation")
     if not isinstance(raw["baselines"], Mapping) or set(raw["baselines"]) != set(BASELINE_ARMS):
-        raise ValueError("baselines must enumerate Mean Teacher, A-3D teacher_free, and MedNeXt supervised")
+        raise ValueError("baselines must enumerate Mean Teacher, A-3D teacher_free, and teacher_supervised")
     for name, expected in _BASELINE_CATALOG.items():
         if dict(raw["baselines"][name]) != expected:
             raise ValueError(f"baseline launch mapping for {name} differs from the declared implementation")
@@ -1079,6 +1271,8 @@ def load_config(path: str | Path, *, real_run: bool = False) -> dict[str, Any]:
     def resolve_local(value: Any) -> Any:
         if not isinstance(value, str) or not value.strip():
             return value
+        if value.strip() == "${Q3D_NNFOUNDATION_WEIGHTS}":
+            return value.strip()
         local = Path(value).expanduser()
         return str((local if local.is_absolute() else config_path.parent / local).resolve())
 
@@ -1097,8 +1291,6 @@ def load_config(path: str | Path, *, real_run: bool = False) -> dict[str, Any]:
 
     teacher = normalized.get("model", {}).get("teacher")
     if isinstance(teacher, dict):
-        if isinstance(teacher.get("source_repo"), str):
-            teacher["source_repo"] = resolve_local(teacher["source_repo"])
         pretrained = teacher.get("pretrained")
         if isinstance(pretrained, dict) and pretrained.get("weights_path") is not None:
             pretrained["weights_path"] = resolve_local(pretrained["weights_path"])

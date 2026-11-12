@@ -31,8 +31,7 @@ def test_canonical_json_recipes_are_strict_and_preserve_pinned_settings() -> Non
     config_dir = Path("configs/candidate_q3d")
     names = {
         "c0", "c1", "v1", "v1u", "v0", "b1", "e1", "o1", "s1",
-        "v1_stride4", "v1_residual2", "v1_decoder_stride8",
-        "mean_teacher", "a3d_teacher_free", "mednext_supervised",
+        "v1_residual2", "mean_teacher", "a3d_teacher_free", "teacher_supervised",
     }
     assert {path.stem for path in config_dir.glob("*.json")} == names
     for path in sorted(config_dir.glob("*.json")):
@@ -52,20 +51,32 @@ def test_canonical_json_recipes_are_strict_and_preserve_pinned_settings() -> Non
         assert config["training"]["stage_optimizer_updates"] == {"T": 8000, "Q": 1000, "P": 0, "J": 8000}
         assert config["tokenizer"]["initialization_volumes"] == 200
         assert config["augmentation"]["intensity_probability_unlabeled_student"] == 1.0
-        if config["model"]["teacher"]["architecture"] == "mednext_l_k3":
-            assert config["model"]["teacher"]["source_repo"] is None
-            assert config["model"]["teacher"]["source_commit"] == "0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba"
+        if config["model"]["teacher"]["architecture"] == "nnfoundation_resenc_l":
+            assert config["model"]["teacher"]["encoder_strides"] == [
+                [1, 1, 1], [2, 2, 2], [1, 2, 2], [1, 2, 2], [1, 2, 2], [1, 2, 2],
+            ]
+            assert config["model"]["teacher"]["phase_offsets"] == {
+                "encoder_stride8": [0.0, 0.0, 0.0],
+                "encoder_stride16": [0.0, 0.0, 0.0],
+            }
+            assert config["model"]["teacher"]["dependency_pins"]["dynamic_network_architectures"] == "0.4.4"
             assert config["model"]["teacher"]["pretrained"]["class_mapping"] == ["BG", "RV", "MYO", "LV"]
-            assert config["model"]["teacher"]["pretrained"]["weights_source_url"] is None
-            assert config["model"]["teacher"]["pretrained"]["provenance_status"] == "NOT_FOUND_OFFICIAL"
+            assert "f443c09319988e833b3d9589bf95909e4443d7b2" in config["model"]["teacher"]["pretrained"]["weights_source_url"]
+            assert config["model"]["teacher"]["pretrained"]["provenance_status"] == "READY"
+            assert config["model"]["teacher"]["pretrained"]["weights_path"] == "${Q3D_NNFOUNDATION_WEIGHTS}"
+            assert config["model"]["teacher"]["pretrained"]["overlap_acdc"] is False
+            assert config["model"]["teacher"]["pretrained"]["overlap_mnms"] is False
+            phase = config["model"]["teacher"]["phase_measurement"]
+            assert phase["receipt_sha256"] == (
+                "2f05888b45ff3bfbf19f90bd91abbd4f0b2ab193b37375c5d875950117d2a14e"
+            )
+            assert phase["encoder_stride8"]["offset_zyx"] == [0.0, 0.0, 0.0]
+            assert phase["encoder_stride16"]["status"] == "NOT_MEASURED"
+            assert "not_inherited" in phase["encoder_stride16"]["policy"]
     assert load_config(config_dir / "s1.json")["model"]["teacher"]["feature_stride"] == 16
-    assert load_config(config_dir / "v1_stride4.json")["model"]["teacher"]["feature_stride"] == 4
-    assert load_config(config_dir / "v1.json")["model"]["teacher"]["feature_source"] == "encoder_stride8"
+    assert load_config(config_dir / "v1.json")["model"]["teacher"]["feature_stride"] == 8
     assert load_config(config_dir / "v1.json")["tokenizer"]["source_feature"] == "encoder_stride8"
-    assert load_config(config_dir / "v1_decoder_stride8.json")["model"]["teacher"]["feature_source"] == "decoder_stride8"
-    assert load_config(config_dir / "v1_decoder_stride8.json")["tokenizer"]["source_feature"] == "decoder_stride8"
-    assert load_config(config_dir / "v1_stride4.json")["model"]["teacher"]["feature_source"] == "stride4_decoder_block"
-    assert load_config(config_dir / "s1.json")["model"]["teacher"]["feature_source"] == "bottleneck_stride16"
+    assert load_config(config_dir / "s1.json")["model"]["teacher"]["feature_source"] == "encoder_stride16"
     assert load_config(config_dir / "v1_residual2.json")["model"]["student"]["residual2"] == {
         "enabled": True, "zero_init": True,
     }
@@ -96,33 +107,28 @@ def test_canonical_json_recipes_are_strict_and_preserve_pinned_settings() -> Non
 
 def test_q3d_feature_source_selection_is_explicit_and_consistent() -> None:
     main = canonical_config("v1")
-    decoder_ablation = canonical_config("v1", feature_source="decoder_stride8")
-    stride4 = canonical_config("v1", source_stride=4)
     stride16 = canonical_config("s1")
 
     assert main["model"]["teacher"]["feature_source"] == "encoder_stride8"
     assert main["tokenizer"]["source_feature"] == main["model"]["teacher"]["feature_source"]
-    assert decoder_ablation["model"]["teacher"]["feature_source"] == "decoder_stride8"
-    assert decoder_ablation["tokenizer"]["source_feature"] == "decoder_stride8"
-    assert decoder_ablation["checkpoint"]["stage_outputs"]["T"].endswith("/v1_decoder_stride8/t")
-    assert stride4["model"]["teacher"]["feature_source"] == "stride4_decoder_block"
-    assert stride4["tokenizer"]["source_feature"] == "stride4_decoder_block"
-    assert stride16["model"]["teacher"]["feature_source"] == "bottleneck_stride16"
-    assert stride16["tokenizer"]["source_feature"] == "bottleneck_stride16"
+    assert main["model"]["teacher"]["feature_channels"] == 256
+    assert stride16["model"]["teacher"]["feature_source"] == "encoder_stride16"
+    assert stride16["tokenizer"]["source_feature"] == "encoder_stride16"
+    assert stride16["model"]["teacher"]["feature_channels"] == 320
 
-    mismatched = copy.deepcopy(decoder_ablation)
-    mismatched["tokenizer"]["source_feature"] = "encoder_stride8"
+    mismatched = copy.deepcopy(main)
+    mismatched["tokenizer"]["source_feature"] = "encoder_stride16"
     with pytest.raises(ValueError, match="tokenizer.source_feature"):
         validate_config(mismatched)
 
     unsupported = copy.deepcopy(main)
-    unsupported["model"]["teacher"]["feature_source"] = "stride8_decoder_block_after_bottleneck"
-    unsupported["tokenizer"]["source_feature"] = "stride8_decoder_block_after_bottleneck"
+    unsupported["model"]["teacher"]["feature_source"] = "encoder_stage8_decoder"
+    unsupported["tokenizer"]["source_feature"] = "encoder_stage8_decoder"
     with pytest.raises(ValueError, match="feature_source"):
         validate_config(unsupported)
 
-    with pytest.raises(ValueError, match="reserved for the V1 source ablation"):
-        canonical_config("c1", feature_source="decoder_stride8")
+    with pytest.raises(ValueError, match="feature_stride must be 8 or 16"):
+        canonical_config("v1", source_stride=4)
 
 
 def test_config_rejects_unknown_root_and_nested_fields() -> None:
@@ -186,32 +192,26 @@ def test_smoke_override_is_explicit_and_synthetic_only() -> None:
 def test_real_teacher_provenance_requires_verified_source_and_weight_facts(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    del tmp_path, monkeypatch
     config = canonical_config("v1")
-    with pytest.raises(ValueError, match="source_repo/source_commit"):
-        validate_real_teacher_provenance(config)
-    source_repo = tmp_path / "mednext-source"
-    source_repo.mkdir()
-    config["model"]["teacher"]["source_repo"] = str(source_repo)
-    monkeypatch.setattr(
-        "self_audit.candidate_q3d.config._verify_mednext_source_checkout",
-        lambda repo, commit: source_repo,
-    )
-    weights = tmp_path / "mednext.pt"
-    weights.write_bytes(b"synthetic-weight-fixture")
-    config["model"]["teacher"]["pretrained"] = {
-        "weights_path": str(weights),
-        "weights_sha256": hashlib.sha256(weights.read_bytes()).hexdigest(),
-        "weights_source_url": "https://zenodo.org/records/123456/files/mednext.pt",
-        "pretraining_dataset": "declared external dataset",
-        "overlap_acdc": False,
-        "overlap_mnms": False,
-        "class_mapping": ["BG", "RV", "MYO", "LV"],
-        "provenance_status": "READY",
-    }
+    weights_path = Path("/Users/alvinluong/Self-Audit-runs/q3d-resenc-20261112/checkpoint_final.pth")
+    if not weights_path.is_file():
+        pytest.skip("Phase-0 checkpoint is external to the repository")
+    config["model"]["teacher"]["pretrained"]["weights_path"] = str(weights_path)
     validate_real_teacher_provenance(config)
-    config["model"]["teacher"]["pretrained"]["overlap_mnms"] = None
-    with pytest.raises(ValueError, match="overlap declarations"):
-        validate_real_teacher_provenance(config)
+    bad_hash = copy.deepcopy(config)
+    bad_hash["model"]["teacher"]["pretrained"]["weights_sha256"] = "0" * 64
+    with pytest.raises(ValueError, match="SHA-256"):
+        validate_real_teacher_provenance(bad_hash)
+    del bad_hash
+    not_ready = copy.deepcopy(config)
+    not_ready["model"]["teacher"]["pretrained"]["provenance_status"] = "NOT_RUN"
+    with pytest.raises(ValueError, match="unavailable"):
+        validate_real_teacher_provenance(not_ready)
+    bad_phase = copy.deepcopy(config)
+    bad_phase["model"]["teacher"]["phase_measurement"]["receipt_sha256"] = "0" * 64
+    with pytest.raises(ValueError, match="locked ERF receipt"):
+        validate_config(bad_phase)
     config = canonical_config("v1")
     config["model"]["teacher"]["pretrained"]["classifier_reinitialization"] = {"enabled": True}
     with pytest.raises(ValueError, match="exact fields"):
@@ -230,22 +230,11 @@ def test_load_config_resolves_all_local_manifest_source_and_weight_paths(tmp_pat
     config["dataset"]["manifests"]["train"] = {
         "path": "data/train.json", "sha256": hashlib.sha256(manifest.read_bytes()).hexdigest(), "status": "READY",
     }
-    config["model"]["teacher"]["source_repo"] = "../official-mednext"
-    config["model"]["teacher"]["pretrained"] = {
-        "weights_path": "weights.pt",
-        "weights_sha256": hashlib.sha256(weights.read_bytes()).hexdigest(),
-        "weights_source_url": "https://huggingface.co/official/mednext/resolve/main/weights.pt",
-        "pretraining_dataset": "declared public dataset",
-        "overlap_acdc": False,
-        "overlap_mnms": False,
-        "class_mapping": ["BG", "RV", "MYO", "LV"],
-        "provenance_status": "READY",
-    }
+    config["model"]["teacher"]["pretrained"]["weights_path"] = "weights.pt"
     recipe = config_dir / "recipe.json"
     recipe.write_text(json.dumps(config), encoding="utf-8")
     loaded = load_config(recipe)
     assert loaded["dataset"]["manifests"]["train"]["path"] == str(manifest.resolve())
-    assert loaded["model"]["teacher"]["source_repo"] == str((config_dir / ".." / "official-mednext").resolve())
     assert loaded["model"]["teacher"]["pretrained"]["weights_path"] == str(weights.resolve())
 
 
@@ -270,7 +259,7 @@ def test_campaign_plan_orders_stages_settings_and_defers_unknown_datasets(tmp_pa
     assert max(experiments.index(item) for item in secondary) < min(experiments.index(item) for item in baselines)
     assert set(item["setting"] for item in primary if item["k"] == 5) == set(PRIMARY_ARMS)
     assert set(item["setting"] for item in secondary if item["k"] == 5) == set(SECONDARY_ARMS) | {
-        "v1_stride4", "v1_residual2",
+        "v1_residual2",
     }
     for experiment in experiments:
         jobs = [item for item in plan["stage_jobs"] if item["experiment_id"] == experiment["id"]]
@@ -306,8 +295,6 @@ def test_campaign_plan_records_manifest_hashes_and_baseline_launches(tmp_path: P
         out=tmp_path / "campaign",
         datasets=("acdc",), protocols=("A",), ks=(5,),
         cross_inputs={"mnms": {"test": str(test_manifest)}},
-        teacher_source_repo=str(tmp_path / "official-mednext"),
-        teacher_source_commit="0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba",
         include_secondary=False, include_baselines=True,
         share_stages=False,
     )
@@ -320,37 +307,47 @@ def test_campaign_plan_records_manifest_hashes_and_baseline_launches(tmp_path: P
     assert a3d["launch_mapping"]["arm"] == "a3d_teacher_free"
     assert a3d["launch_mapping"]["update_match"] is False
     assert plan["baseline_launches"]["mean_teacher"]["arm"] == "mean_teacher"
-    assert plan["baseline_launches"]["mednext_supervised"]["arm"] == "mednext_supervised"
-    assert plan["baseline_launches"]["mednext_supervised"]["status"] == "IMPLEMENTED"
-    mednext_recipe = load_config(next(
-        item["config_path"] for item in plan["experiments"] if item["setting"] == "mednext_supervised"
+    assert plan["baseline_launches"]["teacher_supervised"]["arm"] == "teacher_supervised"
+    assert plan["baseline_launches"]["teacher_supervised"]["status"] == "IMPLEMENTED"
+    teacher_recipe = load_config(next(
+        item["config_path"] for item in plan["experiments"] if item["setting"] == "teacher_supervised"
     ))
-    assert mednext_recipe["model"]["teacher"]["source_repo"] == str(tmp_path / "official-mednext")
-    assert mednext_recipe["model"]["teacher"]["source_commit"] == "0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba"
-    mednext_jobs = [item for item in plan["stage_jobs"] if item["setting"] == "mednext_supervised"]
-    assert mednext_jobs and all(item["readiness"] == "NOT_RUN" for item in mednext_jobs)
+    assert teacher_recipe["model"]["teacher"]["architecture"] == "nnfoundation_resenc_l"
+    teacher_jobs = [item for item in plan["stage_jobs"] if item["setting"] == "teacher_supervised"]
+    assert teacher_jobs
 
 
-def test_mednext_k_only_protocol_b_readiness_skips_all_train_teacher_manifest() -> None:
-    ready_manifest = {"path": "/synthetic/test-only.json", "sha256": "a" * 64, "status": "READY"}
-    mednext = canonical_config("mednext_supervised", protocol="B")
-    mednext["dataset"]["manifests"]["train"] = copy.deepcopy(ready_manifest)
-    mednext["dataset"]["manifests"]["development"] = copy.deepcopy(ready_manifest)
-    mednext["model"]["teacher"]["pretrained"].update({
-        "weights_path": "/synthetic/weights.pt",
-        "weights_sha256": "b" * 64,
-        "weights_source_url": "https://zenodo.org/records/123456/files/weights.pt",
-        "pretraining_dataset": "declared source dataset",
-        "overlap_acdc": False,
-        "overlap_mnms": False,
-        "provenance_status": "READY",
-    })
-    readiness, reason = q3d_campaign._job_readiness(mednext, synthetic=False, stage="T")
+def test_teacher_supervised_k_only_protocol_b_readiness_skips_all_train_teacher_manifest(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    train_path = tmp_path / "train.json"
+    train_path.write_text(json.dumps({
+        "schema": "self_audit.data.v2",
+        "role": "training",
+        "dataset": "acdc",
+        "label_budget": 2,
+        "fewshot": {"selected_ids": ["patient001", "patient002"]},
+        "labeled": [{"id": "patient001"}, {"id": "patient002"}],
+    }), encoding="utf-8")
+    development_path = tmp_path / "development.json"
+    development_path.write_text(json.dumps({
+        "schema": "self_audit.data.v2",
+        "role": "development",
+        "dataset": "acdc",
+    }), encoding="utf-8")
+    ready_manifest = lambda path: {
+        "path": str(path), "sha256": hashlib.sha256(path.read_bytes()).hexdigest(), "status": "READY",
+    }
+    monkeypatch.setattr(q3d_campaign, "validate_real_teacher_provenance", lambda config: None)
+    teacher = canonical_config("teacher_supervised", protocol="B", k=2)
+    teacher["dataset"]["manifests"]["train"] = ready_manifest(train_path)
+    teacher["dataset"]["manifests"]["development"] = ready_manifest(development_path)
+    readiness, reason = q3d_campaign._job_readiness(teacher, synthetic=False, stage="T")
     assert (readiness, reason) == ("READY", None)
 
-    student_teacher = canonical_config("v1", protocol="B")
-    student_teacher["dataset"]["manifests"]["train"] = copy.deepcopy(ready_manifest)
-    student_teacher["dataset"]["manifests"]["development"] = copy.deepcopy(ready_manifest)
+    student_teacher = canonical_config("v1", protocol="B", k=2)
+    student_teacher["dataset"]["manifests"]["train"] = ready_manifest(train_path)
+    student_teacher["dataset"]["manifests"]["development"] = ready_manifest(development_path)
     student_teacher["model"]["teacher"]["pretrained"]["provenance_status"] = "READY"
     readiness, reason = q3d_campaign._job_readiness(
         student_teacher, synthetic=False, stage="T",
@@ -481,7 +478,7 @@ def test_all_selection_preflights_missing_real_inputs_before_any_runner_launch(t
     assert not (plan_path.parent / "RUN_STATE.json").exists()
 
 
-def test_generated_mednext_baseline_command_dispatches_through_train_cli(
+def test_generated_teacher_supervised_baseline_command_dispatches_through_train_cli(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     plan_path = create_campaign_plan(
@@ -494,11 +491,11 @@ def test_generated_mednext_baseline_command_dispatches_through_train_cli(
 
     observed = []
 
-    def fake_mednext(config, output_dir, *, device, smoke):
+    def fake_teacher(config, output_dir, *, device, smoke):
         observed.append((config["arm"], config["training"]["stage_updates"]["T"], smoke, device))
-        return {"status": "COMPLETED_SOFTWARE_ONLY", "arm": "mednext_supervised"}
+        return {"status": "COMPLETED_SOFTWARE_ONLY", "arm": "teacher_supervised"}
 
-    monkeypatch.setattr(baselines, "run_mednext_supervised", fake_mednext)
+    monkeypatch.setattr(baselines, "run_teacher_supervised", fake_teacher)
 
     def invoke_generated_command(command, **_kwargs):
         assert command[1].endswith("/train.py")
@@ -512,8 +509,35 @@ def test_generated_mednext_baseline_command_dispatches_through_train_cli(
         return SimpleNamespace(returncode=0, stdout=captured.getvalue())
 
     result = execute_campaign(
-        plan_path, execute=True, setting="mednext_supervised", device="cpu",
+        plan_path, execute=True, setting="teacher_supervised", device="cpu",
         runner=invoke_generated_command,
     )
     assert result["status"] == "COMPLETED"
-    assert observed == [("mednext_supervised", 1, True, "cpu")]
+    assert observed == [("teacher_supervised", 1, True, "cpu")]
+
+
+def test_k8_is_a_canonical_budget_and_real_manifest_guard_is_fail_closed(tmp_path: Path) -> None:
+    config = canonical_config("v1", dataset="acdc", protocol="A", k=8, seed=42)
+    assert config["protocol"]["k"] == 8
+    assert config["model"]["teacher"]["architecture"] == "nnfoundation_resenc_l"
+
+    train = tmp_path / "train.json"
+    development = tmp_path / "development.json"
+    train.write_text("{}\n", encoding="utf-8")
+    development.write_text("{}\n", encoding="utf-8")
+    config["runtime"]["synthetic"] = False
+    config["dataset"]["manifests"]["train"] = {
+        "path": str(train), "sha256": hashlib.sha256(train.read_bytes()).hexdigest(), "status": "READY",
+    }
+    config["dataset"]["manifests"]["development"] = {
+        "path": str(development), "sha256": hashlib.sha256(development.read_bytes()).hexdigest(), "status": "READY",
+    }
+    with pytest.raises(ValueError, match="K=8 TRAIN manifest SHA-256"):
+        validate_config(config, real_run=True)
+
+
+def test_non_resenc_teacher_source_fields_are_rejected() -> None:
+    config = canonical_config("v1", k=8)
+    config["model"]["teacher"]["legacy_source"] = "/tmp/old-backbone"
+    with pytest.raises(ValueError, match="exact fields"):
+        validate_config(config)
