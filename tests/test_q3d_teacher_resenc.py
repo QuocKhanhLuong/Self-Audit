@@ -263,3 +263,17 @@ def test_checkpoint_missing_sha_fails_closed(tmp_path: Path) -> None:
     torch.save(payload, path)
     with pytest.raises(ValueError, match="64-character hash"):
         load_nnfoundation_encoder(path, "")
+
+
+def test_anisotropic_feature_phase_matches_live_main_convolutions() -> None:
+    from self_audit.candidate_q3d.alignment import grid_phase
+    from self_audit.candidate_q3d.config import NNFOUNDATION_DEFAULT_ENCODER_STRIDES
+
+    teacher = Q3DResEncTeacher(synthetic=True, strides=NNFOUNDATION_DEFAULT_ENCODER_STRIDES)
+    chain = [teacher.encoder.stem.convs[0].conv]
+    for stage_index, stage in enumerate(teacher.encoder.stages):
+        for block in stage.blocks:
+            chain.extend((block.conv1.conv, block.conv2.conv))
+        if stage_index in (3, 4):
+            source = "encoder_stride8" if stage_index == 3 else "encoder_stride16"
+            assert teacher.phase_for_source(source) == grid_phase(chain)

@@ -541,3 +541,10 @@ def test_non_resenc_teacher_source_fields_are_rejected() -> None:
     config["model"]["teacher"]["legacy_source"] = "/tmp/old-backbone"
     with pytest.raises(ValueError, match="exact fields"):
         validate_config(config)
+
+
+def test_boundary_learning_rate_is_an_explicit_shared_head_alias() -> None:
+    config = canonical_config("v1")
+    config["training"]["teacher_boundary_lr"] = config["training"]["teacher_head_lr"] / 2
+    with pytest.raises(ValueError, match="teacher_boundary_lr must equal teacher_head_lr"):
+        validate_config(config)

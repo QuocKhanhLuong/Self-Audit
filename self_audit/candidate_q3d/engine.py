@@ -610,7 +610,7 @@ def _teacher_outputs(
 def _features_to_student_grid(
     feature: Tensor, native_shape: Sequence[int], source: str, *, teacher_phase, student_phase,
 ) -> Tensor:
-    if source in {"stride16", "bottleneck_stride16", "encoder_stride16"}:
+    if source == "encoder_stride16":
         return _align_stride16(feature, native_shape, teacher_phase=teacher_phase, student_phase=student_phase)
     return align_teacher_to_student4(feature, native_shape, teacher_phase, student_phase)
 

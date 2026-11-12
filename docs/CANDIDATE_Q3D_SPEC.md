@@ -86,7 +86,7 @@ Ký hiệu: B batch, D số lát native, H×W in-plane native, h = ceil(H/16), w
 | T-a | 5% đầu | Decoder + region head + boundary; encoder đóng băng | 1e-3 |
 | T-b | Phần còn lại | Toàn mạng | Encoder 1e-4; decoder/heads 1e-3; warmup LR 5% rồi cosine |
 
-Các group không trùng parameter identity; phải loại alias encoder trong decoder. Chọn checkpoint theo DEV FG Dice patient-macro hiện có. Mỗi 400 update log loss TRAIN và DEV FG/RV/MYO/LV của nhánh region. Manifest T lưu `teacher_dev_fg_dice`, per-class tại checkpoint được chọn, và `dev_curve_still_improving` từ ba lần DEV cuối (tăng nghiêm ngặt, thiếu ba điểm thì chưa xác định). Chỉ báo cáo, không tự tăng budget. Joint đóng băng teacher/adapter/codebook; O1 giữ là code ablation ngoài campaign.
+Các group không trùng parameter identity; phải loại alias encoder trong decoder. `teacher_boundary_lr` được giữ làm alias tương thích và bắt buộc bằng `teacher_head_lr`, vì boundary thuộc chung group heads; không có LR boundary bị bỏ qua âm thầm. Chọn checkpoint theo DEV FG Dice patient-macro hiện có. Mỗi 400 update log loss TRAIN và DEV FG/RV/MYO/LV của nhánh region. Manifest T lưu `teacher_dev_fg_dice`, per-class tại checkpoint được chọn, và `dev_curve_still_improving` từ ba lần DEV cuối (tăng nghiêm ngặt, thiếu ba điểm thì chưa xác định). Chỉ báo cáo, không tự tăng budget. Joint đóng băng teacher/adapter/codebook; O1 giữ là code ablation ngoài campaign.
 
 **Feature source:** main `encoder_stride8` = stage 3, 256 kênh; tên stride là theo in-plane, stride z lấy từ config. S1 `encoder_stride16` = stage 4, 320 kênh. Không còn nguồn decoder, stride4 hay bottleneck teacher cũ. Synthetic dùng chính `Q3DResEncTeacher` với kênh/block nhỏ, cùng forward/load/phase contracts; không chứng minh hiệu quả bệnh nhân.
 

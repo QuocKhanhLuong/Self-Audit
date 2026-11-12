@@ -888,6 +888,11 @@ def _validate_training(value: Any, *, arm: str, runtime: Mapping[str, Any]) -> d
     for field in ("teacher_boundary_lr", "teacher_encoder_lr", "teacher_head_lr", "teacher_joint_lr_multiplier",
                   "student_lr", "weight_decay", "gradient_clip_norm"):
         _finite_number(training[field], f"training.{field}", minimum=0.0)
+    # The boundary path belongs to the shared teacher-head parameter group.
+    # Keep the existing recipe field as an explicit alias, never a silently
+    # ignored independent learning rate.
+    if training["teacher_boundary_lr"] != training["teacher_head_lr"]:
+        raise ValueError("teacher_boundary_lr must equal teacher_head_lr for the shared head group")
     if training["student_optimizer"] != "AdamW":
         raise ValueError("student optimizer is pinned to AdamW")
     _positive_int(training["gradient_accumulation"], "training.gradient_accumulation")
