@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import json
 import random
 from collections import defaultdict
 from pathlib import Path
@@ -14,6 +15,60 @@ import torch
 
 from ..candidate_a3d.data import CandidateA3DData
 from ..candidate_a3d.geometry import canonical_geometry
+
+
+def validate_acdc_geometry(
+    manifest: Mapping[str, Any], *, synthetic: bool, dataset_name: str | None = None,
+) -> None:
+    """Reject known ACDC geometry placeholders before opening any voxel arrays.
+
+    This is a metadata guard, not evidence that original headers were audited.
+    The repair receipt separately binds header provenance and geometry changes.
+    Only an explicitly synthetic runtime may use synthetic fixture geometry.
+    """
+    manifest_synthetic = manifest.get("synthetic", False)
+    if type(synthetic) is not bool or type(manifest_synthetic) is not bool:
+        raise ValueError("synthetic identity flags must be booleans")
+    if manifest_synthetic != synthetic:
+        raise ValueError("synthetic/patient identity mismatch")
+    if synthetic:
+        return
+    declared_dataset = str(manifest.get("dataset", "")).lower()
+    if dataset_name is not None and declared_dataset != dataset_name.lower():
+        raise ValueError("training manifest dataset differs from configured dataset")
+    if declared_dataset != "acdc":
+        return
+    from ..data import GEOMETRY_MAP_SCHEMA
+    from .geometry_repair import validate_geometry_record
+
+    records = list(manifest.get("labeled", [])) + list(manifest.get("unlabeled", []))
+    patients = [record["id"] for record in records]
+    section = manifest.get("geometry")
+    if not isinstance(section, Mapping) or section.get("schema") != GEOMETRY_MAP_SCHEMA:
+        raise ValueError("ACDC geometry map requires the declared native schema")
+    by_patient = section.get("by_patient")
+    if not patients or len(set(patients)) != len(patients):
+        raise ValueError("ACDC geometry guard requires unique TRAIN patient IDs")
+    if not isinstance(by_patient, Mapping) or set(by_patient) != set(patients):
+        raise ValueError("ACDC geometry map must cover exactly the TRAIN patient cohort")
+    for patient in patients:
+        try:
+            validate_geometry_record(by_patient[patient])
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"ACDC patient {patient!r} has invalid geometry: {exc}") from exc
+
+
+def validate_manifest_geometry_file(
+    path: str | Path, expected_sha256: str, *, synthetic: bool, dataset_name: str | None = None,
+) -> None:
+    """Check pinned metadata before the baseline loader opens images or masks."""
+    payload = Path(path).read_bytes()
+    if hashlib.sha256(payload).hexdigest() != expected_sha256:
+        raise ValueError("training manifest hash mismatch")
+    manifest = json.loads(payload)
+    if not isinstance(manifest, dict):
+        raise ValueError("training manifest must be an object")
+    validate_acdc_geometry(manifest, synthetic=synthetic, dataset_name=dataset_name)
 
 
 class Q3DData:

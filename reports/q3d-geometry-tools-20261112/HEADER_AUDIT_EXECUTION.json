@@ -1,0 +1,34 @@
+{
+  "schema": "self_audit.q3d.header_audit_execution.v1",
+  "date_utc": "2026-11-12",
+  "host_alias": "vast-gpu",
+  "base_repository_commit": "ba35a056b714ec2cd8f838324c77cca3e6117fe2",
+  "python": "/venv/main/bin/python",
+  "nibabel_version": "5.5.0",
+  "command": "/venv/main/bin/python /tmp/q3d-audit-native-run_d84db742b5ea.py --prepared /root/mount_data/prepared/ACDC --raw /root/mount_data/datasets/ACDC/raw --historical-k8 /root/mount_data/receipts/setup-new-20261112/LOCKED_K8_TRAIN.historical.json --out /tmp/q3d-native-audit-run_d84db742b5ea",
+  "audit_status": "BLOCKED_HEADER_GEOMETRY",
+  "headers_read": 148,
+  "voxel_array_reads": 0,
+  "mask_array_reads": 0,
+  "raw_header_edits": 0,
+  "geometry_substitutions": 0,
+  "patient_training_updates": 0,
+  "not_run": [
+    "Corrected manifests and geometry-only amendment",
+    "New teacher stride/phase measurement and lock",
+    "Corrected L8 GT physiology",
+    "PLAN v2",
+    "GPU profile",
+    "Campaign"
+  ],
+  "remote_original_sha256_verified": {
+    "audit_native_headers.py": "4412e474de8b6fb818d7b645ea0cab0277a34e0c137b4f5191978efcd024f62d",
+    "header-audit.json": "1c85403060749ed013cb97f15578e5b5ce69767af94043ecb72750f5ab60304f",
+    "header-audit.csv": "2af031a6629df3697406c18c300c25401d2560ecbda62ef5bc9571747a4ac524"
+  },
+  "repository_csv_publication": {
+    "path": "header-audit.csv",
+    "sha256": "0711790b7f386f2d03666bb8503a309fdfb9342fcc99c610ffa95849949c4c9a",
+    "transform": "CRLF to LF only; parsed CSV rows asserted identical"
+  }
+}

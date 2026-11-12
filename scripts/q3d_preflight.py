@@ -133,6 +133,7 @@ def _manifest_diagnostics(
     *,
     config_path: Path,
     student_phase: Any = None,
+    synthetic: bool = False,
 ) -> dict[str, Any]:
     if not isinstance(manifest_spec, dict):
         return {"status": "NOT_RUN", "reason": "no TRAIN manifest is declared"}
@@ -177,6 +178,20 @@ def _manifest_diagnostics(
             "status": "INVALID_MANIFEST",
             "path": str(manifest_path),
             "reason": f"manifest dataset {manifest.get('dataset')!r} differs from {dataset_name!r}",
+        }
+
+    from self_audit.candidate_q3d.data import validate_acdc_geometry
+
+    try:
+        # No GT loader runs after a failed geometry or dataset identity check.
+        validate_acdc_geometry(manifest, synthetic=synthetic, dataset_name=dataset_name)
+    except (KeyError, TypeError, ValueError) as exc:
+        return {
+            "status": "INVALID_GEOMETRY",
+            "path": str(manifest_path),
+            "manifest_sha256": actual_sha,
+            "reason": str(exc),
+            "original_header_audit": {"status": "NOT_RUN"},
         }
 
     geometry = manifest.get("geometry")
@@ -1345,6 +1360,7 @@ def build_report(
             spec = None
         datasets[name] = _manifest_diagnostics(
             name, spec, config_path=config_path, student_phase=student_phase,
+            synthetic=config.get("runtime", {}).get("synthetic", False),
         )
         if "labeled_train_stage4_gt_coverage" not in datasets[name]:
             datasets[name]["labeled_train_stage4_gt_coverage"] = {

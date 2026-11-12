@@ -1,0 +1,98 @@
+{
+  "schema": "self_audit.candidate_q3d.smoke_all.v1",
+  "status": "COMPLETED_ALL_SYNTHETIC_RECIPES",
+  "evidence_status": "SOFTWARE_ONLY_SYNTHETIC",
+  "gpu_evidence": "NOT_RUN",
+  "real_data_evidence": "NOT_RUN",
+  "patient_metrics_claimed": false,
+  "recipe_statuses": {
+    "a3d_teacher_free": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+    "b1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "c0": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+    "c1": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+    "e1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "mean_teacher": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+    "o1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "s1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "teacher_supervised": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+    "v0": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "v1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "v1_residual2": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "v1u": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE"
+  },
+  "shared_v1_v1u_stages": {
+    "all_producer_stages_completed": true,
+    "identity_passed": true,
+    "manifest_identity_passed": true,
+    "content_identity_passed": true,
+    "gate": {
+      "missing": [
+        "dead_code_fraction",
+        "200-update_usage_history"
+      ],
+      "passed": false,
+      "status": "NOT_READY",
+      "thresholds": {
+        "max_dead_code_fraction": 0.25,
+        "min_class_codes": 4,
+        "min_perplexity": 32.0
+      }
+    },
+    "synthetic_gate_override_used": true,
+    "physiology_omega_validation": {
+      "gates_passed_without_override": true,
+      "means_are_one": true,
+      "omega_differs": true,
+      "passed": true,
+      "shared_patient_ids": true,
+      "v1": {
+        "computed_mean_omega": 1.0,
+        "gate_passed": true,
+        "omega": {
+          "train_unlabeled_000": 1.0742504461410438,
+          "train_unlabeled_001": 0.9257495538589562
+        },
+        "override_used": false,
+        "reported_mean_omega": 1.0
+      },
+      "v1_is_nonuniform": true,
+      "v1u": {
+        "computed_mean_omega": 1.0,
+        "gate_passed": true,
+        "omega": {
+          "train_unlabeled_000": 1.0,
+          "train_unlabeled_001": 1.0
+        },
+        "override_used": false,
+        "reported_mean_omega": 1.0
+      },
+      "v1u_is_uniform": true
+    }
+  },
+  "stage_artifact_hashes": {
+    "P": {
+      "checkpoint_sha256": "203962966e5fc5c6d31c6ff557caf5ba346bc5279747feecc7c823ac065c3e85",
+      "manifest_sha256": "7d0e8d01447cbb9d5efdaa3d8140ef97b09cdb30e0756a3d37f99045f285f675"
+    },
+    "Q": {
+      "checkpoint_sha256": "82cf188ed73fdc5365da915ebd53fd9546dddcee1a773d116c0e9eb6ce1ab7a4",
+      "manifest_sha256": "3e22d0dfd3fc8f9e197d0c913af4a65ebb71f73bd027c83f5f9b3c90db39c8e6"
+    },
+    "T": {
+      "checkpoint_sha256": "f53c215df78f1b68666b49ec42368332f92b273c03cad0adf11a621e67b23f46",
+      "manifest_sha256": "755989bccd35dda8163bef8afe85a3d6014f746138ecf896abf805474b90b9fc"
+    }
+  },
+  "execution": {
+    "command": [
+      "/Users/alvinluong/miniforge3/bin/python",
+      "scripts/smoke_q3d.py",
+      "--all-arms",
+      "--out",
+      "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/q3d-geometry-validation-9hisju6m/smoke"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 41.829477292001684,
+    "evidence_status": "SOFTWARE_ONLY"
+  }
+}

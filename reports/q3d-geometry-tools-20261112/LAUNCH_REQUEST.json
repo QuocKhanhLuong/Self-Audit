@@ -1,0 +1,48 @@
+{
+  "schema": "self_audit.q3d.launch_request.v1",
+  "status": "NOT_RUN",
+  "authorization": "User authorized launch after completion of the required checks and GPU profile; no further launch confirmation required.",
+  "blocked_by": "Phase A original-header geometry conflicts; corrected manifests, phase lock and GPU profile are NOT_RUN.",
+  "ordered_joint_runs": [
+    {
+      "k": 8,
+      "setting": "v1"
+    },
+    {
+      "k": 5,
+      "setting": "v1"
+    },
+    {
+      "k": 10,
+      "setting": "v1"
+    },
+    {
+      "k": 8,
+      "setting": "v1u"
+    },
+    {
+      "k": 8,
+      "setting": "c1"
+    },
+    {
+      "k": 8,
+      "setting": "c0"
+    }
+  ],
+  "ablation_scope": "Existing registered 6-J campaign scope; no expansion to other settings.",
+  "shared_stages": "Each k uses its own T/Q/P once; K8 ablations reuse K8 T/Q/P.",
+  "planned_stage_counts": {
+    "T": 3,
+    "Q": 3,
+    "P": 3,
+    "J": 6
+  },
+  "plan_v2": "NOT_RUN",
+  "server_log_window": {
+    "status": "NOT_RUN",
+    "requested": true,
+    "mechanism": "tmux window with live tail -F of stage metrics.jsonl while the authorized trainer runs"
+  },
+  "scheduler_note": "Current run CLI selects by setting, not k. Separate K8/K5/K10 plan selections can enforce this order; the historical globally stage-sorted PLAN does not. No ready plans or jobs were created.",
+  "campaign_launched": false
+}

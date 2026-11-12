@@ -224,9 +224,21 @@ def _channels_last_3d(module: nn.Module) -> nn.Module:
 
 
 def _load_data(config: Mapping[str, Any], supplied: Any | None) -> Q3DData:
+    from .data import validate_acdc_geometry, validate_manifest_geometry_file
+
+    synthetic = config["runtime"]["synthetic"]
+    dataset_name = config["dataset"].get("name")
     if supplied is not None:
         if isinstance(supplied, Q3DData):
             data = supplied
+            # Supplied views may have been materialized by their caller; the
+            # engine still checks their metadata before any further access.
+            validate_acdc_geometry(
+                data.student_data.manifest, synthetic=synthetic, dataset_name=dataset_name,
+            )
+            validate_acdc_geometry(
+                data.teacher_data.manifest, synthetic=synthetic, dataset_name=dataset_name,
+            )
         else:
             raise TypeError("data must be a Q3DData instance so protocol views remain explicit")
     else:
@@ -235,16 +247,26 @@ def _load_data(config: Mapping[str, Any], supplied: Any | None) -> Q3DData:
         dataset = config["dataset"]
         manifests = dataset["manifests"]
         train_manifest = manifests["train"]
-        synthetic = bool(config["runtime"]["synthetic"])
-        student_data = CandidateA3DData(
-            train_manifest["path"], train_manifest["sha256"], synthetic=synthetic,
+        validate_manifest_geometry_file(
+            train_manifest["path"], train_manifest["sha256"],
+            synthetic=synthetic, dataset_name=dataset_name,
         )
         protocol = config["protocol"]["variant"]
-        teacher_data = None
+        teacher_manifest = None
         if protocol == "B":
             teacher_manifest = manifests.get("teacher_train")
             if not isinstance(teacher_manifest, Mapping):
                 raise ValueError("protocol B requires a separately hash-pinned teacher_train manifest")
+            validate_manifest_geometry_file(
+                teacher_manifest["path"], teacher_manifest["sha256"],
+                synthetic=synthetic, dataset_name=dataset_name,
+            )
+        # Validate both protocol views before constructing either loader.
+        student_data = CandidateA3DData(
+            train_manifest["path"], train_manifest["sha256"], synthetic=synthetic,
+        )
+        teacher_data = None
+        if teacher_manifest is not None:
             teacher_data = CandidateA3DData(
                 teacher_manifest["path"], teacher_manifest["sha256"], synthetic=synthetic,
             )
