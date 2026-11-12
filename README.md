@@ -1,38 +1,18 @@
-# Self-Audit — Candidate A and A-3D
+# Self-Audit — Candidate Q3D
 
-The active code contains two versioned implementations of the same research
-question: can a student build a finite typed anatomical measurement code and
-decode a mask from that code alone?
-
-- [Active methods and protocol boundary](docs/METHOD.md)
-- [Candidate A, native 2D/2.5D](docs/CANDIDATE_A.md)
-- [Candidate A-3D, native full-volume](docs/CANDIDATE_A3D.md)
-
-The default recipes use dense budgeted TRAIN labels and visit every annotated
-frame/slice once per epoch; U images are unused. A-3D has a separate opt-in
-semi-supervised profile at
-[`configs/candidate_a3d/semi_supervised.json`](configs/candidate_a3d/semi_supervised.json).
-That profile uses image-only TRAIN U for detached EMA consistency only; it never
-opens U masks or creates U GT-derived SDF/K1 targets; detached EMA soft SDF
-consistency is allowed. No efficacy, SOTA, 96-Dice or
-semi-supervised improvement claim follows from this software implementation.
-
-- [ACDC and original M&Ms data preparation](docs/DATA_PREPARATION.md)
-- [Train, epoch logs, export and evaluation](docs/RUNBOOK.md)
-- [A/A-3D ablation plans](docs/EXPERIMENTS.md)
-- [A-3D few-shot label-budget sweep](docs/FEWSHOT.md)
-- [Run the ACDC k=8 teacher-free semi-supervised arm](docs/TEACHER_FREE_K8.md)
-- [Removed code and historical reproduction](docs/MIGRATION.md)
-- [Portable design sources](docs/design/README.md)
+Candidate Q3D is the active research track. Its authoritative design and evidence limits are in [the Q3D specification](docs/CANDIDATE_Q3D_SPEC.md). Candidate A and Candidate A-3D remain explicit, unchanged comparison tracks.
 
 ```bash
 python scripts/check_repo.py
 python -m pytest -q
-python scripts/smoke_candidate_a.py --out /tmp/self-audit-a-smoke
-python scripts/smoke_candidate_a3d.py --out /tmp/self-audit-a3d-smoke
+python scripts/smoke_q3d.py --out /tmp/self-audit-q3d-smoke
 ```
 
-Both smoke tests use manufactured data. The A-3D command is available once its
-implementation is present. Real training requires licensed datasets, locked
-patient splits and local hash-pinned backbone weights; nothing is downloaded or
-trained on patients by these checks.
+After the Q3D TRAIN/development manifest hashes and pretrained teacher provenance are verified in the config, use:
+
+```bash
+python train.py --config configs/candidate_q3d/v1.json --out "$Q3D_RUN_DIR" --allow-full-run
+python evaluate.py --checkpoint "$Q3D_STUDENT_EXPORT" --checkpoint-sha256 "$Q3D_STUDENT_EXPORT_SHA256" --data "$Q3D_EVALUATION_MANIFEST" --data-sha256 "$Q3D_EVALUATION_SHA256" --train-data "$Q3D_TRAIN_MANIFEST" --train-data-sha256 "$Q3D_TRAIN_SHA256" --out "$Q3D_EVALUATION_DIR"
+```
+
+The smoke uses manufactured data only; patient training, GPU validation, and pretrained-weight provenance are separate evidence requirements.

@@ -1,0 +1,145 @@
+{
+  "arm": "mean_teacher",
+  "completed_stages": [
+    "J"
+  ],
+  "config_path": "/private/tmp/q3d-delivery-format-final-20261112/mean_teacher.config.json",
+  "config_sha256": "df3d7eb99c25333b56901076ba9f98a6da8db2120618358f36d1373413c003ae",
+  "configured_stage_updates": {
+    "J": 4,
+    "P": 1,
+    "Q": 2,
+    "T": 1
+  },
+  "device": "cpu",
+  "engine_error": null,
+  "engine_result": {
+    "active_stages": [
+      "J"
+    ],
+    "arm": "mean_teacher",
+    "checkpoint": "/private/tmp/q3d-delivery-format-final-20261112/mean_teacher/latest.pt",
+    "checkpoint_sha256": "111d65c866b6ac9f28db487ed5d5d98d5907b36defb1e82bb2224cb98445fd41",
+    "completed_stages": [
+      "J"
+    ],
+    "completed_updates": 4,
+    "config_sha256": "b7d397ada143e64bd5894317f42241ef99020756a84d8e2c9c17e2565f96472f",
+    "data_identity": {
+      "protocol": "A",
+      "student_labeled_patients": [
+        "train_labeled_000",
+        "train_labeled_001"
+      ],
+      "student_unlabeled_patients": [
+        "train_unlabeled_000",
+        "train_unlabeled_001"
+      ],
+      "student_view": {
+        "dataset": "synthetic",
+        "images": [
+          {
+            "id": "train_labeled_000",
+            "sha256": "68a9cc68e4831c15febe6efc693c4264851238b06f6dc55657befd4a10bb4859"
+          },
+          {
+            "id": "train_labeled_001",
+            "sha256": "89d7c5706f908f48c38ff084250af174b6f37057549c20f13d6d3cdf83d610fb"
+          },
+          {
+            "id": "train_unlabeled_000",
+            "sha256": "2b3d2110521a406b1a22e5ac40342b7a9fb3d84c8b5c38f233a01fa4088daf74"
+          },
+          {
+            "id": "train_unlabeled_001",
+            "sha256": "707cbcc43ce947ec3e141d600799658195527ba474ce2b3b28059ad298321248"
+          }
+        ],
+        "manifest_sha256": "5196bff04495d9c594a9d82765a0ee03b28d14b6d98e750cc679a6e22f37321a",
+        "patients": [
+          "train_labeled_000",
+          "train_labeled_001",
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ]
+      },
+      "teacher_labeled_patients": [
+        "train_labeled_000",
+        "train_labeled_001"
+      ],
+      "teacher_view": {
+        "dataset": "synthetic",
+        "images": [
+          {
+            "id": "train_labeled_000",
+            "sha256": "68a9cc68e4831c15febe6efc693c4264851238b06f6dc55657befd4a10bb4859"
+          },
+          {
+            "id": "train_labeled_001",
+            "sha256": "89d7c5706f908f48c38ff084250af174b6f37057549c20f13d6d3cdf83d610fb"
+          },
+          {
+            "id": "train_unlabeled_000",
+            "sha256": "2b3d2110521a406b1a22e5ac40342b7a9fb3d84c8b5c38f233a01fa4088daf74"
+          },
+          {
+            "id": "train_unlabeled_001",
+            "sha256": "707cbcc43ce947ec3e141d600799658195527ba474ce2b3b28059ad298321248"
+          }
+        ],
+        "manifest_sha256": "5196bff04495d9c594a9d82765a0ee03b28d14b6d98e750cc679a6e22f37321a",
+        "patients": [
+          "train_labeled_000",
+          "train_labeled_001",
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ]
+      },
+      "train_patients": [
+        "train_labeled_000",
+        "train_labeled_001",
+        "train_unlabeled_000",
+        "train_unlabeled_001"
+      ]
+    },
+    "evidence_status": "SOFTWARE_ONLY_SYNTHETIC",
+    "gpu_evidence": "NOT_RUN",
+    "joint_optimizer_updates": 4,
+    "output_dir": "/private/tmp/q3d-delivery-format-final-20261112/mean_teacher",
+    "physiology_support_gate": null,
+    "physiology_support_gates": [],
+    "real_data_evidence": "NOT_RUN",
+    "runtime_synthetic": true,
+    "schema": "self_audit.candidate_q3d.training_result.v1",
+    "status": "COMPLETED",
+    "student_state_sha256": "a6bd1d06a41ce0d3347481e8cc78b63b1fc73a06f8ad261d0eb7fba8a54b002b",
+    "synthetic_gate_override_used": false,
+    "teacher_provenance": null,
+    "teacher_state_sha256": null,
+    "tokenizer": null,
+    "tokenizer_gate": null
+  },
+  "evidence_status": "SOFTWARE_ONLY_SYNTHETIC",
+  "expected_stages": [
+    "J"
+  ],
+  "fixture_development_manifest_sha256": "67f0ff131043d61016dc37f7cd0e91cbc171964f890647f22861f4829f13b54f",
+  "fixture_train_manifest_sha256": "5196bff04495d9c594a9d82765a0ee03b28d14b6d98e750cc679a6e22f37321a",
+  "gpu_evidence": "NOT_RUN",
+  "patient_metrics_claimed": false,
+  "real_data_evidence": "NOT_RUN",
+  "recipe": "mean_teacher",
+  "runtime_synthetic": true,
+  "schema": "self_audit.candidate_q3d.smoke.v1",
+  "status": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+  "synthetic_gate_override_used": false,
+  "synthetic_initialization_volume_override": null,
+  "synthetic_teacher_fixture": null,
+  "tokenizer_gate": {
+    "passed": null,
+    "status": "NOT_APPLICABLE"
+  },
+  "tokenizer_gate_engine_record": null,
+  "tokenizer_initialization_required_volumes": 200,
+  "tokenizer_initialization_volumes": null
+}

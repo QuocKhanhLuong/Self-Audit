@@ -1,0 +1,107 @@
+{
+  "checkpoint_export": {
+    "checkpoint_manifest_sha256": "a1cc1d6a539480b685a7e8938d63930e6ea36a9918abd5fdfe3676830918b145",
+    "checkpoint_schema": "self_audit.candidate_a3d.student.v1",
+    "source_inventory_matches_current_checkout": true,
+    "source_inventory_sha256": "231d25b1b0d93d42eff8eb241b28270b4a0cc30e411fd227b2e03a12de256b42",
+    "student_export_manifest_sha256": "a38c75cba557cd096c450aac9ec55fce011d31e89a1139362fd3487287dd1146"
+  },
+  "evaluation": {
+    "manifest_sha256": "39a5e02901cd77a8f6c17716fb178743b3379840f2baa48f8a00356bbe1be871",
+    "patient_macro": {
+      "assd_mm": null,
+      "clinical_abs_error": {
+        "LV_EDV_abs_error_ml": {
+          "patient_macro_mae": 1.8745999999999998,
+          "patients_counted": 1
+        },
+        "LV_EF_abs_error_percentage_points": {
+          "patient_macro_mae": null,
+          "patients_counted": 0
+        },
+        "LV_ESV_abs_error_ml": {
+          "patient_macro_mae": 1.8745999999999998,
+          "patients_counted": 1
+        },
+        "MYO_mass_ED_abs_error_g": {
+          "patient_macro_mae": 3.58551375,
+          "patients_counted": 1
+        },
+        "MYO_mass_ES_abs_error_g": {
+          "patient_macro_mae": 3.58551375,
+          "patients_counted": 1
+        },
+        "RV_EDV_abs_error_ml": {
+          "patient_macro_mae": 0.0068249999999999995,
+          "patients_counted": 1
+        },
+        "RV_EF_abs_error_percentage_points": {
+          "patient_macro_mae": null,
+          "patients_counted": 0
+        },
+        "RV_ESV_abs_error_ml": {
+          "patient_macro_mae": 0.0068249999999999995,
+          "patients_counted": 1
+        }
+      },
+      "dice_by_class": {
+        "LV": {
+          "patient_macro_assd_mm": null,
+          "patient_macro_dice": 0.0,
+          "patient_macro_hd95_mm": null,
+          "patients_counted": 1
+        },
+        "MYO": {
+          "patient_macro_assd_mm": null,
+          "patient_macro_dice": 0.0,
+          "patient_macro_hd95_mm": null,
+          "patients_counted": 1
+        },
+        "RV": {
+          "patient_macro_assd_mm": null,
+          "patient_macro_dice": 0.0,
+          "patient_macro_hd95_mm": null,
+          "patients_counted": 1
+        }
+      },
+      "fg_dice": 0.0,
+      "hd95_mm": null,
+      "one_absent_count": 6
+    },
+    "per_patient_clinical_errors": {
+      "LV_EDV_abs_error_ml": 1.8745999999999998,
+      "LV_EF_abs_error_percentage_points": null,
+      "LV_ESV_abs_error_ml": 1.8745999999999998,
+      "MYO_mass_ED_abs_error_g": 3.58551375,
+      "MYO_mass_ES_abs_error_g": 3.58551375,
+      "RV_EDV_abs_error_ml": 0.0068249999999999995,
+      "RV_EF_abs_error_percentage_points": null,
+      "RV_ESV_abs_error_ml": 0.0068249999999999995
+    },
+    "phase_pins": {
+      "ED": 0,
+      "ES": 1
+    },
+    "role": "test",
+    "split": "test"
+  },
+  "evidence_limits": {
+    "clinical_evidence": "NOT_ESTABLISHED",
+    "data": "manufactured synthetic fixture only",
+    "efficacy_or_SOTA": "NOT_ESTABLISHED",
+    "gpu_training_or_evaluation": "NOT_RUN",
+    "patient_metrics": "NOT_ESTABLISHED"
+  },
+  "schema": "self_audit.candidate_q3d.a3d_baseline_test_adapter.v1",
+  "source_sha256": {
+    "evaluate.py": "b3a5de23b9b74035fe71b4b174c1c86d0ce9adc7a2540acc12f91df5e04879d6",
+    "self_audit/candidate_a3d/io.py": "8b924f4d62c6223dd21976d3fd3fda1bb1f20c2cbbfca71a34f6ef996c580971",
+    "self_audit/candidate_a3d/k1.py": "1a0cffad9d8998edfd7aac2adfcb477ec34c042ae60768184b24447003e1c206",
+    "self_audit/candidate_q3d/baselines.py": "6436acc0ecfd8ee9d5b5f8a1795ffb66c8dd867724ff8eda2282173cc767be0e",
+    "self_audit/candidate_q3d/evaluation.py": "b9824440d20569f259141d786bdbae75fa273843a356407edd7c4850f8f9495e",
+    "tests/test_q3d_baselines.py": "f85b510e9891a0a6f76b6085e7921a799a5cd7855a6bf44e666eaffa566ffd6e"
+  },
+  "status": "PASS_SOFTWARE_ONLY_SYNTHETIC",
+  "test": "test_a3d_baseline_export_runs_q3d_cli_on_phase_pinned_test",
+  "workflow": "actual Q3D baseline runner -> unchanged A3D student export -> repository evaluate.py CLI -> Q3D evaluate_manifest"
+}

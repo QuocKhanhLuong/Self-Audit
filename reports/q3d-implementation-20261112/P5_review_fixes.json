@@ -1,0 +1,131 @@
+{
+  "schema": "q3d.p5_review_fixes.v1",
+  "created_date": "2026-11-12",
+  "repository": {
+    "head": "a03aadb",
+    "worktree_changes_committed": false,
+    "evidence_boundary": "software-only synthetic verification"
+  },
+  "owned_files_changed": [
+    "self_audit/candidate_q3d/evaluation.py",
+    "self_audit/candidate_q3d/export.py",
+    "scripts/q3d_infer.py",
+    "scripts/q3d_export.py",
+    "scripts/q3d_profile.py",
+    "tests/test_q3d_evaluation_export.py"
+  ],
+  "current_source_sha256": {
+    "self_audit/candidate_q3d/evaluation.py": "65de6aee6914129fde97fe567aed51dc060f518c30f4d70cb79f020b7b1c4839",
+    "self_audit/candidate_q3d/export.py": "e30c3db2bde52f71e32e5f43d96ffff68df2c15458846e1668c48b49572bef64",
+    "scripts/q3d_infer.py": "01b934f7c6678b90211f88ae054c673bd26cd2d7cf969dec611fbd53db24a929",
+    "scripts/q3d_export.py": "f3b5223cd54ee571ca09d4b3b7dfd4b17f305d2c472e88e749296c6bed8da7f1",
+    "scripts/q3d_profile.py": "6630f6a48cf13b27c53c1a513d3c44a648b0e8a28f35f018df42cd121c5df0d6",
+    "tests/test_q3d_evaluation_export.py": "47482b4a303b05c3c937b21b8a51544406d0d41d9fcfff83cacb9d2f5d3b0b17"
+  },
+  "review_fixes": {
+    "evaluation_mode": {
+      "status": "FIXED",
+      "details": "Capture model.training before eval and restore it in a finally block, including when prediction fails."
+    },
+    "missing_surface_hd95": {
+      "status": "FIXED_FAIL_CLOSED",
+      "details": "Frame and patient metrics retain surface status counts and one_absent_count. Paired comparisons report per-patient and total counts; missing counts or a candidate increase make the comparison NO_GO."
+    },
+    "physiology_decision": {
+      "status": "FIXED",
+      "decision": "GO when paired V1 mean FG Dice exceeds V1-U, or when paired harm reduction harm_V1U - harm_V1 has a 95% bootstrap CI lower bound greater than 0.0; otherwise INCONCLUSIVE.",
+      "threshold_frozen": true,
+      "harm_margin_fg_dice": 0.02,
+      "bootstrap_patient_unit": true
+    },
+    "student_codebook_contract": {
+      "status": "FIXED",
+      "api": ["install_codebook(mapping)", "codebook_metadata()"],
+      "verification": "C0 metadata is checked against the persisted extra state and tensor bytes; old numeric-buffer/getattr assumptions were removed."
+    },
+    "student_only_export": {
+      "status": "FIXED",
+      "engine_resume_schemas": [
+        "self_audit.candidate_q3d.resume.v2"
+      ],
+      "resume_schema_policy": "resume-v1 is rejected; no weights_only=False fallback exists.",
+      "removed_from_deploy_state": ["SDF head", "C1 continuous alignment head", "C1-only alignment adapter"],
+      "cold_load_import_guard": "Fresh subprocess checks forbid Q-3D/A-3D teacher module imports.",
+      "codebook_provenance": "Frozen C0 version, dimensions, and SHA-256 are carried in artifact metadata.",
+      "checkpoint_provenance": "Engine exports require the exact source checkpoint SHA-256 and matching .sha256 sidecar.",
+      "config_provenance": "Manifest records source JSON file SHA-256 separately from the engine's canonical validated-config SHA-256."
+    },
+    "profile_artifact_binding": {
+      "status": "FIXED_FAIL_CLOSED",
+      "details": "A profile report is accepted only for matching artifact bytes. q3d_export reuses that exact artifact when updating its cost manifest, avoiding reserialization byte drift."
+    },
+    "external_inference_geometry": {
+      "status": "VERIFIED_FAIL_CLOSED",
+      "details": "Inference rejects cropped context and image/shape_zyx mismatches while requiring native spacing and affine fields."
+    }
+  },
+  "student_configurations_verified": [
+    "c0",
+    "c1",
+    "v1",
+    "v1u",
+    "v0",
+    "b1",
+    "e1",
+    "o1",
+    "s1",
+    "v1_stride4",
+    "v1_residual2",
+    "mean_teacher"
+  ],
+  "verification": {
+    "owned_test_command": "rtk pytest -q tests/test_q3d_evaluation_export.py",
+    "owned_test_result": "25 passed",
+    "lint_command": "rtk ruff check self_audit/candidate_q3d/evaluation.py self_audit/candidate_q3d/export.py scripts/q3d_export.py scripts/q3d_infer.py scripts/q3d_profile.py tests/test_q3d_evaluation_export.py",
+    "lint_result": "passed",
+    "all_configuration_cold_load": {
+      "status": "PASSED_BITWISE",
+      "configurations": 12,
+      "synthetic_native_volumes_per_configuration": 3,
+      "source_student_vs_fresh_process": "bitwise equal"
+    },
+    "actual_engine_checkpoint": {
+      "status": "PASSED",
+      "source": "Synthetic CPU engine.train run; actual engine-written resume-v2 latest.pt containing best_student_state and its SHA sidecar.",
+      "synthetic_unlabeled_patients": 1,
+      "export_sha_and_config_sha": "verified",
+      "fresh_process_volumes": 3,
+      "logits": "bitwise equal"
+    },
+    "synthetic_cpu_profile": {
+      "status": "COMPUTED",
+      "gpu_latency": "NOT_RUN_NOT_REQUESTED",
+      "flops": {
+        "status": "PARTIAL_LOWER_BOUND",
+        "convention": "2 FLOPs per MAC",
+        "counted": ["nn.Conv3d", "nn.Linear", "torch.matmul", "torch.bmm", "scaled_dot_product_attention"],
+        "omitted": ["interpolation", "normalization", "softmax", "elementwise ops"],
+        "total_flops_status": "NOT_RUN_INCOMPLETE_OPERATOR_COVERAGE"
+      }
+    },
+    "hardware": {
+      "cuda_available": false,
+      "cuda_device_count": 0
+    }
+  },
+  "not_run": {
+    "real_patient_evaluation": true,
+    "real_patient_training": true,
+    "real_data_checkpoint_or_weight_hashes": "NOT_RUN; no real dataset or pretrained teacher weights were accessed.",
+    "gpu_latency_or_peak_vram": "NOT_RUN; no CUDA device is available.",
+    "clinical_efficacy_claim": "NONE"
+  },
+  "external_followups": {
+    "c0_no_u_training_regression": {
+      "status": "ENGINE_OWNER_FOLLOWUP",
+      "finding": "Current joint stage rejects empty image-only U keys unconditionally; this owned export test used one synthetic U patient to produce and verify the actual engine-written checkpoint.",
+      "reported_to": "dispatch:ctx_6861cb10dfbf"
+    }
+  },
+  "remaining": []
+}

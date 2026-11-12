@@ -1,0 +1,113 @@
+{
+  "C0": {
+    "dimension": 64,
+    "frozen": true,
+    "initialized": true,
+    "sha256": "404b8c11fc4d8cecac1ed901ed9976318bd4468049643ee4cd7b3d49e6451811",
+    "size": 256,
+    "status": "COMPUTED",
+    "version": "q3d_teacher_codebook.v1"
+  },
+  "arm": "V1",
+  "artifact": "student.pt",
+  "artifact_bytes": 12637568,
+  "artifact_sha256": "b65b6d76078851d78e15b659c2710064dbaff116ddb20325e3471740902e8ad1",
+  "class_mapping": {
+    "0": "background",
+    "1": "RV",
+    "2": "MYO",
+    "255": "ignore",
+    "3": "LV"
+  },
+  "code_commit": "a03aadb060c109c05a67bbd94d0d56a78da84d4e",
+  "code_dirty_at_export": true,
+  "cold_load": {
+    "cold_load_artifact_sha256": "b65b6d76078851d78e15b659c2710064dbaff116ddb20325e3471740902e8ad1",
+    "logit_sha256": [
+      "86ef127f328056dbb035fabf5d2f3210c4632f223d0b95796a9bf9a371876430",
+      "6dc85bc41a05077e24b953fb229bc8ad7e52937fb68a465707902f60d981319e",
+      "fbbb2c88bb99c97b0a7fe7947ecd582304bb58f4f356e164674a9297416c0f94"
+    ],
+    "status": "PASSED_BITWISE_THREE_NATIVE_VOLUMES",
+    "teacher_modules_imported": [],
+    "volumes": 3
+  },
+  "cost": {
+    "cpu_latency_ms_per_volume": {
+      "dtype": "float32",
+      "repeats": 5,
+      "status": "COMPUTED",
+      "summary": {
+        "mean": 117.80605809763074,
+        "p95": 124.95779125019908
+      },
+      "unit": "ms",
+      "value": 117.66258301213384,
+      "warmup": 2
+    },
+    "flops": {
+      "covered_modules": [
+        "nn.Conv3d",
+        "nn.Linear"
+      ],
+      "covered_operators": [
+        "torch.matmul",
+        "torch.bmm",
+        "scaled_dot_product_attention"
+      ],
+      "functional_operator_flops": 104857600,
+      "mac_convention": "2 floating point operations per multiply-accumulate",
+      "module_calls_counted": 51,
+      "module_flops": 9108357120,
+      "omitted": [
+        "interpolation",
+        "normalization",
+        "softmax",
+        "elementwise ops"
+      ],
+      "operator_calls_counted": {
+        "scaled_dot_product_attention": 4,
+        "torch.bmm": 0,
+        "torch.matmul": 8
+      },
+      "status": "PARTIAL_LOWER_BOUND",
+      "total_flops_status": "NOT_RUN_INCOMPLETE_OPERATOR_COVERAGE",
+      "unit": "floating_point_operations_per_volume",
+      "value": 9213214720
+    },
+    "gpu_latency_ms_per_volume": {
+      "status": "NOT_RUN_NO_CUDA"
+    },
+    "parameters": {
+      "status": "COMPUTED",
+      "unit": "parameters",
+      "value": 3132645
+    },
+    "peak_vram_mb": {
+      "status": "NOT_RUN_NO_CUDA"
+    }
+  },
+  "deploy_student_arm": "V1",
+  "engine_config_sha256": "35e026f65a7c60edd669852a40409e6396deaa974b75eb41db72bfbf47e929f6",
+  "input_contract": {
+    "geometry": [
+      "shape",
+      "spacing_zyx",
+      "affine_zyx",
+      "context=full_volume"
+    ],
+    "intensity": "finite float in [0,1]",
+    "shape": "[1,1,D,H,W]"
+  },
+  "output_contract": "raw 4-class logits on the native full-volume grid",
+  "parameters": {
+    "status": "COMPUTED",
+    "value": 3132645
+  },
+  "schema": "q3d.export_manifest.v1",
+  "software_only": true,
+  "source_arm": "v1",
+  "source_checkpoint_sha256": "16e6c7d5c85a8a6a8cacf93b6de34a9f8ab47cadc1f5aa8f677f22875940045d",
+  "source_config_name": "acdc_b_k2_seed42_v1",
+  "source_config_sha256": "6ee576d5416e40653f58089b41c2dd3f3b1918565dc2b61b0995be8147c4a0f6"
+}

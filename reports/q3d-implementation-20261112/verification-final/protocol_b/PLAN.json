@@ -1,0 +1,739 @@
+{
+  "baseline_launches": {
+    "a3d_teacher_free": {
+      "arm": "a3d_teacher_free",
+      "entrypoint": "train.py",
+      "method": "candidate_q3d",
+      "runner": "self_audit.candidate_q3d.baselines.run_a3d_teacher_free",
+      "status": "IMPLEMENTED",
+      "template": "configs/candidate_a3d/teacher_free_acdc_k8.json",
+      "update_match": "requires exact J budget from K-manifest labeled-frame count"
+    },
+    "mean_teacher": {
+      "arm": "mean_teacher",
+      "entrypoint": "train.py",
+      "method": "candidate_q3d",
+      "runner": "self_audit.candidate_q3d.engine.train",
+      "status": "ENGINE_ARM"
+    },
+    "mednext_supervised": {
+      "arm": "mednext_supervised",
+      "entrypoint": "train.py",
+      "method": "candidate_q3d",
+      "runner": "self_audit.candidate_q3d.baselines.run_mednext_supervised",
+      "status": "IMPLEMENTED"
+    }
+  },
+  "cross_evaluation": [
+    {
+      "depends_on": "acdc_b_k2_seed42_c0.j",
+      "manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "source_dataset": "acdc",
+      "source_experiment": "acdc_b_k2_seed42_c0",
+      "status": "NOT_RUN",
+      "target_dataset": "acdc"
+    },
+    {
+      "depends_on": "acdc_b_k2_seed42_c0.j",
+      "manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "source_dataset": "acdc",
+      "source_experiment": "acdc_b_k2_seed42_c0",
+      "status": "NOT_RUN",
+      "target_dataset": "mnms"
+    },
+    {
+      "depends_on": "acdc_b_k2_seed42_c1.j",
+      "manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "source_dataset": "acdc",
+      "source_experiment": "acdc_b_k2_seed42_c1",
+      "status": "NOT_RUN",
+      "target_dataset": "acdc"
+    },
+    {
+      "depends_on": "acdc_b_k2_seed42_c1.j",
+      "manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "source_dataset": "acdc",
+      "source_experiment": "acdc_b_k2_seed42_c1",
+      "status": "NOT_RUN",
+      "target_dataset": "mnms"
+    },
+    {
+      "depends_on": "acdc_b_k2_seed42_v1.j",
+      "manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "source_dataset": "acdc",
+      "source_experiment": "acdc_b_k2_seed42_v1",
+      "status": "NOT_RUN",
+      "target_dataset": "acdc"
+    },
+    {
+      "depends_on": "acdc_b_k2_seed42_v1.j",
+      "manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "source_dataset": "acdc",
+      "source_experiment": "acdc_b_k2_seed42_v1",
+      "status": "NOT_RUN",
+      "target_dataset": "mnms"
+    },
+    {
+      "depends_on": "acdc_b_k2_seed42_v1u.j",
+      "manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "source_dataset": "acdc",
+      "source_experiment": "acdc_b_k2_seed42_v1u",
+      "status": "NOT_RUN",
+      "target_dataset": "acdc"
+    },
+    {
+      "depends_on": "acdc_b_k2_seed42_v1u.j",
+      "manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "source_dataset": "acdc",
+      "source_experiment": "acdc_b_k2_seed42_v1u",
+      "status": "NOT_RUN",
+      "target_dataset": "mnms"
+    },
+    {
+      "dataset": null,
+      "manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "reason": "dataset identity not specified in Q-3D spec",
+      "status": "NOT_RUN"
+    },
+    {
+      "dataset": null,
+      "manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "reason": "dataset identity not specified in Q-3D spec",
+      "status": "NOT_RUN"
+    }
+  ],
+  "evidence": {
+    "gpu_validation": "NOT_RUN",
+    "novelty_claim": "NOT_CLAIMED",
+    "patient_training": "NOT_RUN",
+    "real_data_metrics": "NOT_RUN"
+  },
+  "experiments": [
+    {
+      "arm": "c0",
+      "candidate_a3d_config_path": null,
+      "config_path": "/private/tmp/q3d-campaign-b-task78.vez6Za/recipes/acdc_b_k2_seed42_c0.json",
+      "config_sha256": "eaa8147a025e9257808815e674786d230fc97f62702b242bb3b83457c0de8f8c",
+      "dataset": "acdc",
+      "group": "primary",
+      "id": "acdc_b_k2_seed42_c0",
+      "interface": "continuous",
+      "k": 2,
+      "launch_mapping": null,
+      "output": "/private/tmp/q3d-campaign-b-task78.vez6Za/runs/acdc_b_k2_seed42_c0",
+      "physiology_weighting": false,
+      "protocol": "B",
+      "seed": 42,
+      "setting": "c0",
+      "stages": [
+        "J"
+      ],
+      "student_joint_optimizer_updates": 1,
+      "student_joint_stream_microbatches": 1,
+      "student_joint_update_unit": "L_only_updates",
+      "student_joint_updates": 1,
+      "teacher_signal": "none"
+    },
+    {
+      "arm": "c1",
+      "candidate_a3d_config_path": null,
+      "config_path": "/private/tmp/q3d-campaign-b-task78.vez6Za/recipes/acdc_b_k2_seed42_c1.json",
+      "config_sha256": "b6c5d081d623ba7c5c5c737f76b074131a0c80f1a8fff5d2f466df5955515786",
+      "dataset": "acdc",
+      "group": "primary",
+      "id": "acdc_b_k2_seed42_c1",
+      "interface": "continuous",
+      "k": 2,
+      "launch_mapping": null,
+      "output": "/private/tmp/q3d-campaign-b-task78.vez6Za/runs/acdc_b_k2_seed42_c1",
+      "physiology_weighting": true,
+      "protocol": "B",
+      "seed": 42,
+      "setting": "c1",
+      "stages": [
+        "T",
+        "P",
+        "J"
+      ],
+      "student_joint_optimizer_updates": 1,
+      "student_joint_stream_microbatches": 2,
+      "student_joint_update_unit": "paired_L_U_updates",
+      "student_joint_updates": 1,
+      "teacher_signal": "feature_kd"
+    },
+    {
+      "arm": "v1",
+      "candidate_a3d_config_path": null,
+      "config_path": "/private/tmp/q3d-campaign-b-task78.vez6Za/recipes/acdc_b_k2_seed42_v1.json",
+      "config_sha256": "614f5dcc10e3df92dea8891e0e18d504721bd515748ae16148169b6f399ea378",
+      "dataset": "acdc",
+      "group": "primary",
+      "id": "acdc_b_k2_seed42_v1",
+      "interface": "vq",
+      "k": 2,
+      "launch_mapping": null,
+      "output": "/private/tmp/q3d-campaign-b-task78.vez6Za/runs/acdc_b_k2_seed42_v1",
+      "physiology_weighting": true,
+      "protocol": "B",
+      "seed": 42,
+      "setting": "v1",
+      "stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "student_joint_optimizer_updates": 1,
+      "student_joint_stream_microbatches": 2,
+      "student_joint_update_unit": "paired_L_U_updates",
+      "student_joint_updates": 1,
+      "teacher_signal": "codekd"
+    },
+    {
+      "arm": "v1u",
+      "candidate_a3d_config_path": null,
+      "config_path": "/private/tmp/q3d-campaign-b-task78.vez6Za/recipes/acdc_b_k2_seed42_v1u.json",
+      "config_sha256": "6d5db139fed4d8378e93cd96bc98c1bf28c94439aa556efde17df9264b3d424d",
+      "dataset": "acdc",
+      "group": "primary",
+      "id": "acdc_b_k2_seed42_v1u",
+      "interface": "vq",
+      "k": 2,
+      "launch_mapping": null,
+      "output": "/private/tmp/q3d-campaign-b-task78.vez6Za/runs/acdc_b_k2_seed42_v1u",
+      "physiology_weighting": false,
+      "protocol": "B",
+      "seed": 42,
+      "setting": "v1u",
+      "stages": [
+        "T",
+        "Q",
+        "J"
+      ],
+      "student_joint_optimizer_updates": 1,
+      "student_joint_stream_microbatches": 2,
+      "student_joint_update_unit": "paired_L_U_updates",
+      "student_joint_updates": 1,
+      "teacher_signal": "codekd"
+    }
+  ],
+  "ordering": {
+    "dataset_order": [
+      "acdc"
+    ],
+    "group_order": [
+      "primary"
+    ],
+    "k_order": [
+      2
+    ],
+    "secondary_after_primary": true,
+    "stage_order": [
+      "T",
+      "Q",
+      "P",
+      "J"
+    ]
+  },
+  "schema": "self_audit.candidate_q3d.campaign.v1",
+  "selection": {
+    "baseline_settings": [],
+    "dataset_order": [
+      "acdc"
+    ],
+    "datasets": [
+      "acdc"
+    ],
+    "k_order": [
+      2
+    ],
+    "primary_settings": [
+      "c0",
+      "c1",
+      "v1",
+      "v1u"
+    ],
+    "protocols": [
+      "B"
+    ],
+    "secondary_settings": [],
+    "seed": 42,
+    "smoke_updates": 1,
+    "synthetic": true
+  },
+  "stage_jobs": [
+    {
+      "arm": "c0",
+      "budget_unit": "L_only_updates",
+      "candidate_a3d_config_path": null,
+      "config_path": "/private/tmp/q3d-campaign-b-task78.vez6Za/recipes/acdc_b_k2_seed42_c0.json",
+      "config_sha256": "eaa8147a025e9257808815e674786d230fc97f62702b242bb3b83457c0de8f8c",
+      "dataset": "acdc",
+      "dependencies": [],
+      "development_manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "experiment_id": "acdc_b_k2_seed42_c0",
+      "forward_passes": null,
+      "group": "primary",
+      "id": "acdc_b_k2_seed42_c0.j",
+      "k": 2,
+      "method": "candidate_q3d",
+      "mode": "updates",
+      "optimizer_updates": 1,
+      "output": "/private/tmp/q3d-campaign-b-task78.vez6Za/runs/acdc_b_k2_seed42_c0",
+      "protocol": "B",
+      "readiness": "SMOKE_READY",
+      "reason": null,
+      "seed": 42,
+      "setting": "c0",
+      "stage": "J",
+      "status": "NOT_RUN",
+      "stream_microbatches": 1,
+      "train_manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "update_unit": "L_only_updates",
+      "updates": 1
+    },
+    {
+      "arm": "c1",
+      "budget_unit": "optimizer_updates",
+      "candidate_a3d_config_path": null,
+      "config_path": "/private/tmp/q3d-campaign-b-task78.vez6Za/recipes/acdc_b_k2_seed42_c1.json",
+      "config_sha256": "b6c5d081d623ba7c5c5c737f76b074131a0c80f1a8fff5d2f466df5955515786",
+      "dataset": "acdc",
+      "dependencies": [],
+      "development_manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "experiment_id": "acdc_b_k2_seed42_c1",
+      "forward_passes": null,
+      "group": "primary",
+      "id": "acdc_b_k2_seed42_c1.t",
+      "k": 2,
+      "method": "candidate_q3d",
+      "mode": "updates",
+      "optimizer_updates": 1,
+      "output": "/private/tmp/q3d-campaign-b-task78.vez6Za/runs/acdc_b_k2_seed42_c1",
+      "protocol": "B",
+      "readiness": "SMOKE_READY",
+      "reason": null,
+      "seed": 42,
+      "setting": "c1",
+      "stage": "T",
+      "status": "NOT_RUN",
+      "stream_microbatches": 1,
+      "train_manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "update_unit": "optimizer_updates",
+      "updates": 1
+    },
+    {
+      "arm": "c1",
+      "budget_unit": "full_U_patient_cine_passes",
+      "candidate_a3d_config_path": null,
+      "config_path": "/private/tmp/q3d-campaign-b-task78.vez6Za/recipes/acdc_b_k2_seed42_c1.json",
+      "config_sha256": "b6c5d081d623ba7c5c5c737f76b074131a0c80f1a8fff5d2f466df5955515786",
+      "dataset": "acdc",
+      "dependencies": [
+        "acdc_b_k2_seed42_c1.t"
+      ],
+      "development_manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "experiment_id": "acdc_b_k2_seed42_c1",
+      "forward_passes": 1,
+      "group": "primary",
+      "id": "acdc_b_k2_seed42_c1.p",
+      "k": 2,
+      "method": "candidate_q3d",
+      "mode": "single_forward_pass",
+      "optimizer_updates": 0,
+      "output": "/private/tmp/q3d-campaign-b-task78.vez6Za/runs/acdc_b_k2_seed42_c1",
+      "protocol": "B",
+      "readiness": "SMOKE_READY",
+      "reason": null,
+      "seed": 42,
+      "setting": "c1",
+      "stage": "P",
+      "status": "NOT_RUN",
+      "stream_microbatches": null,
+      "train_manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "update_unit": "full_U_patient_cine_passes",
+      "updates": null
+    },
+    {
+      "arm": "c1",
+      "budget_unit": "paired_L_U_updates",
+      "candidate_a3d_config_path": null,
+      "config_path": "/private/tmp/q3d-campaign-b-task78.vez6Za/recipes/acdc_b_k2_seed42_c1.json",
+      "config_sha256": "b6c5d081d623ba7c5c5c737f76b074131a0c80f1a8fff5d2f466df5955515786",
+      "dataset": "acdc",
+      "dependencies": [
+        "acdc_b_k2_seed42_c1.p"
+      ],
+      "development_manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "experiment_id": "acdc_b_k2_seed42_c1",
+      "forward_passes": null,
+      "group": "primary",
+      "id": "acdc_b_k2_seed42_c1.j",
+      "k": 2,
+      "method": "candidate_q3d",
+      "mode": "updates",
+      "optimizer_updates": 1,
+      "output": "/private/tmp/q3d-campaign-b-task78.vez6Za/runs/acdc_b_k2_seed42_c1",
+      "protocol": "B",
+      "readiness": "SMOKE_READY",
+      "reason": null,
+      "seed": 42,
+      "setting": "c1",
+      "stage": "J",
+      "status": "NOT_RUN",
+      "stream_microbatches": 2,
+      "train_manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "update_unit": "paired_L_U_updates",
+      "updates": 1
+    },
+    {
+      "arm": "v1",
+      "budget_unit": "optimizer_updates",
+      "candidate_a3d_config_path": null,
+      "config_path": "/private/tmp/q3d-campaign-b-task78.vez6Za/recipes/acdc_b_k2_seed42_v1.json",
+      "config_sha256": "614f5dcc10e3df92dea8891e0e18d504721bd515748ae16148169b6f399ea378",
+      "dataset": "acdc",
+      "dependencies": [],
+      "development_manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "experiment_id": "acdc_b_k2_seed42_v1",
+      "forward_passes": null,
+      "group": "primary",
+      "id": "acdc_b_k2_seed42_v1.t",
+      "k": 2,
+      "method": "candidate_q3d",
+      "mode": "updates",
+      "optimizer_updates": 1,
+      "output": "/private/tmp/q3d-campaign-b-task78.vez6Za/runs/acdc_b_k2_seed42_v1",
+      "protocol": "B",
+      "readiness": "SMOKE_READY",
+      "reason": null,
+      "seed": 42,
+      "setting": "v1",
+      "stage": "T",
+      "status": "NOT_RUN",
+      "stream_microbatches": 1,
+      "train_manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "update_unit": "optimizer_updates",
+      "updates": 1
+    },
+    {
+      "arm": "v1",
+      "budget_unit": "optimizer_updates_after_separate_init_pass",
+      "candidate_a3d_config_path": null,
+      "config_path": "/private/tmp/q3d-campaign-b-task78.vez6Za/recipes/acdc_b_k2_seed42_v1.json",
+      "config_sha256": "614f5dcc10e3df92dea8891e0e18d504721bd515748ae16148169b6f399ea378",
+      "dataset": "acdc",
+      "dependencies": [
+        "acdc_b_k2_seed42_v1.t"
+      ],
+      "development_manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "experiment_id": "acdc_b_k2_seed42_v1",
+      "forward_passes": null,
+      "group": "primary",
+      "id": "acdc_b_k2_seed42_v1.q",
+      "k": 2,
+      "method": "candidate_q3d",
+      "mode": "updates",
+      "optimizer_updates": 1,
+      "output": "/private/tmp/q3d-campaign-b-task78.vez6Za/runs/acdc_b_k2_seed42_v1",
+      "protocol": "B",
+      "readiness": "SMOKE_READY",
+      "reason": null,
+      "seed": 42,
+      "setting": "v1",
+      "stage": "Q",
+      "status": "NOT_RUN",
+      "stream_microbatches": 1,
+      "train_manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "update_unit": "optimizer_updates_after_separate_init_pass",
+      "updates": 1
+    },
+    {
+      "arm": "v1",
+      "budget_unit": "full_U_patient_cine_passes",
+      "candidate_a3d_config_path": null,
+      "config_path": "/private/tmp/q3d-campaign-b-task78.vez6Za/recipes/acdc_b_k2_seed42_v1.json",
+      "config_sha256": "614f5dcc10e3df92dea8891e0e18d504721bd515748ae16148169b6f399ea378",
+      "dataset": "acdc",
+      "dependencies": [
+        "acdc_b_k2_seed42_v1.q"
+      ],
+      "development_manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "experiment_id": "acdc_b_k2_seed42_v1",
+      "forward_passes": 1,
+      "group": "primary",
+      "id": "acdc_b_k2_seed42_v1.p",
+      "k": 2,
+      "method": "candidate_q3d",
+      "mode": "single_forward_pass",
+      "optimizer_updates": 0,
+      "output": "/private/tmp/q3d-campaign-b-task78.vez6Za/runs/acdc_b_k2_seed42_v1",
+      "protocol": "B",
+      "readiness": "SMOKE_READY",
+      "reason": null,
+      "seed": 42,
+      "setting": "v1",
+      "stage": "P",
+      "status": "NOT_RUN",
+      "stream_microbatches": null,
+      "train_manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "update_unit": "full_U_patient_cine_passes",
+      "updates": null
+    },
+    {
+      "arm": "v1",
+      "budget_unit": "paired_L_U_updates",
+      "candidate_a3d_config_path": null,
+      "config_path": "/private/tmp/q3d-campaign-b-task78.vez6Za/recipes/acdc_b_k2_seed42_v1.json",
+      "config_sha256": "614f5dcc10e3df92dea8891e0e18d504721bd515748ae16148169b6f399ea378",
+      "dataset": "acdc",
+      "dependencies": [
+        "acdc_b_k2_seed42_v1.p"
+      ],
+      "development_manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "experiment_id": "acdc_b_k2_seed42_v1",
+      "forward_passes": null,
+      "group": "primary",
+      "id": "acdc_b_k2_seed42_v1.j",
+      "k": 2,
+      "method": "candidate_q3d",
+      "mode": "updates",
+      "optimizer_updates": 1,
+      "output": "/private/tmp/q3d-campaign-b-task78.vez6Za/runs/acdc_b_k2_seed42_v1",
+      "protocol": "B",
+      "readiness": "SMOKE_READY",
+      "reason": null,
+      "seed": 42,
+      "setting": "v1",
+      "stage": "J",
+      "status": "NOT_RUN",
+      "stream_microbatches": 2,
+      "train_manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "update_unit": "paired_L_U_updates",
+      "updates": 1
+    },
+    {
+      "arm": "v1u",
+      "budget_unit": "optimizer_updates",
+      "candidate_a3d_config_path": null,
+      "config_path": "/private/tmp/q3d-campaign-b-task78.vez6Za/recipes/acdc_b_k2_seed42_v1u.json",
+      "config_sha256": "6d5db139fed4d8378e93cd96bc98c1bf28c94439aa556efde17df9264b3d424d",
+      "dataset": "acdc",
+      "dependencies": [],
+      "development_manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "experiment_id": "acdc_b_k2_seed42_v1u",
+      "forward_passes": null,
+      "group": "primary",
+      "id": "acdc_b_k2_seed42_v1u.t",
+      "k": 2,
+      "method": "candidate_q3d",
+      "mode": "updates",
+      "optimizer_updates": 1,
+      "output": "/private/tmp/q3d-campaign-b-task78.vez6Za/runs/acdc_b_k2_seed42_v1u",
+      "protocol": "B",
+      "readiness": "SMOKE_READY",
+      "reason": null,
+      "seed": 42,
+      "setting": "v1u",
+      "stage": "T",
+      "status": "NOT_RUN",
+      "stream_microbatches": 1,
+      "train_manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "update_unit": "optimizer_updates",
+      "updates": 1
+    },
+    {
+      "arm": "v1u",
+      "budget_unit": "optimizer_updates_after_separate_init_pass",
+      "candidate_a3d_config_path": null,
+      "config_path": "/private/tmp/q3d-campaign-b-task78.vez6Za/recipes/acdc_b_k2_seed42_v1u.json",
+      "config_sha256": "6d5db139fed4d8378e93cd96bc98c1bf28c94439aa556efde17df9264b3d424d",
+      "dataset": "acdc",
+      "dependencies": [
+        "acdc_b_k2_seed42_v1u.t"
+      ],
+      "development_manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "experiment_id": "acdc_b_k2_seed42_v1u",
+      "forward_passes": null,
+      "group": "primary",
+      "id": "acdc_b_k2_seed42_v1u.q",
+      "k": 2,
+      "method": "candidate_q3d",
+      "mode": "updates",
+      "optimizer_updates": 1,
+      "output": "/private/tmp/q3d-campaign-b-task78.vez6Za/runs/acdc_b_k2_seed42_v1u",
+      "protocol": "B",
+      "readiness": "SMOKE_READY",
+      "reason": null,
+      "seed": 42,
+      "setting": "v1u",
+      "stage": "Q",
+      "status": "NOT_RUN",
+      "stream_microbatches": 1,
+      "train_manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "update_unit": "optimizer_updates_after_separate_init_pass",
+      "updates": 1
+    },
+    {
+      "arm": "v1u",
+      "budget_unit": "paired_L_U_updates",
+      "candidate_a3d_config_path": null,
+      "config_path": "/private/tmp/q3d-campaign-b-task78.vez6Za/recipes/acdc_b_k2_seed42_v1u.json",
+      "config_sha256": "6d5db139fed4d8378e93cd96bc98c1bf28c94439aa556efde17df9264b3d424d",
+      "dataset": "acdc",
+      "dependencies": [
+        "acdc_b_k2_seed42_v1u.q"
+      ],
+      "development_manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "experiment_id": "acdc_b_k2_seed42_v1u",
+      "forward_passes": null,
+      "group": "primary",
+      "id": "acdc_b_k2_seed42_v1u.j",
+      "k": 2,
+      "method": "candidate_q3d",
+      "mode": "updates",
+      "optimizer_updates": 1,
+      "output": "/private/tmp/q3d-campaign-b-task78.vez6Za/runs/acdc_b_k2_seed42_v1u",
+      "protocol": "B",
+      "readiness": "SMOKE_READY",
+      "reason": null,
+      "seed": 42,
+      "setting": "v1u",
+      "stage": "J",
+      "status": "NOT_RUN",
+      "stream_microbatches": 2,
+      "train_manifest": {
+        "path": null,
+        "sha256": null,
+        "status": "NOT_RUN"
+      },
+      "update_unit": "paired_L_U_updates",
+      "updates": 1
+    }
+  ],
+  "status": "PLAN_ONLY_NOT_RUN"
+}

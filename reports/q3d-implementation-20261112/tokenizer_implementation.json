@@ -1,0 +1,80 @@
+{
+  "schema": "self_audit.candidate_q3d.implementation_handoff.v1",
+  "generated_at_utc": "2026-11-11T17:59:22Z",
+  "repository": {
+    "path": "/Users/alvinluong/Self-Audit",
+    "branch_head": "a03aadb060c109c05a67bbd94d0d56a78da84d4e",
+    "authoritative_spec": "docs/CANDIDATE_Q3D_SPEC.md",
+    "authoritative_spec_sha256": "d88f45ca2470ac24e7339935bbe28030e0877633f9870cd232afc30b02c10575"
+  },
+  "implementation": {
+    "feature_capture": {
+      "status": "IMPLEMENTED",
+      "contract": "One frozen teacher forward, one verified MedNeXt feature hook, with checkpoint-safe final-child capture.",
+      "supported_strides": [4, 8, 16]
+    },
+    "alignment": {
+      "status": "IMPLEMENTED",
+      "contract": "Detached exact native-grid alignment with cell-center z interpolation and pad-masked in-plane averaging."
+    },
+    "teacher_tokenizer": {
+      "status": "IMPLEMENTED",
+      "contract": "Deterministic k-means++ initialization from the first 200 L/U volumes, 64-dimensional normalized codes, explicit EMA updates, 200-update usage history and dead-code restart, usage/class-coverage/churn metrics, fail-closed gate, and frozen C0 artifact."
+    },
+    "p0_preflight": {
+      "status": "READ_ONLY_DIAGNOSTICS_COMPLETE",
+      "artifact": "reports/q3d-implementation-20261112/p0_preflight.json",
+      "readiness": "NOT_READY",
+      "student_parameters": 3132713,
+      "parameter_limit": 10000000,
+      "student_parameter_budget": "PASS",
+      "near_far_q3d_sdf": "IMPLEMENTED_IN_Q3D_SOURCE"
+    }
+  },
+  "source_sha256": {
+    "self_audit/candidate_q3d/alignment.py": "5127871c75d0ee0eb85961fd72bef9ca1075db41807273faa0d477a8bede1fcf",
+    "self_audit/candidate_q3d/teacher_features.py": "20027717dc0a98ccda188b0b2451ba8d3bdae9193104c97e33065862901197fa",
+    "self_audit/candidate_q3d/tokenizer.py": "b1ee71524a25f15d300c625899033683dc1bb1b19756aafe470a17f104805f3f",
+    "scripts/q3d_preflight.py": "e94f9634ed81182b5245ab5db232eabf5f5caeffb8c07c38de0814844a099373",
+    "tests/test_q3d_tokenizer.py": "bd4a9126b8dd1c127469e4f99e2679c76991c9c5e021f03b4f25d5b21f9db993",
+    "configs/candidate_q3d/v1.json": "951faa64f235ca7fcdfadcd724b07aca4cbd7df4a0be7d6af81c0c07bd47692c",
+    "self_audit/candidate_a3d/teacher.py": "bb4c80da4212ab15a4a2a526af0f0d4edb8dee7b8a7a6f1efbab73dc7a5055ba"
+  },
+  "baseline_preservation": {
+    "candidate_a3d_teacher_source": "UNCHANGED_FROM_HEAD",
+    "candidate_a3d_teacher_sha256": "bb4c80da4212ab15a4a2a526af0f0d4edb8dee7b8a7a6f1efbab73dc7a5055ba"
+  },
+  "verification": {
+    "owned_synthetic_tests": {
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 rtk python -m pytest -q tests/test_q3d_tokenizer.py",
+      "result": "14 passed in 1.09s"
+    },
+    "repository_check": {
+      "command": "rtk python scripts/check_repo.py",
+      "result": "PASS; method=candidate_q3d; 7 test modules discovered; 14 Q3D recipes discovered"
+    },
+    "full_test_suite": {
+      "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 rtk python -m pytest -q",
+      "result": "62 passed, 3 failed in 2.45s",
+      "peer_owned_failures": [
+        "tests/test_q3d_evaluation_export.py::test_evaluation_manifest_freezes_predictions_then_scores_clinical_and_code_metrics — evaluation output path inside manifest tree is rejected",
+        "tests/test_q3d_evaluation_export.py::test_student_only_export_cold_load_inference_and_profile — exported tokenizer reconstruction loses frozen C0",
+        "tests/test_q3d_physiology_data.py::test_spatial_flips_rotation_and_geometry_are_world_coordinate_exact — augmentation fixture image values exceed [0,1] and are rejected"
+      ],
+      "owned_files_modified_to_address_peer_failures": false
+    }
+  },
+  "evidence_limits": {
+    "mednext_source_checkout_and_pinned_commit": "NOT_RUN_NOT_DECLARED",
+    "official_compatible_mednext_l_k3_weights": {
+      "path": null,
+      "sha256": null,
+      "status": "NOT_FOUND_OFFICIAL"
+    },
+    "acdc_train_manifest_and_geometry": "NOT_RUN_NOT_DECLARED",
+    "mnms_train_manifest_and_geometry": "NOT_RUN_NOT_DECLARED",
+    "gpu": "NOT_RUN",
+    "patient_training": "NOT_RUN",
+    "clinical_gates": "NOT_RUN"
+  }
+}

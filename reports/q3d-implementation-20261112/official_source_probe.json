@@ -1,0 +1,171 @@
+{
+  "status": "SOFTWARE_ONLY",
+  "pretrained": false,
+  "source_commit": "0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba",
+  "initialization": "random_seed_42",
+  "weight_file_sha256": null,
+  "native_input_shape": [
+    1,
+    1,
+    6,
+    17,
+    19
+  ],
+  "torch_version": "2.14.0",
+  "sources": {
+    "stride8": {
+      "source": "stride8",
+      "module_name": "dec_block_3.7",
+      "channels": 256,
+      "features_api": "native_mednext_v1_sequence",
+      "forward_calls": 1,
+      "output_shapes": {
+        "region_logits": [
+          1,
+          4,
+          6,
+          17,
+          19
+        ],
+        "boundary_logits": [
+          1,
+          4,
+          6,
+          17,
+          19
+        ],
+        "sdf": [
+          1,
+          4,
+          6,
+          17,
+          19
+        ],
+        "feature": [
+          1,
+          256,
+          4,
+          4,
+          4
+        ]
+      }
+    },
+    "stride16": {
+      "source": "stride16",
+      "module_name": "bottleneck.7",
+      "channels": 512,
+      "features_api": "native_mednext_v1_sequence",
+      "forward_calls": 1,
+      "output_shapes": {
+        "region_logits": [
+          1,
+          4,
+          6,
+          17,
+          19
+        ],
+        "boundary_logits": [
+          1,
+          4,
+          6,
+          17,
+          19
+        ],
+        "sdf": [
+          1,
+          4,
+          6,
+          17,
+          19
+        ],
+        "feature": [
+          1,
+          512,
+          2,
+          2,
+          2
+        ]
+      }
+    },
+    "stride4": {
+      "source": "stride4",
+      "module_name": "dec_block_2.7",
+      "channels": 128,
+      "features_api": "native_mednext_v1_sequence",
+      "forward_calls": 1,
+      "output_shapes": {
+        "region_logits": [
+          1,
+          4,
+          6,
+          17,
+          19
+        ],
+        "boundary_logits": [
+          1,
+          4,
+          6,
+          17,
+          19
+        ],
+        "sdf": [
+          1,
+          4,
+          6,
+          17,
+          19
+        ],
+        "feature": [
+          1,
+          128,
+          8,
+          8,
+          8
+        ]
+      }
+    }
+  },
+  "source_inventory": {
+    "model_class": "DualBranchTeacher3D",
+    "architecture": "shared_3d_trunk_original_region_separate_boundary_sdf",
+    "input_channels": 1,
+    "num_classes": 4,
+    "class_mapping": [
+      "BG",
+      "RV",
+      "MYO",
+      "LV"
+    ],
+    "backbone": {
+      "backbone": "MedNeXt-L-k3",
+      "source_repo": "/private/tmp/q3d-mednext-official-20261112",
+      "source_commit": "0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba",
+      "upstream_url": "https://github.com/MIC-DKFZ/MedNeXt",
+      "reference_main_sha": "0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba",
+      "weights_sha256": null,
+      "weights_status": "UNTRAINED_RANDOM_INIT",
+      "features_api": "native_mednext_v1_sequence",
+      "factory": "nnunet_mednext.create_mednext_v1",
+      "verified_source_files": [
+        "https://github.com/MIC-DKFZ/MedNeXt/blob/0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba/nnunet_mednext/network_architecture/mednextv1/MedNextV1.py",
+        "https://github.com/MIC-DKFZ/MedNeXt/blob/0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba/nnunet_mednext/network_architecture/mednextv1/blocks.py",
+        "https://github.com/MIC-DKFZ/MedNeXt/blob/0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba/nnunet_mednext/network_architecture/mednextv1/create_mednext_v1.py"
+      ],
+      "pretraining_data": null
+    },
+    "pretraining_data": null,
+    "quality": "UNTRAINED_RANDOM_INIT",
+    "synthetic": false,
+    "padding_policy": "external_minimum_bottleneck_2x2x2",
+    "padding_multiple": 16,
+    "checkpoint_boundary": false,
+    "offload_saved_tensors": false,
+    "accuracy_claim": "NOT_MEASURED",
+    "class_mapping_trust": "metadata_self_declared_semantic_permutation_not_empirically_verified"
+  },
+  "checked_source_sha256": {
+    "self_audit/candidate_a3d/teacher.py": "bb4c80da4212ab15a4a2a526af0f0d4edb8dee7b8a7a6f1efbab73dc7a5055ba",
+    "self_audit/candidate_q3d/teacher_features.py": "20027717dc0a98ccda188b0b2451ba8d3bdae9193104c97e33065862901197fa"
+  },
+  "probe_sha256": "d53b72e1c38fbe528013b7d43a7552920c433b9d8ac0ad4d459889a71c41b68c"
+}

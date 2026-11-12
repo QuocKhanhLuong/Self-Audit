@@ -1,0 +1,114 @@
+{
+  "schema": "q3d.p5_worker_report.v1",
+  "task": "P5 native evaluation and student-only export",
+  "authority": "docs/CANDIDATE_Q3D_SPEC.md",
+  "source_head": "a03aadb060c109c05a67bbd94d0d56a78da84d4e",
+  "source_head_note": "Shared worktree is uncommitted; no commit or push was made.",
+  "owned_files": [
+    "self_audit/candidate_q3d/evaluation.py",
+    "self_audit/candidate_q3d/export.py",
+    "scripts/q3d_infer.py",
+    "scripts/q3d_export.py",
+    "scripts/q3d_profile.py",
+    "tests/test_q3d_evaluation_export.py"
+  ],
+  "source_sha256": {
+    "self_audit/candidate_q3d/evaluation.py": "b93e2fc1f9ac425c715704cdca09508f3b562cedc52fa534688b758b5252af2e",
+    "self_audit/candidate_q3d/export.py": "2b78cb559192278effb233b1102485f310ac583533728434d769effd004d58f3",
+    "scripts/q3d_infer.py": "01b934f7c6678b90211f88ae054c673bd26cd2d7cf969dec611fbd53db24a929",
+    "scripts/q3d_export.py": "89bd4bb0c3c60566f0e4d88c765453a50cf471b6009abb96933535cd57fbc243",
+    "scripts/q3d_profile.py": "185f164d06b73a8c4f0ce91a544861260f123c9dd20fdf911b550a8d92508307",
+    "tests/test_q3d_evaluation_export.py": "6f0c6a316ff2ef9e7f68ebdb9a05da84dab1f13f75c67b3d7382d55a2978c783"
+  },
+  "implemented": [
+    "Native full-volume geometry validation and fail-closed external image checks.",
+    "Per-class and patient-macro Dice, anisotropic millimetre HD95/ASSD, explicit absent-class statuses, ED/ES EDV/ESV/EF and myocardial-mass error summaries.",
+    "DEV-only w_pat versus RV Dice Spearman, codebook usage/perplexity/dead-code and optional teacher agreement diagnostics.",
+    "Paired patient bootstrap confidence intervals, win rates, predeclared GO/NO_GO thresholds, and per-arm harm rates versus C0.",
+    "Student-only state export that strips SDF state, refuses teacher/cache state, records C0 SHA/version, source checkpoint/config hashes, commit and cost fields.",
+    "Exact-config, hash-pinned Q-3D engine resume checkpoint export; sidecar manifest update with measured costs and cold-load result.",
+    "Fresh-process teacher-import check and bitwise logits comparison across exactly three native volumes.",
+    "Fail-closed native NPZ inference plus CPU/GPU request-aware profiling; incomplete FLOPs coverage is labeled as a lower bound."
+  ],
+  "verification": {
+    "py_compile": {
+      "status": "PASS",
+      "command": "python -m py_compile self_audit/candidate_q3d/evaluation.py self_audit/candidate_q3d/export.py scripts/q3d_infer.py scripts/q3d_export.py scripts/q3d_profile.py tests/test_q3d_evaluation_export.py",
+      "exit_code": 0
+    },
+    "focused_p5_tests": {
+      "status": "PASS",
+      "exact_output": "....... [100%]\n7 passed in 3.53s"
+    },
+    "full_configured_pytest": {
+      "status": "FAIL_SHARED_TREE_PEER_CONFIG",
+      "command": "python -m pytest -q",
+      "exact_summary": "3 failed, 64 passed in 4.48s",
+      "failures": [
+        "tests/test_q3d_config_campaign.py::test_canonical_json_recipes_are_strict_and_preserve_pinned_settings",
+        "tests/test_q3d_integration.py::test_q3d_configs_are_nested_and_keep_real_provenance_not_run",
+        "tests/test_q3d_tokenizer.py::test_p0_preflight_keeps_missing_weights_and_patient_diagnostics_not_run"
+      ],
+      "failure_reason": "Current config validation rejects the a3d_teacher_free baseline launch mapping; these files are outside this worker's ownership and were not edited."
+    },
+    "repo_check": {
+      "status": "FAIL_SHARED_TREE_PEER_CONFIG",
+      "command": "python scripts/check_repo.py",
+      "failure": "ValueError: baseline launch mapping for a3d_teacher_free differs from the declared implementation"
+    }
+  },
+  "synthetic_export_verification": {
+    "evidence_status": "SOFTWARE_ONLY_SYNTHETIC_FIXTURE",
+    "checkpoint_path": "/private/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-2897/test_student_only_export_cold_0/checkpoint.pt",
+    "checkpoint_sha256": "ea7c83ad65dc0a2814cd268d01b254c64c89c5789e80ec6d606d083d72e08ab7",
+    "source_config_sha256": "7884f6c225957a8f89c6ccb401475f37b56fbaab29559ac3d365875751abda02",
+    "artifact_path": "/private/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-2897/test_student_only_export_cold_0/q3d.student.pt",
+    "artifact_sha256": "81740640a77224a38247db6cac1c503c084bb4d82cf6ed68adcd447e23e18cdd",
+    "export_manifest_path": "/private/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-2897/test_student_only_export_cold_0/q3d.student.pt.manifest.json",
+    "c0": {
+      "sha256": "5998e9d1dd9bf48af6af87a1ef8c7783b818ac8329637ada08cc5fb329042376",
+      "version": "q3d_teacher_codebook.v1"
+    },
+    "cold_load": {
+      "status": "PASSED_BITWISE_THREE_NATIVE_VOLUMES",
+      "teacher_modules_imported": [],
+      "logit_sha256": [
+        "bf3537fade4030c62a2f2dffdeb00975c58e32b6376b08e3d8ce78b76932a875",
+        "76ce810d92d1d6c80677d79cfbc4156bbc414744f230ccb239c5a107e5d8dde0",
+        "47622d3d1429a2df604045bd3dbdfc30ae58e4870fdaba60b93f5395e9c4f732"
+      ]
+    },
+    "prediction_path": "/private/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-2897/test_student_only_export_cold_0/prediction.npz",
+    "profile_path": "/private/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pytest-of-alvinluong/pytest-2897/test_student_only_export_cold_0/profile.json",
+    "profile": {
+      "input": {
+        "source": "synthetic test NPZ",
+        "shape_zyx": [6, 17, 19],
+        "spacing_zyx_mm": [8.0, 1.25, 1.5]
+      },
+      "parameters": 9049,
+      "flops": {
+        "status": "PARTIAL_LOWER_BOUND",
+        "value": 29568192,
+        "not_run": "Complete operator coverage; attention, interpolation, normalization and elementwise operations are omitted."
+      },
+      "cpu_latency_ms_per_volume": {
+        "status": "COMPUTED_SYNTHETIC_ONE_REPEAT_NO_WARMUP",
+        "value": 4.347458016127348
+      },
+      "gpu_latency_ms_per_volume": "NOT_RUN_NOT_REQUESTED",
+      "peak_vram_mb": "NOT_RUN_NOT_REQUESTED"
+    },
+    "artifact_paths_are_ephemeral": true
+  },
+  "real_evidence": {
+    "real_patient_evaluation": "NOT_RUN_NO_REAL_DATA_OR_LOCKED_MANIFESTS",
+    "pretrained_weights_hash": "NOT_RUN_NO_PRETRAINED_WEIGHTS_USED",
+    "real_q3d_checkpoint_hash": "NOT_RUN_NO_TRAINED_CHECKPOINT",
+    "gpu_latency": "NOT_RUN",
+    "peak_gpu_vram": "NOT_RUN",
+    "full_flops": "NOT_RUN_INCOMPLETE_OPERATOR_COVERAGE",
+    "patient_training": "NOT_RUN"
+  },
+  "integration_note": "A shared-tree interface issue was reported to the coordinator: CandidateQ3DStudent.codebook_version is a plain str/int, while engine.py invokes .fill_(1) on it at the Q freeze path. Export reads the frozen version from tokenizer_artifact and refuses a VQ artifact without version provenance; the engine/student mismatch remains outside this worker's file ownership."
+}

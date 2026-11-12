@@ -1,0 +1,30 @@
+{
+  "schema": "self_audit.q3d.alignment_final.v1",
+  "date": "2026-11-12",
+  "status": "FOCUSED_TESTS_PASS_SMOKE_NOT_REACHED",
+  "source_sha256": {
+    "self_audit/candidate_q3d/alignment.py": "290c22df547c86d72c2baaf59ebacbdad4e17ade3d5920bf60d4e11cc98c9710",
+    "tests/test_q3d_tokenizer.py": "370c3514a2506b44607717b414d9f842b565f4ffedc3118b82bb9433f553a9e5"
+  },
+  "alignment_contract": {
+    "depth_coverage": "Require z_feature_count * teacher_stride >= native D; clamp the spec z coordinates against the actual source feature count.",
+    "inplane_coverage": "Require feature H/W to cover ceil(native_size/16) * (16/teacher_stride) complete teacher cells for each in-plane axis.",
+    "pooling": "Use exact unweighted avg_pool3d with kernel and stride (1,16/stride,16/stride) for strides 4 and 8; stride 16 is identity. Crop to ceil(H/16),ceil(W/16) after pooling and detach.",
+    "producer_boundary": "The helper no longer assumes MedNeXt's min-32 padding; producer-specific feature extraction remains responsible for its own padded geometry."
+  },
+  "verification": {
+    "focused_command": "rtk pytest -q tests/test_q3d_tokenizer.py",
+    "focused_result": "19 passed",
+    "new_regressions": [
+      "D=6 accepts one stride-8 z feature when native depth is covered and in-plane cells are complete",
+      "partial 2x2 stride-8 coverage is rejected",
+      "odd-edge pooling averages all four source cells without overlap weighting"
+    ],
+    "synthetic_smoke": {
+      "command": "rtk python -m scripts.smoke_q3d --out /tmp/self-audit-q3d-smoke",
+      "status": "NOT_REACHED_ENGINE",
+      "detail": "Config validation stopped before training: synthetic tokenizer smoke requires at least 200 Q updates, while smoke_q3d.py defaults to 1. No T/Q/P/J execution evidence was produced."
+    }
+  },
+  "evidence_boundary": "Software-only focused tests; no patient, GPU, efficacy, clinical, gate-pass, or end-to-end synthetic smoke claim."
+}

@@ -1,0 +1,61 @@
+{
+  "schema": "self_audit.candidate_q3d.integration_worker_report.v1",
+  "status": "PASS_SCOPED_SYNTHETIC_AND_REPOSITORY_CHECKS",
+  "repository_head": "a03aadb060c109c05a67bbd94d0d56a78da84d4e",
+  "checks": [
+    {
+      "command": "rtk python scripts/check_repo.py",
+      "status": "PASS",
+      "output": {
+        "method": "candidate_q3d",
+        "sole_doc": "docs/CANDIDATE_Q3D_SPEC.md",
+        "candidate_a_recipes": 4,
+        "candidate_a3d_recipes": 6,
+        "candidate_q3d_recipes": 14
+      }
+    },
+    {
+      "command": "rtk python -m pytest -q tests/test_q3d_baselines.py tests/test_q3d_integration.py",
+      "status": "PASS",
+      "exact_output": "24 passed in 6.48s"
+    }
+  ],
+  "synthetic_smoke": {
+    "command": "rtk env -u PYTHONPATH python scripts/smoke_q3d.py --out reports/q3d-implementation-20261112/worker-smoke-v1c --recipe v1",
+    "status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "completed_stages": ["T", "Q", "P", "J"],
+    "expected_stages": ["T", "Q", "P", "J"],
+    "tokenizer_gate": {
+      "status": "NOT_READY",
+      "passed": false,
+      "missing": ["dead_code_fraction", "200-update_usage_history"],
+      "synthetic_override_used": true
+    },
+    "report_path": "reports/q3d-implementation-20261112/worker-smoke-v1c.smoke.json",
+    "config_path": "reports/q3d-implementation-20261112/worker-smoke-v1c.config.json",
+    "config_sha256": "55ca3b2b36a0a28b632672dc1282e40fe142d4293ea2a876c36a8aae89123d94",
+    "research_checkpoint": {
+      "path": "reports/q3d-implementation-20261112/worker-smoke-v1c/latest.pt",
+      "sha256": "8cf2da9119dde146d5e033ab4087fff3f3c441a3397a4843056f93046eab53af",
+      "sidecar_path": "reports/q3d-implementation-20261112/worker-smoke-v1c/latest.pt.sha256",
+      "bytes": 65973989
+    }
+  },
+  "source_sha256": {
+    "train.py": "4f700864693f5dba4dd80912d3388c883f3fd73154fc01825565b6fc37e3222b",
+    "evaluate.py": "51ab9e63f857264ab4fdfaf1ca8cacd3314a9471e1f355afef93a0bf86b592ea",
+    "self_audit/candidate_q3d/data.py": "ec87026763f498d12c5e2d343e16876560f474dbe8560181143f597084856cb7",
+    "self_audit/candidate_q3d/__init__.py": "d2769690305c0cd5381f4b2aa0c9bee21f65bb2c9b475f723acb0866e44d56f9",
+    "self_audit/candidate_q3d/engine.py": "0fbcfc220e486ab749f8925f515e04b1365f79ad01cec98df3150d4923597cf7",
+    "scripts/check_repo.py": "df557aa933ee843719207cadd1e3556c997ebcdabab17d3855f5ade12a114ea6",
+    "scripts/smoke_q3d.py": "381e4dea718ce80d17c67f392459440b475e08dd97a47600e20cb49a9b74855d",
+    "ACTIVE_PIPELINE.json": "1d2278e9783f20504815239c98eba67451c73120c98c086a834516e2164682ee",
+    "tests/test_q3d_integration.py": "708c6458dc95fd10c6c256a0fe2f71bd478f531749f29c2166f7d2f06ae06fdc"
+  },
+  "evidence_limits": {
+    "real_patient_data": "NOT_RUN",
+    "gpu": "NOT_RUN",
+    "patient_training": "NOT_RUN",
+    "full_pytest_suite": "DEFERRED_TO_COORDINATOR"
+  }
+}

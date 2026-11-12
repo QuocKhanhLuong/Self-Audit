@@ -1,9 +1,9 @@
 {
-  "schema": "self_audit.active_pipeline.candidate_family.v2",
+  "schema": "self_audit.active_pipeline.candidate_family.v3",
   "entrypoint": "train.py",
   "evaluation_entrypoint": "evaluate.py",
-  "default_track": "candidate_a",
-  "method": "candidate_a",
+  "default_track": "candidate_q3d",
+  "method": "candidate_q3d",
   "tracks": {
     "candidate_a": {
       "package": "self_audit.candidate_a",
@@ -14,7 +14,8 @@
       "model_class": "CandidateAStudent",
       "protocol": "native_2d_25d",
       "input": "[B,3,H,W]",
-      "geometry": "shape + spacing_yx_mm; in-plane physical distance"
+      "geometry": "shape + spacing_yx_mm; in-plane physical distance",
+      "status": "explicit_baseline_unchanged"
     },
     "candidate_a3d": {
       "package": "self_audit.candidate_a3d",
@@ -36,18 +37,35 @@
         "targets": "detached student EMA consistency only",
         "forbidden": ["U masks", "U GT-derived SDF targets", "U K1 utility labels"],
         "geometry": "unchanged native full-volume protocol"
-      }
+      },
+      "status": "explicit_baseline_unchanged"
+    },
+    "candidate_q3d": {
+      "package": "self_audit.candidate_q3d",
+      "config_schema": "self_audit.candidate_q3d.v1",
+      "checkpoint_schema": "self_audit.candidate_q3d.resume.v2",
+      "export_schema": "q3d.student_export.v1",
+      "default_config": "configs/candidate_q3d/v1.json",
+      "architecture": "unetrpp_lite_dense_student_with_teacher_anchored_quantized_code_distillation",
+      "model_class": "CandidateQ3DStudent",
+      "protocol": "native_3d_q3d",
+      "input": "[B,1,D,H,W]",
+      "geometry": "native shape_zyx + spacing_zyx + affine_zyx; no crop/resampling",
+      "teacher": "frozen dual-head MedNeXt-L k3 during joint; teacher provenance required for real runs",
+      "stages": ["T", "Q", "P", "J"],
+      "deployment": "student-only; dense decoder, frozen codebook, no teacher",
+      "status": "active_research_design_no_patient_or_gpu_evidence"
     }
   },
-  "supervision": "default dense budgeted TRAIN labels with U unused; optional A-3D semi profile uses image-only TRAIN U for detached EMA consistency only; no U masks/GT-derived SDF targets/K1 utility labels",
-  "schedule": "default epochs visit each annotated TRAIN frame/full-volume frame once; optional A-3D semi profile uses fixed logical steps max(labeled frames, TRAIN patients) with deterministic labeled/U cycles",
-  "metrics": ["dice", "f1", "precision", "recall"],
+  "supervision": "Q3D protocol A uses K labeled TRAIN patients for teacher and student, with remaining TRAIN U image-only for tokenizer/codeKD; protocol B uses all TRAIN labels for teacher and K for student. U masks are never used. Candidate A/A-3D retain their declared baseline supervision contracts.",
+  "schedule": "Q3D stages T teacher fine-tune, Q tokenizer, P physiology cache, J student joint; defaults are 8000, 1000, one cache pass, and 8000 updates. Synthetic overrides are explicit. Candidate A and A-3D schedules remain separate.",
+  "metrics": ["patient-macro Dice by class", "HD95 mm", "ASSD mm", "clinical ED/ES errors", "harm rate", "parameters", "FLOPs", "VRAM", "latency", "codebook usage and churn", "physiology-weight diagnostics"],
   "class_mapping": ["BG", "RV", "MYO", "LV"],
-  "inference": "student only; quantized code plus coordinates and declared public geometry",
+  "inference": "student only; Q3D dense decoder consumes student features and frozen teacher-anchored codebook values; no teacher, support labels, or test-time adaptation",
   "datasets": ["acdc", "mnms"],
   "pretrained_teacher_required_for_patient_joint": true,
   "historical_native_v2_commit": "f01add12524cf73bb15675ecfeadc1014e420210",
   "legacy_frozen_q_commit": "924265f7df604d3dca84dda49578b1a0cf28d821",
   "patient_training_this_delivery": false,
-  "documentation": ["docs/METHOD.md", "docs/CANDIDATE_A.md", "docs/CANDIDATE_A3D.md"]
+  "documentation": ["docs/CANDIDATE_Q3D_SPEC.md"]
 }

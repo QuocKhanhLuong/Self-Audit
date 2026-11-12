@@ -1,0 +1,80 @@
+{
+  "clinical_gates": {
+    "reason": "P0 reports geometry and TRAIN-GT residual diagnostics only; it does not certify clinical validity",
+    "status": "NOT_RUN"
+  },
+  "config_path": "/Users/alvinluong/Self-Audit/configs/candidate_q3d/v1.json",
+  "config_sha256": "b7956f6ed663371e67e4984cd0b2e69915ae2a9ed10468888790536dcb6e07e4",
+  "config_validation": {
+    "arm": "v1",
+    "dataset": "acdc",
+    "k": 5,
+    "protocol": "A",
+    "schema": "self_audit.candidate_q3d.v1",
+    "status": "PASS"
+  },
+  "datasets": {
+    "acdc": {
+      "configured_status": "NOT_RUN",
+      "reason": "TRAIN manifest path or SHA-256 is not declared",
+      "status": "NOT_RUN"
+    },
+    "mnms": {
+      "reason": "no TRAIN manifest is declared",
+      "status": "NOT_RUN"
+    }
+  },
+  "evidence_boundary": "software and declared TRAIN manifest diagnostics only; no training, GPU, DEV/TEST or clinical gate",
+  "generated_at_utc": "2026-11-11T19:11:10.166570+00:00",
+  "gpu_diagnostics": {
+    "status": "NOT_RUN"
+  },
+  "near_far_sdf": {
+    "legacy_a3d_teacher_loss_uses_near_far": false,
+    "q3d_teacher_loss": {
+      "alpha": 0.5,
+      "near_mm": 2.5,
+      "radius_mm": 5.0,
+      "source": "/Users/alvinluong/Self-Audit/self_audit/candidate_q3d/losses.py",
+      "uses_balanced_near_far": true
+    },
+    "status": "IMPLEMENTED_IN_Q3D_SOURCE"
+  },
+  "readiness_reasons": [
+    "actual MedNeXt feature module/channel inventory is NOT_RUN",
+    "compatible hash-pinned teacher weights are unavailable",
+    "one or more dataset TRAIN geometry/GT diagnostics are NOT_RUN"
+  ],
+  "report_status": "READ_ONLY_DIAGNOSTICS_COMPLETE",
+  "schema": "self_audit.candidate_q3d.p0_preflight.v1",
+  "status": "NOT_READY",
+  "student_parameters": {
+    "maximum_parameters": 10000000,
+    "parameter_count": 3132713,
+    "source": "CandidateQ3DStudent instantiated from the validated nested config; no forward run",
+    "status": "PASS",
+    "trainable_parameter_count": 3132713,
+    "within_budget": true
+  },
+  "teacher_feature": {
+    "actual_module": null,
+    "expected_module_by_adapter_contract": {
+      "stride16": "bottleneck",
+      "stride4": "dec_block_2",
+      "stride8": "dec_block_3"
+    },
+    "feature_channels": null,
+    "requested_backbone": "mednext_l_k3",
+    "requested_source": "stride8",
+    "source_reason": "local MedNeXt source checkout and pinned commit are not declared",
+    "source_status": "NOT_RUN",
+    "weights": {
+      "overlap_acdc": null,
+      "overlap_mnms": null,
+      "path": null,
+      "pretraining_dataset": null,
+      "sha256": null,
+      "status": "NOT_RUN_NO_WEIGHTS_PATH_OR_SHA"
+    }
+  }
+}

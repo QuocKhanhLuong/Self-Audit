@@ -1,0 +1,111 @@
+{
+  "source_commit": "a03aadb060c109c05a67bbd94d0d56a78da84d4e",
+  "spec_sha256": "d88f45ca2470ac24e7339935bbe28030e0877633f9870cd232afc30b02c10575",
+  "baseline_sha256": {
+    "self_audit/candidate_a3d/__init__.py": "d401ef8940d7d41754523e1584414245c43b787c995dbc301e4b9673d6bf3b17",
+    "self_audit/candidate_a3d/bank.py": "bf81c83a8a2799de0192996af13dd5ef347b4792a1f0c134cf8f68b3a7361f39",
+    "self_audit/candidate_a3d/codec.py": "ee80d6270055911965a333cc218350374ead9c6148e61453f5f3291a6608901a",
+    "self_audit/candidate_a3d/config.py": "b3d28ba1e0e33a3dac193f99306be8747fa6cca6068576e891321ae436695a04",
+    "self_audit/candidate_a3d/data.py": "2ce775ad763b80e0b285022b56f00a33af1ad454ee583bcf9de2c4209d79e5c8",
+    "self_audit/candidate_a3d/engine.py": "9141e8c5904d4e71e03e4b57aec8b6969681810f7a6f4232031b0de286ea8391",
+    "self_audit/candidate_a3d/evaluation.py": "f58e350817582f48e6bb0ad2646d5ead971db4254d10e3412d815944585c2908",
+    "self_audit/candidate_a3d/geometry.py": "02ea3809718ff152ce06bbfcda18ef12e64c967116669ebd7807da2caf65794e",
+    "self_audit/candidate_a3d/io.py": "8b924f4d62c6223dd21976d3fd3fda1bb1f20c2cbbfca71a34f6ef996c580971",
+    "self_audit/candidate_a3d/k1.py": "1a0cffad9d8998edfd7aac2adfcb477ec34c042ae60768184b24447003e1c206",
+    "self_audit/candidate_a3d/model.py": "5e9b371e603dd8232185fecf0e0f6cc2330e4115d6fef3ae7be61c0fb265d35f",
+    "self_audit/candidate_a3d/profile.py": "341223f4182e3c619e2aa9acece8218d3f58b427267df54f6c97d1ec82a05221",
+    "self_audit/candidate_a3d/semisupervised.py": "5596e067c7a2e0eb2bf5665a98b2fb424bf2f2fdd2714872a2ce29da5a7a56e7",
+    "self_audit/candidate_a3d/teacher.py": "bb4c80da4212ab15a4a2a526af0f0d4edb8dee7b8a7a6f1efbab73dc7a5055ba"
+  },
+  "date": "2026-11-12",
+  "orchestration_run": "run_d8eb861b2b24",
+  "workers": {
+    "student": "ctx_493e5fe4dcd4",
+    "tokenizer": "ctx_95457de3019a",
+    "data": "ctx_897f78de8d05",
+    "config": "ctx_9cd54d059fa4",
+    "engine": "ctx_6861cb10dfbf",
+    "export": "ctx_73a202c01fd4",
+    "integration": "ctx_dabc4b021c47",
+    "pretrained": "ctx_6af5894e1452",
+    "claude_review": "ctx_ce20bbf1d704",
+    "tokenizer_review_fixes": "ctx_ffd8620277e0",
+    "baseline_implementation": "ctx_1fb3842bf324",
+    "export_review_fixes": "ctx_a29618ec578d",
+    "pretrained_review_fixes": "ctx_b0d5fa04bad2",
+    "alignment_final": "ctx_a81f1c465867",
+    "dev_diagnostics": "ctx_84f297a3cdc4",
+    "uniform_epa_fix": "ctx_bbd06220d670",
+    "dev_diagnostics_review_fixes": "ctx_590474a20f33",
+    "config_portability_and_protocol_b": "ctx_50c5c759edc1",
+    "final_minor_fixes": "ctx_c515dd43b42c",
+    "claude_full_repository_followup": "ctx_6dcc3a15f8a6",
+    "evaluation_manifest_preparation": "ctx_c1b5807465a2",
+    "q3d_ci": "ctx_1f68bcf2fde1",
+    "ci_context_fix": "ctx_f01475a06a8f",
+    "claude_p0_review": "ctx_f2f4086a045c",
+    "a3d_test_evaluation_adapter": "ctx_fbffaebe9fab",
+    "claude_all_legacy_coverage": "ctx_927ef0b7104c",
+    "official_channel_contract_fix": "ctx_53fdd53bf195",
+    "claude_official_channel_acceptance": "ctx_124327581ba5"
+  },
+  "public_weights": {
+    "requested": "official public MedNeXt-v1 L k3",
+    "status": "NOT_FOUND_IN_VERIFIED_OFFICIAL_SOURCES",
+    "weight_sha256": null,
+    "sources": [
+      {
+        "url": "https://github.com/MIC-DKFZ/MedNeXt",
+        "finding": "Official source and training recipes; no official pretrained download located."
+      },
+      {
+        "url": "https://github.com/MIC-DKFZ/MedNeXt/releases",
+        "finding": "No releases present."
+      },
+      {
+        "url": "https://github.com/MIC-DKFZ/MedNeXt/issues/16",
+        "finding": "Open request for published trained weights; no download in visible thread."
+      },
+      {
+        "url": "https://github.com/MIC-DKFZ/nnUNet/issues/3022",
+        "finding": "MedNeXt-v2 resource request; v2 is not the spec v1 L k3 architecture."
+      },
+      {
+        "url": "https://zenodo.org/records/4003545",
+        "finding": "Official repository download_pretrained_model.py points to the legacy nnU-Net catalog (published2020), not MedNeXt-v1Lk3. No compatible weights downloaded."
+      }
+    ],
+    "decision": "Do not substitute third-party or incompatible weights; real pretrained teacher execution remains fail-closed."
+  },
+  "e1_reference": {
+    "path": "/Users/alvinluong/.codex/.chatgpt-projects/g-p-6a0b333f53f081919e8bfcd4728b9929/output/pdf/paper-architecture-redraw-20261111/architecture_atlas.html",
+    "sha256": "15d381da2e3212683ce84b4a73e02645b9b449f08fc9ea7653d4983bfce5b257",
+    "section": "04",
+    "rules": [
+      "geometry coverage A_c",
+      "student feature scores within windows A_d",
+      "row normalized A shared for K and V",
+      "P_eff=min(P,N_valid)",
+      "identity when N_valid<=P",
+      "no empty-set softmax"
+    ]
+  },
+  "locked_interpretations": {
+    "alignment": "Exact spec box convention; possible convolution-center mismatch is a spec limitation, not silently corrected.",
+    "physiology_kd": "Exact per-class weighted ratio, epsilon=1e-8; positive scalar patient weights nearly cancel at batch1. Intentional zero weights skip/log KD, global collapse fails closed.",
+    "clear_harm_reduction": "Paired patient bootstrap95 lower bound of harm(V1u)-harm(V1) greater than0; fixed before real data.",
+    "logical_updates": "USER_CONFIRMED: J8000 paired logical updates =8000 optimizer steps; each pair accumulates separate L/U forwards. C0 same8000L/8000optim. Spec9 accumulation2 means stream microbatches, not two pairs. Confirmed before real data.",
+    "c1": "Train-only AS64->actual CT projection compares actual aligned teacher features, removed at export.",
+    "labeled_physiology": "w_pat=1 for labeled training frames.",
+    "tokenizer_gate": "Soft class mass accumulated across declared cohort/window; strict majority >50%, not plurality or final minibatch.",
+    "tokenizer_init": "200-volume initialization pass is separate from1000 Q optimizer updates.",
+    "pretrained_classifier": "Exact compatible region classifier required; no silent head reinitialization.",
+    "missing_myocardium": "No unrequested guard beyond spec; absent myocardium at both phases remains an explicit formula limitation.",
+    "joint_loss_scaling": "L supervised coefficient1 in everyarm; codeKD and commitment averaged over participating L/U streams; no blanket division of supervised loss by stream_count.",
+    "student_collapse": "After ramp warmup, a complete rolling 200-update window assigning all student cells to one code is a collapse and stops J. Short synthetic windows are NOT_EVALUATED, not PASS. Locked before real data.",
+    "checkpoint_schema": "Research resume.v2 contains weights-only-safe RNG state and mandatory SHA sidecar; old prototype resume.v1 is rejected. Complete optimizer-pair checkpoint resume only.",
+    "patient_macro_dice": "Mean finite frame Dice within each patient/class, then mean class scores and mean patients; shared selection/reporting policy (E6 correction before real data).",
+    "baseline_source_snapshot": "A-3D source_inventory pins the whole self_audit tree plus train/evaluate. Train and evaluate each A-3D campaign baseline in the same frozen delivery commit/worktree; keep the checkpoint source_files/source_sha256 and use its pinned worktree after later source edits. Rejecting changed code is intentional fail-closed behavior, not relaxed for Q3D.",
+    "official_teacher_feature_channels": "Pinned MedNeXt-v1 L k3 actual source probe: stride4=128, stride8=256, stride16=512. Canonical channel metadata and C1 projection must match this source; synthetic feature widths are not substituted as official evidence."
+  }
+}

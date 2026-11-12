@@ -1,0 +1,1421 @@
+{
+  "schema": "self_audit.q3d.review.code.v1",
+  "reviewer": "Claude Code (independent reviewer; read-only, no source edits)",
+  "task_id": "task_9c5a28331d84",
+  "dispatch_id": "ctx_927ef0b7104c",
+  "run_id": "run_d8eb861b2b24",
+  "status": "FINAL_FULL_COVERAGE_REVIEW_K1_DELTA_VERIFIED",
+  "head_commit": "a03aadb060c109c05a67bbd94d0d56a78da84d4e",
+  "note": "The working tree is uncommitted; SHAs are a snapshot of the frozen delivery tree at report time. Coverage labels state exactly how each file was reviewed; a hash entry is not a line review.",
+  "authorized_resolutions": {
+    "M3_dev_checkpoint_selection": "resolved by user authorization (the Q3D spec supersedes the legacy DEV policy)",
+    "M4_baseline_tests_docs": "replacement of old docs/tests authorized by user; general pytest discovery must remain",
+    "alignment": "spec section 4 box-cell formula is authoritative; physical-offset concern recorded as a spec limitation only",
+    "L_physiology": "w_pat=1 for L",
+    "updates": "USER CONFIRMED: J = 8000 L/U logical pairs = 8000 optimizer steps (accumulation across the 2 stream microbatches; 16000 stream microbatches); C0/L-only arms 8000 L updates = 8000 optimizer steps; L-supervised coefficient 1, codeKD/commitment averaged over participating streams. The earlier 4000-optimizer-step note is superseded.",
+    "cls_T4": "pool probabilities, then argmax",
+    "C1": "train-only 64->C_T projection matched to actual F_T_aln",
+    "E6": "shared frame-then-patient Dice for DEV selection and reporting",
+    "F1": "early stage-P NO_GO when every TRAIN U patient has w_pat=0 in physiology-weighted KD arms"
+  },
+  "file_inventory_sha256": {
+    ".github/workflows/ci.yml": {
+      "sha256": "b5ef2ad5127911d3c78b66f35faf375dc25a46c59f1a4c7bff73d56430347c58",
+      "coverage": "line_reviewed"
+    },
+    ".github/workflows/discord-notify.yml": {
+      "sha256": "41aed8d80fc404bdf96ecdc677e097ee25bab45dda7433493a8a589046913a85",
+      "coverage": "line_reviewed"
+    },
+    "ACTIVE_PIPELINE.json": {
+      "sha256": "1d2278e9783f20504815239c98eba67451c73120c98c086a834516e2164682ee",
+      "coverage": "line_reviewed"
+    },
+    "AGENTS.md": {
+      "sha256": "a503b57580c5867b32c9c900e20be7cfa035c8a2b08d44d96b7521c63eb0b6b9",
+      "coverage": "line_reviewed"
+    },
+    "configs/ablations/candidate_a.json": {
+      "coverage": "line_reviewed_full (read in full)",
+      "sha256": "c38cf74cec0d0d1893c0fc610cb17ea59daff8e4423ea885d47182ecdd6050e8"
+    },
+    "configs/ablations/candidate_a3d.json": {
+      "coverage": "line_reviewed_full (read in full)",
+      "sha256": "381eedf3f484382b49b4c17ea332713582218dd4e50be7e3ce21f2193d2cfb8c"
+    },
+    "configs/backbone.example.json": {
+      "coverage": "line_reviewed_full (read in full)",
+      "sha256": "8263967827eb46a2c3e2b7f84307be26c890d67ba9d764ee7fbd2134a8b29298"
+    },
+    "configs/backbone3d.example.json": {
+      "coverage": "line_reviewed_full (read in full)",
+      "sha256": "6d0a40c1ed689b9e55c5b94ff465b0ac6a1c2111591875ed0bff18d94b75a4c8"
+    },
+    "configs/candidate_a/full.json": {
+      "coverage": "line_reviewed_full (full.json read in full; sibling recipes read as complete diffs against full.json)",
+      "sha256": "d485543ef1b75e5672130768afd91d8b580789ee1d6b7cfaf77f8587dc26e514"
+    },
+    "configs/candidate_a/smoke.json": {
+      "coverage": "line_reviewed_full (full.json read in full; sibling recipes read as complete diffs against full.json)",
+      "sha256": "a179cf5634907269f200eeeb81f08dd4319b7a02f719c70fd21d5b837748bee0"
+    },
+    "configs/candidate_a/teacher_pretrain.json": {
+      "coverage": "line_reviewed_full (full.json read in full; sibling recipes read as complete diffs against full.json)",
+      "sha256": "658034288605ef274cde8c3022101817411a31faf0dc7d91e803babff22f6995"
+    },
+    "configs/candidate_a/teacher_warmup.json": {
+      "coverage": "line_reviewed_full (full.json read in full; sibling recipes read as complete diffs against full.json)",
+      "sha256": "40301c69fcbc744f8063b090dff5433d61d5aa84ce150307bb9ab491a5050e0c"
+    },
+    "configs/candidate_a3d/full.json": {
+      "coverage": "line_reviewed_full (full.json read in full; sibling recipes read as complete diffs against full.json)",
+      "sha256": "7551d6ab953670fc022a6d2eedcbb757bbf0843fc4dff2c2d39ec513eac525a2"
+    },
+    "configs/candidate_a3d/semi_supervised.json": {
+      "coverage": "line_reviewed_full (full.json read in full; sibling recipes read as complete diffs against full.json)",
+      "sha256": "1d617a65be67fd36ab88131d910f50f65f287b48d5896c1ce83d0d42fba6ab47"
+    },
+    "configs/candidate_a3d/smoke.json": {
+      "coverage": "line_reviewed_full (full.json read in full; sibling recipes read as complete diffs against full.json)",
+      "sha256": "6f1d11a2f3986d06fb0800644ad2a67cc72d1bfada18c9a7e4eb2c85658e2876"
+    },
+    "configs/candidate_a3d/teacher_free_acdc_k8.json": {
+      "coverage": "line_reviewed_full (full.json read in full; sibling recipes read as complete diffs against full.json)",
+      "sha256": "3d40df16d3be00a0535de7405ac37cd574371d1c1470ebcc0a6c658142d14ab8"
+    },
+    "configs/candidate_a3d/teacher_pretrain.json": {
+      "coverage": "line_reviewed_full (full.json read in full; sibling recipes read as complete diffs against full.json)",
+      "sha256": "485f6f5d078de861eaf67ea75c7cb0ee2437666ff3ce6fa0ef7a03b2aa25c179"
+    },
+    "configs/candidate_a3d/teacher_warmup.json": {
+      "coverage": "line_reviewed_full (full.json read in full; sibling recipes read as complete diffs against full.json)",
+      "sha256": "c3f43a7b3f427b455f367754c487c45fe70a7b004e4c5e856f1b61c5fdf9d529"
+    },
+    "configs/candidate_q3d/a3d_teacher_free.json": {
+      "coverage": "line_reviewed_full (v1.json read in full; every other recipe read as a complete key-level diff against v1; all 14 verified byte-equal to canonical_config output)",
+      "sha256": "89b38bc7297ab82b7590d0079a22169389a7747430f40333a673ea92f34834e5"
+    },
+    "configs/candidate_q3d/b1.json": {
+      "coverage": "line_reviewed_full (v1.json read in full; every other recipe read as a complete key-level diff against v1; all 14 verified byte-equal to canonical_config output); K1 delta re-reviewed (config.py: single _FEATURE_CHANNELS line; recipe: feature_channels value only, old bytes reproduced by reverting it)",
+      "sha256": "8668eacb4cdc0f246607a18046ed6c35d43710b3d375f5b8674f262649652552",
+      "previous_sha256": "746eed5531680cc298c3a75beb650062258dbf9557c7ade233c69c07f37f388d"
+    },
+    "configs/candidate_q3d/c0.json": {
+      "coverage": "line_reviewed_full (v1.json read in full; every other recipe read as a complete key-level diff against v1; all 14 verified byte-equal to canonical_config output)",
+      "sha256": "fbd2a8627c00c1f7751aca507c2dc9d56e1cf8215688c01d6004d61395622592"
+    },
+    "configs/candidate_q3d/c1.json": {
+      "coverage": "line_reviewed_full (v1.json read in full; every other recipe read as a complete key-level diff against v1; all 14 verified byte-equal to canonical_config output); K1 delta re-reviewed (config.py: single _FEATURE_CHANNELS line; recipe: feature_channels value only, old bytes reproduced by reverting it)",
+      "sha256": "7597c803e37502020082c991d5d9ae8de23b283a664c8c3b72e0947f339d8582",
+      "previous_sha256": "c4e53fbad2f5763320582f717546ece168098d01cc7fe7adad795008f3407672"
+    },
+    "configs/candidate_q3d/e1.json": {
+      "coverage": "line_reviewed_full (v1.json read in full; every other recipe read as a complete key-level diff against v1; all 14 verified byte-equal to canonical_config output); K1 delta re-reviewed (config.py: single _FEATURE_CHANNELS line; recipe: feature_channels value only, old bytes reproduced by reverting it)",
+      "sha256": "1ade98d442d9f7ba369795ca6c757f0afe83437bfd95ea309fcff92a65f3bd66",
+      "previous_sha256": "32ede10333eb513b2181f4d1a9531a5f854afb276144d010ff4ccd997b1e31ef"
+    },
+    "configs/candidate_q3d/mean_teacher.json": {
+      "coverage": "line_reviewed_full (v1.json read in full; every other recipe read as a complete key-level diff against v1; all 14 verified byte-equal to canonical_config output)",
+      "sha256": "74e290e96848aac64e4d66ad5540c59dff4f29bfbd4d6d7c4795c279fa3ce936"
+    },
+    "configs/candidate_q3d/mednext_supervised.json": {
+      "coverage": "line_reviewed_full (v1.json read in full; every other recipe read as a complete key-level diff against v1; all 14 verified byte-equal to canonical_config output); K1 delta re-reviewed (config.py: single _FEATURE_CHANNELS line; recipe: feature_channels value only, old bytes reproduced by reverting it)",
+      "sha256": "54032520b4a1844028a86fa49c46c71db0059d7d38db3edb3918ec8c6d481423",
+      "previous_sha256": "263c7853f75742277734c51e5202d2f65ff3952e3f37a617911c87cfd6713fc4"
+    },
+    "configs/candidate_q3d/o1.json": {
+      "coverage": "line_reviewed_full (v1.json read in full; every other recipe read as a complete key-level diff against v1; all 14 verified byte-equal to canonical_config output); K1 delta re-reviewed (config.py: single _FEATURE_CHANNELS line; recipe: feature_channels value only, old bytes reproduced by reverting it)",
+      "sha256": "2b5192c4c3d85490ff50932814b65372293b5148e081c9d8bf4650ee32e6ed3a",
+      "previous_sha256": "d51ae94746698cf16cfabea73d0e529c93c86a6e4983abc85bea676ab7096390"
+    },
+    "configs/candidate_q3d/s1.json": {
+      "coverage": "line_reviewed_full (v1.json read in full; every other recipe read as a complete key-level diff against v1; all 14 verified byte-equal to canonical_config output)",
+      "sha256": "95f0d050254a93180422e03d8e2c1d403c1ca88b7881f522b366697db403c1fa"
+    },
+    "configs/candidate_q3d/v0.json": {
+      "coverage": "line_reviewed_full (v1.json read in full; every other recipe read as a complete key-level diff against v1; all 14 verified byte-equal to canonical_config output); K1 delta re-reviewed (config.py: single _FEATURE_CHANNELS line; recipe: feature_channels value only, old bytes reproduced by reverting it)",
+      "sha256": "1112ff49048cccd06724c168388fc3c08e12755c139650a3ba8b3ba73b389d6d",
+      "previous_sha256": "a6fb073ab905f021b732a60e9032e7a61519fef7eb63242606fa1fad548e3274"
+    },
+    "configs/candidate_q3d/v1.json": {
+      "coverage": "line_reviewed_full (v1.json read in full; every other recipe read as a complete key-level diff against v1; all 14 verified byte-equal to canonical_config output); K1 delta re-reviewed (config.py: single _FEATURE_CHANNELS line; recipe: feature_channels value only, old bytes reproduced by reverting it)",
+      "sha256": "9e9d4974e4e29a9dd654bffd38427bae76b5d9cd1512fe2a62d0b42b91697d99",
+      "previous_sha256": "b7956f6ed663371e67e4984cd0b2e69915ae2a9ed10468888790536dcb6e07e4"
+    },
+    "configs/candidate_q3d/v1_residual2.json": {
+      "coverage": "line_reviewed_full (v1.json read in full; every other recipe read as a complete key-level diff against v1; all 14 verified byte-equal to canonical_config output); K1 delta re-reviewed (config.py: single _FEATURE_CHANNELS line; recipe: feature_channels value only, old bytes reproduced by reverting it)",
+      "sha256": "f43f37c0c7620f44bf7b1cd59fe1931535c2f6291295573bbd3b6fb6c48f747e",
+      "previous_sha256": "ff83129823dc822f90b8bfabf4bdf11c46064db87534a41d42afe71193184696"
+    },
+    "configs/candidate_q3d/v1_stride4.json": {
+      "coverage": "line_reviewed_full (v1.json read in full; every other recipe read as a complete key-level diff against v1; all 14 verified byte-equal to canonical_config output); K1 delta re-reviewed (config.py: single _FEATURE_CHANNELS line; recipe: feature_channels value only, old bytes reproduced by reverting it)",
+      "sha256": "6f0f84119e3de65a5b777ac71deb5d51f1fd2e771d0d27b501d165388d2ae4d9",
+      "previous_sha256": "4b9e62fa662fb89ee6a213501a44101e3e95afe44e61805f2a554cc9be73f7a6"
+    },
+    "configs/candidate_q3d/v1u.json": {
+      "coverage": "line_reviewed_full (v1.json read in full; every other recipe read as a complete key-level diff against v1; all 14 verified byte-equal to canonical_config output); K1 delta re-reviewed (config.py: single _FEATURE_CHANNELS line; recipe: feature_channels value only, old bytes reproduced by reverting it)",
+      "sha256": "21943d55914fc546496d3b324f3e2675831e783539bd70680da455541ddf507d",
+      "previous_sha256": "87590201bc36f110784045f69623b40ed9f513e3526712342326b7ca6928f7c6"
+    },
+    "configs/datasets/acdc.json": {
+      "coverage": "line_reviewed_full (read in full)",
+      "sha256": "8e7749d74bf3521dc9b6eb9fecc70d1907e7dcfa7fc36dd5988990e2a1146877"
+    },
+    "configs/datasets/mnms.json": {
+      "coverage": "line_reviewed_full (read in full)",
+      "sha256": "060d4773d24aa6b84e93a89b6f269564c47ec34652e7147c331a75963c3c1722"
+    },
+    "configs/fewshot/candidate_a3d.json": {
+      "coverage": "line_reviewed_full (read in full)",
+      "sha256": "ff12692903e754f370f9e07bfd3176d2273df8275a15730088b43ca54f3eafc6"
+    },
+    "docs/CANDIDATE_Q3D_SPEC.md": {
+      "sha256": "d88f45ca2470ac24e7339935bbe28030e0877633f9870cd232afc30b02c10575",
+      "coverage": "line_reviewed"
+    },
+    "evaluate.py": {
+      "sha256": "b3a5de23b9b74035fe71b4b174c1c86d0ce9adc7a2540acc12f91df5e04879d6",
+      "coverage": "line_reviewed"
+    },
+    "prepare_acdc.py": {
+      "sha256": "05afaae047e92331ef92ee93dc46ec986cb99443f1644678004dbc6b7a9d64d5",
+      "coverage": "line_reviewed"
+    },
+    "prepare_mnms.py": {
+      "sha256": "02435bdb405a93c73ff650c4a37f0d8608f8d67cc1dee8930d186a0a634b4030",
+      "coverage": "line_reviewed"
+    },
+    "pytest.ini": {
+      "sha256": "6c6ccf864e8f2d2e0223ee8e39bfde660c12435aa37d81e2b14000a6bee15003",
+      "coverage": "line_reviewed"
+    },
+    "reports/automatic_pilot_pro4000/build_report.py": {
+      "sha256": "f3464c0532486fac9c3f9317e403f3a533cbe2946cbb5488cea3ddc06d99a082",
+      "coverage": "read_archived_non_active"
+    },
+    "reports/automatic_pilot_pro4000/evaluate_stage.py": {
+      "sha256": "41f89abfe1fc53def1048e487602372f34d88920e16144377accf562ba587626",
+      "coverage": "read_archived_non_active"
+    },
+    "reports/automatic_pilot_pro4000/execute_B128.sh": {
+      "sha256": "5d57c3c356dc5e31f62db3cc1c332481c308b8720ff3827c36aa14954bbcd42a",
+      "coverage": "read_archived_non_active"
+    },
+    "reports/automatic_pilot_pro4000/finalize_report.py": {
+      "sha256": "786174ce96818d9d2dba907ed5195e8c0f6e1ebd423c77e338d66492e8712875",
+      "coverage": "read_archived_non_active"
+    },
+    "reports/automatic_pilot_pro4000/monitor_status.py": {
+      "sha256": "7f9ebb8986fcde21e1e71c37e8938188f983dbf4378fa2a3234cbc27b1da938d",
+      "coverage": "read_archived_non_active"
+    },
+    "reports/automatic_pilot_pro4000/postrun_verify.sh": {
+      "sha256": "68192fc9a5e192736c18f4f38efe76df169cad677bb22251ab819d90659399a8",
+      "coverage": "read_archived_non_active"
+    },
+    "reports/automatic_pilot_pro4000/progress.py": {
+      "sha256": "e4dff0c77d7cb58f0428eda09b640e3102b57e7c159daf80cb4eb7c236aa459d",
+      "coverage": "read_archived_non_active"
+    },
+    "reports/automatic_pilot_pro4000/publication_content.py": {
+      "sha256": "654fcfc199179563565eee58e15c936e88f2af6731407b6ca18b7657a8482241",
+      "coverage": "read_archived_non_active"
+    },
+    "reports/automatic_pilot_pro4000/run_stage.py": {
+      "sha256": "1c29ae234a96f97fd66371b0f87ca6417bcf0032fba7ed18ae0fc189b018f297",
+      "coverage": "read_archived_non_active"
+    },
+    "reports/automatic_pilot_pro4000/verify_outputs.py": {
+      "sha256": "9859b0a6df184ce83dbf6123cb78215c1baeb70ee7d26526ff29625aa181f947",
+      "coverage": "read_archived_non_active"
+    },
+    "reports/teacher-student-expanded-research-20261105/probe_structured_claims.py": {
+      "sha256": "2a0fb42f671c0006a775db4059e6c58450df8a6b15e4b111ed0b704144f44636",
+      "coverage": "read_archived_non_active"
+    },
+    "requirements.txt": {
+      "sha256": "f4d485cbd7e5ae4805aa28f598f322d4622114c97ca5553d026ade95266b2011",
+      "coverage": "line_reviewed"
+    },
+    "scripts/candidate_a3d_infer.py": {
+      "coverage": "line_reviewed_full (read lines 1-158 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "29bdfe93b670beac418bf51b97902d50174cd2d294db275ccd3a2e75deef18f3"
+    },
+    "scripts/candidate_a_ablations.py": {
+      "coverage": "line_reviewed_full (read lines 1-310 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "ab4aede25b4c1b0d41dbd9be74f18635287cd33350977e675d431c3ea79f9206"
+    },
+    "scripts/candidate_a_campaign.py": {
+      "coverage": "line_reviewed_full (read lines 1-590 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "459a7a87c42049d0620773bf6957e7b4bdab32dc9d07970201ae48b08c302073"
+    },
+    "scripts/candidate_a_campaign_report.py": {
+      "coverage": "line_reviewed_full (read lines 1-528 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "497e9b64aa36e5d86e0e1607bfeef9c25c139a94b4525fd1e0a6e3da7feb9ac3"
+    },
+    "scripts/candidate_a_fewshot.py": {
+      "coverage": "line_reviewed_full (read lines 1-403 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "f6d507120b7e7a58a4e36defe057894922e4ada3008ef333b22d57e362d037ba"
+    },
+    "scripts/candidate_a_infer.py": {
+      "coverage": "line_reviewed_full (read lines 1-67 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "2dea345278f606f53a47f4b874d2394e30d9085b88136eaa1a3bd12a090f52fb"
+    },
+    "scripts/candidate_a_offload.py": {
+      "coverage": "line_reviewed_full (read lines 1-795 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "522af032df8585b8518e83b06e6f014e2aebab7a916d2813155a89b23e11df23"
+    },
+    "scripts/candidate_a_offload_watcher.py": {
+      "coverage": "line_reviewed_full (read lines 1-116 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "f29706914985463d8ce984a8a2cac87f53cdbe7c67c2c19c1c4d9f834e737e2b"
+    },
+    "scripts/candidate_a_retention.py": {
+      "coverage": "line_reviewed_full (read lines 1-437 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "e78b6b6ad8e9835fd7e3d5f921b5499eac8e595147e449a075b0886e8f53dbf4"
+    },
+    "scripts/check_mednext_adapter.py": {
+      "coverage": "line_reviewed_full (read lines 1-83 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "283bd255ecd346cf679bd1592afe74052917ece8c3262f9f4df28e505675e5ff"
+    },
+    "scripts/check_repo.py": {
+      "sha256": "df557aa933ee843719207cadd1e3556c997ebcdabab17d3855f5ade12a114ea6",
+      "coverage": "line_reviewed"
+    },
+    "scripts/diagnose_candidate_a3d.py": {
+      "coverage": "line_reviewed_full (read lines 1-175 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "e925801c6b5a2b7918f909e9f9278f991542a60cb0f1bf81637ca98a1c7c37f5"
+    },
+    "scripts/export_candidate_a.py": {
+      "coverage": "line_reviewed_full (read lines 1-16 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "8d18699bfa7fa1d09334c2a8482107a283c8a03189384b0f0cc2d89e1c826b22"
+    },
+    "scripts/profile_candidate_a3d.py": {
+      "coverage": "line_reviewed_full (read lines 1-369 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "33154d271b7d0aaba766e8beccaf4cd40439e9f7fe11863b48147af4d60cbae4"
+    },
+    "scripts/q3d_campaign.py": {
+      "sha256": "4790ac70390a8cdec2dd9b069dc8c4f1ce2bb5dd5a70a20abdfcef8f77eb72dc",
+      "coverage": "line_reviewed"
+    },
+    "scripts/q3d_diagnostics.py": {
+      "sha256": "283897c85947c606fa705ce9a7334e13cc2d6b6e79c77a0485c1398a9cfd4e6c",
+      "coverage": "line_reviewed"
+    },
+    "scripts/q3d_export.py": {
+      "sha256": "49dcf9e6c4b03499bdf3cf8c7838ea00604bb9ca73d91e69c18408da1559043e",
+      "coverage": "line_reviewed"
+    },
+    "scripts/q3d_infer.py": {
+      "sha256": "e2c2151ad67e749c1fd75b607299b7e1284ab661762edbfe356388c05e208623",
+      "coverage": "line_reviewed"
+    },
+    "scripts/q3d_physio_cache.py": {
+      "sha256": "67435ed1f8ea6ec9843deb26f5e624da602cb4851ce346f16fb874765bbb3899",
+      "coverage": "line_reviewed"
+    },
+    "scripts/q3d_preflight.py": {
+      "sha256": "e94f9634ed81182b5245ab5db232eabf5f5caeffb8c07c38de0814844a099373",
+      "coverage": "line_reviewed"
+    },
+    "scripts/q3d_profile.py": {
+      "sha256": "22134a3a43419854867bc0bfdf9e3cc609a42e209591b01a619a59a980ad3fae",
+      "coverage": "line_reviewed"
+    },
+    "scripts/smoke_candidate_a.py": {
+      "coverage": "line_reviewed_full (read lines 1-77 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "2350d3b3aa79141866db83a6573307618fad8b1d8dd8a8cef9eb36c0f0aef5b9"
+    },
+    "scripts/smoke_candidate_a3d.py": {
+      "coverage": "line_reviewed_full (read lines 1-122 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "d9770041e4fda141b94f79ebfd176213a45702eb7720103a6bd695198ec34a4f"
+    },
+    "scripts/smoke_q3d.py": {
+      "sha256": "381e4dea718ce80d17c67f392459440b475e08dd97a47600e20cb49a9b74855d",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/__init__.py": {
+      "coverage": "line_reviewed_full (read lines 1-2 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "6822f8f8a55609332258736eb51627189b6caf9ee4ff56df67b2081033456e9b"
+    },
+    "self_audit/candidate_a/__init__.py": {
+      "coverage": "line_reviewed_full (read lines 1-3 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "64e28849cfb8638718ffadd8d54af86fd860b2c459472bba7ae67ee3b2231374"
+    },
+    "self_audit/candidate_a/bank.py": {
+      "coverage": "line_reviewed_full (read lines 1-430 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "51a7b13e4a16edfda94faca660d6aef31e57f4812786ba96afd2cab027ee8f75"
+    },
+    "self_audit/candidate_a/codec.py": {
+      "coverage": "line_reviewed_full (read lines 1-397 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "4536ae8f64ccf548d1fd68daa4eeaf083d5e11425f90521abbc3ea98cc196ded"
+    },
+    "self_audit/candidate_a/config.py": {
+      "sha256": "59e44efe0eed70910a84560a85e2e83bb3d239ecf1219cea439c629328e17071",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_a/data.py": {
+      "sha256": "37e8c8ad7cee554171f5429ad281ae09f9cfe381aef74d5523e0bc789365dc01",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_a/engine.py": {
+      "coverage": "line_reviewed_full (read lines 1-334 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "0b2386e41357c5476cb1d49946eaae8a672989ab464d81580a92e83f659e82b8"
+    },
+    "self_audit/candidate_a/evaluation.py": {
+      "coverage": "line_reviewed_full (read lines 1-596 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "d4331b92189d10b5a62207cbcfc393a3d7c7d5e5e2cf1232fdce6111a9b60ebf"
+    },
+    "self_audit/candidate_a/io.py": {
+      "sha256": "05d51458a31395077cbe950219730ee8fe952bc12909e18817cd794244bfb8e7",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_a/k1.py": {
+      "sha256": "c185b25274fd87526438ec842de47a436f20b3303fb35e87b517e89350fc18b2",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_a/model.py": {
+      "coverage": "line_reviewed_full (read lines 1-369 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "7f42bc9a622c6f33880eb808b842e929a7f81d3f7f46960b6bbe737b6306ee64"
+    },
+    "self_audit/candidate_a/teacher.py": {
+      "coverage": "line_reviewed_full (read lines 1-485 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "0a000cf69d9014b1466744e71327fc02e8d70ff95024dc85c0beea8e2f7b22ed"
+    },
+    "self_audit/candidate_a3d/__init__.py": {
+      "sha256": "d401ef8940d7d41754523e1584414245c43b787c995dbc301e4b9673d6bf3b17",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_a3d/bank.py": {
+      "coverage": "line_reviewed_full (read lines 1-485 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "bf81c83a8a2799de0192996af13dd5ef347b4792a1f0c134cf8f68b3a7361f39"
+    },
+    "self_audit/candidate_a3d/codec.py": {
+      "sha256": "ee80d6270055911965a333cc218350374ead9c6148e61453f5f3291a6608901a",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_a3d/config.py": {
+      "sha256": "b3d28ba1e0e33a3dac193f99306be8747fa6cca6068576e891321ae436695a04",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_a3d/data.py": {
+      "sha256": "2ce775ad763b80e0b285022b56f00a33af1ad454ee583bcf9de2c4209d79e5c8",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_a3d/engine.py": {
+      "sha256": "9141e8c5904d4e71e03e4b57aec8b6969681810f7a6f4232031b0de286ea8391",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_a3d/evaluation.py": {
+      "coverage": "line_reviewed_full (read lines 1-472 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "f58e350817582f48e6bb0ad2646d5ead971db4254d10e3412d815944585c2908"
+    },
+    "self_audit/candidate_a3d/geometry.py": {
+      "sha256": "02ea3809718ff152ce06bbfcda18ef12e64c967116669ebd7807da2caf65794e",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_a3d/io.py": {
+      "sha256": "8b924f4d62c6223dd21976d3fd3fda1bb1f20c2cbbfca71a34f6ef996c580971",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_a3d/k1.py": {
+      "sha256": "1a0cffad9d8998edfd7aac2adfcb477ec34c042ae60768184b24447003e1c206",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_a3d/model.py": {
+      "sha256": "5e9b371e603dd8232185fecf0e0f6cc2330e4115d6fef3ae7be61c0fb265d35f",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_a3d/profile.py": {
+      "sha256": "341223f4182e3c619e2aa9acece8218d3f58b427267df54f6c97d1ec82a05221",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_a3d/semisupervised.py": {
+      "coverage": "line_reviewed_full (read lines 1-388 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "5596e067c7a2e0eb2bf5665a98b2fb424bf2f2fdd2714872a2ce29da5a7a56e7"
+    },
+    "self_audit/candidate_a3d/teacher.py": {
+      "sha256": "bb4c80da4212ab15a4a2a526af0f0d4edb8dee7b8a7a6f1efbab73dc7a5055ba",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_q3d/__init__.py": {
+      "sha256": "d2769690305c0cd5381f4b2aa0c9bee21f65bb2c9b475f723acb0866e44d56f9",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_q3d/alignment.py": {
+      "sha256": "290c22df547c86d72c2baaf59ebacbdad4e17ade3d5920bf60d4e11cc98c9710",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_q3d/augmentation.py": {
+      "sha256": "0e5a25c3cf90e35237380687a4b33bc6c6467d4ffe6cc7ee9a6e0f8db836a63f",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_q3d/baselines.py": {
+      "sha256": "6436acc0ecfd8ee9d5b5f8a1795ffb66c8dd867724ff8eda2282173cc767be0e",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_q3d/config.py": {
+      "sha256": "ce80c337a9c825fae1d45db384c6ac98e31ef984b64f445d7b7d2638ea45dfe5",
+      "coverage": "line_reviewed; K1 delta re-reviewed (config.py: single _FEATURE_CHANNELS line; recipe: feature_channels value only, old bytes reproduced by reverting it)",
+      "previous_sha256": "27b00486dacf4dfa218375f0dc87ca3b8da2672f81613d42f5fe9022eebaa970"
+    },
+    "self_audit/candidate_q3d/data.py": {
+      "sha256": "ec87026763f498d12c5e2d343e16876560f474dbe8560181143f597084856cb7",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_q3d/diagnostics.py": {
+      "sha256": "00dd52a34ad013e614577ca8d781782309fe00f8cc2f186436b0920235928bdd",
+      "coverage": "line_reviewed",
+      "reviewed_sha256_before_eof_normalization": "72288beb911e87225869b318f364d896a09e86352c288454310461b24858b98f",
+      "post_review_change": "Coordinator removed one EOF blank line; Python AST identical. Claude review covered the pre-normalized bytes; no new behavior was introduced."
+    },
+    "self_audit/candidate_q3d/engine.py": {
+      "sha256": "fd75632a0f0fe0c9d986beb79223e478b727e5d49b8a4f2878db28630c6c8f8a",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_q3d/evaluation.py": {
+      "sha256": "b9824440d20569f259141d786bdbae75fa273843a356407edd7c4850f8f9495e",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_q3d/export.py": {
+      "sha256": "e30c3db2bde52f71e32e5f43d96ffff68df2c15458846e1668c48b49572bef64",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_q3d/losses.py": {
+      "sha256": "9c6979534b6b11faa362ddb4983741ce04a24e08ff953675e08b708e6140fce8",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_q3d/physiology.py": {
+      "sha256": "ac7cecf389a43adad893b56b8f414a65aabf6c227e65ab670e7bcede6caf4797",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_q3d/pretrained.py": {
+      "sha256": "f0212de15f2aacc2680a5f74e8ae3db0066eeb7bc83829da667fe9d2c09f27c9",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_q3d/student.py": {
+      "sha256": "35620256f3cc7a4c326d2f66f9ee973bece8f74e6383c4a23fcc9c2e15795858",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_q3d/teacher_features.py": {
+      "sha256": "20027717dc0a98ccda188b0b2451ba8d3bdae9193104c97e33065862901197fa",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/candidate_q3d/tokenizer.py": {
+      "sha256": "9d9f3bb210e6d81ff0f7297e551e2f1860c18820cf59d15f9d9a39c07adb6fb8",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/data.py": {
+      "sha256": "98fd52ca7c96d161f76e3e340b00bda909cd4d542e083445bca5eb44bbe82815",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/fewshot.py": {
+      "coverage": "line_reviewed_full (read lines 1-159 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "4163838dcc3b1a61dde9a09673ae6f350d0f6bd5dca674d02dedb46a1513821a"
+    },
+    "self_audit/losses.py": {
+      "sha256": "51a32b1fb698cf357717d14afc45f6cfeb4827d226272dff2d4fa27c0fda9ed7",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/metrics.py": {
+      "sha256": "976236a0d31ec007a52bf411201028bbb94c2e3ef92bf31a02aa79b78fd15717",
+      "coverage": "line_reviewed"
+    },
+    "self_audit/model.py": {
+      "coverage": "line_reviewed_full (read lines 1-103 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "da9f379f2d7c48cda78e0265324a6f6911d57ee2d4ff3240e210dce4706a04f0"
+    },
+    "self_audit/preparation.py": {
+      "sha256": "81edff80b9d38b296df23af996dbdf086dadc8bf174b21d54b094eab43cc7c78",
+      "coverage": "line_reviewed"
+    },
+    "tests/__init__.py": {
+      "coverage": "line_reviewed_full (read lines 1-1 in full by delegated read-only Claude Code subagent; findings verified by reviewer spot checks)",
+      "sha256": "3d5b064fe268d5723651bc951284df07bbb475ca87b420d39bac31e054ce5301"
+    },
+    "tests/test_q3d_baselines.py": {
+      "sha256": "f85b510e9891a0a6f76b6085e7921a799a5cd7855a6bf44e666eaffa566ffd6e",
+      "coverage": "line_reviewed_tests_assertion_level"
+    },
+    "tests/test_q3d_cli_bootstrap.py": {
+      "sha256": "28b067c6a6b8e25d7ab8129380b2c5bf34b30537deade772a646449fb5535f75",
+      "coverage": "line_reviewed_tests_assertion_level"
+    },
+    "tests/test_q3d_config_campaign.py": {
+      "sha256": "5f793d3b99a8edcbedd340a4b2e23ac4b2634a783a45e2dbd546d1775ef08caa",
+      "coverage": "line_reviewed_tests_assertion_level"
+    },
+    "tests/test_q3d_diagnostics.py": {
+      "sha256": "8e10591ed00a9a23f1609db120b7daaabaa2a2398886f606556119ab60a008a9",
+      "coverage": "line_reviewed_tests_assertion_level",
+      "reviewed_sha256_before_eof_normalization": "cdb3a775ac7f2cbcdfb7357bc7fcadb76fd079a62f8091cb0db53aed56838de8",
+      "post_review_change": "Coordinator removed one EOF blank line; Python AST identical. Claude review covered the pre-normalized bytes; no new behavior was introduced."
+    },
+    "tests/test_q3d_engine.py": {
+      "sha256": "8c42d84f9d9754dac51316c6a7339c14f245a22556fb0e9cb2d400288acd8ce5",
+      "coverage": "line_reviewed_tests_assertion_level"
+    },
+    "tests/test_q3d_evaluation_export.py": {
+      "sha256": "47482b4a303b05c3c937b21b8a51544406d0d41d9fcfff83cacb9d2f5d3b0b17",
+      "coverage": "line_reviewed_tests_assertion_level"
+    },
+    "tests/test_q3d_integration.py": {
+      "sha256": "13454b04fad68a503990e04b665d3c2b2888bb8ff7a853388de369178c26d4b9",
+      "coverage": "line_reviewed_tests_assertion_level"
+    },
+    "tests/test_q3d_official_channels.py": {
+      "sha256": "43679ce9e698218bb0112c2d7acb71cac6abe724eef39435d8af94a90d4525db",
+      "coverage": "line_reviewed_full (new K1 regression; read in full and mutation-tested in an isolated copy)"
+    },
+    "tests/test_q3d_physio_cli.py": {
+      "sha256": "78a12264c07eea280ab40a25c4e15ad833bf73a104660fa594689f47a4554b46",
+      "coverage": "line_reviewed_tests_assertion_level"
+    },
+    "tests/test_q3d_physiology_data.py": {
+      "sha256": "12480831e165734d11b3c9f633a62008658afc863ea80b7cce2dde8651e0561a",
+      "coverage": "line_reviewed_tests_assertion_level"
+    },
+    "tests/test_q3d_preparation.py": {
+      "sha256": "e896d03e533e8571894c8c265611e83323dbbf90129896a461259518da0e02e0",
+      "coverage": "line_reviewed_tests_assertion_level",
+      "reviewed_sha256_before_eof_normalization": "6cc53182a51d0e020affa99678881ae6294b985a11391d6b1bf98df8f583cac8",
+      "post_review_change": "Coordinator removed one EOF blank line; Python AST identical. Claude review covered the pre-normalized bytes; no new behavior was introduced."
+    },
+    "tests/test_q3d_pretrained.py": {
+      "sha256": "003c911b228d1805e38da2112a5d61f2d9859e184b89f9dbcb72bc1354010cbf",
+      "coverage": "line_reviewed_tests_assertion_level"
+    },
+    "tests/test_q3d_student.py": {
+      "sha256": "db8531527513eef4b715341a0aa6d2b2c3a28be1bb610c28de0fa3e6303c044c",
+      "coverage": "line_reviewed_tests_assertion_level"
+    },
+    "tests/test_q3d_tokenizer.py": {
+      "sha256": "370c3514a2506b44607717b414d9f842b565f4ffedc3118b82bb9433f553a9e5",
+      "coverage": "line_reviewed_tests_assertion_level"
+    },
+    "train.py": {
+      "sha256": "4f700864693f5dba4dd80912d3388c883f3fd73154fc01825565b6fc37e3222b",
+      "coverage": "line_reviewed"
+    }
+  },
+  "findings": [
+    {
+      "id": "R1",
+      "severity": "BLOCKER",
+      "file": "self_audit/candidate_q3d/student.py",
+      "where": "_pad_inplane (F.pad 4-tuple, replicate)",
+      "summary": "F.pad(x,(0,pw,0,ph),mode='replicate') on a 5D tensor raises NotImplementedError on torch 2.14 whenever H or W is not a multiple of 16.",
+      "evidence": "probe: input [1,1,6,37,41] gives 'Padding size 4 is not supported for 5D input tensor'",
+      "correction": "use (0,pw,0,ph,0,0); add a test with odd H/W and D in {6,9,10,13,20}",
+      "owner": "student",
+      "status": "FIXED_IN_SNAPSHOT (student.py:747 uses a 6-tuple pad)"
+    },
+    {
+      "id": "R2",
+      "severity": "SPEC_LIMITATION",
+      "file": "self_audit/candidate_q3d/losses.py",
+      "where": "_class_balanced_weighted_mean / codekd_loss",
+      "summary": "With w=w_cell*w_pat and batch 1, w_pat is a per-sample constant that cancels exactly in sum(w*KL)/sum(w), so V1 and V1-u differ only on w_pat=0 patients.",
+      "evidence": "probe: identical loss 0.62272 at w scaled by 1.0 and by 0.05",
+      "correction": "needs coordinator decision: multiply the class-balanced w_cell mean by w_pat outside the normalization (loss_sample = w_pat * L_codeKD(w_cell)), or normalize across the accumulation window/batch; record it as a spec-formula limitation",
+      "owner": "engine/losses + coordinator",
+      "status": "ACCEPTED_SPEC_LIMITATION (coordinator: exact formula locked with eps 1e-8; w_pat not moved). Consequence to report: with batch 1, V1 and V1-u differ only on w_pat=0 patients"
+    },
+    {
+      "id": "R3",
+      "severity": "MAJOR",
+      "file": "self_audit/candidate_q3d/losses.py",
+      "where": "_class_balanced_weighted_mean raise when all classes are zero-weight",
+      "summary": "An intentional physiology guard w_pat=0 (or all w_cell<0.7) turns every weight to zero, and codekd raises ValueError, crashing that update.",
+      "evidence": "probe: weights*0 raise 'all class-balanced distillation weights are zero'",
+      "correction": "distinguish an intentional w_pat=0 (skip the U term, log guard reason and count) from a global collapse (fail if the skipped fraction in a declared window exceeds a threshold, or if all U patients have w_pat=0 at stage P)",
+      "owner": "engine/losses",
+      "status": "FIXED_VERIFIED (engine _distillation_or_zero skips an all-zero branch and logs it; global KD collapse raises if no branch has positive support over the stage, engine.py:2374)"
+    },
+    {
+      "id": "R4",
+      "severity": "MAJOR",
+      "file": "self_audit/candidate_q3d/tokenizer.py",
+      "where": "metrics() class coverage, check_gate",
+      "summary": "Class coverage uses the hard argmax class per cell with count 1, not soft class mass, and comes only from the last metrics() call's batch; the gate cohort is therefore one volume.",
+      "evidence": "code inspection lines ~426-441, 472",
+      "correction": "accumulate mass[c,k] += sum of pooled teacher class probabilities over cells assigned code k, across the declared L+U gate cohort with frozen candidate weights; owner = argmax_c mass; record the cohort IDs",
+      "owner": "tokenizer",
+      "status": "FIXED_PENDING_ENGINE_INTEGRATION (tokenizer 9d9f3bb2: rolling soft class mass over the last history_window cohorts, majority >50% of code mass); recorded interpretation: the gate cohort is the last 200 Q-stage observations, which mix successive C0 snapshots; the engine must pass soft pooled class_probs"
+    },
+    {
+      "id": "R5",
+      "severity": "MAJOR",
+      "file": "self_audit/candidate_q3d/tokenizer.py",
+      "where": "freeze / load_state_dict",
+      "summary": "Frozen reload restores is_frozen=True, but every parameter keeps requires_grad=True.",
+      "evidence": "probe: frozen_flag True, any_requires_grad True",
+      "correction": "in set_extra_state or a load_state_dict post-hook, call requires_grad_(False) and eval() when is_frozen; the engine must also assert that frozen modules are absent from the optimizer",
+      "owner": "tokenizer/engine",
+      "status": "FIXED (tokenizer _load_from_state_dict re-freezes when is_frozen)"
+    },
+    {
+      "id": "R6",
+      "severity": "MAJOR",
+      "file": "self_audit/candidate_q3d/student.py",
+      "where": "_prepare_codebook / codebook_version",
+      "summary": "VQ arms silently get a random 'untrained-init' C0 when no codebook is passed. codebook_version is not persisted: after reload the version_id buffer is 0 and the attribute reverts to the untrained-init string.",
+      "evidence": "probe",
+      "correction": "for non-synthetic runs, require a codebook mapping carrying the frozen tokenizer C0 plus sha256, version and frozen=True; persist the version and sha in state (extra_state) and verify on load and export",
+      "owner": "student/engine/export",
+      "status": "FIXED_VERIFIED (student install_codebook/codebook_metadata with sha/version/frozen; VQ forward fails before install; metadata in extra_state)"
+    },
+    {
+      "id": "R7",
+      "severity": "MAJOR",
+      "file": "self_audit/candidate_q3d/student.py",
+      "where": "_read_config",
+      "summary": "Canonical config arms v1u, e1, o1 and s1 raise 'unsupported Q-3D student arm'. Config model.student.epa_support='adaptive' is not read, so E1 silently runs uniform EPA. teacher feature_channels is absent from the config, so C1 construction raises.",
+      "evidence": "probe2 over canonical_config for all arms",
+      "correction": "one canonical arm and key mapping shared by config and student, plus a test that constructs a student from canonical_config for every arm",
+      "owner": "student/config",
+      "status": "FIXED_VERIFIED (engine translation layer; config carries teacher feature_channels; C1 requires it)"
+    },
+    {
+      "id": "R8",
+      "severity": "MAJOR",
+      "file": "self_audit/candidate_q3d/tokenizer.py",
+      "where": "_tokenizer_options",
+      "summary": "Config tokenizer keys (dimension, adapter_hidden, anatomy_loss_weight, usage_window_updates, minimum_perplexity, maximum_dead_code_fraction, minimum_class_codes, dead_code_fraction) do not match the keys the tokenizer reads, so the locked gate values come from code defaults.",
+      "evidence": "probe: minimum_perplexity 99 and window 7 in config give 32 and 200 in the tokenizer",
+      "correction": "map the config keys explicitly and fail on unknown or missing keys",
+      "owner": "tokenizer/config",
+      "status": "FIXED_VERIFIED (engine _tokenizer_config maps canonical keys; tokenizer validates options)"
+    },
+    {
+      "id": "R9",
+      "severity": "MAJOR",
+      "file": "self_audit/candidate_q3d/config.py",
+      "where": "training.stage_updates / gradient_accumulation",
+      "summary": "The config does not say whether 8000 updates are logical or optimizer updates.",
+      "evidence": "code inspection",
+      "correction": "add update_unit='logical' plus derived optimizer_updates (J=4000 at accumulation 2), and key ramp, warmup, cosine and the 400-update evaluation cadence on the logical counter",
+      "owner": "config/engine",
+      "status": "FIXED_VERIFIED (J counters j_logical_updates/j_optimizer_updates/j_stream_microbatches; 8000 pairs = 8000 optimizer steps per user confirmation)"
+    },
+    {
+      "id": "R10",
+      "severity": "BLOCKER",
+      "file": "self_audit/candidate_q3d/teacher_features.py",
+      "where": "register_forward_hook on dec_block_3",
+      "summary": "The adapter dispatches sequential blocks through model.iterative_checkpoint (teacher.py:309-313), so whether the dec_block_3 hook fires depends on official MedNeXt source not available locally. The code fails closed (raises if the capture count is not 1).",
+      "evidence": "official MedNeXt @0b78ed86: create_mednext_v1.py:49-62 sets n_channels=32 and checkpoint_style outside_block; MedNextV1.py:278-286 iterative_checkpoint calls each child via checkpoint.checkpoint, so a hook on dec_block_3 captures 0 times",
+      "correction": "when outside_block_checkpointing is True, hook dec_block_3[-1] (bottleneck[-1], dec_block_2[-1]); C_T=n_channels*8=256 (MedNextV1.py:175-178)",
+      "owner": "tokenizer",
+      "status": "FIXED_AND_RUNTIME_VERIFIED_BY_ROOT (dec_block_3.7, C_T 256, random init SOFTWARE_ONLY); hook code at teacher_features.py:45-55"
+    },
+    {
+      "id": "R11",
+      "severity": "MINOR",
+      "file": "self_audit/candidate_q3d/losses.py + tokenizer.py",
+      "where": "tokenizer_stage_loss vs TeacherTokenizer.forward",
+      "summary": "Risk of double beta and anatomy weighting: forward already applies beta=0.25 and 0.5, and tokenizer_stage_loss applies them again.",
+      "correction": "the engine uses exactly one; add a test",
+      "owner": "engine",
+      "status": "FIXED_VERIFIED (Q stage uses tokenizer_output['loss'] once; J commitment = beta * commitment / stream divisor)"
+    },
+    {
+      "id": "R12",
+      "severity": "MINOR",
+      "file": "self_audit/candidate_q3d/config.py",
+      "where": "augmentation.intensity_probability_unlabeled_student=0.5",
+      "summary": "Conflicts with spec line 269 and with augment_unlabeled, which always applies strong intensity to the U student view.",
+      "correction": "set 1.0, or have augment_unlabeled honor the declared probability",
+      "owner": "config/data",
+      "status": "FIXED_VERIFIED (config intensity_probability_unlabeled_student = 1.0)"
+    },
+    {
+      "id": "R13",
+      "severity": "MINOR",
+      "file": "self_audit/candidate_q3d/tokenizer.py",
+      "where": "update_codebook dead-code restart",
+      "summary": "torch.randint without a generator uses the global RNG, so exact resume requires saving and restoring the global RNG state.",
+      "correction": "use a seeded generator stored in extra_state",
+      "owner": "tokenizer",
+      "status": "FIXED (seeded restart generator persisted in extra_state)"
+    },
+    {
+      "id": "R14",
+      "severity": "SPEC_CHOICE",
+      "file": "self_audit/candidate_q3d/tokenizer.py",
+      "where": "forward reconstruction channel_std",
+      "summary": "The per-channel std is computed per batch (batch 1 means per volume), so the reconstruction normalizer varies by volume.",
+      "correction": "freeze the per-channel std from the k-means init cohort and persist it",
+      "owner": "tokenizer",
+      "status": "RECORDED_CHOICE (literal per-volume std of F_T_aln per coordinator)"
+    },
+    {
+      "id": "R15",
+      "severity": "SPEC_LIMITATION",
+      "file": "self_audit/candidate_q3d/physiology.py",
+      "where": "_ratio for MYO",
+      "summary": "When MYO is absent at both ED and ES, r_M=0 and w_m=1, so a teacher with no myocardium passes the physiology term.",
+      "correction": "add a guard requiring MYO ED volume > 0",
+      "owner": "physiology",
+      "status": "ACCEPTED_SPEC_LIMITATION (no undeclared guard added)"
+    },
+    {
+      "id": "R16",
+      "severity": "MAJOR",
+      "file": "pytest.ini",
+      "where": "python_files = test_q3d*.py",
+      "summary": "General pytest discovery is restricted, contrary to the coordinator instruction that it must remain.",
+      "correction": "remove the python_files override (check_repo already guards test naming)",
+      "owner": "integration",
+      "status": "FIXED_VERIFIED (pytest.ini no python_files override; 159 tests collected)"
+    },
+    {
+      "id": "R17",
+      "severity": "SPEC_LIMITATION",
+      "file": "self_audit/candidate_q3d/alignment.py",
+      "where": "z coordinate (z+0.5)/8-0.5 and 2x2 average",
+      "summary": "The implementation matches the authoritative spec section 4 formula exactly. The box-cell assumption may not match the strided-conv sampling centers; this is recorded as a limitation, not a defect.",
+      "correction": "none (do not switch offsets); report it in the limitations",
+      "owner": "-",
+      "status": "ACCEPTED_SPEC"
+    },
+    {
+      "id": "R18",
+      "severity": "OK",
+      "file": "self_audit/candidate_q3d/augmentation.py",
+      "where": "_rotate90_geometry / _flip_geometry",
+      "summary": "The rot90 and flip affine/spacing updates were derived by hand and are correct for torch.rot90(k=1, dims=(-2,-1)).",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R19",
+      "severity": "OK",
+      "file": "self_audit/candidate_a3d/*",
+      "where": "frozen baseline boundary",
+      "summary": "The candidate_a3d teacher, bank, data, semisupervised and geometry SHAs are unchanged since P0.",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "E1",
+      "severity": "BLOCKER",
+      "file": "self_audit/candidate_q3d/engine.py",
+      "where": "_pooled_teacher_targets F.pad 4-tuple replicate; stride4 F.pad",
+      "summary": "Same 5D replicate-pad NotImplementedError as R1, so cls_T4/w_cell crash for any H/W that is not a multiple of 16.",
+      "correction": "use (0,pw,0,ph,0,0)",
+      "owner": "engine",
+      "status": "FIXED_VERIFIED (engine.py:525-527 uses a 6-tuple pad)"
+    },
+    {
+      "id": "E2",
+      "severity": "MAJOR",
+      "file": "self_audit/candidate_q3d/engine.py",
+      "where": "_features_to_student_grid stride4",
+      "summary": "The stride-4 feature keeps D_p/4 z-cells, but _align_stride16 maps z with /16, so the stride4 ablation samples the wrong slices.",
+      "correction": "z coordinate (z+0.5)/4-0.5 for stride-4 sources",
+      "owner": "engine",
+      "status": "FIXED_VERIFIED (stride4/8 routed through align_teacher_to_student4 with teacher_stride; stride16 through _align_stride16)"
+    },
+    {
+      "id": "E3",
+      "severity": "MAJOR",
+      "file": "self_audit/candidate_q3d/engine.py + config.py",
+      "where": "_build_teacher source_repo/source_commit vs exact teacher keys",
+      "summary": "A real teacher cannot be built: the config schema forbids source_repo/source_commit, and the A-3D loader accepts only TRAIN-provenance payloads, not public pretrained weights.",
+      "correction": "declared source-pinned config fields plus a q3d pretrained loader (pretrained.py worker)",
+      "owner": "config/engine/pretrained",
+      "status": "FIXED_VERIFIED (config teacher has source_repo/source_commit/feature_channels; pretrained.py strict exact-key/shape weights_only loader). Limitation: exact BG/RV/MYO/LV head required, classifier reinitialization unsupported; no compatible public weights exist (NOT_FOUND)"
+    },
+    {
+      "id": "E4",
+      "severity": "MAJOR",
+      "file": "self_audit/candidate_q3d/engine.py",
+      "where": "_capture_run_state every update",
+      "summary": "Deep-copies teacher, student and tokenizer state dicts on every update (8000 times for MedNeXt-L in stage T) plus a growing metrics list in the checkpoint.",
+      "correction": "capture only at checkpoint cadence; keep metrics in JSONL only",
+      "owner": "engine",
+      "status": "FIXED_VERIFIED (state captured at checkpoint cadence or on collapse)"
+    },
+    {
+      "id": "E5",
+      "severity": "MINOR",
+      "file": "self_audit/candidate_q3d/engine.py",
+      "where": "_load_checkpoint",
+      "summary": "torch.load(weights_only=False), and the hash check is skipped when the sidecar is missing.",
+      "correction": "require the sidecar SHA before unpickling",
+      "owner": "engine",
+      "status": "FIXED_VERIFIED (resume.v2 torch.load weights_only=True, engine.py:189; v1 rejected)"
+    },
+    {
+      "id": "E6",
+      "severity": "MINOR",
+      "file": "self_audit/candidate_q3d/engine.py vs evaluation.py",
+      "where": "_development_fg_dice vs evaluate_manifest",
+      "summary": "Two different 'DEV patient-macro FG Dice' definitions: TP/FP/FN pooled across frames vs the mean of per-frame Dice.",
+      "correction": "use one shared implementation for selection and reporting",
+      "owner": "engine/evaluation",
+      "status": "FIXED_VERIFIED (engine fd75632a uses evaluation.frame_class_dice + aggregate_patient_class_dice; selection == reporting)"
+    },
+    {
+      "id": "X1",
+      "severity": "BLOCKER",
+      "file": "self_audit/candidate_q3d/export.py",
+      "where": "_construct_deploy_model / export_checkpoint use state key 'codebook','codebook_version'",
+      "summary": "The student registers buffers 'C0' and 'codebook_version_id', so every VQ export raises 'missing its frozen C0 codebook'.",
+      "evidence": "failing test test_student_only_export_cold_load_inference_and_profile",
+      "correction": "read C0/codebook_version_id, verify the C0 sha against the frozen tokenizer artifact",
+      "owner": "export",
+      "status": "FIXED_REVIEWED (export uses install_codebook/codebook_metadata and verifies metadata equality)"
+    },
+    {
+      "id": "X2",
+      "severity": "MAJOR",
+      "file": "self_audit/candidate_q3d/export.py",
+      "where": "_minimal_student_config",
+      "summary": "Rejects canonical arms v1u/e1/o1/s1, drops E1 adaptive support, and C1 construction needs teacher_channels for a train-only head whose weights would also enter the deploy state. The engine's resume checkpoint key 'student_state' and its non-weights-only RNG payload are not accepted by export.",
+      "correction": "share the engine translation layer; strip continuous_feature_head; the engine writes a separate weights-only student checkpoint for export",
+      "owner": "export/engine",
+      "status": "FIXED_REVIEWED (all recipes plus mean_teacher; continuous_feature_head stripped; resume v2 accepted only with a pinned SHA before the weights_only=False fallback)"
+    },
+    {
+      "id": "V1",
+      "severity": "MINOR",
+      "file": "self_audit/candidate_q3d/evaluation.py",
+      "where": "evaluate_manifest old_training",
+      "summary": "old_training is read after model.eval(), so the caller's train mode is never restored.",
+      "correction": "read before eval()",
+      "owner": "evaluation",
+      "status": "FIXED_REVIEWED (old_training captured before eval, restored in finally)"
+    },
+    {
+      "id": "V2",
+      "severity": "MAJOR",
+      "file": "self_audit/candidate_q3d/evaluation.py",
+      "where": "surface_distances_3d one_absent / patient HD95",
+      "summary": "Frames where one mask is absent get HD95=None and are silently excluded, so a candidate that misses a structure is not penalized in the 'HD95 not worse' gate.",
+      "correction": "count one_absent frames explicitly per arm and fail the gate (or use a declared max-distance penalty) when they differ",
+      "owner": "evaluation",
+      "status": "FIXED_REVIEWED (per-patient one_absent counts; candidate count > reference -> NO_GO; missing counts fail closed)"
+    },
+    {
+      "id": "V3",
+      "severity": "MINOR",
+      "file": "self_audit/candidate_q3d/evaluation.py",
+      "where": "compare_primary_arms physiology gate",
+      "summary": "'harm rate gi\u1ea3m r\u00f5' is implemented as any reduction > 0, which one patient can satisfy.",
+      "correction": "lock a minimum harm-rate reduction (e.g. at least 2 patients or a CI) before running; coordinator decision",
+      "owner": "evaluation/coordinator",
+      "status": "FIXED_REVIEWED (harm reduction requires point > 0 and paired bootstrap CI95 lower bound > 0, otherwise INCONCLUSIVE). Recorded interpretation: per coordinator, any positive V1-minus-V1-u FG Dice delta counts as GO for physiology (no 0.01 threshold); flagged as a decision-rule sensitivity, not a defect"
+    },
+    {
+      "id": "C1x",
+      "severity": "INFO",
+      "file": "scripts/q3d_campaign.py",
+      "where": "execute_campaign",
+      "summary": "Execution requires an explicit --execute; real runs require READY, CUDA and real_run validation; the default returns PLAN_VALIDATED_NOT_RUN. Train.py Q3D dispatch now exists; --stage support pending engine completion.",
+      "status": "REVIEWED"
+    },
+    {
+      "id": "A1",
+      "severity": "VERIFY",
+      "file": "self_audit/candidate_q3d/alignment.py",
+      "where": "_teacher_padded_size min 32/multiple 16",
+      "summary": "The expected-source check hardcodes the MedNeXt padding policy; the synthetic tiny teacher pads to multiples of 8 (min 8), so synthetic smoke may raise 'does not cover the declared replicate-padded grid' unless the engine routes synthetic features differently.",
+      "correction": "derive the padded size from teacher.padding_multiple/minimum, or confirm with smoke",
+      "owner": "tokenizer/engine",
+      "status": "FIXED_VERIFIED (alignment helper uses producer-independent coverage checks)"
+    },
+    {
+      "id": "I1",
+      "severity": "BLOCKER",
+      "file": "scripts/q3d_campaign.py + train.py",
+      "where": "_job_command vs train.py argparse/_train_q3d",
+      "summary": "Campaign Q3D jobs pass --stage (unknown to train.py) and --data/--validation-data (rejected for Q3D) and omit --allow-full-run for real runs, so every executed Q3D job fails.",
+      "correction": "align the CLI contract and add a parser round-trip test",
+      "owner": "campaign/integration",
+      "status": "FIXED_VERIFIED (campaign _job_command passes only --config/--out/--device plus --synthetic or --allow-full-run)"
+    },
+    {
+      "id": "I2",
+      "severity": "MINOR",
+      "file": "evaluate.py",
+      "where": "--split choices",
+      "summary": "'test' is not selectable, so the internal TEST role cannot be asserted from the CLI.",
+      "correction": "add 'test'",
+      "owner": "integration",
+      "status": "FIXED_VERIFIED (evaluate.py --split includes test)"
+    },
+    {
+      "id": "D1",
+      "severity": "MAJOR",
+      "file": "self_audit/candidate_q3d/evaluation.py (+engine/evaluate.py)",
+      "where": "teacher_codes_by_frame / physiology_rows",
+      "summary": "The DEV teacher-student code agreement and the w_pat Spearman diagnostics are never passed by any production caller, so they are always NOT_RUN in real runs (tested only at helper level).",
+      "correction": "wire a DEV-only frozen-teacher diagnostic pass into the evaluation route",
+      "owner": "evaluation/engine",
+      "status": "FIXED_VERIFIED (diagnostics.py run_dev_diagnostics + scripts/q3d_diagnostics.py; DEV-only two-pass)"
+    },
+    {
+      "id": "D2",
+      "severity": "MAJOR",
+      "file": "self_audit/candidate_q3d/evaluation.py",
+      "where": "physiology_spearman",
+      "summary": "Spec section 8 requires Spearman against teacher RV Dice and HD95; only RV Dice is implemented.",
+      "correction": "add an HD95 correlation",
+      "owner": "evaluation",
+      "status": "FIXED_VERIFIED (RV HD95 Spearman)"
+    },
+    {
+      "id": "T1",
+      "severity": "MAJOR",
+      "file": "self_audit/candidate_q3d/engine.py",
+      "where": "_make_teacher_optimizer / O1 optimizer",
+      "summary": "(root finding) For real MedNeXt, region_path is Identity and the native region decoder sits inside encoder.model, so the region head got the trunk LR of 1e-4.",
+      "status": "FIXED (root-verified official_optimizer_probe.json; source groups split trunk vs native region decoder)"
+    },
+    {
+      "id": "DG1",
+      "severity": "BLOCKER",
+      "file": "self_audit/candidate_q3d/diagnostics.py + engine.py",
+      "where": "_pooled_teacher_outputs / _pooled_teacher_targets",
+      "summary": "5D replicate pad with a 4-tuple raises for any H/W that is not a multiple of 16 (re-verified on torch 2.14).",
+      "correction": "(0,pw,0,ph,0,0) plus an odd-shape test",
+      "owner": "diagnostics/engine",
+      "status": "FIXED_VERIFIED"
+    },
+    {
+      "id": "DG2",
+      "severity": "MAJOR",
+      "file": "self_audit/candidate_q3d/diagnostics.py",
+      "where": "_codebook_diagnostics ownership",
+      "summary": "Output is labeled 'tokenizer_gate' but uses argmax plurality ownership, not the tokenizer's >50% majority.",
+      "correction": "use the same rule or rename",
+      "owner": "diagnostics",
+      "status": "FIXED_VERIFIED (>0.5 ownership share)"
+    },
+    {
+      "id": "DG3",
+      "severity": "MINOR",
+      "file": "self_audit/candidate_q3d/diagnostics.py",
+      "where": "HD95 Spearman rows",
+      "summary": "one_absent teacher RV rows are dropped silently.",
+      "correction": "report the excluded count",
+      "owner": "diagnostics",
+      "status": "FIXED_VERIFIED (excluded_phase_count)"
+    },
+    {
+      "id": "B1x",
+      "severity": "BLOCKER",
+      "file": "self_audit/candidate_q3d/baselines.py + evaluate.py",
+      "where": "mednext_supervised evaluation",
+      "summary": "The heavy MedNeXt baseline checkpoint (resume v2 file) has no evaluation route: evaluate.py requires a student export sidecar, and evaluate_manifest needs 'logits'.",
+      "correction": "teacher-region evaluation adapter plus an evaluate.py route",
+      "owner": "baseline/evaluation/integration",
+      "status": "FIXED_VERIFIED (baselines.evaluate_mednext_baseline + evaluate.py heavy MedNeXt route, split dev/test)"
+    },
+    {
+      "id": "F1",
+      "severity": "MINOR",
+      "file": "self_audit/candidate_q3d/engine.py",
+      "where": "global KD collapse check",
+      "summary": "The global zero-support check runs only after the full J stage (8000 updates), so a fully guard-zeroed U cohort is detected late, not at stage P.",
+      "correction": "also fail at stage P if every U patient has w_pat=0",
+      "status": "FIXED_VERIFIED (stage P _require_positive_u_physiology_support raises NO_GO_ALL_U_WEIGHTS_ZERO before J; override only when synthetic and smoke, engine.py:2515)"
+    },
+    {
+      "id": "F2",
+      "severity": "MINOR_SPEC_INTERPRETATION",
+      "file": "self_audit/candidate_q3d/engine.py",
+      "where": "Q k-means init prepass",
+      "summary": "The '200 first volumes (L and U)' are drawn with stage_rng.choice from L+U keys (with replacement), not the first 200 in a declared order. Deterministic under the seed and separate from the 1000 Q updates.",
+      "status": "RECORDED_INTERPRETATION"
+    },
+    {
+      "id": "L1",
+      "severity": "MAJOR_LIFECYCLE",
+      "file": "self_audit/candidate_a/io.py",
+      "where": "source_inventory/read_checkpoint",
+      "summary": "A-3D checkpoints and exports are pinned to the hash inventory of every self_audit/**/*.py plus train.py/evaluate.py, Q3D modules included, so any later source edit makes A-3D baseline checkpoints unreadable (fails closed).",
+      "status": "ACCEPTED_DOCUMENTED (coordinator: source_provenance.json baseline_source_snapshot requires training and evaluating the baseline from one frozen delivery snapshot; frozen A/A3D not modified)"
+    },
+    {
+      "id": "L2",
+      "severity": "MINOR_UNREACHABLE",
+      "file": "self_audit/candidate_a3d/engine.py",
+      "where": "'del outputs' when teacher is not None",
+      "summary": "outputs is unbound in non-joint stages with no teacher update; unreachable because validate_training_fields rejects freeze_teacher in non-joint stages.",
+      "status": "RECORDED_FROZEN_BASELINE"
+    },
+    {
+      "id": "P1",
+      "severity": "MAJOR",
+      "file": "prepare_acdc.py, prepare_mnms.py",
+      "where": "DEV/TEST manifest emission",
+      "summary": "Preparation emitted no ED/ES phases and no TEST manifest, so Q3D clinical metrics and DEV diagnostics could not run on prepared data.",
+      "status": "FIXED_VERIFIED (--q3d-evaluation writes phase-pinned DEV and TEST; ACDC Info.cfg 1-based parser with checks; M&Ms phases from index; U stays image-only; manifest SHAs in PREPARATION.json; tests/test_q3d_preparation.py)"
+    },
+    {
+      "id": "P1b",
+      "severity": "BLOCKER",
+      "file": "self_audit/candidate_q3d/engine.py",
+      "where": "_development_fg_dice mask-record key check",
+      "summary": "Phase-annotated DEV records were rejected by an exact {path,sha256} check.",
+      "status": "FIXED_VERIFIED (engine fd75632a: required path/sha256, optional phase in {ED,ES} matched to record phases, other keys rejected)"
+    },
+    {
+      "id": "P1c",
+      "severity": "MAJOR",
+      "file": "self_audit/candidate_q3d/baselines.py, evaluate.py",
+      "where": "A-3D baseline on role=test",
+      "summary": "Frozen candidate_a3d evaluation accepts only development/external_frozen.",
+      "status": "FIXED_VERIFIED (evaluate_a3d_teacher_free_baseline: safe A-3D load_student plus infer_student through Q3D evaluate_manifest; inventory, TRAIN SHA and synthetic identity checks; evaluate.py --config routing)"
+    },
+    {
+      "id": "CI1",
+      "severity": "MAJOR",
+      "file": ".github/workflows/ci.yml",
+      "where": "workflow steps",
+      "summary": "CI did not run the Q3D smoke.",
+      "status": "FIXED_VERIFIED (q3d-contracts job: check_repo, train --describe, full pytest, all-arm Q3D smoke on torch 2.10 CPU)"
+    },
+    {
+      "id": "CI2",
+      "severity": "MAJOR",
+      "file": ".github/workflows/ci.yml",
+      "where": "job-level env runner.temp",
+      "summary": "The runner context is unavailable in jobs.<id>.env.",
+      "status": "FIXED_VERIFIED (CI_LOG_DIR set from $RUNNER_TEMP in a step and exported via GITHUB_ENV; actionlint 1.7.12 PASS per CI owner)"
+    },
+    {
+      "id": "T2",
+      "severity": "BLOCKER_TEST",
+      "file": "tests/test_q3d_integration.py",
+      "where": "line ~430 monkeypatch target",
+      "summary": "A stale mock of the removed _evaluate_mednext_checkpoint left the full suite at 1 failed.",
+      "status": "FIXED_VERIFIED (target _evaluate_configured_baseline; reviewer rerun 164 passed)"
+    },
+    {
+      "id": "H1",
+      "severity": "INFO_ARCHIVED",
+      "file": "reports/automatic_pilot_pro4000/*.py,*.sh",
+      "where": "imports",
+      "summary": "Historical tooling imports self_audit.automatic, self_audit.automatic_evaluation and scripts.run_automatic_pilot (absent) and hardcodes /workspace/Self-Audit, so it is non-runnable on the active tree; reports/teacher-student-expanded-research-20261105/probe_structured_claims.py is a self-contained fixture math probe.",
+      "status": "ARCHIVED_NON_ACTIVE (read; not executed)"
+    },
+    {
+      "id": "TC1",
+      "severity": "COVERAGE_LIMIT",
+      "file": "tests/test_q3d_*.py",
+      "where": "resume tests",
+      "summary": "Exact resume equality is tested for C0 and one V1 pair only; b1/e1/o1/s1/v1u have no exact-resume test, and integration dispatch tests use monkeypatched fakes.",
+      "status": "RECORDED"
+    },
+    {
+      "id": "K1",
+      "severity": "BLOCKER",
+      "track": "Q3D",
+      "file": "self_audit/candidate_q3d/config.py:33 (+ configs/candidate_q3d/*.json)",
+      "summary": "_FEATURE_CHANNELS = {4:256, 8:128, 16:512} swaps stride4 and stride8. The official-source probe measured stride8 dec_block_3.7 = 256 and stride4 dec_block_2.7 = 128, and config.py:621 pins every recipe to the wrong value (c1/v1 declare 128 at stride 8; v1_stride4 declares 256).",
+      "failure_scenario": "On the real MedNeXt teacher, the C1 continuous_feature_head is built with 128 outputs from config (only synthetic runs read actual teacher channels, engine.py:322-333), while F_T_aln has 256 channels, so the C1 primary arm raises a channel mismatch at the first J update. VQ arms are unaffected because the tokenizer uses actual encoder channels; synthetic smoke masks the bug.",
+      "correction": "set {4:128, 8:256, 16:512}, regenerate the 14 recipes, and add a test asserting the mapping against official_source_probe.json",
+      "status": "FIXED_VERIFIED_IN_SNAPSHOT",
+      "previous_status": "OPEN (escalated)",
+      "fix": "config.py:33 now _FEATURE_CHANNELS = {4:128, 8:256, 16:512}, matching official_source_probe.json (stride4 dec_block_2.7=128, stride8 dec_block_3.7=256, stride16 bottleneck.7=512). Ten derived recipes corrected (9 stride-8 recipes 128->256, v1_stride4 256->128); c0, mean_teacher, a3d_teacher_free (null) and s1 (512) unchanged. Fix by Luna (ctx_53fdd53bf195), report official_channels_fix.json.",
+      "verification_by_reviewer": [
+        "Byte-exact delta: reverting only the _FEATURE_CHANNELS line in an isolated copy reproduces the previously reviewed config.py SHA-256 27b00486...; reverting only feature_channels in the 10 recipes reproduces each previously reviewed recipe SHA-256. No other source byte changed.",
+        "All 14 recipes are byte-equal (sorted-key JSON) to canonical_config output (v1_stride4 with source_stride=4, v1_residual2 with residual2=True).",
+        "Regression tests/test_q3d_official_channels.py (frozen sha 43679ce9...) pins an independent OFFICIAL_MEDNEXT_CHANNELS constant, checks every MedNeXt recipe via load_config, canonical_config at strides 4/8/16, and the real (synthetic=False) C1 student continuous_feature_head.out_channels == 256. Optional test (Q3D_OFFICIAL_MEDNEXT_SOURCE) builds the pinned official MedNeXt teacher with random init, asserts stride8 source channels 256, feature [1,256,4,4,4], aligned [1,256,6,2,2], finite feature-KD loss, student gradients and no teacher gradients.",
+        "Isolated mutation matrix (rsync copy under the reviewer scratchpad; shared source never written): fixed state 2 passed; old swap in config only -> 2 failed (ValueError validator + assert 128 == 256); old swap in config and recipes (the exact pre-fix state) -> 2 failed (assert 128 == 256); old swap in recipes only -> portable test failed (validator ValueError); pre-fix state without the source env -> portable test failed (1 failed, 1 skipped). The old wrong mapping is caught in every combination, and the portable test catches it without any external checkout.",
+        "Official checkout /private/tmp/q3d-mednext-official-20261112 at 0b78ed869fbd...; MedNextV1.py/blocks.py/create_mednext_v1.py SHA-256 match official_channels_fix.json; probe file sha 3f06ee43... and spec sha d88f45ca... match.",
+        "C1 budget unchanged: resolve_stage_accounting(c1) J stage_updates 8000, optimizer_updates 8000, stream_microbatches 16000 (USER CONFIRMED 8000 L/U pairs = 8000 optimizer steps)."
+      ]
+    },
+    {
+      "id": "LG1",
+      "severity": "MAJOR",
+      "track": "legacy-only",
+      "file": "scripts/candidate_a_offload.py:345-392, 539-542, 568-577, 707, 723",
+      "summary": "There is no fsync anywhere: the backup copy and receipt are renamed, and the remote weights.pt is then unlinked.",
+      "failure_scenario": "A power loss or kernel panic after the remote unlink can leave the only backup truncated.",
+      "status": "RECORDED_LEGACY (frozen tooling; not used by Q3D)"
+    },
+    {
+      "id": "LG2",
+      "severity": "MAJOR_LATENT",
+      "track": "legacy-only",
+      "file": "self_audit/candidate_a/model.py:284",
+      "summary": "The policy masks with a [B] budget mask on [B,Q] logits (masked_fill(remaining <= 0)); A3D uses remaining[:, None].",
+      "failure_scenario": "With B>1 it raises, or with B==Q masks the wrong axis. Latent because K1 enforces B=1.",
+      "status": "RECORDED_LEGACY"
+    },
+    {
+      "id": "LG3",
+      "severity": "MINOR",
+      "track": "legacy-only",
+      "file": "self_audit/candidate_a/evaluation.py:86-90,121-122,157-159,235-296",
+      "summary": "Packets are rebuilt by re-quantizing dequantized floats; one_absent HD95/ASSD are excluded from the means; threshold is recorded but never applied; latency includes serialize and a parity decode.",
+      "status": "RECORDED_LEGACY"
+    },
+    {
+      "id": "LG4",
+      "severity": "MINOR",
+      "track": "legacy-only",
+      "file": "self_audit/candidate_a/bank.py:338-348; candidate_a/codec.py:317",
+      "summary": "The BOUNDARY point index convention differs from the documented pixel-centre convention (self-consistent between targets and teacher); deserialize does not validate budget_bits.",
+      "status": "RECORDED_LEGACY"
+    },
+    {
+      "id": "LG5",
+      "severity": "MINOR",
+      "track": "legacy (DINOv3 backbone only)",
+      "file": "self_audit/model.py:98",
+      "summary": "The dirty-tree provenance check ignores untracked files (--untracked-files=no) before a local torch.hub import. Q3D uses only digest() from this module.",
+      "status": "RECORDED_LEGACY"
+    },
+    {
+      "id": "LG6",
+      "severity": "MINOR",
+      "track": "legacy A3D semi",
+      "file": "self_audit/candidate_a3d/semisupervised.py:298-299,332-334",
+      "summary": "Teacher-U SDF consistency is gated by boundary_logits (each SDF channel trained only where that class is the argmax) and normalized by the number of present classes. Not in the Q3D path, and teacher_free drops it.",
+      "status": "RECORDED_LEGACY"
+    },
+    {
+      "id": "LG7",
+      "severity": "MINOR",
+      "track": "legacy A3D eval",
+      "file": "self_audit/candidate_a3d/evaluation.py:87-88,117-119,203-212; scripts/diagnose_candidate_a3d.py:145",
+      "summary": "one_absent HD95 is excluded; patients with no masks score silently as None; frame '-1' is not rejected; packet bits reflect the last frame only. Q3D uses its own evaluator and DEV selector.",
+      "status": "RECORDED_LEGACY"
+    },
+    {
+      "id": "LG8",
+      "severity": "MINOR",
+      "track": "legacy campaign tooling",
+      "file": "scripts/candidate_a_campaign_report.py:61-63,100-106,135-137,245,270-277,307-310; candidate_a_campaign.py:62-67,403-406; candidate_a_offload_watcher.py:60-71; candidate_a_retention.py:326-346; candidate_a_ablations.py:128; candidate_a_offload.py:326,782-784",
+      "summary": "Report averages can mix class sets and include FAILED jobs; the hash check is skipped without final_manifest_sha256; the teacher fallback headline; no fsync and a predictable /tmp lock in campaign state; the watcher retries offloaded jobs forever; retention leaks files after a crash; the ablation output is not checked against the dev directory; local offload trusts a self-declared TRAIN SHA. Tests for these scripts were deleted in this delivery.",
+      "status": "RECORDED_LEGACY"
+    },
+    {
+      "id": "LG9",
+      "severity": "MINOR",
+      "track": "legacy configs",
+      "file": "configs/ablations/candidate_a.json, candidate_a3d.json; candidate_a/codec.py, candidate_a3d/codec.py",
+      "summary": "The values_4bit ablation does not reduce packet cost because levels are stored in whole bytes ((bits+7)//8); measured 2-D R0 cost is 640 bits at both 4 and 8 bits. The arm changes quantization resolution only, so any bitrate claim would be confounded.",
+      "status": "RECORDED_LEGACY"
+    },
+    {
+      "id": "K1n",
+      "severity": "NOTE",
+      "track": "Q3D",
+      "file": "self_audit/candidate_q3d/engine.py:317-334; tests/test_q3d_official_channels.py:36",
+      "summary": "Non-blocking hardening notes after the K1 fix: (a) a real (non-synthetic) C1 run still sizes its feature head from config feature_channels and does not compare that value to the loaded teacher's captured channels before J starts; a future mismatch would show up as a loud shape error in the feature-KD loss, not as silent corruption. (b) The test comment says stride4 is 'down_block_1/decoder stride4'; the probe module is dec_block_2.7 (128 is correct either way).",
+      "correction": "optional: assert config feature_channels == teacher_feature_source(teacher, source)['channels'] in _student_config for real C1; fix the comment",
+      "status": "RECORDED_NON_BLOCKING"
+    }
+  ],
+  "evidence_status": {
+    "real_data": "NOT_RUN (no patient training or evaluation)",
+    "gpu": "NOT_RUN",
+    "pretrained_weights": "NOT_FOUND_OFFICIAL (no compatible public MedNeXt-v1 L k3 checkpoint); real T/Q/J fail closed",
+    "official_mednext_source_runtime": "RUN_BY_ROOT_RANDOM_INIT_SOFTWARE_ONLY: official source @0b78ed86 forward/hook probes (official_source_probe.json) and optimizer-group probe (official_optimizer_probe.json); not pretrained, no patient evidence K1 regression: reviewer ran the opt-in official-source C1 forward/loss/backward test (random init, CPU, input [1,1,6,17,19]); software evidence only.",
+    "synthetic": "SOFTWARE_ONLY; post-K1 all-14 synthetic smoke completed per root (verification-final/all14/summary.json); VQ tokenizer gate honestly NOT_READY with explicit synthetic override; export cold-load bitwise on 3 synthetic volumes",
+    "claims": "no patient efficacy, SOTA or novelty claim",
+    "note_updates": "USER CONFIRMED: 8000 L/U pairs = 8000 optimizer steps",
+    "campaign": "campaign-official-channels/PLAN.json (sha 17b8bff3...) is the current immutable plan, PLAN_ONLY_NOT_RUN; campaign-final/ is historical pre-K1"
+  },
+  "coverage_note": "Per-file coverage labels in file_inventory_sha256 are authoritative (140 files: line_reviewed_full 61, line_reviewed 55, line_reviewed_tests_assertion_level 13, read_archived_non_active 11). line_reviewed_full = read in full; line_reviewed = read in full or in every Q3D-relevant function; line_reviewed_tests_assertion_level = test read at assertion level and executed; read_archived_non_active = read, archived/non-active. The 139 files of the prior pass were read by the prior Claude Code reviewer or its delegated read-only subagents, including the legacy Candidate A/A-3D modules (see scope_limits); no file is inventory_only. The K1 delta reviewer did not re-read the 128 unchanged files and relies on that inherited evidence plus matching SHA-256; it read the 11 changed files at the delta level (proved byte-exact) and the new regression test in full. This is per-file coverage as labelled, not a claim that every line of every file was independently line-reviewed by one reviewer, and it excludes files outside the inventory (e.g. README.md, deleted historical tests, CODEX_PROMPT_*.md, unrelated reports).",
+  "verification_run_by_reviewer": {
+    "pytest": "python -m pytest -q -> 164 passed in 43.67s (after the T2 mock fix; an earlier run on the same snapshot gave 1 failed, 163 passed)",
+    "check_repo": "python scripts/check_repo.py -> status PASS",
+    "root_reported": "root frozen final after K1: check_repo PASS; 166 passed, 2 warnings in 40.33s; all-14 synthetic completed; campaign-official-channels PLAN 17b8bff3... validated NOT_RUN (earlier: 164 passed before K1)",
+    "smoke": "not rerun by reviewer",
+    "k1_delta": "tests/test_q3d_official_channels.py: 2 passed with Q3D_OFFICIAL_MEDNEXT_SOURCE (fixed source, isolated copy); mutation matrix as in K1.verification_by_reviewer. Full pytest/all-14 not rerun by this reviewer (root owns it)."
+  },
+  "summary": {
+    "open_q3d_blockers": [],
+    "open_q3d_other": [],
+    "legacy_only_findings": [
+      "LG1",
+      "LG2",
+      "LG3",
+      "LG4",
+      "LG5",
+      "LG6",
+      "LG7",
+      "LG8",
+      "LG9"
+    ],
+    "spec_limitations": [
+      "R2",
+      "R14",
+      "R15",
+      "R17",
+      "F2"
+    ],
+    "accepted_lifecycle": [
+      "L1"
+    ],
+    "archived": [
+      "H1"
+    ],
+    "coverage_limits": [
+      "TC1"
+    ],
+    "closed_in_k1_delta": [
+      "K1"
+    ],
+    "notes_non_blocking": [
+      "K1n"
+    ]
+  },
+  "coverage_summary": {
+    "line_reviewed": 55,
+    "line_reviewed_full": 61,
+    "read_archived_non_active": 11,
+    "line_reviewed_tests_assertion_level": 13
+  },
+  "scope_limits": [
+    "Every executable Python/shell file and every JSON config in the inventory was read in full, by the reviewer or by delegated read-only Claude Code subagents (marked per file).",
+    "Q3D tests were read at assertion level and executed; historical report tooling was read but not executed.",
+    "Excluded by instruction: deleted historical tests, unrelated untracked user report directories, CODEX_PROMPT_*.md, non-code reports.",
+    "Subagent-reviewed files carry the subagents' full-read confirmations; the reviewer spot-checked key findings (LG1, LG2, LG5, LG6) in source."
+  ],
+  "notes": "The working tree is uncommitted and SHAs reflect current bytes. Legacy findings (LG*) are separate from Q3D findings; frozen baselines were not modified.",
+  "k1_delta_review": {
+    "task_id": "task_16f054ba20b0",
+    "dispatch_id": "ctx_124327581ba5",
+    "run_id": "run_d8eb861b2b24",
+    "date": "2026-11-12",
+    "reviewer": "Claude Code (independent read-only delta reviewer; no source edits; mutation checks run only in an isolated scratch copy)",
+    "inherited": "Full 139-file coverage, findings R*/E*/X*/V*/C1x/A1/I*/D*/T*/DG*/B1x/F*/L*/P*/CI*/H1/TC1 and legacy LG1-LG9 are inherited from the prior Claude Code review (task_9c5a28331d84 / ctx_927ef0b7104c). This delta reviewer did not re-read the unchanged files; their hashes were re-verified as unchanged.",
+    "changed_files": [
+      {
+        "path": "configs/candidate_q3d/b1.json",
+        "previous_sha256": "746eed5531680cc298c3a75beb650062258dbf9557c7ade233c69c07f37f388d",
+        "current_sha256": "8668eacb4cdc0f246607a18046ed6c35d43710b3d375f5b8674f262649652552"
+      },
+      {
+        "path": "configs/candidate_q3d/c1.json",
+        "previous_sha256": "c4e53fbad2f5763320582f717546ece168098d01cc7fe7adad795008f3407672",
+        "current_sha256": "7597c803e37502020082c991d5d9ae8de23b283a664c8c3b72e0947f339d8582"
+      },
+      {
+        "path": "configs/candidate_q3d/e1.json",
+        "previous_sha256": "32ede10333eb513b2181f4d1a9531a5f854afb276144d010ff4ccd997b1e31ef",
+        "current_sha256": "1ade98d442d9f7ba369795ca6c757f0afe83437bfd95ea309fcff92a65f3bd66"
+      },
+      {
+        "path": "configs/candidate_q3d/mednext_supervised.json",
+        "previous_sha256": "263c7853f75742277734c51e5202d2f65ff3952e3f37a617911c87cfd6713fc4",
+        "current_sha256": "54032520b4a1844028a86fa49c46c71db0059d7d38db3edb3918ec8c6d481423"
+      },
+      {
+        "path": "configs/candidate_q3d/o1.json",
+        "previous_sha256": "d51ae94746698cf16cfabea73d0e529c93c86a6e4983abc85bea676ab7096390",
+        "current_sha256": "2b5192c4c3d85490ff50932814b65372293b5148e081c9d8bf4650ee32e6ed3a"
+      },
+      {
+        "path": "configs/candidate_q3d/v0.json",
+        "previous_sha256": "a6fb073ab905f021b732a60e9032e7a61519fef7eb63242606fa1fad548e3274",
+        "current_sha256": "1112ff49048cccd06724c168388fc3c08e12755c139650a3ba8b3ba73b389d6d"
+      },
+      {
+        "path": "configs/candidate_q3d/v1.json",
+        "previous_sha256": "b7956f6ed663371e67e4984cd0b2e69915ae2a9ed10468888790536dcb6e07e4",
+        "current_sha256": "9e9d4974e4e29a9dd654bffd38427bae76b5d9cd1512fe2a62d0b42b91697d99"
+      },
+      {
+        "path": "configs/candidate_q3d/v1_residual2.json",
+        "previous_sha256": "ff83129823dc822f90b8bfabf4bdf11c46064db87534a41d42afe71193184696",
+        "current_sha256": "f43f37c0c7620f44bf7b1cd59fe1931535c2f6291295573bbd3b6fb6c48f747e"
+      },
+      {
+        "path": "configs/candidate_q3d/v1_stride4.json",
+        "previous_sha256": "4b9e62fa662fb89ee6a213501a44101e3e95afe44e61805f2a554cc9be73f7a6",
+        "current_sha256": "6f0f84119e3de65a5b777ac71deb5d51f1fd2e771d0d27b501d165388d2ae4d9"
+      },
+      {
+        "path": "configs/candidate_q3d/v1u.json",
+        "previous_sha256": "87590201bc36f110784045f69623b40ed9f513e3526712342326b7ca6928f7c6",
+        "current_sha256": "21943d55914fc546496d3b324f3e2675831e783539bd70680da455541ddf507d"
+      },
+      {
+        "path": "self_audit/candidate_q3d/config.py",
+        "previous_sha256": "27b00486dacf4dfa218375f0dc87ca3b8da2672f81613d42f5fe9022eebaa970",
+        "current_sha256": "ce80c337a9c825fae1d45db384c6ac98e31ef984b64f445d7b7d2638ea45dfe5"
+      }
+    ],
+    "new_files": [
+      "tests/test_q3d_official_channels.py"
+    ],
+    "unchanged_inventory_files": 128,
+    "frozen_baselines": "self_audit/candidate_a/** and self_audit/candidate_a3d/** hashes equal the previous inventory; git status clean for both trees",
+    "legacy_findings": "LG1-LG9 unchanged (legacy-only, not Q3D blockers)",
+    "fix_report": {
+      "path": "reports/q3d-implementation-20261112/official_channels_fix.json",
+      "sha256": "417d5943027a58be4754e8662b60cc7d4004655a0e8dd5051bce5d8e965c4dd5",
+      "listed_hashes_verified": true,
+      "gap": "the report does not list the 10 recipe hashes; this inventory records them"
+    },
+    "root_final_verification": {
+      "reported_by": "root coordinator (term_d8047385...), not run by this reviewer",
+      "check_repo": "PASS (final_check_repo.log sha 33aad782..., verified)",
+      "pytest": "166 passed, 2 upstream checkpoint warnings in 40.33s on official torch 2.10 CI env with Q3D_OFFICIAL_MEDNEXT_SOURCE opt-in (final_pytest.log sha d8fe4b54..., verified)",
+      "final_software_verification": {
+        "path": "reports/q3d-implementation-20261112/final_software_verification.json",
+        "sha256": "b110f6f44fd0553e12a2740d7280288368465df76bac567e39409c9d3d7fe696",
+        "status": "PASS",
+        "source_files_rehashed_by_reviewer": "63/63 match current bytes and agree with this inventory"
+      },
+      "all14": {
+        "path": "reports/q3d-implementation-20261112/verification-final/all14/summary.json",
+        "sha256": "4bdc7fa5a93f7b08c5b76f081780bd57b353efe9d4faaf6d9815198b8475cf6f",
+        "status": "COMPLETED_ALL_SYNTHETIC_RECIPES; VQ gate honestly NOT_READY with explicit synthetic override; SOFTWARE_ONLY_SYNTHETIC"
+      },
+      "campaign": {
+        "path": "reports/q3d-implementation-20261112/campaign-official-channels/PLAN.json",
+        "sha256": "17b8bff3e041acc9f5013318f00ca5eda733740d8bd629d254340d1bcc51bb0f",
+        "status": "PLAN_ONLY_NOT_RUN",
+        "experiments": 168,
+        "stage_jobs": 492,
+        "reviewer_checks": "all MedNeXt-teacher recipes in campaign-official-channels/recipes use (stride8,256)x108, (stride16,512)x12, (stride4,128)x12; no old 128-at-stride-8 value; J jobs for c1/v1/c0 have updates 8000 and optimizer_updates 8000"
+      },
+      "historical": "campaign-final/ is pre-K1 historical and must not be published as current"
+    },
+    "status": "COMPLETE"
+  },
+  "coordinator_post_review_normalization": {
+    "scope": "Remove one extra final blank line from each of three files to satisfy git diff --cached --check; coordinator-only post-review formatting, no semantic changes.",
+    "changes": [
+      {
+        "path": "self_audit/candidate_q3d/diagnostics.py",
+        "reviewed_sha256": "72288beb911e87225869b318f364d896a09e86352c288454310461b24858b98f",
+        "delivered_sha256": "00dd52a34ad013e614577ca8d781782309fe00f8cc2f186436b0920235928bdd",
+        "removed_bytes": 1,
+        "AST_identical": true
+      },
+      {
+        "path": "tests/test_q3d_diagnostics.py",
+        "reviewed_sha256": "cdb3a775ac7f2cbcdfb7357bc7fcadb76fd079a62f8091cb0db53aed56838de8",
+        "delivered_sha256": "8e10591ed00a9a23f1609db120b7daaabaa2a2398886f606556119ab60a008a9",
+        "removed_bytes": 1,
+        "AST_identical": true
+      },
+      {
+        "path": "tests/test_q3d_preparation.py",
+        "reviewed_sha256": "6cc53182a51d0e020affa99678881ae6294b985a11391d6b1bf98df8f583cac8",
+        "delivered_sha256": "e896d03e533e8571894c8c265611e83323dbbf90129896a461259518da0e02e0",
+        "removed_bytes": 1,
+        "AST_identical": true
+      }
+    ],
+    "final_checks": {
+      "verification": "final_software_verification.json",
+      "verification_sha256": "ee6253840718c9847ae125b0c17a33268fc6e59694b7c0e2ef2b40ca3917973b",
+      "pytest": "166 passed, 2 warnings in 39.17s",
+      "all14": "COMPLETED_ALL_SYNTHETIC_RECIPES",
+      "all14_summary_sha256": "13193055f6289ce0c8b8077691cadba3a6f0ab79960f265b7c49abed95dd949e",
+      "source_unchanged_during_checks": true,
+      "review_status": "Original Claude-reviewed behavior preserved exactly; three EOF blank lines removed with identical ASTs. Coordinator reran checks after normalization."
+    }
+  }
+}

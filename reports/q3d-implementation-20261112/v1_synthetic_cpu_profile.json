@@ -1,0 +1,81 @@
+{
+  "arm": "V1",
+  "artifact_sha256": "b65b6d76078851d78e15b659c2710064dbaff116ddb20325e3471740902e8ad1",
+  "cpu_hardware": {
+    "platform": "macOS-26.2-arm64-arm-64bit",
+    "processor": "arm",
+    "torch_threads": 1
+  },
+  "cpu_latency_ms_per_volume": {
+    "dtype": "float32",
+    "repeats": 5,
+    "status": "COMPUTED",
+    "summary": {
+      "mean": 117.80605809763074,
+      "p95": 124.95779125019908
+    },
+    "unit": "ms",
+    "value": 117.66258301213384,
+    "warmup": 2
+  },
+  "evidence_status": "SOFTWARE_ONLY_SYNTHETIC",
+  "flops": {
+    "covered_modules": [
+      "nn.Conv3d",
+      "nn.Linear"
+    ],
+    "covered_operators": [
+      "torch.matmul",
+      "torch.bmm",
+      "scaled_dot_product_attention"
+    ],
+    "functional_operator_flops": 104857600,
+    "mac_convention": "2 floating point operations per multiply-accumulate",
+    "module_calls_counted": 51,
+    "module_flops": 9108357120,
+    "omitted": [
+      "interpolation",
+      "normalization",
+      "softmax",
+      "elementwise ops"
+    ],
+    "operator_calls_counted": {
+      "scaled_dot_product_attention": 4,
+      "torch.bmm": 0,
+      "torch.matmul": 8
+    },
+    "status": "PARTIAL_LOWER_BOUND",
+    "total_flops_status": "NOT_RUN_INCOMPLETE_OPERATOR_COVERAGE",
+    "unit": "floating_point_operations_per_volume",
+    "value": 9213214720
+  },
+  "gpu_latency_ms_per_volume": {
+    "status": "NOT_RUN_NO_CUDA"
+  },
+  "gpu_requested": true,
+  "input": {
+    "batch": 1,
+    "dtype": "float32",
+    "shape_zyx": [
+      10,
+      64,
+      64
+    ],
+    "source": "SYNTHETIC_SOFTWARE_FIXTURE",
+    "spacing_zyx": [
+      8.0,
+      1.25,
+      1.25
+    ]
+  },
+  "parameters": {
+    "status": "COMPUTED",
+    "unit": "parameters",
+    "value": 3132645
+  },
+  "peak_vram_mb": {
+    "status": "NOT_RUN_NO_CUDA"
+  },
+  "schema": "q3d.profile.v1",
+  "status": "NOT_RUN_NO_CUDA"
+}

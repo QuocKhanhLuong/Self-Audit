@@ -36,9 +36,9 @@ def native_geometry_zyx(affine, shape_zyx):
 
 
 
-def read_patient_split(path):
+def read_patient_split(path, *, require_test=False):
     """Compatibility wrapper for the shared patient split reader."""
-    return _read_patient_split(path)
+    return _read_patient_split(path, require_test=require_test)
 
 
 def _header_sha256(image):
@@ -79,6 +79,23 @@ def _resolve_aux_unit(image, cine_unit, *, override, bridge_allowed, name):
             f"{name} spatial units are unknown; verified-cine-bridge requires "
             "a known cine unit or an explicit --spatial-unit override"
         )
+
+
+def _read_acdc_phases(path, frame_count):
+    """Read ACDC's explicit 1-based ED/ES frame numbers from Info.cfg."""
+    values = {}
+    for line in Path(path).read_text(encoding="utf-8").splitlines():
+        match = re.fullmatch(r"\s*(ED|ES)\s*:\s*(\d+)\s*", line, flags=re.IGNORECASE)
+        if match:
+            phase, raw = match.group(1).upper(), int(match.group(2))
+            if phase in values:
+                raise ValueError(f"duplicate {phase} phase in {path}")
+            if raw < 1 or raw > frame_count:
+                raise ValueError(f"{phase} frame in {path} is outside cine (ACDC Info.cfg is 1-based)")
+            values[phase] = raw - 1
+    if set(values) != {"ED", "ES"} or values["ED"] == values["ES"]:
+        raise ValueError(f"{path} must declare distinct ED and ES frames")
+    return values
 
 
 def _geometry_audit(*, pid, frame_index, cine_path, frame_path, mask_path,
@@ -127,10 +144,13 @@ def _geometry_audit(*, pid, frame_index, cine_path, frame_path, mask_path,
 
 
 def prepare(root, split_path, out, budget, seed, evaluation=False,
-            spatial_unit_override=None, frame_geometry_policy="strict"):
+            spatial_unit_override=None, frame_geometry_policy="strict",
+            q3d_evaluation=False):
     import nibabel as nib  # Optional preparation dependency; never silently installed.
     root, out = Path(root).resolve(), Path(out).resolve()
-    split = read_patient_split(split_path)
+    split = read_patient_split(split_path, require_test=q3d_evaluation)
+    if q3d_evaluation and (not split["val"] or not split["test"]):
+        raise ValueError("Q3D evaluation requires nonempty locked DEV and TEST splits")
     all_ids = [patient_id for role in ("train", "val", "test") for patient_id in split[role]]
     if len(set(all_ids)) != len(all_ids) or any(not re.fullmatch(r"patient\d{3}", x) for x in all_ids):
         raise ValueError("unsafe or overlapping patient split")
@@ -140,9 +160,9 @@ def prepare(root, split_path, out, budget, seed, evaluation=False,
     if out.exists() or out == root or root.is_relative_to(out):
         raise ValueError("new separate output directory required")
     out.mkdir(parents=True)
-    groups = {"labeled": [], "unlabeled": [], "evaluation": []}; source_images = {}; geometry_by_patient = {}; spatial_units = {}
+    groups = {"labeled": [], "unlabeled": [], "evaluation": [], "test": []}; source_images = {}; geometry_by_patient = {}; spatial_units = {}
     geometry_audits = []
-    ids = split["train"] + (split["val"] if evaluation else [])
+    ids = split["train"] + (split["val"] if evaluation or q3d_evaluation else []) + (split["test"] if q3d_evaluation else [])
     for pid in ids:
         folder = root / pid
         cine_path = one(folder.glob(f"{pid}_4d.nii*")); cine_hash = digest(cine_path)
@@ -156,10 +176,24 @@ def prepare(root, split_path, out, budget, seed, evaluation=False,
         spatial_units[pid] = unit
         native_geometry = native_geometry_zyx(affine_in_mm(ci.affine, unit), arr.shape[1:])
         geometry_by_patient[pid] = native_geometry
-        role = "evaluation" if pid in split["val"] else ("labeled" if pid in labeled_ids else "unlabeled")
+        role = ("evaluation" if pid in split["val"] else "test") if pid in split["val"] + split["test"] else ("labeled" if pid in labeled_ids else "unlabeled")
+        phases = None
+        if q3d_evaluation and role in {"evaluation", "test"}:
+            phases = _read_acdc_phases(folder / "Info.cfg", raw.shape[3])
         if role != "unlabeled":
             r["masks"] = {}
-            for mp in sorted(folder.glob(f"{pid}_frame*_gt.nii*")):
+            mask_paths = sorted(folder.glob(f"{pid}_frame*_gt.nii*"))
+            if q3d_evaluation and role in {"evaluation", "test"}:
+                by_frame = {}
+                for mask_path in mask_paths:
+                    frame_number = int(re.search(r"_frame(\d+)_gt", mask_path.name)[1]) - 1
+                    if frame_number in by_frame:
+                        raise ValueError(f"{pid} has duplicate reference masks for frame {frame_number}")
+                    by_frame[frame_number] = mask_path
+                if any(frame not in by_frame for frame in phases.values()):
+                    raise ValueError(f"{pid} lacks an explicit ED or ES reference mask")
+                mask_paths = [by_frame[phases[phase]] for phase in ("ED", "ES")]
+            for mp in mask_paths:
                 t = int(re.search(r"_frame(\d+)_gt", mp.name)[1])-1
                 mask = nib.load(mp)
                 frame = nib.load(Path(str(mp).replace("_gt.nii", ".nii")))
@@ -219,8 +253,17 @@ def prepare(root, split_path, out, budget, seed, evaluation=False,
                 y = np.asarray(mask.dataobj)
                 if not np.isin(y, [int(x) for x in CLASS_MAPPING]).all(): raise ValueError("unknown annotation class")
                 op = out / f"{pid}_t{t:03d}_mask.npy"; np.save(op, y.transpose(2, 1, 0).astype(np.uint8))
-                r["masks"][str(t)] = {"path": op.name, "sha256": digest(op)}
+                mask_record = {"path": op.name, "sha256": digest(op)}
+                if phases is not None:
+                    for phase, phase_frame in phases.items():
+                        if t == phase_frame:
+                            mask_record["phase"] = phase
+                r["masks"][str(t)] = mask_record
+            if phases is not None:
+                r["phases"] = phases
             if not r["masks"]: raise ValueError("budgeted/evaluation patient has no reference frames")
+            if q3d_evaluation and role in {"evaluation", "test"} and set(r["masks"]) != {str(v) for v in phases.values()}:
+                raise ValueError(f"{pid} must have exactly the declared ED and ES masks")
         groups[role].append(r); source_images[pid] = cine_hash
     if len(set(source_images.values())) != len(source_images):
         raise ValueError("duplicate raw patient content across roles; resolve split explicitly, never silently drop")
@@ -234,17 +277,28 @@ def prepare(root, split_path, out, budget, seed, evaluation=False,
                                                    for group in (groups["labeled"], groups["unlabeled"])
                                                    for r in group}}}
     write_json(out / "train.json", train_manifest)
-    if evaluation:
+    if evaluation or q3d_evaluation:
         write_json(out / "development.json", {"schema": "self_audit.data.v2", "role": "development",
                      "synthetic": False, "dataset": "acdc", "patients": groups["evaluation"], "scope": "exposed_development",
                      "class_mapping": dict(CLASS_MAPPING),
                      "geometry": {"schema": GEOMETRY_MAP_SCHEMA,
                                   "by_patient": {r["id"]: geometry_by_patient[r["id"]] for r in groups["evaluation"]}}})
+    if q3d_evaluation:
+        if not groups["evaluation"] or not groups["test"]:
+            raise ValueError("Q3D evaluation requires nonempty locked DEV and TEST splits")
+        write_json(out / "test.json", {"schema": "self_audit.data.v2", "role": "test",
+                     "synthetic": False, "dataset": "acdc", "scope": "locked_test",
+                     "patients": groups["test"], "class_mapping": dict(CLASS_MAPPING),
+                     "geometry": {"schema": GEOMETRY_MAP_SCHEMA,
+                                  "by_patient": {r["id"]: geometry_by_patient[r["id"]] for r in groups["test"]}}})
     write_json(out / "PREPARATION.json", {"schema": "self_audit.preparation.acdc.v1", "dataset": "acdc",
                "source_split_sha256": digest(split_path), "raw_images": source_images,
-               "read_mask_patient_ids": labeled_ids + (split["val"] if evaluation else []),
+               "read_mask_patient_ids": labeled_ids + (split["val"] if evaluation or q3d_evaluation else []) + (split["test"] if q3d_evaluation else []),
                "unlabeled_mask_reads": 0, "normalization": "per_cine_image_only_percentiles_0.5_99.5",
-               "train_manifest_sha256": digest(out/"train.json"), "evaluation_authorized": evaluation,
+               "train_manifest_sha256": digest(out/"train.json"), "evaluation_authorized": evaluation or q3d_evaluation,
+               "q3d_evaluation_authorized": q3d_evaluation,
+               "development_manifest_sha256": digest(out / "development.json") if q3d_evaluation else None,
+               "test_manifest_sha256": digest(out / "test.json") if q3d_evaluation else None,
                "geometry_schema": GEOMETRY_SCHEMA, "geometry_axis_order": ["T", "Z", "Y", "X"],
                "spatial_unit_override": spatial_unit_override, "spatial_units": spatial_units,
                "frame_geometry_policy": frame_geometry_policy,
@@ -266,7 +320,8 @@ if __name__ == "__main__":
     p.add_argument("--root", required=True); p.add_argument("--split", required=True)
     p.add_argument("--out", required=True); p.add_argument("--labels", type=int, default=8)
     p.add_argument("--seed", type=int, default=42); p.add_argument("--evaluation", action="store_true")
+    p.add_argument("--q3d-evaluation", action="store_true", help="explicitly prepare phase-pinned Q3D DEV and TEST manifests")
     p.add_argument("--spatial-unit", choices=("mm", "m", "micron"))
     p.add_argument("--frame-geometry-policy", choices=("strict", "verified-cine-bridge"), default="strict")
     a = p.parse_args(); print(prepare(a.root, a.split, a.out, a.labels, a.seed, a.evaluation,
-                                      a.spatial_unit, a.frame_geometry_policy))
+                                      a.spatial_unit, a.frame_geometry_policy, a.q3d_evaluation))

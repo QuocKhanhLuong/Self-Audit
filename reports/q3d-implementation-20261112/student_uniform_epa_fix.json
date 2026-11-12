@@ -1,0 +1,26 @@
+{
+  "schema": "self_audit.q3d.student_uniform_epa_fix.v1",
+  "status": "SOFTWARE_ONLY",
+  "change": {
+    "file": "self_audit/candidate_q3d/student.py",
+    "source_sha256": "35620256f3cc7a4c326d2f66f9ee973bece8f74e6383c4a23fcc9c2e15795858",
+    "summary": "Uniform EPA now masked-pools the already projected full-grid K and spatial V over the shared native support weights; Q and the E1 adaptive A-weighted K/V path are unchanged.",
+    "contracts": [
+      "No parameter shape or checkpoint schema changes",
+      "No public API changes",
+      "Codebook install and metadata persistence unchanged",
+      "C1 projection/export unchanged",
+      "No Z downsampling"
+    ]
+  },
+  "verification": {
+    "command": "rtk pytest -q tests/test_q3d_student.py",
+    "result": "10 passed",
+    "coverage": "Added a reference test that checks projected K/V pooling with fractional token weights and confirms it differs from pool-before-LayerNorm/projection; existing student tests all pass."
+  },
+  "downstream": {
+    "export_cold_load": "Must be tested against this final source state because uniform EPA forward outputs changed.",
+    "real_patient_run": "NOT_RUN",
+    "gpu_run": "NOT_RUN"
+  }
+}

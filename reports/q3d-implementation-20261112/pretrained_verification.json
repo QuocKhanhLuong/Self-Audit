@@ -1,0 +1,63 @@
+{
+  "schema": "self_audit.candidate_q3d.pretrained_verification.v1",
+  "date": "2026-11-12",
+  "status": "SOFTWARE_ONLY_PASS",
+  "source_pin": {
+    "repository": "/private/tmp/q3d-mednext-official-20261112",
+    "expected_commit": "0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba",
+    "observed_commit": "0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba",
+    "working_tree_clean": true,
+    "validation": "build_teacher3d constructs with weights=null and validates the pinned clean official source checkout"
+  },
+  "loader_contract": {
+    "api": "build_q3d_teacher(config, synthetic=False) -> teacher, provenance",
+    "safe_torch_load": "weights_only=true",
+    "checkpoint_sha256_required": true,
+    "https_source_url_required": true,
+    "source_host_restriction": "none; HTTPS URLs such as official GitHub, Zenodo, or Hugging Face sources are accepted and recorded",
+    "pretraining_dataset_required": true,
+    "overlap_acdc_and_mnms_required_as_booleans": true,
+    "class_mapping": ["BG", "RV", "MYO", "LV"],
+    "state_loading": "exact key and shape match with strict=true",
+    "random_real_run_component": "boundary_path only",
+    "classifier_reinitialization": "unsupported; stale configuration field and class mismatch fail closed",
+    "inventory": "loaded, missing, unexpected, and random boundary keys are returned with checkpoint provenance"
+  },
+  "checkpoint_availability": {
+    "official_mednext_v1_l_k3": "NOT_FOUND_IN_VERIFIED_OFFICIAL_SOURCES",
+    "weight_file_sha256": null,
+    "downloaded": false,
+    "real_checkpoint_load": "NOT_RUN",
+    "evidence_reference": "reports/q3d-implementation-20261112/source_provenance.json"
+  },
+  "verification": {
+    "command": "rtk python -m pytest -q tests/test_q3d_pretrained.py",
+    "exit_code": 0,
+    "result": "10 passed",
+    "scope": "software-only fake architecture and state fixtures",
+    "cases": [
+      "weights_only load and complete encoder plus region loading",
+      "random boundary key inventory",
+      "checkpoint SHA mismatch rejection",
+      "non-classifier tensor shape mismatch rejection",
+      "missing region classifier key rejection",
+      "class-order mismatch rejection",
+      "classifier reset bypass rejection",
+      "missing overlap provenance rejection",
+      "Zenodo and Hugging Face HTTPS source URL acceptance",
+      "non-HTTPS source URL rejection"
+    ]
+  },
+  "integration_status": {
+    "engine_loader_wiring": "PENDING_ENGINE_OWNER",
+    "resume_checkpoint_provenance_persistence": "PENDING_ENGINE_OWNER",
+    "config_schema_fields": "PENDING_CONFIG_OWNER"
+  },
+  "not_run": [
+    "real pretrained checkpoint loading",
+    "real data",
+    "patient training",
+    "GPU verification",
+    "patient efficacy or clinical claims"
+  ]
+}

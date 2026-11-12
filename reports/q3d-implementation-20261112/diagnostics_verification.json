@@ -1,0 +1,77 @@
+{
+  "schema": "self_audit.candidate_q3d.diagnostics_verification.v2",
+  "status": "SOFTWARE_ONLY_SYNTHETIC_VALIDATION_PASSED",
+  "git_head": "a03aadb060c109c05a67bbd94d0d56a78da84d4e",
+  "scope": "Follow-up fixes to DEV diagnostics only; no changes to the Q3D spec or frozen baselines",
+  "implementation": {
+    "api": "self_audit.candidate_q3d.diagnostics.run_dev_diagnostics",
+    "checkpoint_api": "self_audit.candidate_q3d.diagnostics.diagnose_checkpoint",
+    "cli": "scripts/q3d_diagnostics.py",
+    "config_loader": "self_audit.candidate_q3d.config.load_config; paths normalized relative to config file",
+    "checkpoint_loader": "self_audit.candidate_q3d.engine._load_checkpoint",
+    "checkpoint_schema": "self_audit.candidate_q3d.resume.v2",
+    "checkpoint_safety": [
+      "required SHA-256 sidecar with exact checkpoint filename",
+      "empty, malformed, mismatched and missing sidecars fail with ValueError",
+      "weights_only=True loader with the engine safe RNG representation",
+      "canonical normalized config SHA and exact TRAIN identity must match",
+      "deployment student exports rejected"
+    ],
+    "diagnostic_behavior": [
+      "code agreement and codebook gate run only for tokenizer-enabled VQ arms",
+      "class-code ownership requires a strict greater-than-50-percent teacher soft-class mass",
+      "C1 runs physiology-only with code diagnostics marked NOT_APPLICABLE",
+      "O1 uses the current checkpoint teacher_state; other teacher arms use the DEV-selected T teacher state",
+      "full-cine label-free inference caches teacher predictions for later ED/ES-only scoring; no teacher re-forward occurs after mask access",
+      "RV HD95 exclusions report counts and reasons including missing teacher RV structures",
+      "5D in-plane replicate padding specifies six pad entries and is exercised at native H/W 17x19",
+      "teacher, student and optional tokenizer state hashes are checked before and after diagnostics"
+    ],
+    "guardrails": {
+      "development_role_only": true,
+      "train_patient_overlap_rejected": true,
+      "test_masks_opened": false,
+      "training_or_checkpoint_selection_influence": false,
+      "insufficient_or_constant_spearman": "NOT_RUN with rho=null"
+    }
+  },
+  "verification": {
+    "focused_command": "rtk python -m pytest -q tests/test_q3d_diagnostics.py",
+    "focused_result": "6 passed",
+    "synthetic_test_coverage": [
+      "v2 resume checkpoint with the engine-safe RNG state loaded through the CLI and API",
+      "relative manifest paths normalized through config.load_config",
+      "sidecar tamper, missing sidecar, empty sidecar and deployment artifact rejection",
+      "protocol mismatch, test-role rejection and TRAIN-overlap rejection",
+      "hard-code agreement, exact usage/perplexity and strict greater-than-50-percent class ownership",
+      "constant and insufficient-patient correlations return NOT_RUN without rho",
+      "odd native 17x19 pooling and six-entry 5D replicate padding",
+      "C1 physiology-only CLI with tokenizer/code diagnostics NOT_APPLICABLE",
+      "O1 selects current teacher_state instead of best_teacher_state",
+      "HD95 exclusions report missing-RV reasons and cached predictions are reused"
+    ],
+    "syntax": "python -m py_compile diagnostics module, CLI and tests: PASS",
+    "cli_help": "python scripts/q3d_diagnostics.py --help: PASS",
+    "diff_check": "git diff --check on the four assigned files: PASS"
+  },
+  "evidence_boundary": {
+    "real_weights": "NOT_RUN_UNAVAILABLE",
+    "real_patient_data": "NOT_RUN_UNAVAILABLE",
+    "gpu": "NOT_RUN",
+    "patient_efficacy": "NOT_MEASURED",
+    "clinical_claim": "NONE",
+    "synthetic_cli_api": "PASS; software evidence only"
+  },
+  "sha256": {
+    "self_audit/candidate_q3d/diagnostics.py": "72288beb911e87225869b318f364d896a09e86352c288454310461b24858b98f",
+    "scripts/q3d_diagnostics.py": "283897c85947c606fa705ce9a7334e13cc2d6b6e79c77a0485c1398a9cfd4e6c",
+    "tests/test_q3d_diagnostics.py": "cdb3a775ac7f2cbcdfb7357bc7fcadb76fd079a62f8091cb0db53aed56838de8"
+  },
+  "files_modified": [
+    "self_audit/candidate_q3d/diagnostics.py",
+    "scripts/q3d_diagnostics.py",
+    "tests/test_q3d_diagnostics.py",
+    "reports/q3d-implementation-20261112/diagnostics_verification.json"
+  ],
+  "git_commit": "NOT_CREATED_BY_WORKER"
+}

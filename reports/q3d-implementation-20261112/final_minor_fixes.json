@@ -1,0 +1,84 @@
+{
+  "schema": "self_audit.candidate_q3d.final_minor_fixes.v1",
+  "date": "2026-11-12",
+  "scope": ["E6", "F1"],
+  "evidence_status": "SOFTWARE_ONLY_SYNTHETIC",
+  "source_head": "a03aadb060c109c05a67bbd94d0d56a78da84d4e",
+  "changes": {
+    "E6": {
+      "status": "IMPLEMENTED",
+      "summary": "Development selection and evaluation reporting share frame Dice followed by patient class-macro aggregation.",
+      "empty_class_policy": "Only frames with reference presence contribute to a class Dice; patient FG Dice averages supported class means.",
+      "regression": "Two unequal-support frames produce the exact shared patient RV Dice 0.75; pooled-count Dice would be approximately 0.5238. Evaluation reporting matches the shared selector aggregator."
+    },
+    "F1": {
+      "status": "IMPLEMENTED",
+      "summary": "Physiology-weighted KD validates all U patient weights after P cache construction and again on J cache reload before optimizer construction.",
+      "allzero_behavior": "Real execution fails closed before the first J optimizer update; the regression asserts unchanged student weights and zero J updates.",
+      "support_semantics": "The guard examines patient w_pat only. Positive patient support with a zero-weight individual U cell branch remains allowed; existing branch/global KD collapse rules still apply.",
+      "bypasses": ["C0 has no U stream", "V0 and V1-U have no physiology-weighted KD"],
+      "synthetic_override": "Only the existing explicit synthetic smoke override may continue past an all-zero support gate. The gate remains recorded as failed with override_used=true and synthetic-only scope. Real configs cannot use the bypass."
+    },
+    "contracts": {
+      "candidate_q3d_spec_changed": false,
+      "candidate_a3d_source_changed": false,
+      "paired_v1_j_updates": 8000,
+      "paired_v1_optimizer_updates": 8000
+    }
+  },
+  "verification": {
+    "focused_regressions": {
+      "command": "python -m pytest -q tests/test_q3d_engine.py -k 'development_and_report_share_frame or allzero_u_patient_support or zero_cell_confidence'",
+      "result": "3 passed"
+    },
+    "engine_tests": {
+      "command": "python -m pytest -q tests/test_q3d_engine.py",
+      "result": "23 passed"
+    },
+    "evaluation_integration_tests": {
+      "command": "python -m pytest -q tests/test_q3d_evaluation_export.py tests/test_q3d_integration.py -k 'evaluation or patient_macro or frame'",
+      "result": "28 passed, 19 deselected"
+    },
+    "check_repo": "PASS",
+    "v1_synthetic_cli_smoke": {
+      "command": "python scripts/smoke_q3d.py --out /tmp/self-audit-q3d-v1-final-retry --recipe v1 --q-updates 1 --init-volumes 8",
+      "status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+      "completed_stages": ["T", "Q", "P", "J"],
+      "q_optimizer_updates": 1,
+      "j_optimizer_updates": 4,
+      "tokenizer_gate": {
+        "status": "NOT_READY",
+        "passed": false,
+        "missing": ["dead_code_fraction", "200-update_usage_history"],
+        "synthetic_override_used": true
+      },
+      "physiology_support_gates": [
+        {
+          "context": "P physiology cache",
+          "status": "PASS_POSITIVE_U_SUPPORT",
+          "patient_weights": {
+            "train_unlabeled_000": 1.0,
+            "train_unlabeled_001": 1.0
+          }
+        },
+        {
+          "context": "J physiology cache reload",
+          "status": "PASS_POSITIVE_U_SUPPORT",
+          "patient_weights": {
+            "train_unlabeled_000": 1.0,
+            "train_unlabeled_001": 1.0
+          }
+        }
+      ],
+      "report": "/private/tmp/self-audit-q3d-v1-final-retry.smoke.json",
+      "gpu_evidence": "NOT_RUN",
+      "patient_efficacy_claimed": false
+    },
+    "initial_smoke_attempt": "Stopped before Q because two initialization volumes yielded 64 k-means points; rerun with eight volumes met the 256-point implementation minimum."
+  },
+  "sha256": {
+    "self_audit/candidate_q3d/engine.py": "bfd0a88046d2a791e882e0c81d8266aab5620d8fce8021cdc957188490dd7127",
+    "self_audit/candidate_q3d/evaluation.py": "b9824440d20569f259141d786bdbae75fa273843a356407edd7c4850f8f9495e",
+    "tests/test_q3d_engine.py": "8c42d84f9d9754dac51316c6a7339c14f245a22556fb0e9cb2d400288acd8ce5"
+  }
+}

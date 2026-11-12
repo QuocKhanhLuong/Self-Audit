@@ -1,7 +1,7 @@
-name: candidate-a-contracts
+name: q3d-contracts
 on: [push, pull_request]
 jobs:
-  cpu-contracts:
+  q3d-cpu-contracts:
     runs-on: ubuntu-latest
     env:
       OMP_NUM_THREADS: '2'
@@ -12,9 +12,33 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: python -m pip install torch==2.10.0 --index-url https://download.pytorch.org/whl/cpu
-      - run: python -m pip install -r requirements.txt
-      - run: python scripts/check_repo.py && python train.py --describe
-      - run: python -m pytest -q
-      - run: python scripts/smoke_candidate_a.py --out /tmp/self-audit-candidate-a
-      - run: python scripts/smoke_candidate_a3d.py --out /tmp/self-audit-candidate-a3d
+      - name: Install official CPU dependencies
+        run: |
+          set -euo pipefail
+          CI_LOG_DIR="$RUNNER_TEMP/q3d-ci-logs"
+          mkdir -p "$CI_LOG_DIR"
+          echo "CI_LOG_DIR=$CI_LOG_DIR" >> "$GITHUB_ENV"
+          python -m pip install torch==2.10.0 --index-url https://download.pytorch.org/whl/cpu 2>&1 | tee "$CI_LOG_DIR/dependencies.log"
+          python -m pip install -r requirements.txt 2>&1 | tee -a "$CI_LOG_DIR/dependencies.log"
+          python -m pip freeze | sort > "$CI_LOG_DIR/package-versions.txt"
+          python -c 'import torch; print(f"torch={torch.__version__}; cuda_available={torch.cuda.is_available()}")' 2>&1 | tee -a "$CI_LOG_DIR/dependencies.log"
+      - name: Validate repository contracts
+        run: |
+          set -euo pipefail
+          python scripts/check_repo.py 2>&1 | tee "$CI_LOG_DIR/check_repo.log"
+          python train.py --describe 2>&1 | tee "$CI_LOG_DIR/train-describe.log"
+      - name: Run full test suite
+        run: |
+          set -euo pipefail
+          python -m pytest -q 2>&1 | tee "$CI_LOG_DIR/pytest.log"
+      - name: Run all Q3D synthetic CPU recipes
+        run: |
+          set -euo pipefail
+          OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python scripts/smoke_q3d.py --all-arms --out /tmp/self-audit-q3d-smoke --init-volumes 16 --q-updates 2 2>&1 | tee "$CI_LOG_DIR/q3d-smoke.log"
+      - name: Upload CI logs after failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: q3d-ci-failure-logs
+          path: ${{ runner.temp }}/q3d-ci-logs/
+          if-no-files-found: warn

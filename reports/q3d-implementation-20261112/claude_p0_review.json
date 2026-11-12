@@ -1,0 +1,323 @@
+{
+  "schema": "self_audit.q3d.review.p0.v1",
+  "reviewer": "Claude Code (independent P0 read-only review)",
+  "task_id": "task_bb8d69c8a1c7",
+  "dispatch_id": "ctx_f2f4086a045c",
+  "run_id": "run_d8eb861b2b24",
+  "date": "2026-11-12",
+  "scope": "Read-only P0 audit of the Q3D spec against the frozen A-3D baseline. This is not the final review: worker code was not reviewed, nothing was executed on patient data, and no GPU was used.",
+  "inputs": {
+    "head_commit": "a03aadb060c109c05a67bbd94d0d56a78da84d4e",
+    "sha256": {
+      "docs/CANDIDATE_Q3D_SPEC.md": "d88f45ca2470ac24e7339935bbe28030e0877633f9870cd232afc30b02c10575",
+      "self_audit/candidate_a3d/teacher.py": "bb4c80da4212ab15a4a2a526af0f0d4edb8dee7b8a7a6f1efbab73dc7a5055ba",
+      "self_audit/candidate_a3d/bank.py": "bf81c83a8a2799de0192996af13dd5ef347b4792a1f0c134cf8f68b3a7361f39",
+      "self_audit/candidate_a3d/data.py": "2ce775ad763b80e0b285022b56f00a33af1ad454ee583bcf9de2c4209d79e5c8",
+      "AGENTS.md (working tree, modified by integration worker)": "c118e67af3aa8781a8e929d55d217406bb6d95dee080851cd9d8c39c1b63a8c1"
+    },
+    "note": "docs/METHOD.md was read at HEAD a03aadb. During this review it was deleted from the working tree (uncommitted, by a concurrent worker)."
+  },
+  "evidence_status": {
+    "mednext_runtime_introspection": "NOT_RUN: no local MedNeXt checkout (external/ is empty and nnunet_mednext cannot be imported). The facts below are static: they come from the adapter source, plus the upstream v1 source as remembered by the reviewer, which was not re-fetched.",
+    "dataset_D_and_spacing_distribution": "NOT_RUN: real-data diagnostic, not synthesized",
+    "r_SV_r_M_on_L_ground_truth": "NOT_RUN: real-data diagnostic, not synthesized",
+    "student_parameter_count": "NOT_RUN: no student code existed at P0. Rough analytic estimate from spec section 6 is about 3-5M, under the 10M budget, but this is an estimate, not a measurement",
+    "official_pretrained_weights": "NOT_FOUND_IN_VERIFIED_OFFICIAL_SOURCES (coordinator, reports/q3d-implementation-20261112/source_provenance.json). The reviewer independently notes that every committed A-3D config has model.weights=null"
+  },
+  "verified_facts": {
+    "mednext_stride8_decoder": {
+      "status": "CONFIRMED_STATIC",
+      "module": "model.dec_block_3 (nn.Sequential of MedNeXtBlock). It is the first decoder block after the bottleneck, and its input is x_res_3 + up_3(bottleneck)",
+      "evidence": [
+        "self_audit/candidate_a3d/teacher.py:316-335 native sequence",
+        "self_audit/candidate_a3d/teacher.py:441-456 native_names and channels tuple"
+      ],
+      "C_T": "256 when MedNeXt-L n_channels=32. It equals adapter.channels[3] = down_2.conv3.out_channels, the same width as x_res_3",
+      "adapter_channels": "(stem.out, down_0, down_1, down_2, down_3 conv3.out) = (32, 64, 128, 256, 512), expected for L k3. Must be checked at runtime by P0 once a checkout exists",
+      "not_exposed": "_native_forward_with_features returns features=(x_res_0..x_res_3, bottleneck) and the logits only (self_audit/candidate_a3d/teacher.py:326,335). The output of dec_block_3 is never returned",
+      "hook_caveat": "The L factory enables outside_block checkpointing. apply_block(sequential=True) then calls model.iterative_checkpoint, which loops over the children of dec_block_3 (self_audit/candidate_a3d/teacher.py:309-313), so dec_block_3.forward never runs and a forward hook registered on dec_block_3 never fires. Register the hook on dec_block_3[-1] instead, or on dec_block_3 only after checking that outside_block_checkpointing is False. In grad-enabled Stage T, checkpoint recompute fires the hook a second time; frozen no_grad Stages Q/P/J fire it once.",
+      "alternative_ablation_sources": "The stride-16 bottleneck is features[4]. The stride-4 option is dec_block_2 (C=128), with the same hook caveat"
+    },
+    "teacher_padding": {
+      "status": "CONFIRMED",
+      "evidence": "self_audit/candidate_a3d/teacher.py:586,601-612",
+      "fact": "padding_multiple = 2**(len(channels)-1) = 16. The minimum size per axis is 32 for MedNeXt. Padding is replicate at the end of every axis, and outputs are cropped. Spec line 66 matches this."
+    },
+    "near_far_sdf": {
+      "status": "ABSENT_ON_MAIN_AND_ALL_LOCAL_AND_REMOTE_BRANCHES",
+      "evidence": [
+        "self_audit/candidate_a3d/teacher.py:780 teacher_loss uses one masked MAE over all voxels and channels",
+        "git grep found no near/far weighting on any branch"
+      ],
+      "available": "The SDF target exists: QueryBank3D.sdf_targets (self_audit/candidate_a3d/bank.py:403-437). It uses continuous voxel-face distance with anisotropic spacing_zyx, is divided by radius_mm (5.0) and clamped to [-1,1], gives +1 for an absent class and -1 for a class that fills the volume, and has 4 channels including BG. The teacher sdf head is tanh (self_audit/candidate_a3d/teacher.py:540)."
+    }
+  },
+  "blockers": [
+    {
+      "id": "B1",
+      "severity": "BLOCKER",
+      "where": [
+        "docs/CANDIDATE_Q3D_SPEC.md:14",
+        "docs/CANDIDATE_Q3D_SPEC.md:76",
+        "self_audit/candidate_a3d/teacher.py:151-195",
+        "self_audit/candidate_a3d/teacher.py:422-426"
+      ],
+      "issue": "The spec says the teacher starts from 'the pretrained MedNeXt checkpoint used by the current k=2 run'. No such checkpoint exists: every committed A-3D config has weights=null, and no official public v1 L k3 weights were found. In addition, _load_mednext accepts only a provenance payload with TRAIN labeled_ids/unlabeled_ids/data_sha256 and a strict 4-class out_0. Raw public weights would be rejected, and weights=null silently yields UNTRAINED_RANDOM_INIT.",
+      "correction": "Config/engine owners: a real Stage T must fail closed unless weights_status is a verified pretrained status. weights=null must be an error for non-synthetic runs, with no random-init fallback. If verified external weights appear, add a separate q3d loader inside candidate_q3d (do not edit teacher.py). It should do a strict key/shape inventory of encoder and decoder, re-initialize out_0 to 4 classes, and record pretraining_data, the overlap with ACDC/M&Ms, and the sha256. Until then, T/Q/J real gates are SOFTWARE_ONLY."
+    },
+    {
+      "id": "B2",
+      "severity": "BLOCKER",
+      "where": [
+        "docs/CANDIDATE_Q3D_SPEC.md:95",
+        "self_audit/candidate_a3d/teacher.py:284-335"
+      ],
+      "issue": "The spec says to take the stride-8 decoder feature 'via _native_forward_with_features, without a second forward', but that method does not return the decoder feature. A naive forward hook on dec_block_3 is silently skipped under outside_block checkpointing (see hook_caveat).",
+      "correction": "teacher_features.py owner (tokenizer worker): capture the output of dec_block_3[-1] with a hook registered for the duration of the single fused teacher forward. Assert that exactly one capture happens per no_grad forward, that its shape is [B,256,D_p/8,H_p/8,W_p/8], and that C_T == adapter.channels[3]; otherwise fail closed. Add a test with outside_block_checkpointing=True on a stub that mimics iterative_checkpoint."
+    },
+    {
+      "id": "B3",
+      "severity": "BLOCKER",
+      "where": [
+        "docs/CANDIDATE_Q3D_SPEC.md:82",
+        "self_audit/candidate_a3d/teacher.py:780"
+      ],
+      "issue": "The near/far balanced SDF loss is not on main or on any branch. The spec fallback ('merge it first in P1') cannot be met, and candidate_a3d is frozen, so teacher_loss cannot be patched.",
+      "correction": "Engine/losses owner: implement q3d_teacher_loss in candidate_q3d/losses.py. Keep the CE+Dice terms via self_audit.losses.supervised_loss and reuse bank.sdf_targets (R=5 mm). near = |target| < 0.5, i.e. |d| < 2.5 mm, judged on the GT-derived target, never on the prediction. Use L1, take the near mean and the far mean pooled over all 4 channels per sample, and combine as 0.5*near + 0.5*far. If one set is empty, use weight 1 on the other set. Absent classes (+1) fall in far. Reuse the same function for student S2. Unit test on hand-made volumes."
+    }
+  ],
+  "major_issues": [
+    {
+      "id": "M1",
+      "severity": "MAJOR",
+      "where": [
+        "docs/CANDIDATE_Q3D_SPEC.md:101-113",
+        "docs/CANDIDATE_Q3D_SPEC.md:62",
+        "docs/CANDIDATE_Q3D_SPEC.md:227"
+      ],
+      "issue": "Alignment convention. The spec puts the cell centers at box centers: teacher 8k+3.5, student 16j+7.5. The real strided convolutions put them elsewhere. A MedNeXt down block (k3, pad k//2, stride 2, plus a 1x1 stride-2 residual) centers cell k at native voxel 8k. The spec's student down conv k(1,3,3) stride (1,2,2) pad 1 centers cell j at 16j. MedNeXt up blocks also pad (1,0) after a transposed conv, which places bottleneck cell i at stride-8 index 2i+1, i.e. a +8 voxel shift of the upsampled path inside dec_block_3 (upstream source as remembered; verify). The z formula (z+0.5)/8-0.5 equals (z-3.5)/8, while the conv-center convention gives z/8. That is a 0.44-cell (3.5-slice, about 35 mm) disagreement when D is about 10. In-plane the error is 4-7.5 px, which is sub-cell.",
+      "correction": "Alignment owner: implement align_teacher_to_student4 with declared center offsets. Teacher cell center c_T(k) = 8k + o_T. Student cell center c_S = (z, 16j+o_S, 16i+o_S). Sample the teacher at coordinate (c_S - o_T)/8 with separable linear interpolation on all three axes, clamped to the valid cells [0, ceil(n_native/8)-1]. The spec's 2x2 average and its z formula are exactly the case o_T=3.5, o_S=7.5, so the spec's unit tests still apply with the box offsets. Recommended defaults are o_T=0 and o_S matched to the student's real downsampling. Add a P0/P2 SOFTWARE_ONLY diagnostic that measures o_T empirically per axis from the gradient centroid of a dec_block_3[-1] cell with respect to the input; this is architecture geometry and needs no weights. Apply the same box-versus-center convention to cls_T4, w_cell and the Q3 class fractions, so all stage-4 targets refer to the same cells."
+    },
+    {
+      "id": "M2",
+      "severity": "MAJOR",
+      "where": [
+        "docs/CANDIDATE_Q3D_SPEC.md:335"
+      ],
+      "issue": "Padding invariance ('changing values in the pad region does not change outputs in the valid region') cannot be satisfied if the student convolves and normalizes a padded canvas whose pad content is free. k3 convs, trilinear upsampling and InstanceNorm statistics all read the pad.",
+      "correction": "Student owner, independent interpretation. Minimum gate: the model takes a native-size input (or a canvas plus valid_shape), crops to the valid region, and re-derives the pad by replicating from the valid voxels at entry. Then (a) the output shape equals the native shape for odd H/W and D in {6,9,10,13,20}, and (b) noise written into the canvas pad leaves the valid-region output bitwise identical. Stronger, recommended gate: masked InstanceNorm and masked EPA pooling over valid tokens only, plus re-replicating pads from the per-stage valid extent ceil(H/2^s) after every block. Then (c) padding to a multiple of 16 versus 32 gives the same valid output within 1e-5 in fp32. EPA pooling grid should be (min(D,4), min(h,4), min(w,4)) so small synthetic fixtures do not produce empty bins."
+    },
+    {
+      "id": "M3",
+      "severity": "MAJOR",
+      "where": [
+        "docs/CANDIDATE_Q3D_SPEC.md:91",
+        "docs/CANDIDATE_Q3D_SPEC.md:283",
+        "docs/METHOD.md@a03aadb:19-21"
+      ],
+      "issue": "The spec selects teacher and student checkpoints by DEV FG Dice. HEAD METHOD.md and the HEAD AGENTS.md say development masks 'never choose a checkpoint or stop training'. The working-tree AGENTS.md rewritten by the integration worker drops that clause.",
+      "correction": "Coordinator/user decision. Either keep DEV read-only and use the final checkpoint of the fixed schedule (or a TRAIN-only criterion), or explicitly authorize DEV selection and record it as a protocol deviation from the A-3D baselines, which never select on DEV. Do not mix the two policies across arms."
+    },
+    {
+      "id": "M4",
+      "severity": "MAJOR",
+      "where": [
+        "git status working tree",
+        "pytest.ini (python_files = test_q3d*.py)"
+      ],
+      "issue": "A concurrent worker deleted all 35 baseline test files and 15 documents (about 6.2k lines) and limited pytest to test_q3d*. The spec and the new AGENTS keep A/A-3D as frozen baselines that Q3D imports (teacher, bank.sdf_targets, data, semisupervised.strong_intensity), so baseline regression coverage is lost.",
+      "correction": "Integration owner and coordinator: restore the baseline tests (or keep them under a marker) rather than deleting them. Run the A-3D teacher/bank/data tests in the default suite at minimum."
+    },
+    {
+      "id": "M5",
+      "severity": "MAJOR",
+      "where": [
+        "docs/CANDIDATE_Q3D_SPEC.md:62"
+      ],
+      "issue": "cls_T4 is defined as 'argmax of region prob, avg-pooled'. Average-pooling integer labels is undefined.",
+      "correction": "Tokenizer/losses owner: average-pool the teacher softmax probabilities over the stage-4 cell, then take the argmax. Use the same pooled fractions for Q3 so cls_T4 and the Q3 targets stay consistent."
+    },
+    {
+      "id": "M6",
+      "severity": "MAJOR",
+      "where": [
+        "docs/CANDIDATE_Q3D_SPEC.md:203",
+        "docs/CANDIDATE_Q3D_SPEC.md:225",
+        "docs/CANDIDATE_Q3D_SPEC.md:262"
+      ],
+      "issue": "codeKD also runs on L frames, but w_pat is defined and cached only for U patients, and the teacher/student intensity augmentation split is specified only for U.",
+      "correction": "Engine owner: compute w_pat for L patients with exactly the same teacher-only cine procedure (no GT, no ED/ES metadata), or set w_pat=1 for L and record the choice. Apply the U intensity rule (teacher clean, student strong) to L codeKD as well. Choose one, record it in the config, and keep it identical across arms."
+    },
+    {
+      "id": "M7",
+      "severity": "MAJOR",
+      "where": [
+        "docs/CANDIDATE_Q3D_SPEC.md:91",
+        "docs/CANDIDATE_Q3D_SPEC.md:262",
+        "docs/CANDIDATE_Q3D_SPEC.md:281"
+      ],
+      "issue": "'8000 updates' is ambiguous because of gradient accumulation 2 (one L plus one U per update). The repository requires logical sample updates and optimizer updates to be reported separately.",
+      "correction": "Config/engine owner: define 8000 as optimizer updates or as logical updates, log both counters, and base ramp, warmup, cosine and the evaluation cadence on the declared counter."
+    }
+  ],
+  "minor_or_unspecified": [
+    {
+      "id": "U1",
+      "where": "docs/CANDIDATE_Q3D_SPEC.md:334",
+      "issue": "The P0 stop rule says 'C_T differs from spec', but the spec never states a numeric C_T.",
+      "proposal": "Declare the expected C_T=256 for MedNeXt-L k3 (n_channels=32) and module dec_block_3. Mismatch: stop."
+    },
+    {
+      "id": "U2",
+      "where": "docs/CANDIDATE_Q3D_SPEC.md:334",
+      "issue": "P0 requires the student parameter count, but the student is a P1 deliverable.",
+      "proposal": "Report it as NOT_RUN at P0 and measure it in P1."
+    },
+    {
+      "id": "U3",
+      "where": "docs/CANDIDATE_Q3D_SPEC.md:95",
+      "issue": "'Block right after the bottleneck' could mean the output of up_3 or of dec_block_3.",
+      "proposal": "Use the dec_block_3 output (after the skip fusion)."
+    },
+    {
+      "id": "U4",
+      "where": "docs/CANDIDATE_Q3D_SPEC.md:139",
+      "issue": "The order and frame choice of the '200 first volumes (L and U)' used for k-means++ initialization are unspecified.",
+      "proposal": "Use deterministic sorted (patient_id, frame) under seed 42, from image-only frames, and log the IDs."
+    },
+    {
+      "id": "U5",
+      "where": "docs/CANDIDATE_Q3D_SPEC.md:146",
+      "issue": "The statistics behind 'per-channel std of F_T_aln' (batch-wise, running, or precomputed) are unspecified.",
+      "proposal": "Precompute per-channel std on the k-means init set with the teacher frozen, freeze it, and save it with the tokenizer."
+    },
+    {
+      "id": "U6",
+      "where": "docs/CANDIDATE_Q3D_SPEC.md:153",
+      "issue": "The class-coverage gate (>=4 codes per RV/MYO/LV) does not say whether it uses hard or soft assignments, which data, or how 'majority' is defined.",
+      "proposal": "Use hard codes on L+U teacher cells: the code's majority class is the argmax of its accumulated teacher class fractions. Lock this before running."
+    },
+    {
+      "id": "U7",
+      "where": "docs/CANDIDATE_Q3D_SPEC.md:235",
+      "issue": "Checking tau on L ground truth uses annotated ED/ES, while U uses max/min LV volume, so the two are inconsistent. L has only 2 masked frames.",
+      "proposal": "Record the difference. tau stays locked after P0, and the diagnostic is NOT_RUN until real data is available."
+    },
+    {
+      "id": "U8",
+      "where": "docs/CANDIDATE_Q3D_SPEC.md:289",
+      "issue": "The deploy geometry is written as '(spacing_zyx, affine)', but the runtime contract is the exact mapping {shape, spacing_zyx, affine_zyx, context='full_volume'}.",
+      "proposal": "Reuse the validation in A-3D _geometry_spacing (teacher.py:113-148)."
+    },
+    {
+      "id": "U9",
+      "where": "docs/CANDIDATE_Q3D_SPEC.md:266",
+      "issue": "rot90 changes shape and spacing, so geometry, affine and the SDF must all be rebuilt. With z spacing of about 10 mm against R=5 mm, the SDF is effectively in-plane, and the near band in z is empty except within the boundary slice.",
+      "proposal": "Recompute the target from the transformed mask with the swapped spacing, and add a test."
+    },
+    {
+      "id": "U10",
+      "where": "docs/CANDIDATE_Q3D_SPEC.md:66",
+      "issue": "With D about 10, only ceil(D/8)=2 of 4 teacher z cells overlap real slices, so z clamping must use the valid cell count, not the padded count.",
+      "proposal": "Clamp to ceil(D/8)-1, as in M1."
+    }
+  ],
+  "acceptance_gates": {
+    "P0": [
+      "JSON with the dec_block_3 module name and C_T (expected 256), verified at runtime on a hash-pinned checkout (currently NOT_RUN)",
+      "near/far status: ABSENT (confirmed)",
+      "D/spacing distribution per dataset: NOT_RUN",
+      "r_SV/r_M on L ground truth: NOT_RUN",
+      "student parameter count: NOT_RUN at P0",
+      "stop if the module is missing or C_T differs"
+    ],
+    "P1": [
+      "shape tests with odd H/W and D in {6,9,10,13,20}",
+      "pad-then-crop returns the native shape",
+      "pad-value invariance as interpreted in M2",
+      "<=10M parameters",
+      "GPU/CPU latency reported, or NOT_RUN if no GPU",
+      "C0 runs on the synthetic fixture and the ACDC smoke (NOT_RUN without data)",
+      "stop if >10M after the section 6 channel cuts"
+    ],
+    "P2": [
+      "section 4 tests: constant in gives constant out; linear-in-voxel gives the center value within 1e-5 under the declared offsets; shapes for D in {6,9,10,13,20} with odd H/W; requires_grad False",
+      "EMA codebook with decay 0.99, L2 re-normalization and dead-code restart (<0.1% over 200 updates)",
+      "freezing with saved version+sha256",
+      "metrics every 50 updates",
+      "gate: perplexity>=32, dead codes<=25%, >=4 codes per RV/MYO/LV, no relaxation; stop if it fails on ACDC (real run NOT_RUN)"
+    ],
+    "P3": [
+      "synthetic ellipsoid cine with known volumes: correct ED/ES, r_SV, r_M, guards (LV SV<=0, LV EDV<10 mL, EF outside [5,90]%)",
+      "cache JSONL with sha256 and the teacher checkpoint SHA",
+      "stroke_balance flag"
+    ],
+    "P4": [
+      "teacher, A_T and C0 bitwise unchanged after one joint step (C0 must be a buffer)",
+      "class-balanced codeKD checked on a hand example, including a class with zero total w being dropped and logged",
+      "linear ramp over the first 10%",
+      "resume reproduces results",
+      "stop on NaN or a student perplexity collapse",
+      "configs c0/c1/v1/v1u share the student, data, updates and seed"
+    ],
+    "P5": [
+      "cold-load in a fresh process without importing any teacher module, bitwise equal on 3 DEV volumes (NOT_RUN without data; synthetic only as SOFTWARE_ONLY)",
+      "cost table",
+      "export manifest with artifact SHA, C0 SHA+version, commit, parameter count and latency",
+      "export strips the SDF head, R_T, H_A, A_T and the physiology cache"
+    ],
+    "global": [
+      "every phase report lists tests, results, and NOT_RUN/SOFTWARE_ONLY items",
+      "no synthetic substitution for real data",
+      "no config/cohort/metric change after results are seen",
+      "candidate_a/ and candidate_a3d/ left unmodified"
+    ]
+  },
+  "independent_interpretations": {
+    "physical_alignment": "Both networks see the same native grid, so no affine is needed. The alignment is a pure index map, but it must use the true receptive-field centers of each layer stack (M1), not assumed box cells. The z axis matters most.",
+    "padding_invariance": "The teacher is not padding-invariant: its valid cells near the end see replicated slices. That is deterministic and acceptable. For the student, see M2: the minimum gate is re-deriving the pad from valid voxels; the strong gate is masked norm and attention plus per-stage re-padding."
+  },
+  "owner_routing": {
+    "student (ctx_493e5fe4dcd4)": [
+      "M2",
+      "U8"
+    ],
+    "tokenizer (ctx_95457de3019a)": [
+      "B2",
+      "M1",
+      "M5",
+      "U3",
+      "U4",
+      "U5",
+      "U6",
+      "U10"
+    ],
+    "data (ctx_897f78de8d05)": [
+      "U9",
+      "M6 (L cine access for physiology)"
+    ],
+    "config (ctx_9cd54d059fa4)": [
+      "B1",
+      "M7",
+      "U1"
+    ],
+    "engine (ctx_6861cb10dfbf)": [
+      "B3",
+      "M6",
+      "M7"
+    ],
+    "export (ctx_73a202c01fd4)": [
+      "U8"
+    ],
+    "integration (ctx_dabc4b021c47)": [
+      "M4",
+      "M3 (AGENTS wording)"
+    ],
+    "coordinator": [
+      "B1 weights decision",
+      "M3 policy decision",
+      "M4 test deletion"
+    ]
+  },
+  "verdict": "P0_REVIEW_COMPLETE_WITH_BLOCKERS. Real T/Q/J execution is blocked by B1 (no verified pretrained teacher). B2 and B3 are software blockers with clear fixes. No real-data or GPU evidence exists, and none was synthesized."
+}

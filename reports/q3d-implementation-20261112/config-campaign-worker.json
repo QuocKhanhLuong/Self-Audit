@@ -1,0 +1,186 @@
+{
+  "artifacts": [
+    "self_audit/candidate_q3d/config.py",
+    "configs/candidate_q3d/*.json",
+    "scripts/q3d_campaign.py",
+    "tests/test_q3d_config_campaign.py",
+    "reports/q3d-implementation-20261112/config-campaign-worker.json",
+    "/private/tmp/q3d-campaign-b-task78.vez6Za/PLAN.json",
+    "/private/tmp/q3d-campaign-b-task78.vez6Za/RUN_STATE.json",
+    "/private/tmp/q3d-campaign-b-task78.vez6Za/runs/acdc_b_k2_seed42_v1/latest.pt"
+  ],
+  "dispatch_id": "ctx_50c5c759edc1",
+  "evidence_limits": {
+    "dataset_downloads": "NOT_RUN",
+    "gpu": "NOT_RUN",
+    "interpretation": "Software and manufactured-fixture evidence only; no patient metric, clinical result, teacher quality, or efficacy claim.",
+    "patient_training": "NOT_RUN",
+    "real_data": "NOT_RUN",
+    "real_teacher_provenance": "NOT_CONFIGURED"
+  },
+  "implementation": {
+    "campaign": "scripts/q3d_campaign.py",
+    "canonical_recipes": [
+      "c0",
+      "c1",
+      "v1",
+      "v1u",
+      "v0",
+      "b1",
+      "e1",
+      "o1",
+      "s1",
+      "v1_stride4",
+      "v1_residual2",
+      "mean_teacher",
+      "a3d_teacher_free",
+      "mednext_supervised"
+    ],
+    "config_module": "self_audit/candidate_q3d/config.py",
+    "details": [
+      "Strict nested config validation rejects unknown root and nested fields.",
+      "Canonical defaults preserve seed 42, K 5/10/2, T/Q/P/J budgets 8000/1000/1/8000, and isolated dataset/protocol/K/seed cache namespaces.",
+      "Q is an optimizer-update count after a separate tokenizer initialization pass; smoke overrides do not impose a Q>=200 validation floor.",
+      "J declares pair/update units explicitly: paired L/U arms use 8000 pairs and 8000 optimizer steps with accumulation over two stream microbatches; C0 uses 8000 L-only updates and optimizer steps.",
+      "Lsup coefficient remains 1 without stream-count division; L/U KD and commitment auxiliaries use separate mean reduction; evaluation and resume units are declared.",
+      "MedNeXt source_repo is null in canonical recipes, its source_commit is pinned, weights_source_url and class_mapping match the pretrained schema, and classifier reinitialization is rejected.",
+      "Real teacher readiness remains fail-closed on verified pinned source, weights path/hash/source URL, pretraining dataset, and overlap declarations.",
+      "Protocol B MedNeXt K-only readiness does not require teacher_train; Protocol B teacher/student arms still require a separate all-TRAIN teacher manifest.",
+      "Synthetic Protocol B teacher and student are derived from the same manufactured cohort and image bytes; student U views strip masks and retain matching IDs, hashes, and geometry.",
+      "Campaign plan records T/Q/P/J dependencies, cross-evaluation inputs, explicit NOT_RUN unnamed CMR targets, and secondary settings after primary settings.",
+      "Mean Teacher, Candidate A-3D teacher_free, and MedNeXt supervised have runnable train.py mappings; full baseline jobs were not run in this task.",
+      "The CUDA missing-real-input preflight test reaches readiness validation instead of the CPU-only real-run guard."
+    ],
+    "files_modified": [
+      "self_audit/candidate_q3d/config.py",
+      "configs/candidate_q3d/*.json (14 recipes)",
+      "scripts/q3d_campaign.py",
+      "tests/test_q3d_config_campaign.py",
+      "reports/q3d-implementation-20261112/config-campaign-worker.json"
+    ],
+    "recipe_sha256": {
+      "a3d_teacher_free": "89b38bc7297ab82b7590d0079a22169389a7747430f40333a673ea92f34834e5",
+      "b1": "746eed5531680cc298c3a75beb650062258dbf9557c7ade233c69c07f37f388d",
+      "c0": "fbd2a8627c00c1f7751aca507c2dc9d56e1cf8215688c01d6004d61395622592",
+      "c1": "c4e53fbad2f5763320582f717546ece168098d01cc7fe7adad795008f3407672",
+      "e1": "32ede10333eb513b2181f4d1a9531a5f854afb276144d010ff4ccd997b1e31ef",
+      "mean_teacher": "74e290e96848aac64e4d66ad5540c59dff4f29bfbd4d6d7c4795c279fa3ce936",
+      "mednext_supervised": "263c7853f75742277734c51e5202d2f65ff3952e3f37a617911c87cfd6713fc4",
+      "o1": "d51ae94746698cf16cfabea73d0e529c93c86a6e4983abc85bea676ab7096390",
+      "s1": "95f0d050254a93180422e03d8e2c1d403c1ca88b7881f522b366697db403c1fa",
+      "v0": "a6fb073ab905f021b732a60e9032e7a61519fef7eb63242606fa1fad548e3274",
+      "v1": "b7956f6ed663371e67e4984cd0b2e69915ae2a9ed10468888790536dcb6e07e4",
+      "v1_residual2": "ff83129823dc822f90b8bfabf4bdf11c46064db87534a41d42afe71193184696",
+      "v1_stride4": "4b9e62fa662fb89ee6a213501a44101e3e95afe44e61805f2a554cc9be73f7a6",
+      "v1u": "87590201bc36f110784045f69623b40ed9f513e3526712342326b7ca6928f7c6"
+    },
+    "source_sha256": {
+      "scripts/q3d_campaign.py": "4790ac70390a8cdec2dd9b069dc8c4f1ce2bb5dd5a70a20abdfcef8f77eb72dc",
+      "self_audit/candidate_q3d/config.py": "27b00486dacf4dfa218375f0dc87ca3b8da2672f81613d42f5fe9022eebaa970",
+      "tests/test_q3d_config_campaign.py": "5f793d3b99a8edcbedd340a4b2e23ac4b2634a783a45e2dbd546d1775ef08caa"
+    },
+    "tests": "tests/test_q3d_config_campaign.py"
+  },
+  "integration_followups": [
+    "Integration worker supplied _manufactured_teacher and the --synthetic-teacher-fixture CLI route; Protocol B campaign smoke used that actual train.py path.",
+    "Integration worker manufactured distinct cine frames per patient; Protocol B teacher/student views share those same image hashes."
+  ],
+  "model_provenance": {
+    "class_mapping": [
+      "BG",
+      "RV",
+      "MYO",
+      "LV"
+    ],
+    "pretrained_weights_status": "NOT_FOUND_OFFICIAL",
+    "teacher_source_checkout": "NOT_CONFIGURED_CANONICAL_NULL",
+    "teacher_source_commit": "0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba",
+    "teacher_source_repo": null,
+    "weights_path": null,
+    "weights_sha256": null,
+    "weights_source_url": null
+  },
+  "schema": "self_audit.candidate_q3d.config_campaign_worker_report.v1",
+  "status": "COMPLETED_SOFTWARE_ONLY",
+  "task_id": "task_78c9882dcf46",
+  "verification": {
+    "campaign_cli": {
+      "command": "rtk python scripts/q3d_campaign.py --help",
+      "exit_code": 0
+    },
+    "canonical_recipe_source_audit": {
+      "bad_recipes": [],
+      "pinned_source_commit": "0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba",
+      "recipe_count": 14,
+      "source_repo_values": "null for all canonical teacher recipes; no local path stored"
+    },
+    "focused": {
+      "command": "rtk pytest -q tests/test_q3d_config_campaign.py",
+      "exit_code": 0,
+      "result": "16 passed"
+    },
+    "repository_check": {
+      "candidate_q3d_recipes": 14,
+      "command": "rtk python scripts/check_repo.py",
+      "exit_code": 0,
+      "status": "PASS"
+    },
+    "repository_pytest": {
+      "command": "rtk python -m pytest -q",
+      "exit_code": 0,
+      "failed": 0,
+      "failures": [],
+      "passed": 159,
+      "result": "159 passed in 40.31s"
+    },
+    "synthetic_smoke": {
+      "checkpoint": "/private/tmp/q3d-campaign-b-task78.vez6Za/runs/acdc_b_k2_seed42_v1/latest.pt",
+      "checkpoint_sha256": "16e6c7d5c85a8a6a8cacf93b6de34a9f8ab47cadc1f5aa8f677f22875940045d",
+      "cohort_patient_ids": [
+        "train_labeled_000",
+        "train_labeled_001",
+        "train_labeled_002",
+        "train_labeled_003"
+      ],
+      "command": "rtk env PYTHONPATH=. OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python scripts/q3d_campaign.py run --plan /private/tmp/q3d-campaign-b-task78.vez6Za/PLAN.json --execute --setting v1 --device cpu",
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "development_manifest_sha256": "aaba08ac16e95277ed6d88581a1eb09dee1d81b005e4c856bcda5d3fbaedf24d",
+      "evidence_scope": "SOFTWARE_ONLY",
+      "exit_code": 0,
+      "experiment": "acdc_b_k2_seed42_v1",
+      "gpu_evidence": "NOT_RUN",
+      "plan": "/private/tmp/q3d-campaign-b-task78.vez6Za/PLAN.json",
+      "plan_sha256": "024c8487ecc2bd039ebe81996b88a8cdc17343e97b512cbdb5d8d619d2016f35",
+      "real_data_evidence": "NOT_RUN",
+      "runtime_config": "/private/tmp/q3d-campaign-b-task78.vez6Za/runtime_configs/acdc_b_k2_seed42_v1.json",
+      "runtime_config_sha256": "6ee576d5416e40653f58089b41c2dd3f3b1918565dc2b61b0995be8147c4a0f6",
+      "same_patient_image_hashes": true,
+      "state": "/private/tmp/q3d-campaign-b-task78.vez6Za/RUN_STATE.json",
+      "state_sha256": "212b18e32592802df2595ab415c2801e36a7ef0c9ce9817b2062ebb2eba58096",
+      "status": "COMPLETED",
+      "student_labeled_patients": 2,
+      "student_manifest_sha256": "c50649628bade65d0d4902fd7118da26465e3496b5188e5101b9aa67593974f8",
+      "student_state_sha256": "89172b6b5548ccfb5878e8b5149d59149663c998ac22a4ac48b26d12fe7df31d",
+      "student_u_masks_stripped": true,
+      "student_unlabeled_patients": 2,
+      "superseded_attempts": [
+        "Earlier smoke_q3d fixture stopped before T on duplicate image content; integration fixture now manufactures distinct cine frames.",
+        "First Protocol B campaign attempt stopped at Q because four initialization volumes yielded 128 points for a 256-code k-means++ initialization; the smoke-only initialization override was raised to eight and the completed run is reported above."
+      ],
+      "synthetic_gate_override_used": true,
+      "teacher_labeled_patients": 4,
+      "teacher_manifest_sha256": "b89f9a0ecbe3147260f7b390efd45de04477d546700c7d9a24fe72df4e92943f",
+      "teacher_state_sha256": "360821e8dc625d9436f7d26f65dde0d5c909c1a1ff829fefc472565e6ef9677b",
+      "tokenizer_gate_missing": [
+        "dead_code_fraction",
+        "200-update_usage_history"
+      ],
+      "tokenizer_gate_status": "NOT_READY"
+    }
+  }
+}

@@ -1,0 +1,1557 @@
+{
+  "schema": "q3d.orchestration_outcomes.v1",
+  "run_id": "run_d8eb861b2b24",
+  "status": "ALL_TASKS_SETTLED",
+  "task_count": 28,
+  "dispatch_count": 30,
+  "tasks": [
+    {
+      "task_id": "task_593ac8a9200b",
+      "task": "Q3D student architecture and variants",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-11T18:18:13.270Z",
+      "reported_subject": "Q3D student implementation complete",
+      "historical_worker_report": "Implemented the native-volume UNETR++-lite student and nine focused tests; E1 uses normalized geometric A_c coverage and student-feature A_d detail rows, with the same normalized support matrix pooling spatial K and V and identity fallback when P is at least N_valid. scripts/check_repo.py passed and tests/test_q3d_student.py passed with 9 tests; source SHA256 is 8ba8a2a9badef339b41355e475f65bf9ba0312351f6f2673278b85ad33412f22 and test SHA256 is d7056f39abfc9eaf9ae7d37ab795e5e35c3d6ff08d2c5ad1ed98a2ecaca73471, while the earlier repository-wide run had 65 passed and 2 campaign test failures. The synthetic engine smoke stopped after T with ValueError that the teacher feature does not cover the declared replicate-padded input grid, recorded in reports/q3d-implementation-20261112/student-smoke.json; GPU/real-data evidence was not run and root/peers own the remaining integration follow-up.",
+      "evidence": "reports/q3d-implementation-20261112/student-smoke.json",
+      "current_evidence_sha256": "2f0264725edb779c2467655688405936501f7dbeeb927908760277a6267f2555",
+      "dispatches": [
+        "ctx_493e5fe4dcd4",
+        "ctx_c2d5a18a627a"
+      ]
+    },
+    {
+      "task_id": "task_c02bbe4f1beb",
+      "task": "Q3D alignment tokenizer and teacher extraction",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-11T18:00:44.822Z",
+      "reported_subject": "Q3D tokenizer and feature implementation complete",
+      "historical_worker_report": "Implemented one-pass feature capture, exact native alignment, the teacher EMA tokenizer, and read-only P0 preflight in the assigned files. Owned synthetic tests pass (14/14), check_repo passes, and P0 counts 3,132,713 student parameters; real data, GPU, and clinical gates are NOT_RUN, with official compatible weights NOT_FOUND_OFFICIAL. Full pytest reports 62 passed and 3 peer-owned failures (evaluation path validation, frozen-C0 export reload, augmentation fixture range); candidate_a3d source is unchanged.",
+      "evidence": "reports/q3d-implementation-20261112/tokenizer_implementation.json",
+      "current_evidence_sha256": "23d10cc94a62b59480b618eb6a589f12b6c0c79c323484d21ced2df11e28ee6b",
+      "dispatches": [
+        "ctx_95457de3019a"
+      ]
+    },
+    {
+      "task_id": "task_c77e95c5d0db",
+      "task": "Q3D physiology native data and augmentation",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-11T18:03:32.959Z",
+      "reported_subject": "Q3D physiology and data APIs implemented",
+      "historical_worker_report": "Implemented protocol-bound physiology/cache handling, native geometry augmentations, Protocol A/B data views, and a deterministic resumable 1L+1U sampler; the focused suite passes with 11 tests. The synthetic cache CLI path and source/fixture hashes are recorded in the report, while real patient data, a verified teacher checkpoint, and GPU execution remain NOT_RUN. Engine stage P and O1 refresh still omit required cache config/source identity arguments; I notified the engine worker and coordinator, so that cross-file integration remains.",
+      "evidence": "reports/q3d-implementation-20261112/worker-data-physiology.json",
+      "current_evidence_sha256": "2ae0322ba22b7ef29f50959cb3bd3e53fb24c0b9b6c290a33ce3add9d7ae2c16",
+      "dispatches": [
+        "ctx_897f78de8d05"
+      ]
+    },
+    {
+      "task_id": "task_c939bca25184",
+      "task": "Q3D configs all ablations campaign sequencing",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-11T18:52:24.074Z",
+      "reported_subject": "Q3D config and campaign fixes complete",
+      "historical_worker_report": "Implemented strict Q3D config/provenance fixes, regenerated all 14 recipes, and wired runnable Mean Teacher, A3D teacher_free, and MedNeXt supervised campaign paths; FINAL J is 8,000 L/U pairs and 8,000 optimizer steps with accumulation 2, while C0 is 8,000 L-only/optimizer steps and loss scaling is explicit. Focused config/campaign tests passed (13) and scripts/check_repo.py passed; synthetic smoke accepted Q=1 with a separate init override of 4 but stopped before stage T on duplicate TRAIN image content across patient IDs, so GPU and patient evidence remain NOT_RUN and full pytest was not rerun. The report records the clean pinned source commit, unavailable official weights with null path/hash/URL, implementation and recipe hashes, and artifact paths; no further owned config/campaign work remains.",
+      "evidence": "reports/q3d-implementation-20261112/config-campaign-worker.json",
+      "current_evidence_sha256": "9e62ea6657249fcc315b2374bf0e229a6210e989c914e6a1454e197783cbe4a3",
+      "dispatches": [
+        "ctx_9cd54d059fa4"
+      ]
+    },
+    {
+      "task_id": "task_1bda8f8f0136",
+      "task": "Q3D losses stages and deterministic resume",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-11T19:11:24.289Z",
+      "reported_subject": "Engine runtime fixes verified",
+      "historical_worker_report": "Updated the owned engine and tests for odd-volume padding, C0 no-U sampling, rolling-200 student VQ collapse detection, C1 synthetic channel matching, truthful synthetic gate continuation, and complete-pair VQ resume. Focused engine plus C0 resume integration passed 23 tests, scripts/check_repo.py passed, and V1 synthetic T/Q/P/J plus C1 T/P/J smokes completed with the V1 gate still NOT_READY; engine SHA256 is 0fbcfc220e486ab749f8925f515e04b1365f79ad01cec98df3150d4923597cf7 and synthetic teacher state SHA256 is 4dc4d72247302e7dd9bc1baca3839887ef68951f808582d8edf69e8c9a321873. No patient data or GPU was used and compatible official pretrained weights remain NOT_FOUND, so real-data/GPU evidence is NOT_RUN while root reruns the all-14 sweep and full suite.",
+      "evidence": "reports/q3d-implementation-20261112/engine-fix-v1-20261112e.smoke.json",
+      "current_evidence_sha256": "92632d7bd332a021946298250c02b1402c14738b41229e48098953f7414a4ea5",
+      "dispatches": [
+        "ctx_6861cb10dfbf"
+      ]
+    },
+    {
+      "task_id": "task_70421ae2cbf5",
+      "task": "Q3D evaluation export and deployment",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-11T18:08:07.236Z",
+      "reported_subject": "P5 evaluation/export complete",
+      "historical_worker_report": "Implemented native Q-3D metrics, paired decision gates, student-only export, fail-closed inference, profiling, and concrete synthetic coverage in the owned files. Focused P5 tests passed 7/7 and three-volume cold-load logits matched bitwise; the latest full suite is 64 passed/3 failed and check_repo fails on the peer-owned a3d_teacher_free baseline mapping, while engine.py also has a codebook_version .fill_ mismatch. No real patient evaluation or GPU measurements were run; the JSON report records hashes, ephemeral synthetic artifact paths, exact check results, and these integration gaps.",
+      "evidence": "reports/q3d-implementation-20261112/P5_evaluation_export_worker.json",
+      "current_evidence_sha256": "d1dee5654009c18d5e5ba8a9feea83f5b05b92ac5338bd60eead21d6c0a0b5d1",
+      "dispatches": [
+        "ctx_73a202c01fd4"
+      ]
+    },
+    {
+      "task_id": "task_333e0bf07af2",
+      "task": "Q3D integration cleanup and new acceptance tests",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-11T19:12:45.687Z",
+      "reported_subject": "Q3D integration, sampler, and smoke support complete",
+      "historical_worker_report": "Implemented the owned Q3D train/evaluate dispatch, v2 L/U sampler, synthetic-only teacher route, and smoke config persistence; I stopped editing the physiology cache CLI after the ownership correction. Verification passed: check_repo, 24 focused baseline/integration tests, and a PYTHONPATH-unset V1 T/Q/P/J smoke that records the actual NOT_READY tokenizer gate under an explicit synthetic override, with hashes in the report. No GPU, real-data, patient-training, full-suite, or all14 evidence was produced by this worker; the root is running the final full checks and all14 sweep.",
+      "evidence": "reports/q3d-implementation-20261112/worker_integration.json",
+      "current_evidence_sha256": "9e08f97cab826f8968503dfa8d55587bc569befc08859dac080b90daec309f1b",
+      "dispatches": [
+        "ctx_dabc4b021c47"
+      ]
+    },
+    {
+      "task_id": "task_bb8d69c8a1c7",
+      "task": "Claude Code independent P0 audit",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-11T17:36:16.952Z",
+      "reported_subject": "P0 read-only review complete: 3 blockers, 7 major",
+      "historical_worker_report": "Read-only P0 audit of docs/CANDIDATE_Q3D_SPEC.md (sha d88f45ca) against frozen A-3D at a03aadb; wrote reports/q3d-implementation-20261112/claude_p0_review.json (sha 4901165c) with exact lines, owner routing and corrections. Confirmed statically: stride-8 source is model.dec_block_3, C_T=256=adapter.channels[3], but _native_forward_with_features never returns it, and under outside_block checkpointing a hook on dec_block_3 never fires (hook dec_block_3[-1]); near/far SDF is absent on main and every branch (teacher_loss is plain MAE, teacher.py:780), so Q3D must add its own loss; no verified pretrained teacher exists (all configs weights=null, and the loader rejects raw public weights), so real T/Q/J must fail closed; majors: the spec box-cell alignment disagrees with conv sampling centers (about 3.5 slices in z, so use declared center offsets), pad-value invariance needs crop-and-replicate or masked ops, DEV checkpoint selection conflicts with HEAD METHOD.md, cls_T4 argmax-then-avgpool is undefined, and a concurrent worker deleted all 35 baseline tests and 15 docs and limited pytest to test_q3d*. Left: MedNeXt runtime introspection, D/spacing stats, r_SV/r_M on L GT and the student parameter count are NOT_RUN (no checkout, no data, no synthesis); coordinator decisions needed on M3 (DEV selection) and M4 (test deletion).",
+      "evidence": "reports/q3d-implementation-20261112/claude_p0_review.json",
+      "current_evidence_sha256": "4901165c994e55b848acee10cf1602db7e366918217ce630a8d82ef310827582",
+      "dispatches": [
+        "ctx_f2f4086a045c"
+      ]
+    },
+    {
+      "task_id": "task_c2cfe8a40478",
+      "task": "Claude Code complete repository review",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-11T19:13:56.135Z",
+      "reported_subject": "Final Q3D code review: no open blockers, 2 minor",
+      "historical_worker_report": "I independently reviewed the CODE_READY candidate: 212 executable files hashed, with Q3D modules, configs, scripts, train/evaluate/check_repo and the A-3D dependencies they use line-reviewed and legacy code marked inventory_only. I reran python -m pytest -q (159 passed) and scripts/check_repo.py (PASS, 14 Q3D recipes). Final report: reports/q3d-implementation-20261112/claude_code_review.json (sha df877812). Every earlier blocker was re-checked in current source and is fixed: odd H/W pad crashes, codebook export key, campaign/train CLI, heavy-baseline eval route, MedNeXt hook, frozen reload, gate soft mass, zero-weight skip, J 8000 counters. Open minor items: E6 (DEV selection pools Dice per patient while reporting averages per frame) and F1 (all-zero U support caught only at end of J). Accepted spec limitations: R2 (w_pat cancels with batch 1 so V1 and V1-u differ only on w_pat=0 patients), R14, R15, R17 box alignment, F2 init sampling. Not covered: real-data, GPU and smoke evidence (smoke result pending from root); no compatible pretrained weights, so real T/Q/J fail closed; no patient efficacy is claimed.",
+      "evidence": "reports/q3d-implementation-20261112/claude_code_review.json",
+      "current_evidence_sha256": "a9687d2cea0fec9ebe623507ee7e464109c372a012394961e228ba56a71d9435",
+      "dispatches": [
+        "ctx_ce20bbf1d704"
+      ]
+    },
+    {
+      "task_id": "task_a8fd94e197ca",
+      "task": "Q3D verified public pretrained loader",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-11T18:08:52.121Z",
+      "reported_subject": "Q3D pretrained loader complete",
+      "historical_worker_report": "Implemented the Q3D-only loader and fixture tests; it constructs the verified architecture with weights=None, checks the clean source pin, public URL and SHA256, and declared pretraining, overlap, and class provenance before strict loading while inventorying the random boundary and any declared classifier reset. The focused software suite passes all 6 tests, including hash, shape, provenance, and classifier mismatch failures; no public checkpoint was supplied or downloaded, so real pretrained loading remains NOT_RUN. Engine and config peers still need to wire build_q3d_teacher and persist its returned provenance in resume checkpoints, including the nested source URL and classifier-reinitialization fields.",
+      "evidence": "reports/q3d-implementation-20261112/pretrained_verification.json",
+      "current_evidence_sha256": "283c365cb6d174587a8b447e81b9f4a3f9c82e7bcbf85f6c72217f111fbf5bcd",
+      "dispatches": [
+        "ctx_6af5894e1452"
+      ]
+    },
+    {
+      "task_id": "task_247e099a6500",
+      "task": "Fix tokenizer gate and frozen resume contracts",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-11T18:15:32.274Z",
+      "reported_subject": "Tokenizer review fixes complete",
+      "historical_worker_report": "Implemented rolling soft-majority class coverage with resumable cohort history, frozen reload enforcement, canonical tokenizer options, persisted restart RNG, and the exact padded-cell alignment fix; wrote the SHA-pinned report at reports/q3d-implementation-20261112/tokenizer_review_fixes.json. The focused tokenizer suite passed 17 tests, with no patient or GPU evidence produced. The engine owner still needs to preserve soft teacher probabilities and supply cohort IDs for end-to-end soft gate coverage; I notified engine and Claude, and did not stage or commit.",
+      "evidence": "reports/q3d-implementation-20261112/tokenizer_review_fixes.json",
+      "current_evidence_sha256": "0766b864175cbbf7d4534636088f5723fd05e072963d018d401bf964e4932b51",
+      "dispatches": [
+        "ctx_ffd8620277e0"
+      ]
+    },
+    {
+      "task_id": "task_ce8307c3f278",
+      "task": "Implement executable Q3D comparison baselines",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-11T19:03:06.010Z",
+      "reported_subject": "Q3D baseline runners implemented and verified",
+      "historical_worker_report": "Implemented the A-3D teacher-free wrapper and K-only MedNeXt T-only baseline with separate heavy-region DEV evaluation, and added actual tiny CPU invocation tests plus the source-hash evidence report. The focused tests passed (2 passed), check_repo passed, the full suite reported 134 passed and 7 unrelated/shared-worktree failures, and the synthetic Q3D smoke stopped before training on duplicate TRAIN image content; real-data and GPU evidence remain NOT_RUN. The three owned files are complete, with no changes to the frozen A-3D source, and no patient efficacy claim is made.",
+      "evidence": "reports/q3d-implementation-20261112/baseline_implementation.json",
+      "current_evidence_sha256": "002ab53d0cd359440567050d08e4924f5da7f389f73ef4f3aec5ff8f02edb325",
+      "dispatches": [
+        "ctx_1fb3842bf324"
+      ]
+    },
+    {
+      "task_id": "task_05c3be310f8b",
+      "task": "Close P5 runtime and decision-gate defects",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-11T19:00:49.245Z",
+      "reported_subject": "P5 integration fixes complete",
+      "historical_worker_report": "Updated the owned Q-3D evaluation, export, and profile integration, removed unsafe resume-v1 and weights_only=False paths, and refreshed the report with current SHA-256s. Verification passed: 25 owned tests, clean Ruff, bitwise fresh-process cold-loads across 12 configurations on three synthetic native volumes, and actual engine-written v2 checkpoint export; real patient and GPU evidence were not available or run. The separate engine owner still needs to close the C0 no-U training regression; this export test used one synthetic U patient and I notified that worker.",
+      "evidence": "reports/q3d-implementation-20261112/P5_review_fixes.json",
+      "current_evidence_sha256": "61cdbf84a407eb2cfe751945226be9407e64e54638c9e934df27e41dbc0549ea",
+      "dispatches": [
+        "ctx_a29618ec578d"
+      ]
+    },
+    {
+      "task_id": "task_6f48036e3b06",
+      "task": "Enforce exact pretrained region contract",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-11T18:17:00.481Z",
+      "reported_subject": "Q3D pretrained loader correction complete",
+      "historical_worker_report": "Removed classifier reset support: the loader now requires exact class order and strict complete encoder plus region checkpoint keys and shapes, leaving only the boundary path random, and accepts declared HTTPS origins without a GitHub-only restriction. The focused software suite passes all 10 fixture tests and the pinned source checkout is clean; no compatible official v1Lk3 weights were found or downloaded, so real pretrained loading and all real-data/GPU evidence remain NOT_RUN. The verification receipt is reports/q3d-implementation-20261112/pretrained_verification.json, and config/engine owners have been notified that schema completion, loader wiring, and provenance persistence remain pending.",
+      "evidence": "reports/q3d-implementation-20261112/pretrained_verification.json",
+      "current_evidence_sha256": "283c365cb6d174587a8b447e81b9f4a3f9c82e7bcbf85f6c72217f111fbf5bcd",
+      "dispatches": [
+        "ctx_b0d5fa04bad2"
+      ]
+    },
+    {
+      "task_id": "task_205014a495d4",
+      "task": "Fix alignment coverage for valid synthetic features",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-11T18:21:58.917Z",
+      "reported_subject": "Alignment final fix complete",
+      "historical_worker_report": "Removed the helper\u2019s hardcoded min-32 assumption while retaining exact pooling, crop, source-count z clamping, and detached output; added D=6 and partial-pooling regressions and wrote reports/q3d-implementation-20261112/alignment_final.json. The focused tests passed 19, but synthetic smoke stopped before training because its default Q=1 is below the validator\u2019s 200-update requirement, so no T/Q/P/J evidence exists. Integration can exercise the pipeline with a valid explicit Q budget while preserving mandatory gate-stop behavior; I notified engine, integration, and Claude and left other files untouched.",
+      "evidence": "reports/q3d-implementation-20261112/alignment_final.json",
+      "current_evidence_sha256": "a4075378aa626fc476a390e73e76cc7fff5d10dc0e9164f2f60f0619bf19d07c",
+      "dispatches": [
+        "ctx_a81f1c465867"
+      ]
+    },
+    {
+      "task_id": "task_a0d3cd94b3fc",
+      "task": "Q3D DEV diagnostic wiring",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-11T18:42:31.521Z",
+      "reported_subject": "Q3D DEV diagnostics implemented",
+      "historical_worker_report": "Implemented the read-only DEV diagnostics API and executable CLI, with hash-bound research checkpoint/config/data checks, native S4 code agreement and gate metrics, label-free full-cine physiology, and report-only RV Dice/HD95 correlations. The synthetic CLI/API suite passes (4 tests), and the assigned verification report records exact artifact hashes; a broader related run had two failures in shared engine.py gate=None handling. Real weights, patient data, and GPU evidence were unavailable and remain NOT_RUN.",
+      "evidence": "reports/q3d-implementation-20261112/diagnostics_verification.json",
+      "current_evidence_sha256": "8f10270def5a927818b88c54228b2cbf52451e7162b53bbe56816034c7c0a448",
+      "dispatches": [
+        "ctx_84f297a3cdc4"
+      ]
+    },
+    {
+      "task_id": "task_2268b164d86e",
+      "task": "Q3D uniform EPA pooling correction",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-11T18:34:54.472Z",
+      "reported_subject": "Uniform EPA projected-support fix complete",
+      "historical_worker_report": "Changed uniform EPA to mask-pool the full-grid projected K and spatial V using fractional native support weights, while preserving full-grid Q and the E1 adaptive A-weighted path. Added a hand/reference test that distinguishes post-projection pooling from pool-before-LayerNorm/projection; Pytest: 10 passed passed all 10 tests. The export worker and Claude were notified with source SHA-256 35620256f3cc7a4c326d2f66f9ee973bece8f74e6383c4a23fcc9c2e15795858, and export cold-load parity still needs verification against this final source; no patient or GPU run was performed.",
+      "evidence": "reports/q3d-implementation-20261112/student_uniform_epa_fix.json",
+      "current_evidence_sha256": "2e60b66418f8b9a6d6fcae5be4118d584cb4018430f2011810be30570a9d68d8",
+      "dispatches": [
+        "ctx_bbd06220d670"
+      ]
+    },
+    {
+      "task_id": "task_93e00ae56152",
+      "task": "Q3D DEV diagnostics review fixes",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-11T18:54:51.604Z",
+      "reported_subject": "Q3D DEV diagnostics follow-up fixes complete",
+      "historical_worker_report": "Updated the diagnostics to use resume.v2 with the engine weights_only loader, normalized config paths, strict majority code ownership, C1 physiology-only mode, O1 current teacher state, cached first-pass predictions, odd-size padding, and counted HD95 exclusions. The focused synthetic CLI/API suite passes all 6 tests, and the verification report contains the current file hashes. Real weights, patient data, and GPU evidence remain NOT_RUN.",
+      "evidence": "reports/q3d-implementation-20261112/diagnostics_verification.json",
+      "current_evidence_sha256": "8f10270def5a927818b88c54228b2cbf52451e7162b53bbe56816034c7c0a448",
+      "dispatches": [
+        "ctx_590474a20f33"
+      ]
+    },
+    {
+      "task_id": "task_78c9882dcf46",
+      "task": "Q3D final campaign protocol fixes",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-11T19:15:07.724Z",
+      "reported_subject": "Q3D config and campaign fixes complete",
+      "historical_worker_report": "Completed the owned Q3D config, recipe, campaign, test, and report updates, including portable null canonical source_repo, MedNeXt K-only Protocol B readiness, and shared-cohort synthetic B views with stripped student U masks. check_repo.py passed, the focused tests passed 16/16, the full suite passed 159/159, and the actual synthetic Protocol B campaign completed T/Q/P/J with the tokenizer gate honestly recorded as NOT_READY under the synthetic override. Real patient training, GPU evidence, and official pretrained weights remain NOT_RUN or NOT_FOUND_OFFICIAL; no patient data was used.",
+      "evidence": "reports/q3d-implementation-20261112/config-campaign-worker.json",
+      "current_evidence_sha256": "9e62ea6657249fcc315b2374bf0e229a6210e989c914e6a1454e197783cbe4a3",
+      "dispatches": [
+        "ctx_50c5c759edc1",
+        "ctx_c6300536bd64"
+      ]
+    },
+    {
+      "task_id": "task_dde3a6e42da0",
+      "task": "Continue independent Claude Code review in /Users/alvinluong/Self-Audit. Owne...",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-11T19:44:19.401Z",
+      "reported_subject": "Final whole-code review: 0 open blockers, coverage labeled honestly",
+      "historical_worker_report": "I extended the review across the repository and verified every new delta in current source: E6 shared Dice, F1 early stage-P guard, the P1 preparation that writes phase-pinned DEV/TEST manifests, the P1b engine phase-key blocker, the P1c A-3D TEST adapter, the CI1/CI2 workflow and the T2 stale test mock. My own final run is pytest 164 passed in 43.67s and check_repo PASS. Final report: reports/q3d-implementation-20261112/claude_code_review.json (sha f869f159). It has 0 open blockers and 0 open minors. It records spec limitations R2/R14/R15/R17/F2, the accepted L1 baseline source-pin lifecycle, H1 archived non-runnable historical tooling and the TC1 test-coverage limit, and corrects the J note (8000 pairs = 8000 optimizer steps) and the official random-init probe evidence. Coverage over 139 files: 55 line-reviewed, 13 tests at assertion level, 23 partially read, 13 legacy scripts risk-scanned only, 11 archived scripts read, 24 hash-only. The hash-only files are mainly legacy Candidate-A teacher/model/codec/evaluation and the A/A-3D JSON recipes, so this is not a full line review of all legacy code. Real-data, GPU and pretrained-weight evidence remain NOT_RUN or NOT_FOUND, and no efficacy claim is made.",
+      "evidence": "reports/q3d-implementation-20261112/claude_code_review.json",
+      "current_evidence_sha256": "a9687d2cea0fec9ebe623507ee7e464109c372a012394961e228ba56a71d9435",
+      "dispatches": [
+        "ctx_6dcc3a15f8a6"
+      ]
+    },
+    {
+      "task_id": "task_911ad3f94159",
+      "task": "Implement final Claude review corrections E6 and F1 in /Users/alvinluong/Self...",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-11T19:25:32.598Z",
+      "reported_subject": "E6/F1 corrections complete",
+      "historical_worker_report": "E6 now shares frame-then-patient class Dice aggregation between development selection and reporting, and F1 records and enforces the all-U patient support gate before P cache acceptance and J updates with the explicit synthetic-only override preserved. The focused regressions, all 23 Q3D engine tests, 28 evaluation/integration checks, and check_repo passed; the bounded V1 synthetic CLI smoke completed T/Q/P/J, and its failed tokenizer gate plus override remain recorded as software-only evidence. The requested report is reports/q3d-implementation-20261112/final_minor_fixes.json with source hashes; no patient or GPU run was performed, and the full suite remains for the coordinator if needed.",
+      "evidence": "reports/q3d-implementation-20261112/final_minor_fixes.json",
+      "current_evidence_sha256": "f403be419da8bff4aa599bc0fef93dda281cd9d66e594f8d21800a1e6d7eaeaa",
+      "dispatches": [
+        "ctx_c515dd43b42c"
+      ]
+    },
+    {
+      "task_id": "task_af763eafdb24",
+      "task": "Fix Claude review P1 data preparation integration gap in /Users/alvinluong/Se...",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-11T19:31:05.992Z",
+      "reported_subject": "Q3D preparation integration fixed",
+      "historical_worker_report": "Added opt-in --q3d-evaluation CLI paths that produce hash-pinned DEV and TEST manifests with explicit ACDC Info.cfg or original M&Ms index ED/ES phases, preserved native geometry/class mapping, and image-only TRAIN U records. Synthetic NIfTI CLI-to-Q3D data/evaluation/diagnostics fixtures pass (3 tests), scripts/check_repo.py passes, and source hashes/checks are in the preparation receipt. Real patient data, patient training, GPU, and full repository pytest remain NOT_RUN; no commit or push was made.",
+      "evidence": "reports/q3d-implementation-20261112/preparation_fixes.json",
+      "current_evidence_sha256": "45ea845a92da4e384b4e879ccdd477bbf1aba90491529fb806e68f2406c32d15",
+      "dispatches": [
+        "ctx_c1b5807465a2"
+      ]
+    },
+    {
+      "task_id": "task_b0b5df03cfdc",
+      "task": "Fix Claude CI1 for Q3D delivery in /Users/alvinluong/Self-Audit. Ownership ON...",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-11T19:29:13.346Z",
+      "reported_subject": "Q3D CI1 workflow and verification ready",
+      "historical_worker_report": "Renamed CI to q3d-contracts and added repository checks, the full test suite, all 14 bounded Q3D synthetic recipes, and failure-only logs; requirements.txt remains unchanged. In an isolated official-index Python 3.11.16 environment with torch 2.10.0, check_repo passed, all 160 tests passed, and all 14 smoke recipes completed; tested source SHA-256 is ad8f0a412ef5c372a1fa12b9ec41eea0c6f67b87fed38f3d218a85db993e82c5. Tokenizer gates remained NOT_READY under the explicitly synthetic-only override, while remote GitHub Actions/Linux-wheel execution remains NOT_RUN; the report records these limits.",
+      "evidence": "reports/q3d-implementation-20261112/ci_verification.json",
+      "current_evidence_sha256": "53515a5044f8ae62439296fab38924470ad043460fbf113457633601a2a4b82e",
+      "dispatches": [
+        "ctx_1f68bcf2fde1"
+      ]
+    },
+    {
+      "task_id": "task_714ad7b727b3",
+      "task": "Follow-up CI2 correction for /Users/alvinluong/Self-Audit. Own ONLY .github/w...",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-11T19:36:55.988Z",
+      "reported_subject": "CI2 correction and selector fix complete",
+      "historical_worker_report": "Moved CI_LOG_DIR initialization into the first workflow step via RUNNER_TEMP/GITHUB_ENV, and official actionlint 1.7.12 passes; workflow SHA-256 is b5ef2ad5127911d3c78b66f35faf375dc25a46c59f1a4c7bff73d56430347c58. The authorized _development_fg_dice fix validates optional ED/ES phase metadata, and the targeted preparation suite passed 3/3 on isolated Python 3.11.16 / torch 2.10.0; its scoped source SHA-256 is 33e5f4464afb82ac184eed4e1e1d115375388ef5b7dc56a6137e4571d5dba7b2. CI1's historical 160-test/all14 evidence remains preserved without claiming an exact historical source snapshot, and remote GitHub Actions execution remains NOT_RUN.",
+      "evidence": "reports/q3d-implementation-20261112/ci_verification.json",
+      "current_evidence_sha256": "53515a5044f8ae62439296fab38924470ad043460fbf113457633601a2a4b82e",
+      "dispatches": [
+        "ctx_f01475a06a8f"
+      ]
+    },
+    {
+      "task_id": "task_fcd24c057cde",
+      "task": "Implement Claude P1c baseline evaluation integration fix in /Users/alvinluong...",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-11T19:40:12.837Z",
+      "reported_subject": "P1c A3D Q3D baseline TEST adapter ready",
+      "historical_worker_report": "Implemented the Q3D-side A3D student adapter and explicit config-driven CLI route into the shared native evaluation metrics, preserving the legacy default and heavy MedNeXt DEV behavior. The actual synthetic train/export/CLI TEST path passed with ED/ES pins, paired-comparable patient FG and clinical outputs, and a matching source inventory; 28 focused baseline/evaluation tests and CLI help passed. No patient or GPU evidence was produced; the durable receipt is reports/q3d-implementation-20261112/baseline_test_adapter.json, and the source is ready for Claude review.",
+      "evidence": "reports/q3d-implementation-20261112/baseline_test_adapter.json",
+      "current_evidence_sha256": "28b6dc9667ff5e9dc686e31f93c1fc7a2e43038f9935e51adbb0a02ac627d0ac",
+      "dispatches": [
+        "ctx_fbffaebe9fab"
+      ]
+    },
+    {
+      "task_id": "task_9c5a28331d84",
+      "task": "Claude complete remaining repository code review",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-11T20:04:59.070Z",
+      "reported_subject": "Full-coverage review done: 1 open Q3D blocker (K1), 9 legacy-only findings",
+      "historical_worker_report": "Every remaining partial, hash-only and risk-scanned file is now read in full: 29 legacy Python files and scripts by three delegated read-only subagents (with my spot checks of LG1, LG2, LG5 and LG6), and all 31 JSON configs by me (v1 in full plus complete diffs for every other recipe, all 14 Q3D recipes verified byte-equal to canonical_config). reports/q3d-implementation-20261112/claude_code_review.json (sha 3da899ea) now covers all 139 inventory files with current hashes and per-file read confirmations. Findings: a new open Q3D blocker K1 (config.py:33 _FEATURE_CHANNELS swaps stride4 and stride8; the official probe measured stride8=256 and stride4=128), which pins the C1 feature head to 128 and makes the real C1 primary arm fail at its first J update; the fix is {4:128, 8:256, 16:512} plus regenerating the recipes and adding a probe-backed test. Legacy-only findings LG1-LG9 are recorded separately (most notable: offload deletes the remote checkpoint without fsync; latent batch-axis masking in candidate_a/model.py:284; the values_4bit ablation does not reduce packet bits). Spec limitations are unchanged (R2/R14/R15/R17/F2). Real-data, GPU and pretrained weights remain NOT_RUN or NOT_FOUND.",
+      "evidence": "reports/q3d-implementation-20261112/claude_code_review.json",
+      "current_evidence_sha256": "a9687d2cea0fec9ebe623507ee7e464109c372a012394961e228ba56a71d9435",
+      "dispatches": [
+        "ctx_927ef0b7104c"
+      ]
+    },
+    {
+      "task_id": "task_f20cac89b541",
+      "task": "Fix official MedNeXt channel config and C1 contract",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-12T00:07:47.766Z",
+      "reported_subject": "Q3D K1 channel blocker fixed",
+      "historical_worker_report": "I corrected _FEATURE_CHANNELS to stride4=128, stride8=256, stride16=512, updated the 10 affected canonical JSON recipes, and added portable plus opt-in official-source C1 regressions. The pinned clean MedNeXt source at 0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba confirmed stride8=256; focused tests passed 18/18 with bounded CPU random-init forward/loss, portable mode passed 1 and skipped 1, check_repo.py passed, and J remained 8000 paired/optimizer updates. Detailed commands and source hashes are in reports/q3d-implementation-20261112/official_channels_fix.json; no patient/GPU training was run, and the remaining step is creating the fresh post-fix campaign plan and running the coordinator's final suite.",
+      "evidence": "reports/q3d-implementation-20261112/official_channels_fix.json",
+      "current_evidence_sha256": "417d5943027a58be4754e8662b60cc7d4004655a0e8dd5051bce5d8e965c4dd5",
+      "dispatches": [
+        "ctx_53fdd53bf195"
+      ]
+    },
+    {
+      "task_id": "task_16f054ba20b0",
+      "task": "Claude independent K1 fix acceptance",
+      "outcome": "succeeded",
+      "completed_at": "2026-11-12T00:10:03.654Z",
+      "reported_subject": "K1 closed; review report final",
+      "historical_worker_report": "I re-reviewed the K1 fix read-only: config.py now has _FEATURE_CHANNELS={4:128,8:256,16:512}. I proved the change is byte-exact: undoing that one line, plus the feature_channels value in the 10 changed recipes, gives back the old reviewed SHA-256s. All 14 recipes match canonical_config. The frozen tests/test_q3d_official_channels.py catches the old swap in every case I tried in an isolated scratch copy (config only, recipes only, both, and portable-only with no source env); the opt-in official-source C1 test passes on the fixed code (head 256, finite loss and backward, no teacher gradients). claude_code_review.json is updated: K1 is FIXED_VERIFIED_IN_SNAPSHOT and open_q3d_blockers=[]. 11 hashes were refreshed and the new test added, for 140 files. LG1-LG9 and every other finding are byte-unchanged, and frozen A/A3D is unchanged. Root's final PASS is recorded (166 passed, check_repo PASS, all14, campaign-official-channels PLAN 17b8bff3 NOT_RUN, c1/v1 J=8000 updates=8000 optimizer steps), and the stale coverage_note is reconciled with the per-file labels. Nothing blocking is left. Optional K1n note: real C1 does not cross-check config channels against the loaded teacher, and there is a small comment typo in the test. No patient, GPU or data work was done and no official weights were found.",
+      "evidence": "reports/q3d-implementation-20261112/claude_code_review.json",
+      "current_evidence_sha256": "a9687d2cea0fec9ebe623507ee7e464109c372a012394961e228ba56a71d9435",
+      "dispatches": [
+        "ctx_124327581ba5"
+      ]
+    }
+  ],
+  "dispatch_launch_evidence": [
+    {
+      "dispatchId": "ctx_124327581ba5",
+      "taskId": "task_16f054ba20b0",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": "claude",
+          "model": null,
+          "effort": null
+        },
+        "effective": {
+          "agent": "claude",
+          "model": null,
+          "effort": null
+        }
+      },
+      "reusedTerminal": null,
+      "provider": {
+        "id": "claude",
+        "model": null
+      }
+    },
+    {
+      "dispatchId": "ctx_53fdd53bf195",
+      "taskId": "task_f20cac89b541",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": null
+        },
+        "effective": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": null
+        }
+      },
+      "reusedTerminal": null,
+      "provider": {
+        "id": "codex",
+        "model": "gpt-6-luna"
+      }
+    },
+    {
+      "dispatchId": "ctx_927ef0b7104c",
+      "taskId": "task_9c5a28331d84",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": null,
+          "model": null,
+          "effort": null
+        },
+        "effective": {
+          "agent": null,
+          "model": null,
+          "effort": null
+        }
+      },
+      "reusedTerminal": "term_65b92643-31f2-47e9-a1ac-c0eedfd4cc89",
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_fbffaebe9fab",
+      "taskId": "task_fcd24c057cde",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": "high"
+        },
+        "effective": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": "high"
+        }
+      },
+      "reusedTerminal": null,
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_f01475a06a8f",
+      "taskId": "task_714ad7b727b3",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": null,
+          "model": null,
+          "effort": null
+        },
+        "effective": {
+          "agent": null,
+          "model": null,
+          "effort": null
+        }
+      },
+      "reusedTerminal": "term_b9a5a547-61cc-47a8-aedc-7eb6a25d2651",
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_1f68bcf2fde1",
+      "taskId": "task_b0b5df03cfdc",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": "high"
+        },
+        "effective": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": "high"
+        }
+      },
+      "reusedTerminal": null,
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_c1b5807465a2",
+      "taskId": "task_af763eafdb24",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": "high"
+        },
+        "effective": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": "high"
+        }
+      },
+      "reusedTerminal": null,
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_c515dd43b42c",
+      "taskId": "task_911ad3f94159",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": "high"
+        },
+        "effective": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": "high"
+        }
+      },
+      "reusedTerminal": null,
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_6dcc3a15f8a6",
+      "taskId": "task_dde3a6e42da0",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": null,
+          "model": null,
+          "effort": null
+        },
+        "effective": {
+          "agent": null,
+          "model": null,
+          "effort": null
+        }
+      },
+      "reusedTerminal": "term_65b92643-31f2-47e9-a1ac-c0eedfd4cc89",
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_50c5c759edc1",
+      "taskId": "task_78c9882dcf46",
+      "retryOf": "ctx_c6300536bd64",
+      "launch": {
+        "requested": {
+          "agent": null,
+          "model": null,
+          "effort": null
+        },
+        "effective": {
+          "agent": null,
+          "model": null,
+          "effort": null
+        }
+      },
+      "reusedTerminal": "term_7968103c-3098-4835-a034-6f8fba8b596f",
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_c6300536bd64",
+      "taskId": "task_78c9882dcf46",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": null,
+          "model": null,
+          "effort": null
+        },
+        "effective": {
+          "agent": null,
+          "model": null,
+          "effort": null
+        }
+      },
+      "reusedTerminal": "term_7968103c-3098-4835-a034-6f8fba8b596f",
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_590474a20f33",
+      "taskId": "task_93e00ae56152",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": null,
+          "model": null,
+          "effort": null
+        },
+        "effective": {
+          "agent": null,
+          "model": null,
+          "effort": null
+        }
+      },
+      "reusedTerminal": "term_b138434f-140f-4a83-a3b6-e8eef77cf803",
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_bbd06220d670",
+      "taskId": "task_2268b164d86e",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": "high"
+        },
+        "effective": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": "high"
+        }
+      },
+      "reusedTerminal": null,
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_84f297a3cdc4",
+      "taskId": "task_a0d3cd94b3fc",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": "high"
+        },
+        "effective": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": "high"
+        }
+      },
+      "reusedTerminal": null,
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_a81f1c465867",
+      "taskId": "task_205014a495d4",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": null,
+          "model": null,
+          "effort": null
+        },
+        "effective": {
+          "agent": null,
+          "model": null,
+          "effort": null
+        }
+      },
+      "reusedTerminal": "term_a784941e-9685-46db-ad33-e8600f5c1007",
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_b0d5fa04bad2",
+      "taskId": "task_6f48036e3b06",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": null,
+          "model": null,
+          "effort": null
+        },
+        "effective": {
+          "agent": null,
+          "model": null,
+          "effort": null
+        }
+      },
+      "reusedTerminal": "term_9fa8cf33-a94c-43ac-9408-ef04c8645f16",
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_a29618ec578d",
+      "taskId": "task_05c3be310f8b",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": null,
+          "model": null,
+          "effort": null
+        },
+        "effective": {
+          "agent": null,
+          "model": null,
+          "effort": null
+        }
+      },
+      "reusedTerminal": "term_0ff01098-353d-42f3-baa5-2d45d20b28af",
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_1fb3842bf324",
+      "taskId": "task_ce8307c3f278",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": null
+        },
+        "effective": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": null
+        }
+      },
+      "reusedTerminal": null,
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_ffd8620277e0",
+      "taskId": "task_247e099a6500",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": null
+        },
+        "effective": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": null
+        }
+      },
+      "reusedTerminal": null,
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_6af5894e1452",
+      "taskId": "task_a8fd94e197ca",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": null
+        },
+        "effective": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": null
+        }
+      },
+      "reusedTerminal": null,
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_ce20bbf1d704",
+      "taskId": "task_c2cfe8a40478",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": null,
+          "model": null,
+          "effort": null
+        },
+        "effective": {
+          "agent": null,
+          "model": null,
+          "effort": null
+        }
+      },
+      "reusedTerminal": "term_65b92643-31f2-47e9-a1ac-c0eedfd4cc89",
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_f2f4086a045c",
+      "taskId": "task_bb8d69c8a1c7",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": "claude",
+          "model": null,
+          "effort": null
+        },
+        "effective": {
+          "agent": "claude",
+          "model": null,
+          "effort": null
+        }
+      },
+      "reusedTerminal": null,
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_dabc4b021c47",
+      "taskId": "task_333e0bf07af2",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": null
+        },
+        "effective": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": null
+        }
+      },
+      "reusedTerminal": null,
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_73a202c01fd4",
+      "taskId": "task_70421ae2cbf5",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": null
+        },
+        "effective": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": null
+        }
+      },
+      "reusedTerminal": null,
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_6861cb10dfbf",
+      "taskId": "task_1bda8f8f0136",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": null
+        },
+        "effective": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": null
+        }
+      },
+      "reusedTerminal": null,
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_9cd54d059fa4",
+      "taskId": "task_c939bca25184",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": null
+        },
+        "effective": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": null
+        }
+      },
+      "reusedTerminal": null,
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_897f78de8d05",
+      "taskId": "task_c77e95c5d0db",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": null
+        },
+        "effective": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": null
+        }
+      },
+      "reusedTerminal": null,
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_95457de3019a",
+      "taskId": "task_c02bbe4f1beb",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": null
+        },
+        "effective": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": null
+        }
+      },
+      "reusedTerminal": null,
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_493e5fe4dcd4",
+      "taskId": "task_593ac8a9200b",
+      "retryOf": "ctx_c2d5a18a627a",
+      "launch": {
+        "requested": {
+          "agent": null,
+          "model": null,
+          "effort": null
+        },
+        "effective": {
+          "agent": null,
+          "model": null,
+          "effort": null
+        }
+      },
+      "reusedTerminal": "term_c4bc9f63-05e0-48aa-b762-31e861ccbc4e",
+      "provider": null
+    },
+    {
+      "dispatchId": "ctx_c2d5a18a627a",
+      "taskId": "task_593ac8a9200b",
+      "retryOf": null,
+      "launch": {
+        "requested": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": null
+        },
+        "effective": {
+          "agent": "codex",
+          "model": "gpt-6-luna",
+          "effort": null
+        }
+      },
+      "reusedTerminal": null,
+      "provider": null
+    }
+  ],
+  "final_terminal_states": [
+    {
+      "dispatch_id": "ctx_124327581ba5",
+      "task_id": "task_16f054ba20b0",
+      "worker_outcome": "succeeded",
+      "terminal_state": "retained",
+      "resource": {
+        "id": "wtr_780c8a7512f4",
+        "ownershipState": "user_owned",
+        "releaseState": "retained",
+        "retainedReason": "user_takeover",
+        "terminalHandle": "term_4387b403-156e-4241-8e60-87ced093b45f",
+        "worktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit",
+        "endpointId": "9cc84b89-a5a3-4f06-9ba6-34d9fa771197",
+        "endpointIncarnation": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit@@d048c826:e8ede374-7fd6-4522-9f1a-7c8552dcf52f",
+        "originDispatchId": "ctx_124327581ba5",
+        "ownerDispatchId": "ctx_124327581ba5",
+        "releaseRequestedAt": null,
+        "releaseCompletedAt": null,
+        "releaseError": null,
+        "recoveryAttemptCount": 0,
+        "lastRecoveryAt": null,
+        "archive": {
+          "source": null,
+          "status": null
+        }
+      }
+    },
+    {
+      "dispatch_id": "ctx_53fdd53bf195",
+      "task_id": "task_f20cac89b541",
+      "worker_outcome": "succeeded",
+      "terminal_state": "retained",
+      "resource": {
+        "id": "wtr_0679b403a275",
+        "ownershipState": "user_owned",
+        "releaseState": "retained",
+        "retainedReason": "user_takeover",
+        "terminalHandle": "term_b72ec0c0-5f89-4bea-a51e-9eac17de347c",
+        "worktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit",
+        "endpointId": "9cc84b89-a5a3-4f06-9ba6-34d9fa771197",
+        "endpointIncarnation": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit@@9837f1af:96a09e2f-ae67-43c7-ad9e-6342c2e9d7f9",
+        "originDispatchId": "ctx_53fdd53bf195",
+        "ownerDispatchId": "ctx_53fdd53bf195",
+        "releaseRequestedAt": null,
+        "releaseCompletedAt": null,
+        "releaseError": null,
+        "recoveryAttemptCount": 0,
+        "lastRecoveryAt": null,
+        "archive": {
+          "source": null,
+          "status": null
+        }
+      }
+    },
+    {
+      "dispatch_id": "ctx_927ef0b7104c",
+      "task_id": "task_9c5a28331d84",
+      "worker_outcome": "succeeded",
+      "terminal_state": "released",
+      "resource": {
+        "id": "wtr_f82f97febb53",
+        "ownershipState": "released",
+        "releaseState": "released",
+        "retainedReason": null,
+        "terminalHandle": "term_65b92643-31f2-47e9-a1ac-c0eedfd4cc89",
+        "worktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit",
+        "endpointId": "9cc84b89-a5a3-4f06-9ba6-34d9fa771197",
+        "endpointIncarnation": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit@@cebe8c7a:1afd000b-a35c-4168-885d-a675b1b4879b",
+        "originDispatchId": "ctx_f2f4086a045c",
+        "ownerDispatchId": "ctx_927ef0b7104c",
+        "releaseRequestedAt": "2026-11-11 23:55:48",
+        "releaseCompletedAt": "2026-11-11 23:56:05",
+        "releaseError": null,
+        "recoveryAttemptCount": 0,
+        "lastRecoveryAt": null,
+        "archive": {
+          "source": "terminal",
+          "status": "empty"
+        }
+      }
+    },
+    {
+      "dispatch_id": "ctx_fbffaebe9fab",
+      "task_id": "task_fcd24c057cde",
+      "worker_outcome": "succeeded",
+      "terminal_state": "released",
+      "resource": {
+        "id": "wtr_9e9ed206b709",
+        "ownershipState": "released",
+        "releaseState": "released",
+        "retainedReason": null,
+        "terminalHandle": "term_ce6b0bd1-72ec-421c-9554-c17a9f54fe1f",
+        "worktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit",
+        "endpointId": "9cc84b89-a5a3-4f06-9ba6-34d9fa771197",
+        "endpointIncarnation": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit@@e49c0a93:75b96ff3-f78a-4d48-bc39-75d971888a64",
+        "originDispatchId": "ctx_fbffaebe9fab",
+        "ownerDispatchId": "ctx_fbffaebe9fab",
+        "releaseRequestedAt": "2026-11-11 19:40:32",
+        "releaseCompletedAt": "2026-11-11 19:40:34",
+        "releaseError": null,
+        "recoveryAttemptCount": 0,
+        "lastRecoveryAt": null,
+        "archive": {
+          "source": "transcript",
+          "status": "captured"
+        }
+      }
+    },
+    {
+      "dispatch_id": "ctx_f01475a06a8f",
+      "task_id": "task_714ad7b727b3",
+      "worker_outcome": "succeeded",
+      "terminal_state": "released",
+      "resource": {
+        "id": "wtr_b282d0a80568",
+        "ownershipState": "released",
+        "releaseState": "released",
+        "retainedReason": null,
+        "terminalHandle": "term_b9a5a547-61cc-47a8-aedc-7eb6a25d2651",
+        "worktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit",
+        "endpointId": "9cc84b89-a5a3-4f06-9ba6-34d9fa771197",
+        "endpointIncarnation": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit@@44b8c6f5:31269340-7210-4a39-89ec-d0a779c21249",
+        "originDispatchId": "ctx_1f68bcf2fde1",
+        "ownerDispatchId": "ctx_f01475a06a8f",
+        "releaseRequestedAt": "2026-11-11 19:37:56",
+        "releaseCompletedAt": "2026-11-11 19:37:58",
+        "releaseError": null,
+        "recoveryAttemptCount": 0,
+        "lastRecoveryAt": null,
+        "archive": {
+          "source": "transcript",
+          "status": "captured"
+        }
+      }
+    },
+    {
+      "dispatch_id": "ctx_1f68bcf2fde1",
+      "task_id": "task_b0b5df03cfdc",
+      "worker_outcome": "succeeded",
+      "terminal_state": "retained",
+      "resource": null
+    },
+    {
+      "dispatch_id": "ctx_c1b5807465a2",
+      "task_id": "task_af763eafdb24",
+      "worker_outcome": "succeeded",
+      "terminal_state": "released",
+      "resource": {
+        "id": "wtr_32fd7c601492",
+        "ownershipState": "released",
+        "releaseState": "released",
+        "retainedReason": null,
+        "terminalHandle": "term_59bb329e-0895-41cf-8f4d-e045ffd5dde9",
+        "worktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit",
+        "endpointId": "9cc84b89-a5a3-4f06-9ba6-34d9fa771197",
+        "endpointIncarnation": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit@@7bca4f10:fd706c83-d22d-42d0-a2f1-64609e7d1936",
+        "originDispatchId": "ctx_c1b5807465a2",
+        "ownerDispatchId": "ctx_c1b5807465a2",
+        "releaseRequestedAt": "2026-11-11 19:31:40",
+        "releaseCompletedAt": "2026-11-11 19:31:42",
+        "releaseError": null,
+        "recoveryAttemptCount": 0,
+        "lastRecoveryAt": null,
+        "archive": {
+          "source": "transcript",
+          "status": "captured"
+        }
+      }
+    },
+    {
+      "dispatch_id": "ctx_c515dd43b42c",
+      "task_id": "task_911ad3f94159",
+      "worker_outcome": "succeeded",
+      "terminal_state": "released",
+      "resource": {
+        "id": "wtr_67780ed1ec23",
+        "ownershipState": "released",
+        "releaseState": "released",
+        "retainedReason": null,
+        "terminalHandle": "term_d66cbd6a-1d78-4df8-8978-fa63d76000d0",
+        "worktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit",
+        "endpointId": "9cc84b89-a5a3-4f06-9ba6-34d9fa771197",
+        "endpointIncarnation": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit@@a702bbcf:04f1cbff-681b-4d8e-ba2f-2270c937819e",
+        "originDispatchId": "ctx_c515dd43b42c",
+        "ownerDispatchId": "ctx_c515dd43b42c",
+        "releaseRequestedAt": "2026-11-11 19:26:04",
+        "releaseCompletedAt": "2026-11-11 19:26:07",
+        "releaseError": null,
+        "recoveryAttemptCount": 0,
+        "lastRecoveryAt": null,
+        "archive": {
+          "source": "transcript",
+          "status": "captured"
+        }
+      }
+    },
+    {
+      "dispatch_id": "ctx_6dcc3a15f8a6",
+      "task_id": "task_dde3a6e42da0",
+      "worker_outcome": "succeeded",
+      "terminal_state": "retained",
+      "resource": null
+    },
+    {
+      "dispatch_id": "ctx_50c5c759edc1",
+      "task_id": "task_78c9882dcf46",
+      "worker_outcome": "succeeded",
+      "terminal_state": "released",
+      "resource": {
+        "id": "wtr_bbffc61af883",
+        "ownershipState": "released",
+        "releaseState": "released",
+        "retainedReason": null,
+        "terminalHandle": "term_7968103c-3098-4835-a034-6f8fba8b596f",
+        "worktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit",
+        "endpointId": "9cc84b89-a5a3-4f06-9ba6-34d9fa771197",
+        "endpointIncarnation": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit@@ca4e9e0e:d009e4d8-b987-488a-977e-2a3ff5ea5edc",
+        "originDispatchId": "ctx_9cd54d059fa4",
+        "ownerDispatchId": "ctx_50c5c759edc1",
+        "releaseRequestedAt": "2026-11-11 19:15:22",
+        "releaseCompletedAt": "2026-11-11 19:15:24",
+        "releaseError": null,
+        "recoveryAttemptCount": 0,
+        "lastRecoveryAt": null,
+        "archive": {
+          "source": "transcript",
+          "status": "captured"
+        }
+      }
+    },
+    {
+      "dispatch_id": "ctx_c6300536bd64",
+      "task_id": "task_78c9882dcf46",
+      "worker_outcome": "failed",
+      "terminal_state": "retained",
+      "resource": null
+    },
+    {
+      "dispatch_id": "ctx_590474a20f33",
+      "task_id": "task_93e00ae56152",
+      "worker_outcome": "succeeded",
+      "terminal_state": "released",
+      "resource": {
+        "id": "wtr_19d811da5148",
+        "ownershipState": "released",
+        "releaseState": "released",
+        "retainedReason": null,
+        "terminalHandle": "term_b138434f-140f-4a83-a3b6-e8eef77cf803",
+        "worktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit",
+        "endpointId": "9cc84b89-a5a3-4f06-9ba6-34d9fa771197",
+        "endpointIncarnation": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit@@1e2d1423:731feec6-2834-4683-b4ce-970c2b744755",
+        "originDispatchId": "ctx_84f297a3cdc4",
+        "ownerDispatchId": "ctx_590474a20f33",
+        "releaseRequestedAt": "2026-11-11 18:55:17",
+        "releaseCompletedAt": "2026-11-11 18:55:20",
+        "releaseError": null,
+        "recoveryAttemptCount": 0,
+        "lastRecoveryAt": null,
+        "archive": {
+          "source": "transcript",
+          "status": "captured"
+        }
+      }
+    },
+    {
+      "dispatch_id": "ctx_bbd06220d670",
+      "task_id": "task_2268b164d86e",
+      "worker_outcome": "succeeded",
+      "terminal_state": "released",
+      "resource": {
+        "id": "wtr_09da2f6d983f",
+        "ownershipState": "released",
+        "releaseState": "released",
+        "retainedReason": null,
+        "terminalHandle": "term_305daa27-0551-4e04-9651-77146275ea71",
+        "worktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit",
+        "endpointId": "9cc84b89-a5a3-4f06-9ba6-34d9fa771197",
+        "endpointIncarnation": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit@@c2f8b9a1:9d03be0c-3e4e-411c-8773-f1af4866b769",
+        "originDispatchId": "ctx_bbd06220d670",
+        "ownerDispatchId": "ctx_bbd06220d670",
+        "releaseRequestedAt": "2026-11-11 18:35:13",
+        "releaseCompletedAt": "2026-11-11 18:35:15",
+        "releaseError": null,
+        "recoveryAttemptCount": 0,
+        "lastRecoveryAt": null,
+        "archive": {
+          "source": "transcript",
+          "status": "captured"
+        }
+      }
+    },
+    {
+      "dispatch_id": "ctx_84f297a3cdc4",
+      "task_id": "task_a0d3cd94b3fc",
+      "worker_outcome": "succeeded",
+      "terminal_state": "retained",
+      "resource": null
+    },
+    {
+      "dispatch_id": "ctx_a81f1c465867",
+      "task_id": "task_205014a495d4",
+      "worker_outcome": "succeeded",
+      "terminal_state": "released",
+      "resource": {
+        "id": "wtr_c78746483cab",
+        "ownershipState": "released",
+        "releaseState": "released",
+        "retainedReason": null,
+        "terminalHandle": "term_a784941e-9685-46db-ad33-e8600f5c1007",
+        "worktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit",
+        "endpointId": "9cc84b89-a5a3-4f06-9ba6-34d9fa771197",
+        "endpointIncarnation": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit@@c8e2a7e5:68a17a30-42f1-4369-ad2d-927ce65c7147",
+        "originDispatchId": "ctx_ffd8620277e0",
+        "ownerDispatchId": "ctx_a81f1c465867",
+        "releaseRequestedAt": "2026-11-11 18:24:16",
+        "releaseCompletedAt": "2026-11-11 18:24:18",
+        "releaseError": null,
+        "recoveryAttemptCount": 0,
+        "lastRecoveryAt": null,
+        "archive": {
+          "source": "transcript",
+          "status": "captured"
+        }
+      }
+    },
+    {
+      "dispatch_id": "ctx_b0d5fa04bad2",
+      "task_id": "task_6f48036e3b06",
+      "worker_outcome": "succeeded",
+      "terminal_state": "released",
+      "resource": {
+        "id": "wtr_3fd67c5fba46",
+        "ownershipState": "released",
+        "releaseState": "released",
+        "retainedReason": null,
+        "terminalHandle": "term_9fa8cf33-a94c-43ac-9408-ef04c8645f16",
+        "worktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit",
+        "endpointId": "9cc84b89-a5a3-4f06-9ba6-34d9fa771197",
+        "endpointIncarnation": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit@@3ab6498a:9dbf32cd-6fd6-48ea-8121-f12ce605fd31",
+        "originDispatchId": "ctx_6af5894e1452",
+        "ownerDispatchId": "ctx_b0d5fa04bad2",
+        "releaseRequestedAt": "2026-11-11 18:18:00",
+        "releaseCompletedAt": "2026-11-11 18:18:02",
+        "releaseError": null,
+        "recoveryAttemptCount": 0,
+        "lastRecoveryAt": null,
+        "archive": {
+          "source": "transcript",
+          "status": "captured"
+        }
+      }
+    },
+    {
+      "dispatch_id": "ctx_a29618ec578d",
+      "task_id": "task_05c3be310f8b",
+      "worker_outcome": "succeeded",
+      "terminal_state": "released",
+      "resource": {
+        "id": "wtr_68e67a923e4b",
+        "ownershipState": "released",
+        "releaseState": "released",
+        "retainedReason": null,
+        "terminalHandle": "term_0ff01098-353d-42f3-baa5-2d45d20b28af",
+        "worktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit",
+        "endpointId": "9cc84b89-a5a3-4f06-9ba6-34d9fa771197",
+        "endpointIncarnation": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit@@3d42800f:061d39c8-8b3e-41ad-b4d0-536c50510845",
+        "originDispatchId": "ctx_73a202c01fd4",
+        "ownerDispatchId": "ctx_a29618ec578d",
+        "releaseRequestedAt": "2026-11-11 19:00:57",
+        "releaseCompletedAt": "2026-11-11 19:00:59",
+        "releaseError": null,
+        "recoveryAttemptCount": 0,
+        "lastRecoveryAt": null,
+        "archive": {
+          "source": "transcript",
+          "status": "captured"
+        }
+      }
+    },
+    {
+      "dispatch_id": "ctx_1fb3842bf324",
+      "task_id": "task_ce8307c3f278",
+      "worker_outcome": "succeeded",
+      "terminal_state": "released",
+      "resource": {
+        "id": "wtr_bfe00fa6195e",
+        "ownershipState": "released",
+        "releaseState": "released",
+        "retainedReason": null,
+        "terminalHandle": "term_c03fb8a8-bccd-48b9-9f0e-940844b7de51",
+        "worktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit",
+        "endpointId": "9cc84b89-a5a3-4f06-9ba6-34d9fa771197",
+        "endpointIncarnation": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit@@e1a947db:278582bf-5780-4761-924f-1b4ebec98861",
+        "originDispatchId": "ctx_1fb3842bf324",
+        "ownerDispatchId": "ctx_1fb3842bf324",
+        "releaseRequestedAt": "2026-11-11 19:03:20",
+        "releaseCompletedAt": "2026-11-11 19:03:22",
+        "releaseError": null,
+        "recoveryAttemptCount": 0,
+        "lastRecoveryAt": null,
+        "archive": {
+          "source": "transcript",
+          "status": "captured"
+        }
+      }
+    },
+    {
+      "dispatch_id": "ctx_ffd8620277e0",
+      "task_id": "task_247e099a6500",
+      "worker_outcome": "succeeded",
+      "terminal_state": "retained",
+      "resource": null
+    },
+    {
+      "dispatch_id": "ctx_6af5894e1452",
+      "task_id": "task_a8fd94e197ca",
+      "worker_outcome": "succeeded",
+      "terminal_state": "retained",
+      "resource": null
+    },
+    {
+      "dispatch_id": "ctx_ce20bbf1d704",
+      "task_id": "task_c2cfe8a40478",
+      "worker_outcome": "succeeded",
+      "terminal_state": "retained",
+      "resource": null
+    },
+    {
+      "dispatch_id": "ctx_f2f4086a045c",
+      "task_id": "task_bb8d69c8a1c7",
+      "worker_outcome": "succeeded",
+      "terminal_state": "retained",
+      "resource": null
+    },
+    {
+      "dispatch_id": "ctx_dabc4b021c47",
+      "task_id": "task_333e0bf07af2",
+      "worker_outcome": "succeeded",
+      "terminal_state": "released",
+      "resource": {
+        "id": "wtr_3891890f1843",
+        "ownershipState": "released",
+        "releaseState": "released",
+        "retainedReason": null,
+        "terminalHandle": "term_d940c935-f986-413c-8f1a-b7e1ba53a24b",
+        "worktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit",
+        "endpointId": "9cc84b89-a5a3-4f06-9ba6-34d9fa771197",
+        "endpointIncarnation": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit@@ae968f94:c2929eb5-8041-4a33-85a2-dc316dab72a0",
+        "originDispatchId": "ctx_dabc4b021c47",
+        "ownerDispatchId": "ctx_dabc4b021c47",
+        "releaseRequestedAt": "2026-11-11 19:15:22",
+        "releaseCompletedAt": "2026-11-11 19:15:24",
+        "releaseError": null,
+        "recoveryAttemptCount": 0,
+        "lastRecoveryAt": null,
+        "archive": {
+          "source": "transcript",
+          "status": "captured"
+        }
+      }
+    },
+    {
+      "dispatch_id": "ctx_73a202c01fd4",
+      "task_id": "task_70421ae2cbf5",
+      "worker_outcome": "succeeded",
+      "terminal_state": "retained",
+      "resource": null
+    },
+    {
+      "dispatch_id": "ctx_6861cb10dfbf",
+      "task_id": "task_1bda8f8f0136",
+      "worker_outcome": "succeeded",
+      "terminal_state": "released",
+      "resource": {
+        "id": "wtr_f2a33106d463",
+        "ownershipState": "released",
+        "releaseState": "released",
+        "retainedReason": null,
+        "terminalHandle": "term_8bfdcb1f-819c-4090-8ee8-2239bc222601",
+        "worktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit",
+        "endpointId": "9cc84b89-a5a3-4f06-9ba6-34d9fa771197",
+        "endpointIncarnation": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit@@4a09d367:c78dc911-b135-4aa8-b66e-84f806e2c8aa",
+        "originDispatchId": "ctx_6861cb10dfbf",
+        "ownerDispatchId": "ctx_6861cb10dfbf",
+        "releaseRequestedAt": "2026-11-11 19:14:58",
+        "releaseCompletedAt": "2026-11-11 19:15:01",
+        "releaseError": null,
+        "recoveryAttemptCount": 0,
+        "lastRecoveryAt": null,
+        "archive": {
+          "source": "transcript",
+          "status": "captured"
+        }
+      }
+    },
+    {
+      "dispatch_id": "ctx_9cd54d059fa4",
+      "task_id": "task_c939bca25184",
+      "worker_outcome": "succeeded",
+      "terminal_state": "retained",
+      "resource": null
+    },
+    {
+      "dispatch_id": "ctx_897f78de8d05",
+      "task_id": "task_c77e95c5d0db",
+      "worker_outcome": "succeeded",
+      "terminal_state": "released",
+      "resource": {
+        "id": "wtr_b55b1637e33d",
+        "ownershipState": "released",
+        "releaseState": "released",
+        "retainedReason": null,
+        "terminalHandle": "term_d02eaca2-a3ca-4aa5-be23-0327a13aea33",
+        "worktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit",
+        "endpointId": "9cc84b89-a5a3-4f06-9ba6-34d9fa771197",
+        "endpointIncarnation": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit@@a30f6543:3927fc61-3e95-4bec-888f-a1076f19643f",
+        "originDispatchId": "ctx_897f78de8d05",
+        "ownerDispatchId": "ctx_897f78de8d05",
+        "releaseRequestedAt": "2026-11-11 18:03:50",
+        "releaseCompletedAt": "2026-11-11 18:03:52",
+        "releaseError": null,
+        "recoveryAttemptCount": 0,
+        "lastRecoveryAt": null,
+        "archive": {
+          "source": "transcript",
+          "status": "captured"
+        }
+      }
+    },
+    {
+      "dispatch_id": "ctx_95457de3019a",
+      "task_id": "task_c02bbe4f1beb",
+      "worker_outcome": "succeeded",
+      "terminal_state": "released",
+      "resource": {
+        "id": "wtr_18a5893277ee",
+        "ownershipState": "released",
+        "releaseState": "released",
+        "retainedReason": null,
+        "terminalHandle": "term_b34cdd2a-22ea-4d9d-9284-7bbab5f4427c",
+        "worktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit",
+        "endpointId": "9cc84b89-a5a3-4f06-9ba6-34d9fa771197",
+        "endpointIncarnation": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit@@b14a24ca:de6be514-9399-42c5-9d74-f4976de83882",
+        "originDispatchId": "ctx_95457de3019a",
+        "ownerDispatchId": "ctx_95457de3019a",
+        "releaseRequestedAt": "2026-11-11 18:01:49",
+        "releaseCompletedAt": "2026-11-11 18:01:51",
+        "releaseError": null,
+        "recoveryAttemptCount": 0,
+        "lastRecoveryAt": null,
+        "archive": {
+          "source": "transcript",
+          "status": "captured"
+        }
+      }
+    },
+    {
+      "dispatch_id": "ctx_493e5fe4dcd4",
+      "task_id": "task_593ac8a9200b",
+      "worker_outcome": "succeeded",
+      "terminal_state": "released",
+      "resource": {
+        "id": "wtr_34eed4d03c3c",
+        "ownershipState": "released",
+        "releaseState": "released",
+        "retainedReason": null,
+        "terminalHandle": "term_c4bc9f63-05e0-48aa-b762-31e861ccbc4e",
+        "worktreeId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit",
+        "endpointId": "9cc84b89-a5a3-4f06-9ba6-34d9fa771197",
+        "endpointIncarnation": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/Self-Audit@@3a49fab3:0c9e2dda-e5a3-4a0b-a6a6-7e4d24d0fead",
+        "originDispatchId": "ctx_c2d5a18a627a",
+        "ownerDispatchId": "ctx_493e5fe4dcd4",
+        "releaseRequestedAt": "2026-11-11 18:18:50",
+        "releaseCompletedAt": "2026-11-11 18:18:52",
+        "releaseError": null,
+        "recoveryAttemptCount": 0,
+        "lastRecoveryAt": null,
+        "archive": {
+          "source": "transcript",
+          "status": "captured"
+        }
+      }
+    },
+    {
+      "dispatch_id": "ctx_c2d5a18a627a",
+      "task_id": "task_593ac8a9200b",
+      "worker_outcome": "failed",
+      "terminal_state": "retained",
+      "resource": null
+    }
+  ],
+  "failed_attempts_resolved_by_retry": [
+    "ctx_c6300536bd64",
+    "ctx_c2d5a18a627a"
+  ],
+  "lifecycle_note": "Reused dispatch rows retain historical terminalState=retained with no owned resource; cleanup ownership transferred to later dispatches. The final source-fix and final delta-review terminals were taken over by the user and remain user_owned; release correctly preserves those terminals. Other materialized settled resources were released. Reclaimable terminal query returned empty.",
+  "final_implementation_evidence": "final_software_verification.json",
+  "historical_report_note": "Worker result bodies describe each historical task snapshot, including integration errors subsequently fixed. Some report paths were refreshed by follow-ups; current_evidence_sha256 pins the delivered report, not its original completion-time bytes. The final verification and final Claude review govern delivered source.",
+  "unresolved_external_evidence": [
+    "compatible official pretrained weight not found",
+    "patient training/evaluation not run",
+    "GPU validation not run"
+  ]
+}

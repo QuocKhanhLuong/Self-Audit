@@ -1,0 +1,399 @@
+{
+  "evidence_status": "SOFTWARE_ONLY_SYNTHETIC",
+  "gpu_evidence": "NOT_RUN",
+  "patient_metrics_claimed": false,
+  "real_data_evidence": "NOT_RUN",
+  "recipe_statuses": {
+    "a3d_teacher_free": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+    "b1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "c0": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+    "c1": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+    "e1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "mean_teacher": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+    "mednext_supervised": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+    "o1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "s1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "v0": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "v1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "v1_residual2": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "v1_stride4": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "v1u": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE"
+  },
+  "runs": {
+    "a3d_teacher_free": {
+      "completed_stages": [
+        "J"
+      ],
+      "config": "/private/tmp/q3d-delivery-format-final-20261112/a3d_teacher_free.config.json",
+      "config_sha256": "29823555d7490c772589f22904c274ec959ef54693c9fc8c65bc4054c4480859",
+      "engine_error": null,
+      "expected_stages": [
+        "J"
+      ],
+      "report": "/private/tmp/q3d-delivery-format-final-20261112/a3d_teacher_free.smoke.json",
+      "synthetic_gate_override_used": false,
+      "tokenizer_gate": {
+        "passed": null,
+        "status": "NOT_APPLICABLE"
+      }
+    },
+    "b1": {
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "config": "/private/tmp/q3d-delivery-format-final-20261112/b1.config.json",
+      "config_sha256": "b32b2ced5ca9411ad38b5fcf165940e83c53c4632b38275cd0d867cb01227b1e",
+      "engine_error": null,
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "report": "/private/tmp/q3d-delivery-format-final-20261112/b1.smoke.json",
+      "synthetic_gate_override_used": true,
+      "tokenizer_gate": {
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "passed": false,
+        "status": "NOT_READY",
+        "thresholds": {
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4,
+          "min_perplexity": 32.0
+        }
+      }
+    },
+    "c0": {
+      "completed_stages": [
+        "J"
+      ],
+      "config": "/private/tmp/q3d-delivery-format-final-20261112/c0.config.json",
+      "config_sha256": "8532362a6a1043b943714b2dfad312ff95ce5443edc77fa29f8f23d0954f77b4",
+      "engine_error": null,
+      "expected_stages": [
+        "J"
+      ],
+      "report": "/private/tmp/q3d-delivery-format-final-20261112/c0.smoke.json",
+      "synthetic_gate_override_used": false,
+      "tokenizer_gate": {
+        "passed": null,
+        "status": "NOT_APPLICABLE"
+      }
+    },
+    "c1": {
+      "completed_stages": [
+        "T",
+        "P",
+        "J"
+      ],
+      "config": "/private/tmp/q3d-delivery-format-final-20261112/c1.config.json",
+      "config_sha256": "5c0c1200397c2f96a448073f2e4440a32522a5e654cd98daca684b6cbfe4a82f",
+      "engine_error": null,
+      "expected_stages": [
+        "T",
+        "P",
+        "J"
+      ],
+      "report": "/private/tmp/q3d-delivery-format-final-20261112/c1.smoke.json",
+      "synthetic_gate_override_used": false,
+      "tokenizer_gate": {
+        "passed": null,
+        "status": "NOT_APPLICABLE"
+      }
+    },
+    "e1": {
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "config": "/private/tmp/q3d-delivery-format-final-20261112/e1.config.json",
+      "config_sha256": "b6291358d11a82a74b160fae8dc52b3fa948aecb9773966e68c61c35a904a5c9",
+      "engine_error": null,
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "report": "/private/tmp/q3d-delivery-format-final-20261112/e1.smoke.json",
+      "synthetic_gate_override_used": true,
+      "tokenizer_gate": {
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "passed": false,
+        "status": "NOT_READY",
+        "thresholds": {
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4,
+          "min_perplexity": 32.0
+        }
+      }
+    },
+    "mean_teacher": {
+      "completed_stages": [
+        "J"
+      ],
+      "config": "/private/tmp/q3d-delivery-format-final-20261112/mean_teacher.config.json",
+      "config_sha256": "df3d7eb99c25333b56901076ba9f98a6da8db2120618358f36d1373413c003ae",
+      "engine_error": null,
+      "expected_stages": [
+        "J"
+      ],
+      "report": "/private/tmp/q3d-delivery-format-final-20261112/mean_teacher.smoke.json",
+      "synthetic_gate_override_used": false,
+      "tokenizer_gate": {
+        "passed": null,
+        "status": "NOT_APPLICABLE"
+      }
+    },
+    "mednext_supervised": {
+      "completed_stages": [
+        "T"
+      ],
+      "config": "/private/tmp/q3d-delivery-format-final-20261112/mednext_supervised.config.json",
+      "config_sha256": "6dcdb1996586a6d824175ebd4c6a31a9fbdc19661ae6628c1e948e6b74f1ecc9",
+      "engine_error": null,
+      "expected_stages": [
+        "T"
+      ],
+      "report": "/private/tmp/q3d-delivery-format-final-20261112/mednext_supervised.smoke.json",
+      "synthetic_gate_override_used": false,
+      "tokenizer_gate": {
+        "passed": null,
+        "status": "NOT_APPLICABLE"
+      }
+    },
+    "o1": {
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "config": "/private/tmp/q3d-delivery-format-final-20261112/o1.config.json",
+      "config_sha256": "07717cb106cb87810ff3bedb8c1e48d7c5c83ef17a114459a5c1c23a01ab6575",
+      "engine_error": null,
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "report": "/private/tmp/q3d-delivery-format-final-20261112/o1.smoke.json",
+      "synthetic_gate_override_used": true,
+      "tokenizer_gate": {
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "passed": false,
+        "status": "NOT_READY",
+        "thresholds": {
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4,
+          "min_perplexity": 32.0
+        }
+      }
+    },
+    "s1": {
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "config": "/private/tmp/q3d-delivery-format-final-20261112/s1.config.json",
+      "config_sha256": "aec835fbaae950361e2ccbe81996ceb1451fe1b3a6d20f217da9d94c98262a37",
+      "engine_error": null,
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "report": "/private/tmp/q3d-delivery-format-final-20261112/s1.smoke.json",
+      "synthetic_gate_override_used": true,
+      "tokenizer_gate": {
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "passed": false,
+        "status": "NOT_READY",
+        "thresholds": {
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4,
+          "min_perplexity": 32.0
+        }
+      }
+    },
+    "v0": {
+      "completed_stages": [
+        "T",
+        "Q",
+        "J"
+      ],
+      "config": "/private/tmp/q3d-delivery-format-final-20261112/v0.config.json",
+      "config_sha256": "f9b4c9b961eaaccd8f7f877637842297f983c99f85097743cad6b0c939b7bc7d",
+      "engine_error": null,
+      "expected_stages": [
+        "T",
+        "Q",
+        "J"
+      ],
+      "report": "/private/tmp/q3d-delivery-format-final-20261112/v0.smoke.json",
+      "synthetic_gate_override_used": true,
+      "tokenizer_gate": {
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "passed": false,
+        "status": "NOT_READY",
+        "thresholds": {
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4,
+          "min_perplexity": 32.0
+        }
+      }
+    },
+    "v1": {
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "config": "/private/tmp/q3d-delivery-format-final-20261112/v1.config.json",
+      "config_sha256": "e266fe81c6974489ff55045ab9b72a22dd6192bb21595341ba4b843c0523040a",
+      "engine_error": null,
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "report": "/private/tmp/q3d-delivery-format-final-20261112/v1.smoke.json",
+      "synthetic_gate_override_used": true,
+      "tokenizer_gate": {
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "passed": false,
+        "status": "NOT_READY",
+        "thresholds": {
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4,
+          "min_perplexity": 32.0
+        }
+      }
+    },
+    "v1_residual2": {
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "config": "/private/tmp/q3d-delivery-format-final-20261112/v1_residual2.config.json",
+      "config_sha256": "0345e5d3cb1a1d3ddb40fe4cd87e4e5b6d1f4d01f6cf4b5d2e38df8b526d4c3c",
+      "engine_error": null,
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "report": "/private/tmp/q3d-delivery-format-final-20261112/v1_residual2.smoke.json",
+      "synthetic_gate_override_used": true,
+      "tokenizer_gate": {
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "passed": false,
+        "status": "NOT_READY",
+        "thresholds": {
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4,
+          "min_perplexity": 32.0
+        }
+      }
+    },
+    "v1_stride4": {
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "config": "/private/tmp/q3d-delivery-format-final-20261112/v1_stride4.config.json",
+      "config_sha256": "6a8cfaac8da4932af8af3956547f5cac52a3f29b0b034ef71088d015b49d2977",
+      "engine_error": null,
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "report": "/private/tmp/q3d-delivery-format-final-20261112/v1_stride4.smoke.json",
+      "synthetic_gate_override_used": true,
+      "tokenizer_gate": {
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "passed": false,
+        "status": "NOT_READY",
+        "thresholds": {
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4,
+          "min_perplexity": 32.0
+        }
+      }
+    },
+    "v1u": {
+      "completed_stages": [
+        "T",
+        "Q",
+        "J"
+      ],
+      "config": "/private/tmp/q3d-delivery-format-final-20261112/v1u.config.json",
+      "config_sha256": "c9b7eb63f321cf04e3a92565eb2b3db76f24506813d5be9098ae9911f4c94a3e",
+      "engine_error": null,
+      "expected_stages": [
+        "T",
+        "Q",
+        "J"
+      ],
+      "report": "/private/tmp/q3d-delivery-format-final-20261112/v1u.smoke.json",
+      "synthetic_gate_override_used": true,
+      "tokenizer_gate": {
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "passed": false,
+        "status": "NOT_READY",
+        "thresholds": {
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4,
+          "min_perplexity": 32.0
+        }
+      }
+    }
+  },
+  "schema": "self_audit.candidate_q3d.smoke_all.v1",
+  "status": "COMPLETED_ALL_SYNTHETIC_RECIPES"
+}

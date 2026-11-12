@@ -137,7 +137,7 @@ def prepare(index: str | Path, root: str | Path, out: str | Path, labels: int, s
             source_class_map: str | Path | dict, *, frame_base: int | None = None,
             axis_order: str | None = None, mask_axis_order: str | None = None,
             evaluation: bool = False, spatial_unit_override: str | None = None,
-            dataset_release: str = "original_2020") -> str:
+            dataset_release: str = "original_2020", q3d_evaluation: bool = False) -> str:
     """Build hash-pinned train/development manifests from an M&Ms index."""
     if frame_base is None:
         raise ValueError("frame_base must be explicit (M&Ms index conventions differ across mirrors)")
@@ -152,13 +152,16 @@ def prepare(index: str | Path, root: str | Path, out: str | Path, labels: int, s
     train_rows = [r for r in rows if r["split"] == "train"]
     val_rows = [r for r in rows if r["split"] == "val"]
     test_rows = [r for r in rows if r["split"] == "test"]
+    if q3d_evaluation and (not val_rows or not test_rows):
+        raise ValueError("Q3D evaluation requires nonempty locked DEV and TEST splits")
     if len(train_rows) < 2:
         raise ValueError("M&Ms index needs at least two TRAIN patients")
     labeled_ids = _select_annotated(train_rows, labels, seed)
     out.mkdir(parents=True)
     geometry_by_patient: dict[str, dict] = {}
     source_images: dict[str, dict] = {}
-    groups = {"labeled": [], "unlabeled": [], "evaluation": []}
+    source_masks: dict[str, list[dict[str, Any]]] = {}
+    groups = {"labeled": [], "unlabeled": [], "evaluation": [], "test": []}
 
     def process(row: dict[str, str], role: str) -> None:
         pid = row["patient_id"]
@@ -181,24 +184,44 @@ def prepare(index: str | Path, root: str | Path, out: str | Path, labels: int, s
             es = parse_frame(row["es_frame"], frame_base=frame_base, name=f"{pid}.es_frame")
             if ed == es or ed >= cine.shape[0] or es >= cine.shape[0]:
                 raise ValueError(f"invalid ED/ES frames for {pid}: {ed}, {es}")
+            if q3d_evaluation and role in {"evaluation", "test"}:
+                record["phases"] = {"ED": ed, "ES": es}
             record["masks"] = {}
             for phase, frame in (("ed", ed), ("es", es)):
                 mask = _frame_mask(nib, row, phase, frame, root=root, image_obj=image_obj,
                                    image_spatial_shape=spatial_shape, source_map=source_map,
                                    default_mask_axis=mask_axis_order, image_unit=image_unit,
                                    unit_override=spatial_unit_override)
+                if q3d_evaluation:
+                    source_path = resolve_path(root, (row.get(f"mask_{phase}") or row.get("mask") or "").strip())
+                    source_masks.setdefault(pid, []).append({
+                        "phase": phase.upper(), "frame": frame, "path": str(source_path),
+                        "sha256": digest(source_path),
+                    })
                 mask_path = out / f"{pid}_t{frame:03d}_mask.npy"
                 np.save(mask_path, mask.astype(np.uint8))
-                record["masks"][str(frame)] = {"path": mask_path.name, "sha256": digest(mask_path)}
+                mask_record = {"path": mask_path.name, "sha256": digest(mask_path)}
+                if q3d_evaluation and role in {"evaluation", "test"}:
+                    mask_record["phase"] = phase.upper()
+                record["masks"][str(frame)] = mask_record
         groups[role].append(record)
 
     for row in train_rows:
         process(row, "labeled" if row["patient_id"] in labeled_ids else "unlabeled")
-    if evaluation:
+    if evaluation or q3d_evaluation:
         for row in val_rows:
             if not _has_annotations(row):
                 raise ValueError(f"development patient {row['patient_id']} needs explicit ED/ES masks")
             process(row, "evaluation")
+    if q3d_evaluation:
+        for row in test_rows:
+            if not _has_annotations(row):
+                raise ValueError(f"TEST patient {row['patient_id']} needs explicit ED/ES masks")
+            process(row, "test")
+    if q3d_evaluation:
+        source_hashes = [entry["sha256"] for entry in source_images.values()]
+        if len(source_hashes) != len(set(source_hashes)):
+            raise ValueError("duplicate raw image content across patient IDs/splits; resolve the locked index explicitly")
 
     train_manifest = {
         "schema": "self_audit.data.v2", "role": "training", "synthetic": False,
@@ -213,7 +236,7 @@ def prepare(index: str | Path, root: str | Path, out: str | Path, labels: int, s
                                      for g in (groups["labeled"], groups["unlabeled"]) for r in g}},
     }
     write_json(out / "train.json", train_manifest)
-    if evaluation:
+    if evaluation or q3d_evaluation:
         write_json(out / "development.json", {
             "schema": "self_audit.data.v2", "role": "development", "synthetic": False,
             "dataset": "mnms", "dataset_release": dataset_release, "scope": "exposed_development",
@@ -223,6 +246,18 @@ def prepare(index: str | Path, root: str | Path, out: str | Path, labels: int, s
             "geometry": {"schema": GEOMETRY_MAP_SCHEMA,
                          "by_patient": {r["id"]: geometry_by_patient[r["id"]] for r in groups["evaluation"]}},
         })
+    if q3d_evaluation:
+        if not groups["evaluation"] or not groups["test"]:
+            raise ValueError("Q3D evaluation requires nonempty locked DEV and TEST splits")
+        write_json(out / "test.json", {
+            "schema": "self_audit.data.v2", "role": "test", "synthetic": False,
+            "dataset": "mnms", "dataset_release": dataset_release, "scope": "locked_test",
+            "patients": groups["test"], "class_mapping": dict(CLASS_MAPPING),
+            "patient_metadata": {r["patient_id"]: {"vendor": r["vendor"].strip()}
+                                 for r in test_rows if r.get("vendor", "").strip()},
+            "geometry": {"schema": GEOMETRY_MAP_SCHEMA,
+                         "by_patient": {r["id"]: geometry_by_patient[r["id"]] for r in groups["test"]}},
+        })
     write_json(out / "PREPARATION.json", {
         "schema": "self_audit.preparation.mnms.v1", "dataset": "mnms", "dataset_release": dataset_release,
         "source_index": str(Path(index).resolve()), "source_index_sha256": digest(index),
@@ -230,12 +265,16 @@ def prepare(index: str | Path, root: str | Path, out: str | Path, labels: int, s
         "frame_base": frame_base, "axis_order_default": axis_order,
         "spatial_unit_override": spatial_unit_override,
         "mask_axis_order_default": mask_axis_order, "raw_images": source_images,
-        "read_mask_patient_ids": sorted(labeled_ids) + ([r["patient_id"] for r in val_rows] if evaluation else []),
+        "read_mask_patient_ids": sorted(labeled_ids) + ([r["patient_id"] for r in val_rows] if evaluation or q3d_evaluation else []) + ([r["patient_id"] for r in test_rows] if q3d_evaluation else []),
+        "raw_masks": source_masks if q3d_evaluation else None,
         "unlabeled_mask_reads": 0,
         "normalization": "per_cine_image_only_percentiles_0.5_99.5",
         "geometry_schema": GEOMETRY_SCHEMA, "geometry_axis_order": ["T", "Z", "Y", "X"],
         "class_mapping": dict(CLASS_MAPPING), "train_manifest_sha256": digest(out / "train.json"),
-        "evaluation_authorized": evaluation,
+        "evaluation_authorized": evaluation or q3d_evaluation,
+        "q3d_evaluation_authorized": q3d_evaluation,
+        "development_manifest_sha256": digest(out / "development.json") if q3d_evaluation else None,
+        "test_manifest_sha256": digest(out / "test.json") if q3d_evaluation else None,
     })
     return digest(out / "train.json")
 
@@ -254,9 +293,11 @@ if __name__ == "__main__":
     parser.add_argument("--spatial-unit", choices=("mm", "m", "micron"))
     parser.add_argument("--dataset-release", required=True, choices=("original_2020",))
     parser.add_argument("--evaluation", action="store_true")
+    parser.add_argument("--q3d-evaluation", action="store_true", help="explicitly prepare phase-pinned Q3D DEV and TEST manifests")
     args = parser.parse_args()
     print(prepare(args.index, args.root, args.out, args.labels, args.seed,
                    args.source_class_map, frame_base=args.frame_base,
                    axis_order=args.axis_order, mask_axis_order=args.mask_axis_order,
                    evaluation=args.evaluation, spatial_unit_override=args.spatial_unit,
+                   q3d_evaluation=args.q3d_evaluation,
                    dataset_release=args.dataset_release))

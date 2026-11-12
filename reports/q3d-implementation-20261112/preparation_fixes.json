@@ -1,0 +1,51 @@
+{
+  "schema": "self_audit.q3d.preparation_fixes.v1",
+  "date": "2026-11-12",
+  "scope": "Q3D preparation integration repair; synthetic temporary-file fixtures only",
+  "baseline_head": "a03aadb060c109c05a67bbd94d0d56a78da84d4e",
+  "implementation": {
+    "explicit_option": "--q3d-evaluation",
+    "acdc": {
+      "source": "ACDC Info.cfg ED/ES (1-based), converted explicitly to 0-based frame indices",
+      "manifests": ["train.json", "development.json", "test.json"],
+      "evaluation_masks": "Only the declared ED and ES masks are prepared for DEV and TEST; missing phase metadata or masks fail closed."
+    },
+    "original_mnms": {
+      "source": "Explicit ED/ES frame values and original class map from the declared original_2020 index",
+      "manifests": ["train.json", "development.json", "test.json"],
+      "class_mapping": "Source labels are remapped to canonical BG/RV/MYO/LV; source mapping and raw evaluation-mask hashes are recorded."
+    },
+    "shared_contract": {
+      "schema": "self_audit.data.v2",
+      "native_arrays": "Original native voxel grids and declared geometry are retained without crop or resampling.",
+      "hashes": "Prepared image and mask cache hashes are present in manifests; preparation receipts bind manifest hashes and source provenance.",
+      "unlabeled_train": "Image-only records contain no masks or phase metadata; reported unlabeled mask reads remain zero.",
+      "split_safety": "DEV and TEST are separate locked roles and checked for TRAIN overlap by Q3D APIs."
+    }
+  },
+  "verification": {
+    "command": "python -m pytest -q tests/test_q3d_preparation.py",
+    "result": "PASS: 3 passed",
+    "coverage": [
+      "ACDC CLI output from synthetic NIfTI fixtures loads through CandidateA3DData/Q3DData and Q3D evaluation.",
+      "Original M&Ms CLI output from synthetic NIfTI/index fixtures loads through CandidateA3DData/Q3DData and Q3D evaluation.",
+      "Q3D DEV diagnostics manifest and ED/ES phase resolver accept prepared DEV records.",
+      "ACDC phase parser rejects missing, duplicate, and out-of-range phase declarations.",
+      "DEV and TEST evaluation report ED/ES clinical errors; TEST role is accepted by Q3D evaluation.",
+      "Image/mask hashes, native geometry, canonical class mapping, split disjointness, and image-only U record shape are asserted."
+    ],
+    "repository_check": "PASS: python scripts/check_repo.py",
+    "compileall": "PASS: prepare_acdc.py, prepare_mnms.py, and tests/test_q3d_preparation.py",
+    "full_repository_pytest": "NOT_RUN_BY_WORKER; focused preparation integration tests were run against the shared in-progress Q3D worktree.",
+    "q3d_smoke": "NOT_RUN_BY_WORKER.",
+    "patient_data_read": false,
+    "patient_training": "NOT_RUN",
+    "gpu": "NOT_RUN",
+    "clinical_efficacy": "NOT_ESTABLISHED"
+  },
+  "sha256": {
+    "prepare_acdc.py": "05afaae047e92331ef92ee93dc46ec986cb99443f1644678004dbc6b7a9d64d5",
+    "prepare_mnms.py": "02435bdb405a93c73ff650c4a37f0d8608f8d67cc1dee8930d186a0a634b4030",
+    "tests/test_q3d_preparation.py": "bb12b4f5330d663c97270d3c570260d70cafa3a402fe8cd51840d51244f6a20c"
+  }
+}

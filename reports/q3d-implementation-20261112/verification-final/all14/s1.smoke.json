@@ -1,0 +1,390 @@
+{
+  "arm": "s1",
+  "completed_stages": [
+    "T",
+    "Q",
+    "P",
+    "J"
+  ],
+  "config_path": "/private/tmp/q3d-delivery-format-final-20261112/s1.config.json",
+  "config_sha256": "aec835fbaae950361e2ccbe81996ceb1451fe1b3a6d20f217da9d94c98262a37",
+  "configured_stage_updates": {
+    "J": 4,
+    "P": 1,
+    "Q": 2,
+    "T": 1
+  },
+  "device": "cpu",
+  "engine_error": null,
+  "engine_result": {
+    "active_stages": [
+      "T",
+      "Q",
+      "P",
+      "J"
+    ],
+    "arm": "s1",
+    "checkpoint": "/private/tmp/q3d-delivery-format-final-20261112/s1/latest.pt",
+    "checkpoint_sha256": "ac8b276b5fce7a7f642f6fdc2f59f45fc345c33bf7ce50f375e44fc946740c62",
+    "completed_stages": [
+      "T",
+      "Q",
+      "P",
+      "J"
+    ],
+    "completed_updates": 7,
+    "config_sha256": "12306b3e61e3b23140658b6e9f451b5f6394b9df6863ce3a24315e7bd9360685",
+    "data_identity": {
+      "protocol": "A",
+      "student_labeled_patients": [
+        "train_labeled_000",
+        "train_labeled_001"
+      ],
+      "student_unlabeled_patients": [
+        "train_unlabeled_000",
+        "train_unlabeled_001"
+      ],
+      "student_view": {
+        "dataset": "synthetic",
+        "images": [
+          {
+            "id": "train_labeled_000",
+            "sha256": "68a9cc68e4831c15febe6efc693c4264851238b06f6dc55657befd4a10bb4859"
+          },
+          {
+            "id": "train_labeled_001",
+            "sha256": "89d7c5706f908f48c38ff084250af174b6f37057549c20f13d6d3cdf83d610fb"
+          },
+          {
+            "id": "train_unlabeled_000",
+            "sha256": "2b3d2110521a406b1a22e5ac40342b7a9fb3d84c8b5c38f233a01fa4088daf74"
+          },
+          {
+            "id": "train_unlabeled_001",
+            "sha256": "707cbcc43ce947ec3e141d600799658195527ba474ce2b3b28059ad298321248"
+          }
+        ],
+        "manifest_sha256": "5196bff04495d9c594a9d82765a0ee03b28d14b6d98e750cc679a6e22f37321a",
+        "patients": [
+          "train_labeled_000",
+          "train_labeled_001",
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ]
+      },
+      "teacher_labeled_patients": [
+        "train_labeled_000",
+        "train_labeled_001"
+      ],
+      "teacher_view": {
+        "dataset": "synthetic",
+        "images": [
+          {
+            "id": "train_labeled_000",
+            "sha256": "68a9cc68e4831c15febe6efc693c4264851238b06f6dc55657befd4a10bb4859"
+          },
+          {
+            "id": "train_labeled_001",
+            "sha256": "89d7c5706f908f48c38ff084250af174b6f37057549c20f13d6d3cdf83d610fb"
+          },
+          {
+            "id": "train_unlabeled_000",
+            "sha256": "2b3d2110521a406b1a22e5ac40342b7a9fb3d84c8b5c38f233a01fa4088daf74"
+          },
+          {
+            "id": "train_unlabeled_001",
+            "sha256": "707cbcc43ce947ec3e141d600799658195527ba474ce2b3b28059ad298321248"
+          }
+        ],
+        "manifest_sha256": "5196bff04495d9c594a9d82765a0ee03b28d14b6d98e750cc679a6e22f37321a",
+        "patients": [
+          "train_labeled_000",
+          "train_labeled_001",
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ]
+      },
+      "train_patients": [
+        "train_labeled_000",
+        "train_labeled_001",
+        "train_unlabeled_000",
+        "train_unlabeled_001"
+      ]
+    },
+    "evidence_status": "SOFTWARE_ONLY_SYNTHETIC",
+    "gpu_evidence": "NOT_RUN",
+    "joint_optimizer_updates": 4,
+    "output_dir": "/private/tmp/q3d-delivery-format-final-20261112/s1",
+    "physiology_support_gate": {
+      "context": "J physiology cache reload",
+      "override_scope": null,
+      "override_used": false,
+      "passed": true,
+      "patient_count": 2,
+      "patient_weights": {
+        "train_unlabeled_000": 1.0,
+        "train_unlabeled_001": 1.0
+      },
+      "positive_patient_count": 2,
+      "status": "PASS_POSITIVE_U_SUPPORT"
+    },
+    "physiology_support_gates": [
+      {
+        "context": "P physiology cache",
+        "override_scope": null,
+        "override_used": false,
+        "passed": true,
+        "patient_count": 2,
+        "patient_weights": {
+          "train_unlabeled_000": 1.0,
+          "train_unlabeled_001": 1.0
+        },
+        "positive_patient_count": 2,
+        "status": "PASS_POSITIVE_U_SUPPORT"
+      },
+      {
+        "context": "J physiology cache reload",
+        "override_scope": null,
+        "override_used": false,
+        "passed": true,
+        "patient_count": 2,
+        "patient_weights": {
+          "train_unlabeled_000": 1.0,
+          "train_unlabeled_001": 1.0
+        },
+        "positive_patient_count": 2,
+        "status": "PASS_POSITIVE_U_SUPPORT"
+      }
+    ],
+    "real_data_evidence": "NOT_RUN",
+    "runtime_synthetic": true,
+    "schema": "self_audit.candidate_q3d.training_result.v1",
+    "status": "COMPLETED",
+    "student_state_sha256": "f1885fafd23c5ba456f14327ffedd784b89e1b1957193913e36e9b926328e535",
+    "synthetic_gate_override_used": true,
+    "teacher_provenance": {
+      "accuracy_claim": "NOT_MEASURED",
+      "architecture": "shared_3d_trunk_original_region_separate_boundary_sdf",
+      "backbone": {
+        "backbone": "tiny_test3d",
+        "pretrained": false,
+        "weights_status": "SYNTHETIC_RANDOM_INIT"
+      },
+      "checkpoint_boundary": false,
+      "class_mapping": [
+        "BG",
+        "RV",
+        "MYO",
+        "LV"
+      ],
+      "class_mapping_trust": "metadata_self_declared_semantic_permutation_not_empirically_verified",
+      "input_channels": 1,
+      "model_class": "DualBranchTeacher3D",
+      "num_classes": 4,
+      "offload_saved_tensors": false,
+      "padding_multiple": 8,
+      "padding_policy": "stride_multiple",
+      "pretraining_data": null,
+      "quality": "SYNTHETIC_RANDOM_INIT",
+      "synthetic": true,
+      "weight_inventory": {
+        "checkpoint_unused_keys": [],
+        "evidence_scope": "SOFTWARE_ONLY",
+        "loaded_keys": [],
+        "missing_keys": [],
+        "reinitialized_keys": [
+          "boundary_path.context.0.weight",
+          "boundary_path.context.1.bias",
+          "boundary_path.context.1.weight",
+          "boundary_path.detail.0.weight",
+          "boundary_path.detail.1.bias",
+          "boundary_path.detail.1.weight",
+          "boundary_path.detail.3.body.0.weight",
+          "boundary_path.detail.3.body.1.bias",
+          "boundary_path.detail.3.body.1.weight",
+          "boundary_path.detail.3.body.3.weight",
+          "boundary_path.detail.3.body.4.bias",
+          "boundary_path.detail.3.body.4.weight",
+          "boundary_path.fuse.0.weight",
+          "boundary_path.fuse.1.bias",
+          "boundary_path.fuse.1.weight",
+          "boundary_path.fuse.3.body.0.weight",
+          "boundary_path.fuse.3.body.1.bias",
+          "boundary_path.fuse.3.body.1.weight",
+          "boundary_path.fuse.3.body.3.weight",
+          "boundary_path.fuse.3.body.4.bias",
+          "boundary_path.fuse.3.body.4.weight",
+          "boundary_path.sdf_head.bias",
+          "boundary_path.sdf_head.weight",
+          "boundary_path.seg_head.bias",
+          "boundary_path.seg_head.weight",
+          "boundary_path.spacing_context.0.bias",
+          "boundary_path.spacing_context.0.weight",
+          "boundary_path.spacing_context.1.bias",
+          "boundary_path.spacing_context.1.weight",
+          "encoder.down.0.0.weight",
+          "encoder.down.0.1.bias",
+          "encoder.down.0.1.weight",
+          "encoder.down.0.3.body.0.weight",
+          "encoder.down.0.3.body.1.bias",
+          "encoder.down.0.3.body.1.weight",
+          "encoder.down.0.3.body.3.weight",
+          "encoder.down.0.3.body.4.bias",
+          "encoder.down.0.3.body.4.weight",
+          "encoder.down.1.0.weight",
+          "encoder.down.1.1.bias",
+          "encoder.down.1.1.weight",
+          "encoder.down.1.3.body.0.weight",
+          "encoder.down.1.3.body.1.bias",
+          "encoder.down.1.3.body.1.weight",
+          "encoder.down.1.3.body.3.weight",
+          "encoder.down.1.3.body.4.bias",
+          "encoder.down.1.3.body.4.weight",
+          "encoder.down.2.0.weight",
+          "encoder.down.2.1.bias",
+          "encoder.down.2.1.weight",
+          "encoder.down.2.3.body.0.weight",
+          "encoder.down.2.3.body.1.bias",
+          "encoder.down.2.3.body.1.weight",
+          "encoder.down.2.3.body.3.weight",
+          "encoder.down.2.3.body.4.bias",
+          "encoder.down.2.3.body.4.weight",
+          "encoder.region_head.bias",
+          "encoder.region_head.weight",
+          "encoder.stem.0.weight",
+          "encoder.stem.1.bias",
+          "encoder.stem.1.weight",
+          "encoder.stem.3.body.0.weight",
+          "encoder.stem.3.body.1.bias",
+          "encoder.stem.3.body.1.weight",
+          "encoder.stem.3.body.3.weight",
+          "encoder.stem.3.body.4.bias",
+          "encoder.stem.3.body.4.weight",
+          "region_path.head.bias",
+          "region_path.head.weight",
+          "region_path.lateral.0.bias",
+          "region_path.lateral.0.weight",
+          "region_path.lateral.1.bias",
+          "region_path.lateral.1.weight",
+          "region_path.lateral.2.bias",
+          "region_path.lateral.2.weight",
+          "region_path.lateral.3.bias",
+          "region_path.lateral.3.weight",
+          "region_path.refine.0.body.0.weight",
+          "region_path.refine.0.body.1.bias",
+          "region_path.refine.0.body.1.weight",
+          "region_path.refine.0.body.3.weight",
+          "region_path.refine.0.body.4.bias",
+          "region_path.refine.0.body.4.weight",
+          "region_path.refine.1.body.0.weight",
+          "region_path.refine.1.body.1.bias",
+          "region_path.refine.1.body.1.weight",
+          "region_path.refine.1.body.3.weight",
+          "region_path.refine.1.body.4.bias",
+          "region_path.refine.1.body.4.weight",
+          "region_path.refine.2.body.0.weight",
+          "region_path.refine.2.body.1.bias",
+          "region_path.refine.2.body.1.weight",
+          "region_path.refine.2.body.3.weight",
+          "region_path.refine.2.body.4.bias",
+          "region_path.refine.2.body.4.weight",
+          "region_path.refine.3.body.0.weight",
+          "region_path.refine.3.body.1.bias",
+          "region_path.refine.3.body.1.weight",
+          "region_path.refine.3.body.3.weight",
+          "region_path.refine.3.body.4.bias",
+          "region_path.refine.3.body.4.weight"
+        ],
+        "source": "synthetic_random_fixture",
+        "unexpected_keys": []
+      }
+    },
+    "teacher_state_sha256": "4dc4d72247302e7dd9bc1baca3839887ef68951f808582d8edf69e8c9a321873",
+    "tokenizer": {
+      "dimension": 64,
+      "frozen": true,
+      "initialized": true,
+      "sha256": "c58204a1f9795902a7c584c7d2e3acdfb11eed20ea912a2c709518ab135d05b9",
+      "size": 256,
+      "train_heads_present": false,
+      "version": "q3d_teacher_codebook.v1"
+    },
+    "tokenizer_gate": {
+      "missing": [
+        "dead_code_fraction",
+        "200-update_usage_history"
+      ],
+      "passed": false,
+      "status": "NOT_READY",
+      "thresholds": {
+        "max_dead_code_fraction": 0.25,
+        "min_class_codes": 4,
+        "min_perplexity": 32.0
+      }
+    }
+  },
+  "evidence_status": "SOFTWARE_ONLY_SYNTHETIC",
+  "expected_stages": [
+    "T",
+    "Q",
+    "P",
+    "J"
+  ],
+  "fixture_development_manifest_sha256": "67f0ff131043d61016dc37f7cd0e91cbc171964f890647f22861f4829f13b54f",
+  "fixture_train_manifest_sha256": "5196bff04495d9c594a9d82765a0ee03b28d14b6d98e750cc679a6e22f37321a",
+  "gpu_evidence": "NOT_RUN",
+  "patient_metrics_claimed": false,
+  "real_data_evidence": "NOT_RUN",
+  "recipe": "s1",
+  "runtime_synthetic": true,
+  "schema": "self_audit.candidate_q3d.smoke.v1",
+  "status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+  "synthetic_gate_override_used": true,
+  "synthetic_initialization_volume_override": 16,
+  "synthetic_teacher_fixture": {
+    "class_mapping": [
+      "BG",
+      "RV",
+      "MYO",
+      "LV"
+    ],
+    "confidence_logits": [
+      10.0,
+      -10.0
+    ],
+    "frame_intensity_cue": {
+      "frame_0": 0.2,
+      "frame_1": 0.8
+    },
+    "kind": "manufactured_coordinate_partition",
+    "physiology_design": "frame_0 LV/RV ED exceeds frame_1 by equal volumes; MYO is constant"
+  },
+  "tokenizer_gate": {
+    "missing": [
+      "dead_code_fraction",
+      "200-update_usage_history"
+    ],
+    "passed": false,
+    "status": "NOT_READY",
+    "thresholds": {
+      "max_dead_code_fraction": 0.25,
+      "min_class_codes": 4,
+      "min_perplexity": 32.0
+    }
+  },
+  "tokenizer_gate_engine_record": {
+    "missing": [
+      "dead_code_fraction",
+      "200-update_usage_history"
+    ],
+    "passed": false,
+    "status": "NOT_READY",
+    "thresholds": {
+      "max_dead_code_fraction": 0.25,
+      "min_class_codes": 4,
+      "min_perplexity": 32.0
+    }
+  },
+  "tokenizer_initialization_required_volumes": 200,
+  "tokenizer_initialization_volumes": 16
+}

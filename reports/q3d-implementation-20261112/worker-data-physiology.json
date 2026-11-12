@@ -1,0 +1,43 @@
+{
+  "schema": "self_audit.q3d_worker_data_physiology_report.v1",
+  "status": "SOFTWARE_ONLY_COMPLETE",
+  "source_head": "a03aadb060c109c05a67bbd94d0d56a78da84d4e",
+  "implementation": {
+    "physiology": "Per-patient predicted cine ED/ES selection, native-geometry soft volumes, physiology residual guards/weights, detached S4 cell-confidence weights, frozen-teacher extraction from image-only TRAIN U, SHA-sealed atomic cache, config/source/protocol/codebook binding, online refresh predicate, report-only DEV association diagnostic.",
+    "data": "Protocol A reuses the student K-label set; Protocol B requires a separate all-TRAIN teacher label view. Both views verify cohort, native image identity and geometry. U frame metadata is restricted to patient/frame; sampler chooses L and U patients uniformly, samples a native frame within each, and serializes exact RNG and cohort state.",
+    "augmentation": "Native y/x flips and spacing-gated in-plane quarter turns transform images and labels together while updating affine/spacing/shape. SDF is intentionally left to the caller to recompute from transformed labels. Labeled and U intensity views use deterministic gamma/noise generators; U teacher/student views share spatial geometry.",
+    "cache_cli": "scripts/q3d_physio_cache.py verifies configured TRAIN manifest bytes and real post-T checkpoint SHA, requires an explicit loader for real runs, supports CPU synthetic-only construction, and does not train or access DEV/TEST."
+  },
+  "verification": {
+    "command": "rtk python -m pytest -q tests/test_q3d_physiology_data.py",
+    "result": "11 passed in 0.70s",
+    "coverage": [
+      "analytic anisotropic ellipsoid volumes and predicted ED/ES",
+      "physiology guards, dataset switch and class-mapping inference",
+      "detached confidence cell weights and report-only DEV diagnostic",
+      "cache protocol/config/source/checkpoint identity, tamper detection and refresh",
+      "synthetic cache CLI with injected and default CPU teacher paths",
+      "image-only U cine traversal without mask reads",
+      "Protocol A/B label separation and deterministic resumable uniform sampler",
+      "world-coordinate exact flips/rot90 and anisotropic rotation rejection",
+      "shared U geometry and reproducible strong intensity view"
+    ],
+    "cache_cli_help": "PASS",
+    "patient_data": "NOT_RUN",
+    "real_post_T_teacher_checkpoint": "NOT_RUN",
+    "GPU": "NOT_RUN"
+  },
+  "weight_hashes": {
+    "synthetic_test_fixture_weight_sha256": "847c52b9d1b811dd8a29613654189163654c24a2f4193eaf3226e62bb1e41bc9",
+    "real_post_T_teacher_checkpoint_sha256": null,
+    "real_tokenizer_codebook_sha256": null
+  },
+  "source_sha256": {
+    "self_audit/candidate_q3d/physiology.py": "ac7cecf389a43adad893b56b8f414a65aabf6c227e65ab670e7bcede6caf4797",
+    "self_audit/candidate_q3d/data.py": "b33b95f94431da7aafa76f6701f702c4aeb37812bbde1e638be9c307f880def8",
+    "self_audit/candidate_q3d/augmentation.py": "0e5a25c3cf90e35237380687a4b33bc6c6467d4ffe6cc7ee9a6e0f8db836a63f",
+    "scripts/q3d_physio_cache.py": "bb9bb738098130d81b99641b272222ae9aa0b3baf17df1633ee9c5cb61b61e66",
+    "tests/test_q3d_physiology_data.py": "12480831e165734d11b3c9f633a62008658afc863ea80b7cce2dde8651e0561a"
+  },
+  "remaining_integration_contract": "Engine stage-P cache writes must pass config=config and source_identity=data.cache_source_identity(); physiology refresh must bind the refreshed teacher SHA and current source identity. No patient/GPU claim is made."
+}

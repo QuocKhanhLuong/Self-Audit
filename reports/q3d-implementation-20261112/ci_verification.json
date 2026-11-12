@@ -1,0 +1,136 @@
+{
+  "ci1_historical": {
+    "ci": {
+      "failure_artifacts": "logs and package-versions.txt only; synthetic outputs, dataset files, and weights are not uploaded",
+      "job": "q3d-cpu-contracts",
+      "remote_ci_run": "NOT_RUN",
+      "steps": [
+        "official CPU dependencies",
+        "scripts/check_repo.py",
+        "train.py --describe",
+        "python -m pytest -q",
+        "scripts/smoke_q3d.py --all-arms --init-volumes 16 --q-updates 2"
+      ],
+      "workflow": ".github/workflows/ci.yml",
+      "workflow_name": "q3d-contracts"
+    },
+    "disqualified_post_run_inventory_sha256": "ad8f0a412ef5c372a1fa12b9ec41eea0c6f67b87fed38f3d218a85db993e82c5",
+    "environment": {
+      "install_sources": {
+        "other_requirements": "default https://pypi.org/simple (official PyPI)",
+        "torch": "https://download.pytorch.org/whl/cpu (official PyTorch CPU index)"
+      },
+      "nibabel": "5.5.0",
+      "numpy": "2.4.6",
+      "pip": "26.3",
+      "platform": "macOS arm64 isolated venv at /private/tmp/self-audit-q3d-ci-py311",
+      "pytest": "9.2.0",
+      "python": "3.11.16",
+      "scipy": "1.17.1",
+      "torch": "2.10.0",
+      "torch_cuda_available": false
+    },
+    "git_head": "a03aadb060c109c05a67bbd94d0d56a78da84d4e",
+    "source_fingerprint": "NOT_CAPTURED_AT_EXECUTION_TIME",
+    "source_hash_note": "The prior aggregate was generated after CI1 checks completed and included preparation sources that were changing concurrently. It is retained as the prior inventory digest only and is not claimed as a fingerprint of the code executed by the historical full suite or all14 smoke.",
+    "verification": {
+      "check_repo": {
+        "command": "python scripts/check_repo.py",
+        "exit_code": 0,
+        "status": "PASS"
+      },
+      "pytest": {
+        "command": "python -m pytest -q",
+        "exit_code": 0,
+        "passed": 160,
+        "status": "PASS"
+      },
+      "q3d_all14": {
+        "command": "OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python scripts/smoke_q3d.py --all-arms --out /tmp/self-audit-q3d-ci1-all14 --init-volumes 16 --q-updates 2",
+        "evidence_status": "SOFTWARE_ONLY_SYNTHETIC",
+        "gpu_evidence": "NOT_RUN",
+        "patient_metrics_claimed": false,
+        "real_data_evidence": "NOT_RUN",
+        "recipe_statuses": {
+          "a3d_teacher_free": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+          "b1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+          "c0": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+          "c1": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+          "e1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+          "mean_teacher": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+          "mednext_supervised": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+          "o1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+          "s1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+          "v0": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+          "v1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+          "v1_residual2": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+          "v1_stride4": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+          "v1u": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE"
+        },
+        "recipes": 14,
+        "status": "COMPLETED_ALL_SYNTHETIC_RECIPES",
+        "tokenizer_gate": "NOT_READY on tokenizer recipes (missing dead_code_fraction and 200-update usage history); explicitly synthetic-only override was used and reported, as allowed for smoke"
+      },
+      "q3d_v1_actual_cli": {
+        "actual_gate": "NOT_READY; missing dead_code_fraction and 200-update usage history",
+        "command": "python scripts/smoke_q3d.py --recipe v1 --out /tmp/self-audit-q3d-ci1-v1",
+        "completed_stages": [
+          "T",
+          "Q",
+          "P",
+          "J"
+        ],
+        "override_reported": true,
+        "status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE"
+      }
+    }
+  },
+  "ci2": {
+    "actionlint": {
+      "asset_sha256": "aba9ced2dee8d27fecca3dc7feb1a7f9a52caefa1eb46f3271ea66b6e0e6953f",
+      "asset_url": "https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_darwin_arm64.tar.gz",
+      "command": "/private/tmp/actionlint-1.7.12/actionlint .github/workflows/ci.yml",
+      "source": "official rhysd/actionlint GitHub release v1.7.12",
+      "status": "PASS",
+      "version": "1.7.12"
+    },
+    "job": "q3d-cpu-contracts",
+    "log_directory_initialization": {
+      "detail": "Initialize CI_LOG_DIR from RUNNER_TEMP inside the dependency step, export it through GITHUB_ENV for later steps; no runner.temp expression remains in job-level env.",
+      "status": "CORRECTED",
+      "upload_artifact_runner_temp_context": "retained at step-level action input"
+    },
+    "remote_github_actions_run": "NOT_RUN",
+    "workflow": ".github/workflows/ci.yml",
+    "workflow_name": "q3d-contracts",
+    "workflow_sha256": "b5ef2ad5127911d3c78b66f35faf375dc25a46c59f1a4c7bff73d56430347c58"
+  },
+  "ci2_targeted_engine_validation": {
+    "command": "python -m pytest -q tests/test_q3d_preparation.py",
+    "coverage": "Both actual ACDC and M&Ms prepared DEV fixtures call _development_fg_dice with phase-tagged masks; patient score and macro score agree with evaluate_manifest output.",
+    "environment": {
+      "python": "3.11.16",
+      "torch": "2.10.0",
+      "venv": "/private/tmp/self-audit-q3d-ci-py311"
+    },
+    "result": "3 passed in 1.92s",
+    "scope": "Only the DEV mask-record validator, frozen preparation sources, and preparation regression test are fingerprinted here; historical CI1 full-suite/all14 evidence remains separate.",
+    "source_hashes_unchanged_after_test": true,
+    "status": "PASS",
+    "tested_source_files_sha256": {
+      "prepare_acdc.py": "05afaae047e92331ef92ee93dc46ec986cb99443f1644678004dbc6b7a9d64d5",
+      "prepare_mnms.py": "02435bdb405a93c73ff650c4a37f0d8608f8d67cc1dee8930d186a0a634b4030",
+      "self_audit/candidate_q3d/engine.py": "fd75632a0f0fe0c9d986beb79223e478b727e5d49b8a4f2878db28630c6c8f8a",
+      "tests/test_q3d_preparation.py": "6cc53182a51d0e020affa99678881ae6294b985a11391d6b1bf98df8f583cac8"
+    },
+    "tested_source_sha256": "33e5f4464afb82ac184eed4e1e1d115375388ef5b7dc56a6137e4571d5dba7b2"
+  },
+  "limits": [
+    "Historical CI1 evidence remains 160 tests and all14 synthetic recipes on actual PyTorch 2.10.0, but an exact execution-time source fingerprint was not captured; no post-run hash is represented as its tested source snapshot.",
+    "CI2 workflow and targeted selector regression passed official actionlint and the isolated PyTorch 2.10.0 environment; GitHub Actions execution and the Linux CPU wheel remain NOT_RUN.",
+    "The isolated 2.10.0 package was the official macOS arm64 wheel; software checks and manufactured fixtures do not establish real-data behavior, GPU behavior, patient efficacy, SOTA, or novelty."
+  ],
+  "schema": "self_audit.q3d_ci_verification.v1",
+  "scope": "software_only_cpu_compatibility",
+  "status": "PASS_WITH_CI2_CORRECTION"
+}

@@ -1,0 +1,182 @@
+{
+  "status": "PASS_SOFTWARE_ONLY",
+  "date": "2026-11-12",
+  "scope": "Q3D K1 official MedNeXt feature-channel contract and C1 continuous feature head",
+  "evidence_boundary": {
+    "teacher_initialization": "UNTRAINED_RANDOM_INIT",
+    "pretrained_weights_used": false,
+    "data_used": false,
+    "patient_training": "NOT_RUN",
+    "gpu_training": "NOT_RUN",
+    "efficacy_or_novelty_claim": "NONE"
+  },
+  "workspace_head_before_fix": "a03aadb060c109c05a67bbd94d0d56a78da84d4e",
+  "authoritative_inputs": {
+    "spec": "docs/CANDIDATE_Q3D_SPEC.md",
+    "spec_sha256": "d88f45ca2470ac24e7339935bbe28030e0877633f9870cd232afc30b02c10575",
+    "probe": "reports/q3d-implementation-20261112/official_source_probe.json",
+    "probe_file_sha256": "3f06ee4394f91267206d36fd2ac9de47bad6e873a16889607d9b5e6a3abf22b0",
+    "probe_embedded_sha256": "d53b72e1c38fbe528013b7d43a7552920c433b9d8ac0ad4d459889a71c41b68c",
+    "checked_project_sources": {
+      "self_audit/candidate_a3d/teacher.py": "bb4c80da4212ab15a4a2a526af0f0d4edb8dee7b8a7a6f1efbab73dc7a5055ba",
+      "self_audit/candidate_q3d/teacher_features.py": "20027717dc0a98ccda188b0b2451ba8d3bdae9193104c97e33065862901197fa"
+    }
+  },
+  "official_source": {
+    "path": "/private/tmp/q3d-mednext-official-20261112",
+    "commit": "0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba",
+    "clean_checkout": true,
+    "upstream_url": "https://github.com/MIC-DKFZ/MedNeXt",
+    "source_files_sha256": {
+      "nnunet_mednext/network_architecture/mednextv1/MedNextV1.py": "c6cdc72029a145d6e4d7bff40c8c3bc6d2c62f212853aa95b889d16562a4fcca",
+      "nnunet_mednext/network_architecture/mednextv1/blocks.py": "2af27e80a743c84020df50c775e56f83a97a9f4be9d3e461c53b023f2a7da2fe",
+      "nnunet_mednext/network_architecture/mednextv1/create_mednext_v1.py": "374008990583498b07d157f485a6e9032697bb1a0aa4e167090e12eda9b8b09d"
+    }
+  },
+  "channel_mapping": {
+    "previous_incorrect": {
+      "stride4": 256,
+      "stride8": 128,
+      "stride16": 512
+    },
+    "corrected": {
+      "stride4": 128,
+      "stride8": 256,
+      "stride16": 512
+    },
+    "official_probe_sources": {
+      "stride4": {
+        "module": "dec_block_2.7",
+        "channels": 128
+      },
+      "stride8": {
+        "module": "dec_block_3.7",
+        "channels": 256
+      },
+      "stride16": {
+        "module": "bottleneck.7",
+        "channels": 512
+      }
+    }
+  },
+  "recipe_updates": [
+    {
+      "path": "configs/candidate_q3d/b1.json",
+      "stride": 8,
+      "previous_channels": 128,
+      "channels": 256
+    },
+    {
+      "path": "configs/candidate_q3d/c1.json",
+      "stride": 8,
+      "previous_channels": 128,
+      "channels": 256
+    },
+    {
+      "path": "configs/candidate_q3d/e1.json",
+      "stride": 8,
+      "previous_channels": 128,
+      "channels": 256
+    },
+    {
+      "path": "configs/candidate_q3d/mednext_supervised.json",
+      "stride": 8,
+      "previous_channels": 128,
+      "channels": 256
+    },
+    {
+      "path": "configs/candidate_q3d/o1.json",
+      "stride": 8,
+      "previous_channels": 128,
+      "channels": 256
+    },
+    {
+      "path": "configs/candidate_q3d/v0.json",
+      "stride": 8,
+      "previous_channels": 128,
+      "channels": 256
+    },
+    {
+      "path": "configs/candidate_q3d/v1.json",
+      "stride": 8,
+      "previous_channels": 128,
+      "channels": 256
+    },
+    {
+      "path": "configs/candidate_q3d/v1_residual2.json",
+      "stride": 8,
+      "previous_channels": 128,
+      "channels": 256
+    },
+    {
+      "path": "configs/candidate_q3d/v1_stride4.json",
+      "stride": 4,
+      "previous_channels": 256,
+      "channels": 128
+    },
+    {
+      "path": "configs/candidate_q3d/v1u.json",
+      "stride": 8,
+      "previous_channels": 128,
+      "channels": 256
+    }
+  ],
+  "joint_budget": {
+    "J_pair_updates": 8000,
+    "J_optimizer_updates": 8000,
+    "J_stream_microbatches": 16000,
+    "campaign_final_PLAN_modified": false
+  },
+  "regression": {
+    "portable_test": "tests/test_q3d_official_channels.py::test_portable_q3d_recipes_and_c1_head_match_official_channel_contract",
+    "portable_test_requires_external_source": false,
+    "official_source_test": "tests/test_q3d_official_channels.py::test_c1_feature_head_and_loss_match_bounded_official_source_forward",
+    "official_source_test_opt_in_env": "Q3D_OFFICIAL_MEDNEXT_SOURCE",
+    "random_init_native_input_shape": [
+      1,
+      1,
+      6,
+      17,
+      19
+    ],
+    "captured_stride8_feature_shape": [
+      1,
+      256,
+      4,
+      4,
+      4
+    ],
+    "aligned_feature_shape": [
+      1,
+      256,
+      6,
+      2,
+      2
+    ],
+    "C1_feature_head_out_channels": 256,
+    "continuous_feature_loss_and_student_backward": "PASS_FINITE",
+    "teacher_gradients": "NONE"
+  },
+  "verification": [
+    {
+      "command": "Q3D_OFFICIAL_MEDNEXT_SOURCE=/private/tmp/q3d-mednext-official-20261112 /private/tmp/self-audit-q3d-ci-py311/bin/python -m pytest -q tests/test_q3d_config_campaign.py tests/test_q3d_official_channels.py",
+      "result": "18 passed in 1.98s; bounded official-source CPU integration included; two upstream checkpoint warnings"
+    },
+    {
+      "command": "/private/tmp/self-audit-q3d-ci-py311/bin/python -m pytest -q tests/test_q3d_official_channels.py",
+      "result": "1 passed, 1 skipped in 0.59s; portable test passes without the source environment variable"
+    },
+    {
+      "command": "/private/tmp/self-audit-q3d-ci-py311/bin/python scripts/check_repo.py",
+      "result": "PASS; 14 Q3D recipes and 14 Q3D test modules recognized"
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS"
+    }
+  ],
+  "modified_project_source_sha256": {
+    "self_audit/candidate_q3d/config.py": "ce80c337a9c825fae1d45db384c6ac98e31ef984b64f445d7b7d2638ea45dfe5",
+    "tests/test_q3d_official_channels.py": "43679ce9e698218bb0112c2d7acb71cac6abe724eef39435d8af94a90d4525db"
+  }
+}

@@ -1,0 +1,120 @@
+{
+  "arm": "a3d_teacher_free",
+  "completed_stages": [
+    "J"
+  ],
+  "config_path": "/private/tmp/q3d-delivery-format-final-20261112/a3d_teacher_free.config.json",
+  "config_sha256": "29823555d7490c772589f22904c274ec959ef54693c9fc8c65bc4054c4480859",
+  "configured_stage_updates": {
+    "J": 4,
+    "P": 1,
+    "Q": 2,
+    "T": 1
+  },
+  "device": "cpu",
+  "engine_error": null,
+  "engine_result": {
+    "arm": "teacher_free",
+    "checkpoint_manifest_path": "/private/tmp/q3d-delivery-format-final-20261112/a3d_teacher_free/final/MANIFEST.json",
+    "checkpoint_manifest_sha256": "060c10913f771f624e19859ee43ca60a98944192ea5acada14538bfa5c8cb255",
+    "checkpoint_path": "/private/tmp/q3d-delivery-format-final-20261112/a3d_teacher_free/final",
+    "checkpoint_schema": "self_audit.candidate_a3d.checkpoint.v1",
+    "config_template": "/Users/alvinluong/Self-Audit/configs/candidate_a3d/teacher_free_acdc_k8.json",
+    "config_template_sha256": "3d40df16d3be00a0535de7405ac37cd574371d1c1470ebcc0a6c658142d14ab8",
+    "development_manifest_sha256": "67f0ff131043d61016dc37f7cd0e91cbc171964f890647f22861f4829f13b54f",
+    "development_selection": "legacy A-3D validation at each configured epoch; final checkpoint retained",
+    "evidence": "SOFTWARE_ONLY",
+    "gpu_evidence": "NOT_RUN",
+    "image_only_u_policy": "not_forwarded; no U loss or optimizer update",
+    "label_budget_k": 2,
+    "labeled_patient_ids": [
+      "train_labeled_000",
+      "train_labeled_001"
+    ],
+    "logical_update_unit": "L_only",
+    "logical_updates": 4,
+    "method": "candidate_a3d",
+    "optimizer_update_counts": {
+      "student_labeled": 4,
+      "student_unlabeled": 0,
+      "teacher": 0
+    },
+    "optimizer_updates": 4,
+    "protocol": "A",
+    "real_data_evidence": "NOT_RUN",
+    "schema": "self_audit.candidate_q3d.baseline.a3d_teacher_free.v1",
+    "seed": 42,
+    "source_hashes": {
+      "baseline_runner": "6436acc0ecfd8ee9d5b5f8a1795ffb66c8dd867724ff8eda2282173cc767be0e",
+      "legacy_config": "b3d28ba1e0e33a3dac193f99306be8747fa6cca6068576e891321ae436695a04",
+      "legacy_data": "2ce775ad763b80e0b285022b56f00a33af1ad454ee583bcf9de2c4209d79e5c8",
+      "legacy_engine": "9141e8c5904d4e71e03e4b57aec8b6969681810f7a6f4232031b0de286ea8391"
+    },
+    "status": "COMPLETED_SOFTWARE_ONLY",
+    "supervision_source": "K labeled TRAIN patients only",
+    "train_manifest_sha256": "5196bff04495d9c594a9d82765a0ee03b28d14b6d98e750cc679a6e22f37321a",
+    "trainer_report": {
+      "elapsed_seconds": 1.4289226662367582,
+      "epochs": 1,
+      "final_manifest_sha256": "060c10913f771f624e19859ee43ca60a98944192ea5acada14538bfa5c8cb255",
+      "label_budget": 2,
+      "label_reads": [
+        "train_labeled_000",
+        "train_labeled_001"
+      ],
+      "metric_files": {
+        "epoch": "epochs.jsonl",
+        "per_class_csv": "metrics.csv",
+        "per_class_jsonl": "metrics.jsonl",
+        "updates": "updates.jsonl"
+      },
+      "quality": "NOT_EVALUATED",
+      "schema": "self_audit.candidate_a3d.v1",
+      "semi_supervised": {
+        "enabled": false
+      },
+      "stage": "joint",
+      "status": "COMPLETED",
+      "student_unlabeled_updates": 0,
+      "student_updates": 4,
+      "synthetic": true,
+      "teacher_snapshots": 0,
+      "teacher_unlabeled_updates": 0,
+      "teacher_updates": 0,
+      "unlabeled_image_reads": [],
+      "unlabeled_samples": 0,
+      "unlabeled_usage": "UNUSED; no U reference paths opened",
+      "updates_per_epoch": 4,
+      "validation_manifest_sha256": "67f0ff131043d61016dc37f7cd0e91cbc171964f890647f22861f4829f13b54f"
+    },
+    "trainer_schema": "self_audit.candidate_a3d.v1",
+    "training_forward_counts": {
+      "labeled": 4,
+      "teacher": 0,
+      "unlabeled": 0
+    }
+  },
+  "evidence_status": "SOFTWARE_ONLY_SYNTHETIC",
+  "expected_stages": [
+    "J"
+  ],
+  "fixture_development_manifest_sha256": "67f0ff131043d61016dc37f7cd0e91cbc171964f890647f22861f4829f13b54f",
+  "fixture_train_manifest_sha256": "5196bff04495d9c594a9d82765a0ee03b28d14b6d98e750cc679a6e22f37321a",
+  "gpu_evidence": "NOT_RUN",
+  "patient_metrics_claimed": false,
+  "real_data_evidence": "NOT_RUN",
+  "recipe": "a3d_teacher_free",
+  "runtime_synthetic": true,
+  "schema": "self_audit.candidate_q3d.smoke.v1",
+  "status": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+  "synthetic_gate_override_used": false,
+  "synthetic_initialization_volume_override": null,
+  "synthetic_teacher_fixture": null,
+  "tokenizer_gate": {
+    "passed": null,
+    "status": "NOT_APPLICABLE"
+  },
+  "tokenizer_gate_engine_record": null,
+  "tokenizer_initialization_required_volumes": 200,
+  "tokenizer_initialization_volumes": null
+}

@@ -1,0 +1,83 @@
+{
+  "schema": "self_audit.candidate_q3d.baseline_implementation.v1",
+  "task": "Implement runnable A-3D teacher-free and heavy MedNeXt supervised Q-3D baselines",
+  "git_head": "a03aadb060c109c05a67bbd94d0d56a78da84d4e",
+  "implementation_status": "COMPLETED",
+  "evidence_level": "SOFTWARE_ONLY",
+  "runner_contracts": {
+    "a3d_teacher_free": {
+      "runner": "self_audit.candidate_q3d.baselines.run_a3d_teacher_free",
+      "implementation": "Delegates to the unchanged Candidate A-3D public trainer using the Q-3D K-labeled TRAIN manifest, seed, and matched J update budget.",
+      "image_only_u": "Not forwarded; zero U loss, U optimizer updates, and U training forwards.",
+      "verification": "Actual tiny CPU synthetic invocation; 4 logical L-only updates and 4 student optimizer updates."
+    },
+    "mednext_supervised": {
+      "runner": "self_audit.candidate_q3d.baselines.run_mednext_supervised",
+      "implementation": "Composes the Q-3D T-stage helpers on a K-only logical Protocol-A data view while retaining the parent A/B config identity for resume.",
+      "heavy_baseline_evaluation": "Separate evaluate_mednext_baseline path validates the resume.v2 schema, checkpoint and sidecar hashes, parent config and K-only data identity, DEV-selected best_teacher_state, then evaluates the MedNeXt region output through Q-3D evaluation checks.",
+      "student_tokenizer": "No student export, Q/P/J stage, tokenizer, or EMA state is constructed for this baseline.",
+      "verification": "Actual tiny CPU synthetic Protocol-B invocation; 2 T logical/optimizer updates on K=2 only, followed by separate synthetic DEV evaluation."
+    }
+  },
+  "tests": {
+    "focused_baseline_tests": {
+      "command": "rtk pytest tests/test_q3d_baselines.py -q",
+      "result": "PASS",
+      "summary": "2 passed"
+    },
+    "repository_check": {
+      "command": "rtk run 'python scripts/check_repo.py'",
+      "result": "PASS"
+    },
+    "full_pytest": {
+      "command": "rtk pytest -q",
+      "result": "FAIL",
+      "summary": "134 passed, 7 failed in 32.23s",
+      "failures": [
+        "tests/test_q3d_config_campaign.py::test_canonical_json_recipes_are_strict_and_preserve_pinned_settings — source_repo is None",
+        "tests/test_q3d_config_campaign.py::test_real_teacher_provenance_requires_existing_file_hash_dataset_and_overlap — pinned official source_repo/source_commit are missing",
+        "tests/test_q3d_engine.py::test_c1_skips_zero_support_u_backward_but_keeps_labeled_feature_kd — missing kd_supported_branches metric",
+        "tests/test_q3d_integration.py::test_q3d_configs_are_nested_and_keep_real_provenance_not_run — expected NOT_FOUND_OFFICIAL, got NOT_RUN",
+        "tests/test_q3d_integration.py::test_all_fourteen_recipes_select_declared_engine_effects — config method values disagree (candidate_q3d versus candidate_a3d)",
+        "tests/test_q3d_integration.py::test_nested_baseline_arms_dispatch_to_separate_runner[a3d_teacher_free-run_a3d_teacher_free] — test module monkeypatch was bypassed and real wrapper received sentinel config without dataset",
+        "tests/test_q3d_integration.py::test_nested_baseline_arms_dispatch_to_separate_runner[mednext_supervised-run_mednext_supervised] — test module monkeypatch was bypassed and real wrapper received sentinel config without dataset"
+      ],
+      "baseline_dispatch_note": "The two integration dispatch failures exercise train.py's module monkeypatch resolution, not the actual baseline update paths; the owned actual-run baseline tests pass."
+    },
+    "q3d_smoke": {
+      "requested_command": "rtk run 'python scripts/smoke_q3d.py --out /tmp/self-audit-q3d-smoke'",
+      "requested_command_result": "FAIL at startup: ModuleNotFoundError: No module named 'self_audit'",
+      "repository_path_retry": {
+        "command": "rtk run 'env PYTHONPATH=. python scripts/smoke_q3d.py --out /tmp/self-audit-q3d-smoke-current'",
+        "result": "FAIL",
+        "reason": "ValueError: duplicate TRAIN image content across patient IDs",
+        "report": "/private/tmp/self-audit-q3d-smoke-current.smoke.json",
+        "completed_stages": [],
+        "evidence_status": "SOFTWARE_ONLY_SYNTHETIC",
+        "real_data_evidence": "NOT_RUN",
+        "gpu_evidence": "NOT_RUN"
+      }
+    }
+  },
+  "evidence_boundary": {
+    "real_data_training": "NOT_RUN",
+    "official_pretrained_weights_validation": "NOT_RUN",
+    "gpu_training_or_evaluation": "NOT_RUN",
+    "patient_metrics": "NOT_RUN",
+    "efficacy_claim": false,
+    "synthetic_results_are_software_evidence_only": true
+  },
+  "source_sha256": {
+    "self_audit/candidate_q3d/baselines.py": "80662e960969c30ef79706558cb7de4a986708b8e0810532a0741896ad6a9996",
+    "tests/test_q3d_baselines.py": "96a75d28fe33733049c0ca9b506fc15a1945b16e782c46d77368eabff86e5cd6",
+    "self_audit/candidate_q3d/engine.py": "2666b817122841c022e02726afdda343d969fda8f49a1caaeeebe3f4deab9f50",
+    "self_audit/candidate_q3d/config.py": "27b00486dacf4dfa218375f0dc87ca3b8da2672f81613d42f5fe9022eebaa970",
+    "self_audit/candidate_q3d/data.py": "ec87026763f498d12c5e2d343e16876560f474dbe8560181143f597084856cb7",
+    "self_audit/candidate_q3d/evaluation.py": "65de6aee6914129fde97fe567aed51dc060f518c30f4d70cb79f020b7b1c4839",
+    "self_audit/candidate_a3d/engine.py": "9141e8c5904d4e71e03e4b57aec8b6969681810f7a6f4232031b0de286ea8391",
+    "self_audit/candidate_a3d/config.py": "b3d28ba1e0e33a3dac193f99306be8747fa6cca6068576e891321ae436695a04",
+    "self_audit/candidate_a3d/data.py": "2ce775ad763b80e0b285022b56f00a33af1ad454ee583bcf9de2c4209d79e5c8",
+    "self_audit/candidate_a3d/teacher.py": "bb4c80da4212ab15a4a2a526af0f0d4edb8dee7b8a7a6f1efbab73dc7a5055ba",
+    "configs/candidate_a3d/teacher_free_acdc_k8.json": "3d40df16d3be00a0535de7405ac37cd574371d1c1470ebcc0a6c658142d14ab8"
+  }
+}
