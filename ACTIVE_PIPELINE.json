@@ -51,7 +51,7 @@
       "protocol": "native_3d_q3d",
       "input": "[B,1,D,H,W]",
       "geometry": "native shape_zyx + spacing_zyx + affine_zyx; no crop/resampling",
-      "teacher": "frozen dual-head MedNeXt-L k3 during joint; teacher provenance required for real runs",
+      "teacher": "nnFoundationCNN ResEnc-L pretrained encoder with new decoder and boundary heads; teacher-only full-volume z-score; frozen during joint; pinned READY provenance required",
       "stages": ["T", "Q", "P", "J"],
       "deployment": "student-only; dense decoder, frozen codebook, no teacher",
       "status": "active_research_design_no_patient_or_gpu_evidence"

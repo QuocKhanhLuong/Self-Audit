@@ -4,14 +4,14 @@ Nov 11, 2026 · Alvin · bản gốc có thể sửa: [Claude Doc](https://claud
 
 ## 1. Phạm vi và quyết định đã chốt
 
-Q-3D là một candidate mới, nằm cạnh A-3D, theo hợp đồng **chỉ student chạy khi deploy**. Teacher MedNeXt hai head chỉ dùng lúc train. Tri thức truyền qua một codebook chung được neo theo teacher (codeKD) trên ảnh không nhãn, có trọng số theo độ nhất quán sinh lý. Student là UNETR++ rút gọn, giữ đường dense cho biên.
+Q-3D là một candidate mới, nằm cạnh A-3D, theo hợp đồng **chỉ student chạy khi deploy**. Teacher nnFoundationCNN ResEnc-L hai nhánh chỉ dùng lúc train. Tri thức truyền qua một codebook chung được neo theo teacher (codeKD) trên ảnh không nhãn, có trọng số theo độ nhất quán sinh lý. Student là UNETR++ rút gọn, giữ đường dense cho biên.
 
 Nguồn tổng hợp: atlas `teacher_student_paper_architecture_vi.pdf` (10 trang), ghi chú "Thay graph bằng representation lượng tử hóa", và các chỉnh sửa đã chốt trong chat ngày 11/11/2026. Code đối chiếu: `QuocKhanhLuong/Self-Audit` `main@c7582bb`.
 
 | Quyết định | Chốt | Thay đổi so với nguồn |
 | --- | --- | --- |
 | Deploy | Chỉ student, không teacher, không cascade | Bỏ khối cascade và cộng logits teacher của atlas (trang 1, 6) |
-| Teacher | Một MedNeXt-L k3, hai head (region, SDF), init pretrained | Giữ atlas trang 2 |
+| Teacher | nnFoundationCNN ResEnc-L: encoder pretrained, decoder/heads mới | [AMEND] 2026-11-12; thay teacher cũ riêng trong Q3D |
 | Interface | Codebook chung neo theo teacher, đóng băng sau khi học tokenizer | Ghi chú học codebook chung với cả hai adapter → đổi thành neo teacher |
 | Residual tầng 2 ("private") | Tắt trong main, bật ở phase sau, khởi tạo đóng góp bằng 0 | Đổi tên thành residual tầng 2; không claim "private" |
 | Đường dense student | Không lượng tử hóa; skip độ phân giải gốc đi thẳng tới decoder | Ghi chú cho decoder chỉ đọc mã → đổi thành ablation |
@@ -22,7 +22,7 @@ Nguồn tổng hợp: atlas `teacher_student_paper_architecture_vi.pdf` (10 tran
 
 **Non-goals (không làm trong Q-3D):** policy chọn query K1, packet/bit codec, đồ thị trạng thái tim, cascade T+S, teacher thời gian, test-time adaptation, đếm bit. A-3D giữ nguyên làm baseline; không sửa file nào trong `self_audit/candidate_a3d/` ngoài import.
 
-**[AMEND] Trạng thái bản sửa 2026-11-12:** P0–P5 theo hợp đồng sửa này đều `NOT_RUN`; kiểm tra hàm thuần CPU/synthetic chỉ là `SOFTWARE_ONLY`. Main đã có triển khai Q3D tại `28e1a36be014a0d75272d5aca3fff18e482d3593`; kiểm tra lịch sử không chứng minh triển khai đó đáp ứng bản sửa. Chưa có kết quả bệnh nhân, GPU hay novelty. Đợt khóa helper tại `b31eb9f` chỉ sửa spec và hàm thuần. **[AMEND] Đợt tích hợp tiếp theo nối hợp đồng weighting vào engine codeKD/feature KD; kiểm chứng CPU/synthetic là SOFTWARE_ONLY, chưa hoàn thành toàn bộ P0–P5.**
+**[AMEND — LỊCH SỬ trước migration ResEnc] Trạng thái bản sửa 2026-11-12:** P0–P5 theo hợp đồng sửa này đều `NOT_RUN`; kiểm tra hàm thuần CPU/synthetic chỉ là `SOFTWARE_ONLY`. Main đã có triển khai Q3D tại `28e1a36be014a0d75272d5aca3fff18e482d3593`; kiểm tra lịch sử không chứng minh triển khai đó đáp ứng bản sửa. Chưa có kết quả bệnh nhân, GPU hay novelty. Đợt khóa helper tại `b31eb9f` chỉ sửa spec và hàm thuần. **[AMEND] Đợt tích hợp tiếp theo nối hợp đồng weighting vào engine codeKD/feature KD; kiểm chứng CPU/synthetic là SOFTWARE_ONLY, chưa hoàn thành toàn bộ P0–P5.**
 
 ## 2. Kiến trúc tổng thể và hợp đồng tensor
 
@@ -30,7 +30,7 @@ Mỗi bước train chạy teacher (đóng băng) và student trên cùng một 
 
 ```mermaid
 flowchart LR
-  X["Volume x<br/>frame 3D native"] --> T["Teacher MedNeXt-L<br/>2 head · đóng băng"]
+  X["Volume x<br/>frame 3D native"] --> T["Teacher ResEnc-L<br/>2 nhánh · đóng băng"]
   X --> E["UNETR++-lite<br/>conv S1–2, EPA S3–4"]
   T --> AL["Căn chỉnh vật lý<br/>stride 8 → lưới S4"] --> TK["A_T + codebook C0<br/>đóng băng → π_T"]
   T --> W["Trọng số w<br/>độ chắc × sinh lý"]
@@ -52,9 +52,9 @@ Ký hiệu: B batch, D số lát native, H×W in-plane native, h = ceil(H/16), w
 | Tensor | Shape | Nguồn | Ghi chú |
 | --- | --- | --- | --- |
 | `x` | \[B,1,D,H,W\], float trong \[0,1\] | `CandidateA3DData` | Hợp đồng hiện có; có `geometry` (spacing\_zyx mm, affine) |
-| `region_logits`, `boundary_logits` | \[B,4,D,H,W\] | `DualBranchTeacher3D` | Giữ nguyên |
-| `sdf_T` | \[B,4,D,H,W\] | `DualBranchTeacher3D` | Code hiện có 4 kênh; atlas ghi 3 kênh — giữ 4 để không sửa teacher |
-| `F_T_src` | \[B,C\_T,D\_p/8,H\_p/8,W\_p/8\] | [FIX] (§3) MedNeXt encoder `x_res_3`, stride 8 | C\_T phải đọc từ `adapter.channels`; D\_p, H\_p, W\_p là kích thước sau padding của teacher |
+| `region_logits`, `boundary_logits` | \[B,4,D,H,W\] | `Q3DResEncTeacher` | Decoder/head mới |
+| `sdf_T` | \[B,4,D,H,W\] | `Q3DResEncTeacher` | Giữ 4 kênh BG/RV/MYO/LV |
+| `F_T_src` | [B,256,Dp/sz,Hp/8,Wp/8] | [AMEND] ResEnc encoder stage 3 | sz là tích stride z đến stage 3; không mặc định z=8 |
 | `F_T_aln` | \[B,C\_T,D,h,w\] | Mục 4 | Teacher đã căn về lưới stage 4 của student |
 | `u_T`, `u_S` | \[B,64,D,h,w\], chuẩn hóa L2 theo kênh | Adapter A\_T, A\_S |  |
 | `C0` | \[256,64\], chuẩn hóa L2 | Tokenizer, mục 5 | Đóng băng sau tokenizer stage |
@@ -63,65 +63,44 @@ Ký hiệu: B batch, D số lát native, H×W in-plane native, h = ceil(H/16), w
 | `logits_S` | \[B,4,D,H,W\] | Student | Đầu ra deploy duy nhất |
 | `sdf_S` | \[B,4,D,H,W\] | Student, head phụ | Chỉ khi train; bỏ khi export |
 
-Lưu ý về trục z: teacher pad mọi trục tới ≥ 32 và bội số của 16 bằng replicate ở phía cuối (`DualBranchTeacher3D._pad`), rồi downsample đẳng hướng. Với D ≈ 10, vùng dữ liệu thật chỉ chiếm khoảng 1–2 ô z ở stride 8. Student không hạ z, nên phép căn ở mục 4 nội suy teacher theo z; đây là rủi ro đã biết, ghi ở mục 13.
+**[AMEND] Geometry teacher:** input student giữ chuẩn [0,1]; teacher z-score riêng trên toàn volume trước padding. Teacher pad replicate phía cao của từng trục tới bội số tích stride của trục đó, không đặt kích thước tối thiểu gấp đôi. Không crop/resample ảnh; chỉ cắt phần padding khỏi logits/SDF đầu ra. Các phép đo Phase 0 được lưu tại `reports/q3d-resenc-phase0-20261112/`.
 
-## 3. Teacher: MedNeXt một encoder, hai head
+## 3. Teacher: nnFoundationCNN ResEnc-L
 
-**[FIX]** Teacher dùng lại `DualBranchTeacher3D`, `supervised_loss` và `bank.sdf_targets`; near/far thuộc `q3d_teacher_loss` trong `self_audit/candidate_q3d/losses.py`. Không sửa hoặc merge vào `candidate_a3d.teacher_loss`. Feature main lấy trực tiếp từ encoder; hook dành cho ablation decoder.
+**[AMEND] 2026-11-12 — thay thiết kế teacher trước đây:** chỉ Q3D đổi teacher; baseline A/A-3D không thay đổi. Phương án SCRATCH được hủy trước khi publish. Không còn fallback teacher cũ hoặc TinyEncoder trong Q3D.
 
-**Cấu trúc (fact từ code):** một `MedNeXtL3DAdapter` làm encoder chung. Nhánh region là đường segmentation gốc của MedNeXt. Nhánh boundary (`_BoundaryPath3D`) đọc `features[0]` và `features[-1]`, ra `boundary_logits` và `sdf`. Hai head có lỗi tương quan vì chung trunk, nên không dùng sự đồng thuận của chúng làm tín hiệu kiểm chứng.
+`build_resenc_l(strides)` sao tham số `get_res_enc_l` của [nnssl tại pin](https://github.com/MIC-DKFZ/nnssl/blob/3d774e942256bd70e5e264c6b94fa38e25f7ed74/src/nnssl/architectures/architecture_registry.py), dùng `dynamic_network_architectures==0.4.4`: 6 stage, kênh [32,64,128,256,320,320], số residual block [1,3,4,6,6,6], kernel 3, InstanceNorm3d affine eps=1e-5 và LeakyReLU. Strides là cấu hình khóa từ Phase 0; thay stride không thay shape tensor weights.
 
-**Init:**
+**Pretrained encoder:** HF `MIC-DKFZ/nnFoundationCNN`, revision `f443c09319988e833b3d9589bf95909e4443d7b2`, `checkpoint_final.pth`, SHA-256 `ac262d3e8c226c79f9567fddc34d38e011284730ddf2294b5c6c319ce2f22bbd`. Nạp bằng `torch.load(weights_only=True)`, kiểm `arch_class_name=ResEncL`, `key_to_stem=encoder.stem`, `key_to_encoder=encoder.stages`, rồi strict load toàn encoder. Không bỏ các alias `all_modules.*` cần cho strict load. Bỏ mọi checkpoint key `decoder.*`, kể cả alias `decoder.encoder.*`; decoder, segmentation head và boundary khởi tạo mới. Hai lần build cùng seed phải giống state.
 
-- Encoder và nhánh region từ checkpoint MedNeXt pretrained mà run k=2 hiện đang dùng. Config phải ghi `weights` và `weights_sha256`, nguồn dữ liệu pretrain, và có chồng lên ACDC/M&Ms hay không.
-- Nhánh boundary khởi tạo random.
+`Q3DResEncTeacher` có encoder → skips → `UNetDecoder` 4 lớp. Nhánh boundary import `_BoundaryPath3D` từ baseline nhưng không sửa nó, đọc skip stage 0 và stage cuối. Output là `region_logits`, `boundary_logits`, `sdf`, cùng feature source theo hợp đồng. Hai nhánh chung trunk nên đồng thuận không phải bằng chứng độc lập.
 
-**[FIX] Loss riêng Q3D (`q3d_teacher_loss`):**
+**Provenance real:** chỉ `architecture=nnfoundation_resenc_l` và `READY`, đầy đủ file/SHA, HF resolve URL chứa revision commit, dataset pretrain, overlap note và license. Dataset khai báo: nnFoundation (~2.1M CT/MR/PET, 125 sources; arXiv 2609.26924 Table D7). `overlap_acdc=false`, `overlap_mnms=false` **theo Table D7, chưa kiểm độc lập**. License weights `CC-BY-SA-4.0`. Đây là giới hạn provenance được công khai, không phải kết luận đã audit toàn bộ bệnh nhân pretrain.
 
-- CE + Dice foreground cho `region_logits` và cho `boundary_logits`.
-- SDF cân bằng gần/xa biên theo atlas trang 2: target là khoảng cách có dấu theo mm chia R = 5 mm, kẹp về \[−1, 1\]; vùng gần là |d| < 2,5 mm; trung bình riêng vùng gần và vùng xa rồi gộp với α = 0,5; tập rỗng thì chuẩn hóa lại trọng số; lớp vắng có target +1. **[FIX]** P1 kiểm tra/triển khai trong Q3D, tái dùng `supervised_loss` và target của `bank.sdf_targets`, không merge near/far vào baseline.
+**Loss:** CE + Dice foreground cho region và boundary; SDF near/far riêng Q3D như trước: signed distance mm/R với R=5 mm, clip [-1,1], gần biên |d|<2.5 mm, alpha=0.5, lớp vắng +1. Chỉ đọc GT trong L; tái dùng target/loss primitives của baseline, không sửa baseline.
 
-**Lịch fine-tune (stage T):**
+**Lịch T (8.000 update, AdamW, wd=1e-4):**
 
-| Bước | Update | Tham số được học | LR (AdamW) |
+| Phase | Update | Trainable | LR |
 | --- | --- | --- | --- |
-| T-a | 5% đầu | Nhánh boundary; encoder và nhánh region đóng băng | 1e-3 |
-| T-b | Phần còn lại | Tất cả | Encoder 1e-4, hai head 1e-3, warmup 5% rồi cosine |
+| T-a | 5% đầu | Decoder + region head + boundary; encoder đóng băng | 1e-3 |
+| T-b | Phần còn lại | Toàn mạng | Encoder 1e-4; decoder/heads 1e-3; warmup LR 5% rồi cosine |
 
-**[AMEND] Param group T-b:** head region là `teacher.encoder.model.out_0`; head boundary là nhánh boundary; các tham số còn lại thuộc encoder/trunk, không trùng giữa các group.
+Các group không trùng parameter identity; phải loại alias encoder trong decoder. Chọn checkpoint theo DEV FG Dice patient-macro hiện có. Mỗi 400 update log loss TRAIN và DEV FG/RV/MYO/LV của nhánh region. Manifest T lưu `teacher_dev_fg_dice`, per-class tại checkpoint được chọn, và `dev_curve_still_improving` từ ba lần DEV cuối (tăng nghiêm ngặt, thiếu ba điểm thì chưa xác định). Chỉ báo cáo, không tự tăng budget. Joint đóng băng teacher/adapter/codebook; O1 giữ là code ablation ngoài campaign.
 
-Tổng 8.000 update (100 epoch × 80 update, giống semi profile hiện tại), chỉ trên L. Weight decay 1e-4. Augmentation theo mục 9. Chọn checkpoint theo DEV FG Dice patient-macro đã khóa trước; DEV chỉ dùng để chọn checkpoint, không dùng để tune loss.
+**Feature source:** main `encoder_stride8` = stage 3, 256 kênh; tên stride là theo in-plane, stride z lấy từ config. S1 `encoder_stride16` = stage 4, 320 kênh. Không còn nguồn decoder, stride4 hay bottleneck teacher cũ. Synthetic dùng chính `Q3DResEncTeacher` với kênh/block nhỏ, cùng forward/load/phase contracts; không chứng minh hiệu quả bệnh nhân.
 
-**Trong stage joint:** teacher đóng băng hoàn toàn (`freeze_teacher: true`), chạy `torch.no_grad()` ở chế độ eval. Teacher online (cập nhật trên L, LR × 0,1, tokenizer vẫn đóng băng) là ablation O1, có đo churn của phép gán mã.
+## 4. Căn chỉnh pha và phép đo ERF
 
-**[FIX] Feature nguồn cho tokenizer:** main dùng encoder `x_res_3`, stride 8, có sẵn tại `features[3]`, không cần hook hoặc forward thứ hai. `_native_forward_with_features` trả `(features, region_logits)`; `features` chỉ gồm `(x_res_0, x_res_1, x_res_2, x_res_3, bottleneck)`, không có decoder. Output `dec_block_3` stride 8 chuyển thành ablation; bottleneck stride 16 vẫn là S1. Nếu dùng hook, hook child cuối của `dec_block_3` vì `iterative_checkpoint` lặp theo child, bỏ qua forward của container. Test assert hook fire đúng một lần mỗi forward và đúng shape/kênh. P0 xác nhận dispatch checkpoint và tên child thực tế từ source đã pin.
+**[AMEND]** Giữ native grid của cả hai mạng. Lưới nhánh chính ResEnc được suy theo từng trục từ chuỗi kernel/stride/padding thật: `j_new=j*a`, `o_new=o+((k-1)*d/2-p)*j`. High-side input padding không đổi gốc tọa độ. Student stage 4 giữ stride (1,16,16). Không dùng phép avg-pool teacher stride8 để giả làm lưới student: tâm sẽ lệch.
 
-## 4. Căn chỉnh vật lý teacher → lưới stage 4 của student
+Residual skip dùng avgpool khi downsample nên không tự giả định cùng lattice với nhánh conv chính. Phase 0 phải ghi bước/offset nhánh chính đến stage 3, độ lệch cực đại của skip lattice, và đo gradient ERF trên encoder pretrained: một cell stage 3, input ngẫu nhiên z-score, trung bình ít nhất 16 mẫu. Báo input shape, cell/channel aggregation, seed và tâm khối gradient. Luật khóa trước: lệch không quá 2 voxel trên mọi trục dùng pha nhánh chính; vượt ngưỡng dùng offset đo được, lưu manifest. Không chọn pha theo DEV/test.
 
-Teacher và student nhận cùng một volume trên cùng native grid, nên căn chỉnh vật lý rút về ánh xạ chỉ số voxel chính xác; không cần affine. Affine chỉ cần nếu sau này hai mạng nhận hai grid khác nhau.
+Strides z suy từ median spacing TRAIN bằng luật planner ResEnc mặc định được pin, giữ nguyên native shape. Báo rõ các điều kiện min-feature-map/shape của planner; không âm thầm resample hay đổi kernel để làm vừa. Quyết định strides/phase khóa trước training và nằm trong config/artifact identity. Nội suy feature dùng bước và offset thực, crop về lưới student, output detach.
 
-**[FIX] Pha của mạng:** lấy tâm pixel native chỉ số 0 tại tọa độ 0. Với down conv k3 s2 p1, tâm ô stride tích lũy s nằm tại `s·k`, không phải `s·k + s/2`. Theo từng trục, bắt đầu bước lưới j = 1, offset o = 0; qua kernel k, stride a, padding trái p, dilation d:
+**[AMEND] Phase 0 đã đo:** median TRAIN metadata ZYX spacing (1,1,1) mm, native shape (9,256,216); 52/80 records có unit spacing và raw headers chưa đối chiếu độc lập. Khóa strides `[(1,1,1),(2,2,2),(1,2,2),(1,2,2),(1,2,2),(1,2,2)]` theo pinned topology rule, min feature-map 4; B=1 native padding tới (2,32,32). Main stage3 step=(2,8,8), offset=(0,0,0), skip displacement cực đại=(0.5,3.5,3.5). Probe 16 mẫu seed42–57, logical (33,97,97), replicate-pad (34,128,128), cell (8,6,6), signed mean 256 channels cho mean offset=(0.6721337438,1.9470438957,1.7222030163) voxel. Theo luật đã khóa dùng **main phase, correction zero**; Y gần ngưỡng, không suy ra confidence guarantee. Receipt SHA `2f05888b45ff3bfbf19f90bd91abbd4f0b2ab193b37375c5d875950117d2a14e`. Các probe khác center/padding được giữ NONCALIBRATION. S1 ngoài campaign giữ analytical stage4 phase, chưa đo ERF riêng. GPU forward/VRAM **NOT_RUN** vì môi trường xác minh local không có CUDA.
 
-```text
-o_new = o + (d·(k−1)/2 − p)·j
-j_new = a·j
-```
-
-**[FIX] Hợp đồng align:** `align_teacher_to_student4(F_T_src, native_shape, teacher_phase, student_phase)` nhận bước lưới/offset của từng mạng suy từ chuỗi kernel/stride/padding thật, kể cả padding đầu vào. Tâm student k có tọa độ native `x = o_S + j_S·k`; lấy mẫu hoặc nội suy teacher tại `(x−o_T)/j_T`. Khai báo xử lý biên, crop về `[D,h,w]`, luôn `detach()`. Không đổi grid ảnh native.
-
-**[FIX] Lý do:** khi hai offset bằng 0, avg-pool 2×2 teacher stride 8 đặt tâm tại `16k+4`, lệch +4 px in-plane so với student `16k`. Công thức z cũ `(z+0,5)/8−0,5` lệch −0,4375 (≈0,44) ô teacher so với `z/8`. Không dùng hai công thức cũ. P0 đọc MedNeXt v1 tại source_repo/source_commit đã pin và ghi kernel/stride/padding stem, down_0..3, kể cả nhánh residual. Source đối chiếu: `MIC-DKFZ/MedNeXt@0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba`.
-
-**[FIX] Hạn chế:** receptive field teacher có thể chứa lát pad replicate; căn đúng pha không phục hồi độ phân giải z đã mất. Nguồn stride 4 vẫn là ablation.
-
-**[OPEN] Nguồn decoder tại pin MedNeXt v1:** source `up_3`/`up_2` dùng transpose conv k3 s2 p1 rồi pad thêm một voxel phía thấp trước khi cộng skip encoder. Nhánh up và skip vì vậy không có cùng tâm native (ở stride 8 lệch một ô, tức 8 px). Không thể gán một `GridPhase` chung cho tổng hai nhánh theo hợp đồng này. Alignment dữ liệu thật cho `decoder_stride8` và `stride4_decoder_block` phải dừng và ghi `NOT_RUN` cho đến khi có hợp đồng riêng được xem xét; không tự chọn pha skip, sửa kiến trúc hoặc đổi ngưỡng. Hook child cuối vẫn được kiểm tra độc lập. Tiny encoder dùng trong smoke có pha xác định nhưng chỉ là proxy `SOFTWARE_ONLY`, không xác nhận pha decoder MedNeXt. Main `features[3] = x_res_3` và bottleneck S1 không bị phát hiện này tác động.
-
-**[FIX] Unit test bắt buộc ở P2:**
-
-- Feature hằng → kết quả hằng.
-- **[FIX]** Feature tuyến tính theo tọa độ native → đúng tâm student, sai số ≤ 1e-5 trong miền nội suy; kiểm riêng quy tắc biên.
-- **[FIX] Network-phase probe:** cho ramp tọa độ native đi qua đúng chuỗi stem/down của student và MedNeXt đã pin, dùng kernel hộp đối xứng chuẩn hóa, giữ kernel/stride/padding thật. So tâm ô đo được với hàm align, sai số ≤ 0,5 px. Đo miền có receptive field nằm trong dữ liệu thật để padding không bẻ cong ramp; kiểm riêng biên. Probe phải phát hiện lệch 4 px và 0,4375 ô của công thức cũ.
-- Shape đúng với D trong {6, 9, 10, 13, 20} và H, W lẻ.
-- `F_T_aln.requires_grad` là False.
+Tests: source isotropic khớp tham số và state keys/shapes upstream; pha nhánh chính từ conv thật; constant/ramp align và H/W lẻ; anisotropic stride/padding/crop đúng; gradients teacher bị chặn ở joint. ERF random-input là chẩn đoán hình học của weights, không phải chứng minh receptive field trên MRI bệnh nhân hay gate chất lượng segmentation.
 
 ## 5. Tokenizer teacher và codebook chung
 
@@ -268,7 +247,7 @@ B_f=\frac{1}{|\mathcal C_f|}\sum_{c\in\mathcal C_f}
 
 ## 9. Dữ liệu, protocol nhãn và lịch train
 
-Protocol chính là A: K bệnh nhân có nhãn cho cả hệ, phần TRAIN còn lại là U image-only. Kết quả chính ở K = 5 và 10; K = 2 là stress test; một seed (42).
+Protocol chính là A: K bệnh nhân có nhãn cho cả hệ, phần TRAIN còn lại U image-only. **[AMEND] Campaign hiện tại: ACDC seed42, so sánh đóng góp ở K8; V1@5 và V1@10 chỉ là đường cong số nhãn.** K2 vẫn hợp lệ trong config nhưng không thuộc campaign.
 
 **Protocol:**
 
@@ -279,7 +258,7 @@ Protocol chính là A: K bệnh nhân có nhãn cho cả hệ, phần TRAIN còn
 | U | TRAIN còn lại, image-only | TRAIN còn lại, image-only với student |
 | Claim | Hiệu quả ít nhãn của cả hệ | Trần khi teacher mạnh |
 
-Không chia sẻ checkpoint, cache sinh lý hay codebook giữa A và B. Pretraining ngoài của MedNeXt phải khai báo ở cả hai.
+Không chia sẻ checkpoint, cache sinh lý hay codebook giữa A và B. Provenance nnFoundation ngoài phải khai báo ở cả hai; overlap theo Table D7 chưa được kiểm độc lập.
 
 **Dataset:** ACDC và M&Ms gốc trước, mỗi bộ train và test riêng; sau đó hai bộ CMR còn lại (chưa xác định tên). Test chéo: train ACDC, test M&Ms và hai bộ kia. Dùng manifest và split đã khóa hiện có. Lưu ý: log campaign trước ghi M&Ms còn bị chặn bởi 34 affine không tương thích geometry.
 
@@ -308,7 +287,7 @@ Không chia sẻ checkpoint, cache sinh lý hay codebook giữa A và B. Pretrai
 
 Chọn checkpoint student theo DEV FG Dice patient-macro, đánh giá mỗi 400 update. Mỗi stage ghi checkpoint, SHA-256 và có thể resume.
 
-**[AMEND] Chia sẻ stage B4:** mỗi tổ hợp `(dataset, protocol, K, seed)` chỉ sinh một T và một Q/P chung cho nguồn main. V1, V1-u và C1 dùng cùng teacher, C0 và cache có SHA (C1 chỉ đọc metadata C0 để xác minh cache). O1, S1, nguồn stride 4 và decoder stride 8 dùng Q/P riêng nhưng chia sẻ T. J nhận manifest stage đã hoàn tất, xác minh SHA, nguồn feature và cohort; không tự train lại T/Q. PLAN chưa chạy chỉ ghi dependency và SHA `NOT_RUN`, không tạo SHA giả.
+**[AMEND] Chia sẻ stage B4:** mỗi tổ hợp `(dataset, protocol, K, seed)` chỉ sinh một T và một Q/P chung cho nguồn main. V1 và V1-u dùng cùng teacher, codebook C0 và cache có SHA; C1 dùng cùng T/P và chỉ đọc metadata codebook để xác minh cache. O1 và S1 dùng Q/P riêng nhưng chia sẻ T; hai nguồn feature riêng teacher cũ đã xóa. J nhận manifest stage đã hoàn tất, xác minh SHA, nguồn feature và cohort; không tự train lại T/Q. PLAN chưa chạy chỉ ghi dependency và SHA `NOT_RUN`, không tạo SHA giả.
 
 ## 10. Hợp đồng deploy: chỉ student
 
@@ -332,9 +311,11 @@ Bốn arm chính trả lời ba câu hỏi: VQ có hơn KD liên tục không, t
 | V1 | VQ, C0 teacher đóng băng | codeKD | [FIX] U chuẩn hóa; L = 1 | **Đề xuất** |
 | V1-u | Như V1 | codeKD | [FIX] omega ≡ 1 trên cả L/U | Sinh lý có cần không |
 
-Ablation phụ, chỉ chạy khi bốn arm chính xong: V0 (VQ, không codeKD; hoàn tất bảng 2×2 của atlas), B1 (decoder chỉ đọc mã), E1 (EPA support thích nghi), O1 (teacher online), S1 (nguồn teacher là bottleneck stride 16). **[FIX] (§3)** Thêm ablation nguồn decoder `dec_block_3` stride 8; main dùng encoder `x_res_3`.
+**[AMEND] Phạm vi 6 run:** `v1@8 v1u@8 c1@8 c0@8 v1@5 v1@10`. T/Q/P main dùng chung tại mỗi K=5,8,10: tổng 3 T, 3 Q, 3 P, 6 J. V1/V1u@8 dùng cùng SHA producer T/Q/P; C1@8 cùng T/P. C0 không cần producer. V1@5 và V1@10 chỉ mô tả đường cong theo ngân sách nhãn, không có claim so sánh ablation. Tất cả v0, b1, e1, o1, s1, v1_residual2 và mean_teacher là `NOT_PLANNED`, vẫn giữ code/test. Hai arm nguồn feature riêng teacher cũ bị xóa khỏi Q3D.
 
-**Baseline:** A-3D `teacher_free` hiện có; Mean Teacher với cùng UNETR++-lite (dùng hạ tầng EMA có sẵn); MedNeXt-L supervised chỉ với K nhãn, báo như mốc nặng.
+**Baseline:** `teacher_supervised@8` đánh giá region head của shared T@8, 0 J, `independent_baseline=false`. A-3D teacher-free@8 chỉ reference khi có bằng chứng cùng manifest/seed/budget và checkpoint; không chứng minh được thì NOT_RUN, không tạo job. Bảng cuối đặt teacher DEV Dice@K cạnh C0@K.
+
+**Manifest khóa:** K8 TRAIN `e524c7531079996232fe71cdfe982a46a5950d49d91a8203eee396b0e67434a3`, DEV18 `ba46934afe8ea5c47dd798019bee233c97c98320b358e2d40165e87a651dc7df`. L5 ⊂ L8 ⊂ L10 được kiểm bằng selector hiện có; sai SHA hoặc nesting phải dừng Phase4. Không tạo lại L8 hay đọc U/DEV/TEST masks cho training.
 
 **Metrics:**
 
@@ -346,7 +327,7 @@ Ablation phụ, chỉ chạy khi bốn arm chính xong: V0 (VQ, không codeKD; h
 - Codebook: perplexity, mã chết, tỉ lệ mã cứng của student trùng teacher trên DEV.
 - Sinh lý: tương quan Spearman giữa w\_pat và Dice RV thật trên DEV.
 
-**Quy tắc quyết định (khóa trước khi chạy; ngưỡng là khởi điểm):** so sánh paired theo bệnh nhân trên TEST, kèm tỉ lệ bệnh nhân thắng và bootstrap CI 95% theo bệnh nhân.
+**[AMEND] Quy tắc quyết định chỉ tại K8 (khóa trước khi chạy; giữ nguyên ngưỡng):** so sánh paired theo bệnh nhân trên TEST, kèm tỉ lệ bệnh nhân thắng và bootstrap CI 95% theo bệnh nhân.
 
 - VQ đóng góp nếu V1 hơn C1 ≥ 1,0 điểm FG Dice và HD95 không tệ hơn.
 - Teacher đóng góp nếu V1 hơn C0 theo cùng tiêu chí.
@@ -359,18 +340,18 @@ Code mới nằm trong `self_audit/candidate_q3d/` và `configs/candidate_q3d/`;
 
 | Phase | Mục tiêu | File chính | Acceptance | Dừng khi |
 | --- | --- | --- | --- | --- |
-| P0 | [FIX] [AMEND] Read-only, không train | `scripts/q3d_preflight.py` | JSON: source_repo/commit MedNeXt v1; kernel/stride/padding stem và down_0..3, pha native; x_res_3/C_T; iterative_checkpoint và child cuối dec_block_3; near/far thuộc Q3D; D/spacing; r_SV/r_M GT L; tham số student; tần suất argmax phân suất GT L ở S4 đúng pha (§5) | Thiếu module/C_T sai: dừng; [OPEN] MYO < 2%: xem lại coverage/balancing trước P2, không tự nới |
+| P0 | [FIX] [AMEND] Read-only, không train | `scripts/q3d_preflight.py` | JSON: HF revision/checkpoint SHA, strict stem/stages và keys/shapes ResEnc; median TRAIN spacing/strides; pha main và skip lattice; ERF ≥16 mẫu với luật 2 voxel; VRAM forward hoặc NOT_RUN; near/far thuộc Q3D; r_SV/r_M GT L; tham số student; class support S4 | Thiếu module/C_T sai: dừng; [OPEN] MYO < 2%: xem lại coverage/balancing trước P2, không tự nới |
 | P1 | [AMEND] Đăng ký track riêng, student + C0, q3d_teacher_loss | `student.py`, `config.py`, `engine.py` (nhánh C0), `losses.py` | Test shape với H, W lẻ và D ∈ {6, 9, 10, 13, 20}; pad rồi crop trả đúng kích thước; đổi giá trị vùng pad không làm đổi output vùng hợp lệ; ≤ 10M tham số; báo latency GPU/CPU; C0 chạy được trên synthetic fixture và smoke ACDC; đăng ký track như dưới | Vượt 10M sau khi đã giảm kênh theo mục 6 |
-| P2 | [FIX] Căn chỉnh theo pha + tokenizer | `alignment.py`, `tokenizer.py`, `teacher_features.py` (main lấy x_res_3; hook child cuối chỉ cho ablation) | Test §4 gồm network-phase probe ≤ 0,5 px; hook fire đúng một lần/forward và đúng shape; EMA codebook, dead-code restart, đóng băng; metric/gate §5 | Gate tokenizer không đạt trên ACDC |
+| P2 | [FIX] Căn chỉnh theo pha + tokenizer | `alignment.py`, `tokenizer.py`, `teacher_features.py` (main encoder stage3, S1 stage4) | Test §4 gồm phase main/skip/ERF và anisotropic shape; EMA codebook, dead-code restart, đóng băng; metric/gate §5 | Gate tokenizer không đạt trên ACDC |
 | P3 | [FIX] Cache sinh lý và mean/ESS U | `physiology.py`, `scripts/q3d_physio_cache.py` | Cine ellipsoid tổng hợp: đúng ED/ES, r_SV, r_M, guard; cache SHA và mean/ESS; omega/gate §8 đúng | Mean U = 0 hoặc ESS/N_U < 0,25 |
 | P4 | [FIX] Stage joint + arm C1, V1, V1-u | `losses.py`, `engine.py`, `configs/candidate_q3d/{c0,c1,v1,v1u}.json` | Teacher/A_T/C0 không đổi từng bit; reducer/omega đúng §7–8, C1 cùng hợp đồng; zero support giữ graph; ramp theo optimizer update; resume giữ nguyên kết quả | Loss NaN hoặc perplexity student sập |
 | P5 | Evaluate + export | `evaluation.py` (chỉ số lâm sàng), `export.py` | Cold-load không import teacher, trùng từng bit; bảng chi phí; manifest export | — |
 
 **[AMEND] Đăng ký track thuộc P1 (chưa làm trong đợt khóa helper):** `train.py` dispatch method `candidate_q3d`; `ACTIVE_PIPELINE.json` có `tracks.candidate_q3d`, inference “student only; dense path + frozen code interface”; `scripts/check_repo.py` validate `configs/candidate_q3d`. Q3D là track riêng, không phải A/A-3D, nên dense decoder không vi phạm điều khoản code-only decoder của A/A-3D trong AGENTS.md. Main đã có đăng ký track; xác nhận đầy đủ theo bản sửa thuộc P1 `NOT_RUN`. Near/far chỉ thuộc Q3D, không sửa baseline.
 
-**[AMEND] Phạm vi bằng chứng:** khóa helper tại `b31eb9f` và tích hợp weighting vào engine chỉ có kiểm chứng CPU/synthetic (`SOFTWARE_ONLY`). Toàn bộ acceptance P0–P5, network-phase probe, GPU, dữ liệu thật và campaign vẫn `NOT_RUN`; không coi riêng test weighting là hoàn thành P4. Baseline A/A-3D được giữ nguyên.
+**[AMEND — LỊCH SỬ trước migration ResEnc] Phạm vi bằng chứng:** khóa helper tại `b31eb9f` và tích hợp weighting vào engine chỉ có kiểm chứng CPU/synthetic (`SOFTWARE_ONLY`). Toàn bộ acceptance P0–P5, network-phase probe, GPU, dữ liệu thật và campaign vẫn `NOT_RUN`; không coi riêng test weighting là hoàn thành P4. Baseline A/A-3D được giữ nguyên.
 
-**Campaign sau P5:** ACDC K = 5 cho bốn arm chính trước, rồi K = 10, rồi K = 2; sau đó M&Ms và test chéo. Một seed.
+**[AMEND] Campaign sau P5:** đúng sáu J, thứ tự `v1@8 v1u@8 c1@8 c0@8 v1@5 v1@10`, ACDC Protocol A seed42; PLAN mới tại `reports/q3d-resenc-plan-20261112/`. Lịch rộng cũ không còn là mặc định; reports cũ giữ nguyên.
 
 **Yêu cầu báo cáo mỗi phase:** commit SHA đã push và xác nhận trên remote; danh sách test và kết quả; mọi mục chưa làm ghi `NOT_RUN` hoặc `SOFTWARE_ONLY`; không thay dữ liệu thật bằng synthetic mà không ghi rõ; không đổi config, cohort hay metric sau khi xem kết quả.
 
@@ -379,8 +360,8 @@ Code mới nằm trong `self_audit/candidate_q3d/` và `configs/candidate_q3d/`;
 **Câu hỏi mở:**
 
 - Hai bộ CMR còn lại là bộ nào; có cine đầy đủ và nhãn RV không (quyết định cổng sinh lý).
-- Checkpoint MedNeXt pretrained đang dùng là gì, dữ liệu pretrain có chồng lên ACDC/M&Ms không.
-- Độ phân giải z của feature teacher stride 8 có đủ không (mục 4); nếu không, chuyển nguồn sang stride 4.
+- **[AMEND — CLOSED]** Checkpoint đã chuyển sang nnFoundationCNN revision/SHA ở §3. Rủi ro overlap vẫn công khai: theo Table D7, chưa audit độc lập.
+- Rủi ro chuyển miền từ pretraining đa modality sang cardiac MRI và thay stride dị hướng; không suy ra hiệu quả từ strict load hay ERF. Stride4 không còn là lựa chọn Q3D.
 - τ\_SV và τ\_M thực tế trên GT; dung sai sinh lý ở các nhóm bệnh của ACDC.
 - M&Ms còn bị chặn bởi 34 affine; cần sửa trước campaign M&Ms.
 
@@ -407,13 +388,15 @@ Code mới nằm trong `self_audit/candidate_q3d/` và `configs/candidate_q3d/`;
 | [ViT-VQGAN](https://arxiv.org/abs/2110.04627) | Mã chuẩn hóa L2, giảm mã chết |
 | [RQ-VAE](https://openaccess.thecvf.com/content/CVPR2022/html/Lee_Autoregressive_Image_Generation_Using_Residual_Quantization_CVPR_2022_paper.html) | Residual tầng 2 |
 | [Codebook-Guided Cross-Modal KD](https://arxiv.org/abs/2609.37243) | Chọn mã teacher theo độ hữu ích và tương thích student |
-| [MedNeXt](https://arxiv.org/abs/2303.09975) | Backbone teacher |
+| [nnFoundation](https://arxiv.org/abs/2609.26924) | Encoder pretrained ResEnc-L |
 | [M&Ms-2 dataset](https://zenodo.org/record/4573984) | Bệnh lý làm sai cân bằng tống máu |
 
 Nguồn nội bộ: atlas `teacher_student_paper_architecture_vi.pdf`; ghi chú "Thay graph bằng representation lượng tử hóa"; các bản nghiên cứu vòng 1–3 trong Project, thư mục `research/2026-11-11-novelty-foundations/`.
 
 
-## Thay đổi 2026-11-12
+## Lịch sử thay đổi 2026-11-12
+
+**[AMEND] Các mục A3/A4 và ghi chú pha MedNeXt bên dưới là lịch sử teacher cũ, đã được §3–§4 ResEnc thay thế. Không còn là đường code active.**
 
 Lịch sử thiết kế gốc ngày 11/11 được giữ trong git. Đối chiếu source baseline tại main `28e1a36`; kiểm tra lịch sử không thay thế kiểm chứng hợp đồng mới.
 
@@ -433,3 +416,5 @@ Lịch sử thiết kế gốc ngày 11/11 được giữ trong git. Đối chi�
 - **[OPEN] Pha decoder — §4:** kiểm tra source pin phát hiện nhánh transpose conv + low-side pad lệch tâm skip; hai ablation decoder thật dừng chờ hợp đồng pha riêng. Không đổi main x_res_3 hoặc source baseline; kết quả tiny proxy không được dùng làm bằng chứng cho decoder thật.
 - **[AMEND] Số học omega — §7/§8:** gate/ESS giữ nguyên giá trị cache; phép chuẩn hóa omega dùng biểu diễn thập phân chuẩn hóa 15 chữ số có nghĩa trước phép chia để bỏ sai khác ULP do nhân chung 0,1 trong kiểm thử gradient. Không thay đổi trọng số tương đối ở độ chính xác nghiệm thu; trường hợp weights bằng nhau phát ra đúng bit 1.
 - **[FIX] Vòng U sau `aa4b09a` — §8/§9:** thay lấy bệnh nhân U có hoàn lại bằng hoán vị từng vòng; log mean omega thực sự đã dùng và lưu trạng thái giữa vòng; giữ nguyên L/C0, bỏ bộ đếm coverage cũ, từ chối resume v2. Test không ghi vào receipt đã commit; suite chạy trong repo copy phải để `git status --porcelain` rỗng. Bằng chứng CPU/synthetic là `SOFTWARE_ONLY`; dữ liệu thật/GPU/campaign `NOT_RUN`.
+
+**[AMEND] Migration ResEnc:** xóa đường Q3D MedNeXt/pretrained source checkout, TinyEncoder proxy và hai arm nguồn stride4/decoder; không sửa baseline A/A-3D hoặc reports lịch sử. Chỉ chấp nhận encoder nnFoundation ResEnc-L READY. `teacher_supervised` thay tên baseline teacher cũ và chỉ đánh giá shared T. Phương án optimizer chính vẫn AdamW ở §3; [recipe nnU-Net tại pin](https://github.com/MIC-DKFZ/nnUNet/blob/c04f7ec8bbffaf3ebc3b26aa2c89042e8a8e368b/nnunetv2/training/nnUNetTrainer/pretraining/pretrainedTrainer.py) dùng SGD LR1e-3, momentum0.99, Nesterov, warmup toàn mạng50 epoch là **phương án thay thế NOT_PLANNED**, không chạy hay trộn với lịch chính. Weights CC-BY-SA-4.0, cần giữ attribution/license; không tuyên bố đã chứng minh độc lập nguồn overlap.

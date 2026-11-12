@@ -68,11 +68,15 @@ real run. An explicitly synthetic smoke may continue through P/J using the
 engine's smoke-only override, but it must report the measured gate result and
 the override; the override must be unreachable for real configs.
 
+Q3D teacher is nnFoundationCNN ResEnc-L with a strict pretrained encoder and
+new decoder/heads. Only this teacher uses full-volume z-score; native geometry
+and the student input contract stay unchanged. No random-weight fallback.
 Real training must fail closed when manifests, pretrained teacher source and
 hash, pretraining dataset, or overlap provenance are missing. Do not use U,
 development, or test masks as training targets. No patient training, dataset
 downloads, dataset deletion, or active-job changes are authorized for this
-delivery. Synthetic smoke results are software evidence only and must be
+delivery. The pinned pretrained checkpoint may be downloaded for key/hash
+verification; never commit weights. Synthetic smoke results are software evidence only and must be
 reported separately from real-data and GPU evidence.
 
 Run `python scripts/check_repo.py`, `python -m pytest -q`, and
