@@ -1140,6 +1140,38 @@ def _record_metric(state: dict[str, Any], metrics_path: Path, record: Mapping[st
     _jsonl_append(metrics_path, value)
 
 
+def _observational_development(model, manifest, *, data, config, device, output_kind, evaluator):
+    """Extra DEV observations must not perturb training RNG or mixed module modes."""
+    rng = _rng_state()
+    modes = [(module, module.training) for module in model.modules()]
+    try:
+        if evaluator is not None:
+            return dict(evaluator(model, manifest, output_kind, device))
+        return _development_fg_dice(
+            model, manifest, sha256=manifest["sha256"], train_ids=data.train_patients,
+            synthetic=bool(config["runtime"]["synthetic"]), output_kind=output_kind, device=device,
+        )
+    finally:
+        for module, training in modes:
+            module.training = training
+        _restore_rng(rng)
+
+
+def _record_epoch_development(state, output_dir, *, stage, update, epoch, epoch_definition,
+                              epoch_updates, dev, selection_point):
+    score = float(dev["score"])
+    if not math.isfinite(score):
+        raise FloatingPointError("epoch DEV score is nonfinite")
+    _record_metric(state, output_dir / "metrics.jsonl", {
+        "stage": stage, "event": "development_epoch", "update": update,
+        "epoch": epoch, "epoch_definition": epoch_definition, "epoch_updates": epoch_updates,
+        "score": score, "per_class": copy.deepcopy(dev.get("per_class")),
+        "patient_count": int(dev.get("patient_count", len(dev.get("patients", {})))),
+        "checkpoint_selection_point": selection_point,
+        "code_interface": dev.get("code_interface", {"status": "NOT_RUN_CUSTOM_EVALUATOR"}),
+    })
+
+
 def _log_teacher_development(
     config: Mapping[str, Any], *, update: int, update_budget: int,
     train_loss: float, dev: Mapping[str, Any],
@@ -1223,6 +1255,7 @@ def _run_teacher_stage(
     dev_manifest = config["dataset"]["manifests"]["development"]
     if not isinstance(dev_manifest, Mapping) or not dev_manifest.get("path") or not dev_manifest.get("sha256"):
         raise ValueError("active Q-3D teacher stage requires a pinned DEV manifest for checkpoint selection")
+    epoch_updates = 2 * int(config["protocol"]["k"])
     while cursor < update_budget:
         current_phase = "T-a" if cursor < warmup_updates else "T-b"
         if current_phase != phase:
@@ -1287,6 +1320,7 @@ def _run_teacher_stage(
         }
         _record_metric(state, output_dir / "metrics.jsonl", record)
 
+        epoch_complete = cursor % epoch_updates == 0
         evaluate_now = cursor % interval == 0 or cursor == update_budget
         if evaluate_now:
             if dev_evaluator is None:
@@ -1342,6 +1376,7 @@ def _run_teacher_stage(
                 state["best_teacher_dev_update"] = cursor
             _record_metric(state, output_dir / "metrics.jsonl", {
                 "stage": stage, "event": "development_selection", "update": cursor,
+                "epoch_logged": epoch_complete,
                 "score": score, "best_score": float(state["best_teacher_score"]),
                 "teacher_dev_fg_dice": score,
                 "teacher_dev_per_class": copy.deepcopy(per_class),
@@ -1353,6 +1388,17 @@ def _run_teacher_stage(
             _log_teacher_development(
                 config, update=cursor, update_budget=update_budget,
                 train_loss=float(record["loss"]), dev=dev,
+            )
+        if epoch_complete:
+            if not evaluate_now:
+                dev = _observational_development(
+                    teacher, dev_manifest, data=data, config=config, device=device,
+                    output_kind="teacher", evaluator=dev_evaluator,
+                )
+            _record_epoch_development(
+                state, output_dir, stage=stage, update=cursor, epoch=cursor // epoch_updates,
+                epoch_definition="2K_random_labeled_frame_draws", epoch_updates=epoch_updates,
+                dev=dev, selection_point=evaluate_now,
             )
         if cursor % checkpoint_every == 0 or cursor == update_budget:
             _save_optimizer_state(state, optimizer_key, optimizer)
@@ -3025,6 +3071,9 @@ def _run_joint_stage(
                 "(perplexity 1.0)"
             )
 
+        epoch_updates = len(data.unlabeled_patients) if wants_u else 2 * int(config["protocol"]["k"])
+        epoch_complete = (bool(update_record["unlabeled_cycle_complete"]) if wants_u
+                          else cursor % epoch_updates == 0)
         evaluate_now = cursor % interval == 0 or cursor == update_budget
         if evaluate_now:
             if dev_evaluator is None:
@@ -3043,10 +3092,24 @@ def _run_joint_stage(
                 state["best_student_state"] = copy.deepcopy(student.state_dict())
             _record_metric(state, output_dir / "metrics.jsonl", {
                 "stage": stage, "event": "development_selection", "update": cursor,
+                "epoch_logged": epoch_complete,
                 "score": score, "best_score": float(state["best_student_score"]),
+                "per_class": copy.deepcopy(dev.get("per_class")),
                 "patient_count": int(dev.get("patient_count", len(dev.get("patients", {})))),
                 "code_interface": dev.get("code_interface", {"status": "NOT_RUN_CUSTOM_EVALUATOR"}),
             })
+        if epoch_complete:
+            if not evaluate_now:
+                dev = _observational_development(
+                    student, dev_manifest, data=data, config=config, device=device,
+                    output_kind="student", evaluator=dev_evaluator,
+                )
+            _record_epoch_development(
+                state, output_dir, stage=stage, update=cursor,
+                epoch=(int(update_record["unlabeled_cycle"]) if wants_u else cursor // epoch_updates),
+                epoch_definition="complete_U_patient_permutation" if wants_u else "2K_L_only_draws",
+                epoch_updates=epoch_updates, dev=dev, selection_point=evaluate_now,
+            )
         if cursor % checkpoint_every == 0 or cursor == update_budget:
             _save_optimizer_state(state, "student_J", optimizer)
             if teacher_optimizer is not None:

@@ -402,7 +402,7 @@ def _joint_stage_case(tmp_path, arm, *, n_unlabeled=2):
     }
 
 
-def _execute_joint_stage(case, output_dir, modules, *, update_limit=None, state=None):
+def _execute_joint_stage(case, output_dir, modules, *, update_limit=None, state=None, dev_evaluator=None):
     import random
 
     from self_audit.candidate_q3d.data import Q3DJointSampler
@@ -439,7 +439,7 @@ def _execute_joint_stage(case, output_dir, modules, *, update_limit=None, state=
         output_dir=output_dir, device=torch.device("cpu"), spatial_rng=spatial_rng,
         intensity_generator=intensity_generator, stage_rng=stage_rng, sampler=sampler,
         smoke=True, update_limit_active=update_limit is not None,
-        dev_evaluator=evaluate, update_budget=int(config["training"]["stage_updates"]["J"]),
+        dev_evaluator=dev_evaluator or evaluate, update_budget=int(config["training"]["stage_updates"]["J"]),
     )
     return state
 

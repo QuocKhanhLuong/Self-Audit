@@ -295,6 +295,8 @@ Không chia sẻ checkpoint, cache sinh lý hay codebook giữa A và B. Provena
 
 Chọn checkpoint student theo DEV FG Dice patient-macro, đánh giá mỗi 400 update. Mỗi stage ghi checkpoint, SHA-256 và có thể resume.
 
+**[AMEND] Log theo epoch quy ước (người dùng chọn ngày 2026-11-12):** T báo DEV Dice patient-macro từng lớp RV/MYO/LV và FG mean sau mỗi `2K` optimizer update (K8: 16); đây là số lượt rút frame ngẫu nhiên, không bảo đảm đã ghé mọi frame. J báo sau mỗi hoán vị bệnh nhân U đầy đủ (K8: 72); C0 không dùng U nên báo mỗi `2K` lượt L. Event `development_epoch` ghi epoch, update và định nghĩa vòng. Đây chỉ là quan sát: chọn checkpoint, lịch LR, loss/ramp, sampler, cache refresh và mọi gate vẫn giữ nguyên, chọn checkpoint mỗi 400 update và update cuối. Khi hai lịch trùng nhau chỉ forward DEV một lần. Đánh giá phụ khôi phục RNG và mode của từng submodule; không thêm nhãn vào TRAIN. Không suy ngược hay tạo metric cho các epoch đã qua trước khi bật log.
+
 **[AMEND] Chia sẻ stage B4:** mỗi tổ hợp `(dataset, protocol, K, seed)` chỉ sinh một T và một Q/P chung cho nguồn main. V1 và V1-u dùng cùng teacher, codebook C0 và cache có SHA; C1 dùng cùng T/P và chỉ đọc metadata codebook để xác minh cache. O1 và S1 dùng Q/P riêng nhưng chia sẻ T; hai nguồn feature riêng teacher cũ đã xóa. J nhận manifest stage đã hoàn tất, xác minh SHA, nguồn feature và cohort; không tự train lại T/Q. PLAN chưa chạy chỉ ghi dependency và SHA `NOT_RUN`, không tạo SHA giả.
 
 ## 10. Hợp đồng deploy: chỉ student
@@ -403,6 +405,8 @@ Nguồn nội bộ: atlas `teacher_student_paper_architecture_vi.pdf`; ghi chú 
 
 
 ## Lịch sử thay đổi 2026-11-12
+
+**[AMEND] Theo yêu cầu log từng epoch:** thêm quan sát per-class DEV ở §9, T mỗi 2K update và J mỗi vòng U, giữ lịch chọn checkpoint 400 update. Áp dụng tiếp từ checkpoint có SHA bằng quy trình recovery tường minh; log lịch sử trước amendment giữ nguyên, mọi đoạn replay phải được lưu riêng và ghi nhận. Thay đổi này không đổi config/manifest/optimizer hay ngưỡng.
 
 **[AMEND] Sau đối chiếu Drive nguyên gốc:** 150/150 CINE tải riêng có SHA giống bản server, đọc đủ voxel hữu hạn; 114 header mâu thuẫn affine/pixdim, trong đó 112 thuộc TRAIN80/DEV18/TEST50 đã khóa. Sửa metadata-only các view, giữ L5 ⊂ L8 ⊂ L10; ghi chú kết quả SDF/mm A-3D lịch sử có thể bị ảnh hưởng, không chạy lại baseline. §3–§4 khóa stride/pha mới bằng canonical probe cùng seed/ngưỡng; §5 ghi OPEN support MYO và review trước P2. GPU/profile/campaign chưa chạy ở thời điểm amendment này.
 

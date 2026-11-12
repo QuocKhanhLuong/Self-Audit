@@ -20,6 +20,8 @@ def _percent(value):
 def metric_line(job, record):
     if record.get("event") not in {"development_selection", "development_epoch"}:
         return None
+    if record.get("event") == "development_selection" and record.get("epoch_logged"):
+        return None
     classes = record.get("per_class") or record.get("teacher_dev_per_class") or {}
     epoch = record.get("epoch")
     return (
