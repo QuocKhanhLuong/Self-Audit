@@ -79,6 +79,9 @@ def _cycle_joint_sampler(monkeypatch: pytest.MonkeyPatch, data) -> None:
             "labeled_key": labeled_keys[labeled_patient],
             "unlabeled_patient": unlabeled_patient,
             "unlabeled_key": unlabeled_keys[unlabeled_patient],
+            "unlabeled_cycle": index // len(data.unlabeled_patients) + 1,
+            "unlabeled_cycle_position": index % len(data.unlabeled_patients) + 1,
+            "unlabeled_cycle_complete": (index + 1) % len(data.unlabeled_patients) == 0,
         }
 
     monkeypatch.setattr(Q3DJointSampler, "sample_update", sample_update)

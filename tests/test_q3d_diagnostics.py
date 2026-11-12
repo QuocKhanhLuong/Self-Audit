@@ -95,7 +95,7 @@ def _fixture_bundle(root: Path, *, arm: str = "v1", mismatch_o1_teacher: bool = 
         tensor_key = next(key for key, value in best_teacher_state.items() if torch.is_tensor(value))
         best_teacher_state[tensor_key] = best_teacher_state[tensor_key] + 1.0
     state = {
-        "schema": "self_audit.candidate_q3d.resume.v2",
+        "schema": "self_audit.candidate_q3d.resume.v3",
         "config_sha256": _object_sha256(config),
         "data_identity": _data_identity_without_labels(data),
         "completed_stages": ["T", *(["Q"] if config["tokenizer"]["enabled"] else []),

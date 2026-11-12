@@ -19,6 +19,8 @@ from typing import Any, Mapping
 import torch
 from torch import Tensor, nn
 
+from . import CHECKPOINT_SCHEMA
+
 
 _STAGES = ("T", "Q", "P")
 _ARTIFACT_STATE_KEYS = {
@@ -415,7 +417,7 @@ def _load_payload(checkpoint_path: Path) -> dict[str, Any]:
         payload = torch.load(checkpoint_path, map_location="cpu")
     if not isinstance(payload, Mapping):
         raise ValueError("Q-3D stage checkpoint must contain a mapping")
-    if payload.get("schema") != "self_audit.candidate_q3d.resume.v2":
+    if payload.get("schema") != CHECKPOINT_SCHEMA:
         raise ValueError("Q-3D stage artifact checkpoint schema mismatch")
     return dict(payload)
 

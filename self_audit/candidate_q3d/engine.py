@@ -25,6 +25,7 @@ import torch
 from torch import Tensor, nn
 from torch.nn import functional as F
 
+from . import CHECKPOINT_SCHEMA
 from .alignment import align_teacher_to_student4
 from .augmentation import augment_labeled, augment_unlabeled
 from .data import Q3DData, Q3DJointSampler
@@ -41,6 +42,7 @@ from .losses import (
 
 
 _CLASS_NAMES = ("BG", "RV", "MYO", "LV")
+STATE_SCHEMA = CHECKPOINT_SCHEMA
 _VQ_ARMS = {"v1", "v1u", "v0", "b1", "e1", "o1", "s1"}
 _TEACHER_ARMS = {"c1", *_VQ_ARMS, "mednext_supervised"}
 _STAGE_ORDER = ("T", "Q", "P", "J")
@@ -189,8 +191,11 @@ def _load_checkpoint(path: str | Path, *, config_sha256: str, data_identity: Map
     if _file_sha256(target) != sidecar_parts[0]:
         raise ValueError("Q-3D checkpoint SHA-256 mismatch")
     payload = torch.load(target, map_location="cpu", weights_only=True)
-    if not isinstance(payload, Mapping) or payload.get("schema") != "self_audit.candidate_q3d.resume.v2":
-        raise ValueError("Q-3D resume checkpoint schema mismatch")
+    if not isinstance(payload, Mapping) or payload.get("schema") != STATE_SCHEMA:
+        raise ValueError(
+            "Q-3D resume checkpoint schema mismatch: expected resume.v3; "
+            "resume.v2 uses the retired U sampling stream and cannot be resumed"
+        )
     if payload.get("config_sha256") != config_sha256:
         raise ValueError("Q-3D resume config hash differs from checkpoint")
     if payload.get("data_identity") != dict(data_identity):
@@ -886,7 +891,7 @@ def _assert_snapshot_unchanged(module: nn.Module | None, snapshot: Mapping[str, 
 
 def _initial_run_state(config_sha256: str, data_identity: Mapping[str, Any]) -> dict[str, Any]:
     return {
-        "schema": "self_audit.candidate_q3d.resume.v2",
+        "schema": STATE_SCHEMA,
         "config_sha256": config_sha256,
         "data_identity": copy.deepcopy(dict(data_identity)),
         "stage": None,
@@ -1956,34 +1961,60 @@ def _update_u_patient_cycle(
     state: dict[str, Any],
     patient_id: str,
     cohort: Sequence[str],
+    omega: float,
+    sample: Mapping[str, Any],
 ) -> dict[str, Any]:
-    """Track random U sampling until every cached patient contributes once."""
+    """Accumulate the weights actually consumed in one sampler permutation.
+
+    The observations survive interrupted resume. O1 can change cache snapshots
+    within a permutation; keep those observations rather than restarting a
+    synthetic coverage cycle when its cache changes.
+    """
 
     expected = set(str(value) for value in cohort)
-    if not expected:
-        raise ValueError("U patient cycle requires a nonempty source cohort")
+    if not expected or len(expected) != len(cohort):
+        raise ValueError("U patient cycle requires a nonempty unique source cohort")
+    if patient_id not in expected or not math.isfinite(omega) or omega < 0:
+        raise ValueError("U patient cycle has an invalid patient or omega")
     current = state.get("j_u_patient_cycle")
-    if not isinstance(current, Mapping):
-        current = {"seen": [], "completed_cycles": 0, "last_cycle_update": None, "snapshot": None}
-    seen = set(str(value) for value in current.get("seen", []))
-    seen.add(str(patient_id))
-    completed = int(current.get("completed_cycles", 0))
-    cycle_complete = expected.issubset(seen)
-    if cycle_complete:
-        completed += 1
-        seen = set()
+    if current is None:
+        current = {"observations": [], "completed_cycles": 0}
+    if not isinstance(current, Mapping) or not isinstance(current.get("observations"), list):
+        raise ValueError("U patient cycle checkpoint lacks v3 observations")
+    observations = copy.deepcopy(current["observations"])
+    completed = current.get("completed_cycles")
+    if type(completed) is not int or completed < 0:
+        raise ValueError("U patient cycle completed count is invalid")
+    seen = [row["patient"] for row in observations]
+    if len(set(seen)) != len(seen) or not set(seen).issubset(expected) or patient_id in seen:
+        raise ValueError("U permutation contains a repeated or unknown patient")
+    cycle_complete = len(observations) + 1 == len(expected)
+    if (sample.get("unlabeled_cycle") != completed + 1
+            or sample.get("unlabeled_cycle_position") != len(observations) + 1
+            or sample.get("unlabeled_cycle_complete") is not cycle_complete):
+        raise ValueError("U patient cycle checkpoint differs from sampler permutation")
+    observations.append({
+        "patient": patient_id, "omega": float(omega),
+        "snapshot": (state.get("physiology_cache") or {}).get("sha256"),
+    })
+    values = [row["omega"] for row in observations]
+    if any(not math.isfinite(value) or value < 0 for value in values):
+        raise ValueError("U patient cycle checkpoint contains invalid omega observations")
+    snapshots = list(dict.fromkeys(row["snapshot"] for row in observations))
     result = {
-        "seen_patient_count": len(seen),
+        "seen_patient_count": len(observations),
         "cohort_patient_count": len(expected),
-        "completed_cycles": completed,
+        "completed_cycles": completed + int(cycle_complete),
         "cycle_complete": cycle_complete,
-        "snapshot": current.get("snapshot"),
+        "snapshot": snapshots[0] if len(snapshots) == 1 else None,
+        "snapshots": snapshots,
+        "realized_mean_omega": math.fsum(values) / len(values),
+        "realized_max_omega": max(values),
+        "realized_zero_fraction": sum(value == 0 for value in values) / len(values),
     }
     state["j_u_patient_cycle"] = {
-        "seen": sorted(seen),
-        "completed_cycles": completed,
-        "last_cycle_update": int(state.get("stage_cursor", 0)) if cycle_complete else current.get("last_cycle_update"),
-        "snapshot": current.get("snapshot"),
+        "observations": [] if cycle_complete else observations,
+        "completed_cycles": result["completed_cycles"],
     }
     return result
 
@@ -2377,12 +2408,6 @@ def _run_joint_stage(
         raise ValueError("Q-3D joint stage lacks the TRAIN streams required by this arm")
     updates_per_epoch = max(len(labeled_keys), len(data.train_patients), 1)
     refresh_every = int(config["physiology"]["cache_refresh_joint_epochs"] or 0) * updates_per_epoch
-    if wants_u and _cohort_policy_arm(config) is not None and state.get("j_u_patient_cycle") is None:
-        state["j_u_patient_cycle"] = {
-            "seen": [], "completed_cycles": 0, "last_cycle_update": None,
-            "snapshot": (state.get("physiology_cache") or {}).get("sha256"),
-        }
-
     while cursor < update_budget:
         update_record = sampler.sample_update()
         l_image, l_labels, l_geometry, l_metadata = _sample_parts(
@@ -2562,12 +2587,16 @@ def _run_joint_stage(
             u_omega = _new_patient_omega(config, state, u_patient, labeled=False)
             if _cohort_policy_arm(config) is not None:
                 u_cycle_record = _update_u_patient_cycle(
-                    state, u_patient, data.unlabeled_patients,
+                    state, u_patient, data.unlabeled_patients, u_omega, update_record,
                 )
                 if u_cycle_record["cycle_complete"]:
                     # O1 may refresh after this update. The completed cycle
                     # must report the weights its frames actually consumed.
                     u_cycle_weighting = copy.deepcopy(state.get("physiology_cohort_weighting"))
+                    if (not is_o1 and u_cycle_weighting["gate_passed"]
+                            and not math.isclose(u_cycle_record["realized_mean_omega"], 1.0,
+                                                 rel_tol=0.0, abs_tol=1e-12)):
+                        raise RuntimeError("complete frozen U permutation must have realized_mean_omega = 1")
             if is_mean_teacher:
                 assert ema_model is not None
                 ema_model.eval()
@@ -2728,24 +2757,6 @@ def _run_joint_stage(
             state["j_kd_zero_weight_branches"] = int(state.get("j_kd_zero_weight_branches", 0)) + len(kd_zero_weight_branches)
         if is_o1 and refresh_every and cursor % refresh_every == 0:
             assert teacher is not None and tokenizer is not None
-            prior_cycle = state.get("j_u_patient_cycle")
-            if isinstance(prior_cycle, Mapping) and prior_cycle.get("seen"):
-                prior_weighting = state.get("physiology_cohort_weighting")
-                _record_metric(state, output_dir / "metrics.jsonl", {
-                    "stage": stage,
-                    "event": "physiology_weighting_partial_u_cycle_closed",
-                    "closed_snapshot": prior_cycle.get("snapshot"),
-                    "seen_patient_count": len(prior_cycle.get("seen", [])),
-                    "cohort_patient_count": len(data.unlabeled_patients),
-                    "mean_omega": prior_weighting.get("mean_omega") if isinstance(prior_weighting, Mapping) else None,
-                    "ess": prior_weighting.get("ess") if isinstance(prior_weighting, Mapping) else None,
-                })
-                state["j_u_patient_cycle"] = {
-                    "seen": [],
-                    "completed_cycles": int(prior_cycle.get("completed_cycles", 0)),
-                    "last_cycle_update": None,
-                    "snapshot": None,
-                }
             teacher.requires_grad_(False)
             teacher.eval()
             churn = _refresh_o1_physiology_and_churn(
@@ -2753,9 +2764,6 @@ def _run_joint_stage(
                 state=state, output_dir=output_dir, device=device, epoch=cursor // updates_per_epoch,
             )
             update_losses.update({f"o1_{name}": value for name, value in churn.items()})
-            cycle_state = state.get("j_u_patient_cycle")
-            if isinstance(cycle_state, dict):
-                cycle_state["snapshot"] = (state.get("physiology_cache") or {}).get("sha256")
             _teacher_stage(teacher, "pretrain", freeze=False)
         record = {
             "stage": stage,
@@ -2793,7 +2801,11 @@ def _run_joint_stage(
                     "stage": stage, "event": "physiology_weighting_full_u_cycle",
                     "cycle": u_cycle_record["completed_cycles"],
                     "snapshot": u_cycle_record.get("snapshot"),
+                    "snapshots": u_cycle_record["snapshots"],
                     "patient_count": u_cycle_record["cohort_patient_count"],
+                    "realized_mean_omega": u_cycle_record["realized_mean_omega"],
+                    "realized_max_omega": u_cycle_record["realized_max_omega"],
+                    "realized_zero_fraction": u_cycle_record["realized_zero_fraction"],
                     "mean_omega": weighting.get("mean_omega"),
                     "max_omega": weighting.get("max_omega"),
                     "zero_fraction": weighting.get("zero_fraction"),

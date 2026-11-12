@@ -37,7 +37,7 @@ def _snapshot(tmp_path: Path, arm='c1'):
     # This is an explicit manufactured safe payload for loader testing; it
     # makes no claim that the randomly initialized teacher was fine-tuned.
     payload = {
-        'schema': 'self_audit.candidate_q3d.resume.v2',
+        'schema': 'self_audit.candidate_q3d.resume.v3',
         'config_sha256': _object_sha256(config),
         'data_identity': _data_identity_without_labels(data),
         'completed_stages': ['T'], 'teacher_state': teacher.state_dict(),

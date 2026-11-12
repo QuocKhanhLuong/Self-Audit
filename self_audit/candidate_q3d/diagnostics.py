@@ -468,7 +468,7 @@ def diagnose_checkpoint(
     except ValueError as exc:
         if "schema mismatch" in str(exc):
             raise ValueError(
-                "diagnostics require a Q-3D research resume checkpoint (schema resume.v2); "
+                "diagnostics require a Q-3D research resume checkpoint (schema resume.v3); "
                 "student deployment exports are rejected"
             ) from exc
         raise

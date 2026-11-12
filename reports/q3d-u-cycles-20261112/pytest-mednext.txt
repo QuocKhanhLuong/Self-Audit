@@ -1,0 +1,22 @@
+........................................................................ [ 15%]
+........................................................................ [ 31%]
+........................................................................ [ 46%]
+........................................................................ [ 62%]
+........................................................................ [ 77%]
+........................................................................ [ 93%]
+...............................                                          [100%]
+=============================== warnings summary ===============================
+tests/test_q3d_alignment.py::test_actual_pinned_mednext_feature_phases_and_source_modules
+tests/test_q3d_official_channels.py::test_c1_feature_head_and_loss_match_bounded_official_source_forward
+tests/test_q3d_tokenizer.py::test_decoder_stride8_ablation_hooks_final_child_once
+  /Users/alvinluong/miniforge3/lib/python3.11/site-packages/torch/_dynamo/eval_frame.py:1548: UserWarning: torch.utils.checkpoint: the use_reentrant parameter should be passed explicitly. Starting in PyTorch 2.9, calling checkpoint without use_reentrant will raise an exception. use_reentrant=False is recommended, but if you need to preserve the current default behavior, you can pass use_reentrant=True. Refer to docs for more details on the differences between the two variants.
+    return fn(*args, **kwargs)
+
+tests/test_q3d_alignment.py::test_actual_pinned_mednext_feature_phases_and_source_modules
+tests/test_q3d_official_channels.py::test_c1_feature_head_and_loss_match_bounded_official_source_forward
+tests/test_q3d_tokenizer.py::test_decoder_stride8_ablation_hooks_final_child_once
+  /Users/alvinluong/miniforge3/lib/python3.11/site-packages/torch/utils/checkpoint.py:242: UserWarning: None of the inputs have requires_grad=True. Gradients will be None
+    check_backward_validity(args)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+463 passed, 6 warnings in 273.21s (0:04:33)

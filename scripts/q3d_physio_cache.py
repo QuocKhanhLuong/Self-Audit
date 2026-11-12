@@ -23,6 +23,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from self_audit.candidate_q3d import CHECKPOINT_SCHEMA  # noqa: E402
+
 from self_audit.candidate_a3d.data import CandidateA3DData  # noqa: E402
 from self_audit.candidate_q3d.physiology import (  # noqa: E402
     compute_physiology_cache_rows,
@@ -144,7 +146,7 @@ def _load_post_t_teacher(config, checkpoint_path, expected_sha256, device):
     if not sidecar_fields or sidecar_fields[0] != expected_sha256:
         raise ValueError("teacher post-T checkpoint requires its matching SHA-256 sidecar")
     payload = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
-    if not isinstance(payload, Mapping) or payload.get("schema") != "self_audit.candidate_q3d.resume.v2":
+    if not isinstance(payload, Mapping) or payload.get("schema") != CHECKPOINT_SCHEMA:
         raise ValueError("teacher post-T checkpoint must use the Q-3D research schema")
     if payload.get("config_sha256") != _object_sha256(normalized):
         raise ValueError("teacher post-T checkpoint config identity mismatch")

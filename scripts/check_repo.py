@@ -93,7 +93,7 @@ def main() -> int:
     q3d = tracks["candidate_q3d"]
     _require(q3d.get("package") == "self_audit.candidate_q3d", "Q3D_PACKAGE_MISMATCH")
     _require(q3d.get("config_schema") == "self_audit.candidate_q3d.v1", "Q3D_CONFIG_SCHEMA_MISMATCH")
-    _require(q3d.get("checkpoint_schema") == "self_audit.candidate_q3d.resume.v2",
+    _require(q3d.get("checkpoint_schema") == "self_audit.candidate_q3d.resume.v3",
              "Q3D_CHECKPOINT_SCHEMA_MISMATCH")
     _require(q3d.get("export_schema") == "q3d.student_export.v1",
              "Q3D_EXPORT_SCHEMA_MISMATCH")

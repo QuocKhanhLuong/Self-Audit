@@ -517,7 +517,7 @@ def test_c0_sampler_avoids_u_and_keeps_the_paired_labeled_rng_stream(monkeypatch
     monkeypatch.setattr(candidate.base, "array", forbid_u)
     c0 = Q3DJointSampler(data, seed=53, require_unlabeled=False)
     c0_updates = [c0.sample_update() for _ in range(12)]
-    assert c0.STATE_SCHEMA == "self_audit.candidate_q3d.joint_sampler.v2"
+    assert c0.STATE_SCHEMA == "self_audit.candidate_q3d.joint_sampler.v3"
     assert all("unlabeled_patient" not in row and "unlabeled_key" not in row for row in c0_updates)
     assert [(row["labeled_patient"], row["labeled_key"]) for row in c0_updates] == [
         (row["labeled_patient"], row["labeled_key"]) for row in paired_updates

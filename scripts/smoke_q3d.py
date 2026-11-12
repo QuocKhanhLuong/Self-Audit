@@ -15,6 +15,8 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from self_audit.candidate_q3d import CHECKPOINT_SCHEMA  # noqa: E402
+
 
 def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -32,8 +34,8 @@ def _load_run_state(path: Path) -> dict[str, Any] | None:
     if len(sidecar_parts) != 2 or sidecar_parts[1] != path.name or sidecar_parts[0] != _sha256(path):
         raise ValueError("synthetic smoke research checkpoint SHA-256 sidecar mismatch")
     value = torch.load(path, map_location="cpu", weights_only=True)
-    if not isinstance(value, dict) or value.get("schema") != "self_audit.candidate_q3d.resume.v2":
-        raise ValueError("synthetic smoke requires a Q3D resume.v2 research checkpoint")
+    if not isinstance(value, dict) or value.get("schema") != CHECKPOINT_SCHEMA:
+        raise ValueError("synthetic smoke requires a Q3D resume.v3 research checkpoint")
     return dict(value)
 
 

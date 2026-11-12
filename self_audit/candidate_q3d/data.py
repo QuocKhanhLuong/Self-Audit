@@ -222,14 +222,16 @@ class Q3DData:
 
 
 class Q3DJointSampler:
-    """Infinite deterministic sampler: one labeled and one U patient per update.
+    """Infinite deterministic sampler: one L and one U patient per update.
 
-    Patient IDs are selected uniformly within L and U independently, then an
-    annotated frame/cine frame is sampled uniformly within that patient.  The
-    RNG state and data identity are serialized for exact interrupted resume.
+    L sampling retains its historical random stream exactly. U patients are
+    visited once per shuffled cycle; a separate frame RNG samples within each
+    patient so frame counts cannot change future patient order. All streams,
+    the current U permutation, and its cursor are serialized for exact resume.
     """
 
-    STATE_SCHEMA = "self_audit.candidate_q3d.joint_sampler.v2"
+    STATE_SCHEMA = "self_audit.candidate_q3d.joint_sampler.v3"
+    LEGACY_STATE_SCHEMA = "self_audit.candidate_q3d.joint_sampler.v2"
 
     def __init__(self, data: Q3DData, *, seed: int = 42,
                  require_unlabeled: bool = True) -> None:
@@ -249,8 +251,15 @@ class Q3DJointSampler:
         # Keep the L stream identical between C0 (L-only) and paired arms.
         # Adding/removing U must not change which supervised examples C0 sees.
         self._labeled_rng = random.Random(seed)
-        self._unlabeled_rng = random.Random(seed + 1)
+        # U patient permutations and per-patient frame choices are independent
+        # streams: changing cine frame counts cannot perturb future patients.
+        self._unlabeled_permutation_rng = random.Random(seed + 1)
+        # Frame choices use seed + 2, independent of permutation advancement.
+        self._unlabeled_frame_rng = random.Random(seed + 2)
         self.updates = 0
+        self._unlabeled_permutation: list[str] = []
+        self._unlabeled_cursor = 0
+        self._unlabeled_cycle_count = 0
         self._labeled_by_patient: dict[str, list[tuple[int, int]]] = defaultdict(list)
         self._unlabeled_by_patient: dict[str, list[tuple[int, int]]] = defaultdict(list)
         for key in data.labeled_frame_keys():
@@ -264,6 +273,18 @@ class Q3DJointSampler:
         if missing_l or missing_u:
             raise ValueError("every Q-3D L and U patient must have at least one native frame")
         self._identity = data.identity(include_unlabeled_frames=require_unlabeled)
+        if require_unlabeled:
+            self._start_next_unlabeled_cycle()
+
+    @property
+    def completed_unlabeled_cycles(self) -> int:
+        """Number of complete U permutations already consumed."""
+        return self._unlabeled_cycle_count
+
+    def _start_next_unlabeled_cycle(self) -> None:
+        self._unlabeled_permutation = list(self.data.unlabeled_patients)
+        self._unlabeled_permutation_rng.shuffle(self._unlabeled_permutation)
+        self._unlabeled_cursor = 0
 
     def sample_update(self) -> dict[str, Any]:
         labeled_patient = self._labeled_rng.choice(self.data.labeled_patients)
@@ -275,10 +296,21 @@ class Q3DJointSampler:
             "labeled_key": labeled_key,
         }
         if self.require_unlabeled:
-            unlabeled_patient = self._unlabeled_rng.choice(self.data.unlabeled_patients)
-            unlabeled_key = self._unlabeled_rng.choice(self._unlabeled_by_patient[unlabeled_patient])
+            unlabeled_patient = self._unlabeled_permutation[self._unlabeled_cursor]
+            unlabeled_key = self._unlabeled_frame_rng.choice(
+                self._unlabeled_by_patient[unlabeled_patient]
+            )
+            cycle_position = self._unlabeled_cursor + 1
+            cycle_size = len(self._unlabeled_permutation)
             record["unlabeled_patient"] = unlabeled_patient
             record["unlabeled_key"] = unlabeled_key
+            record["unlabeled_cycle"] = self._unlabeled_cycle_count + 1
+            record["unlabeled_cycle_position"] = cycle_position
+            record["unlabeled_cycle_complete"] = cycle_position == cycle_size
+            self._unlabeled_cursor += 1
+            if self._unlabeled_cursor == cycle_size:
+                self._unlabeled_cycle_count += 1
+                self._start_next_unlabeled_cycle()
         self.updates += 1
         return record
 
@@ -292,15 +324,27 @@ class Q3DJointSampler:
             "seed": self.seed,
             "updates": self.updates,
             "require_unlabeled": self.require_unlabeled,
+            "unlabeled_permutation": list(self._unlabeled_permutation),
+            "unlabeled_cursor": self._unlabeled_cursor,
+            "unlabeled_cycle_count": self._unlabeled_cycle_count,
             "labeled_rng_state": self._labeled_rng.getstate(),
-            "unlabeled_rng_state": self._unlabeled_rng.getstate(),
+            "unlabeled_permutation_rng_state": self._unlabeled_permutation_rng.getstate(),
+            "unlabeled_frame_rng_state": self._unlabeled_frame_rng.getstate(),
             "data_identity": copy.deepcopy(self._identity),
         }
 
     def load_state_dict(self, state: Mapping[str, Any]) -> None:
-        if not isinstance(state, Mapping) or state.get("schema") != self.STATE_SCHEMA:
-            raise ValueError("Q-3D sampler checkpoint schema mismatch")
-        if state.get("seed") != self.seed:
+        if not isinstance(state, Mapping):
+            raise ValueError("Q-3D sampler checkpoint state must be a mapping")
+        schema = state.get("schema")
+        if schema == self.LEGACY_STATE_SCHEMA:
+            raise ValueError(
+                "Q-3D sampler v2 state cannot resume with the cycle-based v3 sampler; "
+                "start a fresh joint stage"
+            )
+        if schema != self.STATE_SCHEMA:
+            raise ValueError("Q-3D sampler checkpoint schema mismatch; expected v3")
+        if type(state.get("seed")) is not int or state.get("seed") != self.seed:
             raise ValueError("Q-3D sampler seed differs from checkpoint")
         if state.get("require_unlabeled") is not self.require_unlabeled:
             raise ValueError("Q-3D sampler L/U mode differs from checkpoint")
@@ -309,11 +353,49 @@ class Q3DJointSampler:
         updates = state.get("updates")
         if type(updates) is not int or updates < 0:
             raise ValueError("Q-3D sampler update count is invalid")
+
+        permutation = state.get("unlabeled_permutation")
+        cursor = state.get("unlabeled_cursor")
+        cycle_count = state.get("unlabeled_cycle_count")
+        if (not isinstance(permutation, list)
+                or any(type(patient) is not str for patient in permutation)):
+            raise ValueError("Q-3D sampler unlabeled permutation is invalid")
+        if type(cursor) is not int or type(cycle_count) is not int:
+            raise ValueError("Q-3D sampler cursor or cycle count is invalid")
+        if cursor < 0 or cycle_count < 0:
+            raise ValueError("Q-3D sampler cursor or cycle count is invalid")
+        if self.require_unlabeled:
+            expected_patients = tuple(self.data.unlabeled_patients)
+            if (len(permutation) != len(expected_patients)
+                    or set(permutation) != set(expected_patients)):
+                raise ValueError(
+                    "Q-3D sampler unlabeled permutation is not a full patient permutation"
+                )
+            if cursor >= len(permutation):
+                raise ValueError("Q-3D sampler unlabeled cursor is outside the current permutation")
+            if updates != cycle_count * len(permutation) + cursor:
+                raise ValueError("Q-3D sampler cursor and cycle count disagree with update count")
+        elif permutation or cursor != 0 or cycle_count != 0:
+            raise ValueError("Q-3D L-only sampler state must not contain a U permutation or cycles")
+
         try:
-            self._labeled_rng.setstate(state["labeled_rng_state"])
-            self._unlabeled_rng.setstate(state["unlabeled_rng_state"])
-        except (KeyError, TypeError, ValueError) as exc:
+            labeled_rng = random.Random()
+            permutation_rng = random.Random()
+            frame_rng = random.Random()
+            labeled_rng.setstate(state["labeled_rng_state"])
+            permutation_rng.setstate(state["unlabeled_permutation_rng_state"])
+            frame_rng.setstate(state["unlabeled_frame_rng_state"])
+        except (KeyError, IndexError, OverflowError, TypeError, ValueError) as exc:
             raise ValueError("Q-3D sampler RNG state is invalid") from exc
+
+        # Commit only after every field has passed validation, so a malformed
+        # checkpoint cannot leave a partially restored sampler behind.
+        self._labeled_rng = labeled_rng
+        self._unlabeled_permutation_rng = permutation_rng
+        self._unlabeled_frame_rng = frame_rng
+        self._unlabeled_permutation = list(permutation)
+        self._unlabeled_cursor = cursor
+        self._unlabeled_cycle_count = cycle_count
         self.updates = updates
 
 

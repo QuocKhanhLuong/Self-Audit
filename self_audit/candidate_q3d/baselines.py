@@ -13,12 +13,13 @@ import random
 from pathlib import Path
 from typing import Any, Mapping
 
+from . import CHECKPOINT_SCHEMA
+
 
 _ROOT = Path(__file__).resolve().parents[2]
 _A3D_REPORT_SCHEMA = "self_audit.candidate_q3d.baseline.a3d_teacher_free.v1"
 _MEDNEXT_REPORT_SCHEMA = "self_audit.candidate_q3d.baseline.mednext_supervised.v1"
 _A3D_CHECKPOINT_SCHEMA = "self_audit.candidate_a3d.checkpoint.v1"
-_Q3D_RESUME_SCHEMA = "self_audit.candidate_q3d.resume.v2"
 
 
 def _sha256_file(path: str | Path) -> str:
@@ -399,7 +400,7 @@ def _run_mednext_t_only(
     checkpoint_sha256 = engine._atomic_torch_save(state, root_checkpoint)
     teacher_source = dict(provenance["teacher"])
     return {
-        "checkpoint_schema": _Q3D_RESUME_SCHEMA,
+        "checkpoint_schema": CHECKPOINT_SCHEMA,
         "checkpoint_path": str(root_checkpoint),
         "checkpoint_sha256": checkpoint_sha256,
         "logical_updates": int(completed),
@@ -618,9 +619,9 @@ def evaluate_mednext_baseline(
     try:
         payload = torch.load(artifact, map_location="cpu", weights_only=True)
     except (OSError, RuntimeError, ValueError) as exc:
-        raise ValueError("heavy MedNeXt checkpoint is not a safe Q-3D resume.v2 payload") from exc
-    if not isinstance(payload, Mapping) or payload.get("schema") != _Q3D_RESUME_SCHEMA:
-        raise ValueError("heavy MedNeXt evaluation requires Q-3D resume.v2 checkpoint schema")
+        raise ValueError("heavy MedNeXt checkpoint is not a safe Q-3D resume.v3 payload") from exc
+    if not isinstance(payload, Mapping) or payload.get("schema") != CHECKPOINT_SCHEMA:
+        raise ValueError("heavy MedNeXt evaluation requires Q-3D resume.v3 checkpoint schema")
 
     config_sha256 = engine._object_sha256(normalized)
     if payload.get("config_sha256") != config_sha256:
@@ -635,7 +636,7 @@ def evaluate_mednext_baseline(
 
     metadata = payload.get("baseline_metadata")
     if not isinstance(metadata, Mapping):
-        raise ValueError("resume.v2 checkpoint lacks heavy MedNeXt baseline metadata")
+        raise ValueError("resume.v3 checkpoint lacks heavy MedNeXt baseline metadata")
     expected_patient_ids = sorted(k_only_data.labeled_patients)
     if (metadata.get("schema") != _MEDNEXT_REPORT_SCHEMA
             or metadata.get("parent_config_sha256") != config_sha256
@@ -719,7 +720,7 @@ def evaluate_mednext_baseline(
         "schema": "self_audit.candidate_q3d.mednext_supervised.evaluation.v1",
         "artifact_kind": "heavy_mednext_region_baseline",
         "student_export": False,
-        "checkpoint_schema": _Q3D_RESUME_SCHEMA,
+        "checkpoint_schema": CHECKPOINT_SCHEMA,
         "checkpoint_path": str(artifact),
         "checkpoint_sha256": checkpoint_sha256,
         "parent_config_sha256": config_sha256,

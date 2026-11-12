@@ -489,7 +489,7 @@ def test_export_consumes_engine_written_best_student_checkpoint(tmp_path: Path) 
     checkpoint = Path(run["checkpoint"])
     assert checkpoint.is_file()
     payload = torch.load(checkpoint, map_location="cpu", weights_only=True)
-    assert payload["schema"] == "self_audit.candidate_q3d.resume.v2"
+    assert payload["schema"] == "self_audit.candidate_q3d.resume.v3"
     assert isinstance(payload["best_student_state"], dict)
     assert payload["best_student_state"]["_extra_state"]["schema"] == "self_audit.q3d.codebook.v1"
     with pytest.raises(ValueError, match="source checkpoint SHA-256 mismatch"):

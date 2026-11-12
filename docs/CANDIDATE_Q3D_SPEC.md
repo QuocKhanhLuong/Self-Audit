@@ -262,6 +262,8 @@ B_f=\frac{1}{|\mathcal C_f|}\sum_{c\in\mathcal C_f}
 
 **[FIX] Gate trước joint, khóa trước khi dùng kết quả:** chỉ dùng w_pat trên U: `mean_U(w_pat) > 0` và `ESS/N_U = (Σw)²/(N_U·Σw²) ≥ 0,25`. Không đạt thì dừng, không nới. **Log mỗi run:** mean(omega) (phải bằng 1 trên mỗi vòng U đầy đủ, mỗi bệnh nhân góp một lần), max omega, tỉ lệ omega = 0, ESS và ESS/N_U. L không tham gia mẫu số U. Gate không dùng kết quả arm hoặc DEV/TEST. V1-u dùng cùng cohort đủ gate để so sánh trọng số tương đối công bằng.
 
+**[FIX] Log vòng U thực tế:** `realized_mean_omega` là trung bình các omega engine đã dùng trong đúng một hoán vị U (§9), không sao chép mean của cache. Lưu các quan sát giữa vòng trong checkpoint; khi vòng đủ, V1/C1 có gate hợp lệ phải đạt 1 với sai số tuyệt đối ≤ 1e-12. Ghi thêm max/zero fraction thực tế và các SHA snapshot đã dùng. O1 vẫn refresh theo lịch đã khóa; nếu đổi snapshot giữa vòng thì giữ toàn bộ quan sát, ghi các SHA và mean thực tế, không ép mean của vòng trộn snapshot thành 1. Synthetic override gate phải được ghi rõ và không được diễn giải là đạt hợp đồng dữ liệu thật.
+
 **Chẩn đoán (chỉ báo cáo):** tính w\_pat trên bệnh nhân DEV và báo tương quan Spearman với Dice RV và HD95 thật của teacher. Không dùng số này để chọn τ.
 
 ## 9. Dữ liệu, protocol nhãn và lịch train
@@ -282,6 +284,8 @@ Không chia sẻ checkpoint, cache sinh lý hay codebook giữa A và B. Pretrai
 **Dataset:** ACDC và M&Ms gốc trước, mỗi bộ train và test riêng; sau đó hai bộ CMR còn lại (chưa xác định tên). Test chéo: train ACDC, test M&Ms và hai bộ kia. Dùng manifest và split đã khóa hiện có. Lưu ý: log campaign trước ghi M&Ms còn bị chặn bởi 34 affine không tương thích geometry.
 
 **Sampler stage joint:** mỗi update gồm một frame L (ED hoặc ES có nhãn) và một frame U (frame bất kỳ của một bệnh nhân U, lấy đều theo bệnh nhân). Batch 1 mỗi luồng vì shape native khác nhau; tích lũy gradient 2.
+
+**[FIX] Hoán vị U và resume:** mỗi vòng shuffle lại danh sách bệnh nhân U bằng RNG riêng `seed + 1`, mỗi bệnh nhân góp đúng một lần; frame trong bệnh nhân chọn ngẫu nhiên bằng RNG riêng `seed + 2`. V1 và V1-u có cùng chuỗi bệnh nhân/frame khi seed và cohort giống nhau. Stream L giữ nguyên RNG `seed` và hai lần chọn patient/frame của hợp đồng trước để C0 không đổi. Schema sampler `joint_sampler.v3` và checkpoint `resume.v3` lưu hoán vị, cursor, số vòng đã hoàn thành, các RNG và quan sát omega giữa vòng. Resume v2 phải dừng với lỗi rõ ràng, không tự chuyển đổi stream cũ.
 
 **Augmentation** (trong loader, cùng một phép biến đổi không gian cho ảnh, mask và cả hai đầu vào teacher/student):
 
@@ -428,3 +432,4 @@ Lịch sử thiết kế gốc ngày 11/11 được giữ trong git. Đối chi�
 - **[AMEND] API B1 và chia sẻ B4 — §7/§9:** loss public trả map per-cell, engine sở hữu reducer; T/Q/P dùng manifest có SHA và J nhập artifact đã xác minh. Nguồn khác và O1 có Q/P riêng; không chia sẻ giữa protocol A/B. Tài liệu baseline được lưu riêng tại `docs/baselines/`, bản Q3D này vẫn là spec active duy nhất. Acceptance dữ liệu thật P0–P5, GPU và campaign vẫn `NOT_RUN`; kiểm thử CPU/synthetic chỉ là `SOFTWARE_ONLY`.
 - **[OPEN] Pha decoder — §4:** kiểm tra source pin phát hiện nhánh transpose conv + low-side pad lệch tâm skip; hai ablation decoder thật dừng chờ hợp đồng pha riêng. Không đổi main x_res_3 hoặc source baseline; kết quả tiny proxy không được dùng làm bằng chứng cho decoder thật.
 - **[AMEND] Số học omega — §7/§8:** gate/ESS giữ nguyên giá trị cache; phép chuẩn hóa omega dùng biểu diễn thập phân chuẩn hóa 15 chữ số có nghĩa trước phép chia để bỏ sai khác ULP do nhân chung 0,1 trong kiểm thử gradient. Không thay đổi trọng số tương đối ở độ chính xác nghiệm thu; trường hợp weights bằng nhau phát ra đúng bit 1.
+- **[FIX] Vòng U sau `aa4b09a` — §8/§9:** thay lấy bệnh nhân U có hoàn lại bằng hoán vị từng vòng; log mean omega thực sự đã dùng và lưu trạng thái giữa vòng; giữ nguyên L/C0, bỏ bộ đếm coverage cũ, từ chối resume v2. Test không ghi vào receipt đã commit; suite chạy trong repo copy phải để `git status --porcelain` rỗng. Bằng chứng CPU/synthetic là `SOFTWARE_ONLY`; dữ liệu thật/GPU/campaign `NOT_RUN`.

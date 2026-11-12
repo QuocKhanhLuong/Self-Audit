@@ -21,11 +21,10 @@ import numpy as np
 import torch
 
 from self_audit.data import CLASS_MAPPING
+from . import CHECKPOINT_SCHEMA
 
 EXPORT_SCHEMA = "q3d.student_export.v1"
-ENGINE_RESUME_SCHEMAS = {
-    "self_audit.candidate_q3d.resume.v2",
-}
+ENGINE_RESUME_SCHEMAS = {CHECKPOINT_SCHEMA}
 _FORBIDDEN_STATE_PARTS = {"teacher", "sdf", "cache", "optimizer", "tokenizer_teacher", "physiology"}
 
 
@@ -313,8 +312,11 @@ def export_checkpoint(checkpoint_path: str | Path, output_path: str | Path, *,
                       cost_report: Mapping[str, Any] | None = None) -> tuple[Path, dict[str, Any], torch.nn.Module]:
     """Build a deploy-only artifact from a frozen Q-3D training checkpoint."""
     payload, checkpoint_sha = _load_payload(checkpoint_path, expected_checkpoint_sha256)
-    if payload.get("schema") == "self_audit.candidate_q3d.resume.v1":
-        raise ValueError("Q-3D resume-v1 checkpoints are retired; export requires the current resume-v2 schema")
+    if payload.get("schema") in {
+        "self_audit.candidate_q3d.resume.v1", "self_audit.candidate_q3d.resume.v2",
+    }:
+        version = payload["schema"].rsplit(".", 1)[-1]
+        raise ValueError(f"Q-3D resume-{version} checkpoints are retired; export requires the current resume-v3 schema")
     raw_config = payload.get("config", payload.get("configuration"))
     config_sha256 = None
     engine_config_sha256 = payload.get("config_sha256")

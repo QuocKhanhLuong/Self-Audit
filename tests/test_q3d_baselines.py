@@ -132,7 +132,7 @@ def test_mednext_supervised_runs_cpu_t_only_updates_for_protocol_b_k_pool(tmp_pa
     )
     assert evaluation["artifact_kind"] == "heavy_mednext_region_baseline"
     assert evaluation["student_export"] is False
-    assert evaluation["checkpoint_schema"] == "self_audit.candidate_q3d.resume.v2"
+    assert evaluation["checkpoint_schema"] == "self_audit.candidate_q3d.resume.v3"
     assert evaluation["parent_protocol"] == "B"
     assert evaluation["baseline_supervision_protocol"] == "K_only"
     assert evaluation["teacher_train_manifest_used"] is False
@@ -214,7 +214,7 @@ def test_a3d_baseline_export_runs_q3d_cli_on_phase_pinned_test(tmp_path: Path) -
     metrics = json.loads((output_dir / "Q3D_METRICS.json").read_text(encoding="utf-8"))
     assert metrics["role"] == "test"
     assert metrics["per_patient"]["evaluation_000"]["clinical"]["errors"]
-    report_path = root / "reports/q3d-implementation-20261112/baseline_test_adapter.json"
+    report_path = tmp_path / "baseline_test_adapter.json"
     source_paths = (
         "self_audit/candidate_q3d/baselines.py", "evaluate.py", "tests/test_q3d_baselines.py",
         "self_audit/candidate_a3d/k1.py", "self_audit/candidate_a3d/io.py",
@@ -251,3 +251,4 @@ def test_a3d_baseline_export_runs_q3d_cli_on_phase_pinned_test(tmp_path: Path) -
             "efficacy_or_SOTA": "NOT_ESTABLISHED",
         },
     }, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    assert json.loads(report_path.read_text())["status"] == "PASS_SOFTWARE_ONLY_SYNTHETIC"
