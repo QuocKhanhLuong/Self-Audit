@@ -20,6 +20,10 @@ def _padded_size(size: int) -> int:
     return max(32, ((size + 15) // 16) * 16)
 
 
+def _phase(stride: int) -> tuple[tuple[int, int, int], tuple[float, float, float]]:
+    return (stride, stride, stride), (0.0, 0.0, 0.0)
+
+
 @pytest.mark.parametrize("depth", [6, 9, 10, 13, 20])
 def test_alignment_shapes_constant_features_and_detach(depth: int) -> None:
     height, width = 35, 41
@@ -27,7 +31,8 @@ def test_alignment_shapes_constant_features_and_detach(depth: int) -> None:
         source_shape = tuple(_padded_size(dim) // stride for dim in (depth, height, width))
         source = torch.full((2, 3, *source_shape), 2.75, requires_grad=True)
         aligned = align_teacher_to_student4(
-            source, (depth, height, width), teacher_stride=stride,
+            source, (depth, height, width), _phase(stride),
+            ((1, 16, 16), (0.0, 0.0, 0.0)),
         )
         assert aligned.shape == (2, 3, depth, math.ceil(height / 16), math.ceil(width / 16))
         assert not aligned.requires_grad
@@ -38,19 +43,18 @@ def test_alignment_shapes_constant_features_and_detach(depth: int) -> None:
 def test_alignment_linear_cell_centers_are_exact_for_full_cells(stride: int) -> None:
     depth, height, width = 20, 32, 48
     source_shape = tuple(_padded_size(dim) // stride for dim in (depth, height, width))
-    z = (torch.arange(source_shape[0], dtype=torch.float64) + 0.5) * stride
-    y = (torch.arange(source_shape[1], dtype=torch.float64) + 0.5) * stride
-    x = (torch.arange(source_shape[2], dtype=torch.float64) + 0.5) * stride
+    z = torch.arange(source_shape[0], dtype=torch.float64) * stride
+    y = torch.arange(source_shape[1], dtype=torch.float64) * stride
+    x = torch.arange(source_shape[2], dtype=torch.float64) * stride
     source = (z[:, None, None] + y[None, :, None] + x[None, None, :])[None, None]
 
     aligned = align_teacher_to_student4(
-        source, (depth, height, width), teacher_stride=stride,
+        source, (depth, height, width), _phase(stride),
+        ((1, 16, 16), (0.0, 0.0, 0.0)),
     )
-    expected_z = (
-        (torch.arange(depth, dtype=torch.float64) + 0.5) / stride - 0.5
-    ).clamp(0, source_shape[0] - 1) * stride + stride / 2
-    expected_y = torch.arange(height // 16, dtype=torch.float64) * 16 + 8
-    expected_x = torch.arange(width // 16, dtype=torch.float64) * 16 + 8
+    expected_z = torch.arange(depth, dtype=torch.float64).clamp(max=(source_shape[0] - 1) * stride)
+    expected_y = torch.arange(height // 16, dtype=torch.float64) * 16
+    expected_x = torch.arange(width // 16, dtype=torch.float64) * 16
     expected = (
         expected_z[:, None, None]
         + expected_y[None, :, None]
@@ -59,46 +63,52 @@ def test_alignment_linear_cell_centers_are_exact_for_full_cells(stride: int) -> 
     torch.testing.assert_close(aligned, expected, atol=1e-5, rtol=0)
 
 
-def test_alignment_stride8_uses_exact_unweighted_pool_at_odd_edges() -> None:
+def test_alignment_stride8_samples_native_centers_at_odd_edges() -> None:
     depth, height, width = 10, 17, 25
     stride = 8
     source = torch.zeros(
         1, 1, _padded_size(depth) // stride,
         _padded_size(height) // stride, _padded_size(width) // stride,
     )
-    # The final S4 cell uses a full 2x2 teacher-cell average, including the
-    # replicate-padded edge cells even though only one native pixel remains.
-    source[..., 2, 2] = 0
-    source[..., 2, 3] = 2
-    source[..., 3, 2] = 4
-    source[..., 3, 3] = 6
-    aligned = align_teacher_to_student4(source, (depth, height, width), teacher_stride=stride)
+    # S4 centers are native indices 0 and 16, so the final y/x target reads
+    # teacher feature index 2 rather than averaging an offset 2x2 block.
+    source[..., 2, 2] = 6
+    aligned = align_teacher_to_student4(
+        source, (depth, height, width), _phase(stride),
+        ((1, 16, 16), (0.0, 0.0, 0.0)),
+    )
     assert aligned.shape == (1, 1, depth, 2, 2)
-    torch.testing.assert_close(aligned[..., 1, 1], torch.full((1, 1, depth), 3.0))
+    torch.testing.assert_close(aligned[..., 1, 1], torch.full((1, 1, depth), 6.0))
 
 
 def test_alignment_accepts_single_z_feature_when_native_depth_is_covered() -> None:
     source = torch.full((1, 1, 1, 4, 4), 2.5)
-    aligned = align_teacher_to_student4(source, (6, 17, 17), teacher_stride=8)
+    aligned = align_teacher_to_student4(
+        source, (6, 17, 17), _phase(8), ((1, 16, 16), (0.0, 0.0, 0.0)),
+    )
     assert aligned.shape == (1, 1, 6, 2, 2)
     torch.testing.assert_close(aligned, torch.full_like(aligned, 2.5))
 
 
 def test_alignment_rejects_partial_inplane_pooling_cells() -> None:
-    # H has three stride-8 cells, but two complete stride-16 cells require four.
-    source = torch.ones(1, 1, 1, 3, 4)
-    with pytest.raises(ValueError, match="full in-plane pooling coverage"):
-        align_teacher_to_student4(source, (6, 17, 17), teacher_stride=8)
+    source = torch.ones(1, 1, 1, 2, 4)
+    with pytest.raises(ValueError, match="does not cover native_shape"):
+        align_teacher_to_student4(
+            source, (6, 17, 17), _phase(8), ((1, 16, 16), (0.0, 0.0, 0.0)),
+        )
 
 
 def test_alignment_rejects_uncovered_or_unsupported_inputs() -> None:
-    with pytest.raises(ValueError, match="teacher_stride"):
-        align_teacher_to_student4(torch.ones(1, 1, 4, 4, 4), (10, 17, 17), teacher_stride=2)
-    with pytest.raises(ValueError, match="cover"):
-        align_teacher_to_student4(torch.ones(1, 1, 2, 1, 1), (10, 17, 17), teacher_stride=8)
-    # This feature covers every native voxel but not both complete 2x2 cells.
-    with pytest.raises(ValueError, match="full in-plane pooling coverage"):
-        align_teacher_to_student4(torch.ones(1, 1, 2, 3, 4), (10, 17, 25), teacher_stride=8)
+    with pytest.raises(ValueError, match="step values"):
+        align_teacher_to_student4(
+            torch.ones(1, 1, 4, 4, 4), (10, 17, 17),
+            ((0, 8, 8), (0.0, 0.0, 0.0)), ((1, 16, 16), (0.0, 0.0, 0.0)),
+        )
+    with pytest.raises(ValueError, match="does not cover native_shape"):
+        align_teacher_to_student4(
+            torch.ones(1, 1, 1, 4, 4), (10, 17, 17), _phase(8),
+            ((1, 16, 16), (0.0, 0.0, 0.0)),
+        )
 
 
 def _small_tokenizer() -> TeacherTokenizer:
@@ -349,20 +359,61 @@ def test_teacher_feature_capture_survives_child_checkpoint_dispatch_and_runs_onc
         "context": "full_volume",
     }
 
-    source = teacher_feature_source(teacher, "stride8")
-    assert source["module_name"] == "dec_block_3.1"
-    captured = forward_teacher_with_features(teacher, image, geometry=geometry)
+    source = teacher_feature_source(teacher, "encoder_stride8")
+    assert source["feature_index"] == 3
+    assert source["capture_api"] == "forward_with_features"
+    assert source["module"] is None
+    captured = forward_teacher_with_features(
+        teacher, image, geometry=geometry, source="encoder_stride8",
+    )
     assert set(captured) == {"region_logits", "boundary_logits", "sdf", "feature"}
     assert captured["feature"].shape[1] == 4
     assert captured["feature"].requires_grad is False
     assert model.iterative_calls == 9  # encoder, bottleneck, and four decoder blocks
 
 
-def test_feature_source_selects_stride16_and_stride4_modules() -> None:
+def test_feature_source_selects_main_encoder_and_separate_decoder_ablations() -> None:
     model = _CheckpointStyleMedNeXt()
     teacher = DualBranchTeacher3D(_FixtureMedNeXtAdapter(model), boundary_width=4)
-    assert teacher_feature_source(teacher, "stride16")["module_name"] == "bottleneck.0"
-    assert teacher_feature_source(teacher, "stride4")["module_name"] == "dec_block_2.1"
+    main = teacher_feature_source(teacher, "stride8")
+    assert main["source"] == "encoder_stride8"
+    assert main["module_name"] == "forward_with_features[0][3]"
+    assert main["capture_api"] == "forward_with_features"
+    assert teacher_feature_source(teacher, "decoder_stride8")["module_name"] == "dec_block_3.1"
+    assert teacher_feature_source(teacher, "bottleneck_stride16")["module_name"] == "bottleneck.0"
+    assert teacher_feature_source(teacher, "stride4_decoder_block")["module_name"] == "dec_block_2.1"
+
+
+def test_decoder_stride8_ablation_hooks_final_child_once() -> None:
+    model = _CheckpointStyleMedNeXt()
+    teacher = DualBranchTeacher3D(_FixtureMedNeXtAdapter(model), boundary_width=4)
+    teacher.requires_grad_(False)
+    teacher.eval()
+    image = torch.rand(1, 1, 6, 17, 19)
+    geometry = {
+        "shape": (6, 17, 19),
+        "spacing_zyx": (5.0, 1.2, 1.2),
+        "affine_zyx": torch.eye(4),
+        "context": "full_volume",
+    }
+    source = teacher_feature_source(teacher, "decoder_stride8")
+    assert source["module_name"] == "dec_block_3.1"
+    calls = 0
+
+    def count(_module, _inputs, _output):
+        nonlocal calls
+        calls += 1
+
+    handle = source["module"].register_forward_hook(count)
+    try:
+        outputs = forward_teacher_with_features(
+            teacher, image, geometry=geometry, source="decoder_stride8",
+        )
+    finally:
+        handle.remove()
+    assert calls == 1
+    assert outputs["feature"].shape == (1, 4, 32, 32, 32)
+    assert not outputs["feature"].requires_grad
 
 
 def test_p0_preflight_keeps_missing_weights_and_patient_diagnostics_not_run() -> None:

@@ -23,7 +23,7 @@ from ..candidate_a3d.evaluation import (
     _volume_input,
 )
 from ..candidate_a3d.geometry import VolumeGeometry3D
-from .alignment import align_teacher_to_student4
+from .alignment import align_teacher_to_student4, student_grid_phase
 from .physiology import patient_physiology_from_probabilities
 
 _HEX = re.compile(r"^[0-9a-f]{64}$")
@@ -82,20 +82,15 @@ def _phase_frame(record: Mapping[str, Any], phase: str) -> int:
 
 
 def _pooled_teacher_outputs(
-    logits: torch.Tensor, target_hw: tuple[int, int]
+    logits: torch.Tensor, target_hw: tuple[int, int], *, student_phase,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Mirror engine S4 target pooling for class probabilities and confidence."""
-    from torch.nn import functional as F
+    """Use the training engine's phase-correct native-only target reducer."""
+    from .engine import _pooled_teacher_targets
 
-    probs = torch.softmax(logits.float(), dim=1)
-    confidence = probs.max(dim=1, keepdim=True).values
-    pad_h, pad_w = (-probs.shape[-2]) % 16, (-probs.shape[-1]) % 16
-    if pad_h or pad_w:
-        probs = F.pad(probs, (0, pad_w, 0, pad_h, 0, 0), mode="replicate")
-        confidence = F.pad(confidence, (0, pad_w, 0, pad_h, 0, 0), mode="replicate")
-    probs = F.avg_pool3d(probs, kernel_size=(1, 16, 16), stride=(1, 16, 16))
-    confidence = F.avg_pool3d(confidence, kernel_size=(1, 16, 16), stride=(1, 16, 16))
-    return probs[..., :target_hw[0], :target_hw[1]], confidence[..., :target_hw[0], :target_hw[1]]
+    probs, _classes, confidence = _pooled_teacher_targets(
+        logits, target_hw=target_hw, student_phase=student_phase,
+    )
+    return probs, confidence.unsqueeze(1)
 
 
 def _teacher_with_source(teacher: nn.Module, image: torch.Tensor, geometry: Mapping[str, Any],
@@ -223,6 +218,7 @@ def run_dev_diagnostics(
         tokenizer.to(target_device).eval()
     if student is not None:
         student.to(target_device).eval()
+        teacher._q3d_student_phase = student_grid_phase(student)
     teacher_sha = before["teacher"]
     codebook_sha = getattr(tokenizer, "codebook_sha256", None) if tokenizer is not None else None
     protocol_config = config.get("physiology", {})
@@ -248,7 +244,7 @@ def run_dev_diagnostics(
                 if physiology_only:
                     teacher_outputs = teacher(x, geometry=geometry)
                 else:
-                    feature_source = f"stride{config['model']['teacher']['feature_stride']}"
+                    feature_source = config["model"]["teacher"]["feature_source"]
                     teacher_outputs = _teacher_with_source(
                         teacher, x, geometry, source=feature_source, synthetic=synthetic,
                     )
@@ -259,7 +255,7 @@ def run_dev_diagnostics(
                     assert tokenizer is not None and student is not None
                     aligned = align_teacher_to_student4(
                         teacher_outputs["feature"], x.shape[-3:],
-                        teacher_stride=int(config["model"]["teacher"]["feature_stride"]),
+                        teacher_outputs["teacher_phase"], teacher_outputs["student_phase"],
                     )
                     teacher_token = tokenizer(aligned)
                     student_output = student(x, geometry=geometry)
@@ -272,6 +268,7 @@ def run_dev_diagnostics(
                     patient_agreement.append(float((teacher_codes == student_codes).float().mean().cpu()))
                     probabilities, _confidence = _pooled_teacher_outputs(
                         region_logits, (int(teacher_codes.shape[-2]), int(teacher_codes.shape[-1])),
+                        student_phase=teacher_outputs["student_phase"],
                     )
                     all_teacher_codes.append(teacher_codes.detach().cpu())
                     all_class_probs.append(probabilities.detach().cpu())

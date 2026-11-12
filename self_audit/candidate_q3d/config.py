@@ -135,7 +135,8 @@ def _stage_accounting(
 
 def _base_config(arm: str, *, dataset: str = "acdc", protocol: str = "A",
                  k: int = 5, seed: int = DEFAULT_SEED,
-                 source_stride: int | None = None, residual2: bool = False) -> dict[str, Any]:
+                 source_stride: int | None = None, feature_source: str | None = None,
+                 residual2: bool = False) -> dict[str, Any]:
     if dataset not in {"acdc", "mnms"}:
         raise ValueError("dataset must be acdc or mnms; unnamed CMR datasets stay NOT_RUN")
     if protocol not in {"A", "B"}:
@@ -146,6 +147,11 @@ def _base_config(arm: str, *, dataset: str = "acdc", protocol: str = "A",
     settings = _ARM_SETTINGS[arm]
     teacher_used = arm in {"c1", "v1", "v1u", "v0", "b1", "e1", "o1", "s1", "mednext_supervised"}
     source_stride = (16 if arm == "s1" else 8) if source_stride is None else source_stride
+    if feature_source is None:
+        feature_source = (
+            {4: "stride4_decoder_block", 8: "encoder_stride8", 16: "bottleneck_stride16"}[source_stride]
+            if teacher_used else None
+        )
     teacher_online = arm == "o1"
     code_only = arm == "b1"
     adaptive_epa = arm == "e1"
@@ -166,6 +172,7 @@ def _base_config(arm: str, *, dataset: str = "acdc", protocol: str = "A",
         decoder_inputs = ["F4"] if student_architecture == "unetrpp_lite_3d" else ["native_volume"]
     setting_namespace = (
         "v1_stride4" if arm == "v1" and source_stride == 4 else
+        "v1_decoder_stride8" if arm == "v1" and source_stride == 8 and feature_source == "decoder_stride8" else
         "v1_residual2" if arm == "v1" and residual2 else arm
     )
     codekd_enabled = arm in {"v1", "v1u", "b1", "e1", "o1", "s1"}
@@ -233,6 +240,7 @@ def _base_config(arm: str, *, dataset: str = "acdc", protocol: str = "A",
                 "architecture": teacher_architecture,
                 "heads": ["region", "boundary_sdf"] if teacher_architecture == "mednext_l_k3" else [],
                 "feature_stride": source_stride if teacher_architecture == "mednext_l_k3" else None,
+                "feature_source": feature_source if teacher_architecture == "mednext_l_k3" else None,
                 "feature_channels": _FEATURE_CHANNELS[source_stride] if teacher_architecture == "mednext_l_k3" else None,
                 "source_repo": DEFAULT_MEDNEXT_SOURCE_REPO if teacher_architecture == "mednext_l_k3" else None,
                 "source_commit": UPSTREAM_MEDNEXT_COMMIT if teacher_architecture == "mednext_l_k3" else None,
@@ -296,11 +304,7 @@ def _base_config(arm: str, *, dataset: str = "acdc", protocol: str = "A",
             "minimum_perplexity": 32.0,
             "maximum_dead_code_fraction": 0.25,
             "minimum_class_codes": 4,
-            "source_feature": {
-                4: "stride4_decoder_block",
-                8: "stride8_decoder_block_after_bottleneck",
-                16: "bottleneck_stride16",
-            }[source_stride],
+            "source_feature": feature_source,
             "codebook_frozen_after_stage": "Q",
         },
         "physiology": {
@@ -372,7 +376,7 @@ def _base_config(arm: str, *, dataset: str = "acdc", protocol: str = "A",
 
 def canonical_config(arm: str, *, dataset: str = "acdc", protocol: str = "A",
                      k: int = 5, seed: int = DEFAULT_SEED, source_stride: int | None = None,
-                     residual2: bool = False) -> dict[str, Any]:
+                     feature_source: str | None = None, residual2: bool = False) -> dict[str, Any]:
     """Build a fresh canonical nested config for a declared arm and setting."""
     if arm not in ARMS:
         raise ValueError(f"unknown Q-3D arm: {arm}")
@@ -381,7 +385,8 @@ def canonical_config(arm: str, *, dataset: str = "acdc", protocol: str = "A",
     if type(seed) is not int or seed < 0:
         raise ValueError("seed must be a nonnegative integer")
     return validate_config(_base_config(arm, dataset=dataset, protocol=protocol, k=k, seed=seed,
-                                        source_stride=source_stride, residual2=residual2))
+                                        source_stride=source_stride, feature_source=feature_source,
+                                        residual2=residual2))
 
 
 def _exact_mapping(value: Any, keys: set[str], name: str) -> Mapping[str, Any]:
@@ -600,7 +605,7 @@ def _validate_model(value: Any, *, arm: str) -> dict[str, Any]:
         if student["code_gate_init"] != 0.0:
             raise ValueError("the code injection gate must start at zero")
     teacher_keys = {
-        "architecture", "heads", "feature_stride", "feature_channels", "source_repo",
+        "architecture", "heads", "feature_stride", "feature_source", "feature_channels", "source_repo",
         "source_commit", "freeze_joint", "online_joint", "shared_trunk", "pretrained",
     }
     teacher = dict(_exact_mapping(model["teacher"], teacher_keys, "model.teacher"))
@@ -618,6 +623,17 @@ def _validate_model(value: Any, *, arm: str) -> dict[str, Any]:
             raise ValueError("MedNeXt teacher must declare two heads on one shared trunk")
         if teacher["feature_stride"] not in {4, 8, 16}:
             raise ValueError("teacher feature_stride must be 4, 8, or 16")
+        expected_feature_source = {
+            4: "stride4_decoder_block",
+            16: "bottleneck_stride16",
+        }.get(teacher["feature_stride"])
+        if teacher["feature_stride"] == 8:
+            if teacher["feature_source"] not in {"encoder_stride8", "decoder_stride8"}:
+                raise ValueError("stride-8 teacher feature_source must be encoder_stride8 or decoder_stride8")
+            if teacher["feature_source"] == "decoder_stride8" and arm != "v1":
+                raise ValueError("decoder_stride8 is reserved for the V1 source ablation")
+        elif teacher["feature_source"] != expected_feature_source:
+            raise ValueError("teacher feature_source must name the selected stride's explicit source")
         if teacher["feature_channels"] != _FEATURE_CHANNELS[teacher["feature_stride"]]:
             raise ValueError("teacher feature_channels must match the selected verified stride adapter")
         if teacher["source_repo"] is not None and (
@@ -664,7 +680,7 @@ def _validate_model(value: Any, *, arm: str) -> dict[str, Any]:
             raise ValueError("non-READY pretrained provenance must keep unavailable weights and overlap facts null")
     else:
         if (teacher["feature_stride"] is not None or teacher["feature_channels"] is not None
-                or teacher["source_repo"] is not None or teacher["source_commit"] is not None
+                or teacher["feature_source"] is not None or teacher["source_repo"] is not None or teacher["source_commit"] is not None
                 or teacher["pretrained"] is not None):
             raise ValueError("non-MedNeXt baselines cannot carry MedNeXt feature or checkpoint provenance")
     return {"student": student, "teacher": teacher}
@@ -850,14 +866,9 @@ def validate_config(config: Mapping[str, Any], *, real_run: bool = False) -> dic
     _positive_int(tokenizer["minimum_class_codes"], "tokenizer.minimum_class_codes")
     if tokenizer["minimum_class_codes"] != 4 or tokenizer["codebook_frozen_after_stage"] != "Q":
         raise ValueError("tokenizer gate/freeze contract mismatch")
-    source_stride = model["teacher"]["feature_stride"]
-    expected_source_feature = {
-        4: "stride4_decoder_block",
-        8: "stride8_decoder_block_after_bottleneck",
-        16: "bottleneck_stride16",
-    }.get(source_stride, "stride8_decoder_block_after_bottleneck")
+    expected_source_feature = model["teacher"]["feature_source"]
     if tokenizer["source_feature"] != expected_source_feature:
-        raise ValueError("tokenizer source feature must agree with the teacher stride declaration")
+        raise ValueError("tokenizer source_feature must match model.teacher.feature_source")
     physiology = dict(_exact_mapping(raw["physiology"], {
         "enabled", "stroke_balance", "certainty_threshold", "tau_stroke_volume", "tau_myocardium",
         "minimum_lv_ed_ml", "ef_range_percent", "cache_refresh_joint_epochs", "use_ed_es_metadata",
@@ -944,9 +955,11 @@ def validate_config(config: Mapping[str, Any], *, real_run: bool = False) -> dic
         if type(checkpoint[field]) is not bool or not checkpoint[field]:
             raise ValueError(f"checkpoint.{field} must be true")
     teacher_stride = model["teacher"]["feature_stride"]
+    teacher_feature_source = model["teacher"]["feature_source"]
     residual2_enabled = model["student"]["residual2"]["enabled"]
     setting_namespace = (
         "v1_stride4" if arm == "v1" and teacher_stride == 4 else
+        "v1_decoder_stride8" if arm == "v1" and teacher_stride == 8 and teacher_feature_source == "decoder_stride8" else
         "v1_residual2" if arm == "v1" and residual2_enabled else arm
     )
     expected_outputs = {name: f"{expected_namespace}/{setting_namespace}/{name.lower()}" for name in ("T", "Q", "P", "J")}

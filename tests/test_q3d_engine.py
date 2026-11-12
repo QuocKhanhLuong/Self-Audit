@@ -1,6 +1,7 @@
 """Focused synthetic contracts for the Q-3D losses and trainer resume path."""
 
 import copy
+import math
 
 import pytest
 import torch
@@ -60,52 +61,47 @@ def test_q3d_teacher_loss_keeps_two_segmentation_heads_and_near_far_wrapper():
     assert prediction.grad is not None
 
 
-def test_codekd_balances_present_classes_equally_including_background():
-    # Both classes have 2 cells. Class 0 is an exact match, while class 1 has
-    # a high KL; equal class averaging must be half that class-1 KL.
-    teacher = torch.tensor([[[[[1.0, 1.0, 1.0, 1.0]]], [[[0.0, 0.0, 0.0, 0.0]]]]])
-    student = torch.tensor([[[[[1.0, 1.0, 0.5, 0.5]]], [[[0.0, 0.0, 0.5, 0.5]]]]])
-    classes = torch.tensor([[[[0, 0, 1, 1]]]])
-    weights = torch.ones_like(classes, dtype=torch.float32)
-    loss, stats = codekd_loss(teacher, student, classes, weights)
-    expected_class1 = -torch.log(torch.tensor(0.5))
-    assert torch.allclose(loss, expected_class1 / 2, atol=1e-6)
-    assert stats["used_classes"] == [0, 1]
-    assert stats["zero_weight_classes"] == []
+def test_codekd_returns_per_cell_kl_map_without_reducing_classes_or_weights():
+    teacher = torch.tensor(
+        [[[[[1.0, 1.0, 1.0, 1.0]]], [[[0.0, 0.0, 0.0, 0.0]]]]],
+        requires_grad=True,
+    )
+    student = torch.tensor(
+        [[[[[1.0, 1.0, 0.5, 0.5]]], [[[0.0, 0.0, 0.5, 0.5]]]]],
+        requires_grad=True,
+    )
+    per_cell = codekd_loss(teacher, student)
+    expected = torch.tensor([[[[0.0, 0.0, math.log(2.0), math.log(2.0)]]]])
+    assert per_cell.shape == (1, 1, 1, 4)
+    assert torch.allclose(per_cell, expected, atol=1e-6)
+    per_cell.sum().backward()
+    assert teacher.grad is None
+    assert student.grad is not None and torch.isfinite(student.grad).all()
 
 
-def test_codekd_reports_zero_weight_classes_and_retains_graph_if_all_weights_zero():
-    teacher = torch.full((1, 2, 1, 1, 2), 0.5)
-    student = torch.full_like(teacher, 0.5)
-    classes = torch.tensor([[[[0, 1]]]])
-    weights = torch.tensor([[[[1.0, 0.0]]]])
-    loss, stats = codekd_loss(teacher, student, classes, weights)
-    assert loss.item() == pytest.approx(0.0)
-    assert stats["used_classes"] == [0]
-    assert stats["zero_weight_classes"] == [1]
-    student.requires_grad_(True)
-    empty, empty_stats = codekd_loss(teacher, student, classes, torch.zeros_like(weights))
-    assert empty.item() == 0.0 and empty.grad_fn is not None
-    assert empty_stats["used_classes"] == []
-    empty.backward()
+def test_codekd_equal_targets_return_graph_connected_per_cell_zeros():
+    student = torch.full((1, 2, 1, 1, 2), 0.5, requires_grad=True)
+    per_cell = codekd_loss(student.detach(), student)
+    assert per_cell.shape == (1, 1, 1, 2)
+    assert torch.equal(per_cell, torch.zeros_like(per_cell))
+    assert per_cell.grad_fn is not None
+    per_cell.sum().backward()
     assert torch.equal(student.grad, torch.zeros_like(student))
 
 
-def test_codekd_rejects_invalid_probability_mass_and_negative_weights():
+def test_codekd_rejects_invalid_probability_mass():
     teacher = torch.full((1, 2, 1, 1, 1), 0.5)
-    classes = torch.zeros((1, 1, 1, 1), dtype=torch.long)
     with pytest.raises(ValueError, match="positive mass"):
-        codekd_loss(torch.zeros_like(teacher), teacher, classes, torch.ones_like(classes, dtype=torch.float32))
-    with pytest.raises(ValueError, match="nonnegative"):
-        codekd_loss(teacher, teacher, classes, -torch.ones_like(classes, dtype=torch.float32))
+        codekd_loss(torch.zeros_like(teacher), teacher)
 
 
-def test_feature_kd_is_class_balanced_and_detaches_teacher():
+def test_feature_kd_returns_per_cell_cosine_map_and_detaches_teacher():
     teacher = torch.tensor([[[[[1.0, 0.0]]], [[[0.0, 1.0]]]]], requires_grad=True)
     student = torch.tensor([[[[[1.0, 1.0]]], [[[0.0, 0.0]]]]], requires_grad=True)
-    classes = torch.tensor([[[[0, 1]]]])
-    loss, _ = feature_kd_loss(teacher, student, classes, torch.ones_like(classes, dtype=torch.float32))
-    loss.backward()
+    per_cell = feature_kd_loss(teacher, student)
+    assert per_cell.shape == (1, 1, 1, 2)
+    assert torch.allclose(per_cell, torch.tensor([[[[0.0, 1.0]]]]), atol=1e-6)
+    per_cell.sum().backward()
     assert teacher.grad is None
     assert student.grad is not None
 
@@ -602,11 +598,13 @@ def test_development_and_report_share_frame_then_patient_dice_with_unequal_suppo
     assert report["fg_dice"] == pytest.approx(shared["fg_dice"])
 
 
-def test_pooled_teacher_targets_replicate_pad_odd_native_height_width():
+def test_pooled_teacher_targets_native_centers_on_odd_height_width():
     from self_audit.candidate_q3d.engine import _pooled_teacher_targets
 
     logits = torch.randn(1, 4, 6, 17, 19)
-    probs, classes, confidence = _pooled_teacher_targets(logits, target_hw=(2, 2))
+    probs, classes, confidence = _pooled_teacher_targets(
+        logits, target_hw=(2, 2), student_phase=((1, 16, 16), (0, 0, 0)),
+    )
     assert probs.shape == (1, 4, 6, 2, 2)
     assert classes.shape == (1, 6, 2, 2)
     assert confidence.shape == (1, 6, 2, 2)

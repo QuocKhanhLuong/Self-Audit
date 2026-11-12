@@ -113,6 +113,8 @@ j_new = a·j
 
 **[FIX] Hạn chế:** receptive field teacher có thể chứa lát pad replicate; căn đúng pha không phục hồi độ phân giải z đã mất. Nguồn stride 4 vẫn là ablation.
 
+**[OPEN] Nguồn decoder tại pin MedNeXt v1:** source `up_3`/`up_2` dùng transpose conv k3 s2 p1 rồi pad thêm một voxel phía thấp trước khi cộng skip encoder. Nhánh up và skip vì vậy không có cùng tâm native (ở stride 8 lệch một ô, tức 8 px). Không thể gán một `GridPhase` chung cho tổng hai nhánh theo hợp đồng này. Alignment dữ liệu thật cho `decoder_stride8` và `stride4_decoder_block` phải dừng và ghi `NOT_RUN` cho đến khi có hợp đồng riêng được xem xét; không tự chọn pha skip, sửa kiến trúc hoặc đổi ngưỡng. Hook child cuối vẫn được kiểm tra độc lập. Tiny encoder dùng trong smoke có pha xác định nhưng chỉ là proxy `SOFTWARE_ONLY`, không xác nhận pha decoder MedNeXt. Main `features[3] = x_res_3` và bottleneck S1 không bị phát hiện này tác động.
+
 **[FIX] Unit test bắt buộc ở P2:**
 
 - Feature hằng → kết quả hằng.
@@ -229,7 +231,7 @@ B_f=\frac{1}{|\mathcal C_f|}\sum_{c\in\mathcal C_f}
 
 - `weighted_class_balanced_reduce(per_cell_loss, cls, w_cell, omega) -> (loss, stats)` nhận loss `[D,h,w]` hoặc `[B,D,h,w]`; cls/w_cell cùng `[D,h,w]`. Khi có B, áp map chung cho từng frame rồi mean các loss frame; cohort thật với map khác nhau gọi riêng từng frame. Validate shape, finite, lớp nguyên BG/RV/MYO/LV, w_cell ≥ 0 và omega ≥ 0; weights detach. Stats ghi lớp active/excluded, tổng trọng số lớp, base loss và omega.
 - `cohort_omega(w_pat, arm) -> dict` trả `omega` (patient → float), `mean_w_pat`, `ess`, `ess_fraction`, `mean_omega`, `max_omega`, `zero_fraction`. Đầu vào U không rỗng, weights finite/nonnegative. V1/C1 và V1-u dùng cùng cohort U đủ gate §8; V1-u chỉ bỏ trọng số tương đối. `arm="L"` trả omega = 1 và không áp gate U. Không trộn L/U trong một đầu vào.
-- `tests/test_candidate_q3d_weighting.py` khóa tỉ lệ loss/grad 1:0,1:0; anti-regression công thức cũ; ví dụ tay; zero-support không pha loãng; all-zero giữ graph; mean omega/ESS/gate; L/V1-u; weights bằng nhau cho V1/V1-u trùng từng bit. **[FIX] Tích hợp thực thi:** `codekd_loss` và `feature_kd_loss` nhận `weights = w_cell` cùng keyword riêng `omega`; mỗi frame gọi reducer thuần, sau đó mean loss frame. Engine truyền omega = 1 trên L và omega cohort trên U, kể cả nhánh zero-support giữ graph. Bản khóa helper `b31eb9f` chưa nối engine; kiểm chứng tích hợp weighting tiếp theo là `SOFTWARE_ONLY`, không thay thế acceptance toàn bộ P4.
+- `tests/test_candidate_q3d_weighting.py` khóa tỉ lệ loss/grad 1:0,1:0; anti-regression công thức cũ; ví dụ tay; zero-support không pha loãng; all-zero giữ graph; mean omega/ESS/gate; L/V1-u; weights bằng nhau cho V1/V1-u trùng từng bit. **[AMEND] API thực thi B1:** `codekd_loss(pi_T, pi_S)` và `feature_kd_loss(F_T, F_S)` chỉ trả map per-cell `[B,D,h,w]` (KL hoặc 1−cos). Engine gọi `weighted_class_balanced_reduce` riêng mỗi frame với `cls`, `w_cell`, `omega`, rồi mean loss frame; không giữ reducer riêng có epsilon. Engine truyền omega = 1 trên L và omega cohort trên U, kể cả nhánh zero-support giữ graph. Bản khóa helper `b31eb9f` chưa nối engine; kiểm chứng tích hợp là `SOFTWARE_ONLY`, không thay thế acceptance toàn bộ P4.
 
 **Đường gradient:**
 
@@ -301,6 +303,8 @@ Không chia sẻ checkpoint, cache sinh lý hay codebook giữa A và B. Pretrai
 | J | Student joint (mục 7) | 8.000 | Đóng băng |
 
 Chọn checkpoint student theo DEV FG Dice patient-macro, đánh giá mỗi 400 update. Mỗi stage ghi checkpoint, SHA-256 và có thể resume.
+
+**[AMEND] Chia sẻ stage B4:** mỗi tổ hợp `(dataset, protocol, K, seed)` chỉ sinh một T và một Q/P chung cho nguồn main. V1, V1-u và C1 dùng cùng teacher, C0 và cache có SHA (C1 chỉ đọc metadata C0 để xác minh cache). O1, S1, nguồn stride 4 và decoder stride 8 dùng Q/P riêng nhưng chia sẻ T. J nhận manifest stage đã hoàn tất, xác minh SHA, nguồn feature và cohort; không tự train lại T/Q. PLAN chưa chạy chỉ ghi dependency và SHA `NOT_RUN`, không tạo SHA giả.
 
 ## 10. Hợp đồng deploy: chỉ student
 
@@ -421,3 +425,6 @@ Lịch sử thiết kế gốc ngày 11/11 được giữ trong git. Đối chi�
 - **[AMEND] Phần mềm — §1/§7/§12:** hai helper và test SOFTWARE_ONLY, giữ API main hiện có; P0–P5 bản sửa/GPU/dữ liệu thật NOT_RUN. Prompt chưa cung cấp nội dung riêng mang nhãn F5–F8; đã đối chiếu các mệnh đề code cụ thể ở A3–A7, không tự gán nhãn fact.
 
 - **[FIX] Tích hợp weighting sau `b31eb9f` — §7/§8/§11:** codeKD và feature KD trong engine dùng reducer chung với omega tách khỏi w_cell; L luôn 1, U dùng mean cache/ESS đã khóa, V1-u giữ omega 1 với cùng gate U. Cache lưu thống kê cohort trong payload có SHA và xác minh lại khi load; resume/refresh phải giữ hợp đồng weighting. Test đi qua đường gọi engine và hai loss public, không chỉ helper. Bằng chứng CPU/synthetic là SOFTWARE_ONLY; không đổi job server hoặc ngưỡng sinh lý.
+- **[AMEND] API B1 và chia sẻ B4 — §7/§9:** loss public trả map per-cell, engine sở hữu reducer; T/Q/P dùng manifest có SHA và J nhập artifact đã xác minh. Nguồn khác và O1 có Q/P riêng; không chia sẻ giữa protocol A/B. Tài liệu baseline được lưu riêng tại `docs/baselines/`, bản Q3D này vẫn là spec active duy nhất. Acceptance dữ liệu thật P0–P5, GPU và campaign vẫn `NOT_RUN`; kiểm thử CPU/synthetic chỉ là `SOFTWARE_ONLY`.
+- **[OPEN] Pha decoder — §4:** kiểm tra source pin phát hiện nhánh transpose conv + low-side pad lệch tâm skip; hai ablation decoder thật dừng chờ hợp đồng pha riêng. Không đổi main x_res_3 hoặc source baseline; kết quả tiny proxy không được dùng làm bằng chứng cho decoder thật.
+- **[AMEND] Số học omega — §7/§8:** gate/ESS giữ nguyên giá trị cache; phép chuẩn hóa omega dùng biểu diễn thập phân chuẩn hóa 15 chữ số có nghĩa trước phép chia để bỏ sai khác ULP do nhân chung 0,1 trong kiểm thử gradient. Không thay đổi trọng số tương đối ở độ chính xác nghiệm thu; trường hợp weights bằng nhau phát ra đúng bit 1.

@@ -29,6 +29,7 @@ from self_audit.candidate_q3d.physiology import (
     save_physiology_cache,
     summarize_physiology_cohort,
 )
+from self_audit.candidate_q3d.losses import cohort_omega
 
 
 def _case_with_frozen_rows(tmp_path: Path, arm: str, *, n_unlabeled: int = 2):
@@ -93,13 +94,125 @@ def _controlled_confidence_targets(monkeypatch: pytest.MonkeyPatch) -> None:
 
     real_pool = engine._pooled_teacher_targets
 
-    def controlled(region_logits, *, target_hw):
-        probabilities, classes, _confidence = real_pool(region_logits, target_hw=target_hw)
+    def controlled(region_logits, *, target_hw, student_phase):
+        probabilities, classes, _confidence = real_pool(
+            region_logits, target_hw=target_hw, student_phase=student_phase,
+        )
         confidence = torch.full_like(_confidence, 0.85)
         confidence[..., 0, 0] = 0.0
         return probabilities, classes, confidence
 
     monkeypatch.setattr(engine, "_pooled_teacher_targets", controlled)
+
+
+def _set_patient_weights(case, state, *, patient_weights, cache_path: Path):
+    teacher_sha = engine._state_sha256(case["teacher"])
+    codebook_sha = case["tokenizer"].codebook_sha256
+    protocol = case["config"]["protocol"]["variant"]
+    rows = [
+        {
+            "id": patient,
+            "w_pat": float(weight),
+            "protocol": protocol,
+            "teacher_sha256": teacher_sha,
+            "codebook_sha256": codebook_sha,
+        }
+        for patient, weight in zip(case["data"].unlabeled_patients, patient_weights)
+    ]
+    cache_path = Path(cache_path)
+    cache_sha = save_physiology_cache(
+        cache_path, rows, teacher_sha256=teacher_sha, codebook_sha256=codebook_sha,
+        protocol=protocol, source_identity=case["data"].cache_source_identity(),
+    )
+    summary = summarize_physiology_cohort(rows)
+    state["physiology_rows"] = {row["id"]: row for row in rows}
+    state["physiology_cache"] = {
+        "path": str(cache_path),
+        "sha256": cache_sha,
+        "teacher_sha256": teacher_sha,
+        "codebook_sha256": codebook_sha,
+        "source_identity": case["data"].cache_source_identity(),
+        "cohort_weighting": summary,
+    }
+    state["completed_stages"] = ["P"]
+    metadata = engine._cohort_weighting_metadata(
+        case["config"], case["data"], state,
+        context="cohort scaling gradient test", synthetic_override=False,
+    )
+    assert metadata is not None
+    engine._validate_resumed_physiology_cache(
+        case["config"], case["data"], state, output_dir=cache_path.parent,
+        teacher=case["teacher"], tokenizer=case["tokenizer"],
+    )
+    # Start at a post-ramp cursor with a synthetic frozen-cache receipt so the
+    # test executes exactly one optimizer update with KD active.
+    state["stage"] = "J"
+    state["stage_cursor"] = 1
+    state["j_optimizer_updates"] = 1
+
+
+def _install_optimizer_gradient_capture(monkeypatch: pytest.MonkeyPatch):
+    real_make_optimizer = engine._make_optimizer
+    updates = []
+
+    def tracked_make_optimizer(*args, **kwargs):
+        optimizer = real_make_optimizer(*args, **kwargs)
+        real_step = optimizer.step
+
+        def tracked_step(*step_args, **step_kwargs):
+            gradients = []
+            for group in optimizer.param_groups:
+                for parameter in group["params"]:
+                    gradients.append(
+                        None if parameter.grad is None else parameter.grad.detach().clone()
+                    )
+            updates.append(gradients)
+            return real_step(*step_args, **step_kwargs)
+
+        optimizer.step = tracked_step
+        return optimizer
+
+    monkeypatch.setattr(engine, "_make_optimizer", tracked_make_optimizer)
+    return updates
+
+
+def _assert_gradients_bitwise_equal(left, right):
+    assert len(left) == len(right)
+    for left_gradient, right_gradient in zip(left, right):
+        if left_gradient is None or right_gradient is None:
+            assert left_gradient is right_gradient
+        else:
+            assert torch.equal(left_gradient, right_gradient)
+
+
+def _assert_module_state_bitwise_equal(left, right):
+    left_state, right_state = left.state_dict(), right.state_dict()
+    assert left_state.keys() == right_state.keys()
+    for name in left_state:
+        assert engine._same_state_value(left_state[name], right_state[name]), name
+
+
+def _prepare_and_run_ramped_joint_step(
+    tmp_path, monkeypatch, arm, patient_weights, output_name,
+):
+    case, modules, state = _case_with_frozen_rows(tmp_path, arm)
+    case["config"]["training"]["stage_updates"]["J"] = 2
+    _set_patient_weights(
+        case, state, patient_weights=patient_weights,
+        cache_path=tmp_path / "physiology_cache.json",
+    )
+    _cycle_joint_sampler(monkeypatch, case["data"])
+    final_state = _execute_joint_stage(
+        case, tmp_path / output_name, modules, state=state,
+    )
+    assert final_state["j_optimizer_updates"] == 2
+    updates = [
+        row for row in final_state["metrics"]
+        if row.get("stage") == "J" and "event" not in row
+    ]
+    assert len(updates) == 1
+    assert [row["distillation_ramp"] for row in updates] == pytest.approx([1.0])
+    return case, modules, final_state
 
 
 @pytest.mark.parametrize(
@@ -121,21 +234,21 @@ def test_joint_stage_routes_confidence_cells_and_external_omega(
     _controlled_confidence_targets(monkeypatch)
 
     real_loss = getattr(engine, loss_name)
+    per_cell_calls = []
+
+    def loss_spy(teacher_target, student_target):
+        per_cell = real_loss(teacher_target, student_target)
+        per_cell_calls.append(per_cell.detach().clone())
+        return per_cell
+
+    real_reduce = engine.weighted_class_balanced_reduce
     calls = []
 
-    def spy(teacher_target, student_target, classes, weights, *, omega=1.0):
-        actual, stats = real_loss(
-            teacher_target, student_target, classes, weights, omega=omega,
-        )
-        reference, _reference_stats = real_loss(
-            teacher_target, student_target, classes, weights, omega=1.0,
-        )
-        actual_gradient = torch.autograd.grad(
-            actual, student_target, retain_graph=True,
-        )[0]
-        reference_gradient = torch.autograd.grad(
-            reference, student_target, retain_graph=True,
-        )[0]
+    def reducer_spy(values, classes, weights, omega=1.0):
+        actual, stats = real_reduce(values, classes, weights, omega)
+        reference, _reference_stats = real_reduce(values, classes, weights, 1.0)
+        actual_gradient = torch.autograd.grad(actual, values, retain_graph=True)[0]
+        reference_gradient = torch.autograd.grad(reference, values, retain_graph=True)[0]
         calls.append({
             "omega": float(omega),
             "loss": actual.detach().clone(),
@@ -147,12 +260,13 @@ def test_joint_stage_routes_confidence_cells_and_external_omega(
         })
         return actual, stats
 
-    monkeypatch.setattr(engine, loss_name, spy)
+    monkeypatch.setattr(engine, loss_name, loss_spy)
+    monkeypatch.setattr(engine, "weighted_class_balanced_reduce", reducer_spy)
     final_state = _execute_joint_stage(
         case, tmp_path / f"{arm}-joint", modules, state=state,
     )
 
-    assert len(calls) == 4  # L/U for two optimizer updates
+    assert len(per_cell_calls) == len(calls) == 4  # L/U for two optimizer updates
     expected_omegas = (
         [1.0, 1.0, 1.0, 1.0]
         if arm == "v1u" else
@@ -160,9 +274,9 @@ def test_joint_stage_routes_confidence_cells_and_external_omega(
     )
     assert [call["omega"] for call in calls] == pytest.approx(expected_omegas)
 
-    # The reference is the same real wrapper with only the external patient
-    # multiplier removed.  Equality of both loss and VJP catches omega being
-    # omitted, put into the cell denominator, or applied twice.
+    # The reference uses the same per-cell map and cell weights with only the
+    # external patient multiplier removed. Equality of both loss and VJP
+    # catches omega being omitted, put into the cell denominator, or applied twice.
     for call in calls:
         assert call["reference_loss"].item() > 0.0
         expected_loss = call["reference_loss"] * call["omega"]
@@ -202,6 +316,104 @@ def test_joint_stage_routes_confidence_cells_and_external_omega(
     assert [record["distillation_ramp"] for record in records] == pytest.approx([0.0, 1.0])
     assert final_state["j_optimizer_updates"] == 2
     assert final_state["j_kd_supported_branches"] == 4
+
+
+def test_scaling_all_u_weights_by_point_one_keeps_one_real_j_update_bitwise_identical(
+    tmp_path, monkeypatch,
+):
+    """Cohort normalization must make the actual nonzero-ramp update invariant."""
+
+    _controlled_confidence_targets(monkeypatch)
+    captured_updates = _install_optimizer_gradient_capture(monkeypatch)
+
+    base_case, base_modules, base_state = _prepare_and_run_ramped_joint_step(
+        tmp_path / "base", monkeypatch, "v1", [1.0, 0.1], "base-joint",
+    )
+    assert len(captured_updates) == 1
+    base_gradients = captured_updates[-1]
+    captured_updates.clear()
+
+    scaled_case, scaled_modules, scaled_state = _prepare_and_run_ramped_joint_step(
+        tmp_path / "scaled", monkeypatch, "v1", [0.1, 0.01], "scaled-joint",
+    )
+    assert len(captured_updates) == 1
+    scaled_gradients = captured_updates[-1]
+
+    assert base_state["physiology_cohort_weighting"]["omega"] == \
+        scaled_state["physiology_cohort_weighting"]["omega"]
+    _assert_gradients_bitwise_equal(base_gradients, scaled_gradients)
+    _assert_module_state_bitwise_equal(base_modules["student"], scaled_modules["student"])
+    assert base_case["data"].unlabeled_patients == scaled_case["data"].unlabeled_patients
+
+
+@pytest.mark.parametrize("arm", ["v1", "v1u"])
+def test_changing_one_u_patient_weight_scales_v1_loss_but_not_v1u(
+    tmp_path, monkeypatch, arm,
+):
+    _controlled_confidence_targets(monkeypatch)
+    real_distillation = engine._distillation_or_zero
+    distillation_calls = []
+
+    def spy(loss_function, teacher_target, student_target, classes, weights, *, omega=1.0):
+        loss, stats = real_distillation(
+            loss_function, teacher_target, student_target, classes, weights, omega=omega,
+        )
+        gradient = torch.autograd.grad(loss, student_target, retain_graph=True)[0]
+        distillation_calls.append({
+            "loss": loss.detach().clone(),
+            "gradient": gradient.detach().clone(),
+            "omega": float(omega),
+            "base_loss": stats["base_loss"],
+        })
+        return loss, stats
+
+    monkeypatch.setattr(engine, "_distillation_or_zero", spy)
+    outcomes = []
+    for weights, output_name in (([1.0, 0.1], "original"), ([0.5, 0.1], "changed")):
+        distillation_calls.clear()
+        case, _modules, state = _prepare_and_run_ramped_joint_step(
+            tmp_path / output_name, monkeypatch, arm, weights, f"{output_name}-joint",
+        )
+        assert len(distillation_calls) == 2  # labeled and U in one real J update
+        outcomes.append({
+            **distillation_calls[1],
+            "patient": case["data"].unlabeled_patients[0],
+        })
+
+    assert outcomes[0]["patient"] == outcomes[1]["patient"]
+    if arm == "v1":
+        expected_ratio = (0.5 / 0.3) / (1.0 / 0.55)
+        actual_ratio = outcomes[1]["omega"] / outcomes[0]["omega"]
+        assert actual_ratio == pytest.approx(expected_ratio, rel=1e-12)
+        torch.testing.assert_close(
+            outcomes[1]["loss"], outcomes[0]["loss"] * actual_ratio,
+            rtol=1e-6, atol=0,
+        )
+        assert outcomes[1]["base_loss"] == pytest.approx(outcomes[0]["base_loss"])
+    else:
+        assert outcomes[0]["omega"] == outcomes[1]["omega"] == 1.0
+        assert torch.equal(outcomes[0]["loss"], outcomes[1]["loss"])
+        assert torch.equal(outcomes[0]["gradient"], outcomes[1]["gradient"])
+        assert outcomes[0]["base_loss"] == outcomes[1]["base_loss"]
+
+
+def test_normalized_one_to_point_one_cohort_changes_the_same_frame_loss_by_ten():
+    normalized = cohort_omega({"patient_high": 1.0, "patient_low": 0.1}, "v1")
+    assert normalized["mean_w_pat"] == pytest.approx(0.55)
+    assert normalized["omega"]["patient_high"] == pytest.approx(1.0 / 0.55)
+    assert normalized["omega"]["patient_low"] == pytest.approx(0.1 / 0.55)
+
+    per_cell = torch.tensor([[[0.0, 2.0], [3.0, 0.0]]])
+    classes = torch.tensor([[[0, 0], [1, 1]]])
+    weights = torch.ones_like(per_cell)
+    first_loss, first_stats = engine.weighted_class_balanced_reduce(
+        per_cell, classes, weights, normalized["omega"]["patient_high"],
+    )
+    second_loss, second_stats = engine.weighted_class_balanced_reduce(
+        per_cell, classes, weights, normalized["omega"]["patient_low"],
+    )
+    assert first_stats["base_loss"] == second_stats["base_loss"] == pytest.approx(1.25)
+    assert first_loss / second_loss == pytest.approx(10.0)
 
 
 @pytest.mark.parametrize(

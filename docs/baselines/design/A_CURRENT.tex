@@ -1,0 +1,47 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{fontspec}
+\setmainfont{texgyretermes-regular.otf}[
+  BoldFont=texgyretermes-bold.otf,
+  ItalicFont=texgyretermes-italic.otf,
+  BoldItalicFont=texgyretermes-bolditalic.otf]
+\setsansfont{texgyreheros-regular.otf}[BoldFont=texgyreheros-bold.otf]
+\usepackage[left=18mm,right=18mm,top=15mm,bottom=15mm,headheight=14pt,headsep=5mm,includehead]{geometry}
+\usepackage{amsmath,amssymb,graphicx,xcolor}
+\usepackage{booktabs,tabularx,enumitem}
+\usepackage{microtype,parskip,fancyhdr}
+\usepackage[hidelinks]{hyperref}
+\definecolor{accent}{HTML}{172533}
+\definecolor{muted}{HTML}{64717B}
+\definecolor{coral}{HTML}{C56150}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5.5pt}
+\setlength{\abovedisplayskip}{5pt}
+\setlength{\belowdisplayskip}{5pt}
+\setlength{\emergencystretch}{2em}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\fontsize{8}{10}\selectfont\sffamily\color{muted}SELF-AUDIT / RESEARCH DIRECTIONS}
+\fancyhead[R]{\fontsize{8}{10}\selectfont\sffamily\color{muted}FINAL DESIGN / 09.11.2026}
+\fancyfoot[L]{\fontsize{8}{10}\selectfont\sffamily\color{muted}Đề xuất nghiên cứu · Chưa có kết quả thực nghiệm}
+\fancyfoot[R]{\small\sffamily\thepage\,/\,6}
+\renewcommand{\headrulewidth}{0pt}
+\newcommand{\pagetitle}[3]{{\fontsize{9}{11}\selectfont\sffamily\bfseries\color{coral}#1\par}\vspace{5pt}{\fontsize{21}{25}\selectfont\sffamily\bfseries\color{accent}#2\par}\vspace{6pt}{\fontsize{10}{12}\selectfont\sffamily\color{muted}#3\par}\vspace{12pt}}
+\newsavebox{\pagebox}
+\newcommand{\onepage}[1]{\setbox\pagebox=\vbox{\hsize=\textwidth\input{sections-paper-final/#1}}\ifdim\dimexpr\ht\pagebox+\dp\pagebox\relax>\textheight\PackageError{six-page-layout}{Page #1 exceeds one page}{Shorten the page or reduce its figure height.}\fi\box\pagebox\clearpage}
+\newcommand{\diagram}[2]{\noindent\makebox[\linewidth][c]{\includegraphics[width=\linewidth,height=115mm,keepaspectratio]{figures-paper-final/#1.png}}\par\vspace{7pt}{\fontsize{9}{11}\selectfont\color{muted}#2\par}\vspace{8pt}}
+\newcommand{\point}[1]{\par\textbf{\color{accent}#1}\enspace}
+\newcommand{\seg}{\mathcal{L}_{\mathrm{seg}}}
+\newcommand{\Lq}{\mathcal{L}_{q}}
+\newcommand{\Lp}{\mathcal{L}_{\pi}}
+\newcommand{\Lb}{\mathcal{L}_{b}}
+\newcommand{\sg}{\operatorname{sg}}
+\newcommand{\CE}{\operatorname{CE}}
+\raggedbottom
+\begin{document}
+\onepage{A1}
+\onepage{A2}
+\onepage{A3}
+\onepage{B1}
+\onepage{B2}
+\onepage{B3}
+\end{document}

@@ -41,13 +41,25 @@ def _manufactured_teacher(config: dict[str, Any]):
         output = dict(original_forward(image, geometry=geometry))
         batch, _channels, depth, height, width = image.shape
         x = torch.arange(width, device=image.device).view(1, 1, 1, width)
-        low_frame = image.mean(dim=(1, 2, 3, 4)) <= 0.5
+        frame_mean = image.mean(dim=(1, 2, 3, 4))
+        low_frame = frame_mean <= 0.5
         low = torch.where(x < 4, 0, torch.where(x < 10, 1, torch.where(x < 12, 2, 3)))
         high = torch.where(x < 12, 0, torch.where(x < 14, 1, torch.where(x < 16, 2, 3)))
         classes = torch.where(low_frame.view(batch, 1, 1, 1), low, high)
         classes = classes.expand(batch, depth, height, width)
         logits = image.new_full((batch, 4, depth, height, width), -10.0)
         logits.scatter_(1, classes.unsqueeze(1), 10.0)
+        # The smoke fixture encodes a small patient-specific intensity offset.
+        # It varies predicted RV stroke volume without changing the locked
+        # physiology thresholds, making V1/V1-u's relative weighting observable.
+        mixture = (0.05 + 50.0 * (frame_mean - 0.8)).clamp(0.0, 0.2)
+        high_rv = (~low_frame).view(batch, 1, 1, 1) & (classes == 1)
+        logits[:, 1] = torch.where(
+            high_rv, (1.0 - mixture).log().view(batch, 1, 1, 1), logits[:, 1],
+        )
+        logits[:, 0] = torch.where(
+            high_rv, mixture.clamp_min(1e-8).log().view(batch, 1, 1, 1), logits[:, 0],
+        )
         output["region_logits"] = logits
         return output
 
@@ -109,6 +121,20 @@ def _train_q3d(args: argparse.Namespace, parser: argparse.ArgumentParser,
     from self_audit.candidate_q3d.engine import train
 
     teacher = _manufactured_teacher(validated) if synthetic_teacher_fixture else None
+    artifact_inputs: dict[str, Any] = {}
+    for binding in getattr(args, "q3d_stage_artifact", None) or []:
+        key, separator, value = binding.partition("=")
+        if separator != "=" or key not in {"T", "Q", "P"} or not value or key in artifact_inputs:
+            parser.error("--q3d-stage-artifact requires unique T=path, Q=path, or P=path bindings")
+        artifact_inputs[key] = value
+    pinned_stages: set[str] = set()
+    for binding in getattr(args, "q3d_stage_artifact_sha", None) or []:
+        key, separator, value = binding.partition("=")
+        if (separator != "=" or key not in artifact_inputs or key in pinned_stages
+                or len(value) != 64 or any(char not in "0123456789abcdef" for char in value)):
+            parser.error("--q3d-stage-artifact-sha requires a unique STAGE=SHA256 matching a manifest binding")
+        artifact_inputs[key] = {"manifest_path": artifact_inputs[key], "manifest_sha256": value}
+        pinned_stages.add(key)
 
     return train(
         validated,
@@ -116,6 +142,8 @@ def _train_q3d(args: argparse.Namespace, parser: argparse.ArgumentParser,
         device=args.device,
         teacher=teacher,
         synthetic_gate_override=validated["runtime"]["synthetic_gate_override"],
+        stage=getattr(args, "q3d_stage", None),
+        stage_artifacts=artifact_inputs or None,
     )
 
 
@@ -168,6 +196,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--describe", action="store_true")
     parser.add_argument("--config", default="configs/candidate_q3d/v1.json")
+    parser.add_argument("--q3d-stage", choices=("T", "Q", "P", "J"))
+    parser.add_argument("--q3d-stage-artifact", action="append", metavar="STAGE=MANIFEST")
+    parser.add_argument("--q3d-stage-artifact-sha", action="append", metavar="STAGE=SHA256")
     parser.add_argument("--model-config", help="Baseline-only local backbone source and weight provenance JSON")
     parser.add_argument("--teacher-checkpoint", help="Baseline-only verified initialization folder")
     parser.add_argument("--teacher-checkpoint-sha256", help="Baseline-only MANIFEST.json SHA256")

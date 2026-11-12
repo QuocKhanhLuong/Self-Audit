@@ -1,0 +1,17 @@
+\pagetitle{A.3 / CÁCH HỌC VÀ LOSS}{Student đang thiếu thông tin nào?}{K1 chọn phép đo theo lợi ích student thực hiện được}
+\diagram{A3-selection}{Thử giữ nguyên mã hoặc thêm một phép đo vùng/biên bằng giá trị student. Hai đường dùng cùng decoder. Mask trước/sau chỉ minh họa, không phải kết quả thực nghiệm.}
+\point{Chấm từng đề xuất.} Với $j$ còn chưa có trong mã và đủ ngân sách, thử thêm chính $\hat q_{S,j}$. Nhãn chỉ dùng khi TRAIN:
+\begin{align*}
+R'_{t,j}&=R_t\cup\{(j,\hat q_{S,j})\},\\
+U_{t,j}&=\seg(D(R_t),y)-\seg(D(R'_{t,j}),y)-\lambda_c C_j,\\
+\pi_t^*&=\operatorname{softmax}_{\mathcal C_t}(\sg(U_t)/\tau),
+\quad \Lp=\CE(\pi_t^*,\pi_S|_{\mathcal C_t}).
+\end{align*}
+$C_j$ tính bit của ID và giá trị. $\mathcal C_t$ gồm các đề xuất đã thử và STOP với $U=0$. Trial không dùng giá trị teacher. Khi triển khai, $\pi_S$ tự chọn; không cần tính utility bằng nhãn.
+\[
+\boxed{\mathcal L_S=\seg+\lambda_R\mathcal L_{q,R}
++\lambda_B\mathcal L_{q,B}+\lambda_\pi\Lp.}
+\]
+\point{Mỗi loss dạy gì?} $\seg=\CE+\operatorname{DiceLoss}$ dạy mask. $\mathcal L_{q,R},\mathcal L_{q,B}$ là sai số tuyệt đối trung bình đã chuẩn hóa, so giá trị student với target phép đo từ nhãn. $\Lp$ dạy chọn thông tin đáng thêm; target policy được ngắt gradient.
+\point{Khi nào hai nhánh bổ sung nhau?} Ví dụ student đặt đúng vùng nhưng MYO quá dày: thử phép đo biên có thể giúp hơn thêm lượng mô. Phải đo điều này bằng bỏ từng loại phép đo, cùng dung lượng mã; không suy ra từ việc dùng hai loss.
+\point{Đối chứng quyết định.} So với student tự học cả vùng/biên và tự chọn cùng ngân sách. A tập trung mã thích nghi và sự hướng dẫn chọn mã; B tập trung kiến trúc thực thi. Chưa coi tách nhánh hoặc mã có kiểu là bằng chứng novelty.

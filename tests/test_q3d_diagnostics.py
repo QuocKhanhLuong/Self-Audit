@@ -261,10 +261,12 @@ def test_codebook_metrics_use_exact_counts_and_soft_class_ownership():
     assert tied["class_code_coverage"]["MYO"] == 0
 
 
-def test_odd_17x19_native_grid_replicate_padding_and_c1_cli(tmp_path: Path):
+def test_odd_17x19_native_grid_phase_pooling_and_c1_cli(tmp_path: Path):
     torch.set_num_threads(1)
     logits = torch.randn((1, 4, 8, 17, 19), dtype=torch.float32)
-    pooled, confidence = _pooled_teacher_outputs(logits, (2, 2))
+    pooled, confidence = _pooled_teacher_outputs(
+        logits, (2, 2), student_phase=((1, 16, 16), (0, 0, 0)),
+    )
     assert pooled.shape == (1, 4, 8, 2, 2)
     assert confidence.shape == (1, 1, 8, 2, 2)
 

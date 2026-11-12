@@ -228,7 +228,8 @@ def _minimal_student_config(config: Mapping[str, Any], state: Mapping[str, Any],
 
 
 def _construct_deploy_model(config: Mapping[str, Any], state: Mapping[str, Any], *,
-                            device: str | torch.device = "cpu") -> torch.nn.Module:
+                            device: str | torch.device = "cpu",
+                            dtype: torch.dtype | None = None) -> torch.nn.Module:
     from self_audit.candidate_q3d.student import CandidateQ3DStudent
 
     extra_state = state.get("_extra_state")
@@ -242,6 +243,8 @@ def _construct_deploy_model(config: Mapping[str, Any], state: Mapping[str, Any],
         constructor_config["arm"] = "C0"
         constructor_config["model"]["student"]["arm"] = "C0"
     model = CandidateQ3DStudent(constructor_config)
+    if dtype is not None:
+        model.to(dtype=dtype)
     metadata = {key: extra_state[key] for key in
                 ("version", "sha256", "size", "dimension", "initialized", "frozen")}
     if model.use_vq:
@@ -487,7 +490,8 @@ def _write_json_atomic(path: Path, value: Mapping[str, Any]) -> None:
 
 
 def load_export(artifact_path: str | Path, *, expected_sha256: str | None = None,
-                device: str | torch.device = "cpu") -> tuple[torch.nn.Module, dict[str, Any]]:
+                device: str | torch.device = "cpu",
+                dtype: torch.dtype | None = None) -> tuple[torch.nn.Module, dict[str, Any]]:
     """Cold-load a student-only artifact; no teacher factory is available here."""
     path = Path(artifact_path).resolve()
     artifact_sha = _sha256_file(path)
@@ -509,7 +513,9 @@ def load_export(artifact_path: str | Path, *, expected_sha256: str | None = None
     if any("continuous_feature_head" in key.lower() for key in artifact["state_dict"]):
         raise ValueError("Q-3D deploy artifact contains the train-only C1 feature head")
     modules_before = set(sys.modules)
-    model = _construct_deploy_model(artifact["config"], artifact["state_dict"], device=device)
+    model = _construct_deploy_model(
+        artifact["config"], artifact["state_dict"], device=device, dtype=dtype
+    )
     _assert_teacher_free_imports(set(sys.modules) - modules_before)
     metadata = dict(artifact["metadata"])
     metadata["artifact_sha256"] = artifact_sha
@@ -531,6 +537,65 @@ def _read_verification_volume(path: str | Path) -> tuple[torch.Tensor, dict[str,
     return validate_native_image(image, geometry)
 
 
+def _runtime_dtype_name(dtype: torch.dtype) -> str:
+    name = str(dtype).removeprefix("torch.")
+    candidate = getattr(torch, name, None)
+    if not isinstance(candidate, torch.dtype) or not candidate.is_floating_point:
+        raise ValueError(f"unsupported floating-point dtype for Q-3D cold load: {dtype}")
+    return name
+
+
+def _runtime_dtype(name: str) -> torch.dtype:
+    candidate = getattr(torch, name, None)
+    if not isinstance(candidate, torch.dtype) or not candidate.is_floating_point:
+        raise ValueError(f"unsupported floating-point dtype for Q-3D cold load: {name}")
+    return candidate
+
+
+def _cold_load_runtime(model: torch.nn.Module, images: Sequence[torch.Tensor]) -> dict[str, Any]:
+    parameter_dtype = next(
+        (parameter.dtype for parameter in model.parameters() if parameter.is_floating_point()), None
+    )
+    if parameter_dtype is None:
+        raise ValueError("Q-3D reference model has no floating-point parameter dtype")
+    return {
+        "num_threads": torch.get_num_threads(),
+        "num_interop_threads": torch.get_num_interop_threads(),
+        "default_dtype": _runtime_dtype_name(torch.get_default_dtype()),
+        "model_dtype": _runtime_dtype_name(parameter_dtype),
+        "input_dtypes": [_runtime_dtype_name(image.dtype) for image in images],
+        "deterministic_algorithms": torch.are_deterministic_algorithms_enabled(),
+        "deterministic_warn_only": torch.is_deterministic_algorithms_warn_only_enabled(),
+        "cudnn_deterministic": torch.backends.cudnn.deterministic,
+        "cudnn_benchmark": torch.backends.cudnn.benchmark,
+        "cudnn_allow_tf32": torch.backends.cudnn.allow_tf32,
+        "cuda_matmul_allow_tf32": torch.backends.cuda.matmul.allow_tf32,
+        "float32_matmul_precision": torch.get_float32_matmul_precision(),
+        "cublas_workspace_config": os.environ.get("CUBLAS_WORKSPACE_CONFIG"),
+    }
+
+
+def _configure_cold_load_runtime(runtime: Mapping[str, Any]) -> None:
+    """Restore inference settings before the deploy model is constructed."""
+    torch.set_num_threads(int(runtime["num_threads"]))
+    torch.set_num_interop_threads(int(runtime["num_interop_threads"]))
+    torch.set_default_dtype(_runtime_dtype(str(runtime["default_dtype"])))
+    torch.use_deterministic_algorithms(
+        bool(runtime["deterministic_algorithms"]),
+        warn_only=bool(runtime["deterministic_warn_only"]),
+    )
+    torch.set_float32_matmul_precision(str(runtime["float32_matmul_precision"]))
+    torch.backends.cudnn.deterministic = bool(runtime["cudnn_deterministic"])
+    torch.backends.cudnn.benchmark = bool(runtime["cudnn_benchmark"])
+    torch.backends.cudnn.allow_tf32 = bool(runtime["cudnn_allow_tf32"])
+    torch.backends.cuda.matmul.allow_tf32 = bool(runtime["cuda_matmul_allow_tf32"])
+
+
+def _logits_sha256(logits: torch.Tensor) -> str:
+    value = logits.detach().contiguous().cpu().view(torch.uint8)
+    return hashlib.sha256(value.numpy().tobytes(order="C")).hexdigest()
+
+
 def verify_cold_load(model: torch.nn.Module, artifact_path: str | Path,
                      volume_paths: Sequence[str | Path], *, device: str = "cpu") -> dict[str, Any]:
     """Run a fresh interpreter on exactly three declared native volumes and compare logits bitwise."""
@@ -539,37 +604,74 @@ def verify_cold_load(model: torch.nn.Module, artifact_path: str | Path,
     artifact = Path(artifact_path).resolve()
     expected_hashes: list[str] = []
     model = model.to(device).eval()
+    images: list[torch.Tensor] = []
     for volume_path in volume_paths:
         image, geometry = _read_verification_volume(volume_path)
+        images.append(image)
         with torch.inference_mode():
             logits = model.infer_logits(image.to(device), geometry=geometry)
         if not torch.is_tensor(logits) or not torch.isfinite(logits).all():
             raise ValueError("Q-3D reference model returned invalid verification logits")
-        expected_hashes.append(hashlib.sha256(logits.detach().contiguous().cpu().numpy().tobytes()).hexdigest())
-    code = r'''import hashlib, json, sys
-import numpy as np
+        expected_hashes.append(_logits_sha256(logits))
+    runtime = _cold_load_runtime(model, images)
+    code = r'''import json, os, sys
+artifact_path, device, runtime_json, *volume_paths = sys.argv[1:]
+runtime = json.loads(runtime_json)
+if runtime["cublas_workspace_config"] is None:
+    os.environ.pop("CUBLAS_WORKSPACE_CONFIG", None)
+else:
+    os.environ["CUBLAS_WORKSPACE_CONFIG"] = str(runtime["cublas_workspace_config"])
 import torch
-from self_audit.candidate_q3d.export import load_export, _read_verification_volume
+from self_audit.candidate_q3d.export import (
+    _configure_cold_load_runtime, _logits_sha256, _read_verification_volume,
+    _runtime_dtype, load_export,
+)
+_configure_cold_load_runtime(runtime)
 
-artifact_path, device, *volume_paths = sys.argv[1:]
-model, metadata = load_export(artifact_path, device=device)
+model, metadata = load_export(artifact_path, device=device,
+                              dtype=_runtime_dtype(runtime["model_dtype"]))
+actual_input_dtypes = []
 with torch.inference_mode():
     output = []
-    for volume_path in volume_paths:
+    for volume_path, input_dtype_name in zip(volume_paths, runtime["input_dtypes"], strict=True):
         image, geometry = _read_verification_volume(volume_path)
-        logits = model.infer_logits(image.to(device), geometry=geometry)
-        output.append(hashlib.sha256(logits.detach().contiguous().cpu().numpy().tobytes()).hexdigest())
+        image = image.to(device=device, dtype=_runtime_dtype(input_dtype_name))
+        actual_input_dtypes.append(str(image.dtype).removeprefix("torch."))
+        logits = model.infer_logits(image, geometry=geometry)
+        output.append(_logits_sha256(logits))
 forbidden = [name for name in sys.modules if name in {
     "self_audit.candidate_q3d.teacher", "self_audit.candidate_a3d.teacher"}]
 if forbidden:
     raise RuntimeError("teacher module imported in cold-load process: " + repr(forbidden))
 print(json.dumps({"hashes": output, "teacher_modules": forbidden,
-                  "artifact_sha256": metadata["artifact_sha256"]}))
+                  "artifact_sha256": metadata["artifact_sha256"],
+                  "runtime": {"num_threads": torch.get_num_threads(),
+                              "num_interop_threads": torch.get_num_interop_threads(),
+                              "default_dtype": str(torch.get_default_dtype()).removeprefix("torch."),
+                              "model_dtype": str(next(
+                                  parameter.dtype for parameter in model.parameters()
+                                  if parameter.is_floating_point()
+                              )).removeprefix("torch."),
+                              "input_dtypes": actual_input_dtypes,
+                              "deterministic_algorithms": torch.are_deterministic_algorithms_enabled(),
+                              "deterministic_warn_only": torch.is_deterministic_algorithms_warn_only_enabled(),
+                              "cudnn_deterministic": torch.backends.cudnn.deterministic,
+                              "cudnn_benchmark": torch.backends.cudnn.benchmark,
+                              "cudnn_allow_tf32": torch.backends.cudnn.allow_tf32,
+                              "cuda_matmul_allow_tf32": torch.backends.cuda.matmul.allow_tf32,
+                              "float32_matmul_precision": torch.get_float32_matmul_precision(),
+                              "cublas_workspace_config": os.environ.get("CUBLAS_WORKSPACE_CONFIG")}}))
 '''
     root = Path(__file__).resolve().parents[2]
+    child_env = os.environ.copy()
+    if runtime["cublas_workspace_config"] is None:
+        child_env.pop("CUBLAS_WORKSPACE_CONFIG", None)
+    else:
+        child_env["CUBLAS_WORKSPACE_CONFIG"] = str(runtime["cublas_workspace_config"])
     completed = subprocess.run(
-        [sys.executable, "-c", code, str(artifact), device, *[str(Path(p).resolve()) for p in volume_paths]],
-        cwd=root, check=False, capture_output=True, text=True,
+        [sys.executable, "-c", code, str(artifact), device, json.dumps(runtime, sort_keys=True),
+         *[str(Path(p).resolve()) for p in volume_paths]],
+        cwd=root, env=child_env, check=False, capture_output=True, text=True,
     )
     if completed.returncode != 0:
         raise RuntimeError(f"Q-3D cold-load subprocess failed: {completed.stderr.strip()}")
@@ -577,7 +679,9 @@ print(json.dumps({"hashes": output, "teacher_modules": forbidden,
         cold = json.loads(completed.stdout.strip().splitlines()[-1])
     except (ValueError, IndexError) as exc:
         raise RuntimeError("Q-3D cold-load subprocess returned malformed JSON") from exc
-    if cold.get("teacher_modules") or cold.get("hashes") != expected_hashes:
+    expected_child_runtime = runtime
+    if (cold.get("teacher_modules") or cold.get("hashes") != expected_hashes
+            or cold.get("runtime") != expected_child_runtime):
         raise RuntimeError("Q-3D cold-load logits differ bitwise or imported a teacher module")
     return {"status": "PASSED_BITWISE_THREE_NATIVE_VOLUMES",
             "volumes": 3, "logit_sha256": expected_hashes,

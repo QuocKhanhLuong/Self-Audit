@@ -36,6 +36,7 @@ from .losses import (
     mean_teacher_consistency_loss,
     q3d_teacher_loss,
     student_supervised_loss,
+    weighted_class_balanced_reduce,
 )
 
 
@@ -323,11 +324,7 @@ def _student_config(config: Mapping[str, Any], teacher: nn.Module | None = None)
         raise ValueError("C1 requires model.teacher.feature_channels for exact feature matching")
     if arm == "C1" and bool(config["runtime"]["synthetic"]) and teacher is not None:
         channels = getattr(getattr(teacher, "encoder", None), "channels", None)
-        channel_index = {
-            "stride4": 2,
-            "stride8": 3,
-            "stride16": 3,
-        }.get(_teacher_feature_source(config))
+        channel_index = {4: 2, 8: 3, 16: 3}.get(config["model"]["teacher"]["feature_stride"])
         if channels is None or channel_index is None or channel_index >= len(channels):
             raise ValueError("synthetic C1 teacher cannot declare its captured feature channels")
         teacher_feature_channels = int(channels[channel_index])
@@ -455,6 +452,13 @@ def _build_models(
     if tokenizer is not None:
         tokenizer.to(device)
         _channels_last_3d(tokenizer)
+    if teacher is not None:
+        from .alignment import student_grid_phase
+
+        if arm != "mednext_supervised":
+            teacher._q3d_student_phase = student_grid_phase(student)
+        if bool(config["runtime"]["synthetic"]) and config["model"]["teacher"]["feature_stride"] == 16:
+            teacher._q3d_stride16_pool = nn.AvgPool3d((1, 2, 2), stride=(1, 2, 2))
     return teacher, student, tokenizer, provenance
 
 
@@ -512,44 +516,21 @@ def _sdf_targets(labels: Tensor, geometry: Mapping[str, Any], *, radius_mm: floa
     return bank.sdf_targets(labels, geometry["spacing_zyx"])
 
 
-def _pooled_teacher_targets(region_logits: Tensor, *, target_hw: tuple[int, int]) -> tuple[Tensor, Tensor, Tensor]:
-    """Mean-pool teacher class probabilities/confidence over native S4 cells."""
+def _pooled_teacher_targets(
+    region_logits: Tensor, *, target_hw: tuple[int, int], student_phase,
+) -> tuple[Tensor, Tensor, Tensor]:
+    """Pool native voxels around actual student centers, excluding all pad."""
+    from .alignment import pool_teacher_targets
 
-    if region_logits.ndim != 5 or region_logits.shape[1] != 4:
-        raise ValueError("teacher region logits must have shape [B,4,D,H,W]")
-    probabilities = torch.softmax(region_logits.float(), dim=1)
-    confidence = probabilities.max(dim=1, keepdim=True).values
-    height, width = probabilities.shape[-2:]
-    pad_h = (-height) % 16
-    pad_w = (-width) % 16
-    if pad_h or pad_w:
-        pad = (0, pad_w, 0, pad_h, 0, 0)
-        probabilities = F.pad(probabilities, pad, mode="replicate")
-        confidence = F.pad(confidence, pad, mode="replicate")
-    pooled_probs = F.avg_pool3d(probabilities, kernel_size=(1, 16, 16), stride=(1, 16, 16))
-    pooled_confidence = F.avg_pool3d(confidence, kernel_size=(1, 16, 16), stride=(1, 16, 16))
-    pooled_probs = pooled_probs[..., :target_hw[0], :target_hw[1]].detach()
-    pooled_confidence = pooled_confidence[..., :target_hw[0], :target_hw[1]].detach()
-    classes = pooled_probs.argmax(dim=1).detach()
-    return pooled_probs, classes, pooled_confidence[:, 0].detach()
+    result = pool_teacher_targets(region_logits, region_logits.shape[-3:], student_phase)
+    if tuple(result[0].shape[-2:]) != tuple(target_hw):
+        raise ValueError("teacher targets do not match the student phase lattice")
+    return result
 
 
-def _align_stride16(feature: Tensor, native_shape: Sequence[int]) -> Tensor:
-    """Map stride-16 bottleneck features to native-z student S4 cells for S1."""
-
-    depth, height, width = (int(value) for value in native_shape)
-    target_h, target_w = (height + 15) // 16, (width + 15) // 16
-    if feature.ndim != 5 or feature.shape[-2] < target_h or feature.shape[-1] < target_w:
-        raise ValueError("stride-16 teacher feature does not cover student S4")
-    feature = feature[..., :target_h, :target_w].detach()
-    coordinates = (
-        (torch.arange(depth, device=feature.device, dtype=feature.dtype) + 0.5) / 16.0 - 0.5
-    ).clamp_(0.0, float(feature.shape[2] - 1))
-    lower = coordinates.floor().long()
-    upper = coordinates.ceil().long()
-    fraction = (coordinates - lower.to(coordinates.dtype)).view(1, 1, depth, 1, 1)
-    return (feature.index_select(2, lower) +
-            (feature.index_select(2, upper) - feature.index_select(2, lower)) * fraction).detach()
+def _align_stride16(feature: Tensor, native_shape: Sequence[int], *, teacher_phase, student_phase) -> Tensor:
+    """S1 uses the same native-center map as every other teacher source."""
+    return align_teacher_to_student4(feature, native_shape, teacher_phase, student_phase)
 
 
 def _teacher_outputs(
@@ -568,13 +549,23 @@ def _teacher_outputs(
             raise ValueError("Q-3D teacher output keys differ from the frozen dual-branch contract")
         return dict(output)
 
+    from .teacher_features import teacher_feature_phase
+
+    student_phase = getattr(teacher, "_q3d_student_phase", None)
+    if student_phase is None:
+        raise ValueError("Q3D teacher feature extraction requires the actual student grid phase")
+    phases = {
+        "teacher_phase": teacher_feature_phase(teacher, source, synthetic=synthetic),
+        "student_phase": student_phase,
+    }
     if synthetic:
-        # Explicit synthetic-only hook: the tiny A-3D fixture exposes its final
-        # encoder reduction but has no MedNeXt decoder module to hook.
+        # Observe the tiny encoder's feature tuple without a module hook or
+        # second forward. The teacher's own forward remains authoritative.
         encoder = getattr(teacher, "encoder", None)
-        downs = getattr(encoder, "down", None)
-        index = {"stride4": 1, "stride8": 2, "stride16": 2}.get(source)
-        if downs is None or index is None or index >= len(downs):
+        index = {"stride4": 2, "stride4_decoder_block": 2,
+                 "stride8": 3, "encoder_stride8": 3, "decoder_stride8": 3,
+                 "stride16": 3, "bottleneck_stride16": 3}.get(source)
+        if not callable(getattr(encoder, "forward_features", None)) or index is None:
             raise ValueError("synthetic teacher cannot supply the requested feature stride")
         native_shape = tuple(int(value) for value in image.shape[-3:])
         padded_hw = tuple(((value + 15) // 16) * 16 for value in native_shape[1:])
@@ -586,45 +577,60 @@ def _teacher_outputs(
         padded_geometry = dict(geometry)
         padded_geometry["shape"] = (native_shape[0], *padded_hw)
         captured: list[Tensor] = []
-        handle = downs[index].register_forward_hook(
-            lambda _module, _inputs, output: captured.append(output.detach())
-        )
+        original = encoder.forward_features
+        had_override = "forward_features" in encoder.__dict__
+        old_override = encoder.__dict__.get("forward_features")
+
+        def capture_features(value):
+            features = original(value)
+            captured.append(features[index].detach())
+            return features
+
+        encoder.forward_features = capture_features
         try:
             with torch.no_grad():
                 output = teacher(padded_image, geometry=padded_geometry)
         finally:
-            handle.remove()
+            if had_override:
+                encoder.forward_features = old_override
+            else:
+                del encoder.forward_features
         if len(captured) != 1:
-            raise RuntimeError("synthetic teacher feature hook did not run exactly once")
+            raise RuntimeError("synthetic teacher feature tuple did not run exactly once")
         feature = captured[0]
-        if source == "stride16":
+        if source in {"stride16", "bottleneck_stride16"}:
             # The tiny explicit software fixture has no native stride-16
             # stage; average-pool its stride-8 output only for synthetic S1
             # plumbing checks. Real S1 always uses the verified bottleneck.
-            feature = F.avg_pool3d(feature, kernel_size=(1, 2, 2), stride=(1, 2, 2))
+            feature = teacher._q3d_stride16_pool(feature)
         native_outputs = {
             name: value[..., :native_shape[0], :native_shape[1], :native_shape[2]]
             for name, value in output.items()
         }
-        return {**native_outputs, "feature": feature}
+        return {**native_outputs, "feature": feature, **phases}
 
     from .teacher_features import forward_teacher_with_features
 
-    return forward_teacher_with_features(teacher, image, geometry=geometry, source=source)
+    return {**forward_teacher_with_features(teacher, image, geometry=geometry, source=source), **phases}
 
 
-def _features_to_student_grid(feature: Tensor, native_shape: Sequence[int], source: str) -> Tensor:
-    if source in {"stride4", "stride8"}:
-        return align_teacher_to_student4(
-            feature, native_shape, teacher_stride=int(source.removeprefix("stride")),
-        )
-    if source == "stride16":
-        return _align_stride16(feature, native_shape)
-    raise ValueError(f"unsupported Q-3D teacher feature source {source!r}")
+def _features_to_student_grid(
+    feature: Tensor, native_shape: Sequence[int], source: str, *, teacher_phase, student_phase,
+) -> Tensor:
+    if source in {"stride16", "bottleneck_stride16"}:
+        return _align_stride16(feature, native_shape, teacher_phase=teacher_phase, student_phase=student_phase)
+    return align_teacher_to_student4(feature, native_shape, teacher_phase, student_phase)
+
+
+def _aligned_teacher_output(outputs: Mapping[str, Any], native_shape: Sequence[int], source: str) -> Tensor:
+    return _features_to_student_grid(
+        outputs["feature"], native_shape, source,
+        teacher_phase=outputs["teacher_phase"], student_phase=outputs["student_phase"],
+    )
 
 
 def _teacher_feature_source(config: Mapping[str, Any]) -> str:
-    return f"stride{int(config['model']['teacher']['feature_stride'])}"
+    return str(config["model"]["teacher"]["feature_source"])
 
 
 def _make_optimizer(parameters, *, lr: float, weight_decay: float) -> torch.optim.Optimizer:
@@ -722,6 +728,26 @@ def _teacher_loss_targets(labels: Tensor, geometry: Mapping[str, Any], config: M
     return _sdf_targets(labels, geometry, radius_mm=float(config["losses"]["sdf_radius_mm"]))
 
 
+def _code_interface_diagnostics(model: nn.Module, outputs: Mapping[str, Any]) -> dict[str, Any]:
+    """Measure the declared gated code contribution on an evaluated volume."""
+    gate = getattr(model, "vq_gate", None)
+    projector = getattr(model, "quantized_projector", None)
+    f4, codes = outputs.get("f4"), outputs.get("quantized")
+    if gate is None or projector is None or not isinstance(f4, Tensor) or not isinstance(codes, Tensor):
+        return {"status": "NOT_APPLICABLE", "vq_gate": None, "code_to_f4_norm_ratio": None}
+    with torch.no_grad():
+        base_norm = float(torch.linalg.vector_norm(f4.float()))
+        contribution_norm = float(torch.linalg.vector_norm((gate * projector(codes)).float()))
+    ratio = contribution_norm / base_norm if base_norm > 0 else None
+    return {
+        "status": "MEASURED" if ratio is not None else "ZERO_F4_NORM",
+        "vq_gate": float(gate.detach()), "code_to_f4_norm_ratio": ratio,
+        "gated_code_norm": contribution_norm, "f4_norm": base_norm,
+        "interface_claim_supported": ratio is not None and ratio >= 0.05,
+        "decoder_mode": "code_only" if getattr(model, "code_only", False) else "dense_plus_code",
+    }
+
+
 def _development_fg_dice(
     model: nn.Module,
     manifest: Mapping[str, Any],
@@ -745,6 +771,7 @@ def _development_fg_dice(
     from .evaluation import aggregate_patient_class_dice, frame_class_dice
 
     per_patient: dict[str, float] = {}
+    interface_rows: list[dict[str, Any]] = []
     was_training = model.training
     model.eval()
     try:
@@ -789,7 +816,9 @@ def _development_fg_dice(
                         outputs = model(x, geometry=geometry)
                         logits = outputs["region_logits"]
                     else:
-                        logits = model(x, geometry=geometry)["logits"]
+                        outputs = model(x, geometry=geometry)
+                        logits = outputs["logits"]
+                        interface_rows.append(_code_interface_diagnostics(model, outputs))
                     prediction = logits.argmax(1)[0].cpu().numpy()
                     frame_dice_rows.append(frame_class_dice(target, prediction))
                 patient_dice = aggregate_patient_class_dice(frame_dice_rows)["fg_dice"]
@@ -805,6 +834,15 @@ def _development_fg_dice(
         "score": float(np.mean(list(patient_scores.values()))),
         "patients": patient_scores,
         "patient_count": len(patient_scores),
+        "code_interface": {
+            "frames": interface_rows,
+            "vq_gate": next((row["vq_gate"] for row in interface_rows if row["vq_gate"] is not None), None),
+            "mean_code_to_f4_norm_ratio": (
+                float(np.mean([row["code_to_f4_norm_ratio"] for row in interface_rows
+                               if row["code_to_f4_norm_ratio"] is not None]))
+                if any(row["code_to_f4_norm_ratio"] is not None for row in interface_rows) else None
+            ),
+        },
     }
 
 
@@ -1125,6 +1163,7 @@ def _run_teacher_stage(
                 "stage": stage, "event": "development_selection", "update": cursor,
                 "score": score, "best_score": float(state["best_teacher_score"]),
                 "patient_count": int(dev.get("patient_count", len(dev.get("patients", {})))),
+                "code_interface": dev.get("code_interface", {"status": "NOT_RUN_CUSTOM_EVALUATOR"}),
             })
         if cursor % checkpoint_every == 0 or cursor == update_budget:
             _save_optimizer_state(state, optimizer_key, optimizer)
@@ -1205,9 +1244,10 @@ def _tokenizer_forward(
         teacher, image, geometry, with_feature=True, source=source,
         synthetic=bool(config["runtime"]["synthetic"]),
     )
-    aligned = _features_to_student_grid(teacher_outputs["feature"], image.shape[-3:], source)
+    aligned = _aligned_teacher_output(teacher_outputs, image.shape[-3:], source)
     probs, _classes, _confidence = _pooled_teacher_targets(
         teacher_outputs["region_logits"], target_hw=tuple(aligned.shape[-2:]),
+        student_phase=teacher_outputs["student_phase"],
     )
     result = tokenizer(aligned, class_probs=probs)
     return teacher_outputs, result
@@ -1356,10 +1396,11 @@ def _run_tokenizer_stage(
             # reconstructor and anatomy head retain gradients.
             with _autocast(device):
                 tokenizer_output = tokenizer(
-                    _features_to_student_grid(teacher_outputs["feature"], image.shape[-3:], source),
+                    _aligned_teacher_output(teacher_outputs, image.shape[-3:], source),
                     class_probs=_pooled_teacher_targets(
                         teacher_outputs["region_logits"],
-                        target_hw=tuple(_features_to_student_grid(teacher_outputs["feature"], image.shape[-3:], source).shape[-2:]),
+                        target_hw=tuple(_aligned_teacher_output(teacher_outputs, image.shape[-3:], source).shape[-2:]),
+                        student_phase=teacher_outputs["student_phase"],
                     )[0],
                 )
                 loss = tokenizer_output["loss"]
@@ -1377,6 +1418,7 @@ def _run_tokenizer_stage(
             codes = tokenizer_output["codes"].detach().cpu()
             class_probs = _pooled_teacher_targets(
                 teacher_outputs["region_logits"], target_hw=tuple(codes.shape[-2:]),
+                student_phase=teacher_outputs["student_phase"],
             )[0].detach().cpu()
             usage = tokenizer.metrics(
                 codes=codes, class_probs=class_probs,
@@ -1416,6 +1458,7 @@ def _run_tokenizer_stage(
                 if fixed_codes is not None:
                     fixed_probs = _pooled_teacher_targets(
                         fixed_teacher["region_logits"], target_hw=tuple(fixed_codes.shape[-2:]),
+                        student_phase=fixed_teacher["student_phase"],
                     )[0]
                     usage = _tokenizer_usage_report(
                         tokenizer, fixed_codes=fixed_codes, fixed_probs=fixed_probs,
@@ -1878,11 +1921,26 @@ def _distillation_or_zero(
     *,
     omega: float = 1.0,
 ) -> tuple[Tensor, dict[str, Any]]:
-    """Call a public KD wrapper while preserving graph-connected zero support."""
+    """Reduce per-cell KD on each frame, then apply its patient multiplier."""
 
-    return loss_function(
-        teacher_target.detach(), student_target, classes.detach(), weights.detach(), omega=omega,
-    )
+    per_cell = loss_function(teacher_target.detach(), student_target)
+    if per_cell.ndim != 4 or classes.shape != per_cell.shape or weights.shape != per_cell.shape:
+        raise ValueError("KD maps, classes and confidence must share [B,D,h,w]")
+    frame_losses, frames = [], []
+    for loss_map, class_map, confidence in zip(per_cell, classes.detach(), weights.detach()):
+        reduced, stats = weighted_class_balanced_reduce(loss_map, class_map, confidence, omega)
+        frame_losses.append(reduced)
+        frames.append(stats)
+    if not frame_losses:
+        raise ValueError("KD batch must contain at least one frame")
+    loss = torch.stack(frame_losses).mean().to(per_cell.dtype)
+    active = sorted({c for frame in frames for c in frame["active_classids"]})
+    return loss, {
+        "frames": frames, "used_classes": active,
+        "zero_weight_classes": sorted(set(range(4)) - set(active)),
+        "omega": float(omega),
+        "base_loss": sum(frame["base_loss"] for frame in frames) / len(frames),
+    }
 
 
 def _kd_stats_has_support(stats: Mapping[str, Any]) -> bool:
@@ -1966,6 +2024,7 @@ def _teacher_assignments(
         raise RuntimeError("joint codeKD requires the frozen tokenizer codebook from stage Q")
     probs, classes, confidence = _pooled_teacher_targets(
         outputs["region_logits"], target_hw=tuple(tokenized["pi"].shape[-2:]),
+        student_phase=outputs["student_phase"],
     )
     return outputs, {
         "pi": tokenized["pi"].detach(),
@@ -1973,7 +2032,7 @@ def _teacher_assignments(
         "class_probs": probs.detach(),
         "classes": classes.detach(),
         "confidence": confidence.detach(),
-        "feature": _features_to_student_grid(outputs["feature"], image.shape[-3:], _teacher_feature_source(config)).detach(),
+        "feature": _aligned_teacher_output(outputs, image.shape[-3:], _teacher_feature_source(config)).detach(),
     }
 
 
@@ -2450,14 +2509,15 @@ def _run_joint_stage(
                 l_loss = l_loss + ramp * float(learning["codekd"]) * kd / kd_stream_divisor
             elif wants_feature_kd:
                 assert l_teacher_outputs is not None
-                l_features = _features_to_student_grid(
-                    l_teacher_outputs["feature"], l_image.shape[-3:], _teacher_feature_source(config),
+                l_features = _aligned_teacher_output(
+                    l_teacher_outputs, l_image.shape[-3:], _teacher_feature_source(config),
                 )
                 student_feature = l_output.get("feature_kd")
                 if not isinstance(student_feature, Tensor):
                     raise ValueError("C1 requires the train-only continuous_feature_head output")
                 probs, cls, confidence = _pooled_teacher_targets(
                     l_teacher_outputs["region_logits"], target_hw=tuple(student_feature.shape[-2:]),
+                    student_phase=l_teacher_outputs["student_phase"],
                 )
                 if l_features.shape[1] != student_feature.shape[1]:
                     raise ValueError(
@@ -2552,8 +2612,8 @@ def _run_joint_stage(
                         else:
                             kd_zero_weight_branches.append("U")
                     else:
-                        u_feature = _features_to_student_grid(
-                            u_teacher_outputs["feature"], u_student_image.shape[-3:],
+                        u_feature = _aligned_teacher_output(
+                            u_teacher_outputs, u_student_image.shape[-3:],
                             _teacher_feature_source(config),
                         )
                         u_student_feature = u_output.get("feature_kd")
@@ -2561,6 +2621,7 @@ def _run_joint_stage(
                             raise ValueError("C1 U requires the train-only continuous_feature_head output")
                         _probs, u_classes, u_confidence = _pooled_teacher_targets(
                             u_teacher_outputs["region_logits"], target_hw=tuple(u_student_feature.shape[-2:]),
+                            student_phase=u_teacher_outputs["student_phase"],
                         )
                         if u_feature.shape[1] != u_student_feature.shape[1]:
                             raise ValueError("C1 teacher/student continuous feature channels do not match")
@@ -2778,6 +2839,7 @@ def _run_joint_stage(
                 "stage": stage, "event": "development_selection", "update": cursor,
                 "score": score, "best_score": float(state["best_student_score"]),
                 "patient_count": int(dev.get("patient_count", len(dev.get("patients", {})))),
+                "code_interface": dev.get("code_interface", {"status": "NOT_RUN_CUSTOM_EVALUATOR"}),
             })
         if cursor % checkpoint_every == 0 or cursor == update_budget:
             _save_optimizer_state(state, "student_J", optimizer)
@@ -2849,7 +2911,8 @@ def _validate_resumed_physiology_cache(
     recorded_teacher_sha = cache_state.get("teacher_sha256")
     if not isinstance(recorded_teacher_sha, str):
         raise RuntimeError("Q-3D resume physiology cache identity is missing its teacher SHA-256")
-    expected_codebook_sha = tokenizer.codebook_sha256 if tokenizer is not None else None
+    expected_codebook_sha = (tokenizer.codebook_sha256 if tokenizer is not None
+                             else state.get("shared_codebook_sha256"))
     cache_config = cache_state.get("config")
     try:
         # ``save_physiology_cache`` returns the SHA of the canonical payload,
@@ -2932,6 +2995,8 @@ def run_training(
     max_updates: int | None = None,
     synthetic_gate_override: bool = False,
     dev_evaluator=None,
+    stage: str | None = None,
+    stage_artifacts: Mapping[str, str] | None = None,
 ) -> dict[str, Any]:
     """Execute the configured Q-3D stages with hash-bound exact resume.
 
@@ -2973,6 +3038,10 @@ def run_training(
         raise ValueError("synthetic execution requires explicit bounded stage overrides or update_limit")
     stage_updates = resolve_stage_updates(normalized, smoke=bool(smoke))
     active_stages = stages_for_arm(arm)
+    if stage is not None:
+        if stage not in active_stages:
+            raise ValueError(f"stage {stage!r} is not active for arm {arm!r}")
+        active_stages = (stage,)
 
     target_device = torch.device(device if device is not None else normalized["runtime"]["device"])
     if target_device.type not in {"cpu", "cuda"}:
@@ -3041,6 +3110,31 @@ def run_training(
             ]
 
     state["synthetic_gate_override_requested"] = bool(synthetic_gate_override)
+    # A stage checkpoint can reach disk before its immutable artifact receipt.
+    # Recover that publication boundary before proceeding to a dependent stage.
+    # The exporter verifies/adopts an existing manifest and safely regenerates
+    # only unpublished files after an interrupted export.
+    if resume_from is not None:
+        from .stages import export_stage_artifact
+
+        for completed_stage in ("T", "Q", "P"):
+            if (completed_stage in state.get("completed_stages", [])
+                    and completed_stage not in state.get("stage_artifacts", {})):
+                export_stage_artifact(
+                    normalized, q3d_data, state, teacher, tokenizer, output, completed_stage,
+                )
+    if stage_artifacts:
+        from .stages import import_stage_artifacts
+
+        import_stage_artifacts(
+            normalized, q3d_data, state, teacher, tokenizer, output, stage_artifacts,
+        )
+    if stage is not None:
+        required = [item for item in stages_for_arm(arm)
+                    if _STAGE_ORDER.index(item) < _STAGE_ORDER.index(stage)]
+        missing = set(required) - set(state.get("completed_stages", []))
+        if missing:
+            raise ValueError(f"stage {stage} requires verified artifacts for {sorted(missing)}")
     if resume_from is not None:
         _validate_resumed_physiology_cache(
             normalized, q3d_data, state, output_dir=output,
@@ -3094,6 +3188,12 @@ def run_training(
                 sampler=sampler,
             )
         elif stage == "J":
+            # Validate newly imported/local P artifacts as strictly as resumed
+            # ones; entering J must bind the live teacher, C0 and U cohort.
+            _validate_resumed_physiology_cache(
+                normalized, q3d_data, state, output_dir=output,
+                teacher=teacher, tokenizer=tokenizer,
+            )
             if sampler is None:
                 sampler = _make_q3d_sampler(
                     q3d_data, seed, state, require_unlabeled=(arm != "c0"),
@@ -3108,6 +3208,12 @@ def run_training(
             )
         else:
             raise RuntimeError(f"unknown Q-3D stage {stage!r}")
+        if stage in {"T", "Q", "P"} and stage in state.get("completed_stages", []):
+            from .stages import export_stage_artifact
+
+            export_stage_artifact(
+                normalized, q3d_data, state, teacher, tokenizer, output, stage,
+            )
 
     # Even an update-limited stop gets a durable root pointer with every RNG,
     # optimizer, sampler, module, and tokenizer-init state needed to resume.
@@ -3144,6 +3250,8 @@ def run_training(
         "checkpoint": str(root_checkpoint),
         "checkpoint_sha256": checkpoint_sha256,
         "output_dir": str(output),
+        "stage_artifacts": copy.deepcopy(state.get("stage_artifacts", {})),
+        "stage_artifact_hashes": copy.deepcopy(state.get("stage_artifact_hashes", {})),
         "gpu_evidence": "NOT_RUN" if target_device.type == "cpu" else "RUNTIME_REQUESTED",
         "real_data_evidence": "NOT_RUN" if synthetic else "CONFIG_VALIDATED",
     }

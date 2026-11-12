@@ -1,0 +1,122 @@
+{
+  "GPU": "NOT_RUN",
+  "baseline_restoration": {
+    "byte_identical_docs": 16,
+    "byte_identical_tests": 33,
+    "source_sha": "a03aadb060c109c05a67bbd94d0d56a78da84d4e"
+  },
+  "baseline_source_unchanged": true,
+  "campaign": "NOT_RUN",
+  "check_repo": "PASS",
+  "evidence_status": "SOFTWARE_ONLY",
+  "mkl_num_threads": "UNSET_DEFAULT",
+  "omp_num_threads": "UNSET_DEFAULT",
+  "physiology_omega_validation": {
+    "gates_passed_without_override": true,
+    "means_are_one": true,
+    "omega_differs": true,
+    "passed": true,
+    "shared_patient_ids": true,
+    "v1": {
+      "computed_mean_omega": 1.0,
+      "gate_passed": true,
+      "omega": {
+        "train_unlabeled_000": 1.0742504461410438,
+        "train_unlabeled_001": 0.9257495538589562
+      },
+      "override_used": false,
+      "reported_mean_omega": 1.0
+    },
+    "v1_is_nonuniform": true,
+    "v1u": {
+      "computed_mean_omega": 1.0,
+      "gate_passed": true,
+      "omega": {
+        "train_unlabeled_000": 1.0,
+        "train_unlabeled_001": 1.0
+      },
+      "override_used": false,
+      "reported_mean_omega": 1.0
+    },
+    "v1u_is_uniform": true
+  },
+  "plan_counts": {
+    "J": 168,
+    "P": 60,
+    "Q": 60,
+    "T": 12
+  },
+  "plan_experiments": 180,
+  "pytest": "448 passed, 6 warnings in 125.88s (0:02:05)",
+  "real_data": "NOT_RUN",
+  "real_decoder_alignment": "OPEN_NOT_RUN",
+  "shared_stage_artifacts": {
+    "P": {
+      "manifest_sha256": "5b0bce733cd1e502f8d5840d825922e3b79ff324e9d0c24ae76878142b30a8f9",
+      "path": "/private/tmp/self-audit-q3d-final-20261112/_shared_v1_tqp/P/P.artifact.json",
+      "producer_active_stages": [
+        "P"
+      ],
+      "producer_completed_stages": [
+        "T",
+        "Q",
+        "P"
+      ],
+      "producer_requested_stage": "P",
+      "producer_status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+      "stage_artifact_hashes": {
+        "checkpoint_sha256": "ccae8de81a092cf30679a7da983983913512c3c258fd0d02af1ce83585bd9fc5",
+        "manifest_sha256": "5b0bce733cd1e502f8d5840d825922e3b79ff324e9d0c24ae76878142b30a8f9"
+      }
+    },
+    "Q": {
+      "manifest_sha256": "a25bb847b38845972261a132f15ecb2ff2573f0fe2e09880e0894979bf3309c8",
+      "path": "/private/tmp/self-audit-q3d-final-20261112/_shared_v1_tqp/Q/Q.artifact.json",
+      "producer_active_stages": [
+        "Q"
+      ],
+      "producer_completed_stages": [
+        "T",
+        "Q"
+      ],
+      "producer_requested_stage": "Q",
+      "producer_status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+      "stage_artifact_hashes": {
+        "checkpoint_sha256": "5a494ab96ba97a41f98cc606072f01db918626ace8431bf75f538ccb77cf0229",
+        "manifest_sha256": "a25bb847b38845972261a132f15ecb2ff2573f0fe2e09880e0894979bf3309c8"
+      }
+    },
+    "T": {
+      "manifest_sha256": "78824f75fac4695b18088479f435e3b1733eb8a43c0c016e6f17363df79dee5f",
+      "path": "/private/tmp/self-audit-q3d-final-20261112/_shared_v1_tqp/T/T.artifact.json",
+      "producer_active_stages": [
+        "T"
+      ],
+      "producer_completed_stages": [
+        "T"
+      ],
+      "producer_requested_stage": "T",
+      "producer_status": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+      "stage_artifact_hashes": {
+        "checkpoint_sha256": "1e746633ea989315a81999c27e8b1375a34c0c9f3f92087d3a512d1d7d1c3028",
+        "manifest_sha256": "78824f75fac4695b18088479f435e3b1733eb8a43c0c016e6f17363df79dee5f"
+      }
+    }
+  },
+  "smoke_recipes": 15,
+  "smoke_status": "COMPLETED_ALL_SYNTHETIC_RECIPES",
+  "tokenizer_gate": {
+    "missing": [
+      "dead_code_fraction",
+      "200-update_usage_history"
+    ],
+    "passed": false,
+    "status": "NOT_READY",
+    "thresholds": {
+      "max_dead_code_fraction": 0.25,
+      "min_class_codes": 4,
+      "min_perplexity": 32.0
+    }
+  },
+  "tokenizer_synthetic_override_used": true
+}

@@ -41,10 +41,12 @@ from self_audit.candidate_q3d.config import (
 
 PLAN_SCHEMA = "self_audit.candidate_q3d.campaign.v1"
 STATE_SCHEMA = "self_audit.candidate_q3d.campaign_state.v1"
+SHARED_DAG_SCHEMA = "self_audit.candidate_q3d.shared_stage_dag.v1"
 DEFAULT_REPORT_DIR = ROOT / "reports/q3d-implementation-20261112/campaign"
 CAMPAIGN_K_ORDER = (5, 10, 2)
 PRIMARY_SETTINGS = PRIMARY_ARMS
-SECONDARY_SETTINGS = SECONDARY_ARMS + ("v1_stride4", "v1_residual2")
+SECONDARY_SETTINGS = SECONDARY_ARMS + ("v1_stride4", "v1_residual2", "v1_decoder_stride8")
+LEGACY_SECONDARY_SETTINGS = SECONDARY_ARMS + ("v1_stride4", "v1_residual2")
 SYNTHETIC_CONFIDENT_TEACHER_ARMS = {"c1", "v1", "v1u", "v0", "b1", "e1", "o1", "s1"}
 BASELINE_LAUNCHES = {
     "mean_teacher": {
@@ -200,11 +202,13 @@ def _setting_recipe(setting: str, *, dataset: str, protocol: str, k: int, seed: 
                     smoke: bool, smoke_updates: int | None,
                     teacher_source_repo: str | None = None,
                     teacher_source_commit: str | None = None) -> dict[str, Any]:
-    arm = "v1" if setting in {"v1_stride4", "v1_residual2"} else setting
+    arm = "v1" if setting in {"v1_stride4", "v1_residual2", "v1_decoder_stride8"} else setting
     source_stride = 4 if setting == "v1_stride4" else (16 if setting == "s1" else 8)
+    feature_source = "decoder_stride8" if setting == "v1_decoder_stride8" else None
     config = canonical_config(
         arm, dataset=dataset, protocol=protocol, k=k, seed=seed,
-        source_stride=source_stride, residual2=setting == "v1_residual2",
+        source_stride=source_stride, feature_source=feature_source,
+        residual2=setting == "v1_residual2",
     )
     _set_teacher_source(config, source_repo=teacher_source_repo, source_commit=teacher_source_commit)
     if smoke:
@@ -271,6 +275,16 @@ def _job_readiness(config: Mapping[str, Any], *, synthetic: bool, stage: str,
         if config["arm"] == "a3d_teacher_free" and a3d_update_match is not True:
             return "NOT_RUN", "A-3D teacher_free requires an exact synthetic J budget"
         return "SMOKE_READY", None
+    teacher = config["model"]["teacher"]
+    feature_source = teacher.get("feature_source")
+    if stage in {"Q", "P", "J"} and feature_source in {
+        "stride4_decoder_block", "decoder_stride8",
+    }:
+        return (
+            "NOT_RUN",
+            "BLOCKED: OPEN feature-grid phase contract for the real "
+            f"{feature_source} source; decoder up/skip low-side padding phases differ",
+        )
     for role in ("train", "development"):
         if config["dataset"]["manifests"][role]["status"] != "READY":
             return "NOT_RUN", f"{role} manifest path and SHA-256 are not configured"
@@ -398,6 +412,393 @@ def _add_experiment(plan: dict[str, Any], *, setting: str, dataset: str, protoco
         previous_job = stage_job_id
 
 
+def _stage_artifact_identity(experiment: Mapping[str, Any], config: Mapping[str, Any]) -> dict[str, Any]:
+    return {
+        "dataset": experiment["dataset"],
+        "protocol": experiment["protocol"],
+        "k": experiment["k"],
+        "seed": experiment["seed"],
+    }
+
+
+def _artifact_source(config: Mapping[str, Any], setting: str) -> tuple[str, int, str]:
+    teacher = config["model"]["teacher"]
+    source = teacher.get("feature_source")
+    stride = teacher.get("feature_stride")
+    if not isinstance(source, str) or type(stride) is not int:
+        raise ValueError(f"{setting} must declare a teacher feature source and stride before sharing")
+    source_variant = "o1_online" if setting == "o1" else "frozen_teacher"
+    return source, stride, source_variant
+
+
+def _stage_source_config(
+    stage: str,
+    config: Mapping[str, Any],
+    identity: Mapping[str, Any],
+    *,
+    source: str | None = None,
+    stride: int | None = None,
+    source_variant: str | None = None,
+) -> dict[str, Any]:
+    from self_audit.candidate_q3d.stages import stage_source_config
+
+    contract = stage_source_config(config, stage)
+    if contract.get("identity") != dict(identity):
+        raise ValueError(f"{stage} stage source contract identity differs from its plan")
+    if stage in {"Q", "P"} and (
+        contract.get("teacher_feature_source") != source
+        or contract.get("teacher_feature_stride") != stride
+        or contract.get("teacher_variant") != source_variant
+    ):
+        raise ValueError(f"{stage} stage source contract differs from its feature-source key")
+    return contract
+
+
+def _identity_key(identity: Mapping[str, Any]) -> tuple[Any, ...]:
+    return tuple(identity[key] for key in ("dataset", "protocol", "k", "seed"))
+
+
+def _identity_slug(identity: Mapping[str, Any]) -> str:
+    return f"{identity['dataset']}_{str(identity['protocol']).lower()}_k{identity['k']}_seed{identity['seed']}"
+
+
+def _source_slug(source: str, stride: int, source_variant: str) -> str:
+    value = f"{source}_s{stride}_{source_variant}"
+    return "".join(char if char.isalnum() else "_" for char in value).strip("_")
+
+
+def _shared_producer_id(
+    stage: str,
+    identity: Mapping[str, Any],
+    source_key: tuple[str, int, str] | None = None,
+) -> str:
+    suffix = "teacher" if stage == "T" else _source_slug(*source_key) if source_key else ""
+    return f"shared.{_identity_slug(identity)}.{suffix}.{stage.lower()}"
+
+
+def _pending_manifest_ref(job: Mapping[str, Any]) -> dict[str, Any]:
+    manifest_path = job["artifact_output"]["manifest_path"]
+    return {
+        "stage": job["stage"],
+        "producer_job_id": job["id"],
+        "path": manifest_path,
+        "sha256": None,
+        "status": "NOT_RUN",
+    }
+
+
+def _shared_stage_dag(plan: dict[str, Any], out_root: Path) -> None:
+    """Replace repeated arm-local T/Q/P work with content-addressed producers."""
+
+    old_jobs = list(plan["stage_jobs"])
+    old_by_experiment_stage = {
+        (job["experiment_id"], job["stage"]): job for job in old_jobs
+    }
+    configs = {experiment["id"]: load_config(experiment["config_path"]) for experiment in plan["experiments"]}
+    identities = {
+        experiment["id"]: _stage_artifact_identity(experiment, configs[experiment["id"]])
+        for experiment in plan["experiments"]
+    }
+    groups: dict[tuple[str, tuple[Any, ...], tuple[str, int, str] | None], list[dict[str, Any]]] = {}
+    mednext_consumers: dict[tuple[Any, ...], list[dict[str, Any]]] = {}
+    source_by_experiment: dict[str, tuple[str, int, str]] = {}
+
+    for experiment in plan["experiments"]:
+        config = configs[experiment["id"]]
+        identity = identities[experiment["id"]]
+        id_key = _identity_key(identity)
+        if experiment["setting"] == "mednext_supervised":
+            mednext_consumers.setdefault(id_key, []).append(experiment)
+            continue
+        if config["model"]["teacher"]["architecture"] != "mednext_l_k3":
+            continue
+        source_key = _artifact_source(config, experiment["setting"])
+        source_by_experiment[experiment["id"]] = source_key
+        for stage in experiment["stages"]:
+            if stage == "T":
+                groups.setdefault((stage, id_key, None), []).append(experiment)
+            elif stage in {"Q", "P"}:
+                groups.setdefault((stage, id_key, source_key), []).append(experiment)
+
+    def producer_id(stage: str, experiment: Mapping[str, Any]) -> str:
+        identity = identities[experiment["id"]]
+        source_key = source_by_experiment.get(experiment["id"]) if stage in {"Q", "P"} else None
+        return _shared_producer_id(stage, identity, source_key)
+
+    producer_ids: dict[tuple[str, tuple[Any, ...], tuple[str, int, str] | None], str] = {
+        key: _shared_producer_id(key[0], identities[members[0]["id"]], key[2])
+        for key, members in groups.items()
+    }
+    producers: dict[str, dict[str, Any]] = {}
+    producer_for_experiment: dict[str, dict[str, str]] = {item["id"]: {} for item in plan["experiments"]}
+    source_contract_cache: dict[tuple[str, str], dict[str, Any]] = {}
+
+    def source_contract(stage: str, experiment: Mapping[str, Any]) -> dict[str, Any]:
+        key = (experiment["id"], stage)
+        if key not in source_contract_cache:
+            config = configs[experiment["id"]]
+            source_key = source_by_experiment.get(experiment["id"]) if stage in {"Q", "P"} else None
+            source, stride, variant = source_key if source_key else (None, None, None)
+            source_contract_cache[key] = _stage_source_config(
+                stage, config, identities[experiment["id"]],
+                source=source, stride=stride, source_variant=variant,
+            )
+        return source_contract_cache[key]
+
+    def preferred_anchor(members: list[dict[str, Any]]) -> dict[str, Any]:
+        priority = {"v1": 0, "c1": 1, "v1u": 2}
+        return sorted(members, key=lambda item: (priority.get(item["setting"], 10), item["setting"]))[0]
+
+    for (stage, id_key, source_key), members in sorted(
+        groups.items(),
+        key=lambda item: (
+            ("T", "Q", "P").index(item[0][0]),
+            item[0][1],
+            item[0][2] or ("", 0, ""),
+        ),
+    ):
+        anchor = preferred_anchor(members)
+        identity = identities[anchor["id"]]
+        config = configs[anchor["id"]]
+        source, stride, source_variant = source_key if source_key else (None, None, None)
+        source_config = source_contract(stage, anchor)
+        signatures = [source_contract(stage, member) for member in members]
+        if any(signature != source_config for signature in signatures):
+            raise ValueError(f"cannot share {stage} across incompatible stage source configurations")
+
+        job_id = producer_ids[(stage, id_key, source_key)]
+        original = old_by_experiment_stage[(anchor["id"], stage)]
+        output = (out_root / "runs" / "shared" / job_id).resolve()
+        manifest_path = output / f"{stage}.artifact.json"
+        dependencies: list[str] = []
+        input_stages: list[str] = []
+        if stage == "Q":
+            dependencies.append(producer_ids[("T", id_key, None)])
+            input_stages.append("T")
+        elif stage == "P":
+            dependencies.append(producer_ids[("T", id_key, None)])
+            input_stages.append("T")
+            q_key = ("Q", id_key, source_key)
+            if q_key in producer_ids:
+                dependencies.append(producer_ids[q_key])
+                input_stages.append("Q")
+        readiness, reason = _job_readiness(config, synthetic=bool(plan["selection"]["synthetic"]), stage=stage)
+        stage_job = copy.deepcopy(original)
+        stage_job.update({
+            "id": job_id,
+            "experiment_id": anchor["id"],
+            "experiment_ids": [member["id"] for member in members],
+            "consumer_settings": [member["setting"] for member in members],
+            "setting": anchor["setting"],
+            "group": "shared_stage_producer",
+            "kind": "shared_stage_producer",
+            "stage": stage,
+            "dependencies": dependencies,
+            "stage_artifact_inputs": {},
+            "output": str(output),
+            "readiness": readiness,
+            "reason": reason,
+            "status": "NOT_RUN",
+            "artifact_identity": identity,
+            "source_config": source_config,
+            "source_key": None if source_key is None else {
+                "feature_source": source,
+                "feature_stride": stride,
+                "teacher_variant": source_variant,
+            },
+            "artifact_output": {
+                "stage": stage,
+                "manifest_path": str(manifest_path),
+                "manifest_sha256": None,
+                "status": "NOT_RUN",
+            },
+        })
+        producers[job_id] = stage_job
+        for input_stage in input_stages:
+            upstream_id = producer_ids[(input_stage, id_key, None if input_stage == "T" else source_key)]
+            stage_job["stage_artifact_inputs"][input_stage] = _pending_manifest_ref(producers[upstream_id])
+        for member in members:
+            producer_for_experiment[member["id"]][stage] = job_id
+
+        if stage == "T":
+            for baseline in mednext_consumers.get(id_key, []):
+                producer_for_experiment[baseline["id"]]["T"] = job_id
+                stage_job["experiment_ids"].append(baseline["id"])
+                stage_job["consumer_settings"].append(baseline["setting"])
+
+    # A single shared T stage is the only supervised MedNeXt training run per
+    # dataset/protocol/K/seed. The named heavy baseline reuses its region head;
+    # it does not schedule a second teacher training job.
+    for baseline in plan["experiments"]:
+        if baseline["setting"] != "mednext_supervised":
+            continue
+        t_job_id = producer_for_experiment[baseline["id"]].get("T")
+        if t_job_id is None:
+            raise ValueError(f"MedNeXt supervised baseline has no shared T producer: {baseline['id']}")
+        baseline["baseline_reuse"] = {
+            "kind": "shared_q3d_teacher_region_head",
+            "source_stage_job_id": t_job_id,
+            "independent_teacher_training": "NOT_RUN",
+            "independent_baseline": "NOT_RUN",
+            "scope": "Shared Q3D T region head reused for baseline export/evaluation; not an independent MedNeXt training result.",
+            "protocol_b_note": (
+                "Shared T uses the all-TRAIN teacher view under Protocol B and does not establish "
+                "the independent K-labeled MedNeXt baseline."
+            ),
+        }
+        baseline["launch_mapping"] = {
+            "runner": "shared Q3D T artifact export/evaluation",
+            "entrypoint": "evaluate.py",
+            "method": "candidate_q3d",
+            "arm": "mednext_supervised",
+            "source_stage_job_id": t_job_id,
+            "status": "REUSE_SHARED_T_NOT_RUN",
+        }
+
+    joint_jobs = []
+    for experiment in plan["experiments"]:
+        experiment_id = experiment["id"]
+        config = configs[experiment_id]
+        if "J" in experiment["stages"]:
+            job = copy.deepcopy(old_by_experiment_stage[(experiment_id, "J")])
+            input_stages = [stage for stage in ("T", "Q", "P") if stage in experiment["stages"]]
+            optional_inputs: list[str] = []
+            if experiment["setting"] == "c1":
+                # C1 has no tokenizer module, but pins the shared Q manifest
+                # as optional provenance for the P cache it consumes.
+                input_stages.append("Q")
+                optional_inputs.append("Q")
+            input_refs = {}
+            for stage in input_stages:
+                upstream_id = producer_for_experiment[experiment_id].get(stage)
+                if upstream_id is None and stage == "Q" and experiment["setting"] == "c1":
+                    source_key = source_by_experiment[experiment_id]
+                    upstream_id = producer_ids.get(("Q", _identity_key(identities[experiment_id]), source_key))
+                if upstream_id is None:
+                    raise ValueError(f"{experiment_id} lacks a shared {stage} producer")
+                if stage in optional_inputs:
+                    producer_for_experiment[experiment_id][stage] = upstream_id
+                reference = _pending_manifest_ref(producers[upstream_id])
+                if stage in optional_inputs:
+                    reference["role"] = "optional_source_metadata"
+                input_refs[stage] = reference
+            job.update({
+                "kind": "student_joint",
+                "experiment_ids": [experiment_id],
+                "dependencies": [ref["producer_job_id"] for ref in input_refs.values()],
+                "stage_artifact_inputs": input_refs,
+                "optional_stage_artifact_inputs": optional_inputs,
+                "artifact_identity": identities[experiment_id],
+                "status": "NOT_RUN",
+            })
+            joint_jobs.append(job)
+            producer_for_experiment[experiment_id]["J"] = job["id"]
+        experiment["stage_artifact_producers"] = dict(producer_for_experiment[experiment_id])
+        experiment["stage_job_ids"] = [
+            producer_for_experiment[experiment_id][stage] for stage in experiment["stages"]
+        ]
+        experiment["expected_stage_artifacts"] = {
+            stage: _pending_manifest_ref(producers[producer_for_experiment[experiment_id][stage]])
+            for stage in ("T", "Q", "P")
+            if stage in producer_for_experiment[experiment_id]
+        }
+
+    all_jobs = list(producers.values()) + joint_jobs
+    group_order = {name: index for index, name in enumerate(plan["ordering"]["group_order"])}
+    dataset_order = {name: index for index, name in enumerate(plan["ordering"]["dataset_order"])}
+    k_order = {value: index for index, value in enumerate(plan["ordering"]["k_order"])}
+    stage_order = {name: index for index, name in enumerate(("T", "Q", "P", "J"))}
+    all_jobs.sort(key=lambda job: (
+        stage_order[job["stage"]],
+        dataset_order[job["dataset"]],
+        job["protocol"],
+        k_order[job["k"]],
+        job.get("source_key", {}).get("feature_source", "") if isinstance(job.get("source_key"), Mapping) else "",
+        job.get("source_key", {}).get("teacher_variant", "") if isinstance(job.get("source_key"), Mapping) else "",
+        group_order.get(job.get("group"), len(group_order)),
+        job["id"],
+    ))
+    plan["stage_jobs"] = all_jobs
+
+    by_setting_key = {
+        (experiment["dataset"], experiment["protocol"], experiment["k"], experiment["seed"], experiment["setting"]): experiment
+        for experiment in plan["experiments"]
+    }
+    shared_pairs = []
+    source_ablation_refs = []
+    for key, v1 in list(by_setting_key.items()):
+        if key[-1] != "v1":
+            continue
+        identity_tuple = key[:-1]
+        v1u = by_setting_key.get((*identity_tuple, "v1u"))
+        if v1u is None:
+            continue
+        shared_pairs.append({
+            "identity": {"dataset": key[0], "protocol": key[1], "k": key[2], "seed": key[3]},
+            "arms": ["v1", "v1u"],
+            "producer_job_ids": {stage: v1["stage_artifact_producers"][stage] for stage in ("T", "Q", "P")},
+            "consumer_job_ids": {"v1": v1["stage_artifact_producers"]["J"], "v1u": v1u["stage_artifact_producers"]["J"]},
+            "manifest_sha256": {stage: None for stage in ("T", "Q", "P")},
+            "status": "NOT_RUN",
+        })
+        for variant in ("o1", "s1", "v1_stride4", "v1_decoder_stride8"):
+            other = by_setting_key.get((*identity_tuple, variant))
+            if other is None:
+                continue
+            source_ablation_refs.append({
+                "identity": {"dataset": key[0], "protocol": key[1], "k": key[2], "seed": key[3]},
+                "setting": variant,
+                "shared_T_producer_job_id": v1["stage_artifact_producers"]["T"],
+                "distinct_Q_producer_job_id": other["stage_artifact_producers"]["Q"],
+                "distinct_P_producer_job_id": other["stage_artifact_producers"]["P"],
+                "feature_source": configs[other["id"]]["model"]["teacher"]["feature_source"],
+                "feature_stride": configs[other["id"]]["model"]["teacher"]["feature_stride"],
+                "status": "NOT_RUN",
+            })
+
+    shared_consumer_references = []
+    for key, v1 in list(by_setting_key.items()):
+        if key[-1] != "v1":
+            continue
+        identity_tuple = key[:-1]
+        canonical_refs = {
+            stage: v1["stage_artifact_producers"][stage] for stage in ("T", "Q", "P")
+        }
+        consumer_job_ids = {}
+        for setting in ("c1", "v1", "v1u", "e1"):
+            consumer = by_setting_key.get((*identity_tuple, setting))
+            if consumer is None:
+                continue
+            refs = consumer["stage_artifact_producers"]
+            if any(refs.get(stage) != canonical_refs[stage] for stage in ("T", "Q", "P")):
+                raise ValueError("C1/V1/V1-u/E1 must consume the same shared T/Q/P producers")
+            consumer_job_ids[setting] = refs["J"]
+        if consumer_job_ids:
+            shared_consumer_references.append({
+                "identity": {"dataset": key[0], "protocol": key[1], "k": key[2], "seed": key[3]},
+                "producer_job_ids": canonical_refs,
+                "consumer_job_ids": consumer_job_ids,
+                "consumer_settings": list(consumer_job_ids),
+                "status": "NOT_RUN",
+            })
+
+    stage_counts = {stage: sum(job["stage"] == stage for job in all_jobs) for stage in ("T", "Q", "P", "J")}
+    producer_counts = {stage: sum(job.get("kind") == "shared_stage_producer" and job["stage"] == stage
+                                  for job in all_jobs) for stage in ("T", "Q", "P")}
+    plan["shared_stage_dag"] = {
+        "schema": SHARED_DAG_SCHEMA,
+        "status": "PLAN_ONLY_NOT_RUN",
+        "stage_job_counts": stage_counts,
+        "shared_producer_counts": producer_counts,
+        "expected_v1_v1u_shared_references": shared_pairs,
+        "expected_v1_v1u_shared_reference_count": len(shared_pairs),
+        "shared_consumer_references": shared_consumer_references,
+        "source_ablation_references": source_ablation_refs,
+        "mednext_supervised_reuse": "Shared Q3D T region-head export/evaluation; no separate T training job.",
+        "hash_policy": "Manifest paths are fixed at planning time; manifest SHA-256 values stay null until producer completion.",
+    }
+
+
 def _add_cross_evaluation_records(plan: dict[str, Any], *, datasets: list[str],
                                   cross_inputs: Mapping[str, Mapping[str, str]],
                                   manifest_inputs: Mapping[str, Mapping[str, str]]) -> None:
@@ -441,7 +842,8 @@ def create_campaign_plan(*, out: str | Path, datasets: tuple[str, ...] = ("acdc"
                          teacher_source_repo: str | None = None,
                          teacher_source_commit: str | None = None,
                          include_secondary: bool = True, include_baselines: bool = True,
-                         synthetic: bool = False, smoke_updates: int | None = None) -> Path:
+                         synthetic: bool = False, smoke_updates: int | None = None,
+                         share_stages: bool = True) -> Path:
     """Build a hash-pinned campaign plan and per-experiment nested recipes."""
     if not datasets or any(name not in {"acdc", "mnms"} for name in datasets):
         raise ValueError("datasets must explicitly select acdc and/or mnms")
@@ -481,8 +883,11 @@ def create_campaign_plan(*, out: str | Path, datasets: tuple[str, ...] = ("acdc"
             "seed": seed,
             "synthetic": synthetic,
             "smoke_updates": smoke_updates,
+            "shared_stage_dag": bool(share_stages),
             "primary_settings": list(PRIMARY_SETTINGS),
-            "secondary_settings": list(SECONDARY_SETTINGS) if include_secondary else [],
+            "secondary_settings": list(
+                SECONDARY_SETTINGS if share_stages else LEGACY_SECONDARY_SETTINGS
+            ) if include_secondary else [],
             "baseline_settings": list(BASELINE_ARMS) if include_baselines else [],
         },
         "experiments": [],
@@ -498,7 +903,7 @@ def create_campaign_plan(*, out: str | Path, datasets: tuple[str, ...] = ("acdc"
     }
     settings_by_group = [("primary", PRIMARY_SETTINGS)]
     if include_secondary:
-        settings_by_group.append(("secondary", SECONDARY_SETTINGS))
+        settings_by_group.append(("secondary", SECONDARY_SETTINGS if share_stages else LEGACY_SECONDARY_SETTINGS))
     if include_baselines:
         settings_by_group.append(("baseline", BASELINE_ARMS))
     ordered_ks = [k for k in CAMPAIGN_K_ORDER if k in ks]
@@ -527,10 +932,233 @@ def create_campaign_plan(*, out: str | Path, datasets: tuple[str, ...] = ("acdc"
         "k_order": plan["selection"]["k_order"],
         "secondary_after_primary": True,
     }
+    if share_stages:
+        _shared_stage_dag(plan, out_root)
     plan_path = out_root / "PLAN.json"
     _write_json(plan_path, plan)
     validate_campaign_plan(plan_path)
     return plan_path
+
+
+def _validate_shared_stage_dag(plan: Mapping[str, Any]) -> None:
+    dag = plan.get("shared_stage_dag")
+    if not isinstance(dag, Mapping) or dag.get("schema") != SHARED_DAG_SCHEMA:
+        raise ValueError("shared campaign is missing its Q-3D stage DAG contract")
+    if dag.get("status") != "PLAN_ONLY_NOT_RUN":
+        raise ValueError("shared campaign plans must remain PLAN_ONLY_NOT_RUN")
+    jobs = plan["stage_jobs"]
+    job_by_id = {job["id"]: job for job in jobs}
+    stage_rank = {stage: index for index, stage in enumerate(("T", "Q", "P", "J"))}
+    for job in jobs:
+        stage = job.get("stage")
+        if stage not in stage_rank:
+            raise ValueError(f"unknown shared Q-3D campaign stage in {job.get('id')}")
+        dependencies = job.get("dependencies")
+        if not isinstance(dependencies, list) or len(dependencies) != len(set(dependencies)):
+            raise ValueError(f"invalid dependency list for {job['id']}")
+        for dependency_id in dependencies:
+            upstream = job_by_id.get(dependency_id)
+            if upstream is None:
+                raise ValueError(f"missing DAG producer {dependency_id} for {job['id']}")
+            if stage_rank[upstream["stage"]] >= stage_rank[stage]:
+                raise ValueError(f"stage dependency order is invalid for {job['id']}")
+        if job.get("status") != "NOT_RUN":
+            raise ValueError("campaign stage jobs must remain NOT_RUN in a plan")
+
+        inputs = job.get("stage_artifact_inputs", {})
+        if not isinstance(inputs, Mapping):
+            raise ValueError(f"stage_artifact_inputs is malformed for {job['id']}")
+        for input_stage, reference in inputs.items():
+            if input_stage not in {"T", "Q", "P"} or not isinstance(reference, Mapping):
+                raise ValueError(f"invalid stage artifact input for {job['id']}")
+            producer_id = reference.get("producer_job_id")
+            producer = job_by_id.get(producer_id)
+            if producer is None or producer.get("stage") != input_stage:
+                raise ValueError(f"{job['id']} does not point at a {input_stage} producer")
+            output = producer.get("artifact_output")
+            if not isinstance(output, Mapping) or reference.get("path") != output.get("manifest_path"):
+                raise ValueError(f"{job['id']} stage input path differs from its producer output")
+            if reference.get("sha256") is not None or reference.get("status") != "NOT_RUN":
+                raise ValueError("unrun plan references must not invent stage manifest hashes")
+            if producer_id not in dependencies:
+                raise ValueError(f"{job['id']} is missing a direct dependency on {producer_id}")
+
+        if job.get("kind") == "shared_stage_producer":
+            if stage not in {"T", "Q", "P"}:
+                raise ValueError("shared stage producers may only produce T/Q/P")
+            output = job.get("artifact_output")
+            if not isinstance(output, Mapping) or output.get("stage") != stage:
+                raise ValueError(f"{job['id']} has no stage manifest output record")
+            expected_path = str((Path(job["output"]) / f"{stage}.artifact.json").resolve())
+            if output.get("manifest_path") != expected_path:
+                raise ValueError(f"{job['id']} stage manifest path differs from the output convention")
+            if output.get("manifest_sha256") is not None or output.get("status") != "NOT_RUN":
+                raise ValueError("producer manifest hashes stay null until a stage completes")
+            identity = job.get("artifact_identity")
+            if not isinstance(identity, Mapping) or _identity_key(identity) != (
+                job["dataset"], job["protocol"], job["k"], job["seed"],
+            ):
+                raise ValueError(f"{job['id']} has a mismatched data/protocol/K/seed identity")
+            if stage == "T" and inputs:
+                raise ValueError("T producer cannot consume earlier stage artifacts")
+            if stage == "Q" and set(inputs) != {"T"}:
+                raise ValueError("Q producer must consume exactly the shared T manifest")
+            if stage == "P" and ("T" not in inputs or not set(inputs).issubset({"T", "Q"})):
+                raise ValueError("P producer must consume T and may consume Q")
+            if stage in {"Q", "P"}:
+                source_key = job.get("source_key")
+                if not isinstance(source_key, Mapping):
+                    raise ValueError(f"{stage} producer has no feature-source identity")
+                source_config = job.get("source_config")
+                if (not isinstance(source_config, Mapping)
+                        or source_config.get("teacher_feature_source") != source_key.get("feature_source")
+                        or source_config.get("teacher_feature_stride") != source_key.get("feature_stride")
+                        or source_config.get("teacher_variant") != source_key.get("teacher_variant")):
+                    raise ValueError(f"{stage} producer source_config does not pin its feature source")
+        elif stage == "J":
+            if job.get("kind") != "student_joint":
+                raise ValueError(f"J job {job['id']} must be a student_joint consumer")
+            if "T" in inputs or "Q" in inputs or "P" in inputs:
+                for input_stage in inputs:
+                    if input_stage not in {"T", "Q", "P"}:
+                        raise ValueError("J may consume only pinned T/Q/P manifests")
+            if job.get("artifact_output") is not None:
+                raise ValueError("J consumes shared artifacts but does not produce a T/Q/P manifest")
+        else:
+            raise ValueError(f"unrecognized shared DAG job kind for {job['id']}")
+
+    counts = {stage: sum(job["stage"] == stage for job in jobs) for stage in stage_rank}
+    producer_counts = {
+        stage: sum(job.get("kind") == "shared_stage_producer" and job["stage"] == stage for job in jobs)
+        for stage in ("T", "Q", "P")
+    }
+    if dag.get("stage_job_counts") != counts or dag.get("shared_producer_counts") != producer_counts:
+        raise ValueError("shared campaign DAG stage counts are stale")
+    if producer_counts["T"] != len({
+        _identity_key(job["artifact_identity"])
+        for job in jobs if job.get("kind") == "shared_stage_producer" and job["stage"] == "T"
+    }):
+        raise ValueError("shared campaign has duplicate T producers for a data/protocol/K/seed identity")
+    if any(job.get("setting") == "mednext_supervised" and job["stage"] == "T" for job in jobs):
+        raise ValueError("MedNeXt supervised baseline must reuse shared T instead of retraining it")
+
+    experiments = plan["experiments"]
+    experiment_by_setting = {
+        (item["dataset"], item["protocol"], item["k"], item["seed"], item["setting"]): item
+        for item in experiments
+    }
+    for experiment in experiments:
+        expected_ids = experiment.get("stage_artifact_producers", {})
+        if not isinstance(expected_ids, Mapping):
+            raise ValueError(f"{experiment['id']} has no producer-reference map")
+        stage_ids = experiment.get("stage_job_ids", [])
+        if stage_ids != [expected_ids.get(stage) for stage in experiment["stages"]]:
+            raise ValueError(f"{experiment['id']} stage_job_ids differ from producer references")
+        for job_id in stage_ids:
+            if job_id not in job_by_id:
+                raise ValueError(f"{experiment['id']} references a missing shared stage job")
+        expected_artifacts = {
+            stage for stage in experiment["stages"] if stage in {"T", "Q", "P"}
+        }
+        if experiment["setting"] == "c1" and "Q" in expected_ids:
+            expected_artifacts.add("Q")
+        actual_artifacts = set(experiment.get("expected_stage_artifacts", {}))
+        if expected_artifacts != actual_artifacts:
+            raise ValueError(f"{experiment['id']} expected artifact refs differ from its stages")
+        for stage, reference in experiment.get("expected_stage_artifacts", {}).items():
+            if reference.get("producer_job_id") != expected_ids.get(stage) or reference.get("sha256") is not None:
+                raise ValueError(f"{experiment['id']} has a stale or fabricated {stage} reference")
+        if experiment["setting"] == "mednext_supervised":
+            reuse = experiment.get("baseline_reuse")
+            if not isinstance(reuse, Mapping) or reuse.get("source_stage_job_id") != expected_ids.get("T"):
+                raise ValueError("MedNeXt supervised baseline must explicitly reuse the shared T artifact")
+        if "J" in experiment["stages"]:
+            joint_id = expected_ids["J"]
+            joint = job_by_id[joint_id]
+            expected_inputs = {
+                stage: expected_ids[stage] for stage in ("T", "Q", "P") if stage in experiment["stages"]
+            }
+            optional_inputs = ["Q"] if experiment["setting"] == "c1" else []
+            for stage in optional_inputs:
+                q_ref = joint["stage_artifact_inputs"].get("Q", {})
+                q_job_id = q_ref.get("producer_job_id")
+                q_producer = job_by_id.get(q_job_id)
+                p_producer = job_by_id.get(expected_ids.get("P"))
+                if (q_producer is None or q_producer.get("stage") != "Q"
+                        or q_ref.get("role") != "optional_source_metadata"
+                        or p_producer is None
+                        or q_producer.get("artifact_identity") != p_producer.get("artifact_identity")
+                        or q_producer.get("source_key") != p_producer.get("source_key")):
+                    raise ValueError(f"{experiment['id']} is missing optional Q source metadata")
+                expected_inputs["Q"] = q_job_id
+            actual_inputs = {
+                stage: ref.get("producer_job_id")
+                for stage, ref in joint["stage_artifact_inputs"].items()
+            }
+            if actual_inputs != expected_inputs:
+                raise ValueError(f"{experiment['id']} J stage does not consume its pinned stage artifacts")
+            if joint["stage"] != "J":
+                raise ValueError("J consumer must select only the joint stage, never retrain T or Q")
+
+    for key, v1 in experiment_by_setting.items():
+        if key[-1] != "v1":
+            continue
+        identity = key[:-1]
+        v1u = experiment_by_setting.get((*identity, "v1u"))
+        if v1u is None:
+            continue
+        for stage in ("T", "Q", "P"):
+            if v1["stage_artifact_producers"].get(stage) != v1u["stage_artifact_producers"].get(stage):
+                raise ValueError(f"V1 and V1-u do not share the same {stage} producer")
+        t_id = v1["stage_artifact_producers"]["T"]
+        for variant in ("o1", "s1", "v1_stride4", "v1_decoder_stride8"):
+            other = experiment_by_setting.get((*identity, variant))
+            if other is None:
+                continue
+            if other["stage_artifact_producers"].get("T") != t_id:
+                raise ValueError(f"{variant} must share T with V1")
+            for stage in ("Q", "P"):
+                if other["stage_artifact_producers"].get(stage) == v1["stage_artifact_producers"].get(stage):
+                    raise ValueError(f"{variant} must use a distinct {stage} source artifact")
+        residual2 = experiment_by_setting.get((*identity, "v1_residual2"))
+        if residual2 is not None:
+            for stage in ("T", "Q", "P"):
+                if residual2["stage_artifact_producers"].get(stage) != v1["stage_artifact_producers"].get(stage):
+                    raise ValueError("V1 residual2 must reuse the main V1 T/Q/P source")
+
+    expected_pairs = dag.get("expected_v1_v1u_shared_references")
+    if not isinstance(expected_pairs, list):
+        raise ValueError("shared campaign DAG must report expected V1/V1-u shared refs")
+    for pair in expected_pairs:
+        refs = pair.get("producer_job_ids")
+        if not isinstance(refs, Mapping) or set(refs) != {"T", "Q", "P"}:
+            raise ValueError("V1/V1-u shared-ref record must pin T/Q/P producer IDs")
+        if set(pair.get("manifest_sha256", {})) != {"T", "Q", "P"} or any(
+            value is not None for value in pair["manifest_sha256"].values()
+        ):
+            raise ValueError("planned V1/V1-u SHA values must remain null until stages complete")
+    if dag.get("expected_v1_v1u_shared_reference_count") != len(expected_pairs):
+        raise ValueError("shared V1/V1-u expected-reference count is stale")
+    for record in dag.get("shared_consumer_references", []):
+        producer_ids = record.get("producer_job_ids")
+        consumer_ids = record.get("consumer_job_ids")
+        if not isinstance(producer_ids, Mapping) or set(producer_ids) != {"T", "Q", "P"}:
+            raise ValueError("shared C1/V1/V1-u/E1 record must pin T/Q/P producer IDs")
+        if not isinstance(consumer_ids, Mapping):
+            raise ValueError("shared C1/V1/V1-u/E1 record must list its J consumers")
+        identity = record.get("identity", {})
+        for setting, consumer_id in consumer_ids.items():
+            experiment = experiment_by_setting.get((
+                identity.get("dataset"), identity.get("protocol"),
+                identity.get("k"), identity.get("seed"), setting,
+            ))
+            if experiment is None:
+                raise ValueError(f"shared consumer reference names missing setting {setting}")
+            if experiment["stage_artifact_producers"].get("J") != consumer_id:
+                raise ValueError(f"shared consumer J reference differs for {setting}")
+            if any(experiment["stage_artifact_producers"].get(stage) != producer_ids[stage]
+                   for stage in ("T", "Q", "P")):
+                raise ValueError(f"{setting} does not consume the shared T/Q/P producers")
 
 
 def validate_campaign_plan(path: str | Path) -> dict[str, Any]:
@@ -586,15 +1214,16 @@ def validate_campaign_plan(path: str | Path) -> dict[str, Any]:
             actual_stages = [record["stage"] for record in stage_records]
             if actual_stages != experiment["stages"]:
                 raise ValueError(f"stage dependency order differs for {experiment['id']}")
-            previous = None
-            for record in stage_records:
-                expected_dependencies = [previous] if previous else []
-                if record["dependencies"] != expected_dependencies:
-                    raise ValueError(f"stage dependency chain is invalid for {record['id']}")
-                stage_rank = {name: index for index, name in enumerate(("T", "Q", "P", "J"))}
-                if previous and stage_rank[job_by_id[previous]["stage"]] >= stage_rank[record["stage"]]:
-                    raise ValueError("stage order must be T then Q then P then J")
-                previous = record["id"]
+            if not selection.get("shared_stage_dag", False):
+                previous = None
+                for record in stage_records:
+                    expected_dependencies = [previous] if previous else []
+                    if record["dependencies"] != expected_dependencies:
+                        raise ValueError(f"stage dependency chain is invalid for {record['id']}")
+                    stage_rank = {name: index for index, name in enumerate(("T", "Q", "P", "J"))}
+                    if previous and stage_rank[job_by_id[previous]["stage"]] >= stage_rank[record["stage"]]:
+                        raise ValueError("stage order must be T then Q then P then J")
+                    previous = record["id"]
     comparisons: dict[tuple[str, str, int, int], list[dict[str, Any]]] = {}
     for experiment in experiments:
         if experiment["setting"] in PRIMARY_ARMS + SECONDARY_ARMS:
@@ -602,6 +1231,8 @@ def validate_campaign_plan(path: str | Path) -> dict[str, Any]:
             comparisons.setdefault(key, []).append(load_config(experiment["config_path"]))
     for configs in comparisons.values():
         validate_budget_update_equality(configs, smoke=bool(selection["synthetic"]))
+    if selection.get("shared_stage_dag", False):
+        _validate_shared_stage_dag(plan)
     return plan
 
 
@@ -689,9 +1320,14 @@ def _prepare_synthetic_run(plan_path: Path, experiment: Mapping[str, Any],
 
 def _job_command(experiment: Mapping[str, Any], *, config_path: Path,
                  train_ref: Mapping[str, Any], dev_ref: Mapping[str, Any],
-                 device: str, synthetic: bool) -> list[str]:
+                 device: str, synthetic: bool, stage: str | None = None,
+                 stage_artifacts: Mapping[str, str] | None = None) -> list[str]:
     command = [sys.executable, str(ROOT / "train.py"), "--config", str(config_path),
                "--out", experiment["output"], "--device", device]
+    if stage is not None:
+        command.extend(["--q3d-stage", stage])
+    for artifact_stage, manifest_path in sorted((stage_artifacts or {}).items()):
+        command.extend(["--q3d-stage-artifact", f"{artifact_stage}={manifest_path}"])
     if synthetic:
         command.append("--synthetic")
         if experiment["arm"] in SYNTHETIC_CONFIDENT_TEACHER_ARMS:
@@ -730,6 +1366,13 @@ def execute_campaign(path: str | Path, *, execute: bool = False, setting: str = 
         return {"status": "PLAN_VALIDATED_NOT_RUN", "plan": str(plan_path),
                 "selected_setting": setting,
                 "patient_training": "NOT_RUN", "jobs": len(plan["stage_jobs"])}
+    if plan["selection"].get("shared_stage_dag"):
+        from self_audit.candidate_q3d.campaign_runtime import execute_shared_campaign
+
+        return execute_shared_campaign(
+            plan_path, plan, setting=setting, device=device, runner=runner,
+            api=sys.modules[__name__],
+        )
     synthetic = bool(plan["selection"]["synthetic"])
     if not synthetic and device == "cpu":
         raise ValueError("real campaign execution requires explicit CUDA; CPU is reserved for synthetic smoke")
@@ -867,6 +1510,8 @@ def main(argv: list[str] | None = None) -> None:
     plan_parser.add_argument("--overlap-mnms", choices=("yes", "no"))
     plan_parser.add_argument("--primary-only", action="store_true")
     plan_parser.add_argument("--without-baselines", action="store_true")
+    plan_parser.add_argument("--independent-stages", action="store_true",
+                             help="retain the legacy per-arm T/Q/P chains instead of shared artifacts")
     plan_parser.add_argument("--synthetic", action="store_true")
     plan_parser.add_argument("--smoke-updates", type=int)
     run_parser = commands.add_parser("run", help="validate a plan or explicitly execute it")
@@ -895,6 +1540,7 @@ def main(argv: list[str] | None = None) -> None:
             teacher_source_commit=args.teacher_source_commit,
             include_secondary=not args.primary_only, include_baselines=not args.without_baselines,
             synthetic=args.synthetic, smoke_updates=args.smoke_updates,
+            share_stages=not args.independent_stages,
         )
         print(json.dumps({"status": "NOT_RUN", "plan": str(plan_path), "sha256": _sha256(plan_path)}, indent=2))
     else:

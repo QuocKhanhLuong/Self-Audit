@@ -31,7 +31,8 @@ def test_canonical_json_recipes_are_strict_and_preserve_pinned_settings() -> Non
     config_dir = Path("configs/candidate_q3d")
     names = {
         "c0", "c1", "v1", "v1u", "v0", "b1", "e1", "o1", "s1",
-        "v1_stride4", "v1_residual2", "mean_teacher", "a3d_teacher_free", "mednext_supervised",
+        "v1_stride4", "v1_residual2", "v1_decoder_stride8",
+        "mean_teacher", "a3d_teacher_free", "mednext_supervised",
     }
     assert {path.stem for path in config_dir.glob("*.json")} == names
     for path in sorted(config_dir.glob("*.json")):
@@ -59,6 +60,12 @@ def test_canonical_json_recipes_are_strict_and_preserve_pinned_settings() -> Non
             assert config["model"]["teacher"]["pretrained"]["provenance_status"] == "NOT_FOUND_OFFICIAL"
     assert load_config(config_dir / "s1.json")["model"]["teacher"]["feature_stride"] == 16
     assert load_config(config_dir / "v1_stride4.json")["model"]["teacher"]["feature_stride"] == 4
+    assert load_config(config_dir / "v1.json")["model"]["teacher"]["feature_source"] == "encoder_stride8"
+    assert load_config(config_dir / "v1.json")["tokenizer"]["source_feature"] == "encoder_stride8"
+    assert load_config(config_dir / "v1_decoder_stride8.json")["model"]["teacher"]["feature_source"] == "decoder_stride8"
+    assert load_config(config_dir / "v1_decoder_stride8.json")["tokenizer"]["source_feature"] == "decoder_stride8"
+    assert load_config(config_dir / "v1_stride4.json")["model"]["teacher"]["feature_source"] == "stride4_decoder_block"
+    assert load_config(config_dir / "s1.json")["model"]["teacher"]["feature_source"] == "bottleneck_stride16"
     assert load_config(config_dir / "v1_residual2.json")["model"]["student"]["residual2"] == {
         "enabled": True, "zero_init": True,
     }
@@ -85,6 +92,37 @@ def test_canonical_json_recipes_are_strict_and_preserve_pinned_settings() -> Non
     assert a3d["training"]["stage_update_units"]["J"] == "L_only_updates"
     assert a3d["training"]["stage_optimizer_updates"]["J"] == 8000
     assert a3d["training"]["stage_stream_microbatches"]["J"] == 8000
+
+
+def test_q3d_feature_source_selection_is_explicit_and_consistent() -> None:
+    main = canonical_config("v1")
+    decoder_ablation = canonical_config("v1", feature_source="decoder_stride8")
+    stride4 = canonical_config("v1", source_stride=4)
+    stride16 = canonical_config("s1")
+
+    assert main["model"]["teacher"]["feature_source"] == "encoder_stride8"
+    assert main["tokenizer"]["source_feature"] == main["model"]["teacher"]["feature_source"]
+    assert decoder_ablation["model"]["teacher"]["feature_source"] == "decoder_stride8"
+    assert decoder_ablation["tokenizer"]["source_feature"] == "decoder_stride8"
+    assert decoder_ablation["checkpoint"]["stage_outputs"]["T"].endswith("/v1_decoder_stride8/t")
+    assert stride4["model"]["teacher"]["feature_source"] == "stride4_decoder_block"
+    assert stride4["tokenizer"]["source_feature"] == "stride4_decoder_block"
+    assert stride16["model"]["teacher"]["feature_source"] == "bottleneck_stride16"
+    assert stride16["tokenizer"]["source_feature"] == "bottleneck_stride16"
+
+    mismatched = copy.deepcopy(decoder_ablation)
+    mismatched["tokenizer"]["source_feature"] = "encoder_stride8"
+    with pytest.raises(ValueError, match="tokenizer.source_feature"):
+        validate_config(mismatched)
+
+    unsupported = copy.deepcopy(main)
+    unsupported["model"]["teacher"]["feature_source"] = "stride8_decoder_block_after_bottleneck"
+    unsupported["tokenizer"]["source_feature"] = "stride8_decoder_block_after_bottleneck"
+    with pytest.raises(ValueError, match="feature_source"):
+        validate_config(unsupported)
+
+    with pytest.raises(ValueError, match="reserved for the V1 source ablation"):
+        canonical_config("c1", feature_source="decoder_stride8")
 
 
 def test_config_rejects_unknown_root_and_nested_fields() -> None:
@@ -219,6 +257,7 @@ def test_campaign_plan_orders_stages_settings_and_defers_unknown_datasets(tmp_pa
         ks=(2, 5, 10),
         synthetic=True,
         smoke_updates=2,
+        share_stages=False,
     )
     plan = validate_campaign_plan(plan_path)
     experiments = plan["experiments"]
@@ -270,6 +309,7 @@ def test_campaign_plan_records_manifest_hashes_and_baseline_launches(tmp_path: P
         teacher_source_repo=str(tmp_path / "official-mednext"),
         teacher_source_commit="0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba",
         include_secondary=False, include_baselines=True,
+        share_stages=False,
     )
     plan = validate_campaign_plan(plan_path)
     cross = [item for item in plan["cross_evaluation"] if item.get("target_dataset") == "mnms"]
@@ -383,6 +423,7 @@ def test_campaign_validation_is_not_execution_and_selected_synthetic_setting_exe
     plan_path = create_campaign_plan(
         out=tmp_path / "campaign", datasets=("acdc",), protocols=("A",), ks=(5,),
         include_secondary=False, include_baselines=False, synthetic=True, smoke_updates=1,
+        share_stages=False,
     )
     not_run = execute_campaign(plan_path, setting="c0")
     assert not_run["status"] == "PLAN_VALIDATED_NOT_RUN"
@@ -446,6 +487,7 @@ def test_generated_mednext_baseline_command_dispatches_through_train_cli(
     plan_path = create_campaign_plan(
         out=tmp_path / "campaign", datasets=("acdc",), protocols=("A",), ks=(5,),
         include_secondary=False, include_baselines=True, synthetic=True, smoke_updates=1,
+        share_stages=False,  # Preserve the independent historical baseline launcher contract.
     )
     from self_audit.candidate_q3d import baselines
     from train import main as train_main

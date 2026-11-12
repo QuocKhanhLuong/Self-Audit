@@ -211,6 +211,7 @@
     "teacher": {
       "architecture": "mednext_l_k3",
       "feature_channels": 256,
+      "feature_source": "encoder_stride8",
       "feature_stride": 8,
       "freeze_joint": true,
       "heads": [
@@ -290,7 +291,7 @@
     "maximum_dead_code_fraction": 0.25,
     "minimum_class_codes": 4,
     "minimum_perplexity": 32.0,
-    "source_feature": "stride8_decoder_block_after_bottleneck",
+    "source_feature": "encoder_stride8",
     "temperature": 0.1,
     "usage_window_updates": 200
   },

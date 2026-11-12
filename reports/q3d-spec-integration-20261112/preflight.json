@@ -1,0 +1,875 @@
+{
+  "clinical_gates": {
+    "reason": "P0 reports geometry and TRAIN-GT residual diagnostics only; it does not certify clinical validity",
+    "status": "NOT_RUN"
+  },
+  "config_path": "/Users/alvinluong/Self-Audit/configs/candidate_q3d/v1.json",
+  "config_sha256": "7011d2149fc02cdeb19cbb76b1f6cfe76ae52c5bc52b3e0206bbc038b87f6826",
+  "config_validation": {
+    "arm": "v1",
+    "dataset": "acdc",
+    "k": 5,
+    "protocol": "A",
+    "schema": "self_audit.candidate_q3d.v1",
+    "status": "PASS"
+  },
+  "datasets": {
+    "acdc": {
+      "configured_status": "NOT_RUN",
+      "labeled_train_stage4_gt_coverage": {
+        "label_scope": "L only; no U, DEV or TEST labels",
+        "reason": "TRAIN manifest path or SHA-256 is not declared",
+        "status": "NOT_RUN"
+      },
+      "reason": "TRAIN manifest path or SHA-256 is not declared",
+      "status": "NOT_RUN"
+    },
+    "mnms": {
+      "labeled_train_stage4_gt_coverage": {
+        "label_scope": "L only; no U, DEV or TEST labels",
+        "reason": "no TRAIN manifest is declared",
+        "status": "NOT_RUN"
+      },
+      "reason": "no TRAIN manifest is declared",
+      "status": "NOT_RUN"
+    }
+  },
+  "evidence_boundary": "software and declared TRAIN manifest diagnostics only; no training, GPU, DEV/TEST or clinical gate",
+  "generated_at_utc": "2026-11-12T07:39:06.381268+00:00",
+  "gpu_diagnostics": {
+    "status": "NOT_RUN"
+  },
+  "near_far_sdf": {
+    "legacy_a3d_teacher_loss_uses_near_far": false,
+    "q3d_teacher_loss": {
+      "alpha": 0.5,
+      "near_mm": 2.5,
+      "radius_mm": 5.0,
+      "source": "/Users/alvinluong/Self-Audit/self_audit/candidate_q3d/losses.py",
+      "uses_balanced_near_far": true
+    },
+    "status": "IMPLEMENTED_IN_Q3D_SOURCE"
+  },
+  "readiness_reasons": [
+    "Q3D config does not declare the exact pinned MedNeXt source and commit",
+    "compatible hash-pinned teacher weights are unavailable",
+    "one or more dataset TRAIN geometry/GT diagnostics are NOT_RUN",
+    "one or more dataset L-only S4 GT class coverage diagnostics are NOT_RUN"
+  ],
+  "report_status": "READ_ONLY_DIAGNOSTICS_COMPLETE",
+  "schema": "self_audit.candidate_q3d.p0_preflight.v1",
+  "status": "NOT_READY",
+  "student_parameters": {
+    "maximum_parameters": 10000000,
+    "parameter_count": 3132713,
+    "source": "CandidateQ3DStudent instantiated from the validated nested config; no forward run",
+    "stage4_grid_phase": {
+      "offset_zyx": [
+        0,
+        0,
+        0
+      ],
+      "step_zyx": [
+        1,
+        16,
+        16
+      ]
+    },
+    "stage4_grid_phase_reason": null,
+    "stage4_grid_phase_status": "PASS",
+    "status": "PASS",
+    "trainable_parameter_count": 3132713,
+    "within_budget": true
+  },
+  "teacher_feature": {
+    "actual_module": null,
+    "expected_module_by_adapter_contract": {
+      "stride16": "bottleneck",
+      "stride4": "dec_block_2 (ablation)",
+      "stride8": "enc_block_3 / x_res_3 (main)"
+    },
+    "feature_channels": null,
+    "official_source_inventory": {
+      "expected_commit": "0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba",
+      "factory": "nnunet_mednext.create_mednext_v1",
+      "feature_source": {
+        "actual_module": "forward_with_features[0][3]",
+        "channels": 256,
+        "feature_index": 3,
+        "features_api": "native_mednext_v1_sequence",
+        "input_padding": "high_side_replicate_no_phase_shift",
+        "name": "encoder_stride8",
+        "representation": "x_res_3",
+        "requested_alias": "encoder_stride8"
+      },
+      "network": {
+        "down_blocks": [
+          {
+            "main": {
+              "downsample": {
+                "dilation_zyx": [
+                  1,
+                  1,
+                  1
+                ],
+                "groups": 32,
+                "in_channels": 32,
+                "kernel_zyx": [
+                  3,
+                  3,
+                  3
+                ],
+                "module": "Conv3d",
+                "out_channels": 32,
+                "padding_zyx": [
+                  1,
+                  1,
+                  1
+                ],
+                "phase_native": {
+                  "offset_zyx": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "step_zyx": [
+                    2,
+                    2,
+                    2
+                  ]
+                },
+                "stride_zyx": [
+                  2,
+                  2,
+                  2
+                ]
+              },
+              "expansion": {
+                "dilation_zyx": [
+                  1,
+                  1,
+                  1
+                ],
+                "groups": 1,
+                "in_channels": 32,
+                "kernel_zyx": [
+                  1,
+                  1,
+                  1
+                ],
+                "module": "Conv3d",
+                "out_channels": 128,
+                "padding_zyx": [
+                  0,
+                  0,
+                  0
+                ],
+                "phase_native": {
+                  "offset_zyx": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "step_zyx": [
+                    2,
+                    2,
+                    2
+                  ]
+                },
+                "stride_zyx": [
+                  1,
+                  1,
+                  1
+                ]
+              },
+              "phase_native": {
+                "offset_zyx": [
+                  0,
+                  0,
+                  0
+                ],
+                "step_zyx": [
+                  2,
+                  2,
+                  2
+                ]
+              },
+              "projection": {
+                "dilation_zyx": [
+                  1,
+                  1,
+                  1
+                ],
+                "groups": 1,
+                "in_channels": 128,
+                "kernel_zyx": [
+                  1,
+                  1,
+                  1
+                ],
+                "module": "Conv3d",
+                "out_channels": 64,
+                "padding_zyx": [
+                  0,
+                  0,
+                  0
+                ],
+                "phase_native": {
+                  "offset_zyx": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "step_zyx": [
+                    2,
+                    2,
+                    2
+                  ]
+                },
+                "stride_zyx": [
+                  1,
+                  1,
+                  1
+                ]
+              }
+            },
+            "name": "down_0",
+            "phase_match": true,
+            "residual": {
+              "dilation_zyx": [
+                1,
+                1,
+                1
+              ],
+              "groups": 1,
+              "in_channels": 32,
+              "kernel_zyx": [
+                1,
+                1,
+                1
+              ],
+              "module": "Conv3d",
+              "out_channels": 64,
+              "padding_zyx": [
+                0,
+                0,
+                0
+              ],
+              "phase_native": {
+                "offset_zyx": [
+                  0,
+                  0,
+                  0
+                ],
+                "step_zyx": [
+                  2,
+                  2,
+                  2
+                ]
+              },
+              "stride_zyx": [
+                2,
+                2,
+                2
+              ]
+            }
+          },
+          {
+            "main": {
+              "downsample": {
+                "dilation_zyx": [
+                  1,
+                  1,
+                  1
+                ],
+                "groups": 64,
+                "in_channels": 64,
+                "kernel_zyx": [
+                  3,
+                  3,
+                  3
+                ],
+                "module": "Conv3d",
+                "out_channels": 64,
+                "padding_zyx": [
+                  1,
+                  1,
+                  1
+                ],
+                "phase_native": {
+                  "offset_zyx": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "step_zyx": [
+                    4,
+                    4,
+                    4
+                  ]
+                },
+                "stride_zyx": [
+                  2,
+                  2,
+                  2
+                ]
+              },
+              "expansion": {
+                "dilation_zyx": [
+                  1,
+                  1,
+                  1
+                ],
+                "groups": 1,
+                "in_channels": 64,
+                "kernel_zyx": [
+                  1,
+                  1,
+                  1
+                ],
+                "module": "Conv3d",
+                "out_channels": 512,
+                "padding_zyx": [
+                  0,
+                  0,
+                  0
+                ],
+                "phase_native": {
+                  "offset_zyx": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "step_zyx": [
+                    4,
+                    4,
+                    4
+                  ]
+                },
+                "stride_zyx": [
+                  1,
+                  1,
+                  1
+                ]
+              },
+              "phase_native": {
+                "offset_zyx": [
+                  0,
+                  0,
+                  0
+                ],
+                "step_zyx": [
+                  4,
+                  4,
+                  4
+                ]
+              },
+              "projection": {
+                "dilation_zyx": [
+                  1,
+                  1,
+                  1
+                ],
+                "groups": 1,
+                "in_channels": 512,
+                "kernel_zyx": [
+                  1,
+                  1,
+                  1
+                ],
+                "module": "Conv3d",
+                "out_channels": 128,
+                "padding_zyx": [
+                  0,
+                  0,
+                  0
+                ],
+                "phase_native": {
+                  "offset_zyx": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "step_zyx": [
+                    4,
+                    4,
+                    4
+                  ]
+                },
+                "stride_zyx": [
+                  1,
+                  1,
+                  1
+                ]
+              }
+            },
+            "name": "down_1",
+            "phase_match": true,
+            "residual": {
+              "dilation_zyx": [
+                1,
+                1,
+                1
+              ],
+              "groups": 1,
+              "in_channels": 64,
+              "kernel_zyx": [
+                1,
+                1,
+                1
+              ],
+              "module": "Conv3d",
+              "out_channels": 128,
+              "padding_zyx": [
+                0,
+                0,
+                0
+              ],
+              "phase_native": {
+                "offset_zyx": [
+                  0,
+                  0,
+                  0
+                ],
+                "step_zyx": [
+                  4,
+                  4,
+                  4
+                ]
+              },
+              "stride_zyx": [
+                2,
+                2,
+                2
+              ]
+            }
+          },
+          {
+            "main": {
+              "downsample": {
+                "dilation_zyx": [
+                  1,
+                  1,
+                  1
+                ],
+                "groups": 128,
+                "in_channels": 128,
+                "kernel_zyx": [
+                  3,
+                  3,
+                  3
+                ],
+                "module": "Conv3d",
+                "out_channels": 128,
+                "padding_zyx": [
+                  1,
+                  1,
+                  1
+                ],
+                "phase_native": {
+                  "offset_zyx": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "step_zyx": [
+                    8,
+                    8,
+                    8
+                  ]
+                },
+                "stride_zyx": [
+                  2,
+                  2,
+                  2
+                ]
+              },
+              "expansion": {
+                "dilation_zyx": [
+                  1,
+                  1,
+                  1
+                ],
+                "groups": 1,
+                "in_channels": 128,
+                "kernel_zyx": [
+                  1,
+                  1,
+                  1
+                ],
+                "module": "Conv3d",
+                "out_channels": 1024,
+                "padding_zyx": [
+                  0,
+                  0,
+                  0
+                ],
+                "phase_native": {
+                  "offset_zyx": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "step_zyx": [
+                    8,
+                    8,
+                    8
+                  ]
+                },
+                "stride_zyx": [
+                  1,
+                  1,
+                  1
+                ]
+              },
+              "phase_native": {
+                "offset_zyx": [
+                  0,
+                  0,
+                  0
+                ],
+                "step_zyx": [
+                  8,
+                  8,
+                  8
+                ]
+              },
+              "projection": {
+                "dilation_zyx": [
+                  1,
+                  1,
+                  1
+                ],
+                "groups": 1,
+                "in_channels": 1024,
+                "kernel_zyx": [
+                  1,
+                  1,
+                  1
+                ],
+                "module": "Conv3d",
+                "out_channels": 256,
+                "padding_zyx": [
+                  0,
+                  0,
+                  0
+                ],
+                "phase_native": {
+                  "offset_zyx": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "step_zyx": [
+                    8,
+                    8,
+                    8
+                  ]
+                },
+                "stride_zyx": [
+                  1,
+                  1,
+                  1
+                ]
+              }
+            },
+            "name": "down_2",
+            "phase_match": true,
+            "residual": {
+              "dilation_zyx": [
+                1,
+                1,
+                1
+              ],
+              "groups": 1,
+              "in_channels": 128,
+              "kernel_zyx": [
+                1,
+                1,
+                1
+              ],
+              "module": "Conv3d",
+              "out_channels": 256,
+              "padding_zyx": [
+                0,
+                0,
+                0
+              ],
+              "phase_native": {
+                "offset_zyx": [
+                  0,
+                  0,
+                  0
+                ],
+                "step_zyx": [
+                  8,
+                  8,
+                  8
+                ]
+              },
+              "stride_zyx": [
+                2,
+                2,
+                2
+              ]
+            }
+          },
+          {
+            "main": {
+              "downsample": {
+                "dilation_zyx": [
+                  1,
+                  1,
+                  1
+                ],
+                "groups": 256,
+                "in_channels": 256,
+                "kernel_zyx": [
+                  3,
+                  3,
+                  3
+                ],
+                "module": "Conv3d",
+                "out_channels": 256,
+                "padding_zyx": [
+                  1,
+                  1,
+                  1
+                ],
+                "phase_native": {
+                  "offset_zyx": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "step_zyx": [
+                    16,
+                    16,
+                    16
+                  ]
+                },
+                "stride_zyx": [
+                  2,
+                  2,
+                  2
+                ]
+              },
+              "expansion": {
+                "dilation_zyx": [
+                  1,
+                  1,
+                  1
+                ],
+                "groups": 1,
+                "in_channels": 256,
+                "kernel_zyx": [
+                  1,
+                  1,
+                  1
+                ],
+                "module": "Conv3d",
+                "out_channels": 2048,
+                "padding_zyx": [
+                  0,
+                  0,
+                  0
+                ],
+                "phase_native": {
+                  "offset_zyx": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "step_zyx": [
+                    16,
+                    16,
+                    16
+                  ]
+                },
+                "stride_zyx": [
+                  1,
+                  1,
+                  1
+                ]
+              },
+              "phase_native": {
+                "offset_zyx": [
+                  0,
+                  0,
+                  0
+                ],
+                "step_zyx": [
+                  16,
+                  16,
+                  16
+                ]
+              },
+              "projection": {
+                "dilation_zyx": [
+                  1,
+                  1,
+                  1
+                ],
+                "groups": 1,
+                "in_channels": 2048,
+                "kernel_zyx": [
+                  1,
+                  1,
+                  1
+                ],
+                "module": "Conv3d",
+                "out_channels": 512,
+                "padding_zyx": [
+                  0,
+                  0,
+                  0
+                ],
+                "phase_native": {
+                  "offset_zyx": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "step_zyx": [
+                    16,
+                    16,
+                    16
+                  ]
+                },
+                "stride_zyx": [
+                  1,
+                  1,
+                  1
+                ]
+              }
+            },
+            "name": "down_3",
+            "phase_match": true,
+            "residual": {
+              "dilation_zyx": [
+                1,
+                1,
+                1
+              ],
+              "groups": 1,
+              "in_channels": 256,
+              "kernel_zyx": [
+                1,
+                1,
+                1
+              ],
+              "module": "Conv3d",
+              "out_channels": 512,
+              "padding_zyx": [
+                0,
+                0,
+                0
+              ],
+              "phase_native": {
+                "offset_zyx": [
+                  0,
+                  0,
+                  0
+                ],
+                "step_zyx": [
+                  16,
+                  16,
+                  16
+                ]
+              },
+              "stride_zyx": [
+                2,
+                2,
+                2
+              ]
+            }
+          }
+        ],
+        "iterative_checkpoint": {
+          "checkpoints_each_child": true,
+          "dec_block_3_child_count": 8,
+          "dec_block_3_container_forward_bypassed": true,
+          "dec_block_3_last_child_type": "MedNeXtBlock",
+          "dec_block_3_type": "Sequential",
+          "hook_target_for_dec_block_3_output": "dec_block_3.7",
+          "iterates_sequential_children": true,
+          "outside_block_checkpointing": true,
+          "source_file": "/private/tmp/q3d-mednext-phase-pin/nnunet_mednext/network_architecture/mednextv1/MedNextV1.py"
+        },
+        "status": "ACTUAL_MODULES_INSPECTED",
+        "stem": {
+          "dilation_zyx": [
+            1,
+            1,
+            1
+          ],
+          "groups": 1,
+          "in_channels": 1,
+          "kernel_zyx": [
+            1,
+            1,
+            1
+          ],
+          "module": "Conv3d",
+          "out_channels": 32,
+          "padding_zyx": [
+            0,
+            0,
+            0
+          ],
+          "phase_native": {
+            "offset_zyx": [
+              0,
+              0,
+              0
+            ],
+            "step_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          "stride_zyx": [
+            1,
+            1,
+            1
+          ]
+        },
+        "teacher_input_padding": "high_side_replicate_no_phase_shift",
+        "x_res_3_phase_native": {
+          "offset_zyx": [
+            0,
+            0,
+            0
+          ],
+          "step_zyx": [
+            8,
+            8,
+            8
+          ]
+        }
+      },
+      "source_commit": "0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba",
+      "source_repo": "/private/tmp/q3d-mednext-phase-pin",
+      "source_status": "CLEAN_GIT_CHECKOUT",
+      "status": "PINNED_SOURCE_AND_ACTUAL_MODULES_INSPECTED",
+      "verified_source_files": [
+        "https://github.com/MIC-DKFZ/MedNeXt/blob/0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba/nnunet_mednext/network_architecture/mednextv1/MedNextV1.py",
+        "https://github.com/MIC-DKFZ/MedNeXt/blob/0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba/nnunet_mednext/network_architecture/mednextv1/blocks.py",
+        "https://github.com/MIC-DKFZ/MedNeXt/blob/0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba/nnunet_mednext/network_architecture/mednextv1/create_mednext_v1.py"
+      ]
+    },
+    "requested_backbone": "mednext_l_k3",
+    "requested_source": "encoder_stride8",
+    "source_reason": "official source inventory is verified, but the Q3D config does not declare the exact pinned local source path and commit",
+    "source_status": "NOT_RUN",
+    "weights": {
+      "overlap_acdc": null,
+      "overlap_mnms": null,
+      "path": null,
+      "pretraining_dataset": null,
+      "sha256": null,
+      "status": "NOT_RUN_NO_WEIGHTS_PATH_OR_SHA"
+    }
+  }
+}

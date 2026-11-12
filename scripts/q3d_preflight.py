@@ -13,13 +13,17 @@ import hashlib
 import inspect
 import json
 import math
+import os
 import statistics
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+PINNED_MEDNEXT_COMMIT = "0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba"
+PINNED_MEDNEXT_SOURCE = Path(os.environ.get("Q3D_OFFICIAL_MEDNEXT_SOURCE", "/tmp/q3d-mednext-phase-pin"))
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
@@ -87,6 +91,7 @@ def _manifest_diagnostics(
     manifest_spec: Any,
     *,
     config_path: Path,
+    student_phase: Any = None,
 ) -> dict[str, Any]:
     if not isinstance(manifest_spec, dict):
         return {"status": "NOT_RUN", "reason": "no TRAIN manifest is declared"}
@@ -175,6 +180,9 @@ def _manifest_diagnostics(
         "r_sv_r_m_on_labeled_train_ground_truth": _ground_truth_physiology(
             manifest_path, actual_sha,
         ),
+        "labeled_train_stage4_gt_coverage": _ground_truth_stage4_coverage(
+            manifest_path, actual_sha, student_phase,
+        ),
     }
 
 
@@ -245,6 +253,288 @@ def torch_bincount(labels: Any) -> list[int]:
     return [int(value) for value in torch.bincount(labels.reshape(-1).long(), minlength=4).tolist()]
 
 
+def _phase_json(phase: Any) -> dict[str, list[int | float]]:
+    """Serialize the geometry API phase without rounding half-voxel offsets."""
+
+    if not isinstance(phase, (tuple, list)) or len(phase) != 2:
+        raise ValueError("grid phase must be a (step_zyx, offset_zyx) pair")
+    step, offset = phase
+    if not isinstance(step, (tuple, list)) or not isinstance(offset, (tuple, list)) \
+            or len(step) != 3 or len(offset) != 3:
+        raise ValueError("grid phase step and offset must each have three axes")
+
+    def axis(values: Any) -> list[int | float]:
+        output: list[int | float] = []
+        for raw in values:
+            value = float(raw)
+            if not math.isfinite(value):
+                raise ValueError("grid phase contains a non-finite value")
+            output.append(int(value) if value.is_integer() else value)
+        return output
+
+    return {"step_zyx": axis(step), "offset_zyx": axis(offset)}
+
+
+def _phase_matches(first: Any, second: Any) -> bool:
+    left = _phase_json(first)
+    right = _phase_json(second)
+    return left == right
+
+
+def _phase_tuple_from_json(value: Any) -> tuple[tuple[int, ...], tuple[float, ...]] | None:
+    if not isinstance(value, dict) or not isinstance(value.get("step_zyx"), list) \
+            or not isinstance(value.get("offset_zyx"), list):
+        return None
+    if len(value["step_zyx"]) != 3 or len(value["offset_zyx"]) != 3:
+        return None
+    return (
+        tuple(int(item) for item in value["step_zyx"]),
+        tuple(float(item) for item in value["offset_zyx"]),
+    )
+
+
+def _conv3d_inventory(module: Any, *, name: str, phase: Any) -> dict[str, Any]:
+    import torch
+
+    if not isinstance(module, torch.nn.Conv3d):
+        raise TypeError(f"{name} must be an actual Conv3d module")
+    return {
+        "module": type(module).__name__,
+        "kernel_zyx": [int(value) for value in module.kernel_size],
+        "stride_zyx": [int(value) for value in module.stride],
+        "padding_zyx": [int(value) for value in module.padding],
+        "dilation_zyx": [int(value) for value in module.dilation],
+        "groups": int(module.groups),
+        "in_channels": int(module.in_channels),
+        "out_channels": int(module.out_channels),
+        "phase_native": _phase_json(phase),
+    }
+
+
+def _mednext_network_inventory(teacher: Any, *, source_repo: Path) -> dict[str, Any]:
+    """Inspect actual pinned MedNeXt modules and source-defined checkpoint dispatch."""
+
+    from self_audit.candidate_q3d.alignment import grid_phase, teacher_grid_phase
+
+    model = getattr(getattr(teacher, "encoder", None), "model", None)
+    if model is None:
+        raise ValueError("pinned MedNeXt teacher has no loaded encoder model")
+    stem = getattr(model, "stem", None)
+    if stem is None:
+        raise ValueError("pinned MedNeXt model has no stem module")
+    stem_phase = grid_phase([stem])
+    result: dict[str, Any] = {
+        "status": "ACTUAL_MODULES_INSPECTED",
+        "stem": _conv3d_inventory(stem, name="stem", phase=stem_phase),
+        "down_blocks": [],
+    }
+    main_chain = [stem]
+    encoder_stride8_chain = None
+    for index in range(4):
+        block_name = f"down_{index}"
+        block = getattr(model, block_name, None)
+        main_conv = getattr(block, "conv1", None)
+        expansion_conv = getattr(block, "conv2", None)
+        projection_conv = getattr(block, "conv3", None)
+        residual_conv = getattr(block, "res_conv", None)
+        if any(module is None for module in (main_conv, expansion_conv, projection_conv, residual_conv)):
+            raise ValueError(f"pinned MedNeXt {block_name} lacks a main or residual Conv3d module")
+        main_chain_after = [*main_chain, main_conv, expansion_conv, projection_conv]
+        residual_chain = [*main_chain, residual_conv]
+        main_phase = grid_phase(main_chain_after)
+        residual_phase = grid_phase(residual_chain)
+        phases_match = _phase_matches(main_phase, residual_phase)
+        if not phases_match:
+            raise ValueError(f"pinned MedNeXt {block_name} main and residual phases differ")
+        result["down_blocks"].append({
+            "name": block_name,
+            "main": {
+                "downsample": _conv3d_inventory(
+                    main_conv, name=f"{block_name}.conv1",
+                    phase=grid_phase([*main_chain, main_conv]),
+                ),
+                "expansion": _conv3d_inventory(
+                    expansion_conv, name=f"{block_name}.conv2",
+                    phase=grid_phase([*main_chain, main_conv, expansion_conv]),
+                ),
+                "projection": _conv3d_inventory(
+                    projection_conv, name=f"{block_name}.conv3", phase=main_phase,
+                ),
+                "phase_native": _phase_json(main_phase),
+            },
+            "residual": _conv3d_inventory(
+                residual_conv, name=f"{block_name}.res_conv", phase=residual_phase,
+            ),
+            "phase_match": phases_match,
+        })
+        main_chain = main_chain_after
+        if index == 2:
+            encoder_stride8_chain = tuple(main_chain)
+
+    iterative = getattr(model, "iterative_checkpoint", None)
+    if not callable(iterative):
+        raise ValueError("pinned MedNeXt has no iterative_checkpoint method")
+    source_file = inspect.getsourcefile(iterative)
+    if source_file is None:
+        raise ValueError("pinned MedNeXt iterative_checkpoint source is unavailable")
+    method_path = Path(source_file).resolve()
+    try:
+        method_path.relative_to(source_repo.resolve())
+    except ValueError:
+        raise ValueError("iterative_checkpoint resolved outside the pinned source checkout") from None
+    method_source = inspect.getsource(iterative)
+    loops_children = "for l in sequential_block:" in method_source
+    checkpoints_children = "checkpoint.checkpoint(l, x, self.dummy_tensor)" in method_source
+    dec_block = getattr(model, "dec_block_3", None)
+    children = tuple(dec_block.children()) if dec_block is not None else ()
+    outside = bool(getattr(model, "outside_block_checkpointing", False))
+    if not outside or not loops_children or not checkpoints_children or not children:
+        raise ValueError("pinned MedNeXt child-wise checkpoint behavior did not match the inspected source")
+    result["iterative_checkpoint"] = {
+        "source_file": str(method_path),
+        "outside_block_checkpointing": outside,
+        "iterates_sequential_children": loops_children,
+        "checkpoints_each_child": checkpoints_children,
+        "dec_block_3_type": type(dec_block).__name__,
+        "dec_block_3_child_count": len(children),
+        "dec_block_3_last_child_type": type(children[-1]).__name__,
+        "dec_block_3_container_forward_bypassed": True,
+        "hook_target_for_dec_block_3_output": f"dec_block_3.{len(children) - 1}",
+    }
+    if encoder_stride8_chain is None:
+        raise ValueError("pinned MedNeXt encoder stride-8 path is incomplete")
+    x_res_3_chain_phase = grid_phase(encoder_stride8_chain)
+    x_res_3_phase = teacher_grid_phase(teacher, "encoder_stride8", synthetic=False)
+    if not _phase_matches(x_res_3_chain_phase, x_res_3_phase):
+        raise ValueError("teacher feature-phase helper disagrees with the actual encoder chain")
+    result["x_res_3_phase_native"] = _phase_json(x_res_3_phase)
+    result["teacher_input_padding"] = "high_side_replicate_no_phase_shift"
+    return result
+
+
+def _verified_pinned_source(source_path: Path | None = None) -> tuple[Path | None, str | None]:
+    """Accept only a clean Git checkout at the exact pinned commit."""
+
+    source_repo = (source_path or PINNED_MEDNEXT_SOURCE).resolve()
+    if not source_repo.is_dir():
+        return None, "pinned MedNeXt source checkout is unavailable"
+    head = subprocess.run(
+        ["git", "-C", str(source_repo), "rev-parse", "HEAD"],
+        check=False, capture_output=True, text=True,
+    )
+    if head.returncode != 0 or head.stdout.strip() != PINNED_MEDNEXT_COMMIT:
+        actual = head.stdout.strip() if head.returncode == 0 else "unavailable"
+        return None, f"pinned MedNeXt commit mismatch: expected {PINNED_MEDNEXT_COMMIT}, got {actual}"
+    dirty = subprocess.run(
+        ["git", "-C", str(source_repo), "status", "--porcelain"],
+        check=False, capture_output=True, text=True,
+    )
+    if dirty.returncode != 0 or dirty.stdout.strip():
+        return None, "pinned MedNeXt source checkout is not clean"
+    return source_repo, None
+
+
+def _stage4_coverage_record(
+    class_counts: list[int], *, frame_count: int, patient_count: int,
+) -> dict[str, Any]:
+    total_cells = sum(int(value) for value in class_counts)
+    if len(class_counts) != 4 or total_cells <= 0:
+        return {
+            "status": "NOT_RUN",
+            "reason": "no valid L-labeled S4 cells were pooled",
+            "label_scope": "L only",
+        }
+    class_names = ("BG", "RV", "MYO", "LV")
+    fractions = [int(value) / total_cells for value in class_counts]
+    myo_fraction = fractions[2]
+    myo_open = myo_fraction < 0.02
+    return {
+        "status": "MEASURED_TRAIN_L_GROUND_TRUTH",
+        "label_scope": "L only; no U, DEV or TEST labels",
+        "class_order": list(class_names),
+        "total_s4_cells": total_cells,
+        "labeled_frame_count": int(frame_count),
+        "labeled_patient_count": int(patient_count),
+        "class_counts": {name: int(value) for name, value in zip(class_names, class_counts)},
+        "class_fractions": {name: float(value) for name, value in zip(class_names, fractions)},
+        "tie_break_class_id": 0,
+        "tie_break_rule": "argmax chooses the lowest class index",
+        "myo_review": {
+            "status": "OPEN" if myo_open else "CLEAR",
+            "threshold_fraction": 0.02,
+            "observed_fraction": float(myo_fraction),
+            "threshold_changed": False,
+            "reason": "MYO support is below 2%; review class coverage and balancing before P2"
+            if myo_open else None,
+        },
+    }
+
+
+def _gt_probabilities_to_counts(probabilities: Any) -> list[int]:
+    import torch
+
+    if not isinstance(probabilities, torch.Tensor) or probabilities.ndim != 5 \
+            or probabilities.shape[0] != 1 or probabilities.shape[1] != 4:
+        raise ValueError("pooled L GT probabilities must have shape [1,4,D,h,w]")
+    if not torch.isfinite(probabilities).all() or bool((probabilities < 0).any()):
+        raise ValueError("pooled L GT probabilities must be finite and nonnegative")
+    sums = probabilities.sum(dim=1)
+    if not torch.allclose(sums, torch.ones_like(sums), atol=1e-5, rtol=1e-5):
+        raise ValueError("pooled L GT class fractions must sum to one for every S4 cell")
+    winners = probabilities.argmax(dim=1)
+    return torch_bincount(winners)
+
+
+def _ground_truth_stage4_coverage(
+    manifest_path: Path, manifest_sha: str, student_phase: Any,
+) -> dict[str, Any]:
+    """Measure phase-correct argmax class fractions from labeled TRAIN L only."""
+
+    if student_phase is None:
+        return {
+            "status": "NOT_RUN",
+            "reason": "verified student S4 phase is unavailable",
+            "label_scope": "L only",
+        }
+    try:
+        import torch
+        from torch.nn import functional as F
+
+        from self_audit.candidate_a3d.data import CandidateA3DData
+        from self_audit.candidate_q3d.alignment import pool_native_cells
+
+        data = CandidateA3DData(manifest_path, manifest_sha, synthetic=False)
+        class_counts = [0, 0, 0, 0]
+        frame_count = 0
+        patients: set[str] = set()
+        for key in data.labeled_frame_keys():
+            _image, labels, _geometry, metadata = data.load_labeled_frame(key)
+            labels = torch.as_tensor(labels).long()
+            if labels.ndim != 4 or labels.shape[0] != 1:
+                raise ValueError("L mask must have native [1,D,H,W] shape")
+            labels = labels[0]
+            if bool((labels < 0).any()) or bool((labels > 3).any()):
+                raise ValueError("L mask contains class IDs outside BG/RV/MYO/LV")
+            native_shape = tuple(int(value) for value in labels.shape)
+            one_hot = F.one_hot(labels, num_classes=4).permute(3, 0, 1, 2).unsqueeze(0)
+            class_fractions = pool_native_cells(
+                one_hot.to(dtype=torch.float32), native_shape, student_phase,
+            )
+            frame_counts = _gt_probabilities_to_counts(class_fractions)
+            class_counts = [left + right for left, right in zip(class_counts, frame_counts)]
+            frame_count += 1
+            patients.add(str(metadata["patient"]))
+        return _stage4_coverage_record(
+            class_counts, frame_count=frame_count, patient_count=len(patients),
+        )
+    except Exception as exc:
+        return {
+            "status": "NOT_RUN",
+            "reason": f"TRAIN L GT S4 coverage could not be measured: {type(exc).__name__}: {exc}",
+            "label_scope": "L only; no U, DEV or TEST labels",
+        }
+
+
 def _teacher_diagnostics(config: dict[str, Any]) -> dict[str, Any]:
     teacher_cfg = config.get("model", {}).get("teacher", {})
     pretrained = teacher_cfg.get("pretrained") if isinstance(teacher_cfg, dict) else None
@@ -266,23 +556,30 @@ def _teacher_diagnostics(config: dict[str, Any]) -> dict[str, Any]:
     else:
         weight_status = "HASH_VERIFIED_FILE_PRESENT"
 
-    source_name = "stride8" if teacher_cfg.get("feature_stride") == 8 else (
+    source_name = teacher_cfg.get("feature_source") or ("stride8" if teacher_cfg.get("feature_stride") == 8 else (
         "stride4" if teacher_cfg.get("feature_stride") == 4 else (
             "stride16" if teacher_cfg.get("feature_stride") == 16 else "stride8"
         )
-    )
+    ))
+    requested_source_path = _resolve_path(source_repo_value) or PINNED_MEDNEXT_SOURCE
     result: dict[str, Any] = {
         "requested_backbone": teacher_cfg.get("architecture"),
         "requested_source": source_name,
         "expected_module_by_adapter_contract": {
-            "stride4": "dec_block_2",
-            "stride8": "dec_block_3",
+            "stride4": "dec_block_2 (ablation)",
+            "stride8": "enc_block_3 / x_res_3 (main)",
             "stride16": "bottleneck",
         },
         "actual_module": None,
         "feature_channels": None,
         "source_status": "NOT_RUN",
         "source_reason": None,
+        "official_source_inventory": {
+            "status": "NOT_RUN",
+            "source_repo": str(requested_source_path.resolve()),
+            "expected_commit": PINNED_MEDNEXT_COMMIT,
+            "reason": None,
+        },
         "weights": {
             "path": str(weights_path) if weights_path else None,
             "sha256": weights_sha,
@@ -294,42 +591,69 @@ def _teacher_diagnostics(config: dict[str, Any]) -> dict[str, Any]:
     }
     if teacher_cfg.get("architecture") != "mednext_l_k3":
         result["source_reason"] = "selected arm has no MedNeXt teacher"
+        result["official_source_inventory"]["reason"] = result["source_reason"]
         return result
-    source_repo = _resolve_path(source_repo_value)
-    if source_repo is None or source_commit is None:
-        result["source_reason"] = "local MedNeXt source checkout and pinned commit are not declared"
-        return result
-    if not source_repo.is_dir():
-        result["source_reason"] = "declared local MedNeXt source checkout is not present"
-        result["source_repo"] = str(source_repo)
+    source_repo, source_reason = _verified_pinned_source(requested_source_path)
+    if source_repo is None:
+        result["source_reason"] = source_reason
+        result["official_source_inventory"]["reason"] = source_reason
         return result
 
-    # Architecture-only construction is permitted for module/channel inventory;
-    # the result remains explicitly untrained if a verified compatible weight
-    # file is unavailable. No forward, data, download or gate is run here.
+    # Construct only the exact pinned source on CPU with random initialization;
+    # no weights, forward pass, data, download, GPU, training or gate is run.
     from self_audit.candidate_a3d.teacher import build_teacher3d
     from self_audit.candidate_q3d.teacher_features import teacher_feature_source
 
     build_config = {
         "backbone": "mednext_l_k3",
         "source_repo": str(source_repo),
-        "source_commit": str(source_commit),
-        "weights": str(weights_path) if weights_path and weights_path.is_file() else None,
-        "weights_sha256": weights_sha if weights_path and weights_path.is_file() else None,
+        "source_commit": PINNED_MEDNEXT_COMMIT,
+        "weights": None,
+        "weights_sha256": None,
         "input_channels": int(config.get("model", {}).get("student", {}).get("input_channels", 1)),
     }
     try:
         teacher, provenance = build_teacher3d(build_config, synthetic=False)
         details = teacher_feature_source(teacher, source_name)
+        network_inventory = _mednext_network_inventory(teacher, source_repo=source_repo)
     except Exception as exc:
-        result["source_status"] = "NOT_RUN"
-        result["source_reason"] = f"local module inventory failed closed: {type(exc).__name__}: {exc}"
+        reason = f"pinned source inventory failed closed: {type(exc).__name__}: {exc}"
+        result["source_reason"] = reason
+        result["official_source_inventory"].update({"status": "NOT_RUN", "reason": reason})
+        return result
+    official_inventory = {
+        "status": "PINNED_SOURCE_AND_ACTUAL_MODULES_INSPECTED",
+        "source_repo": str(source_repo),
+        "source_commit": provenance.get("backbone", {}).get("source_commit"),
+        "expected_commit": PINNED_MEDNEXT_COMMIT,
+        "source_status": "CLEAN_GIT_CHECKOUT",
+        "factory": provenance.get("backbone", {}).get("factory"),
+        "verified_source_files": provenance.get("backbone", {}).get("verified_source_files", []),
+        "feature_source": {
+            "name": details["source"],
+            "requested_alias": source_name,
+            "actual_module": details["module_name"],
+            "feature_index": details.get("feature_index"),
+            "representation": "x_res_3" if details.get("feature_index") == 3 else None,
+            "channels": details["channels"],
+            "features_api": details["features_api"],
+            "input_padding": details.get("input_padding"),
+        },
+        "network": network_inventory,
+    }
+    result["official_source_inventory"] = official_inventory
+    configured_source = _resolve_path(source_repo_value)
+    if configured_source != source_repo or source_commit != PINNED_MEDNEXT_COMMIT:
+        result["source_reason"] = (
+            "official source inventory is verified, but the Q3D config does not declare "
+            "the exact pinned local source path and commit"
+        )
         return result
     result.update({
         "source_status": "ACTUAL_LOCAL_MODULE_INSPECTED",
         "source_reason": None,
         "source_repo": str(source_repo),
-        "source_commit": provenance.get("backbone", {}).get("source_commit"),
+        "source_commit": PINNED_MEDNEXT_COMMIT,
         "actual_module": details["module_name"],
         "feature_channels": details["channels"],
         "features_api": details["features_api"],
@@ -347,17 +671,29 @@ def _student_parameter_diagnostics(config: dict[str, Any]) -> dict[str, Any]:
         }
     try:
         from self_audit.candidate_q3d.student import CandidateQ3DStudent
+        from self_audit.candidate_q3d.alignment import student_grid_phase
 
         model = CandidateQ3DStudent(config=config)
         total = sum(parameter.numel() for parameter in model.parameters())
         trainable = sum(parameter.numel() for parameter in model.parameters() if parameter.requires_grad)
         maximum = int(student_cfg.get("max_parameters", 10_000_000))
+        try:
+            phase = _phase_json(student_grid_phase(model))
+            phase_status = "PASS"
+            phase_reason = None
+        except Exception as exc:
+            phase = None
+            phase_status = "NOT_RUN"
+            phase_reason = f"student S4 phase probe failed: {type(exc).__name__}: {exc}"
         return {
             "status": "PASS" if total <= maximum else "NO_GO",
             "parameter_count": total,
             "trainable_parameter_count": trainable,
             "maximum_parameters": maximum,
             "within_budget": total <= maximum,
+            "stage4_grid_phase_status": phase_status,
+            "stage4_grid_phase": phase,
+            "stage4_grid_phase_reason": phase_reason,
             "source": "CandidateQ3DStudent instantiated from the validated nested config; no forward run",
         }
     except Exception as exc:
@@ -413,8 +749,20 @@ def build_report(config_path: Path) -> dict[str, Any]:
             },
             "near_far_sdf": _near_far_diagnostics(raw_config),
             "datasets": {
-                "acdc": {"status": "NOT_RUN", "reason": "Q-3D recipe failed validation"},
-                "mnms": {"status": "NOT_RUN", "reason": "Q-3D recipe failed validation"},
+                "acdc": {
+                    "status": "NOT_RUN", "reason": "Q-3D recipe failed validation",
+                    "labeled_train_stage4_gt_coverage": {
+                        "status": "NOT_RUN", "reason": "Q-3D recipe failed validation",
+                        "label_scope": "L only; no U, DEV or TEST labels",
+                    },
+                },
+                "mnms": {
+                    "status": "NOT_RUN", "reason": "Q-3D recipe failed validation",
+                    "labeled_train_stage4_gt_coverage": {
+                        "status": "NOT_RUN", "reason": "Q-3D recipe failed validation",
+                        "label_scope": "L only; no U, DEV or TEST labels",
+                    },
+                },
             },
             "student_parameters": _student_parameter_diagnostics(raw_config) if raw_config else {
                 "status": "NOT_RUN", "reason": "config JSON is unavailable or invalid",
@@ -427,22 +775,46 @@ def build_report(config_path: Path) -> dict[str, Any]:
     current_name = str(dataset_config.get("name", "unknown")).lower()
     manifests = dataset_config.get("manifests", {})
     train_manifest = manifests.get("train") if isinstance(manifests, dict) else None
+    teacher_feature = _teacher_diagnostics(config)
+    student_parameters = _student_parameter_diagnostics(config)
+    student_phase = None
+    if student_parameters.get("stage4_grid_phase_status") == "PASS":
+        student_phase = _phase_tuple_from_json(student_parameters.get("stage4_grid_phase"))
     datasets: dict[str, Any] = {}
     for name in ("acdc", "mnms"):
         if name == current_name:
             spec = train_manifest
         else:
             spec = None
-        datasets[name] = _manifest_diagnostics(name, spec, config_path=config_path)
-    teacher_feature = _teacher_diagnostics(config)
-    student_parameters = _student_parameter_diagnostics(config)
+        datasets[name] = _manifest_diagnostics(
+            name, spec, config_path=config_path, student_phase=student_phase,
+        )
+        if "labeled_train_stage4_gt_coverage" not in datasets[name]:
+            datasets[name]["labeled_train_stage4_gt_coverage"] = {
+                "status": "NOT_RUN",
+                "reason": datasets[name].get("reason", "TRAIN manifest diagnostics are unavailable"),
+                "label_scope": "L only; no U, DEV or TEST labels",
+            }
     readiness_reasons = []
+    if teacher_feature.get("official_source_inventory", {}).get("status") \
+            != "PINNED_SOURCE_AND_ACTUAL_MODULES_INSPECTED":
+        readiness_reasons.append("pinned MedNeXt source/module/phase inventory is NOT_RUN")
     if teacher_feature.get("source_status") != "ACTUAL_LOCAL_MODULE_INSPECTED":
-        readiness_reasons.append("actual MedNeXt feature module/channel inventory is NOT_RUN")
+        readiness_reasons.append("Q3D config does not declare the exact pinned MedNeXt source and commit")
     if teacher_feature.get("weights", {}).get("status") != "HASH_VERIFIED_FILE_PRESENT":
         readiness_reasons.append("compatible hash-pinned teacher weights are unavailable")
     if any(value.get("status") != "READ_ONLY_MANIFEST_DIAGNOSTICS" for value in datasets.values()):
         readiness_reasons.append("one or more dataset TRAIN geometry/GT diagnostics are NOT_RUN")
+    if student_parameters.get("stage4_grid_phase_status") != "PASS":
+        readiness_reasons.append("verified student S4 grid phase is NOT_RUN")
+    for value in datasets.values():
+        coverage = value.get("labeled_train_stage4_gt_coverage", {})
+        if coverage.get("status") != "MEASURED_TRAIN_L_GROUND_TRUTH":
+            readiness_reasons.append("one or more dataset L-only S4 GT class coverage diagnostics are NOT_RUN")
+            break
+        if coverage.get("myo_review", {}).get("status") == "OPEN":
+            readiness_reasons.append("MYO S4 coverage is OPEN for review before P2")
+            break
     if student_parameters.get("status") != "PASS":
         readiness_reasons.append("student parameter-budget diagnostic did not pass")
 

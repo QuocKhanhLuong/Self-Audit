@@ -49,11 +49,11 @@ def test_q3d_configs_are_nested_and_keep_real_provenance_not_run():
     assert validated["model"]["teacher"]["pretrained"]["provenance_status"] == "NOT_FOUND_OFFICIAL"
 
 
-def test_all_fourteen_recipes_select_declared_engine_effects():
+def test_all_fifteen_recipes_select_declared_engine_effects():
     from self_audit.candidate_q3d.engine import _student_arm
 
     recipes = sorted((ROOT / "configs/candidate_q3d").glob("*.json"))
-    assert len(recipes) == 14
+    assert len(recipes) == 15
     for path in recipes:
         config = validate_config(json.loads(path.read_text()))
         arm = config["arm"]
@@ -113,7 +113,8 @@ def test_train_dispatch_selects_only_declared_q3d_engine(monkeypatch):
     assert validator is sentinel_validate
 
 
-def test_q3d_cli_handoff_passes_validated_nested_config_without_patient_inputs(monkeypatch, tmp_path):
+@pytest.mark.parametrize("pinned", [False, True])
+def test_q3d_cli_handoff_passes_validated_nested_config_without_patient_inputs(monkeypatch, tmp_path, pinned):
     normalized = {
         "method": "candidate_q3d",
         "arm": "v1",
@@ -127,7 +128,12 @@ def test_q3d_cli_handoff_passes_validated_nested_config_without_patient_inputs(m
         received["validation_options"] = kwargs
         return normalized
 
-    def run(config, out, *, device, teacher, synthetic_gate_override):
+    def run(config, out, *, device, teacher, synthetic_gate_override, stage=None, stage_artifacts=None):
+        if pinned:
+            assert stage == "J"
+            assert stage_artifacts == {"T": {"manifest_path": "/tmp/T.artifact.json", "manifest_sha256": "a" * 64}}
+        else:
+            assert stage is None and stage_artifacts is None
         received.update(config=config, out=out, device=device,
                         teacher=teacher, synthetic_gate_override=synthetic_gate_override)
         return {"status": "SYNTHETIC_DISPATCHED"}
@@ -160,6 +166,9 @@ def test_q3d_cli_handoff_passes_validated_nested_config_without_patient_inputs(m
         synthetic=True,
         allow_full_run=False,
         device="cpu",
+        q3d_stage="J" if pinned else None,
+        q3d_stage_artifact=["T=/tmp/T.artifact.json"] if pinned else None,
+        q3d_stage_artifact_sha=["T=" + "a" * 64] if pinned else None,
     )
     parser = argparse.ArgumentParser()
     result = training_cli._train_q3d(args, parser, {

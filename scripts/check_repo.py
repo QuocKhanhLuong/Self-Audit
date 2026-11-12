@@ -12,6 +12,61 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+BASELINE_DOCS = {
+    "docs/baselines/CANDIDATE_A.md",
+    "docs/baselines/CANDIDATE_A3D.md",
+    "docs/baselines/DATA_PREPARATION.md",
+    "docs/baselines/EXPERIMENTS.md",
+    "docs/baselines/FEWSHOT.md",
+    "docs/baselines/METHOD.md",
+    "docs/baselines/MIGRATION.md",
+    "docs/baselines/NOVELTY.md",
+    "docs/baselines/RUNBOOK.md",
+    "docs/baselines/TEACHER_FREE_K8.md",
+    "docs/baselines/design/A1.tex",
+    "docs/baselines/design/A2.tex",
+    "docs/baselines/design/A3.tex",
+    "docs/baselines/design/A3D_SPEC.md",
+    "docs/baselines/design/A_CURRENT.tex",
+    "docs/baselines/design/README.md",
+}
+
+BASELINE_TESTS = {
+    "test_candidate_a3d_ablations.py",
+    "test_candidate_a3d_bank_codec.py",
+    "test_candidate_a3d_diagnostic.py",
+    "test_candidate_a3d_evaluation.py",
+    "test_candidate_a3d_k1.py",
+    "test_candidate_a3d_model.py",
+    "test_candidate_a3d_native_contract.py",
+    "test_candidate_a3d_pipeline.py",
+    "test_candidate_a3d_profile_cli.py",
+    "test_candidate_a3d_semi_data.py",
+    "test_candidate_a3d_semi_engine.py",
+    "test_candidate_a3d_semi_plan.py",
+    "test_candidate_a3d_semisupervised.py",
+    "test_candidate_a3d_teacher.py",
+    "test_candidate_a3d_teacher_checkpoint.py",
+    "test_candidate_a_ablations.py",
+    "test_candidate_a_bank_codec.py",
+    "test_candidate_a_campaign.py",
+    "test_candidate_a_campaign_report.py",
+    "test_candidate_a_data.py",
+    "test_candidate_a_evaluation.py",
+    "test_candidate_a_fewshot.py",
+    "test_candidate_a_k1.py",
+    "test_candidate_a_metrics.py",
+    "test_candidate_a_offload.py",
+    "test_candidate_a_offload_watcher.py",
+    "test_candidate_a_pipeline.py",
+    "test_candidate_a_retention.py",
+    "test_candidate_a_student.py",
+    "test_candidate_a_teacher.py",
+    "test_dataset_preparation.py",
+    "test_fewshot_manifest.py",
+    "test_preparation.py",
+}
+
 
 def _require(condition: bool, message: str) -> None:
     if not condition:
@@ -75,8 +130,9 @@ def main() -> int:
         str(path.relative_to(ROOT)) for path in (ROOT / "docs").rglob("*")
         if path.is_file() and path.name != ".DS_Store"
     )
-    _require(docs == ["docs/CANDIDATE_Q3D_SPEC.md"], f"Q3D_SOLE_DOC_CONTRACT_MISMATCH: {docs}")
-    _require((ROOT / docs[0]).is_file(), "MISSING_AUTHORITATIVE_Q3D_SPEC")
+    allowed_docs = BASELINE_DOCS | {"docs/CANDIDATE_Q3D_SPEC.md"}
+    _require(set(docs) == allowed_docs, f"Q3D_DOC_INVENTORY_MISMATCH: {docs}")
+    _require((ROOT / "docs/CANDIDATE_Q3D_SPEC.md").is_file(), "MISSING_AUTHORITATIVE_Q3D_SPEC")
 
     tests = sorted(
         path.name for path in (ROOT / "tests").glob("test*.py")
@@ -84,8 +140,11 @@ def main() -> int:
     )
     contract_tests = {"test_candidate_q3d_weighting.py"}
     old_tests = [name for name in tests
-                 if not name.startswith("test_q3d") and name not in contract_tests]
+                 if not name.startswith("test_q3d") and name not in contract_tests
+                 and name not in BASELINE_TESTS]
     _require(not old_tests, f"NON_Q3D_TESTS_REMAIN: {old_tests}")
+    _require(BASELINE_TESTS.issubset(tests),
+             f"MISSING_RESTORED_BASELINE_TESTS: {sorted(BASELINE_TESTS - set(tests))}")
 
     recipes_a = list((ROOT / "configs/candidate_a").glob("*.json"))
     _require(bool(recipes_a), "MISSING_A_RECIPES")

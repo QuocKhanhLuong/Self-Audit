@@ -15,13 +15,18 @@ import pytest
 import torch
 
 from self_audit.candidate_a3d.teacher import build_teacher3d, set_teacher_stage
-from self_audit.candidate_q3d.alignment import align_teacher_to_student4
+from self_audit.candidate_q3d.alignment import (
+    align_teacher_to_student4,
+    student_grid_phase,
+    teacher_grid_phase,
+)
 from self_audit.candidate_q3d.config import (
     UPSTREAM_MEDNEXT_COMMIT,
     canonical_config,
     load_config,
 )
 from self_audit.candidate_q3d.engine import (
+    _distillation_or_zero,
     _pooled_teacher_targets,
     _student_config,
 )
@@ -34,7 +39,7 @@ from self_audit.candidate_q3d.teacher_features import (
 
 
 # Pinned from official MedNeXt v1 L k3 source at UPSTREAM_MEDNEXT_COMMIT:
-# stride4=down_block_1/decoder stride4 (128), stride8=dec_block_3 (256),
+# stride4=encoder stage 2 / decoder stride4 (128), stride8=encoder features[3] (256),
 # and stride16=bottleneck (512). Keep independent of config.py's lookup.
 OFFICIAL_MEDNEXT_CHANNELS = {4: 128, 8: 256, 16: 512}
 
@@ -106,7 +111,10 @@ def test_c1_feature_head_and_loss_match_bounded_official_source_forward() -> Non
 
             source = teacher_feature_source(teacher, "stride8")
             assert source["channels"] == OFFICIAL_MEDNEXT_CHANNELS[8]
-            assert source["module_name"] in {"dec_block_3", "dec_block_3.7"}
+            assert source["source"] == "encoder_stride8"
+            assert source["module_name"] == "forward_with_features[0][3]"
+            assert source["capture_api"] == "forward_with_features"
+            assert source["module"] is None
 
             student_config = _student_config(config, teacher)
             student = CandidateQ3DStudent(student_config)
@@ -119,8 +127,10 @@ def test_c1_feature_head_and_loss_match_bounded_official_source_forward() -> Non
                 teacher, images, geometry=geometry, source="stride8",
             )
             assert teacher_outputs["feature"].shape == (1, 256, 4, 4, 4)
+            teacher_phase = teacher_grid_phase(teacher, "encoder_stride8")
+            student_phase = student_grid_phase(student)
             aligned = align_teacher_to_student4(
-                teacher_outputs["feature"], native_shape, teacher_stride=8,
+                teacher_outputs["feature"], native_shape, teacher_phase, student_phase,
             )
             assert aligned.shape == (1, 256, 6, 2, 2)
             student.train()
@@ -132,8 +142,11 @@ def test_c1_feature_head_and_loss_match_bounded_official_source_forward() -> Non
             _probs, classes, confidence = _pooled_teacher_targets(
                 teacher_outputs["region_logits"],
                 target_hw=tuple(student_feature.shape[-2:]),
+                student_phase=student_phase,
             )
-            loss, _stats = feature_kd_loss(aligned, student_feature, classes, confidence)
+            loss, _stats = _distillation_or_zero(
+                feature_kd_loss, aligned, student_feature, classes, confidence, omega=1.0,
+            )
             assert torch.isfinite(loss)
             loss.backward()
             student_gradients = [parameter.grad for parameter in student.parameters()
