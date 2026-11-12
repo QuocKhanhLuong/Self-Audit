@@ -30,6 +30,7 @@ from .augmentation import augment_labeled, augment_unlabeled
 from .data import Q3DData, Q3DJointSampler
 from .losses import (
     codekd_loss,
+    cohort_omega,
     commitment_loss,
     feature_kd_loss,
     mean_teacher_consistency_loss,
@@ -865,11 +866,17 @@ def _initial_run_state(config_sha256: str, data_identity: Mapping[str, Any]) -> 
         "best_student_state": None,
         "best_student_score": None,
         "physiology_rows": None,
+        # Frozen U-cohort weighting is a first-class resume identity.  The
+        # rows alone are insufficient because omega is normalized over the
+        # complete U cohort, not over each minibatch.
+        "physiology_cohort_weighting": None,
+        "physiology_weighting_logs": [],
         "gate": None,
         "metrics": [],
         "spatial_rng_state": None,
         "intensity_rng_state": None,
         "stage_rng_state": None,
+        "j_u_patient_cycle": None,
         "rng": None,
         "saved_at": None,
     }
@@ -1527,8 +1534,23 @@ def _run_physiology_stage(
             config=physiology_config, device=device,
         )
         rows.append(row)
+    state["physiology_rows"] = {row["id"]: row for row in rows}
+    cache_path = output_dir / "physiology_cache.json"
+    source_identity = data.cache_source_identity()
+    checksum = save_physiology_cache(
+        cache_path, rows, teacher_sha256=teacher_sha, codebook_sha256=codebook_sha,
+        protocol=config["protocol"]["variant"], refreshed_epoch=0,
+        config=physiology_config, source_identity=source_identity,
+    )
+    from .physiology import summarize_physiology_cohort
+
+    cohort_summary = summarize_physiology_cohort(rows)
+    state["physiology_cache"] = {"path": str(cache_path), "sha256": checksum,
+                                  "teacher_sha256": teacher_sha, "codebook_sha256": codebook_sha,
+                                  "source_identity": source_identity, "config": physiology_config,
+                                  "cohort_weighting": cohort_summary}
     physiology_gate = _require_positive_u_physiology_support(
-        config, data, {row["id"]: row for row in rows}, state,
+        config, data, state["physiology_rows"], state,
         context="P physiology cache", synthetic_override=bool(
             state.get("synthetic_gate_override_requested", False)
         ),
@@ -1542,22 +1564,13 @@ def _run_physiology_stage(
                 "P physiology cache has zero support for every TRAIN U patient; "
                 "physiology-weighted KD cannot enter J"
             )
-    cache_path = output_dir / "physiology_cache.json"
-    source_identity = data.cache_source_identity()
-    checksum = save_physiology_cache(
-        cache_path, rows, teacher_sha256=teacher_sha, codebook_sha256=codebook_sha,
-        protocol=config["protocol"]["variant"], refreshed_epoch=0,
-        config=physiology_config, source_identity=source_identity,
-    )
-    state["physiology_rows"] = {row["id"]: row for row in rows}
-    state["physiology_cache"] = {"path": str(cache_path), "sha256": checksum,
-                                  "teacher_sha256": teacher_sha, "codebook_sha256": codebook_sha,
-                                  "source_identity": source_identity, "config": physiology_config}
+    cohort_metadata = state.get("physiology_cohort_weighting")
     _record_metric(state, output_dir / "metrics.jsonl", {
         "stage": "P", "event": "physiology_cache", "patient_count": len(rows),
         "teacher_sha256": teacher_sha, "codebook_sha256": codebook_sha,
         "cache_path": str(cache_path), "cache_sha256": checksum,
         "weights": {row["id"]: row["w_pat"] for row in rows},
+        "cohort_weighting": cohort_metadata,
     })
     state["completed_stages"].append("P")
     state["stage"] = None
@@ -1572,6 +1585,178 @@ def _run_physiology_stage(
     return state["physiology_rows"]
 
 
+def _cohort_policy_arm(config: Mapping[str, Any]) -> str | None:
+    """Return the U-cohort weighting policy for the active arm.
+
+    V1-U emits unit patient multipliers but shares V1/C1 eligibility.  The
+    explicit physiology flag and loss mode keep direct synthetic stage probes
+    that disable weighting from requiring a cache accidentally.
+    """
+
+    arm = str(config.get("arm", ""))
+    losses = config.get("losses", {})
+    physiology = config.get("physiology", {})
+    mode = losses.get("w_mode") if isinstance(losses, Mapping) else None
+    enabled = bool(physiology.get("enabled", False)) if isinstance(physiology, Mapping) else False
+    if arm == "v1u":
+        return "V1-U" if enabled and mode == "uniform" else None
+    if not (enabled and mode == "physiology"):
+        return None
+    if arm == "c1":
+        return "C1"
+    if arm in {"v1", "b1", "e1", "o1", "s1"}:
+        return "V1"
+    return None
+
+
+def _physiology_rows_for_u(data: Q3DData, state: Mapping[str, Any]) -> dict[str, float]:
+    """Extract exactly one finite cached w_pat for every image-only U patient."""
+
+    rows = state.get("physiology_rows")
+    if not isinstance(rows, Mapping):
+        raise RuntimeError("Q-3D physiology cache has no frozen U patient rows")
+    expected = tuple(data.unlabeled_patients)
+    if not expected:
+        raise RuntimeError("Q-3D physiology weighting requires a nonempty TRAIN U cohort")
+    if set(rows) != set(expected):
+        raise RuntimeError("Q-3D physiology cache U cohort differs from the current TRAIN U cohort")
+    values: dict[str, float] = {}
+    for patient_id in sorted(expected):
+        row = rows.get(patient_id)
+        if not isinstance(row, Mapping) or "w_pat" not in row:
+            raise RuntimeError(f"Q-3D physiology cache is missing w_pat for U patient {patient_id!r}")
+        value = float(row["w_pat"])
+        if not math.isfinite(value) or not 0.0 <= value <= 1.0:
+            raise RuntimeError(f"Q-3D physiology cache has invalid w_pat for U patient {patient_id!r}")
+        values[patient_id] = value
+    return values
+
+
+def _cohort_weighting_metadata(
+    config: Mapping[str, Any],
+    data: Q3DData,
+    state: dict[str, Any],
+    *,
+    context: str,
+    synthetic_override: bool,
+    require_existing: bool = False,
+) -> dict[str, Any] | None:
+    """Build/verify the frozen full-U omega map and eligibility receipt."""
+
+    policy_arm = _cohort_policy_arm(config)
+    if policy_arm is None:
+        return None
+    w_pat = _physiology_rows_for_u(data, state)
+    raw = cohort_omega(w_pat, "L")
+    gate_error: str | None = None
+    try:
+        computed = cohort_omega(w_pat, policy_arm)
+        gate_passed = True
+    except ValueError as exc:
+        computed = raw
+        gate_passed = False
+        gate_error = str(exc)
+
+    all_zero = raw["mean_w_pat"] <= 0.0 or raw["ess"] <= 0.0
+    runtime = config.get("runtime", {})
+    override_allowed = bool(
+        synthetic_override
+        and isinstance(runtime, Mapping)
+        and runtime.get("synthetic") is True
+        and state.get("synthetic_gate_override_requested") is True
+    )
+    override_used = bool(override_allowed and all_zero and not gate_passed)
+    if gate_passed:
+        emitted = {str(patient): float(value) for patient, value in computed["omega"].items()}
+        mean_omega = float(computed["mean_omega"])
+        max_omega = float(computed["max_omega"])
+        zero_fraction = float(computed["zero_fraction"])
+        override_policy = None
+    elif policy_arm == "V1-U" and override_used:
+        emitted = {patient: 1.0 for patient in w_pat}
+        mean_omega, max_omega, zero_fraction = 1.0, 1.0, 0.0
+        override_policy = "synthetic_v1u_unit_omega"
+    else:
+        # Never replace an invalid physiology signal with a guessed prior.
+        # Weighted smoke arms keep their KD graph alive with omega=0.
+        emitted = {patient: 0.0 for patient in w_pat}
+        mean_omega, max_omega, zero_fraction = 0.0, 0.0, 1.0
+        override_policy = "synthetic_weighted_zero_omega" if override_used else "gate_failed_zero_omega"
+
+    positive_count = sum(value > 0.0 for value in w_pat.values())
+    status = "PASS_POSITIVE_U_SUPPORT" if gate_passed else (
+        "NO_GO_ALL_U_WEIGHTS_ZERO" if all_zero else "NO_GO_U_ESS_GATE"
+    )
+    gate = {
+        "context": context,
+        "status": status,
+        "passed": gate_passed,
+        "patient_weights": dict(w_pat),
+        "positive_patient_count": positive_count,
+        "patient_count": len(w_pat),
+        "mean_w_pat": float(raw["mean_w_pat"]),
+        "ess": float(raw["ess"]),
+        "ess_fraction": float(raw["ess_fraction"]),
+        "override_used": override_used,
+        "override_scope": "synthetic_smoke_only" if override_used else None,
+        "gate_error": gate_error,
+    }
+    metadata = {
+        "schema": "self_audit.candidate_q3d.runtime_cohort_weighting.v1",
+        "source": "U",
+        "source_cohort": "U",
+        "arm": policy_arm,
+        "patient_ids": sorted(w_pat),
+        "w_pat": dict(w_pat),
+        "omega": emitted,
+        "mean_w_pat": float(raw["mean_w_pat"]),
+        "ess": float(raw["ess"]),
+        "ess_fraction": float(raw["ess_fraction"]),
+        "mean_omega": mean_omega,
+        "max_omega": max_omega,
+        "zero_fraction": zero_fraction,
+        "gate": gate,
+        "gate_passed": gate_passed,
+        "override_used": override_used,
+        "override_policy": override_policy,
+    }
+    existing = state.get("physiology_cohort_weighting")
+    if require_existing:
+        if not isinstance(existing, Mapping):
+            raise RuntimeError(
+                "Q-3D resume has an old physiology cache without frozen cohort_weighting metadata"
+            )
+        for field in (
+            "schema", "source", "source_cohort", "arm", "patient_ids", "w_pat", "omega",
+            "mean_w_pat", "ess", "ess_fraction", "mean_omega", "max_omega", "zero_fraction",
+            "gate_passed", "override_used", "override_policy",
+        ):
+            if existing.get(field) != metadata.get(field):
+                raise RuntimeError(
+                    f"Q-3D resume physiology cohort_weighting is stale or inconsistent ({field})"
+                )
+        cache_metadata = state.get("physiology_cache")
+        if not isinstance(cache_metadata, Mapping):
+            raise RuntimeError("Q-3D resume has no physiology cache identity")
+        cached_summary = cache_metadata.get("cohort_weighting")
+        if not isinstance(cached_summary, Mapping):
+            raise RuntimeError("Q-3D resume cache is missing cohort_weighting metadata")
+        expected_summary = {
+            "schema": "self_audit.candidate_q3d.cohort_weighting.v1",
+            "patient_ids": sorted(w_pat),
+            "count": len(w_pat),
+            "mean_w_pat": float(raw["mean_w_pat"]),
+            "ess": float(raw["ess"]),
+            "ess_fraction": float(raw["ess_fraction"]),
+            "gate_passed": bool(gate_passed),
+        }
+        if dict(cached_summary) != expected_summary:
+            raise RuntimeError("Q-3D resume cache and checkpoint cohort_weighting metadata differ")
+    state["physiology_cohort_weighting"] = copy.deepcopy(metadata)
+    state["physiology_support_gate"] = copy.deepcopy(gate)
+    return metadata
+
+
 def _w_pat(
     config: Mapping[str, Any],
     state: Mapping[str, Any],
@@ -1579,16 +1764,7 @@ def _w_pat(
     *,
     labeled: bool,
 ) -> float:
-    mode = config["losses"]["w_mode"]
-    if mode == "none":
-        return 1.0
-    if mode == "uniform":
-        return float(config["losses"]["uniform_w"])
-    if mode != "physiology":
-        raise ValueError(f"unsupported Q-3D distillation weight mode: {mode}")
     if labeled:
-        # The cache is defined over image-only TRAIN U.  L contributes to the
-        # same balanced loss with teacher certainty and unit patient weight.
         return 1.0
     rows = state.get("physiology_rows")
     if not isinstance(rows, Mapping) or patient_id not in rows:
@@ -1596,6 +1772,49 @@ def _w_pat(
     value = float(rows[patient_id]["w_pat"])
     if not math.isfinite(value) or not 0.0 <= value <= 1.0:
         raise ValueError("cached Q-3D w_pat must be finite and in [0,1]")
+    return value
+
+
+def _new_patient_omega(
+    config: Mapping[str, Any],
+    state: Mapping[str, Any],
+    patient_id: str,
+    *,
+    labeled: bool,
+) -> float:
+    """Return the frozen full-U patient multiplier for one KD frame."""
+
+    if labeled:
+        return 1.0
+    policy_arm = _cohort_policy_arm(config)
+    if policy_arm is None:
+        return 1.0
+    metadata = state.get("physiology_cohort_weighting")
+    if not isinstance(metadata, Mapping):
+        # Direct unit probes may call this helper before the stage gate.  Use
+        # the complete rows map if available, while real resume paths are
+        # still rejected by _validate_resumed_physiology_cache.
+        rows = state.get("physiology_rows")
+        if not isinstance(rows, Mapping) or not rows:
+            raise RuntimeError("Q-3D U KD has no frozen cohort omega metadata")
+        source = {
+            str(patient): float(row["w_pat"])
+            for patient, row in rows.items()
+            if isinstance(row, Mapping) and "w_pat" in row
+        }
+        if set(source) != set(rows):
+            raise RuntimeError("Q-3D U KD has malformed physiology rows")
+        try:
+            computed = cohort_omega(source, policy_arm)
+        except ValueError as exc:
+            raise RuntimeError("Q-3D U KD cohort omega gate failed") from exc
+        metadata = {"omega": computed["omega"]}
+    omega = metadata.get("omega")
+    if not isinstance(omega, Mapping) or patient_id not in omega:
+        raise RuntimeError(f"Q-3D U KD has no frozen omega for patient {patient_id!r}")
+    value = float(omega[patient_id])
+    if not math.isfinite(value) or value < 0.0:
+        raise RuntimeError(f"Q-3D U KD has invalid frozen omega for patient {patient_id!r}")
     return value
 
 
@@ -1607,42 +1826,27 @@ def _require_positive_u_physiology_support(
     *,
     context: str,
     synthetic_override: bool = False,
+    require_existing: bool = False,
 ) -> dict[str, Any] | None:
-    """Fail closed when a physiology weighted KD arm has no supported U patient."""
+    """Fail closed when a weighted arm has no eligible full-U cohort."""
     arm = str(config["arm"])
     has_kd = (arm == "c1" and float(config["losses"].get("continuous_feature_kd", 0.0)) > 0.0) or (
-        arm in {"v1", "b1", "e1", "o1", "s1"}
+        arm in {"v1", "v1u", "b1", "e1", "o1", "s1"}
         and float(config["losses"].get("codekd", 0.0)) > 0.0
     )
-    if config["losses"].get("w_mode") != "physiology" or not has_kd:
+    if _cohort_policy_arm(config) is None or not has_kd:
         return None
-    patients = tuple(data.unlabeled_patients)
-    if not patients:
-        raise ValueError(f"{context} has no TRAIN U patients for physiology-weighted KD")
-    values: list[float] = []
-    for patient_id in patients:
-        row = rows.get(patient_id)
-        if not isinstance(row, Mapping) or "w_pat" not in row:
-            raise ValueError(f"{context} is missing physiology weight for U patient {patient_id!r}")
-        value = float(row["w_pat"])
-        if not math.isfinite(value) or not 0.0 <= value <= 1.0:
-            raise ValueError(f"{context} has invalid cached Q-3D w_pat for {patient_id!r}")
-        values.append(value)
-    has_support = any(value > 0.0 for value in values)
-    override_used = not has_support and synthetic_override
-    gate = {
-        "context": context,
-        "status": "PASS_POSITIVE_U_SUPPORT" if has_support else "NO_GO_ALL_U_WEIGHTS_ZERO",
-        "passed": has_support,
-        "patient_weights": dict(zip(patients, values)),
-        "positive_patient_count": sum(value > 0.0 for value in values),
-        "patient_count": len(values),
-        "override_used": override_used,
-        "override_scope": "synthetic_smoke_only" if override_used else None,
-    }
-    state["physiology_support_gate"] = gate
+    if not isinstance(state.get("physiology_rows"), Mapping) and isinstance(rows, Mapping):
+        state["physiology_rows"] = copy.deepcopy(dict(rows))
+    metadata = _cohort_weighting_metadata(
+        config, data, state, context=context,
+        synthetic_override=synthetic_override,
+        require_existing=require_existing,
+    )
+    assert metadata is not None
+    gate = copy.deepcopy(metadata["gate"])
     state.setdefault("physiology_support_gates", []).append(gate)
-    if override_used:
+    if gate["override_used"]:
         state["synthetic_gate_override_used"] = True
     return gate
 
@@ -1655,12 +1859,14 @@ def _cell_weights(
     *,
     labeled: bool,
 ) -> Tensor:
+    """Return confidence-only cell weights; patient omega is separate."""
+
     if config["losses"]["teacher_confidence_weighting"]:
         threshold = float(config["physiology"]["certainty_threshold"])
         cell = confidence * (confidence >= threshold).to(confidence.dtype)
     else:
         cell = torch.ones_like(confidence)
-    return (cell * _w_pat(config, state, patient_id, labeled=labeled)).detach()
+    return cell.detach()
 
 
 def _distillation_or_zero(
@@ -1669,20 +1875,59 @@ def _distillation_or_zero(
     student_target: Tensor,
     classes: Tensor,
     weights: Tensor,
-) -> tuple[Tensor | None, dict[str, Any]]:
-    """Skip a deliberately empty weighted branch and expose it to the gate."""
-    detached_weights = weights.detach()
-    detached_classes = classes.detach()
-    if not bool((detached_weights.float().sum() > 0).item()):
-        present = sorted(int(value) for value in detached_classes.unique().cpu().tolist())
-        return None, {
-            "used_classes": [],
-            "zero_weight_classes": present,
-            "skipped": "all_zero_weights",
-        }
+    *,
+    omega: float = 1.0,
+) -> tuple[Tensor, dict[str, Any]]:
+    """Call a public KD wrapper while preserving graph-connected zero support."""
+
     return loss_function(
-        teacher_target.detach(), student_target, detached_classes, detached_weights,
+        teacher_target.detach(), student_target, classes.detach(), weights.detach(), omega=omega,
     )
+
+
+def _kd_stats_has_support(stats: Mapping[str, Any]) -> bool:
+    """Check reducer support without treating a graph-zero loss as skipped."""
+
+    frames = stats.get("frames")
+    if isinstance(frames, Sequence):
+        return any(bool(frame.get("active_classids")) for frame in frames if isinstance(frame, Mapping))
+    return bool(stats.get("used_classes"))
+
+
+def _update_u_patient_cycle(
+    state: dict[str, Any],
+    patient_id: str,
+    cohort: Sequence[str],
+) -> dict[str, Any]:
+    """Track random U sampling until every cached patient contributes once."""
+
+    expected = set(str(value) for value in cohort)
+    if not expected:
+        raise ValueError("U patient cycle requires a nonempty source cohort")
+    current = state.get("j_u_patient_cycle")
+    if not isinstance(current, Mapping):
+        current = {"seen": [], "completed_cycles": 0, "last_cycle_update": None, "snapshot": None}
+    seen = set(str(value) for value in current.get("seen", []))
+    seen.add(str(patient_id))
+    completed = int(current.get("completed_cycles", 0))
+    cycle_complete = expected.issubset(seen)
+    if cycle_complete:
+        completed += 1
+        seen = set()
+    result = {
+        "seen_patient_count": len(seen),
+        "cohort_patient_count": len(expected),
+        "completed_cycles": completed,
+        "cycle_complete": cycle_complete,
+        "snapshot": current.get("snapshot"),
+    }
+    state["j_u_patient_cycle"] = {
+        "seen": sorted(seen),
+        "completed_cycles": completed,
+        "last_cycle_update": int(state.get("stage_cursor", 0)) if cycle_complete else current.get("last_cycle_update"),
+        "snapshot": current.get("snapshot"),
+    }
+    return result
 
 
 def _joint_objective_scales(
@@ -1907,6 +2152,18 @@ def _refresh_o1_physiology_and_churn(
             churns.append(churn)
         patient_churn[patient_id] = churn
         current_snapshots[patient_id] = current_codes
+    state["physiology_rows"] = {row["id"]: row for row in rows}
+    physiology_gate = _require_positive_u_physiology_support(
+        config, data, state["physiology_rows"], state,
+        context="O1 physiology cache refresh",
+        synthetic_override=bool(state.get("synthetic_gate_override_requested", False)),
+    )
+    if physiology_gate is not None:
+        _record_metric(state, output_dir / "metrics.jsonl", {
+            "stage": "J", "event": "physiology_support_gate_refresh", **physiology_gate,
+        })
+        if not physiology_gate["passed"] and not physiology_gate["override_used"]:
+            raise RuntimeError("O1 physiology cache refresh failed the frozen U cohort gate")
     cache_path = output_dir / "physiology_cache.json"
     source_identity = data.cache_source_identity()
     checksum = save_physiology_cache(
@@ -1914,15 +2171,19 @@ def _refresh_o1_physiology_and_churn(
         protocol=config["protocol"]["variant"], refreshed_epoch=epoch,
         config=physiology_config, source_identity=source_identity,
     )
-    state["physiology_rows"] = {row["id"]: row for row in rows}
+    from .physiology import summarize_physiology_cohort
+
+    cohort_summary = summarize_physiology_cohort(rows)
+    cohort_metadata = state.get("physiology_cohort_weighting")
     state["o1_code_snapshots"] = current_snapshots
     state["physiology_cache"] = {"path": str(cache_path), "sha256": checksum,
                                   "teacher_sha256": teacher_sha, "codebook_sha256": codebook_sha,
                                   "refreshed_epoch": epoch, "source_identity": source_identity,
-                                  "config": physiology_config}
+                                  "config": physiology_config, "cohort_weighting": cohort_summary}
     teacher.requires_grad_(True)
     return {"mean_assignment_churn": float(np.mean(churns)) if churns else None,
             "patient_churn": patient_churn,
+            "cohort_weighting": cohort_metadata,
             "cache_sha256": checksum}
 
 
@@ -1970,11 +2231,28 @@ def _run_joint_stage(
         config, data, state.get("physiology_rows") or {}, state,
         context="J physiology cache reload",
         synthetic_override=bool(state.get("synthetic_gate_override_requested", False)),
+        require_existing=(cursor > 0 or isinstance(state.get("physiology_cache"), Mapping)),
     )
     if physiology_gate is not None:
         _record_metric(state, output_dir / "metrics.jsonl", {
             "stage": "J", "event": "physiology_support_gate", **physiology_gate,
         })
+        weighting = state.get("physiology_cohort_weighting")
+        if isinstance(weighting, Mapping):
+            _record_metric(state, output_dir / "metrics.jsonl", {
+                "stage": "J", "event": "physiology_weighting",
+                "source_cohort": weighting.get("source_cohort"),
+                "arm": weighting.get("arm"),
+                "mean_w_pat": weighting.get("mean_w_pat"),
+                "ess": weighting.get("ess"),
+                "ess_fraction": weighting.get("ess_fraction"),
+                "mean_omega": weighting.get("mean_omega"),
+                "max_omega": weighting.get("max_omega"),
+                "zero_fraction": weighting.get("zero_fraction"),
+                "gate_passed": weighting.get("gate_passed"),
+                "override_used": weighting.get("override_used"),
+                "override_policy": weighting.get("override_policy"),
+            })
         if not physiology_gate["passed"] and not physiology_gate["override_used"]:
             raise RuntimeError(
                 "J physiology cache reload has zero support for every TRAIN U patient; "
@@ -2034,13 +2312,17 @@ def _run_joint_stage(
     ramp_updates = max(1, int(math.ceil(update_budget * float(learning["codekd_ramp_fraction"]))))
     sdf_lambda = float(learning["balanced_sdf"])
     intensity_config = _intensity_config(config)
-    phys_rows = state.get("physiology_rows") or {}
     labeled_keys = data.labeled_frame_keys()
     unlabeled_keys = data.unlabeled_frame_keys() if wants_u else []
     if not labeled_keys or (wants_u and not unlabeled_keys):
         raise ValueError("Q-3D joint stage lacks the TRAIN streams required by this arm")
     updates_per_epoch = max(len(labeled_keys), len(data.train_patients), 1)
     refresh_every = int(config["physiology"]["cache_refresh_joint_epochs"] or 0) * updates_per_epoch
+    if wants_u and _cohort_policy_arm(config) is not None and state.get("j_u_patient_cycle") is None:
+        state["j_u_patient_cycle"] = {
+            "seen": [], "completed_cycles": 0, "last_cycle_update": None,
+            "snapshot": (state.get("physiology_cache") or {}).get("sha256"),
+        }
 
     while cursor < update_budget:
         update_record = sampler.sample_update()
@@ -2060,6 +2342,8 @@ def _run_joint_stage(
 
         u_image = u_geometry = u_metadata = None
         u_student_image = None
+        u_cycle_record: dict[str, Any] | None = None
+        u_cycle_weighting: dict[str, Any] | None = None
         if wants_u:
             u_image, u_geometry, u_metadata = _load_u(data, update_record["unlabeled_key"])
             weak_u, strong_u, u_geometry = augment_unlabeled(
@@ -2146,6 +2430,7 @@ def _run_joint_stage(
             )
             l_loss = l_supervised
             l_kd_value = 0.0
+            l_omega = _new_patient_omega(config, state, l_patient, labeled=True)
             if wants_codekd:
                 assert l_assignments is not None and l_output.get("pi") is not None
                 l_weights = _cell_weights(
@@ -2153,15 +2438,15 @@ def _run_joint_stage(
                 )
                 kd, l_kd_stats = _distillation_or_zero(
                     codekd_loss, l_assignments["pi"], l_output["pi"],
-                    l_assignments["classes"], l_weights,
+                    l_assignments["classes"], l_weights, omega=l_omega,
                 )
-                if kd is None:
-                    kd_zero_weight_branches.append("L")
-                    kd = l_output["logits"].new_zeros(())
-                else:
+                if _kd_stats_has_support(l_kd_stats):
                     kd_supported_branches += 1
+                else:
+                    kd_zero_weight_branches.append("L")
                 l_kd_value = float(kd.detach().float().item())
                 update_losses["labeled_kd_stats"] = l_kd_stats
+                update_losses["labeled_kd_omega"] = l_omega
                 l_loss = l_loss + ramp * float(learning["codekd"]) * kd / kd_stream_divisor
             elif wants_feature_kd:
                 assert l_teacher_outputs is not None
@@ -2181,15 +2466,15 @@ def _run_joint_stage(
                     )
                 weights = _cell_weights(config, confidence, l_patient, state, labeled=True)
                 kd, _kd_stats = _distillation_or_zero(
-                    feature_kd_loss, l_features, student_feature, cls, weights,
+                    feature_kd_loss, l_features, student_feature, cls, weights, omega=l_omega,
                 )
-                if kd is None:
-                    kd_zero_weight_branches.append("L")
-                    kd = l_output["logits"].new_zeros(())
-                else:
+                if _kd_stats_has_support(_kd_stats):
                     kd_supported_branches += 1
+                else:
+                    kd_zero_weight_branches.append("L")
                 l_kd_value = float(kd.detach().float().item())
                 update_losses["labeled_kd_stats"] = _kd_stats
+                update_losses["labeled_kd_omega"] = l_omega
                 l_loss = l_loss + ramp * float(learning["continuous_feature_kd"]) * kd / kd_stream_divisor
             if arm in _VQ_ARMS:
                 if l_output.get("u") is None or l_output.get("quantized") is None:
@@ -2213,6 +2498,16 @@ def _run_joint_stage(
         u_loss_value = 0.0
         if wants_u:
             assert u_image is not None and u_student_image is not None and u_geometry is not None
+            u_patient = str(u_metadata["patient"])
+            u_omega = _new_patient_omega(config, state, u_patient, labeled=False)
+            if _cohort_policy_arm(config) is not None:
+                u_cycle_record = _update_u_patient_cycle(
+                    state, u_patient, data.unlabeled_patients,
+                )
+                if u_cycle_record["cycle_complete"]:
+                    # O1 may refresh after this update. The completed cycle
+                    # must report the weights its frames actually consumed.
+                    u_cycle_weighting = copy.deepcopy(state.get("physiology_cohort_weighting"))
             if is_mean_teacher:
                 assert ema_model is not None
                 ema_model.eval()
@@ -2245,18 +2540,17 @@ def _run_joint_stage(
                     if wants_codekd:
                         assert u_assignments is not None and u_output.get("pi") is not None
                         u_weights = _cell_weights(
-                            config, u_assignments["confidence"], str(u_metadata["patient"]), state,
+                            config, u_assignments["confidence"], u_patient, state,
                             labeled=False,
                         )
                         u_kd, u_kd_stats = _distillation_or_zero(
                             codekd_loss, u_assignments["pi"], u_output["pi"],
-                            u_assignments["classes"], u_weights,
+                            u_assignments["classes"], u_weights, omega=u_omega,
                         )
-                        if u_kd is None:
-                            kd_zero_weight_branches.append("U")
-                            u_kd = u_output["logits"].new_zeros(())
-                        else:
+                        if _kd_stats_has_support(u_kd_stats):
                             kd_supported_branches += 1
+                        else:
+                            kd_zero_weight_branches.append("U")
                     else:
                         u_feature = _features_to_student_grid(
                             u_teacher_outputs["feature"], u_student_image.shape[-3:],
@@ -2271,16 +2565,16 @@ def _run_joint_stage(
                         if u_feature.shape[1] != u_student_feature.shape[1]:
                             raise ValueError("C1 teacher/student continuous feature channels do not match")
                         u_weights = _cell_weights(
-                            config, u_confidence, str(u_metadata["patient"]), state, labeled=False,
+                            config, u_confidence, u_patient, state, labeled=False,
                         )
                         u_kd, _u_stats = _distillation_or_zero(
                             feature_kd_loss, u_feature, u_student_feature, u_classes, u_weights,
+                            omega=u_omega,
                         )
-                        if u_kd is None:
-                            kd_zero_weight_branches.append("U")
-                            u_kd = u_output["logits"].new_zeros(())
-                        else:
+                        if _kd_stats_has_support(_u_stats):
                             kd_supported_branches += 1
+                        else:
+                            kd_zero_weight_branches.append("U")
                         u_kd_stats = _u_stats
                     u_loss = ramp * float(learning["codekd"] if wants_codekd else learning["continuous_feature_kd"]) * u_kd / kd_stream_divisor
                     u_commitment = u_output["logits"].new_zeros(())
@@ -2291,8 +2585,12 @@ def _run_joint_stage(
                 if not torch.isfinite(u_loss):
                     raise FloatingPointError("Q-3D unlabeled joint loss is nonfinite")
                 u_loss_value = float(u_loss.detach().float().item())
-                update_losses["unlabeled_distillation"] = u_loss_value
+                # Keep the raw weighted KD term separate from the total U
+                # objective (which also contains ramp/divisor and commitment).
+                update_losses["unlabeled_distillation"] = float(u_kd.detach().float().item())
+                update_losses["unlabeled_total"] = u_loss_value
                 update_losses["unlabeled_commitment"] = float(u_commitment.detach().float().item())
+                update_losses["unlabeled_kd_omega"] = u_omega
             elif arm in _VQ_ARMS:
                 # V0 has no teacher KD term but retains S4 commitment on both
                 # L and U, as specified by the joint loss table.
@@ -2310,12 +2608,13 @@ def _run_joint_stage(
                     raise FloatingPointError("Q-3D V0 U commitment is nonfinite")
                 u_loss_value = float(u_loss.detach().float().item())
                 update_losses["unlabeled_commitment"] = u_loss_value
+                update_losses["unlabeled_total"] = u_loss_value
             else:
                 raise RuntimeError("Q-3D U stream was requested without a named unlabeled objective")
-            if u_loss.requires_grad:
-                u_loss.backward()
-            elif wants_distillation and kd_zero_weight_branches and kd_zero_weight_branches[-1] == "U":
-                update_losses["unlabeled_backward_skipped"] = "all_zero_weights"
+            # Even a zero-support reducer result is graph-connected to the
+            # student output; always traverse backward so optimizer/update
+            # accounting remains truthful and hooks observe the branch.
+            u_loss.backward()
             del u_output, u_loss
 
         torch.nn.utils.clip_grad_norm_(
@@ -2368,6 +2667,24 @@ def _run_joint_stage(
             state["j_kd_zero_weight_branches"] = int(state.get("j_kd_zero_weight_branches", 0)) + len(kd_zero_weight_branches)
         if is_o1 and refresh_every and cursor % refresh_every == 0:
             assert teacher is not None and tokenizer is not None
+            prior_cycle = state.get("j_u_patient_cycle")
+            if isinstance(prior_cycle, Mapping) and prior_cycle.get("seen"):
+                prior_weighting = state.get("physiology_cohort_weighting")
+                _record_metric(state, output_dir / "metrics.jsonl", {
+                    "stage": stage,
+                    "event": "physiology_weighting_partial_u_cycle_closed",
+                    "closed_snapshot": prior_cycle.get("snapshot"),
+                    "seen_patient_count": len(prior_cycle.get("seen", [])),
+                    "cohort_patient_count": len(data.unlabeled_patients),
+                    "mean_omega": prior_weighting.get("mean_omega") if isinstance(prior_weighting, Mapping) else None,
+                    "ess": prior_weighting.get("ess") if isinstance(prior_weighting, Mapping) else None,
+                })
+                state["j_u_patient_cycle"] = {
+                    "seen": [],
+                    "completed_cycles": int(prior_cycle.get("completed_cycles", 0)),
+                    "last_cycle_update": None,
+                    "snapshot": None,
+                }
             teacher.requires_grad_(False)
             teacher.eval()
             churn = _refresh_o1_physiology_and_churn(
@@ -2375,6 +2692,9 @@ def _run_joint_stage(
                 state=state, output_dir=output_dir, device=device, epoch=cursor // updates_per_epoch,
             )
             update_losses.update({f"o1_{name}": value for name, value in churn.items()})
+            cycle_state = state.get("j_u_patient_cycle")
+            if isinstance(cycle_state, dict):
+                cycle_state["snapshot"] = (state.get("physiology_cache") or {}).get("sha256")
             _teacher_stage(teacher, "pretrain", freeze=False)
         record = {
             "stage": stage,
@@ -2397,11 +2717,29 @@ def _run_joint_stage(
             "learning_rates": [float(group["lr"]) for group in optimizer.param_groups],
             "sampler": update_record,
         }
+        if u_cycle_record is not None:
+            record["u_patient_cycle"] = u_cycle_record
+            record["u_patient_omega"] = u_omega
         if student_code_usage is not None and (
             cursor % 50 == 0 or cursor == update_budget or student_code_collapse
         ):
             record["student_code_usage"] = student_code_usage
         _record_metric(state, output_dir / "metrics.jsonl", record)
+        if u_cycle_record is not None and u_cycle_record["cycle_complete"]:
+            weighting = u_cycle_weighting
+            if isinstance(weighting, Mapping):
+                _record_metric(state, output_dir / "metrics.jsonl", {
+                    "stage": stage, "event": "physiology_weighting_full_u_cycle",
+                    "cycle": u_cycle_record["completed_cycles"],
+                    "snapshot": u_cycle_record.get("snapshot"),
+                    "patient_count": u_cycle_record["cohort_patient_count"],
+                    "mean_omega": weighting.get("mean_omega"),
+                    "max_omega": weighting.get("max_omega"),
+                    "zero_fraction": weighting.get("zero_fraction"),
+                    "ess": weighting.get("ess"),
+                    "ess_fraction": weighting.get("ess_fraction"),
+                    "source_cohort": weighting.get("source_cohort"),
+                })
         state["sampler_state"] = sampler.state_dict()
 
         if student_code_collapse:
@@ -2477,6 +2815,105 @@ def _run_joint_stage(
     _atomic_torch_save(state, _stage_directory(output_dir, config, stage) / "latest.pt")
     _atomic_torch_save(state, output_dir / "latest.pt")
     return cursor
+
+
+def _validate_resumed_physiology_cache(
+    config: Mapping[str, Any],
+    data: Q3DData,
+    state: dict[str, Any],
+    *,
+    output_dir: Path,
+    teacher: nn.Module | None,
+    tokenizer: nn.Module | None,
+) -> None:
+    """Reject stale checkpoints and validate the sealed frozen-U weighting."""
+
+    if _cohort_policy_arm(config) is None:
+        return
+    completed = set(state.get("completed_stages", []))
+    if "P" not in completed and state.get("stage") != "J" and "J" not in completed:
+        return
+    cache_state = state.get("physiology_cache")
+    if not isinstance(cache_state, Mapping):
+        raise RuntimeError("Q-3D resume requires a physiology cache identity with cohort_weighting metadata")
+    cache_path = Path(str(cache_state.get("path", ""))).expanduser()
+    if not cache_path.is_absolute():
+        cache_path = output_dir / cache_path
+    if not cache_path.is_file():
+        raise RuntimeError(f"Q-3D resume physiology cache is missing: {cache_path}")
+    expected_cache_sha = cache_state.get("sha256")
+    if not isinstance(expected_cache_sha, str):
+        raise RuntimeError("Q-3D resume physiology cache identity is missing its canonical SHA-256")
+    from .physiology import load_physiology_cache
+
+    recorded_teacher_sha = cache_state.get("teacher_sha256")
+    if not isinstance(recorded_teacher_sha, str):
+        raise RuntimeError("Q-3D resume physiology cache identity is missing its teacher SHA-256")
+    expected_codebook_sha = tokenizer.codebook_sha256 if tokenizer is not None else None
+    cache_config = cache_state.get("config")
+    try:
+        # ``save_physiology_cache`` returns the SHA of the canonical payload,
+        # not the SHA of the pretty-printed envelope bytes on disk.  Let the
+        # loader verify the complete cache identity and then compare its
+        # canonical document SHA with the checkpoint receipt.
+        document = load_physiology_cache(
+            cache_path,
+            teacher_sha256=recorded_teacher_sha,
+            codebook_sha256=expected_codebook_sha,
+            protocol=str(config["protocol"]["variant"]),
+            config=cache_config if isinstance(cache_config, Mapping) else None,
+            source_identity=data.cache_source_identity(),
+        )
+    except (OSError, TypeError, ValueError) as exc:
+        if "cohort_weighting" in str(exc):
+            raise RuntimeError(
+                "Q-3D resume found an old physiology cache without cohort_weighting metadata"
+            ) from exc
+        raise RuntimeError("Q-3D resume physiology cache failed full identity validation") from exc
+    if document.get("sha256") != expected_cache_sha:
+        raise RuntimeError("Q-3D resume physiology cache canonical SHA-256 differs from checkpoint")
+    payload = document.get("payload")
+    if not isinstance(payload, Mapping):
+        raise RuntimeError("Q-3D resume physiology cache envelope is malformed")
+    cached_summary = payload.get("cohort_weighting")
+    if not isinstance(cached_summary, Mapping):
+        raise RuntimeError(
+            "Q-3D resume found an old physiology cache without cohort_weighting metadata"
+        )
+    rows = state.get("physiology_rows")
+    if not isinstance(rows, Mapping):
+        raise RuntimeError("Q-3D resume physiology cache has no frozen patient rows")
+    cached_rows = {row["id"]: row for row in payload["patients"]}
+    if dict(rows) != cached_rows:
+        # Mean/ESS alone cannot detect weights swapped between two patients.
+        raise RuntimeError("Q-3D resume patient rows differ from the sealed physiology cache")
+    from .physiology import summarize_physiology_cohort
+
+    expected_summary = summarize_physiology_cohort([dict(rows[key]) for key in sorted(rows)])
+    if dict(cached_summary) != expected_summary:
+        raise RuntimeError("Q-3D resume physiology cache cohort_weighting is stale")
+    if cache_state.get("cohort_weighting") != dict(cached_summary):
+        raise RuntimeError("Q-3D resume checkpoint/cache cohort_weighting metadata differ")
+    # A checkpoint from before runtime cohort weighting was persisted cannot
+    # be resumed merely because its cache file happens to contain the newer
+    # raw summary.  The runtime omega map is part of the J contract and must
+    # be present in the checkpoint itself.
+    if not isinstance(state.get("physiology_cohort_weighting"), Mapping):
+        raise RuntimeError(
+            "Q-3D resume checkpoint is missing frozen physiology cohort_weighting metadata"
+        )
+    _cohort_weighting_metadata(
+        config, data, state, context="Q-3D resume physiology cache",
+        synthetic_override=bool(state.get("synthetic_gate_override_requested", False)),
+        require_existing=True,
+    )
+    if str(config.get("arm")) != "o1":
+        if teacher is None or payload.get("teacher_sha256") != _state_sha256(teacher):
+            raise RuntimeError("Q-3D resume physiology cache teacher snapshot differs")
+    if payload.get("codebook_sha256") != expected_codebook_sha:
+        raise RuntimeError("Q-3D resume physiology cache codebook snapshot differs")
+    if payload.get("source_identity") != data.cache_source_identity():
+        raise RuntimeError("Q-3D resume physiology cache source cohort differs")
 
 
 def run_training(
@@ -2604,6 +3041,11 @@ def run_training(
             ]
 
     state["synthetic_gate_override_requested"] = bool(synthetic_gate_override)
+    if resume_from is not None:
+        _validate_resumed_physiology_cache(
+            normalized, q3d_data, state, output_dir=output,
+            teacher=teacher, tokenizer=tokenizer,
+        )
 
     if update_limit is not None:
         state["requested_update_limit"] = int(state["completed_updates_total"]) + update_limit
@@ -2697,6 +3139,8 @@ def run_training(
         "synthetic_gate_override_used": bool(state.get("synthetic_gate_override_used", False)),
         "physiology_support_gate": state.get("physiology_support_gate"),
         "physiology_support_gates": list(state.get("physiology_support_gates", [])),
+        "physiology_cohort_weighting": state.get("physiology_cohort_weighting"),
+        "u_patient_cycle": state.get("j_u_patient_cycle"),
         "checkpoint": str(root_checkpoint),
         "checkpoint_sha256": checkpoint_sha256,
         "output_dir": str(output),

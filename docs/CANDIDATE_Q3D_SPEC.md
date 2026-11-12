@@ -22,7 +22,7 @@ Nguồn tổng hợp: atlas `teacher_student_paper_architecture_vi.pdf` (10 tran
 
 **Non-goals (không làm trong Q-3D):** policy chọn query K1, packet/bit codec, đồ thị trạng thái tim, cascade T+S, teacher thời gian, test-time adaptation, đếm bit. A-3D giữ nguyên làm baseline; không sửa file nào trong `self_audit/candidate_a3d/` ngoài import.
 
-**[AMEND] Trạng thái bản sửa 2026-11-12:** P0–P5 theo hợp đồng sửa này đều `NOT_RUN`; kiểm tra hàm thuần CPU/synthetic chỉ là `SOFTWARE_ONLY`. Main đã có triển khai Q3D tại `28e1a36be014a0d75272d5aca3fff18e482d3593`; kiểm tra lịch sử không chứng minh triển khai đó đáp ứng bản sửa. Chưa có kết quả bệnh nhân, GPU hay novelty. Đợt này chỉ sửa spec và khóa helper loss, không sửa engine, student, tokenizer hoặc train.
+**[AMEND] Trạng thái bản sửa 2026-11-12:** P0–P5 theo hợp đồng sửa này đều `NOT_RUN`; kiểm tra hàm thuần CPU/synthetic chỉ là `SOFTWARE_ONLY`. Main đã có triển khai Q3D tại `28e1a36be014a0d75272d5aca3fff18e482d3593`; kiểm tra lịch sử không chứng minh triển khai đó đáp ứng bản sửa. Chưa có kết quả bệnh nhân, GPU hay novelty. Đợt khóa helper tại `b31eb9f` chỉ sửa spec và hàm thuần. **[AMEND] Đợt tích hợp tiếp theo nối hợp đồng weighting vào engine codeKD/feature KD; kiểm chứng CPU/synthetic là SOFTWARE_ONLY, chưa hoàn thành toàn bộ P0–P5.**
 
 ## 2. Kiến trúc tổng thể và hợp đồng tensor
 
@@ -229,7 +229,7 @@ B_f=\frac{1}{|\mathcal C_f|}\sum_{c\in\mathcal C_f}
 
 - `weighted_class_balanced_reduce(per_cell_loss, cls, w_cell, omega) -> (loss, stats)` nhận loss `[D,h,w]` hoặc `[B,D,h,w]`; cls/w_cell cùng `[D,h,w]`. Khi có B, áp map chung cho từng frame rồi mean các loss frame; cohort thật với map khác nhau gọi riêng từng frame. Validate shape, finite, lớp nguyên BG/RV/MYO/LV, w_cell ≥ 0 và omega ≥ 0; weights detach. Stats ghi lớp active/excluded, tổng trọng số lớp, base loss và omega.
 - `cohort_omega(w_pat, arm) -> dict` trả `omega` (patient → float), `mean_w_pat`, `ess`, `ess_fraction`, `mean_omega`, `max_omega`, `zero_fraction`. Đầu vào U không rỗng, weights finite/nonnegative. V1/C1 và V1-u dùng cùng cohort U đủ gate §8; V1-u chỉ bỏ trọng số tương đối. `arm="L"` trả omega = 1 và không áp gate U. Không trộn L/U trong một đầu vào.
-- `tests/test_candidate_q3d_weighting.py` khóa tỉ lệ loss/grad 1:0,1:0; anti-regression công thức cũ; ví dụ tay; zero-support không pha loãng; all-zero giữ graph; mean omega/ESS/gate; L/V1-u; weights bằng nhau cho V1/V1-u trùng từng bit. Chỉ thêm helpers, giữ API loss đang có trên main; tích hợp vào engine thuộc P4 `NOT_RUN`.
+- `tests/test_candidate_q3d_weighting.py` khóa tỉ lệ loss/grad 1:0,1:0; anti-regression công thức cũ; ví dụ tay; zero-support không pha loãng; all-zero giữ graph; mean omega/ESS/gate; L/V1-u; weights bằng nhau cho V1/V1-u trùng từng bit. **[FIX] Tích hợp thực thi:** `codekd_loss` và `feature_kd_loss` nhận `weights = w_cell` cùng keyword riêng `omega`; mỗi frame gọi reducer thuần, sau đó mean loss frame. Engine truyền omega = 1 trên L và omega cohort trên U, kể cả nhánh zero-support giữ graph. Bản khóa helper `b31eb9f` chưa nối engine; kiểm chứng tích hợp weighting tiếp theo là `SOFTWARE_ONLY`, không thay thế acceptance toàn bộ P4.
 
 **Đường gradient:**
 
@@ -360,7 +360,7 @@ Code mới nằm trong `self_audit/candidate_q3d/` và `configs/candidate_q3d/`;
 
 **[AMEND] Đăng ký track thuộc P1 (chưa làm trong đợt khóa helper):** `train.py` dispatch method `candidate_q3d`; `ACTIVE_PIPELINE.json` có `tracks.candidate_q3d`, inference “student only; dense path + frozen code interface”; `scripts/check_repo.py` validate `configs/candidate_q3d`. Q3D là track riêng, không phải A/A-3D, nên dense decoder không vi phạm điều khoản code-only decoder của A/A-3D trong AGENTS.md. Main đã có đăng ký track; xác nhận đầy đủ theo bản sửa thuộc P1 `NOT_RUN`. Near/far chỉ thuộc Q3D, không sửa baseline.
 
-**[AMEND] Phạm vi lần sửa này:** spec và hai helper thuần/test CPU là `SOFTWARE_ONLY`; P0–P5, network-phase probe, GPU, dữ liệu thật và campaign theo bản sửa đều `NOT_RUN`. Giữ API Q3D đang có; checker chỉ thêm tên test khóa hợp đồng vào allowlist.
+**[AMEND] Phạm vi bằng chứng:** khóa helper tại `b31eb9f` và tích hợp weighting vào engine chỉ có kiểm chứng CPU/synthetic (`SOFTWARE_ONLY`). Toàn bộ acceptance P0–P5, network-phase probe, GPU, dữ liệu thật và campaign vẫn `NOT_RUN`; không coi riêng test weighting là hoàn thành P4. Baseline A/A-3D được giữ nguyên.
 
 **Campaign sau P5:** ACDC K = 5 cho bốn arm chính trước, rồi K = 10, rồi K = 2; sau đó M&Ms và test chéo. Một seed.
 
@@ -419,3 +419,5 @@ Lịch sử thiết kế gốc ngày 11/11 được giữ trong git. Đối chi�
 - **[AMEND] A8 — §5/§12 P0; [OPEN]:** tần suất argmax phân suất GT L ở S4 đúng pha; MYO < 2% phải xem lại coverage/balancing trước P2, không tự đổi ngưỡng.
 - **[OPEN] A9 — §13:** decoder bỏ qua mã, prior phạt bệnh lý, commitment xung đột codeKD; logging/giới hạn claim, chưa đổi design.
 - **[AMEND] Phần mềm — §1/§7/§12:** hai helper và test SOFTWARE_ONLY, giữ API main hiện có; P0–P5 bản sửa/GPU/dữ liệu thật NOT_RUN. Prompt chưa cung cấp nội dung riêng mang nhãn F5–F8; đã đối chiếu các mệnh đề code cụ thể ở A3–A7, không tự gán nhãn fact.
+
+- **[FIX] Tích hợp weighting sau `b31eb9f` — §7/§8/§11:** codeKD và feature KD trong engine dùng reducer chung với omega tách khỏi w_cell; L luôn 1, U dùng mean cache/ESS đã khóa, V1-u giữ omega 1 với cùng gate U. Cache lưu thống kê cohort trong payload có SHA và xác minh lại khi load; resume/refresh phải giữ hợp đồng weighting. Test đi qua đường gọi engine và hai loss public, không chỉ helper. Bằng chứng CPU/synthetic là SOFTWARE_ONLY; không đổi job server hoặc ngưỡng sinh lý.

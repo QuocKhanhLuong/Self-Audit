@@ -104,7 +104,7 @@ def _controlled_confidence_targets(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.mark.parametrize(
     ("arm", "loss_name"),
-    (("v1", "codekd_loss"), ("c1", "feature_kd_loss")),
+    (("v1", "codekd_loss"), ("v1u", "codekd_loss"), ("c1", "feature_kd_loss")),
 )
 def test_joint_stage_routes_confidence_cells_and_external_omega(
     tmp_path, monkeypatch, arm, loss_name,
@@ -153,23 +153,33 @@ def test_joint_stage_routes_confidence_cells_and_external_omega(
     )
 
     assert len(calls) == 4  # L/U for two optimizer updates
-    expected_omegas = [
-        1.0, 1.0 / 0.55, 1.0, 0.1 / 0.55,
-    ]
+    expected_omegas = (
+        [1.0, 1.0, 1.0, 1.0]
+        if arm == "v1u" else
+        [1.0, 1.0 / 0.55, 1.0, 0.1 / 0.55]
+    )
     assert [call["omega"] for call in calls] == pytest.approx(expected_omegas)
 
     # The reference is the same real wrapper with only the external patient
     # multiplier removed.  Equality of both loss and VJP catches omega being
     # omitted, put into the cell denominator, or applied twice.
     for call in calls:
-        torch.testing.assert_close(
-            call["loss"], call["reference_loss"] * call["omega"],
-            rtol=2e-5, atol=2e-6,
+        assert call["reference_loss"].item() > 0.0
+        expected_loss = call["reference_loss"] * call["omega"]
+        expected_gradient = call["reference_gradient"] * call["omega"]
+        assert torch.linalg.vector_norm(expected_gradient).item() > 0.0
+        loss_relative_error = float(
+            (call["loss"] - expected_loss).abs()
+            / expected_loss.abs().clamp_min(torch.finfo(expected_loss.dtype).tiny)
         )
-        torch.testing.assert_close(
-            call["gradient"], call["reference_gradient"] * call["omega"],
-            rtol=3e-5, atol=3e-6,
+        gradient_relative_error = float(
+            torch.linalg.vector_norm(call["gradient"] - expected_gradient)
+            / torch.linalg.vector_norm(expected_gradient).clamp_min(
+                torch.finfo(expected_gradient.dtype).tiny
+            )
         )
+        assert loss_relative_error <= 1e-6
+        assert gradient_relative_error <= 1e-6
         assert call["stats"]["omega"] == pytest.approx(call["omega"])
 
     # The confidence-only cell map is unchanged between U patients; .1 must
@@ -187,7 +197,7 @@ def test_joint_stage_routes_confidence_cells_and_external_omega(
         if record.get("stage") == "J" and "event" not in record
     ]
     assert [record["u_patient_omega"] for record in records] == pytest.approx(
-        [1.0 / 0.55, 0.1 / 0.55],
+        [1.0, 1.0] if arm == "v1u" else [1.0 / 0.55, 0.1 / 0.55],
     )
     assert [record["distillation_ramp"] for record in records] == pytest.approx([0.0, 1.0])
     assert final_state["j_optimizer_updates"] == 2
@@ -278,9 +288,9 @@ def test_real_joint_rejects_invalid_u_gate_even_when_override_flag_is_set(
 
 
 def _resume_cache_state(tmp_path: Path, case, rows):
-    teacher_sha = "a" * 64
+    teacher_sha = str(rows[0]["teacher_sha256"])
     cache_path = tmp_path / "physiology_cache.json"
-    save_physiology_cache(
+    cache_sha = save_physiology_cache(
         cache_path, rows, teacher_sha256=teacher_sha, codebook_sha256=None,
         protocol="A", source_identity=case["data"].cache_source_identity(),
     )
@@ -292,18 +302,27 @@ def _resume_cache_state(tmp_path: Path, case, rows):
     state["physiology_rows"] = {row["id"]: dict(row) for row in rows}
     state["physiology_cache"] = {
         "path": str(cache_path),
-        "sha256": engine._file_sha256(cache_path),
+        # save_physiology_cache returns the SHA of the canonical payload, which
+        # is the cache identity persisted by the production P stage.
+        "sha256": cache_sha,
         "teacher_sha256": teacher_sha,
         "codebook_sha256": None,
         "source_identity": case["data"].cache_source_identity(),
         "cohort_weighting": summary,
     }
+    # A current checkpoint seals the normalized omega map alongside the cache
+    # summary; older checkpoints intentionally omit this field in the test
+    # branches below.
+    engine._cohort_weighting_metadata(
+        case["config"], case["data"], state,
+        context="resume fixture", synthetic_override=False,
+    )
     return cache_path, state, summary
 
 
 def test_resume_requires_sealed_cohort_metadata_and_rejects_tampering(tmp_path):
     case, _modules, _unused_state = _case_with_frozen_rows(tmp_path, "c1")
-    teacher_sha = "a" * 64
+    teacher_sha = engine._state_sha256(case["teacher"])
     rows = [
         {
             "id": patient,
@@ -316,38 +335,105 @@ def test_resume_requires_sealed_cohort_metadata_and_rejects_tampering(tmp_path):
     ]
     cache_path, state, summary = _resume_cache_state(tmp_path, case, rows)
 
-    # An old cache with no sealed summary is rejected, even if its outer file
-    # digest is updated to the newly written bytes.
-    old_state = copy.deepcopy(state)
-    old_state.pop("physiology_cohort_weighting", None)
-    document = json.loads(cache_path.read_text(encoding="utf-8"))
-    document["payload"].pop("cohort_weighting")
-    cache_path.write_text(json.dumps(document, sort_keys=True), encoding="utf-8")
-    old_state["physiology_cache"]["sha256"] = engine._file_sha256(cache_path)
-    with pytest.raises(RuntimeError, match="old physiology cache without cohort_weighting"):
-        engine._validate_resumed_physiology_cache(
-            case["config"], case["data"], old_state,
-            output_dir=tmp_path, teacher=None, tokenizer=None,
-        )
-
-    # Reseal a valid cache, migrate the runtime omega map once, then reject a
-    # checkpoint whose omega was changed independently of the sealed cache.
-    save_physiology_cache(
-        cache_path, rows, teacher_sha256=teacher_sha, codebook_sha256=None,
-        protocol="A", source_identity=case["data"].cache_source_identity(),
-    )
-    state["physiology_cache"]["sha256"] = engine._file_sha256(cache_path)
+    # A valid cache and checkpoint resume together are accepted first.  This
+    # binds the test to the payload SHA returned by save_physiology_cache.
     engine._validate_resumed_physiology_cache(
         case["config"], case["data"], state,
-        output_dir=tmp_path, teacher=None, tokenizer=None,
+        output_dir=tmp_path, teacher=case["teacher"], tokenizer=None,
     )
     assert state["physiology_cohort_weighting"]["mean_omega"] == pytest.approx(1.0)
     assert state["physiology_cache"]["cohort_weighting"] == summary
 
+    # An old cache with no sealed summary is rejected, even if its payload
+    # digest is updated to the newly written bytes.
+    old_cache_state = copy.deepcopy(state)
+    document = json.loads(cache_path.read_text(encoding="utf-8"))
+    document["payload"].pop("cohort_weighting")
+    document["sha256"] = hashlib.sha256(
+        json.dumps(
+            document["payload"], sort_keys=True, separators=(",", ":"),
+            allow_nan=False,
+        ).encode("utf-8")
+    ).hexdigest()
+    cache_path.write_text(json.dumps(document, sort_keys=True), encoding="utf-8")
+    old_cache_state["physiology_cache"]["sha256"] = document["sha256"]
+    with pytest.raises(RuntimeError, match="old physiology cache without cohort_weighting"):
+        engine._validate_resumed_physiology_cache(
+            case["config"], case["data"], old_cache_state,
+            output_dir=tmp_path, teacher=case["teacher"], tokenizer=None,
+        )
+
+    # A checkpoint created before the omega metadata was added is rejected even
+    # when the sealed cache itself is valid.
+    cache_sha = save_physiology_cache(
+        cache_path, rows, teacher_sha256=teacher_sha, codebook_sha256=None,
+        protocol="A", source_identity=case["data"].cache_source_identity(),
+    )
+    state["physiology_cache"]["sha256"] = cache_sha
+    missing_checkpoint_metadata = copy.deepcopy(state)
+    missing_checkpoint_metadata.pop("physiology_cohort_weighting", None)
+    with pytest.raises(RuntimeError, match="missing frozen physiology cohort_weighting metadata"):
+        engine._validate_resumed_physiology_cache(
+            case["config"], case["data"], missing_checkpoint_metadata,
+            output_dir=tmp_path, teacher=case["teacher"], tokenizer=None,
+        )
+
+    changed_teacher = torch.nn.Linear(1, 1)
+    with pytest.raises(RuntimeError, match="teacher snapshot differs"):
+        engine._validate_resumed_physiology_cache(
+            case["config"], case["data"], state,
+            output_dir=tmp_path, teacher=changed_teacher, tokenizer=None,
+        )
+
+    # Swapping the two patient weights leaves mean and ESS unchanged. Even a
+    # matching rederived runtime omega map must not override the sealed rows.
+    swapped = copy.deepcopy(state)
+    first, second = (row["id"] for row in rows)
+    swapped["physiology_rows"][first]["w_pat"] = rows[1]["w_pat"]
+    swapped["physiology_rows"][second]["w_pat"] = rows[0]["w_pat"]
+    engine._cohort_weighting_metadata(
+        case["config"], case["data"], swapped,
+        context="swapped checkpoint", synthetic_override=False,
+    )
+    with pytest.raises(RuntimeError, match="patient rows differ"):
+        engine._validate_resumed_physiology_cache(
+            case["config"], case["data"], swapped,
+            output_dir=tmp_path, teacher=case["teacher"], tokenizer=None,
+        )
+
+    # O1 intentionally refreshes the teacher while retaining the cache's
+    # recorded snapshot identity.  A changed current teacher is therefore
+    # accepted for O1, but the stored payload/checkpoint SHA is untouched.
+    o1_case, _o1_modules, _o1_unused_state = _case_with_frozen_rows(tmp_path / "o1", "c1")
+    o1_case["config"]["arm"] = "o1"
+    o1_teacher_sha = engine._state_sha256(o1_case["teacher"])
+    o1_rows = [
+        {
+            "id": patient,
+            "w_pat": weight,
+            "protocol": "A",
+            "teacher_sha256": o1_teacher_sha,
+            "codebook_sha256": None,
+        }
+        for patient, weight in zip(o1_case["data"].unlabeled_patients, (1.0, 0.1))
+    ]
+    o1_cache_path, o1_state, _o1_summary = _resume_cache_state(
+        tmp_path / "o1", o1_case, o1_rows,
+    )
+    o1_changed_teacher = torch.nn.Linear(1, 1)
+    engine._validate_resumed_physiology_cache(
+        o1_case["config"], o1_case["data"], o1_state,
+        output_dir=tmp_path / "o1", teacher=o1_changed_teacher, tokenizer=None,
+    )
+    assert o1_state["physiology_cache"]["path"] == str(o1_cache_path)
+    assert o1_state["physiology_cache"]["teacher_sha256"] == o1_teacher_sha
+
+    # Finally reject a checkpoint whose omega was changed independently of the
+    # sealed cache.
     tampered = copy.deepcopy(state)
     tampered["physiology_cohort_weighting"]["omega"][rows[0]["id"]] = 9.0
     with pytest.raises(RuntimeError, match="stale or inconsistent"):
         engine._validate_resumed_physiology_cache(
             case["config"], case["data"], tampered,
-            output_dir=tmp_path, teacher=None, tokenizer=None,
+            output_dir=tmp_path, teacher=case["teacher"], tokenizer=None,
         )

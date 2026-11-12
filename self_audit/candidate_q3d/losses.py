@@ -170,40 +170,41 @@ def _class_balanced_weighted_mean(
     classes: Tensor,
     weights: Tensor,
     *,
-    class_count: int = 4,
+    omega: float = 1.0,
 ) -> tuple[Tensor, dict[str, Any]]:
-    if values.shape != classes.shape or weights.shape != classes.shape:
-        raise ValueError("values, class IDs, and weights must have the same [B,...] shape")
-    if classes.dtype.is_floating_point or classes.dtype.is_complex:
-        raise TypeError("teacher class IDs must be integer")
-    if not torch.isfinite(values).all() or not torch.isfinite(weights).all():
-        raise FloatingPointError("distillation values/weights contain NaN or Inf")
-    if bool((weights < 0).any()):
-        raise ValueError("distillation weights must be nonnegative")
-    if bool(((classes < 0) | (classes >= class_count)).any()):
-        raise ValueError("teacher class IDs are outside the declared class range")
-    classes = classes.detach().long()
-    weights = weights.detach().float()
-    class_terms: list[Tensor] = []
-    used: list[int] = []
-    dropped: list[int] = []
-    for class_id in range(class_count):
-        selected = classes.eq(class_id)
-        if not bool(selected.any()):
-            continue
-        class_weights = weights[selected]
-        denom = class_weights.sum()
-        if not bool(denom > 0):
-            dropped.append(class_id)
-            continue
-        class_terms.append((values[selected].float() * class_weights).sum() / (denom + 1e-8))
-        used.append(class_id)
-    if not class_terms:
-        raise ValueError("all class-balanced distillation weights are zero; refusing to disable the loss")
-    result = torch.stack(class_terms).mean()
-    if not torch.isfinite(result):
-        raise FloatingPointError("nonfinite class-balanced distillation loss")
-    return result, {"used_classes": used, "zero_weight_classes": dropped}
+    """Adapt batched KD maps to the single-frame contract in section 7.
+
+    Every frame has its own class/weight map and contributes one frame loss,
+    including graph-connected zeros. ``weights`` contains cell confidence
+    only; the patient multiplier is the separate ``omega`` argument.
+    """
+    if any(not isinstance(value, Tensor) for value in (values, classes, weights)):
+        raise TypeError("distillation values, class IDs, and weights must be tensors")
+    if values.ndim != 4 or values.shape != classes.shape or weights.shape != classes.shape:
+        raise ValueError("values, class IDs, and weights must share [B,D,H,W]")
+    if values.shape[0] == 0:
+        raise ValueError("distillation batch must be nonempty")
+    frame_losses: list[Tensor] = []
+    frame_stats: list[dict[str, Any]] = []
+    used: set[int] = set()
+    dropped: set[int] = set()
+    for frame in range(values.shape[0]):
+        loss, stats = weighted_class_balanced_reduce(
+            values[frame], classes[frame], weights[frame], omega,
+        )
+        frame_losses.append(loss)
+        frame_stats.append(stats)
+        used.update(stats["active_classids"])
+        present = set(int(value) for value in classes[frame].unique().tolist())
+        dropped.update(present.intersection(stats["excluded_classids"]))
+    # Keep the public KD loss dtype; accumulation inside the pure reducer uses
+    # higher precision for tiny cell supports without changing their support.
+    result = torch.stack(frame_losses).mean().to(dtype=values.dtype)
+    return result, {
+        "used_classes": sorted(used), "zero_weight_classes": sorted(dropped),
+        "frames": frame_stats, "omega": frame_stats[0]["omega"],
+        "base_loss": sum(item["base_loss"] for item in frame_stats) / len(frame_stats),
+    }
 
 
 def codekd_loss(
@@ -211,13 +212,15 @@ def codekd_loss(
     pi_student: Tensor,
     teacher_classes: Tensor,
     weights: Tensor,
+    *,
+    omega: float = 1.0,
 ) -> tuple[Tensor, dict[str, Any]]:
     """Class-balanced weighted KL(teacher assignments || student assignments).
 
     Background is class zero and receives the same class mean weight as each
-    present foreground class.  A zero-weight present class is reported and
-    omitted; if every class has zero weight this raises instead of returning a
-    fake zero loss.
+    present foreground class within each frame. Cell weights exclude patient
+    physiology: ``omega`` multiplies the balanced frame loss outside every
+    denominator. Empty support returns a zero retaining the student graph.
     """
 
     if not isinstance(pi_teacher, Tensor) or not isinstance(pi_student, Tensor):
@@ -242,11 +245,13 @@ def codekd_loss(
         raise ValueError("codeKD distributions must have positive mass at every cell")
     # Normalize defensively only to correct floating point sum drift.  Inputs
     # are still required to represent probability mass, not arbitrary scores.
-    teacher_probabilities = pi_teacher.detach().float()
+    dtype = torch.float64 if pi_student.dtype == torch.float64 else torch.float32
+    teacher_probabilities = pi_teacher.detach().to(dtype=dtype)
     p_t = teacher_probabilities / teacher_probabilities.sum(1, keepdim=True)
-    p_s = pi_student.float() / pi_student.float().sum(1, keepdim=True)
+    student_probabilities = pi_student.to(dtype=dtype)
+    p_s = student_probabilities / student_probabilities.sum(1, keepdim=True)
     kl = (p_t * (p_t.clamp_min(1e-8).log() - p_s.clamp_min(1e-8).log())).sum(1)
-    loss, stats = _class_balanced_weighted_mean(kl, teacher_classes, weights)
+    loss, stats = _class_balanced_weighted_mean(kl, teacher_classes, weights, omega=omega)
     return loss, {"loss": loss.detach(), **stats}
 
 
@@ -255,8 +260,10 @@ def feature_kd_loss(
     feature_student: Tensor,
     teacher_classes: Tensor,
     weights: Tensor,
+    *,
+    omega: float = 1.0,
 ) -> tuple[Tensor, dict[str, Any]]:
-    """C1 class-balanced weighted cosine alignment of continuous features."""
+    """C1 cosine KD with the same cell reducer and outer omega as codeKD."""
 
     if feature_teacher.ndim != 5 or feature_student.ndim != 5 \
             or feature_teacher.shape[0] != feature_student.shape[0] \
@@ -266,10 +273,13 @@ def feature_kd_loss(
         raise ValueError("feature KD channels must match")
     if not torch.isfinite(feature_teacher).all() or not torch.isfinite(feature_student).all():
         raise FloatingPointError("feature KD tensors contain NaN or Inf")
+    dtype = torch.float64 if feature_student.dtype == torch.float64 else torch.float32
     per_cell = 1.0 - F.cosine_similarity(
-        feature_teacher.detach().float(), feature_student.float(), dim=1, eps=1e-8,
+        feature_teacher.detach().to(dtype=dtype), feature_student.to(dtype=dtype), dim=1, eps=1e-8,
     )
-    loss, stats = _class_balanced_weighted_mean(per_cell, teacher_classes, weights)
+    if weights.ndim == 5 and weights.shape[1] == 1:
+        weights = weights[:, 0]
+    loss, stats = _class_balanced_weighted_mean(per_cell, teacher_classes, weights, omega=omega)
     return loss, {"loss": loss.detach(), **stats}
 
 

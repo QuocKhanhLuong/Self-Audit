@@ -24,6 +24,7 @@ from self_audit.candidate_q3d.physiology import (
     physiology_dev_diagnostic,
     physiology_weight_for_patient,
     save_physiology_cache,
+    summarize_physiology_cohort,
 )
 from scripts.q3d_physio_cache import build_cache
 
@@ -115,6 +116,36 @@ def _analytic_cine():
         probabilities[frame, 0, myo] = 0.0
         probabilities[frame, 2, myo] = 1.0
     return probabilities, geometry, chamber_radii, myo
+
+
+def _minimal_cache_rows(weights):
+    return [
+        {
+            "id": patient_id,
+            "protocol": "A",
+            "teacher_sha256": "a" * 64,
+            "codebook_sha256": None,
+            "w_pat": weight,
+        }
+        for patient_id, weight in weights
+    ]
+
+
+def _minimal_cache_source(rows):
+    return {
+        "protocol": "A",
+        "train_manifest_sha256": "c" * 64,
+        "unlabeled_patients": [
+            {"id": row["id"], "image_sha256": f"{index + 1:064x}"}
+            for index, row in enumerate(rows)
+        ],
+    }
+
+
+def _reseal_cache(document):
+    payload = document["payload"]
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), allow_nan=False)
+    document["sha256"] = hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
 
 def test_analytic_ellipsoid_volumes_select_predicted_ed_es_and_weight_one():
@@ -261,6 +292,126 @@ def test_cache_hash_binds_protocol_teacher_codebook_tau_and_source(tmp_path):
             target, teacher_sha256="a" * 64, codebook_sha256=None,
             protocol="A", config=config, source_identity=source,
         )
+
+
+def test_cache_persists_unequal_u_weight_mean_ess_and_gate(tmp_path):
+    rows = _minimal_cache_rows([("U-1", 1.0), ("U-2", 0.5), ("U-3", 0.25)])
+    source = _minimal_cache_source(rows)
+    config = {"physio": {"stroke_balance": True, "tau_sv": 0.15, "tau_m": 0.1}}
+    target = tmp_path / "unequal" / "physiology.json"
+    save_physiology_cache(
+        target, rows, teacher_sha256="a" * 64, codebook_sha256=None,
+        protocol="A", config=config, source_identity=source,
+    )
+
+    document = json.loads(target.read_text())
+    metadata = document["payload"]["cohort_weighting"]
+    expected = summarize_physiology_cohort(rows)
+    assert metadata == expected
+    assert metadata["patient_ids"] == ["U-1", "U-2", "U-3"]
+    assert metadata["count"] == 3
+    assert metadata["mean_w_pat"] == pytest.approx(1.75 / 3.0)
+    expected_ess = 1.75 ** 2 / (1.0 ** 2 + 0.5 ** 2 + 0.25 ** 2)
+    assert metadata["ess"] == pytest.approx(expected_ess)
+    assert metadata["ess_fraction"] == pytest.approx(expected_ess / 3.0)
+    assert metadata["gate_passed"] is True
+    loaded = load_physiology_cache(
+        target, teacher_sha256="a" * 64, codebook_sha256=None,
+        protocol="A", config=config, source_identity=source,
+    )
+    assert loaded["payload"]["cohort_weighting"] == metadata
+
+
+def test_cache_writes_and_loads_all_zero_u_cohort_for_audit(tmp_path):
+    rows = _minimal_cache_rows([("U-1", 0.0), ("U-2", 0.0)])
+    source = _minimal_cache_source(rows)
+    config = {"physio": {"stroke_balance": True, "tau_sv": 0.15, "tau_m": 0.1}}
+    target = tmp_path / "all-zero" / "physiology.json"
+    checksum = save_physiology_cache(
+        target, rows, teacher_sha256="a" * 64, codebook_sha256=None,
+        protocol="A", config=config, source_identity=source,
+    )
+    document = json.loads(target.read_text())
+    metadata = document["payload"]["cohort_weighting"]
+    assert checksum == document["sha256"]
+    assert metadata["mean_w_pat"] == 0.0
+    assert metadata["ess"] == 0.0
+    assert metadata["ess_fraction"] == 0.0
+    assert metadata["gate_passed"] is False
+    loaded = load_physiology_cache(
+        target, teacher_sha256="a" * 64, codebook_sha256=None,
+        protocol="A", config=config, source_identity=source,
+    )
+    assert loaded["payload"]["cohort_weighting"]["gate_passed"] is False
+    assert not physiology_cache_needs_refresh(
+        loaded, teacher_sha256="a" * 64, codebook_sha256=None,
+        protocol="A", epoch=0, config=config, source_identity=source,
+    )
+
+
+def test_cache_rejects_resealed_forged_cohort_metadata(tmp_path):
+    rows = _minimal_cache_rows([("U-1", 1.0), ("U-2", 0.5)])
+    source = _minimal_cache_source(rows)
+    config = {"physio": {"stroke_balance": True, "tau_sv": 0.15, "tau_m": 0.1}}
+    target = tmp_path / "forged" / "physiology.json"
+    save_physiology_cache(
+        target, rows, teacher_sha256="a" * 64, codebook_sha256=None,
+        protocol="A", config=config, source_identity=source,
+    )
+    document = json.loads(target.read_text())
+    document["payload"]["cohort_weighting"]["mean_w_pat"] += 0.125
+    _reseal_cache(document)
+    target.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n")
+    with pytest.raises(ValueError, match="mean_w_pat.*cached rows"):
+        load_physiology_cache(
+            target, teacher_sha256="a" * 64, codebook_sha256=None,
+            protocol="A", config=config, source_identity=source,
+        )
+
+
+def test_cache_rejects_resealed_stale_format_without_cohort_metadata(tmp_path):
+    rows = _minimal_cache_rows([("U-1", 1.0), ("U-2", 0.5)])
+    source = _minimal_cache_source(rows)
+    config = {"physio": {"stroke_balance": True, "tau_sv": 0.15, "tau_m": 0.1}}
+    target = tmp_path / "stale" / "physiology.json"
+    save_physiology_cache(
+        target, rows, teacher_sha256="a" * 64, codebook_sha256=None,
+        protocol="A", config=config, source_identity=source,
+    )
+    document = json.loads(target.read_text())
+    del document["payload"]["cohort_weighting"]
+    _reseal_cache(document)
+    target.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n")
+    with pytest.raises(ValueError, match="cohort_weighting metadata is missing.*regenerate"):
+        load_physiology_cache(
+            target, teacher_sha256="a" * 64, codebook_sha256=None,
+            protocol="A", config=config, source_identity=source,
+        )
+    assert physiology_cache_needs_refresh(
+        document, teacher_sha256="a" * 64, codebook_sha256=None,
+        protocol="A", epoch=0, config=config, source_identity=source,
+    )
+
+
+def test_cache_binds_existing_image_only_u_cohort_exactly(tmp_path):
+    fixture, data = _student_data(tmp_path / "existing-u", n_labeled=2, n_unlabeled=3)
+    rows = _minimal_cache_rows([(patient_id, 0.4 + index * 0.1)
+                                for index, patient_id in enumerate(data.uids)])
+    source = Q3DData(data, protocol="A").cache_source_identity()
+    config = {"physio": {"stroke_balance": True, "tau_sv": 0.15, "tau_m": 0.1}}
+    target = tmp_path / "existing-u" / "physiology.json"
+    save_physiology_cache(
+        target, rows, teacher_sha256="a" * 64, codebook_sha256=None,
+        protocol="A", config=config, source_identity=source,
+    )
+    loaded = load_physiology_cache(
+        target, teacher_sha256="a" * 64, codebook_sha256=None,
+        protocol="A", config=config, source_identity=source,
+    )
+    assert loaded["payload"]["cohort_weighting"]["patient_ids"] == sorted(data.uids)
+    assert loaded["payload"]["cohort_weighting"]["count"] == len(data.uids)
+    assert {row["id"] for row in loaded["payload"]["patients"]} == set(data.uids)
+    assert set(fixture["train_ids"]) >= set(data.uids)
 
 
 def test_cache_cli_builds_a_marked_synthetic_snapshot_without_patient_claims(tmp_path):

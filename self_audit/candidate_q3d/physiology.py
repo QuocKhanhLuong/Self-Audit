@@ -12,6 +12,7 @@ import math
 import os
 import re
 import tempfile
+from numbers import Real
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -24,6 +25,7 @@ from ..candidate_a3d.geometry import VolumeGeometry3D, canonical_geometry
 
 
 _CACHE_SCHEMA = "self_audit.candidate_q3d.physiology_cache.v1"
+_COHORT_WEIGHTING_SCHEMA = "self_audit.candidate_q3d.cohort_weighting.v1"
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _CLASS_RV, _CLASS_MYO, _CLASS_LV = 1, 2, 3
 
@@ -368,6 +370,152 @@ def _source_patient_ids(source_identity: Mapping[str, Any], protocol: str) -> se
     return set(ids)
 
 
+def _validated_cache_rows(
+    patients: Any,
+) -> list[dict[str, Any]]:
+    """Copy and validate the rows used by cache statistics and serialization.
+
+    ``w_pat`` is the only row value used for cohort weighting.  It is still
+    validated here (rather than only at the call sites) so the statistics in
+    ``cohort_weighting`` can never be computed from a different set of rows
+    than the rows written to or read from the cache.  Boolean values are
+    rejected even though Python considers them integers.
+    """
+
+    if not isinstance(patients, list):
+        raise ValueError("physiology cache patients must be a list")
+    if not patients:
+        raise ValueError("physiology cache requires at least one patient row")
+    rows: list[dict[str, Any]] = []
+    ids: list[str] = []
+    for index, raw_row in enumerate(patients):
+        if not isinstance(raw_row, Mapping):
+            raise ValueError(f"physiology cache patient row {index} is not a mapping")
+        row = dict(raw_row)
+        patient_id = row.get("id")
+        if not isinstance(patient_id, str) or not patient_id.strip():
+            raise ValueError("physiology cache patient IDs must be nonempty strings")
+        weight = row.get("w_pat")
+        if (isinstance(weight, bool) or not isinstance(weight, Real)
+                or not math.isfinite(float(weight)) or not 0.0 <= float(weight) <= 1.0):
+            raise ValueError(
+                f"physiology cache patient row {patient_id!r} w_pat must be finite and in [0,1]"
+            )
+        # Normalize numeric scalar subclasses before json.dump.  This also
+        # makes the exact rows used in the summary the exact rows persisted.
+        row["w_pat"] = float(weight)
+        ids.append(patient_id)
+        rows.append(row)
+    if len(set(ids)) != len(ids):
+        raise ValueError("physiology cache patient rows are malformed or duplicated")
+    return rows
+
+
+def summarize_physiology_cohort(rows: list[Mapping[str, Any]]) -> dict[str, Any]:
+    """Return raw U-cohort ``w_pat`` statistics and the frozen gate result.
+
+    This helper deliberately reports the source weights, not normalized
+    ``omega`` values.  The L-arm implementation of :func:`cohort_omega` is
+    used only as a gate-free, numerically stable source-statistics calculator;
+    callers choose an arm and construct normalized omega exactly once when a
+    cache is consumed.  A zero-mean or low-ESS cohort is therefore valid audit
+    output with ``gate_passed=False`` rather than a serialization error.
+    """
+
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("physiology cohort summary requires nonempty patient rows")
+    validated = _validated_cache_rows(rows)
+    patient_ids = sorted(row["id"] for row in validated)
+    weights = {row["id"]: row["w_pat"] for row in validated}
+
+    # Import lazily to keep this data/cache module usable by standalone tools
+    # and to avoid imposing a losses import during module initialization.
+    from .losses import cohort_omega
+
+    raw = cohort_omega(weights, "L")
+    mean_w_pat = float(raw["mean_w_pat"])
+    ess = float(raw["ess"])
+    ess_fraction = float(raw["ess_fraction"])
+    return {
+        "schema": _COHORT_WEIGHTING_SCHEMA,
+        "patient_ids": patient_ids,
+        "count": len(patient_ids),
+        "mean_w_pat": mean_w_pat,
+        "ess": ess,
+        "ess_fraction": ess_fraction,
+        "gate_passed": bool(mean_w_pat > 0.0 and ess_fraction >= 0.25),
+    }
+
+
+def _validate_cohort_weighting(
+    metadata: Any,
+    rows: list[Mapping[str, Any]],
+) -> dict[str, Any]:
+    """Validate cohort metadata against the exact cached patient rows."""
+
+    if not isinstance(metadata, Mapping):
+        raise ValueError(
+            "physiology cache cohort_weighting metadata is missing; regenerate the cache"
+        )
+    required = {
+        "schema", "patient_ids", "count", "mean_w_pat", "ess",
+        "ess_fraction", "gate_passed",
+    }
+    if set(metadata) != required:
+        raise ValueError(
+            "physiology cache cohort_weighting metadata is stale or malformed; "
+            "regenerate the cache"
+        )
+    if metadata.get("schema") != _COHORT_WEIGHTING_SCHEMA:
+        raise ValueError(
+            "physiology cache cohort_weighting schema mismatch; regenerate the cache"
+        )
+    patient_ids = metadata.get("patient_ids")
+    expected = sorted(row["id"] for row in _validated_cache_rows(rows))
+    if (not isinstance(patient_ids, list)
+            or any(not isinstance(patient_id, str) for patient_id in patient_ids)
+            or patient_ids != expected):
+        raise ValueError(
+            "physiology cache cohort_weighting patient_ids differ from cached rows; "
+            "regenerate the cache"
+        )
+    count = metadata.get("count")
+    if type(count) is not int or count != len(expected):
+        raise ValueError(
+            "physiology cache cohort_weighting count differs from cached rows; "
+            "regenerate the cache"
+        )
+    for field in ("mean_w_pat", "ess", "ess_fraction"):
+        value = metadata.get(field)
+        if (isinstance(value, bool) or not isinstance(value, Real)
+                or not math.isfinite(float(value))):
+            raise ValueError(
+                f"physiology cache cohort_weighting {field} is not finite; regenerate the cache"
+            )
+    gate_passed = metadata.get("gate_passed")
+    if type(gate_passed) is not bool:
+        raise ValueError(
+            "physiology cache cohort_weighting gate_passed is not boolean; regenerate the cache"
+        )
+
+    expected_metadata = summarize_physiology_cohort(rows)
+    for field in ("mean_w_pat", "ess", "ess_fraction"):
+        # The expected values are emitted by the same canonical JSON encoder
+        # used by save.  Exact equality catches a resealed forged metadata
+        # value while avoiding an arbitrary tolerance at the gate boundary.
+        if float(metadata[field]) != expected_metadata[field]:
+            raise ValueError(
+                f"physiology cache cohort_weighting {field} does not match cached rows; "
+                "regenerate the cache"
+            )
+    if bool(gate_passed) != expected_metadata["gate_passed"]:
+        raise ValueError(
+            "physiology cache cohort_weighting gate_passed does not match cached rows; "
+            "regenerate the cache"
+        )
+    return dict(metadata)
+
+
 def save_physiology_cache(
     path: str | Path,
     patients: list[Mapping[str, Any]],
@@ -391,19 +539,16 @@ def save_physiology_cache(
         raise ValueError("source_identity must bind the cache to a nonempty TRAIN manifest/cohort")
     expected_ids = _source_patient_ids(source_identity, protocol)
     options = _physio_options(config)
-    rows = [dict(row) for row in patients]
-    ids = [row.get("id") for row in rows]
-    if not rows or any(not isinstance(pid, str) or not pid for pid in ids) or len(set(ids)) != len(ids):
-        raise ValueError("physiology cache requires unique nonempty TRAIN patient rows")
+    rows = _validated_cache_rows(patients)
+    ids = [row["id"] for row in rows]
     if set(ids) != expected_ids:
         raise ValueError("physiology rows must cover exactly the source image-only TRAIN U cohort")
     for row in rows:
         if (row.get("protocol") != protocol or row.get("teacher_sha256") != teacher_sha256
                 or row.get("codebook_sha256") != codebook_sha256):
             raise ValueError("physiology row identity differs from cache protocol/checkpoints")
-        weight = row.get("w_pat")
-        if not isinstance(weight, (int, float)) or not math.isfinite(float(weight)) or not 0 <= weight <= 1:
-            raise ValueError("physiology row w_pat must be finite and in [0,1]")
+    rows = sorted(rows, key=lambda row: row["id"])
+    cohort_weighting = summarize_physiology_cohort(rows)
     payload: dict[str, Any] = {
         "schema": _CACHE_SCHEMA,
         "protocol": protocol,
@@ -414,7 +559,8 @@ def save_physiology_cache(
         "source_identity": dict(source_identity),
         "source_identity_sha256": hashlib.sha256(_canonical_json(source_identity)).hexdigest(),
         "refreshed_epoch": refreshed_epoch,
-        "patients": sorted(rows, key=lambda row: row["id"]),
+        "cohort_weighting": cohort_weighting,
+        "patients": rows,
     }
     checksum = hashlib.sha256(_canonical_json(payload)).hexdigest()
     document = {"payload": payload, "sha256": checksum}
@@ -469,25 +615,36 @@ def load_physiology_cache(
     if (payload.get("protocol") != protocol or payload.get("teacher_sha256") != teacher_sha256
             or payload.get("codebook_sha256") != codebook_sha256):
         raise ValueError("physiology cache protocol, teacher or codebook identity mismatch")
-    if payload.get("physio_config_sha256") != config_sha:
+    try:
+        payload_config_sha = hashlib.sha256(
+            _canonical_json(payload["physio_config"])
+        ).hexdigest()
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError("physiology cache config binding is malformed; regenerate the cache") from exc
+    if payload.get("physio_config_sha256") != payload_config_sha:
+        raise ValueError("physiology cache config binding hash mismatch; regenerate the cache")
+    if payload_config_sha != config_sha:
         raise ValueError("physiology cache tau/gate settings differ from the requested config")
-    if payload.get("source_identity_sha256") != source_sha:
+    try:
+        payload_source_sha = hashlib.sha256(
+            _canonical_json(payload["source_identity"])
+        ).hexdigest()
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError("physiology cache source binding is malformed; regenerate the cache") from exc
+    if payload.get("source_identity_sha256") != payload_source_sha:
+        raise ValueError("physiology cache source binding hash mismatch; regenerate the cache")
+    if payload_source_sha != source_sha:
         raise ValueError("physiology cache source manifest/cohort identity mismatch")
     patients = payload.get("patients")
-    if not isinstance(patients, list) or not patients:
-        raise ValueError("physiology cache has no patient rows")
-    ids = [row.get("id") for row in patients if isinstance(row, dict)]
-    if len(ids) != len(patients) or len(set(ids)) != len(ids):
-        raise ValueError("physiology cache patient rows are malformed or duplicated")
+    rows = _validated_cache_rows(patients)
+    ids = [row["id"] for row in rows]
     if set(ids) != expected_ids:
         raise ValueError("physiology cache patients differ from the image-only TRAIN U cohort")
-    for row in patients:
+    for row in rows:
         if (row.get("protocol") != protocol or row.get("teacher_sha256") != teacher_sha256
                 or row.get("codebook_sha256") != codebook_sha256):
             raise ValueError("physiology patient row checkpoint or protocol identity mismatch")
-        weight = row.get("w_pat")
-        if not isinstance(weight, (int, float)) or not math.isfinite(float(weight)) or not 0 <= weight <= 1:
-            raise ValueError("physiology patient row w_pat must be finite and in [0,1]")
+    _validate_cohort_weighting(payload.get("cohort_weighting"), rows)
     return document
 
 
@@ -535,9 +692,29 @@ def physiology_cache_needs_refresh(
     if cached_ids != expected_ids:
         return True
     options = _physio_options(config)
-    if payload.get("physio_config_sha256") != hashlib.sha256(_canonical_json(options)).hexdigest():
+    try:
+        payload_config_sha = hashlib.sha256(
+            _canonical_json(payload["physio_config"])
+        ).hexdigest()
+        payload_source_sha = hashlib.sha256(
+            _canonical_json(payload["source_identity"])
+        ).hexdigest()
+    except (KeyError, TypeError, ValueError):
         return True
-    if payload.get("source_identity_sha256") != hashlib.sha256(_canonical_json(source_identity)).hexdigest():
+    if payload.get("physio_config_sha256") != payload_config_sha:
+        return True
+    if payload_config_sha != hashlib.sha256(_canonical_json(options)).hexdigest():
+        return True
+    if payload.get("source_identity_sha256") != payload_source_sha:
+        return True
+    if payload_source_sha != hashlib.sha256(_canonical_json(source_identity)).hexdigest():
+        return True
+    try:
+        rows = _validated_cache_rows(payload.get("patients"))
+        if {row["id"] for row in rows} != expected_ids:
+            return True
+        _validate_cohort_weighting(payload.get("cohort_weighting"), rows)
+    except (TypeError, ValueError):
         return True
     if not online_teacher:
         return False
@@ -603,5 +780,6 @@ __all__ = [
     "physiology_cell_weights", "physiology_weight_for_patient",
     "compute_physiology_cache_rows", "save_physiology_cache",
     "load_physiology_cache", "physiology_cache_needs_refresh",
+    "summarize_physiology_cohort",
     "physiology_dev_diagnostic",
 ]

@@ -74,7 +74,7 @@ def test_codekd_balances_present_classes_equally_including_background():
     assert stats["zero_weight_classes"] == []
 
 
-def test_codekd_reports_zero_weight_classes_and_fails_if_all_weights_zero():
+def test_codekd_reports_zero_weight_classes_and_retains_graph_if_all_weights_zero():
     teacher = torch.full((1, 2, 1, 1, 2), 0.5)
     student = torch.full_like(teacher, 0.5)
     classes = torch.tensor([[[[0, 1]]]])
@@ -83,8 +83,12 @@ def test_codekd_reports_zero_weight_classes_and_fails_if_all_weights_zero():
     assert loss.item() == pytest.approx(0.0)
     assert stats["used_classes"] == [0]
     assert stats["zero_weight_classes"] == [1]
-    with pytest.raises(ValueError, match="all class-balanced distillation weights are zero"):
-        codekd_loss(teacher, student, classes, torch.zeros_like(weights))
+    student.requires_grad_(True)
+    empty, empty_stats = codekd_loss(teacher, student, classes, torch.zeros_like(weights))
+    assert empty.item() == 0.0 and empty.grad_fn is not None
+    assert empty_stats["used_classes"] == []
+    empty.backward()
+    assert torch.equal(student.grad, torch.zeros_like(student))
 
 
 def test_codekd_rejects_invalid_probability_mass_and_negative_weights():
@@ -506,7 +510,7 @@ def test_o1_two_pair_run_reenables_teacher_gradients_each_update(tmp_path):
                for name, value in initial_teacher.items())
 
 
-def test_c1_skips_zero_cell_confidence_u_backward_with_positive_patient_support(tmp_path, monkeypatch):
+def test_c1_keeps_zero_cell_confidence_u_backward_graph_with_positive_patient_support(tmp_path, monkeypatch):
     case = _joint_stage_case(tmp_path, "c1")
     case["config"]["training"]["stage_updates"]["J"] = 1
     case["config"]["losses"]["w_mode"] = "physiology"
@@ -533,7 +537,8 @@ def test_c1_skips_zero_cell_confidence_u_backward_with_positive_patient_support(
     state = _execute_joint_stage(case, tmp_path / "c1-zero-u", modules, state=state)
     update = next(record for record in state["metrics"]
                   if record.get("stage") == "J" and record.get("update") == 1)
-    assert update["losses"]["unlabeled_backward_skipped"] == "all_zero_weights"
+    assert update["losses"]["unlabeled_distillation"] == pytest.approx(0.0)
+    assert update["kd_zero_weight_branches"] == ["U"]
     assert update["kd_supported_branches"] == 1
 
 
@@ -555,7 +560,9 @@ def test_c1_allzero_u_patient_support_fails_before_any_j_update(tmp_path):
         _execute_joint_stage(case, tmp_path / "c1-all-zero", modules, state=state)
     assert state.get("j_optimizer_updates", 0) == 0
     assert state["physiology_support_gate"]["status"] == "NO_GO_ALL_U_WEIGHTS_ZERO"
-    assert not any(item.get("stage") == "J" and item.get("event") != "physiology_support_gate"
+    assert not any(item.get("stage") == "J" and item.get("event") not in {
+        "physiology_support_gate", "physiology_weighting",
+    }
                    for item in state["metrics"])
     for name, value in case["student"].state_dict().items():
         if torch.is_tensor(value):
