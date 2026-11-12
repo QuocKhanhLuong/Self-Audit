@@ -3,7 +3,7 @@
 
 This command inspects one validated nested recipe, local source/weight paths,
 the declared train manifest and model source. It never downloads assets,
-modifies a manifest, trains a model, or reads DEV/TEST labels.
+modifies a manifest, trains a model, or reads VAL/TEST labels.
 """
 
 from __future__ import annotations

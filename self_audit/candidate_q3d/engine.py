@@ -803,7 +803,7 @@ def _development_fg_dice(
     from ..candidate_a3d.geometry import VolumeGeometry3D
 
     if output_kind not in {"student", "teacher"}:
-        raise ValueError("development output_kind must be student or teacher")
+        raise ValueError("validation output_kind must be student or teacher")
     path, _raw_manifest, patients, patient_ids, geometries, resolve = _validated_manifest(
         manifest["path"], sha256, train_ids=train_ids, synthetic=synthetic,
     )
