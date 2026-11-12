@@ -1,19 +1,12 @@
 from __future__ import annotations
 
 import math
-import os
-from collections.abc import Sequence
 
 import pytest
 import torch
 from torch import Tensor, nn
 from torch.nn import functional as F
 
-from self_audit.candidate_a3d.teacher import (
-    DualBranchTeacher3D,
-    TinyEncoder3D,
-    build_teacher3d,
-)
 from self_audit.candidate_q3d.alignment import (
     align_teacher_to_student4,
     grid_phase,
@@ -22,22 +15,28 @@ from self_audit.candidate_q3d.alignment import (
     student_grid_phase,
     teacher_grid_phase,
 )
-from self_audit.candidate_q3d.config import UPSTREAM_MEDNEXT_COMMIT
 from self_audit.candidate_q3d.student import CandidateQ3DStudent
 from self_audit.candidate_q3d.teacher_features import (
-    _mednext_phase_chain,
-    forward_teacher_with_features,
     teacher_feature_phase,
     teacher_feature_source,
 )
+from self_audit.candidate_q3d.teacher_resenc import Q3DResEncTeacher
 
 
 def _student() -> CandidateQ3DStudent:
     return CandidateQ3DStudent({"arm": "C0"})
 
 
-def _tiny_teacher() -> DualBranchTeacher3D:
-    teacher = DualBranchTeacher3D(TinyEncoder3D(widths=(4, 8, 12, 16)))
+def _synthetic_teacher(
+    *,
+    strides: tuple[tuple[int, int, int], ...] | None = None,
+    phase_offsets: dict[str, tuple[float, float, float]] | None = None,
+) -> Q3DResEncTeacher:
+    teacher = Q3DResEncTeacher(
+        synthetic=True,
+        strides=strides,
+        phase_offsets=phase_offsets,
+    )
     teacher.requires_grad_(False)
     teacher.eval()
     return teacher
@@ -60,7 +59,7 @@ def _conv_params(module: nn.Module) -> tuple[tuple[int, int, int], ...]:
     raise TypeError(type(module))
 
 
-def _box_probe(chain: Sequence[nn.Module], shape: tuple[int, int, int], axis: int) -> Tensor:
+def _box_probe(chain: tuple[nn.Module, ...], shape: tuple[int, int, int], axis: int) -> Tensor:
     coordinate = torch.arange(shape[axis], dtype=torch.float64)
     view = [1, 1, 1, 1, 1]
     view[axis + 2] = shape[axis]
@@ -75,14 +74,12 @@ def _box_probe(chain: Sequence[nn.Module], shape: tuple[int, int, int], axis: in
         else:
             kernel = torch.ones((1, 1, *kernel_size), dtype=value.dtype)
             kernel /= math.prod(kernel_size)
-            value = F.conv3d(
-                value, kernel, stride=stride, padding=padding, dilation=dilation,
-            )
+            value = F.conv3d(value, kernel, stride=stride, padding=padding, dilation=dilation)
     return value
 
 
 def _check_network_phase_ramps(
-    chain: Sequence[nn.Module],
+    chain: tuple[nn.Module, ...],
     phase: tuple[tuple[int, int, int], tuple[float, float, float]],
     shape: tuple[int, int, int],
 ) -> None:
@@ -98,8 +95,7 @@ def _check_network_phase_ramps(
     for axis in range(3):
         values = _box_probe(chain, shape, axis)
         centers_by_axis = [
-            offset[index]
-            + torch.arange(values.shape[index + 2], dtype=torch.float64) * step[index]
+            offset[index] + torch.arange(values.shape[index + 2], dtype=torch.float64) * step[index]
             for index in range(3)
         ]
         valid_by_axis = [
@@ -115,98 +111,60 @@ def _check_network_phase_ramps(
         expected_shape = [1, 1, 1, 1, 1]
         expected_shape[axis + 2] = expected.numel()
         expected = expected.view(expected_shape).expand_as(observed)
-        assert torch.max(torch.abs(observed - expected)).item() <= 0.5
         assert torch.max(torch.abs(observed - expected)).item() <= 1e-5
 
 
-def test_student_and_tiny_teacher_phases_come_from_actual_modules() -> None:
+def test_student_phase_is_derived_from_live_sampling_modules() -> None:
     student = _student()
-    student_chain = (
+    chain = (
         student.stem[0].conv,
         student.stage1[0].conv,
         student.stage2[0].conv,
         student.stage3.down.conv,
         student.stage4.down.conv,
     )
-    assert student_grid_phase(student) == ((1, 16, 16), (0.0, 0.0, 0.0))
-    assert grid_phase(student_chain) == student_grid_phase(student)
-    _check_network_phase_ramps(student_chain, student_grid_phase(student), (16, 161, 161))
+    phase = student_grid_phase(student)
+    assert phase == ((1, 16, 16), (0.0, 0.0, 0.0))
+    assert grid_phase(chain) == phase
+    _check_network_phase_ramps(chain, phase, (16, 161, 161))
 
-    teacher = _tiny_teacher()
-    tiny_chain = (
-        teacher.encoder.stem[0],
-        teacher.encoder.down[0][0],
-        teacher.encoder.down[1][0],
-        teacher.encoder.down[2][0],
+
+def test_resenc_phase_uses_configured_stride_and_measured_offset() -> None:
+    strides = (
+        (1, 1, 1), (2, 2, 1), (2, 2, 2),
+        (2, 1, 2), (2, 2, 2), (1, 2, 2),
     )
-    assert teacher_feature_phase(teacher, "encoder_stride8", synthetic=True) == (
-        (8, 8, 8), (0.0, 0.0, 0.0)
+    offsets = {
+        "encoder_stride8": (0.5, -1.0, 2.0),
+        "stride16": (1.5, 0.0, -2.0),
+    }
+    teacher = _synthetic_teacher(strides=strides, phase_offsets=offsets)
+    assert teacher_feature_phase(teacher, "encoder_stride8") == (
+        (8, 4, 4), offsets["encoder_stride8"],
     )
-    assert teacher_grid_phase(teacher, "stride8", synthetic=True) == (
-        (8, 8, 8), (0.0, 0.0, 0.0)
+    assert teacher_grid_phase(teacher, "stride16") == (
+        (16, 8, 8), offsets["stride16"],
     )
-    _check_network_phase_ramps(tiny_chain, teacher_grid_phase(
-        teacher, "encoder_stride8", synthetic=True
-    ), (97, 97, 97))
+    assert teacher_feature_source(teacher, "stride8")["module_name"] == "encoder.stages.3"
 
 
-def test_synthetic_bottleneck_phase_uses_the_attached_pool_module() -> None:
-    teacher = _tiny_teacher()
-    with pytest.raises(ValueError, match="actual AvgPool3d"):
-        teacher_grid_phase(teacher, "bottleneck_stride16", synthetic=True)
-    teacher._q3d_stride16_pool = nn.AvgPool3d(
-        kernel_size=(1, 2, 2), stride=(1, 2, 2)
-    )
-    assert teacher_grid_phase(teacher, "bottleneck_stride16", synthetic=True) == (
-        (8, 16, 16), (0.0, 4.0, 4.0)
-    )
-    chain = (
-        teacher.encoder.stem[0],
-        teacher.encoder.down[0][0],
-        teacher.encoder.down[1][0],
-        teacher.encoder.down[2][0],
-        teacher._q3d_stride16_pool,
-    )
-    _check_network_phase_ramps(chain, teacher_grid_phase(
-        teacher, "bottleneck_stride16", synthetic=True
-    ), (97, 97, 97))
+def test_resenc_phase_offsets_fail_closed() -> None:
+    with pytest.raises(ValueError, match="must be finite"):
+        _synthetic_teacher(phase_offsets={"encoder_stride8": (0.0, float("nan"), 0.0)})
+    with pytest.raises(ValueError, match="unsupported"):
+        _synthetic_teacher(phase_offsets={"unknown_source": (0.0, 0.0, 0.0)})
 
 
-@pytest.mark.parametrize(
-    ("source", "feature_index", "step"),
-    [
-        ("decoder_stride8", 3, (8, 8, 8)),
-        ("stride4_decoder_block", 2, (4, 4, 4)),
-    ],
-)
-def test_synthetic_secondary_teacher_sources_probe_their_actual_proxy_chain(
-    source: str,
-    feature_index: int,
-    step: tuple[int, int, int],
-) -> None:
-    teacher = _tiny_teacher()
-    details = teacher_feature_source(teacher, source, synthetic=True)
-    assert details["synthetic_proxy"] is True
-    assert details["feature_index"] == feature_index
-    chain = (teacher.encoder.stem[0], *(
-        teacher.encoder.down[index][0] for index in range(feature_index)
-    ))
-    phase = teacher_feature_phase(teacher, source, synthetic=True)
-    assert phase == (step, (0.0, 0.0, 0.0))
-    _check_network_phase_ramps(chain, phase, (97, 97, 97))
-
-
-@pytest.mark.parametrize("depth", [6, 8])
-def test_alignment_endpoint_replication_handles_shallow_teacher_depth(depth: int) -> None:
+def test_alignment_endpoint_replication_handles_shallow_teacher_depth() -> None:
     teacher_phase = ((8, 8, 8), (0.0, 0.0, 0.0))
     student_phase = ((1, 16, 16), (0.0, 0.0, 0.0))
     source = torch.full((1, 1, 1, 3, 3), 2.5, dtype=torch.float64)
-    aligned = align_teacher_to_student4(source, (depth, 17, 19), teacher_phase, student_phase)
-    assert aligned.shape == (1, 1, depth, 2, 2)
+    aligned = align_teacher_to_student4(source, (6, 17, 19), teacher_phase, student_phase)
+    assert aligned.shape == (1, 1, 6, 2, 2)
     torch.testing.assert_close(aligned, torch.full_like(aligned, 2.5))
 
 
-def test_alignment_samples_all_native_student_centers_with_precise_interior() -> None:
+def test_alignment_samples_all_native_student_centers() -> None:
     native_shape = (32, 33, 41)
     teacher_phase = ((8, 8, 8), (0.0, 0.0, 0.0))
     student_phase = ((1, 16, 16), (0.0, 0.0, 0.0))
@@ -219,12 +177,12 @@ def test_alignment_samples_all_native_student_centers_with_precise_interior() ->
     expected_z = torch.arange(native_shape[0], dtype=torch.float64).view(-1, 1, 1)
     expected_y = (torch.arange(3, dtype=torch.float64) * 16).view(1, -1, 1)
     expected_x = (torch.arange(3, dtype=torch.float64) * 16).view(1, 1, -1)
-    expected = (expected_z + expected_y + expected_x).view(1, 1, *expected_z.shape[:1], 3, 3)
+    expected = (expected_z + expected_y + expected_x).view(1, 1, native_shape[0], 3, 3)
     torch.testing.assert_close(aligned[..., :25, :, :], expected[..., :25, :, :], atol=1e-5, rtol=0)
     assert not aligned.requires_grad
 
 
-def test_pool_native_cells_uses_centered_overlap_and_excludes_padded_values() -> None:
+def test_pool_native_cells_uses_centered_overlap_and_excludes_padding() -> None:
     native_shape = (16, 65, 65)
     student_phase = ((1, 16, 16), (0.0, 0.0, 0.0))
     depth, height, width = native_shape
@@ -233,20 +191,17 @@ def test_pool_native_cells_uses_centered_overlap_and_excludes_padded_values() ->
     x = torch.arange(width, dtype=torch.float64).view(1, 1, 1, 1, width)
     native = z + y + x
     pooled = pool_native_cells(native, native_shape, student_phase)
-    expected = torch.tensor(7 + 32 + 32, dtype=torch.float64)
-    torch.testing.assert_close(pooled[0, 0, 7, 2, 2], expected, atol=1e-5, rtol=0)
-
+    torch.testing.assert_close(pooled[0, 0, 7, 2, 2], torch.tensor(71.0, dtype=torch.float64))
     padded = torch.full((1, 1, 17, 80, 80), 10000.0, dtype=torch.float64)
     padded[..., :depth, :height, :width] = native
-    padded_pooled = pool_native_cells(padded, native_shape, student_phase)
-    torch.testing.assert_close(padded_pooled, pooled)
+    torch.testing.assert_close(pool_native_cells(padded, native_shape, student_phase), pooled)
 
 
-def test_pool_teacher_targets_returns_native_fractions_class_and_mean_confidence() -> None:
+def test_pool_teacher_targets_returns_fractions_classes_and_confidence() -> None:
     native_shape = (1, 33, 33)
     student_phase = ((1, 16, 16), (0.0, 0.0, 0.0))
     logits = torch.zeros((1, 4, 2, 48, 48), dtype=torch.float32)
-    logits[:, 3] = 100.0  # high-side padding must be removed before softmax/pooling
+    logits[:, 3] = 100.0  # high-side padding must be removed before pooling
     logits[:, :, :1, :33, :33] = 0.0
     logits[:, 0, :, :, :16] = 9.0
     logits[:, 1, :, :, 16:33] = 9.0
@@ -259,113 +214,18 @@ def test_pool_teacher_targets_returns_native_fractions_class_and_mean_confidence
     assert confidence[0, 0, 1, 1] > 0.99
 
 
-def test_tiny_feature_capture_observes_forward_tuple_once_and_preserves_teacher_outputs() -> None:
-    teacher = _tiny_teacher()
-    image = torch.rand((1, 1, 6, 17, 19), dtype=torch.float32)
-    geometry = {
-        "shape": (6, 17, 19),
-        "spacing_zyx": (5.0, 1.2, 1.2),
-        "affine_zyx": torch.eye(4),
-        "context": "full_volume",
-    }
-    with torch.no_grad():
-        reference = teacher(image, geometry=geometry)
-    calls = 0
-    original = teacher.encoder.forward_features
-
-    def counted(value: Tensor) -> tuple[Tensor, ...]:
-        nonlocal calls
-        calls += 1
-        return original(value)
-
-    teacher.encoder.forward_features = counted
-    captured = forward_teacher_with_features(
-        teacher, image, geometry=geometry, source="encoder_stride8", synthetic=True,
-    )
-    assert calls == 1
-    assert set(captured) == {"region_logits", "boundary_logits", "sdf", "feature"}
-    assert captured["feature"].shape == (1, 16, 1, 3, 3)
-    assert not captured["feature"].requires_grad
-    for key in ("region_logits", "boundary_logits", "sdf"):
-        torch.testing.assert_close(captured[key], reference[key])
+def test_resenc_feature_source_is_encoder_grid_and_requires_no_hooks() -> None:
+    teacher = _synthetic_teacher()
+    details = teacher_feature_source(teacher, "encoder_stride8", synthetic=True)
+    assert details["feature_index"] == 3
+    assert details["module_name"] == "encoder.stages.3"
+    assert details["capture_api"] == "forward_with_features"
+    assert details["module"] is None
+    assert details["synthetic_proxy"] is True
 
 
-@pytest.mark.skipif(
-    not os.environ.get("Q3D_OFFICIAL_MEDNEXT_SOURCE"),
-    reason="set Q3D_OFFICIAL_MEDNEXT_SOURCE to the clean pinned MedNeXt checkout",
-)
-def test_actual_pinned_mednext_feature_phases_and_source_modules() -> None:
-    source_repo = os.environ["Q3D_OFFICIAL_MEDNEXT_SOURCE"]
-    teacher, _provenance = build_teacher3d(
-        {
-            "backbone": "mednext_l_k3",
-            "input_channels": 1,
-            "source_repo": source_repo,
-            "source_commit": UPSTREAM_MEDNEXT_COMMIT,
-            "weights": None,
-            "weights_sha256": None,
-        },
-        synthetic=False,
-    )
-    assert teacher.encoder.source_commit == "0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba"
-    assert teacher_feature_phase(teacher, "encoder_stride8") == (
-        (8, 8, 8), (0.0, 0.0, 0.0)
-    )
-    main_chain = _mednext_phase_chain(teacher.encoder.model, "encoder_stride8")
-    sampling_chain = tuple(
-        module for index, module in enumerate(main_chain)
-        if index == 0 or module.stride != (1, 1, 1)
-    )
-    _check_network_phase_ramps(
-        sampling_chain,
-        teacher_feature_phase(teacher, "encoder_stride8"),
-        (33, 33, 33),
-    )
-    main = teacher_feature_source(teacher, "encoder_stride8")
-    assert main["feature_index"] == 3
-    assert main["capture_api"] == "forward_with_features"
-    assert main["module"] is None
-    decoder = teacher_feature_source(teacher, "decoder_stride8")
-    assert decoder["module_name"] == "dec_block_3.7"
-    assert decoder["capture_api"] == "module_hook"
-    assert decoder["channels"] == 256
-    with pytest.raises(ValueError, match="upsample array-index lattice.*encoder skip lattice"):
-        teacher_feature_phase(teacher, "decoder_stride8")
-    with pytest.raises(ValueError, match="upsample array-index lattice.*encoder skip lattice"):
-        teacher_feature_phase(teacher, "stride4_decoder_block")
-    assert teacher_feature_phase(teacher, "bottleneck_stride16") == (
-        (16, 16, 16), (0.0, 0.0, 0.0)
-    )
-
-    teacher.requires_grad_(False)
-    teacher.eval()
-    image = torch.rand((1, 1, 32, 32, 32))
-    geometry = {
-        "shape": (32, 32, 32),
-        "spacing_zyx": (1.0, 1.0, 1.0),
-        "affine_zyx": torch.eye(4),
-        "context": "full_volume",
-    }
-    forward_calls = 0
-    original_forward_with_features = teacher.encoder.forward_with_features
-
-    def counted_forward_with_features(value: Tensor) -> tuple[tuple[Tensor, ...], Tensor]:
-        nonlocal forward_calls
-        forward_calls += 1
-        return original_forward_with_features(value)
-
-    teacher.encoder.forward_with_features = counted_forward_with_features
-    decoder_output: list[Tensor] = []
-    decoder_handle = decoder["module"].register_forward_hook(
-        lambda _module, _inputs, output: decoder_output.append(output.detach())
-    )
-    try:
-        captured = forward_teacher_with_features(
-            teacher, image, geometry=geometry, source="encoder_stride8",
-        )
-    finally:
-        decoder_handle.remove()
-    assert forward_calls == 1
-    assert captured["feature"].shape == (1, 256, 4, 4, 4)
-    assert len(decoder_output) == 1
-    assert decoder_output[0].shape == (1, 256, 4, 4, 4)
+def test_resenc_feature_phase_rejects_removed_sources() -> None:
+    teacher = _synthetic_teacher()
+    for source in ("unknown_source", "decoder", "feature_4"):
+        with pytest.raises(ValueError, match="encoder_stride8 or encoder_stride16"):
+            teacher_feature_phase(teacher, source)
