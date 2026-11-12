@@ -1,0 +1,43 @@
+{
+  "observed_at_utc": "2026-11-12T14:13:00.747280+00:00",
+  "evidence_status": "REAL_GPU_LOG_OBSERVED",
+  "server_code_commit": "056ae65540e4084d810475ae52bcf49f7b83ad7f",
+  "plan_sha256": "be8cd9689584389e655007b6a6fec8f3b647dc6e61f51713f3dfe41d26bb9ec4",
+  "supervisor": "q3d-campaign                     RUNNING   pid 62594, uptime 0:01:05",
+  "queue": {
+    "status": "RUNNING",
+    "setting": "v1",
+    "k": 8,
+    "through_stage": "P",
+    "current_stage": "T",
+    "code_commit": "056ae65540e4084d810475ae52bcf49f7b83ad7f",
+    "plan_sha256": "be8cd9689584389e655007b6a6fec8f3b647dc6e61f51713f3dfe41d26bb9ec4",
+    "resume_update": 3200,
+    "observational_metrics_amendment": true
+  },
+  "latest_update": 3248,
+  "first_epoch_event": {
+    "checkpoint_selection_point": false,
+    "code_interface": {
+      "frames": [],
+      "mean_code_to_f4_norm_ratio": null,
+      "vq_gate": null
+    },
+    "epoch": 201,
+    "epoch_definition": "2K_random_labeled_frame_draws",
+    "epoch_updates": 16,
+    "event": "development_epoch",
+    "patient_count": 18,
+    "per_class": {
+      "LV": 0.8841351206951972,
+      "MYO": 0.8212926176720962,
+      "RV": 0.726516579574926
+    },
+    "score": 0.8106481059807398,
+    "stage": "T",
+    "update": 3216
+  },
+  "gpu": "NVIDIA RTX PRO 4000 Blackwell, 5205 MiB, 100 %",
+  "metrics_path": "/root/mount_data/runs/q3d-resenc-pixdim-20261112/campaign-v2/runs/shared/shared.acdc_a_k8_seed42.teacher.t/metrics.jsonl",
+  "failure": null
+}

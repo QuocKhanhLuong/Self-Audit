@@ -1,0 +1,1158 @@
+[Q3D acdc protocol=A k=2 seed=42] T update=1/1 | train_loss=19.095922 | DEV patient_macro_fg_dice=0.135218 | RV=0.001949 MYO=0.169611 LV=0.234094
+[Q3D acdc protocol=A k=2 seed=42] T update=1/1 | train_loss=19.095922 | DEV patient_macro_fg_dice=0.135218 | RV=0.001949 MYO=0.169611 LV=0.234094
+[Q3D acdc protocol=A k=2 seed=42] T update=1/1 | train_loss=19.095922 | DEV patient_macro_fg_dice=0.135218 | RV=0.001949 MYO=0.169611 LV=0.234094
+[Q3D acdc protocol=A k=2 seed=42] T update=1/1 | train_loss=19.095922 | DEV patient_macro_fg_dice=0.135218 | RV=0.001949 MYO=0.169611 LV=0.234094
+[Q3D acdc protocol=A k=2 seed=42] T update=1/1 | train_loss=5.667176 | DEV patient_macro_fg_dice=0.102043 | RV=0.000000 MYO=0.306128 LV=0.000000
+[Q3D acdc protocol=A k=2 seed=42] T update=1/1 | train_loss=19.095922 | DEV patient_macro_fg_dice=0.135218 | RV=0.001949 MYO=0.169611 LV=0.234094
+[Q3D acdc protocol=A k=2 seed=42] T update=1/1 | train_loss=19.095922 | DEV patient_macro_fg_dice=0.135218 | RV=0.001949 MYO=0.169611 LV=0.234094
+[Q3D acdc protocol=A k=2 seed=42] T update=1/1 | train_loss=19.095922 | DEV patient_macro_fg_dice=0.135218 | RV=0.001949 MYO=0.169611 LV=0.234094
+[Q3D acdc protocol=A k=2 seed=42] T update=1/1 | train_loss=19.095922 | DEV patient_macro_fg_dice=0.135218 | RV=0.001949 MYO=0.169611 LV=0.234094
+{"completed_stages": ["J"], "recipe": "a3d_teacher_free", "status": "COMPLETED_DECLARED_SYNTHETIC_STAGES", "tokenizer_gate": {"passed": null, "status": "NOT_APPLICABLE"}}
+{"completed_stages": ["T", "Q", "P", "J"], "recipe": "b1", "status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE", "tokenizer_gate": {"missing": ["dead_code_fraction", "200-update_usage_history"], "passed": false, "status": "NOT_READY", "thresholds": {"max_dead_code_fraction": 0.25, "min_class_codes": 4, "min_perplexity": 32.0}}}
+{"completed_stages": ["J"], "recipe": "c0", "status": "COMPLETED_DECLARED_SYNTHETIC_STAGES", "tokenizer_gate": {"passed": null, "status": "NOT_APPLICABLE"}}
+{"completed_stages": ["T", "P", "J"], "recipe": "c1", "status": "COMPLETED_DECLARED_SYNTHETIC_STAGES", "tokenizer_gate": {"passed": null, "status": "NOT_APPLICABLE"}}
+{"completed_stages": ["T", "Q", "P", "J"], "recipe": "e1", "status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE", "tokenizer_gate": {"missing": ["dead_code_fraction", "200-update_usage_history"], "passed": false, "status": "NOT_READY", "thresholds": {"max_dead_code_fraction": 0.25, "min_class_codes": 4, "min_perplexity": 32.0}}}
+{"completed_stages": ["T"], "recipe": "teacher_supervised", "status": "COMPLETED_DECLARED_SYNTHETIC_STAGES", "tokenizer_gate": {"passed": null, "status": "NOT_APPLICABLE"}}
+{"completed_stages": ["J"], "recipe": "mean_teacher", "status": "COMPLETED_DECLARED_SYNTHETIC_STAGES", "tokenizer_gate": {"passed": null, "status": "NOT_APPLICABLE"}}
+{"completed_stages": ["T", "Q", "P", "J"], "recipe": "o1", "status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE", "tokenizer_gate": {"missing": ["dead_code_fraction", "200-update_usage_history"], "passed": false, "status": "NOT_READY", "thresholds": {"max_dead_code_fraction": 0.25, "min_class_codes": 4, "min_perplexity": 32.0}}}
+{"completed_stages": ["T", "Q", "P", "J"], "recipe": "s1", "status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE", "tokenizer_gate": {"missing": ["dead_code_fraction", "200-update_usage_history"], "passed": false, "status": "NOT_READY", "thresholds": {"max_dead_code_fraction": 0.25, "min_class_codes": 4, "min_perplexity": 32.0}}}
+{"completed_stages": ["T", "Q", "J"], "recipe": "v0", "status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE", "tokenizer_gate": {"missing": ["dead_code_fraction", "200-update_usage_history"], "passed": false, "status": "NOT_READY", "thresholds": {"max_dead_code_fraction": 0.25, "min_class_codes": 4, "min_perplexity": 32.0}}}
+{"completed_stages": ["T", "Q", "P", "J"], "recipe": "v1", "status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE", "tokenizer_gate": {"missing": ["dead_code_fraction", "200-update_usage_history"], "passed": false, "status": "NOT_READY", "thresholds": {"max_dead_code_fraction": 0.25, "min_class_codes": 4, "min_perplexity": 32.0}}}
+{"completed_stages": ["T", "Q", "P", "J"], "recipe": "v1_residual2", "status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE", "tokenizer_gate": {"missing": ["dead_code_fraction", "200-update_usage_history"], "passed": false, "status": "NOT_READY", "thresholds": {"max_dead_code_fraction": 0.25, "min_class_codes": 4, "min_perplexity": 32.0}}}
+{"completed_stages": ["T", "Q", "P", "J"], "recipe": "v1u", "status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE", "tokenizer_gate": {"missing": ["dead_code_fraction", "200-update_usage_history"], "passed": false, "status": "NOT_READY", "thresholds": {"max_dead_code_fraction": 0.25, "min_class_codes": 4, "min_perplexity": 32.0}}}
+{
+  "schema": "self_audit.candidate_q3d.smoke_all.v1",
+  "status": "COMPLETED_ALL_SYNTHETIC_RECIPES",
+  "evidence_status": "SOFTWARE_ONLY_SYNTHETIC",
+  "recipe_statuses": {
+    "a3d_teacher_free": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+    "b1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "c0": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+    "c1": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+    "e1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "teacher_supervised": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+    "mean_teacher": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+    "o1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "s1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "v0": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "v1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "v1_residual2": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "v1u": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE"
+  },
+  "shared_v1_v1u_stages": {
+    "producer": "v1",
+    "producer_stage_order": [
+      "T",
+      "Q",
+      "P"
+    ],
+    "artifacts": {
+      "T": {
+        "path": "/private/tmp/q3d-epoch-smoke-20261112/_shared_v1_tqp/T/T.artifact.json",
+        "manifest_sha256": "31b02a7ef41ea2246a682e104d3a3a1f5522dd47fd5ea2c390d8882a7356d196",
+        "stage_artifact_hashes": {
+          "manifest_sha256": "31b02a7ef41ea2246a682e104d3a3a1f5522dd47fd5ea2c390d8882a7356d196",
+          "checkpoint_sha256": "46017e41906e5e56556510b7249594f04390f9aac1d900185522db341f989eb7"
+        },
+        "producer_status": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+        "producer_requested_stage": "T",
+        "producer_active_stages": [
+          "T"
+        ],
+        "producer_completed_stages": [
+          "T"
+        ]
+      },
+      "Q": {
+        "path": "/private/tmp/q3d-epoch-smoke-20261112/_shared_v1_tqp/Q/Q.artifact.json",
+        "manifest_sha256": "f206fc19d536d937569ac28265b579dfaf28294a7ecfa454aa69453519166ae5",
+        "stage_artifact_hashes": {
+          "manifest_sha256": "f206fc19d536d937569ac28265b579dfaf28294a7ecfa454aa69453519166ae5",
+          "checkpoint_sha256": "a41e17658d18da96cd5c963212f9238757e501e404f29da4646ebe920b927677"
+        },
+        "producer_status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+        "producer_requested_stage": "Q",
+        "producer_active_stages": [
+          "Q"
+        ],
+        "producer_completed_stages": [
+          "T",
+          "Q"
+        ]
+      },
+      "P": {
+        "path": "/private/tmp/q3d-epoch-smoke-20261112/_shared_v1_tqp/P/P.artifact.json",
+        "manifest_sha256": "6022d1a0bb0ae02387f2d34eebb10942bdc8bdb080514a59c1c520007673814e",
+        "stage_artifact_hashes": {
+          "manifest_sha256": "6022d1a0bb0ae02387f2d34eebb10942bdc8bdb080514a59c1c520007673814e",
+          "checkpoint_sha256": "98c9f3ce220f8201f7f184e9b808cc6977fb59c4fcb4bc0b2f7c092fa567ca43"
+        },
+        "producer_status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+        "producer_requested_stage": "P",
+        "producer_active_stages": [
+          "P"
+        ],
+        "producer_completed_stages": [
+          "T",
+          "Q",
+          "P"
+        ]
+      }
+    },
+    "stage_reports": {
+      "T": "/private/tmp/q3d-epoch-smoke-20261112/_shared_v1_tqp/T.smoke.json",
+      "Q": "/private/tmp/q3d-epoch-smoke-20261112/_shared_v1_tqp/Q.smoke.json",
+      "P": "/private/tmp/q3d-epoch-smoke-20261112/_shared_v1_tqp/P.smoke.json"
+    },
+    "all_producer_stages_completed": true,
+    "gate": {
+      "status": "NOT_READY",
+      "passed": false,
+      "missing": [
+        "dead_code_fraction",
+        "200-update_usage_history"
+      ],
+      "thresholds": {
+        "min_perplexity": 32.0,
+        "max_dead_code_fraction": 0.25,
+        "min_class_codes": 4
+      }
+    },
+    "synthetic_gate_override_requested": true,
+    "synthetic_gate_override_used": true,
+    "consumer_stages": {
+      "v1": "J",
+      "v1u": "J"
+    },
+    "consumers": {
+      "v1": {
+        "requested_stage": "J",
+        "engine_active_stages": [
+          "J"
+        ],
+        "stage_artifact_inputs": {
+          "P": {
+            "path": "/private/tmp/q3d-epoch-smoke-20261112/_shared_v1_tqp/P/P.artifact.json",
+            "manifest_sha256": "6022d1a0bb0ae02387f2d34eebb10942bdc8bdb080514a59c1c520007673814e"
+          },
+          "Q": {
+            "path": "/private/tmp/q3d-epoch-smoke-20261112/_shared_v1_tqp/Q/Q.artifact.json",
+            "manifest_sha256": "f206fc19d536d937569ac28265b579dfaf28294a7ecfa454aa69453519166ae5"
+          },
+          "T": {
+            "path": "/private/tmp/q3d-epoch-smoke-20261112/_shared_v1_tqp/T/T.artifact.json",
+            "manifest_sha256": "31b02a7ef41ea2246a682e104d3a3a1f5522dd47fd5ea2c390d8882a7356d196"
+          }
+        },
+        "stage_artifact_hashes": {
+          "T": {
+            "manifest_sha256": "31b02a7ef41ea2246a682e104d3a3a1f5522dd47fd5ea2c390d8882a7356d196",
+            "checkpoint_sha256": "46017e41906e5e56556510b7249594f04390f9aac1d900185522db341f989eb7"
+          },
+          "Q": {
+            "manifest_sha256": "f206fc19d536d937569ac28265b579dfaf28294a7ecfa454aa69453519166ae5",
+            "checkpoint_sha256": "a41e17658d18da96cd5c963212f9238757e501e404f29da4646ebe920b927677"
+          },
+          "P": {
+            "manifest_sha256": "6022d1a0bb0ae02387f2d34eebb10942bdc8bdb080514a59c1c520007673814e",
+            "checkpoint_sha256": "98c9f3ce220f8201f7f184e9b808cc6977fb59c4fcb4bc0b2f7c092fa567ca43"
+          }
+        }
+      },
+      "v1u": {
+        "requested_stage": "J",
+        "engine_active_stages": [
+          "J"
+        ],
+        "stage_artifact_inputs": {
+          "P": {
+            "path": "/private/tmp/q3d-epoch-smoke-20261112/_shared_v1_tqp/P/P.artifact.json",
+            "manifest_sha256": "6022d1a0bb0ae02387f2d34eebb10942bdc8bdb080514a59c1c520007673814e"
+          },
+          "Q": {
+            "path": "/private/tmp/q3d-epoch-smoke-20261112/_shared_v1_tqp/Q/Q.artifact.json",
+            "manifest_sha256": "f206fc19d536d937569ac28265b579dfaf28294a7ecfa454aa69453519166ae5"
+          },
+          "T": {
+            "path": "/private/tmp/q3d-epoch-smoke-20261112/_shared_v1_tqp/T/T.artifact.json",
+            "manifest_sha256": "31b02a7ef41ea2246a682e104d3a3a1f5522dd47fd5ea2c390d8882a7356d196"
+          }
+        },
+        "stage_artifact_hashes": {
+          "T": {
+            "manifest_sha256": "31b02a7ef41ea2246a682e104d3a3a1f5522dd47fd5ea2c390d8882a7356d196",
+            "checkpoint_sha256": "46017e41906e5e56556510b7249594f04390f9aac1d900185522db341f989eb7"
+          },
+          "Q": {
+            "manifest_sha256": "f206fc19d536d937569ac28265b579dfaf28294a7ecfa454aa69453519166ae5",
+            "checkpoint_sha256": "a41e17658d18da96cd5c963212f9238757e501e404f29da4646ebe920b927677"
+          },
+          "P": {
+            "manifest_sha256": "6022d1a0bb0ae02387f2d34eebb10942bdc8bdb080514a59c1c520007673814e",
+            "checkpoint_sha256": "98c9f3ce220f8201f7f184e9b808cc6977fb59c4fcb4bc0b2f7c092fa567ca43"
+          }
+        }
+      }
+    },
+    "manifest_identity_passed": true,
+    "content_identity_passed": true,
+    "identity_passed": true,
+    "physiology_omega_validation": {
+      "v1": {
+        "omega": {
+          "train_unlabeled_000": 1.0742504461410438,
+          "train_unlabeled_001": 0.9257495538589562
+        },
+        "computed_mean_omega": 1.0,
+        "reported_mean_omega": 1.0,
+        "gate_passed": true,
+        "override_used": false
+      },
+      "v1u": {
+        "omega": {
+          "train_unlabeled_000": 1.0,
+          "train_unlabeled_001": 1.0
+        },
+        "computed_mean_omega": 1.0,
+        "reported_mean_omega": 1.0,
+        "gate_passed": true,
+        "override_used": false
+      },
+      "shared_patient_ids": true,
+      "omega_differs": true,
+      "v1_is_nonuniform": true,
+      "v1u_is_uniform": true,
+      "means_are_one": true,
+      "gates_passed_without_override": true,
+      "passed": true
+    }
+  },
+  "runs": {
+    "a3d_teacher_free": {
+      "report": "/private/tmp/q3d-epoch-smoke-20261112/a3d_teacher_free.smoke.json",
+      "config": "/private/tmp/q3d-epoch-smoke-20261112/a3d_teacher_free.config.json",
+      "config_sha256": "49f7b6e811c870442ab0ebc827e1dd7d0653a8b5fccf48b833ef8aaa1c32a404",
+      "completed_stages": [
+        "J"
+      ],
+      "expected_stages": [
+        "J"
+      ],
+      "expected_completed_stages": [
+        "J"
+      ],
+      "requested_stage": null,
+      "engine_active_stages": null,
+      "stage_artifact_inputs": {},
+      "stage_artifact_hashes": {},
+      "tokenizer_gate": {
+        "status": "NOT_APPLICABLE",
+        "passed": null
+      },
+      "synthetic_gate_override_requested": false,
+      "synthetic_gate_override_used": false,
+      "physiology_cohort_weighting": null,
+      "engine_error": null
+    },
+    "b1": {
+      "report": "/private/tmp/q3d-epoch-smoke-20261112/b1.smoke.json",
+      "config": "/private/tmp/q3d-epoch-smoke-20261112/b1.config.json",
+      "config_sha256": "3862b7105a6156ba6870c17bcf0e1a3076ef35d169a06e1a9acb608e1dbda02d",
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "requested_stage": null,
+      "engine_active_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "stage_artifact_inputs": {},
+      "stage_artifact_hashes": {},
+      "tokenizer_gate": {
+        "status": "NOT_READY",
+        "passed": false,
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "thresholds": {
+          "min_perplexity": 32.0,
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4
+        }
+      },
+      "synthetic_gate_override_requested": true,
+      "synthetic_gate_override_used": true,
+      "physiology_cohort_weighting": {
+        "schema": "self_audit.candidate_q3d.runtime_cohort_weighting.v1",
+        "source": "U",
+        "source_cohort": "U",
+        "arm": "V1",
+        "patient_ids": [
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ],
+        "w_pat": {
+          "train_unlabeled_000": 0.9483836053009851,
+          "train_unlabeled_001": 0.8172821362545306
+        },
+        "omega": {
+          "train_unlabeled_000": 1.0742504461410438,
+          "train_unlabeled_001": 0.9257495538589562
+        },
+        "mean_w_pat": 0.8828328707777578,
+        "ess": 1.9890341983719577,
+        "ess_fraction": 0.9945170991859789,
+        "mean_omega": 1.0,
+        "max_omega": 1.0742504461410438,
+        "zero_fraction": 0.0,
+        "gate": {
+          "context": "J physiology cache reload",
+          "status": "PASS_POSITIVE_U_SUPPORT",
+          "passed": true,
+          "patient_weights": {
+            "train_unlabeled_000": 0.9483836053009851,
+            "train_unlabeled_001": 0.8172821362545306
+          },
+          "positive_patient_count": 2,
+          "patient_count": 2,
+          "mean_w_pat": 0.8828328707777578,
+          "ess": 1.9890341983719577,
+          "ess_fraction": 0.9945170991859789,
+          "override_used": false,
+          "override_scope": null,
+          "gate_error": null
+        },
+        "gate_passed": true,
+        "override_used": false,
+        "override_policy": null
+      },
+      "engine_error": null
+    },
+    "c0": {
+      "report": "/private/tmp/q3d-epoch-smoke-20261112/c0.smoke.json",
+      "config": "/private/tmp/q3d-epoch-smoke-20261112/c0.config.json",
+      "config_sha256": "c4f466f68aa604e866ff754ac6bb320164d2d9b593acfdc63129b3a188bea107",
+      "completed_stages": [
+        "J"
+      ],
+      "expected_stages": [
+        "J"
+      ],
+      "expected_completed_stages": [
+        "J"
+      ],
+      "requested_stage": null,
+      "engine_active_stages": [
+        "J"
+      ],
+      "stage_artifact_inputs": {},
+      "stage_artifact_hashes": {},
+      "tokenizer_gate": {
+        "status": "NOT_APPLICABLE",
+        "passed": null
+      },
+      "synthetic_gate_override_requested": false,
+      "synthetic_gate_override_used": false,
+      "physiology_cohort_weighting": null,
+      "engine_error": null
+    },
+    "c1": {
+      "report": "/private/tmp/q3d-epoch-smoke-20261112/c1.smoke.json",
+      "config": "/private/tmp/q3d-epoch-smoke-20261112/c1.config.json",
+      "config_sha256": "fca4ee0c4f5b1c9f19c2e0aa04db8478826e1dcc7ef3ea2053a0d0e2cb5c995d",
+      "completed_stages": [
+        "T",
+        "P",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "P",
+        "J"
+      ],
+      "expected_completed_stages": [
+        "T",
+        "P",
+        "J"
+      ],
+      "requested_stage": null,
+      "engine_active_stages": [
+        "T",
+        "P",
+        "J"
+      ],
+      "stage_artifact_inputs": {},
+      "stage_artifact_hashes": {},
+      "tokenizer_gate": {
+        "status": "NOT_APPLICABLE",
+        "passed": null
+      },
+      "synthetic_gate_override_requested": false,
+      "synthetic_gate_override_used": false,
+      "physiology_cohort_weighting": {
+        "schema": "self_audit.candidate_q3d.runtime_cohort_weighting.v1",
+        "source": "U",
+        "source_cohort": "U",
+        "arm": "C1",
+        "patient_ids": [
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ],
+        "w_pat": {
+          "train_unlabeled_000": 0.9483836053009851,
+          "train_unlabeled_001": 0.8172821362545306
+        },
+        "omega": {
+          "train_unlabeled_000": 1.0742504461410438,
+          "train_unlabeled_001": 0.9257495538589562
+        },
+        "mean_w_pat": 0.8828328707777578,
+        "ess": 1.9890341983719577,
+        "ess_fraction": 0.9945170991859789,
+        "mean_omega": 1.0,
+        "max_omega": 1.0742504461410438,
+        "zero_fraction": 0.0,
+        "gate": {
+          "context": "J physiology cache reload",
+          "status": "PASS_POSITIVE_U_SUPPORT",
+          "passed": true,
+          "patient_weights": {
+            "train_unlabeled_000": 0.9483836053009851,
+            "train_unlabeled_001": 0.8172821362545306
+          },
+          "positive_patient_count": 2,
+          "patient_count": 2,
+          "mean_w_pat": 0.8828328707777578,
+          "ess": 1.9890341983719577,
+          "ess_fraction": 0.9945170991859789,
+          "override_used": false,
+          "override_scope": null,
+          "gate_error": null
+        },
+        "gate_passed": true,
+        "override_used": false,
+        "override_policy": null
+      },
+      "engine_error": null
+    },
+    "e1": {
+      "report": "/private/tmp/q3d-epoch-smoke-20261112/e1.smoke.json",
+      "config": "/private/tmp/q3d-epoch-smoke-20261112/e1.config.json",
+      "config_sha256": "1d93341dc6cfeccd5f7c2539a6c83acc91d0358c0bf9992a4255dfb27343de38",
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "requested_stage": null,
+      "engine_active_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "stage_artifact_inputs": {},
+      "stage_artifact_hashes": {},
+      "tokenizer_gate": {
+        "status": "NOT_READY",
+        "passed": false,
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "thresholds": {
+          "min_perplexity": 32.0,
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4
+        }
+      },
+      "synthetic_gate_override_requested": true,
+      "synthetic_gate_override_used": true,
+      "physiology_cohort_weighting": {
+        "schema": "self_audit.candidate_q3d.runtime_cohort_weighting.v1",
+        "source": "U",
+        "source_cohort": "U",
+        "arm": "V1",
+        "patient_ids": [
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ],
+        "w_pat": {
+          "train_unlabeled_000": 0.9483836053009851,
+          "train_unlabeled_001": 0.8172821362545306
+        },
+        "omega": {
+          "train_unlabeled_000": 1.0742504461410438,
+          "train_unlabeled_001": 0.9257495538589562
+        },
+        "mean_w_pat": 0.8828328707777578,
+        "ess": 1.9890341983719577,
+        "ess_fraction": 0.9945170991859789,
+        "mean_omega": 1.0,
+        "max_omega": 1.0742504461410438,
+        "zero_fraction": 0.0,
+        "gate": {
+          "context": "J physiology cache reload",
+          "status": "PASS_POSITIVE_U_SUPPORT",
+          "passed": true,
+          "patient_weights": {
+            "train_unlabeled_000": 0.9483836053009851,
+            "train_unlabeled_001": 0.8172821362545306
+          },
+          "positive_patient_count": 2,
+          "patient_count": 2,
+          "mean_w_pat": 0.8828328707777578,
+          "ess": 1.9890341983719577,
+          "ess_fraction": 0.9945170991859789,
+          "override_used": false,
+          "override_scope": null,
+          "gate_error": null
+        },
+        "gate_passed": true,
+        "override_used": false,
+        "override_policy": null
+      },
+      "engine_error": null
+    },
+    "teacher_supervised": {
+      "report": "/private/tmp/q3d-epoch-smoke-20261112/teacher_supervised.smoke.json",
+      "config": "/private/tmp/q3d-epoch-smoke-20261112/teacher_supervised.config.json",
+      "config_sha256": "ddce28189209cbb7e9f724902bf8399c61138c62da36cc68a66853824d49b5ff",
+      "completed_stages": [
+        "T"
+      ],
+      "expected_stages": [
+        "T"
+      ],
+      "expected_completed_stages": [
+        "T"
+      ],
+      "requested_stage": null,
+      "engine_active_stages": null,
+      "stage_artifact_inputs": {},
+      "stage_artifact_hashes": {},
+      "tokenizer_gate": {
+        "status": "NOT_APPLICABLE",
+        "passed": null
+      },
+      "synthetic_gate_override_requested": false,
+      "synthetic_gate_override_used": false,
+      "physiology_cohort_weighting": null,
+      "engine_error": null
+    },
+    "mean_teacher": {
+      "report": "/private/tmp/q3d-epoch-smoke-20261112/mean_teacher.smoke.json",
+      "config": "/private/tmp/q3d-epoch-smoke-20261112/mean_teacher.config.json",
+      "config_sha256": "0b65d8ce6203ceeaa173a0a70804631d8fc463988d42d6b960421579551e6a24",
+      "completed_stages": [
+        "J"
+      ],
+      "expected_stages": [
+        "J"
+      ],
+      "expected_completed_stages": [
+        "J"
+      ],
+      "requested_stage": null,
+      "engine_active_stages": [
+        "J"
+      ],
+      "stage_artifact_inputs": {},
+      "stage_artifact_hashes": {},
+      "tokenizer_gate": {
+        "status": "NOT_APPLICABLE",
+        "passed": null
+      },
+      "synthetic_gate_override_requested": false,
+      "synthetic_gate_override_used": false,
+      "physiology_cohort_weighting": null,
+      "engine_error": null
+    },
+    "o1": {
+      "report": "/private/tmp/q3d-epoch-smoke-20261112/o1.smoke.json",
+      "config": "/private/tmp/q3d-epoch-smoke-20261112/o1.config.json",
+      "config_sha256": "06983af5e85545fbda3962fcdf5373c0d1146c130d4459a4d2e33c16667b1b43",
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "requested_stage": null,
+      "engine_active_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "stage_artifact_inputs": {},
+      "stage_artifact_hashes": {},
+      "tokenizer_gate": {
+        "status": "NOT_READY",
+        "passed": false,
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "thresholds": {
+          "min_perplexity": 32.0,
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4
+        }
+      },
+      "synthetic_gate_override_requested": true,
+      "synthetic_gate_override_used": true,
+      "physiology_cohort_weighting": {
+        "schema": "self_audit.candidate_q3d.runtime_cohort_weighting.v1",
+        "source": "U",
+        "source_cohort": "U",
+        "arm": "V1",
+        "patient_ids": [
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ],
+        "w_pat": {
+          "train_unlabeled_000": 0.9483836053009851,
+          "train_unlabeled_001": 0.8172821362545306
+        },
+        "omega": {
+          "train_unlabeled_000": 1.0742504461410438,
+          "train_unlabeled_001": 0.9257495538589562
+        },
+        "mean_w_pat": 0.8828328707777578,
+        "ess": 1.9890341983719577,
+        "ess_fraction": 0.9945170991859789,
+        "mean_omega": 1.0,
+        "max_omega": 1.0742504461410438,
+        "zero_fraction": 0.0,
+        "gate": {
+          "context": "J physiology cache reload",
+          "status": "PASS_POSITIVE_U_SUPPORT",
+          "passed": true,
+          "patient_weights": {
+            "train_unlabeled_000": 0.9483836053009851,
+            "train_unlabeled_001": 0.8172821362545306
+          },
+          "positive_patient_count": 2,
+          "patient_count": 2,
+          "mean_w_pat": 0.8828328707777578,
+          "ess": 1.9890341983719577,
+          "ess_fraction": 0.9945170991859789,
+          "override_used": false,
+          "override_scope": null,
+          "gate_error": null
+        },
+        "gate_passed": true,
+        "override_used": false,
+        "override_policy": null
+      },
+      "engine_error": null
+    },
+    "s1": {
+      "report": "/private/tmp/q3d-epoch-smoke-20261112/s1.smoke.json",
+      "config": "/private/tmp/q3d-epoch-smoke-20261112/s1.config.json",
+      "config_sha256": "f23d41666fb88ec75b3b9f440c781fd1795eda904e685ddf6b102d2f04c9bba4",
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "requested_stage": null,
+      "engine_active_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "stage_artifact_inputs": {},
+      "stage_artifact_hashes": {},
+      "tokenizer_gate": {
+        "status": "NOT_READY",
+        "passed": false,
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "thresholds": {
+          "min_perplexity": 32.0,
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4
+        }
+      },
+      "synthetic_gate_override_requested": true,
+      "synthetic_gate_override_used": true,
+      "physiology_cohort_weighting": {
+        "schema": "self_audit.candidate_q3d.runtime_cohort_weighting.v1",
+        "source": "U",
+        "source_cohort": "U",
+        "arm": "V1",
+        "patient_ids": [
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ],
+        "w_pat": {
+          "train_unlabeled_000": 0.9483836053009851,
+          "train_unlabeled_001": 0.8172821362545306
+        },
+        "omega": {
+          "train_unlabeled_000": 1.0742504461410438,
+          "train_unlabeled_001": 0.9257495538589562
+        },
+        "mean_w_pat": 0.8828328707777578,
+        "ess": 1.9890341983719577,
+        "ess_fraction": 0.9945170991859789,
+        "mean_omega": 1.0,
+        "max_omega": 1.0742504461410438,
+        "zero_fraction": 0.0,
+        "gate": {
+          "context": "J physiology cache reload",
+          "status": "PASS_POSITIVE_U_SUPPORT",
+          "passed": true,
+          "patient_weights": {
+            "train_unlabeled_000": 0.9483836053009851,
+            "train_unlabeled_001": 0.8172821362545306
+          },
+          "positive_patient_count": 2,
+          "patient_count": 2,
+          "mean_w_pat": 0.8828328707777578,
+          "ess": 1.9890341983719577,
+          "ess_fraction": 0.9945170991859789,
+          "override_used": false,
+          "override_scope": null,
+          "gate_error": null
+        },
+        "gate_passed": true,
+        "override_used": false,
+        "override_policy": null
+      },
+      "engine_error": null
+    },
+    "v0": {
+      "report": "/private/tmp/q3d-epoch-smoke-20261112/v0.smoke.json",
+      "config": "/private/tmp/q3d-epoch-smoke-20261112/v0.config.json",
+      "config_sha256": "215e6f989d2c6dbe5320a460f5508624a0819221f8869564e2d6c32987d4154a",
+      "completed_stages": [
+        "T",
+        "Q",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "Q",
+        "J"
+      ],
+      "expected_completed_stages": [
+        "T",
+        "Q",
+        "J"
+      ],
+      "requested_stage": null,
+      "engine_active_stages": [
+        "T",
+        "Q",
+        "J"
+      ],
+      "stage_artifact_inputs": {},
+      "stage_artifact_hashes": {},
+      "tokenizer_gate": {
+        "status": "NOT_READY",
+        "passed": false,
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "thresholds": {
+          "min_perplexity": 32.0,
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4
+        }
+      },
+      "synthetic_gate_override_requested": true,
+      "synthetic_gate_override_used": true,
+      "physiology_cohort_weighting": null,
+      "engine_error": null
+    },
+    "v1": {
+      "report": "/private/tmp/q3d-epoch-smoke-20261112/v1.smoke.json",
+      "config": "/private/tmp/q3d-epoch-smoke-20261112/v1.config.json",
+      "config_sha256": "529982364261a686ff7897fba9301372cd7aaaaa64f625e52e61bf3f769adc3e",
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "requested_stage": "J",
+      "engine_active_stages": [
+        "J"
+      ],
+      "stage_artifact_inputs": {
+        "P": {
+          "path": "/private/tmp/q3d-epoch-smoke-20261112/_shared_v1_tqp/P/P.artifact.json",
+          "manifest_sha256": "6022d1a0bb0ae02387f2d34eebb10942bdc8bdb080514a59c1c520007673814e"
+        },
+        "Q": {
+          "path": "/private/tmp/q3d-epoch-smoke-20261112/_shared_v1_tqp/Q/Q.artifact.json",
+          "manifest_sha256": "f206fc19d536d937569ac28265b579dfaf28294a7ecfa454aa69453519166ae5"
+        },
+        "T": {
+          "path": "/private/tmp/q3d-epoch-smoke-20261112/_shared_v1_tqp/T/T.artifact.json",
+          "manifest_sha256": "31b02a7ef41ea2246a682e104d3a3a1f5522dd47fd5ea2c390d8882a7356d196"
+        }
+      },
+      "stage_artifact_hashes": {
+        "P": {
+          "manifest_sha256": "6022d1a0bb0ae02387f2d34eebb10942bdc8bdb080514a59c1c520007673814e",
+          "checkpoint_sha256": "98c9f3ce220f8201f7f184e9b808cc6977fb59c4fcb4bc0b2f7c092fa567ca43"
+        },
+        "Q": {
+          "manifest_sha256": "f206fc19d536d937569ac28265b579dfaf28294a7ecfa454aa69453519166ae5",
+          "checkpoint_sha256": "a41e17658d18da96cd5c963212f9238757e501e404f29da4646ebe920b927677"
+        },
+        "T": {
+          "manifest_sha256": "31b02a7ef41ea2246a682e104d3a3a1f5522dd47fd5ea2c390d8882a7356d196",
+          "checkpoint_sha256": "46017e41906e5e56556510b7249594f04390f9aac1d900185522db341f989eb7"
+        }
+      },
+      "tokenizer_gate": {
+        "status": "NOT_READY",
+        "passed": false,
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "thresholds": {
+          "min_perplexity": 32.0,
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4
+        }
+      },
+      "synthetic_gate_override_requested": true,
+      "synthetic_gate_override_used": true,
+      "physiology_cohort_weighting": {
+        "schema": "self_audit.candidate_q3d.runtime_cohort_weighting.v1",
+        "source": "U",
+        "source_cohort": "U",
+        "arm": "V1",
+        "patient_ids": [
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ],
+        "w_pat": {
+          "train_unlabeled_000": 0.9483836053009851,
+          "train_unlabeled_001": 0.8172821362545306
+        },
+        "omega": {
+          "train_unlabeled_000": 1.0742504461410438,
+          "train_unlabeled_001": 0.9257495538589562
+        },
+        "mean_w_pat": 0.8828328707777578,
+        "ess": 1.9890341983719577,
+        "ess_fraction": 0.9945170991859789,
+        "mean_omega": 1.0,
+        "max_omega": 1.0742504461410438,
+        "zero_fraction": 0.0,
+        "gate": {
+          "context": "J physiology cache reload",
+          "status": "PASS_POSITIVE_U_SUPPORT",
+          "passed": true,
+          "patient_weights": {
+            "train_unlabeled_000": 0.9483836053009851,
+            "train_unlabeled_001": 0.8172821362545306
+          },
+          "positive_patient_count": 2,
+          "patient_count": 2,
+          "mean_w_pat": 0.8828328707777578,
+          "ess": 1.9890341983719577,
+          "ess_fraction": 0.9945170991859789,
+          "override_used": false,
+          "override_scope": null,
+          "gate_error": null
+        },
+        "gate_passed": true,
+        "override_used": false,
+        "override_policy": null
+      },
+      "engine_error": null
+    },
+    "v1_residual2": {
+      "report": "/private/tmp/q3d-epoch-smoke-20261112/v1_residual2.smoke.json",
+      "config": "/private/tmp/q3d-epoch-smoke-20261112/v1_residual2.config.json",
+      "config_sha256": "0f5658275eb40f96ec20a840697d4c7858f66b72346a17c4cdd9f31305caefd0",
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "requested_stage": null,
+      "engine_active_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "stage_artifact_inputs": {},
+      "stage_artifact_hashes": {},
+      "tokenizer_gate": {
+        "status": "NOT_READY",
+        "passed": false,
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "thresholds": {
+          "min_perplexity": 32.0,
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4
+        }
+      },
+      "synthetic_gate_override_requested": true,
+      "synthetic_gate_override_used": true,
+      "physiology_cohort_weighting": {
+        "schema": "self_audit.candidate_q3d.runtime_cohort_weighting.v1",
+        "source": "U",
+        "source_cohort": "U",
+        "arm": "V1",
+        "patient_ids": [
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ],
+        "w_pat": {
+          "train_unlabeled_000": 0.9483836053009851,
+          "train_unlabeled_001": 0.8172821362545306
+        },
+        "omega": {
+          "train_unlabeled_000": 1.0742504461410438,
+          "train_unlabeled_001": 0.9257495538589562
+        },
+        "mean_w_pat": 0.8828328707777578,
+        "ess": 1.9890341983719577,
+        "ess_fraction": 0.9945170991859789,
+        "mean_omega": 1.0,
+        "max_omega": 1.0742504461410438,
+        "zero_fraction": 0.0,
+        "gate": {
+          "context": "J physiology cache reload",
+          "status": "PASS_POSITIVE_U_SUPPORT",
+          "passed": true,
+          "patient_weights": {
+            "train_unlabeled_000": 0.9483836053009851,
+            "train_unlabeled_001": 0.8172821362545306
+          },
+          "positive_patient_count": 2,
+          "patient_count": 2,
+          "mean_w_pat": 0.8828328707777578,
+          "ess": 1.9890341983719577,
+          "ess_fraction": 0.9945170991859789,
+          "override_used": false,
+          "override_scope": null,
+          "gate_error": null
+        },
+        "gate_passed": true,
+        "override_used": false,
+        "override_policy": null
+      },
+      "engine_error": null
+    },
+    "v1u": {
+      "report": "/private/tmp/q3d-epoch-smoke-20261112/v1u.smoke.json",
+      "config": "/private/tmp/q3d-epoch-smoke-20261112/v1u.config.json",
+      "config_sha256": "add885bc8cf35db800ee6ea8597e8f4111ad5f8e454e308edb03f47ad0485587",
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "requested_stage": "J",
+      "engine_active_stages": [
+        "J"
+      ],
+      "stage_artifact_inputs": {
+        "P": {
+          "path": "/private/tmp/q3d-epoch-smoke-20261112/_shared_v1_tqp/P/P.artifact.json",
+          "manifest_sha256": "6022d1a0bb0ae02387f2d34eebb10942bdc8bdb080514a59c1c520007673814e"
+        },
+        "Q": {
+          "path": "/private/tmp/q3d-epoch-smoke-20261112/_shared_v1_tqp/Q/Q.artifact.json",
+          "manifest_sha256": "f206fc19d536d937569ac28265b579dfaf28294a7ecfa454aa69453519166ae5"
+        },
+        "T": {
+          "path": "/private/tmp/q3d-epoch-smoke-20261112/_shared_v1_tqp/T/T.artifact.json",
+          "manifest_sha256": "31b02a7ef41ea2246a682e104d3a3a1f5522dd47fd5ea2c390d8882a7356d196"
+        }
+      },
+      "stage_artifact_hashes": {
+        "P": {
+          "manifest_sha256": "6022d1a0bb0ae02387f2d34eebb10942bdc8bdb080514a59c1c520007673814e",
+          "checkpoint_sha256": "98c9f3ce220f8201f7f184e9b808cc6977fb59c4fcb4bc0b2f7c092fa567ca43"
+        },
+        "Q": {
+          "manifest_sha256": "f206fc19d536d937569ac28265b579dfaf28294a7ecfa454aa69453519166ae5",
+          "checkpoint_sha256": "a41e17658d18da96cd5c963212f9238757e501e404f29da4646ebe920b927677"
+        },
+        "T": {
+          "manifest_sha256": "31b02a7ef41ea2246a682e104d3a3a1f5522dd47fd5ea2c390d8882a7356d196",
+          "checkpoint_sha256": "46017e41906e5e56556510b7249594f04390f9aac1d900185522db341f989eb7"
+        }
+      },
+      "tokenizer_gate": {
+        "status": "NOT_READY",
+        "passed": false,
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "thresholds": {
+          "min_perplexity": 32.0,
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4
+        }
+      },
+      "synthetic_gate_override_requested": true,
+      "synthetic_gate_override_used": true,
+      "physiology_cohort_weighting": {
+        "schema": "self_audit.candidate_q3d.runtime_cohort_weighting.v1",
+        "source": "U",
+        "source_cohort": "U",
+        "arm": "V1-U",
+        "patient_ids": [
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ],
+        "w_pat": {
+          "train_unlabeled_000": 0.9483836053009851,
+          "train_unlabeled_001": 0.8172821362545306
+        },
+        "omega": {
+          "train_unlabeled_000": 1.0,
+          "train_unlabeled_001": 1.0
+        },
+        "mean_w_pat": 0.8828328707777578,
+        "ess": 1.9890341983719577,
+        "ess_fraction": 0.9945170991859789,
+        "mean_omega": 1.0,
+        "max_omega": 1.0,
+        "zero_fraction": 0.0,
+        "gate": {
+          "context": "J physiology cache reload",
+          "status": "PASS_POSITIVE_U_SUPPORT",
+          "passed": true,
+          "patient_weights": {
+            "train_unlabeled_000": 0.9483836053009851,
+            "train_unlabeled_001": 0.8172821362545306
+          },
+          "positive_patient_count": 2,
+          "patient_count": 2,
+          "mean_w_pat": 0.8828328707777578,
+          "ess": 1.9890341983719577,
+          "ess_fraction": 0.9945170991859789,
+          "override_used": false,
+          "override_scope": null,
+          "gate_error": null
+        },
+        "gate_passed": true,
+        "override_used": false,
+        "override_policy": null
+      },
+      "engine_error": null
+    }
+  },
+  "patient_metrics_claimed": false,
+  "gpu_evidence": "NOT_RUN",
+  "real_data_evidence": "NOT_RUN",
+  "report": "/private/tmp/q3d-epoch-smoke-20261112.smoke.json"
+}
