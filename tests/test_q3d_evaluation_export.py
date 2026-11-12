@@ -376,7 +376,7 @@ def test_student_only_export_cold_load_inference_and_profile(tmp_path: Path) -> 
 @pytest.mark.parametrize("recipe_name,student_arm", [
     ("c0", "C0"), ("c1", "C1"), ("v1", "V1"), ("v1u", "V1-U"),
     ("v0", "V0"), ("b1", "B1"), ("e1", "E1"), ("o1", "O1"),
-    ("s1", "S1"), ("v1_stride4", "V1"), ("v1_residual2", "V1"),
+    ("s1", "S1"), ("v1_residual2", "V1"),
     ("mean_teacher", "C0"),
 ])
 def test_export_round_trips_all_student_recipes_without_train_only_heads(

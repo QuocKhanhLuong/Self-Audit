@@ -453,7 +453,32 @@ def test_cache_cli_default_synthetic_teacher_path_is_explicit_and_runs_cpu(tmp_p
         "runtime": {"synthetic": True},
         "physiology": {"enabled": True, "stroke_balance": False, "has_rv": False},
         "tokenizer": {"enabled": False},
-        "model": {"teacher": {"architecture": "mednext_l_k3", "pretrained": {}}},
+        "model": {"teacher": {
+            "architecture": "nnfoundation_resenc_l",
+            "heads": ["region", "boundary_sdf"],
+            "feature_stride": 8,
+            "feature_source": "encoder_stride8",
+            "feature_channels": 256,
+            "encoder_strides": [
+                [1, 1, 1], [2, 2, 2], [1, 2, 2],
+                [1, 2, 2], [1, 2, 2], [1, 2, 2],
+            ],
+            "phase_offsets": {
+                "encoder_stride8": [0.0, 0.0, 0.0],
+                "encoder_stride16": [0.0, 0.0, 0.0],
+            },
+            "encoder_channels": [32, 64, 128, 256, 320, 320],
+            "encoder_blocks": [1, 3, 4, 6, 6, 6],
+            "dependency_pins": {
+                "dynamic_network_architectures": "0.4.4",
+                "nnssl_commit": "3d774e942256bd70e5e264c6b94fa38e25f7ed74",
+                "nnunet_commit": "c04f7ec8bbffaf3ebc3b26aa2c89042e8a8e368b",
+            },
+            "freeze_joint": True,
+            "online_joint": False,
+            "shared_trunk": True,
+            "pretrained": {},
+        }},
     }
     config_path = tmp_path / "q3d_synthetic.json"
     config_path.write_text(json.dumps(config))

@@ -118,7 +118,7 @@ def test_full_pytest_suite_leaves_tracked_working_source_clean(tmp_path: Path) -
     assert initial_status.stdout == "", f"initial snapshot is not clean:\n{initial_status.stdout}"
 
     # cwd and PYTHONPATH both point at the copy, so project imports resolve to
-    # the isolated snapshot. Q3D_OFFICIAL_MEDNEXT_SOURCE remains inherited.
+    # the isolated snapshot. External ResEnc source paths remain inherited.
     pytest_command = [
         sys.executable,
         "-m",

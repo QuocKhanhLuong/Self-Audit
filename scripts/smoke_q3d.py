@@ -91,18 +91,13 @@ def _tokenizer_initialization_count(state: dict[str, Any] | None) -> int | None:
 
 
 _ALL_RECIPES = (
-    "a3d_teacher_free", "b1", "c0", "c1", "e1", "mednext_supervised",
-    "mean_teacher", "o1", "s1", "v0", "v1", "v1_decoder_stride8",
-    "v1_residual2", "v1_stride4", "v1u",
+    "a3d_teacher_free", "b1", "c0", "c1", "e1", "teacher_supervised",
+    "mean_teacher", "o1", "s1", "v0", "v1", "v1_residual2", "v1u",
 )
 
 
 def _recipe_config(name: str, canonical_config):
     kwargs: dict[str, Any] = {"dataset": "acdc", "protocol": "A", "k": 2, "seed": 42}
-    if name == "v1_stride4":
-        return canonical_config("v1", source_stride=4, **kwargs)
-    if name == "v1_decoder_stride8":
-        return canonical_config("v1", feature_source="decoder_stride8", **kwargs)
     if name == "v1_residual2":
         return canonical_config("v1", residual2=True, **kwargs)
     return canonical_config(name, **kwargs)
@@ -161,7 +156,7 @@ def _run_recipe(
 
     engine_result: dict[str, Any] | None = None
     engine_error: str | None = None
-    if name in {"a3d_teacher_free", "mednext_supervised"}:
+    if name in {"a3d_teacher_free", "teacher_supervised"}:
         try:
             from train import _train_q3d
 
@@ -415,7 +410,7 @@ def _validate_v1_v1u_omega(run_reports: dict[str, dict[str, Any]]) -> dict[str, 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", required=True, help="New output directory; must not exist")
-    parser.add_argument("--all-arms", action="store_true", help="Run all 15 Q3D arm/variant recipes")
+    parser.add_argument("--all-arms", action="store_true", help="Run all 13 Q3D arm recipes")
     parser.add_argument("--recipe", choices=_ALL_RECIPES, default="v1",
                         help="One bounded recipe to run when --all-arms is absent")
     parser.add_argument("--q-updates", type=int, default=1,

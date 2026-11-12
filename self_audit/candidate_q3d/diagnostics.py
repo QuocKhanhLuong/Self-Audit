@@ -97,8 +97,8 @@ def _teacher_with_source(teacher: nn.Module, image: torch.Tensor, geometry: Mapp
                          *, source: str, synthetic: bool) -> dict[str, torch.Tensor]:
     from .engine import _teacher_outputs
 
-    # Use the same exact one-pass feature path as T/Q/J, including synthetic
-    # hook padding and the verified MedNeXt decoder-block hook for real runs.
+    # Use the same exact one-pass feature path as T/Q/J, including the
+    # teacher-owned native padding and feature phase for real runs.
     return _teacher_outputs(
         teacher, image, geometry, with_feature=True, source=source, synthetic=synthetic,
     )
@@ -394,7 +394,7 @@ def run_dev_diagnostics(
             "status": "COMPUTED",
             "mean": float(np.mean(all_agreements)) if all_agreements else None,
             "frame_count": len(all_agreements),
-            "alignment": "teacher_features_hooked_then_engine_align_teacher_to_student4",
+            "alignment": "teacher_features_then_engine_align_teacher_to_student4",
         }),
         "tokenizer_gate": tokenizer_gate,
         "physiology": {
@@ -475,7 +475,8 @@ def diagnose_checkpoint(
     train_ids = tuple(data.train_patients)
     completed = set(payload.get("completed_stages", ()))
     required_stages = {"J"}
-    if config["model"]["teacher"]["architecture"] == "mednext_l_k3":
+    teacher_architecture = str(config["model"]["teacher"].get("architecture", "none"))
+    if teacher_architecture not in {"none", "ema_student", "candidate_a3d"}:
         required_stages.add("T")
     if config["tokenizer"]["enabled"]:
         required_stages.add("Q")

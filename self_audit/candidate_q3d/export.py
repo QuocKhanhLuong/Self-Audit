@@ -163,9 +163,9 @@ def _student_arm(config: Mapping[str, Any], student: Mapping[str, Any]) -> str:
         "c0": "C0", "mean-teacher": "C0", "c1": "C1",
         "v0": "V0", "v1": "V1", "v1u": "V1-U", "v1-u": "V1-U",
         "b1": "B1", "e1": "E1", "o1": "O1", "s1": "S1",
-        # The stride and residual source ablations retain the V1 student API;
-        # their altered student settings are already carried in model.student.
-        "v1-stride4": "V1", "v1-residual2": "V1",
+        # The residual source ablation retains the V1 student API; its altered
+        # student settings are already carried in model.student.
+        "v1-residual2": "V1",
     }
     try:
         return aliases[source]
@@ -268,9 +268,22 @@ def _construct_deploy_model(config: Mapping[str, Any], state: Mapping[str, Any],
 
 def _assert_teacher_free_imports(module_names: Sequence[str] | None = None) -> None:
     names = sys.modules if module_names is None else module_names
-    forbidden = [name for name in names
-                 if name in {"self_audit.candidate_q3d.teacher", "self_audit.candidate_a3d.teacher"}
-                 or name.endswith((".candidate_q3d.teacher", ".candidate_a3d.teacher"))]
+    forbidden = [name for name in names if (
+        name in {
+            "self_audit.candidate_q3d.teacher",
+            "self_audit.candidate_q3d.teacher_resenc",
+            "self_audit.candidate_a3d.teacher",
+        }
+        or name.endswith((
+            ".candidate_q3d.teacher",
+            ".candidate_q3d.teacher_resenc",
+            ".candidate_a3d.teacher",
+        ))
+        or name == "dynamic_network_architectures"
+        or name.startswith("dynamic_network_architectures.")
+        or name == "nnssl"
+        or name.startswith("nnssl.")
+    )]
     if forbidden:
         raise RuntimeError(f"student-only cold load imported teacher modules: {sorted(forbidden)}")
 
@@ -641,8 +654,22 @@ with torch.inference_mode():
         actual_input_dtypes.append(str(image.dtype).removeprefix("torch."))
         logits = model.infer_logits(image, geometry=geometry)
         output.append(_logits_sha256(logits))
-forbidden = [name for name in sys.modules if name in {
-    "self_audit.candidate_q3d.teacher", "self_audit.candidate_a3d.teacher"}]
+forbidden = [name for name in sys.modules if (
+    name in {
+        "self_audit.candidate_q3d.teacher",
+        "self_audit.candidate_q3d.teacher_resenc",
+        "self_audit.candidate_a3d.teacher",
+    }
+    or name.endswith((
+        ".candidate_q3d.teacher",
+        ".candidate_q3d.teacher_resenc",
+        ".candidate_a3d.teacher",
+    ))
+    or name == "dynamic_network_architectures"
+    or name.startswith("dynamic_network_architectures.")
+    or name == "nnssl"
+    or name.startswith("nnssl.")
+)]
 if forbidden:
     raise RuntimeError("teacher module imported in cold-load process: " + repr(forbidden))
 print(json.dumps({"hashes": output, "teacher_modules": forbidden,

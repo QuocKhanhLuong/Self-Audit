@@ -7,7 +7,11 @@ import numpy as np
 import pytest
 import torch
 
-from self_audit.candidate_q3d.export import EXPORT_SCHEMA, verify_cold_load
+from self_audit.candidate_q3d.export import (
+    EXPORT_SCHEMA,
+    _assert_teacher_free_imports,
+    verify_cold_load,
+)
 from self_audit.candidate_q3d.student import CandidateQ3DStudent
 
 
@@ -66,6 +70,19 @@ def _write_volume(path: Path, shape: tuple[int, int, int], seed: int) -> Path:
         context=np.asarray("full_volume"),
     )
     return path
+
+
+@pytest.mark.parametrize(
+    "module_name",
+    [
+        "self_audit.candidate_q3d.teacher_resenc",
+        "dynamic_network_architectures.architectures.unet",
+        "nnssl.networks",
+    ],
+)
+def test_student_only_export_rejects_teacher_and_encoder_dependency_imports(module_name: str) -> None:
+    with pytest.raises(RuntimeError, match="teacher modules"):
+        _assert_teacher_free_imports({module_name})
 
 
 @pytest.mark.parametrize(

@@ -31,6 +31,24 @@ def _fake_module(name: str, **members):
     return module
 
 
+def test_manufactured_teacher_preserves_resenc_feature_api() -> None:
+    config = canonical_config("v1", dataset="acdc", protocol="A", k=2, seed=42)
+    config["runtime"]["synthetic"] = True
+    teacher = training_cli._manufactured_teacher(config).eval()
+    geometry = {
+        "shape": (8, 32, 32),
+        "spacing_zyx": (5.0, 1.2, 1.2),
+        "affine_zyx": torch.eye(4),
+        "context": "full_volume",
+    }
+    with torch.inference_mode():
+        outputs = teacher.forward_with_features(
+            torch.rand(1, 1, 8, 32, 32), geometry=geometry,
+        )
+    assert {"region_logits", "boundary_logits", "sdf", "feature_encoder_stride8"}.issubset(outputs)
+    assert outputs["feature_encoder_stride8"].shape[1] == 16
+
+
 def test_active_pipeline_declares_q3d_default_and_keeps_baselines():
     active = json.loads((ROOT / "ACTIVE_PIPELINE.json").read_text())
     assert active["default_track"] == "candidate_q3d"
@@ -40,20 +58,23 @@ def test_active_pipeline_declares_q3d_default_and_keeps_baselines():
     assert active["tracks"]["candidate_q3d"]["default_config"] == "configs/candidate_q3d/v1.json"
 
 
-def test_q3d_configs_are_nested_and_keep_real_provenance_not_run():
+def test_q3d_configs_are_nested_and_keep_pinned_real_provenance():
     config = json.loads((ROOT / "configs/candidate_q3d/v1.json").read_text())
     validated = validate_config(config)
     assert validated is not config
     assert validated["model"]["student"]["architecture"] == "unetrpp_lite_3d"
     assert validated["runtime"]["synthetic"] is False
-    assert validated["model"]["teacher"]["pretrained"]["provenance_status"] == "NOT_FOUND_OFFICIAL"
+    assert validated["model"]["teacher"]["pretrained"]["provenance_status"] == "READY"
+    assert validated["model"]["teacher"]["pretrained"]["weights_sha256"] == (
+        "ac262d3e8c226c79f9567fddc34d38e011284730ddf2294b5c6c319ce2f22bbd"
+    )
 
 
-def test_all_fifteen_recipes_select_declared_engine_effects():
+def test_all_declared_recipes_select_declared_engine_effects():
     from self_audit.candidate_q3d.engine import _student_arm
 
     recipes = sorted((ROOT / "configs/candidate_q3d").glob("*.json"))
-    assert len(recipes) == 15
+    assert len(recipes) == 13
     for path in recipes:
         config = validate_config(json.loads(path.read_text()))
         arm = config["arm"]
@@ -76,23 +97,21 @@ def test_all_fifteen_recipes_select_declared_engine_effects():
         if settings["tokenizer"]:
             assert config["tokenizer"]["initialization_volumes"] == 200
             assert config["training"]["stage_update_units"]["Q"] == "optimizer_updates_after_separate_init_pass"
-        if arm in {"a3d_teacher_free", "mednext_supervised"}:
+        if arm in {"a3d_teacher_free", "teacher_supervised"}:
             assert config["model"]["student"]["architecture"] in {
-                "candidate_a3d", "mednext_l_k3_supervised",
+                "candidate_a3d", "nnfoundation_resenc_l_supervised",
             }
             if arm == "a3d_teacher_free":
                 assert config["baselines"][arm]["method"] == "candidate_q3d"
             else:
                 assert settings["stages"] == ("T",)
-                assert config["model"]["student"]["architecture"] == "mednext_l_k3_supervised"
+                assert config["model"]["student"]["architecture"] == "nnfoundation_resenc_l_supervised"
         else:
             assert _student_arm(arm) in {"C0", "C1", "V0", "V1", "V1-U", "B1"}
             assert config["tokenizer"]["enabled"] is settings["tokenizer"]
             assert config["physiology"]["enabled"] is settings["physiology"]
         if path.stem == "v1_residual2":
             assert config["model"]["student"]["residual2"]["enabled"] is True
-        if path.stem == "v1_stride4":
-            assert config["model"]["teacher"]["feature_stride"] == 4
 
 
 def test_train_dispatch_selects_only_declared_q3d_engine(monkeypatch):
@@ -286,7 +305,7 @@ def test_synthetic_teacher_fixture_is_refused_for_real_config(monkeypatch, tmp_p
     ("arm", "runner_name"),
     [
         ("a3d_teacher_free", "run_a3d_teacher_free"),
-        ("mednext_supervised", "run_mednext_supervised"),
+        ("teacher_supervised", "run_teacher_supervised"),
     ],
 )
 def test_nested_baseline_arms_dispatch_to_separate_runner(monkeypatch, tmp_path, arm, runner_name):
@@ -422,7 +441,7 @@ def test_q3d_evaluate_cli_accepts_internal_test_split(monkeypatch, tmp_path, cap
     assert json.loads(capsys.readouterr().out) == {"fg_dice": 0.5}
 
 
-def test_mednext_research_evaluation_routes_through_baseline_owner(monkeypatch, tmp_path, capsys):
+def test_teacher_supervised_research_evaluation_routes_through_baseline_owner(monkeypatch, tmp_path, capsys):
     checkpoint = tmp_path / "latest.pt"
     checkpoint.write_bytes(b"synthetic resume bytes")
     observed = {}
@@ -434,10 +453,10 @@ def test_mednext_research_evaluation_routes_through_baseline_owner(monkeypatch, 
             config_path=config_path, manifest=manifest, data_sha=data_sha,
             out=out, device=device, split=split,
         )
-        return {"artifact_kind": "heavy_mednext_region_baseline", "student_export": False}
+        return {"artifact_kind": "heavy_resenc_region_baseline", "student_export": False}
 
     monkeypatch.setattr(evaluation_cli, "_evaluate_configured_baseline", evaluate)
-    config = tmp_path / "mednext.json"
+    config = tmp_path / "teacher-supervised.json"
     config.write_text("{}")
     monkeypatch.setattr(sys, "argv", [
         "evaluate.py", "--checkpoint", str(checkpoint), "--checkpoint-sha256", "abc",
@@ -451,7 +470,7 @@ def test_mednext_research_evaluation_routes_through_baseline_owner(monkeypatch, 
         "out": "eval-out", "device": "cpu", "split": "test",
     }
     assert json.loads(capsys.readouterr().out) == {
-        "artifact_kind": "heavy_mednext_region_baseline", "student_export": False,
+        "artifact_kind": "heavy_resenc_region_baseline", "student_export": False,
     }
 
 

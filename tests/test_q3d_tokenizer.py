@@ -4,14 +4,13 @@ import math
 
 import pytest
 import torch
-from torch import nn
 
-from self_audit.candidate_a3d.teacher import DualBranchTeacher3D, MedNeXtL3DAdapter
 from self_audit.candidate_q3d.alignment import align_teacher_to_student4
 from self_audit.candidate_q3d.teacher_features import (
     forward_teacher_with_features,
     teacher_feature_source,
 )
+from self_audit.candidate_q3d.teacher_resenc import Q3DResEncTeacher
 from self_audit.candidate_q3d.tokenizer import TeacherTokenizer
 from scripts.q3d_preflight import build_report
 
@@ -294,137 +293,86 @@ def test_dead_code_restart_generator_state_resumes_exactly() -> None:
     assert torch.equal(tokenizer._restart_generator.get_state(), resumed._restart_generator.get_state())
 
 
-class _CheckpointAwareConv3d(nn.Module):
-    def __init__(self, in_channels: int, out_channels: int) -> None:
-        super().__init__()
-        self.conv = nn.Conv3d(in_channels, out_channels, 1)
-
-    def forward(self, value: torch.Tensor, _dummy: torch.Tensor | None = None) -> torch.Tensor:
-        return self.conv(value)
-
-
-class _CheckpointStyleMedNeXt(nn.Module):
-    """Minimal native-sequence fixture exercising child-only block calls."""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self._candidate_a_native_v1 = True
-        self.outside_block_checkpointing = True
-        self.dummy_tensor = torch.zeros(1)
-        self.stem = _CheckpointAwareConv3d(1, 4)
-        for name in ("enc_block_0", "enc_block_1", "enc_block_2", "enc_block_3", "bottleneck"):
-            setattr(self, name, nn.Sequential(_CheckpointAwareConv3d(4, 4)))
-        for name in ("down_0", "down_1", "down_2", "down_3", "up_3", "up_2", "up_1", "up_0", "out_0"):
-            setattr(self, name, _CheckpointAwareConv3d(4, 4))
-        self.dec_block_3 = nn.Sequential(_CheckpointAwareConv3d(4, 4), _CheckpointAwareConv3d(4, 4))
-        self.dec_block_2 = nn.Sequential(_CheckpointAwareConv3d(4, 4), _CheckpointAwareConv3d(4, 4))
-        self.dec_block_1 = nn.Sequential(_CheckpointAwareConv3d(4, 4), _CheckpointAwareConv3d(4, 4))
-        self.dec_block_0 = nn.Sequential(_CheckpointAwareConv3d(4, 4), _CheckpointAwareConv3d(4, 4))
-        self.iterative_calls = 0
-
-    def iterative_checkpoint(self, block: nn.Module, value: torch.Tensor) -> torch.Tensor:
-        self.iterative_calls += 1
-        for child in block.children():
-            value = child(value)
-        return value
+def _small_resenc_teacher() -> Q3DResEncTeacher:
+    """Small six-stage ResEnc fixture that preserves S8/S16 phase semantics."""
+    teacher = Q3DResEncTeacher(
+        synthetic=True,
+        strides=(
+            (1, 1, 1), (2, 2, 2), (2, 2, 2),
+            (2, 2, 2), (2, 2, 2), (1, 1, 1),
+        ),
+    )
+    return teacher.eval()
 
 
-class _FixtureMedNeXtAdapter(MedNeXtL3DAdapter):
-    def __init__(self, model: _CheckpointStyleMedNeXt) -> None:
-        super().__init__(
-            model, source_repo="synthetic-fixture", source_commit="fixture",
-            weights_sha256=None, features_api="native_mednext_v1_sequence",
-            feature_channels=(4, 4, 4, 4, 4),
-        )
-
-
-def test_teacher_feature_capture_survives_child_checkpoint_dispatch_and_runs_once(monkeypatch) -> None:
-    torch.manual_seed(11)
-    from self_audit.candidate_a3d import teacher as teacher_module
-
-    def checkpoint_passthrough(function, *args, **kwargs):
-        return function(*args)
-
-    monkeypatch.setattr(teacher_module.torch_checkpoint, "checkpoint", checkpoint_passthrough)
-    model = _CheckpointStyleMedNeXt()
-    encoder = _FixtureMedNeXtAdapter(model)
-    teacher = DualBranchTeacher3D(encoder, boundary_width=4)
-    teacher.requires_grad_(False)
-    teacher.eval()
-    image = torch.rand(1, 1, 6, 17, 19)
-    geometry = {
-        "shape": (6, 17, 19),
+def _resenc_geometry() -> dict[str, object]:
+    return {
+        "shape": (17, 17, 19),
         "spacing_zyx": (5.0, 1.2, 1.2),
         "affine_zyx": torch.eye(4),
         "context": "full_volume",
     }
 
-    source = teacher_feature_source(teacher, "encoder_stride8")
+
+def test_teacher_feature_capture_uses_one_native_resenc_forward() -> None:
+    torch.manual_seed(11)
+    teacher = _small_resenc_teacher()
+    image = torch.rand(1, 1, 17, 17, 19)
+    geometry = _resenc_geometry()
+    calls = 0
+    original = teacher.forward_with_features
+
+    def counted(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        return original(*args, **kwargs)
+
+    teacher.forward_with_features = counted
+    source = teacher_feature_source(teacher, "encoder_stride8", synthetic=True)
     assert source["feature_index"] == 3
+    assert source["module_name"] == "encoder.stages.3"
+    assert source["channels"] == 16
     assert source["capture_api"] == "forward_with_features"
     assert source["module"] is None
     captured = forward_teacher_with_features(
-        teacher, image, geometry=geometry, source="encoder_stride8",
+        teacher, image, geometry=geometry, source="encoder_stride8", synthetic=True,
     )
-    assert set(captured) == {"region_logits", "boundary_logits", "sdf", "feature"}
-    assert captured["feature"].shape[1] == 4
-    assert captured["feature"].requires_grad is False
-    assert model.iterative_calls == 9  # encoder, bottleneck, and four decoder blocks
-
-
-def test_feature_source_selects_main_encoder_and_separate_decoder_ablations() -> None:
-    model = _CheckpointStyleMedNeXt()
-    teacher = DualBranchTeacher3D(_FixtureMedNeXtAdapter(model), boundary_width=4)
-    main = teacher_feature_source(teacher, "stride8")
-    assert main["source"] == "encoder_stride8"
-    assert main["module_name"] == "forward_with_features[0][3]"
-    assert main["capture_api"] == "forward_with_features"
-    assert teacher_feature_source(teacher, "decoder_stride8")["module_name"] == "dec_block_3.1"
-    assert teacher_feature_source(teacher, "bottleneck_stride16")["module_name"] == "bottleneck.0"
-    assert teacher_feature_source(teacher, "stride4_decoder_block")["module_name"] == "dec_block_2.1"
-
-
-def test_decoder_stride8_ablation_hooks_final_child_once() -> None:
-    model = _CheckpointStyleMedNeXt()
-    teacher = DualBranchTeacher3D(_FixtureMedNeXtAdapter(model), boundary_width=4)
-    teacher.requires_grad_(False)
-    teacher.eval()
-    image = torch.rand(1, 1, 6, 17, 19)
-    geometry = {
-        "shape": (6, 17, 19),
-        "spacing_zyx": (5.0, 1.2, 1.2),
-        "affine_zyx": torch.eye(4),
-        "context": "full_volume",
-    }
-    source = teacher_feature_source(teacher, "decoder_stride8")
-    assert source["module_name"] == "dec_block_3.1"
-    calls = 0
-
-    def count(_module, _inputs, _output):
-        nonlocal calls
-        calls += 1
-
-    handle = source["module"].register_forward_hook(count)
-    try:
-        outputs = forward_teacher_with_features(
-            teacher, image, geometry=geometry, source="decoder_stride8",
-        )
-    finally:
-        handle.remove()
     assert calls == 1
-    assert outputs["feature"].shape == (1, 4, 32, 32, 32)
-    assert not outputs["feature"].requires_grad
+    assert set(captured) == {"region_logits", "boundary_logits", "sdf", "feature"}
+    assert captured["region_logits"].shape == (1, 4, 17, 17, 19)
+    assert captured["feature"].shape == (1, 16, 4, 4, 4)
+    assert captured["feature"].requires_grad is False
 
 
-def test_p0_preflight_keeps_missing_weights_and_patient_diagnostics_not_run() -> None:
+def test_resenc_feature_source_selects_declared_encoder_stages_only() -> None:
+    teacher = _small_resenc_teacher()
+    stride8 = teacher_feature_source(teacher, "stride8", synthetic=True)
+    stride16 = teacher_feature_source(teacher, "encoder_stride16", synthetic=True)
+    assert stride8["source"] == "encoder_stride8"
+    assert stride8["phase"] == ((8, 8, 8), (0.0, 0.0, 0.0))
+    assert stride16["source"] == "encoder_stride16"
+    assert stride16["feature_index"] == 4
+    assert stride16["channels"] == 20
+    with pytest.raises(ValueError, match="encoder_stride8 or encoder_stride16"):
+        teacher_feature_source(teacher, "decoder_stride8", synthetic=True)
+
+
+def test_p0_preflight_reports_resenc_source_and_patient_diagnostics_scope() -> None:
     from pathlib import Path
+    from scripts.q3d_preflight import RESENC_CHECKPOINT
 
     root = Path(__file__).resolve().parents[1]
     report = build_report(root / "configs/candidate_q3d/v1.json")
     assert report["config_validation"]["status"] == "PASS"
     assert report["status"] == "NOT_READY"
-    assert report["teacher_feature"]["source_status"] == "NOT_RUN"
-    assert report["teacher_feature"]["weights"]["status"] == "NOT_RUN_NO_WEIGHTS_PATH_OR_SHA"
+    if RESENC_CHECKPOINT.is_file():
+        assert report["teacher_feature"]["source_status"] == "ACTUAL_RESENC_MODULES_INSPECTED"
+        assert report["teacher_feature"]["weights"]["status"] == "HASH_VERIFIED_FILE_PRESENT"
+    else:
+        assert report["teacher_feature"]["source_status"] == "NOT_RUN"
+        assert report["teacher_feature"]["weights"]["status"] in {
+            "NOT_RUN_WEIGHTS_FILE_MISSING", "NOT_RUN_NO_WEIGHTS_PATH_OR_SHA",
+        }
     assert report["datasets"]["acdc"]["status"] == "NOT_RUN"
     assert report["datasets"]["mnms"]["status"] == "NOT_RUN"
     assert report["clinical_gates"]["status"] == "NOT_RUN"

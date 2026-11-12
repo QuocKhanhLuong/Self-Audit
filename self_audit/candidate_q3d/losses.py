@@ -229,7 +229,7 @@ def feature_kd_loss(
 def mean_teacher_consistency_loss(student_logits: Tensor, ema_logits: Tensor) -> Tensor:
     """Detached soft-probability consistency for the Mean Teacher baseline.
 
-    The baseline has no teacher MedNeXt, tokenizer, codebook, or GT on U.  It
+    The baseline has no external teacher, tokenizer, codebook, or GT on U.  It
     compares the online student's strong-view probabilities to the student EMA
     weak-view probabilities with a symmetric-shape mean-square discrepancy.
     """

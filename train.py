@@ -37,8 +37,10 @@ def _manufactured_teacher(config: dict[str, Any]):
     teacher, _provenance = _build_teacher(config, synthetic=True)
     original_forward = teacher.forward
 
-    def forward(self, image, geometry=None):
-        output = dict(original_forward(image, geometry=geometry))
+    def forward(self, image, geometry=None, *, return_features=False):
+        output = dict(original_forward(
+            image, geometry=geometry, return_features=return_features,
+        ))
         batch, _channels, depth, height, width = image.shape
         x = torch.arange(width, device=image.device).view(1, 1, 1, width)
         frame_mean = image.mean(dim=(1, 2, 3, 4))
@@ -102,7 +104,7 @@ def _train_q3d(args: argparse.Namespace, parser: argparse.ArgumentParser,
 
     baseline_runners = {
         "a3d_teacher_free": "run_a3d_teacher_free",
-        "mednext_supervised": "run_mednext_supervised",
+        "teacher_supervised": "run_teacher_supervised",
     }
     if validated["arm"] in baseline_runners:
         if synthetic_teacher_fixture:

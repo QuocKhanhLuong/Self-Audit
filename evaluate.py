@@ -90,13 +90,13 @@ def _evaluate_configured_baseline(checkpoint: str, checkpoint_sha: str, config_p
     arm = config.get("arm")
     if config.get("method") != "candidate_q3d":
         raise ValueError("--config for a nested baseline checkpoint must declare method=candidate_q3d")
-    if arm == "mednext_supervised":
-        from self_audit.candidate_q3d.baselines import evaluate_mednext_baseline
+    if arm == "teacher_supervised":
+        from self_audit.candidate_q3d.baselines import evaluate_teacher_supervised_baseline
         if not Path(checkpoint).is_file():
-            raise ValueError("mednext_supervised evaluation requires its resume checkpoint file")
+            raise ValueError("teacher_supervised evaluation requires its resume checkpoint file")
         if split == "external_test":
-            raise ValueError("heavy MedNeXt evaluation supports only --split dev or test")
-        return evaluate_mednext_baseline(
+            raise ValueError("teacher-supervised evaluation supports only --split dev or test")
+        return evaluate_teacher_supervised_baseline(
             checkpoint, checkpoint_sha, config, data_manifest, data_sha, out,
             device=device, split=split or "dev",
         )
@@ -110,7 +110,7 @@ def _evaluate_configured_baseline(checkpoint: str, checkpoint_sha: str, config_p
             checkpoint, checkpoint_sha, config, data_manifest, data_sha, out,
             device=device, split=split or "test",
         )
-    raise ValueError("--config supports only Q3D arms a3d_teacher_free or mednext_supervised")
+    raise ValueError("--config supports only Q3D arms a3d_teacher_free or teacher_supervised")
 
 
 def evaluator_for_schema(schema: str) -> Any:
@@ -132,7 +132,7 @@ def main() -> None:
     parser.add_argument("--out", required=True)
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--threshold", type=float)
-    parser.add_argument("--config", help="Nested Q3D baseline config for A3D or MedNeXt checkpoint evaluation")
+    parser.add_argument("--config", help="Nested Q3D baseline config for A3D or teacher-supervised checkpoint evaluation")
     parser.add_argument("--train-data", help="Q3D-only hash-pinned TRAIN manifest for overlap checks")
     parser.add_argument("--train-data-sha256", help="SHA-256 of the Q3D TRAIN manifest")
     parser.add_argument("--split", choices=["dev", "test", "external_test"],
