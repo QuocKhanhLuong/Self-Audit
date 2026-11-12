@@ -1,0 +1,1135 @@
+{
+  "evidence_status": "SOFTWARE_ONLY_SYNTHETIC",
+  "gpu_evidence": "NOT_RUN",
+  "patient_metrics_claimed": false,
+  "real_data_evidence": "NOT_RUN",
+  "recipe_statuses": {
+    "a3d_teacher_free": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+    "b1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "c0": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+    "c1": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+    "e1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "mean_teacher": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+    "o1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "s1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "teacher_supervised": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+    "v0": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "v1": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "v1_residual2": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "v1u": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE"
+  },
+  "runs": {
+    "a3d_teacher_free": {
+      "completed_stages": [
+        "J"
+      ],
+      "config": "/private/tmp/self-audit-q3d-resenc-final-20261112/a3d_teacher_free.config.json",
+      "config_sha256": "db4115743f2718eea77937f0e8c5d5ade40dc6c51fb5479a2667e4b306db27c2",
+      "engine_active_stages": null,
+      "engine_error": null,
+      "expected_completed_stages": [
+        "J"
+      ],
+      "expected_stages": [
+        "J"
+      ],
+      "physiology_cohort_weighting": null,
+      "report": "/private/tmp/self-audit-q3d-resenc-final-20261112/a3d_teacher_free.smoke.json",
+      "requested_stage": null,
+      "stage_artifact_hashes": {},
+      "stage_artifact_inputs": {},
+      "synthetic_gate_override_requested": false,
+      "synthetic_gate_override_used": false,
+      "tokenizer_gate": {
+        "passed": null,
+        "status": "NOT_APPLICABLE"
+      }
+    },
+    "b1": {
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "config": "/private/tmp/self-audit-q3d-resenc-final-20261112/b1.config.json",
+      "config_sha256": "58a8c26f432854127035b91076d38036af028112c046177df113bfc9f49d1f6f",
+      "engine_active_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "engine_error": null,
+      "expected_completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "physiology_cohort_weighting": {
+        "arm": "V1",
+        "ess": 1.9890341983719577,
+        "ess_fraction": 0.9945170991859789,
+        "gate": {
+          "context": "J physiology cache reload",
+          "ess": 1.9890341983719577,
+          "ess_fraction": 0.9945170991859789,
+          "gate_error": null,
+          "mean_w_pat": 0.8828328707777578,
+          "override_scope": null,
+          "override_used": false,
+          "passed": true,
+          "patient_count": 2,
+          "patient_weights": {
+            "train_unlabeled_000": 0.9483836053009851,
+            "train_unlabeled_001": 0.8172821362545306
+          },
+          "positive_patient_count": 2,
+          "status": "PASS_POSITIVE_U_SUPPORT"
+        },
+        "gate_passed": true,
+        "max_omega": 1.0742504461410438,
+        "mean_omega": 1.0,
+        "mean_w_pat": 0.8828328707777578,
+        "omega": {
+          "train_unlabeled_000": 1.0742504461410438,
+          "train_unlabeled_001": 0.9257495538589562
+        },
+        "override_policy": null,
+        "override_used": false,
+        "patient_ids": [
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ],
+        "schema": "self_audit.candidate_q3d.runtime_cohort_weighting.v1",
+        "source": "U",
+        "source_cohort": "U",
+        "w_pat": {
+          "train_unlabeled_000": 0.9483836053009851,
+          "train_unlabeled_001": 0.8172821362545306
+        },
+        "zero_fraction": 0.0
+      },
+      "report": "/private/tmp/self-audit-q3d-resenc-final-20261112/b1.smoke.json",
+      "requested_stage": null,
+      "stage_artifact_hashes": {},
+      "stage_artifact_inputs": {},
+      "synthetic_gate_override_requested": true,
+      "synthetic_gate_override_used": true,
+      "tokenizer_gate": {
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "passed": false,
+        "status": "NOT_READY",
+        "thresholds": {
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4,
+          "min_perplexity": 32.0
+        }
+      }
+    },
+    "c0": {
+      "completed_stages": [
+        "J"
+      ],
+      "config": "/private/tmp/self-audit-q3d-resenc-final-20261112/c0.config.json",
+      "config_sha256": "c5a4d1c8df839280f071a93f52f0b9ecb6b9ac5db178f56a6c7315cecf100ceb",
+      "engine_active_stages": [
+        "J"
+      ],
+      "engine_error": null,
+      "expected_completed_stages": [
+        "J"
+      ],
+      "expected_stages": [
+        "J"
+      ],
+      "physiology_cohort_weighting": null,
+      "report": "/private/tmp/self-audit-q3d-resenc-final-20261112/c0.smoke.json",
+      "requested_stage": null,
+      "stage_artifact_hashes": {},
+      "stage_artifact_inputs": {},
+      "synthetic_gate_override_requested": false,
+      "synthetic_gate_override_used": false,
+      "tokenizer_gate": {
+        "passed": null,
+        "status": "NOT_APPLICABLE"
+      }
+    },
+    "c1": {
+      "completed_stages": [
+        "T",
+        "P",
+        "J"
+      ],
+      "config": "/private/tmp/self-audit-q3d-resenc-final-20261112/c1.config.json",
+      "config_sha256": "4665291ee20b31e530545ab964f337137bd7c87fb6db71ee3852cfb2e169984c",
+      "engine_active_stages": [
+        "T",
+        "P",
+        "J"
+      ],
+      "engine_error": null,
+      "expected_completed_stages": [
+        "T",
+        "P",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "P",
+        "J"
+      ],
+      "physiology_cohort_weighting": {
+        "arm": "C1",
+        "ess": 1.9890341983719577,
+        "ess_fraction": 0.9945170991859789,
+        "gate": {
+          "context": "J physiology cache reload",
+          "ess": 1.9890341983719577,
+          "ess_fraction": 0.9945170991859789,
+          "gate_error": null,
+          "mean_w_pat": 0.8828328707777578,
+          "override_scope": null,
+          "override_used": false,
+          "passed": true,
+          "patient_count": 2,
+          "patient_weights": {
+            "train_unlabeled_000": 0.9483836053009851,
+            "train_unlabeled_001": 0.8172821362545306
+          },
+          "positive_patient_count": 2,
+          "status": "PASS_POSITIVE_U_SUPPORT"
+        },
+        "gate_passed": true,
+        "max_omega": 1.0742504461410438,
+        "mean_omega": 1.0,
+        "mean_w_pat": 0.8828328707777578,
+        "omega": {
+          "train_unlabeled_000": 1.0742504461410438,
+          "train_unlabeled_001": 0.9257495538589562
+        },
+        "override_policy": null,
+        "override_used": false,
+        "patient_ids": [
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ],
+        "schema": "self_audit.candidate_q3d.runtime_cohort_weighting.v1",
+        "source": "U",
+        "source_cohort": "U",
+        "w_pat": {
+          "train_unlabeled_000": 0.9483836053009851,
+          "train_unlabeled_001": 0.8172821362545306
+        },
+        "zero_fraction": 0.0
+      },
+      "report": "/private/tmp/self-audit-q3d-resenc-final-20261112/c1.smoke.json",
+      "requested_stage": null,
+      "stage_artifact_hashes": {},
+      "stage_artifact_inputs": {},
+      "synthetic_gate_override_requested": false,
+      "synthetic_gate_override_used": false,
+      "tokenizer_gate": {
+        "passed": null,
+        "status": "NOT_APPLICABLE"
+      }
+    },
+    "e1": {
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "config": "/private/tmp/self-audit-q3d-resenc-final-20261112/e1.config.json",
+      "config_sha256": "1c02c1e43519c650537d3e14015b15e6beee00edfb10de438b7d0de5dc11df39",
+      "engine_active_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "engine_error": null,
+      "expected_completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "physiology_cohort_weighting": {
+        "arm": "V1",
+        "ess": 1.9890341983719577,
+        "ess_fraction": 0.9945170991859789,
+        "gate": {
+          "context": "J physiology cache reload",
+          "ess": 1.9890341983719577,
+          "ess_fraction": 0.9945170991859789,
+          "gate_error": null,
+          "mean_w_pat": 0.8828328707777578,
+          "override_scope": null,
+          "override_used": false,
+          "passed": true,
+          "patient_count": 2,
+          "patient_weights": {
+            "train_unlabeled_000": 0.9483836053009851,
+            "train_unlabeled_001": 0.8172821362545306
+          },
+          "positive_patient_count": 2,
+          "status": "PASS_POSITIVE_U_SUPPORT"
+        },
+        "gate_passed": true,
+        "max_omega": 1.0742504461410438,
+        "mean_omega": 1.0,
+        "mean_w_pat": 0.8828328707777578,
+        "omega": {
+          "train_unlabeled_000": 1.0742504461410438,
+          "train_unlabeled_001": 0.9257495538589562
+        },
+        "override_policy": null,
+        "override_used": false,
+        "patient_ids": [
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ],
+        "schema": "self_audit.candidate_q3d.runtime_cohort_weighting.v1",
+        "source": "U",
+        "source_cohort": "U",
+        "w_pat": {
+          "train_unlabeled_000": 0.9483836053009851,
+          "train_unlabeled_001": 0.8172821362545306
+        },
+        "zero_fraction": 0.0
+      },
+      "report": "/private/tmp/self-audit-q3d-resenc-final-20261112/e1.smoke.json",
+      "requested_stage": null,
+      "stage_artifact_hashes": {},
+      "stage_artifact_inputs": {},
+      "synthetic_gate_override_requested": true,
+      "synthetic_gate_override_used": true,
+      "tokenizer_gate": {
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "passed": false,
+        "status": "NOT_READY",
+        "thresholds": {
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4,
+          "min_perplexity": 32.0
+        }
+      }
+    },
+    "mean_teacher": {
+      "completed_stages": [
+        "J"
+      ],
+      "config": "/private/tmp/self-audit-q3d-resenc-final-20261112/mean_teacher.config.json",
+      "config_sha256": "57cc28edd0f188a5736fd8d409077eec89429be26741a0e911c3b1735a11452a",
+      "engine_active_stages": [
+        "J"
+      ],
+      "engine_error": null,
+      "expected_completed_stages": [
+        "J"
+      ],
+      "expected_stages": [
+        "J"
+      ],
+      "physiology_cohort_weighting": null,
+      "report": "/private/tmp/self-audit-q3d-resenc-final-20261112/mean_teacher.smoke.json",
+      "requested_stage": null,
+      "stage_artifact_hashes": {},
+      "stage_artifact_inputs": {},
+      "synthetic_gate_override_requested": false,
+      "synthetic_gate_override_used": false,
+      "tokenizer_gate": {
+        "passed": null,
+        "status": "NOT_APPLICABLE"
+      }
+    },
+    "o1": {
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "config": "/private/tmp/self-audit-q3d-resenc-final-20261112/o1.config.json",
+      "config_sha256": "5c5dd7185068d230a97afa6263f041f849ac0f80b3f964801f469bc1708bbbaf",
+      "engine_active_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "engine_error": null,
+      "expected_completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "physiology_cohort_weighting": {
+        "arm": "V1",
+        "ess": 1.9890341983719577,
+        "ess_fraction": 0.9945170991859789,
+        "gate": {
+          "context": "J physiology cache reload",
+          "ess": 1.9890341983719577,
+          "ess_fraction": 0.9945170991859789,
+          "gate_error": null,
+          "mean_w_pat": 0.8828328707777578,
+          "override_scope": null,
+          "override_used": false,
+          "passed": true,
+          "patient_count": 2,
+          "patient_weights": {
+            "train_unlabeled_000": 0.9483836053009851,
+            "train_unlabeled_001": 0.8172821362545306
+          },
+          "positive_patient_count": 2,
+          "status": "PASS_POSITIVE_U_SUPPORT"
+        },
+        "gate_passed": true,
+        "max_omega": 1.0742504461410438,
+        "mean_omega": 1.0,
+        "mean_w_pat": 0.8828328707777578,
+        "omega": {
+          "train_unlabeled_000": 1.0742504461410438,
+          "train_unlabeled_001": 0.9257495538589562
+        },
+        "override_policy": null,
+        "override_used": false,
+        "patient_ids": [
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ],
+        "schema": "self_audit.candidate_q3d.runtime_cohort_weighting.v1",
+        "source": "U",
+        "source_cohort": "U",
+        "w_pat": {
+          "train_unlabeled_000": 0.9483836053009851,
+          "train_unlabeled_001": 0.8172821362545306
+        },
+        "zero_fraction": 0.0
+      },
+      "report": "/private/tmp/self-audit-q3d-resenc-final-20261112/o1.smoke.json",
+      "requested_stage": null,
+      "stage_artifact_hashes": {},
+      "stage_artifact_inputs": {},
+      "synthetic_gate_override_requested": true,
+      "synthetic_gate_override_used": true,
+      "tokenizer_gate": {
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "passed": false,
+        "status": "NOT_READY",
+        "thresholds": {
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4,
+          "min_perplexity": 32.0
+        }
+      }
+    },
+    "s1": {
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "config": "/private/tmp/self-audit-q3d-resenc-final-20261112/s1.config.json",
+      "config_sha256": "bce28e857db57b9d2999ae054f06e59662f0d1c6cb757c338ebff7abf2a6bf37",
+      "engine_active_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "engine_error": null,
+      "expected_completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "physiology_cohort_weighting": {
+        "arm": "V1",
+        "ess": 1.9890341983719577,
+        "ess_fraction": 0.9945170991859789,
+        "gate": {
+          "context": "J physiology cache reload",
+          "ess": 1.9890341983719577,
+          "ess_fraction": 0.9945170991859789,
+          "gate_error": null,
+          "mean_w_pat": 0.8828328707777578,
+          "override_scope": null,
+          "override_used": false,
+          "passed": true,
+          "patient_count": 2,
+          "patient_weights": {
+            "train_unlabeled_000": 0.9483836053009851,
+            "train_unlabeled_001": 0.8172821362545306
+          },
+          "positive_patient_count": 2,
+          "status": "PASS_POSITIVE_U_SUPPORT"
+        },
+        "gate_passed": true,
+        "max_omega": 1.0742504461410438,
+        "mean_omega": 1.0,
+        "mean_w_pat": 0.8828328707777578,
+        "omega": {
+          "train_unlabeled_000": 1.0742504461410438,
+          "train_unlabeled_001": 0.9257495538589562
+        },
+        "override_policy": null,
+        "override_used": false,
+        "patient_ids": [
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ],
+        "schema": "self_audit.candidate_q3d.runtime_cohort_weighting.v1",
+        "source": "U",
+        "source_cohort": "U",
+        "w_pat": {
+          "train_unlabeled_000": 0.9483836053009851,
+          "train_unlabeled_001": 0.8172821362545306
+        },
+        "zero_fraction": 0.0
+      },
+      "report": "/private/tmp/self-audit-q3d-resenc-final-20261112/s1.smoke.json",
+      "requested_stage": null,
+      "stage_artifact_hashes": {},
+      "stage_artifact_inputs": {},
+      "synthetic_gate_override_requested": true,
+      "synthetic_gate_override_used": true,
+      "tokenizer_gate": {
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "passed": false,
+        "status": "NOT_READY",
+        "thresholds": {
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4,
+          "min_perplexity": 32.0
+        }
+      }
+    },
+    "teacher_supervised": {
+      "completed_stages": [
+        "T"
+      ],
+      "config": "/private/tmp/self-audit-q3d-resenc-final-20261112/teacher_supervised.config.json",
+      "config_sha256": "fda8129db8b031289029d198ada94bc6f9c7212ebaac9b5ec67ead78cf2f09f4",
+      "engine_active_stages": null,
+      "engine_error": null,
+      "expected_completed_stages": [
+        "T"
+      ],
+      "expected_stages": [
+        "T"
+      ],
+      "physiology_cohort_weighting": null,
+      "report": "/private/tmp/self-audit-q3d-resenc-final-20261112/teacher_supervised.smoke.json",
+      "requested_stage": null,
+      "stage_artifact_hashes": {},
+      "stage_artifact_inputs": {},
+      "synthetic_gate_override_requested": false,
+      "synthetic_gate_override_used": false,
+      "tokenizer_gate": {
+        "passed": null,
+        "status": "NOT_APPLICABLE"
+      }
+    },
+    "v0": {
+      "completed_stages": [
+        "T",
+        "Q",
+        "J"
+      ],
+      "config": "/private/tmp/self-audit-q3d-resenc-final-20261112/v0.config.json",
+      "config_sha256": "7352c49f0529e4fb52abda79862dce7eda4c0dfa0115aeefa3ba42c928905792",
+      "engine_active_stages": [
+        "T",
+        "Q",
+        "J"
+      ],
+      "engine_error": null,
+      "expected_completed_stages": [
+        "T",
+        "Q",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "Q",
+        "J"
+      ],
+      "physiology_cohort_weighting": null,
+      "report": "/private/tmp/self-audit-q3d-resenc-final-20261112/v0.smoke.json",
+      "requested_stage": null,
+      "stage_artifact_hashes": {},
+      "stage_artifact_inputs": {},
+      "synthetic_gate_override_requested": true,
+      "synthetic_gate_override_used": true,
+      "tokenizer_gate": {
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "passed": false,
+        "status": "NOT_READY",
+        "thresholds": {
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4,
+          "min_perplexity": 32.0
+        }
+      }
+    },
+    "v1": {
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "config": "/private/tmp/self-audit-q3d-resenc-final-20261112/v1.config.json",
+      "config_sha256": "60171e7c74c7c4c52b81be08dbd9cccaf1d07d5c51b3f1b8adb9c990f31ee3a6",
+      "engine_active_stages": [
+        "J"
+      ],
+      "engine_error": null,
+      "expected_completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "physiology_cohort_weighting": {
+        "arm": "V1",
+        "ess": 1.9890341983719577,
+        "ess_fraction": 0.9945170991859789,
+        "gate": {
+          "context": "J physiology cache reload",
+          "ess": 1.9890341983719577,
+          "ess_fraction": 0.9945170991859789,
+          "gate_error": null,
+          "mean_w_pat": 0.8828328707777578,
+          "override_scope": null,
+          "override_used": false,
+          "passed": true,
+          "patient_count": 2,
+          "patient_weights": {
+            "train_unlabeled_000": 0.9483836053009851,
+            "train_unlabeled_001": 0.8172821362545306
+          },
+          "positive_patient_count": 2,
+          "status": "PASS_POSITIVE_U_SUPPORT"
+        },
+        "gate_passed": true,
+        "max_omega": 1.0742504461410438,
+        "mean_omega": 1.0,
+        "mean_w_pat": 0.8828328707777578,
+        "omega": {
+          "train_unlabeled_000": 1.0742504461410438,
+          "train_unlabeled_001": 0.9257495538589562
+        },
+        "override_policy": null,
+        "override_used": false,
+        "patient_ids": [
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ],
+        "schema": "self_audit.candidate_q3d.runtime_cohort_weighting.v1",
+        "source": "U",
+        "source_cohort": "U",
+        "w_pat": {
+          "train_unlabeled_000": 0.9483836053009851,
+          "train_unlabeled_001": 0.8172821362545306
+        },
+        "zero_fraction": 0.0
+      },
+      "report": "/private/tmp/self-audit-q3d-resenc-final-20261112/v1.smoke.json",
+      "requested_stage": "J",
+      "stage_artifact_hashes": {
+        "P": {
+          "checkpoint_sha256": "1de9cc42c77f3b6def6e8d2c0dbb77db8aaac3889838bcc2b7be219a23454c86",
+          "manifest_sha256": "89c2112f29a947159591763edc27846a19f2bed50ae0cd3cbfcf23bdfc9bee31"
+        },
+        "Q": {
+          "checkpoint_sha256": "b3689da6239664053659e426137d8f5e37223ee9229bca5a5e436ae0276fd9e7",
+          "manifest_sha256": "f218f5e910bd33dc75d0c669173974ea866af84efd87fb3a8b552d936687a67e"
+        },
+        "T": {
+          "checkpoint_sha256": "c198dfbcce1f6a9d5d157235b6ca805963c50002f8bbecda1f6e80fcd6afb940",
+          "manifest_sha256": "717bae17203b068acd23c15f3cc5e47812edf77d0877fc9ef435266d418ae694"
+        }
+      },
+      "stage_artifact_inputs": {
+        "P": {
+          "manifest_sha256": "89c2112f29a947159591763edc27846a19f2bed50ae0cd3cbfcf23bdfc9bee31",
+          "path": "/private/tmp/self-audit-q3d-resenc-final-20261112/_shared_v1_tqp/P/P.artifact.json"
+        },
+        "Q": {
+          "manifest_sha256": "f218f5e910bd33dc75d0c669173974ea866af84efd87fb3a8b552d936687a67e",
+          "path": "/private/tmp/self-audit-q3d-resenc-final-20261112/_shared_v1_tqp/Q/Q.artifact.json"
+        },
+        "T": {
+          "manifest_sha256": "717bae17203b068acd23c15f3cc5e47812edf77d0877fc9ef435266d418ae694",
+          "path": "/private/tmp/self-audit-q3d-resenc-final-20261112/_shared_v1_tqp/T/T.artifact.json"
+        }
+      },
+      "synthetic_gate_override_requested": true,
+      "synthetic_gate_override_used": true,
+      "tokenizer_gate": {
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "passed": false,
+        "status": "NOT_READY",
+        "thresholds": {
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4,
+          "min_perplexity": 32.0
+        }
+      }
+    },
+    "v1_residual2": {
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "config": "/private/tmp/self-audit-q3d-resenc-final-20261112/v1_residual2.config.json",
+      "config_sha256": "f7da9a5b6b9686647982405eeb89353453eb0d9cb51da2ada7dba009e9fde993",
+      "engine_active_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "engine_error": null,
+      "expected_completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "physiology_cohort_weighting": {
+        "arm": "V1",
+        "ess": 1.9890341983719577,
+        "ess_fraction": 0.9945170991859789,
+        "gate": {
+          "context": "J physiology cache reload",
+          "ess": 1.9890341983719577,
+          "ess_fraction": 0.9945170991859789,
+          "gate_error": null,
+          "mean_w_pat": 0.8828328707777578,
+          "override_scope": null,
+          "override_used": false,
+          "passed": true,
+          "patient_count": 2,
+          "patient_weights": {
+            "train_unlabeled_000": 0.9483836053009851,
+            "train_unlabeled_001": 0.8172821362545306
+          },
+          "positive_patient_count": 2,
+          "status": "PASS_POSITIVE_U_SUPPORT"
+        },
+        "gate_passed": true,
+        "max_omega": 1.0742504461410438,
+        "mean_omega": 1.0,
+        "mean_w_pat": 0.8828328707777578,
+        "omega": {
+          "train_unlabeled_000": 1.0742504461410438,
+          "train_unlabeled_001": 0.9257495538589562
+        },
+        "override_policy": null,
+        "override_used": false,
+        "patient_ids": [
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ],
+        "schema": "self_audit.candidate_q3d.runtime_cohort_weighting.v1",
+        "source": "U",
+        "source_cohort": "U",
+        "w_pat": {
+          "train_unlabeled_000": 0.9483836053009851,
+          "train_unlabeled_001": 0.8172821362545306
+        },
+        "zero_fraction": 0.0
+      },
+      "report": "/private/tmp/self-audit-q3d-resenc-final-20261112/v1_residual2.smoke.json",
+      "requested_stage": null,
+      "stage_artifact_hashes": {},
+      "stage_artifact_inputs": {},
+      "synthetic_gate_override_requested": true,
+      "synthetic_gate_override_used": true,
+      "tokenizer_gate": {
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "passed": false,
+        "status": "NOT_READY",
+        "thresholds": {
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4,
+          "min_perplexity": 32.0
+        }
+      }
+    },
+    "v1u": {
+      "completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "config": "/private/tmp/self-audit-q3d-resenc-final-20261112/v1u.config.json",
+      "config_sha256": "2f15ebfc1afc6b167a384255886dde8798b75b8c4e198cc7422f4873d8202ea0",
+      "engine_active_stages": [
+        "J"
+      ],
+      "engine_error": null,
+      "expected_completed_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "expected_stages": [
+        "T",
+        "Q",
+        "P",
+        "J"
+      ],
+      "physiology_cohort_weighting": {
+        "arm": "V1-U",
+        "ess": 1.9890341983719577,
+        "ess_fraction": 0.9945170991859789,
+        "gate": {
+          "context": "J physiology cache reload",
+          "ess": 1.9890341983719577,
+          "ess_fraction": 0.9945170991859789,
+          "gate_error": null,
+          "mean_w_pat": 0.8828328707777578,
+          "override_scope": null,
+          "override_used": false,
+          "passed": true,
+          "patient_count": 2,
+          "patient_weights": {
+            "train_unlabeled_000": 0.9483836053009851,
+            "train_unlabeled_001": 0.8172821362545306
+          },
+          "positive_patient_count": 2,
+          "status": "PASS_POSITIVE_U_SUPPORT"
+        },
+        "gate_passed": true,
+        "max_omega": 1.0,
+        "mean_omega": 1.0,
+        "mean_w_pat": 0.8828328707777578,
+        "omega": {
+          "train_unlabeled_000": 1.0,
+          "train_unlabeled_001": 1.0
+        },
+        "override_policy": null,
+        "override_used": false,
+        "patient_ids": [
+          "train_unlabeled_000",
+          "train_unlabeled_001"
+        ],
+        "schema": "self_audit.candidate_q3d.runtime_cohort_weighting.v1",
+        "source": "U",
+        "source_cohort": "U",
+        "w_pat": {
+          "train_unlabeled_000": 0.9483836053009851,
+          "train_unlabeled_001": 0.8172821362545306
+        },
+        "zero_fraction": 0.0
+      },
+      "report": "/private/tmp/self-audit-q3d-resenc-final-20261112/v1u.smoke.json",
+      "requested_stage": "J",
+      "stage_artifact_hashes": {
+        "P": {
+          "checkpoint_sha256": "1de9cc42c77f3b6def6e8d2c0dbb77db8aaac3889838bcc2b7be219a23454c86",
+          "manifest_sha256": "89c2112f29a947159591763edc27846a19f2bed50ae0cd3cbfcf23bdfc9bee31"
+        },
+        "Q": {
+          "checkpoint_sha256": "b3689da6239664053659e426137d8f5e37223ee9229bca5a5e436ae0276fd9e7",
+          "manifest_sha256": "f218f5e910bd33dc75d0c669173974ea866af84efd87fb3a8b552d936687a67e"
+        },
+        "T": {
+          "checkpoint_sha256": "c198dfbcce1f6a9d5d157235b6ca805963c50002f8bbecda1f6e80fcd6afb940",
+          "manifest_sha256": "717bae17203b068acd23c15f3cc5e47812edf77d0877fc9ef435266d418ae694"
+        }
+      },
+      "stage_artifact_inputs": {
+        "P": {
+          "manifest_sha256": "89c2112f29a947159591763edc27846a19f2bed50ae0cd3cbfcf23bdfc9bee31",
+          "path": "/private/tmp/self-audit-q3d-resenc-final-20261112/_shared_v1_tqp/P/P.artifact.json"
+        },
+        "Q": {
+          "manifest_sha256": "f218f5e910bd33dc75d0c669173974ea866af84efd87fb3a8b552d936687a67e",
+          "path": "/private/tmp/self-audit-q3d-resenc-final-20261112/_shared_v1_tqp/Q/Q.artifact.json"
+        },
+        "T": {
+          "manifest_sha256": "717bae17203b068acd23c15f3cc5e47812edf77d0877fc9ef435266d418ae694",
+          "path": "/private/tmp/self-audit-q3d-resenc-final-20261112/_shared_v1_tqp/T/T.artifact.json"
+        }
+      },
+      "synthetic_gate_override_requested": true,
+      "synthetic_gate_override_used": true,
+      "tokenizer_gate": {
+        "missing": [
+          "dead_code_fraction",
+          "200-update_usage_history"
+        ],
+        "passed": false,
+        "status": "NOT_READY",
+        "thresholds": {
+          "max_dead_code_fraction": 0.25,
+          "min_class_codes": 4,
+          "min_perplexity": 32.0
+        }
+      }
+    }
+  },
+  "schema": "self_audit.candidate_q3d.smoke_all.v1",
+  "shared_v1_v1u_stages": {
+    "all_producer_stages_completed": true,
+    "artifacts": {
+      "P": {
+        "manifest_sha256": "89c2112f29a947159591763edc27846a19f2bed50ae0cd3cbfcf23bdfc9bee31",
+        "path": "/private/tmp/self-audit-q3d-resenc-final-20261112/_shared_v1_tqp/P/P.artifact.json",
+        "producer_active_stages": [
+          "P"
+        ],
+        "producer_completed_stages": [
+          "T",
+          "Q",
+          "P"
+        ],
+        "producer_requested_stage": "P",
+        "producer_status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+        "stage_artifact_hashes": {
+          "checkpoint_sha256": "1de9cc42c77f3b6def6e8d2c0dbb77db8aaac3889838bcc2b7be219a23454c86",
+          "manifest_sha256": "89c2112f29a947159591763edc27846a19f2bed50ae0cd3cbfcf23bdfc9bee31"
+        }
+      },
+      "Q": {
+        "manifest_sha256": "f218f5e910bd33dc75d0c669173974ea866af84efd87fb3a8b552d936687a67e",
+        "path": "/private/tmp/self-audit-q3d-resenc-final-20261112/_shared_v1_tqp/Q/Q.artifact.json",
+        "producer_active_stages": [
+          "Q"
+        ],
+        "producer_completed_stages": [
+          "T",
+          "Q"
+        ],
+        "producer_requested_stage": "Q",
+        "producer_status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+        "stage_artifact_hashes": {
+          "checkpoint_sha256": "b3689da6239664053659e426137d8f5e37223ee9229bca5a5e436ae0276fd9e7",
+          "manifest_sha256": "f218f5e910bd33dc75d0c669173974ea866af84efd87fb3a8b552d936687a67e"
+        }
+      },
+      "T": {
+        "manifest_sha256": "717bae17203b068acd23c15f3cc5e47812edf77d0877fc9ef435266d418ae694",
+        "path": "/private/tmp/self-audit-q3d-resenc-final-20261112/_shared_v1_tqp/T/T.artifact.json",
+        "producer_active_stages": [
+          "T"
+        ],
+        "producer_completed_stages": [
+          "T"
+        ],
+        "producer_requested_stage": "T",
+        "producer_status": "COMPLETED_DECLARED_SYNTHETIC_STAGES",
+        "stage_artifact_hashes": {
+          "checkpoint_sha256": "c198dfbcce1f6a9d5d157235b6ca805963c50002f8bbecda1f6e80fcd6afb940",
+          "manifest_sha256": "717bae17203b068acd23c15f3cc5e47812edf77d0877fc9ef435266d418ae694"
+        }
+      }
+    },
+    "consumer_stages": {
+      "v1": "J",
+      "v1u": "J"
+    },
+    "consumers": {
+      "v1": {
+        "engine_active_stages": [
+          "J"
+        ],
+        "requested_stage": "J",
+        "stage_artifact_hashes": {
+          "P": {
+            "checkpoint_sha256": "1de9cc42c77f3b6def6e8d2c0dbb77db8aaac3889838bcc2b7be219a23454c86",
+            "manifest_sha256": "89c2112f29a947159591763edc27846a19f2bed50ae0cd3cbfcf23bdfc9bee31"
+          },
+          "Q": {
+            "checkpoint_sha256": "b3689da6239664053659e426137d8f5e37223ee9229bca5a5e436ae0276fd9e7",
+            "manifest_sha256": "f218f5e910bd33dc75d0c669173974ea866af84efd87fb3a8b552d936687a67e"
+          },
+          "T": {
+            "checkpoint_sha256": "c198dfbcce1f6a9d5d157235b6ca805963c50002f8bbecda1f6e80fcd6afb940",
+            "manifest_sha256": "717bae17203b068acd23c15f3cc5e47812edf77d0877fc9ef435266d418ae694"
+          }
+        },
+        "stage_artifact_inputs": {
+          "P": {
+            "manifest_sha256": "89c2112f29a947159591763edc27846a19f2bed50ae0cd3cbfcf23bdfc9bee31",
+            "path": "/private/tmp/self-audit-q3d-resenc-final-20261112/_shared_v1_tqp/P/P.artifact.json"
+          },
+          "Q": {
+            "manifest_sha256": "f218f5e910bd33dc75d0c669173974ea866af84efd87fb3a8b552d936687a67e",
+            "path": "/private/tmp/self-audit-q3d-resenc-final-20261112/_shared_v1_tqp/Q/Q.artifact.json"
+          },
+          "T": {
+            "manifest_sha256": "717bae17203b068acd23c15f3cc5e47812edf77d0877fc9ef435266d418ae694",
+            "path": "/private/tmp/self-audit-q3d-resenc-final-20261112/_shared_v1_tqp/T/T.artifact.json"
+          }
+        }
+      },
+      "v1u": {
+        "engine_active_stages": [
+          "J"
+        ],
+        "requested_stage": "J",
+        "stage_artifact_hashes": {
+          "P": {
+            "checkpoint_sha256": "1de9cc42c77f3b6def6e8d2c0dbb77db8aaac3889838bcc2b7be219a23454c86",
+            "manifest_sha256": "89c2112f29a947159591763edc27846a19f2bed50ae0cd3cbfcf23bdfc9bee31"
+          },
+          "Q": {
+            "checkpoint_sha256": "b3689da6239664053659e426137d8f5e37223ee9229bca5a5e436ae0276fd9e7",
+            "manifest_sha256": "f218f5e910bd33dc75d0c669173974ea866af84efd87fb3a8b552d936687a67e"
+          },
+          "T": {
+            "checkpoint_sha256": "c198dfbcce1f6a9d5d157235b6ca805963c50002f8bbecda1f6e80fcd6afb940",
+            "manifest_sha256": "717bae17203b068acd23c15f3cc5e47812edf77d0877fc9ef435266d418ae694"
+          }
+        },
+        "stage_artifact_inputs": {
+          "P": {
+            "manifest_sha256": "89c2112f29a947159591763edc27846a19f2bed50ae0cd3cbfcf23bdfc9bee31",
+            "path": "/private/tmp/self-audit-q3d-resenc-final-20261112/_shared_v1_tqp/P/P.artifact.json"
+          },
+          "Q": {
+            "manifest_sha256": "f218f5e910bd33dc75d0c669173974ea866af84efd87fb3a8b552d936687a67e",
+            "path": "/private/tmp/self-audit-q3d-resenc-final-20261112/_shared_v1_tqp/Q/Q.artifact.json"
+          },
+          "T": {
+            "manifest_sha256": "717bae17203b068acd23c15f3cc5e47812edf77d0877fc9ef435266d418ae694",
+            "path": "/private/tmp/self-audit-q3d-resenc-final-20261112/_shared_v1_tqp/T/T.artifact.json"
+          }
+        }
+      }
+    },
+    "content_identity_passed": true,
+    "gate": {
+      "missing": [
+        "dead_code_fraction",
+        "200-update_usage_history"
+      ],
+      "passed": false,
+      "status": "NOT_READY",
+      "thresholds": {
+        "max_dead_code_fraction": 0.25,
+        "min_class_codes": 4,
+        "min_perplexity": 32.0
+      }
+    },
+    "identity_passed": true,
+    "manifest_identity_passed": true,
+    "physiology_omega_validation": {
+      "gates_passed_without_override": true,
+      "means_are_one": true,
+      "omega_differs": true,
+      "passed": true,
+      "shared_patient_ids": true,
+      "v1": {
+        "computed_mean_omega": 1.0,
+        "gate_passed": true,
+        "omega": {
+          "train_unlabeled_000": 1.0742504461410438,
+          "train_unlabeled_001": 0.9257495538589562
+        },
+        "override_used": false,
+        "reported_mean_omega": 1.0
+      },
+      "v1_is_nonuniform": true,
+      "v1u": {
+        "computed_mean_omega": 1.0,
+        "gate_passed": true,
+        "omega": {
+          "train_unlabeled_000": 1.0,
+          "train_unlabeled_001": 1.0
+        },
+        "override_used": false,
+        "reported_mean_omega": 1.0
+      },
+      "v1u_is_uniform": true
+    },
+    "producer": "v1",
+    "producer_stage_order": [
+      "T",
+      "Q",
+      "P"
+    ],
+    "stage_reports": {
+      "P": "/private/tmp/self-audit-q3d-resenc-final-20261112/_shared_v1_tqp/P.smoke.json",
+      "Q": "/private/tmp/self-audit-q3d-resenc-final-20261112/_shared_v1_tqp/Q.smoke.json",
+      "T": "/private/tmp/self-audit-q3d-resenc-final-20261112/_shared_v1_tqp/T.smoke.json"
+    },
+    "synthetic_gate_override_requested": true,
+    "synthetic_gate_override_used": true
+  },
+  "status": "COMPLETED_ALL_SYNTHETIC_RECIPES"
+}

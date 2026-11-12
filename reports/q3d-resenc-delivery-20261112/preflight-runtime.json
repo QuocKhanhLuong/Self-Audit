@@ -1,0 +1,2504 @@
+{
+  "clinical_gates": {
+    "reason": "P0 reports geometry and TRAIN-GT residual diagnostics only; it does not certify clinical validity",
+    "status": "NOT_RUN"
+  },
+  "config_path": "/Users/alvinluong/orca/workspaces/Self-Audit/q3d-resenc-20261112/configs/candidate_q3d/v1.json",
+  "config_sha256": "653727f52301a2f6a9a8078f0cbcce6c165bb4f58ae3cf82adab092e1f61b489",
+  "config_validation": {
+    "arm": "v1",
+    "dataset": "acdc",
+    "k": 5,
+    "protocol": "A",
+    "schema": "self_audit.candidate_q3d.v1",
+    "status": "PASS"
+  },
+  "datasets": {
+    "acdc": {
+      "configured_status": "NOT_RUN",
+      "labeled_train_stage4_gt_coverage": {
+        "label_scope": "L only; no U, DEV or TEST labels",
+        "reason": "TRAIN manifest path or SHA-256 is not declared",
+        "status": "NOT_RUN"
+      },
+      "reason": "TRAIN manifest path or SHA-256 is not declared",
+      "status": "NOT_RUN"
+    },
+    "mnms": {
+      "labeled_train_stage4_gt_coverage": {
+        "label_scope": "L only; no U, DEV or TEST labels",
+        "reason": "no TRAIN manifest is declared",
+        "status": "NOT_RUN"
+      },
+      "reason": "no TRAIN manifest is declared",
+      "status": "NOT_RUN"
+    }
+  },
+  "evidence_boundary": "software and declared TRAIN manifest diagnostics only; no training, GPU, DEV/TEST or clinical gate",
+  "generated_at_utc": "2026-11-12T10:20:15.121143+00:00",
+  "gpu_diagnostics": {
+    "status": "NOT_RUN"
+  },
+  "near_far_sdf": {
+    "legacy_a3d_teacher_loss_uses_near_far": false,
+    "q3d_teacher_loss": {
+      "alpha": 0.5,
+      "near_mm": 2.5,
+      "radius_mm": 5.0,
+      "source": "/Users/alvinluong/orca/workspaces/Self-Audit/q3d-resenc-20261112/self_audit/candidate_q3d/losses.py",
+      "uses_balanced_near_far": true
+    },
+    "status": "IMPLEMENTED_IN_Q3D_SOURCE"
+  },
+  "readiness_reasons": [
+    "one or more dataset TRAIN geometry/GT diagnostics are NOT_RUN",
+    "one or more dataset L-only S4 GT class coverage diagnostics are NOT_RUN"
+  ],
+  "report_status": "READ_ONLY_DIAGNOSTICS_COMPLETE",
+  "schema": "self_audit.candidate_q3d.p0_preflight.v1",
+  "status": "NOT_READY",
+  "student_parameters": {
+    "maximum_parameters": 10000000,
+    "parameter_count": 3132713,
+    "source": "CandidateQ3DStudent instantiated from the validated nested config; no forward run",
+    "stage4_grid_phase": {
+      "offset_zyx": [
+        0,
+        0,
+        0
+      ],
+      "step_zyx": [
+        1,
+        16,
+        16
+      ]
+    },
+    "stage4_grid_phase_reason": null,
+    "stage4_grid_phase_status": "PASS",
+    "status": "PASS",
+    "trainable_parameter_count": 3132713,
+    "within_budget": true
+  },
+  "teacher_feature": {
+    "actual_module": "Q3DResEncTeacher",
+    "checkpoint": {
+      "actual_sha256": "ac262d3e8c226c79f9567fddc34d38e011284730ddf2294b5c6c319ce2f22bbd",
+      "dna_version": "0.4.4",
+      "hf_revision": "f443c09319988e833b3d9589bf95909e4443d7b2",
+      "path": "/Users/alvinluong/Self-Audit-runs/q3d-resenc-20261112/checkpoint_final.pth",
+      "sha256": "ac262d3e8c226c79f9567fddc34d38e011284730ddf2294b5c6c319ce2f22bbd",
+      "status": "HASH_VERIFIED_FILE_PRESENT",
+      "strict_encoder": {
+        "architecture": "ResEncL",
+        "encoder_key_count": 448,
+        "inspection_path": "/Users/alvinluong/orca/workspaces/Self-Audit/q3d-resenc-20261112/reports/q3d-resenc-phase0-20261112/checkpoint_inspection.json",
+        "mismatches": {},
+        "missing_keys": [],
+        "status": "PASS",
+        "unexpected_keys": []
+      }
+    },
+    "dna_version": "0.4.4",
+    "expected_architecture": "ResEncL",
+    "hf_revision": "f443c09319988e833b3d9589bf95909e4443d7b2",
+    "requested_backbone": "nnfoundation_resenc_l",
+    "requested_teacher": "nnFoundationCNN_ResEncL_Phase0",
+    "resenc_source_inventory": {
+      "architecture": "ResEncL",
+      "checkpoint_sha256": "ac262d3e8c226c79f9567fddc34d38e011284730ddf2294b5c6c319ce2f22bbd",
+      "dna_version": "0.4.4",
+      "hf_revision": "f443c09319988e833b3d9589bf95909e4443d7b2",
+      "network": {
+        "architecture": "ResEncL",
+        "checkpoint_encoder_inventory": {
+          "actual_sha256": "ac262d3e8c226c79f9567fddc34d38e011284730ddf2294b5c6c319ce2f22bbd",
+          "dna_version": "0.4.4",
+          "hf_revision": "f443c09319988e833b3d9589bf95909e4443d7b2",
+          "path": "/Users/alvinluong/Self-Audit-runs/q3d-resenc-20261112/checkpoint_final.pth",
+          "sha256": "ac262d3e8c226c79f9567fddc34d38e011284730ddf2294b5c6c319ce2f22bbd",
+          "status": "HASH_VERIFIED_FILE_PRESENT",
+          "strict_encoder": {
+            "architecture": "ResEncL",
+            "encoder_key_count": 448,
+            "inspection_path": "/Users/alvinluong/orca/workspaces/Self-Audit/q3d-resenc-20261112/reports/q3d-resenc-phase0-20261112/checkpoint_inspection.json",
+            "mismatches": {},
+            "missing_keys": [],
+            "status": "PASS",
+            "unexpected_keys": []
+          }
+        },
+        "encoder_conv_count": 57,
+        "encoder_convs": [
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stem.convs.0.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.0.blocks.0.conv1.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.0.blocks.0.conv2.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.1.blocks.0.conv1.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              2,
+              2,
+              2
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.1.blocks.0.conv2.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              1,
+              1,
+              1
+            ],
+            "module": "Conv3d",
+            "name": "stages.1.blocks.0.skip.1.conv",
+            "padding_zyx": [
+              0,
+              0,
+              0
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.1.blocks.1.conv1.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.1.blocks.1.conv2.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.1.blocks.2.conv1.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.1.blocks.2.conv2.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.2.blocks.0.conv1.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              2,
+              2
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.2.blocks.0.conv2.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              1,
+              1,
+              1
+            ],
+            "module": "Conv3d",
+            "name": "stages.2.blocks.0.skip.1.conv",
+            "padding_zyx": [
+              0,
+              0,
+              0
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.2.blocks.1.conv1.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.2.blocks.1.conv2.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.2.blocks.2.conv1.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.2.blocks.2.conv2.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.2.blocks.3.conv1.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.2.blocks.3.conv2.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.3.blocks.0.conv1.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              2,
+              2
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.3.blocks.0.conv2.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              1,
+              1,
+              1
+            ],
+            "module": "Conv3d",
+            "name": "stages.3.blocks.0.skip.1.conv",
+            "padding_zyx": [
+              0,
+              0,
+              0
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.3.blocks.1.conv1.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.3.blocks.1.conv2.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.3.blocks.2.conv1.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.3.blocks.2.conv2.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.3.blocks.3.conv1.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.3.blocks.3.conv2.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.3.blocks.4.conv1.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.3.blocks.4.conv2.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.3.blocks.5.conv1.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.3.blocks.5.conv2.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.4.blocks.0.conv1.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              2,
+              2
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.4.blocks.0.conv2.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              1,
+              1,
+              1
+            ],
+            "module": "Conv3d",
+            "name": "stages.4.blocks.0.skip.1.conv",
+            "padding_zyx": [
+              0,
+              0,
+              0
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.4.blocks.1.conv1.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.4.blocks.1.conv2.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.4.blocks.2.conv1.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.4.blocks.2.conv2.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.4.blocks.3.conv1.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.4.blocks.3.conv2.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.4.blocks.4.conv1.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.4.blocks.4.conv2.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.4.blocks.5.conv1.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.4.blocks.5.conv2.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.5.blocks.0.conv1.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              2,
+              2
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.5.blocks.0.conv2.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.5.blocks.1.conv1.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.5.blocks.1.conv2.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.5.blocks.2.conv1.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.5.blocks.2.conv2.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.5.blocks.3.conv1.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.5.blocks.3.conv2.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.5.blocks.4.conv1.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.5.blocks.4.conv2.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.5.blocks.5.conv1.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kernel_zyx": [
+              3,
+              3,
+              3
+            ],
+            "module": "Conv3d",
+            "name": "stages.5.blocks.5.conv2.conv",
+            "padding_zyx": [
+              1,
+              1,
+              1
+            ],
+            "stride_zyx": [
+              1,
+              1,
+              1
+            ]
+          }
+        ],
+        "erf": {
+          "compute": {
+            "device": "cpu",
+            "dynamic_network_architectures_version": "0.4.4",
+            "input_shape_zyx": [
+              33,
+              97,
+              97
+            ],
+            "padding_mode": "replicate",
+            "patient_data": "NOT_USED",
+            "random_zscore_input": true,
+            "samples": 16,
+            "seed_start": 42,
+            "torch_version": "2.14.0"
+          },
+          "decision_rule": {
+            "gate": "all(abs(mean_offset_axis)) <= threshold",
+            "metric": "absolute mean centroid offset per axis from theoretical main phase",
+            "threshold_voxels": 2.0
+          },
+          "limitations": [
+            "Random Z-score inputs are architecture evidence only and contain no patient data.",
+            "The probe measures encoder stage 3 only; it does not measure decoder or patient-dependent fields.",
+            "The logical input shape is a bounded synthetic probe and is not a full-volume efficacy claim."
+          ],
+          "model": {
+            "architecture": "ResEncL",
+            "configured_phase": [
+              [
+                2,
+                8,
+                8
+              ],
+              [
+                0.0,
+                0.0,
+                0.0
+              ]
+            ],
+            "cumulative_stride_zyx": [
+              2,
+              8,
+              8
+            ],
+            "phase_reference": "theoretical main convolution path; configured phase correction is reported but not used",
+            "stage_channels": 256,
+            "stage_index": 3,
+            "stage_name": "encoder.stages[3]",
+            "stride_schedule_zyx": [
+              [
+                1,
+                1,
+                1
+              ],
+              [
+                2,
+                2,
+                2
+              ],
+              [
+                1,
+                2,
+                2
+              ],
+              [
+                1,
+                2,
+                2
+              ],
+              [
+                1,
+                2,
+                2
+              ],
+              [
+                1,
+                2,
+                2
+              ]
+            ]
+          },
+          "proposed_offset_zyx": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "samples": [
+            {
+              "cell_index_zyx": [
+                8,
+                6,
+                6
+              ],
+              "centroid_offset_from_nominal_main_phase_voxels": [
+                0.7661451200082929,
+                2.7865518067222155,
+                0.9763613093975252
+              ],
+              "channel_aggregation": "signed_mean_all_stage_channels",
+              "channel_count": 256,
+              "feature_shape": [
+                1,
+                256,
+                17,
+                16,
+                16
+              ],
+              "gradient_centroid_voxels": [
+                16.766145120008293,
+                50.786551806722215,
+                48.976361309397525
+              ],
+              "gradient_mass": 2.599130868911743,
+              "input_shape_zyx": [
+                33,
+                97,
+                97
+              ],
+              "logical_feature_shape": [
+                17,
+                13,
+                13
+              ],
+              "max_abs_offset_voxels": 2.7865518067222155,
+              "model_input_shape_zyx": [
+                34,
+                128,
+                128
+              ],
+              "nominal_main_phase_center_voxels": [
+                16.0,
+                48.0,
+                48.0
+              ],
+              "padding_after_zyx": [
+                1,
+                31,
+                31
+              ],
+              "seed": 42,
+              "signed_mean_cell_activation": 0.011825124733150005
+            },
+            {
+              "cell_index_zyx": [
+                8,
+                6,
+                6
+              ],
+              "centroid_offset_from_nominal_main_phase_voxels": [
+                1.0145629064831567,
+                2.7168911687894024,
+                1.5662802491395666
+              ],
+              "channel_aggregation": "signed_mean_all_stage_channels",
+              "channel_count": 256,
+              "feature_shape": [
+                1,
+                256,
+                17,
+                16,
+                16
+              ],
+              "gradient_centroid_voxels": [
+                17.014562906483157,
+                50.7168911687894,
+                49.56628024913957
+              ],
+              "gradient_mass": 3.08951473236084,
+              "input_shape_zyx": [
+                33,
+                97,
+                97
+              ],
+              "logical_feature_shape": [
+                17,
+                13,
+                13
+              ],
+              "max_abs_offset_voxels": 2.7168911687894024,
+              "model_input_shape_zyx": [
+                34,
+                128,
+                128
+              ],
+              "nominal_main_phase_center_voxels": [
+                16.0,
+                48.0,
+                48.0
+              ],
+              "padding_after_zyx": [
+                1,
+                31,
+                31
+              ],
+              "seed": 43,
+              "signed_mean_cell_activation": 0.012162229977548122
+            },
+            {
+              "cell_index_zyx": [
+                8,
+                6,
+                6
+              ],
+              "centroid_offset_from_nominal_main_phase_voxels": [
+                0.791946661361635,
+                1.5170016036211535,
+                1.6310563754857554
+              ],
+              "channel_aggregation": "signed_mean_all_stage_channels",
+              "channel_count": 256,
+              "feature_shape": [
+                1,
+                256,
+                17,
+                16,
+                16
+              ],
+              "gradient_centroid_voxels": [
+                16.791946661361635,
+                49.51700160362115,
+                49.631056375485755
+              ],
+              "gradient_mass": 2.3314990997314453,
+              "input_shape_zyx": [
+                33,
+                97,
+                97
+              ],
+              "logical_feature_shape": [
+                17,
+                13,
+                13
+              ],
+              "max_abs_offset_voxels": 1.6310563754857554,
+              "model_input_shape_zyx": [
+                34,
+                128,
+                128
+              ],
+              "nominal_main_phase_center_voxels": [
+                16.0,
+                48.0,
+                48.0
+              ],
+              "padding_after_zyx": [
+                1,
+                31,
+                31
+              ],
+              "seed": 44,
+              "signed_mean_cell_activation": 0.010791242122650146
+            },
+            {
+              "cell_index_zyx": [
+                8,
+                6,
+                6
+              ],
+              "centroid_offset_from_nominal_main_phase_voxels": [
+                0.9961877322574537,
+                2.678582873378133,
+                5.129965460919479
+              ],
+              "channel_aggregation": "signed_mean_all_stage_channels",
+              "channel_count": 256,
+              "feature_shape": [
+                1,
+                256,
+                17,
+                16,
+                16
+              ],
+              "gradient_centroid_voxels": [
+                16.996187732257454,
+                50.67858287337813,
+                53.12996546091948
+              ],
+              "gradient_mass": 2.6521596908569336,
+              "input_shape_zyx": [
+                33,
+                97,
+                97
+              ],
+              "logical_feature_shape": [
+                17,
+                13,
+                13
+              ],
+              "max_abs_offset_voxels": 5.129965460919479,
+              "model_input_shape_zyx": [
+                34,
+                128,
+                128
+              ],
+              "nominal_main_phase_center_voxels": [
+                16.0,
+                48.0,
+                48.0
+              ],
+              "padding_after_zyx": [
+                1,
+                31,
+                31
+              ],
+              "seed": 45,
+              "signed_mean_cell_activation": 0.011107426136732101
+            },
+            {
+              "cell_index_zyx": [
+                8,
+                6,
+                6
+              ],
+              "centroid_offset_from_nominal_main_phase_voxels": [
+                0.13601569416211134,
+                2.45573646304549,
+                0.8614732292930682
+              ],
+              "channel_aggregation": "signed_mean_all_stage_channels",
+              "channel_count": 256,
+              "feature_shape": [
+                1,
+                256,
+                17,
+                16,
+                16
+              ],
+              "gradient_centroid_voxels": [
+                16.13601569416211,
+                50.45573646304549,
+                48.86147322929307
+              ],
+              "gradient_mass": 2.373138904571533,
+              "input_shape_zyx": [
+                33,
+                97,
+                97
+              ],
+              "logical_feature_shape": [
+                17,
+                13,
+                13
+              ],
+              "max_abs_offset_voxels": 2.45573646304549,
+              "model_input_shape_zyx": [
+                34,
+                128,
+                128
+              ],
+              "nominal_main_phase_center_voxels": [
+                16.0,
+                48.0,
+                48.0
+              ],
+              "padding_after_zyx": [
+                1,
+                31,
+                31
+              ],
+              "seed": 46,
+              "signed_mean_cell_activation": 0.010181719437241554
+            },
+            {
+              "cell_index_zyx": [
+                8,
+                6,
+                6
+              ],
+              "centroid_offset_from_nominal_main_phase_voxels": [
+                1.2376981563032103,
+                1.6065039907127385,
+                3.33594162570661
+              ],
+              "channel_aggregation": "signed_mean_all_stage_channels",
+              "channel_count": 256,
+              "feature_shape": [
+                1,
+                256,
+                17,
+                16,
+                16
+              ],
+              "gradient_centroid_voxels": [
+                17.23769815630321,
+                49.60650399071274,
+                51.33594162570661
+              ],
+              "gradient_mass": 8.199926376342773,
+              "input_shape_zyx": [
+                33,
+                97,
+                97
+              ],
+              "logical_feature_shape": [
+                17,
+                13,
+                13
+              ],
+              "max_abs_offset_voxels": 3.33594162570661,
+              "model_input_shape_zyx": [
+                34,
+                128,
+                128
+              ],
+              "nominal_main_phase_center_voxels": [
+                16.0,
+                48.0,
+                48.0
+              ],
+              "padding_after_zyx": [
+                1,
+                31,
+                31
+              ],
+              "seed": 47,
+              "signed_mean_cell_activation": 0.022517912089824677
+            },
+            {
+              "cell_index_zyx": [
+                8,
+                6,
+                6
+              ],
+              "centroid_offset_from_nominal_main_phase_voxels": [
+                0.7411228316671519,
+                1.1504052685581243,
+                1.5980216097023145
+              ],
+              "channel_aggregation": "signed_mean_all_stage_channels",
+              "channel_count": 256,
+              "feature_shape": [
+                1,
+                256,
+                17,
+                16,
+                16
+              ],
+              "gradient_centroid_voxels": [
+                16.741122831667152,
+                49.150405268558124,
+                49.598021609702315
+              ],
+              "gradient_mass": 2.640185832977295,
+              "input_shape_zyx": [
+                33,
+                97,
+                97
+              ],
+              "logical_feature_shape": [
+                17,
+                13,
+                13
+              ],
+              "max_abs_offset_voxels": 1.5980216097023145,
+              "model_input_shape_zyx": [
+                34,
+                128,
+                128
+              ],
+              "nominal_main_phase_center_voxels": [
+                16.0,
+                48.0,
+                48.0
+              ],
+              "padding_after_zyx": [
+                1,
+                31,
+                31
+              ],
+              "seed": 48,
+              "signed_mean_cell_activation": 0.009423049166798592
+            },
+            {
+              "cell_index_zyx": [
+                8,
+                6,
+                6
+              ],
+              "centroid_offset_from_nominal_main_phase_voxels": [
+                0.7623445587746787,
+                2.9118483200154017,
+                2.346609851881894
+              ],
+              "channel_aggregation": "signed_mean_all_stage_channels",
+              "channel_count": 256,
+              "feature_shape": [
+                1,
+                256,
+                17,
+                16,
+                16
+              ],
+              "gradient_centroid_voxels": [
+                16.76234455877468,
+                50.9118483200154,
+                50.346609851881894
+              ],
+              "gradient_mass": 1.8493460416793823,
+              "input_shape_zyx": [
+                33,
+                97,
+                97
+              ],
+              "logical_feature_shape": [
+                17,
+                13,
+                13
+              ],
+              "max_abs_offset_voxels": 2.9118483200154017,
+              "model_input_shape_zyx": [
+                34,
+                128,
+                128
+              ],
+              "nominal_main_phase_center_voxels": [
+                16.0,
+                48.0,
+                48.0
+              ],
+              "padding_after_zyx": [
+                1,
+                31,
+                31
+              ],
+              "seed": 49,
+              "signed_mean_cell_activation": 0.00953258853405714
+            },
+            {
+              "cell_index_zyx": [
+                8,
+                6,
+                6
+              ],
+              "centroid_offset_from_nominal_main_phase_voxels": [
+                0.4687469094508607,
+                2.3207290733357198,
+                0.38653300578024385
+              ],
+              "channel_aggregation": "signed_mean_all_stage_channels",
+              "channel_count": 256,
+              "feature_shape": [
+                1,
+                256,
+                17,
+                16,
+                16
+              ],
+              "gradient_centroid_voxels": [
+                16.46874690945086,
+                50.32072907333572,
+                48.386533005780244
+              ],
+              "gradient_mass": 2.9146199226379395,
+              "input_shape_zyx": [
+                33,
+                97,
+                97
+              ],
+              "logical_feature_shape": [
+                17,
+                13,
+                13
+              ],
+              "max_abs_offset_voxels": 2.3207290733357198,
+              "model_input_shape_zyx": [
+                34,
+                128,
+                128
+              ],
+              "nominal_main_phase_center_voxels": [
+                16.0,
+                48.0,
+                48.0
+              ],
+              "padding_after_zyx": [
+                1,
+                31,
+                31
+              ],
+              "seed": 50,
+              "signed_mean_cell_activation": 0.01128483098000288
+            },
+            {
+              "cell_index_zyx": [
+                8,
+                6,
+                6
+              ],
+              "centroid_offset_from_nominal_main_phase_voxels": [
+                0.799906898325343,
+                -0.7296139987391541,
+                -3.378997007897418
+              ],
+              "channel_aggregation": "signed_mean_all_stage_channels",
+              "channel_count": 256,
+              "feature_shape": [
+                1,
+                256,
+                17,
+                16,
+                16
+              ],
+              "gradient_centroid_voxels": [
+                16.799906898325343,
+                47.270386001260846,
+                44.62100299210258
+              ],
+              "gradient_mass": 2.48503041267395,
+              "input_shape_zyx": [
+                33,
+                97,
+                97
+              ],
+              "logical_feature_shape": [
+                17,
+                13,
+                13
+              ],
+              "max_abs_offset_voxels": 3.378997007897418,
+              "model_input_shape_zyx": [
+                34,
+                128,
+                128
+              ],
+              "nominal_main_phase_center_voxels": [
+                16.0,
+                48.0,
+                48.0
+              ],
+              "padding_after_zyx": [
+                1,
+                31,
+                31
+              ],
+              "seed": 51,
+              "signed_mean_cell_activation": 0.011169572360813618
+            },
+            {
+              "cell_index_zyx": [
+                8,
+                6,
+                6
+              ],
+              "centroid_offset_from_nominal_main_phase_voxels": [
+                0.485408373730575,
+                1.7115782510014412,
+                1.3467347498203992
+              ],
+              "channel_aggregation": "signed_mean_all_stage_channels",
+              "channel_count": 256,
+              "feature_shape": [
+                1,
+                256,
+                17,
+                16,
+                16
+              ],
+              "gradient_centroid_voxels": [
+                16.485408373730575,
+                49.71157825100144,
+                49.3467347498204
+              ],
+              "gradient_mass": 1.307875633239746,
+              "input_shape_zyx": [
+                33,
+                97,
+                97
+              ],
+              "logical_feature_shape": [
+                17,
+                13,
+                13
+              ],
+              "max_abs_offset_voxels": 1.7115782510014412,
+              "model_input_shape_zyx": [
+                34,
+                128,
+                128
+              ],
+              "nominal_main_phase_center_voxels": [
+                16.0,
+                48.0,
+                48.0
+              ],
+              "padding_after_zyx": [
+                1,
+                31,
+                31
+              ],
+              "seed": 52,
+              "signed_mean_cell_activation": 0.009145531803369522
+            },
+            {
+              "cell_index_zyx": [
+                8,
+                6,
+                6
+              ],
+              "centroid_offset_from_nominal_main_phase_voxels": [
+                -0.23071591778483125,
+                1.4908676195786654,
+                1.989025945447274
+              ],
+              "channel_aggregation": "signed_mean_all_stage_channels",
+              "channel_count": 256,
+              "feature_shape": [
+                1,
+                256,
+                17,
+                16,
+                16
+              ],
+              "gradient_centroid_voxels": [
+                15.769284082215169,
+                49.490867619578665,
+                49.989025945447274
+              ],
+              "gradient_mass": 2.069502115249634,
+              "input_shape_zyx": [
+                33,
+                97,
+                97
+              ],
+              "logical_feature_shape": [
+                17,
+                13,
+                13
+              ],
+              "max_abs_offset_voxels": 1.989025945447274,
+              "model_input_shape_zyx": [
+                34,
+                128,
+                128
+              ],
+              "nominal_main_phase_center_voxels": [
+                16.0,
+                48.0,
+                48.0
+              ],
+              "padding_after_zyx": [
+                1,
+                31,
+                31
+              ],
+              "seed": 53,
+              "signed_mean_cell_activation": 0.01026533916592598
+            },
+            {
+              "cell_index_zyx": [
+                8,
+                6,
+                6
+              ],
+              "centroid_offset_from_nominal_main_phase_voxels": [
+                0.445884674151511,
+                3.361495010755469,
+                0.7320642678344669
+              ],
+              "channel_aggregation": "signed_mean_all_stage_channels",
+              "channel_count": 256,
+              "feature_shape": [
+                1,
+                256,
+                17,
+                16,
+                16
+              ],
+              "gradient_centroid_voxels": [
+                16.44588467415151,
+                51.36149501075547,
+                48.73206426783447
+              ],
+              "gradient_mass": 2.8707761764526367,
+              "input_shape_zyx": [
+                33,
+                97,
+                97
+              ],
+              "logical_feature_shape": [
+                17,
+                13,
+                13
+              ],
+              "max_abs_offset_voxels": 3.361495010755469,
+              "model_input_shape_zyx": [
+                34,
+                128,
+                128
+              ],
+              "nominal_main_phase_center_voxels": [
+                16.0,
+                48.0,
+                48.0
+              ],
+              "padding_after_zyx": [
+                1,
+                31,
+                31
+              ],
+              "seed": 54,
+              "signed_mean_cell_activation": 0.014083940535783768
+            },
+            {
+              "cell_index_zyx": [
+                8,
+                6,
+                6
+              ],
+              "centroid_offset_from_nominal_main_phase_voxels": [
+                0.7484596497954925,
+                2.1549154105750716,
+                2.6294206473651514
+              ],
+              "channel_aggregation": "signed_mean_all_stage_channels",
+              "channel_count": 256,
+              "feature_shape": [
+                1,
+                256,
+                17,
+                16,
+                16
+              ],
+              "gradient_centroid_voxels": [
+                16.748459649795493,
+                50.15491541057507,
+                50.62942064736515
+              ],
+              "gradient_mass": 2.6849608421325684,
+              "input_shape_zyx": [
+                33,
+                97,
+                97
+              ],
+              "logical_feature_shape": [
+                17,
+                13,
+                13
+              ],
+              "max_abs_offset_voxels": 2.6294206473651514,
+              "model_input_shape_zyx": [
+                34,
+                128,
+                128
+              ],
+              "nominal_main_phase_center_voxels": [
+                16.0,
+                48.0,
+                48.0
+              ],
+              "padding_after_zyx": [
+                1,
+                31,
+                31
+              ],
+              "seed": 55,
+              "signed_mean_cell_activation": 0.012351999059319496
+            },
+            {
+              "cell_index_zyx": [
+                8,
+                6,
+                6
+              ],
+              "centroid_offset_from_nominal_main_phase_voxels": [
+                0.3357902322469215,
+                0.9294322193801037,
+                3.495232929907779
+              ],
+              "channel_aggregation": "signed_mean_all_stage_channels",
+              "channel_count": 256,
+              "feature_shape": [
+                1,
+                256,
+                17,
+                16,
+                16
+              ],
+              "gradient_centroid_voxels": [
+                16.33579023224692,
+                48.929432219380104,
+                51.49523292990778
+              ],
+              "gradient_mass": 2.288440227508545,
+              "input_shape_zyx": [
+                33,
+                97,
+                97
+              ],
+              "logical_feature_shape": [
+                17,
+                13,
+                13
+              ],
+              "max_abs_offset_voxels": 3.495232929907779,
+              "model_input_shape_zyx": [
+                34,
+                128,
+                128
+              ],
+              "nominal_main_phase_center_voxels": [
+                16.0,
+                48.0,
+                48.0
+              ],
+              "padding_after_zyx": [
+                1,
+                31,
+                31
+              ],
+              "seed": 56,
+              "signed_mean_cell_activation": 0.009959827177226543
+            },
+            {
+              "cell_index_zyx": [
+                8,
+                6,
+                6
+              ],
+              "centroid_offset_from_nominal_main_phase_voxels": [
+                1.2546398604239855,
+                2.0897892650976786,
+                2.9095217729353067
+              ],
+              "channel_aggregation": "signed_mean_all_stage_channels",
+              "channel_count": 256,
+              "feature_shape": [
+                1,
+                256,
+                17,
+                16,
+                16
+              ],
+              "gradient_centroid_voxels": [
+                17.254639860423985,
+                50.08978926509768,
+                50.90952177293531
+              ],
+              "gradient_mass": 1.7784948348999023,
+              "input_shape_zyx": [
+                33,
+                97,
+                97
+              ],
+              "logical_feature_shape": [
+                17,
+                13,
+                13
+              ],
+              "max_abs_offset_voxels": 2.9095217729353067,
+              "model_input_shape_zyx": [
+                34,
+                128,
+                128
+              ],
+              "nominal_main_phase_center_voxels": [
+                16.0,
+                48.0,
+                48.0
+              ],
+              "padding_after_zyx": [
+                1,
+                31,
+                31
+              ],
+              "seed": 57,
+              "signed_mean_cell_activation": 0.009957283735275269
+            }
+          ],
+          "schema": "self_audit.q3d_resenc.erf_probe.v1",
+          "selected_phase": {
+            "offset_zyx": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "step_zyx": [
+              2,
+              8,
+              8
+            ]
+          },
+          "status": "PASS_MAIN_PHASE",
+          "summary": {
+            "absolute_mean_centroid_offset_voxels": [
+              0.6721340213348468,
+              1.9470446466142284,
+              1.7222028764199635
+            ],
+            "max_abs_centroid_offset_voxels": 5.129965460919479,
+            "mean_abs_centroid_offset_voxels": [
+              0.7009735110579507,
+              2.0382463964566226,
+              2.1445775024071407
+            ],
+            "mean_centroid_offset_voxels": [
+              0.6721340213348468,
+              1.9470446466142284,
+              1.7222028764199635
+            ],
+            "proposed_phase_offset_zyx": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        "erf_request": {
+          "aggregation": "mean_signed_offset",
+          "erf_samples": 16,
+          "erf_threshold": 2.0,
+          "expected_stride_schedule_zyx": [
+            [
+              1,
+              1,
+              1
+            ],
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              1,
+              2,
+              2
+            ],
+            [
+              1,
+              2,
+              2
+            ],
+            [
+              1,
+              2,
+              2
+            ],
+            [
+              1,
+              2,
+              2
+            ]
+          ],
+          "input_center": [
+            16,
+            48,
+            48
+          ],
+          "input_shape": [
+            33,
+            97,
+            97
+          ],
+          "locked_offset": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "offset_rule": "mean_signed_offset",
+          "phase_threshold_voxels": 2.0,
+          "run_erf": true,
+          "samples": 16,
+          "seed": 42,
+          "source_cell": [
+            8,
+            6,
+            6
+          ],
+          "source_step": [
+            2,
+            8,
+            8
+          ],
+          "threshold": 2.0
+        },
+        "geometry": {
+          "cumulative_encoder_stride_zyx": [
+            2,
+            32,
+            32
+          ],
+          "input_padding": "high_side_replicate_no_phase_shift",
+          "native_grid": "declared_native_no_resampling",
+          "status": "MEASURED_CPU"
+        },
+        "phase": {
+          "convention": "main_path",
+          "empirical_decision": "USE_NOMINAL_MAIN_PHASE",
+          "feature_source": "encoder_stride8",
+          "main_path": {
+            "offset_zyx": [
+              0,
+              0,
+              0
+            ],
+            "step_zyx": [
+              2,
+              8,
+              8
+            ]
+          },
+          "max_abs_residual_skip_offset_voxels": 3.5,
+          "residual_skip_path": {
+            "offset_zyx": [
+              0.5,
+              3.5,
+              3.5
+            ],
+            "step_zyx": [
+              2,
+              8,
+              8
+            ]
+          },
+          "source": "live_ResEncL_encoder_modules",
+          "stages": [
+            {
+              "main": {
+                "offset_zyx": [
+                  0,
+                  0,
+                  0
+                ],
+                "step_zyx": [
+                  2,
+                  2,
+                  2
+                ]
+              },
+              "residual_skip": {
+                "offset_zyx": [
+                  0.5,
+                  0.5,
+                  0.5
+                ],
+                "step_zyx": [
+                  2,
+                  2,
+                  2
+                ]
+              },
+              "stage": 1
+            },
+            {
+              "main": {
+                "offset_zyx": [
+                  0,
+                  0,
+                  0
+                ],
+                "step_zyx": [
+                  2,
+                  4,
+                  4
+                ]
+              },
+              "residual_skip": {
+                "offset_zyx": [
+                  0.5,
+                  1.5,
+                  1.5
+                ],
+                "step_zyx": [
+                  2,
+                  4,
+                  4
+                ]
+              },
+              "stage": 2
+            },
+            {
+              "main": {
+                "offset_zyx": [
+                  0,
+                  0,
+                  0
+                ],
+                "step_zyx": [
+                  2,
+                  8,
+                  8
+                ]
+              },
+              "residual_skip": {
+                "offset_zyx": [
+                  0.5,
+                  3.5,
+                  3.5
+                ],
+                "step_zyx": [
+                  2,
+                  8,
+                  8
+                ]
+              },
+              "stage": 3
+            },
+            {
+              "main": {
+                "offset_zyx": [
+                  0,
+                  0,
+                  0
+                ],
+                "step_zyx": [
+                  2,
+                  16,
+                  16
+                ]
+              },
+              "residual_skip": {
+                "offset_zyx": [
+                  0.5,
+                  7.5,
+                  7.5
+                ],
+                "step_zyx": [
+                  2,
+                  16,
+                  16
+                ]
+              },
+              "stage": 4
+            },
+            {
+              "main": {
+                "offset_zyx": [
+                  0,
+                  0,
+                  0
+                ],
+                "step_zyx": [
+                  2,
+                  32,
+                  32
+                ]
+              },
+              "residual_skip": {
+                "offset_zyx": [
+                  0.5,
+                  15.5,
+                  15.5
+                ],
+                "step_zyx": [
+                  2,
+                  32,
+                  32
+                ]
+              },
+              "stage": 5
+            }
+          ],
+          "status": "EMPIRICAL_MAIN_PHASE_SELECTED",
+          "threshold_voxels": 2.0
+        },
+        "status": "ACTUAL_RESENC_MODULES_INSPECTED"
+      },
+      "provenance": {
+        "architecture": "ResEncL",
+        "checkpoint_path": "/Users/alvinluong/Self-Audit-runs/q3d-resenc-20261112/checkpoint_final.pth",
+        "decoder_loaded": false,
+        "encoder_key_count": 448,
+        "hf_revision": "f443c09319988e833b3d9589bf95909e4443d7b2",
+        "loaded_prefixes": [
+          "encoder.stem",
+          "encoder.stages"
+        ],
+        "missing_keys": [],
+        "nnssl_commit": "3d774e942256bd70e5e264c6b94fa38e25f7ed74",
+        "segmentation_head_loaded": false,
+        "unexpected_keys": [],
+        "weights_sha256": "ac262d3e8c226c79f9567fddc34d38e011284730ddf2294b5c6c319ce2f22bbd"
+      },
+      "status": "PHASE0_CHECKPOINT_AND_ACTUAL_MODULES_INSPECTED"
+    },
+    "source_reason": null,
+    "source_status": "ACTUAL_RESENC_MODULES_INSPECTED",
+    "weight_quality": null,
+    "weights": {
+      "load_scope": "encoder_only_strict",
+      "overlap_acdc": false,
+      "overlap_mnms": false,
+      "path": "/Users/alvinluong/Self-Audit-runs/q3d-resenc-20261112/checkpoint_final.pth",
+      "pretraining_dataset": "nnFoundation (~2.1M CT/MR/PET, 125 sources; arXiv 2609.26924 Table D7)",
+      "sha256": "ac262d3e8c226c79f9567fddc34d38e011284730ddf2294b5c6c319ce2f22bbd",
+      "status": "HASH_VERIFIED_FILE_PRESENT"
+    }
+  }
+}
