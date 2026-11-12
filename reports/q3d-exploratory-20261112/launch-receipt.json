@@ -1,0 +1,162 @@
+{
+  "observed_utc": "2026-11-12T17:09:57.300351+00:00",
+  "source_commit": "0e34bae30264302e7e018229d1ab4208dad266c9",
+  "plan_sha256": "be8cd9689584389e655007b6a6fec8f3b647dc6e61f51713f3dfe41d26bb9ec4",
+  "queue": {
+    "setting": "v1",
+    "k": 8,
+    "through_stage": "P",
+    "current_stage": "J_PROFILE",
+    "current_job": null,
+    "recovery_audit": "/root/mount_data/runs/q3d-resenc-pixdim-20261112/exploratory/recovery/20261112T165541.160500Z-0c7ac19b",
+    "status": "RUNNING",
+    "updated_utc": "2026-11-12T17:09:45.124568+00:00",
+    "code_commit": "0e34bae30264302e7e018229d1ab4208dad266c9",
+    "plan_sha256": "be8cd9689584389e655007b6a6fec8f3b647dc6e61f51713f3dfe41d26bb9ec4",
+    "exploratory": true,
+    "exploratory_quality_waiver": {
+      "schema": "q3d.exploratory_quality_waiver.v1",
+      "reason": "User-authorized full-pipeline exploratory continuation 2026-11-12",
+      "scope": [
+        "tokenizer_gate",
+        "physiology_support",
+        "kd_support"
+      ],
+      "exploratory": true
+    }
+  },
+  "job_statuses": {
+    "acdc_a_k10_seed42_v1.j": "NOT_RUN",
+    "acdc_a_k5_seed42_v1.j": "NOT_RUN",
+    "acdc_a_k8_seed42_c0.j": "NOT_RUN",
+    "acdc_a_k8_seed42_c1.j": "NOT_RUN",
+    "acdc_a_k8_seed42_v1.j": "NOT_RUN",
+    "acdc_a_k8_seed42_v1u.j": "NOT_RUN",
+    "shared.acdc_a_k10_seed42.encoder_stride8_s8_frozen_teacher.p": "NOT_RUN",
+    "shared.acdc_a_k10_seed42.encoder_stride8_s8_frozen_teacher.q": "NOT_RUN",
+    "shared.acdc_a_k10_seed42.teacher.t": "NOT_RUN",
+    "shared.acdc_a_k5_seed42.encoder_stride8_s8_frozen_teacher.p": "NOT_RUN",
+    "shared.acdc_a_k5_seed42.encoder_stride8_s8_frozen_teacher.q": "NOT_RUN",
+    "shared.acdc_a_k5_seed42.teacher.t": "NOT_RUN",
+    "shared.acdc_a_k8_seed42.encoder_stride8_s8_frozen_teacher.p": "COMPLETED",
+    "shared.acdc_a_k8_seed42.encoder_stride8_s8_frozen_teacher.q": "COMPLETED",
+    "shared.acdc_a_k8_seed42.teacher.t": "COMPLETED"
+  },
+  "q_recovery": {
+    "completed_updates_total": 9000,
+    "completed_stages": [
+      "T",
+      "Q"
+    ],
+    "tokenizer_gate": {
+      "checks": {
+        "LV_codes": true,
+        "MYO_codes": false,
+        "RV_codes": false,
+        "dead_code_fraction": false,
+        "perplexity": false
+      },
+      "observed": {
+        "class_code_coverage": {
+          "BG": 244,
+          "LV": 5,
+          "MYO": 0,
+          "RV": 3
+        },
+        "dead_code_fraction": 0.6328125,
+        "perplexity": 20.87472152709961
+      },
+      "passed": false,
+      "status": "NO_GO",
+      "thresholds": {
+        "max_dead_code_fraction": 0.25,
+        "min_class_codes": 4,
+        "min_perplexity": 32.0
+      }
+    },
+    "exploratory": true,
+    "checkpoint_sha256": "ec71a8b304e64c9d0541523b6d4ba916c4fcfe17b488b6817a40acdb91ba6b68",
+    "artifact": {
+      "path": "/root/mount_data/runs/q3d-resenc-pixdim-20261112/campaign-v2/runs/shared/shared.acdc_a_k8_seed42.encoder_stride8_s8_frozen_teacher.q/Q.artifact.json",
+      "sha256": "e0b40fc60d4a11bb3ae823ea61f75732c98caadae4a463ea6f55c650d5bfc26d"
+    },
+    "history": [
+      {
+        "absence": {
+          "observed_utc": "2026-11-12T16:55:40.538986+00:00",
+          "ps_sha256": "c8ae620ae7b7650017a19b73d955b39c88d5f544df9e573b5874be11e10b81b3"
+        },
+        "audit_dir": "/root/mount_data/runs/q3d-resenc-pixdim-20261112/exploratory/recovery/20261112T165541.160500Z-0c7ac19b",
+        "checkpoint_sha256": "cf16cacac89ebbdb39732d9f80ff4af219b30753d446f3342bbe3dc2dc18bf94",
+        "completed_checkpoint_sha256": "ec71a8b304e64c9d0541523b6d4ba916c4fcfe17b488b6817a40acdb91ba6b68",
+        "completed_utc": "2026-11-12T16:56:03.827000+00:00",
+        "exploratory": true,
+        "exploratory_quality_waiver": {
+          "exploratory": true,
+          "reason": "User-authorized full-pipeline exploratory continuation 2026-11-12",
+          "schema": "q3d.exploratory_quality_waiver.v1",
+          "scope": [
+            "tokenizer_gate",
+            "physiology_support",
+            "kd_support"
+          ]
+        },
+        "job_id": "shared.acdc_a_k8_seed42.encoder_stride8_s8_frozen_teacher.q",
+        "metrics": {
+          "committed_rows": 1025,
+          "uncommitted_bytes": 0
+        },
+        "original_command": [
+          "/venv/main/bin/python",
+          "/root/Self-Audit/train.py",
+          "--config",
+          "/root/mount_data/runs/q3d-resenc-pixdim-20261112/campaign-v2/recipes/acdc_a_k8_seed42_v1.json",
+          "--out",
+          "/root/mount_data/runs/q3d-resenc-pixdim-20261112/campaign-v2/runs/shared/shared.acdc_a_k8_seed42.encoder_stride8_s8_frozen_teacher.q",
+          "--device",
+          "cuda",
+          "--q3d-stage",
+          "Q",
+          "--q3d-stage-artifact",
+          "T=/root/mount_data/runs/q3d-resenc-pixdim-20261112/campaign-v2/runs/shared/shared.acdc_a_k8_seed42.teacher.t/T.artifact.json",
+          "--allow-full-run",
+          "--q3d-stage-artifact-sha",
+          "T=14035b846fff89371dafb3eba5e6471458c8fedf9876344e67d1668471848b8d"
+        ],
+        "resume_command": [
+          "/venv/main/bin/python",
+          "/root/Self-Audit/train.py",
+          "--config",
+          "/root/mount_data/runs/q3d-resenc-pixdim-20261112/campaign-v2/recipes/acdc_a_k8_seed42_v1.json",
+          "--out",
+          "/root/mount_data/runs/q3d-resenc-pixdim-20261112/campaign-v2/runs/shared/shared.acdc_a_k8_seed42.encoder_stride8_s8_frozen_teacher.q",
+          "--device",
+          "cuda",
+          "--q3d-stage",
+          "Q",
+          "--q3d-stage-artifact",
+          "T=/root/mount_data/runs/q3d-resenc-pixdim-20261112/campaign-v2/runs/shared/shared.acdc_a_k8_seed42.teacher.t/T.artifact.json",
+          "--allow-full-run",
+          "--q3d-stage-artifact-sha",
+          "T=14035b846fff89371dafb3eba5e6471458c8fedf9876344e67d1668471848b8d",
+          "--q3d-exploratory-quality-waiver",
+          "User-authorized full-pipeline exploratory continuation 2026-11-12"
+        ],
+        "reused_receipt": null,
+        "stage_cursor": 1000
+      }
+    ]
+  },
+  "monitor": {
+    "status": "OK",
+    "updated_utc": "2026-11-12T17:09:40.114931+00:00",
+    "attention_required": false,
+    "alerts": [],
+    "interval_seconds": 420
+  },
+  "supervisor": "q3d-campaign                     RUNNING   pid 80826, uptime 0:14:18\nq3d-watchdog                     RUNNING   pid 80860, uptime 0:14:18\n",
+  "gpu": "NVIDIA RTX PRO 4000 Blackwell, 0 %, 813 MiB",
+  "log_window": "ssh_tmux:q3d-training",
+  "all_six_J_complete": "NOT_RUN",
+  "test_evaluation": "NOT_RUN"
+}

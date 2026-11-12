@@ -1,0 +1,56 @@
+{
+  "automation_id": "bf11b8cd-f129-4d11-9e5c-fc36fe30c460",
+  "enabled": true,
+  "schedule": "*/10 * * * *",
+  "server_watchdog_interval_seconds": 420,
+  "runs": [
+    {
+      "id": "6add9a0e-7ad4-435e-9b69-896780c1111d",
+      "trigger": "scheduled",
+      "status": "skipped_precheck",
+      "model": null,
+      "precheck": {
+        "command": "/Users/alvinluong/miniforge3/bin/python /Users/alvinluong/Self-Audit/scripts/q3d_alarm_precheck.py",
+        "exitCode": 1,
+        "timedOut": false,
+        "durationMs": 3041,
+        "stdout": "{\"attention_required\": false, \"queue_status\": \"RUNNING\", \"supervisor\": \"q3d-campaign                     RUNNING   pid 80826, uptime 0:05:07\", \"monitor_status\": \"OK\", \"monitor_stale\": false}\n",
+        "stderr": "",
+        "stdoutTruncated": false,
+        "stderrTruncated": false,
+        "error": null,
+        "startedAt": 1794502843439,
+        "completedAt": 1794502846480
+      },
+      "output": null
+    },
+    {
+      "id": "95ab72fe-ece4-43af-b9f8-1bee57ca0d48",
+      "trigger": "scheduled",
+      "status": "skipped_precheck",
+      "model": null,
+      "precheck": {
+        "command": "/Users/alvinluong/miniforge3/bin/python /Users/alvinluong/Self-Audit/scripts/q3d_alarm_precheck.py",
+        "exitCode": 1,
+        "timedOut": false,
+        "durationMs": 3010,
+        "stdout": "{\"attention_required\": false, \"queue_status\": \"RUNNING\", \"supervisor\": \"q3d-campaign                     RUNNING   pid 80826, uptime 0:02:07\", \"monitor_status\": \"OK\", \"monitor_stale\": false}\n",
+        "stderr": "",
+        "stdoutTruncated": false,
+        "stderrTruncated": false,
+        "error": null,
+        "startedAt": 1794502663437,
+        "completedAt": 1794502666447
+      },
+      "output": null
+    },
+    {
+      "id": "d8a09968-3bdc-4c4e-a384-6162904ea5f4",
+      "trigger": "manual",
+      "status": "completed",
+      "model": "gpt-6-astra",
+      "precheck": null,
+      "output": "Read-only verification at 16:58 UTC: K8 V1 stage P is active with one trainer and 100% GPU utilization. Queue and watchdog are running; latest monitor status is OK.\n\nQ retains measured `NO_GO` and the explicit exploratory waiver. P has no new metrics yet, which is expected during cache construction.\n\nNo edits, restarts, or automation changes made."
+    }
+  ]
+}

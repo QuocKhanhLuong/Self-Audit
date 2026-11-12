@@ -63,7 +63,36 @@ stopped and remaining implementation/review was reassigned to Astra.
 
 ## Evidence status
 
-Software checks are `SOFTWARE_ONLY`: `check_repo` PASS; full pytest **778 passed, 2 skipped in 222.44s** (including the isolated clean-copy suite); all 13 synthetic recipes completed. See `pytest.txt`, `check-repo.json`, `smoke-summary.json` and `review.md`. Deployment, resumed P/J progress and
-monitor activation are `NOT_RUN` until a separate timestamped launch receipt
-is added to this directory. Completion of the six J runs and held-out test
-evaluation are `NOT_RUN` at the time of this source amendment.
+Software checks are `SOFTWARE_ONLY`: `check_repo` PASS; full pytest **778 passed,
+2 skipped in 222.44s** (including the isolated clean-copy suite); all 13 synthetic
+recipes completed. See `pytest.txt`, `check-repo.json`, `smoke-summary.json` and
+`review.md`. These checks cover implementation commit
+`0e34bae30264302e7e018229d1ab4208dad266c9`. The subsequent read-only status
+viewer was checked manually with missing status files and against the live
+server; `check_repo` still passed. An independent Astra review found no
+important issues in that viewer. The full suite was not repeated for the
+viewer and timestamped execution receipts.
+
+## Verified launch and visible logs
+
+`deployment-receipt.json` records the server deployment at 16:55 UTC on
+2026-11-12. The server remains pinned to implementation commit `0e34bae`;
+the later viewer/report commit is not pulled into an active trainer checkout.
+`launch-receipt.json` records a later live observation. Q recovered from its
+completed 1,000-update cursor, exported its artifact with the measured failed
+gate intact, and P completed. The queue then entered the separate 20-update
+J GPU profile before full K8 J. Completion of all six J runs and held-out
+test evaluation remain `NOT_RUN` at this observation.
+
+Both Supervisor programs were running. The server watchdog completed automatic
+420-second checks with status `OK`. `alarm-verification.json` separately records
+an actual completed `gpt-6-astra` inspection and scheduled healthy-run prechecks;
+the 10-minute agent alarm is enabled.
+
+The visible Orca tab **Q3D LIVE - training** attaches read-only to server tmux
+window `ssh_tmux:q3d-training`. Its upper pane shows VAL Dice RV/MYO/LV; the
+lower pane uses `scripts/q3d_watch_status.py` to refresh queue status, timestamp,
+watchdog and GPU every five seconds. Stage P computes a physiology cache and
+has no optimizer epochs, so the viewer states that explicitly. GPU activity
+does not establish a completed update. The standalone status viewer is copied
+outside the server checkout, without modifying trainer code or run artifacts.
