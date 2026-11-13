@@ -39,8 +39,8 @@ with exact axis transpose and original-to-array hashes recorded; no interpolatio
 Report source SHA, generated SHA, class mapping BG/RV/MYO/LV and split identity.
 
 T epoch = a seeded permutation of all 160 L frame keys, exactly once each.
-T is 50 epochs = 8,000 optimizer updates. T-a is first 400 updates (5%),
-including half of epoch 3; schedule boundaries remain exact in update units.
+T is 50 epochs = 8,000 labeled-frame exposures (8,000 optimizer steps at default batch1; fewer steps with the explicit batch2 amendment below). T-a is first 400 exposures (5%),
+including half of epoch 3; T schedule boundaries remain exact in frame-exposure units.
 J epoch = a seeded permutation of the 80 TRAIN patients, one randomly selected
 non-ED/ES frame each. Each J update pairs one L frame and one U frame, one
 optimizer step. L uses a separate shuffled 160-frame stream spanning two J

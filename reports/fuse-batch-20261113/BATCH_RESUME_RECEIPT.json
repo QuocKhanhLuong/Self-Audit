@@ -1,0 +1,48 @@
+{
+  "observed_utc": "2026-11-13T06:38:58.909891+00:00",
+  "source_commit": "5f2485d03517e0dbfa44f479c9fd61b571aa1ec9",
+  "checkpoint_state": {
+    "checkpoint_path": "/root/mount_data/runs/fuse-20261113/resume.pt",
+    "checkpoint_sha256": "c6ad49c33699b78562f10b9e2c1d0849aa70a7df03180958bc0ff0412843af12",
+    "epoch": 7,
+    "schema": "self_audit.candidate_fuse.state.v1",
+    "stage": "T",
+    "status": "RUNNING",
+    "update": 1120,
+    "updated_utc": "2026-11-13T06:38:55.200889+00:00"
+  },
+  "latest_metric": {
+    "batch_size": 2,
+    "epoch": 7,
+    "examples_seen": 1124,
+    "loss": 0.4719894528388977,
+    "optimizer_steps": 1120,
+    "stage": "T",
+    "type": "train_update",
+    "update": 1124
+  },
+  "latest_batch2": [
+    {
+      "batch_size": 2,
+      "epoch": 7,
+      "examples_seen": 1122,
+      "loss": 0.48448044061660767,
+      "optimizer_steps": 1119,
+      "stage": "T",
+      "type": "train_update",
+      "update": 1122
+    },
+    {
+      "batch_size": 2,
+      "epoch": 7,
+      "examples_seen": 1124,
+      "loss": 0.4719894528388977,
+      "optimizer_steps": 1120,
+      "stage": "T",
+      "type": "train_update",
+      "update": 1124
+    }
+  ],
+  "services": "fuse-campaign                    RUNNING   pid 351745, uptime 0:00:35\nfuse-watchdog                    RUNNING   pid 352071, uptime 0:00:00\n",
+  "gpu": "name, memory.used [MiB], memory.total [MiB], utilization.gpu [%]\nNVIDIA RTX PRO 4000 Blackwell, 11095 MiB, 24467 MiB, 80 %\n"
+}

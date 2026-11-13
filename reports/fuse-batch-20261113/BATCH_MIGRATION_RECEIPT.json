@@ -1,0 +1,43 @@
+{
+  "archive": "/root/mount_data/runs/fuse-20261113/batch1_archive",
+  "archived_files": {
+    "EPOCH_BUDGET_LOCK.json": "efb9d66491299e87f3265c6d62c9a21a24987563464feae4d2e8ea4155bda54e",
+    "RUN_STATE.json": "0e78fc23573597d9c99f0748ba9afbcba56b52791f102a9c29ad09187310c041",
+    "STATE.json": "d502973efcdaad15009e1f2485faa71ff57aa6622e506810f55bb0c161387e5e",
+    "metrics.jsonl": "a36c2ed73c0c1333c820541e335b9c1100ed7aa2b62e5e9007611f4b821c3d08",
+    "recipe.json": "7579669c4f5f9ae989d09182c54895d765beb14b130e8ca536000256b87f1d3f",
+    "resume.pt": "63b14a2ad07e63f326cf106faa46c60d65b0fb899634a451aa88b43d54ef4a83",
+    "resume.sha256.json": "22a9377650d758a37cb7d9bb9685e28f769a7b720e2987768d5ac9af38fbab7f",
+    "teacher.pt": "86fb2c0949d6fd4caba84171b662b304b8f424186bc5056f8bb42d2eaf129365",
+    "teacher.pt.meta.json": "417f025e3256bcbe705b53e0fd52af9792de06686f5caf2964b8b2d51e90323a"
+  },
+  "best_teacher_score_before": 0.8040184774719421,
+  "created_utc": "2026-11-13T06:34:47.821282+00:00",
+  "expected_new_optimizer_steps_for_full_teacher_epochs": 80,
+  "joint_epochs": 100,
+  "joint_pairs_per_step": 1,
+  "new_checkpoint_sha256": "c365e4347069559927d5f7322f575bbd21d47702ceb578edca0583e1928f6876",
+  "new_identity": {
+    "config_sha256": "73e7fdd1bf5376a550dc8c7bf24d850f186df3ef5efe297c0fcc06322bd253d7",
+    "train_manifest_sha256": "3b30c0006218b2aa348730b1667ca2a78fe47742af509871d9a860bb9a8d5b9b",
+    "val_manifest_sha256": "e3421779441afcab8f8feadbd293bedad6c00877730eb3c7151fa6a15667e88b"
+  },
+  "notes": "Partial resumed epoch may have singleton frames. T update counts labeled frame exposures; optimizer_steps is separate. J update semantics unchanged. Old weights and all source files preserved.",
+  "old_checkpoint_sha256": "63b14a2ad07e63f326cf106faa46c60d65b0fb899634a451aa88b43d54ef4a83",
+  "old_identity": {
+    "config_sha256": "306fd853378b64b467966034a6df9ed5765b476208f1a3bb8fdfd8aebf545be9",
+    "train_manifest_sha256": "3b30c0006218b2aa348730b1667ca2a78fe47742af509871d9a860bb9a8d5b9b",
+    "val_manifest_sha256": "e3421779441afcab8f8feadbd293bedad6c00877730eb3c7151fa6a15667e88b"
+  },
+  "preserved_training_payload_sha256": "81cdc2790ebb4fe80778bb9935588fe60c94258655cdcc21fa6f284ae45d8937",
+  "remaining_teacher_frames": 6900,
+  "schema": "self_audit.candidate_fuse.batch_migration.v1",
+  "source_commit": "d9dfdf80966cf7fdf480c972b098c5cf0d64fb99",
+  "status": "MIGRATED",
+  "teacher_batch_size": 2,
+  "teacher_epochs": 50,
+  "teacher_examples_seen": 1100,
+  "teacher_optimizer_steps_before": 1100,
+  "user_authorization": "Increase batch to optimize VRAM; preserve native data and epoch counts",
+  "weights_optimizer_rng_sampler_metrics_unchanged": true
+}
