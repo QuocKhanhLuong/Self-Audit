@@ -74,11 +74,9 @@ points below. Confidence intervals are paired bootstrap 95% percentile CIs.
 |---|---|---:|---:|---:|---:|
 | VAL18 | fusion − teacher | +2.208 | [+1.238, +3.261] | 0.000328 | 18 |
 | VAL18 | fusion − student | +0.160 | [−1.264, +1.537] | 0.324730 | 18 |
-| TEST50 | fusion − teacher | +2.593 | [+1.942, +3.302] | 0.0* | 50 |
+| TEST50 | fusion − teacher | +2.593 | [+1.942, +3.302] | 7.656e-12 | 50 |
 | TEST50 | fusion − student | −0.855 | [−1.979, +0.230] | 0.204476 | 50 |
 
-*SciPy returned a floating-point `0.0` for the TEST50 fusion-minus-teacher
-Wilcoxon p-value (numerical underflow); this does not mean a zero probability.
 The test and bootstrap CI summarize different features of the paired
 distribution. The TEST50 fusion-minus-student mean CI includes zero. No
 multiplicity adjustment was made. The previously opened full-label TEST
