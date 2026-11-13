@@ -1,0 +1,61 @@
+{
+  "schema": "self_audit.fuse.semi_launch.v1",
+  "launched_utc": "2026-11-13T12:22:28.219653+00:00",
+  "host": "vast-gpu",
+  "source_commit": "32e528e39b79493b8e2251bd884d7a2ed4583748",
+  "checkout": "/root/Self-Audit-fuse-semi-20261113",
+  "run_directory": "/root/mount_data/runs/fuse-acdc-k8-20261113",
+  "config_sha256_file": "d7af9576751eb7409093a8d7a5685d65c50baf088b168b289c83cf4b4d1bf8a8",
+  "track": "A",
+  "status": "RUNNING_VERIFIED",
+  "services": [
+    "fuse-k8-campaign",
+    "fuse-k8-watchdog"
+  ],
+  "watchdog_interval_seconds": 420,
+  "automatic_retry_limit": 0,
+  "OOM_policy": "stop; no crop/resample",
+  "B_B0": "BLOCKED; no launch",
+  "old_full_label_run": "preserved unchanged",
+  "verified_utc": "2026-11-13T12:23:54.481309+00:00",
+  "engine_state": {
+    "checkpoint_path": "/root/mount_data/runs/fuse-acdc-k8-20261113/resume.pt",
+    "checkpoint_sha256": "8647ead3c0bc92a1f79b0369d8aae6a971db1da03862569dacd9148dd8d33ae3",
+    "epoch": 4,
+    "schema": "self_audit.candidate_fuse.state.v1",
+    "stage": "T",
+    "status": "RUNNING",
+    "update": 64,
+    "updated_utc": "2026-11-13T12:23:50.947811+00:00"
+  },
+  "campaign_state": {
+    "active": "T",
+    "attempts": {
+      "T": 1
+    },
+    "completed": [],
+    "config": "/root/mount_data/runs/fuse-acdc-k8-20261113/recipe.json",
+    "config_sha256": "d7af9576751eb7409093a8d7a5685d65c50baf088b168b289c83cf4b4d1bf8a8",
+    "device": "cuda",
+    "schema": "self_audit.candidate_fuse.campaign_state.v1",
+    "stage_logs": {
+      "T": "/root/mount_data/runs/fuse-acdc-k8-20261113/campaign_logs/T.log"
+    },
+    "status": "RUNNING",
+    "test_ledger": {
+      "status": "NOT_RUN"
+    },
+    "updated_utc": "2026-11-13T12:22:28.169087+00:00"
+  },
+  "supervisor_status": "fuse-k8-campaign                 RUNNING   pid 582872, uptime 0:01:26\nfuse-k8-watchdog                 RUNNING   pid 582906, uptime 0:01:26\n",
+  "gpu_snapshot": "NVIDIA RTX PRO 4000 Blackwell, 7363 MiB, 98 %",
+  "code_sha_verified": "32e528e39b79493b8e2251bd884d7a2ed4583748",
+  "server_checkout_clean": true,
+  "TEST_status": "NOT_RUN",
+  "alarm_id": "6e159a89-7381-4c3f-9394-f354f1d32a76",
+  "alarm_interval_minutes": 10,
+  "tmux_session": "fuse-k8-training",
+  "orca_log_terminal": "term_0166f265-029e-4c08-a489-4d8d34fbc256",
+  "alarm_enabled": true,
+  "healthy_precheck_exit_code": 1
+}

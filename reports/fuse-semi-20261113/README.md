@@ -10,7 +10,7 @@ non-L8 TRAIN mask reads. This is data-contract evidence, not model efficacy.
 The user explicitly chose 8,000 T frame exposures: 500 L8 epochs with physical
 batch 2; J remains 100 epochs/8,000 pairs. The architecture, losses, T-a fraction,
 LR groups, dropout schedule and VAL deploy margin 0.01 remain unchanged.
-New Track A patient results are NOT_RUN until its new campaign completes.
+Final Track A VAL/TEST comparison results are NOT_RUN until its campaign completes.
 
 M&Ms Track B and B0 are BLOCKED. All 209 extracted headers have unknown spatial
 units, including all 34 staging validation patients. C8J7L5 also fails the audit
@@ -48,3 +48,18 @@ new tests:26 passed,3 subtests passed. CPU smoke T→J→VAL3→export passed, w
 bitwise cold-load for teacher/student/fusion on three native shapes. These are
 SOFTWARE_ONLY results; optional unavailable external-source tests were skipped.
 Raw output is retained in pytest.txt, check_repo.txt and SOFTWARE_ONLY_SMOKE.json.
+
+Track A launched on 2026-11-13 at 12:22:28 UTC (19:22 Vietnam) from source commit
+`32e528e39b79493b8e2251bd884d7a2ed4583748`, in a new pinned server checkout
+`/root/Self-Audit-fuse-semi-20261113` and run directory
+`/root/mount_data/runs/fuse-acdc-k8-20261113`. Real GPU T updates and per-epoch
+VAL class metrics have been observed. This is RUNNING evidence, not a final
+K8 efficacy result. T→J→VAL/deploy/export→one TEST transaction is managed by
+`fuse-k8-campaign`; automatic retries are disabled, including on OOM.
+
+The visible Orca window is **FUSE K8 | epoch + VAL per-class**, attached to
+tmux `fuse-k8-training`. The server watchdog checks every 420 seconds. Orca alarm
+`6e159a89-7381-4c3f-9394-f354f1d32a76` checks every 10 minutes; healthy runs skip
+agent notifications, and completion/failure triggers evidence collection and
+one report. No monitor pulls or changes the pinned training source. See
+LAUNCH_RECEIPT.json for the verified process/GPU snapshot and alarm precheck.
