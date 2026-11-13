@@ -1,0 +1,58 @@
+{
+  "active": null,
+  "artifacts": {
+    "fusion.pt": "9dbc0d565813cc16dbdb963509f47cbdc9971a0a8261b5b86bab1619c8385fe4",
+    "joint_best.pt": "2e942ef3cbd7a8d5f55b37ec077d839518926769f25a65b5c7b38cc9676bd378",
+    "student.pt": "f7ae3a1473c83db4e09b473db1ea5e743a368c6cce422e6dbbbe248581a00beb",
+    "teacher.pt": "e8419dccd58e3f78ec7d77b716373fe2804ab22cd1fbf4e014184fd5d274b054"
+  },
+  "attempts": {
+    "EXPORT": 1,
+    "J": 1,
+    "T": 1,
+    "TEST_ONCE": 1,
+    "VAL3": 1
+  },
+  "completed": [
+    "T",
+    "J",
+    "VAL3",
+    "EXPORT",
+    "TEST_ONCE"
+  ],
+  "config": "/root/mount_data/runs/fuse-acdc-k8-20261113/recipe.json",
+  "config_sha256": "d7af9576751eb7409093a8d7a5685d65c50baf088b168b289c83cf4b4d1bf8a8",
+  "device": "cuda",
+  "error": null,
+  "export_bundle": {
+    "fusion": {
+      "path": "/root/mount_data/runs/fuse-acdc-k8-20261113/exports/fusion.pt",
+      "sha256": "9dbc0d565813cc16dbdb963509f47cbdc9971a0a8261b5b86bab1619c8385fe4"
+    },
+    "student": {
+      "path": "/root/mount_data/runs/fuse-acdc-k8-20261113/exports/student.pt",
+      "sha256": "f7ae3a1473c83db4e09b473db1ea5e743a368c6cce422e6dbbbe248581a00beb"
+    },
+    "teacher": {
+      "path": "/root/mount_data/runs/fuse-acdc-k8-20261113/exports/teacher.pt",
+      "sha256": "e8419dccd58e3f78ec7d77b716373fe2804ab22cd1fbf4e014184fd5d274b054"
+    }
+  },
+  "schema": "self_audit.candidate_fuse.campaign_state.v1",
+  "stage_logs": {
+    "EXPORT": "/root/mount_data/runs/fuse-acdc-k8-20261113/campaign_logs/EXPORT.log",
+    "J": "/root/mount_data/runs/fuse-acdc-k8-20261113/campaign_logs/J.log",
+    "T": "/root/mount_data/runs/fuse-acdc-k8-20261113/campaign_logs/T.log",
+    "TEST_ONCE": "/root/mount_data/runs/fuse-acdc-k8-20261113/campaign_logs/TEST_ONCE.log",
+    "VAL3": "/root/mount_data/runs/fuse-acdc-k8-20261113/campaign_logs/VAL3.log"
+  },
+  "status": "COMPLETED",
+  "test_ledger": {
+    "attempt": 1,
+    "completed_utc": "2026-11-13T17:53:56.699255+00:00",
+    "started_utc": "2026-11-13T17:53:04.032800+00:00",
+    "status": "COMMITTED",
+    "transaction_path": "/root/mount_data/runs/fuse-acdc-k8-20261113/TEST_ONCE/TEST_TRANSACTION.json"
+  },
+  "updated_utc": "2026-11-13T17:53:56.699817+00:00"
+}

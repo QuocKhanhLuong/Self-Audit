@@ -1,0 +1,1702 @@
+{
+  "analysis_status": "EXPLORATORY_POST_TEST_OPEN",
+  "independent_unit": "patient",
+  "pairing": "same patient IDs across compared models",
+  "schema": "self_audit.paired_comparison_analysis.v1",
+  "splits": {
+    "TEST50": {
+      "models": {
+        "fusion": {
+          "FG": {
+            "mean_patient_metric": 0.7640729960593887,
+            "median_patient_metric": 0.8105308222694005,
+            "n_patients": 50
+          },
+          "LV.dice": {
+            "mean_patient_metric": 0.8271121515067957,
+            "median_patient_metric": 0.8786091848678375,
+            "n_patients": 50
+          },
+          "LV.hd95_mm": {
+            "mean_patient_metric": 19.20328996376467,
+            "median_patient_metric": 6.444180770812292,
+            "n_patients": 50
+          },
+          "MYO.dice": {
+            "mean_patient_metric": 0.7576155472208381,
+            "median_patient_metric": 0.8096155121898223,
+            "n_patients": 50
+          },
+          "MYO.hd95_mm": {
+            "mean_patient_metric": 19.202277570722803,
+            "median_patient_metric": 6.354232688287496,
+            "n_patients": 50
+          },
+          "RV.dice": {
+            "mean_patient_metric": 0.7074912894505329,
+            "median_patient_metric": 0.7589742404993743,
+            "n_patients": 50
+          },
+          "RV.hd95_mm": {
+            "mean_patient_metric": 59.86819069581542,
+            "median_patient_metric": 50.223446362690524,
+            "n_patients": 50
+          }
+        },
+        "student": {
+          "FG": {
+            "mean_patient_metric": 0.7726267213367249,
+            "median_patient_metric": 0.8229637853181953,
+            "n_patients": 50
+          },
+          "LV.dice": {
+            "mean_patient_metric": 0.8451161852959547,
+            "median_patient_metric": 0.8834778924075872,
+            "n_patients": 50
+          },
+          "LV.hd95_mm": {
+            "mean_patient_metric": 17.24433777230094,
+            "median_patient_metric": 6.557862393723554,
+            "n_patients": 50
+          },
+          "MYO.dice": {
+            "mean_patient_metric": 0.7525975034155623,
+            "median_patient_metric": 0.812013831652752,
+            "n_patients": 50
+          },
+          "MYO.hd95_mm": {
+            "mean_patient_metric": 22.471658913924724,
+            "median_patient_metric": 6.5625,
+            "n_patients": 50
+          },
+          "RV.dice": {
+            "mean_patient_metric": 0.7201664752986582,
+            "median_patient_metric": 0.7816400116268958,
+            "n_patients": 50
+          },
+          "RV.hd95_mm": {
+            "mean_patient_metric": 38.90438228758922,
+            "median_patient_metric": 22.734647799542756,
+            "n_patients": 50
+          }
+        },
+        "teacher": {
+          "FG": {
+            "mean_patient_metric": 0.7381429548740206,
+            "median_patient_metric": 0.7861734684624722,
+            "n_patients": 50
+          },
+          "LV.dice": {
+            "mean_patient_metric": 0.8116448187968838,
+            "median_patient_metric": 0.8758318943207135,
+            "n_patients": 50
+          },
+          "LV.hd95_mm": {
+            "mean_patient_metric": 21.488436240774657,
+            "median_patient_metric": 6.950992496476708,
+            "n_patients": 50
+          },
+          "MYO.dice": {
+            "mean_patient_metric": 0.7327282756901687,
+            "median_patient_metric": 0.8009454334385094,
+            "n_patients": 50
+          },
+          "MYO.hd95_mm": {
+            "mean_patient_metric": 22.22124252217491,
+            "median_patient_metric": 6.601559996604919,
+            "n_patients": 50
+          },
+          "RV.dice": {
+            "mean_patient_metric": 0.6700557701350092,
+            "median_patient_metric": 0.71877260882406,
+            "n_patients": 50
+          },
+          "RV.hd95_mm": {
+            "mean_patient_metric": 68.33065765216118,
+            "median_patient_metric": 50.77171559584548,
+            "n_patients": 50
+          }
+        }
+      },
+      "paired": {
+        "FG": {
+          "fusion_minus_student": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": -0.008553725277336112,
+            "median_difference": -0.00719049841483993,
+            "n_paired_patients": 50,
+            "patient_bootstrap_mean_difference_95ci": [
+              -0.019788232852769247,
+              0.002302745646753827
+            ],
+            "patient_ids": [
+              "patient101",
+              "patient102",
+              "patient103",
+              "patient104",
+              "patient105",
+              "patient106",
+              "patient107",
+              "patient108",
+              "patient109",
+              "patient110",
+              "patient111",
+              "patient112",
+              "patient113",
+              "patient114",
+              "patient115",
+              "patient116",
+              "patient117",
+              "patient118",
+              "patient119",
+              "patient120",
+              "patient121",
+              "patient122",
+              "patient123",
+              "patient124",
+              "patient125",
+              "patient126",
+              "patient127",
+              "patient128",
+              "patient129",
+              "patient130",
+              "patient131",
+              "patient132",
+              "patient133",
+              "patient134",
+              "patient135",
+              "patient136",
+              "patient137",
+              "patient138",
+              "patient139",
+              "patient140",
+              "patient141",
+              "patient142",
+              "patient143",
+              "patient144",
+              "patient145",
+              "patient146",
+              "patient147",
+              "patient148",
+              "patient149",
+              "patient150"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 0.20447619481721802,
+              "statistic": 505.0
+            }
+          },
+          "fusion_minus_teacher": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": 0.02593004118536828,
+            "median_difference": 0.017610913839068543,
+            "n_paired_patients": 50,
+            "patient_bootstrap_mean_difference_95ci": [
+              0.01941538138653352,
+              0.03302295820668496
+            ],
+            "patient_ids": [
+              "patient101",
+              "patient102",
+              "patient103",
+              "patient104",
+              "patient105",
+              "patient106",
+              "patient107",
+              "patient108",
+              "patient109",
+              "patient110",
+              "patient111",
+              "patient112",
+              "patient113",
+              "patient114",
+              "patient115",
+              "patient116",
+              "patient117",
+              "patient118",
+              "patient119",
+              "patient120",
+              "patient121",
+              "patient122",
+              "patient123",
+              "patient124",
+              "patient125",
+              "patient126",
+              "patient127",
+              "patient128",
+              "patient129",
+              "patient130",
+              "patient131",
+              "patient132",
+              "patient133",
+              "patient134",
+              "patient135",
+              "patient136",
+              "patient137",
+              "patient138",
+              "patient139",
+              "patient140",
+              "patient141",
+              "patient142",
+              "patient143",
+              "patient144",
+              "patient145",
+              "patient146",
+              "patient147",
+              "patient148",
+              "patient149",
+              "patient150"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 7.65609797781508e-12,
+              "statistic": 35.0
+            }
+          }
+        },
+        "LV.dice": {
+          "fusion_minus_student": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": -0.018004033789158963,
+            "median_difference": -0.0010972542117054784,
+            "n_paired_patients": 50,
+            "patient_bootstrap_mean_difference_95ci": [
+              -0.03258862155086803,
+              -0.006299356675392508
+            ],
+            "patient_ids": [
+              "patient101",
+              "patient102",
+              "patient103",
+              "patient104",
+              "patient105",
+              "patient106",
+              "patient107",
+              "patient108",
+              "patient109",
+              "patient110",
+              "patient111",
+              "patient112",
+              "patient113",
+              "patient114",
+              "patient115",
+              "patient116",
+              "patient117",
+              "patient118",
+              "patient119",
+              "patient120",
+              "patient121",
+              "patient122",
+              "patient123",
+              "patient124",
+              "patient125",
+              "patient126",
+              "patient127",
+              "patient128",
+              "patient129",
+              "patient130",
+              "patient131",
+              "patient132",
+              "patient133",
+              "patient134",
+              "patient135",
+              "patient136",
+              "patient137",
+              "patient138",
+              "patient139",
+              "patient140",
+              "patient141",
+              "patient142",
+              "patient143",
+              "patient144",
+              "patient145",
+              "patient146",
+              "patient147",
+              "patient148",
+              "patient149",
+              "patient150"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 0.07237748012944856,
+              "statistic": 451.0
+            }
+          },
+          "fusion_minus_teacher": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": 0.01546733270991185,
+            "median_difference": 0.00881388872416905,
+            "n_paired_patients": 50,
+            "patient_bootstrap_mean_difference_95ci": [
+              0.010635476489109362,
+              0.021224333741481746
+            ],
+            "patient_ids": [
+              "patient101",
+              "patient102",
+              "patient103",
+              "patient104",
+              "patient105",
+              "patient106",
+              "patient107",
+              "patient108",
+              "patient109",
+              "patient110",
+              "patient111",
+              "patient112",
+              "patient113",
+              "patient114",
+              "patient115",
+              "patient116",
+              "patient117",
+              "patient118",
+              "patient119",
+              "patient120",
+              "patient121",
+              "patient122",
+              "patient123",
+              "patient124",
+              "patient125",
+              "patient126",
+              "patient127",
+              "patient128",
+              "patient129",
+              "patient130",
+              "patient131",
+              "patient132",
+              "patient133",
+              "patient134",
+              "patient135",
+              "patient136",
+              "patient137",
+              "patient138",
+              "patient139",
+              "patient140",
+              "patient141",
+              "patient142",
+              "patient143",
+              "patient144",
+              "patient145",
+              "patient146",
+              "patient147",
+              "patient148",
+              "patient149",
+              "patient150"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 2.239985974483716e-12,
+              "statistic": 27.0
+            }
+          }
+        },
+        "LV.hd95_mm": {
+          "fusion_minus_student": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": 1.9589521914637276,
+            "median_difference": 0.0,
+            "n_paired_patients": 50,
+            "patient_bootstrap_mean_difference_95ci": [
+              -3.916904027684348,
+              8.092552074191248
+            ],
+            "patient_ids": [
+              "patient101",
+              "patient102",
+              "patient103",
+              "patient104",
+              "patient105",
+              "patient106",
+              "patient107",
+              "patient108",
+              "patient109",
+              "patient110",
+              "patient111",
+              "patient112",
+              "patient113",
+              "patient114",
+              "patient115",
+              "patient116",
+              "patient117",
+              "patient118",
+              "patient119",
+              "patient120",
+              "patient121",
+              "patient122",
+              "patient123",
+              "patient124",
+              "patient125",
+              "patient126",
+              "patient127",
+              "patient128",
+              "patient129",
+              "patient130",
+              "patient131",
+              "patient132",
+              "patient133",
+              "patient134",
+              "patient135",
+              "patient136",
+              "patient137",
+              "patient138",
+              "patient139",
+              "patient140",
+              "patient141",
+              "patient142",
+              "patient143",
+              "patient144",
+              "patient145",
+              "patient146",
+              "patient147",
+              "patient148",
+              "patient149",
+              "patient150"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 0.40085760810199633,
+              "statistic": 347.5
+            }
+          },
+          "fusion_minus_teacher": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": -2.285146277009989,
+            "median_difference": -0.38639924859973895,
+            "n_paired_patients": 50,
+            "patient_bootstrap_mean_difference_95ci": [
+              -5.067177146400267,
+              -0.3197625689438305
+            ],
+            "patient_ids": [
+              "patient101",
+              "patient102",
+              "patient103",
+              "patient104",
+              "patient105",
+              "patient106",
+              "patient107",
+              "patient108",
+              "patient109",
+              "patient110",
+              "patient111",
+              "patient112",
+              "patient113",
+              "patient114",
+              "patient115",
+              "patient116",
+              "patient117",
+              "patient118",
+              "patient119",
+              "patient120",
+              "patient121",
+              "patient122",
+              "patient123",
+              "patient124",
+              "patient125",
+              "patient126",
+              "patient127",
+              "patient128",
+              "patient129",
+              "patient130",
+              "patient131",
+              "patient132",
+              "patient133",
+              "patient134",
+              "patient135",
+              "patient136",
+              "patient137",
+              "patient138",
+              "patient139",
+              "patient140",
+              "patient141",
+              "patient142",
+              "patient143",
+              "patient144",
+              "patient145",
+              "patient146",
+              "patient147",
+              "patient148",
+              "patient149",
+              "patient150"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 0.00018646549692642627,
+              "statistic": 132.0
+            }
+          }
+        },
+        "MYO.dice": {
+          "fusion_minus_student": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": 0.005018043805275863,
+            "median_difference": 0.0009580077098766959,
+            "n_paired_patients": 50,
+            "patient_bootstrap_mean_difference_95ci": [
+              -0.0038262473045123304,
+              0.014447678766633196
+            ],
+            "patient_ids": [
+              "patient101",
+              "patient102",
+              "patient103",
+              "patient104",
+              "patient105",
+              "patient106",
+              "patient107",
+              "patient108",
+              "patient109",
+              "patient110",
+              "patient111",
+              "patient112",
+              "patient113",
+              "patient114",
+              "patient115",
+              "patient116",
+              "patient117",
+              "patient118",
+              "patient119",
+              "patient120",
+              "patient121",
+              "patient122",
+              "patient123",
+              "patient124",
+              "patient125",
+              "patient126",
+              "patient127",
+              "patient128",
+              "patient129",
+              "patient130",
+              "patient131",
+              "patient132",
+              "patient133",
+              "patient134",
+              "patient135",
+              "patient136",
+              "patient137",
+              "patient138",
+              "patient139",
+              "patient140",
+              "patient141",
+              "patient142",
+              "patient143",
+              "patient144",
+              "patient145",
+              "patient146",
+              "patient147",
+              "patient148",
+              "patient149",
+              "patient150"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 0.3724861917482851,
+              "statistic": 544.0
+            }
+          },
+          "fusion_minus_teacher": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": 0.024887271530669244,
+            "median_difference": 0.014344089890544254,
+            "n_paired_patients": 50,
+            "patient_bootstrap_mean_difference_95ci": [
+              0.015315779048194906,
+              0.03571353280645281
+            ],
+            "patient_ids": [
+              "patient101",
+              "patient102",
+              "patient103",
+              "patient104",
+              "patient105",
+              "patient106",
+              "patient107",
+              "patient108",
+              "patient109",
+              "patient110",
+              "patient111",
+              "patient112",
+              "patient113",
+              "patient114",
+              "patient115",
+              "patient116",
+              "patient117",
+              "patient118",
+              "patient119",
+              "patient120",
+              "patient121",
+              "patient122",
+              "patient123",
+              "patient124",
+              "patient125",
+              "patient126",
+              "patient127",
+              "patient128",
+              "patient129",
+              "patient130",
+              "patient131",
+              "patient132",
+              "patient133",
+              "patient134",
+              "patient135",
+              "patient136",
+              "patient137",
+              "patient138",
+              "patient139",
+              "patient140",
+              "patient141",
+              "patient142",
+              "patient143",
+              "patient144",
+              "patient145",
+              "patient146",
+              "patient147",
+              "patient148",
+              "patient149",
+              "patient150"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 1.7394549622906652e-07,
+              "statistic": 138.0
+            }
+          }
+        },
+        "MYO.hd95_mm": {
+          "fusion_minus_student": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": -3.2693813432019208,
+            "median_difference": 0.0,
+            "n_paired_patients": 50,
+            "patient_bootstrap_mean_difference_95ci": [
+              -11.404932909612064,
+              3.6362081221998217
+            ],
+            "patient_ids": [
+              "patient101",
+              "patient102",
+              "patient103",
+              "patient104",
+              "patient105",
+              "patient106",
+              "patient107",
+              "patient108",
+              "patient109",
+              "patient110",
+              "patient111",
+              "patient112",
+              "patient113",
+              "patient114",
+              "patient115",
+              "patient116",
+              "patient117",
+              "patient118",
+              "patient119",
+              "patient120",
+              "patient121",
+              "patient122",
+              "patient123",
+              "patient124",
+              "patient125",
+              "patient126",
+              "patient127",
+              "patient128",
+              "patient129",
+              "patient130",
+              "patient131",
+              "patient132",
+              "patient133",
+              "patient134",
+              "patient135",
+              "patient136",
+              "patient137",
+              "patient138",
+              "patient139",
+              "patient140",
+              "patient141",
+              "patient142",
+              "patient143",
+              "patient144",
+              "patient145",
+              "patient146",
+              "patient147",
+              "patient148",
+              "patient149",
+              "patient150"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 0.6992015773166784,
+              "statistic": 441.0
+            }
+          },
+          "fusion_minus_teacher": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": -3.0189649514521086,
+            "median_difference": -0.2860465375546444,
+            "n_paired_patients": 50,
+            "patient_bootstrap_mean_difference_95ci": [
+              -7.196612276204859,
+              -0.4698286265411976
+            ],
+            "patient_ids": [
+              "patient101",
+              "patient102",
+              "patient103",
+              "patient104",
+              "patient105",
+              "patient106",
+              "patient107",
+              "patient108",
+              "patient109",
+              "patient110",
+              "patient111",
+              "patient112",
+              "patient113",
+              "patient114",
+              "patient115",
+              "patient116",
+              "patient117",
+              "patient118",
+              "patient119",
+              "patient120",
+              "patient121",
+              "patient122",
+              "patient123",
+              "patient124",
+              "patient125",
+              "patient126",
+              "patient127",
+              "patient128",
+              "patient129",
+              "patient130",
+              "patient131",
+              "patient132",
+              "patient133",
+              "patient134",
+              "patient135",
+              "patient136",
+              "patient137",
+              "patient138",
+              "patient139",
+              "patient140",
+              "patient141",
+              "patient142",
+              "patient143",
+              "patient144",
+              "patient145",
+              "patient146",
+              "patient147",
+              "patient148",
+              "patient149",
+              "patient150"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 0.002845365254369524,
+              "statistic": 188.0
+            }
+          }
+        },
+        "RV.dice": {
+          "fusion_minus_student": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": -0.012675185848125303,
+            "median_difference": -0.009224157270935174,
+            "n_paired_patients": 50,
+            "patient_bootstrap_mean_difference_95ci": [
+              -0.03332304808367973,
+              0.007987652262907936
+            ],
+            "patient_ids": [
+              "patient101",
+              "patient102",
+              "patient103",
+              "patient104",
+              "patient105",
+              "patient106",
+              "patient107",
+              "patient108",
+              "patient109",
+              "patient110",
+              "patient111",
+              "patient112",
+              "patient113",
+              "patient114",
+              "patient115",
+              "patient116",
+              "patient117",
+              "patient118",
+              "patient119",
+              "patient120",
+              "patient121",
+              "patient122",
+              "patient123",
+              "patient124",
+              "patient125",
+              "patient126",
+              "patient127",
+              "patient128",
+              "patient129",
+              "patient130",
+              "patient131",
+              "patient132",
+              "patient133",
+              "patient134",
+              "patient135",
+              "patient136",
+              "patient137",
+              "patient138",
+              "patient139",
+              "patient140",
+              "patient141",
+              "patient142",
+              "patient143",
+              "patient144",
+              "patient145",
+              "patient146",
+              "patient147",
+              "patient148",
+              "patient149",
+              "patient150"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 0.19095974436218555,
+              "statistic": 501.0
+            }
+          },
+          "fusion_minus_teacher": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": 0.03743551931552373,
+            "median_difference": 0.028283928949446202,
+            "n_paired_patients": 50,
+            "patient_bootstrap_mean_difference_95ci": [
+              0.025424244115783163,
+              0.04997017797368979
+            ],
+            "patient_ids": [
+              "patient101",
+              "patient102",
+              "patient103",
+              "patient104",
+              "patient105",
+              "patient106",
+              "patient107",
+              "patient108",
+              "patient109",
+              "patient110",
+              "patient111",
+              "patient112",
+              "patient113",
+              "patient114",
+              "patient115",
+              "patient116",
+              "patient117",
+              "patient118",
+              "patient119",
+              "patient120",
+              "patient121",
+              "patient122",
+              "patient123",
+              "patient124",
+              "patient125",
+              "patient126",
+              "patient127",
+              "patient128",
+              "patient129",
+              "patient130",
+              "patient131",
+              "patient132",
+              "patient133",
+              "patient134",
+              "patient135",
+              "patient136",
+              "patient137",
+              "patient138",
+              "patient139",
+              "patient140",
+              "patient141",
+              "patient142",
+              "patient143",
+              "patient144",
+              "patient145",
+              "patient146",
+              "patient147",
+              "patient148",
+              "patient149",
+              "patient150"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 3.623269506647375e-08,
+              "statistic": 117.0
+            }
+          }
+        },
+        "RV.hd95_mm": {
+          "fusion_minus_student": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": 20.9638084082262,
+            "median_difference": 2.9986853903392756,
+            "n_paired_patients": 50,
+            "patient_bootstrap_mean_difference_95ci": [
+              10.286978679694993,
+              32.80664517042614
+            ],
+            "patient_ids": [
+              "patient101",
+              "patient102",
+              "patient103",
+              "patient104",
+              "patient105",
+              "patient106",
+              "patient107",
+              "patient108",
+              "patient109",
+              "patient110",
+              "patient111",
+              "patient112",
+              "patient113",
+              "patient114",
+              "patient115",
+              "patient116",
+              "patient117",
+              "patient118",
+              "patient119",
+              "patient120",
+              "patient121",
+              "patient122",
+              "patient123",
+              "patient124",
+              "patient125",
+              "patient126",
+              "patient127",
+              "patient128",
+              "patient129",
+              "patient130",
+              "patient131",
+              "patient132",
+              "patient133",
+              "patient134",
+              "patient135",
+              "patient136",
+              "patient137",
+              "patient138",
+              "patient139",
+              "patient140",
+              "patient141",
+              "patient142",
+              "patient143",
+              "patient144",
+              "patient145",
+              "patient146",
+              "patient147",
+              "patient148",
+              "patient149",
+              "patient150"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 0.0011079263767745727,
+              "statistic": 270.0
+            }
+          },
+          "fusion_minus_teacher": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": -8.462466956345757,
+            "median_difference": -0.7752498033646451,
+            "n_paired_patients": 50,
+            "patient_bootstrap_mean_difference_95ci": [
+              -15.270099704255077,
+              -2.414925227370773
+            ],
+            "patient_ids": [
+              "patient101",
+              "patient102",
+              "patient103",
+              "patient104",
+              "patient105",
+              "patient106",
+              "patient107",
+              "patient108",
+              "patient109",
+              "patient110",
+              "patient111",
+              "patient112",
+              "patient113",
+              "patient114",
+              "patient115",
+              "patient116",
+              "patient117",
+              "patient118",
+              "patient119",
+              "patient120",
+              "patient121",
+              "patient122",
+              "patient123",
+              "patient124",
+              "patient125",
+              "patient126",
+              "patient127",
+              "patient128",
+              "patient129",
+              "patient130",
+              "patient131",
+              "patient132",
+              "patient133",
+              "patient134",
+              "patient135",
+              "patient136",
+              "patient137",
+              "patient138",
+              "patient139",
+              "patient140",
+              "patient141",
+              "patient142",
+              "patient143",
+              "patient144",
+              "patient145",
+              "patient146",
+              "patient147",
+              "patient148",
+              "patient149",
+              "patient150"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 0.032686704461446295,
+              "statistic": 345.0
+            }
+          }
+        }
+      }
+    },
+    "VAL18": {
+      "models": {
+        "fusion": {
+          "FG": {
+            "mean_patient_metric": 0.8256628783893308,
+            "median_patient_metric": 0.8304488487443367,
+            "n_patients": 18
+          },
+          "LV.dice": {
+            "mean_patient_metric": 0.8968022384187806,
+            "median_patient_metric": 0.9128182068335917,
+            "n_patients": 18
+          },
+          "LV.hd95_mm": {
+            "mean_patient_metric": 4.503011869445164,
+            "median_patient_metric": 3.8107838249733907,
+            "n_patients": 18
+          },
+          "MYO.dice": {
+            "mean_patient_metric": 0.8221112831953035,
+            "median_patient_metric": 0.8524674370198873,
+            "n_patients": 18
+          },
+          "MYO.hd95_mm": {
+            "mean_patient_metric": 9.229104942992675,
+            "median_patient_metric": 5.347431637419739,
+            "n_patients": 18
+          },
+          "RV.dice": {
+            "mean_patient_metric": 0.7580751135539086,
+            "median_patient_metric": 0.7638495682196513,
+            "n_patients": 18
+          },
+          "RV.hd95_mm": {
+            "mean_patient_metric": 41.59013504080908,
+            "median_patient_metric": 14.143296646664409,
+            "n_patients": 18
+          }
+        },
+        "student": {
+          "FG": {
+            "mean_patient_metric": 0.8240662961953887,
+            "median_patient_metric": 0.8346946038873706,
+            "n_patients": 18
+          },
+          "LV.dice": {
+            "mean_patient_metric": 0.8881262909280654,
+            "median_patient_metric": 0.8996234120729789,
+            "n_patients": 18
+          },
+          "LV.hd95_mm": {
+            "mean_patient_metric": 6.279868074680088,
+            "median_patient_metric": 4.930490106513618,
+            "n_patients": 18
+          },
+          "MYO.dice": {
+            "mean_patient_metric": 0.8114907719413551,
+            "median_patient_metric": 0.8520044345243204,
+            "n_patients": 18
+          },
+          "MYO.hd95_mm": {
+            "mean_patient_metric": 10.751368617801672,
+            "median_patient_metric": 5.94305217280199,
+            "n_patients": 18
+          },
+          "RV.dice": {
+            "mean_patient_metric": 0.7725818257167458,
+            "median_patient_metric": 0.7439994838803248,
+            "n_patients": 18
+          },
+          "RV.hd95_mm": {
+            "mean_patient_metric": 28.11260225572509,
+            "median_patient_metric": 10.842347744735699,
+            "n_patients": 18
+          }
+        },
+        "teacher": {
+          "FG": {
+            "mean_patient_metric": 0.8035832372668468,
+            "median_patient_metric": 0.7935165624501224,
+            "n_patients": 18
+          },
+          "LV.dice": {
+            "mean_patient_metric": 0.8826575516500488,
+            "median_patient_metric": 0.893476879353224,
+            "n_patients": 18
+          },
+          "LV.hd95_mm": {
+            "mean_patient_metric": 10.132170758012837,
+            "median_patient_metric": 4.09655369622847,
+            "n_patients": 18
+          },
+          "MYO.dice": {
+            "mean_patient_metric": 0.8100309519982782,
+            "median_patient_metric": 0.8340661633600366,
+            "n_patients": 18
+          },
+          "MYO.hd95_mm": {
+            "mean_patient_metric": 9.450930596285628,
+            "median_patient_metric": 5.308068827327514,
+            "n_patients": 18
+          },
+          "RV.dice": {
+            "mean_patient_metric": 0.7180612081522132,
+            "median_patient_metric": 0.7369837218978956,
+            "n_patients": 18
+          },
+          "RV.hd95_mm": {
+            "mean_patient_metric": 74.501290985246,
+            "median_patient_metric": 25.58997303852064,
+            "n_patients": 18
+          }
+        }
+      },
+      "paired": {
+        "FG": {
+          "fusion_minus_student": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": 0.001596582193941999,
+            "median_difference": 0.0026453519245436263,
+            "n_paired_patients": 18,
+            "patient_bootstrap_mean_difference_95ci": [
+              -0.012642409831973662,
+              0.015369341803010412
+            ],
+            "patient_ids": [
+              "patient004",
+              "patient005",
+              "patient012",
+              "patient014",
+              "patient015",
+              "patient018",
+              "patient028",
+              "patient029",
+              "patient030",
+              "patient032",
+              "patient036",
+              "patient065",
+              "patient070",
+              "patient082",
+              "patient087",
+              "patient089",
+              "patient095",
+              "patient098"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 0.32472991943359375,
+              "statistic": 62.0
+            }
+          },
+          "fusion_minus_teacher": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": 0.022079641122484117,
+            "median_difference": 0.016999670153718116,
+            "n_paired_patients": 18,
+            "patient_bootstrap_mean_difference_95ci": [
+              0.012381703234431567,
+              0.03260793806499536
+            ],
+            "patient_ids": [
+              "patient004",
+              "patient005",
+              "patient012",
+              "patient014",
+              "patient015",
+              "patient018",
+              "patient028",
+              "patient029",
+              "patient030",
+              "patient032",
+              "patient036",
+              "patient065",
+              "patient070",
+              "patient082",
+              "patient087",
+              "patient089",
+              "patient095",
+              "patient098"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 0.00032806396484375,
+              "statistic": 10.0
+            }
+          }
+        },
+        "LV.dice": {
+          "fusion_minus_student": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": 0.008675947490715078,
+            "median_difference": 0.002142147950015383,
+            "n_paired_patients": 18,
+            "patient_bootstrap_mean_difference_95ci": [
+              -0.0028117774542163842,
+              0.022009356483243803
+            ],
+            "patient_ids": [
+              "patient004",
+              "patient005",
+              "patient012",
+              "patient014",
+              "patient015",
+              "patient018",
+              "patient028",
+              "patient029",
+              "patient030",
+              "patient032",
+              "patient036",
+              "patient065",
+              "patient070",
+              "patient082",
+              "patient087",
+              "patient089",
+              "patient095",
+              "patient098"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 0.2121429443359375,
+              "statistic": 56.0
+            }
+          },
+          "fusion_minus_teacher": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": 0.014144686768731849,
+            "median_difference": 0.011567742100958844,
+            "n_paired_patients": 18,
+            "patient_bootstrap_mean_difference_95ci": [
+              0.007501290829066185,
+              0.02162149316807648
+            ],
+            "patient_ids": [
+              "patient004",
+              "patient005",
+              "patient012",
+              "patient014",
+              "patient015",
+              "patient018",
+              "patient028",
+              "patient029",
+              "patient030",
+              "patient032",
+              "patient036",
+              "patient065",
+              "patient070",
+              "patient082",
+              "patient087",
+              "patient089",
+              "patient095",
+              "patient098"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 0.00019073486328125,
+              "statistic": 8.0
+            }
+          }
+        },
+        "LV.hd95_mm": {
+          "fusion_minus_student": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": -1.7768562052349235,
+            "median_difference": -0.30337907400373176,
+            "n_paired_patients": 18,
+            "patient_bootstrap_mean_difference_95ci": [
+              -4.227615367136029,
+              -0.16756666067284723
+            ],
+            "patient_ids": [
+              "patient004",
+              "patient005",
+              "patient012",
+              "patient014",
+              "patient015",
+              "patient018",
+              "patient028",
+              "patient029",
+              "patient030",
+              "patient032",
+              "patient036",
+              "patient065",
+              "patient070",
+              "patient082",
+              "patient087",
+              "patient089",
+              "patient095",
+              "patient098"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 0.03304694365260127,
+              "statistic": 15.0
+            }
+          },
+          "fusion_minus_teacher": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": -5.62915888856767,
+            "median_difference": -0.2958397660876608,
+            "n_paired_patients": 18,
+            "patient_bootstrap_mean_difference_95ci": [
+              -14.83931570927791,
+              -0.37909328611501614
+            ],
+            "patient_ids": [
+              "patient004",
+              "patient005",
+              "patient012",
+              "patient014",
+              "patient015",
+              "patient018",
+              "patient028",
+              "patient029",
+              "patient030",
+              "patient032",
+              "patient036",
+              "patient065",
+              "patient070",
+              "patient082",
+              "patient087",
+              "patient089",
+              "patient095",
+              "patient098"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 0.003510363671504141,
+              "statistic": 6.0
+            }
+          }
+        },
+        "MYO.dice": {
+          "fusion_minus_student": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": 0.010620511253948152,
+            "median_difference": 0.0068558578686450655,
+            "n_paired_patients": 18,
+            "patient_bootstrap_mean_difference_95ci": [
+              0.003464559093809084,
+              0.01886178923615762
+            ],
+            "patient_ids": [
+              "patient004",
+              "patient005",
+              "patient012",
+              "patient014",
+              "patient015",
+              "patient018",
+              "patient028",
+              "patient029",
+              "patient030",
+              "patient032",
+              "patient036",
+              "patient065",
+              "patient070",
+              "patient082",
+              "patient087",
+              "patient089",
+              "patient095",
+              "patient098"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 0.02367401123046875,
+              "statistic": 34.0
+            }
+          },
+          "fusion_minus_teacher": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": 0.012080331197025082,
+            "median_difference": 0.010670447658818416,
+            "n_paired_patients": 18,
+            "patient_bootstrap_mean_difference_95ci": [
+              0.0064197800758136695,
+              0.018304794409298813
+            ],
+            "patient_ids": [
+              "patient004",
+              "patient005",
+              "patient012",
+              "patient014",
+              "patient015",
+              "patient018",
+              "patient028",
+              "patient029",
+              "patient030",
+              "patient032",
+              "patient036",
+              "patient065",
+              "patient070",
+              "patient082",
+              "patient087",
+              "patient089",
+              "patient095",
+              "patient098"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 0.00067138671875,
+              "statistic": 13.0
+            }
+          }
+        },
+        "MYO.hd95_mm": {
+          "fusion_minus_student": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": -1.5222636748089982,
+            "median_difference": -0.20131667605139714,
+            "n_paired_patients": 18,
+            "patient_bootstrap_mean_difference_95ci": [
+              -9.962775799615004,
+              6.1272304631557315
+            ],
+            "patient_ids": [
+              "patient004",
+              "patient005",
+              "patient012",
+              "patient014",
+              "patient015",
+              "patient018",
+              "patient028",
+              "patient029",
+              "patient030",
+              "patient032",
+              "patient036",
+              "patient065",
+              "patient070",
+              "patient082",
+              "patient087",
+              "patient089",
+              "patient095",
+              "patient098"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 0.08428387967828295,
+              "statistic": 25.0
+            }
+          },
+          "fusion_minus_teacher": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": -0.22182565329295253,
+            "median_difference": -0.2608044439118229,
+            "n_paired_patients": 18,
+            "patient_bootstrap_mean_difference_95ci": [
+              -0.5119976862179627,
+              0.07637580504882975
+            ],
+            "patient_ids": [
+              "patient004",
+              "patient005",
+              "patient012",
+              "patient014",
+              "patient015",
+              "patient018",
+              "patient028",
+              "patient029",
+              "patient030",
+              "patient032",
+              "patient036",
+              "patient065",
+              "patient070",
+              "patient082",
+              "patient087",
+              "patient089",
+              "patient095",
+              "patient098"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 0.17881002646274524,
+              "statistic": 42.0
+            }
+          }
+        },
+        "RV.dice": {
+          "fusion_minus_student": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": -0.01450671216283732,
+            "median_difference": -0.0005414866449314215,
+            "n_paired_patients": 18,
+            "patient_bootstrap_mean_difference_95ci": [
+              -0.05152705293010854,
+              0.01582691017291916
+            ],
+            "patient_ids": [
+              "patient004",
+              "patient005",
+              "patient012",
+              "patient014",
+              "patient015",
+              "patient018",
+              "patient028",
+              "patient029",
+              "patient030",
+              "patient032",
+              "patient036",
+              "patient065",
+              "patient070",
+              "patient082",
+              "patient087",
+              "patient089",
+              "patient095",
+              "patient098"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 0.9661178588867188,
+              "statistic": 84.0
+            }
+          },
+          "fusion_minus_teacher": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": 0.040013905401695374,
+            "median_difference": 0.02065486849405812,
+            "n_paired_patients": 18,
+            "patient_bootstrap_mean_difference_95ci": [
+              0.01420233265649863,
+              0.06871972866152555
+            ],
+            "patient_ids": [
+              "patient004",
+              "patient005",
+              "patient012",
+              "patient014",
+              "patient015",
+              "patient018",
+              "patient028",
+              "patient029",
+              "patient030",
+              "patient032",
+              "patient036",
+              "patient065",
+              "patient070",
+              "patient082",
+              "patient087",
+              "patient089",
+              "patient095",
+              "patient098"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 0.0055999755859375,
+              "statistic": 24.0
+            }
+          }
+        },
+        "RV.hd95_mm": {
+          "fusion_minus_student": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": 13.477532785083996,
+            "median_difference": 0.23134722013321873,
+            "n_paired_patients": 18,
+            "patient_bootstrap_mean_difference_95ci": [
+              -0.4139916745081832,
+              29.794429723730833
+            ],
+            "patient_ids": [
+              "patient004",
+              "patient005",
+              "patient012",
+              "patient014",
+              "patient015",
+              "patient018",
+              "patient028",
+              "patient029",
+              "patient030",
+              "patient032",
+              "patient036",
+              "patient065",
+              "patient070",
+              "patient082",
+              "patient087",
+              "patient089",
+              "patient095",
+              "patient098"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 0.32472991943359375,
+              "statistic": 62.0
+            }
+          },
+          "fusion_minus_teacher": {
+            "bootstrap_resamples": 10000,
+            "bootstrap_seed": 42,
+            "mean_difference": -32.91115594443691,
+            "median_difference": -0.4027787570557657,
+            "n_paired_patients": 18,
+            "patient_bootstrap_mean_difference_95ci": [
+              -64.17333791820279,
+              -7.349192325712477
+            ],
+            "patient_ids": [
+              "patient004",
+              "patient005",
+              "patient012",
+              "patient014",
+              "patient015",
+              "patient018",
+              "patient028",
+              "patient029",
+              "patient030",
+              "patient032",
+              "patient036",
+              "patient065",
+              "patient070",
+              "patient082",
+              "patient087",
+              "patient089",
+              "patient095",
+              "patient098"
+            ],
+            "wilcoxon_two_sided": {
+              "p_value": 0.04423369101367787,
+              "statistic": 34.0
+            }
+          }
+        }
+      }
+    }
+  },
+  "statistical_methods": {
+    "bootstrap": "paired patient resampling; mean difference; percentile 95% CI",
+    "wilcoxon": "paired two-sided signed-rank, zero differences discarded"
+  }
+}
