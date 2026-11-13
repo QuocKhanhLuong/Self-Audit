@@ -2,8 +2,8 @@
   "schema": "self_audit.active_pipeline.candidate_family.v3",
   "entrypoint": "train.py",
   "evaluation_entrypoint": "evaluate.py",
-  "default_track": "candidate_q3d",
-  "method": "candidate_q3d",
+  "default_track": "candidate_fuse",
+  "method": "candidate_fuse",
   "tracks": {
     "candidate_a": {
       "package": "self_audit.candidate_a",
@@ -55,6 +55,22 @@
       "stages": ["T", "Q", "P", "J"],
       "deployment": "student-only; dense decoder, frozen codebook, no teacher",
       "status": "active_research_design_no_patient_or_gpu_evidence"
+    },
+    "candidate_fuse": {
+      "package": "self_audit.candidate_fuse",
+      "config_schema": "self_audit.candidate_fuse.v1",
+      "checkpoint_schema": "candidate_fuse.resume.v1",
+      "export_schema": "self_audit.candidate_fuse.export.v1",
+      "default_config": "configs/candidate_fuse/v1.json",
+      "architecture": "native_supervised_cine_teacher_student_gated_fusion",
+      "model_class": "FuseStudent",
+      "protocol": "native_3d_full_train_supervised_cine",
+      "input": "[B,1,D,H,W]",
+      "geometry": "native shape + spacing_zyx + affine_zyx; full_volume",
+      "teacher": "pinned nnFoundationCNN ResEnc-L with TRAIN80 decoder and heads; frozen during joint",
+      "stages": ["T", "J"],
+      "deployment": "locked validation choice: student or teacher-feature fusion",
+      "status": "software_only_implementation_pending_patient_gpu_evidence"
     }
   },
   "supervision": "Q3D protocol A uses K labeled TRAIN patients for teacher and student, with remaining TRAIN U image-only for tokenizer/codeKD; protocol B uses all TRAIN labels for teacher and K for student. U masks are never used. Candidate A/A-3D retain their declared baseline supervision contracts.",
@@ -67,5 +83,5 @@
   "historical_native_v2_commit": "f01add12524cf73bb15675ecfeadc1014e420210",
   "legacy_frozen_q_commit": "924265f7df604d3dca84dda49578b1a0cf28d821",
   "patient_training_this_delivery": false,
-  "documentation": ["docs/CANDIDATE_Q3D_SPEC.md"]
+  "documentation": ["docs/CANDIDATE_Q3D_SPEC.md", "docs/CANDIDATE_FUSE_SPEC.md"]
 }

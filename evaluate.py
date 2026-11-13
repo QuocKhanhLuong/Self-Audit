@@ -20,6 +20,13 @@ _EVALUATORS = {
 }
 _Q3D_EXPORT_SCHEMA = "q3d.student_export.v1"
 _Q3D_EXPORT_MANIFEST_SCHEMA = "q3d.export_manifest.v1"
+_FUSE_EXPORT_SCHEMA = "self_audit.candidate_fuse.export.v1"
+
+
+def _evaluate_fuse_export(*args: Any, **kwargs: Any) -> Any:
+    """Load the FUSE evaluation implementation only when an export is used."""
+    evaluate = importlib.import_module("self_audit.candidate_fuse.evaluation").evaluate_export
+    return evaluate(*args, **kwargs)
 
 
 def _q3d_training_patient_ids(path: str | Path, expected_sha256: str) -> tuple[str, ...]:
@@ -132,6 +139,8 @@ def evaluator_for_schema(schema: str) -> Any:
 
     if schema == _Q3D_EXPORT_SCHEMA:
         return _evaluate_q3d_export
+    if schema == _FUSE_EXPORT_SCHEMA:
+        return _evaluate_fuse_export
     if not isinstance(schema, str) or schema not in _EVALUATORS:
         raise ValueError(f"unsupported checkpoint schema: {schema!r}")
     return importlib.import_module(_EVALUATORS[schema]).evaluate
@@ -152,10 +161,14 @@ def main() -> None:
     parser.add_argument("--q3d-exploratory-quality-waiver", metavar="REASON",
                         help="exact explicit reason recorded in a Q3D exploratory student export")
     parser.add_argument("--split", choices=["dev", "test", "external_test"],
-                        help="Optional expected Q3D manifest role")
+                        help="Expected manifest role; required for FUSE evaluation")
+    parser.add_argument("--fuse-mode", choices=("teacher", "student", "fusion"),
+                        help="Candidate FUSE mode; FUSE evaluation runs the locked mode set")
     args = parser.parse_args()
 
     checkpoint_path = Path(args.checkpoint)
+    if args.fuse_mode is not None:
+        parser.error("--fuse-mode is reserved; FUSE exports are evaluated in the locked three-mode set")
     if args.config:
         if args.q3d_exploratory_quality_waiver is not None:
             parser.error("--q3d-exploratory-quality-waiver requires a Q3D student export")
@@ -172,6 +185,22 @@ def main() -> None:
         return
 
     if checkpoint_path.is_file():
+        try:
+            candidate_manifest = json.loads(checkpoint_path.with_suffix(checkpoint_path.suffix + ".manifest.json").read_text())
+        except (OSError, json.JSONDecodeError):
+            candidate_manifest = None
+        if isinstance(candidate_manifest, dict) and candidate_manifest.get("schema") == _FUSE_EXPORT_SCHEMA:
+            if args.split is None:
+                parser.error("FUSE evaluation requires explicit --split dev; TEST requires the locked three-mode evaluate_exports transaction")
+            if args.split != "dev":
+                parser.error("single-mode FUSE evaluation supports only --split dev; TEST requires the locked three-mode evaluate_exports transaction")
+            evaluate = evaluator_for_schema(_FUSE_EXPORT_SCHEMA)
+            result = evaluate(
+                args.checkpoint, args.checkpoint_sha256, args.data, args.data_sha256,
+                args.out, role="development", device=args.device,
+            )
+            print(json.dumps(result, indent=2))
+            return
         try:
             evaluate = evaluator_for_schema(_Q3D_EXPORT_SCHEMA)
             result = evaluate(

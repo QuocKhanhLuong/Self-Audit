@@ -1,0 +1,67 @@
+{
+  "run": "run_b224a53b7a76",
+  "branch": "fuse-rebuild",
+  "base_sha": "50a7441939b1d9d05611ff2dc34a2a9b2f6f5a28",
+  "workers": [
+    {
+      "name": "W1 data",
+      "task": "task_243eec09159d",
+      "dispatch": "ctx_b73efb76e942",
+      "terminal": "term_f64cae37-9d31-4400-b61b-fb49313fe20e"
+    },
+    {
+      "name": "W2 teacher",
+      "task": "task_b2fa131d52d2",
+      "dispatch": "ctx_bf6b9291d3e1",
+      "terminal": "term_cc145968-734f-4f8c-a1ca-fc1f7e389c99"
+    },
+    {
+      "name": "W3 student",
+      "task": "task_716fcd72c1f1",
+      "dispatch": "ctx_0766495e891e",
+      "terminal": "term_90814d67-8b75-49f9-a82b-3923ca859205"
+    },
+    {
+      "name": "W4 engine",
+      "task": "task_b3f208224f69",
+      "dispatch": "ctx_286527e0df76",
+      "terminal": "term_908a0303-797b-470d-ab5b-5adb9ead454a"
+    },
+    {
+      "name": "W4 eval",
+      "task": "task_8f5b2cf160fa",
+      "dispatch": "ctx_e2d867b4031b",
+      "terminal": "term_7f4d140e-c6b6-40f0-9ba7-ef9b23b3cd8b"
+    },
+    {
+      "name": "W4 config",
+      "task": "task_f6ea94125f61",
+      "dispatch": "ctx_95dd2a7a79f1",
+      "terminal": "term_0e81d8b7-6618-4a43-85ca-f1a6618854d8"
+    },
+    {
+      "name": "W5 ops",
+      "task": "task_4b90d36949a6",
+      "dispatch": "ctx_ddbf3899ec81",
+      "terminal": "term_cc733536-184c-4ae7-a45f-c70b5c9c4615"
+    },
+    {
+      "name": "W5 smoke",
+      "task": "task_d3c2558bae5d",
+      "dispatch": "ctx_1902e16dfb7a",
+      "terminal": "term_e483180c-68f7-45ee-a304-3f27c26b6a4f"
+    }
+  ],
+  "reviewer": "Exactly one Claude session after integration; NOT_STARTED",
+  "runtime": "gpt-6-luna low; project service_tier priority",
+  "server": "Old Q3D running at0e34bae; untouched until switch",
+  "pending": [
+    "focused tests",
+    "one Claude review",
+    "merge/push main",
+    "switch old services with receipt",
+    "new checkout profile20T20J",
+    "epoch train T/J and livewindow",
+    "VAL/deploy/TEST once"
+  ]
+}

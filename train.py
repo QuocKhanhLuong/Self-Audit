@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Canonical trainer dispatcher for Candidate A, A-3D, and Q3D."""
+"""Canonical trainer dispatcher for Candidate A, A-3D, Q3D, and FUSE."""
 
 from __future__ import annotations
 
@@ -210,6 +210,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--describe", action="store_true")
     parser.add_argument("--config", default="configs/candidate_q3d/v1.json")
+    parser.add_argument("--fuse-stage", choices=("T", "J", "all"))
+    parser.add_argument("--fuse-resume", action="store_true")
+    parser.add_argument("--fuse-max-updates", type=int)
+    parser.add_argument("--fuse-teacher-artifact")
     parser.add_argument("--q3d-stage", choices=("T", "Q", "P", "J"))
     parser.add_argument("--q3d-stage-artifact", action="append", metavar="STAGE=MANIFEST")
     parser.add_argument("--q3d-stage-artifact-sha", action="append", metavar="STAGE=SHA256")
@@ -246,7 +250,27 @@ def main() -> None:
     if not isinstance(config, dict):
         parser.error("config root must be an object")
     method = config.get("method")
-    if method == "candidate_q3d":
+    if method == "candidate_fuse":
+        if not args.out:
+            parser.error("FUSE requires --out")
+        if any((args.q3d_stage, args.q3d_stage_artifact, args.q3d_stage_artifact_sha,
+                args.q3d_exploratory_quality_waiver, args.model_config,
+                args.teacher_checkpoint, args.teacher_checkpoint_sha256, args.data,
+                args.data_sha256, args.validation_data, args.validation_data_sha256,
+                args.synthetic, args.synthetic_teacher_fixture)):
+            parser.error("Q3D/baseline-only options cannot be combined with a FUSE config")
+        from self_audit.candidate_fuse.config import load_config
+        try:
+            config = load_config(args.config, real_run=config.get("runtime", {}).get("synthetic") is not True)
+        except (OSError, TypeError, ValueError) as exc:
+            parser.error(f"invalid FUSE config: {exc}")
+        from self_audit.candidate_fuse.engine import run_training
+        result = run_training(
+            config, args.out, device=args.device, stage=args.fuse_stage or "all",
+            resume=args.fuse_resume, max_updates=args.fuse_max_updates,
+            teacher_artifact=args.fuse_teacher_artifact,
+        )
+    elif method == "candidate_q3d":
         runtime = config.get("runtime")
         synthetic_requested = isinstance(runtime, dict) and runtime.get("synthetic") is True
         try:
@@ -259,11 +283,13 @@ def main() -> None:
             synthetic_teacher_fixture=bool(args.synthetic_teacher_fixture),
         )
     elif method in {"candidate_a", "candidate_a3d"}:
+        if any((args.fuse_stage, args.fuse_resume, args.fuse_max_updates is not None, args.fuse_teacher_artifact)):
+            parser.error("--fuse-* options require a candidate_fuse config")
         if args.q3d_exploratory_quality_waiver is not None:
             parser.error("--q3d-exploratory-quality-waiver applies only to candidate_q3d configs")
         result = _train_baseline(args, parser, config, method)
     else:
-        parser.error("config.method must be candidate_a, candidate_a3d, or candidate_q3d")
+        parser.error("config.method must be candidate_a, candidate_a3d, candidate_q3d, or candidate_fuse")
     print(json.dumps(result, indent=2))
 
 

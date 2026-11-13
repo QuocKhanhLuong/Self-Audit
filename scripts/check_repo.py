@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the active Q3D contract and preserve explicit A/A-3D baselines."""
+"""Validate the active FUSE contract and preserve A/A-3D/Q3D baselines."""
 
 from __future__ import annotations
 
@@ -77,15 +77,16 @@ def main() -> int:
     from self_audit.candidate_a.config import validate_config as validate_a
     from self_audit.candidate_a3d.config import validate_config as validate_a3d
     from self_audit.candidate_q3d.config import validate_config as validate_q3d
+    from self_audit.candidate_fuse.config import load_config as load_fuse
 
     active = json.loads((ROOT / "ACTIVE_PIPELINE.json").read_text())
     _require(active.get("entrypoint") == "train.py", "ACTIVE_ENTRYPOINT_MISMATCH")
     _require(active.get("evaluation_entrypoint") == "evaluate.py", "ACTIVE_EVALUATION_ENTRYPOINT_MISMATCH")
-    _require(active.get("default_track") == "candidate_q3d", "Q3D_NOT_DEFAULT")
-    _require(active.get("method") == "candidate_q3d", "Q3D_NOT_ACTIVE_METHOD")
+    _require(active.get("default_track") == "candidate_fuse", "FUSE_NOT_DEFAULT")
+    _require(active.get("method") == "candidate_fuse", "FUSE_NOT_ACTIVE_METHOD")
     tracks = active.get("tracks")
     _require(isinstance(tracks, dict), "ACTIVE_TRACKS_MISSING")
-    _require(set(tracks) == {"candidate_a", "candidate_a3d", "candidate_q3d"},
+    _require(set(tracks) == {"candidate_a", "candidate_a3d", "candidate_q3d", "candidate_fuse"},
              "ACTIVE_TRACK_INVENTORY_MISMATCH")
     for name in ("candidate_a", "candidate_a3d"):
         _require(tracks[name].get("status") == "explicit_baseline_unchanged",
@@ -97,6 +98,10 @@ def main() -> int:
              "Q3D_CHECKPOINT_SCHEMA_MISMATCH")
     _require(q3d.get("export_schema") == "q3d.student_export.v1",
              "Q3D_EXPORT_SCHEMA_MISMATCH")
+    fuse = tracks["candidate_fuse"]
+    _require(fuse.get("package") == "self_audit.candidate_fuse", "FUSE_PACKAGE_MISMATCH")
+    _require(fuse.get("config_schema") == "self_audit.candidate_fuse.v1", "FUSE_CONFIG_SCHEMA_MISMATCH")
+    _require(fuse.get("export_schema") == "self_audit.candidate_fuse.export.v1", "FUSE_EXPORT_SCHEMA_MISMATCH")
 
     for relative in (
         "self_audit/engine.py", "self_audit/control.py", "self_audit/decoder_control.py",
@@ -130,17 +135,19 @@ def main() -> int:
         str(path.relative_to(ROOT)) for path in (ROOT / "docs").rglob("*")
         if path.is_file() and path.name != ".DS_Store"
     )
-    allowed_docs = BASELINE_DOCS | {"docs/CANDIDATE_Q3D_SPEC.md"}
+    allowed_docs = BASELINE_DOCS | {"docs/CANDIDATE_Q3D_SPEC.md", "docs/CANDIDATE_FUSE_SPEC.md"}
     _require(set(docs) == allowed_docs, f"Q3D_DOC_INVENTORY_MISMATCH: {docs}")
     _require((ROOT / "docs/CANDIDATE_Q3D_SPEC.md").is_file(), "MISSING_AUTHORITATIVE_Q3D_SPEC")
+    _require((ROOT / "docs/CANDIDATE_FUSE_SPEC.md").is_file(), "MISSING_AUTHORITATIVE_FUSE_SPEC")
 
     tests = sorted(
         path.name for path in (ROOT / "tests").glob("test*.py")
         if path.name != "__init__.py"
     )
     contract_tests = {"test_candidate_q3d_weighting.py"}
+    fuse_tests = {name for name in tests if name.startswith("test_fuse")}
     old_tests = [name for name in tests
-                 if not name.startswith("test_q3d") and name not in contract_tests
+                 if not name.startswith(("test_q3d", "test_fuse")) and name not in contract_tests
                  and name not in BASELINE_TESTS]
     _require(not old_tests, f"NON_Q3D_TESTS_REMAIN: {old_tests}")
     _require(BASELINE_TESTS.issubset(tests),
@@ -160,12 +167,17 @@ def main() -> int:
         validate_q3d(json.loads(recipe.read_text()))
     arms = {str(json.loads(path.read_text()).get("arm")) for path in recipes_q3d}
     _require({"c0", "c1", "v1", "v1u"}.issubset(arms), "MISSING_Q3D_PRIMARY_ABLATION_RECIPES")
+    recipes_fuse = list((ROOT / "configs/candidate_fuse").glob("*.json"))
+    _require(bool(recipes_fuse), "MISSING_FUSE_RECIPE")
+    for recipe in recipes_fuse:
+        load_fuse(recipe)
 
     print(json.dumps({
         "status": "PASS",
         "method": active["method"],
         "docs": docs,
         "tests": tests,
+        "fuse_tests": sorted(fuse_tests),
         "recipes": {
             "candidate_a": len(recipes_a),
             "candidate_a3d": len(recipes_a3d),

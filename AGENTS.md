@@ -47,10 +47,32 @@ semble search "save model to disk" ./my-project --top-k 10
 
 # Repository source of truth
 
+Candidate FUSE is the active default track. Read `docs/CANDIDATE_FUSE_SPEC.md`
+in full before changing FUSE. Candidate A, Candidate A-3D, and Candidate Q3D
+remain explicit historical comparison tracks with their own config,
+checkpoint, geometry, and evaluation contracts. `train.py` and `evaluate.py`
+remain the only canonical top-level entrypoints.
+
+Implement FUSE under `self_audit/candidate_fuse/` and
+`configs/candidate_fuse/`. The exact FUSE APIs, formulas, data identity,
+native geometry, teacher/student behavior, training schedules, selection and
+export contracts are defined in `docs/CANDIDATE_FUSE_SPEC.md`. Seed is 42;
+the real recipe uses all TRAIN80 labels (160 ED/ES frames) and image-only
+non-ED/ES cine frames, with disjoint VAL18 and TEST50. Do not crop or resample.
+The Q3D teacher recipe is copied by value, but Q3D remains frozen and its
+historical requirements below continue to govern that track only.
+
+FUSE template manifests may be null for validation/template use. Real FUSE
+execution requires all three existing hash-pinned manifests. Synthetic CPU
+checks are software evidence only. Preserve all run history and unrelated
+work; do not change Q3D server jobs or claim patient/GPU evidence from CPU
+checks.
+
+## Historical Candidate Q3D contract
+
 Read `ACTIVE_PIPELINE.json` and the complete `docs/CANDIDATE_Q3D_SPEC.md`
-before changing the active pipeline. Candidate Q3D is active; Candidate A and
-Candidate A-3D remain explicit comparison baselines. `train.py` and
-`evaluate.py` are the only canonical top-level entrypoints.
+when changing Q3D. Candidate Q3D is a preserved comparison track; Candidate A
+and Candidate A-3D remain explicit comparison baselines.
 
 Implement Q3D under `self_audit/candidate_q3d/` and
 `configs/candidate_q3d/`. Candidate A-3D may be imported as a dependency, but

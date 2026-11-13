@@ -1,0 +1,286 @@
+{
+  "observed_utc": "2026-11-13T05:20:40.459788+00:00",
+  "supervisor": "q3d-campaign                     RUNNING   pid 80826, uptime 12:25:01\nq3d-watchdog                     RUNNING   pid 80860, uptime 12:25:01\n",
+  "queue": {
+    "setting": "v1",
+    "k": 10,
+    "through_stage": "J",
+    "current_stage": "J",
+    "current_job": "acdc_a_k10_seed42_v1.j",
+    "recovery_audit": "/root/mount_data/runs/q3d-resenc-pixdim-20261112/exploratory/recovery/20261112T165541.160500Z-0c7ac19b",
+    "status": "RUNNING",
+    "updated_utc": "2026-11-13T04:07:25.071484+00:00",
+    "code_commit": "0e34bae30264302e7e018229d1ab4208dad266c9",
+    "plan_sha256": "be8cd9689584389e655007b6a6fec8f3b647dc6e61f51713f3dfe41d26bb9ec4",
+    "exploratory": true,
+    "exploratory_quality_waiver": {
+      "schema": "q3d.exploratory_quality_waiver.v1",
+      "reason": "User-authorized full-pipeline exploratory continuation 2026-11-12",
+      "scope": [
+        "tokenizer_gate",
+        "physiology_support",
+        "kd_support"
+      ],
+      "exploratory": true
+    }
+  },
+  "monitor": {
+    "alerts": [],
+    "attention_required": false,
+    "base": "/root/mount_data/runs/q3d-resenc-pixdim-20261112",
+    "checked_utc": "2026-11-13T05:17:48.466459+00:00",
+    "current_stage": "J",
+    "final": false,
+    "health": "OK",
+    "interval_seconds": 420,
+    "lock_acquired": true,
+    "metrics": {
+      "age_seconds": 0.6,
+      "job_id": "acdc_a_k10_seed42_v1.j",
+      "last_record": {
+        "stage": "J",
+        "update": 5474
+      },
+      "last_update": 5474,
+      "mtime_utc": "2026-11-13T05:17:47.864319+00:00",
+      "stage": "J"
+    },
+    "mode": {
+      "no_restart": false,
+      "once": false
+    },
+    "processes": {
+      "detail": null,
+      "listing_ok": true,
+      "matching": [
+        {
+          "kind": "queue",
+          "pid": 80826
+        },
+        {
+          "kind": "queue",
+          "pid": 81160
+        },
+        {
+          "kind": "queue",
+          "pid": 81719
+        },
+        {
+          "kind": "train",
+          "pid": 310244
+        }
+      ]
+    },
+    "program": "q3d-campaign",
+    "progress": {
+      "age_seconds": 0.6,
+      "current_stage": "J",
+      "last_progress_utc": "2026-11-13T05:17:47.864319+00:00",
+      "source": "job_output",
+      "stage_p_metrics_optional": false,
+      "stale_threshold_seconds": 1800
+    },
+    "queue": {
+      "age_seconds": 4223.4,
+      "current_stage": "J",
+      "error": null,
+      "has_error": false,
+      "k": 10,
+      "mtime_utc": "2026-11-13T04:07:25.071585+00:00",
+      "readable": true,
+      "setting": "v1",
+      "status": "RUNNING",
+      "through_stage": "J",
+      "updated_utc": "2026-11-13T04:07:25.071484+00:00"
+    },
+    "restart": {
+      "attempted": false,
+      "blocked_by": [
+        "supervisor state RUNNING is not EXITED/FATAL/STOPPED",
+        "live train.py/queue process present"
+      ],
+      "eligible": false,
+      "history": [],
+      "history_error": null,
+      "result": null,
+      "would_restart": false
+    },
+    "run_state": {
+      "counts": {
+        "COMPLETED": 11,
+        "NOT_RUN": 3,
+        "RUNNING": 1
+      },
+      "error": null,
+      "failed_jobs": [],
+      "mtime_utc": "2026-11-13T04:07:25.064734+00:00",
+      "readable": true,
+      "running_jobs": [
+        {
+          "id": "acdc_a_k10_seed42_v1.j",
+          "stage": "J"
+        }
+      ]
+    },
+    "schema": "q3d.watchdog.status.v1",
+    "status": "OK",
+    "supervisor": {
+      "detail": "status_observed",
+      "pid": 80826,
+      "program": "q3d-campaign",
+      "returncode": 0,
+      "state": "RUNNING"
+    },
+    "updated_utc": "2026-11-13T05:17:48.466459+00:00",
+    "watchdog_version": "1"
+  },
+  "checkout_head": "0e34bae30264302e7e018229d1ab4208dad266c9",
+  "checkout_status": "",
+  "configs": {
+    "q3d-campaign.conf": "[program:q3d-campaign]\ncommand=/venv/main/bin/python -u /root/Self-Audit/scripts/q3d_resume_queue.py --base /root/mount_data/runs/q3d-resenc-pixdim-20261112 --source-sha 0e34bae30264302e7e018229d1ab4208dad266c9 --plan-sha be8cd9689584389e655007b6a6fec8f3b647dc6e61f51713f3dfe41d26bb9ec4 --reason \"User-authorized full-pipeline exploratory continuation 2026-11-12\"\ndirectory=/root/Self-Audit\nenvironment=Q3D_NNFOUNDATION_WEIGHTS=\"/root/mount_data/pretrained/nnfoundationcnn-f443c093/checkpoint_final.pth\",PYTHONUNBUFFERED=\"1\"\nautostart=false\nautorestart=false\nstartsecs=0\nstopasgroup=true\nkillasgroup=true\nstdout_logfile=/root/mount_data/runs/q3d-resenc-pixdim-20261112/supervisor-queue.log\nstdout_logfile_maxbytes=10MB\nstdout_logfile_backups=3\nredirect_stderr=true\n",
+    "q3d-watchdog.conf": "[program:q3d-watchdog]\ncommand=/venv/main/bin/python -u /root/Self-Audit/scripts/q3d_watchdog.py --base /root/mount_data/runs/q3d-resenc-pixdim-20261112 --interval-seconds 420\ndirectory=/root/Self-Audit\nenvironment=PYTHONUNBUFFERED=\"1\"\nautostart=true\nautorestart=unexpected\nstartsecs=0\nstopasgroup=true\nkillasgroup=true\nstdout_logfile=/root/mount_data/runs/q3d-resenc-pixdim-20261112/supervisor-watchdog.log\nstdout_logfile_maxbytes=5MB\nstdout_logfile_backups=3\nredirect_stderr=true\n"
+  },
+  "processes": [
+    {
+      "pid": 80826,
+      "argv": [
+        "/venv/main/bin/python",
+        "-u",
+        "/root/Self-Audit/scripts/q3d_resume_queue.py",
+        "--base",
+        "/root/mount_data/runs/q3d-resenc-pixdim-20261112",
+        "--source-sha",
+        "0e34bae30264302e7e018229d1ab4208dad266c9",
+        "--plan-sha",
+        "be8cd9689584389e655007b6a6fec8f3b647dc6e61f51713f3dfe41d26bb9ec4",
+        "--reason",
+        "User-authorized full-pipeline exploratory continuation 2026-11-12"
+      ],
+      "cwd": "/root/Self-Audit"
+    },
+    {
+      "pid": 80860,
+      "argv": [
+        "/venv/main/bin/python",
+        "-u",
+        "/root/Self-Audit/scripts/q3d_watchdog.py",
+        "--base",
+        "/root/mount_data/runs/q3d-resenc-pixdim-20261112",
+        "--interval-seconds",
+        "420"
+      ],
+      "cwd": "/root/Self-Audit"
+    },
+    {
+      "pid": 310244,
+      "argv": [
+        "/venv/main/bin/python",
+        "/root/Self-Audit/train.py",
+        "--config",
+        "/root/mount_data/runs/q3d-resenc-pixdim-20261112/campaign-v2/recipes/acdc_a_k10_seed42_v1.json",
+        "--out",
+        "/root/mount_data/runs/q3d-resenc-pixdim-20261112/campaign-v2/runs/acdc_a_k10_seed42_v1",
+        "--device",
+        "cuda",
+        "--q3d-stage",
+        "J",
+        "--q3d-stage-artifact",
+        "P=/root/mount_data/runs/q3d-resenc-pixdim-20261112/campaign-v2/runs/shared/shared.acdc_a_k10_seed42.encoder_stride8_s8_frozen_teacher.p/P.artifact.json",
+        "--q3d-stage-artifact",
+        "Q=/root/mount_data/runs/q3d-resenc-pixdim-20261112/campaign-v2/runs/shared/shared.acdc_a_k10_seed42.encoder_stride8_s8_frozen_teacher.q/Q.artifact.json",
+        "--q3d-stage-artifact",
+        "T=/root/mount_data/runs/q3d-resenc-pixdim-20261112/campaign-v2/runs/shared/shared.acdc_a_k10_seed42.teacher.t/T.artifact.json",
+        "--allow-full-run",
+        "--q3d-exploratory-quality-waiver",
+        "User-authorized full-pipeline exploratory continuation 2026-11-12",
+        "--q3d-stage-artifact-sha",
+        "P=0c42d67beebdee04c0a1b2e34b5c06ceb2a55ed7ba078aa2ea83a45eed332faa",
+        "--q3d-stage-artifact-sha",
+        "Q=581a0dfa108810ccd50d9f81672235700fc5d51b4857771d0006d8a4b672472b",
+        "--q3d-stage-artifact-sha",
+        "T=bddec0579d046b2b3151c5a4bcd622750c0018032dbb1eedd1c444a23b3ef02f"
+      ],
+      "cwd": "/root/Self-Audit"
+    }
+  ],
+  "source_files": {
+    "scripts/q3d_resume_queue.py": {
+      "sha256": "cd819abd0467d1e38fe7d59800a505119a95cadf8b3f6cacf88a5efb15a1d9b7",
+      "git_lines": [
+        {
+          "line": 21,
+          "text": "import subprocess"
+        },
+        {
+          "line": 83,
+          "text": "    reader = process_reader or (lambda: subprocess.check_output("
+        },
+        {
+          "line": 93,
+          "text": "        if len(parts) != 2 or not parts[0].isdigit():"
+        },
+        {
+          "line": 155,
+          "text": "    def __init__(self, base, source_sha, plan_sha, reason, *, root=ROOT,"
+        },
+        {
+          "line": 160,
+          "text": "        self.source_sha, self.plan_sha = source_sha, plan_sha"
+        },
+        {
+          "line": 183,
+          "text": "            'code_commit': self.source_sha, 'plan_sha256': self.plan_sha,"
+        },
+        {
+          "line": 194,
+          "text": "        actual = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=self.root, text=True).strip()"
+        },
+        {
+          "line": 195,
+          "text": "        if actual != self.source_sha or sha(self.plan_path) != self.plan_sha:"
+        },
+        {
+          "line": 215,
+          "text": "                    'source_sha256': self.source_sha, 'plan_sha256': self.plan_sha,"
+        },
+        {
+          "line": 224,
+          "text": "                child = subprocess.Popen(command, cwd=self.root, stdout=stdout, stderr=stderr,"
+        },
+        {
+          "line": 228,
+          "text": "            result = subprocess.CompletedProcess(command, code, (audit / 'stdout.txt').read_text(),"
+        },
+        {
+          "line": 568,
+          "text": "    ResumeQueue(args.base, args.source_sha, args.plan_sha, args.reason).run()"
+        }
+      ]
+    },
+    "scripts/q3d_watchdog.py": {
+      "sha256": "c18e4e20fd60cbf8a06ffb99537b2fb9fcd200db80c9628f7556979db86d538b",
+      "git_lines": [
+        {
+          "line": 48,
+          "text": "import subprocess"
+        },
+        {
+          "line": 221,
+          "text": "    except subprocess.TimeoutExpired:"
+        },
+        {
+          "line": 281,
+          "text": "        if len(parts) < 3 or not parts[0].isdigit():"
+        },
+        {
+          "line": 478,
+          "text": "def check_once(base: Path, *, runner: Runner = subprocess.run, now: Callable[[], float] = time.time,"
+        },
+        {
+          "line": 687,
+          "text": "def main(argv: Sequence[str] | None = None, *, runner: Runner = subprocess.run,"
+        }
+      ]
+    }
+  }
+}
