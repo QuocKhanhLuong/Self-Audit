@@ -62,3 +62,9 @@ being accepted; the source inventory must remain unchanged. A failed earlier
 single-file upload is preserved as a failed attempt and is not an accepted
 archive. The guarded cleanup helper defaults to a plan; server execution is
 allowed only after the complete verification receipt and remote parts agree.
+
+## Q3D archive cleanup — completed
+
+The guarded `fuse-q3d-cleanup` service deleted only `/root/mount_data/runs/q3d-resenc-pixdim-20261112` after full Drive verification. All 19 parts (234 archived files; 39,585,105,920 bytes) were downloaded in full for SHA256 comparison, and their ordered concatenation matched archive SHA256 `fc981fa446e1c1b78131794ec3f44296f4a606e514e2d6bd95de64555c1359ed`. The `DELETED.json` receipt identifies the exact source and the verified receipt; the source path was confirmed absent after cleanup.
+
+The cleanup receipt records free space increasing from 5,046,747,136 to 42,883,506,176 bytes, recovering 37,836,759,040 bytes. Archive destination: [private Drive folder](https://drive.google.com/drive/folders/1-EPd8W7iBvnn2RFxGm-LvG4CuSFL26Gk). The source was 39,584,757,851 bytes. Receipt copies and their local SHA256 values are in `archive/`; target B GPU training and TEST remain `NOT_RUN`.
