@@ -1,0 +1,195 @@
+{
+  "schema": "self_audit.candidate_fuse.final_evidence.v1",
+  "patient_evidence_status": "REAL_PATIENT_DATA_EXECUTED",
+  "scope": "Completed real-data GPU campaign on the full TRAIN80 labeled split with disjoint VAL18 and one-shot TEST50 evaluation. Metrics are cohort evidence, not clinical efficacy or external generalization.",
+  "run": {
+    "host": "vast-gpu",
+    "checkout": "/root/Self-Audit-fuse-batch2-20261113",
+    "source_commit": "5f2485d03517e0dbfa44f479c9fd61b571aa1ec9",
+    "source_worktree_status": "clean detached HEAD",
+    "run_directory": "/root/mount_data/runs/fuse-20261113",
+    "status": "COMPLETED",
+    "completed_utc": "2026-11-13T10:46:31.736533+00:00",
+    "error": null,
+    "completed_stages": ["T", "J", "VAL3", "EXPORT", "TEST_ONCE"],
+    "attempts": {
+      "T": 3,
+      "J": 1,
+      "VAL3": 1,
+      "EXPORT": 1,
+      "TEST_ONCE": 1
+    },
+    "automatic_retry_limit": 0
+  },
+  "training": {
+    "synthetic": false,
+    "seed": 42,
+    "dtype": "bfloat16",
+    "data": {
+      "train": {
+        "patients": 80,
+        "labeled_ed_es_frames": 160,
+        "image_only_cine_frames": 1988,
+        "manifest_sha256": "3b30c0006218b2aa348730b1667ca2a78fe47742af509871d9a860bb9a8d5b9b"
+      },
+      "validation": {
+        "patients": 18,
+        "labeled_frames": 36,
+        "manifest_sha256": "e3421779441afcab8f8feadbd293bedad6c00877730eb3c7151fa6a15667e88b"
+      },
+      "test": {
+        "patients": 50,
+        "labeled_frames": 100,
+        "manifest_sha256": "84f24ca7a50e4516548cc16037b6159eaed2eb1ea07d94287e8305894a951297"
+      }
+    },
+    "T": {
+      "epochs": 50,
+      "labeled_frame_exposures": 8000,
+      "physical_batch_size_after_exposure_1100": 2,
+      "optimizer_steps": 4558
+    },
+    "J": {
+      "epochs": 100,
+      "updates": 8000,
+      "pairing": "1L+1U"
+    },
+    "validation_coverage": {
+      "T_epochs_with_RV_MYO_LV": 50,
+      "J_epochs_with_RV_MYO_LV": 100,
+      "missing_epochs": [],
+      "missing_class_rows": []
+    },
+    "nonfinite_training_loss_rows": 0
+  },
+  "validation_VAL18": {
+    "teacher": {
+      "patient_count": 18,
+      "fg_dice": 0.9063205246460301,
+      "per_class": {
+        "RV": {"dice": 0.9041665753506414, "hd95_mm": 4.0157162735194305},
+        "MYO": {"dice": 0.8846246194348556, "hd95_mm": 3.175795287745119},
+        "LV": {"dice": 0.9301703791525932, "hd95_mm": 3.535631773106123}
+      }
+    },
+    "student": {
+      "patient_count": 18,
+      "fg_dice": 0.8975853956050547,
+      "per_class": {
+        "RV": {"dice": 0.8918178651604968, "hd95_mm": 6.326359769630085},
+        "MYO": {"dice": 0.8787018629232138, "hd95_mm": 3.8477521604976612},
+        "LV": {"dice": 0.9222364587314534, "hd95_mm": 4.068038729354066}
+      }
+    },
+    "fusion": {
+      "patient_count": 18,
+      "fg_dice": 0.9090160352042614,
+      "per_class": {
+        "RV": {"dice": 0.9064507446219232, "hd95_mm": 3.9817497960060138},
+        "MYO": {"dice": 0.887407141663156, "hd95_mm": 3.0328472442964842},
+        "LV": {"dice": 0.9331902193277054, "hd95_mm": 3.256050731582557}
+      }
+    }
+  },
+  "test_TEST50": {
+    "status": "COMMITTED",
+    "attempt": 1,
+    "started_utc": "2026-11-13T10:45:39.468204+00:00",
+    "completed_utc": "2026-11-13T10:46:31.736128+00:00",
+    "transaction_path": "/root/mount_data/runs/fuse-20261113/TEST_ONCE/TEST_TRANSACTION.json",
+    "manifest_sha256": "84f24ca7a50e4516548cc16037b6159eaed2eb1ea07d94287e8305894a951297",
+    "teacher": {
+      "patient_count": 50,
+      "fg_dice": 0.9062471852997642,
+      "per_class": {
+        "RV": {"dice": 0.8982149941021373, "hd95_mm": 7.61302689552213},
+        "MYO": {"dice": 0.8875570543847489, "hd95_mm": 3.030311373766894},
+        "LV": {"dice": 0.9329695074124067, "hd95_mm": 3.5969197849903356}
+      }
+    },
+    "student": {
+      "patient_count": 50,
+      "fg_dice": 0.9077013189074132,
+      "per_class": {
+        "RV": {"dice": 0.9009328482294232, "hd95_mm": 4.9241024455666755},
+        "MYO": {"dice": 0.8878829411185033, "hd95_mm": 3.057718670451373},
+        "LV": {"dice": 0.9342881673743131, "hd95_mm": 3.67678807807849}
+      }
+    },
+    "fusion": {
+      "patient_count": 50,
+      "fg_dice": 0.9082566409376495,
+      "per_class": {
+        "RV": {"dice": 0.8996899375168818, "hd95_mm": 7.459072828214219},
+        "MYO": {"dice": 0.8927128938256886, "hd95_mm": 2.9351827957162375},
+        "LV": {"dice": 0.9323670914703777, "hd95_mm": 3.6476567867116523}
+      }
+    }
+  },
+  "deployment_decision": {
+    "mode": "fusion",
+    "rule": "student_if_student_fg_dice_ge_fusion_minus_0.01",
+    "margin": 0.01,
+    "validation_fusion_fg_dice": 0.9090160352042614,
+    "validation_student_fg_dice": 0.8975853956050547,
+    "student_threshold": 0.8990160352042614,
+    "fusion_minus_student": 0.0114306395992067,
+    "selection_basis": "VAL18 only; TEST50 was not used for selection",
+    "artifact_path": "/root/mount_data/runs/fuse-20261113/exports/fusion.pt",
+    "artifact_sha256": "086c80a0eb6162444199b368862db2a7ca45112f9ecd51e4f3ef6f15f0365869"
+  },
+  "artifacts": {
+    "joint_best": {
+      "path": "/root/mount_data/runs/fuse-20261113/joint_best.pt",
+      "epoch": 83,
+      "update": 6640,
+      "sha256": "3367f4206f4d46c46f510a56b2f1bf2674347737e4018fcf06e1adf6999ae797"
+    },
+    "teacher_export_sha256": "c55a526288192a04a7a816dce4f3f2588d812489830456b6c511e3acfbe89c07",
+    "student_export_sha256": "0633dbe47c58a97c30b5e8c7cc2ee098d9bc00ba1a5eb1587d9036c1405b6f10",
+    "fusion_export_sha256": "086c80a0eb6162444199b368862db2a7ca45112f9ecd51e4f3ef6f15f0365869"
+  },
+  "provenance": {
+    "recipe_sha256": "33cf79bf0864b1c8330026254b8ddaba0a365370582558ab76576c869e59545d",
+    "result_json_sha256": "3e1c1efadb3de4b93e5beddad2638e73e51a675506f41367b0753145d38745e6",
+    "test_transaction_sha256": "5104ce8bd58c4f622bc542ad3be0a8077844b850cd8077852594c709f689a50c",
+    "source_receipt_sha256": "d59b7e5ac5b48bf7d96cc529c4ebcf80f53b40d8688a7959eae16a3dfffd03ad",
+    "build_receipt_sha256": "4c69ae6030242f7aeae903bdfaa1a6df6d8cf11d87a3e9fd9dd2978e67b7f3c6",
+    "data_validation_sha256": "13c24455e60f4158353ef9d533d5d0497de6c4e79ba902a225632e285d92f89f",
+    "epoch_budget_lock_sha256": "efb9d66491299e87f3265c6d62c9a21a24987563464feae4d2e8ea4155bda54e",
+    "batch_migration_receipt_sha256": "576aec734439d0669c1099ce34fb21ed1ffb1b45c755b7f2118755d4a8dfbdff",
+    "batch_resume_receipt_sha256": "7919df10689180d48f6ef9d0e8257a4858ccfb7eea88ea5b1ae09fc68f949f72",
+    "batch_rng_fix_sha256": "a0c35e46dbca7f58b38314ae1407b3f3eb82415dcf19974325e3e9ec90793cf5",
+    "metrics_jsonl_sha256": "2b4a3b468e1ea5cf25774bd46daca609e78905fccad4587b6725681a24590fd9",
+    "test_manifest_sha256_verified_against_file": true
+  },
+  "incidents": [
+    {
+      "stage": "T resume",
+      "observed_utc": "2026-11-13T06:35:50.020036+00:00",
+      "error": "TypeError: RNG state must be a torch.ByteTensor",
+      "disposition": "Fixed in pinned commit 5f2485d by restoring RNG byte tensors on CPU; failed attempt did not change the checkpoint. T later completed."
+    },
+    {
+      "stage": "T",
+      "observed_utc": "2026-11-13T06:39:11.104019+00:00",
+      "event": "CUDA allocator reported failure allocating 478150656 bytes with 349831168 bytes free at exposure 1120.",
+      "disposition": "Training logs then continued through epoch 50 and 8000 labeled-frame exposures; final campaign status is COMPLETED with no current error."
+    }
+  ],
+  "monitor": {
+    "supervisor_campaign": "EXITED after campaign completion",
+    "supervisor_watchdog": "STOPPED",
+    "orca_automation": {
+      "id": "0985130d-e9d1-4897-b0d8-2252dddc3291",
+      "name": "FUSE 10-minute training monitor",
+      "rrule": "*/10 * * * *",
+      "enabled": false
+    }
+  },
+  "limitations": [
+    "Patient inference timing was not run.",
+    "Reported metrics do not establish clinical efficacy or external generalization.",
+    "CUDA determinism is best-effort warn-only for kernels without deterministic backward implementations."
+  ]
+}

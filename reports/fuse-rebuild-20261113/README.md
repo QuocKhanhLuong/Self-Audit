@@ -25,10 +25,29 @@ GPU profile: NVIDIA RTX PRO 4000 Blackwell, bf16, 20 real T and 20 real J update
 | T | 8.38 GiB | 0.9408 |
 | J | 12.44 GiB | 0.7229 |
 
-No OOM/nonfinite loss. Measured compute/data-load projection is 3.70 hours for 8,000 T + 8,000 J updates; VAL and checkpoint I/O add overhead not measured by this profile. EPOCH_BUDGET_LOCK.json keeps T50/J100 before any production VAL outcome. GPU determinism is BEST_EFFORT_GPU_WARN_ONLY; no claim of bitwise GPU training reproducibility. Profile created no checkpoints; only its receipt/log remain.
+The 20-update profile itself had no OOM or nonfinite loss. Measured compute/data-load projection is 3.70 hours for 8,000 T + 8,000 J updates; VAL and checkpoint I/O add overhead not measured by this profile. EPOCH_BUDGET_LOCK.json keeps T50/J100 before any production VAL outcome. GPU determinism is BEST_EFFORT_GPU_WARN_ONLY; no claim of bitwise GPU training reproducibility. Profile created no checkpoints; only its receipt/log remain.
 
 Production run `/root/mount_data/runs/fuse-20261113` launched under Supervisor `fuse-campaign`. Automatic stage order T→J→VAL3→export→TEST3; validation each epoch. `fuse-watchdog` checks every 420 seconds; Luna alarm `0985130d-e9d1-4897-b0d8-2252dddc3291` every 600 seconds. Automatic retry limit zero; failures are reported for diagnosis rather than silently rerun. Visible Orca window **FUSE LIVE training**, server tmux **fuse-training**, shows per-update loss and per-epoch FG/RV/MYO/LV.
 
-Real training is RUNNING, not completed. Final VAL18/TEST50 table, final deploy selection, patient inference timing and completed-campaign efficacy: NOT_RUN. Current observations are timestamped in LAUNCH_RECEIPT.json and can become stale.
+The first production VAL after teacher epoch 1 (update 160) reported FG 48.06%, RV 32.42%, MYO 49.38%, LV 62.38%. This is a historical launch snapshot, not the final selection result.
 
-First production VAL after teacher epoch 1 (update 160): FG 48.06%, RV 32.42%, MYO 49.38%, LV 62.38%. Preliminary training progress only; no efficacy conclusion or final teacher selection. Training advanced into epoch 2 after this evaluation.
+## Production campaign completion and patient evidence
+
+The real GPU campaign completed at 2026-11-13 10:46:31 UTC. `RUN_STATE.json` reports all stages complete (`T`, `J`, `VAL3`, `EXPORT`, `TEST_ONCE`), `error: null`, and a committed one-shot test transaction on attempt 1. Validation coverage is complete: all 50 T epochs and all 100 J epochs have RV/MYO/LV metrics; no nonfinite training-loss rows were found.
+
+This is patient-data execution using the complete TRAIN80 labeled split, not a few-label run: 80 training patients, 160 labeled ED/ES frames, and 1,988 image-only cine frames; VAL18 has 36 labeled frames and TEST50 has 100. T used 8,000 labeled-frame exposures across 50 epochs with physical batch 2 after exposure 1,100, totaling 4,558 optimizer steps. J used 8,000 updates across 100 epochs with its locked 1L+1U pairing.
+
+| Split / model | Patients | FG Dice | RV Dice | MYO Dice | LV Dice |
+|---|---:|---:|---:|---:|---:|
+| VAL18 teacher | 18 | 0.906321 | 0.904167 | 0.884625 | 0.930170 |
+| VAL18 student | 18 | 0.897585 | 0.891818 | 0.878702 | 0.922236 |
+| VAL18 fusion | 18 | 0.909016 | 0.906451 | 0.887407 | 0.933190 |
+| TEST50 teacher | 50 | 0.906247 | 0.898215 | 0.887557 | 0.932970 |
+| TEST50 student | 50 | 0.907701 | 0.900933 | 0.887883 | 0.934288 |
+| TEST50 fusion | 50 | 0.908257 | 0.899690 | 0.892713 | 0.932367 |
+
+The predeclared VAL18 rule selected `fusion.pt`: student FG Dice (0.897585) was 0.011431 below fusion (0.909016), exceeding the 0.01 margin for choosing the student. TEST50 was used only for the committed one-shot evaluation, not selection. The selected export SHA-256 is `086c80a0eb6162444199b368862db2a7ca45112f9ecd51e4f3ef6f15f0365869`.
+
+The run logs retain the initial resume error (`TypeError: RNG state must be a torch.ByteTensor`), fixed on pinned source `5f2485d03517e0dbfa44f479c9fd61b571aa1ec9`, and a T allocator OOM warning at exposure 1,120 (478,150,656-byte request; 349,831,168 bytes free). T subsequently completed all 8,000 exposures. The final campaign state has no current error. The 420-second `fuse-watchdog` is stopped, and the 10-minute Orca automation `0985130d-e9d1-4897-b0d8-2252dddc3291` is disabled.
+
+These are cohort metrics from the recorded ACDC patient splits, not evidence of clinical efficacy or external generalization. Patient inference timing remains NOT_RUN. Full metrics, provenance hashes, transaction status, export hashes, and incident details are recorded in [FINAL_EVIDENCE.json](FINAL_EVIDENCE.json).
