@@ -139,4 +139,3 @@ def test_actual_student_and_teacher_phase_coordinate_probe(shape):
           assert valid.any()
           error=torch.max(torch.abs(aligned[valid]-expected.expand_as(aligned)[valid])).item()
           assert error <= 0.5, (level,axis,error,student_phase,teacher_phase)
-

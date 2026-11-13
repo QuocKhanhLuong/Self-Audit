@@ -1,0 +1,15 @@
+{
+  "schema": "self_audit.candidate_fuse.epoch_budget_lock.v1",
+  "locked_utc": "2026-11-13T06:14:27.917195+00:00",
+  "teacher_epochs": 50,
+  "joint_epochs": 100,
+  "teacher_updates": 8000,
+  "joint_updates": 8000,
+  "profile_sha256": "b6b9551d8853b1d00eb4d19265580a3bb8cee9dc89c52a850512949ad02a903c",
+  "profile_compute_data_load_hours": 3.6969935638157443,
+  "reason": "Keep predeclared 50 T and 100 J epochs: measured native-volume bf16 profile fits GPU memory and projects 3.70 compute/data-load hours. Extra VAL and checkpoint I/O are excluded from estimate; no VAL/TEST outcome used.",
+  "auto_retry_limit": 0,
+  "evidence": "GPU profile with all TRAIN labels; not few-label results",
+  "dtype": "bfloat16",
+  "determinism": "BEST_EFFORT_GPU_WARN_ONLY"
+}

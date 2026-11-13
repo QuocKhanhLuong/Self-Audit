@@ -1,0 +1,104 @@
+{
+  "artifacts": [
+    {
+      "kind": "checkpoint",
+      "path": "campaign-v2/runs/acdc_a_k8_seed42_v1u/latest.pt",
+      "sha256": "3c2fca57484c4213dd28530b03cab2005c97066aefb7ae9f33e4240eb81a6a61",
+      "size_bytes": 881154651
+    },
+    {
+      "kind": "log",
+      "path": "monitor.jsonl",
+      "sha256": "7c4dcb460a94f13787e4a24d86ddf115b2340b1fa078ce6dcb93a837f683d9b4",
+      "size_bytes": 206929
+    },
+    {
+      "kind": "log",
+      "path": "launch.log",
+      "sha256": "67407807b81f7195c244bf07b8f5c9b5a058d0255ef271ff6bd1597be8b3fe48",
+      "size_bytes": 88636379
+    },
+    {
+      "kind": "log",
+      "path": "supervisor-queue.log",
+      "sha256": "84c2aaadc597de7133c8bc951f34853ffc38efbedecfcede7905255fdb5f6ec7",
+      "size_bytes": 10379742
+    },
+    {
+      "kind": "log",
+      "path": "campaign-v2/runs/acdc_a_k8_seed42_v1u/metrics.jsonl",
+      "sha256": "43a5201db2f8af87b02456cd0e74a9eb4419d7178e6e0e6ad7f290d7759dc51f",
+      "size_bytes": 4581297
+    },
+    {
+      "kind": "metadata",
+      "path": "MONITOR_STATUS.json",
+      "sha256": "c1fa50cc0f69bfed29edf7da6cd2201e0611ae8f8da64d5ccc489185c8c948e1",
+      "size_bytes": 2425
+    },
+    {
+      "kind": "metadata",
+      "path": "QUEUE_STATUS.json",
+      "sha256": "64c5ec4419db9a8ed238c8eff64714f0543082244d1a79c597e6f3ad8ad98e90",
+      "size_bytes": 785
+    },
+    {
+      "kind": "metadata",
+      "path": "campaign-v2/RUN_STATE.json",
+      "sha256": "bc99904cac239f15915b1f43a8db4bfe689ad5f70787e8d06a3d41234287d6ca",
+      "size_bytes": 1756724
+    },
+    {
+      "kind": "metadata",
+      "path": "campaign-v2/PLAN.json",
+      "sha256": "be8cd9689584389e655007b6a6fec8f3b647dc6e61f51713f3dfe41d26bb9ec4",
+      "size_bytes": 113560
+    },
+    {
+      "kind": "metadata",
+      "path": "campaign-v2/runs/acdc_a_k8_seed42_v1u/latest.pt.sha256",
+      "sha256": "7d063d4a4767736c569749312da5ca05179cad50b5061c999e5cf529bf188930",
+      "size_bytes": 76
+    }
+  ],
+  "checkpoint_boundary": {
+    "checkpoint": {
+      "kind": "checkpoint",
+      "path": "campaign-v2/runs/acdc_a_k8_seed42_v1u/latest.pt",
+      "sha256": "3c2fca57484c4213dd28530b03cab2005c97066aefb7ae9f33e4240eb81a6a61",
+      "size_bytes": 881154651
+    },
+    "stage": "J",
+    "update": 1600
+  },
+  "created_utc": "2026-11-13T06:12:21.434080+00:00",
+  "schema": "self_audit.candidate_fuse.switch_receipt.v1",
+  "source_run": "/root/mount_data/runs/q3d-resenc-pixdim-20261112",
+  "status": "SWITCH_READY",
+  "superseded_unrun_jobs": [
+    {
+      "job_id": "acdc_a_k8_seed42_c0.j",
+      "status": "SUPERSEDED"
+    },
+    {
+      "job_id": "acdc_a_k8_seed42_c1.j",
+      "status": "SUPERSEDED"
+    },
+    {
+      "job_id": "acdc_a_k8_seed42_v1u.j",
+      "status": "SUPERSEDED"
+    }
+  ],
+  "source_commit": "0e34bae30264302e7e018229d1ab4208dad266c9",
+  "fuse_commit": "0813b9f6e18144c7a7b720fb37bcb0708e808e3a",
+  "last_logged_update": 1634,
+  "uncommitted_updates_preserved_only_in_log": 34,
+  "stop_policy": "Latest user fast-switch amendment: preserve last committed checkpoint; discard no files; subsequent unsaved updates remain in historical log.",
+  "services": {
+    "q3d-campaign": "STOPPED",
+    "q3d-watchdog": "STOPPED",
+    "old_alarm": "DISABLED"
+  },
+  "writers_verified_absent": true,
+  "archive": "/root/mount_data/runs/fuse-20261113/q3d_archive"
+}
