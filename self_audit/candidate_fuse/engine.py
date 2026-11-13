@@ -90,6 +90,20 @@ def _transform(image: Tensor, target: Tensor | None, geometry: Mapping[str, Any]
     return image, target, transformed
 
 
+def _teacher_batch_loss(outputs: Mapping[str, Any], target: Tensor,
+                        geometry: Mapping[str, Any]) -> Tensor:
+    """Mean per-frame objective; each frame retains its own Dice reduction."""
+    batch = int(target.shape[0])
+    if batch == 1:
+        return teacher_loss(outputs, target, geometry)
+    losses=[]
+    for bi in range(batch):
+        sliced={name:(value[bi:bi+1] if isinstance(value,Tensor) and value.ndim>0 and value.shape[0]==batch else value)
+                for name,value in outputs.items()}
+        losses.append(teacher_loss(sliced,target[bi:bi+1],geometry))
+    return torch.stack(losses).mean()
+
+
 def _autocast(device: torch.device, config: Mapping[str, Any]):
     if device.type == "cuda" and config["runtime"]["amp_dtype"] == "bfloat16":
         return torch.autocast(device_type="cuda", dtype=torch.bfloat16)
@@ -581,32 +595,60 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
             t_epochs = int(cfg["training"]["teacher_epochs"])
             epoch_size = sampler.teacher_epoch_size
             t_budget = min(teacher_updates, epoch_size*t_epochs)
+            t_a_boundary = max(1, round(t_budget * 0.05))
             t_update = current_update if resume and start_stage == "T" else 0
             t_start_epoch = (t_epochs if t_update >= t_budget else t_update // epoch_size) if resume and start_stage == "T" else 0
+            t_optimizer_steps = int(payload.get("teacher_optimizer_steps", t_update)) if resume and start_stage == "T" else 0
             metrics = payload.get("last_validation") if resume and start_stage == "T" else None
             for epoch in range(t_start_epoch, t_epochs):
                 teacher.train(True); losses=[]
                 in_epoch = t_update % epoch_size
                 remaining = min(epoch_size - in_epoch if in_epoch else epoch_size, t_budget-t_update)
-                for _ in range(max(0,remaining)):
-                    key=sampler.next_labeled(); frame=train_data.load(key,labeled=True)
-                    image,target,geometry=_frame_tensor(frame,target_device)
-                    image,target,geometry=_transform(image,target,geometry,py_rng)
+                epoch_end_update = t_update + max(0, remaining)
+                while t_update < epoch_end_update:
+                    configured_batch = int(cfg["training"]["teacher_batch_size"])
+                    # Keep epoch, frame-budget and 20-frame resume boundaries exact.
+                    until_checkpoint = 20 - (t_update % 20) if t_update % 20 else configured_batch
+                    until_phase = t_a_boundary-t_update if t_update < t_a_boundary else configured_batch
+                    take = min(configured_batch, epoch_end_update-t_update, t_budget-t_update,
+                               until_checkpoint, until_phase)
+                    keys=sampler.next_labeled_batch(take)
+                    frames=[train_data.load(key,labeled=True) for key in keys]
+                    samples=[_frame_tensor(frame,target_device) for frame in frames]
+                    if len(samples)==1:
+                        image,target,geometry=_transform(*samples[0],py_rng)
+                    else:
+                        first_image,first_target,geometry=samples[0]
+                        for image_i,target_i,geometry_i in samples[1:]:
+                            if image_i.shape != first_image.shape or target_i.shape != first_target.shape or any(geometry_i[k] != geometry[k] for k in ("shape","spacing_zyx","affine_zyx","context")):
+                                raise ValueError("same-patient teacher batch must have identical native shape and geometry")
+                        runtime={key:geometry[key] for key in ("shape","spacing_zyx","affine_zyx","context")}
+                        transform=sample_spatial_transform(runtime,rng=py_rng)
+                        transformed=[]
+                        for image_i,target_i,geometry_i in samples:
+                            xi,yi,gi=apply_spatial_transform(image_i,target_i,runtime,**transform)
+                            gi.update({k:v for k,v in geometry_i.items() if k not in gi})
+                            transformed.append((xi,yi,gi))
+                        image=torch.cat([v[0] for v in transformed],dim=0)
+                        target=torch.cat([v[1] for v in transformed],dim=0)
+                        geometry=transformed[0][2]
                     configure_teacher_step(teacher,teacher_opt,t_update,t_budget,cfg)
                     teacher_opt.zero_grad(set_to_none=True)
                     with _autocast(target_device,cfg):
-                        outputs=teacher(image,geometry,return_features=False); loss=teacher_loss(outputs,target,geometry)
+                        outputs=teacher(image,geometry,return_features=False)
+                        loss=_teacher_batch_loss(outputs,target,geometry)
                     if not torch.isfinite(loss): raise FloatingPointError("nonfinite FUSE teacher loss")
                     loss.backward(); torch.nn.utils.clip_grad_norm_(teacher.parameters(),float(cfg["training"]["gradient_clip_norm"]))
-                    teacher_opt.step(); losses.append(float(loss.detach().float())); t_update+=1
-                    _metric(out_path,{"type":"train_update","stage":"T","epoch":epoch,"update":t_update,"loss":losses[-1]})
+                    teacher_opt.step(); losses.append(float(loss.detach().float())); t_update+=len(keys); t_optimizer_steps+=1
+                    _metric(out_path,{"type":"train_update","stage":"T","epoch":epoch,"update":t_update,"optimizer_steps":t_optimizer_steps,"batch_size":len(keys),"examples_seen":t_update,"loss":losses[-1]})
                     if (_checkpoint_due(t_update,t_budget,synthetic=synthetic)
                             and t_update < t_budget and t_update % epoch_size != 0):
                         payload={"identity":identity,"stage":"T","epoch":epoch,"update":t_update,
                             "teacher":teacher.state_dict(),"student":student.state_dict(),
                             "teacher_optimizer":teacher_opt.state_dict(),"student_optimizer":student_opt.state_dict(),
                             "sampler":sampler.state_dict(),"rng":_rng_state(rng_generator,py_rng),
-                            "best_t":best_t,"best_j":best_j,"selected_teacher":selected_teacher}
+                            "best_t":best_t,"best_j":best_j,"selected_teacher":selected_teacher,
+                            "teacher_optimizer_steps":t_optimizer_steps}
                         _save_resume(out_path,payload,"T",epoch,t_update)
                         current_epoch=epoch; current_update=t_update
                     if t_update>=t_budget: break
@@ -626,6 +668,7 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
                     "teacher_optimizer":teacher_opt.state_dict(),"student_optimizer":student_opt.state_dict(),
                     "sampler":sampler.state_dict(),"rng":_rng_state(rng_generator,py_rng),
                     "best_t":best_t,"best_j":best_j,"selected_teacher":selected_teacher,
+                    "teacher_optimizer_steps":t_optimizer_steps,
                     "last_validation":metrics}
                 _metric(out_path,{"type":"validation","stage":"T","epoch":epoch+1,"update":t_update,"modes":metrics})
                 _save_resume(out_path,boundary,"T",epoch+1,t_update)
@@ -652,7 +695,7 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
                     _sha(Path(teacher_receipt["path"]))==teacher_receipt["sha256"] and
                     json.loads(Path(teacher_receipt["manifest_path"]).read_text()).get("artifact_sha256")==teacher_receipt["sha256"])
                 if not teacher_export_clean: raise RuntimeError("teacher-only export inventory or SHA check failed")
-                result={"status":"PAUSED","stage":"T","update":t_update,"profile":"PROFILE" if profile else None}
+                result={"status":"PAUSED","stage":"T","update":t_update,"optimizer_steps":t_optimizer_steps,"batch_size":int(cfg["training"]["teacher_batch_size"]),"examples_seen":t_update,"profile":"PROFILE" if profile else None}
                 result.update({"teacher_artifact":str((out_path/"teacher.pt").resolve()),
                     "joint_checkpoint":None,"exports":{"teacher":teacher_receipt},
                     "deployment":None,"teacher_has_no_grads_after_J":False,"export_clean":teacher_export_clean,

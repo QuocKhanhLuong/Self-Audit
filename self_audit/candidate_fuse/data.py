@@ -281,6 +281,23 @@ class FuseSampler:
         key = self._stream[self._cursor]; self._cursor += 1
         return key
 
+    def next_labeled_batch(self, batch_size=2):
+        """Consume up to two same-patient L frames from this epoch's stream."""
+        if type(batch_size) is not int or batch_size not in (1, 2):
+            raise ValueError("teacher batch size must be integer 1 or 2")
+        first = self.next_labeled()
+        if batch_size == 1:
+            return [first]
+        # Do not wrap the permutation: epoch membership is a strict boundary.
+        match = next((i for i in range(self._cursor, len(self._stream))
+                      if self._stream[i][0] == first[0]), None)
+        if match is None:
+            return [first]
+        key = self._stream.pop(match)
+        self._stream.insert(self._cursor, key)
+        self._cursor += 1
+        return [first, key]
+
     def next_pair(self):
         if self._u_cursor == len(self._u_patients): self._new_patient_epoch()
         pid = self._u_patients[self._u_cursor]; self._u_cursor += 1

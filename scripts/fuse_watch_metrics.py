@@ -27,6 +27,8 @@ def format_metric(record: Mapping) -> str | None:
     if event == "train_update" and isinstance(epoch, int):
         epoch += 1
     parts = [f"{record.get('stage', '?')} epoch={epoch} update={record.get('update', '-')}"]
+    if "batch_size" in record:
+        parts.append(f"batch={record['batch_size']} examples={record.get('examples_seen', '-')} optimizer_steps={record.get('optimizer_steps', '-')}")
     losses = record.get("losses", {})
     if isinstance(losses, Mapping):
         for name, value in losses.items():

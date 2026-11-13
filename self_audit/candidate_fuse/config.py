@@ -14,7 +14,7 @@ METHOD = "candidate_fuse"
 _ROOT_KEYS = {"schema", "method", "seed", "data", "model", "training", "evaluation", "runtime"}
 _DATA_KEYS = {"train_manifest", "train_manifest_sha256", "val_manifest", "val_manifest_sha256", "test_manifest", "test_manifest_sha256"}
 _TRAINING_DEFAULTS = {
-    "teacher_epochs": 50, "joint_epochs": 100,
+    "teacher_epochs": 50, "joint_epochs": 100, "teacher_batch_size": 1,
     "teacher_lr_encoder": 1e-4, "teacher_lr_head": 1e-3,
     "student_lr": 3e-4, "weight_decay": 1e-4,
     "warmup_fraction": 0.05, "gradient_clip_norm": 1.0,
@@ -101,8 +101,11 @@ def validate_config(config: Mapping[str, Any], *, real_run: bool = False) -> dic
         if type(actual) is not int or actual != expected:
             description = "synthetic FUSE defaults use one teacher and joint epoch" if synthetic else "real FUSE defaults use 50 teacher and 100 joint epochs"
             raise ValueError(description)
+    batch_size = training["teacher_batch_size"]
+    if type(batch_size) is not int or batch_size not in (1, 2):
+        raise ValueError("FUSE teacher_batch_size must be integer 1 or 2")
     for name, expected in defaults.items():
-        if name in epoch_fields:
+        if name in epoch_fields or name == "teacher_batch_size":
             continue
         actual = training[name]
         if isinstance(actual, bool) or not isinstance(actual, (int, float)):

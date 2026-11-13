@@ -318,3 +318,11 @@ results stay NOT_RUN. Report SOFTWARE_ONLY/GPU/patient evidence separately.
 ### [AMEND 2026-11-13] TEST transaction entrypoint
 
 The campaign calls the canonical evaluation module `evaluate_exports` in its own process for the single locked three-mode TEST transaction. The standalone `evaluate.py` FUSE CLI remains VAL-only; TEST cannot be opened through a single-mode CLI invocation. This intentional exception preserves one ledger and one attempt for the three frozen exports.
+
+### [AMEND 2026-11-13] User-requested larger physical teacher batch
+
+`training.teacher_batch_size` is opt-in 1 (compatibility default) or 2. At 2, T groups remaining ED/ES frames of the same patient within the current shuffled epoch, retaining a singleton if the other frame was consumed before resume. Both share one sampled spatial augmentation, identical native geometry, and one true stacked tensor forward. No crop/resampling/padding across patients. Each frame has its own original teacher-loss reduction; their losses are averaged for one optimizer step. Batch2 therefore changes optimizer update composition and stochastic augmentation correlation. It is an explicit training amendment, not numerically equivalent to two batch1 optimizer steps.
+
+T retains 50 epochs and 8,000 labeled-frame exposures; historical `update` in T now denotes examples_seen, with `optimizer_steps` logged separately. T-a (first400 exposures), T-b LR schedule, epoch validation, budget and 20-frame checkpoint boundaries remain on exposure units; a batch never crosses them. B1 is unchanged. Existing progress/optimizer/RNG/sampler is retained by an explicit checkpoint/config identity migration, archived and SHA-receipted; no silent hash bypass. Original checkpoint assumed one optimizer step per consumed frame. J remains 100 epochs and 8,000 paired optimizer updates, oneL+oneU per step.
+
+Hardware selection: largest native TRAIN patient057 shape (8,512,428), bf16 T-b batch2 fits (16.62GiB allocated) with 2.1348s/frame versus batch1 2.1641s/frame in the short probe. This is a small measured difference, not a validated campaign speedup. Full-fusion J batch2 exceeds 24GB GPU capacity (OOM); J batch1 is retained. Model, losses, split, labels, geometry and epoch counts are unchanged; no TEST outcome is used for this choice.
