@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 SCHEMA = "self_audit.candidate_fuse.v1"
+SEMI_SCHEMA = "self_audit.candidate_fuse.v2"
 METHOD = "candidate_fuse"
 _ROOT_KEYS = {"schema", "method", "seed", "data", "model", "training", "evaluation", "runtime"}
 _DATA_KEYS = {"train_manifest", "train_manifest_sha256", "val_manifest", "val_manifest_sha256", "test_manifest", "test_manifest_sha256"}
@@ -49,6 +50,12 @@ def normalize_config(mapping: Mapping[str, Any]) -> dict[str, Any]:
         raise TypeError("FUSE config must be a mapping")
     result = copy.deepcopy(dict(mapping))
     defaults = default_config(synthetic=bool(result.get("runtime", {}).get("synthetic", False)))
+    semi = result.get("schema") == SEMI_SCHEMA
+    if semi:
+        if set(result) != _ROOT_KEYS | {"experiment"} or result.get("experiment") != {"track": "A", "dataset": "ACDC"}:
+            raise ValueError("FUSE v2 requires exactly experiment={track:A,dataset:ACDC}")
+        result["training"] = copy.deepcopy(result.get("training", {}))
+        result["training"].setdefault("teacher_epochs", 1 if result.get("runtime", {}).get("synthetic") else 500)
     for key in ("training", "evaluation", "runtime"):
         if isinstance(result.get(key), dict):
             for name, value in defaults[key].items():
@@ -58,10 +65,14 @@ def normalize_config(mapping: Mapping[str, Any]) -> dict[str, Any]:
 
 def validate_config(config: Mapping[str, Any], *, real_run: bool = False) -> dict[str, Any]:
     value = copy.deepcopy(dict(config))
-    if set(value) != _ROOT_KEYS:
-        raise ValueError(f"FUSE config keys must be exactly {sorted(_ROOT_KEYS)}")
-    if value.get("schema") != SCHEMA or value.get("method") != METHOD:
+    semi = value.get("schema") == SEMI_SCHEMA
+    expected_root = _ROOT_KEYS | ({"experiment"} if semi else set())
+    if set(value) != expected_root:
+        raise ValueError(f"FUSE config keys must be exactly {sorted(expected_root)}")
+    if value.get("schema") not in {SCHEMA, SEMI_SCHEMA} or value.get("method") != METHOD:
         raise ValueError("unsupported FUSE schema or method")
+    if semi and value.get("experiment") != {"track": "A", "dataset": "ACDC"}:
+        raise ValueError("FUSE v2 experiment must be exactly track A, dataset ACDC")
     if type(value.get("seed")) is not int or value["seed"] != 42:
         raise ValueError("FUSE seed is locked to 42")
     data = value.get("data")
@@ -94,7 +105,7 @@ def validate_config(config: Mapping[str, Any], *, real_run: bool = False) -> dic
     defaults = default_config(synthetic=synthetic)["training"]
     epoch_fields = {"teacher_epochs", "joint_epochs"}
     expected_epochs = {"teacher_epochs": 1, "joint_epochs": 1} if synthetic else {
-        "teacher_epochs": 50, "joint_epochs": 100,
+        "teacher_epochs": 500 if semi else 50, "joint_epochs": 100,
     }
     for name, expected in expected_epochs.items():
         actual = training[name]

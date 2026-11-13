@@ -1,7 +1,8 @@
 # Candidate FUSE — native supervised/cine teacher–student fusion
 
 2026-11-13. This is the implementation contract for `candidate_fuse`.
-Uses labels of **all TRAIN80 patients; not a few-label result**.
+The original full-label run uses **all TRAIN80 labels; not a few-label result**.
+The semi-supervised and transfer extensions are locked in the amendment below.
 val means the historical development/DEV18 split; internal role remains `development`.
 Implementation verified with focused tests, CPU smoke and one independent Claude review (SOFTWARE_ONLY). Patient/GPU evidence is recorded separately in the launch report.
 
@@ -326,3 +327,67 @@ The campaign calls the canonical evaluation module `evaluate_exports` in its own
 T retains 50 epochs and 8,000 labeled-frame exposures; historical `update` in T now denotes examples_seen, with `optimizer_steps` logged separately. T-a (first400 exposures), T-b LR schedule, epoch validation, budget and 20-frame checkpoint boundaries remain on exposure units; a batch never crosses them. B1 is unchanged. Existing progress/optimizer/RNG/sampler is retained by an explicit checkpoint/config identity migration, archived and SHA-receipted; no silent hash bypass. Original checkpoint assumed one optimizer step per consumed frame. J remains 100 epochs and 8,000 paired optimizer updates, oneL+oneU per step.
 
 Hardware selection: largest native TRAIN patient057 shape (8,512,428), bf16 T-b batch2 fits (16.62GiB allocated) with 2.1348s/frame versus batch1 2.1641s/frame in the short probe. This is a small measured difference, not a validated campaign speedup. Full-fusion J batch2 exceeds 24GB GPU capacity (OOM); J batch1 is retained. Model, losses, split, labels, geometry and epoch counts are unchanged; no TEST outcome is used for this choice.
+
+### [AMEND 2026-11-13] Semi K8 and source-to-target transfer
+
+The full-label artifacts and all frozen historical tracks remain unchanged.
+Track A uses exactly the L8 in the existing hash-pinned ACDC K8 pixdim manifest.
+L contains only those eight patients' ED/ES frames. U contains ALL cine frames
+of the other 72 TRAIN patients, plus non-ED/ES frames of L8. U records contain
+image paths/hashes only. TRAIN construction, validation, profiling and training
+must never open a mask outside L8; VAL/TEST masks remain evaluation-only.
+No new selector is run for A. Existing TRAIN80/VAL18/TEST50 IDs, image arrays,
+geometry and labels are unchanged.
+
+User budget clarification: T preserves 8,000 labeled-frame exposures, hence
+500 epochs of 16 L8 frames, with physical teacher batch2 (4,000 optimizer steps
+when all batches pair ED/ES). T-a remains the first400 exposures; T-b, losses,
+augmentation, teacher/student architecture and phase remain unchanged. J keeps
+100 epochs of80 TRAIN patients, 8,000 L/U optimizer steps. Evaluate every epoch;
+select on VAL only and apply the same fixed 0.01 FG deploy margin. Report actual
+optimizer steps and exposures separately. The 500-epoch budget is fixed before
+opening Track A TEST; full-label TEST is historical comparison evidence only.
+
+Compatibility interface: original config/data v1 and their hashes are unchanged.
+Semi config schema `self_audit.candidate_fuse.v2` adds exactly one root field
+`experiment={"track":"A", "dataset":"ACDC"}` initially. Its other keys and
+scalars match v1, except teacher_epochs=500. Synthetic epochs remain1.
+Semi TRAIN manifest schema `self_audit.candidate_fuse.data.v2` retains the v1
+record/geometry/split structure and adds `dataset` and `labeled_contract`.
+`labeled_contract` contains `patient_ids` (sorted, unique), `patient_ids_sha256`
+(SHA256 of compact JSON of that sorted list), `source_manifest` and
+`source_manifest_sha256`. Verify source bytes and its L IDs; real A requires8.
+TRAIN patients equal U patients; L is a subset. For L patients, exclude exactly
+their annotated ED/ES from U; for others, allow every cine frame. Evaluation
+v1 manifests can be reused byte-for-byte. Existing FuseData/FuseSampler public
+signatures remain unchanged; labeled_keys iterates L only and the J epoch still
+visits all U patients once. Builder outputs metadata only and reuses arrays;
+it filters mask references before any FuseData validation or mask I/O.
+
+Track B preparation audits every original M&Ms image header (pixdim, affine,
+units and geometry consistency), using official TRAIN/VAL/TEST membership.
+No ACDC pixdim waiver extends to M&Ms. Invalid TRAIN patients may be excluded
+with an explicit receipt. Any invalid VAL/TEST patient blocks B and B0; report
+IDs and continue A. Missing official split or required data also blocks rather
+than inventing a split. Class mapping must be explicit and verified against
+dataset evidence and permitted L8 masks. Select target L8 with the repository
+seed42 selector and lock its IDs and manifest SHA before training. Target U has
+all frames of other TRAIN patients plus non-ED/ES of target L8, image only.
+
+After B preparation passes, B imports the SHA-verified selected ACDC80 teacher,
+reports zero-shot target VAL, then fine-tunes only target L8 for2,000 optimizer
+updates with T-b LR groups and target VAL selection. Frozen adapted teacher
+drives the unchanged J objective. Source teacher, adapted teacher, student and
+fusion are evaluated within one locked target TEST transaction. B uses source
+ACDC80 labels plus8 target patients. Optional B0 uses nnFoundation initialization
+and target L8 only, sharing the exact B split and L8 SHA. B/B0 execution is NOT_RUN
+until the geometry/split gate passes and their explicit config extension is
+implemented and checked; no placeholder may launch them.
+
+Save per-patient metrics and paired two-sided Wilcoxon plus percentile bootstrap
+95% CIs (10,000 patient resamples, seed42), fusion-minus-teacher and
+fusion-minus-student, and B-minus-B0 if available. Label these analyses as
+performed after TEST opening; never use them to select checkpoints or recipes.
+Each track opens its TEST exactly once. OOM stops without crop/resampling.
+For this extension run check_repo, the full pytest suite, and the synthetic
+end-to-end smoke. CPU evidence is SOFTWARE_ONLY; patient metrics are separate.

@@ -57,8 +57,12 @@ Implement FUSE under `self_audit/candidate_fuse/` and
 `configs/candidate_fuse/`. The exact FUSE APIs, formulas, data identity,
 native geometry, teacher/student behavior, training schedules, selection and
 export contracts are defined in `docs/CANDIDATE_FUSE_SPEC.md`. Seed is 42;
-the real recipe uses all TRAIN80 labels (160 ED/ES frames) and image-only
-non-ED/ES cine frames, with disjoint VAL18 and TEST50. Do not crop or resample.
+the original full-label recipe uses all TRAIN80 labels (160 ED/ES frames) and
+image-only non-ED/ES cine frames, with disjoint VAL18 and TEST50. The explicit
+semi K8 amendment uses only locked L8 masks and all remaining TRAIN frames as
+image-only U, with 500 T epochs (8,000 labeled-frame exposures) and 100 J epochs.
+Read the spec amendment before changing its v2 config/data contract. M&Ms B/B0
+must stop if any official VAL/TEST geometry is invalid. Do not crop or resample.
 The Q3D teacher recipe is copied by value, but Q3D remains frozen and its
 historical requirements below continue to govern that track only.
 

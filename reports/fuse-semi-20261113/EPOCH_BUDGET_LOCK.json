@@ -1,0 +1,33 @@
+{
+  "schema": "self_audit.fuse.semi_budget_lock.v1",
+  "locked_before_training_utc": "2026-11-13T12:12:17.554390+00:00",
+  "track": "A",
+  "dataset": "ACDC",
+  "evidence": "protocol lock; new patient outcomes NOT_RUN",
+  "user_clarification": "Gi\u1eef 8.000 l\u01b0\u1ee3t frame T (500 epoch L8)",
+  "teacher": {
+    "labeled_patients": 8,
+    "frames_per_epoch": 16,
+    "epochs": 500,
+    "labeled_frame_exposures": 8000,
+    "physical_batch_size": 2,
+    "expected_optimizer_steps": 4000,
+    "warmup_encoder_frozen_exposures": 400
+  },
+  "joint": {
+    "unlabeled_patient_epoch": 80,
+    "epochs": 100,
+    "optimizer_steps": 8000,
+    "frames_per_step": {
+      "labeled": 1,
+      "unlabeled": 1
+    }
+  },
+  "validation_every_epochs": 1,
+  "selection": "VAL only; best fusion FG J snapshot, earliest ties",
+  "deployment_rule": "student_VAL_FG >= fusion_VAL_FG - 0.01 -> student, otherwise fusion",
+  "TEST": "exactly one locked three-mode transaction after selection",
+  "B_B0": "BLOCKED by M&Ms validation geometry; no launch",
+  "architecture_losses_geometry": "unchanged from full-label FUSE",
+  "OOM": "stop; no crop/resample/retry"
+}

@@ -49,10 +49,10 @@ def test_manufactured_teacher_preserves_resenc_feature_api() -> None:
     assert outputs["feature_encoder_stride8"].shape[1] == 16
 
 
-def test_active_pipeline_declares_q3d_default_and_keeps_baselines():
+def test_active_pipeline_declares_fuse_default_and_keeps_baselines():
     active = json.loads((ROOT / "ACTIVE_PIPELINE.json").read_text())
-    assert active["default_track"] == "candidate_q3d"
-    assert active["method"] == "candidate_q3d"
+    assert active["default_track"] == "candidate_fuse"
+    assert active["method"] == "candidate_fuse"
     assert active["tracks"]["candidate_a"]["config_schema"] == "self_audit.candidate_a.v2"
     assert active["tracks"]["candidate_a3d"]["config_schema"] == "self_audit.candidate_a3d.v1"
     assert active["tracks"]["candidate_q3d"]["default_config"] == "configs/candidate_q3d/v1.json"
@@ -709,8 +709,9 @@ def test_baseline_training_dispatch_remains_separate_from_q3d():
     assert validator.__module__ == "self_audit.candidate_a3d.config"
 
 
-def test_q3d_main_describe_uses_active_pipeline(capsys, monkeypatch):
+def test_main_describe_reports_active_fuse_default(capsys, monkeypatch):
     monkeypatch.setattr(sys, "argv", ["train.py", "--describe"])
     training_cli.main()
     described = json.loads(capsys.readouterr().out)
-    assert described["method"] == "candidate_q3d"
+    assert described["default_track"] == "candidate_fuse"
+    assert described["method"] == "candidate_fuse"

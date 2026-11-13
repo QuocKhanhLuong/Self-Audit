@@ -1,0 +1,28 @@
+{
+  "schema": "self_audit.fuse.drive_archive.v1",
+  "verified_utc": "2026-11-13T12:09:34.219720+00:00",
+  "status": "VERIFIED",
+  "source_run": "/root/mount_data/runs/fuse-20261113",
+  "evidence": "patient; all TRAIN80 labels, not few-label",
+  "folder_url": "https://drive.google.com/drive/folders/1a5Uurg6A-fmofPLMyF-QVqQJIcTqM8B5",
+  "checkpoint": {
+    "file_id": "1NQ9nEAn4pTswSKfz8jgKGlHlRMAV4jYh",
+    "name": "fusion.pt",
+    "bytes": 1584661401,
+    "sha256": "086c80a0eb6162444199b368862db2a7ca45112f9ecd51e4f3ef6f15f0365869",
+    "md5": "960faa69af3add48cafe069ce07bae73",
+    "source_local_remote_SHA_match": true,
+    "verification": "local SHA256 and MD5 compared with Drive hashes from rclone lsjson --hash; connector metadata readback confirms file ID, size and folder"
+  },
+  "results_bundle": {
+    "file_id": "1liBCm64t7wiWrLMHEIsdzlkUd3jUBJOS",
+    "name": "results-and-provenance.zip",
+    "sha256": "0c88586ff6413ebe7e243812cf084645dccaabe908de6294c51167a339fdb704"
+  },
+  "sidecar": {
+    "file_id": "1m_7cbxpm0Y7XMq168fTtc1eOGHop5YS4",
+    "sha256": "785f5c6e632ee4088a21dfe07f89dcea0d374948ce9d31acfbfd2e7ffea99c26"
+  },
+  "sharing": "private; existing folder permissions preserved",
+  "upload": "checkpoint via rclone because connector upload limit512MiB; small receipt bundle and sidecar via Google Drive connector"
+}

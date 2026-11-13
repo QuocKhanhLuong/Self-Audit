@@ -75,13 +75,17 @@ class FuseData:
             raise ValueError("manifest SHA256 mismatch")
         self.manifest = json.loads(self.path.read_text(encoding="utf-8"))
         m = self.manifest
-        if m.get("schema") != "self_audit.candidate_fuse.data.v1" or m.get("role") != role:
+        schema = m.get("schema")
+        if schema not in {"self_audit.candidate_fuse.data.v1", "self_audit.candidate_fuse.data.v2"} or m.get("role") != role:
             raise ValueError("FUSE manifest schema or role mismatch")
+        if schema == "self_audit.candidate_fuse.data.v2" and role != "train":
+            raise ValueError("FUSE data.v2 is a TRAIN-only semi-supervised manifest")
         if type(m.get("synthetic")) is not bool or m["synthetic"] != bool(synthetic):
             raise ValueError("synthetic/patient identity mismatch")
         if m.get("class_mapping") != _CLASSES:
             raise ValueError("FUSE class mapping must be BG/RV/MYO/LV")
         self.role, self.synthetic = role, bool(synthetic)
+        self._schema = schema
         self._images: dict[str, np.ndarray] = {}
         self._geometry: dict[str, dict[str, Any]] = {}
         self._records: dict[str, dict[str, Any]] = {}
@@ -91,13 +95,23 @@ class FuseData:
             self._patients = tuple(str(x) for x in m.get("patients", []))
             l_ids = [str(r.get("id")) for r in self._labeled]
             u_ids = [str(r.get("id")) for r in self._unlabeled]
-            if len(l_ids) != 80 or set(l_ids) != set(u_ids) or len(set(l_ids)) != 80:
-                if not synthetic:
-                    raise ValueError("real TRAIN requires the same exact 80 patients in L and U")
-                if not l_ids or set(l_ids) != set(u_ids) or len(set(l_ids)) != len(l_ids):
-                    raise ValueError("synthetic TRAIN L/U patient IDs must match and be unique")
-            if len(self._patients) != len(l_ids) or set(self._patients) != set(l_ids):
-                raise ValueError("TRAIN patient inventory must equal the shared L/U patient set")
+            if schema == "self_audit.candidate_fuse.data.v1":
+                if len(l_ids) != 80 or set(l_ids) != set(u_ids) or len(set(l_ids)) != 80:
+                    if not synthetic:
+                        raise ValueError("real TRAIN requires the same exact 80 patients in L and U")
+                    if not l_ids or set(l_ids) != set(u_ids) or len(set(l_ids)) != len(l_ids):
+                        raise ValueError("synthetic TRAIN L/U patient IDs must match and be unique")
+                self._labeled_ids = set(l_ids)
+            else:
+                self._labeled_ids = self._validate_labeled_contract(m, l_ids)
+                if not self._labeled_ids or not set(l_ids).issubset(set(u_ids)) or len(set(l_ids)) != len(l_ids):
+                    raise ValueError("semi-supervised TRAIN requires unique L patients contained in U")
+                if not synthetic and len(self._labeled_ids) != 8:
+                    raise ValueError("real semi-supervised TRAIN requires the locked L8 budget")
+            if len(self._patients) != len(u_ids) or len(set(u_ids)) != len(u_ids):
+                raise ValueError("TRAIN patient inventory must equal unique U patient IDs")
+            if set(self._patients) != set(u_ids):
+                raise ValueError("TRAIN patient inventory must equal U patient IDs")
             for r in self._labeled:
                 if set(r) != {"id", "image", "image_sha256", "phases", "masks"}:
                     raise ValueError("labeled record has invalid fields")
@@ -106,13 +120,26 @@ class FuseData:
                     raise ValueError("U records must be image-only and contain no mask references")
             self._labeled_by_id = {r["id"]: r for r in self._labeled}
             self._unlabeled_by_id = {r["id"]: r for r in self._unlabeled}
-            for pid in self._patients:
-                lrec, urec = self._labeled_by_id[pid], self._unlabeled_by_id[pid]
-                if lrec["image_sha256"] != urec["image_sha256"] or lrec["image"] != urec["image"]:
-                    raise ValueError("L and U must reference identical cine bytes per TRAIN patient")
-                self._check_record(pid, lrec, require_phases=True)
-                self._check_record(pid, urec, require_phases=False)
-                self._check_lu_frames(pid)
+            if schema == "self_audit.candidate_fuse.data.v1":
+                for pid in self._patients:
+                    lrec = self._labeled_by_id[pid]
+                    urec = self._unlabeled_by_id[pid]
+                    if lrec["image_sha256"] != urec["image_sha256"] or lrec["image"] != urec["image"]:
+                        raise ValueError("L and U must reference identical cine bytes per TRAIN patient")
+                    self._check_record(pid, lrec, require_phases=True)
+                    self._check_record(pid, urec, require_phases=False)
+                    self._check_lu_frames(pid)
+            else:
+                for pid in self._patients:
+                    urec = self._unlabeled_by_id[pid]
+                    if pid in self._labeled_by_id:
+                        lrec = self._labeled_by_id[pid]
+                        if lrec["image_sha256"] != urec["image_sha256"] or lrec["image"] != urec["image"]:
+                            raise ValueError("L and U must reference identical cine bytes per TRAIN patient")
+                        self._check_record(pid, lrec, require_phases=True)
+                        self._check_lu_frames(pid)
+                    else:
+                        self._check_record(pid, urec, require_phases=False)
         else:
             self._records_list = list(m.get("patients", []))
             ids = [str(r.get("id")) for r in self._records_list]
@@ -150,6 +177,73 @@ class FuseData:
     @property
     def patients(self):
         return self._patients
+
+    def _validate_labeled_contract(self, manifest, labeled_ids):
+        """Verify v2's locked L identity and source lineage before payload checks."""
+        if not isinstance(manifest.get("dataset"), str) or not manifest["dataset"]:
+            raise ValueError("semi-supervised TRAIN must declare its dataset")
+        contract = manifest.get("labeled_contract")
+        fields = {"patient_ids", "patient_ids_sha256", "source_manifest", "source_manifest_sha256"}
+        if not isinstance(contract, Mapping) or set(contract) != fields:
+            raise ValueError("v2 labeled_contract has invalid fields")
+        ids = contract["patient_ids"]
+        if (not isinstance(ids, list) or any(not isinstance(pid, str) or not pid for pid in ids)
+                or ids != sorted(set(ids))):
+            raise ValueError("locked L patient IDs must be sorted and unique")
+        expected_ids_sha = hashlib.sha256(json.dumps(ids, separators=(",", ":"), ensure_ascii=False).encode("utf-8")).hexdigest()
+        if _safe_hash(contract["patient_ids_sha256"], "locked L patient IDs SHA256") != expected_ids_sha:
+            raise ValueError("locked L patient IDs SHA256 mismatch")
+        if sorted(labeled_ids) != ids:
+            raise ValueError("TRAIN L records differ from locked patient IDs")
+        source_path_raw = contract["source_manifest"]
+        if not isinstance(source_path_raw, str) or not source_path_raw:
+            raise ValueError("locked L source manifest path is required")
+        source_path = Path(source_path_raw)
+        if not source_path.is_absolute():
+            source_path = (self.path.parent / source_path).resolve()
+        source_sha = _safe_hash(contract["source_manifest_sha256"], "locked L source manifest SHA256")
+        if _sha(source_path) != source_sha:
+            raise ValueError("locked L source manifest SHA256 mismatch")
+        source = json.loads(source_path.read_text(encoding="utf-8"))
+        if (source.get("schema") != "self_audit.data.v2" or source.get("role") != "training"
+                or source.get("synthetic") is not self.synthetic or source.get("dataset") != manifest["dataset"]):
+            raise ValueError("locked L source manifest identity mismatch")
+        source_labeled = source.get("labeled")
+        if not isinstance(source_labeled, list):
+            raise ValueError("locked L source manifest has no labeled records")
+        source_ids = [r.get("id") if isinstance(r, Mapping) else None for r in source_labeled]
+        if (any(not isinstance(pid, str) or not pid for pid in source_ids)
+                or sorted(source_ids) != ids or len(set(source_ids)) != len(source_ids)):
+            raise ValueError("locked L source IDs differ from the locked contract")
+        if source.get("label_budget") != len(source_labeled):
+            raise ValueError("locked L source label_budget differs from its records")
+        by_source = {}
+        for src in source_labeled:
+            if set(src) != {"id", "image", "image_sha256", "masks"}:
+                raise ValueError("locked L source record keys differ from the reviewed interface")
+            _safe_hash(src["image_sha256"], "locked L source image SHA256")
+            if not isinstance(src["image"], str) or not src["image"] or not isinstance(src["masks"], Mapping):
+                raise ValueError("locked L source record is malformed")
+            for frame, mask in src["masks"].items():
+                if not isinstance(frame, str) or not isinstance(mask, Mapping) or set(mask) != {"path", "sha256"}:
+                    raise ValueError("locked L source mask keys differ from the reviewed interface")
+                if not isinstance(mask["path"], str) or not mask["path"]:
+                    raise ValueError("locked L source mask path is malformed")
+                _safe_hash(mask["sha256"], "locked L source mask SHA256")
+            by_source[src["id"]] = src
+        for record in manifest.get("labeled", []):
+            src = by_source.get(record.get("id"))
+            if src is None or record.get("image_sha256") != src.get("image_sha256"):
+                raise ValueError("TRAIN L image identity differs from locked source")
+            src_masks = src.get("masks")
+            masks = record.get("masks")
+            if not isinstance(src_masks, Mapping) or not isinstance(masks, Mapping) or set(src_masks) != set(masks):
+                raise ValueError("TRAIN L mask inventory differs from locked source")
+            for frame in masks:
+                src_mask = src_masks[frame]
+                if not isinstance(src_mask, Mapping) or masks[frame].get("sha256") != src_mask.get("sha256"):
+                    raise ValueError("TRAIN L mask identity differs from locked source")
+        return set(ids)
 
     def _resolve(self, raw):
         path = Path(raw)
@@ -205,13 +299,15 @@ class FuseData:
         if self.role != "train":
             return [(pid, frame) for pid in self._patients
                     for frame in sorted(self._records[pid]["phases"].values())]
-        return [(pid, frame) for pid in self._patients for frame in sorted(self._labeled_by_id[pid]["phases"].values())]
+        return [(pid, frame) for pid in self._patients if pid in self._labeled_by_id
+                for frame in sorted(self._labeled_by_id[pid]["phases"].values())]
 
     def unlabeled_keys(self) -> list[FrameKey]:
         if self.role != "train":
             raise ValueError("unlabeled_keys are available only for TRAIN")
         return [(pid, t) for pid in self._patients for t in range(self._images[pid].shape[0])
-                if t not in set(self._labeled_by_id[pid]["phases"].values())]
+                if pid not in self._labeled_by_id
+                or t not in set(self._labeled_by_id[pid]["phases"].values())]
 
     def load(self, key: FrameKey, *, labeled: bool) -> Frame:
         if not isinstance(key, tuple) or len(key) != 2 or key[0] not in self._images or type(key[1]) is not int:
@@ -228,7 +324,8 @@ class FuseData:
             target = torch.from_numpy(np.array(np.load(self._resolve(entry["path"]), allow_pickle=False), dtype=np.int64, copy=True))[None]
             image = torch.from_numpy(np.array(cine[frame], dtype=np.float32, copy=True))[None, None]
             return Frame(image, target, dict(self._geometry[pid]), pid, frame)
-        expected = set(self._labeled_by_id[pid]["phases"].values())
+        expected = (set(self._labeled_by_id[pid]["phases"].values())
+                    if pid in self._labeled_by_id else set())
         if labeled and frame not in expected:
             raise ValueError("labeled load is restricted to ED/ES keys")
         if not labeled and frame in expected:

@@ -42,16 +42,23 @@ def _select_profile_frames(data, count: int = 20):
     """Select largest native L frames and a sampler J stream with largest U."""
     from self_audit.candidate_fuse.data import FuseSampler
     labeled = []
-    for key in data.labeled_keys():
+    allowed_l = set(data.labeled_keys())
+    if not allowed_l:
+        raise ValueError("real profile requires at least one authorized TRAIN L frame")
+    for key in sorted(allowed_l):
         frame = data.load(key, labeled=True)
         labeled.append((-_native_voxels(frame), key, tuple(frame.geometry["shape"])))
     labeled.sort(key=lambda row: (row[0], row[1]))
-    if len(labeled) < count:
-        raise ValueError("real profile requires at least 20 annotated TRAIN L frames")
-    l_frames = [(key, shape) for _, key, shape in labeled[:count]]
+    # Repeat the fixed, authorized L inventory in deterministic ranked order
+    # when K8 has fewer distinct frames than the 20-update profile window.
+    l_frames = [labeled[i % len(labeled)] for i in range(count)]
+    l_frames = [(key, shape) for _, key, shape in l_frames]
+    if any(key not in allowed_l for key, _shape in l_frames):
+        raise RuntimeError("profile selected a non-L key for a labeled read")
 
     first_u_by_patient = {}
-    for key in data.unlabeled_keys():
+    all_u_keys = data.unlabeled_keys()
+    for key in all_u_keys:
         first_u_by_patient.setdefault(key[0], key)
     u_rows = []
     for key in first_u_by_patient.values():
@@ -60,6 +67,8 @@ def _select_profile_frames(data, count: int = 20):
         u_rows.append((-_native_voxels(frame), key, shape))
     if len({key[0] for _, key, _ in u_rows}) < count:
         raise ValueError("real profile requires at least 20 TRAIN patients with U frames")
+    # Every cine frame for a patient shares the manifest native geometry, so
+    # one image-only frame per patient suffices to rank U without redundant reads.
     largest_u = min(u_rows, key=lambda row: (row[0], row[1]))[1]
     sampler = FuseSampler(data, seed=42)
     pairs = [sampler.next_pair() for _ in range(count)]
@@ -71,6 +80,8 @@ def _select_profile_frames(data, count: int = 20):
         pairs[0] = (pairs[0][0], largest_u)
     else:
         pairs[0] = (pairs[0][0], largest_u)
+    if any(lkey not in allowed_l for lkey, _ukey in pairs):
+        raise RuntimeError("profile paired a non-L key for a labeled read")
     return l_frames, pairs, largest_u
 
 
@@ -110,6 +121,10 @@ def run_profile(config: Path, out: Path, *, device: str = "cuda") -> dict[str, A
     data = FuseData(cfg["data"]["train_manifest"],
                     expected_sha256=cfg["data"]["train_manifest_sha256"], role="train")
     l_frames, pairs, largest_u_key = _select_profile_frames(data, 20)
+    authorized_l_keys = set(data.labeled_keys())
+    if any(key not in authorized_l_keys for key, _shape in l_frames) or any(
+            lkey not in authorized_l_keys for lkey, _ukey in pairs):
+        raise RuntimeError("profile L reads must be restricted to the manifest authorized frame set")
     largest_l = max(l_frames, key=lambda item: item[1][0] * item[1][1] * item[1][2])
     largest_u_frame = data.load(largest_u_key, labeled=False)
     if largest_l[0] not in {item[0] for item in l_frames} or largest_u_key not in {item[1] for item in pairs}:
@@ -223,22 +238,32 @@ def run_profile(config: Path, out: Path, *, device: str = "cuda") -> dict[str, A
         "train_manifest_sha256": data.manifest_sha256,
         "device": torch.cuda.get_device_name(target_device),
         "dtype": cfg["runtime"]["amp_dtype"],
-        "T": {"updates": 20, "budget_updates": total_t_updates,
+        "T": {"optimizer_updates": len(t_times), "labeled_exposures": len(t_times),
+              "physical_batch_size": 1,
+              "batch_comparability": "profile executes one frame per optimizer step; semi-K8 production teacher uses batch2 where paired frames are available",
+              "distinct_labeled_frames": len({key for key, _shape in l_frames}),
+              "profiled_L_keys": [list(key) for key, _shape in l_frames],
+              "unique_profiled_L_keys": [list(key) for key in sorted({key for key, _shape in l_frames})],
+              "updates": len(t_times), "budget_updates": total_t_updates,
               "phase_schedule": "profile-local T-a/T-b proportional schedule",
               "update_indices": list(range(20)),
               "seconds_per_update": t_times, "mean_seconds_per_update": t_mean,
               "peak_vram_bytes": t_peak, "mean_loss": float(np.mean(t_losses)),
               "largest_L_key_included": list(largest_l[0]), "largest_L_shape": list(largest_l[1])},
-        "J": {"updates": 20, "budget_updates": total_j_updates,
+        "J": {"optimizer_updates": len(j_times), "paired_exposures": len(j_times),
+              "physical_batch_size": 1,
+              "updates": len(j_times), "budget_updates": total_j_updates,
               "seconds_per_update": j_times, "mean_seconds_per_update": j_mean,
               "peak_vram_bytes": j_peak, "mean_loss": float(np.mean(j_losses)),
               "largest_U_key_included": list(largest_u_key), "largest_U_shape": list(largest_u_frame.geometry["shape"]),
+              "largest_U_search_scope": "all permitted image-only TRAIN U frame keys",
               "profiled_U_keys": [list(pair[1]) for pair in pairs]},
         "peak_vram_bytes": max(t_peak, j_peak),
         "projected_full_T_seconds": t_projected,
         "projected_full_J_seconds": j_projected,
         "projected_full_TJ_seconds": t_projected + j_projected,
         "projection_basis": "mean measured full-volume data-load plus optimizer-step time multiplied by locked update count; estimate excludes production checkpoint and VAL overhead",
+        "profile_evidence": "measured software/GPU profile on listed native volumes; extrapolated runtime is an estimate, not validated campaign performance",
         "locked_default_joint_epochs": int(cfg["training"]["joint_epochs"]),
         "scratch_checkpoint_policy": "no checkpoint files created; model state discarded after receipt",
         "teacher_provenance": teacher_provenance,

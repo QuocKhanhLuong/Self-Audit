@@ -1,0 +1,25 @@
+{
+  "schema": "self_audit.fuse.semi_real_data_preflight.v1",
+  "status": "PASS",
+  "evidence": "CPU real manifest and image/mask access audit; no training or GPU",
+  "train_patients": 80,
+  "labeled_frames": 16,
+  "unlabeled_frames": 2132,
+  "labeled_patient_ids": [
+    "patient007",
+    "patient010",
+    "patient011",
+    "patient024",
+    "patient026",
+    "patient041",
+    "patient077",
+    "patient099"
+  ],
+  "forbidden_mask_file_count": 144,
+  "non_L8_mask_reads": 0,
+  "unique_L8_mask_files_read": 16,
+  "unique_U_patients_per_epoch": 80,
+  "geometry_unchanged": true,
+  "split_unchanged": true,
+  "manifest_sha256": "ef7562a251e5c30622ab00dfa46a5b62e0c4552cc0aac06b24caa3e63ff23363"
+}

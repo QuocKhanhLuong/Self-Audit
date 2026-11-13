@@ -1,0 +1,107 @@
+{
+  "cold_load": {
+    "fusion": {
+      "bitwise_equal": true,
+      "latency_per_volume_ms": [
+        10.168374996283092,
+        10.981291998177767,
+        13.607542001409456
+      ],
+      "mean_latency_ms": 11.585736331956772,
+      "mode": "fusion",
+      "sha256": "1e905a0e11bed58cc91d1ec29a21197f5bde7a4444ab107d5bf1272f5c5d2323",
+      "status": "PASS",
+      "volumes": 3
+    },
+    "student": {
+      "bitwise_equal": true,
+      "latency_per_volume_ms": [
+        2.702915997360833,
+        3.4725000004982576,
+        3.168834009557031
+      ],
+      "mean_latency_ms": 3.1147500024720407,
+      "mode": "student",
+      "sha256": "fa38812d0d9c3790b3f895dfb2b9a283206c84c2076abf07ab6a2c422197b02d",
+      "status": "PASS",
+      "volumes": 3
+    },
+    "teacher": {
+      "bitwise_equal": true,
+      "latency_per_volume_ms": [
+        8.053958998061717,
+        7.878999997046776,
+        10.233000008156523
+      ],
+      "mean_latency_ms": 8.721986334421672,
+      "mode": "teacher",
+      "sha256": "35f2530cd6cfc824bb11029cc0c021a883c6417996aa0ee456e7e32e63c5cf8a",
+      "status": "PASS",
+      "volumes": 3
+    }
+  },
+  "deployment": {
+    "fusion_fg_dice": 0.16971890890108773,
+    "margin": 0.01,
+    "mode": "student",
+    "path": "/private/tmp/self-audit-fuse-semi-smoke-20261113/run/exports/student.pt",
+    "rule": "student_if_student_fg_dice_ge_fusion_minus_0.01",
+    "sha256": "fa38812d0d9c3790b3f895dfb2b9a283206c84c2076abf07ab6a2c422197b02d",
+    "student_fg_dice": 0.19051742768052854
+  },
+  "device": "cpu",
+  "export_clean": true,
+  "exports": {
+    "fusion": {
+      "manifest_path": "/private/tmp/self-audit-fuse-semi-smoke-20261113/run/exports/fusion.pt.manifest.json",
+      "mode": "fusion",
+      "path": "/private/tmp/self-audit-fuse-semi-smoke-20261113/run/exports/fusion.pt",
+      "sha256": "1e905a0e11bed58cc91d1ec29a21197f5bde7a4444ab107d5bf1272f5c5d2323"
+    },
+    "student": {
+      "manifest_path": "/private/tmp/self-audit-fuse-semi-smoke-20261113/run/exports/student.pt.manifest.json",
+      "mode": "student",
+      "path": "/private/tmp/self-audit-fuse-semi-smoke-20261113/run/exports/student.pt",
+      "sha256": "fa38812d0d9c3790b3f895dfb2b9a283206c84c2076abf07ab6a2c422197b02d"
+    },
+    "teacher": {
+      "manifest_path": "/private/tmp/self-audit-fuse-semi-smoke-20261113/run/exports/teacher.pt.manifest.json",
+      "mode": "teacher",
+      "path": "/private/tmp/self-audit-fuse-semi-smoke-20261113/run/exports/teacher.pt",
+      "sha256": "35f2530cd6cfc824bb11029cc0c021a883c6417996aa0ee456e7e32e63c5cf8a"
+    }
+  },
+  "gpu_evidence": "NOT_RUN",
+  "native_shapes": [
+    [
+      5,
+      9,
+      11
+    ],
+    [
+      6,
+      11,
+      13
+    ],
+    [
+      7,
+      13,
+      15
+    ]
+  ],
+  "output": "/private/tmp/self-audit-fuse-semi-smoke-20261113",
+  "patient_training": "SYNTHETIC_ONLY",
+  "real_data_evidence": "NOT_RUN",
+  "schema": "self_audit.candidate_fuse.smoke.v1",
+  "seed": 42,
+  "stages": [
+    "T",
+    "J",
+    "VAL3",
+    "deploy_export"
+  ],
+  "status": "SOFTWARE_ONLY",
+  "teacher_has_no_grads_after_J": true,
+  "teacher_runtime_invariant": true,
+  "threads": 1
+}

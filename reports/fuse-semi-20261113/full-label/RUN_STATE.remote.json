@@ -1,0 +1,58 @@
+{
+  "active": null,
+  "artifacts": {
+    "fusion.pt": "086c80a0eb6162444199b368862db2a7ca45112f9ecd51e4f3ef6f15f0365869",
+    "joint_best.pt": "3367f4206f4d46c46f510a56b2f1bf2674347737e4018fcf06e1adf6999ae797",
+    "student.pt": "0633dbe47c58a97c30b5e8c7cc2ee098d9bc00ba1a5eb1587d9036c1405b6f10",
+    "teacher.pt": "c55a526288192a04a7a816dce4f3f2588d812489830456b6c511e3acfbe89c07"
+  },
+  "attempts": {
+    "EXPORT": 1,
+    "J": 1,
+    "T": 3,
+    "TEST_ONCE": 1,
+    "VAL3": 1
+  },
+  "completed": [
+    "T",
+    "J",
+    "VAL3",
+    "EXPORT",
+    "TEST_ONCE"
+  ],
+  "config": "/root/mount_data/runs/fuse-20261113/recipe.json",
+  "config_sha256": "33cf79bf0864b1c8330026254b8ddaba0a365370582558ab76576c869e59545d",
+  "device": "cuda",
+  "error": null,
+  "export_bundle": {
+    "fusion": {
+      "path": "/root/mount_data/runs/fuse-20261113/exports/fusion.pt",
+      "sha256": "086c80a0eb6162444199b368862db2a7ca45112f9ecd51e4f3ef6f15f0365869"
+    },
+    "student": {
+      "path": "/root/mount_data/runs/fuse-20261113/exports/student.pt",
+      "sha256": "0633dbe47c58a97c30b5e8c7cc2ee098d9bc00ba1a5eb1587d9036c1405b6f10"
+    },
+    "teacher": {
+      "path": "/root/mount_data/runs/fuse-20261113/exports/teacher.pt",
+      "sha256": "c55a526288192a04a7a816dce4f3f2588d812489830456b6c511e3acfbe89c07"
+    }
+  },
+  "schema": "self_audit.candidate_fuse.campaign_state.v1",
+  "stage_logs": {
+    "EXPORT": "/root/mount_data/runs/fuse-20261113/campaign_logs/EXPORT.log",
+    "J": "/root/mount_data/runs/fuse-20261113/campaign_logs/J.log",
+    "T": "/root/mount_data/runs/fuse-20261113/campaign_logs/T.log",
+    "TEST_ONCE": "/root/mount_data/runs/fuse-20261113/campaign_logs/TEST_ONCE.log",
+    "VAL3": "/root/mount_data/runs/fuse-20261113/campaign_logs/VAL3.log"
+  },
+  "status": "COMPLETED",
+  "test_ledger": {
+    "attempt": 1,
+    "completed_utc": "2026-11-13T10:46:31.736128+00:00",
+    "started_utc": "2026-11-13T10:45:39.468204+00:00",
+    "status": "COMMITTED",
+    "transaction_path": "/root/mount_data/runs/fuse-20261113/TEST_ONCE/TEST_TRANSACTION.json"
+  },
+  "updated_utc": "2026-11-13T10:46:31.736533+00:00"
+}

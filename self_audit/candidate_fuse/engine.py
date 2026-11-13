@@ -21,7 +21,7 @@ from torch import Tensor
 
 from self_audit.losses import supervised_loss
 from self_audit.candidate_q3d.augmentation import apply_spatial_transform, sample_spatial_transform
-from .config import config_sha256, validate_config
+from .config import SEMI_SCHEMA, config_sha256, validate_config
 from .evaluation import choose_deployment, evaluate_modes
 from .export import export_model
 from .student import FuseStudent, sample_keep_mask
@@ -286,6 +286,30 @@ def _identity(config: Mapping[str, Any], train: Any, val: Any) -> dict[str, Any]
             "val_manifest_sha256": val.manifest_sha256}
 
 
+def _validate_semi_track_a(config: Mapping[str, Any], train: Any, val: Any) -> None:
+    """Fail closed on Track A identity, L8 masks, and disjoint evaluation data."""
+    if config["schema"] != SEMI_SCHEMA:
+        return
+    manifest = train.manifest
+    expected_dataset = "synthetic" if config["runtime"]["synthetic"] else "acdc"
+    if manifest.get("schema") != "self_audit.candidate_fuse.data.v2" or manifest.get("dataset") != expected_dataset:
+        raise ValueError("FUSE experiment A requires matching data.v2 TRAIN manifest")
+    # FuseData's data.v2 loader verifies L/source IDs, compact-list SHA, exact
+    # source-manifest bytes, and each source image/mask identity before this
+    # orchestration gate is reached.
+    contract = manifest.get("labeled_contract")
+    ids = contract["patient_ids"]
+    if len(ids) != 8 or not set(ids).issubset(train.patients):
+        raise ValueError("ACDC L8 must be a subset of the U TRAIN patient inventory")
+    if set(train.patients) & set(val.patients):
+        raise ValueError("ACDC TRAIN and validation patients overlap")
+    if {str(record["id"]) for record in manifest.get("labeled", [])} != set(ids):
+        raise ValueError("ACDC TRAIN masks may be declared only for L8")
+    labeled_keys = train.labeled_keys()
+    if len(labeled_keys) != 16 or {pid for pid, _ in labeled_keys} != set(ids):
+        raise ValueError("ACDC L8 must expose exactly 16 labeled ED/ES frames")
+
+
 def _attach_gate_means(metrics: dict[str, Any], teacher: FuseTeacher, student: FuseStudent,
                        data: Any, device: torch.device) -> None:
     """Record actual validation G means without affecting selection or RNG."""
@@ -517,6 +541,7 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
     out_path = Path(out).resolve(); out_path.mkdir(parents=True, exist_ok=True)
     _new_or_append_metrics(out_path, resume)
     train_data = _data(cfg, "train", synthetic); val_data = _data(cfg, "development", synthetic)
+    _validate_semi_track_a(cfg, train_data, val_data)
     identity = _identity(cfg, train_data, val_data)
     py_rng = random.Random(cfg["seed"]); rng_generator = torch.Generator(device=target_device).manual_seed(cfg["seed"])
     teacher, teacher_provenance = build_teacher(cfg, synthetic=synthetic)

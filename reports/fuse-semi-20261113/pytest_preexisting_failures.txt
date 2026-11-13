@@ -1,0 +1,33 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+________ test_active_pipeline_declares_q3d_default_and_keeps_baselines _________
+
+    def test_active_pipeline_declares_q3d_default_and_keeps_baselines():
+        active = json.loads((ROOT / "ACTIVE_PIPELINE.json").read_text())
+>       assert active["default_track"] == "candidate_q3d"
+E       AssertionError: assert 'candidate_fuse' == 'candidate_q3d'
+E
+E         - candidate_q3d
+E         + candidate_fuse
+
+tests/test_q3d_integration.py:54: AssertionError
+_________________ test_q3d_main_describe_uses_active_pipeline __________________
+
+capsys = <_pytest.capture.CaptureFixture object at 0x120c8c350>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1205ad990>
+
+    def test_q3d_main_describe_uses_active_pipeline(capsys, monkeypatch):
+        monkeypatch.setattr(sys, "argv", ["train.py", "--describe"])
+        training_cli.main()
+        described = json.loads(capsys.readouterr().out)
+>       assert described["method"] == "candidate_q3d"
+E       AssertionError: assert 'candidate_fuse' == 'candidate_q3d'
+E
+E         - candidate_q3d
+E         + candidate_fuse
+
+tests/test_q3d_integration.py:716: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_q3d_integration.py::test_active_pipeline_declares_q3d_default_and_keeps_baselines
+FAILED tests/test_q3d_integration.py::test_q3d_main_describe_uses_active_pipeline
+2 failed in 0.79s
