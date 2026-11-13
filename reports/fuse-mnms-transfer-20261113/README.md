@@ -1,6 +1,6 @@
 # M&Ms transfer B preparation — 2026-11-13
 
-Status: software integration accepted after one independent Claude review. Target patient/GPU training and TEST are **NOT_RUN**. Do not infer a queued or launched run from this plan alone; a verified launch receipt is required.
+Status at 2026-11-13 15:42 UTC: software integration accepted after one independent Claude review; **Track B queue installed and WAITING for Track A**. `LAUNCH_RECEIPT.json` verifies the production checkout, queue, services and visible log window. Target patient/GPU training and TEST are **NOT_RUN**.
 
 The predecessor is the running ACDC semi K8 experiment A. Its pinned checkout, recipe, manifests and processes are unchanged. `TRACK_A_SNAPSHOT.json` is a time-stamped observation, not a final result.
 
@@ -20,13 +20,27 @@ The original345-case M&Ms open-release split is175/34/136. The prior geometry am
 
 ## Operations
 
-A separate queue will wait for A's completed one-shot TEST, GPU availability, SHA verification and disk headroom. It will profile20 T and20 J optimizer steps, with largest permitted L8 T volume and largest TRAIN image-only U volume. OOM/profile failure stops without architecture or crop changes. A separate checkout, output directory and monitor isolate the target run.
+A separate queue now waits for A's completed one-shot TEST, GPU availability, SHA verification and disk headroom. It will profile 20 T and 20 J optimizer steps, with largest permitted L8 T volume and largest TRAIN image-only U volume. OOM/profile failure stops without architecture or crop changes. A separate checkout, output directory and monitor isolate the target run.
 
-The user authorized archiving the stopped historical Q3D run to private Google Drive and removing its server copy only after full remote SHA256 verification. Original ACDC/M&Ms data and FUSE A/full-label runs are excluded. Archive receipts will be added when verification completes.
+The production checkout is `/root/Self-Audit-fuse-transfer-20261113`, pinned to
+`553b53f259abaec64384c7a51e88db6ed1f4e568`; the new output root is
+`/root/mount_data/runs/fuse-mnms-transfer-20261113`. Services
+`fuse-mnms-transfer`, `fuse-mnms-watchdog` and `fuse-q3d-cleanup` are running.
+The queue has zero automatic training retries. A's campaign PID remained 582872
+before and after installation; the only GPU process at verification was A's J
+child. A had completed 18 J epochs and reached update 1,500 of 8,000.
+
+The visible Orca window **FUSE M&Ms | queued after A** attaches to tmux
+`fuse-mnms-transfer`; it shows the waiting state and switches to per-class metrics
+when B starts. Separate Luna alarms check B and archive completion every 10 minutes;
+the existing A monitor is unchanged. IDs and precheck receipts are in the launch
+receipt. No target ETA is inferred before the GPU profile.
+
+The user authorized archiving the stopped historical Q3D run to private Google Drive and removing its server copy only after full remote SHA256 verification. Original ACDC/M&Ms data and FUSE A/full-label runs are excluded. At the launch observation, seven 2 GiB parts (14 GiB) had passed full remote download and SHA256 comparison; the complete archive was not yet verified and no source file had been deleted. The guarded cleanup service waits for complete verification and stopped producer/old writers. Final archive receipts will be added by the completion monitor. [Private archive folder](https://drive.google.com/drive/folders/1-EPd8W7iBvnn2RFxGm-LvG4CuSFL26Gk).
 
 ## Evidence
 
-See PLAN.json for source teacher, geometry and L8 pins. Focused test reports are SOFTWARE_ONLY. Full pytest: 964 passed, 2 skipped, 2 warnings, 3 subtests passed (OMP_NUM_THREADS unset). The isolated full-suite audit including all staged new files passed and left git status empty. check_repo, legacy FUSE/Q3D smoke and four-mode transfer smoke passed; all four transfer cold loads were bitwise equal. Verbatim outputs are in validation/. REVIEW.json records the independent Claude verdict and remaining low-priority notes. MANIFESTS.json pins all three runtime manifests; CPU_PREFLIGHT.json verifies original-source hashes and largest native L/U frame loading without TEST voxel decoding. Target GPU profile and queue installation are still NOT_RUN at this commit. No target efficacy or completion claim is made here.
+See PLAN.json for source teacher, geometry and L8 pins. Focused test reports are SOFTWARE_ONLY. Full pytest: 964 passed, 2 skipped, 2 warnings, 3 subtests passed (OMP_NUM_THREADS unset). The isolated full-suite audit including all staged new files passed and left git status empty. check_repo, legacy FUSE/Q3D smoke and four-mode transfer smoke passed; all four transfer cold loads were bitwise equal. Verbatim outputs are in validation/. REVIEW.json records the independent Claude verdict and remaining low-priority notes. MANIFESTS.json pins all three runtime manifests; CPU_PREFLIGHT.json verifies original-source hashes and largest native L/U frame loading without TEST voxel decoding. Target GPU profile, target training, target TEST and B0 remain NOT_RUN. No target efficacy or completion claim is made here.
 
 
 Integration corrections include stable source-teacher provenance and the zero-shot

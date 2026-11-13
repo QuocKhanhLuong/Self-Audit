@@ -1,0 +1,280 @@
+{
+  "A_campaign": {
+    "active": "J",
+    "attempts": {
+      "J": 1,
+      "T": 1
+    },
+    "completed": [
+      "T"
+    ],
+    "config": "/root/mount_data/runs/fuse-acdc-k8-20261113/recipe.json",
+    "config_sha256": "d7af9576751eb7409093a8d7a5685d65c50baf088b168b289c83cf4b4d1bf8a8",
+    "device": "cuda",
+    "schema": "self_audit.candidate_fuse.campaign_state.v1",
+    "stage_logs": {
+      "J": "/root/mount_data/runs/fuse-acdc-k8-20261113/campaign_logs/J.log",
+      "T": "/root/mount_data/runs/fuse-acdc-k8-20261113/campaign_logs/T.log"
+    },
+    "status": "RUNNING",
+    "test_ledger": {
+      "status": "NOT_RUN"
+    },
+    "updated_utc": "2026-11-13T15:11:50.481763+00:00"
+  },
+  "A_pid_after_install": 582872,
+  "A_pid_before_install": 582872,
+  "A_progress": {
+    "checkpoint_path": "/root/mount_data/runs/fuse-acdc-k8-20261113/resume.pt",
+    "checkpoint_sha256": "7f10b4ee1f349737478a0f9a74880c9301b6181c62e95758e31c788e098d5b58",
+    "epoch": 18,
+    "schema": "self_audit.candidate_fuse.state.v1",
+    "stage": "J",
+    "status": "RUNNING",
+    "update": 1500,
+    "updated_utc": "2026-11-13T15:41:38.879667+00:00"
+  },
+  "A_training_children": {
+    "exit_code": 0,
+    "stderr": "",
+    "stdout": "PID    PPID     ELAPSED COMMAND\n 703075  582872       30:32 /venv/main/bin/python train.py --config /root/mount_data/runs/fuse-acdc-k8-20261113/recipe.json --out /root/mount_data/runs/fuse-acdc-k8-20261113 --fuse-stage J --fuse-resume --fuse-teacher-artifact /root/mount_data/runs/fuse-acdc-k8-20261113/teacher.pt --device cuda"
+  },
+  "B_queue": {
+    "automatic_retries": 0,
+    "campaign": "NOT_RUN",
+    "config": "/root/Self-Audit-fuse-transfer-20261113/reports/fuse-mnms-transfer-20261113/recipe.json",
+    "config_sha256": "608d630afa846e2b5f3a9d1d34d9d565e48e6b68797a73898a4a6ab5489abd31",
+    "created_utc": "2026-11-13T15:40:19.031296+00:00",
+    "device": "cuda",
+    "output": "/root/mount_data/runs/fuse-mnms-transfer-20261113",
+    "predecessor": "/root/mount_data/runs/fuse-acdc-k8-20261113/RUN_STATE.json",
+    "predecessor_sha256": null,
+    "profile": "NOT_RUN",
+    "schema": "self_audit.candidate_fuse.transfer_queue.v1",
+    "stages": [
+      "PROFILE_TJ",
+      "CAMPAIGN_TJ_VAL_EXPORT_TEST_ONCE"
+    ],
+    "status": "WAITING"
+  },
+  "NOT_RUN": [
+    "B GPU profile",
+    "B target training",
+    "B target TEST",
+    "B0"
+  ],
+  "archive": {
+    "deleted": null,
+    "drive_folder": "https://drive.google.com/drive/folders/1-EPd8W7iBvnn2RFxGm-LvG4CuSFL26Gk",
+    "parts": {
+      "verified_bytes": 15032385536,
+      "verified_parts": [
+        {
+          "bytes": 2147483648,
+          "name": "q3d-resenc-pixdim-20261112.tar.part000",
+          "remote": "KhanhDrive:Q3D-archive-20261113/parts/q3d-resenc-pixdim-20261112.tar.part000",
+          "remote_sha256": "63ef0d3cb4b448203fa839887d63dc323a9db2ca673941e3418b78ef59baa52a",
+          "sha256": "63ef0d3cb4b448203fa839887d63dc323a9db2ca673941e3418b78ef59baa52a"
+        },
+        {
+          "bytes": 2147483648,
+          "name": "q3d-resenc-pixdim-20261112.tar.part001",
+          "remote": "KhanhDrive:Q3D-archive-20261113/parts/q3d-resenc-pixdim-20261112.tar.part001",
+          "remote_sha256": "9e7078301ba797291c2aabed0637e0338011c809619497609d318ee6bde2a4cd",
+          "sha256": "9e7078301ba797291c2aabed0637e0338011c809619497609d318ee6bde2a4cd"
+        },
+        {
+          "bytes": 2147483648,
+          "name": "q3d-resenc-pixdim-20261112.tar.part002",
+          "remote": "KhanhDrive:Q3D-archive-20261113/parts/q3d-resenc-pixdim-20261112.tar.part002",
+          "remote_sha256": "46cdb8c17e613b3a9cc01305f48f1995b7b59f30e01d747cbf5df1f01267f62e",
+          "sha256": "46cdb8c17e613b3a9cc01305f48f1995b7b59f30e01d747cbf5df1f01267f62e"
+        },
+        {
+          "bytes": 2147483648,
+          "name": "q3d-resenc-pixdim-20261112.tar.part003",
+          "remote": "KhanhDrive:Q3D-archive-20261113/parts/q3d-resenc-pixdim-20261112.tar.part003",
+          "remote_sha256": "7ca6d632b1a4058cd545f88256d8d900912faa66f5e4f98a402c0369c68a70ff",
+          "sha256": "7ca6d632b1a4058cd545f88256d8d900912faa66f5e4f98a402c0369c68a70ff"
+        },
+        {
+          "bytes": 2147483648,
+          "name": "q3d-resenc-pixdim-20261112.tar.part004",
+          "remote": "KhanhDrive:Q3D-archive-20261113/parts/q3d-resenc-pixdim-20261112.tar.part004",
+          "remote_sha256": "496e4a6a39ab89086e2a4df52f22ae22a9e26f3f13c2f5048d07f78947fe2602",
+          "sha256": "496e4a6a39ab89086e2a4df52f22ae22a9e26f3f13c2f5048d07f78947fe2602"
+        },
+        {
+          "bytes": 2147483648,
+          "name": "q3d-resenc-pixdim-20261112.tar.part005",
+          "remote": "KhanhDrive:Q3D-archive-20261113/parts/q3d-resenc-pixdim-20261112.tar.part005",
+          "remote_sha256": "0c6409e84e61efa9d7f1f311fb862741ada0f7a2b1647c883251b20988a4874a",
+          "sha256": "0c6409e84e61efa9d7f1f311fb862741ada0f7a2b1647c883251b20988a4874a"
+        },
+        {
+          "bytes": 2147483648,
+          "name": "q3d-resenc-pixdim-20261112.tar.part006",
+          "remote": "KhanhDrive:Q3D-archive-20261113/parts/q3d-resenc-pixdim-20261112.tar.part006",
+          "remote_sha256": "c27e3e115393a93c9bfed521b7fb0afb17f8fdfa3a1b7b76f1f730ba007f7a3a",
+          "sha256": "c27e3e115393a93c9bfed521b7fb0afb17f8fdfa3a1b7b76f1f730ba007f7a3a"
+        }
+      ]
+    },
+    "source_still_exists": true,
+    "status": {
+      "part": "q3d-resenc-pixdim-20261112.tar.part007",
+      "status": "UPLOADING_PART",
+      "updated_utc": "2026-11-13T15:42:12.851961+00:00",
+      "verified_parts": 7
+    },
+    "verified": null
+  },
+  "automatic_training_retries": 0,
+  "automations": [
+    {
+      "agentId": "codex",
+      "baseBranch": null,
+      "createdAt": 1794584470061,
+      "dtstart": 1794584470027,
+      "enabled": true,
+      "executionTargetId": "local",
+      "executionTargetType": "local",
+      "extraAgentArgs": "--model gpt-6-luna",
+      "id": "6af7c86e-6a20-43db-ac19-1546b0c66a76",
+      "missedRunGraceMinutes": 720,
+      "missedRunPolicy": "run_once_within_grace",
+      "name": "FUSE M&Ms B completion and health monitor",
+      "nextRunAt": 1794585000000,
+      "precheck": {
+        "command": "rtk proxy ssh -o ConnectTimeout=15 vast-gpu '/venv/main/bin/python /root/Self-Audit-fuse-transfer-20261113/reports/fuse-mnms-transfer-20261113/server_monitor.py alarm'; fuse_check_code=$?; if [ \"$fuse_check_code\" = 1 ]; then exit 1; else exit 0; fi",
+        "timeoutSeconds": 30
+      },
+      "projectId": "d0e04079-d131-40cf-b6fa-54b15baee09f",
+      "prompt": "Read AGENTS.md and reports/fuse-mnms-transfer-20261113/{README.md,PLAN.json,LAUNCH_RECEIPT.json}. Use rtk prefix for shell commands. Read /etc/vast-agents-guide.md through SSH vast-gpu before server actions. The production B checkout /root/Self-Audit-fuse-transfer-20261113 is pinned at 553b53f259abaec64384c7a51e88db6ed1f4e568. Never git pull or edit any active checkout, recipe, manifests or run. Preserve A at /root/mount_data/runs/fuse-acdc-k8-20261113 and its processes. No train retry, TEST reopening, architecture/crop/resample changes. No Slack/email. Healthy progress means no edits or notification. Verify uncertain SSH/network status before declaring failure. On a terminal outcome disable THIS named automation, preserve other monitors, and send exactly one completion or blocker message. Report-only publication is authorized: stage exact owned reports only, preserve unrelated changes, fast-forward main without force, push and verify remote SHA. Coordinate any simultaneous report changes rather than reverting them. This automation is named \"FUSE M&Ms B completion and health monitor\". Read B /root/mount_data/runs/fuse-mnms-transfer-20261113/TRANSFER_QUEUE_STATE.json, campaign/RUN_STATE.json, campaign/STATE.json, metrics tail, supervisor fuse-mnms-transfer/fuse-mnms-watchdog and GPU state. The queue must wait until A completes its committed one-shot TEST; do not launch it independently. B budgets are T_tgt2000 optimizer steps batch2 and J100epochs17500pairedsteps. Source teacher is the selected full-label ACDC80 checkpoint. If WAITING with A healthy, stay silent. If FAILED/BLOCKED/OOM/stale, preserve all artifacts and report the exact reason once; no automatic retry. If queue COMPLETED and campaign TEST_ONCE/TEST_TRANSACTION.json is COMMITTED attempt1, do not rerun TEST. Fetch small result, ZERO_SHOT_VAL, transaction, export manifest and profile receipts into reports/fuse-mnms-transfer-20261113/results/. Report VAL34 and TEST136 FG/RV/MYO/LV, HD95 if present, for teacher_zero_shot, adapted teacher, student and fusion. Read actual schemas. Use stored patient rows for paired Wilcoxon and bootstrap10000seed42, fusion-minus-teacher and fusion-minus-student. scripts/fuse_compare_results.py build_input hardcodes VAL18/TEST50; create the portable input manually with VAL34/TEST136 using result.validation, zero-shot VAL and transaction.metrics. Use model order teacher,student,fusion,teacher_zero_shot so first-three paired contrasts remain correct. State tests were specified after TEST opening. Labels used=ACDC80 source plus8targetpatients; B0=NOT_RUN optional, no launch. Verify deploy choice from VAL only. Stop only the completed B watchdog if still running. Update PLAN/README with final receipts, commit reports and verify remote. No new large artifact uploads; the requested full-label fusion90 checkpoint is already verified on Drive. Do not invent results or ETA.",
+      "reuseSession": false,
+      "rrule": "*/10 * * * *",
+      "runContext": {
+        "hostId": "local",
+        "kind": "workspace-run",
+        "path": "/Users/alvinluong/Self-Audit",
+        "projectHostSetupId": "d0e04079-d131-40cf-b6fa-54b15baee09f",
+        "projectId": "github:quockhanhluong/self-audit",
+        "repoId": "d0e04079-d131-40cf-b6fa-54b15baee09f"
+      },
+      "schedulerOwner": "local_host_service",
+      "sourceContext": {
+        "accountLabel": null,
+        "hostId": "local",
+        "kind": "task-source",
+        "projectHostSetupId": "d0e04079-d131-40cf-b6fa-54b15baee09f",
+        "projectId": "github:quockhanhluong/self-audit",
+        "provider": "github",
+        "providerIdentity": {
+          "owner": "QuocKhanhLuong",
+          "provider": "github",
+          "repo": "Self-Audit"
+        },
+        "repoId": "d0e04079-d131-40cf-b6fa-54b15baee09f"
+      },
+      "timezone": "Asia/Ho_Chi_Minh",
+      "updatedAt": 1794584470061,
+      "workspaceId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/orca/workspaces/Self-Audit/fuse-rebuild",
+      "workspaceMode": "existing"
+    },
+    {
+      "agentId": "codex",
+      "baseBranch": null,
+      "createdAt": 1794584470174,
+      "dtstart": 1794584470170,
+      "enabled": true,
+      "executionTargetId": "local",
+      "executionTargetType": "local",
+      "extraAgentArgs": "--model gpt-6-luna",
+      "id": "024c315f-d75a-4dec-9b15-c2de8265244f",
+      "missedRunGraceMinutes": 720,
+      "missedRunPolicy": "run_once_within_grace",
+      "name": "Q3D verified Drive archive cleanup completion",
+      "nextRunAt": 1794585000000,
+      "precheck": {
+        "command": "rtk proxy ssh -o ConnectTimeout=15 vast-gpu '/venv/main/bin/python /root/Self-Audit-fuse-transfer-20261113/reports/fuse-mnms-transfer-20261113/server_monitor.py archive-alarm'; fuse_check_code=$?; if [ \"$fuse_check_code\" = 1 ]; then exit 1; else exit 0; fi",
+        "timeoutSeconds": 30
+      },
+      "projectId": "d0e04079-d131-40cf-b6fa-54b15baee09f",
+      "prompt": "Read AGENTS.md and reports/fuse-mnms-transfer-20261113/{README.md,PLAN.json,LAUNCH_RECEIPT.json}. Use rtk prefix for shell commands. Read /etc/vast-agents-guide.md through SSH vast-gpu before server actions. The production B checkout /root/Self-Audit-fuse-transfer-20261113 is pinned at 553b53f259abaec64384c7a51e88db6ed1f4e568. Never git pull or edit any active checkout, recipe, manifests or run. Preserve A at /root/mount_data/runs/fuse-acdc-k8-20261113 and its processes. No train retry, TEST reopening, architecture/crop/resample changes. No Slack/email. Healthy progress means no edits or notification. Verify uncertain SSH/network status before declaring failure. On a terminal outcome disable THIS named automation, preserve other monitors, and send exactly one completion or blocker message. Report-only publication is authorized: stage exact owned reports only, preserve unrelated changes, fast-forward main without force, push and verify remote SHA. Coordinate any simultaneous report changes rather than reverting them. This automation is named \"Q3D verified Drive archive cleanup completion\". The user explicitly authorized transferring ONLY /root/mount_data/runs/q3d-resenc-pixdim-20261112 to private Drive, verifying SHA then deleting its server copy. Actual producer is supervisor fuse-q3d-archive-parts, receipt dir /root/mount_data/receipts/q3d-drive-archive-20261113-parts; source cleanup is the installed fuse-q3d-cleanup service running the reviewed archive_cleanup.py after VERIFIED. Archive Drive folder https://drive.google.com/drive/folders/1-EPd8W7iBvnn2RFxGm-LvG4CuSFL26Gk. Read STATUS/PARTS/VERIFIED/PREDELETE/DELETED/DELETE_FAILED where present, producer and cleanup service status, disk free. Never delete source independently, restart producer or remove other data. Healthy uploading/verifying means no notification. If DELETED exists, verify it identifies the exact source, remote receipt and part verification, and source is absent. Fetch small receipts into reports/fuse-mnms-transfer-20261113/archive/, record verified bytes/SHA, Drive URL and recovered free space, then publish report-only commit and disable this automation. If producer FAILED, cleanup failed/expired or DELETE_FAILED: inspect exact error, preserve remaining source, report once and disable this automation. Do not falsely call partial upload verified. Do not modify B or A jobs. If connection uncertain recheck before declaring failure.",
+      "reuseSession": false,
+      "rrule": "*/10 * * * *",
+      "runContext": {
+        "hostId": "local",
+        "kind": "workspace-run",
+        "path": "/Users/alvinluong/Self-Audit",
+        "projectHostSetupId": "d0e04079-d131-40cf-b6fa-54b15baee09f",
+        "projectId": "github:quockhanhluong/self-audit",
+        "repoId": "d0e04079-d131-40cf-b6fa-54b15baee09f"
+      },
+      "schedulerOwner": "local_host_service",
+      "sourceContext": {
+        "accountLabel": null,
+        "hostId": "local",
+        "kind": "task-source",
+        "projectHostSetupId": "d0e04079-d131-40cf-b6fa-54b15baee09f",
+        "projectId": "github:quockhanhluong/self-audit",
+        "provider": "github",
+        "providerIdentity": {
+          "owner": "QuocKhanhLuong",
+          "provider": "github",
+          "repo": "Self-Audit"
+        },
+        "repoId": "d0e04079-d131-40cf-b6fa-54b15baee09f"
+      },
+      "timezone": "Asia/Ho_Chi_Minh",
+      "updatedAt": 1794584470174,
+      "workspaceId": "d0e04079-d131-40cf-b6fa-54b15baee09f::/Users/alvinluong/orca/workspaces/Self-Audit/fuse-rebuild",
+      "workspaceMode": "existing"
+    }
+  ],
+  "code_checkout": "/root/Self-Audit-fuse-transfer-20261113",
+  "code_commit": "553b53f259abaec64384c7a51e88db6ed1f4e568",
+  "code_git_status": "",
+  "disk_free_bytes": 5053898752,
+  "evidence": "SOFTWARE_ONLY for code checks; live service state verified; target GPU/patient NOT_RUN",
+  "gpu_processes": {
+    "exit_code": 0,
+    "stderr": "",
+    "stdout": "703075, /venv/main/bin/python, 18892 MiB"
+  },
+  "log_window": {
+    "terminal_handle": "term_113a323e-e146-4c5b-b72c-00ef92b95278",
+    "title": "FUSE M&Ms | queued after A",
+    "tmux_session": "fuse-mnms-transfer",
+    "verified_visible": true
+  },
+  "observed_utc": "2026-11-13T15:42:23.161755+00:00",
+  "prechecks": {
+    "B_alarm": {
+      "exit_code": 1,
+      "issues": [],
+      "meaning": "healthy; skip notification"
+    },
+    "archive_alarm": {
+      "exit_code": 1,
+      "failed": false,
+      "meaning": "healthy transfer; skip notification",
+      "unhealthy": false
+    }
+  },
+  "recipe_config_sha256": "cbe6abb5ad9084db5ff25081d1948df79ea12aa434fba85a883828aea23de01e",
+  "recipe_file_sha256": "608d630afa846e2b5f3a9d1d34d9d565e48e6b68797a73898a4a6ab5489abd31",
+  "recipe_path": "/root/Self-Audit-fuse-transfer-20261113/reports/fuse-mnms-transfer-20261113/recipe.json",
+  "schema": "self_audit.fuse.mnms_transfer_launch.v1",
+  "services": {
+    "exit_code": 0,
+    "stderr": "",
+    "stdout": "fuse-mnms-transfer               RUNNING   pid 717985, uptime 0:02:04\nfuse-mnms-watchdog               RUNNING   pid 717986, uptime 0:02:04\nfuse-q3d-cleanup                 RUNNING   pid 717987, uptime 0:02:04\nfuse-k8-campaign                 RUNNING   pid 582872, uptime 3:19:55\nfuse-k8-watchdog                 RUNNING   pid 582906, uptime 3:19:55\nfuse-q3d-archive-parts           RUNNING   pid 693585, uptime 0:43:16"
+  },
+  "status": "QUEUED_WAITING_FOR_TRACK_A",
+  "tmux": {
+    "exit_code": 0,
+    "stderr": "",
+    "stdout": "data-acdc\ndata-mnms\nfuse-k8-training\nfuse-mnms-transfer\nfuse-training\nself-audit-data\nssh_tmux"
+  }
+}

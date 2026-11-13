@@ -1,13 +1,20 @@
 {
   "B0": "NOT_RUN; optional and not automatically queued",
   "NOT_RUN": [
-    "queue installation",
     "target GPU profile",
     "target patient training",
     "target TEST",
     "B0"
   ],
+  "archive": {
+    "drive_folder": "https://drive.google.com/drive/folders/1-EPd8W7iBvnn2RFxGm-LvG4CuSFL26Gk",
+    "guarded_cleanup_service": "fuse-q3d-cleanup",
+    "source_deleted": false,
+    "status": "IN_PROGRESS_NOT_FULLY_VERIFIED",
+    "verified_bytes_at_launch": 15032385536
+  },
   "base_commit": "aec26cffc1ff5932c544ed06a5e55fa6e3201a4d",
+  "code_commit": "553b53f259abaec64384c7a51e88db6ed1f4e568",
   "dataset": "M&Ms public 345-case release",
   "deploy_rule": "student if student VAL FG >= fusion VAL FG - 0.01; otherwise fusion",
   "evidence": "SOFTWARE_ONLY; target GPU and patient results NOT_RUN",
@@ -31,6 +38,7 @@
     "J6P5T8"
   ],
   "labels_used": "ACDC80 source plus 8 target patients",
+  "launch_receipt": "LAUNCH_RECEIPT.json",
   "manifests": {
     "development": {
       "path": "/root/mount_data/prepared/MnMs/fuse-transfer-20261113/development.json",
@@ -65,6 +73,7 @@
       "unlabeled_patient_records": 175
     }
   },
+  "observed_utc": "2026-11-13T15:42:23.161755+00:00",
   "order": [
     "wait_A_complete",
     "GPU_profile_T20_J20",
@@ -98,7 +107,7 @@
     "train": 175,
     "validation": 34
   },
-  "status": "SOFTWARE_VERIFIED_PENDING_QUEUE",
+  "status": "QUEUED_WAITING_FOR_TRACK_A",
   "teacher": {
     "batch_size": 2,
     "epochs": 250,
