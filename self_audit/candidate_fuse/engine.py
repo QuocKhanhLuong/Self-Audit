@@ -263,9 +263,15 @@ def _rng_state(generator: torch.Generator, py_rng: random.Random) -> dict[str, A
 
 
 def _restore_rng(state: Mapping[str, Any], generator: torch.Generator, py_rng: random.Random) -> None:
-    random.setstate(state["python"]); np.random.set_state(state["numpy"]); torch.set_rng_state(state["torch"])
-    if state.get("cuda") is not None: torch.cuda.set_rng_state_all(state["cuda"])
-    generator.set_state(state["generator"]); py_rng.setstate(state["augmentation"])
+    # Resume payloads are loaded with map_location=target_device. RNG state
+    # byte tensors remain CPU-owned even when model/optimizer tensors map to CUDA.
+    random.setstate(state["python"]); np.random.set_state(state["numpy"])
+    torch.set_rng_state(torch.as_tensor(state["torch"], dtype=torch.uint8, device="cpu"))
+    cuda_states=state.get("cuda")
+    if cuda_states is not None:
+        torch.cuda.set_rng_state_all([torch.as_tensor(value,dtype=torch.uint8,device="cpu") for value in cuda_states])
+    generator.set_state(torch.as_tensor(state["generator"],dtype=torch.uint8,device="cpu"))
+    py_rng.setstate(state["augmentation"])
 
 
 def _data(config: Mapping[str, Any], role: str, synthetic: bool):
