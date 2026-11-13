@@ -1,6 +1,6 @@
 # M&Ms transfer B preparation — 2026-11-13
 
-Status at 2026-11-13 15:42 UTC: software integration accepted after one independent Claude review; **Track B queue installed and WAITING for Track A**. `LAUNCH_RECEIPT.json` verifies the production checkout, queue, services and visible log window. Target patient/GPU training and TEST are **NOT_RUN**.
+Initial launch observation at 2026-11-13 15:42 UTC: software integration accepted after one independent Claude review; **Track B queue installed and WAITING for Track A**. `LAUNCH_RECEIPT.json` verifies the production checkout, queue, services and visible log window. The terminal outcome is recorded below and in `PLAN.json`.
 
 The predecessor is the running ACDC semi K8 experiment A. Its pinned checkout, recipe, manifests and processes are unchanged. `TRACK_A_SNAPSHOT.json` is a time-stamped observation, not a final result.
 
@@ -67,4 +67,38 @@ allowed only after the complete verification receipt and remote parts agree.
 
 The guarded `fuse-q3d-cleanup` service deleted only `/root/mount_data/runs/q3d-resenc-pixdim-20261112` after full Drive verification. All 19 parts (234 archived files; 39,585,105,920 bytes) were downloaded in full for SHA256 comparison, and their ordered concatenation matched archive SHA256 `fc981fa446e1c1b78131794ec3f44296f4a606e514e2d6bd95de64555c1359ed`. The `DELETED.json` receipt identifies the exact source and the verified receipt; the source path was confirmed absent after cleanup.
 
-The cleanup receipt records free space increasing from 5,046,747,136 to 42,883,506,176 bytes, recovering 37,836,759,040 bytes. Archive destination: [private Drive folder](https://drive.google.com/drive/folders/1-EPd8W7iBvnn2RFxGm-LvG4CuSFL26Gk). The source was 39,584,757,851 bytes. Receipt copies and their local SHA256 values are in `archive/`; target B GPU training and TEST remain `NOT_RUN`.
+The cleanup receipt records free space increasing from 5,046,747,136 to 42,883,506,176 bytes, recovering 37,836,759,040 bytes. Archive destination: [private Drive folder](https://drive.google.com/drive/folders/1-EPd8W7iBvnn2RFxGm-LvG4CuSFL26Gk). The source was 39,584,757,851 bytes. Receipt copies and their local SHA256 values are in `archive/`.
+
+## Final outcome — Track B failed before training
+
+Track A completed its one-shot TEST transaction and committed attempt 1 at
+2026-11-13 17:53:56 UTC. The queued B run then failed at 17:54:33 UTC in
+`PROFILE_TJ` with exit code 1. During the profile's zero-shot teacher evaluation
+on development VAL data, loading a source mask raised
+`ValueError: source mask contains fractional labels` at
+`self_audit/candidate_fuse/mnms_data.py:525`. The complete 1,479-byte remote
+queue log is copied to `results/transfer_queue_failure.log`; its SHA256 matches
+the remote file. `results/TRANSFER_FAILURE_RECEIPT.json` records the queue,
+predecessor transaction and run-state hashes.
+
+The queue state records `profile: NOT_RUN` because the profile exited before
+writing a profile receipt. B's campaign `RUN_STATE.json`, `STATE.json`, metrics
+and TEST transaction are absent. No target training or B TEST ran, no B VAL
+result was produced, and no deployment choice was made. The observed error is
+the fractional-label validation failure; this report does not infer why that
+source mask contained fractional values. This was not an OOM, and the queue
+records zero automatic retries. The committed A TEST was not reopened.
+
+At the terminal snapshot, the B queue and B watchdog were already exited; the
+watchdog exited with status 3 after the queue failure, so neither was stopped
+by this monitor. A's campaign completed normally and its watchdog exited
+naturally; neither was signalled or restarted. GPU utilization was 0%, with no
+GPU compute processes. The production B checkout remained clean at
+`553b53f259abaec64384c7a51e88db6ed1f4e568`. The exact B completion and health
+automation was disabled; the separate A completion monitor remained enabled.
+The Q3D archive cleanup automation was already disabled before this action and
+was not changed.
+
+No training retry, TEST reopening, B0 launch, architecture change, crop, or
+resampling was performed. Results and paired statistical comparisons are not
+available for B. No post-TEST tests were run because B never opened TEST.

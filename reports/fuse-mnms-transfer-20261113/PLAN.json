@@ -1,7 +1,7 @@
 {
   "B0": "NOT_RUN; optional and not automatically queued",
   "NOT_RUN": [
-    "target GPU profile",
+    "target GPU profile metrics (PROFILE_TJ exited before a profile receipt was produced)",
     "target patient training",
     "target TEST",
     "B0"
@@ -37,7 +37,7 @@
   "code_commit": "553b53f259abaec64384c7a51e88db6ed1f4e568",
   "dataset": "M&Ms public 345-case release",
   "deploy_rule": "student if student VAL FG >= fusion VAL FG - 0.01; otherwise fusion",
-  "evidence": "SOFTWARE_ONLY; target GPU and patient results NOT_RUN",
+  "evidence": "SOFTWARE_ONLY for code checks; B failed during PROFILE_TJ before target training; target patient results and TEST NOT_RUN",
   "geometry_manifest_sha256": "5f9b78c368d18e73140f65c49e1bc34cd9ae3810225953411ed26e653593e8ba",
   "geometry_policy": "mnms_open345_mm_polar_v1",
   "joint": {
@@ -93,7 +93,7 @@
       "unlabeled_patient_records": 175
     }
   },
-  "observed_utc": "2026-11-13T15:42:23.161755+00:00",
+  "observed_utc": "2026-11-13T18:03:00.889758+00:00",
   "order": [
     "wait_A_complete",
     "GPU_profile_T20_J20",
@@ -127,7 +127,41 @@
     "train": 175,
     "validation": 34
   },
-  "status": "QUEUED_WAITING_FOR_TRACK_A",
+  "status": "FAILED",
+  "terminal_outcome": {
+    "status": "FAILED",
+    "queue_updated_utc": "2026-11-13T17:54:33.605693+00:00",
+    "stage": "PROFILE_TJ",
+    "exit_code": 1,
+    "profile_field": "NOT_RUN; PROFILE_TJ exited before a profile receipt was produced",
+    "campaign": "NOT_RUN",
+    "automatic_retries": 0,
+    "error": {
+      "type": "ValueError",
+      "message": "source mask contains fractional labels",
+      "raised_at": "self_audit/candidate_fuse/mnms_data.py:525",
+      "during": "zero-shot teacher evaluation on development VAL data inside fuse_profile.py"
+    },
+    "b_campaign_RUN_STATE": "absent",
+    "b_campaign_STATE": "absent",
+    "b_TEST_TRANSACTION": "absent",
+    "b_metrics": "none",
+    "a_test_transaction": {
+      "status": "COMMITTED",
+      "attempt": 1,
+      "path": "/root/mount_data/runs/fuse-acdc-k8-20261113/TEST_ONCE/TEST_TRANSACTION.json",
+      "sha256": "0f196a32e8d21bc6541907b954c44a4fc59c2f0395a5b87dd7f32ce1f7b36359"
+    },
+    "remote_receipts": {
+      "queue_state_sha256": "908a59235d2089b38a1872960eded0e654cbd27536b11c931ea4f14df7b22d21",
+      "queue_log_sha256": "9e91f88d2d3d8007a91b0c26a3ab8e9692a8e587a3df68073fa2d3be4e48e189",
+      "queue_log_local_copy": "results/transfer_queue_failure.log",
+      "predecessor_RUN_STATE_sha256": "99d7264e90d87ca21b236daa651cbf9b5ea88a0fc4f29830288d64dfd5d5448e"
+    },
+    "deployment_choice": "NOT_MADE; B produced no VAL selection result",
+    "target_TEST_opened": false,
+    "b0": "NOT_RUN; optional and not launched"
+  },
   "teacher": {
     "batch_size": 2,
     "epochs": 250,

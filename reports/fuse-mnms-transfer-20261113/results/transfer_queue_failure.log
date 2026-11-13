@@ -1,0 +1,19 @@
+Traceback (most recent call last):
+  File "/root/Self-Audit-fuse-transfer-20261113/scripts/fuse_profile.py", line 317, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/root/Self-Audit-fuse-transfer-20261113/scripts/fuse_profile.py", line 311, in main
+    result = run_profile(args.config, args.out, device=args.device, execute=args.execute)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/Self-Audit-fuse-transfer-20261113/scripts/fuse_profile.py", line 118, in run_profile
+    t_metrics, j_metrics, t_times, j_times = _measure_tj(torch, np, cfg, data, target, scratch_root,
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/Self-Audit-fuse-transfer-20261113/scripts/fuse_profile.py", line 188, in _measure_tj
+    zero_shot_metrics = evaluate_modes(teacher, None, val_data, device=device, modes=("teacher",))
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/Self-Audit-fuse-transfer-20261113/self_audit/candidate_fuse/evaluation.py", line 113, in evaluate_modes
+    frame = data.load(key, labeled=True)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/Self-Audit-fuse-transfer-20261113/self_audit/candidate_fuse/mnms_data.py", line 525, in load
+    raise ValueError("source mask contains fractional labels")
+ValueError: source mask contains fractional labels

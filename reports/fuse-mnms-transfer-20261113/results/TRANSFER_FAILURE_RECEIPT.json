@@ -1,0 +1,87 @@
+{
+  "schema": "self_audit.fuse.mnms_transfer_failure_receipt.v1",
+  "observed_utc": "2026-11-13T18:03:00.889758+00:00",
+  "production_checkout": {
+    "path": "/root/Self-Audit-fuse-transfer-20261113",
+    "commit": "553b53f259abaec64384c7a51e88db6ed1f4e568",
+    "git_status": "clean; detached HEAD"
+  },
+  "queue": {
+    "path": "/root/mount_data/runs/fuse-mnms-transfer-20261113/TRANSFER_QUEUE_STATE.json",
+    "sha256": "908a59235d2089b38a1872960eded0e654cbd27536b11c931ea4f14df7b22d21",
+    "updated_utc": "2026-11-13T17:54:33.605693+00:00",
+    "status": "FAILED",
+    "active": null,
+    "stage": "PROFILE_TJ",
+    "exit_code": 1,
+    "automatic_retries": 0,
+    "profile_field": "NOT_RUN; PROFILE_TJ exited before a profile receipt was produced",
+    "campaign": "NOT_RUN",
+    "error": {
+      "type": "ValueError",
+      "message": "source mask contains fractional labels",
+      "source": "self_audit/candidate_fuse/mnms_data.py:525",
+      "call_path": [
+        "fuse_profile.py:188: zero-shot teacher evaluation on development VAL data",
+        "evaluation.py:113: labeled frame load",
+        "mnms_data.py:525: fractional source-mask labels rejected"
+      ]
+    },
+    "campaign_RUN_STATE": "absent",
+    "campaign_STATE": "absent",
+    "metrics": "none",
+    "TEST_TRANSACTION": "absent",
+    "target_TEST_opened": false,
+    "deployment_choice": "NOT_MADE; no B VAL selection result"
+  },
+  "queue_log": {
+    "remote_path": "/root/mount_data/runs/fuse-mnms-transfer-20261113/transfer_queue.log",
+    "local_path": "results/transfer_queue_failure.log",
+    "bytes": 1479,
+    "sha256": "9e91f88d2d3d8007a91b0c26a3ab8e9692a8e587a3df68073fa2d3be4e48e189"
+  },
+  "predecessor_A": {
+    "run": "/root/mount_data/runs/fuse-acdc-k8-20261113",
+    "RUN_STATE": "COMPLETED",
+    "RUN_STATE_sha256": "99d7264e90d87ca21b236daa651cbf9b5ea88a0fc4f29830288d64dfd5d5448e",
+    "TEST_TRANSACTION": "/root/mount_data/runs/fuse-acdc-k8-20261113/TEST_ONCE/TEST_TRANSACTION.json",
+    "TEST_TRANSACTION_status": "COMMITTED",
+    "TEST_TRANSACTION_attempt": 1,
+    "TEST_TRANSACTION_completed_utc": "2026-11-13T17:53:56.688707+00:00",
+    "TEST_TRANSACTION_sha256": "0f196a32e8d21bc6541907b954c44a4fc59c2f0395a5b87dd7f32ce1f7b36359"
+  },
+  "supervisor_at_observation": {
+    "fuse-mnms-transfer": "EXITED; exit status 1 at 2026-11-13 17:54:33 UTC",
+    "fuse-mnms-watchdog": "EXITED; exit status 3 at 2026-11-13 17:54:49 UTC",
+    "fuse-k8-campaign": "EXITED normally after completion",
+    "fuse-k8-watchdog": "EXITED normally at 2026-11-13 17:58:28 UTC"
+  },
+  "gpu_at_observation": {
+    "device": "NVIDIA RTX PRO 4000 Blackwell",
+    "memory_total_mib": 24467,
+    "memory_used_mib": 19,
+    "utilization_percent": 0,
+    "compute_processes": []
+  },
+  "automation": {
+    "id": "6af7c86e-6a20-43db-ac19-1546b0c66a76",
+    "name": "FUSE M&Ms B completion and health monitor",
+    "enabled": false,
+    "disabled_utc": "2026-11-13T18:07:30.323+00:00"
+  },
+  "other_automation_checks": {
+    "observed_utc": "2026-11-13T18:10:47.027+00:00",
+    "fuse_acdc_k8_completion_and_health_monitor": {
+      "id": "6e159a89-7381-4c3f-9394-f354f1d32a76",
+      "enabled": true,
+      "action_taken": false
+    },
+    "q3d_verified_drive_archive_cleanup_completion": {
+      "id": "024c315f-d75a-4dec-9b15-c2de8265244f",
+      "enabled": false,
+      "updated_utc": "2026-11-13T16:57:54.159+00:00",
+      "action_taken": false
+    }
+  },
+  "evidence_boundary": "No target training, B VAL result, B TEST, or deployment selection was produced. The observed fractional-label exception is recorded without inferring its upstream cause."
+}
