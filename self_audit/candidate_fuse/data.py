@@ -480,4 +480,19 @@ def write_synthetic_manifests(out, *, seed=42):
     return outputs
 
 
-__all__ = ["Frame", "FrameKey", "FuseData", "FuseSampler", "write_synthetic_manifests"]
+def open_fuse_data(manifest_path, expected_sha256=None, *, role, synthetic=False):
+    """Open a legacy FUSE manifest or the native-source M&Ms v3 contract."""
+    path = Path(manifest_path).resolve()
+    actual_sha = _sha(path)
+    if expected_sha256 is not None and actual_sha != _safe_hash(expected_sha256, "manifest SHA256"):
+        raise ValueError("manifest SHA256 mismatch")
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    if manifest.get("schema") == "self_audit.candidate_fuse.data.v3":
+        from .mnms_data import MNMSFuseData
+        from .mnms_data import _cache_limit_from_env
+        return MNMSFuseData(path, expected_sha256, role=role, synthetic=synthetic,
+                            image_cache_bytes=_cache_limit_from_env())
+    return FuseData(path, expected_sha256, role=role, synthetic=synthetic)
+
+
+__all__ = ["Frame", "FrameKey", "FuseData", "FuseSampler", "open_fuse_data", "write_synthetic_manifests"]

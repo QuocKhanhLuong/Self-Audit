@@ -1,0 +1,46 @@
+{
+  "builder_base_commit": "aec26cffc1ff5932c544ed06a5e55fa6e3201a4d",
+  "builder_overlay_sha256": {
+    "scripts/fuse_prepare_mnms.py": "b90fcdbf4b8815a85bd912a8d7f02c9d46df715968b9038eef67b7981579201d",
+    "self_audit/candidate_fuse/data.py": "3f9a0dd22838ce28fd84655aae0f89be95d6da2ed2e3ee1e68f1ecacaf1a56a3",
+    "self_audit/candidate_fuse/mnms_data.py": "1e6e9aa942b06932d9204cc211d31757a83b1ee0239c57b4c877cf8f1dc25dd0"
+  },
+  "config_sha256": "cbe6abb5ad9084db5ff25081d1948df79ea12aa434fba85a883828aea23de01e",
+  "evidence": "METADATA_ONLY; no TEST voxel decoding",
+  "manifests": {
+    "development": {
+      "path": "/root/mount_data/prepared/MnMs/fuse-transfer-20261113/development.json",
+      "patients": 34,
+      "schema": "self_audit.candidate_fuse.data.v3",
+      "sha256": "4575daae110897abe9e9c4c5cef9a3fed29a244ed21126d5517cf5336e615727"
+    },
+    "test": {
+      "all_member_sha256_null": true,
+      "path": "/root/mount_data/prepared/MnMs/fuse-transfer-20261113/test.json",
+      "patients": 136,
+      "schema": "self_audit.candidate_fuse.data.v3",
+      "sha256": "1d3717e4352602bff0ea5aea20458a645dccd636228fa6a022c08d188ba4cfdb"
+    },
+    "train": {
+      "labeled_frames": 16,
+      "labeled_patients": [
+        "A2N8V0",
+        "A9E3G9",
+        "B9E0Q1",
+        "C1K8P5",
+        "D3F9H9",
+        "E3T0Z2",
+        "E5F5V7",
+        "J6P5T8"
+      ],
+      "mask_references_only_L8": true,
+      "path": "/root/mount_data/prepared/MnMs/fuse-transfer-20261113/train.json",
+      "patients": 175,
+      "schema": "self_audit.candidate_fuse.data.v3",
+      "sha256": "5c76cf96e365406a24092753739ca905801b3708640131593632cee21bf25f1d",
+      "unlabeled_patient_records": 175
+    }
+  },
+  "recipe_file_sha256": "608d630afa846e2b5f3a9d1d34d9d565e48e6b68797a73898a4a6ab5489abd31",
+  "status": "BUILT"
+}

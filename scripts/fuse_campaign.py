@@ -25,6 +25,10 @@ STATE_SCHEMA = "self_audit.candidate_fuse.campaign_state.v1"
 STAGES = ("T", "J", "VAL3", "EXPORT", "TEST_ONCE")
 
 
+def _is_track_b(config: dict) -> bool:
+    return config.get("schema") == "self_audit.candidate_fuse.v3" and config.get("experiment", {}).get("track") == "B"
+
+
 def _sha(path: Path) -> str:
     h = hashlib.sha256()
     with path.open("rb") as f:
@@ -139,12 +143,17 @@ def commands(config: Path, out: Path, max_updates: int | None = None,
     py = sys.executable
     budget = ["--fuse-max-updates", str(max_updates)] if max_updates is not None else []
     device_args = ["--device", device]
+    cfg_doc = json.loads(config.read_text(encoding="utf-8")) if config.is_file() else {}
+    b_config = _is_track_b(cfg_doc)
+    b_source = cfg_doc.get("experiment", {}).get("source_teacher", {}).get("path")
+    source_args = ["--fuse-teacher-artifact", str(b_source)] if b_config and b_source else []
+    j_teacher = str(out / "teacher.pt")
     return {
         "T": [py, "train.py", "--config", str(config),
-              "--out", str(out), "--fuse-stage", "T", *device_args, *budget],
+              "--out", str(out), "--fuse-stage", "T", *source_args, *device_args, *budget],
         "J": [py, "train.py", "--config", str(config),
-              "--out", str(out), "--fuse-stage", "J", "--fuse-resume", "--fuse-teacher-artifact",
-              str(out / "teacher.pt"), *device_args, *budget],
+              "--out", str(out), "--fuse-stage", "J", "--fuse-resume",
+              "--fuse-teacher-artifact", j_teacher, *device_args, *budget],
         # J performs locked VAL3 selection and writes the selected deployment export.
         "VAL3": [],
         "EXPORT": [],
@@ -152,24 +161,30 @@ def commands(config: Path, out: Path, max_updates: int | None = None,
     }
 
 
-def export_bundle(out: Path) -> dict[str, dict[str, str]]:
-    """Load and verify all three engine export receipts for the TEST transaction."""
+def export_bundle(out: Path, *, track_b: bool = False) -> dict[str, dict[str, str]]:
+    """Load and verify the locked engine export receipts for TEST."""
     exports = out / "exports"
     bundle = {}
-    for mode in ("teacher", "student", "fusion"):
+    modes = ("teacher_zero_shot", "teacher", "student", "fusion") if track_b else ("teacher", "student", "fusion")
+    for mode in modes:
         artifact = exports / f"{mode}.pt"
         sidecar = artifact.with_suffix(artifact.suffix + ".manifest.json")
         if not artifact.is_file() or not sidecar.is_file():
             raise ValueError(f"FUSE {mode} export or sidecar is missing")
         receipt = json.loads(sidecar.read_text(encoding="utf-8"))
         artifact_sha = _sha(artifact)
+        expected_mode = "teacher" if mode == "teacher_zero_shot" else mode
         if (receipt.get("schema") != "self_audit.candidate_fuse.export.v1"
                 or receipt.get("artifact") != artifact.name
                 or receipt.get("artifact_sha256") != artifact_sha
                 or receipt.get("artifact_bytes") != artifact.stat().st_size
-                or receipt.get("mode") != mode):
+                or receipt.get("mode") != expected_mode):
             raise ValueError(f"FUSE {mode} sidecar does not identify current artifact bytes")
         bundle[mode] = {"path": str(artifact.resolve()), "sha256": artifact_sha}
+    expected_files = {f"{mode}.pt" for mode in modes} | {f"{mode}.pt.manifest.json" for mode in modes}
+    present_files = {path.name for path in exports.iterdir() if path.is_file()}
+    if present_files != expected_files:
+        raise ValueError("FUSE export inventory does not match the locked comparison modes")
     return bundle
 
 
@@ -181,7 +196,8 @@ def evaluate_test_once(config_path: Path, out: Path, *, device: str = "cuda") ->
     if not isinstance(manifest, str) or not isinstance(manifest_sha, str):
         raise ValueError("locked TEST requires a pinned test manifest and SHA in the FUSE config")
     from self_audit.candidate_fuse.evaluation import evaluate_exports
-    return evaluate_exports(export_bundle(out), manifest, out / "TEST_ONCE", device, "test", manifest_sha)
+    return evaluate_exports(export_bundle(out, track_b=_is_track_b(config)), manifest,
+                            out / "TEST_ONCE", device, "test", manifest_sha)
 
 
 def run_campaign(config: Path, out: Path, *, execute: bool, max_updates: int | None = None,

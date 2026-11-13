@@ -1,0 +1,25 @@
+........................................................................ [  7%]
+........................................................................ [ 15%]
+..................................................................... [ 22%]
+........................................................................ [ 29%]
+........................................................................ [ 37%]
+........................................................................ [ 44%]
+........................................................................ [ 52%]
+........................................................................ [ 59%]
+........................................................................ [ 67%]
+........................................................................ [ 74%]
+........................................................................ [ 82%]
+........................................................................ [ 89%]
+......s.......s......................................................... [ 97%]
+........................                                                 [100%]
+=============================== warnings summary ===============================
+tests/test_fuse_transfer_evaluation.py::test_corrupt_test_archive_fails_preflight_without_ledger_or_mask_read
+  /Users/alvinluong/miniforge3/lib/python3.11/zipfile.py:1581: UserWarning: Duplicate name: 'Testing/mnmsT00/mnmsT00_sa_gt.nii.gz'
+    return self._open_to_write(zinfo, force_zip64=force_zip64)
+
+tests/test_fuse_transfer_evaluation.py::test_corrupt_test_archive_fails_preflight_without_ledger_or_mask_read
+  /Users/alvinluong/miniforge3/lib/python3.11/zipfile.py:1581: UserWarning: Duplicate name: 'Testing/mnmsT01/mnmsT01_sa_gt.nii.gz'
+    return self._open_to_write(zinfo, force_zip64=force_zip64)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+955 passed, 2 skipped, 2 warnings, 3 subtests passed in 266.79s (0:04:26)

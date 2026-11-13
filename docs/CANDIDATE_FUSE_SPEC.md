@@ -433,3 +433,92 @@ all raw failures, and write new receipts only. A geometry pass alone does not
 claim a prepared training manifest, target L8 lock, mask-map sample validation,
 B/B0 implementation, TEST evaluation, or efficacy; those remain NOT_RUN until
 separately completed. Never modify Track A's pinned checkout or running jobs.
+
+### [AMEND 2026-11-13] Track B execution and implementation interface
+
+The user explicitly chose 100 target J epochs: TRAIN175 gives 17,500 paired
+optimizer steps. This is a larger J update budget than ACDC's 8,000 steps;
+report both, without claiming equal compute. B T_tgt is exactly 2,000 optimizer
+steps, with physical batch2, no T-a freeze, and the existing T-b LR groups.
+Thus 4,000 labeled-frame exposures span 250 L8 epochs. Log exposures and
+optimizer steps separately; validate after each complete L8 epoch. B0 remains
+optional and is not automatically queued by this implementation.
+
+Configuration schema `self_audit.candidate_fuse.v3` is B only. Its experiment
+object is `{track: B, dataset: MNMS, source_teacher: {path, sha256,
+metadata_sha256, identity}}`; identity has source config/train/val manifest
+SHA256 fields. The source artifact must be SELECTED, match its sidecar and
+the complete declared source identity, and strict-load every teacher parameter
+(encoder, decoder, region/boundary heads). Real B pins the selected ACDC80
+artifact SHA `bf2de8287a3fb6a5df7c490b0e081d39e58911a99cfa081243015a2c6ca894ec`.
+All v1/v2 normalization and hashes remain unchanged. B training has the same
+scalar keys, teacher_epochs=250, joint_epochs=100, teacher_batch_size=2;
+the exact optimizer-step contract is additionally enforced by the engine.
+Synthetic B uses one epoch and a local selected synthetic source fixture.
+
+Data schema `self_audit.candidate_fuse.data.v3` represents native M&Ms NIfTI
+sources, with a frozen manifest per role (train/development/test), exact
+TRAIN175/VAL34/TEST136 membership, the existing geometry receipt and target
+L8 lock pinned by SHA. `open_fuse_data(path, expected_sha256, *, role,
+synthetic=False)` returns the existing FuseData API: manifest, manifest_sha256,
+patients, labeled_keys(), unlabeled_keys(), load(key, labeled=...). Existing
+v1/v2 callers and bytes retain their old behavior. The v3 reader lives in
+`mnms_data.py`; metadata-only builder is `scripts/fuse_prepare_mnms.py`.
+No new normalized cine arrays are materialized on disk: read native NIfTI,
+transpose XYZ/T to T/ZYX and use the existing normalize_cine transform with
+a bounded in-memory image cache. Cache settings affect storage only. Native
+geometry is taken from the adjudicated SHA-bound receipt, never guessed.
+TRAIN mask records/reads are limited to the locked L8. Other TRAIN patients'
+ED/ES can be known or unknown and every frame remains U. TEST ZIP image/mask
+voxel data is opened only inside the locked TEST transaction, not preparation.
+Manifest preparation may use archive inventory/header receipts and CRCs.
+All source container/member identities must be checked before voxel use.
+For a TEST member without a prior full-member digest, member_sha256 is null;
+the pinned complete archive SHA, exact member name, byte size and CRC bind
+its bytes. header_sha256 is a separate image-header field, never substituted
+for the full-member hash. Preparation must not open TEST member payloads to
+fill missing hashes. Cache validated container hashes by unchanged file stat;
+fail if the source changes. The image cache defaults to 32 GiB and can be
+bounded through FUSE_MNMS_CACHE_BYTES without changing data or model identity.
+
+Before T_tgt, preserve a frozen source export at
+`exports/teacher_zero_shot.pt` (payload mode teacher), its standard sidecar,
+and target VAL result `ZERO_SHOT_VAL.json`. Resume must reuse and verify these
+artifacts rather than substituting the adapted teacher. Regular teacher export
+means T_tgt. The unchanged three-mode J VAL selection and deployment rule use
+adapted teacher/student/fusion only. B's RESULT exports add teacher_zero_shot;
+the campaign/evaluate_exports API accepts exactly four comparison labels for
+B: teacher_zero_shot, teacher, student, fusion. All four checkpoints, SHA and
+manifest identity are locked before one TEST ledger opens; evaluation remains
+one transaction, and failure never automatically reopens TEST. Source zero-shot
+is report-only. v1/v2 retain exactly three comparison labels.
+
+Operations: `scripts/fuse_transfer_queue.py` waits for A's committed campaign
+completion and one-shot TEST result, verifies the pinned B config/source/data,
+then runs bounded largest-native-volume T/J GPU profiles and the B campaign.
+No active A process, checkout, run file or alarm is changed by preparation.
+The queue uses its own lock, state, logs, checkout and run directory; it never
+retries OOM, TEST or a failed profile, and has no unbounded automatic retries.
+Require disk headroom for atomic checkpoint replacement before launch. No
+old data/run deletion is authorized. A missing resource is reported explicitly,
+not hidden behind a successful plan or silently reduced model/geometry.
+
+Ownership during implementation: W1 data.py/mnms_data.py + manifest builder
+and data tests; W2 config.py/engine.py/teacher.py + B configs and transfer tests;
+W3 evaluation.py + four-mode transaction tests; W4 campaign/transfer queue/
+profile/smoke scripts and operation tests. Coordinator owns this contract,
+integration report, launch pins and server execution. Workers communicate
+interface changes before editing another owner's files. Frozen historical
+tracks and existing A config/manifest identities remain immutable.
+
+### [AMEND 2026-11-13] User-authorized historical Q3D storage migration
+
+The user authorized moving only the stopped historical run
+`/root/mount_data/runs/q3d-resenc-pixdim-20261112` to their private Drive,
+verifying SHA256, and then releasing its server copy. This is the sole exception
+to the earlier no-old-run-deletion clause. Preserve datasets, full-label FUSE,
+Track A, source teacher, and all active runs. Save the source inventory and
+archive/deletion receipts outside the historical directory. Require completed
+uploads, full remote-byte SHA256 verification for every ordered archive part,
+an unchanged source inventory, and no old campaign/watchdog writer before
+removal. A partial upload or failed verification never authorizes deletion.

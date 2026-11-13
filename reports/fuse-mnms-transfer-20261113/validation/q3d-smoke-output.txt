@@ -1,0 +1,25 @@
+[Q3D acdc protocol=A k=2 seed=42] T update=1/1 | train_loss=19.095922 | VAL patient_macro_fg_dice=0.135218 | RV=0.001949 MYO=0.169611 LV=0.234094
+{"completed_stages": ["T", "Q", "P", "J"], "recipe": "v1", "status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE", "tokenizer_gate": {"missing": ["dead_code_fraction", "200-update_usage_history"], "passed": false, "status": "NOT_READY", "thresholds": {"max_dead_code_fraction": 0.25, "min_class_codes": 4, "min_perplexity": 32.0}}}
+{
+  "status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+  "completed_stages": [
+    "T",
+    "Q",
+    "P",
+    "J"
+  ],
+  "tokenizer_gate": {
+    "status": "NOT_READY",
+    "passed": false,
+    "missing": [
+      "dead_code_fraction",
+      "200-update_usage_history"
+    ],
+    "thresholds": {
+      "min_perplexity": 32.0,
+      "max_dead_code_fraction": 0.25,
+      "min_class_codes": 4
+    }
+  },
+  "report": "/private/tmp/fuse-transfer-q3d-smoke-20261113.smoke.json"
+}

@@ -21,7 +21,7 @@ from torch import Tensor
 
 from self_audit.losses import supervised_loss
 from self_audit.candidate_q3d.augmentation import apply_spatial_transform, sample_spatial_transform
-from .config import SEMI_SCHEMA, config_sha256, validate_config
+from .config import SEMI_SCHEMA, TRANSFER_SCHEMA, config_sha256, validate_config
 from .evaluation import choose_deployment, evaluate_modes
 from .export import export_model
 from .student import FuseStudent, sample_keep_mask
@@ -233,6 +233,21 @@ def _checkpoint_due(update: int, total_updates: int, *, synthetic: bool) -> bool
     return bool(synthetic or update % 20 == 0 or update == total_updates)
 
 
+def _transfer_teacher_budget(epoch_size: int, epochs: int, *, batch_size: int = 2,
+                             max_optimizer_steps: int | None = None) -> dict[str, int]:
+    """Return Track B's paired optimizer-step and labeled-exposure budgets."""
+    if any(type(value) is not int or value < 1 for value in (epoch_size, epochs, batch_size)):
+        raise ValueError("Track B T budget dimensions must be positive integers")
+    steps = math.ceil(epoch_size / batch_size) * epochs
+    exposures = epoch_size * epochs
+    if max_optimizer_steps is not None:
+        if type(max_optimizer_steps) is not int or max_optimizer_steps < 1:
+            raise ValueError("Track B max_updates must be a positive optimizer-step count")
+        steps = min(steps, max_optimizer_steps)
+        exposures = min(exposures, steps * batch_size)
+    return {"optimizer_steps": steps, "examples_seen": exposures}
+
+
 def _recover_metrics(out: Path, receipt: Mapping[str, Any]) -> str | None:
     """Restore the checkpoint's committed JSONL prefix and archive its suffix."""
     path = out / "metrics.jsonl"
@@ -275,10 +290,10 @@ def _restore_rng(state: Mapping[str, Any], generator: torch.Generator, py_rng: r
 
 
 def _data(config: Mapping[str, Any], role: str, synthetic: bool):
-    from .data import FuseData
+    from .data import open_fuse_data
     name = "train" if role == "train" else "val" if role == "development" else "test"
-    return FuseData(config["data"][f"{name}_manifest"], config["data"][f"{name}_manifest_sha256"],
-                    role=role, synthetic=synthetic)
+    return open_fuse_data(config["data"][f"{name}_manifest"], config["data"][f"{name}_manifest_sha256"],
+                          role=role, synthetic=synthetic)
 
 
 def _identity(config: Mapping[str, Any], train: Any, val: Any) -> dict[str, Any]:
@@ -308,6 +323,23 @@ def _validate_semi_track_a(config: Mapping[str, Any], train: Any, val: Any) -> N
     labeled_keys = train.labeled_keys()
     if len(labeled_keys) != 16 or {pid for pid, _ in labeled_keys} != set(ids):
         raise ValueError("ACDC L8 must expose exactly 16 labeled ED/ES frames")
+
+
+def _validate_transfer_track_b(config: Mapping[str, Any], train: Any, val: Any) -> None:
+    if config["schema"] != TRANSFER_SCHEMA:
+        return
+    if config["runtime"]["synthetic"]:
+        if train.manifest.get("synthetic") is not True or val.manifest.get("synthetic") is not True:
+            raise ValueError("synthetic Track B requires synthetic TRAIN and validation fixtures")
+        return
+    if (train.manifest.get("schema") != "self_audit.candidate_fuse.data.v3"
+            or val.manifest.get("schema") != "self_audit.candidate_fuse.data.v3"
+            or train.manifest.get("dataset_release") != "original_2020_open345"
+            or val.manifest.get("dataset_release") != "original_2020_open345"
+            or len(train.patients) != 175 or len(val.patients) != 34
+            or len(train.labeled_keys()) != 16
+            or set(train.patients) & set(val.patients)):
+        raise ValueError("real Track B requires the locked M&Ms TRAIN175/VAL34 manifests and target L8")
 
 
 def _attach_gate_means(metrics: dict[str, Any], teacher: FuseTeacher, student: FuseStudent,
@@ -367,7 +399,8 @@ def _assert_teacher_clean(teacher: FuseTeacher) -> bool:
 
 def _export_receipts(out: Path, teacher: FuseTeacher, student: FuseStudent,
                      config: Mapping[str, Any], identity: Mapping[str, Any],
-                     validation: Mapping[str, Any], deployment: Mapping[str, Any]) -> tuple[dict[str, Any], bool, dict[str, Any]]:
+                     validation: Mapping[str, Any], deployment: Mapping[str, Any], *,
+                     zero_shot: Mapping[str, Any] | None = None) -> tuple[dict[str, Any], bool, dict[str, Any]]:
     export_dir = out / "exports"
     export_dir.mkdir(parents=True, exist_ok=True)
     result = export_model(None, teacher, config, export_dir / "teacher.pt", mode="teacher",
@@ -383,6 +416,17 @@ def _export_receipts(out: Path, teacher: FuseTeacher, student: FuseStudent,
         receipts[mode] = {"path": str(Path(result["path"]).resolve()),
                           "sha256": result["sha256"], "mode": mode,
                           "manifest_path": str(Path(result["manifest_path"]).resolve())}
+    if zero_shot is not None:
+        # The report-only source comparison is frozen before T; bind the
+        # original bytes into the final B bundle without re-exporting T.
+        source = dict(zero_shot["source_teacher"])
+        source["configured_source"] = copy.deepcopy(config["experiment"]["source_teacher"])
+        source.update(zero_shot.get("source_teacher_verification", {}))
+        verified = _verify_zero_shot_artifacts(out, identity=identity,
+            source=source, expected=zero_shot)
+        receipts["teacher_zero_shot"] = {"path": verified["path"],
+            "sha256": verified["sha256"], "mode": "teacher_zero_shot",
+            "manifest_path": verified["manifest_path"]}
     # Verify the exact emitted bytes and exported module inventories. This is
     # a measured check, not a claim inferred from how export_model is called.
     teacher_payload = torch.load(receipts["teacher"]["path"], map_location="cpu", weights_only=True)
@@ -448,6 +492,130 @@ def _load_teacher_reference(reference: Mapping[str, Any], identity: Mapping[str,
                 not torch.equal(left[key].detach().cpu(), right[key].detach().cpu()) for key in left):
             raise ValueError("supplied teacher artifact weights differ from the J checkpoint pin")
     teacher.load_state_dict(payload["model"], strict=True)
+
+
+def _transfer_source_reference(config: Mapping[str, Any]) -> dict[str, Any]:
+    """Verify Track B's source artifact and metadata before any deserialization."""
+    source = config["experiment"]["source_teacher"]
+    raw_path = source.get("path")
+    if not isinstance(raw_path, str) or not raw_path.strip():
+        raise ValueError("Track B requires a concrete selected source teacher path")
+    path = Path(raw_path).expanduser().resolve()
+    metadata_path = Path(str(path) + ".meta.json")
+    if not path.is_file() or not metadata_path.is_file():
+        raise FileNotFoundError("Track B selected source teacher or metadata is missing")
+    digest = _sha(path)
+    metadata_digest = _sha(metadata_path)
+    if digest != source["sha256"]:
+        raise ValueError("Track B source teacher SHA256 mismatch")
+    if metadata_digest != source["metadata_sha256"]:
+        raise ValueError("Track B source teacher metadata SHA256 mismatch")
+    metadata = json.loads(metadata_path.read_text())
+    if metadata.get("status") != "SELECTED":
+        raise ValueError("Track B source teacher metadata must have SELECTED status")
+    if metadata.get("sha256") != digest or metadata.get("identity") != source["identity"]:
+        raise ValueError("Track B source teacher metadata identity/SHA mismatch")
+    return {"path": str(path), "sha256": digest,
+            "metadata_path": str(metadata_path), "metadata_sha256": metadata_digest,
+            "identity": dict(source["identity"]), "status": metadata["status"]}
+
+
+def _import_transfer_source(reference: Mapping[str, Any], teacher: FuseTeacher) -> None:
+    # The bytes and sidecar were verified by _transfer_source_reference before
+    # this weights_only load. Q3D's alias-aware strict loader checks every
+    # encoder, decoder and region/boundary head tensor.
+    payload = torch.load(reference["path"], map_location="cpu", weights_only=True)
+    if not isinstance(payload, Mapping) or set(payload) != {"model"} or not isinstance(payload["model"], Mapping):
+        raise ValueError("Track B source payload must contain exactly the selected model state")
+    try:
+        teacher.load_state_dict(payload["model"], strict=True)
+    except (RuntimeError, ValueError, TypeError) as exc:
+        raise ValueError("Track B source teacher failed strict full-model loading") from exc
+    del payload
+
+
+def _verify_zero_shot_artifacts(out: Path, *, identity: Mapping[str, Any],
+                                source: Mapping[str, Any], expected: Mapping[str, Any] | None = None) -> dict[str, Any]:
+    artifact = out / "exports" / "teacher_zero_shot.pt"
+    manifest = Path(str(artifact) + ".manifest.json")
+    report = out / "ZERO_SHOT_VAL.json"
+    if not artifact.is_file() or not manifest.is_file() or not report.is_file():
+        raise ValueError("Track B requires the committed zero-shot teacher export and VAL receipt")
+    artifact_sha = _sha(artifact)
+    val_sha = _sha(report)
+    sidecar = json.loads(manifest.read_text())
+    result = json.loads(report.read_text())
+    if (sidecar.get("schema") != "self_audit.candidate_fuse.export.v1"
+            or sidecar.get("mode") != "teacher" or sidecar.get("artifact_sha256") != artifact_sha):
+        raise ValueError("Track B zero-shot export SHA/sidecar mismatch")
+    configured_source = source.get("configured_source", source)
+    if "configured_source" not in source:
+        # Direct callers/tests may pass the verifier result; engine callers
+        # always provide the canonical config mapping explicitly.
+        configured_source = {key: source[key] for key in
+                             ("path", "sha256", "metadata_sha256", "identity")}
+    expected_verification = source.get("source_teacher_verification")
+    if expected_verification is None:
+        expected_verification = {key: source[key] for key in
+                                 ("path", "sha256", "metadata_sha256", "identity", "status")}
+        if "metadata_path" in source:
+            expected_verification["metadata_path"] = source["metadata_path"]
+    if (result.get("source_teacher") != configured_source
+            or result.get("source_teacher_verification") != expected_verification
+            or result.get("identity") != dict(identity)):
+        raise ValueError("Track B zero-shot VAL does not match the configured source and target identity")
+    if result.get("export_sha256") != artifact_sha or "teacher_zero_shot" not in result.get("metrics", {}):
+        raise ValueError("Track B zero-shot VAL receipt does not bind its export")
+    export_payload = torch.load(artifact, map_location="cpu", weights_only=True)
+    export_metadata = export_payload.get("metadata", {}) if isinstance(export_payload, Mapping) else {}
+    if (not isinstance(export_payload, Mapping)
+            or export_payload.get("schema") != "self_audit.candidate_fuse.export.v1"
+            or export_payload.get("mode") != "teacher"
+            or not isinstance(export_payload.get("teacher_state"), Mapping)
+            or export_payload.get("student_state")
+            or export_metadata.get("comparison_label") != "teacher_zero_shot"
+            or export_metadata.get("source_teacher") != configured_source
+            or export_metadata.get("source_teacher_verification") != expected_verification):
+        raise ValueError("Track B zero-shot export payload is not the pinned source-only teacher")
+    del export_payload
+    if expected is not None and (expected.get("sha256") != artifact_sha
+                                 or expected.get("val_sha256") != val_sha
+                                 or expected.get("source_teacher") != configured_source):
+        raise ValueError("Track B resume zero-shot pins differ from committed artifacts")
+    return {"path": str(artifact.resolve()), "sha256": artifact_sha,
+            "manifest_path": str(manifest.resolve()), "mode": "teacher_zero_shot",
+            "val_path": str(report.resolve()), "val_sha256": val_sha,
+            "source_teacher": configured_source,
+            "source_teacher_verification": expected_verification}
+
+
+def _create_zero_shot_artifacts(out: Path, *, config: Mapping[str, Any], identity: Mapping[str, Any],
+                                source: Mapping[str, Any], teacher: FuseTeacher,
+                                val_data: Any, device: torch.device) -> dict[str, Any]:
+    artifact = out / "exports" / "teacher_zero_shot.pt"
+    report = out / "ZERO_SHOT_VAL.json"
+    if artifact.exists() or Path(str(artifact) + ".manifest.json").exists() or report.exists():
+        return _verify_zero_shot_artifacts(out, identity=identity,
+            source=dict(source, configured_source=copy.deepcopy(config["experiment"]["source_teacher"])))
+    # The export contract pins the exact configured source_teacher mapping.
+    # Keep the resolved path/status used during verification separately so
+    # provenance is both exact and auditable without changing v3 config data.
+    source_public = copy.deepcopy(config["experiment"]["source_teacher"])
+    source_verification = {key: source[key] for key in
+                           ("path", "sha256", "metadata_path", "metadata_sha256", "identity", "status")}
+    teacher.eval()
+    exported = export_model(None, teacher, config, artifact, mode="teacher",
+        metadata={"identity": dict(identity), "source_teacher": source_public,
+                  "source_teacher_verification": source_verification,
+                  "comparison_label": "teacher_zero_shot", "selection_role": "report_only"})
+    metrics = evaluate_modes(teacher, None, val_data, device=device, modes=("teacher",))
+    _atomic_json(report, {"schema": "self_audit.candidate_fuse.zero_shot_val.v1",
+        "comparison_label": "teacher_zero_shot", "selection_role": "report_only",
+        "identity": dict(identity), "source_teacher": source_public,
+        "source_teacher_verification": source_verification,
+        "export_sha256": exported["sha256"], "metrics": {"teacher_zero_shot": metrics["teacher"]}})
+    verification = dict(source, configured_source=source_public)
+    return _verify_zero_shot_artifacts(out, identity=identity, source=verification)
 
 
 def _teacher_reference(path: Path, identity: Mapping[str, Any], *, profile: bool = False) -> dict[str, Any]:
@@ -542,27 +710,50 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
     _new_or_append_metrics(out_path, resume)
     train_data = _data(cfg, "train", synthetic); val_data = _data(cfg, "development", synthetic)
     _validate_semi_track_a(cfg, train_data, val_data)
+    _validate_transfer_track_b(cfg, train_data, val_data)
     identity = _identity(cfg, train_data, val_data)
+    transfer = cfg["schema"] == TRANSFER_SCHEMA
+    source_reference = _transfer_source_reference(cfg) if transfer else None
     py_rng = random.Random(cfg["seed"]); rng_generator = torch.Generator(device=target_device).manual_seed(cfg["seed"])
     teacher, teacher_provenance = build_teacher(cfg, synthetic=synthetic)
     teacher.to(target_device)
     student = FuseStudent(cfg, teacher_channels=teacher.feature_channels, teacher_phases=teacher.feature_phases).to(target_device)
-    teacher_updates = train_data.labeled_keys().__len__() * int(cfg["training"]["teacher_epochs"])
+    teacher_epoch_size = len(train_data.labeled_keys())
+    teacher_batch_size = int(cfg["training"]["teacher_batch_size"])
+    teacher_updates = teacher_epoch_size * int(cfg["training"]["teacher_epochs"])
+    transfer_budget = (_transfer_teacher_budget(teacher_epoch_size,
+        int(cfg["training"]["teacher_epochs"]), batch_size=teacher_batch_size) if transfer else None)
+    teacher_step_budget = (transfer_budget["optimizer_steps"] if transfer_budget is not None else
+        math.ceil(teacher_epoch_size / teacher_batch_size) * int(cfg["training"]["teacher_epochs"]))
     joint_updates = len(train_data.patients) * int(cfg["training"]["joint_epochs"])
     if max_updates is not None:
-        teacher_updates = min(teacher_updates, max_updates) if stage in {"all", "T"} else teacher_updates
+        if transfer:
+            if stage in {"all", "T"}:
+                transfer_budget = _transfer_teacher_budget(teacher_epoch_size,
+                    int(cfg["training"]["teacher_epochs"]), batch_size=teacher_batch_size,
+                    max_optimizer_steps=max_updates)
+                teacher_step_budget = transfer_budget["optimizer_steps"]
+                teacher_updates = transfer_budget["examples_seen"]
+        else:
+            teacher_updates = min(teacher_updates, max_updates) if stage in {"all", "T"} else teacher_updates
         joint_updates = min(joint_updates, max_updates) if stage in {"all", "J"} else joint_updates
     start_stage = stage
     teacher_ref = None
     transition_t_to_j = False
     resume_payload = None
     metrics = None
+    zero_shot_info = None
     if resume:
         payload = _load_resume(out_path, identity, target_device)
         resume_payload = payload
         archived_suffix = _recover_metrics(out_path, payload["metrics_receipt"])
         start_stage = payload["stage"]
         transition_t_to_j = stage == "J" and start_stage == "T"
+        if transfer:
+            if not isinstance(payload.get("zero_shot_teacher"), Mapping):
+                raise ValueError("Track B resume checkpoint lacks the committed zero-shot teacher pins")
+            zero_shot_info = _verify_zero_shot_artifacts(out_path, identity=identity,
+                source=source_reference, expected=payload.get("zero_shot_teacher"))
         if start_stage == "J":
             teacher_ref = payload.get("teacher_artifact")
             if not isinstance(teacher_ref, Mapping):
@@ -592,6 +783,16 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
         teacher_ref=_teacher_reference(out_path/"teacher.pt",identity,profile=profile)
     elif stage == "all" and (out_path / "resume.pt").exists() and not resume:
         raise FileExistsError("existing progress requires --fuse-resume")
+    elif transfer:
+        _import_transfer_source(source_reference, teacher)
+        zero_shot_info = _create_zero_shot_artifacts(out_path, config=cfg, identity=identity,
+            source=source_reference, teacher=teacher, val_data=val_data, device=target_device)
+    if transfer and zero_shot_info is None:
+        # Stage J begins from the selected adapted teacher, while retaining and
+        # verifying the original source comparison created before T.
+        zero_shot_info = _verify_zero_shot_artifacts(out_path, identity=identity,
+            source=dict(source_reference,
+                        configured_source=copy.deepcopy(cfg["experiment"]["source_teacher"])))
     sampler = None
     from .data import FuseSampler
     sampler = FuseSampler(train_data, seed=cfg["seed"])
@@ -626,21 +827,37 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
             t_epochs = int(cfg["training"]["teacher_epochs"])
             epoch_size = sampler.teacher_epoch_size
             t_budget = min(teacher_updates, epoch_size*t_epochs)
-            t_a_boundary = max(1, round(t_budget * 0.05))
+            if transfer:
+                t_step_budget = min(teacher_step_budget, math.ceil(epoch_size / teacher_batch_size) * t_epochs)
+                t_budget = min(t_budget, t_step_budget * teacher_batch_size)
+            else:
+                t_step_budget = None
+            t_a_boundary = 0 if transfer else max(1, round(t_budget * 0.05))
             t_update = current_update if resume and start_stage == "T" else 0
-            t_start_epoch = (t_epochs if t_update >= t_budget else t_update // epoch_size) if resume and start_stage == "T" else 0
+            t_start_epoch = (current_epoch if resume and start_stage == "T" else 0)
+            if resume and start_stage == "T" and t_update % epoch_size:
+                t_start_epoch = t_update // epoch_size
             t_optimizer_steps = int(payload.get("teacher_optimizer_steps", t_update)) if resume and start_stage == "T" else 0
             metrics = payload.get("last_validation") if resume and start_stage == "T" else None
             for epoch in range(t_start_epoch, t_epochs):
+                # A committed epoch boundary may already sit exactly at a
+                # bounded profile's final budget. Do not repeat its VAL or
+                # replace the selected snapshot when resuming that same cap.
+                if t_update >= t_budget or (t_step_budget is not None and t_optimizer_steps >= t_step_budget):
+                    break
                 teacher.train(True); losses=[]
                 in_epoch = t_update % epoch_size
                 remaining = min(epoch_size - in_epoch if in_epoch else epoch_size, t_budget-t_update)
                 epoch_end_update = t_update + max(0, remaining)
-                while t_update < epoch_end_update:
+                while t_update < epoch_end_update and (t_step_budget is None or t_optimizer_steps < t_step_budget):
                     configured_batch = int(cfg["training"]["teacher_batch_size"])
-                    # Keep epoch, frame-budget and 20-frame resume boundaries exact.
-                    until_checkpoint = 20 - (t_update % 20) if t_update % 20 else configured_batch
-                    until_phase = t_a_boundary-t_update if t_update < t_a_boundary else configured_batch
+                    # Track B profiles/budgets count optimizer updates; the
+                    # historical A tracks keep their frame-exposure units.
+                    checkpoint_cursor = t_optimizer_steps if transfer else t_update
+                    checkpoint_quantum = configured_batch if transfer else 1
+                    until_checkpoint = (20 - (checkpoint_cursor % 20)) * checkpoint_quantum
+                    until_phase = (configured_batch if transfer or t_update >= t_a_boundary
+                                   else t_a_boundary-t_update)
                     take = min(configured_batch, epoch_end_update-t_update, t_budget-t_update,
                                until_checkpoint, until_phase)
                     keys=sampler.next_labeled_batch(take)
@@ -672,14 +889,18 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
                     loss.backward(); torch.nn.utils.clip_grad_norm_(teacher.parameters(),float(cfg["training"]["gradient_clip_norm"]))
                     teacher_opt.step(); losses.append(float(loss.detach().float())); t_update+=len(keys); t_optimizer_steps+=1
                     _metric(out_path,{"type":"train_update","stage":"T","epoch":epoch,"update":t_update,"optimizer_steps":t_optimizer_steps,"batch_size":len(keys),"examples_seen":t_update,"loss":losses[-1]})
-                    if (_checkpoint_due(t_update,t_budget,synthetic=synthetic)
-                            and t_update < t_budget and t_update % epoch_size != 0):
+                    checkpoint_cursor = t_optimizer_steps if transfer else t_update
+                    checkpoint_budget = t_step_budget if transfer else t_budget
+                    checkpoint_due = (_checkpoint_due(checkpoint_cursor, checkpoint_budget, synthetic=synthetic)
+                                      if checkpoint_cursor > 0 else False)
+                    if checkpoint_due and checkpoint_cursor < checkpoint_budget and t_update % epoch_size != 0:
                         payload={"identity":identity,"stage":"T","epoch":epoch,"update":t_update,
                             "teacher":teacher.state_dict(),"student":student.state_dict(),
                             "teacher_optimizer":teacher_opt.state_dict(),"student_optimizer":student_opt.state_dict(),
                             "sampler":sampler.state_dict(),"rng":_rng_state(rng_generator,py_rng),
                             "best_t":best_t,"best_j":best_j,"selected_teacher":selected_teacher,
-                            "teacher_optimizer_steps":t_optimizer_steps}
+                            "teacher_optimizer_steps":t_optimizer_steps,
+                            **({"zero_shot_teacher":zero_shot_info} if transfer else {})}
                         _save_resume(out_path,payload,"T",epoch,t_update)
                         current_epoch=epoch; current_update=t_update
                     if t_update>=t_budget: break
@@ -690,7 +911,7 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
                     meta_status="PROFILE" if profile else "SELECTED"
                     tpath=out_path/"teacher.pt"; digest=_atomic_torch_save({"model":teacher_state},tpath)
                     _write_json(Path(str(tpath)+".meta.json"),{"status":meta_status,"sha256":digest,"identity":identity,"provenance":teacher_provenance})
-                    teacher_ref=_teacher_reference(tpath,identity)
+                    teacher_ref=_teacher_reference(tpath,identity,profile=profile)
                 # Commit validation selection and exact RNG/sampler cursors
                 # before appending the corresponding metric event.
                 current_epoch=epoch+1; current_update=t_update
@@ -700,12 +921,13 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
                     "sampler":sampler.state_dict(),"rng":_rng_state(rng_generator,py_rng),
                     "best_t":best_t,"best_j":best_j,"selected_teacher":selected_teacher,
                     "teacher_optimizer_steps":t_optimizer_steps,
+                    **({"zero_shot_teacher":zero_shot_info} if transfer else {}),
                     "last_validation":metrics}
                 _metric(out_path,{"type":"validation","stage":"T","epoch":epoch+1,"update":t_update,"modes":metrics})
                 _save_resume(out_path,boundary,"T",epoch+1,t_update)
                 print(f"FUSE T epoch={epoch+1} update={t_update} loss={float(np.mean(losses)) if losses else float('nan'):.6g} val_fg={score:.6f}",flush=True)
                 current_epoch=epoch+1; current_update=t_update
-                if t_update>=t_budget: break
+                if t_update>=t_budget or (t_step_budget is not None and t_optimizer_steps>=t_step_budget): break
             if teacher_state is None:
                 if (out_path/"teacher.pt").is_file(): teacher_state=torch.load(out_path/"teacher.pt",map_location=target_device,weights_only=False)["model"]
                 else: raise RuntimeError("teacher stage ended without a selected validation snapshot")
@@ -719,6 +941,11 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
                 teacher_receipt={"path":str(Path(teacher_result["path"]).resolve()),
                     "sha256":teacher_result["sha256"],"mode":"teacher",
                     "manifest_path":str(Path(teacher_result["manifest_path"]).resolve())}
+                teacher_exports={"teacher":teacher_receipt}
+                if transfer:
+                    teacher_exports["teacher_zero_shot"]={"path":zero_shot_info["path"],
+                        "sha256":zero_shot_info["sha256"],"mode":"teacher_zero_shot",
+                        "manifest_path":zero_shot_info["manifest_path"]}
                 teacher_payload=torch.load(teacher_receipt["path"],map_location="cpu",weights_only=True)
                 teacher_export_clean=(teacher_payload.get("schema")=="self_audit.candidate_fuse.export.v1" and
                     teacher_payload.get("mode")=="teacher" and bool(teacher_payload.get("teacher_state")) and
@@ -726,9 +953,11 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
                     _sha(Path(teacher_receipt["path"]))==teacher_receipt["sha256"] and
                     json.loads(Path(teacher_receipt["manifest_path"]).read_text()).get("artifact_sha256")==teacher_receipt["sha256"])
                 if not teacher_export_clean: raise RuntimeError("teacher-only export inventory or SHA check failed")
-                result={"status":"PAUSED","stage":"T","update":t_update,"optimizer_steps":t_optimizer_steps,"batch_size":int(cfg["training"]["teacher_batch_size"]),"examples_seen":t_update,"profile":"PROFILE" if profile else None}
+                result={"status":"PAUSED","stage":"T","update":t_update,"update_unit":"examples_seen",
+                    "optimizer_steps":t_optimizer_steps,"batch_size":int(cfg["training"]["teacher_batch_size"]),
+                    "examples_seen":t_update,"profile":"PROFILE" if profile else None}
                 result.update({"teacher_artifact":str((out_path/"teacher.pt").resolve()),
-                    "joint_checkpoint":None,"exports":{"teacher":teacher_receipt},
+                    "joint_checkpoint":None,"exports":teacher_exports,
                     "deployment":None,"teacher_has_no_grads_after_J":False,"export_clean":teacher_export_clean,
                     "determinism_status":determinism_status,"determinism_note":determinism_note})
                 if profile:
@@ -736,7 +965,8 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
                     result["profile_metrics"]={"elapsed_seconds":time.perf_counter()-run_started,
                         "peak_memory_bytes":torch.cuda.max_memory_allocated(target_device) if target_device.type=="cuda" else None,
                         "dtype":cfg["runtime"]["amp_dtype"] if target_device.type=="cuda" else "float32",
-                        "device":str(target_device),"updates":t_update}
+                        "device":str(target_device),"updates":t_update,"update_unit":"examples_seen",
+                        "optimizer_steps":t_optimizer_steps,"examples_seen":t_update}
                 _atomic_json(out_path/"RESULT.json",result)
                 _state(out_path,status="COMPLETED",stage="T",epoch=current_epoch,update=t_update,
                        checkpoint=out_path/"resume.pt" if (out_path/"resume.pt").is_file() else None,
@@ -794,7 +1024,8 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
                             "teacher_artifact":teacher_ref,"student":student.state_dict(),
                             "student_optimizer":student_opt.state_dict(),"sampler":sampler.state_dict(),
                             "rng":_rng_state(rng_generator,py_rng),"best_t":best_t,"best_j":best_j,
-                            "selected_teacher":True}
+                            "selected_teacher":True,
+                            **({"zero_shot_teacher":zero_shot_info} if transfer else {})}
                         _save_resume(out_path,payload,"J",epoch,j_update)
                         current_epoch=epoch; current_update=j_update
                     if j_update>=total: break
@@ -811,7 +1042,8 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
                     "teacher_artifact":teacher_ref,"student":student.state_dict(),
                     "student_optimizer":student_opt.state_dict(),
                     "sampler":sampler.state_dict(),"rng":_rng_state(rng_generator,py_rng),
-                    "best_t":best_t,"best_j":best_j,"selected_teacher":True}
+                    "best_t":best_t,"best_j":best_j,"selected_teacher":True,
+                    **({"zero_shot_teacher":zero_shot_info} if transfer else {})}
                 _metric(out_path,{"type":"validation","stage":"J","epoch":epoch+1,"update":j_update,"modes":modes})
                 _save_resume(out_path,boundary,"J",epoch+1,j_update)
                 print(f"FUSE J epoch={epoch+1} update={j_update} loss={float(np.mean(losses)) if losses else float('nan'):.6g} val_fusion_fg={score:.6f}",flush=True)
@@ -825,7 +1057,8 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
             _assert_teacher_clean(teacher)
             _attach_gate_means(metrics,teacher,student,val_data,target_device)
             decision=choose_deployment(metrics,margin=.01)
-            receipts,export_clean,deployment_receipt=_export_receipts(out_path,teacher,student,cfg,identity,metrics,decision)
+            receipts,export_clean,deployment_receipt=_export_receipts(out_path,teacher,student,cfg,identity,metrics,decision,
+                zero_shot=zero_shot_info if transfer else None)
             teacher_has_no_grads_after_j=_assert_teacher_clean(teacher)
             _metric(out_path,{"type":"validation_selected","stage":"J","epoch":best["epoch"],"update":best["update"],"modes":metrics,"deployment":decision})
         result={"status":"COMPLETED","stage":stage,"epoch":current_epoch,"update":current_update,

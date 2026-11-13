@@ -1,0 +1,124 @@
+{
+  "B0": "NOT_RUN; optional and not automatically queued",
+  "NOT_RUN": [
+    "queue installation",
+    "target GPU profile",
+    "target patient training",
+    "target TEST",
+    "B0"
+  ],
+  "base_commit": "aec26cffc1ff5932c544ed06a5e55fa6e3201a4d",
+  "dataset": "M&Ms public 345-case release",
+  "deploy_rule": "student if student VAL FG >= fusion VAL FG - 0.01; otherwise fusion",
+  "evidence": "SOFTWARE_ONLY; target GPU and patient results NOT_RUN",
+  "geometry_manifest_sha256": "5f9b78c368d18e73140f65c49e1bc34cd9ae3810225953411ed26e653593e8ba",
+  "geometry_policy": "mnms_open345_mm_polar_v1",
+  "joint": {
+    "budget_choice": "User explicitly chose 100 target epochs on 2026-11-13",
+    "epochs": 100,
+    "one_step": "one L frame plus one U frame",
+    "optimizer_steps": 17500
+  },
+  "l8_lock_sha256": "ab239da264645bf82e246b8db6bb55dc5f3314260ef2dcccadc6c9e49bd579f4",
+  "labeled_patients": [
+    "A2N8V0",
+    "A9E3G9",
+    "B9E0Q1",
+    "C1K8P5",
+    "D3F9H9",
+    "E3T0Z2",
+    "E5F5V7",
+    "J6P5T8"
+  ],
+  "labels_used": "ACDC80 source plus 8 target patients",
+  "manifests": {
+    "development": {
+      "path": "/root/mount_data/prepared/MnMs/fuse-transfer-20261113/development.json",
+      "patients": 34,
+      "schema": "self_audit.candidate_fuse.data.v3",
+      "sha256": "4575daae110897abe9e9c4c5cef9a3fed29a244ed21126d5517cf5336e615727"
+    },
+    "test": {
+      "all_member_sha256_null": true,
+      "path": "/root/mount_data/prepared/MnMs/fuse-transfer-20261113/test.json",
+      "patients": 136,
+      "schema": "self_audit.candidate_fuse.data.v3",
+      "sha256": "1d3717e4352602bff0ea5aea20458a645dccd636228fa6a022c08d188ba4cfdb"
+    },
+    "train": {
+      "labeled_frames": 16,
+      "labeled_patients": [
+        "A2N8V0",
+        "A9E3G9",
+        "B9E0Q1",
+        "C1K8P5",
+        "D3F9H9",
+        "E3T0Z2",
+        "E5F5V7",
+        "J6P5T8"
+      ],
+      "mask_references_only_L8": true,
+      "path": "/root/mount_data/prepared/MnMs/fuse-transfer-20261113/train.json",
+      "patients": 175,
+      "schema": "self_audit.candidate_fuse.data.v3",
+      "sha256": "5c76cf96e365406a24092753739ca905801b3708640131593632cee21bf25f1d",
+      "unlabeled_patient_records": 175
+    }
+  },
+  "order": [
+    "wait_A_complete",
+    "GPU_profile_T20_J20",
+    "source_teacher_zero_shot_VAL",
+    "T_tgt",
+    "J",
+    "VAL_deploy_export",
+    "TEST_four_modes_once"
+  ],
+  "predecessor": {
+    "code_commit": "32e528e39b79493b8e2251bd884d7a2ed4583748",
+    "must_complete_test_transaction": true,
+    "run_dir": "/root/mount_data/runs/fuse-acdc-k8-20261113",
+    "track": "A"
+  },
+  "recipe": "recipe.json",
+  "recipe_config_sha256": "cbe6abb5ad9084db5ff25081d1948df79ea12aa434fba85a883828aea23de01e",
+  "schema": "self_audit.fuse.mnms_transfer_plan.v1",
+  "source_teacher": {
+    "identity": {
+      "config_sha256": "73e7fdd1bf5376a550dc8c7bf24d850f186df3ef5efe297c0fcc06322bd253d7",
+      "train_manifest_sha256": "3b30c0006218b2aa348730b1667ca2a78fe47742af509871d9a860bb9a8d5b9b",
+      "val_manifest_sha256": "e3421779441afcab8f8feadbd293bedad6c00877730eb3c7151fa6a15667e88b"
+    },
+    "metadata_sha256": "5c2791fb0a45f353b98885765d9b546df3efba95c88150f647cf0a84b27d4752",
+    "path": "/root/mount_data/runs/fuse-20261113/teacher.pt",
+    "sha256": "bf2de8287a3fb6a5df7c490b0e081d39e58911a99cfa081243015a2c6ca894ec"
+  },
+  "split_counts": {
+    "test": 136,
+    "train": 175,
+    "validation": 34
+  },
+  "status": "SOFTWARE_VERIFIED_PENDING_QUEUE",
+  "teacher": {
+    "batch_size": 2,
+    "epochs": 250,
+    "labeled_frame_exposures": 4000,
+    "optimizer_steps": 2000,
+    "schedule": "T-b only"
+  },
+  "test_modes": [
+    "teacher_zero_shot",
+    "teacher",
+    "student",
+    "fusion"
+  ],
+  "track": "B",
+  "verification": {
+    "check_repo": "PASS",
+    "independent_review": "ACCEPT SOFTWARE_ONLY; no blocking findings; REVIEW.json",
+    "isolated_full_suite_git_clean": "PASS; all staged new files included",
+    "pytest": "964 passed, 2 skipped, 2 warnings, 3 subtests passed in 263.96s (0:04:23)",
+    "real_CPU_preflight": "PASS; source hashes, geometry and largest L/U frame loading; TEST payloads unopened",
+    "transfer_smoke": "PASS; 4 cold-load modes bitwise; one synthetic TEST transaction"
+  }
+}

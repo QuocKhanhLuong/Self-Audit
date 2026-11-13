@@ -1,0 +1,390 @@
+FUSE T epoch=1 update=16 loss=5.23256 val_fg=0.143448
+FUSE J epoch=1 update=10 loss=3.72752 val_fusion_fg=0.191735
+{
+  "cold_load": {
+    "fusion": {
+      "bitwise_equal": true,
+      "latency_per_volume_ms": [
+        10.293540995917283,
+        11.362500008544885,
+        13.562667008955032
+      ],
+      "mean_latency_ms": 11.739569337805733,
+      "mode": "fusion",
+      "sha256": "b1c10cf7e5d4606b5435fd6f6d506911800ce242d46c90761c5941d4863e5a24",
+      "status": "PASS",
+      "volumes": 3
+    },
+    "student": {
+      "bitwise_equal": true,
+      "latency_per_volume_ms": [
+        3.224082989618182,
+        2.3872919991845265,
+        2.64620799862314
+      ],
+      "mean_latency_ms": 2.752527662475283,
+      "mode": "student",
+      "sha256": "c2b7a09cf2b3270c1aedb0995c1b1761bbbe3468b12a9c2c32228af94f7c3b82",
+      "status": "PASS",
+      "volumes": 3
+    },
+    "teacher": {
+      "bitwise_equal": true,
+      "latency_per_volume_ms": [
+        7.314416012377478,
+        7.390040991595015,
+        9.546874993247911
+      ],
+      "mean_latency_ms": 8.083777332406802,
+      "mode": "teacher",
+      "sha256": "c6d7a0e7be0822b886eed2a5b36482a11f38c519d1c0071b76c1bab41258a45c",
+      "status": "PASS",
+      "volumes": 3
+    },
+    "teacher_zero_shot": {
+      "bitwise_equal": true,
+      "latency_per_volume_ms": [
+        7.4070830014534295,
+        7.198582999990322,
+        9.858083009021357
+      ],
+      "mean_latency_ms": 8.15458300348837,
+      "mode": "teacher",
+      "sha256": "9988a0bed7db3af85d236480d86e50921bd7e8bec21e27402dfc2044b839c102",
+      "status": "PASS",
+      "volumes": 3
+    }
+  },
+  "device": "cpu",
+  "exports": {
+    "fusion": {
+      "manifest_path": "/private/tmp/fuse-transfer-verified-smoke-20261113/run/exports/fusion.pt.manifest.json",
+      "mode": "fusion",
+      "path": "/private/tmp/fuse-transfer-verified-smoke-20261113/run/exports/fusion.pt",
+      "sha256": "b1c10cf7e5d4606b5435fd6f6d506911800ce242d46c90761c5941d4863e5a24"
+    },
+    "student": {
+      "manifest_path": "/private/tmp/fuse-transfer-verified-smoke-20261113/run/exports/student.pt.manifest.json",
+      "mode": "student",
+      "path": "/private/tmp/fuse-transfer-verified-smoke-20261113/run/exports/student.pt",
+      "sha256": "c2b7a09cf2b3270c1aedb0995c1b1761bbbe3468b12a9c2c32228af94f7c3b82"
+    },
+    "teacher": {
+      "manifest_path": "/private/tmp/fuse-transfer-verified-smoke-20261113/run/exports/teacher.pt.manifest.json",
+      "mode": "teacher",
+      "path": "/private/tmp/fuse-transfer-verified-smoke-20261113/run/exports/teacher.pt",
+      "sha256": "c6d7a0e7be0822b886eed2a5b36482a11f38c519d1c0071b76c1bab41258a45c"
+    },
+    "teacher_zero_shot": {
+      "manifest_path": "/private/tmp/fuse-transfer-verified-smoke-20261113/run/exports/teacher_zero_shot.pt.manifest.json",
+      "mode": "teacher_zero_shot",
+      "path": "/private/tmp/fuse-transfer-verified-smoke-20261113/run/exports/teacher_zero_shot.pt",
+      "sha256": "9988a0bed7db3af85d236480d86e50921bd7e8bec21e27402dfc2044b839c102"
+    }
+  },
+  "gpu_evidence": "NOT_RUN",
+  "real_data_evidence": "NOT_RUN",
+  "schema": "self_audit.candidate_fuse.transfer_smoke.v1",
+  "seed": 42,
+  "stages": [
+    "T",
+    "J",
+    "VAL3",
+    "deploy_export"
+  ],
+  "status": "SOFTWARE_ONLY",
+  "test_transaction": {
+    "artifacts": {
+      "fusion": {
+        "path": "/private/tmp/fuse-transfer-verified-smoke-20261113/run/exports/fusion.pt",
+        "sha256": "b1c10cf7e5d4606b5435fd6f6d506911800ce242d46c90761c5941d4863e5a24"
+      },
+      "student": {
+        "path": "/private/tmp/fuse-transfer-verified-smoke-20261113/run/exports/student.pt",
+        "sha256": "c2b7a09cf2b3270c1aedb0995c1b1761bbbe3468b12a9c2c32228af94f7c3b82"
+      },
+      "teacher": {
+        "path": "/private/tmp/fuse-transfer-verified-smoke-20261113/run/exports/teacher.pt",
+        "sha256": "c6d7a0e7be0822b886eed2a5b36482a11f38c519d1c0071b76c1bab41258a45c"
+      },
+      "teacher_zero_shot": {
+        "path": "/private/tmp/fuse-transfer-verified-smoke-20261113/run/exports/teacher_zero_shot.pt",
+        "sha256": "9988a0bed7db3af85d236480d86e50921bd7e8bec21e27402dfc2044b839c102"
+      }
+    },
+    "completed_utc": "2026-11-13T15:28:37.896228+00:00",
+    "config_sha256": "4d2e6b380e4a0d4d5e50e7f4d108966662dbf4e9e9992a35cef8b8a53a91ab1a",
+    "manifest": "/private/tmp/fuse-transfer-verified-smoke-20261113/data/test.json",
+    "manifest_sha256": "6611ce09288ab5e2140fc02991372570683f36eecaff8155001445d51e7dc400",
+    "metrics": {
+      "fusion": {
+        "fg_dice": 0.17470412959922982,
+        "patient_count": 2,
+        "per_class": {
+          "LV": {
+            "dice": 0.2344400645252517,
+            "hd95_mm": 6.069151639817623,
+            "hd95_patient_count": 2,
+            "patient_count": 2
+          },
+          "MYO": {
+            "dice": 0.18863873254117156,
+            "hd95_mm": 3.9395431207184415,
+            "hd95_patient_count": 2,
+            "patient_count": 2
+          },
+          "RV": {
+            "dice": 0.10103359173126615,
+            "hd95_mm": 4.118900347918995,
+            "hd95_patient_count": 2,
+            "patient_count": 2
+          }
+        },
+        "per_patient": {
+          "mnmsT00": {
+            "fg_dice": 0.20416032847812612,
+            "per_class": {
+              "LV": {
+                "dice": 0.25742574257425743,
+                "frames_with_reference": 2,
+                "hd95_mm": 5.884441020371192
+              },
+              "MYO": {
+                "dice": 0.19949968730456535,
+                "frames_with_reference": 2,
+                "hd95_mm": 3.9395431207184415
+              },
+              "RV": {
+                "dice": 0.15555555555555556,
+                "frames_with_reference": 2,
+                "hd95_mm": 3.1864679201324235
+              }
+            }
+          },
+          "mnmsT01": {
+            "fg_dice": 0.14524793072033348,
+            "per_class": {
+              "LV": {
+                "dice": 0.21145438647624598,
+                "frames_with_reference": 2,
+                "hd95_mm": 6.253862259264054
+              },
+              "MYO": {
+                "dice": 0.17777777777777776,
+                "frames_with_reference": 2,
+                "hd95_mm": 3.9395431207184415
+              },
+              "RV": {
+                "dice": 0.046511627906976744,
+                "frames_with_reference": 2,
+                "hd95_mm": 5.051332775705566
+              }
+            }
+          }
+        }
+      },
+      "student": {
+        "fg_dice": 0.17734131420400367,
+        "patient_count": 2,
+        "per_class": {
+          "LV": {
+            "dice": 0.24038930821220045,
+            "hd95_mm": 5.913391847143935,
+            "hd95_patient_count": 2,
+            "patient_count": 2
+          },
+          "MYO": {
+            "dice": 0.17961381186999284,
+            "hd95_mm": 3.9395431207184415,
+            "hd95_patient_count": 2,
+            "patient_count": 2
+          },
+          "RV": {
+            "dice": 0.1120208225298177,
+            "hd95_mm": 4.0054705250082705,
+            "hd95_patient_count": 2,
+            "patient_count": 2
+          }
+        },
+        "per_patient": {
+          "mnmsT00": {
+            "fg_dice": 0.20833577601860698,
+            "per_class": {
+              "LV": {
+                "dice": 0.26033640803038527,
+                "frames_with_reference": 2,
+                "hd95_mm": 5.703228139868324
+              },
+              "MYO": {
+                "dice": 0.18714090287277702,
+                "frames_with_reference": 2,
+                "hd95_mm": 3.9395431207184415
+              },
+              "RV": {
+                "dice": 0.17753001715265865,
+                "frames_with_reference": 2,
+                "hd95_mm": 2.959608274310976
+              }
+            }
+          },
+          "mnmsT01": {
+            "fg_dice": 0.14634685238940034,
+            "per_class": {
+              "LV": {
+                "dice": 0.22044220839401563,
+                "frames_with_reference": 2,
+                "hd95_mm": 6.123555554419546
+              },
+              "MYO": {
+                "dice": 0.17208672086720866,
+                "frames_with_reference": 2,
+                "hd95_mm": 3.9395431207184415
+              },
+              "RV": {
+                "dice": 0.046511627906976744,
+                "frames_with_reference": 2,
+                "hd95_mm": 5.051332775705566
+              }
+            }
+          }
+        }
+      },
+      "teacher": {
+        "fg_dice": 0.14337244832132642,
+        "patient_count": 2,
+        "per_class": {
+          "LV": {
+            "dice": 0.0,
+            "hd95_mm": null,
+            "hd95_patient_count": 0,
+            "patient_count": 2
+          },
+          "MYO": {
+            "dice": 0.14091572848462008,
+            "hd95_mm": 3.9395431207184415,
+            "hd95_patient_count": 2,
+            "patient_count": 2
+          },
+          "RV": {
+            "dice": 0.2892016164793592,
+            "hd95_mm": 4.981000212641172,
+            "hd95_patient_count": 2,
+            "patient_count": 2
+          }
+        },
+        "per_patient": {
+          "mnmsT00": {
+            "fg_dice": 0.15854567294477243,
+            "per_class": {
+              "LV": {
+                "dice": 0.0,
+                "frames_with_reference": 2,
+                "hd95_mm": null
+              },
+              "MYO": {
+                "dice": 0.18450704225352113,
+                "frames_with_reference": 2,
+                "hd95_mm": 3.9395431207184415
+              },
+              "RV": {
+                "dice": 0.2911299765807962,
+                "frames_with_reference": 2,
+                "hd95_mm": 4.8787188522825975
+              }
+            }
+          },
+          "mnmsT01": {
+            "fg_dice": 0.12819922369788042,
+            "per_class": {
+              "LV": {
+                "dice": 0.0,
+                "frames_with_reference": 2,
+                "hd95_mm": null
+              },
+              "MYO": {
+                "dice": 0.09732441471571907,
+                "frames_with_reference": 2,
+                "hd95_mm": 3.9395431207184415
+              },
+              "RV": {
+                "dice": 0.2872732563779222,
+                "frames_with_reference": 2,
+                "hd95_mm": 5.083281572999748
+              }
+            }
+          }
+        }
+      },
+      "teacher_zero_shot": {
+        "fg_dice": 0.14494297948611207,
+        "patient_count": 2,
+        "per_class": {
+          "LV": {
+            "dice": 0.0,
+            "hd95_mm": null,
+            "hd95_patient_count": 0,
+            "patient_count": 2
+          },
+          "MYO": {
+            "dice": 0.14734646158283116,
+            "hd95_mm": 3.9395431207184415,
+            "hd95_patient_count": 2,
+            "patient_count": 2
+          },
+          "RV": {
+            "dice": 0.2874824768755051,
+            "hd95_mm": 5.703933934198402,
+            "hd95_patient_count": 2,
+            "patient_count": 2
+          }
+        },
+        "per_patient": {
+          "mnmsT00": {
+            "fg_dice": 0.16244674991446806,
+            "per_class": {
+              "LV": {
+                "dice": 0.0,
+                "frames_with_reference": 2,
+                "hd95_mm": null
+              },
+              "MYO": {
+                "dice": 0.20480735653590967,
+                "frames_with_reference": 2,
+                "hd95_mm": 3.9395431207184415
+              },
+              "RV": {
+                "dice": 0.28253289320749453,
+                "frames_with_reference": 2,
+                "hd95_mm": 5.778297101099822
+              }
+            }
+          },
+          "mnmsT01": {
+            "fg_dice": 0.1274392090577561,
+            "per_class": {
+              "LV": {
+                "dice": 0.0,
+                "frames_with_reference": 2,
+                "hd95_mm": null
+              },
+              "MYO": {
+                "dice": 0.08988556662975267,
+                "frames_with_reference": 2,
+                "hd95_mm": 3.9395431207184415
+              },
+              "RV": {
+                "dice": 0.29243206054351567,
+                "frames_with_reference": 2,
+                "hd95_mm": 5.629570767296983
+              }
+            }
+          }
+        }
+      }
+    },
+    "role": "test",
+    "schema": "self_audit.candidate_fuse.evaluation_transaction.v1",
+    "started_utc": "2026-11-13T15:28:37.725845+00:00",
+    "status": "COMMITTED"
+  }
+}

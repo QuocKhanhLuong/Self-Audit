@@ -18,6 +18,7 @@ import torch
 from self_audit.candidate_q3d.evaluation import frame_class_dice, surface_distances_3d
 
 MODES = ("teacher", "student", "fusion")
+TRANSFER_MODES = ("teacher_zero_shot", "teacher", "student", "fusion")
 CLASS_NAMES = ("RV", "MYO", "LV")
 
 
@@ -272,10 +273,12 @@ def _same_state(left, right, label: str, *, allow_extra: bool = False) -> None:
 
 
 def evaluate_exports(bundle: dict, data_manifest, out, device, role, expected_sha256):
-    """Run teacher/student/fusion as one hash-pinned transaction.
+    """Run the locked three-mode or Track B four-mode transaction.
 
-    ``bundle`` maps each of ``teacher``, ``student`` and ``fusion`` to an
-    export receipt ``{"path": ..., "sha256": ...}``. ``expected_sha256`` is
+    ``bundle`` maps the three comparison modes, or all four Track B comparison
+    labels, to export receipts ``{"path": ..., "sha256": ...}``. Track B's
+    ``teacher_zero_shot`` receipt intentionally has payload/sidecar mode
+    ``teacher``; its transaction label is report-only. ``expected_sha256`` is
     either the pinned data-manifest SHA string, or a mapping with ``manifest``
     and optional per-mode SHA values. ``data_manifest`` may be a path or a
     ``{"path": ..., "sha256": ...}`` mapping. A single atomic ledger is
@@ -284,8 +287,12 @@ def evaluate_exports(bundle: dict, data_manifest, out, device, role, expected_sh
     selected_role = "development" if role == "dev" else role
     if selected_role not in {"development", "test"}:
         raise ValueError("FUSE export transaction role must be development or test")
-    if not isinstance(bundle, Mapping) or set(bundle) != set(MODES):
-        raise ValueError("FUSE export bundle must contain exactly teacher, student, fusion receipts")
+    if not isinstance(bundle, Mapping) or set(bundle) not in (set(MODES), set(TRANSFER_MODES)):
+        raise ValueError("FUSE export bundle must contain exactly three comparison receipts or the four Track B receipts")
+    transfer = set(bundle) == set(TRANSFER_MODES)
+    if transfer and selected_role != "test":
+        raise ValueError("Track B four-mode evaluation is reserved for its one-shot TEST transaction")
+    selected_modes = TRANSFER_MODES if transfer else MODES
     if isinstance(data_manifest, Mapping):
         manifest_path = Path(data_manifest["path"]).resolve()
         embedded_manifest_sha = data_manifest.get("sha256")
@@ -294,7 +301,7 @@ def evaluate_exports(bundle: dict, data_manifest, out, device, role, expected_sh
         embedded_manifest_sha = None
     if isinstance(expected_sha256, Mapping):
         expected_manifest_sha = expected_sha256.get("manifest", expected_sha256.get("data_manifest"))
-        expected_modes = {mode: expected_sha256.get(mode) for mode in MODES}
+        expected_modes = {mode: expected_sha256.get(mode) for mode in selected_modes}
     else:
         expected_manifest_sha = expected_sha256
         expected_modes = {}
@@ -304,11 +311,12 @@ def evaluate_exports(bundle: dict, data_manifest, out, device, role, expected_sh
         expected_manifest_sha = embedded_manifest_sha
     if not isinstance(expected_manifest_sha, str) or len(expected_manifest_sha) != 64:
         raise ValueError("FUSE transaction requires an expected data-manifest SHA-256")
-    # Pin every artifact, sidecar and manifest before constructing FuseData,
+    # Pin every artifact, sidecar and manifest before constructing FUSE data,
     # whose role-checked validation reads the ED/ES masks.
     from .export import _sha, _validate_sidecar, load_export
     pinned = {}
-    for mode in MODES:
+    sidecars = {}
+    for mode in selected_modes:
         receipt = bundle[mode]
         if not isinstance(receipt, Mapping) or not isinstance(receipt.get("path"), (str, Path)):
             raise ValueError(f"FUSE {mode} receipt requires an artifact path")
@@ -318,12 +326,76 @@ def evaluate_exports(bundle: dict, data_manifest, out, device, role, expected_sh
             raise ValueError(f"FUSE {mode} artifact SHA-256 mismatch")
         if receipt.get("sha256") not in (None, expected):
             raise ValueError(f"FUSE {mode} receipt SHA differs from the pinned SHA")
+        expected_payload_mode = "teacher" if mode == "teacher_zero_shot" else mode
+        if receipt.get("mode") not in (None, mode, expected_payload_mode):
+            raise ValueError(f"FUSE {mode} receipt declares a different export mode")
         sidecar = _validate_sidecar(path, expected)
-        if sidecar.get("mode") != mode:
+        if sidecar.get("mode") != expected_payload_mode:
             raise ValueError(f"FUSE {mode} receipt points to a different export mode")
         pinned[mode] = {"path": str(path), "sha256": expected}
+        sidecars[mode] = sidecar
     if not manifest_path.is_file() or _sha(manifest_path) != expected_manifest_sha:
         raise ValueError("FUSE transaction data-manifest SHA-256 mismatch")
+
+    # Read export metadata and weights-only payloads before constructing the
+    # role-specific data reader, whose TEST load path can open target masks.
+    transfer_config = None
+    config_sha = None
+    manifest_doc = None
+    if transfer:
+        payloads = {}
+        for mode, receipt in pinned.items():
+            payload = torch.load(receipt["path"], map_location="cpu", weights_only=True)
+            if not isinstance(payload, Mapping) or payload.get("schema") != "self_audit.candidate_fuse.export.v1":
+                raise ValueError(f"FUSE {mode} artifact is not a valid weights-only export")
+            if not isinstance(payload.get("config"), Mapping):
+                raise ValueError(f"FUSE {mode} export lacks its embedded config")
+            payloads[mode] = payload
+        from .config import TRANSFER_SCHEMA, config_sha256, validate_config
+        try:
+            transfer_config = validate_config(payloads["teacher"]["config"])
+        except (TypeError, ValueError) as exc:
+            raise ValueError("Track B transaction exports do not carry a valid v3 config") from exc
+        if (transfer_config.get("schema") != TRANSFER_SCHEMA
+                or transfer_config.get("experiment", {}).get("track") != "B"
+                or transfer_config.get("experiment", {}).get("dataset") != "MNMS"):
+            raise ValueError("four-mode FUSE transaction requires the embedded Track B v3 config")
+        config_sha = config_sha256(transfer_config)
+        configured_test_path = transfer_config["data"].get("test_manifest")
+        configured_test_sha = transfer_config["data"].get("test_manifest_sha256")
+        if (not isinstance(configured_test_path, str)
+                or Path(configured_test_path).resolve() != manifest_path
+                or configured_test_sha != expected_manifest_sha):
+            raise ValueError("Track B config does not pin this exact target TEST manifest")
+        source_teacher = transfer_config["experiment"]["source_teacher"]
+        expected_data_identity = {
+            key: transfer_config["data"].get(key) for key in
+            ("train_manifest_sha256", "val_manifest_sha256", "test_manifest_sha256")
+        }
+        for mode in selected_modes:
+            if payloads[mode].get("config") != transfer_config:
+                raise ValueError("Track B exports do not embed the same complete v3 config")
+            metadata = sidecars[mode].get("metadata")
+            if (not isinstance(metadata, Mapping)
+                    or metadata.get("config_sha256") != config_sha
+                    or metadata.get("data_manifest_sha256") != expected_data_identity):
+                raise ValueError(f"Track B {mode} export metadata differs from its config/data identity")
+        zero_metadata = sidecars["teacher_zero_shot"].get("metadata", {})
+        declared_source = zero_metadata.get("source_teacher") if isinstance(zero_metadata, Mapping) else None
+        if declared_source != source_teacher:
+            raise ValueError("zero-shot export source provenance differs from the Track B config")
+        manifest_doc = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if (manifest_doc.get("schema") != "self_audit.candidate_fuse.data.v3"
+                or manifest_doc.get("role") != "test"
+                or manifest_doc.get("dataset_release") != "original_2020_open345"):
+            raise ValueError("Track B TEST manifest is not the locked M&Ms data.v3 target split")
+        # Verify all source-container bytes and ZIP directory metadata before
+        # creating the irreversible one-shot TEST transaction. No member data
+        # is read or decompressed by this metadata-only pass.
+        from .mnms_data import MNMSFuseData
+        preflight = MNMSFuseData(manifest_path, expected_manifest_sha,
+                                 role="test", synthetic=bool(manifest_doc.get("synthetic", False)))
+        preflight.verify_sources()
 
     root = Path(out).resolve()
     root.mkdir(parents=True, exist_ok=True)
@@ -339,6 +411,8 @@ def evaluate_exports(bundle: dict, data_manifest, out, device, role, expected_sh
                   "status": "RUNNING", "role": selected_role, "started_utc": started,
                   "manifest": str(manifest_path), "manifest_sha256": expected_manifest_sha,
                   "artifacts": pinned}
+        if transfer:
+            ledger["config_sha256"] = config_sha
         _atomic_json(ledger_path, ledger)
         try:
             exports = {mode: load_export(value["path"], device=device,
@@ -347,17 +421,25 @@ def evaluate_exports(bundle: dict, data_manifest, out, device, role, expected_sh
             _same_state(exports["teacher"].teacher.model, exports["fusion"].teacher.model, "teacher")
             _same_state(exports["student"].student, exports["fusion"].student,
                         "student", allow_extra=True)
-            manifest_doc = json.loads(manifest_path.read_text())
-            from .data import FuseData
-            data = FuseData(manifest_path, expected_sha256=expected_manifest_sha,
-                            role=selected_role,
-                            synthetic=bool(manifest_doc.get("synthetic", False)))
+            if manifest_doc is None:
+                manifest_doc = json.loads(manifest_path.read_text())
+            from .data import open_fuse_data
+            data = open_fuse_data(manifest_path, expected_sha256=expected_manifest_sha,
+                                  role=selected_role,
+                                  synthetic=bool(manifest_doc.get("synthetic", False)))
             metrics = evaluate_modes(
                 exports["teacher"].teacher, exports["student"].student, data,
                 device=device, modes=MODES,
                 fusion_teacher=exports["fusion"].teacher,
                 fusion_student=exports["fusion"].student,
             )
+            if transfer:
+                # This source-only comparison is report-only and cannot enter
+                # validation selection or the student/fusion deploy rule.
+                metrics["teacher_zero_shot"] = evaluate_modes(
+                    exports["teacher_zero_shot"].teacher, None, data,
+                    device=device, modes=("teacher",),
+                )["teacher"]
             ledger.update({"status": "COMMITTED", "completed_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
                            "metrics": metrics})
             _atomic_json(ledger_path, ledger)

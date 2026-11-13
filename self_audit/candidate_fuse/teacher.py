@@ -13,6 +13,7 @@ from torch.nn.modules.utils import _triple
 from self_audit.candidate_q3d.pretrained import build_q3d_teacher
 from self_audit.candidate_q3d.losses import q3d_teacher_loss
 from self_audit.candidate_q3d.engine import _sdf_targets, _schedule_lr
+from .config import TRANSFER_SCHEMA
 
 
 class FuseTeacher(nn.Module):
@@ -182,9 +183,10 @@ def configure_teacher_step(teacher: FuseTeacher, optimizer: torch.optim.Optimize
                            total_updates: int, config: Mapping[str, Any]) -> dict[str, Any]:
     if total_updates <= 0 or update < 0 or update >= total_updates:
         raise ValueError("teacher update must be within a positive update budget")
-    t_a = max(1, round(total_updates * 0.05))
+    transfer = config.get("schema") == TRANSFER_SCHEMA
+    t_a = 0 if transfer else max(1, round(total_updates * 0.05))
     t_b = total_updates - t_a
-    phase = "T-a" if update < t_a else "T-b"
+    phase = "T-b" if transfer else "T-a" if update < t_a else "T-b"
     training = config.get("training", {})
     warmup_fraction = float(training.get("warmup_fraction", 0.05))
     for group in optimizer.param_groups:
