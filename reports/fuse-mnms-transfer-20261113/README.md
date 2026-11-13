@@ -95,9 +95,10 @@ by this monitor. A's campaign completed normally and its watchdog exited
 naturally; neither was signalled or restarted. GPU utilization was 0%, with no
 GPU compute processes. The production B checkout remained clean at
 `553b53f259abaec64384c7a51e88db6ed1f4e568`. The exact B completion and health
-automation was disabled; the separate A completion monitor remained enabled.
-The Q3D archive cleanup automation was already disabled before this action and
-was not changed.
+automation was disabled. The separate A completion monitor was disabled during
+its concurrent completion run, then restored to enabled at 18:20 UTC per the
+current instruction to preserve other monitors. The Q3D archive cleanup
+automation was already disabled before this action and was not changed.
 
 No training retry, TEST reopening, B0 launch, architecture change, crop, or
 resampling was performed. Results and paired statistical comparisons are not
