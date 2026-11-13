@@ -1,0 +1,36 @@
+{
+  "schema": "self_audit.mnms_geometry_execution.v1",
+  "evidence": [
+    "SOFTWARE_ONLY",
+    "DATA_HEADER",
+    "L8_MASK_CONTRACT"
+  ],
+  "host": "vast-gpu",
+  "checkout": "/root/Self-Audit-fuse-mnms-prep-20261113",
+  "base_commit": "32e528e39b79493b8e2251bd884d7a2ed4583748",
+  "executed_file_sha256": {
+    "self_audit/candidate_fuse/geometry.py": "5cfb8912229f564b092bc92a35902ee80440c40041b88448d847bdead5c88e3b",
+    "scripts/fuse_adjudicate_mnms.py": "5272c44037cdd0da4f28b11db6f59a0a8681c42342d5d2d709c5e7f0edfaaa5a",
+    "scripts/fuse_lock_mnms_l8.py": "29b00a45f6c2b1f9a514bdb9f630eea8b971d6b8a8fb2b4468859b042ae2acf3"
+  },
+  "remote_local_source_hashes_match": true,
+  "geometry_directory": "/root/mount_data/receipts/fuse-mnms-geometry-20261113/adjudicated-v2",
+  "l8_directory": "/root/mount_data/receipts/fuse-mnms-l8-20261113-v2",
+  "geometry_status": "GEOMETRY_READY",
+  "l8_lock_sha256": "ab239da264645bf82e246b8db6bb55dc5f3314260ef2dcccadc6c9e49bd579f4",
+  "target_model_evaluation": "NOT_RUN",
+  "target_patient_training": "NOT_RUN",
+  "run_A_changed": false,
+  "snapshot_producer_sha256": "c734beec3b6b59ee599b8cf5cf6e56815e05f5b166c9937c795b86bb8504d58f",
+  "original_intermediate_receipts_preserved": true,
+  "last_A_observation": {
+    "utc": "2026-11-13T13:04:32.583130+00:00",
+    "status": "RUNNING",
+    "stage": "T",
+    "epoch": 125,
+    "frame_exposures": 2000,
+    "campaign_pid": 582872,
+    "watchdog_pid": 582906
+  },
+  "OMP_NUM_THREADS": null
+}

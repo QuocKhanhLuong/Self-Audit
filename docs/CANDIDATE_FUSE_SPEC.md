@@ -391,3 +391,45 @@ performed after TEST opening; never use them to select checkpoints or recipes.
 Each track opens its TEST exactly once. OOM stops without crop/resampling.
 For this extension run check_repo, the full pytest suite, and the synthetic
 end-to-end smoke. CPU evidence is SOFTWARE_ONLY; patient metrics are separate.
+
+### [AMEND 2026-11-13] M&Ms open-release geometry adjudication
+
+The user requested resolution of the M&Ms geometry blockers. This explicit
+opt-in policy is `mnms_open345_mm_polar_v1`; strict raw-header audit remains
+unchanged. It applies only to the SHA-bound public 345-case release, whose
+archive partitions are TRAIN175/VAL34/TEST136. This is the open subset, not
+the complete original challenge cohort. Original NIfTI files, voxel arrays,
+patient IDs, ED/ES indices and archive partition membership are immutable.
+The organizer's data page specifies source labels 1=LV, 2=MYO, 3=RV; canonical
+BG/RV/MYO/LV mapping is {0:0,1:3,2:2,3:1}.
+
+The acquisition paper Table III explicitly reports spatial resolution and
+slice dimensions in mm. Its pinned source is
+https://diposit.ub.edu/server/api/core/bitstreams/f2f7dc43-becc-4554-910d-360ed7fd339c/content
+with SHA256 `c3584856b3933cdeb440d3d2215f1bcdc6d90a7bbe5803bee615e7a823b4c7fd`;
+an arbitrary caller-supplied document cannot authorize unknown units.
+For these source-bound headers with unknown units,
+record an explicit dataset-level mm interpretation, never claim that the raw
+NIfTI declared mm or that original DICOM geometry was recovered. Preserve raw
+findings and both original and effective affine in a separate metadata receipt.
+No unknown-unit override applies to other data. Known meter/micron units are
+converted explicitly, including affine translation, rather than relabelled.
+
+A valid coded sform or qform is required; no identity/fallback geometry. Require
+finite positive pixdim, finite nonsingular affine with homogeneous final row,
+affine-column norms matching pixdim (rtol=1e-5, atol=1e-5), and normalized
+Gram error <=1e-3. Use the polar factor U@Vt of column-normalized affine
+(SVD) multiplied by original pixdim; preserve translation and handedness.
+Accept only if the maximum displacement of all eight native image corners
+is <=0.05 mm. These are metadata approximation bounds, not assertions that
+all deviations are float32 rounding. Canonical z/y/x geometry must then pass
+the existing repository validator. Material shear, invalid units/provenance,
+missing header, or any bound failure remains a blocker for VAL/TEST.
+
+The policy is locked before any target model result or target mask is opened.
+Geometry evidence may read image headers inside the TEST ZIP without extracting
+voxel data. Bind each row to source file/archive SHA and header SHA, preserve
+all raw failures, and write new receipts only. A geometry pass alone does not
+claim a prepared training manifest, target L8 lock, mask-map sample validation,
+B/B0 implementation, TEST evaluation, or efficacy; those remain NOT_RUN until
+separately completed. Never modify Track A's pinned checkout or running jobs.

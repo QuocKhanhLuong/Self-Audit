@@ -1,0 +1,48 @@
+{
+  "B_training": "NOT_RUN",
+  "artifact_sha256": {
+    "index": "8b285d11e920602b48a1dd87002cc2f360eb6853e66879916c325fd24ba95d7e",
+    "metadata": "612b76738262dcca277e2fe9afba2c1bfea869543fb6af82a68fe30097433fbd",
+    "test_archive": "941296c7a357cf1bc3b61225541438ecd1a3b6c1de48caa43c8f973d4f1d099e"
+  },
+  "blocked_patient_ids_by_split": {
+    "test": [],
+    "train": [],
+    "val": []
+  },
+  "blockers": [],
+  "corrected_count": 345,
+  "dataset_release": "original_2020_open345",
+  "geometry_manifest_sha256": "5f9b78c368d18e73140f65c49e1bc34cd9ae3810225953411ed26e653593e8ba",
+  "geometry_ready_counts": {
+    "test": 136,
+    "train": 175,
+    "val": 34
+  },
+  "mask_sample_checks": "NOT_RUN",
+  "max_corner_displacement_mm": 0.027515688469619857,
+  "per_patient_sha256": "47278484559c63868eb6cae599bc8ef21b064b7ae511b92f8d20707dd121c891",
+  "policy": {
+    "dataset_release": "original_2020_open345",
+    "name": "mnms_open345_mm_polar_v1",
+    "reason": "User requested resolution of M&Ms B/B0 header blockers. Apply the explicit open345 mm interpretation supported by acquisition Table III and bounded polar metadata approximation; preserve raw files, voxel arrays, labels, split, raw failures and source hashes. No target model result was opened for this policy.",
+    "schema": "self_audit.mnms_geometry_policy.v1",
+    "source_identities_sha256": "91b9ff9dcaa59964a5553a7fa792dbb5896e23eb4c9070c61ff29d590c7f3b93",
+    "units_evidence_sha256": "c3584856b3933cdeb440d3d2215f1bcdc6d90a7bbe5803bee615e7a823b4c7fd",
+    "units_evidence_url": "https://diposit.ub.edu/server/api/core/bitstreams/f2f7dc43-becc-4554-910d-360ed7fd339c/content"
+  },
+  "policy_sha256": "d04cb30a79e7f4234acef33981443571fa44be96435cc949459baf57da4b9db5",
+  "prepared_manifests": "NOT_RUN",
+  "raw_unknown_unit_count": 345,
+  "schema": "self_audit.fuse_mnms_open345_adjudication.v1",
+  "scope": "header_only_no_voxel_or_mask_payloads; metadata geometry receipt, not a training manifest",
+  "snapshot_sha256": "fe0bcdf459b85c68d5b790f06a766febc6f698b8932e2ce87a264edd8ed63f95",
+  "source_identities_sha256": "91b9ff9dcaa59964a5553a7fa792dbb5896e23eb4c9070c61ff29d590c7f3b93",
+  "split_counts": {
+    "test": 136,
+    "train": 175,
+    "val": 34
+  },
+  "status": "GEOMETRY_READY",
+  "target_L8_lock": "NOT_RUN"
+}
