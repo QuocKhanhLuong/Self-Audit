@@ -1,0 +1,31 @@
+{
+  "schema": "self_audit.fuse.a_aug.profile_comparison.v1",
+  "evidence_status": "GPU_PROFILE_ONLY",
+  "profile_source_commit": "e4836f7af084f19f7a47cfe47c7fc138df50a469",
+  "device": "NVIDIA RTX PRO 4000 Blackwell",
+  "dtype": "bfloat16",
+  "steps_each_stage_each_variant": 20,
+  "rows": {
+    "T": {
+      "legacy_seconds_per_update": 1.0291875018621794,
+      "aug_seconds_per_update": 1.0611680682864972,
+      "ratio": 1.0310736055057539,
+      "aug_peak_vram_gib": 6.15294075012207
+    },
+    "J": {
+      "legacy_seconds_per_update": 0.7042483115568757,
+      "aug_seconds_per_update": 0.7123474905849434,
+      "ratio": 1.0115004592771588,
+      "aug_peak_vram_gib": 12.933030128479004
+    }
+  },
+  "over_50_percent_slowdown": false,
+  "legacy_control": "Measured now using old locked K8 recipe, same code/runtime and matched frame schedule; not historical runtime from old A",
+  "scope": "wall time includes per-update data loading, augmentation/preparation, forward, backward, optimizer step, and CUDA sync; excludes setup, VAL, checkpoints, and export",
+  "estimated_update_only_seconds": 9943.452197825536,
+  "estimate_limit": "Excludes VAL per epoch, checkpoint IO, setup, final export and TEST. T profile mixes T-a/T-b 50/50 unlike full 5/95 budget. Not a campaign ETA.",
+  "profile_sha256": {
+    "PROFILE_TJ.json": "13fb7e30f2b9db83e97bd8cf3d7f74447be879b69532d6849e3dbaabacc6fe6e",
+    "PROFILE_TJ_LEGACY.json": "05f114dc48b94fe5e38841164924462c6f7019e493e4fd0ea05bc0ec0e5a73f6"
+  }
+}

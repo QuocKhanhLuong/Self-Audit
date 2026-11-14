@@ -1,0 +1,102 @@
+{
+  "schema": "self_audit.fuse.a_aug.server_launch.v1",
+  "created_utc": "2026-11-14T01:17:54.550285+00:00",
+  "source_commit": "e4836f7af084f19f7a47cfe47c7fc138df50a469",
+  "run_dir": "/root/mount_data/runs/fuse-acdc-k8-aug-20261114",
+  "checkout": "/root/Self-Audit-fuse-aug-20261114",
+  "recipe_sha256": "6339398967762ea26bd6e0d4dc6fa7da04dbd64b2e2f5b0701b248d156e8b6b5",
+  "automatic_retry_limit": 0,
+  "test_opening": 2,
+  "services": {
+    "fuse-k8-aug-campaign": {
+      "command": "/venv/main/bin/python -u /root/Self-Audit-fuse-aug-20261114/scripts/fuse_aug_run.py --config /root/mount_data/runs/fuse-acdc-k8-aug-20261114/recipe.json --out /root/mount_data/runs/fuse-acdc-k8-aug-20261114 --old-run /root/mount_data/runs/fuse-acdc-k8-20261113 --phase0 /root/mount_data/runs/fuse-acdc-k8-aug-20261114/PHASE0_L8.json",
+      "config_sha256": "4dcea68a657f3f1f539babb48ebcb55960542f1fbae5daec8d6902f3254c39c9"
+    },
+    "fuse-k8-aug-watchdog": {
+      "command": "/venv/main/bin/python -u /root/Self-Audit-fuse-aug-20261114/scripts/fuse_watchdog.py --run-dir /root/mount_data/runs/fuse-acdc-k8-aug-20261114 --interval-seconds 420 --stale-seconds 1800",
+      "config_sha256": "ec5ab2f1ee5f930235a9fdaac807c884dbe6d4b396932a6ba534069f23ca7922"
+    }
+  },
+  "tmux": "fuse-k8-aug-training",
+  "completion_automation": {
+    "id": "c2116cd9-666a-46f6-b435-8e772f9c5d8a",
+    "enabled": true,
+    "schedule": "*/5 * * * *",
+    "healthy_precheck_exit": 1,
+    "terminal_precheck_exit": 0,
+    "automatic_retry_limit": 0,
+    "publication": "verify and commit/push main after TEST commit; disable after one completion/failure report"
+  },
+  "inputs": {
+    "recipe.json": "6339398967762ea26bd6e0d4dc6fa7da04dbd64b2e2f5b0701b248d156e8b6b5",
+    "EXPERIMENT_LOCK.json": "58fab046b124c8a23fc1e0ca79e583da7b06c551e3181bd8ad4067d9882f48ae",
+    "PHASE0_L8.json": "7ba19db0a896ce1169680e62dad1548a970af37fdf5c374cfb23ea40a4087db5",
+    "PROFILE_TJ_LEGACY.json": "05f114dc48b94fe5e38841164924462c6f7019e493e4fd0ea05bc0ec0e5a73f6",
+    "PROFILE_TJ.json": "13fb7e30f2b9db83e97bd8cf3d7f74447be879b69532d6849e3dbaabacc6fe6e"
+  },
+  "old_A_state_sha256_before": "99d7264e90d87ca21b236daa651cbf9b5ea88a0fc4f29830288d64dfd5d5448e",
+  "supervisor_config": "/root/mount_data/runs/fuse-acdc-k8-aug-20261114/SUPERVISORD.conf",
+  "prelaunch_issue": "Global supervisor reread failed because archived Q3D log directory is absent. No training process was started. Use dedicated A-aug supervisor; existing services/configurations unchanged.",
+  "campaign_started_utc": "2026-11-14T01:17:54.665387+00:00",
+  "evidence_status": "GPU_PATIENT_TRAINING_STARTED",
+  "observed": {
+    "alerts": [],
+    "epoch": 4,
+    "flow": {
+      "automatic_retry_limit": 0,
+      "config_sha256": "6339398967762ea26bd6e0d4dc6fa7da04dbd64b2e2f5b0701b248d156e8b6b5",
+      "old_run": "/root/mount_data/runs/fuse-acdc-k8-20261113",
+      "schema": "self_audit.fuse.a_aug.flow.v1",
+      "started_utc": "2026-11-14T01:17:54.683217+00:00",
+      "status": "RUNNING",
+      "test_label": "TEST lần 2, sau khi TEST đã mở",
+      "test_opening": 2
+    },
+    "healthy": true,
+    "last_progress_age_seconds": 1,
+    "latest_metric": {
+      "epoch": 4,
+      "loss": 2.7902774810791016,
+      "stage": "T",
+      "type": "train_update",
+      "update": 80
+    },
+    "observed_utc": "2026-11-14T01:19:25.783338+00:00",
+    "publish_ready": false,
+    "stage": "T",
+    "status": "RUNNING",
+    "update": 64
+  },
+  "watchdog": {
+    "service": "fuse-k8-aug-watchdog",
+    "state": "RUNNING",
+    "pid": 1110842,
+    "interval_seconds": 420,
+    "read_only": true
+  },
+  "campaign": {
+    "state": "RUNNING",
+    "pid": 1110379
+  },
+  "log_window": {
+    "terminal": "term_7ec4210c-ff10-44a5-9e98-ddd9bbd8b76c",
+    "title": "A-aug K8 | epoch + VAL RV MYO LV",
+    "tmux": "fuse-k8-aug-training",
+    "screen_verified": "T epochs 1-4, epoch5 updates, teacher VAL FG/RV/MYO/LV; lower pane raw log"
+  },
+  "not_run_at_launch": [
+    "J full training",
+    "final VAL three modes",
+    "new-run export",
+    "TEST50 opening 2",
+    "paired comparison outcome"
+  ],
+  "preserved": [
+    "old A run/checkpoints",
+    "B/B0 state and files",
+    "candidate_a/",
+    "candidate_a3d/",
+    "candidate_q3d/"
+  ],
+  "profile_comparison_sha256": "2265d041714ff97e6127f4b30cfcee53218f87d8dc38068e51134b042416f3af"
+}
