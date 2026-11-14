@@ -27,6 +27,7 @@ from .export import export_model
 from .student import FuseStudent, sample_keep_mask
 from .teacher import (FuseTeacher, build_teacher, configure_teacher_step,
                       teacher_loss, teacher_parameter_groups)
+from .augmentation import StrongInplaneAugment
 
 
 def _soft_ce(logits: Tensor, teacher_logits: Tensor) -> Tensor:
@@ -117,7 +118,8 @@ def _lambda_u(update: int, total_updates: int, fraction: float) -> float:
 
 def joint_loss(student: FuseStudent, teacher: FuseTeacher, labeled: Any, unlabeled: Any,
                *, update: int, total_updates: int, config: Mapping[str, Any],
-               generator: torch.Generator | None = None) -> tuple[Tensor, dict[str, Any]]:
+               generator: torch.Generator | None = None,
+               augmentation: Any | None = None) -> tuple[Tensor, dict[str, Any]]:
     """Exact §5 paired objective; teacher remains a detached frozen target."""
     if total_updates <= 0 or not 0 <= update < total_updates:
         raise ValueError("joint update must be inside a positive update budget")
@@ -126,25 +128,32 @@ def joint_loss(student: FuseStudent, teacher: FuseTeacher, labeled: Any, unlabel
     device = next(student.parameters()).device
     image_l, target_l, geom_l = _frame_tensor(labeled, device)
     image_u, geom_u = _frame_image(unlabeled, device)
-    # L and U belong to different patients and can have different native
-    # shapes and spacings. Their transforms are therefore sampled separately;
-    # each frame still has one shared transformed input for its T and S paths.
-    runtime_l = {key: geom_l[key] for key in ("shape", "spacing_zyx", "affine_zyx", "context")}
-    runtime_u = {key: geom_u[key] for key in ("shape", "spacing_zyx", "affine_zyx", "context")}
-    transform_l = sample_spatial_transform(runtime_l, rng=_joint_py_rng)
-    transform_u = sample_spatial_transform(runtime_u, rng=_joint_py_rng)
-    image_l, target_l, geom_l = apply_spatial_transform(image_l, target_l, runtime_l, **transform_l)
-    image_u, _, geom_u = apply_spatial_transform(image_u, None, runtime_u, **transform_u)
-    geom_l.update({key: value for key, value in labeled.geometry.items() if key not in geom_l})
-    geom_u.update({key: value for key, value in unlabeled.geometry.items() if key not in geom_u})
+    if augmentation is None:
+        # Keep every pre-A-aug config on its exact historical transform path.
+        runtime_l = {key: geom_l[key] for key in ("shape", "spacing_zyx", "affine_zyx", "context")}
+        runtime_u = {key: geom_u[key] for key in ("shape", "spacing_zyx", "affine_zyx", "context")}
+        legacy_rng = _joint_py_rng
+        transform_l = sample_spatial_transform(runtime_l, rng=legacy_rng)
+        transform_u = sample_spatial_transform(runtime_u, rng=legacy_rng)
+        image_l, target_l, geom_l = apply_spatial_transform(image_l, target_l, runtime_l, **transform_l)
+        image_u, _, geom_u = apply_spatial_transform(image_u, None, runtime_u, **transform_u)
+        geom_l.update({key: value for key, value in labeled.geometry.items() if key not in geom_l})
+        geom_u.update({key: value for key, value in unlabeled.geometry.items() if key not in geom_u})
+        teacher_l_image = student_l_image = image_l
+        teacher_u_image = student_u_image = image_u
+    else:
+        teacher_l_image, student_l_image, target_l, geom_l = augmentation.joint_views(
+            image_l, target_l, geom_l)
+        teacher_u_image, student_u_image, _, geom_u = augmentation.joint_views(
+            image_u, None, geom_u)
     keep_l = sample_keep_mask(1, update, total_updates, device=device, generator=generator)
     keep_u = sample_keep_mask(1, update, total_updates, device=device, generator=generator)
     with torch.no_grad():
-        teacher_l, features_l = _unwrap_teacher(teacher(image_l, geom_l, return_features=True))
-        teacher_u, features_u = _unwrap_teacher(teacher(image_u, geom_u, return_features=True))
+        teacher_l, features_l = _unwrap_teacher(teacher(teacher_l_image, geom_l, return_features=True))
+        teacher_u, features_u = _unwrap_teacher(teacher(teacher_u_image, geom_u, return_features=True))
         pseudo_u = teacher_u["region_logits"].detach()
-    out_l = student(image_l, geom_l, teacher_features=features_l, keep_mask=keep_l)
-    out_u = student(image_u, geom_u, teacher_features=features_u, keep_mask=keep_u)
+    out_l = student(student_l_image, geom_l, teacher_features=features_l, keep_mask=keep_l)
+    out_u = student(student_u_image, geom_u, teacher_features=features_u, keep_mask=keep_u)
     supervised = supervised_loss(out_l["logits"], target_l)
     unsupervised = _soft_ce(out_u["logits"], pseudo_u)
     mimic_l, mimic_u = out_l["mimic_loss"], out_u["mimic_loss"]
@@ -271,13 +280,18 @@ def _recover_metrics(out: Path, receipt: Mapping[str, Any]) -> str | None:
     return archived
 
 
-def _rng_state(generator: torch.Generator, py_rng: random.Random) -> dict[str, Any]:
-    return {"python": random.getstate(), "numpy": np.random.get_state(), "torch": torch.get_rng_state(),
+def _rng_state(generator: torch.Generator, py_rng: random.Random,
+               strong_augmentation: Any | None = None) -> dict[str, Any]:
+    state = {"python": random.getstate(), "numpy": np.random.get_state(), "torch": torch.get_rng_state(),
             "cuda": torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None,
             "generator": generator.get_state(), "augmentation": py_rng.getstate()}
+    if strong_augmentation is not None:
+        state["strong_augmentation"] = strong_augmentation.state_dict()
+    return state
 
 
-def _restore_rng(state: Mapping[str, Any], generator: torch.Generator, py_rng: random.Random) -> None:
+def _restore_rng(state: Mapping[str, Any], generator: torch.Generator, py_rng: random.Random,
+                 strong_augmentation: Any | None = None) -> None:
     # Resume payloads are loaded with map_location=target_device. RNG state
     # byte tensors remain CPU-owned even when model/optimizer tensors map to CUDA.
     random.setstate(state["python"]); np.random.set_state(state["numpy"])
@@ -287,6 +301,43 @@ def _restore_rng(state: Mapping[str, Any], generator: torch.Generator, py_rng: r
         torch.cuda.set_rng_state_all([torch.as_tensor(value,dtype=torch.uint8,device="cpu") for value in cuda_states])
     generator.set_state(torch.as_tensor(state["generator"],dtype=torch.uint8,device="cpu"))
     py_rng.setstate(state["augmentation"])
+    if strong_augmentation is not None:
+        if "strong_augmentation" not in state:
+            raise ValueError("enabled augmentation resume checkpoint lacks strong_augmentation RNG state")
+        strong_augmentation.load_state_dict(state["strong_augmentation"])
+
+
+def prepare_teacher_batch(frames: list[Any], device: torch.device | str, *,
+                          py_rng: random.Random, augmentation: Any | None = None):
+    """Prepare independent T views; batch2 frames never share augmentation draws."""
+    if not frames:
+        raise ValueError("teacher batch must contain at least one frame")
+    samples = [_frame_tensor(frame, torch.device(device)) for frame in frames]
+    if augmentation is not None:
+        transformed = [augmentation.teacher_view(image, target, geometry)
+                       for image, target, geometry in samples]
+        if any(tuple(item[0].shape) != tuple(transformed[0][0].shape) or
+               tuple(item[1].shape) != tuple(transformed[0][1].shape) or
+               item[2] != transformed[0][2] for item in transformed[1:]):
+            raise ValueError("same-patient teacher batch must retain identical native shape and geometry")
+        return (torch.cat([item[0] for item in transformed], dim=0),
+                torch.cat([item[1] for item in transformed], dim=0), transformed[0][2])
+    if len(samples) == 1:
+        return _transform(*samples[0], py_rng)
+    first_image, first_target, geometry = samples[0]
+    for image_i, target_i, geometry_i in samples[1:]:
+        if image_i.shape != first_image.shape or target_i.shape != first_target.shape or any(
+                geometry_i[k] != geometry[k] for k in ("shape", "spacing_zyx", "affine_zyx", "context")):
+            raise ValueError("same-patient teacher batch must have identical native shape and geometry")
+    runtime = {key: geometry[key] for key in ("shape", "spacing_zyx", "affine_zyx", "context")}
+    transform = sample_spatial_transform(runtime, rng=py_rng)
+    transformed = []
+    for image_i, target_i, geometry_i in samples:
+        xi, yi, gi = apply_spatial_transform(image_i, target_i, runtime, **transform)
+        gi.update({key: value for key, value in geometry_i.items() if key not in gi})
+        transformed.append((xi, yi, gi))
+    return (torch.cat([item[0] for item in transformed], dim=0),
+            torch.cat([item[1] for item in transformed], dim=0), transformed[0][2])
 
 
 def _data(config: Mapping[str, Any], role: str, synthetic: bool):
@@ -713,6 +764,11 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
     _validate_transfer_track_b(cfg, train_data, val_data)
     identity = _identity(cfg, train_data, val_data)
     transfer = cfg["schema"] == TRANSFER_SCHEMA
+    augmentation_config = cfg.get("augmentation")
+    if augmentation_config is not None and (cfg["schema"] != SEMI_SCHEMA or augmentation_config != {"policy": "inplane_strong_v1"}):
+        raise ValueError("strong in-plane augmentation is allowed only for v2 A with policy=inplane_strong_v1")
+    strong_augmentation = (StrongInplaneAugment(seed=cfg["seed"])
+                           if augmentation_config is not None else None)
     source_reference = _transfer_source_reference(cfg) if transfer else None
     py_rng = random.Random(cfg["seed"]); rng_generator = torch.Generator(device=target_device).manual_seed(cfg["seed"])
     teacher, teacher_provenance = build_teacher(cfg, synthetic=synthetic)
@@ -769,7 +825,7 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
         elif payload.get("teacher") is not None:
             teacher.load_state_dict(payload["teacher"], strict=True)
         if payload.get("student") is not None: student.load_state_dict(payload["student"], strict=True)
-        _restore_rng(payload["rng"], rng_generator, py_rng)
+        _restore_rng(payload["rng"], rng_generator, py_rng, strong_augmentation)
     elif stage == "J":
         if teacher_artifact is None: raise ValueError("J stage requires selected --fuse-teacher-artifact")
         artifact = Path(teacher_artifact)
@@ -862,24 +918,8 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
                                until_checkpoint, until_phase)
                     keys=sampler.next_labeled_batch(take)
                     frames=[train_data.load(key,labeled=True) for key in keys]
-                    samples=[_frame_tensor(frame,target_device) for frame in frames]
-                    if len(samples)==1:
-                        image,target,geometry=_transform(*samples[0],py_rng)
-                    else:
-                        first_image,first_target,geometry=samples[0]
-                        for image_i,target_i,geometry_i in samples[1:]:
-                            if image_i.shape != first_image.shape or target_i.shape != first_target.shape or any(geometry_i[k] != geometry[k] for k in ("shape","spacing_zyx","affine_zyx","context")):
-                                raise ValueError("same-patient teacher batch must have identical native shape and geometry")
-                        runtime={key:geometry[key] for key in ("shape","spacing_zyx","affine_zyx","context")}
-                        transform=sample_spatial_transform(runtime,rng=py_rng)
-                        transformed=[]
-                        for image_i,target_i,geometry_i in samples:
-                            xi,yi,gi=apply_spatial_transform(image_i,target_i,runtime,**transform)
-                            gi.update({k:v for k,v in geometry_i.items() if k not in gi})
-                            transformed.append((xi,yi,gi))
-                        image=torch.cat([v[0] for v in transformed],dim=0)
-                        target=torch.cat([v[1] for v in transformed],dim=0)
-                        geometry=transformed[0][2]
+                    image,target,geometry=prepare_teacher_batch(frames,target_device,
+                        py_rng=py_rng,augmentation=strong_augmentation)
                     configure_teacher_step(teacher,teacher_opt,t_update,t_budget,cfg)
                     teacher_opt.zero_grad(set_to_none=True)
                     with _autocast(target_device,cfg):
@@ -897,7 +937,7 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
                         payload={"identity":identity,"stage":"T","epoch":epoch,"update":t_update,
                             "teacher":teacher.state_dict(),"student":student.state_dict(),
                             "teacher_optimizer":teacher_opt.state_dict(),"student_optimizer":student_opt.state_dict(),
-                            "sampler":sampler.state_dict(),"rng":_rng_state(rng_generator,py_rng),
+                            "sampler":sampler.state_dict(),"rng":_rng_state(rng_generator,py_rng,strong_augmentation),
                             "best_t":best_t,"best_j":best_j,"selected_teacher":selected_teacher,
                             "teacher_optimizer_steps":t_optimizer_steps,
                             **({"zero_shot_teacher":zero_shot_info} if transfer else {})}
@@ -918,7 +958,7 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
                 boundary={"identity":identity,"stage":"T","epoch":epoch+1,"update":t_update,
                     "teacher":teacher.state_dict(),"student":student.state_dict(),
                     "teacher_optimizer":teacher_opt.state_dict(),"student_optimizer":student_opt.state_dict(),
-                    "sampler":sampler.state_dict(),"rng":_rng_state(rng_generator,py_rng),
+                    "sampler":sampler.state_dict(),"rng":_rng_state(rng_generator,py_rng,strong_augmentation),
                     "best_t":best_t,"best_j":best_j,"selected_teacher":selected_teacher,
                     "teacher_optimizer_steps":t_optimizer_steps,
                     **({"zero_shot_teacher":zero_shot_info} if transfer else {}),
@@ -1009,10 +1049,11 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
                         else:
                             q=min(1.,(j_update-warmup)/max(1,total-warmup)); scale=.5*(1+math.cos(math.pi*q))
                         group["lr"]=float(cfg["training"]["student_lr"])*scale
-                    global _joint_py_rng
-                    _joint_py_rng=py_rng
+                    if strong_augmentation is None:
+                        global _joint_py_rng
+                        _joint_py_rng=py_rng
                     with _autocast(target_device,cfg):
-                        loss,stats=joint_loss(student,teacher,frame_l,frame_u,update=j_update,total_updates=total,config=cfg,generator=rng_generator)
+                        loss,stats=joint_loss(student,teacher,frame_l,frame_u,update=j_update,total_updates=total,config=cfg,generator=rng_generator,augmentation=strong_augmentation)
                     _assert_teacher_clean(teacher)
                     loss.backward(); torch.nn.utils.clip_grad_norm_(student.parameters(),float(cfg["training"]["gradient_clip_norm"])); student_opt.step()
                     _assert_teacher_clean(teacher)
@@ -1023,7 +1064,7 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
                         payload={"identity":identity,"stage":"J","epoch":epoch,"update":j_update,
                             "teacher_artifact":teacher_ref,"student":student.state_dict(),
                             "student_optimizer":student_opt.state_dict(),"sampler":sampler.state_dict(),
-                            "rng":_rng_state(rng_generator,py_rng),"best_t":best_t,"best_j":best_j,
+                            "rng":_rng_state(rng_generator,py_rng,strong_augmentation),"best_t":best_t,"best_j":best_j,
                             "selected_teacher":True,
                             **({"zero_shot_teacher":zero_shot_info} if transfer else {})}
                         _save_resume(out_path,payload,"J",epoch,j_update)
@@ -1041,7 +1082,7 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
                 boundary={"identity":identity,"stage":"J","epoch":epoch+1,"update":j_update,
                     "teacher_artifact":teacher_ref,"student":student.state_dict(),
                     "student_optimizer":student_opt.state_dict(),
-                    "sampler":sampler.state_dict(),"rng":_rng_state(rng_generator,py_rng),
+                    "sampler":sampler.state_dict(),"rng":_rng_state(rng_generator,py_rng,strong_augmentation),
                     "best_t":best_t,"best_j":best_j,"selected_teacher":True,
                     **({"zero_shot_teacher":zero_shot_info} if transfer else {})}
                 _metric(out_path,{"type":"validation","stage":"J","epoch":epoch+1,"update":j_update,"modes":modes})

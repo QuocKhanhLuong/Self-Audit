@@ -30,6 +30,7 @@ _TRANSFER_SOURCE_IDENTITY = {
     "train_manifest_sha256": "3b30c0006218b2aa348730b1667ca2a78fe47742af509871d9a860bb9a8d5b9b",
     "val_manifest_sha256": "e3421779441afcab8f8feadbd293bedad6c00877730eb3c7151fa6a15667e88b",
 }
+_AUGMENTATION_POLICY = {"policy": "inplane_strong_v1"}
 
 
 def _teacher_recipe() -> dict[str, Any]:
@@ -81,6 +82,8 @@ def normalize_config(mapping: Mapping[str, Any]) -> dict[str, Any]:
     defaults = default_config(synthetic=bool(result.get("runtime", {}).get("synthetic", False)))
     semi = result.get("schema") == SEMI_SCHEMA
     transfer = result.get("schema") == TRANSFER_SCHEMA
+    if "augmentation" in result and (not semi or result["augmentation"] != _AUGMENTATION_POLICY):
+        raise ValueError("FUSE augmentation is supported only for v2 Track A with policy inplane_strong_v1")
     if transfer:
         transfer_defaults = default_transfer_config(synthetic=bool(result.get("runtime", {}).get("synthetic", False)))
         if set(result) != _ROOT_KEYS | {"experiment"}:
@@ -89,7 +92,8 @@ def normalize_config(mapping: Mapping[str, Any]) -> dict[str, Any]:
         for name in ("teacher_epochs", "joint_epochs", "teacher_batch_size"):
             result["training"].setdefault(name, transfer_defaults["training"][name])
     if semi:
-        if set(result) != _ROOT_KEYS | {"experiment"} or result.get("experiment") != {"track": "A", "dataset": "ACDC"}:
+        allowed = _ROOT_KEYS | {"experiment"} | ({"augmentation"} if "augmentation" in result else set())
+        if set(result) != allowed or result.get("experiment") != {"track": "A", "dataset": "ACDC"}:
             raise ValueError("FUSE v2 requires exactly experiment={track:A,dataset:ACDC}")
         result["training"] = copy.deepcopy(result.get("training", {}))
         result["training"].setdefault("teacher_epochs", 1 if result.get("runtime", {}).get("synthetic") else 500)
@@ -105,12 +109,17 @@ def validate_config(config: Mapping[str, Any], *, real_run: bool = False) -> dic
     semi = value.get("schema") == SEMI_SCHEMA
     transfer = value.get("schema") == TRANSFER_SCHEMA
     expected_root = _ROOT_KEYS | ({"experiment"} if (semi or transfer) else set())
+    augmentation_enabled = "augmentation" in value
+    if augmentation_enabled:
+        expected_root = expected_root | {"augmentation"}
     if set(value) != expected_root:
         raise ValueError(f"FUSE config keys must be exactly {sorted(expected_root)}")
     if value.get("schema") not in {SCHEMA, SEMI_SCHEMA, TRANSFER_SCHEMA} or value.get("method") != METHOD:
         raise ValueError("unsupported FUSE schema or method")
     if semi and value.get("experiment") != {"track": "A", "dataset": "ACDC"}:
         raise ValueError("FUSE v2 experiment must be exactly track A, dataset ACDC")
+    if augmentation_enabled and (not semi or value.get("augmentation") != _AUGMENTATION_POLICY):
+        raise ValueError("FUSE augmentation is supported only for v2 Track A with policy inplane_strong_v1")
     if transfer:
         experiment = value.get("experiment")
         if not isinstance(experiment, Mapping) or set(experiment) != {"track", "dataset", "source_teacher"} or experiment.get("track") != "B" or experiment.get("dataset") != "MNMS":

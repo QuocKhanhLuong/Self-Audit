@@ -522,3 +522,90 @@ archive/deletion receipts outside the historical directory. Require completed
 uploads, full remote-byte SHA256 verification for every ordered archive part,
 an unchanged source inventory, and no old campaign/watchdog writer before
 removal. A partial upload or failed verification never authorizes deletion.
+
+### [AMEND 2026-11-14] A-aug: locked stronger in-plane augmentation
+
+A-aug changes only augmentation relative to Track A at main `8fe7ace` and
+`reports/fuse-semi-20261113/recipe.A.json` (raw SHA256
+`d7af9576751eb7409093a8d7a5685d65c50baf088b168b289c83cf4b4d1bf8a8`).
+Keep its exact L8/U/manifests, seed42, architecture, T 500 epochs/8,000 frame
+exposures/physical batch2, J 100 epochs/8,000 paired updates, optimizer and
+selection/deploy rule. Do not run or modify B/B0. Use a new server run directory.
+The old A TEST50 was already opened: this experiment is explicitly **TEST
+opening 2, after TEST was opened**, descriptive only; never use it for selection.
+The primary comparison is student A-aug minus student A on VAL18, paired
+two-sided Wilcoxon and 10,000 patient bootstrap percentile 95% CI, seed42.
+Before training, report old teacher/student/fusion metrics on all16 L8 frames
+without augmentation next to old VAL18; this diagnosis is not a training gate.
+
+New `candidate_fuse.augmentation` code owns this opt-in policy. Existing v1/v2/v3
+recipes without `augmentation` keep identical normalization, hashes and behavior.
+Only the v2 A config may add top-level `augmentation`, exactly
+`{"policy":"inplane_strong_v1"}`. The numerical policy is fixed in source and
+this contract; unit tests may override probabilities on the augmentor directly.
+Its enabled recipe must be identical to old A after removing this one key.
+
+For each frame independently, sample one set of y/x transform draws, shared
+across all z slices. Apply the transforms sequentially, including their
+interpolation passes. Scale is visual magnification: s>1 zooms in (the inverse
+sampling map divides coordinates by s). In order: arbitrary rotation [-180,180] degrees (p=.5),
+isotropic y/x scaling [.7,1.4] (p=.5), 2D elastic deformation (p=.2), y and x
+flips (p=.5 each), then the existing spacing-safe quarter turn (p=.5; k=1..3).
+For a rectangular frame, a quarter turn samples onto the original centered
+H/W canvas with zero padding, rather than swapping output shape. No operation
+mixes z slices. The fixed output native shape, spacing and affine metadata are
+unchanged. These are training view deformations, not dataset resampling.
+Use bilinear image and nearest categorical mask interpolation, outside0/BG.
+Elastic alpha U[0,200] pixels and sigma U[9,13] pixels are the nnU-Net v1 2D
+defaults at commit `db16c6cef5fdd5a180159184e46b58bcca670446`:
+https://github.com/MIC-DKFZ/nnUNet/blob/db16c6cef5fdd5a180159184e46b58bcca670446/nnunet/training/data_augmentation/default_data_augmentation.py
+Smooth independent uniform[-1,1] 2D displacement fields with Gaussian sigma,
+then multiply by alpha, matching batchgenerators' convention.
+
+After spatial transformation: gamma [.7,1.5] p=.3, brightness multiplier
+[.75,1.25] p=.15, contrast [.75,1.25] p=.15, zero-mean Gaussian noise with
+standard deviation U[0,.1] p=.1, in-plane Gaussian blur sigma U[.5,1] p=.2,
+in-plane low-resolution simulation scale U[.5,1] p=.25 (nearest downsample,
+bilinear upsample to original H/W). Intensity parameters are per-frame;
+noise is voxelwise. Finish with clip[0,1], the input domain of both wrappers;
+teacher's unchanged internal full-volume z-score follows this clipping.
+
+T uses strong spatial+intensity input and matching spatial mask; its two ED/ES
+frames receive independent per-frame draws and retain their same native batch
+shape. J L and U each use one spatial view shared by teacher and student;
+only student receives the added strong intensity transforms. Teacher logits
+and fusion/mimic features come from the spatial-only view. L target follows
+that exact spatial transform. Evaluation, including Phase0, has no augment.
+All probabilities zero must return bitwise-identical inputs. Assert finite
+normalized images, categorical labels0..3 and unchanged z/shape/metadata.
+
+Interface before parallel implementation:
+`StrongInplaneAugment(seed=42, *, probabilities=None)` exposes
+`spatial(image, target, geometry) -> (image, target, geometry)`,
+`intensity(image) -> image`, `teacher_view(image,target,geometry)` returning
+the spatial+intensity image/target/geometry triple, and
+`joint_views(image,target,geometry)` returning
+`(teacher_image,student_image,target,geometry)`.
+Inputs are [1,1,D,H,W] float32[0,1], optional target [1,D,H,W] long.
+Its private CPU torch.Generator is seeded run_seed+2003; all random decisions,
+fields and noise use this generator, never global/sampler/dropout generators.
+`state_dict()/load_state_dict()` strictly serialize/restore this RNG. Optional
+probability keys are `rotate`, `scale`, `elastic`, `flip_y`, `flip_x`, `rot90`,
+`gamma`, `brightness`, `contrast`, `noise`, `blur`, `low_resolution`.
+Engine constructs one augmentor per run, checkpoints it as
+`rng.strong_augmentation` (required when enabled), and passes it explicitly to
+`joint_loss(..., augmentation=None)`; disabled calls retain old behavior.
+Shared `prepare_teacher_batch(frames, device, *, py_rng, augmentation=None)`
+returns image,target,geometry and is used by engine and the new profile script.
+
+Save and inspect12 real L8 overlays. Profile20 actual optimizer updates each
+of T(batch2) and J, including the largest native volume, into scratch output.
+Record wall time/update, CPU augmentation time, peak VRAM, dtype and GPU model;
+compare against the old A profile with explicit unit/batch caveats. If >50%
+slower, explain the bottleneck before full launch. OOM or mask misalignment
+stops; no automatic crop/resample or post-VAL weakening. Full pytest,
+check_repo and synthetic T/J/eval/export/cold-load smoke precede launch.
+One independent Claude reviewer checks logic and formulas. Run new watchdog
+with zero automatic training/TEST retries and a visible live log. Publish
+results promptly after TEST commits, including old/new VAL/TEST per-class
+Dice+HD95, Phase0, paired VAL statistics and profile/total timing.
