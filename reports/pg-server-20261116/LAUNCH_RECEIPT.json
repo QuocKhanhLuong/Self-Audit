@@ -1,0 +1,44 @@
+{
+  "schema": "self_audit.pg_campaign_launch.v1",
+  "utc": "2026-11-16T01:32:47.111726+00:00",
+  "source_commit": "e2fbff9f92e4950ea5d7fbfc920c5661be1e2200",
+  "run": "/root/mount_data/runs/pg-k8-20261116",
+  "host": "ae8a6d2632f0",
+  "config": "/root/dataset/receipts/PG_K8_CONFIG.json",
+  "config_sha256": "3ab6655b3cd71ffdef26735713feb958c0541d478d2c460326082b2f2e950fe4",
+  "service": "pg-campaign",
+  "tmux": "pg-k8:0",
+  "stage_order": [
+    "S1",
+    "S2",
+    "S3",
+    "A4",
+    "A3",
+    "A2",
+    "A1",
+    "finalize"
+  ],
+  "budgets": {
+    "S1": 10000,
+    "S2": 8000,
+    "S3": 4000,
+    "each_arm": 8000
+  },
+  "profile": {
+    "path": "/root/mount_data/runs/pg-k8-profile-20261116/GPU_PROFILE.json",
+    "sha256": "2459d58639402db8af9623039d0950ea174fd808ac946f4c8dacc90e0fe20389",
+    "status": "FAILED_S3_VAL_ACCESSOR",
+    "S1": "COMPLETED_2_UPDATES",
+    "S2": "COMPLETED_2_UPDATES",
+    "S3_and_arms": "NOT_RUN_TO_COMPLETION"
+  },
+  "launch_decision": "User requested full S1 before other-team code ready. S1 tested on largest TRAIN and canonical real profile; independent S3 VAL accessor fix underway. Stage boundary hook fetches and validates main before S2. All-stage GPU profile is not PASS.",
+  "artifact_isolation": "Full run starts from seed42; no profile checkpoint reused. Existing preflight directory retained.",
+  "auto_retry": 0,
+  "monitor_automation": "c851dc66-2854-459a-9ef3-9ca6a4ae6e1e",
+  "monitor_interval_seconds": 300,
+  "source_refresh_boundary": "before S2, never during S1",
+  "status": "SERVICE_STARTED",
+  "pending_boundary_fix_commit": "fd12e9111c199906443eb1ab64fb17bc103464c7",
+  "boundary_fix_validation": "Other-team 158 PG tests, 16 Linux codebook tests and all-stage synthetic smoke PASS; real GPU recheck NOT_RUN"
+}

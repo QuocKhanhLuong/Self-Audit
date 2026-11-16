@@ -1,0 +1,44 @@
+{
+  "automation": "c851dc66-2854-459a-9ef3-9ca6a4ae6e1e",
+  "enabled": true,
+  "schedule": "*/5 * * * *",
+  "scope": "PG only",
+  "runs_observed": [
+    {
+      "id": "74609188-0855-44b5-98c9-11b60a137b44",
+      "status": "skipped_precheck",
+      "scheduledFor": 1794792900000,
+      "precheckResult": {
+        "command": "rtk proxy python /Users/alvinluong/orca/workspaces/Self-Audit/pg-server-20261116/scripts/pg_health.py",
+        "exitCode": 3,
+        "timedOut": false,
+        "durationMs": 5227,
+        "stdout": "{\"needs_attention\": false, \"process\": \"pg-campaign                      RUNNING   pid 44500, uptime 0:02:32\", \"seconds_since_progress_file\": 91.31898641586304, \"stage\": \"S1\", \"status\": \"RUNNING\"}\n",
+        "stderr": "",
+        "stdoutTruncated": false,
+        "stderrTruncated": false,
+        "error": null,
+        "startedAt": 1794792914902,
+        "completedAt": 1794792920129
+      }
+    },
+    {
+      "id": "055578db-8bb2-47a7-a3b5-5687976dcc75",
+      "status": "completed",
+      "scheduledFor": 1794792600000,
+      "precheckResult": {
+        "command": "rtk proxy python /Users/alvinluong/orca/workspaces/Self-Audit/pg-server-20261116/scripts/pg_health.py",
+        "exitCode": 0,
+        "timedOut": false,
+        "durationMs": 5019,
+        "stdout": "{\"returncode\": 0, \"health\": {\"needs_attention\": true, \"process\": \"pg-campaign                      STOPPED   Not started\", \"status\": \"MISSING_QUEUE\"}, \"stderr\": \"Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.\\nHave fun!\\nAI agents: READ /etc/vast-agents-guide.md (also linked as ./AGENTS.md) before acting on or describing this instance: it is the operating guide. ('vast-capabilities' shows live state only, not the guide.)\\n\"}\n",
+        "stderr": "",
+        "stdoutTruncated": false,
+        "stderrTruncated": false,
+        "error": null,
+        "startedAt": 1794792734876,
+        "completedAt": 1794792739895
+      }
+    }
+  ]
+}

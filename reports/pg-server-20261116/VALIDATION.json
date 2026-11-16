@@ -1,0 +1,20 @@
+{
+  "schema": "self_audit.pg_setup_validation.v1",
+  "source_commit": "e2fbff9f92e4950ea5d7fbfc920c5661be1e2200",
+  "evidence": "SOFTWARE_ONLY",
+  "checks": {
+    "check_repo": "PASS",
+    "pytest_pg": "151 passed in 58.97s",
+    "relocation_and_audit_followup": "12 passed in 0.90s",
+    "smoke": "PASS S1 S2 S3 A1 A2 A3 A4"
+  },
+  "note": "The 12-test followup overlaps with the PG suite; counts are not additive. Historical modules were not edited. Full repository pytest was not run for this setup-only increment; the other-team Linux matrix is separately recorded.",
+  "integrated_followup": {
+    "commit": "fd12e9111c199906443eb1ab64fb17bc103464c7",
+    "evidence_owner": "other PG code coordinator",
+    "pytest_pg": "158 passed",
+    "linux_codebook": "16 passed",
+    "smoke": "all stages and 4 arms PASS",
+    "receipt": "reports/pg-k8-20261116/FIXES_RECEIPT.json"
+  }
+}

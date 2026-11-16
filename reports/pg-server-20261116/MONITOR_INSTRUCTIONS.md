@@ -36,3 +36,21 @@ disable only this PG automation. Leave unrelated historical automations alone.
 
 Current M&Ms scope is download/integrity/geometry preparation only; do not
 start B/B0 or any M&Ms training. Historical A/A3D/Q3D/FUSE source is frozen.
+
+Launch-specific note: real profile exposed S3 `_qval_metrics` incorrectly
+requesting U keys from VAL plus native-grid aggregation incompatibility. The
+other code team is publishing its codebook.py/regression fix to main. Confirm
+that fix exists in the fetched S2 boundary commit; retain the failed profile
+receipt. S1 has no dependency on this evaluator and is authorized to train
+while the fix is prepared. Do not rerun the profile concurrently with S1.
+Remote launch receipt is /root/dataset/receipts/PG_LAUNCH_RECEIPT.json; local
+report receipt is under this directory. Read LIVE_STATUS.json only as a dated
+snapshot and always verify live state.
+
+The S3 fix is now published: fd12e9111c199906443eb1ab64fb17bc103464c7.
+Before any later recovery, verify this commit is an ancestor of the current
+main. The existing boundary hook runs CPU checks after its fetch; it does not
+run a second GPU profile. Do not report GPU recheck PASS until measured. The
+finalization metric parity check remains strict at atol 1e-7 (OPEN-B1f in the
+other-team review); diagnose a real failure if one occurs, do not silently
+loosen it or rerun an already committed TEST transaction.

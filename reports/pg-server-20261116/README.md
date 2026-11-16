@@ -79,3 +79,37 @@ Main update e71b6c1 was integrated before launch; it includes the other team's
 single Claude review and Linux CPU acceptance receipts. Local PG suite: 151
 passed, then 12 focused relocation/audit checks passed (overlap between runs).
 No patient efficacy result is claimed by this setup report.
+
+M&Ms archive audit is now GEOMETRY_READY: 175 TRAIN, 34 VAL, 136 TEST; all
+345 raw header hashes match the committed original release. The previously
+authorized mm/polar geometry policy recomputes within 1e-10 affine tolerance
+(maximum observed roundoff near 1e-14). Original unknown-unit tags remain
+recorded. Voxel arrays, target manifests and M&Ms training remain NOT_RUN.
+
+## Actual launch and remaining verification
+
+The canonical real GPU profile passed S1 and S2, then exposed a real-only S3
+VAL accessor bug: `_qval_metrics` called TRAIN-only `unlabeled_keys()` on VAL.
+The failed receipt is preserved (316.3 s; peak allocated 12,031,922,176 bytes,
+reserved 16,773,021,696 bytes). No OOM. S3 and arm GPU profile completion is
+NOT_RUN; the complete GPU profile is not reported as PASS.
+
+Following the user's explicit instruction to train S1 before the other team's
+later code is ready, the full fresh run started on e2fbff9, seed 42, with no
+profile checkpoint reuse. Full S1 reached update 50/10,000. The other team
+owns a narrow tested S3 evaluator fix; the S1/S2 boundary hook will pick up
+that main commit. The running checkout is not changed during S1.
+
+The five-minute Orca repair automation is enabled, ID
+c851dc66-2854-459a-9ef3-9ca6a4ae6e1e. Healthy-process precheck returned exit 3;
+SSH errors and stopped/stale jobs wake the agent. Supervisor does not blindly
+retry failed training. All stages and arm budgets remain unchanged. This is
+an ongoing training launch, not completed results or efficacy evidence.
+
+The S3 evaluation follow-up is published and remote-verified as
+fd12e9111c199906443eb1ab64fb17bc103464c7. The other team reports 158 current PG
+tests, all-stage synthetic smoke and 16 Linux codebook tests passing; see its
+FIXES_RECEIPT.json. This checkout incorporates that commit; the live server
+remains e2fbff9 until the boundary hook. The hook performs CPU validation;
+there is no second GPU profile running alongside S1. Actual S3 GPU verification
+and full-campaign results remain NOT_RUN at this handoff.
