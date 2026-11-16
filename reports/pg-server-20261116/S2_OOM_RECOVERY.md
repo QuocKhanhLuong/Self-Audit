@@ -48,7 +48,34 @@ Local software verification:
   sampler, augmentation and threshold state exactly, retaining 30 unique
   epoch rows. Nonfinite stream losses fail before optimizer mutation.
 
-Real post-warmup recovery is pending at this pre-deployment report. It must
-be verified separately from software parity. The original GPU profile is
-still not an all-stage PASS. Campaign completion still requires S3, all four
-arm exports, finalization and committed final TEST receipts.
+Real recovery outcome: **BLOCKED_OOM_AFTER_TESTED_STREAM_FIX**.
+Fix commit `a0a88879994efd83ee9d86619886f5fd92f4b311` was pushed to main,
+remote-SHA verified and deployed at the stopped S2 boundary. Server repository
+checks and all **169 PG tests passed in 206.69 seconds**. One explicitly
+recorded resume used the existing service, with automatic retries disabled.
+
+At **12:19:39.983561 UTC**, that attempt failed in an individual U-stream
+forward at `teacher_training.py:702`, through MedNeXt `dec_block_1`/`conv2`.
+The failed allocation was 216 MiB; the exception reported 21.77 GiB allocated
+by PyTorch, 1.20 GiB reserved but unallocated, and 96.56 MiB device-free out
+of 23.43 GiB. These exception values are not a measured whole-stage peak.
+The exact stream name, patient and failing update were not logged; do not
+infer them. A prior allocator warning was followed by continued process
+activity, but this later traceback and queue failure confirm termination.
+
+No new diagnostic/checkpoint beyond update 800 was committed. The original
+checkpoint hash and 30 epoch rows still match, so post-800 optimizer progress
+is **NOT_VERIFIED**, not zero and not successful recovery. S1 and all
+configuration/data hashes remain unchanged. There is no GPU writer, and no
+further invocation was launched. The one-view adaptation remains untested
+and unapplied; it must not be presented as a proven solution to this failure.
+
+The second failed attempt, queue, traceback log and server validation are
+archived at
+`/root/mount_data/runs/pg-k8-20261116/code_updates/oom-after-stream-fix-20261116T121939Z/`.
+`S2_OOM_RECOVERY_RECEIPT.json` binds the outcome and unchanged checkpoint.
+Both coordinators were informed. The named PG monitor remains enabled;
+future recovery requires a concrete reviewed mitigation, not an identical
+retry. The original GPU profile is still not an all-stage PASS. Campaign
+completion still requires S3, all four arm exports, finalization and committed
+final TEST receipts.

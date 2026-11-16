@@ -1,0 +1,66 @@
+{
+  "schema": "self_audit.pg_s2_oom_recovery.v1",
+  "utc": "2026-11-16T12:21:34.988903+00:00",
+  "status": "BLOCKED_OOM_AFTER_TESTED_STREAM_FIX",
+  "source_commit": "a0a88879994efd83ee9d86619886f5fd92f4b311",
+  "run": "/root/mount_data/runs/pg-k8-20261116",
+  "failure": {
+    "argv": [
+      "/venv/main/bin/python",
+      "/root/Self-Audit-pg-20261116/train.py",
+      "--config",
+      "/root/dataset/receipts/PG_K8_CONFIG.json",
+      "--out",
+      "/root/mount_data/runs/pg-k8-20261116",
+      "--device",
+      "cuda",
+      "--pg-stage",
+      "S2",
+      "--pg-resume"
+    ],
+    "config_sha256": "3ab6655b3cd71ffdef26735713feb958c0541d478d2c460326082b2f2e950fe4",
+    "finished_utc": "2026-11-16T12:19:39.983561+00:00",
+    "log_path": "/root/mount_data/runs/pg-k8-20261116/logs/S2.log",
+    "log_sha256": "3dbefdb99a58e38bf01014da01145da824ab159f654fe384f5fdc7785d4e36aa",
+    "returncode": 1,
+    "source_hashes": {
+      "scripts/pg_campaign.py": "dc7149a2d1107277e06124899c8db416eac86978804845ee932c548f5d7638c2",
+      "self_audit/candidate_pg/engine.py": "c7cf97e8b0b01308db2997876c92b6fb98f8a2862fe900e2c73c47de9a932107",
+      "train.py": "fa29ce3adff741b6b6e586bc3d268f9e589bffab58f7722b23b1982a481dfcae"
+    },
+    "started_utc": "2026-11-16T12:16:47.619375+00:00",
+    "status": "FAILED"
+  },
+  "last_durable_update": 800,
+  "post800_progress": "NOT_VERIFIED",
+  "checkpoint_sha256": "09564256071f9811bc3e4521968284ad0b281da7258afda6c36c0d69b28c0138",
+  "s1_sha256": "f596a68a692799326aac736fdff085543a495ad13f0d8c82270b4724782b1b8f",
+  "config_sha256": "3ab6655b3cd71ffdef26735713feb958c0541d478d2c460326082b2f2e950fe4",
+  "checkpoint_rows": {
+    "csv_offset": 9221,
+    "epoch": 10,
+    "jsonl_offset": 16920,
+    "row_count": 30,
+    "schema": "self_audit.candidate_pg.epoch_commit.v1",
+    "update": 800
+  },
+  "gpu_writers": 0,
+  "original_archive": "/root/mount_data/runs/pg-k8-20261116/code_updates/oom-S2-20261116T115809Z",
+  "latest_archive": "/root/mount_data/runs/pg-k8-20261116/code_updates/oom-after-stream-fix-20261116T121939Z",
+  "software_checks": {
+    "local_pg": "169 passed in67.02s",
+    "server_pg": "169 passed in206.69s",
+    "check_repo": "PASS"
+  },
+  "resource_failure": {
+    "allocation_request_mib": 216,
+    "torch_allocated_gib": 21.77,
+    "torch_reserved_unallocated_gib": 1.2,
+    "device_total_gib": 23.43,
+    "device_free_mib": 96.56
+  },
+  "recipe_adaptation": false,
+  "blind_retry": false,
+  "completion": false,
+  "monitor_automation": "c851dc66-2854-459a-9ef3-9ca6a4ae6e1e"
+}

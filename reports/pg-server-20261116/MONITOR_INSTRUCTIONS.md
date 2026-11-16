@@ -54,3 +54,20 @@ run a second GPU profile. Do not report GPU recheck PASS until measured. The
 finalization metric parity check remains strict at atol 1e-7 (OPEN-B1f in the
 other-team review); diagnose a real failure if one occurs, do not silently
 loosen it or rerun an already committed TEST transaction.
+
+Latest diagnosed S2 blocker (2026-11-16 12:19:39 UTC): read
+`S2_OOM_RECOVERY.md` and `S2_OOM_RECOVERY_RECEIPT.json`. Original S2 failed
+at the first post-warmup second-strong forward. Reviewed fix `a0a8887`
+accumulates stream gradients separately without changing the two-view recipe;
+169 PG tests passed both locally and on server. Its single recorded resume
+still failed with CUDA OOM in an individual U-stream forward. The exact
+stream/update/patient was not recorded. Last durable checkpoint remains
+update 800, SHA `09564256071f9811bc3e4521968284ad0b281da7258afda6c36c0d69b28c0138`,
+with 30 committed epoch rows; completed S1 and config/data hashes are intact.
+Both attempts are archived. Do not repeat that invocation or claim recovery
+from software checks or temporary GPU activity. A subsequent recovery needs
+a concrete reviewed mitigation and ownership coordination. The registered
+common one-view adaptation is not yet applied or proven sufficient. Recheck
+live state; this is a dated blocker, not a permanent prohibition on an
+authorized tested repair. Keep the PG automation enabled until the existing
+completion requirements are satisfied.
