@@ -71,3 +71,16 @@ common one-view adaptation is not yet applied or proven sufficient. Recheck
 live state; this is a dated blocker, not a permanent prohibition on an
 authorized tested repair. Keep the PG automation enabled until the existing
 completion requirements are satisfied.
+
+Subsequent recovery (2026-11-16 12:46 UTC): read
+`S2_CHECKPOINT_MEMORY_RECOVERY.md` and its matching `_RECEIPT.json`.
+Reviewed source `df646fc9f800b1e90f2adda963b21b19ec984a10` adds per-native-block
+activation recomputation and precise OOM context without changing the recipe.
+174 PG tests and repository checks passed locally and on the stopped server;
+original update 800 strictly loaded on CPU. One supervised full-budget resume
+reached verified durable update 850, with finite active-U losses and measured
+7.35 GiB allocated / 11.26 GiB reserved peaks through that diagnostic.
+Original 800, S1, data/config and prior failures remain preserved. The run is
+progressing, not complete, and all-stage GPU fit is not established. Do not
+reapply the fix, restart a healthy process or refresh its active checkout.
+Recheck live state and retain the existing completion/automation requirements.

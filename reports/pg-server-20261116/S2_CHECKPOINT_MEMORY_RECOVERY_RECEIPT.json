@@ -1,0 +1,283 @@
+{
+  "schema": "self_audit.pg_s2_checkpoint_memory_recovery.v1",
+  "utc": "2026-11-16T12:46:55.058507+00:00",
+  "status": "RECOVERED_PROGRESS_VERIFIED_CAMPAIGN_RUNNING",
+  "source_commit": "df646fc9f800b1e90f2adda963b21b19ec984a10",
+  "run": "/root/mount_data/runs/pg-k8-20261116",
+  "resume_from_update": 800,
+  "checkpoint": {
+    "path": "/root/mount_data/runs/pg-k8-20261116/S2/teacher_latest.pt",
+    "sha256": "4616f738ba63140fd28f2d2dfbcf856f4695fc18047b61fc2e196102044dbccd",
+    "update": 850,
+    "optimizer_steps": [
+      850
+    ],
+    "model_state_keys": 541,
+    "config_sha256": "3887c1263a793946ef7f27b52d5d30bae6fd6d9eab37e72383cc86fd988b92fb",
+    "epoch_logger": {
+      "schema": "self_audit.candidate_pg.epoch_logger.v1",
+      "row_count": 30,
+      "epoch": 10,
+      "update": 850,
+      "csv_offset": 9221,
+      "jsonl_offset": 16920
+    }
+  },
+  "diag": {
+    "confident_fraction": 0.8115053176879883,
+    "lambda_denominator_updates": 8000,
+    "lambda_u": 0.0625,
+    "loss_sup": 0.572060227394104,
+    "loss_total": 0.5744558572769165,
+    "loss_u": 0.038330078125,
+    "memory_peak_bytes": 7891382272,
+    "memory_reserved_peak_bytes": 12087984128,
+    "seconds": 3.3263065139763057,
+    "tau_c": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ],
+    "tau_g": 0.28622502088546753,
+    "update": 850
+  },
+  "original_checkpoint": {
+    "path": "/root/mount_data/runs/pg-k8-20261116/code_updates/oom-S2-20261116T115809Z/S2/teacher_latest.pt",
+    "sha256": "09564256071f9811bc3e4521968284ad0b281da7258afda6c36c0d69b28c0138",
+    "update": 800
+  },
+  "s1_sha256": "f596a68a692799326aac736fdff085543a495ad13f0d8c82270b4724782b1b8f",
+  "raw_config_sha256": "3ab6655b3cd71ffdef26735713feb958c0541d478d2c460326082b2f2e950fe4",
+  "manifests": [
+    {
+      "path": "/root/dataset/prepared/ACDC/pg-k8-20261116-v2/test.json",
+      "sha256": "43b2c98991660c5928bafc5a5e9230c439286451d87fab50b27d443ad738698d"
+    },
+    {
+      "path": "/root/dataset/prepared/ACDC/pg-k8-20261116-v2/train.json",
+      "sha256": "7ccf688343f016d549b5975f1407c336d269078edf86c1ad52052dafb72f7ebb"
+    },
+    {
+      "path": "/root/dataset/prepared/ACDC/pg-k8-20261116-v2/val.json",
+      "sha256": "ca5bb5f0c603111d302ef879930e8d20a46d426fdbbefbe623a035f9010e8d5b"
+    },
+    {
+      "path": "/root/dataset/prepared/ACDC/pg-k8-20261116-v2/locked_k8_derived.json",
+      "sha256": "771d7b9a02e52d6cc0eb4891ff631aa4f0aaf3a532bbbf28a7c32e71cbbcbc86"
+    }
+  ],
+  "source_file_sha256": {
+    "self_audit/candidate_pg/teacher_mednext.py": "02941fd4e33fafbd28d58e261adef2bc2af451c9304f5ec68b3c64975b6f592a",
+    "self_audit/candidate_pg/teacher_training.py": "1f3295a1a27963e91f2f93d57799f338c37ee594b9fc8f7edacdd6e451ce8a38",
+    "tests/test_candidate_pg_teacher_checkpoint_memory.py": "e2359986d245be47e267a7177f15074c3fd4073545adcfeef366db1986d05a17"
+  },
+  "queue_status": "RUNNING",
+  "attempt_history_count": 4,
+  "active_stage": "S2",
+  "supervisor": "pg-campaign                      RUNNING   pid 465370, uptime 0:05:19",
+  "gpu_processes": [
+    "465383, /venv/main/bin/python, 11886 MiB"
+  ],
+  "trainer_pid": 465383,
+  "trainer_argv": [
+    "/venv/main/bin/python",
+    "/root/Self-Audit-pg-20261116/train.py",
+    "--config",
+    "/root/dataset/receipts/PG_K8_CONFIG.json",
+    "--out",
+    "/root/mount_data/runs/pg-k8-20261116",
+    "--device",
+    "cuda",
+    "--pg-stage",
+    "S2",
+    "--pg-resume",
+    ""
+  ],
+  "tmux_windows": [
+    "pg-k8:0 pipeline panes=3"
+  ],
+  "free_disk_bytes": 47784804352,
+  "boundary": {
+    "path": "/root/mount_data/runs/pg-k8-20261116/code_updates/S2_MAIN_REFRESH.json",
+    "sha256": "4285a64f7a4175dd45baf29d712a32d70384e3b244fc56f0ffd3060bfc004633",
+    "status": "PASS"
+  },
+  "software_checks": {
+    "check_repo": "PASS local and server",
+    "local_pg": "174 passed in69.73s",
+    "server_pg": "174 passed in207.86s"
+  },
+  "strict_cpu_load": {
+    "schema": "self_audit.pg_s2_checkpoint_cpu_load.v1",
+    "status": "PASS",
+    "utc": "2026-11-16T12:40:51.866430+00:00",
+    "source_commit": "df646fc9f800b1e90f2adda963b21b19ec984a10",
+    "checkpoint_sha256": "09564256071f9811bc3e4521968284ad0b281da7258afda6c36c0d69b28c0138",
+    "config_sha256": "3887c1263a793946ef7f27b52d5d30bae6fd6d9eab37e72383cc86fd988b92fb",
+    "update": 800,
+    "strict_model_load": true,
+    "optimizer_loaded": true,
+    "optimizer_steps": [
+      800
+    ],
+    "model_state_keys": 541,
+    "buffer_count": 0,
+    "cuda_initialized": false,
+    "torch_version": "2.14.1+cu132",
+    "source_provenance": {
+      "model_class": "MedNeXtPGTeacher",
+      "architecture": "MedNeXt-L-k3-full-encoder-decoder-plus-boundary-sdf",
+      "feature_channels": [
+        32,
+        64,
+        128,
+        256,
+        512
+      ],
+      "block_counts": [
+        3,
+        4,
+        8,
+        8,
+        8,
+        8,
+        8,
+        4,
+        3
+      ],
+      "exp_ratios": [
+        3,
+        4,
+        8,
+        8,
+        8,
+        8,
+        8,
+        4,
+        3
+      ],
+      "feature_phases": [
+        [
+          [
+            1,
+            1,
+            1
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            1,
+            2,
+            2
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            1,
+            4,
+            4
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            2,
+            8,
+            8
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            2,
+            16,
+            16
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ]
+        ]
+      ],
+      "class_mapping": [
+        "BG",
+        "RV",
+        "MYO",
+        "LV"
+      ],
+      "sdf_channels": 3,
+      "sdf_all_channels": 4,
+      "sdf_radius_mm": 5.0,
+      "boundary_compatibility_head": "boundary_logits",
+      "q3d_teacher_loss_keys": [
+        "region_logits",
+        "boundary_logits",
+        "sdf"
+      ],
+      "q3d_sdf_source": "sdf_all (bg1 + foreground3); public sdf is foreground3",
+      "upstream_url": "https://github.com/MIC-DKFZ/MedNeXt",
+      "reference_main_sha": "0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba",
+      "verified_source_files": [
+        "https://github.com/MIC-DKFZ/MedNeXt/blob/0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba/nnunet_mednext/network_architecture/mednextv1/MedNextV1.py",
+        "https://github.com/MIC-DKFZ/MedNeXt/blob/0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba/nnunet_mednext/network_architecture/mednextv1/blocks.py",
+        "https://github.com/MIC-DKFZ/MedNeXt/blob/0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba/nnunet_mednext/network_architecture/mednextv1/create_mednext_v1.py"
+      ],
+      "backbone": "MedNeXt-L-k3",
+      "source_repo": "/root/Self-Audit-pg-20261116/external/MedNeXt",
+      "source_commit": "0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba",
+      "weights_sha256": null,
+      "weights_status": "UNTRAINED_RANDOM_INIT",
+      "features_api": "native_mednext_v1_sequence",
+      "factory": "nnunet_mednext.create_mednext_v1",
+      "pretraining_data": null
+    }
+  },
+  "resume_request": {
+    "schema": "self_audit.pg_s2_checkpoint_resume_request.v1",
+    "utc": "2026-11-16T12:41:34.611813+00:00",
+    "source_commit": "df646fc9f800b1e90f2adda963b21b19ec984a10",
+    "reason": "Reviewed df646fc per-native-block activation recomputation after archived stream-forward OOM; 174 PG tests and repository checks pass locally and on server; strict original update800 model and optimizer CPU load passed; full two-view recipe, configuration, data, S1 and budgets unchanged; one supervised resume, no automatic retry.",
+    "checkpoint_sha256": "09564256071f9811bc3e4521968284ad0b281da7258afda6c36c0d69b28c0138",
+    "resume_update": 800,
+    "config_sha256": "3ab6655b3cd71ffdef26735713feb958c0541d478d2c460326082b2f2e950fe4",
+    "stage_budget": 8000,
+    "no_update_cap": true,
+    "gpu_writers_before": 0,
+    "single_start": true,
+    "boundary_receipt_sha256": "4285a64f7a4175dd45baf29d712a32d70384e3b244fc56f0ffd3060bfc004633",
+    "strict_cpu_load_sha256": "0dc0819c8572afe6d477b0ae3e0b4eb27bca6fdaa47bad1e66d26601a2925914",
+    "service_before_sha256": "798c7ba3d545ce532fe82f2a17d5ffbf514f6428770b700a9e26ce5e3ea8518d"
+  },
+  "start_result": {
+    "utc": "2026-11-16T12:41:36.918210+00:00",
+    "returncode": 0,
+    "stdout": "pg-campaign: started\n",
+    "stderr": ""
+  },
+  "original_recipe_preserved": true,
+  "blind_retry": false,
+  "completed_campaign": false,
+  "all_stage_gpu_fit": "NOT_ESTABLISHED",
+  "automation": "c851dc66-2854-459a-9ef3-9ca6a4ae6e1e",
+  "automation_action": "KEEP_ENABLED"
+}

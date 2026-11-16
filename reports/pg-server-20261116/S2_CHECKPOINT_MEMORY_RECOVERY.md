@@ -68,3 +68,35 @@ All prior failures, boundary checks and receipts remain preserved as described
 in `S2_OOM_RECOVERY.md`. The automation remains enabled until the four-arm,
 finalization and committed TEST requirements are met. This repair does not
 establish all-stage GPU fit, scientific efficacy or campaign completion.
+
+## Verified real resume
+
+Recovery source `df646fc9f800b1e90f2adda963b21b19ec984a10` was pushed to
+main, remote-SHA verified and deployed while S2 was stopped. Server repository
+checks passed and **174 PG tests passed in 207.86 seconds**. The original
+update-800 checkpoint loaded strictly into the real teacher on CPU: 541 state
+keys, zero buffers and AdamW step 800; CUDA was not initialized by this check.
+
+The existing service was resumed once at **12:41:36 UTC**, without an update
+cap or automatic retries. Real S2 reached **durable update 850**. The new
+checkpoint loaded on CPU, matched its sidecar SHA-256
+`4616f738ba63140fd28f2d2dfbcf856f4695fc18047b61fc2e196102044dbccd`, and
+contained AdamW step 850, the unchanged resolved config hash and 30 existing
+epoch rows. Original update 800 remains hash-verified in its immutable archive.
+
+Diagnostic 850 reports finite supervised/U/total losses
+`0.572060227394104 / 0.038330078125 / 0.5744558572769165`, with
+`lambda_u=0.0625` and denominator 8,000. Measured process peak allocated memory
+is **7,891,382,272 bytes (7.35 GiB)** and peak reserved memory is
+**12,087,984,128 bytes (11.26 GiB)** through that diagnostic. These are measured
+post-warmup progress figures, not whole-stage or all-patient maximums.
+
+Status: **RECOVERED_PROGRESS_VERIFIED_CAMPAIGN_RUNNING**. Exactly one GPU
+writer, the existing service and one `pg-k8` window were verified. S1,
+configuration and manifest identities are unchanged; no new OOM context was
+recorded. `S2_CHECKPOINT_MEMORY_RECOVERY_RECEIPT.json` contains the bound
+snapshot, strict-load check and single-resume request. Server evidence is at
+`code_updates/checkpoint-memory-20261116T123600Z/`. The active checkout stays
+pinned to the tested source; this subsequent report publication does not
+change the running stage. Four-arm completion and final TEST receipts remain
+outstanding, so the named automation stays enabled.
