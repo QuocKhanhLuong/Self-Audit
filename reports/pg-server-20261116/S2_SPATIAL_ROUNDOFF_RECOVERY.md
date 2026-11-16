@@ -44,25 +44,56 @@ and disabled-augmentation identity. All 13 pass; repository checks and all 187 P
 Full PG and repository test results and recovery execution are recorded below
 when measured. This report does not claim campaign completion or all-stage fit.
 
-## Recovery status
+## Verified recovery
 
-**CPU_VERIFIED_GPU_REPLAY_RESUME_PENDING**. The PG code coordinator confirmed
-sole recovery ownership and the one-ULP-only scope. Original S1, checkpoint
-1950, configuration, manifests, completed epochs and all previous failures must
-be preserved before the stopped-boundary deployment. Recovery requires reviewed
-source, passing checks, one recorded full-budget resume, and a newly verified
-durable checkpoint beyond the reproduced failing update 1989.
+**RECOVERED_DURABLE_PROGRESS_VERIFIED_CAMPAIGN_RUNNING**, observed at
+2026-11-16 14:30:11 UTC. Reviewed source
+`dfeee8806daf471e6c8b045a42cd5ad791da487d` was published with a four-path
+allowlist, remote-SHA verified and deployed at the stopped boundary under
+`QUEUE.lock`. The running checkout remains pinned to this tested source.
 
-All four arm exports, finalization and committed final TEST receipts are still
-outstanding. Keep automation `c851dc66-2854-459a-9ef3-9ca6a4ae6e1e` enabled.
+- Local focused tests: **13 passed**. Full PG suite: **187 passed in 70.18s**.
+- Full local suite: **1,178 passed, 4 skipped, 3 subtests passed in 457.74s**;
+  two expected duplicate-ZIP warnings came from corruption fixtures.
+- Repository checks pass locally and on the server. Server PG suite:
+  **187 passed in 206.04s**.
+- The two-update PG CPU smoke passes with its explicit software-only overrides.
+  Q3D CPU smoke completed with its explicit synthetic override; its tokenizer
+  gate remains NOT_READY/passed=false. These are software checks only.
+- Original checkpoint 1950 strictly loaded the real teacher's 541 state keys
+  and AdamW step 1950 on CPU without initializing CUDA.
+- Fixed augmentation-only replay passed through updates 1951–2000. It corrected
+  exactly the reproduced update-1989 voxel, with the original private RNG hash,
+  and left checkpoint 1950 unchanged. No model forward or optimizer ran in replay.
 
-The exact source and test bytes passed code-team review. The two-update PG
-CPU smoke passed with its explicit software-only overrides. The Q3D CPU smoke
-completed with its explicit synthetic override; its tokenizer gate remains
-NOT_READY/passed=false. Full repository tests are still running at publication.
-Original S2 and failure evidence are preserved under
-`code_updates/spatial-roundoff-20261116T141644Z/`, including a hash-verified copy
-of checkpoint 1950. No training resume has yet occurred.
+The existing service resumed **once at 14:25:07 UTC** from update 1950 with
+the unchanged full 8,000-update budget, two strong views, and zero automatic
+retries. Durable checkpoint **2000** then loaded on CPU and matched its sidecar:
+`96818d071dfb51c537cc2336e6c1410f1c01e37ced927eba5419cc7b9c089386`.
+Its AdamW step is 2000; epoch 25 has 75 committed rows. The original resolved
+config SHA is unchanged. Finite supervised/U/total diagnostic losses are
+`0.7456923723220825 / 0.0272216796875 / 0.7729140520095825`.
+
+Measured peaks through diagnostic 2000 are **7,909,834,752 allocated bytes
+(7.37 GiB)** and **11,947,474,944 reserved bytes (11.13 GiB)**. One GPU trainer
+PID 534662, existing supervisor PID 534633, and one `pg-k8` window were verified.
+These observations establish recovery past the reproduced failure, not
+whole-stage or all-stage GPU fit or scientific efficacy.
+
+Original checkpoint 1950, S2 metrics and failed logs/queue/service/boundary
+receipts are hash-preserved under
+`code_updates/spatial-roundoff-20261116T141644Z/`. Completed S1, original data,
+manifest/split/config identities and all earlier attempts remain preserved.
+The directory also contains the server validation, strict CPU load, bounded
+replay, explicit resume request, start result and verified-progress receipts.
+The matching JSON report binds these observations to hashes and source.
+
+All four arm exports, finalization and committed final TEST receipts remain
+outstanding. Automation `c851dc66-2854-459a-9ef3-9ca6a4ae6e1e` was verified
+enabled and remains enabled. No additional deployment or restart is needed
+while the stage is healthy. M&Ms remains preparation-only; historical tracks
+and runs were not changed.
 
 Coordinator relay of user steering at 14:16:12 UTC: finish this reviewed repair
-and resume promptly; subsequent code fixes must use Luna only.
+and resume promptly; **subsequent code fixes must use Luna only**. This
+restriction is also preserved in `MONITOR_INSTRUCTIONS.md`.

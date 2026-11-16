@@ -1,7 +1,7 @@
 {
   "schema": "self_audit.pg_s2_spatial_roundoff_recovery.v1",
-  "utc": "2026-11-16T14:15:15.748624+00:00",
-  "status": "CPU_VERIFIED_GPU_REPLAY_RESUME_PENDING",
+  "utc": "2026-11-16T14:30:11.199823+00:00",
+  "status": "RECOVERED_DURABLE_PROGRESS_VERIFIED_CAMPAIGN_RUNNING",
   "run": "/root/mount_data/runs/pg-k8-20261116",
   "original_source": "df646fc9f800b1e90f2adda963b21b19ec984a10",
   "checkpoint_before": {
@@ -91,11 +91,13 @@
     "focused": "13 passed in 0.61s",
     "check_repo": "PASS",
     "full_pg": "187 passed in 70.18s",
-    "full_suite": "RUNNING",
+    "full_suite": "1178 passed, 4 skipped, 3 subtests passed in 457.74s; 2 fixture ZIP warnings",
     "pg_smoke": "PASS; 2 updates; SOFTWARE_ONLY with explicit smoke overrides",
-    "q3d_smoke": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE; tokenizer gate NOT_READY, passed=false"
+    "q3d_smoke": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE; tokenizer gate NOT_READY, passed=false",
+    "server_pg": "187 passed in 206.04s",
+    "server_check_repo": "PASS"
   },
-  "training_resume": "NOT_RUN",
+  "training_resume": "ONE_FULL_BUDGET_RESUME_FROM_1950_VERIFIED_AT_2000",
   "completed_campaign": false,
   "all_stage_gpu_fit": "NOT_ESTABLISHED",
   "automation": "c851dc66-2854-459a-9ef3-9ca6a4ae6e1e",
@@ -181,5 +183,190 @@
     "msg_5ef70450d460",
     "msg_0793cb3849ee"
   ],
-  "subsequent_code_fix_policy": "Luna only, per coordinator relay of explicit user steering at 2026-11-16T14:16:12Z"
+  "subsequent_code_fix_policy": "Luna only, per coordinator relay of explicit user steering at 2026-11-16T14:16:12Z",
+  "source_commit": "dfeee8806daf471e6c8b045a42cd5ad791da487d",
+  "boundary_receipt_sha256": "55327999a0157df8c0ca796bf67459ea2ace940a05d3565cb5eb08be319a93e4",
+  "fixed_replay": {
+    "schema": "self_audit.pg_spatial_roundoff_replay.v1",
+    "status": "PASS",
+    "source_commit": "dfeee8806daf471e6c8b045a42cd5ad791da487d",
+    "checkpoint_sha256": "f1d49002107479263e1456e7e0157a6c3dcae302b39aaefa8fbacf5388949dd6",
+    "start_update": 1950,
+    "end_update": 2000,
+    "diagnostic_only": true,
+    "model_forward": false,
+    "optimizer_step": false,
+    "cutmix_draws_omitted": "independent private RNG; spatial/intensity RNG sequence preserved",
+    "corrections": [
+      {
+        "context": {
+          "update": 1989,
+          "role": "b",
+          "key": [
+            "patient011",
+            5
+          ],
+          "native": {
+            "shape": [
+              1,
+              1,
+              9,
+              256,
+              216
+            ],
+            "dtype": "torch.float32",
+            "finite": true,
+            "minimum": 0,
+            "maximum": 1,
+            "above_one": 0
+          },
+          "rng_sha256": "7b519c9e77add865cd1a7e29d3ef0345299b68f5e4ba0cfdfa9472b684c0cbcf"
+        },
+        "raw": {
+          "shape": [
+            1,
+            1,
+            10,
+            174,
+            208
+          ],
+          "dtype": "torch.float32",
+          "finite": true,
+          "minimum": 0,
+          "maximum": 1.0000001192092896,
+          "above_one": 1
+        },
+        "corrected": {
+          "shape": [
+            1,
+            1,
+            10,
+            174,
+            208
+          ],
+          "dtype": "torch.float32",
+          "finite": true,
+          "minimum": 0,
+          "maximum": 1,
+          "above_one": 0
+        }
+      }
+    ],
+    "checkpoint_unchanged": true,
+    "cuda_peak_allocated_bytes": 139099136,
+    "utc": "2026-11-16T14:23:53.355531+00:00"
+  },
+  "strict_cpu_load": {
+    "status": "PASS",
+    "update": 1950,
+    "optimizer_steps": [
+      1950
+    ],
+    "model_state_keys": 541,
+    "checkpoint_sha256": "f1d49002107479263e1456e7e0157a6c3dcae302b39aaefa8fbacf5388949dd6",
+    "config_sha256": "3887c1263a793946ef7f27b52d5d30bae6fd6d9eab37e72383cc86fd988b92fb",
+    "cuda_initialized": false
+  },
+  "resume_request": {
+    "schema": "self_audit.pg_spatial_roundoff_resume_request.v1",
+    "utc": "2026-11-16T14:25:05.442792+00:00",
+    "source_commit": "dfeee8806daf471e6c8b045a42cd5ad791da487d",
+    "reason": "Reviewed dfeee88 PG-only correction for measured one-FP32-ULP spatial interpolation overshoot at update1989; 187 PG tests pass locally and on server, full local suite and PG smoke pass, strict original1950 CPU load and bounded fixed augmentation replay1951-2000 pass; original checkpoint1950, S1, data, configuration and full two-view budgets preserved; one supervised resume, no automatic retry.",
+    "resume_update": 1950,
+    "checkpoint_sha256": "f1d49002107479263e1456e7e0157a6c3dcae302b39aaefa8fbacf5388949dd6",
+    "config_sha256": "3ab6655b3cd71ffdef26735713feb958c0541d478d2c460326082b2f2e950fe4",
+    "s1_sha256": "f596a68a692799326aac736fdff085543a495ad13f0d8c82270b4724782b1b8f",
+    "stage_budget": 8000,
+    "no_update_cap": true,
+    "gpu_writers_before": 0,
+    "single_start": true,
+    "boundary_receipt_sha256": "55327999a0157df8c0ca796bf67459ea2ace940a05d3565cb5eb08be319a93e4",
+    "replay_sha256": "3fca31085f04c3eb05b49314833fc3f9d46d4490ba67341e3b3fd27ab881d369",
+    "strict_cpu_load_sha256": "cab7e11ab21fef8eab66ea59c3541b3c22dc089e9c7eae0700b39082b2dbff3d"
+  },
+  "start_result": {
+    "utc": "2026-11-16T14:25:07.652335+00:00",
+    "returncode": 0,
+    "stdout": "pg-campaign: started\n",
+    "stderr": ""
+  },
+  "progress": {
+    "schema": "self_audit.pg_spatial_roundoff_progress.v1",
+    "status": "RECOVERED_DURABLE_PROGRESS_VERIFIED",
+    "utc": "2026-11-16T14:30:11.199823+00:00",
+    "queue": "RUNNING",
+    "stage": "S2",
+    "latest": {
+      "path": "/root/mount_data/runs/pg-k8-20261116/S2/teacher_latest.pt",
+      "sha256": "96818d071dfb51c537cc2336e6c1410f1c01e37ced927eba5419cc7b9c089386",
+      "update": 2000
+    },
+    "gpu": [
+      "534662, /venv/main/bin/python, 11776 MiB"
+    ],
+    "source_commit": "dfeee8806daf471e6c8b045a42cd5ad791da487d",
+    "checkpoint_sha256": "96818d071dfb51c537cc2336e6c1410f1c01e37ced927eba5419cc7b9c089386",
+    "optimizer_steps": [
+      2000
+    ],
+    "config_sha256": "3887c1263a793946ef7f27b52d5d30bae6fd6d9eab37e72383cc86fd988b92fb",
+    "model_state_keys": 541,
+    "epoch_logger": {
+      "schema": "self_audit.candidate_pg.epoch_logger.v1",
+      "row_count": 75,
+      "epoch": 25,
+      "update": 2000,
+      "csv_offset": 23073,
+      "jsonl_offset": 42607
+    },
+    "diag": {
+      "confident_fraction": 0.7066155076026917,
+      "lambda_denominator_updates": 8000,
+      "lambda_u": 1,
+      "loss_sup": 0.7456923723220825,
+      "loss_total": 0.7729140520095825,
+      "loss_u": 0.0272216796875,
+      "memory_peak_bytes": 7909834752,
+      "memory_reserved_peak_bytes": 11947474944,
+      "seconds": 3.2625184701755643,
+      "tau_c": [
+        0.7694541811943054,
+        0.5,
+        0.5,
+        0.5
+      ],
+      "tau_g": 0.7694541811943054,
+      "update": 2000
+    },
+    "trainers": [
+      {
+        "pid": 534662,
+        "argv": [
+          "/venv/main/bin/python",
+          "/root/Self-Audit-pg-20261116/train.py",
+          "--config",
+          "/root/dataset/receipts/PG_K8_CONFIG.json",
+          "--out",
+          "/root/mount_data/runs/pg-k8-20261116",
+          "--device",
+          "cuda",
+          "--pg-stage",
+          "S2",
+          "--pg-resume"
+        ]
+      }
+    ],
+    "tmux_windows": [
+      "pg-k8:0 pipeline panes=3"
+    ],
+    "supervisor": "pg-campaign                      RUNNING   pid 534633, uptime 0:05:09",
+    "free_disk_bytes": 46791122944,
+    "original_checkpoint_preserved": true,
+    "s1_and_config_and_manifests_preserved": true,
+    "attempt_history_count": 5,
+    "new_log": "[S2] start\n/venv/main/lib/python3.12/site-packages/torch/nn/functional.py:3561: UserWarning: nll_loss2d_forward_out_cuda_template does not have a deterministic implementation, but you set 'torch.use_deterministic_algorithms(True, warn_only=True)'. You can file an issue at https://github.com/pytorch/pytorch/issues to help us prioritize adding deterministic support for this operation. (Triggered internally at /__w/pytorch/pytorch/aten/src/ATen/Context.cpp:186.)\n  return torch._C._nn.cross_entropy_loss(\n[S2] ep 25/100 | loss 0.488 | train FG 0.900 | val FG 0.808 (best 0.808@25) | test FG 0.732 | 244s\n/venv/main/lib/python3.12/site-packages/torch/nn/functional.py:3561: UserWarning: nll_loss2d_forward_out_cuda_template does not have a deterministic implementation, but you set 'torch.use_deterministic_algorithms(True, warn_only=True)'. You can file an issue at https://github.com/pytorch/pytorch/issues to help us prioritize adding deterministic support for this operation. (Triggered internally at /__w/pytorch/pytorch/aten/src/ATen/Context.cpp:186.)\n  return torch._C._nn.cross_entropy_loss(\n",
+    "completed_campaign": false
+  },
+  "automation_verified_enabled": true,
+  "epoch_commit_observation": {"utc":"2026-11-16T14:31:55.977908+00:00","epoch_commit":{"csv_offset":23073,"epoch":25,"jsonl_offset":42607,"metrics_offset":42607,"row_count":75,"schema":"self_audit.candidate_pg.epoch_commit.v1","update":2000},"csv_rows":75,"jsonl_rows":75,"unique_rows":75,"epoch25_rows":3}
 }

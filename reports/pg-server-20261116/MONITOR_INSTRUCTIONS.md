@@ -84,3 +84,26 @@ Original 800, S1, data/config and prior failures remain preserved. The run is
 progressing, not complete, and all-stage GPU fit is not established. Do not
 reapply the fix, restart a healthy process or refresh its active checkout.
 Recheck live state and retain the existing completion/automation requirements.
+
+S2 roundoff recovery verified (2026-11-16 14:30 UTC): read
+`S2_SPATIAL_ROUNDOFF_RECOVERY.md` and its matching `_RECEIPT.json`.
+The 14:02:07 failure was reproduced at update 1989: a valid U partner weak
+image gained one FP32 ULP above 1 during bilinear interpolation. Reviewed
+PG-only fix `dfeee8806daf471e6c8b045a42cd5ad791da487d` preserves strict input
+checks and rejects larger, negative or nonfinite excursions. Local/server
+187 PG tests, local full suite (1178 passed/4 skipped), PG CPU smoke,
+strict checkpoint-1950 CPU load and fixed augmentation replay all passed.
+The existing service resumed once at 14:25:07 UTC and reached verified durable
+checkpoint 2000, SHA `96818d071dfb51c537cc2336e6c1410f1c01e37ced927eba5419cc7b9c089386`,
+with AdamW step 2000, 75 committed epoch rows and finite active-U losses.
+Original checkpoint 1950 and all S2 failure history are archived under
+`code_updates/spatial-roundoff-20261116T141644Z/`; S1/config/splits are intact.
+Exactly one GPU trainer and one pg-k8 window were verified. Do not reapply the
+fix, restart a healthy process or refresh its active checkout. Recheck live
+state; the campaign is incomplete and all-stage GPU fit is not established.
+The named PG automation remains enabled until the original completion gates.
+
+User amendment relayed by the PG code coordinator at 14:16:12 UTC: complete
+this already-written reviewed repair and resume promptly; **all subsequent
+code fixes must be implemented by Luna only**. This does not authorize blind
+retries or change any data, budget, recipe, history or completion requirement.
