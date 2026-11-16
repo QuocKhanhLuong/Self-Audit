@@ -1,0 +1,60 @@
+{
+  "schema": "self_audit.candidate_pg.v2",
+  "seed": 42,
+  "data": {
+    "dataset": "acdc", "split_lock": "configs/candidate_fuse/semi_k8.json", "k_labeled": 8,
+    "unlabeled": "all_train_cine_frames_minus_labeled_masks", "forbid_splits_in_training": ["VAL18", "TEST50"],
+    "native_geometry": true, "per_step": {"labeled": 1, "unlabeled": 2}, "u_partner_policy": "different_patient", "u_sampling": "patient_balanced"
+  },
+  "augmentation": {
+    "policy": "inplane_strong_v1", "weak": "spatial_only", "strong": "intensity_only_on_weak_canvas", "n_strong_views": 2, "clamp": [0.0, 1.0],
+    "cutmix": {"area_fraction": [0.25, 0.5], "align_px": 16, "full_depth": true, "pad_weight": 0.0}
+  },
+  "student": {
+    "arch": "unetrpp_lite_fuse", "channels": [16,32,64,128,256], "num_classes": 4, "init": "cinema_distill",
+    "fusion": {"levels": 5, "gate_bias": -2.0, "inside_encoder": true}, "teacher_dropout_on_labeled": {"start": 0.0, "end": 0.5}, "fp_skip_dropout": 0.5
+  },
+  "cinema_init": {
+    "hf_repo": "mathpluscode/CineMA", "files": ["pretrained/cinema.safetensors", "pretrained/config.yaml"],
+    "taps": {"cinema_conv_1_8": "student.stage3", "cinema_tokens_1_16": "student.stage4"},
+    "projector": "conv1x1x1_discard_after_init", "loss": "cosine", "data": "TRAIN images only (L images + U)",
+    "optimizer": {"name": "adamw", "lr": 0.0003, "weight_decay": 0.0001}, "updates": 10000
+  },
+  "teacher": {
+    "arch": "mednext_l", "kernel": 3, "channels": [32,64,128,256,512],
+    "block_counts": [3,4,8,8,8,8,8,4,3], "exp_ratios": [3,4,8,8,8,8,8,4,3],
+    "down_strides": [[1,2,2],[1,2,2],[2,2,2],[1,2,2]], "feature_phases": [[1,1,1],[1,2,2],[1,4,4],[2,8,8],[2,16,16]],
+    "heads": {"region": 4, "sdf": {"channels": 3, "radius_mm": 5.0}}, "init": "random",
+    "semi": {
+      "method": "unimatch_v1", "target": "self_weak_stopgrad", "stream_weights": {"s1": 0.25, "s2": 0.25, "fp": 0.5},
+      "fp": "dropout3d_0.5_on_encoder_skips", "threshold": {"mode": "class_adaptive", "ema": 0.999, "clip": [0.5,0.95]},
+      "sdf_consistency": {"weight": 0.5, "on": "confident_voxels", "loss": "l1_normalized"},
+      "lambda_u": {"max": 1.0, "warmup_updates_labeled_only": 800, "ramp_fraction": 0.1}
+    },
+    "optimizer": {"name": "adamw", "lr": 0.001, "weight_decay": 0.0001}, "updates": 8000, "select": "VAL18 FG of teacher region head"
+  },
+  "codebook": {
+    "teacher_tap": "mednext_level3_phase_2_8_8_aligned_to_student_stage3_grid_1_8_8", "P_T": "conv1x1x1_256_to_64",
+    "codebook": {"size": 128, "dim": 64, "dead_code_restart_every": 500, "usage_entropy_weight": 0.01},
+    "H_T_Q": "conv1x1x1_64_64_relu_64_4", "train_labels": "L_K pooled GT + detached teacher pseudo-labels on U (confidence-weighted)",
+    "commit_beta": 0.25, "rho_temperature": 1.0, "updates": 4000
+  },
+  "pg": {
+    "enabled": true, "target_source": "fusion_weak", "threshold": {"mode": "class_adaptive", "ema": 0.999, "clip": [0.5,0.95]},
+    "agreement": {"paths": ["teacher_only_region", "student_only_clean_weak"], "form": "sqrt(pT[y]*pS[y])"},
+    "boundary": {"near_mm": 2.5, "radius_mm": 5.0, "mode": "soft_weight"}, "stream_weights": {"s1": 0.25, "s2": 0.25, "fp": 0.5},
+    "lambda_u": {"max": 1.0, "warmup_updates_labeled_only": 800, "ramp_fraction": 0.1}, "loss": "weighted_ce_plus_weighted_dice"
+  },
+  "cbkd": {
+    "enabled": true, "variant": "aux_code_branch", "codebook": "full_C_frozen", "student_tap": "stage3_post_epa_128ch",
+    "P_S": "conv1x1x1_128_to_64", "H_S_Q": "conv1x1x1_64_64_relu_64_4", "rho_temperature": 1.0,
+    "weights": {"assign": 1.0, "qtask": 1.0, "commit": 0.25, "qpred": 0.0}, "lambda_cb": 0.5,
+    "inputs": "clean weak U (no CutMix) for assign/commit; labeled student-only forward for assign/commit/qtask", "warmup_updates_labeled_only": 800
+  },
+  "training": {
+    "optimizer": {"name": "adamw", "lr": 0.001, "weight_decay": 0.0001, "schedule": "reuse candidate_fuse _schedule_lr"},
+    "updates": 8000, "updates_per_epoch": 80, "eval_every_epochs": 1, "eval_splits": ["train_labeled", "VAL18", "TEST50"],
+    "selection": {"split": "VAL18", "path": "student_only", "metric": "fg_dice_patient_macro"}
+  },
+  "export": {"strip_prefixes": ["fusions.", "mimic_heads.", "code_branch.", "P_S.", "H_S_Q."], "assert_no_teacher_keys": true}
+}

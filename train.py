@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Canonical trainer dispatcher for Candidate A, A-3D, Q3D, and FUSE."""
+"""Canonical trainer dispatcher for Candidate A, A-3D, Q3D, FUSE, and PG."""
 
 from __future__ import annotations
 
@@ -25,7 +25,11 @@ def _training_api(method: str):
         from self_audit.candidate_q3d.engine import train
         from self_audit.candidate_q3d.config import validate_config
         return train, validate_config
-    raise ValueError("config.method must be candidate_a, candidate_a3d, or candidate_q3d")
+    if method == "candidate_pg":
+        from self_audit.candidate_pg.engine import train
+        from self_audit.candidate_pg.config import validate_config
+        return train, validate_config
+    raise ValueError("config.method must be candidate_a, candidate_a3d, candidate_q3d, candidate_fuse, or candidate_pg")
 
 
 def _manufactured_teacher(config: dict[str, Any]):
@@ -214,6 +218,10 @@ def main() -> None:
     parser.add_argument("--fuse-resume", action="store_true")
     parser.add_argument("--fuse-max-updates", type=int)
     parser.add_argument("--fuse-teacher-artifact")
+    parser.add_argument("--pg-stage", choices=("S1", "S2", "S3", "arms", "all"))
+    parser.add_argument("--pg-arm", choices=("A1", "A2", "A3", "A4"))
+    parser.add_argument("--pg-resume", action="store_true")
+    parser.add_argument("--pg-max-updates", type=int)
     parser.add_argument("--q3d-stage", choices=("T", "Q", "P", "J"))
     parser.add_argument("--q3d-stage-artifact", action="append", metavar="STAGE=MANIFEST")
     parser.add_argument("--q3d-stage-artifact-sha", action="append", metavar="STAGE=SHA256")
@@ -249,7 +257,24 @@ def main() -> None:
         parser.error(f"cannot read config {args.config!r}: {exc}")
     if not isinstance(config, dict):
         parser.error("config root must be an object")
+    # PG's exact v2 config intentionally has no legacy ``method`` key; route
+    # solely by its additive schema while preserving old dispatcher behavior.
     method = config.get("method")
+    pg_arm_from_file = None
+    if method is None and config.get("schema") == "self_audit.candidate_pg.v2":
+        method = "candidate_pg"
+    elif method is None and set(config) == {"pg", "cbkd"}:
+        # Canonical PG arm files intentionally contain only the two Boolean
+        # switches.  Resolve them against the locked base before dispatch so
+        # they remain runnable without a legacy ``method`` key.
+        method = "candidate_pg"
+        pg_switches = (bool(config["pg"].get("enabled")), bool(config["cbkd"].get("enabled")))
+        pg_arm_from_file = {
+            (False, False): "A1", (True, False): "A2",
+            (False, True): "A3", (True, True): "A4",
+        }.get(pg_switches)
+        if pg_arm_from_file is None:
+            parser.error("PG arm files must contain Boolean pg.enabled and cbkd.enabled")
     if method == "candidate_fuse":
         if not args.out:
             parser.error("FUSE requires --out")
@@ -282,6 +307,35 @@ def main() -> None:
             args, parser, config,
             synthetic_teacher_fixture=bool(args.synthetic_teacher_fixture),
         )
+    elif method == "candidate_pg":
+        if not args.out:
+            parser.error("PG requires --out")
+        if any((args.fuse_stage, args.fuse_resume, args.fuse_max_updates is not None,
+                args.fuse_teacher_artifact, args.q3d_stage, args.q3d_stage_artifact,
+                args.q3d_stage_artifact_sha, args.q3d_exploratory_quality_waiver,
+                args.model_config, args.teacher_checkpoint, args.teacher_checkpoint_sha256,
+                args.data, args.data_sha256, args.validation_data,
+                args.validation_data_sha256, args.synthetic, args.synthetic_teacher_fixture)):
+            parser.error("PG cannot be combined with FUSE/Q3D/baseline-only options")
+        try:
+            from self_audit.candidate_pg import config as pg_config
+            config = pg_config.load_config(args.config)
+            # A campaign may pass a switch-only arm JSON; merge it against
+            # the explicit base config without affecting historical tracks.
+            if set(config) == {"pg", "cbkd"}:
+                base_path = Path(__file__).resolve().parent / "configs" / "candidate_pg" / "pg_k8_base.json"
+                config = pg_config.apply_arm(pg_config.load_config(base_path), config)
+        except (OSError, TypeError, ValueError) as exc:
+            parser.error(f"invalid PG config: {exc}")
+        from self_audit.candidate_pg.engine import train
+        selected_arm = args.pg_arm or pg_arm_from_file
+        if args.pg_arm and pg_arm_from_file and args.pg_arm != pg_arm_from_file:
+            parser.error(f"--pg-arm {args.pg_arm} conflicts with switch-only config for {pg_arm_from_file}")
+        selected_stage = args.pg_stage or ("arms" if selected_arm else "all")
+        if selected_arm and selected_stage != "arms":
+            parser.error("a single PG arm requires --pg-stage arms; run shared S1/S2/S3 once with the base config")
+        result = train(config, args.out, device=args.device, stage=selected_stage,
+                       resume=args.pg_resume, max_updates=args.pg_max_updates, arm=selected_arm)
     elif method in {"candidate_a", "candidate_a3d"}:
         if any((args.fuse_stage, args.fuse_resume, args.fuse_max_updates is not None, args.fuse_teacher_artifact)):
             parser.error("--fuse-* options require a candidate_fuse config")
@@ -290,7 +344,10 @@ def main() -> None:
         result = _train_baseline(args, parser, config, method)
     else:
         parser.error("config.method must be candidate_a, candidate_a3d, candidate_q3d, or candidate_fuse")
-    print(json.dumps(result, indent=2))
+    if method == "candidate_pg":
+        print(f"[PG] status={result.get('status')} out={Path(args.out).resolve()}")
+    else:
+        print(json.dumps(result, indent=2))
 
 
 if __name__ == "__main__":

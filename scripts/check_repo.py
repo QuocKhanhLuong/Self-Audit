@@ -78,6 +78,7 @@ def main() -> int:
     from self_audit.candidate_a3d.config import validate_config as validate_a3d
     from self_audit.candidate_q3d.config import validate_config as validate_q3d
     from self_audit.candidate_fuse.config import load_config as load_fuse
+    from self_audit.candidate_pg.config import apply_arm, load_config as load_pg, validate_config as validate_pg
 
     active = json.loads((ROOT / "ACTIVE_PIPELINE.json").read_text())
     _require(active.get("entrypoint") == "train.py", "ACTIVE_ENTRYPOINT_MISMATCH")
@@ -146,9 +147,10 @@ def main() -> int:
     )
     contract_tests = {"test_candidate_q3d_weighting.py"}
     fuse_tests = {name for name in tests if name.startswith("test_fuse")}
+    pg_tests = {name for name in tests if name.startswith("test_candidate_pg_")}
     old_tests = [name for name in tests
                  if not name.startswith(("test_q3d", "test_fuse")) and name not in contract_tests
-                 and name not in BASELINE_TESTS]
+                 and name not in BASELINE_TESTS and name not in pg_tests]
     _require(not old_tests, f"NON_Q3D_TESTS_REMAIN: {old_tests}")
     _require(BASELINE_TESTS.issubset(tests),
              f"MISSING_RESTORED_BASELINE_TESTS: {sorted(BASELINE_TESTS - set(tests))}")
@@ -171,6 +173,13 @@ def main() -> int:
     _require(bool(recipes_fuse), "MISSING_FUSE_RECIPE")
     for recipe in recipes_fuse:
         load_fuse(recipe)
+    pg_dir = ROOT / "configs/candidate_pg"
+    pg_base = load_pg(pg_dir / "pg_k8_base.json")
+    _require({path.name for path in pg_dir.glob("*.json")} ==
+             {"pg_k8_base.json", *(f"pg_k8_A{i}.json" for i in range(1, 5))},
+             "PG_RECIPE_INVENTORY_MISMATCH")
+    for index in range(1, 5):
+        validate_pg(apply_arm(pg_base, pg_dir / f"pg_k8_A{index}.json"))
 
     print(json.dumps({
         "status": "PASS",
@@ -178,6 +187,7 @@ def main() -> int:
         "docs": docs,
         "tests": tests,
         "fuse_tests": sorted(fuse_tests),
+        "pg_tests": sorted(pg_tests),
         "recipes": {
             "candidate_a": len(recipes_a),
             "candidate_a3d": len(recipes_a3d),

@@ -21,12 +21,58 @@ _EVALUATORS = {
 _Q3D_EXPORT_SCHEMA = "q3d.student_export.v1"
 _Q3D_EXPORT_MANIFEST_SCHEMA = "q3d.export_manifest.v1"
 _FUSE_EXPORT_SCHEMA = "self_audit.candidate_fuse.export.v1"
+_PG_EXPORT_SCHEMA = "self_audit.candidate_pg.student_export.v2"
 
 
 def _evaluate_fuse_export(*args: Any, **kwargs: Any) -> Any:
     """Load the FUSE evaluation implementation only when an export is used."""
     evaluate = importlib.import_module("self_audit.candidate_fuse.evaluation").evaluate_export
     return evaluate(*args, **kwargs)
+
+
+def _evaluate_pg_export(checkpoint: str, checkpoint_sha: str, data_manifest: str,
+                        data_sha: str, out: str, device: str = "cpu", **kwargs: Any) -> dict[str, Any]:
+    """Evaluate a PG weights-only export on a SHA-pinned native manifest."""
+    artifact = Path(checkpoint).resolve()
+    if not artifact.is_file() or digest(artifact) != checkpoint_sha:
+        raise ValueError("PG export is missing or its SHA-256 does not match")
+    sidecar = artifact.with_suffix(artifact.suffix + ".manifest.json")
+    if not sidecar.is_file():
+        raise ValueError("PG export is missing its manifest sidecar")
+    manifest = json.loads(sidecar.read_text())
+    if manifest.get("schema") != "self_audit.candidate_pg.student_export_sidecar.v2":
+        raise ValueError("PG export manifest schema mismatch")
+    if manifest.get("artifact_sha256") != checkpoint_sha:
+        raise ValueError("PG export sidecar hash mismatch")
+    split = kwargs.get("split") or "dev"
+    if split not in {"dev", "test"}:
+        raise ValueError("PG evaluation requires --split dev or test")
+    from self_audit.candidate_fuse.data import open_fuse_data
+    from self_audit.candidate_pg.evaluation import evaluate_records
+    from self_audit.candidate_pg.export import load_student_export
+    from self_audit.model import digest as file_digest
+    role = "development" if split == "dev" else "test"
+    if not Path(data_manifest).is_file() or file_digest(data_manifest) != data_sha:
+        raise ValueError("PG evaluation manifest is missing or SHA-256 mismatched")
+    data = open_fuse_data(data_manifest, data_sha, role=role, synthetic=False)
+    model = load_student_export(artifact, device=device)
+    records = []
+    import torch
+    with torch.inference_mode():
+        for key in data.labeled_keys():
+            frame = data.load(key, labeled=True)
+            image = torch.as_tensor(frame.image, dtype=torch.float32, device=device)
+            if image.ndim == 4:
+                image = image.unsqueeze(0)
+            output = model(image, frame.geometry)
+            logits = output.get("logits") if isinstance(output, dict) else output
+            records.append({"patient": frame.patient_id, "frame": frame.frame_index,
+                            "target": frame.target, "prediction": logits.argmax(1).detach().cpu(),
+                            "geometry": frame.geometry, "split": split.upper()})
+    result = evaluate_records(records, path="student_only", split=split.upper())
+    Path(out).mkdir(parents=True, exist_ok=True)
+    (Path(out) / "PG_METRICS.json").write_text(json.dumps(result, indent=2, sort_keys=True, allow_nan=False) + "\n")
+    return result
 
 
 def _q3d_training_patient_ids(path: str | Path, expected_sha256: str) -> tuple[str, ...]:
@@ -141,6 +187,8 @@ def evaluator_for_schema(schema: str) -> Any:
         return _evaluate_q3d_export
     if schema == _FUSE_EXPORT_SCHEMA:
         return _evaluate_fuse_export
+    if schema == _PG_EXPORT_SCHEMA:
+        return _evaluate_pg_export
     if not isinstance(schema, str) or schema not in _EVALUATORS:
         raise ValueError(f"unsupported checkpoint schema: {schema!r}")
     return importlib.import_module(_EVALUATORS[schema]).evaluate
@@ -164,6 +212,8 @@ def main() -> None:
                         help="Expected manifest role; required for FUSE evaluation")
     parser.add_argument("--fuse-mode", choices=("teacher", "student", "fusion"),
                         help="Candidate FUSE mode; FUSE evaluation runs the locked mode set")
+    parser.add_argument("--pg-path", choices=("student_only",),
+                        help="Candidate PG deployment export evaluation path")
     args = parser.parse_args()
 
     checkpoint_path = Path(args.checkpoint)
@@ -189,6 +239,14 @@ def main() -> None:
             candidate_manifest = json.loads(checkpoint_path.with_suffix(checkpoint_path.suffix + ".manifest.json").read_text())
         except (OSError, json.JSONDecodeError):
             candidate_manifest = None
+        if isinstance(candidate_manifest, dict) and candidate_manifest.get("schema") == "self_audit.candidate_pg.student_export_sidecar.v2":
+            evaluate = evaluator_for_schema(_PG_EXPORT_SCHEMA)
+            result = evaluate(
+                args.checkpoint, args.checkpoint_sha256, args.data, args.data_sha256,
+                args.out, args.device, split=args.split, path=args.pg_path or "student_only",
+            )
+            print(json.dumps(result, indent=2))
+            return
         if isinstance(candidate_manifest, dict) and candidate_manifest.get("schema") == _FUSE_EXPORT_SCHEMA:
             if args.split is None:
                 parser.error("FUSE evaluation requires explicit --split dev; TEST requires the locked three-mode evaluate_exports transaction")
