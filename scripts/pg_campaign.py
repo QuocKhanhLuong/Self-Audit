@@ -48,7 +48,6 @@ def main() -> None:
                           resume=args.resume, max_updates=args.max_updates, arm=args.arm)
     # Durable RESULT.json/receipts contain the full structured campaign.  The
     # foreground campaign keeps stdout intentionally small for runner logs.
-    print(f"[PG] stage={args.stage} status={result.get('status')} out={Path(args.out).resolve()}")
 
 
 if __name__ == "__main__":

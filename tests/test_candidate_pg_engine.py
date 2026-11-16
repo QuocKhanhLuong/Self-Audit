@@ -13,6 +13,15 @@ def test_pg_lambda_has_labeled_only_warmup() -> None:
     assert _lambda_u(800, 8000) > 0.0
 
 
+def test_profile_update_limit_cannot_be_reused_as_full_run(tmp_path):
+    lock = tmp_path / "EXPERIMENT_LOCK.json"
+    lock.write_text(json.dumps({"requested_max_updates": 2, "profile_only": True}))
+    before = lock.read_bytes()
+    with pytest.raises(ValueError, match="separate profile directory"):
+        run_training(default_config(synthetic=True), tmp_path, stage="arms")
+    assert lock.read_bytes() == before
+
+
 def test_pg_synthetic_full_flow_and_four_exports(tmp_path) -> None:
     config = validate_config(default_config(synthetic=True))
     result = run_training(config, tmp_path, device="cpu", max_updates=1)

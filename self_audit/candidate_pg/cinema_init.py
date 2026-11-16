@@ -759,6 +759,7 @@ def run_cinema_init(
     encoder_factory: Callable[..., Any] | None = None,
     cinema_encoder: nn.Module | None = None,
     student_encoder: nn.Module | None = None,
+    max_updates: int | None = None,
 ) -> dict[str, Any]:
     """Run S1 CineMA distillation and return its receipt paths/metrics.
 
@@ -790,6 +791,8 @@ def run_cinema_init(
     np.random.seed(seed)
     torch.manual_seed(seed)
     updates = int(cinema_config.get("updates", 10000))
+    if max_updates is not None:
+        updates = min(updates, int(max_updates))
     if updates <= 0:
         raise ValueError("CineMA S1 updates must be positive")
     if int(cinema_config.get("updates_per_epoch", UPDATES_PER_EPOCH)) != UPDATES_PER_EPOCH:

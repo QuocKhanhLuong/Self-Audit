@@ -327,3 +327,71 @@ Late edits re-checked at: cinema_init b1b473ff, codebook 5cf5ec36, engine 9739b0
 - Root evidence (not re-run by me): `check_repo` PASS (`/private/tmp/pg-check-repo-final.json`); Q3D smoke exit 0 with the synthetic gate override (`/private/tmp/pg-q3d-final.log`); full synthetic PG smoke ran S1/S2/S3/A1–A4, bitwise cold load, and one TEST transaction (`/private/tmp/pg-root-final-smoke.log`). The full-repo pytest (`/private/tmp/pg-final-pytest.log`, 04:18) gave 1081 passed, 4 skipped, and 2 failed. Both failures were the stale `test_pg_resume_*` tests that used single-arm stage `all`, which was made invalid by ST1. Root corrected them. Locally, at the latest bytes, `tests/test_candidate_pg_engine.py` gave 4 passed and `tests/test_candidate_pg_*.py` gave **94 passed**. Root still owns a final full-repo rerun.
 
 **Reviewer verdict:** the code is complete; no stub stages remain. I have no open BLOCKER or HIGH findings. Every required local check from §7.1 has a code path and tests (CPU, synthetic, fixture-only). The residual LOW/MED items are listed in §7.2. The real S1/S2/S3/A1–A4 runs are NOT_RUN. This review makes no efficacy, GPU, or patient-level claim.
+
+---
+
+## 8. Narrow-fix revision review (2026-11-16, tree `0798b46` + uncommitted)
+
+**Scope:** only the user's narrow fixes B1, L1, L2, L3a, L3b and R1, plus the root-owned logging helper, arm start/end/summary lines, CLI stdout removal, and the bounded S1 `max_updates` used for the 2-update GPU profile. I did not run a server, GPU, or training job, and I wrote no source or test file. Nothing in this section is evidence of efficacy, GPU behaviour, or patient-level results. The real S1/S2/S3/A1–A4 runs remain **NOT_RUN**.
+
+**Reviewed SHA-256 prefixes (latest bytes):** codebook `633b9b7bf31a`, export `7103394f420d`, engine `39101203238f`, teacher_training `8ea2653deae4`, logging `7b1089bee904`, cinema_init `694a55ffdfd5`, train.py `fa29ce3adff7`, scripts/pg_campaign.py `dc7149a2d110`, scripts/smoke_pg.py `8c55e8e0bc7f`, tests/test_candidate_pg_codebook.py `269cc245189b`. training_step, views, student_pg and the configs are unchanged in this revision.
+
+### 8.1 Findings sent to root during this pass
+
+| ID | Sev | Finding | Disposition |
+|---|---|---|---|
+| N-B1t | test bug | `test_cold_load_child_receives_parent_runtime_flags` failed: it called `set_float32_matmul_precision("high")` after `cuda.matmul.allow_tf32=False`, and the two are coupled, so TF32 was switched back on. | FIXED (owner). The export tests pass locally. |
+| N-L3r | HIGH | A regression in L3a: `run_codebook` raised `FileNotFoundError` whenever `resume=True` and no S3 checkpoint existed. The engine passes `resume` through, so a campaign that crashed in S2 could not be resumed. | FIXED (root). codebook:1469 now loads from the checkpoint only when `resume and checkpoint.is_file()`, and seeds otherwise. Root reports a direct resume-before-checkpoint test and an initializer spy that shows a restored C is never reseeded. |
+| N-L3m | MED | The first L3a version ran the teacher over every TRAIN L+U frame and kept every valid vector on the CPU, which would take several GB. | FIXED (root). Frames are visited in a seeded random order, and the loop stops once at least K valid vectors have been collected. K are then sampled without replacement. `frames_visited` is recorded. |
+| N-L3n | LOW | The `nullcontext` fallback in `_autocast_disabled` could silently skip the fp32 guard. | FIXED (root). It is now plain `torch.autocast(device_type, enabled=False)`. |
+| N-R1t | LOW–MED | The S3 console row timed only the last update (`step_started`). S3 also had no start/end lines, so the smoke CLI stdout test failed. | FIXED (owner). There is an `epoch_started` timer (codebook:1552/1692/1699), plus `[S3] start` (:1551) and `[S3] end` (:1765). |
+| N-MU | MED | Bounded `max_updates` receipts say `COMPLETED`, and stage-only or resume imports did not check the update count. A 2-update profile directory could therefore be reused as a full run. | FIXED (root) by locking identity rather than adding new statuses. engine:468-472 refuses an out dir whose `EXPERIMENT_LOCK.requested_max_updates` differs. `requested_max_updates` and `profile_only` go into the identity, the stage receipts and RESULT. Root reports an early-rejection test. |
+
+### 8.2 Disposition table — B1 / L1 / L2 / L3a / L3b / R1
+
+| Fix | Disposition | Evidence |
+|---|---|---|
+| **B1** cold-load runtime parity + tolerance | **FIXED** (code reading + local tests) | export `_cold_load_runtime` captures threads, deterministic flags, `warn_only`, cuDNN deterministic/benchmark/TF32, matmul TF32 and precision, and `CUBLAS_WORKSPACE_CONFIG`. `_cold_worker` restores them before the model is built, and the child's runtime must equal the parent's or the run fails as a configuration error. The result is PASS only when `max_abs_logit_delta <= 1e-4` **and** every argmax is identical (in-memory vs loaded vs fresh process). Otherwise it returns `status: "WARN"` with per-volume diagnostics and does not raise. Load, subprocess, shape and NaN/Inf failures still raise. finalization:498 stores the WARN receipt and does not raise. Tests cover a WARN above tolerance, a PASS below tolerance, a WARN on an argmax change within tolerance, and runtime propagation. |
+| **L1** teacher labeled loss on strong-L | **FIXED** | teacher_training:672 feeds `lstrong` to `_q3d_teacher_loss`. The target and geometry stay the weak-aligned `ly_aug`/`lg_aug`; strong is intensity-only. `lstrong` was already drawn by `joint_views`, so the RNG stream is unchanged. Test: `test_teacher_stage_supervision_uses_labeled_strong_input`. |
+| **L2** independent second CutMix box, same packet mix | **FIXED** | When `n_strong_views == 2`, a second `cutmix_box` is drawn from `cutmix_generator` on `av&bv`. `packet_s2 = mix_packet(pa,ya,wa,av,box_s2, …, sdf)` uses the same A/B packet as stream 1. `s2_img` uses `box_s2`, and `loss_s2` and `sdf_s2` use `packet_s2`/`confident_s2`. The threshold still updates from the unmixed A∪B valid voxels (spec). The student arms already drew one box per stream (engine:888, training_step:656). Test: `test_teacher_stage_strong_view2_uses_distinct_box_and_packet_alignment`. |
+| **L3a** C seeded from 128 valid projected teacher z at a fresh S3 start, never on resume | **FIXED** after N-L3r and N-L3m | `_initialize_codebook_from_train` uses TRAIN L/U only (never VAL/TEST). It keeps the valid support from `_aligned_level3`, which excludes internal padding, and filters out non-finite vectors. Sampling is seeded and without replacement. A short pool raises. C is copied before AdamW is built. Seeding is skipped only when a real checkpoint is loaded. **Residual note (LOW, not a defect):** the stop-at-K rule means the 128 seeds usually come from a single randomly chosen frame, because one frame has thousands of valid stage-3 cells. That is a literal reading of the spec. If more diversity is wanted later, that is a separate user decision. |
+| **L3b** rho / vq / assign_kl, TeacherCodebook and StudentCodeBranch in float32 with autocast disabled; AMP-parity tests | **FIXED** | `rho`, `vq_ste`, `assign_kl`, `TeacherCodebook._output` (P_T, distances, argmax, embedding, STE) and `StudentCodeBranch.forward` (P_S, distances, argmax, embedding, STE) all run inside `torch.autocast(enabled=False)` on `.float()` inputs. Gradients still reach P_T, P_S and the teacher C through the differentiable casts, and the student C stays a frozen buffer. The `H_*_Q` heads stay outside the guard, which the fix did not require. Test: `test_code_assignments_are_identical_under_cpu_autocast_for_teacher_and_branch`. **Residual note (LOW):** that test uses small random features. It would probably also pass on the old bf16 code, so it guards against regressions but is weak at proving the fix. A near-tie fixture would make it decisive. |
+| **R1** one epoch summary row per epoch for S2/S3/A1–A4, one start/end per stage, no other stdout | **FIXED** (code reading; root owns the final CLI test receipt) | `logging.epoch_console_line` emits `[X] ep e/E \| loss x \| train FG x \| val FG x (best x@e) \| test FG x \| Ns`. S2 (teacher_training:604/734/781), S3 (codebook:1551/1693/1765) and arms (engine:752/1020/1106) each print one start line, one row per completed epoch, and one end line. The `[PG]` CLI prints in train.py, pg_campaign.py and smoke_pg.py are removed. Synthetic S2/S3 no longer redirect stdout. By root scope decision, S1 keeps its own cosine row and start/end lines, and synthetic S1 output stays suppressed (outside R1). S2's partial-epoch evaluation, added by its owner, was reverted by root, so the 80-update selection boundaries are unchanged. |
+| Root: bounded S1 `max_updates` | **FIXED** | cinema_init:794-795 applies `min(updates, max_updates)`. The engine passes the bound to both the real and the synthetic S1, and N-MU stops profile artifacts from being reused. |
+
+### 8.3 Open / residual items carried honestly
+
+- **OPEN-B1f (MED, scoped out by root):** `finalization._compare_all12` (atol 1e-7) still raises if drift changes the metrics of the selected VAL/TEST export. A cold-load WARN that comes with an argmax change will therefore still stop finalization at the separate metric-parity check. Root chose to keep that contract, because B1 was scoped to `verify_cold_load` only.
+- **LOW:** `num_interop_threads` is not part of the cold-load runtime. This was not requested.
+- The §7.2 residual LOW/MED list is unchanged by this revision. This revision introduced no new BLOCKER or HIGH that is still open.
+- **External/preflight (root, not code):** the server MedNeXt pin PASSES. `b1251ee…` is the CineMA HuggingFace **model** revision, not a GitHub source commit, and the official GitHub source has no such commit. The source pin is waiting on the user, and root is correcting CINEMA_SOURCE.md. The config manifests, root and mounted data that the real campaign needs are missing, and the GPU profile has not been run.
+
+### 8.4 Local test receipts (CPU, synthetic or fixture only)
+
+- At export, codebook and logging bytes earlier in this pass: `pytest tests/test_candidate_pg_*.py` gave 102 passed and 1 failed. The failure was the smoke CLI stdout test, while R1/S3 was still in progress, and it is since fixed by the owner.
+- At the latest bytes above: `pytest tests/test_candidate_pg_codebook.py tests/test_candidate_pg_export.py tests/test_candidate_pg_logging.py` gave **26 passed**. One earlier run of the same trio failed once in `test_run_codebook_synthetic_loop_checkpoint_resume_and_receipts` at the same codebook SHA while root was still editing tests. Two later runs (the codebook file alone, and the trio again) passed, so I am recording it as transient; root's final suite is authoritative.
+- Root owns the full PG suite, the full-repo pytest, `check_repo`, the Q3D smoke, and the Linux matrix with OMP unset and with OMP=2. Those receipts may be added after this review. I did not re-run the full suites, as root asked.
+
+**Reviewer verdict (this revision):** every one of B1, L1, L2, L3a, L3b and R1 is FIXED at the SHAs above, by code reading and focused CPU tests. The only open code item is OPEN-B1f, a MED that root scoped out. No efficacy, GPU, or patient-level claim is made.
+
+### 8.5 Coordinator verification addendum
+
+The final implementation passes **107 PG tests** on macOS (Python 3.11.16,
+PyTorch 2.14.0) and the two-update synthetic PG smoke (S1–S3, all four arms,
+exports/finalization), with no stderr output. The smoke is software evidence only.
+After the review, the coordinator strengthened L3b's fixture to a known near-tie:
+`1.002` rounds to `1.0` in bf16, changing the nearest code without the guard.
+Both teacher and student must retain code 1 and bit-identical rho under autocast;
+all **14 codebook tests pass**. This closes the weak-test LOW note in §8.2.
+The seed diversity note and OPEN-B1f remain unchanged.
+
+Linux acceptance with **OMP_NUM_THREADS unset: 17 passed** (173.09 seconds).
+Linux acceptance with **OMP_NUM_THREADS=2: 17 passed**. Exact logs, file hashes and the completed matrix
+are recorded in `FIXES_RECEIPT.json`. This narrow revision reruns the user-requested
+PG suite and smoke; the prior full-repository/Q3D receipts remain historical.
+FUSE/Q3D implementation files and all configs have no changes in this revision.
+
+A separate user-assigned server coordinator owns the fresh manifest preparation
+and sole GPU launch. The preflight established that `b1251ee` belongs to the HF
+model repository; official GitHub source is separately identified as `c10daa1`.
+No GPU profile result is claimed here while that coordinated launch is pending.

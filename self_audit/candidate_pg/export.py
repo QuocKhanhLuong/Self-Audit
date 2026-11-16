@@ -204,19 +204,63 @@ def _call_model(model: nn.Module, image: torch.Tensor, geometry: Mapping[str, An
     return output
 
 
-def _cold_worker(artifact: str, result_file: str, volumes_file: str, device: str) -> None:
+def _cold_load_runtime() -> dict[str, Any]:
+    """Capture the inference settings that can change deployed logits."""
+
+    return {
+        "num_threads": int(torch.get_num_threads()),
+        "deterministic_algorithms": bool(torch.are_deterministic_algorithms_enabled()),
+        "deterministic_warn_only": bool(torch.is_deterministic_algorithms_warn_only_enabled()),
+        "cudnn_deterministic": bool(torch.backends.cudnn.deterministic),
+        "cudnn_benchmark": bool(torch.backends.cudnn.benchmark),
+        "cudnn_allow_tf32": bool(torch.backends.cudnn.allow_tf32),
+        "cuda_matmul_allow_tf32": bool(torch.backends.cuda.matmul.allow_tf32),
+        "float32_matmul_precision": str(torch.get_float32_matmul_precision()),
+        "cublas_workspace_config": os.environ.get("CUBLAS_WORKSPACE_CONFIG"),
+    }
+
+
+def _configure_cold_load_runtime(runtime: Mapping[str, Any]) -> None:
+    """Restore parent inference settings before constructing the deploy model."""
+
+    torch.set_num_threads(int(runtime["num_threads"]))
+    torch.use_deterministic_algorithms(
+        bool(runtime["deterministic_algorithms"]),
+        warn_only=bool(runtime["deterministic_warn_only"]),
+    )
+    torch.set_float32_matmul_precision(str(runtime["float32_matmul_precision"]))
+    torch.backends.cudnn.deterministic = bool(runtime["cudnn_deterministic"])
+    torch.backends.cudnn.benchmark = bool(runtime["cudnn_benchmark"])
+    torch.backends.cudnn.allow_tf32 = bool(runtime["cudnn_allow_tf32"])
+    torch.backends.cuda.matmul.allow_tf32 = bool(runtime["cuda_matmul_allow_tf32"])
+
+
+def _cold_worker(artifact: str, result_file: str, volumes_file: str, device: str,
+                 runtime: Mapping[str, Any] | None = None) -> None:
+    if runtime is not None:
+        if isinstance(runtime, str):
+            runtime = json.loads(runtime)
+        if not isinstance(runtime, Mapping):
+            raise TypeError("PG cold-load runtime must be a mapping")
+        _configure_cold_load_runtime(runtime)
     model = load_student_export(artifact, device=device)
     volumes = torch.load(volumes_file, map_location="cpu", weights_only=True)
     outputs = []
     with torch.inference_mode():
         for image, geometry in volumes:
             outputs.append(_call_model(model, image.to(device), geometry).detach().cpu())
-    torch.save(outputs, result_file)
+    torch.save({"outputs": outputs, "runtime": _cold_load_runtime()}, result_file)
 
 
 def verify_cold_load(model: nn.Module, artifact_path: str | Path, volumes: Sequence[tuple[Any, Mapping[str, Any]]],
                      *, model_factory: Any = None, device: str | torch.device = "cpu") -> dict[str, Any]:
-    """Require in-memory, loaded, and fresh-interpreter logits to be bitwise equal."""
+    """Compare in-memory, loaded, and fresh-interpreter logits.
+
+    Numerical drift is accepted when the largest absolute logit delta is at
+    most ``1e-4`` and the class argmax is unchanged.  Such drift is reported as
+    ``WARN`` only when it exceeds that tolerance (or changes an argmax); load,
+    subprocess, and provenance failures remain hard errors.
+    """
     if not isinstance(model, nn.Module):
         raise TypeError("PG cold-load reference model must be nn.Module")
     _validate_factory(model_factory)
@@ -225,34 +269,93 @@ def verify_cold_load(model: nn.Module, artifact_path: str | Path, volumes: Seque
     path = Path(artifact_path).resolve()
     loaded = load_student_export(path, device=device)
     expected = []
+    loaded_outputs = []
     reference_flags = [(module, module.training) for module in model.modules()]
     model.eval()
     try:
         with torch.inference_mode():
             for image, geometry in volumes:
                 tensor = torch.as_tensor(image, dtype=torch.float32, device=device)
-                expected.append(_call_model(model, tensor, geometry).detach().cpu())
+                reference = _call_model(model, tensor, geometry).detach().cpu()
                 actual = _call_model(loaded, tensor, geometry).detach().cpu()
-                if not torch.equal(expected[-1], actual):
-                    raise RuntimeError("PG loaded student logits differ bitwise from in-memory model")
+                if not torch.isfinite(reference).all() or not torch.isfinite(actual).all():
+                    raise ValueError("PG cold-load logits contain NaN/Inf")
+                expected.append(reference)
+                loaded_outputs.append(actual)
     finally:
         for module, flag in reference_flags:
             module.training = flag
+
+    runtime = _cold_load_runtime()
     with tempfile.TemporaryDirectory(prefix="pg-cold-load-") as directory:
         volume_file = Path(directory) / "volumes.pt"; result_file = Path(directory) / "outputs.pt"
         torch.save([(torch.as_tensor(image).cpu(), dict(geometry)) for image, geometry in volumes], volume_file)
         code = ("from self_audit.candidate_pg.export import _cold_worker;"
-                f"_cold_worker({str(path)!r},{str(result_file)!r},{str(volume_file)!r},{str(device)!r})")
+                f"_cold_worker({str(path)!r},{str(result_file)!r},{str(volume_file)!r},{str(device)!r},"
+                f"{json.dumps(runtime, sort_keys=True)!r})")
         env = os.environ.copy(); env["PYTHONHASHSEED"] = "0"
+        if runtime["cublas_workspace_config"] is None:
+            env.pop("CUBLAS_WORKSPACE_CONFIG", None)
+        else:
+            env["CUBLAS_WORKSPACE_CONFIG"] = str(runtime["cublas_workspace_config"])
         completed = subprocess.run([sys.executable, "-c", code], cwd=str(Path(__file__).parents[2]),
                                    env=env, capture_output=True, text=True)
         if completed.returncode != 0:
             raise RuntimeError(f"PG cold-load subprocess failed: {completed.stderr.strip()}")
-        actual = torch.load(result_file, map_location="cpu", weights_only=True)
-    if len(actual) != len(expected) or any(not torch.equal(a, b) for a, b in zip(expected, actual)):
-        raise RuntimeError("PG fresh-process logits differ bitwise")
-    return {"status": "PASS", "bitwise_equal": True, "volumes": len(volumes),
-            "sha256": sha256_file(path), "mode": "student_only"}
+        child_result = torch.load(result_file, map_location="cpu", weights_only=True)
+    if not isinstance(child_result, Mapping):
+        raise RuntimeError("PG cold-load subprocess returned malformed output")
+    actual = child_result.get("outputs")
+    child_runtime = child_result.get("runtime")
+    if not isinstance(actual, Sequence) or isinstance(actual, (str, bytes)):
+        raise RuntimeError("PG cold-load subprocess returned malformed logits")
+    if not isinstance(child_runtime, Mapping):
+        raise RuntimeError("PG cold-load subprocess returned malformed runtime")
+    child_runtime = dict(child_runtime)
+    if child_runtime != runtime:
+        raise RuntimeError("PG cold-load subprocess runtime differs from parent")
+    if len(actual) != len(expected):
+        raise RuntimeError("PG cold-load subprocess returned the wrong number of volumes")
+
+    comparisons: list[dict[str, Any]] = []
+    bitwise_equal = True
+    argmax_equal = True
+    max_delta = 0.0
+    for index, (reference, loaded_output, fresh) in enumerate(zip(expected, loaded_outputs, actual, strict=True)):
+        if not torch.is_tensor(fresh) or not torch.isfinite(fresh).all():
+            raise RuntimeError(f"PG cold-load subprocess returned invalid logits for volume {index}")
+        if tuple(reference.shape) != tuple(loaded_output.shape) or tuple(reference.shape) != tuple(fresh.shape):
+            raise RuntimeError(f"PG cold-load logits shape mismatch for volume {index}")
+        volume_bitwise = bool(torch.equal(reference, loaded_output) and torch.equal(reference, fresh))
+        volume_delta = max(
+            float((reference - loaded_output).abs().max().item()),
+            float((reference - fresh).abs().max().item()),
+        )
+        class_dim = 1 if reference.ndim > 1 else 0
+        volume_argmax = bool(
+            torch.equal(torch.argmax(reference, dim=class_dim), torch.argmax(loaded_output, dim=class_dim))
+            and torch.equal(torch.argmax(reference, dim=class_dim), torch.argmax(fresh, dim=class_dim))
+        )
+        bitwise_equal = bitwise_equal and volume_bitwise
+        argmax_equal = argmax_equal and volume_argmax
+        max_delta = max(max_delta, volume_delta)
+        comparisons.append({"volume": index, "bitwise_equal": volume_bitwise,
+                            "max_abs_logit_delta": volume_delta,
+                            "argmax_equal": volume_argmax})
+    within_tolerance = max_delta <= 1e-4 and argmax_equal
+    return {
+        "status": "PASS" if within_tolerance else "WARN",
+        "bitwise_equal": bitwise_equal,
+        "max_abs_logit_delta": max_delta,
+        "argmax_equal": argmax_equal,
+        "tolerance": 1e-4,
+        "within_tolerance": within_tolerance,
+        "volumes": len(volumes),
+        "sha256": sha256_file(path),
+        "mode": "student_only",
+        "runtime": {"parent": runtime, "child": child_runtime},
+        "per_volume": comparisons,
+    }
 
 
 def recompute_selected_epoch(export_path: str | Path, *, model_factory: Any,

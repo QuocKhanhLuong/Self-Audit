@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 
 import pytest
 import torch
@@ -14,6 +15,7 @@ from self_audit.candidate_pg.teacher_training import (
     _soft_consistency,
     run_teacher_stage,
 )
+from self_audit.candidate_pg.views import StatefulViewGenerator
 
 
 torch.set_num_threads(1)
@@ -92,6 +94,98 @@ def test_teacher_stage_active_unimatch_smoke_uses_weak_fp_and_strict16_canvas(tm
     receipt = run_teacher_stage(config, tmp_path, train, train["labeled"], train["labeled"], teacher=teacher, max_updates=1)
     assert receipt["status"] == "COMPLETED"
     assert 0.5 in teacher.skip_dropout_calls  # FP is weak-A with feature dropout
+
+
+def test_teacher_stage_supervision_uses_labeled_strong_input(tmp_path):
+    class _CaptureTeacher(_TinyTeacher):
+        def __init__(self):
+            super().__init__()
+            self.inputs = []
+
+        def forward(self, image, geometry, **kwargs):
+            self.inputs.append(image.detach().clone())
+            return super().forward(image, geometry, **kwargs)
+
+    config = _config(1)
+    train = {
+        "labeled": [_frame(0, labeled=True, patient="L0", shape=(2, 64, 64))],
+        "unlabeled": [_frame(1, labeled=False, patient="U0", shape=(2, 64, 64)), _frame(2, labeled=False, patient="U1", shape=(2, 64, 64))],
+    }
+    teacher = _CaptureTeacher()
+    run_teacher_stage(config, tmp_path, train, train["labeled"], train["labeled"], teacher=teacher, max_updates=1)
+
+    image = train["labeled"][0]["image"]
+    geometry = train["labeled"][0]["geometry"]
+    valid = torch.ones((1, *image.shape[-3:]), dtype=torch.bool)
+    _, expected_strong, _, _, _ = StatefulViewGenerator(seed=42 + 1009).joint_views(image, valid, geometry, train["labeled"][0]["target"])
+    # The first teacher forward is the supervised labeled path in warmup.
+    torch.testing.assert_close(teacher.inputs[0], expected_strong)
+
+
+def test_teacher_stage_strong_view2_uses_distinct_box_and_packet_alignment(tmp_path, monkeypatch):
+    import self_audit.candidate_pg.teacher_training as training
+
+    config = _config(1)
+    config["teacher"]["semi"]["lambda_u"]["warmup_updates_labeled_only"] = 0
+    train = {
+        "labeled": [_frame(0, labeled=True, patient="L0", shape=(2, 64, 64))],
+        "unlabeled": [_frame(1, labeled=False, patient="U0", shape=(2, 64, 64)), _frame(2, labeled=False, patient="U1", shape=(2, 64, 64))],
+    }
+    seen_boxes = []
+    packet_boxes = []
+    image_boxes = []
+    original_packet = training.mix_packet
+    original_tensor = training.mix_tensor
+    original_box = training.cutmix_box
+
+    def fake_box(*args, **kwargs):
+        box = original_box(*args, **kwargs)
+        if seen_boxes and box == seen_boxes[0]:
+            for _ in range(100):
+                candidate = original_box(*args, **kwargs)
+                if candidate != seen_boxes[0]:
+                    box = candidate
+                    break
+        seen_boxes.append(box)
+        return box
+
+    def capture_packet(*args, **kwargs):
+        packet = original_packet(*args, **kwargs)
+        packet_boxes.append(packet["box"])
+        return packet
+
+    def capture_tensor(anchor, partner, box):
+        image_boxes.append(box)
+        return original_tensor(anchor, partner, box)
+
+    monkeypatch.setattr(training, "cutmix_box", fake_box)
+    monkeypatch.setattr(training, "mix_packet", capture_packet)
+    monkeypatch.setattr(training, "mix_tensor", capture_tensor)
+    run_teacher_stage(config, tmp_path, train, train["labeled"], train["labeled"], teacher=_TinyTeacher(), max_updates=1)
+
+    assert len(seen_boxes) == len(packet_boxes) == len(image_boxes) == 2
+    assert packet_boxes == seen_boxes
+    assert image_boxes == seen_boxes
+
+
+def test_teacher_stage_stdout_contract(tmp_path, capsys):
+    config = _config(80)
+    train = {
+        "labeled": [_frame(0, labeled=True, patient="L0"), _frame(1, labeled=True, patient="L1")],
+        "unlabeled": [_frame(2, labeled=False, patient="U0"), _frame(3, labeled=False, patient="U1")],
+    }
+    def evaluator(_teacher, _data, *, split, **_kwargs):
+        return {"fg_dice": {"train": .7, "val": .8, "test": .6}[split], "per_class": {}, "per_patient": {}}
+
+    run_teacher_stage(config, tmp_path, train, train["labeled"], train["labeled"], teacher=_TinyTeacher(), evaluator=evaluator)
+    lines = [line for line in capsys.readouterr().out.splitlines() if line]
+    assert lines[0] == "[S2] start"
+    assert lines[-1] == "[S2] end"
+    assert len(lines) == 3
+    assert re.fullmatch(
+        r"\[S2\] ep 1/1 \| loss \d+\.\d{3} \| train FG 0\.700 \| val FG 0\.800 \(best 0\.800@1\) \| test FG 0\.600 \| \d+s",
+        lines[1],
+    )
 
 
 def test_q3d_adapter_has_exact_three_keys(monkeypatch):

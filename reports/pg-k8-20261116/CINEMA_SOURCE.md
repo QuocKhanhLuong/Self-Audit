@@ -1,8 +1,9 @@
 # CineMA S1 source receipt
 
-This note records the primary-source inspection used by
-`self_audit/candidate_pg/cinema_init.py`. It is source/provenance evidence only;
-no CineMA weights were downloaded or trained in this code-only delivery.
+This note records the original primary-source inspection used by
+`self_audit/candidate_pg/cinema_init.py`. No full CineMA weights were downloaded
+or trained in that initial code-only delivery. Follow-up server download hashes
+and software checks are recorded separately in `FIXES_RECEIPT.json`.
 
 ## Primary sources
 
@@ -13,7 +14,12 @@ no CineMA weights were downloaded or trained in this code-only delivery.
 - Official feature extraction example: <https://github.com/mathpluscode/CineMA/blob/main/cinema/examples/inference/mae_feature_extraction.py>
 - Official ACDC preprocessing: <https://github.com/mathpluscode/CineMA/blob/main/cinema/data/acdc/preprocess.py>
 
-The inspected GitHub source was `main` at commit `b1251ee50423bceeca84c080782fc3bc7756dea6`.
+Correction from the follow-up server preflight: `b1251ee50423bceeca84c080782fc3bc7756dea6`
+is the **Hugging Face model repository revision**, not a GitHub source commit.
+The earlier attribution to GitHub was incorrect. The official GitHub repository
+does not contain that commit; its observed HEAD was
+`c10daa1d93f0ea28d8b9ad9206b0f673d25805c1`. A source-package revision must be
+specified separately from the pretrained asset revision.
 The Hub `pretrained` directory lists only the two allowed S1 files: a 348-byte
 `config.yaml` (ETag `8a465e51889187cf1056fc4feaef9a0182feabe4`) and a
 502,749,000-byte `cinema.safetensors` file (ETag
@@ -43,7 +49,7 @@ real CineMA or patient evidence.
 The local verification environment has `torch`, `safetensors`, `huggingface_hub`
 and `PyYAML`, but not the official `cinema` package, `omegaconf`, or MONAI. A
 real S1 run therefore requires installing the pinned official CineMA source
-(`https://github.com/mathpluscode/CineMA`, commit above) and its dependencies;
+(`https://github.com/mathpluscode/CineMA`, with a separately verified source commit) and its dependencies;
 the implementation fails closed when that dependency is unavailable.
 
 ## Safetensors header check

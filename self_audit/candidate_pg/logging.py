@@ -23,6 +23,17 @@ _VAL_SPLITS = {"val", "VAL", "VAL18", "development", "dev"}
 _TEST_SPLITS = {"test", "TEST", "TEST50"}
 
 
+def epoch_console_line(name, epoch, epochs, loss, train_fg, val_fg,
+                       best_fg, best_epoch, test_fg, seconds) -> str:
+    """The single console row shared by S2, S3 and each student arm."""
+    def number(value):
+        return "nan" if value is None else f"{float(value):.3f}"
+    return (f"[{name}] ep {epoch}/{epochs} | loss {number(loss)}"
+            f" | train FG {number(train_fg)} | val FG {number(val_fg)}"
+            f" (best {number(best_fg)}@{best_epoch}) | test FG {number(test_fg)}"
+            f" | {float(seconds):.0f}s")
+
+
 def _empty_row() -> dict[str, Any]:
     return {column: None for column in EPOCH_COLUMNS}
 

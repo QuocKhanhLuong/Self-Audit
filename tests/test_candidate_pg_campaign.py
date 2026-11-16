@@ -4,6 +4,7 @@ import json
 import runpy
 import subprocess
 import sys
+import re
 import pytest
 
 
@@ -13,7 +14,16 @@ def test_smoke_pg_cli_is_local_software_only(tmp_path) -> None:
         [sys.executable, "scripts/smoke_pg.py", "--out", str(output), "--updates", "1"],
         check=True, capture_output=True, text=True,
     )
-    assert completed.stdout.startswith("[PG] smoke status=")
+    lines = completed.stdout.splitlines()
+    names = ("S2", "S3", "A1", "A2", "A3", "A4")
+    epoch_line = re.compile(r"\[(S2|S3|A[1-4])\] ep \d+/\d+ \| loss [\d.]+ \| train FG [\d.]+ \| val FG [\d.]+ \(best [\d.]+@\d+\) \| test FG [\d.]+ \| \d+s")
+    for name in names:
+        assert sum(line.startswith(f"[{name}] start") for line in lines) == 1
+        assert sum(line.startswith(f"[{name}] end") for line in lines) == 1
+    assert all(epoch_line.fullmatch(line) or any(line.startswith(f"[{name}] {event}")
+               for name in names for event in ("start", "end")) for line in lines)
+    for name in ("S3", "A1", "A2", "A3", "A4"):
+        assert sum(line.startswith(f"[{name}] ep ") for line in lines) == 1
     result = json.loads((output / "RESULT.json").read_text())
     assert result["software_only"] is True
     assert result["real_runs"] == "NOT_RUN"

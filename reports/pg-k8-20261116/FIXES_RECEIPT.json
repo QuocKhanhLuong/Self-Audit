@@ -1,0 +1,131 @@
+{
+  "schema": "candidate_pg.narrow_fixes.v1",
+  "base_sha": "0798b46738e335bb7e8075a966de2362bf1e16f4",
+  "items": [
+    "B1",
+    "L1",
+    "L2",
+    "L3a",
+    "L3b",
+    "R1"
+  ],
+  "file_sha256": {
+    "scripts/pg_campaign.py": "dc7149a2d1107277e06124899c8db416eac86978804845ee932c548f5d7638c2",
+    "scripts/smoke_pg.py": "bb19f8c82e440682f4193e9087148b921f332ae14700294fabbdd1e00a9dd4bd",
+    "self_audit/candidate_pg/cinema_init.py": "694a55ffdfd538f8dc2fe6981e70e8500350688a476459f9b06878116dfac87e",
+    "self_audit/candidate_pg/codebook.py": "633b9b7bf31aea4390f548c0c11525a06e8e6ecb48a5cf402726ccef2973be1a",
+    "self_audit/candidate_pg/engine.py": "39101203238fa085a211c35bdd06a079209d3903cdd77bda1ca5f501d84ae322",
+    "self_audit/candidate_pg/export.py": "7103394f420dbab15c0217c327e6dd88a303453406229c918d3cf657d82be76b",
+    "self_audit/candidate_pg/logging.py": "7b1089bee904119b0277cf93efa1667279504021a29378e0e64031ef1e93d564",
+    "self_audit/candidate_pg/teacher_training.py": "8ea2653deae4b2ba63f8068e119518951e2ca1b55f5801d62e7b2afc9c940731",
+    "tests/test_candidate_pg_campaign.py": "bbc96d88d251a4cce1516fab33657bed8f277b0267af47b0dd21fa9a69af213a",
+    "tests/test_candidate_pg_cinema.py": "5069b32929c9250b5a3f0ddf664612fcaa99d5ac63210fd383d9d0b789ca7463",
+    "tests/test_candidate_pg_codebook.py": "3d587e5f888721d408caf1545b83f50fe5e9fcab725e2268bbf3e005f346f784",
+    "tests/test_candidate_pg_engine.py": "b9a3fff7d5c098573ea0705ba0355a9c8bd8a731e37da2c1cc12740a6d861f68",
+    "tests/test_candidate_pg_export.py": "88d62eb7d8d932219c821d9c85d5b7a172d32fa8154337ffd0f637d2c3b480a7",
+    "tests/test_candidate_pg_logging.py": "c2e62a097f0801d71064e7feaad147b446ecce7b0a176443106328eae527fc2c",
+    "tests/test_candidate_pg_teacher_training.py": "9381670d860e0efbefce6e16a55e81b25a55295ed4eaa7cf9898d8f48089243e",
+    "train.py": "fa29ce3adff741b6b6e586bc3d268f9e589bffab58f7722b23b1982a481dfcae"
+  },
+  "local": {
+    "platform": "macOS-26.2-arm64",
+    "python": "3.11.16",
+    "torch": "2.14.0",
+    "full_pg": "107 passed in 52.85s",
+    "full_pg_log_sha256": "f7997d403bf5b16185c6cbf210b5863cad2a50020bd47242b6b8e43cb957a52c",
+    "codebook_after_near_tie_fixture": "14 passed in 1.51s",
+    "smoke": "COMPLETED, S1/S2/S3/A1/A2/A3/A4, software_only=true",
+    "smoke_updates": 2,
+    "smoke_log_sha256": "3497ae2d95ecc0701e78cd5d4c4998c8b3b76111fe76ec714a4d9b4ea0d76df0",
+    "smoke_stderr_bytes": 0,
+    "smoke_cold_load": {
+      "A1": {
+        "status": "PASS",
+        "max_abs_logit_delta": 0.0,
+        "argmax_equal": true
+      },
+      "A2": {
+        "status": "PASS",
+        "max_abs_logit_delta": 0.0,
+        "argmax_equal": true
+      },
+      "A3": {
+        "status": "PASS",
+        "max_abs_logit_delta": 0.0,
+        "argmax_equal": true
+      },
+      "A4": {
+        "status": "PASS",
+        "max_abs_logit_delta": 0.0,
+        "argmax_equal": true
+      }
+    }
+  },
+  "linux_acceptance": {
+    "status": "PASS",
+    "platform": "Linux-6.8.0-146-generic-x86_64-with-glibc2.39",
+    "python": "3.12.15",
+    "torch": "2.14.1+cu132",
+    "OMP_NUM_THREADS_unset": {
+      "summary": "17 passed in 173.09s (0:02:53)",
+      "log_sha256": "7e9d819e3fd59dd320b9992159024484c2c58d1f1b749bb6091d4cc2745987df"
+    },
+    "tests": [
+      "tests/test_candidate_pg_export.py",
+      "tests/test_candidate_pg_finalization.py",
+      "tests/test_candidate_pg_engine.py",
+      "tests/test_candidate_pg_campaign.py"
+    ],
+    "OMP_NUM_THREADS_2": {
+      "summary": "17 passed in 166.64s (0:02:46)",
+      "log_sha256": "97dcb150fb907192831e0240d976d037910dc0eac8915173906ab7f87f16232d"
+    }
+  },
+  "server": {
+    "gpu": "NVIDIA RTX PRO 4000 Blackwell",
+    "mednext_commit": "0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba",
+    "cinema_hf_revision": "b1251ee50423bceeca84c080782fc3bc7756dea6",
+    "cinema_github_observed_commit": "c10daa1d93f0ea28d8b9ad9206b0f673d25805c1",
+    "hf_download": {
+      "status": "DOWNLOADED",
+      "repo": "mathpluscode/CineMA",
+      "files": [
+        {
+          "file": "pretrained/config.yaml",
+          "path": "/workspace/.hf_home/hub/models--mathpluscode--CineMA/snapshots/b1251ee50423bceeca84c080782fc3bc7756dea6/pretrained/config.yaml",
+          "bytes": 348,
+          "sha256": "3147bbd6d0350f9fe30d14989db0f6d53ecef2ed32900d843a3fc3155a3e0a32"
+        },
+        {
+          "file": "pretrained/cinema.safetensors",
+          "path": "/workspace/.hf_home/hub/models--mathpluscode--CineMA/snapshots/b1251ee50423bceeca84c080782fc3bc7756dea6/pretrained/cinema.safetensors",
+          "bytes": 502749000,
+          "sha256": "a841b7e9300d60ea8feb73e3a7d8c60ddedc1d1d49ec1049ebfcfa337c5d5590"
+        }
+      ]
+    },
+    "packages": {
+      "monai": "1.6.1",
+      "omegaconf": "2.4.0"
+    },
+    "gpu_profile": {
+      "status": "PENDING",
+      "owner_run": "run_f5b7f82c0eb4",
+      "reason": "Coordinated single launch on server owner merged source after commit and fresh manifest receipts.",
+      "limitation": "Unchanged 800-update warmup means a 2-update profile does not measure active strong-view/FP peak memory."
+    },
+    "settings_changed": false
+  },
+  "orchestration": {
+    "run": "run_260e742283ea",
+    "coding_workers": 3,
+    "coding_model": "gpt-5.6-luna",
+    "claude_reviewers": 1,
+    "released_workers": 4
+  },
+  "evidence_boundary": "Software tests and source/download checks; no patient efficacy claim. GPU profile pending.",
+  "remaining_open": {
+    "OPEN-B1f": "Finalization metric parity remains strict at 1e-7 (outside verify_cold_load scope).",
+    "seed_diversity": "Initial 128 codes may come from one seeded randomly selected TRAIN frame."
+  }
+}

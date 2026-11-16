@@ -133,6 +133,36 @@ def test_vq_ste_has_identity_z_gradient_and_no_codebook_gradient() -> None:
     assert C.grad is None
 
 
+def test_code_assignments_are_identical_under_cpu_autocast_for_teacher_and_branch() -> None:
+    cfg = _cfg()
+    teacher = TeacherCodebook(cfg).eval()
+    with torch.no_grad():
+        # bf16 rounds 1.002 to 1.0. An unguarded projection chooses code 0;
+        # the required fp32 projection must keep the exact code-1 match.
+        teacher.C.copy_(torch.tensor([[1.] * 3, [1.002] * 3, [3.] * 3, [4.] * 3]))
+        teacher.P_T.weight.zero_()
+        teacher.P_T.weight[:, 0] = 1
+        teacher.P_T.bias.zero_()
+    student = StudentCodeBranch(cfg, teacher).eval()
+    with torch.no_grad():
+        student.P_S.weight.zero_()
+        student.P_S.weight[:, 0] = 1
+        student.P_S.bias.zero_()
+    teacher_feature = torch.full((1, 5, 1, 2, 2), 1.002)
+    student_feature = torch.full((1, 2, 1, 2, 2), 1.002)
+    reference_teacher = teacher(teacher_feature)
+    reference_student = student(student_feature)
+    assert torch.all(reference_teacher["assignments"] == 1)
+    assert torch.all(reference_student["assignments"] == 1)
+    with torch.autocast(device_type="cpu", dtype=torch.bfloat16):
+        amp_teacher = teacher(teacher_feature)
+        amp_student = student(student_feature)
+    torch.testing.assert_close(amp_teacher["assignments"], reference_teacher["assignments"], rtol=0, atol=0)
+    torch.testing.assert_close(amp_student["assignments"], reference_student["assignments"], rtol=0, atol=0)
+    torch.testing.assert_close(amp_teacher["rho"], reference_teacher["rho"], rtol=0, atol=0)
+    torch.testing.assert_close(amp_student["rho"], reference_student["rho"], rtol=0, atol=0)
+
+
 def test_teacher_forward_loss_and_trainable_codebook_gradient() -> None:
     torch.manual_seed(4)
     teacher = TeacherCodebook(_cfg())
@@ -267,13 +297,16 @@ def _loop_config() -> dict[str, object]:
     }
 
 
-def _run_loop(out: Path, *, updates: int, resume: bool = False):
+def _run_loop(out: Path, *, updates: int, resume: bool = False, distinct: bool = False):
     from self_audit.candidate_pg.codebook import run_codebook
 
     config = _loop_config()
     config["codebook"] = dict(config["codebook"])
     config["codebook"]["updates"] = updates
     data = _LoopData()
+    if distinct:
+        for index, frame in enumerate(data.frames.values()):
+            frame.image = frame.image + float(index) * 0.25
     torch.manual_seed(1234)
     teacher = _PhaseTeacher()
     before = {name: value.detach().clone() for name, value in teacher.state_dict().items()}
@@ -291,23 +324,35 @@ def _run_loop(out: Path, *, updates: int, resume: bool = False):
     return result, data, teacher, before
 
 
-def test_run_codebook_synthetic_loop_checkpoint_resume_and_receipts(tmp_path: Path) -> None:
+def test_run_codebook_synthetic_loop_checkpoint_resume_and_receipts(tmp_path: Path, monkeypatch) -> None:
     """Exercise S3's real loop, native phases, L1/U2, logging, and replay."""
 
     from self_audit.candidate_pg.codebook import TeacherCodebook
+    import self_audit.candidate_pg.codebook as module
+
+    init_calls = []
+    original_init = module._initialize_codebook_from_train
+
+    def record_init(*args, **kwargs):
+        init_calls.append(True)
+        return original_init(*args, **kwargs)
+
+    monkeypatch.setattr(module, "_initialize_codebook_from_train", record_init)
 
     full_out = tmp_path / "full"
     partial_out = tmp_path / "resume"
     full, full_data, full_teacher, full_before = _run_loop(full_out, updates=2)
     _run_loop(partial_out, updates=1)
     resumed, resumed_data, resumed_teacher, resumed_before = _run_loop(partial_out, updates=2, resume=True)
+    assert len(init_calls) == 2  # two fresh runs; no reseeding the resumed C
 
     assert full["status"] == resumed["status"] == "COMPLETED"
     assert full["codebook_frozen"] is True and resumed["codebook_frozen"] is True
     # The fallback synthetic path still enforces one anchor plus a different
     # U patient partner on every update.
-    for loaded, expected_count in ((full_data.loaded_pairs, 4), (resumed_data.loaded_pairs, 2)):
-        assert len(loaded) == expected_count
+    # Exclude initialization reads; each learning step still consumes U1/U2.
+    for loaded in (full_data.loaded_pairs[-4:], resumed_data.loaded_pairs):
+        assert len(loaded) in (2, 4)
         assert all(loaded[index][0] != loaded[index + 1][0] for index in range(0, len(loaded), 2))
     # Teacher is a frozen target in S3; neither run may mutate its parameters,
     # and packets observed inside the teacher are detached.
@@ -320,7 +365,7 @@ def test_run_codebook_synthetic_loop_checkpoint_resume_and_receipts(tmp_path: Pa
     assert full_state["C"].shape == (4, 64)
     for name in ("P_T.weight", "P_T.bias", "C", "H_T_Q.0.weight", "H_T_Q.2.weight"):
         torch.testing.assert_close(full_state[name], resumed_state[name], rtol=0, atol=0)
-    assert int(full_state["restart_count"]) > 0
+    assert torch.equal(full_state["restart_count"], resumed_state["restart_count"])
     reloaded = TeacherCodebook(_loop_config())
     reloaded.load_state_dict(full_state)
     assert all(not parameter.requires_grad for parameter in reloaded.parameters())
@@ -345,6 +390,45 @@ def test_run_codebook_synthetic_loop_checkpoint_resume_and_receipts(tmp_path: Pa
         patient_rows = list(csv.DictReader(patient_path.open(newline="", encoding="utf-8")))
         assert {row["split"] for row in patient_rows} == {"train", "val", "test"}
         assert {row["path"] for row in patient_rows} == {"qT"}
+
+
+def test_run_codebook_cold_codebook_seed_is_reproducible_and_used(tmp_path: Path) -> None:
+    first, _data_a, _teacher_a, _before_a = _run_loop(tmp_path / "first", updates=2, distinct=True)
+    second, _data_b, _teacher_b, _before_b = _run_loop(tmp_path / "second", updates=2, distinct=True)
+    first_state = torch.load(tmp_path / "first" / "codebook.pt", map_location="cpu", weights_only=False)["codebook"]
+    second_state = torch.load(tmp_path / "second" / "codebook.pt", map_location="cpu", weights_only=False)["codebook"]
+    torch.testing.assert_close(first_state["C"], second_state["C"], rtol=0, atol=0)
+    init = first["codebook_initialization"]
+    assert init["source"] == "TRAIN_L_U_projected_z_T"
+    assert init["sampled_vectors"] == _loop_config()["codebook"]["codebook"]["size"]
+    assert init["valid_vectors"] >= init["sampled_vectors"]
+    assert first["metrics"]["perplexity"] > 1.0
+
+
+def test_codebook_initialization_128_train_vectors_has_noncollapsed_perplexity() -> None:
+    from self_audit.candidate_pg.codebook import _initialize_codebook_from_train
+
+    torch.manual_seed(123)
+    data = _LoopData()
+    for frame in data.frames.values():
+        frame.image = torch.linspace(0, 1, 2 * 64 * 64).reshape(1, 2, 64, 64)
+        frame.geometry["shape"] = (2, 64, 64)
+        if frame.target is not None:
+            frame.target = torch.zeros(2, 64, 64, dtype=torch.long)
+    teacher = _PhaseTeacher()
+    cb = TeacherCodebook({"teacher_channels": 256, "embedding_dim": 64, "codebook_size": 128})
+    metadata = _initialize_codebook_from_train(cb, data, teacher, _PhaseStudent(), torch.device("cpu"), seed=42)
+    assert metadata["sampled_vectors"] == 128
+    assert metadata["frames_visited"] == 1
+    frame = data.frames[("L0", 0)]
+    features = teacher(frame.image.unsqueeze(0), frame.geometry)["features"][3]
+    assignments = cb(features)["assignments"]
+    assert usage_metrics(assignments, 128)["perplexity"] > 1.0
+
+
+def test_run_codebook_resume_before_first_checkpoint_initializes(tmp_path) -> None:
+    receipt, *_ = _run_loop(tmp_path, updates=1, resume=True)
+    assert receipt["codebook_initialization"]["source"] == "TRAIN_L_U_projected_z_T"
 
 
 def test_run_codebook_resume_after_checkpoint_before_commit_is_row_exact(tmp_path: Path, monkeypatch) -> None:

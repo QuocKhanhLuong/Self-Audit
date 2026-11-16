@@ -43,12 +43,9 @@ def main() -> None:
     result = run_training(config, args.out, device="cpu", stage="all", max_updates=max(1, args.updates))
     result["software_only"] = True
     result["real_runs"] = "NOT_RUN"
-    # RESULT.json is the durable machine-readable receipt.  Keep stdout to a
-    # single concise status line so callers cannot mistake console chatter for
-    # the campaign artifact.
+    # RESULT.json is the machine-readable receipt; runners own stage/epoch stdout.
     result_path = Path(args.out) / "RESULT.json"
     result_path.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(f"[PG] smoke status={result.get('status')} out={Path(args.out).resolve()}")
 
 
 if __name__ == "__main__":

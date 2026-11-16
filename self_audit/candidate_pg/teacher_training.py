@@ -26,7 +26,7 @@ import torch
 from torch import Tensor, nn
 from torch.nn import functional as F
 
-from .logging import EpochLogger
+from .logging import EpochLogger, epoch_console_line
 from .reliability import ClassAdaptiveThreshold
 from .views import StatefulViewGenerator, center_crop_pad, cutmix_box, mix_packet, mix_tensor
 
@@ -601,8 +601,10 @@ def run_teacher_stage(
     logger = _open_logger_for_resume(stage_dir, resume_payload) if resume else EpochLogger(
         stage_dir, csv_name="epochs.csv", jsonl_name="epochs.jsonl", stage="S2", arm="teacher"
     )
-    print(f"[PG S2] start updates={total_updates} device={target_device}", flush=True)
+    print("[S2] start", flush=True)
     run_log = stage_dir / "run.log"; diag_path = stage_dir / "diag.jsonl"
+    epochs = max(1, math.ceil(total_updates / 80))
+    epoch_started = time.perf_counter()
     for update in range(start, total_updates):
         t0 = time.perf_counter()
         lkey, akey, bkey = _next_triple(sampler)
@@ -640,32 +642,48 @@ def run_teacher_stage(
                     raise ValueError("PG teacher CutMix must span full depth")
                 box = cutmix_box(av & bv, view_generator.cutmix_generator, partner_valid=bv, area_fraction=_required(cutmix_cfg, "area_fraction", "augmentation.cutmix"), align_px=int(_required(cutmix_cfg, "align_px", "augmentation.cutmix")))
                 sdf_a = _public_sdf(a_target).detach(); sdf_b = _public_sdf(b_target).detach()
-                packet = mix_packet(pa, ya, wa, av, box, partner_p_W=pb, partner_y=yb, partner_w=wb, partner_valid=bv, extra={"sdf": sdf_a}, partner_extra={"sdf": sdf_b})
+                packet_s1 = mix_packet(pa, ya, wa, av, box, partner_p_W=pb, partner_y=yb, partner_w=wb, partner_valid=bv, extra={"sdf": sdf_a}, partner_extra={"sdf": sdf_b})
+                # Strong view 2 owns a separate CutMix draw and packet.  The
+                # image box, target/probability packet, SDF target, and valid
+                # support must all agree for that stream; reusing box 1 would
+                # silently make the two strong losses the same spatial view.
+                if n_strong_views == 2:
+                    box_s2 = cutmix_box(av & bv, view_generator.cutmix_generator, partner_valid=bv, area_fraction=_required(cutmix_cfg, "area_fraction", "augmentation.cutmix"), align_px=int(_required(cutmix_cfg, "align_px", "augmentation.cutmix")))
+                    packet_s2 = mix_packet(pa, ya, wa, av, box_s2, partner_p_W=pb, partner_y=yb, partner_w=wb, partner_valid=bv, extra={"sdf": sdf_a}, partner_extra={"sdf": sdf_b})
+                else:
+                    box_s2 = box
+                    packet_s2 = packet_s1
                 tau = threshold.thresholds.to(device=pa.device)
-                y_u = packet["y"]; conf_u = packet["p_W"].max(1).values
-                confident = (conf_u >= tau[y_u]) & packet["valid"]
-            # Same box is reused for both strong streams and their SDF target.
+                y_u = packet_s1["y"]; conf_u = packet_s1["p_W"].max(1).values
+                confident = (conf_u >= tau[y_u]) & packet_s1["valid"]
+                y_u_s2 = packet_s2["y"]; conf_u_s2 = packet_s2["p_W"].max(1).values
+                confident_s2 = (conf_u_s2 >= tau[y_u_s2]) & packet_s2["valid"]
+            # Each strong stream applies its own intensity draw and its own
+            # CutMix box.  FP remains the clean weak-A image by contract.
             s1_img = mix_tensor(view_generator.strong(aw), view_generator.strong(bw), box)
-            s2_img = mix_tensor(view_generator.strong(aw), view_generator.strong(bw), box) if n_strong_views == 2 else s1_img
+            s2_img = mix_tensor(view_generator.strong(aw), view_generator.strong(bw), box_s2) if n_strong_views == 2 else s1_img
             # FP is weak-A plus feature perturbation; it is not an intensity-strong view.
             fp_img = aw
         optimizer.zero_grad(set_to_none=True)
         with amp_context():
-            l_out = _model_output(teacher, lv, lg_aug, return_features=True)
+            # Supervision is evaluated on the labeled strong view.  Its target
+            # and SDF geometry remain the spatially aligned weak-view pair;
+            # intensity-only strong augmentation must not alter either.
+            l_out = _model_output(teacher, lstrong, lg_aug, return_features=True)
             loss_sup, parts = _q3d_teacher_loss(l_out, ly_aug, lg_aug, sdf_radius=radius, sdf_near=sdf_near, sdf_weight=1.0)
         if update >= warmup and lambda_u > 0.0:
             with amp_context():
                 s1_out = _model_output(teacher, s1_img, ag_aug, return_features=True)
                 s2_out = _model_output(teacher, s2_img, ag_aug, return_features=True) if n_strong_views == 2 else None
                 fp_out = _model_output(teacher, fp_img, ag_aug, return_features=True, skip_dropout=fp_dropout, dropout_generator=fp_generator)
-            loss_s1 = _soft_consistency(s1_out["region_logits"], packet["p_W"], confident)
-            loss_s2 = _soft_consistency(s2_out["region_logits"], packet["p_W"], confident) if s2_out is not None else loss_s1 * 0.0
+            loss_s1 = _soft_consistency(s1_out["region_logits"], packet_s1["p_W"], confident)
+            loss_s2 = _soft_consistency(s2_out["region_logits"], packet_s2["p_W"], confident_s2) if s2_out is not None else loss_s1 * 0.0
             confident_a = (wa >= tau[ya]) & av
             loss_fp = _soft_consistency(fp_out["region_logits"], pa, confident_a)
-            sdf_s1 = _sdf_consistency(s1_out.get("sdf", s1_out["sdf_all"][:, 1:]), packet["sdf"], confident, weight=1.0)
+            sdf_s1 = _sdf_consistency(s1_out.get("sdf", s1_out["sdf_all"][:, 1:]), packet_s1["sdf"], confident, weight=1.0)
             sdf_s2 = loss_s1 * 0.0
             if s2_out is not None:
-                sdf_s2 = _sdf_consistency(s2_out.get("sdf", s2_out["sdf_all"][:, 1:]), packet["sdf"], confident, weight=1.0)
+                sdf_s2 = _sdf_consistency(s2_out.get("sdf", s2_out["sdf_all"][:, 1:]), packet_s2["sdf"], confident_s2, weight=1.0)
             sdf_fp = _sdf_consistency(fp_out.get("sdf", fp_out["sdf_all"][:, 1:]), sdf_a, confident_a, weight=1.0)
             loss_sdf = float(sdf_weight) * (weights["s1"] * sdf_s1 + weights["s2"] * sdf_s2 + weights["fp"] * sdf_fp)
             loss_u = weights["s1"] * loss_s1 + weights["s2"] * loss_s2 + weights["fp"] * loss_fp + loss_sdf
@@ -685,7 +703,8 @@ def run_teacher_stage(
         if update_no % 50 == 0 or update_no == total_updates:
             with diag_path.open("a", encoding="utf-8") as stream: stream.write(json.dumps(diag, allow_nan=False, sort_keys=True) + "\n")
             with run_log.open("a", encoding="utf-8") as stream: stream.write("DEBUG " + json.dumps(diag, allow_nan=False, sort_keys=True) + "\n")
-        if update_no % 80 == 0:
+        is_epoch_boundary = update_no % 80 == 0
+        if is_epoch_boundary:
             epoch = update_no // 80
             metrics_by_split = (("train", train_data), ("val", val_data), ("test", test_data))
             vals: dict[str, Any] = {}
@@ -707,13 +726,19 @@ def run_teacher_stage(
                 best_score = val_score; best_update = update_no; best_state = copy.deepcopy(teacher.state_dict())
             logger.mark_best(epoch=epoch if best_update == update_no else int(best_update // 80), split="val", path="teacher")
             history.append({"epoch": epoch, "update": update_no, "val_fg_dice": val_score, "test_fg_dice": vals["test"].get("fg_dice")})
-            print(f"[PG S2] epoch={epoch} update={update_no} VAL18_fg_dice={val_score:.6f}", flush=True)
+            epoch_elapsed = time.perf_counter() - epoch_started
+            print(epoch_console_line(
+                "S2", epoch, epochs, epoch_loss["total"],
+                vals["train"].get("fg_dice"), val_score, best_score,
+                0 if best_update is None else int(best_update // 80),
+                vals["test"].get("fg_dice"), epoch_elapsed,
+            ), flush=True)
+            epoch_started = time.perf_counter()
             epoch_loss_sum = {"total": 0.0, "sup": 0.0, "u": 0.0}; epoch_loss_count = 0
         # Checkpoint every non-boundary 50 updates to preserve partial-epoch
         # loss accumulators, and at every epoch boundary.  At a boundary the
         # order is deliberately rows -> atomic checkpoint -> commit receipt;
         # either crash window is deterministic on resume.
-        is_epoch_boundary = update_no % 80 == 0
         if update_no % 50 == 0 or is_epoch_boundary or update_no == total_updates:
             logger_state = _logger_checkpoint_state(logger, epoch=update_no // 80, update=update_no)
             payload = {
@@ -749,7 +774,7 @@ def run_teacher_stage(
         },
     }
     (stage_dir / "TEACHER_BEST_RECEIPT.json").write_text(json.dumps(receipt, indent=2, allow_nan=False) + "\n", encoding="utf-8")
-    print(f"[PG S2] complete updates={total_updates} selected_update={best_update}", flush=True)
+    print("[S2] end", flush=True)
     return receipt
 
 

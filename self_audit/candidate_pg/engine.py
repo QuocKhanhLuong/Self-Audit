@@ -465,6 +465,11 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
         raise ValueError("unknown PG arm")
     target_device = torch.device(device)
     out_path = Path(out).resolve()
+    lock_path = out_path / "EXPERIMENT_LOCK.json"
+    if lock_path.is_file():
+        previous_lock = json.loads(lock_path.read_text())
+        if previous_lock.get("requested_max_updates") != max_updates:
+            raise ValueError("PG update limit differs from the existing run; use a separate profile directory")
     out_path.mkdir(parents=True, exist_ok=True)
     runtime_cfg = cfg.get("runtime", {}) if isinstance(cfg.get("runtime", {}), Mapping) else {}
     if runtime_cfg.get("deterministic", True) is not True or runtime_cfg.get("tf32", False) is not False:
@@ -497,6 +502,8 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
         "cublas_workspace_config": cublas_workspace,
         **runtime_flags,
         "source_git_sha": _source_git_sha(), "data_identity": data_identity,
+        "requested_max_updates": max_updates,
+        "profile_only": max_updates is not None and not synthetic,
     }
     _json(out_path / "EXPERIMENT_LOCK.json", identity)
     # A single predeclared adaptation may reduce two strong views to one for
@@ -508,7 +515,7 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
         _json(out_path / "EXPERIMENT_LOCK.json", identity)
         _json(out_path / "OOM_ADAPTATION.json", {"status": "APPLIED", "reason": "explicit_runtime_oom_reduce_strong_views", "n_strong_views": 1, "arms": list(_ARMS)})
     data = _load_data(cfg, synthetic=synthetic)
-    result: dict[str, Any] = {"schema": _SCHEMA, "status": "RUNNING", "identity": copy.deepcopy(identity), "stages": {}, "arms": {}}
+    result: dict[str, Any] = {"schema": _SCHEMA, "status": "RUNNING", "identity": copy.deepcopy(identity), "profile_only": identity["profile_only"], "stages": {}, "arms": {}}
     # S1: defer to the CineMA worker when available. Synthetic mode records an
     # explicit fixture receipt and never pretends to be pretrained CineMA.
     if stage in {"all", "S1"}:
@@ -541,6 +548,7 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
                 result["stages"]["S1"] = cine.run_cinema_init(
                     s1_cfg, out_path / "S1", data["labeled"] + data["unlabeled"],
                     device=device, cinema_encoder=_TinyCinemaEncoder(), student_encoder=s1_student,
+                    max_updates=max_updates,
                 )
         elif not reused_s1:
             # CineMA initialization is image-only but must see the complete
@@ -557,7 +565,7 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
                 train_source.labeled_keys(),
                 data.get("unlabeled_keys", train_source.unlabeled_keys()),
             )
-            result["stages"]["S1"] = cine.run_cinema_init(cfg, out_path / "S1", train_records, device=device)
+            result["stages"]["S1"] = cine.run_cinema_init(cfg, out_path / "S1", train_records, device=device, max_updates=max_updates)
         if reused_s1:
             _json(out_path / "S1_RECEIPT.json", result["stages"]["S1"])
         # Bind the S1 receipt to the exact recipe/runtime/data identity used by
@@ -610,21 +618,11 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
         test_source = data.get("objects").test if data.get("objects") is not None else data.get("test")
         s2_sampler = data.get("sampler") if data.get("sampler") is not None else None
         s2_view = view_mod.StatefulViewGenerator(seed=42 + 2003) if view_mod is not None else None
-        if synthetic:
-            # Keep the smoke CLI's stdout machine-readable JSON; the complete
-            # S2 receipt/diag files remain durable evidence under out/S2.
-            with contextlib.redirect_stdout(io.StringIO()):
-                s2_receipt = teacher_training.run_teacher_stage(
-                    cfg, out_path, train_source, val_source, test_source, device=device,
-                    teacher=teacher, sampler=s2_sampler, view_generator=s2_view,
-                    resume=resume, max_updates=t_updates, seed=42,
-                )
-        else:
-            s2_receipt = teacher_training.run_teacher_stage(
-                cfg, out_path, train_source, val_source, test_source, device=device,
-                teacher=teacher, sampler=s2_sampler, view_generator=s2_view,
-                resume=resume, max_updates=t_updates, seed=42,
-            )
+        s2_receipt = teacher_training.run_teacher_stage(
+            cfg, out_path, train_source, val_source, test_source, device=device,
+            teacher=teacher, sampler=s2_sampler, view_generator=s2_view,
+            resume=resume, max_updates=t_updates, seed=42,
+        )
         teacher.eval(); teacher.requires_grad_(False)
         result["stages"]["S2"] = {**dict(s2_receipt), "teacher": teacher_meta, "run_identity": copy.deepcopy(identity)}
         _json(out_path / "S2_RECEIPT.json", result["stages"]["S2"])
@@ -671,12 +669,11 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
             s3_train = _SyntheticStageBundle(data["labeled"], data["unlabeled"])
             s3_val = _SyntheticStageBundle(data["val"], data["unlabeled"])
             s3_test = _SyntheticStageBundle(data["test"], data["unlabeled"])
-            with contextlib.redirect_stdout(io.StringIO()):
-                s3_result = codebook.run_codebook(
-                    s3_cfg, out_path / "S3", s3_train, s3_val, s3_test,
-                    teacher, student=s3_alignment_student, device=device,
-                    max_updates=max_updates or int(runtime_cfg.get("synthetic_updates", 1)), resume=resume,
-                )
+            s3_result = codebook.run_codebook(
+                s3_cfg, out_path / "S3", s3_train, s3_val, s3_test,
+                teacher, student=s3_alignment_student, device=device,
+                max_updates=max_updates or int(runtime_cfg.get("synthetic_updates", 1)), resume=resume,
+            )
             artifact = s3_result.get("artifact")
             if not isinstance(artifact, str) or not Path(artifact).is_file():
                 raise RuntimeError("synthetic S3 runner did not produce a codebook artifact")
@@ -752,6 +749,7 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
     # Capture the final encoder-initialized state once; all arms clone it.
     shared_student_state = copy.deepcopy(shared_student.state_dict())
     for arm_name in selected_arms:
+        print(f"[{arm_name}] start", flush=True)
         _seed(42)
         switches = _SWITCHES[arm_name]
         student = _build_student(cfg, synthetic=synthetic)
@@ -848,6 +846,7 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
                 keep_generator.set_state(payload["keep_generator_state"])
             if payload.get("fp_generator_state") is not None:
                 fp_generator.set_state(payload["fp_generator_state"])
+        epoch_started = time.perf_counter()
         for update in range(start, updates):
             step_started = time.perf_counter()
             if sampler is not None:
@@ -1016,6 +1015,14 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
                 # epoch and can be reconstructed from metrics_receipt.
                 _save_checkpoint(out_path, checkpoint_state, arm=arm_name, epoch=epoch, update=update_no)
                 epoch_logger.commit_epoch(epoch=epoch, update=update_no)
+                console_metrics = {row["split"]: row["fg_dice"] for row in eval_rows
+                                   if row["path"] == "student_only"}
+                print(log_mod.epoch_console_line(
+                    arm_name, epoch, math.ceil(updates / int(cfg["training"]["updates_per_epoch"])),
+                    mean_total, console_metrics["train"], console_metrics["val"],
+                    best, best_epoch, console_metrics["test"], time.perf_counter() - epoch_started,
+                ), flush=True)
+                epoch_started = time.perf_counter()
                 _append_jsonl(arm_dir / "run.log", {"level": "DEBUG", "stage": "arms", "arm": arm_name, "epoch": epoch, "update": update_no, "loss_total": mean_total, "loss_sup": mean_sup, "loss_pg": mean_pg, "loss_cbkd": mean_cbkd, "lr": lr_now})
                 epoch_loss_sum = [0.0, 0.0, 0.0, 0.0]; epoch_loss_steps = 0
             if update_no % 50 == 0 or update_no == updates:
@@ -1096,6 +1103,7 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
         # Finalization owns the one authoritative export/cold-load transaction;
         # keep the arm result export slot populated from that receipt below.
         result["arms"][arm_name] = {"switches": switches, "updates": updates, "best_val": best, "metrics": rows, "export": None}
+        print(f"[{arm_name}] end", flush=True)
     if set(selected_arms) == set(_ARMS):
         finalizer = _module("self_audit.candidate_pg.finalization")
         if finalizer is None or not hasattr(finalizer, "finalize_campaign"):

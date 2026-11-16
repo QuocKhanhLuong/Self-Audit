@@ -195,12 +195,13 @@ def test_backprojection_padding_mask_excludes_centres_outside_crop_support():
 def test_synthetic_run_is_train_only_and_discards_projectors(tmp_path):
     train = [{"image": torch.rand(8, 32, 32), "geometry": _geometry(), "split": "train"} for _ in range(3)]
     result = run_cinema_init(
-        {"runtime": {"synthetic": True}, "cinema_init": {"synthetic": True, "updates": 2}},
+        {"runtime": {"synthetic": True}, "cinema_init": {"synthetic": True, "updates": 10000}},
         tmp_path,
         train,
         device="cpu",
         encoder_factory=lambda *args, **kwargs: TinyCinema(),
         student_encoder=TinyStudent(),
+        max_updates=2,
     )
     assert result["status"] == "SOFTWARE_ONLY_SYNTHETIC"
     receipt = json.loads(Path(result["receipt_path"]).read_text())

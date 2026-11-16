@@ -31,6 +31,17 @@ _IGNORE_INDEX = 255
 _DEFAULT_CLASSES = 4
 
 
+def _autocast_disabled(device: torch.device):
+    """Return a context that keeps code assignments in float32.
+
+    S3 may run under the global GPU autocast context.  Distances and nearest
+    code selection are part of the code-order contract, so they must not be
+    evaluated in bf16/fp16.
+    """
+
+    return torch.autocast(device_type=device.type, enabled=False)
+
+
 def _as_options(config: Any, *, preferred: str | None = None) -> dict[str, Any]:
     """Extract codebook options from a PG config without requiring a schema.
 
@@ -138,13 +149,19 @@ def rho(
     if dim != code_dim:
         raise ValueError("z and codebook embedding dimensions differ")
     tau = _finite_positive(temperature, "temperature")
-    distances = (z.reshape(-1, dim).square().sum(1, keepdim=True)
-                 + C.to(device=z.device, dtype=z.dtype).square().sum(1).unsqueeze(0)
-                 - 2.0 * z.reshape(-1, dim) @ C.to(device=z.device, dtype=z.dtype).T)
-    # Round-off can make exact self-distances slightly negative.  This does not
-    # change ordering and keeps the function finite in float16/bfloat16.
-    distances = distances.clamp_min(0.0)
-    probabilities = torch.softmax((-distances / tau), dim=-1).reshape(*shape, C.shape[0])
+    # Assignment precision is a contract: a surrounding AMP context must not
+    # change code ordering or nearest-code IDs.  ``.float()`` is differentiable
+    # and therefore keeps the teacher's codebook/projection gradients intact.
+    with _autocast_disabled(z.device):
+        z_fp32 = z.float()
+        C_fp32 = C.to(device=z.device, dtype=torch.float32)
+        distances = (z_fp32.reshape(-1, dim).square().sum(1, keepdim=True)
+                     + C_fp32.square().sum(1).unsqueeze(0)
+                     - 2.0 * z_fp32.reshape(-1, dim) @ C_fp32.T)
+        # Round-off can make exact self-distances slightly negative.  This does
+        # not change ordering and keeps the function finite.
+        distances = distances.clamp_min(0.0)
+        probabilities = torch.softmax((-distances / tau), dim=-1).reshape(*shape, C.shape[0])
     if channel_first:
         probabilities = probabilities.permute(0, 4, 1, 2, 3).contiguous()
         if tuple(probabilities.shape) != (original[0], C.shape[0], original[2], original[3], original[4]):
@@ -170,16 +187,19 @@ def vq_ste(
     C, K, code_dim = _validate_codebook(C)
     if dim != code_dim:
         raise ValueError("z and codebook embedding dimensions differ")
-    if assignments is None:
-        assignments = rho(z, C).argmax(dim=-1)
-    else:
-        if tuple(assignments.shape) != shape or assignments.dtype.is_floating_point:
-            raise ValueError("assignments must match z's leading shape and be integer")
-        assignments = assignments.to(device=z.device, dtype=torch.long)
-        if bool((assignments < 0).any()) or bool((assignments >= K).any()):
-            raise ValueError("assignments contain an invalid code index")
-    selected = F.embedding(assignments.reshape(-1), C.to(device=z.device, dtype=z.dtype)).reshape(*shape, dim)
-    straight_through = z + (selected - z).detach()
+    with _autocast_disabled(z.device):
+        z_fp32 = z.float()
+        C_fp32 = C.to(device=z.device, dtype=torch.float32)
+        if assignments is None:
+            assignments = rho(z_fp32, C_fp32).argmax(dim=-1)
+        else:
+            if tuple(assignments.shape) != shape or assignments.dtype.is_floating_point:
+                raise ValueError("assignments must match z's leading shape and be integer")
+            assignments = assignments.to(device=z.device, dtype=torch.long)
+            if bool((assignments < 0).any()) or bool((assignments >= K).any()):
+                raise ValueError("assignments contain an invalid code index")
+        selected = F.embedding(assignments.reshape(-1), C_fp32).reshape(*shape, dim)
+        straight_through = z_fp32 + (selected - z_fp32).detach()
     if return_indices:
         return straight_through, assignments, selected
     return straight_through
@@ -262,15 +282,21 @@ def assign_kl(
                 valid_mask, tuple(rho_teacher.shape[0:1] + rho_teacher.shape[2:]), device=rho_teacher.device,
             )
         if weights is not None and isinstance(weights, Tensor) and weights.ndim == 5 and weights.shape[1] == 1:
-            weights = weights[:, 0].to(device=rho_teacher.device, dtype=rho_student.dtype)
+            weights = weights[:, 0].to(device=rho_teacher.device, dtype=torch.float32)
     else:
         if rho_teacher.shape[-1] < 2:
             raise ValueError("teacher and student assignments must have K>=2")
         pt = rho_teacher.detach()
         ps = rho_student
-    pt = pt / pt.sum(dim=-1, keepdim=True).clamp_min(1e-12)
-    ps = ps / ps.sum(dim=-1, keepdim=True).clamp_min(1e-12)
-    values = (pt * (pt.clamp_min(1e-12).log() - ps.clamp_min(1e-12).log())).sum(dim=-1)
+    # KL is evaluated in float32 even when the student branch is under AMP.
+    # Casting the live student tensor preserves its gradient while the teacher
+    # remains an explicit stop-gradient target.
+    with _autocast_disabled(rho_student.device):
+        pt = pt.float()
+        ps = ps.float()
+        pt = pt / pt.sum(dim=-1, keepdim=True).clamp_min(1e-12)
+        ps = ps / ps.sum(dim=-1, keepdim=True).clamp_min(1e-12)
+        values = (pt * (pt.clamp_min(1e-12).log() - ps.clamp_min(1e-12).log())).sum(dim=-1)
     if reduction == "none":
         return values
     if reduction != "mean":
@@ -521,12 +547,16 @@ class TeacherCodebook(nn.Module):
 
     def _output(self, feature: Tensor, valid_mask: Tensor | None) -> dict[str, Tensor]:
         flat, spatial, shape = _feature_to_flat(feature, self.teacher_channels)
-        z_map = self.P_T(feature)
-        z_flat = z_map.permute(0, 2, 3, 4, 1).reshape(-1, self.embedding_dim)
-        probabilities = rho(z_flat, self.C, self.temperature)
-        assignments = probabilities.argmax(dim=-1)
-        quantized_flat = F.embedding(assignments, self.C)
-        straight_flat = z_flat + (quantized_flat - z_flat).detach()
+        # Keep the projection and all code assignments in fp32 under AMP.  The
+        # projection remains trainable because ``feature.float()`` is a normal
+        # differentiable cast and C is not detached on this teacher path.
+        with _autocast_disabled(feature.device):
+            z_map = self.P_T(feature.float())
+            z_flat = z_map.permute(0, 2, 3, 4, 1).reshape(-1, self.embedding_dim).float()
+            probabilities = rho(z_flat, self.C.float(), self.temperature)
+            assignments = probabilities.argmax(dim=-1)
+            quantized_flat = F.embedding(assignments, self.C.float())
+            straight_flat = z_flat + (quantized_flat - z_flat).detach()
         quantized = quantized_flat.reshape(shape[0], *spatial, self.embedding_dim).permute(0, 4, 1, 2, 3)
         straight = straight_flat.reshape(shape[0], *spatial, self.embedding_dim).permute(0, 4, 1, 2, 3)
         assignments_map = assignments.reshape(shape)
@@ -833,12 +863,17 @@ class StudentCodeBranch(nn.Module):
     def forward(self, feature: Tensor, valid_mask: Tensor | None = None) -> dict[str, Tensor]:
         flat, spatial, shape = _feature_to_flat(feature, self.student_channels)
         del flat
-        z_map = self.P_S(feature)
-        z_flat = z_map.permute(0, 2, 3, 4, 1).reshape(-1, self.embedding_dim)
-        probabilities = rho(z_flat, self.C, self.temperature)
-        assignments = probabilities.argmax(dim=-1)
-        quantized_flat = F.embedding(assignments, self.C)
-        straight_flat = z_flat + (quantized_flat - z_flat).detach()
+        # Student assignments must be bit-stable between fp32 and AMP.  Keep
+        # P_S, rho, and nearest-code selection in a disabled-autocast fp32
+        # region; gradients through P_S and the STE remain intact while C is a
+        # frozen buffer.
+        with _autocast_disabled(feature.device):
+            z_map = self.P_S(feature.float())
+            z_flat = z_map.permute(0, 2, 3, 4, 1).reshape(-1, self.embedding_dim).float()
+            probabilities = rho(z_flat, self.C.float(), self.temperature)
+            assignments = probabilities.argmax(dim=-1)
+            quantized_flat = F.embedding(assignments, self.C.float())
+            straight_flat = z_flat + (quantized_flat - z_flat).detach()
         quantized = quantized_flat.reshape(shape[0], *spatial, self.embedding_dim).permute(0, 4, 1, 2, 3)
         straight = straight_flat.reshape(shape[0], *spatial, self.embedding_dim).permute(0, 4, 1, 2, 3)
         assignments_map = assignments.reshape(shape)
@@ -1140,6 +1175,78 @@ def _aligned_level3(
     return aligned.detach(), student_phase, support
 
 
+@torch.no_grad()
+def _initialize_codebook_from_train(
+    codebook: TeacherCodebook,
+    train_data: Any,
+    teacher: nn.Module,
+    student: nn.Module | None,
+    device: torch.device,
+    *,
+    seed: int,
+) -> dict[str, Any]:
+    """Seed C from randomly selected valid TRAIN teacher projections.
+
+    Visit TRAIN L/U frames in seeded random order until K valid vectors are
+    available, then sample K cells without replacement. VAL/TEST are never
+    consulted. The support returned by ``_aligned_level3``
+    excludes high-side internal padding, and non-finite projected vectors are
+    discarded before sampling.  A short pool is an error rather than a reason
+    to duplicate a cell or fall back to random weights.
+    """
+
+    labeled_keys, unlabeled_keys = _frame_lists(train_data)
+    stream = [(key, True) for key in labeled_keys] + [(key, False) for key in unlabeled_keys]
+    if not stream:
+        raise ValueError("S3 codebook initialization requires TRAIN L/U frames")
+    generator = torch.Generator(device="cpu").manual_seed(int(seed))
+    required = codebook.codebook_size
+    candidates: list[Tensor] = []
+    candidate_count = 0
+    frames_visited = 0
+    for frame_index in torch.randperm(len(stream), generator=generator).tolist():
+        key, labeled = stream[frame_index]
+        frames_visited += 1
+        frame = _load_s3_frame(train_data, key, labeled=labeled)
+        image, _, geometry = _s3_frame_tensors(frame, device, labeled=labeled)
+        packet = _teacher_packet(teacher, image, geometry)
+        feature, _phase, feature_valid = _aligned_level3(
+            packet["features"][3], geometry, teacher=teacher, student=student,
+        )
+        with _autocast_disabled(device):
+            projected = codebook.P_T(feature.float()).float()
+        flat = projected.permute(0, 2, 3, 4, 1).reshape(-1, codebook.embedding_dim)
+        support = _broadcast_mask(
+            feature_valid, tuple(projected.shape[0:1] + projected.shape[2:]), device=device,
+        ).reshape(-1)
+        finite = torch.isfinite(flat).all(dim=1)
+        selected = flat[support & finite]
+        if selected.numel():
+            candidates.append(selected.detach().cpu())
+            candidate_count += int(selected.shape[0])
+        if candidate_count >= required:
+            break
+    if not candidates:
+        raise ValueError("S3 codebook initialization found no valid projected TRAIN vectors")
+    pool = torch.cat(candidates, dim=0)
+    if int(pool.shape[0]) < required:
+        raise ValueError(
+            f"S3 codebook initialization needs {required} valid TRAIN vectors, found {int(pool.shape[0])}"
+        )
+    indices = torch.randperm(int(pool.shape[0]), generator=generator)[:required]
+    sampled = pool.index_select(0, indices).to(device=codebook.C.device, dtype=codebook.C.dtype)
+    codebook.C.copy_(sampled)
+    return {
+        "source": "TRAIN_L_U_projected_z_T",
+        "seed": int(seed),
+        "valid_vectors": int(pool.shape[0]),
+        "sampled_vectors": int(required),
+        "codebook_size": int(required),
+        "frames_visited": frames_visited,
+        "sampling": "seeded_frame_order_then_cells_without_replacement",
+    }
+
+
 def _pooled_gt(
     target: Tensor,
     native_shape: tuple[int, int, int],
@@ -1354,14 +1461,28 @@ def run_codebook(
         raise ValueError("S3 requires the exact codebook.optimizer mapping")
     if optimizer_options.get("name") != "adamw" or "lr" not in optimizer_options or "weight_decay" not in optimizer_options:
         raise ValueError("S3 training.optimizer must declare AdamW lr and weight_decay")
+    labeled_keys, unlabeled_keys = _frame_lists(train_data)
+    if not labeled_keys or not unlabeled_keys:
+        raise ValueError("S3 requires nonempty labeled and U TRAIN streams")
+    seed_value = int(config["seed"]) if "seed" in config else int(options.get("seed", 42))
+    initialization_meta: dict[str, Any]
+    if resume and checkpoint.is_file():
+        initialization_meta = {
+            "source": "checkpoint",
+            "seed": seed_value,
+            "codebook_size": int(codebook.codebook_size),
+        }
+    else:
+        # Cold S3 starts from real TRAIN teacher projections, not a random C.
+        # Resume loads C below and must never reinitialize it.
+        initialization_meta = _initialize_codebook_from_train(
+            codebook, train_data, teacher, student, target_device, seed=seed_value,
+        )
     optimizer = torch.optim.AdamW(
         codebook.parameters(),
         lr=float(optimizer_options["lr"]),
         weight_decay=float(optimizer_options["weight_decay"]),
     )
-    labeled_keys, unlabeled_keys = _frame_lists(train_data)
-    if not labeled_keys or not unlabeled_keys:
-        raise ValueError("S3 requires nonempty labeled and U TRAIN streams")
     sampler = None
     synthetic = bool(isinstance(config.get("runtime"), Mapping) and config["runtime"].get("synthetic", False))
     try:
@@ -1426,6 +1547,9 @@ def run_codebook(
     run_log = root / "run.log"
     metrics_path = root / "qT_metrics.jsonl"
     epoch_logger = _open_logger_for_resume(root, resume_payload) if resume else __import__("self_audit.candidate_pg.logging", fromlist=["EpochLogger"]).EpochLogger(root, stage="S3", arm="S3")
+    total_epochs = max(1, (configured_updates + eval_every - 1) // eval_every)
+    print("[S3] start", flush=True)
+    epoch_started = time.perf_counter()
     for update in range(start, updates):
         step_started = time.perf_counter()
         if sampler is not None:
@@ -1519,6 +1643,7 @@ def run_codebook(
                 stream.write("DEBUG " + json.dumps(record, sort_keys=True) + "\n")
         is_epoch_boundary = update_no % eval_every == 0 or (update_no == updates and not truncated_run)
         if is_epoch_boundary:
+            epoch_loss_value = epoch_loss_sum["total"] / max(1, epoch_loss_count)
             split_metrics = {
                 "train_labeled": _qval_metrics(codebook, train_data, teacher, student, target_device),
                 "VAL18": _qval_metrics(codebook, val_data, teacher, student, target_device) if val_data is not None else None,
@@ -1531,7 +1656,7 @@ def run_codebook(
                 if metric is None:
                     continue
                 split = split_aliases[split_name]
-                train_loss = epoch_loss_sum["total"] / max(1, epoch_loss_count) if split_name == "train_labeled" else None
+                train_loss = epoch_loss_value if split_name == "train_labeled" else None
                 epoch_logger.log_epoch(_metric_epoch_row(metric, epoch=epoch, update=update_no, split=split, loss_total=train_loss))
                 for patient_id, patient_metric in (metric.get("per_patient") or {}).items():
                     per = patient_metric.get("per_class", {}) if isinstance(patient_metric, Mapping) else {}
@@ -1555,6 +1680,23 @@ def run_codebook(
                     epoch_logger.select_best(split="val", path="qT", metric="fg_dice")
                 except ValueError:
                     pass
+            # S3 emits exactly one compact progress row per completed epoch;
+            # detailed diagnostics remain file-only in diag.jsonl/run.log.
+            from .logging import epoch_console_line
+            train_metric = split_metrics.get("train_labeled") or {}
+            val_metric = split_metrics.get("VAL18") or {}
+            test_metric = split_metrics.get("TEST50") or {}
+            best_row = epoch_logger.best_val
+            best_fg = best_row.get("fg_dice") if isinstance(best_row, Mapping) else None
+            best_epoch = best_row.get("epoch") if isinstance(best_row, Mapping) else epoch
+            epoch_seconds = time.perf_counter() - epoch_started
+            print(epoch_console_line(
+                "S3", epoch, total_epochs, epoch_loss_value,
+                train_metric.get("fg_dice"), val_metric.get("fg_dice"),
+                best_fg, best_epoch, test_metric.get("fg_dice"),
+                epoch_seconds,
+            ), flush=True)
+            epoch_started = time.perf_counter()
             with metrics_path.open("a", encoding="utf-8") as stream:
                 stream.write(json.dumps({"stage": "S3", "update": update_no, "epoch": epoch, "splits": split_metrics}, sort_keys=True, allow_nan=False) + "\n")
             # Boundary rows are now durable in the append receipts.  Reset the
@@ -1600,7 +1742,6 @@ def run_codebook(
     val_metrics = _qval_metrics(codebook, val_data, teacher, student, target_device) if val_data is not None else None
     test_metrics = _qval_metrics(codebook, test_data, teacher, student, target_device) if test_data is not None else None
     runtime_cfg = config.get("runtime") if isinstance(config.get("runtime"), Mapping) else {}
-    seed_value = int(config["seed"]) if "seed" in config else 42
     receipt = {
         "schema": CODEBOOK_VERSION, "status": "COMPLETED", "seed": seed_value,
         "runtime": {
@@ -1611,6 +1752,7 @@ def run_codebook(
         },
         "updates": updates, "updates_per_epoch": int(updates_per_epoch),
         "batch_reduction": "L + mean(U1,U2)",
+        "codebook_initialization": initialization_meta,
         "data_identity": json.loads(json.dumps(config.get("data", {}), default=str)),
         "source_identity": json.loads(json.dumps({
             "teacher": config.get("teacher", {}), "codebook": config.get("codebook", {}),
@@ -1620,6 +1762,7 @@ def run_codebook(
     }
     receipt_path = root / "S3_RECEIPT.json"
     receipt_path.write_text(json.dumps(receipt, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+    print("[S3] end", flush=True)
     return {
         "status": "COMPLETED",
         "updates": updates,
@@ -1636,6 +1779,7 @@ def run_codebook(
         "val": val_metrics,
         "test": test_metrics,
         "batch_reduction": "L + mean(U1,U2)",
+        "codebook_initialization": initialization_meta,
         "updates_per_epoch": int(updates_per_epoch),
         "receipt": str(receipt_path.resolve()),
         "artifact_metadata": codebook.artifact_metadata(),

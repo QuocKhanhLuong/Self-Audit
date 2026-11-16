@@ -6,6 +6,13 @@ import pytest
 from self_audit.candidate_pg.logging import EPOCH_COLUMNS, EpochLogger, select_best_epoch
 
 
+def test_epoch_console_line_has_exact_requested_format():
+    from self_audit.candidate_pg.logging import epoch_console_line
+    assert epoch_console_line("A4", 37, 100, .412, .951, .836, .841, 31, .792, 41.2) == (
+        "[A4] ep 37/100 | loss 0.412 | train FG 0.951 | val FG 0.836 (best 0.841@31) | test FG 0.792 | 41s"
+    )
+
+
 def _row(epoch, split, path, *, score=None, loss=None):
     return {
         "stage": "J", "arm": "A4", "epoch": epoch, "update": epoch * 80,

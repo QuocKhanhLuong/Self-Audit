@@ -344,9 +344,7 @@ def main() -> None:
         result = _train_baseline(args, parser, config, method)
     else:
         parser.error("config.method must be candidate_a, candidate_a3d, candidate_q3d, or candidate_fuse")
-    if method == "candidate_pg":
-        print(f"[PG] status={result.get('status')} out={Path(args.out).resolve()}")
-    else:
+    if method != "candidate_pg":
         print(json.dumps(result, indent=2))
 
 
