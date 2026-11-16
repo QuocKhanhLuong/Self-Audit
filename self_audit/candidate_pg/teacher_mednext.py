@@ -159,6 +159,17 @@ class _PGAnisotropicMedNeXt(nn.Module):
 
     @staticmethod
     def _run_module(module: nn.Module, value: Tensor) -> Tensor:
+        # Preserve the native module/parameter layout while recomputing its
+        # internal activations during backward. FP skip-dropout draws occur
+        # outside these modules, so its private generator is never replayed.
+        if module.training and torch.is_grad_enabled() and (value.requires_grad or any(p.requires_grad for p in module.parameters())):
+            from torch.utils.checkpoint import checkpoint
+
+            if isinstance(module, nn.Sequential):
+                for block in module:
+                    value = _PGAnisotropicMedNeXt._run_module(block, value)
+                return value
+            return checkpoint(module, value, use_reentrant=False, preserve_rng_state=True)
         return module(value)
 
     def forward_with_features(

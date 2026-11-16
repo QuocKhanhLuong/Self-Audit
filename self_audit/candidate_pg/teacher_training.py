@@ -10,7 +10,7 @@ software checks and fails closed when a real configuration is incomplete.
 from __future__ import annotations
 
 import copy
-from contextlib import nullcontext
+from contextlib import contextmanager, nullcontext
 import hashlib
 import json
 import math
@@ -476,6 +476,32 @@ def _backward_loss(loss: Tensor) -> None:
     loss.backward()
 
 
+@contextmanager
+def _oom_context(stage_dir: Path, context: Mapping[str, Any], image: Tensor):
+    """Append exact failure context without retrying or replacing the error."""
+    try:
+        yield
+    except torch.OutOfMemoryError as exc:
+        shape = [int(v) for v in image.shape[-3:]]
+        record = {"stage": "S2", **dict(context), "native_shape": shape,
+                  "padded_shape": [((v + m - 1) // m) * m for v, m in zip(shape, (2, 16, 16))],
+                  "error": str(exc), "unix_time": time.time()}
+        if image.device.type == "cuda":
+            record.update(memory_allocated_bytes=torch.cuda.memory_allocated(image.device),
+                          memory_reserved_bytes=torch.cuda.memory_reserved(image.device),
+                          memory_peak_bytes=torch.cuda.max_memory_allocated(image.device),
+                          memory_reserved_peak_bytes=torch.cuda.max_memory_reserved(image.device))
+        try:
+            with (stage_dir / "failures.jsonl").open("a", encoding="utf-8") as stream:
+                stream.write(json.dumps(record, sort_keys=True) + "\n")
+        except OSError as log_error:
+            if hasattr(exc, "add_note"):
+                exc.add_note(f"Could not append PG OOM context: {log_error}")
+        if hasattr(exc, "add_note"):
+            exc.add_note("PG OOM context: " + json.dumps(record, sort_keys=True))
+        raise
+
+
 def run_teacher_stage(
     config: Mapping[str, Any],
     out: str | Path,
@@ -615,6 +641,8 @@ def run_teacher_stage(
     for update in range(start, total_updates):
         t0 = time.perf_counter()
         lkey, akey, bkey = _next_triple(sampler)
+        oom_base = {"update": update + 1, "resumed_from_update": start,
+                    "labeled_key": str(lkey), "u_anchor_key": str(akey), "u_partner_key": str(bkey)}
         lf = _load_frame(train_data, lkey, labeled=True, index=update); af = _load_frame(train_data, akey, labeled=False, index=update); bf = _load_frame(train_data, bkey, labeled=False, index=update)
         li, ly, lg, _, _ = _as_image_target(lf, target_device, labeled=True)
         lv, lstrong, ly_aug, lvalid, lg_aug = labeled_view.joint_views(li, _valid_for(li), lg, ly)
@@ -639,8 +667,10 @@ def run_teacher_stage(
             bw, _bstr, bv, bg_aug = view_generator.joint_views(bi, bvalid, bg)
             # The weak A/B targets are detached before any packet or threshold work.
             with torch.no_grad(), amp_context():
-                a_target = _model_output(teacher, aw, ag_aug, return_features=True)
-                b_target = _model_output(teacher, bw, bg_aug, return_features=True)
+                with _oom_context(stage_dir, {**oom_base, "stream": "weak_A"}, aw):
+                    a_target = _model_output(teacher, aw, ag_aug, return_features=True)
+                with _oom_context(stage_dir, {**oom_base, "stream": "weak_B"}, bw):
+                    b_target = _model_output(teacher, bw, bg_aug, return_features=True)
                 pa = a_target["region_logits"].softmax(1).detach(); pb = b_target["region_logits"].softmax(1).detach()
                 ya = pa.argmax(1); yb = pb.argmax(1)
                 wa = pa.max(1).values; wb = pb.max(1).values
@@ -675,7 +705,7 @@ def run_teacher_stage(
             # FP is weak-A plus feature perturbation; it is not an intensity-strong view.
             fp_img = aw
         optimizer.zero_grad(set_to_none=True)
-        with amp_context():
+        with _oom_context(stage_dir, {**oom_base, "stream": "labeled_forward"}, lstrong), amp_context():
             # Supervision is evaluated on the labeled strong view.  Its target
             # and SDF geometry remain the spatially aligned weak-view pair;
             # intensity-only strong augmentation must not alter either.
@@ -685,7 +715,8 @@ def run_teacher_stage(
         # one combined backward, exceeding VRAM at the first post-warmup
         # update. Accumulate the same weighted gradients one stream at a time;
         # parameters, clipping, and optimizer state change only once below.
-        _backward_loss(loss_sup)
+        with _oom_context(stage_dir, {**oom_base, "stream": "labeled_backward"}, lstrong):
+            _backward_loss(loss_sup)
         loss_sup = loss_sup.detach()
         del l_out, parts
         if update >= warmup and lambda_u > 0.0:
@@ -698,11 +729,12 @@ def run_teacher_stage(
             sdf_losses = {"s2": loss_sup.new_zeros(())}
             for name, stream_image, target_p, target_sdf, support in streams_to_run:
                 kwargs = {"skip_dropout": fp_dropout, "dropout_generator": fp_generator} if name == "fp" else {}
-                with amp_context():
+                with _oom_context(stage_dir, {**oom_base, "stream": name, "phase": "forward"}, stream_image), amp_context():
                     stream_out = _model_output(teacher, stream_image, ag_aug, return_features=True, **kwargs)
-                region_loss = _soft_consistency(stream_out["region_logits"], target_p, support)
-                sdf_loss = _sdf_consistency(_public_sdf(stream_out), target_sdf, support, weight=1.0)
-                _backward_loss(float(lambda_u) * weights[name] * (region_loss + float(sdf_weight) * sdf_loss))
+                with _oom_context(stage_dir, {**oom_base, "stream": name, "phase": "loss_backward"}, stream_image):
+                    region_loss = _soft_consistency(stream_out["region_logits"], target_p, support)
+                    sdf_loss = _sdf_consistency(_public_sdf(stream_out), target_sdf, support, weight=1.0)
+                    _backward_loss(float(lambda_u) * weights[name] * (region_loss + float(sdf_weight) * sdf_loss))
                 region_losses[name] = region_loss.detach()
                 sdf_losses[name] = sdf_loss.detach()
                 del stream_out, region_loss, sdf_loss
