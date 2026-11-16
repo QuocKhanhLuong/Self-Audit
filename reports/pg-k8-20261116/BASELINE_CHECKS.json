@@ -1,0 +1,41 @@
+{
+  "schema": "self_audit.candidate_pg.baseline_checks.v1",
+  "scope": "SOFTWARE_ONLY",
+  "source_head": "17efb5ff4645216f382074653a4544ad72a25552",
+  "python": "/Users/alvinluong/miniforge3/bin/python",
+  "pytest": {
+    "status": "PASS",
+    "passed": 991,
+    "skipped": 4,
+    "subtests_passed": 3,
+    "warnings": 2,
+    "seconds": 315.31
+  },
+  "check_repo": {
+    "status": "PASS"
+  },
+  "q3d_smoke": {
+    "exit_code": 0,
+    "status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "tokenizer_gate": "NOT_READY",
+    "patient_evidence": false
+  },
+  "protected_source_files": 196,
+  "protected_source_changed": [],
+  "logs": {
+    "pytest": {
+      "path": "/private/tmp/pg-baseline-pytest.log",
+      "sha256": "72585a7089f7252c6f9ebd6b9b192acefd6fe04f9647602f7176863043af55b3"
+    },
+    "check_repo": {
+      "path": "/private/tmp/pg-check-repo-baseline.log",
+      "sha256": "839ffc3b1c4e7f9f061e6ac5aedad8dac18c82b6e13bf86697817e6a31803fbe"
+    },
+    "q3d_smoke": {
+      "path": "/private/tmp/pg-q3d-smoke.log",
+      "sha256": "a72a0535e96bdd53c91e4d5ec603333bef0cb6f1ee629444b3ec6e42fbcc11fe"
+    }
+  },
+  "pg_final_checks": "See SOFTWARE_CHECKS.json",
+  "server_execution": "NOT_RUN_USER_CODE_ONLY_SCOPE"
+}

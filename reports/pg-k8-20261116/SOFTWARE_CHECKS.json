@@ -1,0 +1,128 @@
+{
+  "artifact_sha256": {
+    "EXPERIMENT_LOCK.json": "38e74577babbed330b317857b56ec23ee0c2c00a4e33fa5d7368cc38ecb76370",
+    "FINALIZATION.json": "24cdebafe4cd62a2ea40324cc6c5772164733a78e0672592a0aea760be34ad65",
+    "FINAL_METRICS.json": "d8721cbabe9353312e301ec70687bf17e6b966fa9e3900edda86571e94f0fe64",
+    "RESULT.json": "bc8afd59730bffefc84ad723c484655c0acd458ac948d06bae290d5748825cfa",
+    "S1/S1_RECEIPT.json": "fdcc5cb89397d388714620c3b355072309eb5452611ea9e74af69e94be65ebcd",
+    "S1_RECEIPT.json": "6b2d1b63d992c4c42907a12ff0bd36886217d14741a17fc129268ce5be6c0354",
+    "S2_RECEIPT.json": "8f0e9e5133e201ab6daaf865950d5469135775764cf58d1557028a8192e5231d",
+    "S3/S3_RECEIPT.json": "a4167bae3611eb33963ce7a5a138ed43de630f2810abdc5211a6c753c1fa9b96",
+    "S3_RECEIPT.json": "1ee7a777c15d9e0047c2ae99f15a60ae26842bb5ea8b4d4644f55eecbae77dd5",
+    "SHUFFLE.json": "9386987d0e8c2b82a625a5078e0df3fdaa346b99491c20703b8642f4ed6e4d39",
+    "TEST_TRANSACTION.json": "2891505b03b970923e1af3681c1ff6c65820e223030968cd55af1212ca32cdca",
+    "arms/A1/EXPERIMENT_LOCK.json": "a7d32a1e773247bc8e99992e8b21995d607ac286591e42c705e0481fd119a5cd",
+    "arms/A2/EXPERIMENT_LOCK.json": "11d61c44e18d126eb60eaaf52b9c546904f08d2b25df34ab7526f295db737893",
+    "arms/A3/EXPERIMENT_LOCK.json": "13687b16541492bbda42ae9feaf831011362c0df2da9c8ff9ae8245a05923002",
+    "arms/A4/EXPERIMENT_LOCK.json": "e27477de8599cde3682df540fef5b2024acab1302cb4df665ce6959bf6807570"
+  },
+  "check_repo": {
+    "log": "software_logs/check_repo.json",
+    "status": "PASS"
+  },
+  "historical_attempt": {
+    "failed": 2,
+    "passed": 1081,
+    "pytest_log": "/private/tmp/pg-final-pytest.log",
+    "reason": "two resume tests still used the single-arm all-stage invocation that the reviewed lifecycle fix rejects; updated and passed in the final full suite"
+  },
+  "implementation_git_sha": "088b18ba82b97dea853bcb658666e6532596e965",
+  "log_sha256": {
+    "software_logs/check_repo.json": "4b7b5310791a92a9d442b786d5780c5f57ad7fbae8139921d58022756a7a65ca",
+    "software_logs/pg_smoke.log": "b33ec04250215e6c889303e9686a3084b19fe958052288cd07f1a2d48bd17206",
+    "software_logs/pytest.log": "58d87ecfa0f254e767ebabe8a5b9a744df16f83cfd66853cdea8bcb66e540228"
+  },
+  "pg_smoke": {
+    "arms": [
+      "A1",
+      "A2",
+      "A3",
+      "A4"
+    ],
+    "cold_load": {
+      "A1": {
+        "bitwise_equal": true,
+        "mode": "student_only",
+        "sha256": "0d5273e449f2b0d2274e375fb752fe5be0b10975949c38a785e2e123d8da4bb9",
+        "status": "PASS",
+        "volumes": 3
+      },
+      "A2": {
+        "bitwise_equal": true,
+        "mode": "student_only",
+        "sha256": "92dccac093f1407e298310a5af5527dcb0a83e620cb3053809f7768c929bc4f8",
+        "status": "PASS",
+        "volumes": 3
+      },
+      "A3": {
+        "bitwise_equal": true,
+        "mode": "student_only",
+        "sha256": "0e99002533232fd40623d6afd25baae6ec136c1ccd52abbb4dedd98faca89cd7",
+        "status": "PASS",
+        "volumes": 3
+      },
+      "A4": {
+        "bitwise_equal": true,
+        "mode": "student_only",
+        "sha256": "dec43f7b42df2d2ac651d81493271b2856c6fa43777788cb4d23ef0740311829",
+        "status": "PASS",
+        "volumes": 3
+      }
+    },
+    "deploy_parameters": 3074852,
+    "epoch_rows_per_arm": {
+      "A1": 6,
+      "A2": 6,
+      "A3": 6,
+      "A4": 6
+    },
+    "plots": 8,
+    "real_weights_or_patients": false,
+    "root": "/private/tmp/pg-root-final2-smoke-20261116",
+    "s2_unlabeled_loss_exercised": true,
+    "source": "synthetic injected encoders/teacher; explicit warmup-zero and teacher-threshold-zero fixture overrides",
+    "stages": [
+      "S1",
+      "S2",
+      "S3"
+    ],
+    "status": "COMPLETED_SOFTWARE_ONLY",
+    "test_transaction": "COMMITTED",
+    "updates_per_stage_or_arm": 1
+  },
+  "protected_sources": {
+    "changed": [],
+    "count": 196
+  },
+  "pytest": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -p no:cacheprovider --basetemp /private/tmp/pg-final2-pytest-temp",
+    "passed": 1085,
+    "seconds": 326.12,
+    "skipped": 4,
+    "status": "PASS",
+    "subtests_passed": 3,
+    "warnings": 2
+  },
+  "q3d_smoke": {
+    "exit_code": 0,
+    "receipt_sha256": "10b7a7a4cf5eb1fbfa6c0c5dbeaa7cd3bf9393112d7af0b5c03cb863d7583e50",
+    "status": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE",
+    "tokenizer_gate": {
+      "missing": [
+        "dead_code_fraction",
+        "200-update_usage_history"
+      ],
+      "passed": false,
+      "status": "NOT_READY",
+      "thresholds": {
+        "max_dead_code_fraction": 0.25,
+        "min_class_codes": 4,
+        "min_perplexity": 32.0
+      }
+    }
+  },
+  "real_stages": "NOT_RUN_USER_CODE_ONLY_SCOPE",
+  "schema": "self_audit.candidate_pg.software_checks.v1",
+  "scope": "SOFTWARE_ONLY",
+  "source_files_receipt": "SOURCE_FILES.json"
+}

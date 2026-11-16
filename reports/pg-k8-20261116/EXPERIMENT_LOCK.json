@@ -1,0 +1,62 @@
+{
+  "arm_config_sha256": {
+    "A1": "f68212d85ae0c89e458954b00d32826393c4551afa13f5c8db3592d03f0c7e44",
+    "A2": "8b4e7a9ccd66e82517939f30d7ceae10bb10992d5b109eb4355f2d557eabd9d1",
+    "A3": "8cdb1042968c24d0da16e014ab0ee8923cd55dd5f9b7a5d2ab16200534914c17",
+    "A4": "1f1d28c8a3f7226eca9934169515e1c4105e2686beac7f2ef119d5db3f87e850"
+  },
+  "config_sha256": "1f1d28c8a3f7226eca9934169515e1c4105e2686beac7f2ef119d5db3f87e850",
+  "implementation_git_sha": "088b18ba82b97dea853bcb658666e6532596e965",
+  "manifests": {
+    "test": {
+      "path": "/root/mount_data/prepared/ACDC/fuse-final-20261113/test.json",
+      "sha256": "84f24ca7a50e4516548cc16037b6159eaed2eb1ea07d94287e8305894a951297"
+    },
+    "train": {
+      "path": "/root/mount_data/prepared/ACDC/fuse-k8-20261113/train.json",
+      "sha256": "ef7562a251e5c30622ab00dfa46a5b62e0c4552cc0aac06b24caa3e63ff23363"
+    },
+    "val": {
+      "path": "/root/mount_data/prepared/ACDC/fuse-final-20261113/development.json",
+      "sha256": "e3421779441afcab8f8feadbd293bedad6c00877730eb3c7151fa6a15667e88b"
+    }
+  },
+  "real_stages": {
+    "A1": "NOT_RUN_USER_CODE_ONLY_SCOPE",
+    "A2": "NOT_RUN_USER_CODE_ONLY_SCOPE",
+    "A3": "NOT_RUN_USER_CODE_ONLY_SCOPE",
+    "A4": "NOT_RUN_USER_CODE_ONLY_SCOPE",
+    "S1": "NOT_RUN_USER_CODE_ONLY_SCOPE",
+    "S2": "NOT_RUN_USER_CODE_ONLY_SCOPE",
+    "S3": "NOT_RUN_USER_CODE_ONLY_SCOPE"
+  },
+  "run_root_planned": "/root/mount_data/runs/pg-k8-20261116",
+  "runtime": {
+    "cpu_amp_dtype": "float32",
+    "cublas_workspace_config": ":4096:8",
+    "deterministic": true,
+    "device": "cuda",
+    "gpu_amp_dtype": "bfloat16",
+    "gradient_clip_norm": 1.0,
+    "num_threads": 1,
+    "pin_memory": false,
+    "stage_batch_sizes": {
+      "S1": 1,
+      "S2_labeled": 1,
+      "S2_unlabeled": 2,
+      "S3_labeled": 1,
+      "S3_unlabeled": 2
+    },
+    "synthetic": false,
+    "tf32": false,
+    "workers": 0
+  },
+  "schema": "self_audit.candidate_pg.code_only_lock.v1",
+  "scope": "CODE_AND_LOCAL_SOFTWARE_CHECKS_ONLY",
+  "seed": 42,
+  "server_launches": [],
+  "source_base_sha": "17efb5ff4645216f382074653a4544ad72a25552",
+  "source_k8_sha256": "60dd11747570f3ac183e8636050a3ac3d73651cb43b37deba9ff7422b442a433",
+  "split_lock_sha256": "cdec2b85c549a1cf9a19eea8790b7d6dbe155fdbe7a4798b60315412cbead639",
+  "test_policy": "Per-epoch monitoring only. Selection is VAL18 student-only. Final TEST_ONCE locks all four exports; it is not a claim of an unseen test set."
+}
