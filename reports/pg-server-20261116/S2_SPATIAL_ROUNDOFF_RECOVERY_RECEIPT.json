@@ -1,0 +1,185 @@
+{
+  "schema": "self_audit.pg_s2_spatial_roundoff_recovery.v1",
+  "utc": "2026-11-16T14:15:15.748624+00:00",
+  "status": "CPU_VERIFIED_GPU_REPLAY_RESUME_PENDING",
+  "run": "/root/mount_data/runs/pg-k8-20261116",
+  "original_source": "df646fc9f800b1e90f2adda963b21b19ec984a10",
+  "checkpoint_before": {
+    "update": 1950,
+    "sha256": "f1d49002107479263e1456e7e0157a6c3dcae302b39aaefa8fbacf5388949dd6",
+    "unchanged_after_diagnostic": true
+  },
+  "failure": {
+    "utc": "2026-11-16T14:02:07.017646+00:00",
+    "error": "ValueError: image must be finite and normalized to [0,1]"
+  },
+  "reproduction": {
+    "kind": "augmentation_only_no_model_or_optimizer",
+    "device": "cuda",
+    "update": 1989,
+    "labeled_key": [
+      "patient077",
+      8
+    ],
+    "u_anchor_key": [
+      "patient094",
+      13
+    ],
+    "u_partner_key": [
+      "patient011",
+      5
+    ],
+    "native_shape": [
+      1,
+      1,
+      9,
+      256,
+      216
+    ],
+    "partner_canvas_shape": [
+      1,
+      1,
+      10,
+      174,
+      208
+    ],
+    "input_min": 0,
+    "input_max": 1,
+    "input_finite": true,
+    "dtype": "torch.float32",
+    "rotation_matrix": [
+      [
+        0.7102487087249756,
+        0.703950822353363
+      ],
+      [
+        -0.703950822353363,
+        0.7102487087249756
+      ]
+    ],
+    "quarter_turn_matrix": [
+      [
+        6.123234262925839e-17,
+        -1
+      ],
+      [
+        1,
+        6.123234262925839e-17
+      ]
+    ],
+    "output_min": 0,
+    "output_max": 1.0000001192092896,
+    "output_finite": true,
+    "voxels_above_one": 1,
+    "voxels_below_zero": 0,
+    "view_rng_sha256": "7b519c9e77add865cd1a7e29d3ef0345299b68f5e4ba0cfdfa9472b684c0cbcf",
+    "cuda_peak_allocated_bytes": 139099136
+  },
+  "correction": {
+    "scope": "PG weak spatial output only",
+    "maximum_accepted": 1.0000001192092896,
+    "negative_or_nonfinite_rejected": true,
+    "larger_overshoot_rejected": true,
+    "native_and_direct_strong_validation": "strict_unchanged",
+    "state_formats": "unchanged"
+  },
+  "source_file_sha256": {
+    "self_audit/candidate_pg/views.py": "e37907a4db94b85b19e711164506191290a19688921fda9ca806d90e9a86fbd8",
+    "tests/test_candidate_pg_spatial_roundoff.py": "327c7533565009f5dec557f3e4a6de375920818232b15faf684f5126dc693dcb"
+  },
+  "software_checks": {
+    "focused": "13 passed in 0.61s",
+    "check_repo": "PASS",
+    "full_pg": "187 passed in 70.18s",
+    "full_suite": "RUNNING",
+    "pg_smoke": "PASS; 2 updates; SOFTWARE_ONLY with explicit smoke overrides",
+    "q3d_smoke": "COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE; tokenizer gate NOT_READY, passed=false"
+  },
+  "training_resume": "NOT_RUN",
+  "completed_campaign": false,
+  "all_stage_gpu_fit": "NOT_ESTABLISHED",
+  "automation": "c851dc66-2854-459a-9ef3-9ca6a4ae6e1e",
+  "automation_action": "KEEP_ENABLED",
+  "review": {
+    "status": "NO_BLOCKING_FINDING",
+    "message": "msg_5ef70450d460",
+    "run": "run_260e742283ea",
+    "exact_source_and_test_hashes_verified": true
+  },
+  "archive": {
+    "schema": "self_audit.pg_spatial_recovery_archive.v1",
+    "utc": "2026-11-16T14:16:46.449199+00:00",
+    "archive": "/root/mount_data/runs/pg-k8-20261116/code_updates/spatial-roundoff-20261116T141644Z",
+    "source_commit": "df646fc9f800b1e90f2adda963b21b19ec984a10",
+    "checkpoint_sha256": "f1d49002107479263e1456e7e0157a6c3dcae302b39aaefa8fbacf5388949dd6",
+    "config_sha256": "3ab6655b3cd71ffdef26735713feb958c0541d478d2c460326082b2f2e950fe4",
+    "s1_sha256": "f596a68a692799326aac736fdff085543a495ad13f0d8c82270b4724782b1b8f",
+    "manifests": [
+      {
+        "path": "/root/dataset/prepared/ACDC/pg-k8-20261116-v2/test.json",
+        "sha256": "43b2c98991660c5928bafc5a5e9230c439286451d87fab50b27d443ad738698d"
+      },
+      {
+        "path": "/root/dataset/prepared/ACDC/pg-k8-20261116-v2/train.json",
+        "sha256": "7ccf688343f016d549b5975f1407c336d269078edf86c1ad52052dafb72f7ebb"
+      },
+      {
+        "path": "/root/dataset/prepared/ACDC/pg-k8-20261116-v2/val.json",
+        "sha256": "ca5bb5f0c603111d302ef879930e8d20a46d426fdbbefbe623a035f9010e8d5b"
+      },
+      {
+        "path": "/root/dataset/prepared/ACDC/pg-k8-20261116-v2/locked_k8_derived.json",
+        "sha256": "771d7b9a02e52d6cc0eb4891ff631aa4f0aaf3a532bbbf28a7c32e71cbbcbc86"
+      }
+    ],
+    "failure_log_sha256": "195e6603f5c2d9bcdaddff3547b4d011bcf856281aa95e36fe0eb4994df10a65",
+    "queue_sha256": "59560f4e44b8c03b7c620df957c5ad5668a265751012972fa7deddb665402a15",
+    "attempt_history_count": 4,
+    "files": {
+      "QUEUE_STATE.before.json": "59560f4e44b8c03b7c620df957c5ad5668a265751012972fa7deddb665402a15",
+      "S2.failed.log": "195e6603f5c2d9bcdaddff3547b4d011bcf856281aa95e36fe0eb4994df10a65",
+      "S1_RECEIPT.json": "9c3840e8fcfd09a3ed6343f2b375ab5fbd173c8f5234f982fe0e8daed9987e06",
+      "PG_K8_CONFIG.json": "3ab6655b3cd71ffdef26735713feb958c0541d478d2c460326082b2f2e950fe4",
+      "pg-campaign.before.conf": "ddb270f40475eca93a1d502b0fae90e12956ba98a33766132be72d8f2b9c4e0a",
+      "S2_MAIN_REFRESH.json": "4285a64f7a4175dd45baf29d712a32d70384e3b244fc56f0ffd3060bfc004633",
+      "CHECK_REPO.txt": "2b1ecb01b8c399dcd00f4788fb78661d318663e4b10db50dc50e0036d47468ce",
+      "FOCUSED_TESTS.txt": "d56e6ca08eb8b6c59d51600c757dc44d6d2c1a6fe8ef63280da73deadf139929",
+      "S2/diag.jsonl": "26aa3ff5d5e3ba1a2425fc742369e91129124ee1d5636817480da132f77eb969",
+      "S2/run.log": "b8d4542daf5cb5f34658f440fdf86773ee5e352e687a0c62a3c1466136e5f9ba",
+      "S2/teacher_latest.pt": "f1d49002107479263e1456e7e0157a6c3dcae302b39aaefa8fbacf5388949dd6",
+      "S2/teacher_latest.sha256.json": "d3686e5980751f88c0ea5d23b244d42de08a0cf8c71a9e1b7990e32ebd9c8c7f",
+      "S2/epochs.csv": "522bfecd671f6e495ef627d79c30a6f21594151cccfe73fc6dc8ba46ea0eed2a",
+      "S2/epochs.jsonl": "700163c9a6dbc5c404573c0d4c7358d85e4d7cca3b8864ca26ac00b9c5ebf3ff",
+      "S2/patients_epoch001.csv": "8f61c48de744a964d9b3050d9f1158b0b2ee4c1aa7858f20b2813946c07568fe",
+      "S2/epochs.commit.json": "90a204cb4c77a2763c04039206030cd0d1a73440b183fc7545a8b85273a65be0",
+      "S2/patients_epoch002.csv": "7247eb84dac5713397f1cac71e4434342b753e2951d6d46591c1aa09a6c441c5",
+      "S2/patients_epoch003.csv": "74bac42b8beb521db78bd439889cbda75345750fbac6c882ea3a86b05e1fad17",
+      "S2/patients_epoch004.csv": "972f22c9190a6d2211662c4235d170b1dc3393d4dc3c9a1f3165356cfec38515",
+      "S2/patients_epoch005.csv": "e4fc57d9d8222a88d77d586d25909181fdb1250087a41c3cf98293e0a5b92c8d",
+      "S2/patients_epoch006.csv": "c7157528d99065a7bd40a6e7c22aa5954c7973b808efd2cac37818efacabbcd2",
+      "S2/patients_epoch007.csv": "12cbb7fec90c8b7c1899df891683740a192dccdb3e4c9c229c007d2ab8dbde72",
+      "S2/patients_epoch008.csv": "28442b2d7fe62e48c48fa181e15d5a3ef3b2b821a3b586b9da372a1b9d0052f4",
+      "S2/patients_epoch009.csv": "0084cb5093925db148b7939a09fc4a080d8723a63665eeaa0324301b521d082b",
+      "S2/patients_epoch010.csv": "065d8821b0581742f3b0c19441426ef61f733a09dd384ce2b3ff9b553b9b76a0",
+      "S2/patients_epoch011.csv": "1c517929eebc5d249074eaa209ed8e820e6a7ad7d3e0f5f5628eb4dd12ab0639",
+      "S2/patients_epoch012.csv": "826f3f9da191abd6419c3632ed358d5d6c0f65c267c096e4f728fca90a4429d0",
+      "S2/patients_epoch013.csv": "5b96c7201b4aef1dc3c442c0ea339e955eb909ab5d21e696f6a0dc1184802499",
+      "S2/patients_epoch014.csv": "f6db55b9819d39195cb596fbb3b25ce849176c06795c3554c6a834219d8b17f8",
+      "S2/patients_epoch015.csv": "7b840ddde1dac37d7921997e16265d2980ba0fd8f5a49d50e58fb79d6e5df372",
+      "S2/patients_epoch016.csv": "a70ad9ac12e5267dbb8b34f867df0eb3fa45504629a2412fcf55400f91bc54e9",
+      "S2/patients_epoch017.csv": "9d6b3930f51905733938be6c83a774bcfc212e9ecb2cce5974712535f0be3484",
+      "S2/patients_epoch018.csv": "20202ac7fede92395a1838316d730952f1f0492585fca3fd6a836ef5a601f1ce",
+      "S2/patients_epoch019.csv": "56dc71a74b5ec802855fe8f01fabdef27ec3ef2236f7eb26b17cb68547ac1f8d",
+      "S2/patients_epoch020.csv": "d67dfb49ed749f408903be9a2b450a5ab6e1a828b4f2658d2b328820bc1814f8",
+      "S2/patients_epoch021.csv": "1da09dd3eb47569ccac62f011097ee998373ad470988dbe9195e35d123d3e434",
+      "S2/patients_epoch022.csv": "b238ce4415053da5de901443eef161c0d24f3de6f1d0037b5bf6fe37d69c652e",
+      "S2/patients_epoch023.csv": "3a15d067eba302c8168db6b19fa18acdb28e4caee9bf18ccb25025605db76ac2",
+      "S2/patients_epoch024.csv": "90d3ea65e125f359a39b04ed278b499d4fdab628f1edcc8b6399b7b81304a755"
+    }
+  },
+  "ownership_review_messages": [
+    "msg_5ef70450d460",
+    "msg_0793cb3849ee"
+  ],
+  "subsequent_code_fix_policy": "Luna only, per coordinator relay of explicit user steering at 2026-11-16T14:16:12Z"
+}

@@ -344,6 +344,22 @@ class StatefulViewGenerator:
         if not bool(torch.isfinite(image).all()) or bool(((image < 0) | (image > 1)).any()):
             raise ValueError("image must be finite and normalized to [0,1]")
 
+    @staticmethod
+    def _repair_spatial_roundoff(image: Tensor) -> Tensor:
+        """Repair only a measured one-FP32-ULP upper interpolation overshoot.
+
+        Native inputs are strictly validated before spatial augmentation. S2
+        update 1989 exposed a bilinear sum of 1.0000001192092896 from valid
+        [0,1] inputs. Keep this correction at the PG spatial-output boundary;
+        negative/nonfinite values and larger excursions remain hard errors.
+        In-range tensors, labels, geometry and all RNG draws stay unchanged.
+        """
+        low, high = (float(value) for value in torch.aminmax(image))
+        upper = 1.0 + torch.finfo(torch.float32).eps
+        if not math.isfinite(low) or not math.isfinite(high) or low < 0 or high > upper:
+            raise ValueError(f"PG spatial image outside one-ULP roundoff bound: min={low}, max={high}")
+        return image.clamp_max(1.0) if high > 1.0 else image
+
     def weak(
         self,
         image: Tensor,
@@ -386,6 +402,7 @@ class StatefulViewGenerator:
         # without changing augmentation.py or creating a second RNG contract.
         replay_state = self.augment.state_dict()
         image_w, valid_w, geometry_w = self.augment.spatial(image, valid4.long(), geometry)
+        image_w = self._repair_spatial_roundoff(image_w)
         if target4 is None:
             return image_w, valid_w.bool(), geometry_w
         self.augment.load_state_dict(replay_state)
