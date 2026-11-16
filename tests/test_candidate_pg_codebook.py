@@ -431,6 +431,31 @@ def test_run_codebook_resume_before_first_checkpoint_initializes(tmp_path) -> No
     assert receipt["codebook_initialization"]["source"] == "TRAIN_L_U_projected_z_T"
 
 
+@pytest.mark.parametrize("split", ["VAL18", "TEST50"])
+def test_qval_uses_only_labeled_keys_with_different_native_grids(split) -> None:
+    from self_audit.candidate_pg.codebook import _qval_metrics
+
+    class EvaluationData(_LoopData):
+        def labeled_keys(self):
+            return [("L0", 0), ("V1", 0)]
+
+        def unlabeled_keys(self):
+            raise ValueError(f"unlabeled_keys are available only for TRAIN, not {split}")
+
+    data = EvaluationData()
+    second = _LoopFrame("V1", labeled=True)
+    second.image = torch.linspace(0, 1, 3 * 24 * 32).reshape(1, 3, 24, 32)
+    second.target = torch.ones(3, 24, 32, dtype=torch.long)
+    second.geometry["shape"] = (3, 24, 32)
+    data.frames[("V1", 0)] = second
+    cb = TeacherCodebook(_loop_config())
+    metrics = _qval_metrics(cb, data, _PhaseTeacher(), _PhaseStudent(), torch.device("cpu"))
+    assert set(metrics["per_patient"]) == {"L0", "V1"}
+    assert metrics["valid_voxels"] == 2 * 2 * 2 + 3 * 3 * 4
+    assert metrics["valid_count"] == metrics["valid_voxels"]
+    assert data.loaded_pairs == []
+
+
 def test_run_codebook_resume_after_checkpoint_before_commit_is_row_exact(tmp_path: Path, monkeypatch) -> None:
     from self_audit.candidate_pg.logging import EpochLogger
     from self_audit.candidate_pg.codebook import run_codebook

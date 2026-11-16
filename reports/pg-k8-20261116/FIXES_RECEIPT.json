@@ -109,12 +109,50 @@
       "omegaconf": "2.4.0"
     },
     "gpu_profile": {
-      "status": "PENDING",
-      "owner_run": "run_f5b7f82c0eb4",
-      "reason": "Coordinated single launch on server owner merged source after commit and fresh manifest receipts.",
-      "limitation": "Unchanged 800-update warmup means a 2-update profile does not measure active strong-view/FP peak memory."
+      "schema": "self_audit.pg_gpu_pipeline_profile.v1",
+      "command": [
+        "/venv/main/bin/python",
+        "/root/Self-Audit-pg-20261116/train.py",
+        "--config",
+        "/root/dataset/receipts/PG_K8_CONFIG.json",
+        "--out",
+        "/root/mount_data/runs/pg-k8-profile-20261116",
+        "--device",
+        "cuda",
+        "--pg-stage",
+        "all",
+        "--pg-max-updates",
+        "2"
+      ],
+      "source_sha": "e2fbff9f92e4950ea5d7fbfc920c5661be1e2200",
+      "config_sha256": "3ab6655b3cd71ffdef26735713feb958c0541d478d2c460326082b2f2e950fe4",
+      "gpu": "NVIDIA RTX PRO 4000 Blackwell",
+      "torch": "2.14.1+cu132",
+      "cuda": "13.2",
+      "status": "FAILED",
+      "limits": [
+        "Two updates per stage, warmup only for S2 and arms; not peak memory after warmup",
+        "S1 includes its unchanged full TRAIN image-only cosine evaluation",
+        "Separate profile artifacts must never seed the full campaign"
+      ],
+      "error": "ValueError: unlabeled_keys are available only for TRAIN",
+      "elapsed_seconds": 316.3005533358082,
+      "peak_allocated_bytes": 12031922176,
+      "peak_reserved_bytes": 16773021696,
+      "receipt": "GPU_PROFILE_ATTEMPT.json",
+      "receipt_sha256": "2459d58639402db8af9623039d0950ea174fd808ac946f4c8dacc90e0fe20389",
+      "oom": false,
+      "followup": "S3 VAL accessor and heterogeneous native-grid usage aggregation fixed in follow-up; GPU rerun deferred to full-S1 boundary owned by server coordinator, no concurrent GPU job."
     },
-    "settings_changed": false
+    "settings_changed": false,
+    "cinema_install": {
+      "verified": true,
+      "python": "/venv/main/bin/python",
+      "version": "1.0.0",
+      "editable_source": "/root/Self-Audit-pg-20261116/external/CineMA",
+      "source_commit": "c10daa1d93f0ea28d8b9ad9206b0f673d25805c1",
+      "dependencies_changed_by_install": false
+    }
   },
   "orchestration": {
     "run": "run_260e742283ea",
@@ -123,9 +161,25 @@
     "claude_reviewers": 1,
     "released_workers": 4
   },
-  "evidence_boundary": "Software tests and source/download checks; no patient efficacy claim. GPU profile pending.",
+  "evidence_boundary": "Six requested code fixes verified. Real all-stage GPU profile attempted once and failed in S3 after S1/S2; memory is a partial warmup measurement, not a passed full profile or efficacy evidence. Follow-up evaluation fix verified in software; GPU rerun pending server S1 boundary.",
   "remaining_open": {
     "OPEN-B1f": "Finalization metric parity remains strict at 1e-7 (outside verify_cold_load scope).",
     "seed_diversity": "Initial 128 codes may come from one seeded randomly selected TRAIN frame."
+  },
+  "fix_commit": "e71b6c1fc34344268c369ba804639c5f674354d0",
+  "file_sha256_scope": "Original six-item fix commit; later source changes are recorded separately below.",
+  "followup": {
+    "base_sha": "e2fbff9f92e4950ea5d7fbfc920c5661be1e2200",
+    "reason": "Actual requested GPU profile failed during S3 VAL evaluation.",
+    "files_sha256": {
+      "self_audit/candidate_pg/codebook.py": "22c87e71dfb19e97dd9925485e032fe4f91f72f59373f1dcf170285e2511df42",
+      "tests/test_candidate_pg_codebook.py": "45158fb583c634de80300fde2508f2e7e601bb3112e83806b758cadf3e15a4c8"
+    },
+    "full_pg": "158 passed in 61.14s",
+    "full_pg_log_sha256": "96aeec15684c5c04241a5d1d80b6922152431dd69583d34d3450bf99ef01466d",
+    "smoke": "COMPLETED, two updates, S1/S2/S3/A1/A2/A3/A4, SOFTWARE_ONLY",
+    "smoke_log_sha256": "3497ae2d95ecc0701e78cd5d4c4998c8b3b76111fe76ec714a4d9b4ea0d76df0",
+    "linux_codebook": "16 passed in 4.41s (OMP_NUM_THREADS=2, CPU, isolated Linux worktree)",
+    "settings_changed": false
   }
 }

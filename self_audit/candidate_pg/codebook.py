@@ -1064,18 +1064,18 @@ def cbkd_loss(
     return total
 
 
-def _frame_lists(data: Any) -> tuple[list[Any], list[Any]]:
+def _frame_lists(data: Any, *, include_unlabeled: bool = True) -> tuple[list[Any], list[Any]]:
     """Return labeled/U frame keys or frame objects from a PG/FUSE view."""
 
     view = getattr(data, "train", data)
     if hasattr(view, "labeled_keys") and hasattr(view, "unlabeled_keys"):
-        return list(view.labeled_keys()), list(view.unlabeled_keys())
+        return list(view.labeled_keys()), list(view.unlabeled_keys()) if include_unlabeled else []
     labeled = getattr(view, "labeled", None)
     unlabeled = getattr(view, "unlabeled", None)
     if labeled is not None and unlabeled is not None:
-        return list(labeled), list(unlabeled)
+        return list(labeled), list(unlabeled) if include_unlabeled else []
     if isinstance(view, Mapping) and "labeled" in view and "unlabeled" in view:
-        return list(view["labeled"]), list(view["unlabeled"])
+        return list(view["labeled"]), list(view["unlabeled"]) if include_unlabeled else []
     raise TypeError("S3 data must expose labeled_keys/unlabeled_keys or labeled/unlabeled sequences")
 
 
@@ -1276,7 +1276,7 @@ def _qval_metrics(
 
     from .evaluation import patient_macro, pooled_grid_metrics
 
-    labeled, _ = _frame_lists(data)
+    labeled, _ = _frame_lists(data, include_unlabeled=False)
     if not labeled:
         return {"fg_dice": float("nan"), "perplexity": 0.0, "dead_code_count": codebook.codebook_size}
     frame_rows: list[dict[str, Any]] = []
@@ -1314,7 +1314,8 @@ def _qval_metrics(
             "metrics": frame_metric,
             "valid_mask": pooled_valid[0].detach().cpu().numpy(),
         })
-        usages.append(output["assignments"])
+        # Native patient grids differ in shape; accumulate valid cells only.
+        usages.append(output["assignments"][pooled_valid])
     metrics = patient_macro(frame_rows)
     valid_by_patient: dict[str, int] = {}
     for row in frame_rows:
@@ -1322,7 +1323,7 @@ def _qval_metrics(
     for patient, count in valid_by_patient.items():
         if isinstance(metrics.get("per_patient"), Mapping) and isinstance(metrics["per_patient"].get(patient), Mapping):
             metrics["per_patient"][patient]["valid_voxels"] = int(count)
-    usage = torch.cat(usages, dim=0) if usages else torch.empty(0)
+    usage = torch.cat(usages).reshape(1, 1, 1, -1) if usages else torch.empty(0)
     usage_metrics_value = usage_metrics(usage, codebook.codebook_size) if usages else {"perplexity": 0.0, "dead_code_count": codebook.codebook_size, "dead_code_fraction": 1.0}
     metrics.update({key: value for key, value in usage_metrics_value.items() if key not in {"usage", "codes_per_class"}})
     metrics.pop("usage", None)

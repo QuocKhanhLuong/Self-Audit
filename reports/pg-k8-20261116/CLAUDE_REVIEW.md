@@ -395,3 +395,30 @@ A separate user-assigned server coordinator owns the fresh manifest preparation
 and sole GPU launch. The preflight established that `b1251ee` belongs to the HF
 model repository; official GitHub source is separately identified as `c10daa1`.
 No GPU profile result is claimed here while that coordinated launch is pending.
+
+### 8.6 Real profile follow-up (coordinator verification)
+
+The requested `train.py --pg-stage all --pg-max-updates 2 --device cuda`
+was run once on committed integration source `e2fbff9`, with unchanged settings.
+It completed S1/S2 and failed during S3 VAL evaluation with
+`ValueError: unlabeled_keys are available only for TRAIN`. This is a **FAILED**
+profile, not a full-pipeline PASS; its original receipt is preserved in
+`GPU_PROFILE_ATTEMPT.json`. Peak allocated/reserved memory was
+12,031,922,176 / 16,773,021,696 bytes, with no OOM. Arms were not reached.
+
+**N-S3-EVAL: FIXED in software, GPU recheck pending.** `_qval_metrics` now
+requests only labeled keys, so it never calls TRAIN-only U accessors on VAL/TEST.
+The same evaluation pass now aggregates flat valid code assignments across
+patients, since native patient grids have different shapes. Regression tests
+exercise VAL18 and TEST50 accessors that reject U, two different native grids,
+and an exact valid-cell count. This is a small profile-blocking bug fix;
+FUSE and training settings remain unchanged.
+
+After this follow-up, the full current PG suite passes **158 tests**, the
+separate two-update synthetic full smoke completes, and all **16 codebook tests
+pass on Linux** (OMP=2, CPU). The original Linux B1
+acceptance matrix remains 17/17 with OMP unset and 17/17 with OMP=2.
+This addendum is the coordinator's verification, not an additional Claude review.
+The sole server owner has started full S1 under the separate user instruction;
+GPU rechecking of this follow-up is deferred to its stage boundary, without
+interrupting S1 or launching a concurrent GPU job. OPEN-B1f remains open.
