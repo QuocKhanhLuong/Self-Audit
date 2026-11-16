@@ -8,6 +8,7 @@ within that arms transaction.
 from __future__ import annotations
 
 import argparse
+import copy
 import fcntl
 import hashlib
 import json
@@ -163,7 +164,15 @@ def readiness(data_path: Path, source_path: Path, config: dict[str, Any], config
 
 def planned_commands(config_path: Path, out: Path, device: str) -> list[list[str]]:
     base = [sys.executable, str(ROOT / "train.py"), "--config", str(config_path), "--out", str(out), "--device", device]
-    commands = [base + ["--pg-stage", stage, "--pg-resume"] for stage in ("S1", "S2", "S3")]
+    # S2's resume contract requires teacher_latest.pt. A new stage (including
+    # an empty directory left by pre-training validation) must start fresh.
+    # Any retained S2 artifact keeps strict resume enabled, so a missing or
+    # corrupt checkpoint after training cannot silently reset the budget.
+    s2_dir = out / "S2"
+    s2_has_state = (s2_dir.exists() and any(s2_dir.iterdir())) or (out / "S2_RECEIPT.json").exists()
+    commands = [base + ["--pg-stage", stage] +
+                (["--pg-resume"] if stage != "S2" or s2_has_state else [])
+                for stage in ("S1", "S2", "S3")]
     commands.extend(base + ["--pg-stage", "arms", "--pg-arm", arm, "--pg-resume"]
                     for arm in ARM_ORDER)
     commands.append(base + ["--pg-stage", "arms", "--pg-resume"])
@@ -215,7 +224,7 @@ class Queue:
                     "attempt": len(state.get("attempt_history", [])) + 1,
                     "status": prior_status,
                     "active_stage": state.get("active_stage"),
-                    "stages": state.get("stages", {}),
+                    "stages": copy.deepcopy(state.get("stages", {})),
                     "recovery_reason": self.resume_failed_reason.strip(),
                     "recorded_utc": _now(),
                 })

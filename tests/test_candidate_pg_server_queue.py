@@ -6,6 +6,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "pg_server_queue.py"
 spec = importlib.util.spec_from_file_location("pg_server_queue", SCRIPT)
@@ -88,7 +90,8 @@ def test_queue_waits_for_ready_receipts_and_runs_canonical_order(tmp_path, monke
     assert observed == [("S1", None), ("S2", None), ("S3", None),
                         ("arms", "A4"), ("arms", "A3"), ("arms", "A2"),
                         ("arms", "A1"), ("arms", None)]
-    assert all("--pg-resume" in c for c in calls)
+    assert "--pg-resume" not in calls[1]  # S2 has never trained.
+    assert all("--pg-resume" in c for i, c in enumerate(calls) if i != 1)
     assert state["arm_order"] == ["A4", "A3", "A2", "A1"]
     assert all(Path(rec["log_path"]).is_file() and rec["returncode"] == 0
                for rec in state["stages"].values())
@@ -153,6 +156,72 @@ def test_failed_attempt_is_not_retried_by_second_invocation(tmp_path):
     assert recovered["status"] == "COMPLETED"
     assert [c[c.index("--pg-stage") + 1] for c in calls[:3]] == ["S1", "S2", "S2"]
     assert recovered["attempt_history"][0]["recovery_reason"] == "root reviewed logs and checkpoint identity"
+    assert recovered["attempt_history"][0]["stages"]["S2"]["status"] == "FAILED"
+    assert recovered["attempt_history"][0]["stages"]["S2"]["returncode"] == 17
+    assert "--pg-resume" not in calls[2]
+
+
+def test_s2_empty_pretraining_directory_starts_fresh(tmp_path):
+    out = tmp_path / "out"
+    (out / "S2").mkdir(parents=True)
+    commands = queue_module.planned_commands(tmp_path / "config.json", out, "cuda")
+    assert "--pg-resume" not in commands[1]
+
+
+def test_s2_retained_progress_requires_strict_resume_even_without_checkpoint(tmp_path):
+    out = tmp_path / "out"
+    (out / "S2").mkdir(parents=True)
+    (out / "S2" / "diag.jsonl").write_text('{"update": 1}\n')
+    commands = queue_module.planned_commands(tmp_path / "config.json", out, "cuda")
+    assert "--pg-resume" in commands[1]
+    (out / "S2" / "teacher_latest.pt").write_bytes(b"checkpoint validated by S2 trainer")
+    commands = queue_module.planned_commands(tmp_path / "config.json", out, "cuda")
+    assert "--pg-resume" in commands[1]
+
+
+@pytest.mark.parametrize("active_stage,checkpoint", [
+    ("S2", "S2/teacher_latest.pt"),
+    ("S3", "S3/checkpoint.pt"),
+    ("arm:A4", "resume_A4.pt"),
+])
+def test_recovery_resumes_stage_and_preserves_completed_shared_artifacts(tmp_path, active_stage, checkpoint):
+    config, data, source = _setup(tmp_path)
+    out = tmp_path / "out"
+    out.mkdir()
+    completed = queue_module.STAGES[:queue_module.STAGES.index(active_stage)]
+    artifacts = {}
+    for stage in completed:
+        path = out / f"{stage}_RECEIPT.json"
+        path.write_text(json.dumps({"status": "COMPLETED", "stage": stage}))
+        artifacts[path] = path.read_bytes()
+    cp = out / checkpoint
+    cp.parent.mkdir(parents=True, exist_ok=True)
+    cp.write_bytes(b"retained stage state; validated by canonical trainer")
+    artifacts[cp] = cp.read_bytes()
+    stages = {stage: {"status": "COMPLETED"} for stage in completed}
+    stages[active_stage] = {"status": "FAILED", "returncode": 17}
+    queue_module.atomic_json(out / "QUEUE_STATE.json", {
+        "schema": queue_module.SCHEMA, "config_sha256": queue_module.sha256(config),
+        "status": "FAILED", "active_stage": active_stage, "stages": stages,
+    })
+    calls = []
+
+    def runner(argv, **kwargs):
+        calls.append(argv)
+        return subprocess.CompletedProcess(argv, 0)
+
+    state = queue_module.Queue(config_path=config, out=out, data_ready=data,
+        source_ready=source, device="cpu", poll_seconds=0.001, max_wait_seconds=0,
+        runner=runner, resume_failed_reason="reviewed retained stage checkpoint").run()
+    assert state["status"] == "COMPLETED"
+    assert len(calls) == len(queue_module.STAGES) - len(completed)
+    assert "--pg-resume" in calls[0]
+    expected_stage = "arms" if active_stage.startswith("arm:") else active_stage
+    assert calls[0][calls[0].index("--pg-stage") + 1] == expected_stage
+    if active_stage.startswith("arm:"):
+        assert calls[0][calls[0].index("--pg-arm") + 1] == "A4"
+    assert all(path.read_bytes() == expected for path, expected in artifacts.items())
+    assert state["attempt_history"][0]["stages"][active_stage] == {"status": "FAILED", "returncode": 17}
 
 
 def test_ready_data_receipt_still_requires_config_manifest_bytes(tmp_path):
