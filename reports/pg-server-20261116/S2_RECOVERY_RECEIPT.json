@@ -1,0 +1,404 @@
+{
+  "schema": "self_audit.pg_s2_recovery.v1",
+  "utc": "2026-11-16T11:29:56.274112+00:00",
+  "status": "S2_RUNNING_WITH_MEASURED_OPTIMIZER_PROGRESS",
+  "host": "ae8a6d2632f0",
+  "run": "/root/mount_data/runs/pg-k8-20261116",
+  "deployed_source_commit": "7ac281f1465288df3bd47f33fe579d94aca699b3",
+  "deployed_worktree_status": "",
+  "config_sha256": "3ab6655b3cd71ffdef26735713feb958c0541d478d2c460326082b2f2e950fe4",
+  "manifests": {
+    "test": {
+      "path": "/root/dataset/prepared/ACDC/pg-k8-20261116-v2/test.json",
+      "expected_sha256": "43b2c98991660c5928bafc5a5e9230c439286451d87fab50b27d443ad738698d",
+      "actual_sha256": "43b2c98991660c5928bafc5a5e9230c439286451d87fab50b27d443ad738698d"
+    },
+    "train": {
+      "path": "/root/dataset/prepared/ACDC/pg-k8-20261116-v2/train.json",
+      "expected_sha256": "7ccf688343f016d549b5975f1407c336d269078edf86c1ad52052dafb72f7ebb",
+      "actual_sha256": "7ccf688343f016d549b5975f1407c336d269078edf86c1ad52052dafb72f7ebb"
+    },
+    "val": {
+      "path": "/root/dataset/prepared/ACDC/pg-k8-20261116-v2/val.json",
+      "expected_sha256": "ca5bb5f0c603111d302ef879930e8d20a46d426fdbbefbe623a035f9010e8d5b",
+      "actual_sha256": "ca5bb5f0c603111d302ef879930e8d20a46d426fdbbefbe623a035f9010e8d5b"
+    }
+  },
+  "s1": {
+    "updates": 10000,
+    "checkpoint_sha256": "f596a68a692799326aac736fdff085543a495ad13f0d8c82270b4724782b1b8f",
+    "receipt_sha256": "9c3840e8fcfd09a3ed6343f2b375ab5fbd173c8f5234f982fe0e8daed9987e06",
+    "queue_record_unchanged": true
+  },
+  "boundary_validation": {
+    "diffstat": "scripts/pg_server_queue.py              | 13 +++++-\n tests/test_candidate_pg_server_queue.py | 71 ++++++++++++++++++++++++++++++++-\n 2 files changed, 81 insertions(+), 3 deletions(-)",
+    "new_sha": "7ac281f1465288df3bd47f33fe579d94aca699b3",
+    "old_sha": "2ade94c4de7ed7cb71c1a606a881e1b795a71c54",
+    "recorded_utc": "2026-11-16T11:26:12.446312+00:00",
+    "schema": "self_audit.candidate_pg.main_refresh.v1",
+    "stage": "S2",
+    "status": "PASS",
+    "validation": [
+      {
+        "command": [
+          "/venv/main/bin/python",
+          "scripts/check_repo.py"
+        ],
+        "returncode": 0,
+        "result": "}"
+      },
+      {
+        "command": [
+          "/venv/main/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "tests/test_candidate_pg_audit_mnms_download.py",
+          "tests/test_candidate_pg_campaign.py",
+          "tests/test_candidate_pg_cinema.py",
+          "tests/test_candidate_pg_codebook.py",
+          "tests/test_candidate_pg_config.py",
+          "tests/test_candidate_pg_data.py",
+          "tests/test_candidate_pg_download_dataset.py",
+          "tests/test_candidate_pg_engine.py",
+          "tests/test_candidate_pg_evaluation.py",
+          "tests/test_candidate_pg_export.py",
+          "tests/test_candidate_pg_finalization.py",
+          "tests/test_candidate_pg_health.py",
+          "tests/test_candidate_pg_logging.py",
+          "tests/test_candidate_pg_manifest_relocation.py",
+          "tests/test_candidate_pg_models.py",
+          "tests/test_candidate_pg_prepare_acdc.py",
+          "tests/test_candidate_pg_provision_sources.py",
+          "tests/test_candidate_pg_refresh_main.py",
+          "tests/test_candidate_pg_reliability.py",
+          "tests/test_candidate_pg_resource_profile.py",
+          "tests/test_candidate_pg_runtime.py",
+          "tests/test_candidate_pg_s1_native_view.py",
+          "tests/test_candidate_pg_server_queue.py",
+          "tests/test_candidate_pg_teacher_training.py",
+          "tests/test_candidate_pg_training_step.py",
+          "tests/test_candidate_pg_views.py"
+        ],
+        "returncode": 0,
+        "result": "163 passed in 171.36s (0:02:51)"
+      }
+    ],
+    "validation_sha256": {
+      "CHECK_REPO.txt": "a2ea78270995c5d8324028450d72bd371225317398f41d5ab5801c1169da5302",
+      "FOCUSED_TESTS.txt": "af8e679c9c4699accd7224a3a00901990a6f76712e6b3960ac1c7e6b43afa5a5"
+    }
+  },
+  "archives": {
+    "failed-S2-20261116T110918Z": {
+      "path": "/root/mount_data/runs/pg-k8-20261116/code_updates/failed-S2-20261116T110918Z",
+      "preservation": {
+        "utc": "2026-11-16T11:14:38.382111+00:00",
+        "reason": "Runtime fixture dynamic cuBLAS allow_tf32 teardown failure; corrected fixture passed two cases on local and server. No training changes.",
+        "failure_files_sha256": {
+          "CHECK_REPO.txt": "a2ea78270995c5d8324028450d72bd371225317398f41d5ab5801c1169da5302",
+          "FOCUSED_TESTS.txt": "7ccfd63372a8f33b0ac22a42598459941313a50631ce43547e8f72693f842655",
+          "S2_MAIN_REFRESH.json": "ace2b77719668872790ddfd3a32cbabc56b1781bf403d9863ccc4d3683cda785",
+          "QUEUE_STATE.json": "1ba60e2126fac3f426ed4d5594a621fb8f7314341a49b52a6d515cce3cc2cd7a",
+          "S1_RECEIPT.json": "9c3840e8fcfd09a3ed6343f2b375ab5fbd173c8f5234f982fe0e8daed9987e06"
+        },
+        "config_sha256": "3ab6655b3cd71ffdef26735713feb958c0541d478d2c460326082b2f2e950fe4",
+        "s1_checkpoint_sha256": "f596a68a692799326aac736fdff085543a495ad13f0d8c82270b4724782b1b8f",
+        "fix_commit": "2ade94c4de7ed7cb71c1a606a881e1b795a71c54"
+      },
+      "verified": {
+        "CHECK_REPO.txt": true,
+        "FOCUSED_TESTS.txt": true,
+        "S2_MAIN_REFRESH.json": true,
+        "QUEUE_STATE.json": true,
+        "S1_RECEIPT.json": true
+      },
+      "resume_request": {
+        "utc": "2026-11-16T11:18:19.382295+00:00",
+        "reason": "S2 boundary recovery after verified fixture-only fix 2ade94c: dynamic torch allow_tf32 teardown repaired; full boundary checks pass; completed S1 and exact config preserved; prior failure archived.",
+        "fix_commit": "2ade94c4de7ed7cb71c1a606a881e1b795a71c54",
+        "boundary_receipt_sha256": "0dbedc54893897b1fc8093805f85a0a873525ef279a7f56560c91138d32dc759",
+        "supervisor_before_sha256": "5a93e4160e2a8a959dc6376fe3e46c76b5508d2e747903d1c5b392eed230be2f",
+        "supervisor_after_sha256": "5749e563a39123ac3a6a61808d5d6f1dc995ef5e5b6f3df448f54bec5f7bef8e",
+        "s1_checkpoint_sha256": "f596a68a692799326aac736fdff085543a495ad13f0d8c82270b4724782b1b8f",
+        "config_sha256": "3ab6655b3cd71ffdef26735713feb958c0541d478d2c460326082b2f2e950fe4"
+      }
+    },
+    "recovery-S2-20261116T111907Z": {
+      "path": "/root/mount_data/runs/pg-k8-20261116/code_updates/recovery-S2-20261116T111907Z",
+      "preservation": {
+        "utc": "2026-11-16T11:23:15.667617+00:00",
+        "reason": "S2 was empty and failed before its first optimizer update because queue unconditionally supplied --pg-resume. Fix distinguishes empty/new S2 from retained progress; deep-copies attempt history.",
+        "files_sha256": {
+          "CHECK_REPO.txt": "a2ea78270995c5d8324028450d72bd371225317398f41d5ab5801c1169da5302",
+          "FOCUSED_TESTS.txt": "edd26d24d9ca57f07f6db6ef4315bc1d91e56cb68329003f4a37f2a7887d5dc7",
+          "S2_MAIN_REFRESH.json": "0dbedc54893897b1fc8093805f85a0a873525ef279a7f56560c91138d32dc759",
+          "QUEUE_STATE.json": "8fae74b235b2f1b8f85b6e1d2de84df3448689048e65a135b4702b52607e6076",
+          "S1_RECEIPT.json": "9c3840e8fcfd09a3ed6343f2b375ab5fbd173c8f5234f982fe0e8daed9987e06",
+          "S2.log": "e40cae0b1ae162e4ffeaf559d3a1c5b36ce1949f882c32562d07765d73f864c7",
+          "pg-campaign.before.conf": "5749e563a39123ac3a6a61808d5d6f1dc995ef5e5b6f3df448f54bec5f7bef8e"
+        },
+        "config_sha256": "3ab6655b3cd71ffdef26735713feb958c0541d478d2c460326082b2f2e950fe4",
+        "s1_checkpoint_sha256": "f596a68a692799326aac736fdff085543a495ad13f0d8c82270b4724782b1b8f",
+        "fix_commit": "7ac281f1465288df3bd47f33fe579d94aca699b3",
+        "s2_directory_empty": true
+      },
+      "verified": {
+        "CHECK_REPO.txt": true,
+        "FOCUSED_TESTS.txt": true,
+        "S2_MAIN_REFRESH.json": true,
+        "QUEUE_STATE.json": true,
+        "S1_RECEIPT.json": true,
+        "S2.log": true,
+        "pg-campaign.before.conf": true
+      },
+      "resume_request": {
+        "utc": "2026-11-16T11:26:42.396935+00:00",
+        "reason": "Reviewed S2 pre-training failure: empty stage, zero optimizer updates; fixed unconditional resume at 7ac281f; check_repo and 163 PG tests pass; both prior failures archived; S1 and all config/data pins unchanged.",
+        "fix_commit": "7ac281f1465288df3bd47f33fe579d94aca699b3",
+        "boundary_receipt_sha256": "a60557c340869bd11f5bccba5b54ce6a7d543f839391419f72ffe79158fd1ce7",
+        "supervisor_before_sha256": "5749e563a39123ac3a6a61808d5d6f1dc995ef5e5b6f3df448f54bec5f7bef8e",
+        "supervisor_after_sha256": "ca4103cc9233b5c5b2a65a0ec279b8d02a07ebbeb540708e394faca998156f27",
+        "s1_checkpoint_sha256": "f596a68a692799326aac736fdff085543a495ad13f0d8c82270b4724782b1b8f",
+        "config_sha256": "3ab6655b3cd71ffdef26735713feb958c0541d478d2c460326082b2f2e950fe4",
+        "fresh_s2_argv": [
+          "/usr/bin/python3",
+          "/root/Self-Audit-pg-20261116/train.py",
+          "--config",
+          "/root/dataset/receipts/PG_K8_CONFIG.json",
+          "--out",
+          "/root/mount_data/runs/pg-k8-20261116",
+          "--device",
+          "cuda",
+          "--pg-stage",
+          "S2"
+        ]
+      }
+    }
+  },
+  "queue": {
+    "status": "RUNNING",
+    "active_stage": "S2",
+    "stages": {
+      "S1": {
+        "argv": [
+          "/venv/main/bin/python",
+          "/root/Self-Audit-pg-20261116/train.py",
+          "--config",
+          "/root/dataset/receipts/PG_K8_CONFIG.json",
+          "--out",
+          "/root/mount_data/runs/pg-k8-20261116",
+          "--device",
+          "cuda",
+          "--pg-stage",
+          "S1",
+          "--pg-resume"
+        ],
+        "config_sha256": "3ab6655b3cd71ffdef26735713feb958c0541d478d2c460326082b2f2e950fe4",
+        "finished_utc": "2026-11-16T11:06:18.335038+00:00",
+        "log_path": "/root/mount_data/runs/pg-k8-20261116/logs/S1.log",
+        "log_sha256": "2a81b5e19148e95cd24361b7212853add9fde1b5426342196cff28d08d96f54e",
+        "returncode": 0,
+        "source_hashes": {
+          "scripts/pg_campaign.py": "dc7149a2d1107277e06124899c8db416eac86978804845ee932c548f5d7638c2",
+          "self_audit/candidate_pg/engine.py": "c7cf97e8b0b01308db2997876c92b6fb98f8a2862fe900e2c73c47de9a932107",
+          "train.py": "fa29ce3adff741b6b6e586bc3d268f9e589bffab58f7722b23b1982a481dfcae"
+        },
+        "started_utc": "2026-11-16T01:32:48.039808+00:00",
+        "status": "COMPLETED"
+      },
+      "S2": {
+        "argv": [
+          "/venv/main/bin/python",
+          "/root/Self-Audit-pg-20261116/train.py",
+          "--config",
+          "/root/dataset/receipts/PG_K8_CONFIG.json",
+          "--out",
+          "/root/mount_data/runs/pg-k8-20261116",
+          "--device",
+          "cuda",
+          "--pg-stage",
+          "S2"
+        ],
+        "config_sha256": "3ab6655b3cd71ffdef26735713feb958c0541d478d2c460326082b2f2e950fe4",
+        "log_path": "/root/mount_data/runs/pg-k8-20261116/logs/S2.log",
+        "source_hashes": {
+          "scripts/pg_campaign.py": "dc7149a2d1107277e06124899c8db416eac86978804845ee932c548f5d7638c2",
+          "self_audit/candidate_pg/engine.py": "c7cf97e8b0b01308db2997876c92b6fb98f8a2862fe900e2c73c47de9a932107",
+          "train.py": "fa29ce3adff741b6b6e586bc3d268f9e589bffab58f7722b23b1982a481dfcae"
+        },
+        "started_utc": "2026-11-16T11:26:43.574231+00:00",
+        "status": "RUNNING"
+      }
+    },
+    "attempt_history": [
+      {
+        "active_stage": "S2",
+        "attempt": 1,
+        "recorded_utc": "2026-11-16T11:18:19.758402+00:00",
+        "recovery_reason": "S2 boundary recovery after verified fixture-only fix 2ade94c: dynamic torch allow_tf32 teardown repaired; full boundary checks pass; completed S1 and exact config preserved; prior failure archived.",
+        "stages": {
+          "S1": {
+            "argv": [
+              "/venv/main/bin/python",
+              "/root/Self-Audit-pg-20261116/train.py",
+              "--config",
+              "/root/dataset/receipts/PG_K8_CONFIG.json",
+              "--out",
+              "/root/mount_data/runs/pg-k8-20261116",
+              "--device",
+              "cuda",
+              "--pg-stage",
+              "S1",
+              "--pg-resume"
+            ],
+            "config_sha256": "3ab6655b3cd71ffdef26735713feb958c0541d478d2c460326082b2f2e950fe4",
+            "finished_utc": "2026-11-16T11:06:18.335038+00:00",
+            "log_path": "/root/mount_data/runs/pg-k8-20261116/logs/S1.log",
+            "log_sha256": "2a81b5e19148e95cd24361b7212853add9fde1b5426342196cff28d08d96f54e",
+            "returncode": 0,
+            "source_hashes": {
+              "scripts/pg_campaign.py": "dc7149a2d1107277e06124899c8db416eac86978804845ee932c548f5d7638c2",
+              "self_audit/candidate_pg/engine.py": "c7cf97e8b0b01308db2997876c92b6fb98f8a2862fe900e2c73c47de9a932107",
+              "train.py": "fa29ce3adff741b6b6e586bc3d268f9e589bffab58f7722b23b1982a481dfcae"
+            },
+            "started_utc": "2026-11-16T01:32:48.039808+00:00",
+            "status": "COMPLETED"
+          },
+          "S2": {
+            "argv": [
+              "/venv/main/bin/python",
+              "/root/Self-Audit-pg-20261116/train.py",
+              "--config",
+              "/root/dataset/receipts/PG_K8_CONFIG.json",
+              "--out",
+              "/root/mount_data/runs/pg-k8-20261116",
+              "--device",
+              "cuda",
+              "--pg-stage",
+              "S2",
+              "--pg-resume"
+            ],
+            "config_sha256": "3ab6655b3cd71ffdef26735713feb958c0541d478d2c460326082b2f2e950fe4",
+            "finished_utc": "2026-11-16T11:19:07.471824+00:00",
+            "log_path": "/root/mount_data/runs/pg-k8-20261116/logs/S2.log",
+            "log_sha256": "e40cae0b1ae162e4ffeaf559d3a1c5b36ce1949f882c32562d07765d73f864c7",
+            "returncode": 1,
+            "source_hashes": {
+              "scripts/pg_campaign.py": "dc7149a2d1107277e06124899c8db416eac86978804845ee932c548f5d7638c2",
+              "self_audit/candidate_pg/engine.py": "c7cf97e8b0b01308db2997876c92b6fb98f8a2862fe900e2c73c47de9a932107",
+              "train.py": "fa29ce3adff741b6b6e586bc3d268f9e589bffab58f7722b23b1982a481dfcae"
+            },
+            "started_utc": "2026-11-16T11:18:20.546641+00:00",
+            "status": "FAILED"
+          }
+        },
+        "status": "FAILED"
+      },
+      {
+        "active_stage": "S2",
+        "attempt": 2,
+        "recorded_utc": "2026-11-16T11:26:42.781578+00:00",
+        "recovery_reason": "Reviewed S2 pre-training failure: empty stage, zero optimizer updates; fixed unconditional resume at 7ac281f; check_repo and 163 PG tests pass; both prior failures archived; S1 and all config/data pins unchanged.",
+        "stages": {
+          "S1": {
+            "argv": [
+              "/venv/main/bin/python",
+              "/root/Self-Audit-pg-20261116/train.py",
+              "--config",
+              "/root/dataset/receipts/PG_K8_CONFIG.json",
+              "--out",
+              "/root/mount_data/runs/pg-k8-20261116",
+              "--device",
+              "cuda",
+              "--pg-stage",
+              "S1",
+              "--pg-resume"
+            ],
+            "config_sha256": "3ab6655b3cd71ffdef26735713feb958c0541d478d2c460326082b2f2e950fe4",
+            "finished_utc": "2026-11-16T11:06:18.335038+00:00",
+            "log_path": "/root/mount_data/runs/pg-k8-20261116/logs/S1.log",
+            "log_sha256": "2a81b5e19148e95cd24361b7212853add9fde1b5426342196cff28d08d96f54e",
+            "returncode": 0,
+            "source_hashes": {
+              "scripts/pg_campaign.py": "dc7149a2d1107277e06124899c8db416eac86978804845ee932c548f5d7638c2",
+              "self_audit/candidate_pg/engine.py": "c7cf97e8b0b01308db2997876c92b6fb98f8a2862fe900e2c73c47de9a932107",
+              "train.py": "fa29ce3adff741b6b6e586bc3d268f9e589bffab58f7722b23b1982a481dfcae"
+            },
+            "started_utc": "2026-11-16T01:32:48.039808+00:00",
+            "status": "COMPLETED"
+          },
+          "S2": {
+            "argv": [
+              "/venv/main/bin/python",
+              "/root/Self-Audit-pg-20261116/train.py",
+              "--config",
+              "/root/dataset/receipts/PG_K8_CONFIG.json",
+              "--out",
+              "/root/mount_data/runs/pg-k8-20261116",
+              "--device",
+              "cuda",
+              "--pg-stage",
+              "S2",
+              "--pg-resume"
+            ],
+            "config_sha256": "3ab6655b3cd71ffdef26735713feb958c0541d478d2c460326082b2f2e950fe4",
+            "finished_utc": "2026-11-16T11:19:07.471824+00:00",
+            "log_path": "/root/mount_data/runs/pg-k8-20261116/logs/S2.log",
+            "log_sha256": "e40cae0b1ae162e4ffeaf559d3a1c5b36ce1949f882c32562d07765d73f864c7",
+            "returncode": 1,
+            "source_hashes": {
+              "scripts/pg_campaign.py": "dc7149a2d1107277e06124899c8db416eac86978804845ee932c548f5d7638c2",
+              "self_audit/candidate_pg/engine.py": "c7cf97e8b0b01308db2997876c92b6fb98f8a2862fe900e2c73c47de9a932107",
+              "train.py": "fa29ce3adff741b6b6e586bc3d268f9e589bffab58f7722b23b1982a481dfcae"
+            },
+            "started_utc": "2026-11-16T11:18:20.546641+00:00",
+            "status": "FAILED"
+          }
+        },
+        "status": "FAILED"
+      }
+    ]
+  },
+  "progress": {
+    "confident_fraction": 0.0,
+    "lambda_denominator_updates": 8000,
+    "lambda_u": 0.0,
+    "loss_sup": 2.0415289402008057,
+    "loss_total": 2.0415289402008057,
+    "loss_u": 0.0,
+    "seconds": 0.6534572811797261,
+    "tau_c": [
+      0.5,
+      0.5,
+      0.5,
+      0.5
+    ],
+    "tau_g": 0.25,
+    "update": 50
+  },
+  "progress_age_seconds": 71.43739056587219,
+  "supervisor": "pg-campaign                      RUNNING   pid 416212, uptime 0:03:14",
+  "training_processes": [
+    "416219  416212       03:12 /venv/main/bin/python /root/Self-Audit-pg-20261116/train.py --config /root/dataset/receipts/PG_K8_CONFIG.json --out /root/mount_data/runs/pg-k8-20261116 --device cuda --pg-stage S2"
+  ],
+  "queue_processes": [
+    "416212    1325       03:13 /venv/main/bin/python -u /root/Self-Audit-pg-20261116/scripts/pg_server_queue.py --config /root/dataset/receipts/PG_K8_CONFIG.json --out /root/mount_data/runs/pg-k8-20261116 --data-ready /root/dataset/prepared/ACDC/pg-k8-20261116-v2/PREPARATION_RECEIPT.json --source-ready /root/dataset/receipts/SOURCE_READY.json --before-stage-script /root/Self-Audit-pg-20261116/scripts/pg_refresh_main.py --resume-failed Reviewed S2 pre-training failure: empty stage, zero optimizer updates; fixed unconditional resume at 7ac281f; check_repo and 163 PG tests pass; both prior failures archived; S1 and all config/data pins unchanged."
+  ],
+  "gpu_processes": [
+    "416219, /venv/main/bin/python, 18850 MiB"
+  ],
+  "gpu_snapshot": "NVIDIA RTX PRO 4000 Blackwell, 99 %, 18860 MiB, 24467 MiB",
+  "disk": "Filesystem      Size  Used Avail Use% Mounted on\noverlay         100G   55G   46G  55% /",
+  "tmux_windows": "pg-k8:0 pipeline panes=3",
+  "finalization_exists": false,
+  "test_transaction_exists": false,
+  "evidence_boundary": "S2 startup progress only. S3, four trained arms and finalization are not complete. No GPU profile rerun or patient efficacy conclusion.",
+  "automation": {
+    "id": "c851dc66-2854-459a-9ef3-9ca6a4ae6e1e",
+    "name": "PG K8 download training repair",
+    "enabled": true,
+    "rrule": "*/5 * * * *",
+    "nextRunAt": 1794828600000
+  }
+}
