@@ -1,0 +1,108 @@
+{
+  "allowed_cinema_files_only": [
+    "pretrained/config.yaml",
+    "pretrained/cinema.safetensors"
+  ],
+  "artifacts": [
+    {
+      "expected_source_oid": "8a465e51889187cf1056fc4feaef9a0182feabe4",
+      "path": "/root/dataset/pretrained/huggingface/hub/models--mathpluscode--CineMA/blobs/8a465e51889187cf1056fc4feaef9a0182feabe4",
+      "sha256": "3147bbd6d0350f9fe30d14989db0f6d53ecef2ed32900d843a3fc3155a3e0a32",
+      "source": "hf://mathpluscode/CineMA@b1251ee50423bceeca84c080782fc3bc7756dea6/pretrained/config.yaml",
+      "source_oid_algorithm": "git-blob-sha1",
+      "verified": true
+    },
+    {
+      "expected_source_oid": "a841b7e9300d60ea8feb73e3a7d8c60ddedc1d1d49ec1049ebfcfa337c5d5590",
+      "path": "/root/dataset/pretrained/huggingface/hub/blobs/91/918fca9ed0be56d6d95bb36dd0a7c6181c70be19adbd9a2bea29713eb9b7879b",
+      "sha256": "a841b7e9300d60ea8feb73e3a7d8c60ddedc1d1d49ec1049ebfcfa337c5d5590",
+      "source": "hf://mathpluscode/CineMA@b1251ee50423bceeca84c080782fc3bc7756dea6/pretrained/cinema.safetensors",
+      "source_oid_algorithm": "sha256",
+      "verified": true
+    }
+  ],
+  "config_binding": {
+    "cinema_init.files": [
+      "pretrained/cinema.safetensors",
+      "pretrained/config.yaml"
+    ],
+    "cinema_init.hf_repo": "mathpluscode/CineMA",
+    "cinema_init.hf_revision": "b1251ee50423bceeca84c080782fc3bc7756dea6",
+    "cinema_init.hf_revision_source": "Hugging Face API sha, queried independently of GitHub source commit",
+    "cinema_init.source_paths": "omit; real loader uses pinned HF cache",
+    "environment": {
+      "HF_HOME": "optional persistent Hugging Face cache root",
+      "MEDNEXT_SOURCE_ROOT": "not consumed by loader; teacher.source_repo remains external/MedNeXt",
+      "PYTHONPATH": "prepend external/CineMA so cinema.mae.mae imports from the pinned checkout"
+    },
+    "teacher.source_commit": "0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba",
+    "teacher.source_repo": "external/MedNeXt (relative to Candidate PG repository root)",
+    "teacher.weights": null,
+    "teacher.weights_sha256": null
+  },
+  "root": "/root/Self-Audit-pg-20261116",
+  "schema": "self_audit.candidate_pg.source_setup.v1",
+  "sources": {
+    "cinema_code": {
+      "clean": true,
+      "expected_revision": "c10daa1d93f0ea28d8b9ad9206b0f673d25805c1",
+      "expected_url": "https://github.com/mathpluscode/CineMA.git",
+      "path": "/root/Self-Audit-pg-20261116/external/CineMA",
+      "revision": "c10daa1d93f0ea28d8b9ad9206b0f673d25805c1",
+      "status": "READY",
+      "url": "https://github.com/mathpluscode/CineMA.git"
+    },
+    "cinema_pretrained": {
+      "artifacts": [
+        {
+          "expected_source_oid": "8a465e51889187cf1056fc4feaef9a0182feabe4",
+          "path": "/root/dataset/pretrained/huggingface/hub/models--mathpluscode--CineMA/blobs/8a465e51889187cf1056fc4feaef9a0182feabe4",
+          "sha256": "3147bbd6d0350f9fe30d14989db0f6d53ecef2ed32900d843a3fc3155a3e0a32",
+          "source": "hf://mathpluscode/CineMA@b1251ee50423bceeca84c080782fc3bc7756dea6/pretrained/config.yaml",
+          "source_oid_algorithm": "git-blob-sha1",
+          "verified": true
+        },
+        {
+          "expected_source_oid": "a841b7e9300d60ea8feb73e3a7d8c60ddedc1d1d49ec1049ebfcfa337c5d5590",
+          "path": "/root/dataset/pretrained/huggingface/hub/blobs/91/918fca9ed0be56d6d95bb36dd0a7c6181c70be19adbd9a2bea29713eb9b7879b",
+          "sha256": "a841b7e9300d60ea8feb73e3a7d8c60ddedc1d1d49ec1049ebfcfa337c5d5590",
+          "source": "hf://mathpluscode/CineMA@b1251ee50423bceeca84c080782fc3bc7756dea6/pretrained/cinema.safetensors",
+          "source_oid_algorithm": "sha256",
+          "verified": true
+        }
+      ],
+      "files": {
+        "pretrained/cinema.safetensors": {
+          "expected_sha256": "a841b7e9300d60ea8feb73e3a7d8c60ddedc1d1d49ec1049ebfcfa337c5d5590",
+          "expected_size_bytes": 502749000,
+          "path": "/root/dataset/pretrained/huggingface/hub/blobs/91/918fca9ed0be56d6d95bb36dd0a7c6181c70be19adbd9a2bea29713eb9b7879b",
+          "sha256": "a841b7e9300d60ea8feb73e3a7d8c60ddedc1d1d49ec1049ebfcfa337c5d5590",
+          "size_bytes": 502749000,
+          "status": "READY"
+        },
+        "pretrained/config.yaml": {
+          "expected_git_blob_sha1": "8a465e51889187cf1056fc4feaef9a0182feabe4",
+          "expected_size_bytes": 348,
+          "git_blob_sha1": "8a465e51889187cf1056fc4feaef9a0182feabe4",
+          "path": "/root/dataset/pretrained/huggingface/hub/models--mathpluscode--CineMA/blobs/8a465e51889187cf1056fc4feaef9a0182feabe4",
+          "sha256": "3147bbd6d0350f9fe30d14989db0f6d53ecef2ed32900d843a3fc3155a3e0a32",
+          "size_bytes": 348,
+          "status": "READY"
+        }
+      },
+      "repo": "mathpluscode/CineMA",
+      "revision": "b1251ee50423bceeca84c080782fc3bc7756dea6",
+      "revision_source": "Hugging Face model API field sha"
+    },
+    "mednext": {
+      "clean": true,
+      "expected_revision": "0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba",
+      "expected_url": "https://github.com/MIC-DKFZ/MedNeXt.git",
+      "path": "/root/Self-Audit-pg-20261116/external/MedNeXt",
+      "revision": "0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba",
+      "status": "READY",
+      "url": "https://github.com/MIC-DKFZ/MedNeXt.git"
+    }
+  },
+  "status": "READY"
+}

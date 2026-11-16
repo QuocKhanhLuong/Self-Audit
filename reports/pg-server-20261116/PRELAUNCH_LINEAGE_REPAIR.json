@@ -1,0 +1,44 @@
+{
+  "after": {
+    "manifests": {
+      "test": {
+        "path": "/root/dataset/prepared/ACDC/pg-k8-20261116-v2/test.json",
+        "sha256": "43b2c98991660c5928bafc5a5e9230c439286451d87fab50b27d443ad738698d"
+      },
+      "train": {
+        "path": "/root/dataset/prepared/ACDC/pg-k8-20261116-v2/train.json",
+        "sha256": "7ccf688343f016d549b5975f1407c336d269078edf86c1ad52052dafb72f7ebb"
+      },
+      "val": {
+        "path": "/root/dataset/prepared/ACDC/pg-k8-20261116-v2/val.json",
+        "sha256": "ca5bb5f0c603111d302ef879930e8d20a46d426fdbbefbe623a035f9010e8d5b"
+      }
+    },
+    "receipt": "f23e2b4d55ac00a670d6396d702409f6eb761331231ea6edf0da7a966601d470"
+  },
+  "arrays_modified": false,
+  "before": {
+    "manifests": {
+      "test": {
+        "path": "/root/dataset/prepared/ACDC/pg-k8-20261116-v2/test.json",
+        "sha256": "43b2c98991660c5928bafc5a5e9230c439286451d87fab50b27d443ad738698d"
+      },
+      "train": {
+        "path": "/root/dataset/prepared/ACDC/pg-k8-20261116-v2/train.json",
+        "sha256": "7ccf688343f016d549b5975f1407c336d269078edf86c1ad52052dafb72f7ebb"
+      },
+      "val": {
+        "path": "/root/dataset/prepared/ACDC/pg-k8-20261116-v2/val.json",
+        "sha256": "ca5bb5f0c603111d302ef879930e8d20a46d426fdbbefbe623a035f9010e8d5b"
+      }
+    },
+    "receipt": "f0728d237deea445485aae6e5c56d0accdd8feeb1d798a8a4c9bf1adf526d8b1"
+  },
+  "changes": [
+    "Move raw source image paths and hashes to relocation_lineage.source_images; FUSE record schema unchanged",
+    "Bind all role lineage to generated K8 lock SHA"
+  ],
+  "schema": "self_audit.pg_prelaunch_lineage_repair.v1",
+  "training_started": false,
+  "utc": "2026-11-16T01:18:33.523735+00:00"
+}

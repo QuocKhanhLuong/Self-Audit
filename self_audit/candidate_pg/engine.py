@@ -169,9 +169,24 @@ class _LazyTrainImageSequence(ABCSequence):
             raise TypeError("S1 TRAIN sequence index must be an integer")
         key, labeled = self._keys[index]
         frame = self.source.load(key, labeled=labeled)
+        # The public CineMA canvas is a source-model view only. Resolve its
+        # centre from native dimensions/spacing; never consult a TRAIN mask.
+        # FuseData intentionally strips extra geometry keys, so attach this
+        # explicit preprocessing declaration after loading the native frame.
+        from .cinema_init import OFFICIAL_SAX_SIZE, OFFICIAL_SAX_SPACING
+        geometry = copy.deepcopy(frame.geometry)
+        native = tuple(int(v) for v in frame.image.shape[-3:])
+        source_spacing = tuple(reversed(OFFICIAL_SAX_SPACING))
+        resized = tuple(max(1, round(n * float(s) / t)) for n, s, t in
+                        zip(native, geometry['spacing_zyx'], source_spacing, strict=True))
+        target = (OFFICIAL_SAX_SIZE[2], OFFICIAL_SAX_SIZE[0], OFFICIAL_SAX_SIZE[1])
+        geometry['cinema_crop'] = {
+            'start_zyx': [max(0, (n - t) // 2) for n, t in zip(resized, target, strict=True)],
+            'size_zyx': list(target), 'policy': 'image_center_no_gt_v1',
+        }
         return {
             "image": frame.image,
-            "geometry": frame.geometry,
+            "geometry": geometry,
             "patient_id": str(frame.patient_id),
             "frame_index": int(frame.frame_index),
             "split": "train",

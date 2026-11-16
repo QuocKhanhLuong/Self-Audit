@@ -1,0 +1,97 @@
+{
+  "campaign_note": "The S1 campaign must reseed and initialize a fresh student at seed 42.",
+  "cases": [
+    {
+      "mean_seconds_per_step": 0.47765302527695896,
+      "measured_steps": 5,
+      "peak_allocated_bytes": 7093339136,
+      "peak_reserved_bytes": 7291797504,
+      "seconds_per_step": [
+        0.4773047142662108,
+        0.47674991097301245,
+        0.4775634501129389,
+        0.47921930998563766,
+        0.4774277410469949
+      ],
+      "torch_threads": 2,
+      "warmup_steps": 3
+    },
+    {
+      "mean_seconds_per_step": 0.47616159366443755,
+      "measured_steps": 5,
+      "peak_allocated_bytes": 7089144832,
+      "peak_reserved_bytes": 7398752256,
+      "seconds_per_step": [
+        0.4766123159788549,
+        0.4768356876447797,
+        0.47685153177008033,
+        0.47447447990998626,
+        0.4760339530184865
+      ],
+      "torch_threads": 4,
+      "warmup_steps": 3
+    },
+    {
+      "mean_seconds_per_step": 0.477857615519315,
+      "measured_steps": 5,
+      "peak_allocated_bytes": 7091241984,
+      "peak_reserved_bytes": 7230980096,
+      "seconds_per_step": [
+        0.47716049337759614,
+        0.47855295380577445,
+        0.47842548228800297,
+        0.47686507599428296,
+        0.4782840721309185
+      ],
+      "torch_threads": 8,
+      "warmup_steps": 3
+    }
+  ],
+  "device": {
+    "cuda": "13.2",
+    "name": "NVIDIA RTX PRO 4000 Blackwell",
+    "runtime": {
+      "cublas_workspace_config": ":4096:8",
+      "cudnn_benchmark": false,
+      "cudnn_deterministic": true,
+      "determinism_status": "BEST_EFFORT_GPU_WARN_ONLY",
+      "deterministic": true,
+      "deterministic_warn_only": true,
+      "tf32": false
+    },
+    "total_memory_bytes": 25153044480
+  },
+  "dtype": "float32 (current canonical S1 path)",
+  "frame": {
+    "frame_index": 0,
+    "patient_id": "patient057",
+    "shape_zyx": [
+      8,
+      512,
+      428
+    ],
+    "split": "train",
+    "target_read": false,
+    "voxels": 1753088
+  },
+  "not_measured": [
+    "S2",
+    "S3",
+    "arms",
+    "optimized batch size"
+  ],
+  "recommendation": {
+    "mean_seconds_per_step": 0.47616159366443755,
+    "peak_allocated_bytes": 7089144832,
+    "torch_threads": 4
+  },
+  "schema": "self_audit.pg_resource_profile.v1",
+  "scope": "S1 real TRAIN image-only frame; no evaluation loops",
+  "seed": 42,
+  "source": {
+    "cinema_config_sha256": "3147bbd6d0350f9fe30d14989db0f6d53ecef2ed32900d843a3fc3155a3e0a32",
+    "cinema_weights_sha256": "a841b7e9300d60ea8feb73e3a7d8c60ddedc1d1d49ec1049ebfcfa337c5d5590",
+    "train_manifest_sha256": "7ccf688343f016d549b5975f1407c336d269078edf86c1ad52052dafb72f7ebb"
+  },
+  "status": "MEASURED"
+}

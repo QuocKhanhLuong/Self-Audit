@@ -155,7 +155,8 @@ def validate_config(config: Mapping[str, Any]) -> dict[str, Any]:
     _require(value.get("schema") == SCHEMA and type(value.get("seed")) is int and value["seed"] == SEED, "unsupported PG schema or seed")
     _assert_reference_values(value, reference)
     data = value["data"]
-    _require(set(data) == set(default_config()["data"]), "PG data fields must be explicit and complete")
+    allowed_data = set(default_config()["data"])
+    _require(set(data) in (allowed_data, allowed_data | {"materialization"}), "PG data fields must be explicit and complete")
     _require(data["split_lock"] == "configs/candidate_fuse/semi_k8.json" and data["split_lock_sha256"] == SPLIT_LOCK_SHA256 and data["source_k8_sha256"] == K8_SOURCE_SHA256, "PG split/source lock SHA pins are invalid")
     _require(set(data["manifests"]) == {"train", "val", "test"}, "PG manifests must declare train, val and test")
     for role, ref in data["manifests"].items():
@@ -163,6 +164,14 @@ def validate_config(config: Mapping[str, Any]) -> dict[str, Any]:
         _require((ref["path"] is None) == (ref["sha256"] is None), f"PG {role} manifest path/SHA must be paired")
         _require(ref["path"] is None or isinstance(ref["path"], str), f"PG {role} manifest path must be a string or null")
         _require(ref["sha256"] is None or _is_sha(ref["sha256"]), f"PG {role} manifest SHA256 is invalid")
+    materialization = data.get("materialization")
+    if materialization is not None:
+        fields = {"receipt", "sha256"}
+        runtime_for_materialization = value.get("runtime")
+        _require(isinstance(runtime_for_materialization, Mapping) and runtime_for_materialization.get("synthetic") is False, "PG materialization lineage is real-data only")
+        _require(isinstance(materialization, Mapping) and set(materialization) == fields, "PG materialization lineage fields are invalid")
+        _require(isinstance(materialization["receipt"], str) and bool(materialization["receipt"]), "PG preparation receipt path is required")
+        _require(_is_sha(materialization["sha256"]), "PG preparation receipt SHA256 is invalid")
     runtime = value["runtime"]
     _require(set(runtime) == set(default_config()["runtime"]), "PG runtime fields must be explicit")
     _require(runtime["cpu_amp_dtype"] == "float32" and runtime["gpu_amp_dtype"] == "bfloat16" and runtime["deterministic"] is True and runtime["tf32"] is False, "PG runtime precision/determinism is locked")
