@@ -469,6 +469,13 @@ def _valid_for(image: Tensor) -> Tensor:
     return torch.ones((image.shape[0], *image.shape[-3:]), dtype=torch.bool, device=image.device)
 
 
+def _backward_loss(loss: Tensor) -> None:
+    """Accumulate one finite stream; the caller steps only after all streams."""
+    if not bool(torch.isfinite(loss)):
+        raise FloatingPointError("PG teacher stage produced nonfinite loss")
+    loss.backward()
+
+
 def run_teacher_stage(
     config: Mapping[str, Any],
     out: str | Path,
@@ -658,6 +665,9 @@ def run_teacher_stage(
                 confident = (conf_u >= tau[y_u]) & packet_s1["valid"]
                 y_u_s2 = packet_s2["y"]; conf_u_s2 = packet_s2["p_W"].max(1).values
                 confident_s2 = (conf_u_s2 >= tau[y_u_s2]) & packet_s2["valid"]
+            # Targets retain only the detached tensors used by the losses,
+            # not the unused five-level feature outputs of both weak passes.
+            del a_target, b_target
             # Each strong stream applies its own intensity draw and its own
             # CutMix box.  FP remains the clean weak-A image by contract.
             s1_img = mix_tensor(view_generator.strong(aw), view_generator.strong(bw), box)
@@ -671,20 +681,33 @@ def run_teacher_stage(
             # intensity-only strong augmentation must not alter either.
             l_out = _model_output(teacher, lstrong, lg_aug, return_features=True)
             loss_sup, parts = _q3d_teacher_loss(l_out, ly_aug, lg_aug, sdf_radius=radius, sdf_near=sdf_near, sdf_weight=1.0)
+        # The independent labeled/strong/FP graphs previously coexisted until
+        # one combined backward, exceeding VRAM at the first post-warmup
+        # update. Accumulate the same weighted gradients one stream at a time;
+        # parameters, clipping, and optimizer state change only once below.
+        _backward_loss(loss_sup)
+        loss_sup = loss_sup.detach()
+        del l_out, parts
         if update >= warmup and lambda_u > 0.0:
-            with amp_context():
-                s1_out = _model_output(teacher, s1_img, ag_aug, return_features=True)
-                s2_out = _model_output(teacher, s2_img, ag_aug, return_features=True) if n_strong_views == 2 else None
-                fp_out = _model_output(teacher, fp_img, ag_aug, return_features=True, skip_dropout=fp_dropout, dropout_generator=fp_generator)
-            loss_s1 = _soft_consistency(s1_out["region_logits"], packet_s1["p_W"], confident)
-            loss_s2 = _soft_consistency(s2_out["region_logits"], packet_s2["p_W"], confident_s2) if s2_out is not None else loss_s1 * 0.0
             confident_a = (wa >= tau[ya]) & av
-            loss_fp = _soft_consistency(fp_out["region_logits"], pa, confident_a)
-            sdf_s1 = _sdf_consistency(s1_out.get("sdf", s1_out["sdf_all"][:, 1:]), packet_s1["sdf"], confident, weight=1.0)
-            sdf_s2 = loss_s1 * 0.0
-            if s2_out is not None:
-                sdf_s2 = _sdf_consistency(s2_out.get("sdf", s2_out["sdf_all"][:, 1:]), packet_s2["sdf"], confident_s2, weight=1.0)
-            sdf_fp = _sdf_consistency(fp_out.get("sdf", fp_out["sdf_all"][:, 1:]), sdf_a, confident_a, weight=1.0)
+            streams_to_run = [("s1", s1_img, packet_s1["p_W"], packet_s1["sdf"], confident)]
+            if n_strong_views == 2:
+                streams_to_run.append(("s2", s2_img, packet_s2["p_W"], packet_s2["sdf"], confident_s2))
+            streams_to_run.append(("fp", fp_img, pa, sdf_a, confident_a))
+            region_losses = {"s2": loss_sup.new_zeros(())}
+            sdf_losses = {"s2": loss_sup.new_zeros(())}
+            for name, stream_image, target_p, target_sdf, support in streams_to_run:
+                kwargs = {"skip_dropout": fp_dropout, "dropout_generator": fp_generator} if name == "fp" else {}
+                with amp_context():
+                    stream_out = _model_output(teacher, stream_image, ag_aug, return_features=True, **kwargs)
+                region_loss = _soft_consistency(stream_out["region_logits"], target_p, support)
+                sdf_loss = _sdf_consistency(_public_sdf(stream_out), target_sdf, support, weight=1.0)
+                _backward_loss(float(lambda_u) * weights[name] * (region_loss + float(sdf_weight) * sdf_loss))
+                region_losses[name] = region_loss.detach()
+                sdf_losses[name] = sdf_loss.detach()
+                del stream_out, region_loss, sdf_loss
+            loss_s1, loss_s2, loss_fp = (region_losses[name] for name in ("s1", "s2", "fp"))
+            sdf_s1, sdf_s2, sdf_fp = (sdf_losses[name] for name in ("s1", "s2", "fp"))
             loss_sdf = float(sdf_weight) * (weights["s1"] * sdf_s1 + weights["s2"] * sdf_s2 + weights["fp"] * sdf_fp)
             loss_u = weights["s1"] * loss_s1 + weights["s2"] * loss_s2 + weights["fp"] * loss_fp + loss_sdf
             with torch.no_grad():
@@ -693,7 +716,6 @@ def run_teacher_stage(
         total_loss = loss_sup + float(lambda_u) * loss_u
         if not bool(torch.isfinite(total_loss)):
             raise FloatingPointError("PG teacher stage produced nonfinite loss")
-        total_loss.backward()
         torch.nn.utils.clip_grad_norm_(teacher.parameters(), clip_norm)
         optimizer.step()
         update_no = update + 1
@@ -701,6 +723,8 @@ def run_teacher_stage(
         epoch_loss_sum["total"] += float(total_loss.detach()); epoch_loss_sum["sup"] += float(loss_sup.detach()); epoch_loss_sum["u"] += float(loss_u.detach()); epoch_loss_count += 1
         diag = {"update": update_no, "loss_total": float(total_loss.detach()), "loss_sup": float(loss_sup.detach()), "loss_u": float(loss_u.detach()), "lambda_u": float(lambda_u), "lambda_denominator_updates": int(schedule_updates), "tau_g": float(threshold.tau_g), "tau_c": [float(v) for v in threshold.thresholds], "confident_fraction": float(confident_fraction), "seconds": float(elapsed)}
         if update_no % 50 == 0 or update_no == total_updates:
+            diag["memory_peak_bytes"] = torch.cuda.max_memory_allocated(target_device) if target_device.type == "cuda" else 0
+            diag["memory_reserved_peak_bytes"] = torch.cuda.max_memory_reserved(target_device) if target_device.type == "cuda" else 0
             with diag_path.open("a", encoding="utf-8") as stream: stream.write(json.dumps(diag, allow_nan=False, sort_keys=True) + "\n")
             with run_log.open("a", encoding="utf-8") as stream: stream.write("DEBUG " + json.dumps(diag, allow_nan=False, sort_keys=True) + "\n")
         is_epoch_boundary = update_no % 80 == 0
