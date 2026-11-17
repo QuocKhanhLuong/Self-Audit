@@ -1,6 +1,6 @@
 {
   "schema": "self_audit.pg_a4_padding_recovery.v1",
-  "status": "LOCAL_VALIDATION_PASSED_PENDING_DEPLOYMENT",
+  "status": "RECOVERY_VERIFIED_CAMPAIGN_RUNNING",
   "run": "/root/mount_data/runs/pg-k8-20261116",
   "host": "ae8a6d2632f0",
   "original_source": "dfeee8806daf471e6c8b045a42cd5ad791da487d",
@@ -233,7 +233,87 @@
       "sampler_update_after": 801,
       "verification_cuda_initialized": false
     },
-    "server_checks": "NOT_RUN",
+    "server_checks": {
+      "schema": "self_audit.pg_a4_boundary_deploy.v1",
+      "started_utc": "2026-11-17T00:05:12.679604+00:00",
+      "target": "2f7aade2cf39ee69e5f47e25dea040fd85d39b59",
+      "host": "ae8a6d2632f0",
+      "status": "PASS",
+      "service_before": "pg-campaign                      EXITED    Nov 16 11:27 PM",
+      "head_before": "dfeee8806daf471e6c8b045a42cd5ad791da487d",
+      "preservation_before": {
+        "all_29_preservation_entries": "PASS",
+        "manifests_and_preparation": "PASS"
+      },
+      "head_after": "2f7aade2cf39ee69e5f47e25dea040fd85d39b59",
+      "source_sha256": {
+        "self_audit/candidate_pg/reliability.py": "5cda63f8b732c67aea503a24537bc431f111e89b4eedc159222dcdd6ad7c6cf9",
+        "tests/test_candidate_pg_reliability.py": "8d48efe1f04704ab81b974bb2df5296bdaea70b8958e2d40b5198a89b4240a45"
+      },
+      "checks": {
+        "check_repo": {
+          "argv": [
+            "/venv/main/bin/python",
+            "scripts/check_repo.py"
+          ],
+          "exit_code": 0,
+          "started_utc": "2026-11-17T00:05:13.941032+00:00",
+          "finished_utc": "2026-11-17T00:05:16.156620+00:00",
+          "log": "/root/mount_data/runs/pg-k8-20261116/code_updates/a4-probability-20261116T233344Z/server_check_repo.log",
+          "sha256": "e67c9406fa8a3cda3fa174d99156ddffa75d7ebd0cb33aa196c6d4a394c4ec7b",
+          "tail": "ampaign.py\",\n    \"test_candidate_pg_cinema.py\",\n    \"test_candidate_pg_codebook.py\",\n    \"test_candidate_pg_config.py\",\n    \"test_candidate_pg_data.py\",\n    \"test_candidate_pg_download_dataset.py\",\n    \"test_candidate_pg_engine.py\",\n    \"test_candidate_pg_evaluation.py\",\n    \"test_candidate_pg_export.py\",\n    \"test_candidate_pg_finalization.py\",\n    \"test_candidate_pg_health.py\",\n    \"test_candidate_pg_logging.py\",\n    \"test_candidate_pg_manifest_relocation.py\",\n    \"test_candidate_pg_models.py\",\n    \"test_candidate_pg_prepare_acdc.py\",\n    \"test_candidate_pg_provision_sources.py\",\n    \"test_candidate_pg_refresh_main.py\",\n    \"test_candidate_pg_reliability.py\",\n    \"test_candidate_pg_resource_profile.py\",\n    \"test_candidate_pg_runtime.py\",\n    \"test_candidate_pg_s1_native_view.py\",\n    \"test_candidate_pg_server_queue.py\",\n    \"test_candidate_pg_spatial_roundoff.py\",\n    \"test_candidate_pg_teacher_checkpoint_memory.py\",\n    \"test_candidate_pg_teacher_stream_memory.py\",\n    \"test_candidate_pg_teacher_training.py\",\n    \"test_candidate_pg_training_step.py\",\n    \"test_candidate_pg_views.py\"\n  ],\n  \"recipes\": {\n    \"candidate_a\": 4,\n    \"candidate_a3d\": 6,\n    \"candidate_q3d\": 13\n  }\n}\n"
+        },
+        "full_pg": {
+          "argv": [
+            "/venv/main/bin/python",
+            "-m",
+            "pytest",
+            "-q",
+            "tests/test_candidate_pg_audit_mnms_download.py",
+            "tests/test_candidate_pg_campaign.py",
+            "tests/test_candidate_pg_cinema.py",
+            "tests/test_candidate_pg_codebook.py",
+            "tests/test_candidate_pg_config.py",
+            "tests/test_candidate_pg_data.py",
+            "tests/test_candidate_pg_download_dataset.py",
+            "tests/test_candidate_pg_engine.py",
+            "tests/test_candidate_pg_evaluation.py",
+            "tests/test_candidate_pg_export.py",
+            "tests/test_candidate_pg_finalization.py",
+            "tests/test_candidate_pg_health.py",
+            "tests/test_candidate_pg_logging.py",
+            "tests/test_candidate_pg_manifest_relocation.py",
+            "tests/test_candidate_pg_models.py",
+            "tests/test_candidate_pg_prepare_acdc.py",
+            "tests/test_candidate_pg_provision_sources.py",
+            "tests/test_candidate_pg_refresh_main.py",
+            "tests/test_candidate_pg_reliability.py",
+            "tests/test_candidate_pg_resource_profile.py",
+            "tests/test_candidate_pg_runtime.py",
+            "tests/test_candidate_pg_s1_native_view.py",
+            "tests/test_candidate_pg_server_queue.py",
+            "tests/test_candidate_pg_spatial_roundoff.py",
+            "tests/test_candidate_pg_teacher_checkpoint_memory.py",
+            "tests/test_candidate_pg_teacher_stream_memory.py",
+            "tests/test_candidate_pg_teacher_training.py",
+            "tests/test_candidate_pg_training_step.py",
+            "tests/test_candidate_pg_views.py"
+          ],
+          "exit_code": 0,
+          "started_utc": "2026-11-17T00:05:16.157169+00:00",
+          "finished_utc": "2026-11-17T00:08:46.110408+00:00",
+          "log": "/root/mount_data/runs/pg-k8-20261116/code_updates/a4-probability-20261116T233344Z/server_full_pg.log",
+          "sha256": "7aed7c284c8464f6e7898192e6f274433d82440f82c6aac1e9dfe4b0460648ef",
+          "tail": "........................................................................ [ 34%]\n........................................................................ [ 68%]\n...................................................................      [100%]\n211 passed in 208.05s (0:03:28)\n"
+        }
+      },
+      "preservation_after": {
+        "all_29_preservation_entries": "PASS",
+        "manifests_and_preparation": "PASS"
+      },
+      "service_after": "pg-campaign                      EXITED    Nov 16 11:27 PM",
+      "finished_utc": "2026-11-17T00:08:46.562994+00:00"
+    },
     "check_repo": "PASS",
     "prior_fresh_smoke": {
       "command": [
@@ -315,7 +395,93 @@
       }
     }
   },
-  "production_resume": "NOT_RUN",
+  "production_resume": {
+    "schema": "self_audit.pg_a4_production_resume.v1",
+    "requested_utc": "2026-11-17T00:08:57.028395+00:00",
+    "status": "START_RETURNED; DURABLE_PROGRESS_NOT_YET_VERIFIED",
+    "source_commit": "2f7aade2cf39ee69e5f47e25dea040fd85d39b59",
+    "validation_sha256": "9827b3b8c1a596a631bee41ed945a848e258f4907a24670526643fe0996e2732",
+    "original_checkpoint_sha256": "1c557ec57ad4156977155571d20c6388e239fe5a4cd630ca9440b20716237866",
+    "original_update": 800,
+    "reason": "Reviewed Luna fix 2f7aade accepts zero class mass only in invalid native padding and preserves global finite/nonnegative checks; original800 failure reproduced and isolated patched801 passed; 211 PG tests and repository checks pass locally/server plus fresh source-bound CPU smoke; original checkpoint800, completed S1/S2/S3, exact data/config, RNG, rows and full 8000 arm budget preserved; one supervised resume, no automatic retry.",
+    "argv": [
+      "/venv/main/bin/python",
+      "-u",
+      "/root/Self-Audit-pg-20261116/scripts/pg_server_queue.py",
+      "--config",
+      "/root/dataset/receipts/PG_K8_CONFIG.json",
+      "--out",
+      "/root/mount_data/runs/pg-k8-20261116",
+      "--data-ready",
+      "/root/dataset/prepared/ACDC/pg-k8-20261116-v2/PREPARATION_RECEIPT.json",
+      "--source-ready",
+      "/root/dataset/receipts/SOURCE_READY.json",
+      "--before-stage-script",
+      "/root/Self-Audit-pg-20261116/scripts/pg_refresh_main.py",
+      "--resume-failed",
+      "Reviewed Luna fix 2f7aade accepts zero class mass only in invalid native padding and preserves global finite/nonnegative checks; original800 failure reproduced and isolated patched801 passed; 211 PG tests and repository checks pass locally/server plus fresh source-bound CPU smoke; original checkpoint800, completed S1/S2/S3, exact data/config, RNG, rows and full 8000 arm budget preserved; one supervised resume, no automatic retry."
+    ],
+    "service_before": {
+      "argv": [
+        "supervisorctl",
+        "status",
+        "pg-campaign"
+      ],
+      "exit_code": 3,
+      "output": "pg-campaign                      EXITED    Nov 16 11:27 PM"
+    },
+    "original_supervisor_sha256": "55bfe45f976bdff598ae573a5d822e01624a0cb446456fd522b0c9f08dc1c993",
+    "attempt_history_before": 5,
+    "new_supervisor_sha256": "fefd262dc9f8b27938057bf2b0cb2b7ffc05d7c77ce59b83f5436902067c22a7",
+    "reread": {
+      "argv": [
+        "supervisorctl",
+        "reread"
+      ],
+      "exit_code": 0,
+      "output": "pg-campaign: changed"
+    },
+    "update": {
+      "argv": [
+        "supervisorctl",
+        "update",
+        "pg-campaign"
+      ],
+      "exit_code": 0,
+      "output": "pg-campaign: stopped\npg-campaign: updated process group"
+    },
+    "service_ready": {
+      "argv": [
+        "supervisorctl",
+        "status",
+        "pg-campaign"
+      ],
+      "exit_code": 3,
+      "output": "pg-campaign                      STOPPED   Not started"
+    },
+    "start_attempt_utc": "2026-11-17T00:08:57.390155+00:00",
+    "start_result": {
+      "argv": [
+        "supervisorctl",
+        "start",
+        "pg-campaign"
+      ],
+      "exit_code": 0,
+      "output": "pg-campaign: started"
+    },
+    "observed_utc": "2026-11-17T00:08:59.279819+00:00",
+    "service_after": {
+      "argv": [
+        "supervisorctl",
+        "status",
+        "pg-campaign"
+      ],
+      "exit_code": 0,
+      "output": "pg-campaign                      RUNNING   pid 847976, uptime 0:00:02"
+    },
+    "durable_progress_verified": true,
+    "durable_progress_verified_utc": "2026-11-17T00:18:31.819851+00:00"
+  },
   "completed_campaign": false,
   "automation": "c851dc66-2854-459a-9ef3-9ca6a4ae6e1e",
   "automation_action": "KEEP_ENABLED",
@@ -329,5 +495,189 @@
     "setup_errors": "Two instrumented attempts failed before replay with ModuleNotFoundError due to absent checkout PYTHONPATH; corrected before measured reproduction. Original logs retained.",
     "smoke_incident": "A prior worker message used shell backticks in a double-quoted body, executing smoke in an already-used output directory and failing duplicate epoch row. That attempt is not PASS evidence; coordinator ran and verified a separate fresh unique smoke.",
     "smoke_incident_log_sha256": "3dde7cbef5cf2d4d306511a12500598220d024b220bef263baaa3dc1fb0ec5f0"
+  },
+  "publication": {
+    "code_commit": "2f7aade2cf39ee69e5f47e25dea040fd85d39b59",
+    "remote_ref": "refs/heads/main",
+    "remote_sha_verified": "2f7aade2cf39ee69e5f47e25dea040fd85d39b59",
+    "deployed_sha": "2f7aade2cf39ee69e5f47e25dea040fd85d39b59",
+    "receipt_update_scope": "Only the two A4 recovery documents and MONITOR_INSTRUCTIONS; server remains pinned to code_commit while healthy."
+  },
+  "automation_verified_enabled": true,
+  "automation_verification_source": "orca automations show exact ID, 2026-11-17 00:07 UTC",
+  "durable_progress": {
+    "schema": "self_audit.pg_a4_durable_progress.v1",
+    "observed_utc": "2026-11-17T00:18:31.819851+00:00",
+    "status": "RECOVERY_VERIFIED_CAMPAIGN_RUNNING",
+    "source_commit": "2f7aade2cf39ee69e5f47e25dea040fd85d39b59",
+    "verified_checkpoint": {
+      "update": 850,
+      "epoch": 11,
+      "sha256": "83675dad32107ffc6de69eee652f739af6f08a37645bf3aef9b152a6c87e90eb",
+      "archive": "/root/mount_data/runs/pg-k8-20261116/code_updates/a4-probability-20261116T233344Z/resume_A4_verified_850.pt",
+      "cpu_load": "PASS",
+      "finite_student_tensors": true,
+      "config_sha256": "3887c1263a793946ef7f27b52d5d30bae6fd6d9eab37e72383cc86fd988b92fb"
+    },
+    "optimizer": {
+      "existing_states": 131,
+      "existing_step_delta_counts": {
+        "50": 111,
+        "47": 20
+      },
+      "conditional_fusion_parameter_names": [
+        "fusions.0.project.weight",
+        "fusions.0.project.bias",
+        "fusions.0.gate.weight",
+        "fusions.0.gate.bias",
+        "fusions.1.project.weight",
+        "fusions.1.project.bias",
+        "fusions.1.gate.weight",
+        "fusions.1.gate.bias",
+        "fusions.2.project.weight",
+        "fusions.2.project.bias",
+        "fusions.2.gate.weight",
+        "fusions.2.gate.bias",
+        "fusions.3.project.weight",
+        "fusions.3.project.bias",
+        "fusions.3.gate.weight",
+        "fusions.3.gate.bias",
+        "fusions.4.project.weight",
+        "fusions.4.project.bias",
+        "fusions.4.gate.weight",
+        "fusions.4.gate.bias"
+      ],
+      "interpretation": "All 111 non-fusion states advanced50; 20 labeled fusion states advanced47 (769to816), consistent with the preserved stochastic teacher-dropout branch that bypasses fusion when dropped. Actual keep draws were not separately replayed on GPU.",
+      "new_active_states": 6,
+      "new_steps": [
+        50
+      ]
+    },
+    "sampler": {
+      "before": 800,
+      "after": 850
+    },
+    "cuda_initialized_by_verifier": false,
+    "latest_checkpoint_sidecar": {
+      "arm": "A4",
+      "epoch": 12,
+      "path": "/root/mount_data/runs/pg-k8-20261116/resume_A4.pt",
+      "sha256": "64ecaa900f03c45e8fb8ec8079e6a0ddabeb1f95dc8953c3ad1b127fbd9938bc",
+      "update": 960
+    },
+    "queue_status": "RUNNING",
+    "active_stage": "arm:A4",
+    "attempt_history_length": 6,
+    "original_failure_preserved_in_history": true,
+    "completed_stages": {
+      "S1": "COMPLETED",
+      "S2": "COMPLETED",
+      "S3": "COMPLETED"
+    },
+    "shared_artifacts_stage_receipts_original_archive_config_manifests": "HASH_VERIFIED",
+    "experiment_lock_changes": {
+      "source_git_sha": {
+        "before": "dfeee8806daf471e6c8b045a42cd5ad791da487d",
+        "after": "2f7aade2cf39ee69e5f47e25dea040fd85d39b59"
+      }
+    },
+    "verifier_error_diagnosis": "Initial progress verifier required byte-identical live EXPERIMENT_LOCK and stopped at that assertion after archiving/loading850. Only source_git_sha changed to the deployed reviewed commit; engine.py lines514-523 rewrites current source identity on resume. All remaining lock fields are identical, original lock is hash-preserved. A second verifier assertion assumed every parameter must advance50; observed deltas are 111 non-fusion states+50 and20 fusion states+47, with6 new code-branch states at50. CPU name mapping confirms the conditional fusion branch; student_pg.py bypasses fusion when keep_mask is zero. This verifier checks those measured counts, preserves the failed verification scripts, and checks the exact source-only lock difference; The v2 verifier then rejected a byte-prefix comparison of epoch rows; the only semantic changes were best_val selection markers on historical VAL/student_only rows as a later VAL winner was selected. This verifier preserves all60 original metric/content rows, permits only that marker change, and verifies the current marker against the VAL/student_only maximum. No campaign retry or source edit occurred.",
+    "original_epoch_metric_values_preserved": true,
+    "original_epoch_rows": 60,
+    "selection_marker_changes": [
+      {
+        "epoch": 9,
+        "split": "val",
+        "path": "student_only",
+        "changes": {
+          "best_val": {
+            "before": true,
+            "after": false
+          }
+        }
+      }
+    ],
+    "selected_val_epoch": 12,
+    "epoch_rows": 72,
+    "epoch_rows_unique": true,
+    "diagnostic_850": {
+      "agreement": 0.6325586438179016,
+      "agreement_a": 0.6325586438179016,
+      "arm": "A4",
+      "boundary_band_coverage_a": 0.06269983947277069,
+      "boundary_band_coverage_b": 0.056271374225616455,
+      "code_coverage": 1.0,
+      "code_dead": 127,
+      "code_perplexity": 1.0,
+      "code_valid_count": 8640,
+      "confidence_coverage": 0.9999493360519409,
+      "coverage_per_class_a": [
+        0.9481797218322754,
+        0.018909519538283348,
+        0.015484938398003578,
+        0.017425814643502235
+      ],
+      "coverage_per_class_b": [
+        0.9468194246292114,
+        0.011215372942388058,
+        0.01830754056572914,
+        0.0236576609313488
+      ],
+      "cutmix_boxes": [
+        [
+          64,
+          192,
+          64,
+          176
+        ],
+        [
+          80,
+          176,
+          64,
+          208
+        ]
+      ],
+      "cutmix_nonempty": true,
+      "gate_means": [
+        0.341796875,
+        0.390625,
+        0.3203125,
+        0.4296875,
+        0.458984375
+      ],
+      "loss_cbkd": 54.787384033203125,
+      "loss_pg": 0.3441212773323059,
+      "loss_sup": 0.17879614233970642,
+      "loss_total": 27.593996047973633,
+      "memory_mb": 13884.09814453125,
+      "seconds": 1.633735309354961,
+      "tau_c": [
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ],
+      "teacher_fusion_disagreement": 0.0026566116139292717,
+      "teacher_fusion_disagreement_a": 0.004120154771953821,
+      "teacher_fusion_disagreement_b": 0.0049375854432582855,
+      "update": 850
+    },
+    "gpu_compute_processes": [
+      "847983, /venv/main/bin/python, 15882 MiB"
+    ],
+    "trainer_pid": "847983",
+    "trainer_command": "/venv/main/bin/python /root/Self-Audit-pg-20261116/train.py --config /root/dataset/receipts/PG_K8_CONFIG.json --out /root/mount_data/runs/pg-k8-20261116 --device cuda --pg-stage arms --pg-arm A4 --pg-resume ",
+    "tmux_windows": [
+      "pg-k8:0 pipeline"
+    ],
+    "disk": "Filesystem      Size  Used Avail Use% Mounted on\noverlay         100G   58G   43G  58% /",
+    "completed_campaign": false,
+    "evidence_boundary": "Finite resumed optimizer progress only; measured code_perplexity1/code_dead127 is not evidence of useful tokenizer support or efficacy. All-stage GPU fit remains unestablished."
+  },
+  "durable_progress_receipt_sha256": "f6606ee7e2bf2cec2332e9c480d57badb81be1b1a8d10b8f55f2df88fd018d23",
+  "completion_requirements": {
+    "all_four_arm_exports": false,
+    "finalization": false,
+    "committed_final_test_receipts": false
   }
 }

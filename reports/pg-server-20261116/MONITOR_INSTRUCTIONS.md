@@ -120,6 +120,17 @@ terminal `term_5537f8bd-ac38-45bc-aec0-a21dbba01fea`, Orca run
 `run_9e5e6f4841da`. Luna dispatches `ctx_9bba73fcfde0` and `ctx_65914628cbb1` (requested/effective
 `gpt-5.6-luna`, max) owns diagnosis and the narrow patch. Root coordinator run
 `run_260e742283ea` reviews; it will not edit or launch. Check this ownership
-before starting another repair or GPU diagnostic. No campaign resume has yet
-occurred for this failure. Keep the named automation enabled; preserve all
-completed shared stages and original full budgets.
+before starting another repair or GPU diagnostic. The exact reviewed fix
+`2f7aade2cf39ee69e5f47e25dea040fd85d39b59` passed 211 PG tests locally and on
+the stopped server. One production resume from original update 800 started at
+2026-11-17 00:08:57 UTC. Recovery was verified at 00:18:31 UTC: archived and
+CPU-checked checkpoint 850, latest sidecar 960, finite active PG/CBKD losses,
+72 unique epoch rows, sole GPU trainer 847983, one pg-k8 window. Read
+`A4_PADDING_RECOVERY.md` and its matching `_RECEIPT.json` for all hashes,
+conditional optimizer counters and diagnosed verifier assumptions. S1/S2/S3,
+config/manifests, original checkpoint/history and budgets are preserved. The
+active recovery worker is finished and released. Do not reapply this repair,
+restart a healthy process, or refresh its active checkout. Code perplexity 1
+and 127 dead codes at update 850 are measured diagnostics, not a quality PASS.
+All four exports, finalization and committed final TEST receipts remain
+outstanding; keep the named automation enabled and recheck live state.
