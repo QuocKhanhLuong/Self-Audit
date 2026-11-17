@@ -22,7 +22,14 @@ def _valid4(valid: Tensor, shape: Sequence[int]) -> Tensor:
     return valid.bool()
 
 
-def _probabilities(probabilities: Tensor) -> Tensor:
+def _probabilities(probabilities: Tensor, valid: Tensor | None = None) -> Tensor:
+    """Validate and normalize a probability packet on its valid support.
+
+    Different-native-grid partners are center-padded before CutMix.  Padded
+    probability cells intentionally remain all-zero and therefore are not a
+    distribution; only valid cells require positive class mass.  Finite and
+    nonnegative checks remain global so invalid padding cannot hide bad data.
+    """
     if not isinstance(probabilities, Tensor) or probabilities.ndim < 3:
         raise ValueError("probabilities must have shape [B,C,*spatial]")
     if probabilities.shape[1] < 2 or not probabilities.dtype.is_floating_point:
@@ -30,11 +37,20 @@ def _probabilities(probabilities: Tensor) -> Tensor:
     if not bool(torch.isfinite(probabilities).all()) or bool((probabilities < 0).any()):
         raise ValueError("probabilities must be finite and nonnegative")
     mass = probabilities.sum(dim=1)
-    if bool((mass <= 0).any()):
-        raise ValueError("probabilities must have positive class mass at every cell")
+    if valid is None:
+        support = torch.ones_like(mass, dtype=torch.bool)
+        if bool((mass <= 0).any()):
+            raise ValueError("probabilities must have positive class mass at every cell")
+    else:
+        support = _valid4(valid, (probabilities.shape[0], *probabilities.shape[2:]))
+        support = support.to(device=mass.device)
+    if valid is not None and bool((mass[support] <= 0).any()):
+        raise ValueError("probabilities must have positive class mass on valid support")
     # The engine emits softmax values.  Normalize tiny floating-point drift but
-    # do not silently turn arbitrary scores into probabilities.
-    return probabilities / mass.unsqueeze(1)
+    # do not silently turn arbitrary scores into probabilities.  A zero-mass
+    # invalid cell stays zero; no class support is fabricated.
+    safe_mass = torch.where(mass > 0, mass, torch.ones_like(mass))
+    return probabilities / safe_mass.unsqueeze(1)
 
 
 def _clip_pair(clip: Sequence[float]) -> tuple[float, float]:
@@ -66,7 +82,7 @@ def class_adaptive_threshold_update(
     if not math.isfinite(ema) or not 0 <= ema < 1:
         raise ValueError("ema must be finite and in [0,1)")
     low, high = _clip_pair(clip)
-    probs = _probabilities(probabilities)
+    probs = _probabilities(probabilities, valid)
     support = _valid4(valid, (probs.shape[0], *probs.shape[2:]))
     if not bool(support.any()):
         raise ValueError("threshold update has no valid support")
@@ -190,13 +206,13 @@ def voxel_weights(
     teacher argmax.
     """
 
-    fusion = _probabilities(pW)
-    teacher = _probabilities(pT_region)
-    student = _probabilities(pS_cleanweak)
-    if fusion.shape != teacher.shape or teacher.shape != student.shape:
-        raise ValueError("pW, pT_region, and pS_cleanweak must share shape")
+    fusion = _probabilities(pW, valid)
     expected_valid_shape = (fusion.shape[0], *fusion.shape[2:])
     support = _valid4(valid, expected_valid_shape)
+    teacher = _probabilities(pT_region, support)
+    student = _probabilities(pS_cleanweak, support)
+    if fusion.shape != teacher.shape or teacher.shape != student.shape:
+        raise ValueError("pW, pT_region, and pS_cleanweak must share shape")
     confidence, labels = fusion.max(dim=1)
     selected_teacher = teacher.gather(1, labels.unsqueeze(1)).squeeze(1)
     selected_student = student.gather(1, labels.unsqueeze(1)).squeeze(1)

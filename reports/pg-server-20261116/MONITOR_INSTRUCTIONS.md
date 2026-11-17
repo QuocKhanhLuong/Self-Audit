@@ -107,3 +107,19 @@ User amendment relayed by the PG code coordinator at 14:16:12 UTC: complete
 this already-written reviewed repair and resume promptly; **all subsequent
 code fixes must be implemented by Luna only**. This does not authorize blind
 retries or change any data, budget, recipe, history or completion requirement.
+
+A4 recovery ownership (2026-11-16 23:34 UTC; dated, recheck live state): S1,
+S2 and S3 completed; A4 stopped at 23:27:08 after durable update 800/epoch 10
+with `ValueError: probabilities must have positive class mass at every cell`.
+Original checkpoint SHA is
+`1c557ec57ad4156977155571d20c6388e239fe5a4cd630ca9440b20716237866`.
+Failure/checkpoint/queue/epoch/config evidence is preserved under
+`code_updates/a4-probability-20261116T233344Z/`, including
+`PRESERVED_SHA256.json`. The PG code coordinator assigned recovery to monitor
+terminal `term_5537f8bd-ac38-45bc-aec0-a21dbba01fea`, Orca run
+`run_9e5e6f4841da`. Luna dispatches `ctx_9bba73fcfde0` and `ctx_65914628cbb1` (requested/effective
+`gpt-5.6-luna`, max) owns diagnosis and the narrow patch. Root coordinator run
+`run_260e742283ea` reviews; it will not edit or launch. Check this ownership
+before starting another repair or GPU diagnostic. No campaign resume has yet
+occurred for this failure. Keep the named automation enabled; preserve all
+completed shared stages and original full budgets.

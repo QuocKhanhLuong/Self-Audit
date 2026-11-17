@@ -1,0 +1,333 @@
+{
+  "schema": "self_audit.pg_a4_padding_recovery.v1",
+  "status": "LOCAL_VALIDATION_PASSED_PENDING_DEPLOYMENT",
+  "run": "/root/mount_data/runs/pg-k8-20261116",
+  "host": "ae8a6d2632f0",
+  "original_source": "dfeee8806daf471e6c8b045a42cd5ad791da487d",
+  "archive": "/root/mount_data/runs/pg-k8-20261116/code_updates/a4-probability-20261116T233344Z",
+  "failure": {
+    "utc": "2026-11-16T23:27:08.982965+00:00",
+    "stage": "arm:A4",
+    "error": "ValueError: probabilities must have positive class mass at every cell"
+  },
+  "checkpoint_before": {
+    "update": 800,
+    "epoch": 10,
+    "sha256": "1c557ec57ad4156977155571d20c6388e239fe5a4cd630ca9440b20716237866",
+    "cpu_deserialization": "PASS; student, optimizer, RNG, sampler, view generator and threshold state present",
+    "epoch_row_count": 60
+  },
+  "completed_stages": {
+    "S1": 10000,
+    "S2": 8000,
+    "S3": 4000
+  },
+  "reproduction": {
+    "status": "REPRODUCED_ORIGINAL_FAILURE",
+    "log": "/tmp/pg-a4-replay-diag3-7GY1md/replay.log",
+    "isolated_output": true,
+    "production_run_unchanged": true,
+    "labeled_key": [
+      "patient041",
+      10
+    ],
+    "u_anchor_key": [
+      "patient099",
+      11
+    ],
+    "u_partner_key": [
+      "patient090",
+      2
+    ],
+    "packet_shape": [
+      1,
+      4,
+      16,
+      224,
+      154
+    ],
+    "packet_dtype": "torch.float32",
+    "valid_count": 435408,
+    "voxel_count": 551936,
+    "zero_mass_each_pW_pT_pS": 115200,
+    "zero_mass_valid_each": 0,
+    "zero_mass_invalid_each": 115200,
+    "positive_mass_invalid_each": 1328,
+    "view_rng_prefixes": [
+      "e6e42f859f431b0f",
+      "cfdc5793a17e390e",
+      "974a23399138d776",
+      "da996b8c2659ccd8"
+    ],
+    "second_packet_zero_mass_each": 92160,
+    "attempted_update": 801
+  },
+  "worker": {
+    "run": "run_9e5e6f4841da",
+    "task": "task_3d922f3c2e4c",
+    "dispatch": "ctx_9bba73fcfde0",
+    "requested_model": "gpt-5.6-luna",
+    "effective_model": "gpt-5.6-luna",
+    "effort": "max",
+    "followup_task": "task_8ddfa9994c2c",
+    "followup_dispatch": "ctx_65914628cbb1",
+    "release": "ctx_65914628cbb1 released; transcript archived"
+  },
+  "review": {
+    "early_message": "msg_c3503b4b8054",
+    "early_status": "NO_BLOCKING_LOGIC_FINDING; final validation pending",
+    "coordinator_run": "run_260e742283ea",
+    "final_message": "msg_399acf113a5d",
+    "final_status": "NO_BLOCKING_FINDINGS; cleared after final validation without another approval round"
+  },
+  "preserved_sha256": {
+    "QUEUE_STATE.json": "5480176861feac61058116444eeaa75dcca756182ab60ca62d022bd02a1578b7",
+    "resume_A4.pt": "1c557ec57ad4156977155571d20c6388e239fe5a4cd630ca9440b20716237866",
+    "resume_A4.sha256.json": "5824ac8afcfe30e30aa5d1d237339b87599dde0c0fb6b46d7abdcd81c86be8d7",
+    "S1_RECEIPT.json": "9c3840e8fcfd09a3ed6343f2b375ab5fbd173c8f5234f982fe0e8daed9987e06",
+    "S2_RECEIPT.json": "362af47f0b768700c0b845c049270831f0a4218fe345e370b3268cf7d54dc7b4",
+    "S3_RECEIPT.json": "d9e917650cb71ed30c0fdb7aae238cda0cf6b74e23bc7f01478ed2ebd17a0e56",
+    "EXPERIMENT_LOCK.json": "78fd0fc612e0b91182aea163f9fdf4b8ae318c351a94f802aaf0d26b0985fe65",
+    "PG_K8_CONFIG.json": "3ab6655b3cd71ffdef26735713feb958c0541d478d2c460326082b2f2e950fe4",
+    "pg-campaign.original.conf": "55bfe45f976bdff598ae573a5d822e01624a0cb446456fd522b0c9f08dc1c993",
+    "logs/arm:A4.log": "ca0a611317c14afd6d846f1218d59d8b18778cca5ce74e6063d1fcb44d01e468",
+    "arms/A4/EXPERIMENT_LOCK.json": "47f2e3e35581463c3062354b4ce1685bdbacbe78acecf59ccee45205fa2b1c5c",
+    "arms/A4/diag.jsonl": "e3b4f26b5a8ab7bcd08b1d3b17653a6a19e5eb5e5697d99c0c76bf9da4544be7",
+    "arms/A4/epochs.csv": "024fb7ae15b7343ef45a55fd0819f8815deb88ff3ff7bb93c40f86b8227ab861",
+    "arms/A4/epochs.jsonl": "e15cdd2ede354cf6df8ad6c20211e206db80e8f3e0498aea2f310c7b5689e6b3",
+    "arms/A4/patients_epoch001.csv": "a5d3f09fb314f7340428583980a91589ee3e6a7b43f58e0a914785393d1dbadd",
+    "arms/A4/epochs.commit.json": "df1070ce12c55ca2cf211a046a75a455e208aa7a113686e503b05fd84beae937",
+    "arms/A4/run.log": "6824041d24012ac7234ca08a68e73c039f1b1f3e607377fdf9a5c3f9736d315e",
+    "arms/A4/patients_epoch002.csv": "f1ff53b172c6b35ae585e96f153ac04940ef8654d190f7132e88846a5ba77d75",
+    "arms/A4/patients_epoch003.csv": "a56ee07472dab0cc66788b220f758230b1b60eed55f1f815073684c60a3169ec",
+    "arms/A4/patients_epoch004.csv": "9c83beb4285b47bd403d4e16407de8a6e206955ee7c52126b64dbb5b33926945",
+    "arms/A4/patients_epoch005.csv": "ba06d5562c02c76c435d075795b20acbc4758ff25815e58467f6b55366df7b89",
+    "arms/A4/patients_epoch006.csv": "6e1a4a2b55dcc3e96c49cbfd8886aa5360ca4ee610278f723ea17ab196309fbc",
+    "arms/A4/patients_epoch007.csv": "502b8f341261ca2fe11f3df04c4537feeb8397ac446dcf8e8000cf58bf7f9862",
+    "arms/A4/patients_epoch008.csv": "9d034084fb60ba3599fef7a3cb8dcf4975376ed8424c1dff3149cbb9a1030005",
+    "arms/A4/patients_epoch009.csv": "f73f67caacb37d1496cf72f810f723d3377548becef0dbf431b226e84f85082c",
+    "arms/A4/patients_epoch010.csv": "b13d7d318bfa47b0e5fe8b60d7c11c1adcee4463d28efce534b4c3cb62164909",
+    "shared_S1_student_init.pt": "f596a68a692799326aac736fdff085543a495ad13f0d8c82270b4724782b1b8f",
+    "shared_S2_teacher_best.pt": "5708cd36d15b73cd5cd1200c6aaaa8805243020e261d8154a154eebf666fcf72",
+    "shared_S3_codebook.pt": "5093860d1e553ac94f0a8869042ab96e39a5f239ab5731d070c4961743179ef5"
+  },
+  "validation": {
+    "focused": {
+      "status": "PASS",
+      "passed": 28,
+      "command": "rtk pytest -q tests/test_candidate_pg_reliability.py",
+      "reported_by": "Luna msg_6762a9f81967",
+      "source_sha256": {
+        "self_audit/candidate_pg/reliability.py": "5cda63f8b732c67aea503a24537bc431f111e89b4eedc159222dcdd6ad7c6cf9",
+        "tests/test_candidate_pg_reliability.py": "8d48efe1f04704ab81b974bb2df5296bdaea70b8958e2d40b5198a89b4240a45"
+      }
+    },
+    "full_pg": {
+      "status": "PASS",
+      "passed": 211,
+      "command": "rtk pytest -q tests/test_candidate_pg_*.py",
+      "reported_by": "Luna msg_6762a9f81967",
+      "source_sha256": {
+        "self_audit/candidate_pg/reliability.py": "5cda63f8b732c67aea503a24537bc431f111e89b4eedc159222dcdd6ad7c6cf9",
+        "tests/test_candidate_pg_reliability.py": "8d48efe1f04704ab81b974bb2df5296bdaea70b8958e2d40b5198a89b4240a45"
+      }
+    },
+    "pg_smoke": {
+      "command": [
+        "python",
+        "scripts/smoke_pg.py",
+        "--out",
+        "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pg-a4-final-source-smoke-tiadyu3d/run",
+        "--updates",
+        "2"
+      ],
+      "exit_code": 0,
+      "started_utc": "2026-11-17T00:03:02.941307+00:00",
+      "finished_utc": "2026-11-17T00:03:18.120562+00:00",
+      "out": "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pg-a4-final-source-smoke-tiadyu3d/run",
+      "log": "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pg-a4-final-source-smoke-tiadyu3d/smoke.log",
+      "log_sha256": "3497ae2d95ecc0701e78cd5d4c4998c8b3b76111fe76ec714a4d9b4ea0d76df0",
+      "result_status": "COMPLETED",
+      "result_sha256": "98fe3b68f1f2c867b0a9951e4dfbd561ce477df1378dd90f14e5b29cba59256c",
+      "source_sha256": {
+        "self_audit/candidate_pg/reliability.py": "5cda63f8b732c67aea503a24537bc431f111e89b4eedc159222dcdd6ad7c6cf9",
+        "tests/test_candidate_pg_reliability.py": "8d48efe1f04704ab81b974bb2df5296bdaea70b8958e2d40b5198a89b4240a45"
+      },
+      "epoch_row_uniqueness": {
+        "S3/epochs.jsonl": {
+          "rows": 3,
+          "identity_fields": [
+            "epoch",
+            "split",
+            "path"
+          ],
+          "unique_rows": 3,
+          "unique": true
+        },
+        "S1/epochs.jsonl": {
+          "rows": 1,
+          "identity_fields": [
+            "epoch"
+          ],
+          "unique_rows": 1,
+          "unique": true
+        },
+        "arms/A4/epochs.jsonl": {
+          "rows": 6,
+          "identity_fields": [
+            "epoch",
+            "split",
+            "path"
+          ],
+          "unique_rows": 6,
+          "unique": true
+        },
+        "arms/A3/epochs.jsonl": {
+          "rows": 6,
+          "identity_fields": [
+            "epoch",
+            "split",
+            "path"
+          ],
+          "unique_rows": 6,
+          "unique": true
+        },
+        "arms/A2/epochs.jsonl": {
+          "rows": 6,
+          "identity_fields": [
+            "epoch",
+            "split",
+            "path"
+          ],
+          "unique_rows": 6,
+          "unique": true
+        },
+        "arms/A1/epochs.jsonl": {
+          "rows": 6,
+          "identity_fields": [
+            "epoch",
+            "split",
+            "path"
+          ],
+          "unique_rows": 6,
+          "unique": true
+        }
+      }
+    },
+    "patched_replay": {
+      "status": "INDEPENDENTLY_VERIFIED_COMPLETED",
+      "output": "/tmp/pg-a4-replay-after-wXjfd2",
+      "checkpoint_update": 801,
+      "checkpoint_sha256": "4571dda2948f35104ac0ee87b76b7d84939f2c33cc087f653b8208755cd244e0",
+      "original_production_checkpoint_unchanged": true,
+      "config_hash_equal": true,
+      "existing_optimizer_state_count": 131,
+      "existing_optimizer_step_deltas": [
+        1
+      ],
+      "newly_active_optimizer_state_count": 6,
+      "new_optimizer_steps": [
+        1
+      ],
+      "sampler_update_before": 800,
+      "sampler_update_after": 801,
+      "verification_cuda_initialized": false
+    },
+    "server_checks": "NOT_RUN",
+    "check_repo": "PASS",
+    "prior_fresh_smoke": {
+      "command": [
+        "python",
+        "scripts/smoke_pg.py",
+        "--out",
+        "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pg-a4-coordinator-smoke-2m6q5tn8/run",
+        "--updates",
+        "2"
+      ],
+      "exit_code": 0,
+      "out": "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pg-a4-coordinator-smoke-2m6q5tn8/run",
+      "log": "/var/folders/zk/7qfmzgnd1c9fqnzv4lfsm8t00000gn/T/pg-a4-coordinator-smoke-2m6q5tn8/smoke.log",
+      "log_sha256": "3497ae2d95ecc0701e78cd5d4c4998c8b3b76111fe76ec714a4d9b4ea0d76df0",
+      "result_status": "COMPLETED",
+      "result_sha256": "83a6c7dedf63bd78339ab3e05e2bd63701452c748698ec8125b6c2448a531df7",
+      "log_created_utc": "2026-11-16T23:55:44.937681+00:00",
+      "log_last_write_utc": "2026-11-16T23:55:52.712979+00:00",
+      "time_source": "filesystem log birth and last-write times; process timestamps not separately captured",
+      "epoch_row_uniqueness": {
+        "S3/epochs.jsonl": {
+          "rows": 3,
+          "identity_fields": [
+            "epoch",
+            "split",
+            "path"
+          ],
+          "unique_rows": 3,
+          "unique": true
+        },
+        "S1/epochs.jsonl": {
+          "rows": 1,
+          "identity_fields": [
+            "epoch"
+          ],
+          "unique_rows": 1,
+          "unique": true
+        },
+        "arms/A4/epochs.jsonl": {
+          "rows": 6,
+          "identity_fields": [
+            "epoch",
+            "split",
+            "path"
+          ],
+          "unique_rows": 6,
+          "unique": true
+        },
+        "arms/A3/epochs.jsonl": {
+          "rows": 6,
+          "identity_fields": [
+            "epoch",
+            "split",
+            "path"
+          ],
+          "unique_rows": 6,
+          "unique": true
+        },
+        "arms/A2/epochs.jsonl": {
+          "rows": 6,
+          "identity_fields": [
+            "epoch",
+            "split",
+            "path"
+          ],
+          "unique_rows": 6,
+          "unique": true
+        },
+        "arms/A1/epochs.jsonl": {
+          "rows": 6,
+          "identity_fields": [
+            "epoch",
+            "split",
+            "path"
+          ],
+          "unique_rows": 6,
+          "unique": true
+        }
+      }
+    }
+  },
+  "production_resume": "NOT_RUN",
+  "completed_campaign": false,
+  "automation": "c851dc66-2854-459a-9ef3-9ca6a4ae6e1e",
+  "automation_action": "KEEP_ENABLED",
+  "final_source_sha256": {
+    "self_audit/candidate_pg/reliability.py": "5cda63f8b732c67aea503a24537bc431f111e89b4eedc159222dcdd6ad7c6cf9",
+    "tests/test_candidate_pg_reliability.py": "8d48efe1f04704ab81b974bb2df5296bdaea70b8958e2d40b5198a89b4240a45"
+  },
+  "diagnostic_archive": {
+    "path": "/root/mount_data/runs/pg-k8-20261116/code_updates/a4-probability-20261116T233344Z/diagnostics",
+    "manifest_sha256": "fc51c6e97569367e72ff92bf26fe5b92c98f340364b7f2a5e5aea7981499650b",
+    "setup_errors": "Two instrumented attempts failed before replay with ModuleNotFoundError due to absent checkout PYTHONPATH; corrected before measured reproduction. Original logs retained.",
+    "smoke_incident": "A prior worker message used shell backticks in a double-quoted body, executing smoke in an already-used output directory and failing duplicate epoch row. That attempt is not PASS evidence; coordinator ran and verified a separate fresh unique smoke.",
+    "smoke_incident_log_sha256": "3dde7cbef5cf2d4d306511a12500598220d024b220bef263baaa3dc1fb0ec5f0"
+  }
+}
