@@ -82,3 +82,41 @@ def test_s2_resume_flag_only_when_checkpoint_exists(tmp_path) -> None:
     (tmp_path / "S2").mkdir(); (tmp_path / "S2" / "teacher_latest.pt").write_bytes(b"x")
     assert "--resume" in pipe.stage_command("S2", cfg, tmp_path, "cuda")
     assert "--resume" in pipe.stage_command("S3", cfg, tmp_path, "cuda") and "--resume" in pipe.stage_command("A4", cfg, tmp_path, "cuda")
+
+
+def test_pipeline_triggers_upload_after_done_and_on_budget_abort_and_survives_failure(monkeypatch, tmp_path) -> None:
+    calls = []
+    monkeypatch.setattr(pipe, "trigger_upload", lambda stage, out, include_resume=False: calls.append((stage, include_resume)))
+    _patch(monkeypatch, tmp_path, "pass")
+    assert pipe.main(["--config", str(_cfg(tmp_path)), "--out", str(tmp_path / "r1"), "--stages", "S1,S2"]) == 0
+    assert calls == [("S1", False), ("S2", False)]
+    calls.clear()
+    _patch(monkeypatch, tmp_path, "import time; time.sleep(60)")
+    monkeypatch.setenv("MAX_HOURS", str(0.5 / 3600))
+    assert pipe.main(["--config", str(_cfg(tmp_path)), "--out", str(tmp_path / "r2"), "--stages", "S3", "--poll-seconds", "0.2"]) == 3
+    assert calls == [("S3", True)]  # aborted stage uploads its last resume checkpoint
+    monkeypatch.undo()
+
+
+def test_trigger_upload_is_bounded_and_never_raises(monkeypatch, tmp_path) -> None:
+    import subprocess
+
+    seen = {}
+
+    def slow(cmd, timeout=None, **kw):
+        seen["cmd"], seen["timeout"] = cmd, timeout
+        raise subprocess.TimeoutExpired(cmd, timeout)
+
+    monkeypatch.setattr(pipe.subprocess, "run", slow)
+    monkeypatch.setenv("CBKD_SA_UPLOAD_TIMEOUT", "7")
+    pipe.trigger_upload("S2", tmp_path, include_resume=True)  # timeout -> warning only
+    assert seen["timeout"] == 7 and "--include-resume" in seen["cmd"] and "S2" in seen["cmd"]
+
+    def broken(cmd, timeout=None, **kw):
+        raise OSError("no rclone")
+
+    monkeypatch.setattr(pipe.subprocess, "run", broken)
+    pipe.trigger_upload("S1", tmp_path)  # any error -> warning only
+    monkeypatch.setenv("CBKD_SA_UPLOAD", "0")
+    monkeypatch.setattr(pipe.subprocess, "run", lambda *a, **k: (_ for _ in ()).throw(AssertionError("must not run")))
+    pipe.trigger_upload("S1", tmp_path)
