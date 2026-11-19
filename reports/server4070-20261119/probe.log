@@ -1,0 +1,23 @@
+[S1] start | updates 20
+<frozen importlib._bootstrap_external>:1241: FutureWarning: The cuda.cudart module is deprecated and will be removed in a future release, please switch to use the cuda.bindings.runtime module instead.
+/home/linhdang/workspace/quockhanh_workspace/SpecMamba/.venv-selfaudit/lib/python3.11/site-packages/torch/autograd/graph.py:869: UserWarning: adaptive_avg_pool3d_backward_cuda does not have a deterministic implementation, but you set 'torch.use_deterministic_algorithms(True, warn_only=True)'. You can file an issue at https://github.com/pytorch/pytorch/issues to help us prioritize adding deterministic support for this operation. (Triggered internally at /pytorch/aten/src/ATen/Context.cpp:160.)
+  return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+[S1] ep 1/1 | cosine train 0.5372 | holdout 0.5218
+[S1] end | COMPLETED
+{"S1": {"wall_seconds": 510.8849387168884, "wall_s_per_update": 25.54424693584442, "peak_mem_gb": 3.6693544387817383}}
+[S2] start
+/home/linhdang/workspace/quockhanh_workspace/SpecMamba/.venv-selfaudit/lib/python3.11/site-packages/torch/nn/functional.py:3504: UserWarning: nll_loss2d_forward_out_cuda_template does not have a deterministic implementation, but you set 'torch.use_deterministic_algorithms(True, warn_only=True)'. You can file an issue at https://github.com/pytorch/pytorch/issues to help us prioritize adding deterministic support for this operation. (Triggered internally at /pytorch/aten/src/ATen/Context.cpp:160.)
+  return torch._C._nn.cross_entropy_loss(
+[S2] end
+{"S2": {"wall_seconds": 279.9180669784546, "wall_s_per_update": 13.99590334892273, "peak_mem_gb": 4.766689300537109, "step_s_per_update_median": 1.8153455220162868}}
+[S3-SA] update 20/20 loss 4.6112 ppl 61.3
+{"S3": {"wall_seconds": 321.5011842250824, "wall_s_per_update": 16.07505921125412, "peak_mem_gb": 5.637567520141602, "step_s_per_update_median": 1.0888241019565612}}
+[A4] start
+/home/linhdang/workspace/quockhanh_workspace/SpecMamba/.venv-selfaudit/lib/python3.11/site-packages/torch/nn/functional.py:3504: UserWarning: nll_loss2d_forward_out_cuda_template does not have a deterministic implementation, but you set 'torch.use_deterministic_algorithms(True, warn_only=True)'. You can file an issue at https://github.com/pytorch/pytorch/issues to help us prioritize adding deterministic support for this operation. (Triggered internally at /pytorch/aten/src/ATen/Context.cpp:160.)
+  return torch._C._nn.cross_entropy_loss(
+/home/linhdang/workspace/quockhanh_workspace/SpecMamba/.venv-selfaudit/lib/python3.11/site-packages/torch/autograd/graph.py:869: UserWarning: adaptive_avg_pool3d_backward_cuda does not have a deterministic implementation, but you set 'torch.use_deterministic_algorithms(True, warn_only=True)'. You can file an issue at https://github.com/pytorch/pytorch/issues to help us prioritize adding deterministic support for this operation. (Triggered internally at /pytorch/aten/src/ATen/Context.cpp:160.)
+  return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+[A4] ep 1/1 | loss 2.606 | train FG 0.077 | val FG 0.054 (best 0.054@1) | test FG nan | 96s
+[A4] end
+{"A4": {"wall_seconds": 315.55077624320984, "wall_s_per_update": 15.777538812160492, "peak_mem_gb": 10.127478122711182, "step_s_per_update_median": 25.500913710100576}}
+PROBE_EXIT=0
