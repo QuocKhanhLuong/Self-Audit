@@ -68,6 +68,17 @@ def test_oracle_patch_roundtrip_and_pooled_oracle() -> None:
     spec2 = importlib.util.spec_from_file_location("cbkd_sa_oracles", ROOT / "scripts/cbkd_sa_oracles.py")
     o = importlib.util.module_from_spec(spec2); sys.modules["cbkd_sa_oracles"] = o; spec2.loader.exec_module(o)
     t = torch.zeros(5, 37, 41, dtype=torch.long); t[:, 8:30, 6:33] = 1; t[:, 14:22, 14:24] = 3  # odd sizes -> padded cells excluded
-    assert torch.equal(o.assemble(o.patches(t), tuple(t.shape)), t)  # O2 exact round trip (pad cells dropped)
+    from self_audit.candidate_pg import shape_atoms as sa
+
+    for patch in ((2, 8, 8), (1, 8, 8)):
+        assert torch.equal(sa.assemble_full_res(sa.patch_split(t, patch), tuple(t.shape), patch), t)  # exact round trip, pad cells dropped
     pred, stats = o.pooled_oracle(t)
     assert pred.shape == t.shape and stats["mixed_cells"] > 0 and (pred == t).float().mean() > 0.8
+
+
+def test_s2_resume_flag_only_when_checkpoint_exists(tmp_path) -> None:
+    cfg = tmp_path / "c.json"
+    assert "--resume" not in pipe.stage_command("S2", cfg, tmp_path, "cuda")
+    (tmp_path / "S2").mkdir(); (tmp_path / "S2" / "teacher_latest.pt").write_bytes(b"x")
+    assert "--resume" in pipe.stage_command("S2", cfg, tmp_path, "cuda")
+    assert "--resume" in pipe.stage_command("S3", cfg, tmp_path, "cuda") and "--resume" in pipe.stage_command("A4", cfg, tmp_path, "cuda")

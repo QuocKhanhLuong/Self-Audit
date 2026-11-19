@@ -30,17 +30,23 @@ Consequence: required stages are S1, S2, S3-SA, A4-SA (the prompt's full list), 
 - The download receipt was re-pointed (a copy in the volume) to the new inventory path; raw file hashes are still verified.
 
 ## Phase 0 oracles on VAL18 (no teacher; GT used for measurement only)
-| | FG Dice | HD95 mm | LV | MYO | RV |
-|---|---|---|---|---|---|
-| O1 pooled-code oracle (1,8,8) | 0.884 | 2.93 | 0.923 | 0.808 | 0.919 |
-| O2 shape-atom oracle (k-means K=128, 2x8x8) | 0.771 | 7.95 | 0.817 | 0.691 | 0.806 |
+K-means (K=128, 25 iterations, seed 42) on TRAIN L_K one-hot GT patches, nearest centroid on VAL18, argmax; patch code is
+`shape_atoms.patch_split` / `assemble_full_res` (exact round trip, tested).
+
+| | patch | FG Dice | HD95 mm | LV | MYO | RV |
+|---|---|---|---|---|---|---|
+| O1 pooled-code oracle | cells (1,8,8), trilinear | 0.884 | 2.93 | 0.923 | 0.808 | 0.919 |
+| O2 (first run, **2x8x8**) | 2x8x8 | 0.771 | 7.95 | 0.817 | 0.691 | 0.806 |
+| O2 (rerun, **1x8x8**, student stage-3 cell) | 1x8x8 | 0.828 | 4.18 | 0.847 | 0.761 | 0.876 |
 
 Mixed cells (no class > 0.7): 1.7 % of all cells and 40.6 % of cells containing MYO.
 
-Reading: O2 (hard assignment of non-overlapping patches) is worse than O1 here. The P2 claim "pooled fractions cannot
-carry MYO geometry" is not supported by this oracle: pooled fractions with trilinear upsampling reach MYO 0.81 against
-0.69 for 128 hard atoms. The learned `D_A` is conditioned on teacher features and is not bounded by O2. Measurement
-only, not a gate. O4 (old S3 codebook) and O6 (config diff) were not run.
+Corrections to the earlier reading: the 0.771 was a **2x8x8** measurement, not the 1x8x8 grid the pipeline uses. At 1x8x8 the
+oracle is FG 0.828 / MYO 0.761. This is below the expected reference (FG ~0.92 / MYO ~0.89) and not ~0.77, so by the stop rule
+it was not treated as a patch-code bug; the round trip is exact. The likely cause is the oracle itself: 128 hard centroids
+of binary 1x8x8 patches (mean then argmax, non-overlapping tiling, 25 k-means iterations from a random init) cannot represent
+boundary detail, so this is a weak quantizer, not a ceiling. It is a measurement only, not a gate. The learned `D_A` is
+conditioned on teacher features and is not bounded by it. O4 (old S3 codebook) and O6 (config diff) were not run.
 
 ## GPU environment and probe
 - A100-SXM4-40GB, torch 2.15.0+cu132; `nnunet_mednext` and `cinema` import. The pinned MedNeXt checkout had to be added
@@ -50,4 +56,4 @@ only, not a gate. O4 (old S3 codebook) and O6 (config diff) were not run.
   100 updates only; logged from the first CBKD update as required).
 
 ## Not done
-- Launch: blocked by budget, see BUDGET.md.
+- O4, O6.

@@ -32,7 +32,12 @@ def sha_file(path: Path) -> str:
 def stage_command(stage: str, config: Path, out: Path, device: str) -> list[str]:
     py = sys.executable
     if stage in ("S1", "S2", "S3"):
-        return [py, str(ROOT / "scripts/pg_campaign.py"), "--config", str(config), "--out", str(out), "--device", device, "--stage", stage, "--resume"]
+        cmd = [py, str(ROOT / "scripts/pg_campaign.py"), "--config", str(config), "--out", str(out), "--device", device, "--stage", stage]
+        # S2 raises if asked to resume without a checkpoint; S1 has no mid-stage checkpoint (it restarts, ~1 h);
+        # S3-SA and the arms resume only when their checkpoint exists, so --resume is always safe for them.
+        if stage == "S3" or (stage == "S2" and (out / "S2" / "teacher_latest.pt").is_file()):
+            cmd.append("--resume")
+        return cmd
     if stage == "A4":
         return [py, str(ROOT / "scripts/pg_campaign.py"), "--config", str(config), "--out", str(out), "--device", device, "--stage", "arms", "--arm", "A4", "--resume"]
     return [py, str(ROOT / "scripts/cbkd_sa_finalize.py"), "--config", str(config), "--out", str(out), "--device", device]

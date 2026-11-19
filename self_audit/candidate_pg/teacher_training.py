@@ -762,7 +762,8 @@ def run_teacher_stage(
         is_epoch_boundary = update_no % 80 == 0
         if is_epoch_boundary:
             epoch = update_no // 80
-            metrics_by_split = (("train", train_data), ("val", val_data), ("test", test_data))
+            monitor_test = "TEST50" in _mapping(cfg.get("training", {}), "training").get("eval_splits", ["TEST50"])
+            metrics_by_split = (("train", train_data), ("val", val_data)) + ((("test", test_data),) if monitor_test else ())
             vals: dict[str, Any] = {}
             all_patient_rows: list[dict[str, Any]] = []
             for split, dataset in metrics_by_split:
@@ -781,13 +782,13 @@ def run_teacher_stage(
             if best_update is None or val_score > best_score:  # strict > preserves earliest tie
                 best_score = val_score; best_update = update_no; best_state = copy.deepcopy(teacher.state_dict())
             logger.mark_best(epoch=epoch if best_update == update_no else int(best_update // 80), split="val", path="teacher")
-            history.append({"epoch": epoch, "update": update_no, "val_fg_dice": val_score, "test_fg_dice": vals["test"].get("fg_dice")})
+            history.append({"epoch": epoch, "update": update_no, "val_fg_dice": val_score, "test_fg_dice": vals.get("test", {}).get("fg_dice")})
             epoch_elapsed = time.perf_counter() - epoch_started
             print(epoch_console_line(
                 "S2", epoch, epochs, epoch_loss["total"],
                 vals["train"].get("fg_dice"), val_score, best_score,
                 0 if best_update is None else int(best_update // 80),
-                vals["test"].get("fg_dice"), epoch_elapsed,
+                vals.get("test", {}).get("fg_dice"), epoch_elapsed,
             ), flush=True)
             epoch_started = time.perf_counter()
             epoch_loss_sum = {"total": 0.0, "sup": 0.0, "u": 0.0}; epoch_loss_count = 0

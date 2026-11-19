@@ -28,3 +28,25 @@ config, and I did **not launch** the pipeline.
 3. Split: S1 + S2 + S3-SA on Modal (about USD 25), A4-SA elsewhere. Stages are independent artifacts with DONE markers.
 4. Cut cost without changing the method (needs your approval because it changes the protocol): drop the per-epoch
    `fusion`-path evaluation (about 15 % of A4 time) and TEST monitoring in S2.
+
+## Re-projection after option 4 (approved)
+
+Changes (training and the student-only VAL18 selection are unchanged):
+- A4: per-epoch evaluation covers `student_only` only (was `student_only` + `fusion`); TEST50 is evaluated once at the end.
+- S2: no per-epoch TEST monitoring (train + VAL18 only).
+
+Measured A4 eval: about 33 s per epoch for 34 volumes x 2 paths (0.49 s per volume-evaluation); now 34 volume-evaluations,
+about 16.5 s, saving about 0.46 h over 100 epochs. S2 saving is an estimate (50 TEST volumes per epoch of 84, about 0.5 h).
+
+| Stage | Projected h (before) | Projected h (after) |
+|---|---|---|
+| S1 | 1.1 | 1.1 |
+| S2 | 6.0 | 5.5 |
+| S3-SA | 2.1 | 2.1 |
+| A4-SA | 8.7 | 8.2 |
+| FINAL (VAL18 + TEST50 + export) | n/a | 0.3 |
+| **Total** | 17.9 | **17.2 (about USD 43)** |
+
+Launch settings: `MAX_HOURS = 17.2 x 1.15 = 19.8`; per-stage caps `CAP_HOURS_S1=1.1 S2=5.5 S3=2.1 A4=8.2 FINAL=0.3`
+(a stage aborts at 1.3x its cap). Credit still falls short of about 43 USD; the job stops at a checkpoint when credit runs out
+and the same command resumes (S1 has no mid-stage checkpoint and would restart, about 1 h).
