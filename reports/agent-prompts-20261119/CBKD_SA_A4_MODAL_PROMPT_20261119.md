@@ -45,7 +45,7 @@ Stop and report if raw ACDC is incomplete, the split lock cannot be reproduced (
 
 - Implement CBKD-SA exactly per rev 4 §2, §4, §5 and the guards in §1b: shape-atom codebook (`candidate_pg/shape_atoms.py`), `cbkd.variant = "cbkd_sa"` with `L_pm` (clean weak U and L_K) and `L_atom`, margin `m_T`, `τ*`; CBKD-v1 untouched.
 - Rev 4 §8.8 optimization protocol: per-term grad-norm logging every 50 updates, CBKD-SA gradients clipped as their own group with the clip factor logged, CBKD-SA onset staggered from the PG onset (PG at 800 as before; CBKD-SA starts at 1200 with its own ramp).
-- Modal pipeline script `scripts/modal_pipeline_cbkd_sa_a4.sh`:
+- Pipeline script `scripts/run_pipeline_cbkd_sa_a4.sh` (root path from env `SELF_AUDIT_ROOT`, default `/root/mount_data`, so it also runs on the 4070 server):
   - runs prepare check → S1 (only if needed) → S2 → S3-SA → A4-SA → final evaluation, in one container;
   - each stage writes a `DONE.json` marker (config hash, artifact hashes); on restart, finished stages are skipped and an unfinished stage resumes from its last checkpoint (checkpoint every 500 updates);
   - budget guard: reads per-stage hour caps from `BUDGET.md`-derived env vars; aborts cleanly (checkpoint + marker `ABORTED_BUDGET`) if a stage exceeds 1.3× its projected time or the total wall clock exceeds `MAX_HOURS`.
@@ -62,7 +62,7 @@ Stop and report if raw ACDC is incomplete, the split lock cannot be reproduced (
 
 ## 4. Phase 3: launch and stop
 
-- Launch the pipeline once: `modal run --detach scripts/modal_app.py::gpu --cmd "MAX_HOURS=<from BUDGET.md> bash scripts/modal_pipeline_cbkd_sa_a4.sh"`.
+- Launch the pipeline once: `modal run --detach scripts/modal_app.py::gpu --cmd "MAX_HOURS=<from BUDGET.md> bash scripts/run_pipeline_cbkd_sa_a4.sh"`.
 - Record the app ID and the monitoring commands in `reports/cbkd-sa-a4-20261119/RUNNING.md`: `modal app logs <app-id>`, `modal volume ls self-audit-mount runs/cbkd-sa-a4-20261119`, `modal volume get ...`.
 - End the session after the launch is confirmed running (first epoch line visible). Do not poll for hours.
 
