@@ -28,8 +28,13 @@ def build(prepared: Path, base_path: Path) -> dict:
 
     cfg = json.loads(base_path.read_text())
     cfg = copy.deepcopy(cfg)
+    receipt = json.loads((prepared / "PREPARATION_RECEIPT.json").read_text())
     for role, name in (("train", "train.json"), ("val", "val.json"), ("test", "test.json")):
-        cfg["data"]["manifests"][role] = {"path": str(prepared / name), "sha256": sha(prepared / name)}
+        # The preparer pins the resolved path (on Modal a /__modal/volumes/<id>/... alias); the data loader
+        # requires config path == receipt path, so use the receipt's own string.
+        pinned = receipt["manifests"][role]
+        assert pinned["sha256"] == sha(prepared / name), f"{name} differs from its receipt pin"
+        cfg["data"]["manifests"][role] = {"path": pinned["path"], "sha256": pinned["sha256"]}
     cfg["data"]["materialization"] = {"receipt": str(prepared / "PREPARATION_RECEIPT.json"), "sha256": sha(prepared / "PREPARATION_RECEIPT.json")}
     cfg["pg"]["enabled"] = True
     cfg["cbkd"].update({"enabled": True, "variant": "cbkd_sa", "warmup_updates_labeled_only": 1200, "ramp_updates": 400})
