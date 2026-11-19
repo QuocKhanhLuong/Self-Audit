@@ -345,6 +345,43 @@ def _load_data(config: Mapping[str, Any], *, synthetic: bool) -> dict[str, Any]:
             "objects": bundle, "sampler": PGSampler(bundle, seed=42)}
 
 
+def _grouped_backward(student: nn.Module, step_result: Mapping[str, Any], clip_norm: float, *, per_term: bool) -> dict[str, Any]:
+    """Backward with the CBKD-SA terms clipped as their own group (rev 4 section 8.8).
+
+    ``main`` = sup + lambda_u * PG, ``cbkd`` = lambda_cb * (L_pm + L_atom).  Each group is clipped to
+    ``clip_norm`` separately and the clipped gradients are summed.  Logs group norms/factors and, on
+    ``per_term`` rows, the sup / PG / CBKD norms.
+    """
+
+    diag = step_result["diagnostics"]
+    lam_u, lam_cb = float(diag.get("lambda_u", 0.0)), float(diag.get("lambda_cb", 0.0))
+    params = [p for p in student.parameters() if p.requires_grad]
+    main = step_result["loss_sup"] + lam_u * step_result["loss_pg"]
+    cb = lam_cb * step_result["loss_cbkd"]
+
+    def grads(loss: Tensor, retain: bool) -> list[Tensor]:
+        if not loss.requires_grad:
+            return [torch.zeros_like(p) for p in params]
+        out = torch.autograd.grad(loss, params, retain_graph=retain, allow_unused=True)
+        return [torch.zeros_like(p) if g is None else g for p, g in zip(params, out)]
+
+    def norm(gs: Sequence[Tensor]) -> float:
+        return float(torch.sqrt(sum((g.float() ** 2).sum() for g in gs)))
+
+    g_main = grads(main, retain=cb.requires_grad or per_term)
+    g_cb = grads(cb, retain=per_term)
+    n_main, n_cb = norm(g_main), norm(g_cb)
+    f_main = min(1.0, clip_norm / (n_main + 1e-6)) if clip_norm > 0 else 1.0
+    f_cb = min(1.0, clip_norm / (n_cb + 1e-6)) if clip_norm > 0 else 1.0
+    for p, a, b in zip(params, g_main, g_cb):
+        p.grad = a * f_main + b * f_cb
+    info = {"norm_main": n_main, "norm_cbkd": n_cb, "clip_factor_main": f_main, "clip_factor_cbkd": f_cb}
+    if per_term:
+        info["norm_sup"] = norm(grads(step_result["loss_sup"], retain=True))
+        info["norm_pg"] = norm(grads(lam_u * step_result["loss_pg"], retain=False)) if (lam_u * step_result["loss_pg"]).requires_grad else 0.0
+    return info
+
+
 def _lambda_u(update: int, total_updates: int, *, warmup_updates_labeled_only: int = 800,
               ramp_fraction: float = 0.1, maximum: float = 1.0) -> float:
     """Backward-compatible locked PG ramp helper used by focused tests.
@@ -644,7 +681,22 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
     if stage == "S2":
         result["status"] = "PAUSED"; _json(out_path / "RESULT.json", result); return result
     s3_codebook_model = None
-    if stage in {"all", "S3"}:
+    sa_variant = isinstance(cfg.get("cbkd"), Mapping) and cfg["cbkd"].get("variant") == "cbkd_sa"
+    if sa_variant and synthetic:
+        raise ValueError("cbkd_sa has no synthetic engine path; software evidence comes from the unit tests")
+    if sa_variant and stage in {"all", "S3"}:
+        from . import shape_atoms as _sa
+        _seed(42)
+        s3_alignment_student = _build_student(cfg, synthetic=False)
+        sa_receipt = _sa.run_shape_atoms(
+            cfg, out_path / "S3", data["objects"], data["objects"].val, teacher, s3_alignment_student,
+            device=device, max_updates=max_updates, resume=resume,
+        )
+        sa_receipt = dict(sa_receipt); sa_receipt["run_identity"] = copy.deepcopy(identity)
+        result["stages"]["S3"] = sa_receipt
+        _json(out_path / "S3_RECEIPT.json", sa_receipt)
+        s3_codebook_model = _sa.load_shape_atoms(sa_receipt["artifact"], target_device)
+    elif stage in {"all", "S3"}:
         codebook = _module("self_audit.candidate_pg.codebook")
         if codebook is not None and hasattr(codebook, "run_codebook") and not synthetic:
             train_source = data.get("objects") if not synthetic else data
@@ -707,6 +759,12 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
         _json(out_path / "S3_RECEIPT.json", result["stages"]["S3"])
     if stage == "S3":
         result["status"] = "PAUSED"; _json(out_path / "RESULT.json", result); return result
+    if s3_codebook_model is None and sa_variant:
+        if stage not in {"arms"}:
+            raise RuntimeError("PG arms require the completed S3-SA codebook stage")
+        from . import shape_atoms as _sa
+        s3_receipt = _read_receipt(out_path / "S3_RECEIPT.json")
+        s3_codebook_model = _sa.load_shape_atoms(_receipt_artifact(s3_receipt, names=("artifact", "codebook"), label="S3"), target_device)
     if s3_codebook_model is None:
         if stage not in {"arms"}:
             raise RuntimeError("PG arms require the completed S3 codebook stage")
@@ -769,7 +827,10 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
         switches = _SWITCHES[arm_name]
         student = _build_student(cfg, synthetic=synthetic)
         student.load_state_dict(shared_student_state, strict=True)
-        if switches["cbkd"] and s3_codebook_model is not None and hasattr(student, "attach_code_branch"):
+        if switches["cbkd"] and sa_variant and hasattr(student, "attach_code_branch"):
+            from . import shape_atoms as _sa
+            student.attach_code_branch(_sa.StudentAtomBranch(s3_codebook_model))
+        elif switches["cbkd"] and s3_codebook_model is not None and hasattr(student, "attach_code_branch"):
             branch_cfg = dict(cfg.get("cbkd", {})); branch_cfg.update({"student_channels": 128, "embedding_dim": int(getattr(s3_codebook_model, "embedding_dim", 64))})
             student.attach_code_branch(codebook.StudentCodeBranch(branch_cfg, s3_codebook_model))
         student = student.to(target_device)
@@ -942,10 +1003,14 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
             diag_agreement = float(diagnostics.get("agreement_a")) if isinstance(diagnostics.get("agreement_a"), Tensor) else float("nan")
             if not torch.isfinite(loss):
                 raise FloatingPointError(f"non-finite PG loss at {arm_name} update {update}")
-            loss.backward()
             clip_norm = float(runtime_cfg.get("gradient_clip_norm", 1.0))
-            if clip_norm > 0:
-                torch.nn.utils.clip_grad_norm_(student.parameters(), clip_norm)
+            grad_diag: dict[str, Any] = {}
+            if sa_variant and switches["cbkd"]:
+                grad_diag = _grouped_backward(student, step_result, clip_norm, per_term=(update + 1) % 50 == 0)
+            else:
+                loss.backward()
+                if clip_norm > 0:
+                    torch.nn.utils.clip_grad_norm_(student.parameters(), clip_norm)
             optimizer.step()
             update_no = update + 1
             epoch_loss_sum[0] += float(loss.detach()); epoch_loss_sum[1] += float(loss_sup.detach())
@@ -957,7 +1022,8 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
                 # selection below reads val/student_only exclusively.
                 eval_rows = []
                 patient_rows: list[dict[str, Any]] = []
-                split_frames = (("train", data["labeled"]), ("val", data["val"]), ("test", data["test"]))
+                monitor_test = "TEST50" in cfg.get("training", {}).get("eval_splits", ["TEST50"])
+                split_frames = (("train", data["labeled"]), ("val", data["val"])) + ((("test", data["test"]),) if monitor_test else ())
                 path_models = (("student_only", student), ("fusion", student))
                 mean_total = epoch_loss_sum[0] / max(1, epoch_loss_steps)
                 mean_sup = epoch_loss_sum[1] / max(1, epoch_loss_steps)
@@ -1032,6 +1098,7 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
                 epoch_logger.commit_epoch(epoch=epoch, update=update_no)
                 console_metrics = {row["split"]: row["fg_dice"] for row in eval_rows
                                    if row["path"] == "student_only"}
+                console_metrics.setdefault("test", None)
                 print(log_mod.epoch_console_line(
                     arm_name, epoch, math.ceil(updates / int(cfg["training"]["updates_per_epoch"])),
                     mean_total, console_metrics["train"], console_metrics["val"],
@@ -1102,6 +1169,9 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
                     "cutmix_boxes": _diag_json(exact_boxes),
                     "cutmix_nonempty": bool(exact_boxes) and any(int(box[1]) > int(box[0]) and int(box[3]) > int(box[2]) for box in exact_boxes),
                     "seconds": time.perf_counter() - step_started, "memory_mb": memory_mb,
+                    **({"grad": grad_diag} if grad_diag else {}),
+                    **{k: _diag_json(diagnostics[k]) for k in ("loss_pm", "loss_atom", "loss_commit", "m_T_mean", "student_code_perplexity",
+                                                               "student_code_dead", "loss_pm_l", "loss_pm_u", "lambda_u", "lambda_cb") if k in diagnostics},
                 })
             if update_no % 50 == 0 or update_no == updates or update_no % int(cfg.get("training", {}).get("updates_per_epoch", 80)) == 0:
                 _save_checkpoint(out_path, {"schema": _SCHEMA, "config_sha256": arm_identity["config_sha256"], "arm": arm_name, "update": update_no, "student": student.state_dict(), "optimizer": optimizer.state_dict(), "rng": _rng_state(), "sampler": sampler.state_dict() if sampler is not None else None, "view_generator": view_gen.state_dict() if view_gen is not None else None, "keep_generator_state": keep_generator.get_state(), "fp_generator_state": fp_generator.get_state(), "threshold": threshold.state_dict() if threshold is not None else None, "best_val": best, "best_epoch": best_epoch, "best_student": best_state, "switches": switches, "epoch_loss_sum": epoch_loss_sum, "epoch_loss_steps": epoch_loss_steps, "metrics_receipt": {"row_count": len(epoch_logger.rows), "epoch": math.ceil(update_no / 80), "update": update_no}}, arm=arm_name, epoch=math.ceil(update_no / 80), update=update_no)

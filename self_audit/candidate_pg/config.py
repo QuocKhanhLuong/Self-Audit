@@ -128,6 +128,19 @@ def _require(condition: bool, message: str) -> None:
         raise ValueError(message)
 
 
+# Reviewed deviations from the PG v2 reference used by the W2S-Match campaign.
+# ``None`` means any value (type-checked by the consumer).
+_W2S_ALTERNATIVES: dict[str, Any] = {
+    "teacher.semi.threshold.clip": ([0.5, 0.95], [0.95, 0.95]),
+    "teacher.select": ("VAL18 FG of teacher region head", "VAL20 FG of teacher region head"),
+    "cbkd.variant": ("aux_code_branch", "cbkd_sa_gated", "cbkd_sa"),
+    "cbkd.warmup_updates_labeled_only": None,
+    "training.selection": None,
+    "training.eval_splits": None,
+}
+W2S_TARGET_MODES = ("fusion", "self", "w2s_arbiter")
+
+
 def _assert_reference_values(actual: Mapping[str, Any], reference: Mapping[str, Any], path: str = "") -> None:
     """Require every original reference key/value while permitting extras."""
 
@@ -135,6 +148,11 @@ def _assert_reference_values(actual: Mapping[str, Any], reference: Mapping[str, 
         location = f"{path}.{key}" if path else str(key)
         _require(key in actual, f"PG exact reference key missing: {location}")
         observed = actual[key]
+        if location in _W2S_ALTERNATIVES:
+            # W2S-Match (2026-11-19): a closed set of reviewed alternatives; everything else stays pinned.
+            allowed = _W2S_ALTERNATIVES[location]
+            _require(allowed is None or observed in allowed, f"PG reference value {location} outside the reviewed W2S alternatives")
+            continue
         if location in {"pg.enabled", "cbkd.enabled"}:
             # Resolved A1/A2/A3/A4 configs are intentionally the same locked
             # recipe with only these two Boolean switches changed.
@@ -186,6 +204,18 @@ def validate_config(config: Mapping[str, Any]) -> dict[str, Any]:
         _require(isinstance(optimizer, Mapping) and optimizer.get("name") == "adamw", f"PG {section} optimizer must be explicit lowercase adamw")
     _require(value["training"]["optimizer"].get("schedule") == "reuse candidate_fuse _schedule_lr" and value["training"].get("warmup_fraction") == 0.05, "PG student schedule/warmup is locked")
     _require(isinstance(value["pg"].get("enabled"), bool) and isinstance(value["cbkd"].get("enabled"), bool), "PG arm switches must be boolean")
+    mode = value["pg"].get("target_mode", "fusion")
+    _require(mode in W2S_TARGET_MODES, "pg.target_mode must be fusion, self or w2s_arbiter")
+    if value["cbkd"].get("variant") == "cbkd_sa_gated" and value["cbkd"]["enabled"]:
+        _require(mode == "w2s_arbiter", "cbkd_sa_gated requires pg.target_mode='w2s_arbiter'")
+    if mode != "fusion":
+        w2s = value["pg"].get("w2s")
+        _require(isinstance(w2s, Mapping), "pg.w2s must be declared for W2S target modes")
+        _require(w2s.get("tau") == 0.95, "W2S student threshold is the fixed 0.95")
+        _require(0.0 < float(w2s.get("tau_v", 0.99)) <= 1.0 and 0.0 <= float(w2s.get("alpha_max", 0.5)) <= 1.0, "invalid W2S tau_v/alpha_max")
+    selection = value["training"]["selection"]
+    _require(isinstance(selection, Mapping) and selection.get("split") in ("VAL18", "VAL20") and selection.get("path") == "student_only"
+             and selection.get("metric") == "fg_dice_patient_macro", "PG selection must be student_only fg_dice_patient_macro on VAL18/VAL20")
     return value
 
 

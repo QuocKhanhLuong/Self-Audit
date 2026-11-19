@@ -467,6 +467,59 @@ def _cbkd_loss(student: nn.Module, teacher: nn.Module, codebook: nn.Module, teac
     return total, terms
 
 
+def _cbkd_sa_loss(student: nn.Module, teacher: nn.Module, codebook: nn.Module, teacher_l: Mapping[str, Any], teacher_a: Mapping[str, Any],
+                  student_l: Mapping[str, Any], student_a: Mapping[str, Any], labeled_target: Tensor,
+                  labeled_geometry: Mapping[str, Any], u_geometry: Mapping[str, Any], valid_l: Tensor, valid_a: Tensor,
+                  weights: Mapping[str, Any]) -> tuple[Tensor, dict[str, Tensor]]:
+    """CBKD-SA (rev 4 section 5): ``L_pm`` to the atom-reconstructed teacher plus ``L_atom``.
+
+    * ``L_pm`` : student-only full-res softmax vs ``q_T^full`` (teacher re-assembled
+      from its codes through the frozen ``D_A``); weight ``m_T`` on clean weak U, 1 on L_K.
+    * ``L_atom``: student stage3 -> ``P_S`` -> hard VQ (frozen ``C``, STE) -> frozen ``D_A``
+      vs GT patch (CE + Dice + SDF L1) on L_K, plus commitment on L_K and clean weak U.
+    Teacher and codebook tensors are detached; only ``P_S`` and the student receive gradient.
+    """
+
+    from . import shape_atoms as sa
+
+    branch = getattr(student, "code_branch", None)
+    if not isinstance(branch, sa.StudentAtomBranch):
+        raise TypeError("cbkd_sa requires PGStudent.code_branch = StudentAtomBranch")
+    if not isinstance(codebook, sa.ShapeAtomCodebook):
+        raise TypeError("cbkd_sa requires a frozen ShapeAtomCodebook")
+    if any(parameter.requires_grad for parameter in codebook.parameters()):
+        raise RuntimeError("CBKD-SA codebook must be frozen")
+    code_l, code_a = student_l.get("code_branch"), student_a.get("code_branch")
+    if not isinstance(code_l, Mapping) or not isinstance(code_a, Mapping):
+        raise TypeError("cbkd_sa requires labelled and clean-U code packets")
+    stage_l, stage_a = student_l["stage3"], student_a["stage3"]
+    native_l = tuple(int(v) for v in labeled_target.shape[-3:])
+    native_a = tuple(int(v) for v in valid_a.shape[-3:])
+    with torch.no_grad():
+        atoms_l = sa.teacher_atoms(codebook, _aligned_teacher_level3(teacher, student, teacher_l, labeled_geometry, stage_l.shape[-3:]), native_l)
+        atoms_a = sa.teacher_atoms(codebook, _aligned_teacher_level3(teacher, student, teacher_a, u_geometry, stage_a.shape[-3:]), native_a)
+    p_l = _student_logits(student_l).softmax(1)
+    p_a = _student_logits(student_a).softmax(1)
+    pm_l = sa.pm_loss(p_l, atoms_l["q"], torch.ones_like(atoms_l["margin"]), torch.ones_like(atoms_l["margin"]), valid_l)
+    pm_a = sa.pm_loss(p_a, atoms_a["q"], atoms_a["margin"], torch.ones_like(atoms_a["margin"]), valid_a)
+    loss_pm = pm_l + pm_a
+    sdf_target = None
+    if "spacing_zyx" in labeled_geometry:
+        from .teacher_training import _sdf_targets4
+
+        sdf_target = _sdf_targets4(labeled_target, labeled_geometry)[:, 1:].detach()
+    atom, atom_terms = sa.atom_loss(code_l, labeled_target, sdf_target, valid_l, native_l, codebook.patch)
+    commit = sa.commitment(code_l["z"], code_l["e"], code_l.get("valid_mask")) + sa.commitment(code_a["z"], code_a["e"], code_a.get("valid_mask"))
+    commit_weight = float(_required(weights, "commit", "cbkd.weights"))
+    loss_atom = atom + commit_weight * commit
+    usage = sa.code_usage(code_a["idx"].detach(), code_a.get("valid_mask"), codebook.size)
+    m = atoms_a["margin"]
+    terms = {"pm": loss_pm, "atom": loss_atom, "commit": commit, "pm_l": pm_l, "pm_a": pm_a,
+             "m_T_mean": m.mean(), "student_code_perplexity": torch.tensor(usage["perplexity"]),
+             "student_code_dead": torch.tensor(float(usage["dead"])), **atom_terms}
+    return loss_pm + loss_atom, terms
+
+
 def _config_lambda_u(config: Mapping[str, Any], update: int) -> float:
     pg = _section(config, "pg")
     lam = _mapping(_required(pg, "lambda_u", "pg"), "pg.lambda_u")
@@ -487,6 +540,11 @@ def _config_lambda_cb(config: Mapping[str, Any], update: int) -> float:
     value = float(_required(cbkd_cfg, "lambda_cb", "cbkd"))
     if value < 0 or warmup < 0:
         raise ValueError("invalid CBKD warmup/lambda")
+    if cbkd_cfg.get("variant") == "cbkd_sa":
+        # Staggered onset with its own linear ramp (rev 4 section 8.8).
+        from . import shape_atoms as sa
+
+        return sa.lambda_cb(update, lam=value, onset=warmup, ramp=int(cbkd_cfg.get("ramp_updates", 400)))
     return value if update >= warmup else 0.0
 
 
@@ -515,6 +573,17 @@ def student_training_step(
     """
 
     config = _mapping(config, "config")
+    target_mode = _mapping(config.get("pg", {}), "pg").get("target_mode", "fusion")
+    if target_mode != "fusion":
+        # W2S-Match arms (student-only labelled path; no teacher-feature fusion).
+        from .w2s_step import TARGET_MODES, w2s_student_training_step
+
+        if target_mode not in TARGET_MODES:
+            raise ValueError(f"unknown pg.target_mode {target_mode!r}")
+        return w2s_student_training_step(
+            config, student, teacher, codebook, labeled, u_a, u_b, update,
+            labeled_views=labeled_views, u_views=u_views, keep_generator=keep_generator, fp_generator=fp_generator,
+        )
     if not isinstance(student, nn.Module) or not isinstance(teacher, nn.Module):
         raise TypeError("student and teacher must be torch modules")
     _generator_required(keep_generator, "keep_generator")
@@ -722,8 +791,20 @@ def student_training_step(
             if codebook is None:
                 raise RuntimeError("CBKD is enabled but no codebook was supplied")
             cbkd_weights = _mapping(_required(cbkd_cfg, "weights", "cbkd"), "cbkd.weights")
-            cbkd_value, cbkd_terms = _cbkd_loss(student, teacher, codebook, teacher_l, teacher_a, out_l_student, clean_a, lv["target"], lv["geometry"], ua["geometry"], lv["valid"], ua["valid"], cbkd_weights)
-            loss_cbkd = cbkd_value
+            if cbkd_cfg.get("variant") == "cbkd_sa":
+                cbkd_value, sa_terms = _cbkd_sa_loss(student, teacher, codebook, teacher_l, teacher_a, out_l_student, clean_a, lv["target"], lv["geometry"], ua["geometry"], lv["valid"], ua["valid"], cbkd_weights)
+                loss_cbkd = cbkd_value
+                diagnostics.update({
+                    "lambda_cb": _config_lambda_cb(config, update), "loss_pm": sa_terms["pm"].detach(), "loss_atom": sa_terms["atom"].detach(),
+                    "loss_commit": sa_terms["commit"].detach(), "m_T_mean": sa_terms["m_T_mean"].detach(),
+                    "student_code_perplexity": float(sa_terms["student_code_perplexity"]), "student_code_dead": int(sa_terms["student_code_dead"]),
+                    "code_perplexity": float(sa_terms["student_code_perplexity"]), "code_dead": int(sa_terms["student_code_dead"]),
+                    "loss_pm_l": sa_terms["pm_l"].detach(), "loss_pm_u": sa_terms["pm_a"].detach(),
+                })
+                cbkd_terms = {"assign": sa_terms["pm"], "commit": sa_terms["commit"], "qtask": sa_terms["atom"]}
+            else:
+                cbkd_value, cbkd_terms = _cbkd_loss(student, teacher, codebook, teacher_l, teacher_a, out_l_student, clean_a, lv["target"], lv["geometry"], ua["geometry"], lv["valid"], ua["valid"], cbkd_weights)
+                loss_cbkd = cbkd_value
             code_packet = clean_a.get("code_branch")
             if isinstance(code_packet, Mapping) and isinstance(code_packet.get("assignments"), Tensor):
                 code_metrics = cb.usage_metrics(
