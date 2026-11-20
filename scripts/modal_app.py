@@ -32,6 +32,7 @@ image = (
         "numpy>=1.26,<3",
         "scipy>=1.13,<2",
         "nibabel>=5.2,<6",
+        "medpy>=0.5,<0.6",  # SSL4MIS-compatible evaluation (evaluation_ssl4mis_compat.py)
         "pytest>=8,<10",
         "huggingface_hub",
         "safetensors",
