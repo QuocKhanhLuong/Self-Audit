@@ -16,4 +16,9 @@ if [ -f "$RUN/from-server4070/S1/student_init.pt" ] && [ -f "$RUN/from-server407
   python scripts/cbkd_sa_import_s1.py --src "$RUN/from-server4070/S1" --out "$RUN" --config "$CFG"
   python scripts/cbkd_sa_upload.py --out "$RUN" --stage S1 --artifacts-md "$RUN/ARTIFACTS.md" || true
 fi
-python scripts/cbkd_sa_pipeline.py --config "$CFG" --out "$RUN" --device cuda
+# S2 trained on the 4070 server: import it too when present (then run with STAGES=S3,A4,FINAL).
+if [ -f "$RUN/from-server4070/S2/teacher_best.pt" ] && [ -f "$RUN/from-server4070/S2/S2_RECEIPT.json" ]; then
+  python scripts/cbkd_sa_import_s1.py --stage S2 --src "$RUN/from-server4070/S2" --out "$RUN" --config "$CFG"
+  python scripts/cbkd_sa_upload.py --out "$RUN" --stage S2 --artifacts-md "$RUN/ARTIFACTS.md" || true
+fi
+python scripts/cbkd_sa_pipeline.py --config "$CFG" --out "$RUN" --device cuda ${STAGES:+--stages "$STAGES"}
