@@ -644,7 +644,7 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
     view_mod = _module("self_audit.candidate_pg.views")
     # Stage-only invocations import the frozen S2 teacher; they never create a
     # fresh random teacher behind a successful receipt.
-    if stage not in {"all", "S1", "S2"}:
+    if stage not in {"all", "S1", "S2"} and cfg.get("pg", {}).get("target_mode") != "self":
         s2_receipt = _read_receipt(out_path / "S2_RECEIPT.json")
         s2_artifact = _receipt_artifact(s2_receipt, names=("checkpoint", "checkpoint_path"), label="S2")
         s2_payload = torch.load(s2_artifact, map_location=target_device, weights_only=False)
@@ -681,7 +681,7 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
     if stage == "S2":
         result["status"] = "PAUSED"; _json(out_path / "RESULT.json", result); return result
     s3_codebook_model = None
-    sa_variant = isinstance(cfg.get("cbkd"), Mapping) and cfg["cbkd"].get("variant") == "cbkd_sa"
+    sa_variant = isinstance(cfg.get("cbkd"), Mapping) and cfg["cbkd"].get("variant") in ("cbkd_sa", "cbkd_sa_gated")
     if sa_variant and synthetic:
         raise ValueError("cbkd_sa has no synthetic engine path; software evidence comes from the unit tests")
     if sa_variant and stage in {"all", "S3"}:
@@ -759,13 +759,14 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
         _json(out_path / "S3_RECEIPT.json", result["stages"]["S3"])
     if stage == "S3":
         result["status"] = "PAUSED"; _json(out_path / "RESULT.json", result); return result
-    if s3_codebook_model is None and sa_variant:
+    needs_codebook = any(_SWITCHES[a]["cbkd"] for a in selected_arms)
+    if s3_codebook_model is None and sa_variant and needs_codebook:
         if stage not in {"arms"}:
             raise RuntimeError("PG arms require the completed S3-SA codebook stage")
         from . import shape_atoms as _sa
         s3_receipt = _read_receipt(out_path / "S3_RECEIPT.json")
         s3_codebook_model = _sa.load_shape_atoms(_receipt_artifact(s3_receipt, names=("artifact", "codebook"), label="S3"), target_device)
-    if s3_codebook_model is None:
+    if s3_codebook_model is None and needs_codebook:
         if stage not in {"arms"}:
             raise RuntimeError("PG arms require the completed S3 codebook stage")
         s3_receipt = _read_receipt(out_path / "S3_RECEIPT.json")
@@ -923,6 +924,12 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
             if payload.get("fp_generator_state") is not None:
                 fp_generator.set_state(payload["fp_generator_state"])
         epoch_started = time.perf_counter()
+        w2s_watch = None
+        if arm_cfg.get("pg", {}).get("target_mode") == "w2s_arbiter":
+            from .w2s_checks import Watchdogs
+            _fg = [float((torch.as_tensor(f.target) > 0).float().mean()) for f in data["labeled"]]
+            w2s_watch = Watchdogs(sum(_fg) / max(1, len(_fg)), int(round(updates * float(arm_cfg["pg"]["w2s"]["alpha_start_fraction"]))),
+                                  emit=lambda message: print(message, flush=True))
         for update in range(start, updates):
             step_started = time.perf_counter()
             if sampler is not None:
@@ -1146,6 +1153,8 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
 
                 exact_boxes = diagnostics.get("cutmix_boxes", u_views.get("boxes"))
                 exact_agreement = diagnostics.get("agreement_a")
+                if w2s_watch is not None:
+                    w2s_watch.update(update_no, {k: _diag_json(diagnostics[k]) for k in ("alpha", "override_share_fg_disagree", "fg_coverage") if k in diagnostics})
                 _append_jsonl(arm_dir / "diag.jsonl", {
                     "update": update_no, "arm": arm_name,
                     "loss_total": float(loss.detach()), "loss_sup": float(loss_sup.detach()),
@@ -1171,6 +1180,10 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
                     "cutmix_nonempty": bool(exact_boxes) and any(int(box[1]) > int(box[0]) and int(box[3]) > int(box[2]) for box in exact_boxes),
                     "seconds": time.perf_counter() - step_started, "memory_mb": memory_mb,
                     **({"grad": grad_diag} if grad_diag else {}),
+                    **{k: _diag_json(diagnostics[k]) for k in ("alpha", "tau", "tau_v", "target_mode", "rule_fraction", "rule_fraction_per_class",
+                                                               "override_share_fg_disagree", "fg_coverage", "weight_mean", "loss_u",
+                                                               "gate_fraction", "mean_m_T_gated", "lambda_u", "lambda_cb", "loss_sup",
+                                                               "loss_pm", "loss_atom", "loss_commit", "code_perplexity", "code_dead") if k in diagnostics},
                     **{k: _diag_json(diagnostics[k]) for k in ("loss_pm", "loss_atom", "loss_commit", "m_T_mean", "student_code_perplexity",
                                                                "student_code_dead", "loss_pm_l", "loss_pm_u", "lambda_u", "lambda_cb") if k in diagnostics},
                 })

@@ -26,7 +26,7 @@ from torch import Tensor, nn
 from . import losses, shape_atoms as cbkd_sa, w2s_arbiter as arb
 from .views import CutMixBox, mix_tensor
 
-TARGET_MODES = ("fusion", "self", "w2s_arbiter")
+TARGET_MODES = ("fusion", "self", "w2s_arbiter", "teacher")
 CBKD_VARIANT = "cbkd_sa_gated"
 
 
@@ -92,12 +92,12 @@ def w2s_student_training_step(
     )
 
     mode = config["pg"]["target_mode"]
-    if mode not in ("self", "w2s_arbiter"):
+    if mode not in ("self", "w2s_arbiter", "teacher"):
         raise ValueError(f"unsupported W2S target_mode {mode!r}")
     if isinstance(update, bool) or int(update) != update or update < 0:
         raise ValueError("update must be a nonnegative integer")
     update = int(update)
-    use_teacher = mode == "w2s_arbiter"
+    use_teacher = mode in ("w2s_arbiter", "teacher")
     if use_teacher and not isinstance(teacher, nn.Module):
         raise TypeError("w2s_arbiter requires the frozen teacher W")
     cb_on_cfg = cbkd_sa_active(config)
@@ -183,6 +183,12 @@ def w2s_student_training_step(
                     packets.append((y, (c >= params["tau"]).float(), torch.zeros_like(y), torch.zeros_like(y, dtype=torch.bool)))
                 c, y = p_s_a.max(1)
                 packets.append((y, (c >= params["tau"]).float(), torch.zeros_like(y), torch.zeros_like(y, dtype=torch.bool)))
+            elif mode == "teacher":  # naive KD: teacher pseudo-labels at the fixed 0.95, no arbiter, no stability
+                packets = []
+                pairs_t = [mix_tensor(p_t_a, p_t_b, box) for box in boxes] + [p_t_a]
+                for p_mix in pairs_t:
+                    c, y = p_mix.max(1)
+                    packets.append((y, (c >= params["tau"]).float(), torch.zeros_like(y), torch.zeros_like(y, dtype=torch.bool)))
             else:
                 _, _, stable_views = arb.source_aligned_stability(
                     y_s_a, y_s_b, [l.detach().argmax(1) for l in logits_views], logits_fp.detach().argmax(1), boxes)

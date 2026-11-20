@@ -132,13 +132,17 @@ def _require(condition: bool, message: str) -> None:
 # ``None`` means any value (type-checked by the consumer).
 _W2S_ALTERNATIVES: dict[str, Any] = {
     "teacher.semi.threshold.clip": ([0.5, 0.95], [0.95, 0.95]),
-    "teacher.select": ("VAL18 FG of teacher region head", "VAL20 FG of teacher region head"),
+    "teacher.select": ("VAL18 FG of teacher region head", "VAL20 FG of teacher region head", "VAL10 FG of teacher region head"),
+    # SSL4MIS split campaign (70/10/20, 7 labeled patients, ED/ES-only U)
+    "data.k_labeled": (8, 7),
+    "data.unlabeled": ("all_train_cine_frames_minus_labeled_masks", "ed_es_frames_of_remaining_train_patients"),
+    "data.forbid_splits_in_training": (["VAL18", "TEST50"], ["VAL10", "TEST20"]),
     "cbkd.variant": ("aux_code_branch", "cbkd_sa_gated", "cbkd_sa"),
     "cbkd.warmup_updates_labeled_only": None,
     "training.selection": None,
     "training.eval_splits": None,
 }
-W2S_TARGET_MODES = ("fusion", "self", "w2s_arbiter")
+W2S_TARGET_MODES = ("fusion", "self", "w2s_arbiter", "teacher")
 
 
 def _assert_reference_values(actual: Mapping[str, Any], reference: Mapping[str, Any], path: str = "") -> None:
@@ -174,7 +178,10 @@ def validate_config(config: Mapping[str, Any]) -> dict[str, Any]:
     _assert_reference_values(value, reference)
     data = value["data"]
     allowed_data = set(default_config()["data"])
-    _require(set(data) in (allowed_data, allowed_data | {"materialization"}), "PG data fields must be explicit and complete")
+    optional_data = {"materialization", "ssl4mis"}  # ssl4mis: {lock, receipt} refs of the SSL4MIS-split campaign
+    _require(allowed_data <= set(data) <= allowed_data | optional_data, "PG data fields must be explicit and complete")
+    _require("ssl4mis" not in data or (isinstance(data["ssl4mis"], Mapping) and set(data["ssl4mis"]) == {"lock", "receipt"}
+             and all(isinstance(v, Mapping) and set(v) == {"path", "sha256"} for v in data["ssl4mis"].values())), "data.ssl4mis must be {lock, receipt} path/sha256 refs")
     _require(data["split_lock"] == "configs/candidate_fuse/semi_k8.json" and data["split_lock_sha256"] == SPLIT_LOCK_SHA256 and data["source_k8_sha256"] == K8_SOURCE_SHA256, "PG split/source lock SHA pins are invalid")
     _require(set(data["manifests"]) == {"train", "val", "test"}, "PG manifests must declare train, val and test")
     for role, ref in data["manifests"].items():
@@ -205,7 +212,7 @@ def validate_config(config: Mapping[str, Any]) -> dict[str, Any]:
     _require(value["training"]["optimizer"].get("schedule") == "reuse candidate_fuse _schedule_lr" and value["training"].get("warmup_fraction") == 0.05, "PG student schedule/warmup is locked")
     _require(isinstance(value["pg"].get("enabled"), bool) and isinstance(value["cbkd"].get("enabled"), bool), "PG arm switches must be boolean")
     mode = value["pg"].get("target_mode", "fusion")
-    _require(mode in W2S_TARGET_MODES, "pg.target_mode must be fusion, self or w2s_arbiter")
+    _require(mode in W2S_TARGET_MODES, "pg.target_mode must be fusion, self, teacher or w2s_arbiter")
     if value["cbkd"].get("variant") == "cbkd_sa_gated" and value["cbkd"]["enabled"]:
         _require(mode == "w2s_arbiter", "cbkd_sa_gated requires pg.target_mode='w2s_arbiter'")
     if mode != "fusion":
@@ -214,7 +221,7 @@ def validate_config(config: Mapping[str, Any]) -> dict[str, Any]:
         _require(w2s.get("tau") == 0.95, "W2S student threshold is the fixed 0.95")
         _require(0.0 < float(w2s.get("tau_v", 0.99)) <= 1.0 and 0.0 <= float(w2s.get("alpha_max", 0.5)) <= 1.0, "invalid W2S tau_v/alpha_max")
     selection = value["training"]["selection"]
-    _require(isinstance(selection, Mapping) and selection.get("split") in ("VAL18", "VAL20") and selection.get("path") == "student_only"
+    _require(isinstance(selection, Mapping) and selection.get("split") in ("VAL18", "VAL20", "VAL10") and selection.get("path") == "student_only"
              and selection.get("metric") == "fg_dice_patient_macro", "PG selection must be student_only fg_dice_patient_macro on VAL18/VAL20")
     return value
 

@@ -483,6 +483,10 @@ def open_pg_data(config: Mapping[str, Any]) -> PGData:
     data_cfg = config.get("data")
     if not isinstance(data_cfg, Mapping):
         raise ValueError("PG config is missing data")
+    if data_cfg.get("ssl4mis"):  # SSL4MIS-split campaign: L7 / U63 (ED+ES) / val10 / test20
+        from .ssl4mis_data import open_ssl4mis_data
+
+        return open_ssl4mis_data(config)
     if data_cfg.get("split_lock") != "configs/candidate_fuse/semi_k8.json":
         raise ValueError("PG must reuse the exact FUSE semi-K8 split lock")
     if data_cfg.get("split_lock_sha256") not in {None, SPLIT_LOCK_SHA256}:
