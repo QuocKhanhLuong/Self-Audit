@@ -32,7 +32,12 @@ def sha_file(path: Path) -> str:
 def stage_command(stage: str, config: Path, out: Path, device: str) -> list[str]:
     py = sys.executable
     if stage in ("S1", "S2", "S3"):
-        return [py, str(ROOT / "scripts/pg_campaign.py"), "--config", str(config), "--out", str(out), "--device", device, "--stage", stage, "--resume"]
+        cmd = [py, str(ROOT / "scripts/pg_campaign.py"), "--config", str(config), "--out", str(out), "--device", device, "--stage", stage]
+        # S2 raises if asked to resume without a checkpoint; S1 has no mid-stage checkpoint (it restarts, ~1 h);
+        # S3-SA and the arms resume only when their checkpoint exists, so --resume is always safe for them.
+        if stage == "S3" or (stage == "S2" and (out / "S2" / "teacher_latest.pt").is_file()):
+            cmd.append("--resume")
+        return cmd
     if stage == "A4":
         return [py, str(ROOT / "scripts/pg_campaign.py"), "--config", str(config), "--out", str(out), "--device", device, "--stage", "arms", "--arm", "A4", "--resume"]
     return [py, str(ROOT / "scripts/cbkd_sa_finalize.py"), "--config", str(config), "--out", str(out), "--device", device]
@@ -42,6 +47,33 @@ def artifacts(stage: str, out: Path) -> list[Path]:
     mapping = {"S1": ["S1_RECEIPT.json"], "S2": ["S2_RECEIPT.json"], "S3": ["S3_RECEIPT.json"],
                "A4": ["arms/A4/epochs.csv"], "FINAL": ["FINAL_RESULT.json"]}
     return [out / name for name in mapping[stage]]
+
+
+def trigger_upload(stage: str, out: Path, include_resume: bool = False) -> None:
+    """Back up a stage's artifacts to Drive from inside this container; never raises, bounded by a timeout.
+
+    Runs ``scripts/cbkd_sa_upload.py`` (rclone) as a subprocess with a hard timeout (default 900 s,
+    ``CBKD_SA_UPLOAD_TIMEOUT``).  Any failure or timeout only logs a warning.  ``CBKD_SA_UPLOAD=0`` disables it.
+    The Drive token comes from the container environment and is never printed.
+    """
+
+    if os.environ.get("CBKD_SA_UPLOAD", "1") == "0":
+        return
+    cmd = [sys.executable, str(ROOT / "scripts/cbkd_sa_upload.py"), "--out", str(out), "--stage", stage,
+           "--artifacts-md", str(out / "ARTIFACTS.md")]
+    if include_resume:
+        cmd.append("--include-resume")
+    if os.environ.get("CBKD_SA_UPLOAD_DEST"):
+        cmd += ["--dest-root", os.environ["CBKD_SA_UPLOAD_DEST"]]
+    timeout = float(os.environ.get("CBKD_SA_UPLOAD_TIMEOUT", "900"))
+    try:
+        result = subprocess.run(cmd, timeout=timeout)
+        if result.returncode:
+            print(f"[pipeline] WARNING {stage}: Drive upload exited with {result.returncode}", flush=True)
+    except subprocess.TimeoutExpired:
+        print(f"[pipeline] WARNING {stage}: Drive upload timed out after {timeout:.0f}s (continuing)", flush=True)
+    except Exception as exc:  # noqa: BLE001 - backup is best effort
+        print(f"[pipeline] WARNING {stage}: Drive upload failed to run: {type(exc).__name__}: {exc}", flush=True)
 
 
 def write_json(path: Path, value: dict) -> None:
@@ -104,10 +136,13 @@ def main(argv: list[str] | None = None) -> int:
             write_json(out / "markers" / f"{stage}.{status}.json", {"stage": stage, "reason": reason or f"exit {code}", "exit_code": code,
                                                                    "elapsed_seconds": time.time() - t0, "config_sha256": config_sha})
             print(f"[pipeline] {stage}: {status} ({reason or code}); re-run the same command to resume", flush=True)
+            if reason:  # budget abort: keep the last resume checkpoint on Drive too
+                trigger_upload(stage, out, include_resume=True)
             return 3 if reason else 1
         write_json(marker, {"stage": stage, "config_sha256": config_sha, "elapsed_seconds": time.time() - t0,
                             "artifact_sha256": {str(p.relative_to(out)): sha_file(p) for p in artifacts(stage, out) if p.is_file()}})
         print(f"[pipeline] {stage}: DONE in {time.time() - t0:.0f}s", flush=True)
+        trigger_upload(stage, out)
     return 0
 
 

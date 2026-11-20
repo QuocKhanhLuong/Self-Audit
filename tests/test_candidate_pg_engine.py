@@ -68,3 +68,15 @@ def test_pg_resume_recovers_checkpoint_before_logger_commit(tmp_path, monkeypatc
     assert resumed["status"] == "COMPLETED"
     assert len(rows) == 6
     assert len({(row["epoch"], row["split"], row["path"]) for row in rows}) == 6
+
+
+def test_reduced_monitoring_drops_test_and_fusion_rows_but_keeps_val_selection(tmp_path) -> None:
+    config = validate_config(default_config(synthetic=True))
+    config["training"]["eval_splits"] = ["train_labeled", "VAL18"]
+    config["training"]["eval_paths"] = ["student_only"]
+    for stage in ("S1", "S2", "S3"):
+        run_training(config, tmp_path, device="cpu", stage=stage, max_updates=1)
+    result = run_training(config, tmp_path, device="cpu", stage="arms", arm="A2", max_updates=1)
+    assert result["status"] == "COMPLETED"
+    rows = [json.loads(line) for line in (tmp_path / "arms" / "A2" / "epochs.jsonl").read_text().splitlines()]
+    assert {r["split"] for r in rows} == {"train", "val"} and {r["path"] for r in rows} == {"student_only"}

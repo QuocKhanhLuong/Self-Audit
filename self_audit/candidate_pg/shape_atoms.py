@@ -334,6 +334,29 @@ def class_dice(pred: Tensor, ref: Tensor, cls: int) -> float:
 
 
 # --------------------------------------------------------------------------- S3-SA stage
+def patch_split(target: Tensor, patch: Sequence[int] = (1, 8, 8)) -> Tensor:
+    """One-hot GT ``[D,H,W]`` -> non-overlapping patches ``[N, 4*pd*ph*pw]`` (high side padded with background)."""
+
+    d, h, w = target.shape
+    pd, ph, pw = (int(v) for v in patch)
+    x = _onehot(target[None])[0]
+    x = F.pad(x, (0, -w % pw, 0, -h % ph, 0, -d % pd))
+    x[0, d:, :, :] = 1.0; x[0, :, h:, :] = 1.0; x[0, :, :, w:] = 1.0  # padding is background
+    c, dd, hh, ww = x.shape
+    x = x.reshape(c, dd // pd, pd, hh // ph, ph, ww // pw, pw).permute(1, 3, 5, 0, 2, 4, 6)
+    return x.reshape(-1, c * pd * ph * pw)
+
+
+def assemble_full_res(rows: Tensor, shape: Sequence[int], patch: Sequence[int] = (1, 8, 8)) -> Tensor:
+    """Inverse of :func:`patch_split` (argmax labels ``[D,H,W]``; padded cells dropped)."""
+
+    d, h, w = (int(v) for v in shape)
+    pd, ph, pw = (int(v) for v in patch)
+    gd, gh, gw = -(-d // pd), -(-h // ph), -(-w // pw)
+    x = rows.reshape(gd, gh, gw, N_CLASS, pd, ph, pw).permute(3, 0, 4, 1, 5, 2, 6).reshape(N_CLASS, gd * pd, gh * ph, gw * pw)
+    return x[:, :d, :h, :w].argmax(0)
+
+
 def _onehot(labels: Tensor) -> Tensor:
     return F.one_hot(labels.clamp(0, N_CLASS - 1), N_CLASS).permute(0, 4, 1, 2, 3).float()
 
@@ -524,7 +547,7 @@ def load_shape_atoms(path: Any, device: str | torch.device = "cpu") -> ShapeAtom
 
 
 __all__ = [
-    "load_shape_atoms", "reconstruction_report", "run_shape_atoms",
+    "assemble_full_res", "load_shape_atoms", "patch_split", "reconstruction_report", "run_shape_atoms",
     "AtomDecoder", "ShapeAtomCodebook", "StudentAtomBranch", "atom_loss", "calibrate_tau_star", "class_dice",
     "code_usage", "commitment", "crop_to_native", "fg_dice", "fit_loss", "l2n", "lambda_cb", "margin",
     "nearest_two", "pm_loss", "restart_dead_codes", "split_patches", "teacher_atoms", "upsample_cells",

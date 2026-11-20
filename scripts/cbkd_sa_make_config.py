@@ -4,6 +4,7 @@
 Differences from the A4 resolved config (reports/pg-server-20261116/PG_K8_CONFIG.json + A4 switches):
   * cbkd.variant = cbkd_sa, cbkd.warmup_updates_labeled_only = 1200, cbkd.ramp_updates = 400
   * data.manifests / data.materialization: the re-prepared data (hash-pinned; reported if they differ)
+  * training.eval_paths = [student_only] (no fusion-path monitoring; approved cost cut)
   * training.eval_splits drops TEST50 (TEST50 is evaluated once, after selection, by cbkd_sa_finalize.py)
 """
 from __future__ import annotations
@@ -39,6 +40,7 @@ def build(prepared: Path, base_path: Path) -> dict:
     cfg["pg"]["enabled"] = True
     cfg["cbkd"].update({"enabled": True, "variant": "cbkd_sa", "warmup_updates_labeled_only": 1200, "ramp_updates": 400})
     cfg["training"]["eval_splits"] = ["train_labeled", "VAL18"]
+    cfg["training"]["eval_paths"] = ["student_only"]  # option 4 (approved): no per-epoch fusion-path evaluation
     return validate_config(cfg)
 
 

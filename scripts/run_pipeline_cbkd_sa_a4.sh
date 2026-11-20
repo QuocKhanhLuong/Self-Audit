@@ -11,4 +11,14 @@ CFG=$RUN/A4_SA_CONFIG.json
 mkdir -p "$RUN"
 test -f "$PREP/train.json" && test -f "$PREP/val.json" && test -f "$PREP/test.json" || { echo "prepared data missing: $PREP" >&2; exit 2; }
 python scripts/cbkd_sa_make_config.py --prepared "$PREP" --out "$CFG"
-python scripts/cbkd_sa_pipeline.py --config "$CFG" --out "$RUN" --device cuda
+# Optional: a completed S1 trained elsewhere (RTX 4070 server) is imported instead of retrained.
+if [ -f "$RUN/from-server4070/S1/student_init.pt" ] && [ -f "$RUN/from-server4070/S1/S1_RECEIPT.json" ]; then
+  python scripts/cbkd_sa_import_s1.py --src "$RUN/from-server4070/S1" --out "$RUN" --config "$CFG"
+  python scripts/cbkd_sa_upload.py --out "$RUN" --stage S1 --artifacts-md "$RUN/ARTIFACTS.md" || true
+fi
+# S2 trained on the 4070 server: import it too when present (then run with STAGES=S3,A4,FINAL).
+if [ -f "$RUN/from-server4070/S2/teacher_best.pt" ] && [ -f "$RUN/from-server4070/S2/S2_RECEIPT.json" ]; then
+  python scripts/cbkd_sa_import_s1.py --stage S2 --src "$RUN/from-server4070/S2" --out "$RUN" --config "$CFG"
+  python scripts/cbkd_sa_upload.py --out "$RUN" --stage S2 --artifacts-md "$RUN/ARTIFACTS.md" || true
+fi
+python scripts/cbkd_sa_pipeline.py --config "$CFG" --out "$RUN" --device cuda ${STAGES:+--stages "$STAGES"}

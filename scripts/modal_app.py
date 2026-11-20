@@ -42,6 +42,11 @@ image = (
     .pip_install("git+https://github.com/MIC-DKFZ/MedNeXt.git")
     # CineMA source model (`cinema.mae.mae.get_model`, used by candidate_pg/cinema_init.py)
     .pip_install("git+https://github.com/mathpluscode/CineMA.git")
+    # The PG teacher loads MedNeXt from <repo>/external/MedNeXt at a pinned commit (config teacher.source_commit).
+    .run_commands(
+        "mkdir -p /root/Self-Audit/external && git clone https://github.com/MIC-DKFZ/MedNeXt.git /root/Self-Audit/external/MedNeXt"
+        " && git -C /root/Self-Audit/external/MedNeXt checkout 0b78ed869fbd1cc2fd38754d2f8519f1b72d43ba"
+    )
     .env({"HF_HOME": f"{MOUNT}/hf", "PYTHONPATH": REPO, "PYTHONUNBUFFERED": "1"})
     # Code is attached at container start (no image rebuild when code changes).
     .add_local_dir(
@@ -101,6 +106,7 @@ def cpu(cmd: str) -> None:
 
 @app.function(
     volumes={MOUNT: vol},
+    secrets=[modal.Secret.from_name("rclone-gdrive")],  # used only by the post-stage Drive backup (never printed)
     gpu="A100-40GB",
     cpu=4,
     memory=24576,
@@ -111,4 +117,13 @@ def cpu(cmd: str) -> None:
 def gpu(cmd: str) -> None:
     """A100-40GB container for training. Run with `modal run --detach`."""
     _sh("nvidia-smi --query-gpu=name,memory.total --format=csv")
+    _sh(cmd)
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# Drive backup of stage artifacts runs INSIDE the stage container (scripts/cbkd_sa_upload.py via rclone, 15-minute
+# timeout, non-fatal) using the same Drive secret as pull_drive; no separate function sits on the training path.
+@app.function(volumes={MOUNT: vol}, secrets=[modal.Secret.from_name("rclone-gdrive")], cpu=2, memory=4096, timeout=3600)
+def cpu_drive(cmd: str) -> None:
+    """CPU container with the Drive secret, for manual uploads / write probes (e.g. a test upload)."""
     _sh(cmd)
