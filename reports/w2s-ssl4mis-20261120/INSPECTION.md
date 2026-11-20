@@ -28,10 +28,19 @@ Date 2026-11-20. Host: RTX 4070 server (read-only inspection; no training, no co
 ## 6. Duplicates
 - Exact-voxel duplicate groups among the 100 training patients (full 4D array hash): patient074 == patient076, both in the train set (U63). No duplicate crosses train and val10/test20.
 
-## 7. SSL4MIS evaluation code
-- Not inspected yet (needs the pinned repo files code/test_2D_fully.py or equivalent); planned for Phase 1 before the compatible evaluator is written.
+## 7. SSL4MIS code reading (commit 06df6047, files code/test_2D_fully.py, utils/metrics.py, dataloaders/*, train_acdc_unet_semi_seg.sh)
+- Data: 2D slices. Each ED/ES frame volume is min-max normalised over the whole 3D volume ((x-min)/(max-min)), then stored as one h5 per slice. train_slices.list holds 1312 slice ids (1-based slice index) over 140 volumes; I checked that the slice count of every one of the 140 volumes equals the raw ACDC depth (0 mismatches), so the lists map onto our raw volumes patient by patient.
+- Labeled set: `patients_to_slices("ACDC", 7) = 136`; the labeled set is `train_slices.list[:136]`, the unlabeled set is the remaining slices (index 136 onward, 1176 slices of the other 63 patients). The first 136 lines are exactly the 14 volumes of the 7 patients, so "7 patients" is also whole volumes here.
+- Names: frame01 / frame02 are positional (first and second annotated frame). In ACDC ED comes before ES for all 100 patients, so frame01 = ED and frame02 = ES whether read positionally or by Info.cfg. The earlier open point 2 is closed.
+- Test script (test_2D_fully.py): per volume; every slice is resized to 256x256 with scipy zoom order=0 (both image going in and prediction coming back), argmax, then the volume is assembled. Per class (RV=1, MYO=2, LV=3) it calls medpy.metric.binary dc, asd and hd95 on the binary masks with NO voxelspacing argument, so HD95 and ASD are in voxel units on the (slice, H, W) index grid. Results are averaged over the 40 test volumes per class, then over the 3 classes. There is no handling of empty prediction or empty label (medpy raises); published code bases built on it (BCP etc.) return 0 for such cases, so the compatible evaluator must record how it treats them.
+- Model selection in their training scripts uses val.list (20 volumes) with the same slice-wise 256x256 pipeline; test.list is evaluated with the best-on-val checkpoint.
+- Consequence for us: our student is 3D on native volumes. The compatible metric set applies the identical medpy computation (binary per class, voxel units, no spacing, mean over classes and volumes) to our native-grid predictions; our own native metric set (mm, true spacing) stays the primary one. U sampling in this campaign is by ED/ES volumes of U63 (126 volumes), not by 2D slices.
 
-## 8. Open points for the user
+## 8. Decisions taken by the user (2026-11-20 14:2x)
+- The old-split A4-SA stage S2 on the 4070 was stopped at epoch 78/100 and its weights (S2/teacher_latest.pt, 947 MB) were deleted; logs and CSVs of that run were kept. Probe artifacts under runs/probe-a4sa were not touched.
+- Open points that remain: Modal credit (not stated; plan on the 4070 only unless told otherwise).
+
+## 8b. Former open points (superseded)
 1. Stop or keep the old-split S2 job on the 4070 (it blocks the GPU for about 2.3 h more).
 2. Confirm frame01 -> ED, frame02 -> ES.
 3. Modal credit left, if any Modal stage is wanted.
