@@ -174,7 +174,9 @@ def validate_config(config: Mapping[str, Any]) -> dict[str, Any]:
     _assert_reference_values(value, reference)
     data = value["data"]
     allowed_data = set(default_config()["data"])
-    _require(set(data) in (allowed_data, allowed_data | {"materialization"}), "PG data fields must be explicit and complete")
+    optional_data = {"materialization", "w2s_val20"}  # w2s_val20: hash-pinned VAL20 manifest (W2S-Match)
+    _require(allowed_data <= set(data) <= allowed_data | optional_data, "PG data fields must be explicit and complete")
+    _require("w2s_val20" not in data or (isinstance(data["w2s_val20"], Mapping) and set(data["w2s_val20"]) == {"path", "sha256"}), "data.w2s_val20 must be {path, sha256}")
     _require(data["split_lock"] == "configs/candidate_fuse/semi_k8.json" and data["split_lock_sha256"] == SPLIT_LOCK_SHA256 and data["source_k8_sha256"] == K8_SOURCE_SHA256, "PG split/source lock SHA pins are invalid")
     _require(set(data["manifests"]) == {"train", "val", "test"}, "PG manifests must declare train, val and test")
     for role, ref in data["manifests"].items():
