@@ -49,14 +49,16 @@ def main(argv: list[str] | None = None) -> int:
     max_hours = float(os.environ["MAX_HOURS"]) if os.environ.get("MAX_HOURS") else None
     deadline = time.time() + max_hours * 3600 if max_hours else None
     fallback = {"value": False}
-    m3_arms = ["S1kdM3", "S2arbM3", "S2M3"]
+    # S2arbM3 finished at 100 epochs: its config file is never rewritten (it is only created if missing)
+    m3_arms = ["S1kdM3", "S2M3"] + ([] if cfg("S2arbM3").is_file() else ["S2arbM3"])
 
     def tau_v() -> str:
         return str(json.loads((tdir / "SATURATION.json").read_text())["tau_v"])
 
     def make_cfgs(v: str) -> list[str]:
         return [PY, str(scripts / "w2s_make_configs_ssl4mis.py"), "--prepared", str(prep), "--out-dir", str(cfgdir), "--tau-v", v,
-                "--m3hl-checkpoint", str(ckpt), "--only", *m3_arms]
+                "--m3hl-checkpoint", str(ckpt), "--only", *m3_arms,
+                *(["--epochs", os.environ["STUDENT_EPOCHS"]] if os.environ.get("STUDENT_EPOCHS") else [])]
 
     def wait() -> list[str]:
         log = tdir / "train_stdout.log"

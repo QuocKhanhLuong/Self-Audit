@@ -209,3 +209,29 @@ def test_a4sa_config_differs_from_old_a4sa_only_in_split_selection_and_teacher_t
     assert json.loads(new["/cbkd/variant"]) == "cbkd_sa" and json.loads(new["/pg/enabled"]) is True and "/pg/target_mode" not in new  # default fusion target, as the old A4-SA recipe
     assert json.loads(new["/teacher/semi/threshold/clip"]) == [0.95, 0.95]
     assert [k for k in diff if k.startswith("/teacher/semi/threshold/clip")]
+
+
+def test_150_epoch_config_differs_from_100_epoch_only_in_epoch_and_update_fields(prepared) -> None:
+    out, lock_path = prepared
+
+    def flat(x, p=""):
+        if isinstance(x, dict):
+            r = {}
+            for k, v in x.items():
+                r.update(flat(v, f"{p}/{k}"))
+            return r
+        return {p: json.dumps(x)}
+
+    for arm in ("S0", "S1kd", "S2arb", "S2main", "A4SA"):
+        a = flat(mk.build(arm, out, lock_path, 0.99))
+        b = flat(mk.build(arm, out, lock_path, 0.99, epochs=150))
+        diff = sorted(k for k in set(a) | set(b) if a.get(k) != b.get(k))
+        assert diff == ["/training/epochs", "/training/updates"], (arm, diff)
+        assert json.loads(b["/training/updates"]) == 150 * 80 and json.loads(b["/training/epochs"]) == 150
+        # absolute onsets are untouched; fraction-defined schedules are untouched fields that scale with the total
+        assert a["/pg/lambda_u/warmup_updates_labeled_only"] == b["/pg/lambda_u/warmup_updates_labeled_only"] if "/pg/lambda_u/warmup_updates_labeled_only" in a else True
+    bad = mk.build("S0", out, lock_path, 0.99, epochs=150)
+    bad["training"]["updates"] = 8000
+    with pytest.raises(ValueError):
+        validate_config(bad)
+    assert json.loads(flat(mk.build("W", out, lock_path, 0.99, epochs=150))["/teacher/updates"]) == 8000  # teacher budget unchanged

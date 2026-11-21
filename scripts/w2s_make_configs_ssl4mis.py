@@ -28,7 +28,7 @@ def sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def build(arm: str, prepared: Path, lock: Path, tau_v: float, m3hl_checkpoint: Path | None = None) -> dict:
+def build(arm: str, prepared: Path, lock: Path, tau_v: float, m3hl_checkpoint: Path | None = None, epochs: int | None = None) -> dict:
     from self_audit.candidate_pg.config import validate_config
     from self_audit.candidate_pg.w2s_config import make_config
 
@@ -49,6 +49,11 @@ def build(arm: str, prepared: Path, lock: Path, tau_v: float, m3hl_checkpoint: P
         cfg["pg"]["m3hl"] = {"checkpoint": {"path": str(m3hl_checkpoint), "sha256": sha(m3hl_checkpoint)}, "source_root": "external/M3HL", "source_commit": "19151b3"}
         if arm == "S2M3":
             cfg["cbkd"]["variant"] = "cbkd_sa_out"
+    if epochs is not None and arm != "W":
+        # student epoch budget: total updates follow updates_per_epoch (fraction-defined schedules scale; absolute onsets such as the
+        # labeled-only warm-up at 800 and the CBKD onset at 1200 are absolute update counts and are NOT rescaled)
+        cfg["training"]["epochs"] = int(epochs)
+        cfg["training"]["updates"] = int(epochs) * int(cfg["training"]["updates_per_epoch"])
     receipt_path = prepared / "PREPARATION_RECEIPT.json"
     receipt = json.loads(receipt_path.read_text())
     for role in ("train", "val", "test"):
@@ -74,12 +79,13 @@ def main() -> None:
     ap.add_argument("--out-dir", type=Path, required=True)
     ap.add_argument("--tau-v", type=float, default=0.99, help="0.99, or 0.999 only if the saturation check says so")
     ap.add_argument("--m3hl-checkpoint", type=Path, help="unet_best_model.pth of T-M3HL (needed for the M3 arms)")
+    ap.add_argument("--epochs", type=int, help="student epoch budget (default: the config default of 100 epochs = 8000 updates)")
     ap.add_argument("--only", nargs="*", help="write only these arms (default: the five standard arms)")
     a = ap.parse_args()
     a.out_dir.mkdir(parents=True, exist_ok=True)
     for arm in (a.only or ARMS):
         path = a.out_dir / f"ssl4mis_{arm}.json"
-        path.write_text(json.dumps(build(arm, a.prepared.resolve(), a.lock.resolve(), a.tau_v, a.m3hl_checkpoint), indent=2, sort_keys=True) + "\n")
+        path.write_text(json.dumps(build(arm, a.prepared.resolve(), a.lock.resolve(), a.tau_v, a.m3hl_checkpoint, a.epochs), indent=2, sort_keys=True) + "\n")
         print(f"wrote {path} sha256 {sha(path)[:16]}")
 
 

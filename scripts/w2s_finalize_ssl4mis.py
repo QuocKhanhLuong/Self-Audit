@@ -46,6 +46,15 @@ def main() -> int:
     for name, frames in (("val10", val), ("test20", test)):
         records = predict_records(student, frames, device, kind="student")
         metrics[name] = {"native": native_metrics(records), "ssl4mis_compat": compat_metrics(records)}
+    # also the final (last-update) checkpoint, reported next to the val10-selected one (selection is never made on test20)
+    final_metrics = None
+    if ckpt.get("student") is not None:
+        student.load_state_dict(ckpt["student"], strict=True)
+        final_metrics = {}
+        for name, frames in (("val10", val), ("test20", test)):
+            records = predict_records(student, frames, device, kind="student")
+            final_metrics[name] = {"native": native_metrics(records), "ssl4mis_compat": compat_metrics(records)}
+        student.load_state_dict(ckpt["best_student"], strict=True)
     student.cpu()
     export = export_student(student, cfg, args.run / "exports" / f"{args.name}.pt", epoch=int(ckpt["best_epoch"]),
                             metadata={"arm": args.name, "selected_epoch": int(ckpt["best_epoch"]), "selection": "val10 student-only FG Dice",
@@ -58,7 +67,7 @@ def main() -> int:
     cold = verify_cold_load(student, export["path"], volumes)
     cx = complexity(deployed.to(device).eval(), val[0], device)
     write_once(final, {"schema": "self_audit.w2s_ssl4mis.final.v1", "arm": args.name, "selected_epoch": int(ckpt["best_epoch"]),
-                       "best_val_fg": float(ckpt["best_val"]), "metrics": metrics, "export": export, "cold_load": cold, "complexity": cx})
+                       "best_val_fg": float(ckpt["best_val"]), "metrics": metrics, "final_epoch_metrics": final_metrics, "epochs": cfg["training"].get("epochs", int(cfg["training"]["updates"]) // int(cfg["training"]["updates_per_epoch"])), "export": export, "cold_load": cold, "complexity": cx})
     print(f"[final] {args.name} val10 FG {metrics['val10']['native']['fg_dice']:.4f} | test20 FG {metrics['test20']['native']['fg_dice']:.4f} "
           f"| test20 SSL4MIS-compat Dice {metrics['test20']['ssl4mis_compat']['mean']['dice']:.4f} HD95(vox) {metrics['test20']['ssl4mis_compat']['mean']['hd95']:.2f}", flush=True)
     return 0

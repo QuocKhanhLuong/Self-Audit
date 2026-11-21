@@ -141,6 +141,7 @@ _W2S_ALTERNATIVES: dict[str, Any] = {
     "cbkd.warmup_updates_labeled_only": None,
     "training.selection": None,
     "training.eval_splits": None,
+    "training.updates": None,  # student epoch budget (training.epochs x updates_per_epoch); checked below
 }
 W2S_TARGET_MODES = ("fusion", "self", "w2s_arbiter", "teacher")
 
@@ -211,6 +212,10 @@ def validate_config(config: Mapping[str, Any]) -> dict[str, Any]:
         _require(isinstance(optimizer, Mapping) and optimizer.get("name") == "adamw", f"PG {section} optimizer must be explicit lowercase adamw")
     _require(value["training"]["optimizer"].get("schedule") == "reuse candidate_fuse _schedule_lr" and value["training"].get("warmup_fraction") == 0.05, "PG student schedule/warmup is locked")
     _require(isinstance(value["pg"].get("enabled"), bool) and isinstance(value["cbkd"].get("enabled"), bool), "PG arm switches must be boolean")
+    training = value["training"]
+    if "epochs" in training:
+        _require(type(training["epochs"]) is int and training["epochs"] > 0 and training["updates"] == training["epochs"] * training["updates_per_epoch"],
+                 "training.updates must equal training.epochs x training.updates_per_epoch")
     mode = value["pg"].get("target_mode", "fusion")
     _require(mode in W2S_TARGET_MODES, "pg.target_mode must be fusion, self, teacher or w2s_arbiter")
     if value["cbkd"].get("variant") in ("cbkd_sa_gated", "cbkd_sa_out") and value["cbkd"]["enabled"]:

@@ -86,7 +86,7 @@ def main(argv: list[str] | None = None) -> int:
         """A4-SA reuses the S1 artifact, teacher W and the S3-SA codebook of the S2main run directory (receipts copied, never retrained)."""
         import shutil
 
-        subprocess.run([PY, str(scripts / "w2s_make_configs_ssl4mis.py"), "--prepared", str(prep), "--out-dir", str(cfgdir), "--tau-v", tau_v(), "--only", "A4SA"], check=True)
+        subprocess.run([PY, str(scripts / "w2s_make_configs_ssl4mis.py"), "--prepared", str(prep), "--out-dir", str(cfgdir), "--tau-v", tau_v(), "--only", "A4SA", *(["--epochs", os.environ["STUDENT_EPOCHS"]] if os.environ.get("STUDENT_EPOCHS") else [])], check=True)
         dirs["A4SA"].mkdir(parents=True, exist_ok=True)
         for name in ("S1_RECEIPT.json", "S1_LINK.json", "S2_RECEIPT.json", "S3_RECEIPT.json", "CB_DECISION.json"):
             if (dirs["S2main"] / name).is_file():
