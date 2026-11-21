@@ -185,3 +185,27 @@ def test_old_split_configs_still_validate() -> None:
     validate_config(json.loads((ROOT / "configs/candidate_pg/pg_k8_base.json").read_text()))
     for path in sorted((ROOT / "configs/candidate_pg/w2s").glob("w2s_*.json")):
         validate_config(json.loads(path.read_text()))
+
+
+def test_a4sa_config_differs_from_old_a4sa_only_in_split_selection_and_teacher_threshold(prepared) -> None:
+    import cbkd_sa_make_config as old
+
+    out, lock_path = prepared
+
+    def flat(x, p=""):
+        if isinstance(x, dict):
+            r = {}
+            for k, v in x.items():
+                r.update(flat(v, f"{p}/{k}"))
+            return r
+        return {p: json.dumps(x)}
+
+    new = flat(_config(out, lock_path, "A4SA"))
+    base = flat(old.build(out, ROOT / "reports/pg-server-20261116/PG_K8_CONFIG.json"))
+    diff = sorted(k for k in set(new) | set(base) if new.get(k) != base.get(k))
+    allowed = ("/data/", "/training/selection", "/training/eval_splits", "/teacher/select", "/teacher/semi/threshold/clip",
+               "/cinema_init/hf_revision")  # hf_revision only pins the CineMA download; S1 is reused, never retrained
+    assert all(k.startswith(allowed) for k in diff), [k for k in diff if not k.startswith(allowed)]
+    assert json.loads(new["/cbkd/variant"]) == "cbkd_sa" and json.loads(new["/pg/enabled"]) is True and "/pg/target_mode" not in new  # default fusion target, as the old A4-SA recipe
+    assert json.loads(new["/teacher/semi/threshold/clip"]) == [0.95, 0.95]
+    assert [k for k in diff if k.startswith("/teacher/semi/threshold/clip")]

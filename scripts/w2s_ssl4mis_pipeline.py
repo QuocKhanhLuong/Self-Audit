@@ -23,8 +23,8 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from cbkd_sa_pipeline import OVERRUN, run_stage, sha_file, write_json  # noqa: E402
 
 PY = sys.executable
-ALL = ["CONFIG", "LINK", "W", "WFINAL", "SAT", "CONFIG2", "LINKW", "CB", "S2MAIN", "S2MAINFINAL", "S0", "S0FINAL", "S1KD", "S1KDFINAL", "S2ARB", "S2ARBFINAL"]
-ARM_OF = {"S2MAIN": ("S2main", "S2main", "A4"), "S0": ("S0", "S0", "A2"), "S1KD": ("S1kd", "S1kd", "A2"), "S2ARB": ("S2arb", "S2arb", "A2")}
+ALL = ["CONFIG", "LINK", "W", "WFINAL", "SAT", "CONFIG2", "LINKW", "CB", "S2MAIN", "S2MAINFINAL", "S0", "S0FINAL", "S1KD", "S1KDFINAL", "S2ARB", "S2ARBFINAL", "A4SA", "A4SAFINAL"]
+ARM_OF = {"S2MAIN": ("S2main", "S2main", "A4"), "A4SA": ("A4SA", "A4SA", "A4"), "S0": ("S0", "S0", "A2"), "S1KD": ("S1kd", "S1kd", "A2"), "S2ARB": ("S2arb", "S2arb", "A2")}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -41,7 +41,7 @@ def main(argv: list[str] | None = None) -> int:
     s1_sha = os.environ.get("S1_SHA256", "c8195fb4a79ee665b169da36a492c99192eb33a1962c42079404107c1d2a01bf")
     cfgdir = run / "configs"
     cfg = lambda arm: cfgdir / f"ssl4mis_{arm}.json"
-    dirs = {"W": run / "W", "S0": run / "S0", "S1kd": run / "S1kd", "S2arb": run / "S2arb", "S2main": run / "S2main"}
+    dirs = {"W": run / "W", "S0": run / "S0", "S1kd": run / "S1kd", "S2arb": run / "S2arb", "S2main": run / "S2main", "A4SA": run / "A4SA"}
     scripts = ROOT / "scripts"
     dev = args.device
     max_hours = float(os.environ["MAX_HOURS"]) if os.environ.get("MAX_HOURS") else None
@@ -82,15 +82,28 @@ def main(argv: list[str] | None = None) -> int:
         spec[step] = ((lambda arm=arm, eng=eng: campaign(arm, dirs[arm], "--stage", "arms", "--arm", eng)), cfg(arm), [dirs[arm] / f"resume_{eng}.pt"])
         spec[step + "FINAL"] = ((lambda arm=arm, name=name, eng=eng: final(arm, name, eng)), cfg(arm), [dirs[arm] / "FINAL_RESULT.json"])
 
+    def prepare_a4sa() -> None:
+        """A4-SA reuses the S1 artifact, teacher W and the S3-SA codebook of the S2main run directory (receipts copied, never retrained)."""
+        import shutil
+
+        subprocess.run([PY, str(scripts / "w2s_make_configs_ssl4mis.py"), "--prepared", str(prep), "--out-dir", str(cfgdir), "--tau-v", tau_v(), "--only", "A4SA"], check=True)
+        dirs["A4SA"].mkdir(parents=True, exist_ok=True)
+        for name in ("S1_RECEIPT.json", "S1_LINK.json", "S2_RECEIPT.json", "S3_RECEIPT.json", "CB_DECISION.json"):
+            if (dirs["S2main"] / name).is_file():
+                shutil.copyfile(dirs["S2main"] / name, dirs["A4SA"] / name)
+
+    pre = {"A4SA": prepare_a4sa}
     wanted = [s for s in args.steps.replace(",", " ").split() if s]
     unknown = [s for s in wanted if s not in spec]
     if unknown:
         raise SystemExit(f"unknown steps {unknown}")
     run.mkdir(parents=True, exist_ok=True)
     for step in [s for s in ALL if s in wanted]:
-        if step in ("S2MAIN", "S2MAINFINAL") and fallback["value"]:
+        if step in ("S2MAIN", "S2MAINFINAL", "A4SA", "A4SAFINAL") and fallback["value"]:
             print(f"[pipeline] {step}: skipped (codebook fallback rule fired; S2-arb is the main arm)", flush=True)
             continue
+        if step in pre:
+            pre[step]()
         thunk, cfg_path, arts = spec[step]
         marker = run / "markers" / f"{step}.DONE.json"
         cfg_sha = sha_file(cfg_path) if cfg_path and cfg_path.is_file() else None
