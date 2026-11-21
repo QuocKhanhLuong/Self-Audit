@@ -90,3 +90,13 @@ def test_epoch_full_metrics_table_replaces_replayed_epochs(tmp_path):
     assert [r["epoch"] for r in rows] == [1, 2, 3]
     csv_lines = (tmp_path / "epoch_full_metrics.csv").read_text().splitlines()
     assert csv_lines[0] == "epoch,update,split,units,class,dice,jaccard,hd95,asd" and len(csv_lines) == 1 + 3 * 2 * 2 * 4
+
+
+def test_diag_log_writes_null_for_nonfinite_values(tmp_path):
+    import json
+
+    from self_audit.candidate_pg.engine import _append_jsonl
+
+    _append_jsonl(tmp_path / "diag.jsonl", {"update": 1, "m_T": float("nan"), "grad": {"a": float("inf"), "b": 1.0}, "xs": [float("nan"), 2.0]})
+    row = json.loads((tmp_path / "diag.jsonl").read_text())
+    assert row["m_T"] is None and row["grad"] == {"a": None, "b": 1.0} and row["xs"] == [None, 2.0]

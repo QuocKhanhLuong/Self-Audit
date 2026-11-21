@@ -105,10 +105,24 @@ def _json(path: Path, value: Any) -> None:
     path.write_text(json.dumps(value, indent=2, sort_keys=True, allow_nan=False, default=str) + "\n", encoding="utf-8")
 
 
+def _finite_or_none(value: Any) -> Any:
+    """Diagnostics only: a non-finite float (e.g. a mean over an empty gate) is logged as null instead of aborting the run.
+
+    The training loss itself is guarded separately (non-finite total loss raises); this only touches the diagnostic log."""
+    if isinstance(value, float):
+        return value if math.isfinite(value) else None
+    if isinstance(value, Mapping):
+        return {k: _finite_or_none(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_finite_or_none(v) for v in value]
+    return value
+
+
 def _append_jsonl(path: Path, row: Mapping[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    clean = _finite_or_none(dict(row)) if path.name == "diag.jsonl" else dict(row)
     with path.open("a", encoding="utf-8") as stream:
-        stream.write(json.dumps(dict(row), sort_keys=True, allow_nan=False, default=str) + "\n")
+        stream.write(json.dumps(clean, sort_keys=True, allow_nan=False, default=str) + "\n")
 
 
 class _SyntheticFrame:
