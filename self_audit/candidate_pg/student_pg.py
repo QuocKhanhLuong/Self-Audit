@@ -198,8 +198,12 @@ def build_student(
     teacher_channels: tuple[int, ...] | list[int] | None = None,
     teacher_phases: tuple[GridPhase, ...] | list[GridPhase] | None = None,
 ) -> PGStudent:
-    """Engine-facing constructor with the same resolved config contract."""
+    """Engine-facing constructor with the same resolved config contract (``student.arch = "aniso"`` selects :class:`AnisoStudent`)."""
 
+    if str(config.get("student", {}).get("arch", "unetrpp_lite")) == "aniso":
+        from .aniso_student import AnisoStudent
+
+        return AnisoStudent(config)
     return PGStudent(config, teacher_channels=teacher_channels, teacher_phases=teacher_phases)
 
 
