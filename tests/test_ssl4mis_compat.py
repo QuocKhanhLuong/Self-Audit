@@ -61,3 +61,32 @@ def test_volume_average_is_over_volumes_then_classes_and_counts_empties() -> Non
 def test_shape_mismatch_is_rejected() -> None:
     with pytest.raises(ValueError, match="native grid"):
         evaluate_volumes([{"prediction": _vol((2, 4, 4)), "target": _vol((3, 4, 4))}])
+
+
+def test_jaccard_in_volume_metrics_and_empty_case():
+    from self_audit.candidate_pg.evaluation_ssl4mis_compat import jaccard
+
+    gt = np.zeros((2, 6, 6), dtype=np.int64)
+    gt[:, 1:4, 1:4] = 1
+    pred = gt.copy()
+    pred[:, 1:4, 3] = 0  # drop one column: 6 of 18 voxels
+    out = evaluate_volumes([{"patient": "a", "frame": 0, "prediction": pred, "target": gt}])
+    expected = 12 / 18
+    assert out["per_class"]["RV"]["jaccard"] == pytest.approx(expected)
+    assert out["per_class"]["RV"]["dice"] == pytest.approx(2 * 12 / (12 + 18))
+    assert out["mean"]["jaccard"] == pytest.approx(expected / 3)  # MYO and LV are empty in both: 0
+    assert jaccard(np.zeros((2, 2), bool), np.zeros((2, 2), bool)) == 0.0
+
+
+def test_epoch_full_metrics_table_replaces_replayed_epochs(tmp_path):
+    from self_audit.candidate_pg.engine import _append_epoch_full
+
+    unit = {"mean": {"dice": .5, "jaccard": .4, "hd95": 3., "asd": 1.}, "per_class": {c: {"dice": .5, "jaccard": .4, "hd95": 3., "asd": 1.} for c in ("RV", "MYO", "LV")}}
+    entry = {"native_mm": unit, "ssl4mis_voxels": unit}
+    for epoch in (1, 2, 2, 3):  # epoch 2 replayed after a resume
+        _append_epoch_full(tmp_path, {"epoch": epoch, "update": epoch * 80, "val": entry, "test": entry})
+    import json
+    rows = [json.loads(l) for l in (tmp_path / "epoch_full_metrics.jsonl").read_text().splitlines()]
+    assert [r["epoch"] for r in rows] == [1, 2, 3]
+    csv_lines = (tmp_path / "epoch_full_metrics.csv").read_text().splitlines()
+    assert csv_lines[0] == "epoch,update,split,units,class,dice,jaccard,hd95,asd" and len(csv_lines) == 1 + 3 * 2 * 2 * 4

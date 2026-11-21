@@ -463,6 +463,66 @@ def _evaluate(model: nn.Module, frames: Sequence[Any], device: torch.device, *, 
     }
 
 
+def _epoch_full_splits() -> tuple[str, ...]:
+    """Splits for the extra per-epoch Dice/Jaccard/HD95/ASD table (env ``EPOCH_FULL_METRICS=val,test``; off when unset).
+
+    An environment switch, not a config field, so the resolved config hash and resume identity are unchanged.  Descriptive
+    only: selection still reads val/student_only FG Dice from the locked epoch logger.
+    """
+    import os
+
+    return tuple(s for s in (v.strip() for v in os.environ.get("EPOCH_FULL_METRICS", "").split(",")) if s in {"train", "val", "test"})
+
+
+def _evaluate_full(model: nn.Module, frames: Sequence[Any], device: torch.device) -> dict[str, Any]:
+    """Dice, Jaccard, HD95 and ASD per class and mean: native (mm, true spacing) and SSL4MIS-compatible (voxels, medpy)."""
+    from .evaluation_ssl4mis_compat import evaluate_volumes
+
+    if not frames:
+        return {}
+    was_training = model.training
+    model.eval()
+    records: list[dict[str, Any]] = []
+    with torch.no_grad():
+        for frame in frames:
+            image, target, geometry = _frame_tensors(frame, device, labeled=True)
+            cls = _extract_logits(model(image, geometry)).argmax(1)
+            spacing = geometry.get("spacing_zyx", geometry.get("spacing_zyx_mm"))
+            records.append({"patient": str(getattr(frame, "patient_id", "unknown")), "frame": int(getattr(frame, "frame_index", 0)),
+                            "target": target[0].cpu().numpy(), "prediction": cls[0].cpu().numpy(),
+                            "geometry": {"spacing_zyx": [float(v) for v in spacing]}})
+    model.train(was_training)
+    def pack(result: Mapping[str, Any]) -> dict[str, Any]:
+        return {"mean": result["mean"], "per_class": result["per_class"], "empty_cases": result["empty_cases"]}
+    return {"volumes": len(records), "native_mm": pack(evaluate_volumes(records, voxelspacing_key="spacing_zyx")),
+            "ssl4mis_voxels": pack(evaluate_volumes(records))}
+
+
+def _append_epoch_full(arm_dir: Path, row: Mapping[str, Any]) -> None:
+    """Append one epoch row to ``epoch_full_metrics.jsonl``/``.csv``; rows at or after this epoch (resume replays) are replaced."""
+    import csv
+
+    jpath = arm_dir / "epoch_full_metrics.jsonl"
+    old = [json.loads(line) for line in jpath.read_text().splitlines() if line.strip()] if jpath.exists() else []
+    old = [r for r in old if int(r["epoch"]) < int(row["epoch"])]
+    rows = old + [dict(row)]
+    jpath.write_text("".join(json.dumps(r, sort_keys=True) + "\n" for r in rows))
+    flat = []
+    for r in rows:
+        for split in ("train", "val", "test"):
+            entry = r.get(split)
+            if not entry:
+                continue
+            for unit in ("native_mm", "ssl4mis_voxels"):
+                for scope, values in [("mean", entry[unit]["mean"])] + [(c, v) for c, v in entry[unit]["per_class"].items()]:
+                    flat.append({"epoch": r["epoch"], "update": r["update"], "split": split, "units": unit, "class": scope,
+                                 "dice": values["dice"], "jaccard": values["jaccard"], "hd95": values["hd95"], "asd": values["asd"]})
+    with (arm_dir / "epoch_full_metrics.csv").open("w", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=["epoch", "update", "split", "units", "class", "dice", "jaccard", "hd95", "asd"])
+        writer.writeheader()
+        writer.writerows(flat)
+
+
 def _save_checkpoint(out: Path, state: Mapping[str, Any], *, arm: str, epoch: int, update: int) -> dict[str, Any]:
     path = out / f"resume_{arm}.pt"
     sha = _atomic_save(dict(state), path)
@@ -1072,6 +1132,17 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
                             })
                 for eval_row in eval_rows:
                     epoch_logger.log_epoch(eval_row)
+                _full_splits = _epoch_full_splits()
+                if _full_splits:
+                    _full = {"epoch": epoch, "update": update_no, "arm": arm_name}
+                    for _name in _full_splits:
+                        _frames = {"train": data["labeled"], "val": data["val"], "test": data.get("test")}[_name]
+                        if _frames:
+                            _full[_name] = _evaluate_full(student, _frames, target_device)
+                    _append_epoch_full(arm_dir, _full)
+                    print("[full] ep {} | ".format(epoch) + " | ".join(
+                        "{} dice {:.4f} jc {:.4f} hd95 {:.2f}mm asd {:.2f}mm".format(n, *(_full[n]["native_mm"]["mean"][k] for k in ("dice", "jaccard", "hd95", "asd")))
+                        for n in _full_splits if n in _full), flush=True)
                 if patient_rows:
                     epoch_logger.log_patient_rows(epoch, patient_rows)
                 selected = epoch_logger.select_best(split="val", path="student_only", metric="fg_dice")

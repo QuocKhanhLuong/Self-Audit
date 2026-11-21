@@ -37,6 +37,13 @@ def class_metrics(pred: np.ndarray, gt: np.ndarray, *, voxelspacing: Sequence[fl
     return float(metric.binary.dc(pred, gt)), float(metric.binary.hd95(pred, gt, **kwargs)), float(metric.binary.asd(pred, gt, **kwargs)), False
 
 
+def jaccard(pred: np.ndarray, gt: np.ndarray) -> float:
+    """medpy Jaccard; 0.0 when both masks are empty (medpy would divide by zero)."""
+
+    pred, gt = pred.astype(bool), gt.astype(bool)
+    return float(metric.binary.jc(pred, gt)) if pred.any() or gt.any() else 0.0
+
+
 def evaluate_volumes(records: Sequence[Mapping[str, Any]], *, voxelspacing_key: str | None = None) -> dict[str, Any]:
     """SSL4MIS-protocol metrics over ``records`` with ``prediction``/``target`` ``[D,H,W]`` integer arrays."""
 
@@ -51,14 +58,14 @@ def evaluate_volumes(records: Sequence[Mapping[str, Any]], *, voxelspacing_key: 
         row = {"patient": str(rec.get("patient", "unknown")), "frame": int(rec.get("frame", 0))}
         for cls, name in CLASSES.items():
             dice, hd95, asd, was_empty = class_metrics(pred == cls, gt == cls, voxelspacing=spacing)
-            row[name] = {"dice": dice, "hd95": hd95, "asd": asd, "empty": was_empty}
+            row[name] = {"dice": dice, "jaccard": jaccard(pred == cls, gt == cls), "hd95": hd95, "asd": asd, "empty": was_empty}
             empty += int(was_empty)
         per_volume.append(row)
-    classes = {name: {key: float(np.mean([r[name][key] for r in per_volume])) for key in ("dice", "hd95", "asd")} for name in CLASSES.values()}
-    mean = {key: float(np.mean([classes[name][key] for name in classes])) for key in ("dice", "hd95", "asd")}
+    classes = {name: {key: float(np.mean([r[name][key] for r in per_volume])) for key in ("dice", "jaccard", "hd95", "asd")} for name in CLASSES.values()}
+    mean = {key: float(np.mean([classes[name][key] for name in classes])) for key in ("dice", "jaccard", "hd95", "asd")}
     return {"protocol": "SSL4MIS test_2D_fully.py metric computation", "hd95_unit": HD95_UNIT if voxelspacing_key is None else "mm",
             "volumes": len(per_volume), "per_class": classes, "mean": mean, "empty_cases": empty,
             "empty_policy": "zero (Dice per medpy, HD95=0, ASD=0; counted in empty_cases)", "per_volume": per_volume}
 
 
-__all__ = ["CLASSES", "HD95_UNIT", "class_metrics", "evaluate_volumes"]
+__all__ = ["CLASSES", "HD95_UNIT", "class_metrics", "evaluate_volumes", "jaccard"]
