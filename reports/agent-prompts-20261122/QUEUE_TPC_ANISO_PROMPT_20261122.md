@@ -1,8 +1,12 @@
-# Agent prompt: re-order the GPU queue, and do the CPU-side work for TPC-Gate and AnisoStudent (2026-11-22, rev 1)
+# Agent prompt: re-order the GPU queue, and do the CPU-side work for TPC-Gate and AnisoStudent (2026-11-22, rev 2: fixed 150 epochs)
 
 > Self-contained. Read it all before acting. Machine: the vast RTX 5000 Ada 32 GB (tmux session `w2s`). Repo branch `claude/w2s-ssl4mis-20261120`; pull and record the SHA.
 > Background (read first): `reports/m3hl-teacher-20261121/RUNNING.md`, `reports/m3hl-teacher-20261121/INSPECTION.md`, `reports/w2s-ssl4mis-20261120/INSPECTION.md`, `reports/agent-prompts-20261121/M3HL_TEACHER_AGENT_PROMPT_20261121.md`.
-> User decision (2026-11-22): **let A4-SA finish**, look at it, then move to the new student. Meanwhile do only work that does not compete with the running GPU job.
+> User decisions (2026-11-22, rev 2):
+> - **Every student training from now on runs a fixed 150 epochs** (at the current 80 updates/epoch, that is 12,000 updates; derive the update count from the config's `updates_per_epoch`, do not hard-code it).
+> - **Restart A4-SA at 150 epochs.** The LR schedule is cosine over the total updates, so the running 100-epoch job cannot be extended.
+> - The arms already finished at 100 epochs (S0, S1kd, S2-m3hl-arb) are **kept, not rerun**. Every report must label each arm with its epoch budget and state that 100- and 150-epoch arms are not directly comparable.
+> - After A4-SA (150), look at it, then move to the new student. CPU-side work must not compete with the GPU job.
 
 ---
 
@@ -21,13 +25,30 @@
 
 Two student trainings at once caused OOM, so student stages run one at a time. Keep it that way.
 
-## 1. Part Q: GPU queue (do not interrupt A4-SA)
+## 1. Part Q: GPU queue (150-epoch rule)
 
-Do not stop, restart or modify the running A4-SA job. After it ends (A4SAFINAL done), the queue order is:
+### 1.1 Global epoch change
 
-1. `S1KDM3 S1KDM3FINAL` (required: separates the arbiter effect from simply having the M3HL teacher).
-2. `M3CB`, then `S2M3 S2M3FINAL` only if CB-out passes the existing fallback rule. Record the CB-out reconstruction numbers either way.
-3. `S1-ANISO`, then the two-arm architecture screening (§4.3).
+- Add a single config field, `train.epochs = 150`, that sets the total student updates to `150 × updates_per_epoch`, for every student arm built from now on (A4SA, S1kd-m3hl, S2-m3hl, S0-unetrpp-150, S0-aniso). The configs of finished arms stay untouched.
+- Schedules defined as a **fraction** of training (cosine LR, the α(t) ramp at 20 % → 50 %) scale automatically. Onsets defined in **absolute updates** (labeled-only warm-up / λ_u onset at 800, CBKD onset at 1200 with a 400-update ramp, α onset) stay at their absolute values. Do not rescale them. List every schedule field and whether it is relative or absolute in the run report.
+- Selection is still the val10-best epoch, now over 150 epochs. Also evaluate and report the **final (epoch 150) checkpoint** on val10 and test20.
+- Teacher and codebook stages (W, T-M3HL, CB, M3CB, S1, S1-ANISO) are not student trainings: their budgets do not change.
+- Run a config-diff test: a new 150-epoch config differs from its 100-epoch counterpart only in the epoch/update fields.
+
+### 1.2 Restart A4-SA
+
+1. Stop the running A4-SA cleanly: let it write its current checkpoint, then end the process.
+2. Rename its run directory to `A4SA_e100_partial` and keep every log and CSV. Do not delete anything; do not resume from it.
+3. Start A4-SA from scratch at 150 epochs. Use the same CB artifact, the same W, the same S1 init and the same seed 42.
+
+### 1.3 Queue order (one student training at a time)
+
+1. `A4SA` (150) → `A4SAFINAL`.
+2. `S1KDM3 S1KDM3FINAL` at 150 (required: separates the arbiter effect from simply having the M3HL teacher). Note: its counterpart S2-m3hl-arb ran at 100 epochs, so this pair has unequal schedules. Report it, and if time remains at the end of the queue, add an optional `S2ARBM3-150` rerun.
+3. `M3CB`, then `S2M3 S2M3FINAL` at 150 only if CB-out passes the existing fallback rule. Record the CB-out reconstruction numbers either way.
+4. `S1-ANISO`, then the two-arm architecture screening at 150 epochs (§4.3).
+
+Rough GPU cost: each 150-epoch student is about 1.5× the old 100-epoch runtime. Write the projected end time of every queue item into RUNNING.md.
 
 Implement the queue as a small resumable script (or extend the existing pipelines' `--steps`), so that each item starts automatically when the previous one has finished. Write the order and the commands to `reports/m3hl-teacher-20261121/RUNNING.md`. Ask the user only if a step fails twice.
 
@@ -96,14 +117,14 @@ Norm/activation: as in `PGStudent`. Expose the stage-3 feature for the code bran
 
 ### 4.3 Screening (GPU, queued after §1 items 1–2)
 
-- Two arms, identical except for the architecture: `S0-unetrpp` (reuse the finished S0 if its config matches, otherwise rerun with the short schedule) and `S0-aniso` (S1-ANISO init). Both use UniMatch self-training without a teacher, the same short schedule (3000 updates), seed 42.
+- Two arms, identical except for the architecture: `S0-unetrpp-150` (UNETR++-lite, existing S1 init; a new 150-epoch run, because the finished S0 used 100 epochs and the screening needs equal schedules) and `S0-aniso` (S1-ANISO init, 150 epochs). Both use UniMatch self-training without a teacher, seed 42.
 - Pre-registered decision on **val10 only**: keep AnisoStudent if its HD95 (mm) ≤ the UNETR++-lite HD95 and its Dice ≥ UNETR++-lite − 0.5. Report also an inter-slice consistency metric: mean Dice between adjacent aligned slices, compared to the GT's own value.
 - Do not open test20 for the screening.
 - Output: `reports/m3hl-teacher-20261121/ANISO_SCREEN.md`.
 
 ## 5. Hard constraints
 
-1. Never interrupt or modify A4-SA; never run two student trainings at once.
+1. The only job you may stop is the 100-epoch A4-SA (§1.2), and its artifacts must be kept. Never run two student trainings at once.
 2. CPU-side work must not starve the GPU job: cap CPU threads (for example `OMP_NUM_THREADS=4`), and avoid heavy I/O on the run disk.
 3. No decision uses test20; U63 GT is diagnostic-only; val10 is the only selection set.
 4. Seed 42; no tuning beyond the pre-registered choices (q in §3.3, the screening rule in §4.3).
