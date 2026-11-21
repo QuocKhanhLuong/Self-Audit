@@ -45,6 +45,7 @@ class M3HLTeacher(nn.Module):
 
     feature_phases = None
     teacher_phases = None
+    output_space = True  # CBKD-SA reads the output probabilities (cbkd_sa_out), not a feature level
 
     def __init__(self, net: nn.Module, *, input_size: int = M3HL_INPUT, num_classes: int = M3HL_CLASSES,
                  slice_batch: int = 32):

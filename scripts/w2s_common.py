@@ -24,7 +24,10 @@ def load_teacher(cfg: dict[str, Any], run: Path, device: Any):
 
     from self_audit.candidate_pg import engine
 
-    teacher, _ = engine._build_teacher(cfg, synthetic=False)
+    teacher, meta = engine._build_teacher(cfg, synthetic=False)
+    if meta.get("kind") == "m3hl":  # hash-pinned in the config; no S2 receipt
+        teacher.to(device)
+        return teacher, Path(cfg["pg"]["m3hl"]["checkpoint"]["path"])
     receipt = engine._read_receipt(run / "S2_RECEIPT.json")
     artifact = engine._receipt_artifact(receipt, names=("checkpoint", "checkpoint_path"), label="S2")
     payload = torch.load(artifact, map_location=device, weights_only=False)

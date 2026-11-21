@@ -137,7 +137,7 @@ _W2S_ALTERNATIVES: dict[str, Any] = {
     "data.k_labeled": (8, 7),
     "data.unlabeled": ("all_train_cine_frames_minus_labeled_masks", "ed_es_frames_of_remaining_train_patients"),
     "data.forbid_splits_in_training": (["VAL18", "TEST50"], ["VAL10", "TEST20"]),
-    "cbkd.variant": ("aux_code_branch", "cbkd_sa_gated", "cbkd_sa"),
+    "cbkd.variant": ("aux_code_branch", "cbkd_sa_gated", "cbkd_sa", "cbkd_sa_out"),
     "cbkd.warmup_updates_labeled_only": None,
     "training.selection": None,
     "training.eval_splits": None,
@@ -213,8 +213,18 @@ def validate_config(config: Mapping[str, Any]) -> dict[str, Any]:
     _require(isinstance(value["pg"].get("enabled"), bool) and isinstance(value["cbkd"].get("enabled"), bool), "PG arm switches must be boolean")
     mode = value["pg"].get("target_mode", "fusion")
     _require(mode in W2S_TARGET_MODES, "pg.target_mode must be fusion, self, teacher or w2s_arbiter")
-    if value["cbkd"].get("variant") == "cbkd_sa_gated" and value["cbkd"]["enabled"]:
-        _require(mode == "w2s_arbiter", "cbkd_sa_gated requires pg.target_mode='w2s_arbiter'")
+    if value["cbkd"].get("variant") in ("cbkd_sa_gated", "cbkd_sa_out") and value["cbkd"]["enabled"]:
+        _require(mode == "w2s_arbiter", "cbkd_sa_gated/cbkd_sa_out require pg.target_mode='w2s_arbiter'")
+    source = value["pg"].get("teacher_source", "mednext")
+    _require(source in ("mednext", "m3hl"), "pg.teacher_source must be mednext or m3hl")
+    if source == "m3hl":
+        m3 = value["pg"].get("m3hl")
+        _require(isinstance(m3, Mapping) and isinstance(m3.get("checkpoint"), Mapping) and _is_sha(m3["checkpoint"].get("sha256"))
+                 and isinstance(m3["checkpoint"].get("path"), str) and str(m3.get("source_commit", "")).startswith("19151b3"),
+                 "pg.m3hl needs checkpoint {path, sha256} and source_commit 19151b3")
+        _require(mode in ("teacher", "w2s_arbiter"), "the M3HL teacher needs pg.target_mode teacher or w2s_arbiter")
+    _require(value["cbkd"].get("variant") != "cbkd_sa_out" or not value["cbkd"]["enabled"] or source == "m3hl", "cbkd_sa_out needs pg.teacher_source='m3hl'")
+    _require(not (value["cbkd"]["enabled"] and value["cbkd"].get("variant") == "cbkd_sa_gated" and source == "m3hl"), "cbkd_sa_gated needs the MedNeXt teacher; use cbkd_sa_out with M3HL")
     if mode != "fusion":
         w2s = value["pg"].get("w2s")
         _require(isinstance(w2s, Mapping), "pg.w2s must be declared for W2S target modes")

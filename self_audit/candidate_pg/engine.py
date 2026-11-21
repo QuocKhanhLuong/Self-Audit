@@ -275,6 +275,17 @@ def _module(name: str):
 def _build_teacher(config: Mapping[str, Any], *, synthetic: bool) -> tuple[nn.Module, dict[str, Any]]:
     if synthetic:
         return _TinyTeacher(), {"kind": "synthetic_fixture", "synthetic": True}
+    if config.get("pg", {}).get("teacher_source", "mednext") == "m3hl":
+        # M3HL: a hash-pinned external 2D U-Net, loaded from the config (no S2 receipt/state-dict path), frozen, probabilities only.
+        from .teacher_m3hl import build_m3hl_teacher
+
+        spec = config["pg"]["m3hl"]
+        checkpoint = Path(spec["checkpoint"]["path"])
+        if _sha(checkpoint) != spec["checkpoint"]["sha256"]:
+            raise ValueError("M3HL teacher checkpoint SHA-256 differs from the config pin")
+        root = Path(spec.get("source_root", "external/M3HL"))
+        root = root if root.is_absolute() else Path(__file__).resolve().parents[2] / root
+        return build_m3hl_teacher(checkpoint, root), {"kind": "m3hl", "checkpoint_sha256": spec["checkpoint"]["sha256"], "source_commit": spec["source_commit"]}
     mod = _module("self_audit.candidate_pg.teacher_mednext")
     if mod is None or not hasattr(mod, "build_teacher"):
         raise RuntimeError("PG real run requires candidate_pg.teacher_mednext.build_teacher")
@@ -704,7 +715,7 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
     view_mod = _module("self_audit.candidate_pg.views")
     # Stage-only invocations import the frozen S2 teacher; they never create a
     # fresh random teacher behind a successful receipt.
-    if stage not in {"all", "S1", "S2"} and cfg.get("pg", {}).get("target_mode") != "self":
+    if stage not in {"all", "S1", "S2"} and cfg.get("pg", {}).get("target_mode") != "self" and cfg.get("pg", {}).get("teacher_source", "mednext") != "m3hl":
         s2_receipt = _read_receipt(out_path / "S2_RECEIPT.json")
         s2_artifact = _receipt_artifact(s2_receipt, names=("checkpoint", "checkpoint_path"), label="S2")
         s2_payload = torch.load(s2_artifact, map_location=target_device, weights_only=False)
@@ -741,7 +752,7 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
     if stage == "S2":
         result["status"] = "PAUSED"; _json(out_path / "RESULT.json", result); return result
     s3_codebook_model = None
-    sa_variant = isinstance(cfg.get("cbkd"), Mapping) and cfg["cbkd"].get("variant") in ("cbkd_sa", "cbkd_sa_gated")
+    sa_variant = isinstance(cfg.get("cbkd"), Mapping) and cfg["cbkd"].get("variant") in ("cbkd_sa", "cbkd_sa_gated", "cbkd_sa_out")
     if sa_variant and synthetic:
         raise ValueError("cbkd_sa has no synthetic engine path; software evidence comes from the unit tests")
     if sa_variant and stage in {"all", "S3"}:

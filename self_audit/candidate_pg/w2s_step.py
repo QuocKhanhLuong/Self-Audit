@@ -28,6 +28,7 @@ from .views import CutMixBox, mix_tensor
 
 TARGET_MODES = ("fusion", "self", "w2s_arbiter", "teacher")
 CBKD_VARIANT = "cbkd_sa_gated"
+CBKD_VARIANTS = ("cbkd_sa_gated", "cbkd_sa_out")  # _out: teacher side reads output probabilities + SDF (M3HL teacher)
 
 
 def w2s_params(config: Mapping[str, Any]) -> dict[str, Any]:
@@ -43,7 +44,7 @@ def w2s_params(config: Mapping[str, Any]) -> dict[str, Any]:
 
 def cbkd_sa_active(config: Mapping[str, Any]) -> bool:
     c = config.get("cbkd", {})
-    return bool(c.get("enabled")) and c.get("variant") == CBKD_VARIANT
+    return bool(c.get("enabled")) and c.get("variant") in CBKD_VARIANTS
 
 
 def _packet_loss(logits: Tensor, y: Tensor, w: Tensor, valid: Tensor) -> Tensor:
@@ -214,6 +215,8 @@ def w2s_student_training_step(
             diagnostics.update(_rule_diagnostics(packets, valid_views, p_t_a, p_s_a))
 
         if cb_now:
+            if (config["cbkd"]["variant"] == "cbkd_sa_out") != bool(getattr(teacher, "output_space", False)):
+                raise ValueError("cbkd_sa_out requires the M3HL (output-space) teacher, and cbkd_sa_gated the MedNeXt teacher")
             if not isinstance(codebook, cbkd_sa.ShapeAtomCodebook):
                 raise RuntimeError("cbkd_sa_gated requires a frozen ShapeAtomCodebook")
             if any(p.requires_grad for p in codebook.parameters()):
@@ -223,7 +226,10 @@ def w2s_student_training_step(
                 raise TypeError("cbkd_sa_gated requires PGStudent.code_branch = StudentAtomBranch")
             stage3_shape = clean_a["stage3"].shape[-3:]
             with torch.no_grad():
-                feat = _aligned_teacher_level3(teacher, student, teacher_a, ua["geometry"], stage3_shape)
+                if getattr(teacher, "output_space", False):
+                    feat = cbkd_sa.teacher_out_map(p_t_a, ua["geometry"])
+                else:
+                    feat = _aligned_teacher_level3(teacher, student, teacher_a, ua["geometry"], stage3_shape)
                 atoms = cbkd_sa.teacher_atoms(codebook, feat, anchor)
             rule_fp = packets[-1][2]
             gate = ((rule_fp == 1) | (rule_fp == 2) | (rule_fp == 4)).float()
@@ -288,4 +294,4 @@ def _rule_diagnostics(packets: Sequence[tuple[Tensor, Tensor, Tensor, Tensor]], 
     }
 
 
-__all__ = ["CBKD_VARIANT", "TARGET_MODES", "cbkd_sa_active", "w2s_params", "w2s_student_training_step"]
+__all__ = ["CBKD_VARIANT", "CBKD_VARIANTS", "TARGET_MODES", "cbkd_sa_active", "w2s_params", "w2s_student_training_step"]

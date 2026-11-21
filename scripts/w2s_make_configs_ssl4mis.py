@@ -19,27 +19,36 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 ARMS = ("W", "S0", "S1kd", "S2arb", "S2main")
-EXTRA_ARMS = ("A4SA",)  # written only on request (--only), so the configs of the running arms stay byte-identical
-ENGINE_ARM = {"S0": "A2", "S1kd": "A2", "S2arb": "A2", "S2main": "A4", "A4SA": "A4"}
+# written only on request (--only), so the configs of the running arms stay byte-identical; M3*: M3HL teacher (campaign m3hl-teacher-20261121)
+EXTRA_ARMS = ("A4SA", "S1kdM3", "S2arbM3", "S2M3")
+ENGINE_ARM = {"S0": "A2", "S1kd": "A2", "S2arb": "A2", "S2main": "A4", "A4SA": "A4", "S1kdM3": "A2", "S2arbM3": "A2", "S2M3": "A4"}
 
 
 def sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def build(arm: str, prepared: Path, lock: Path, tau_v: float) -> dict:
+def build(arm: str, prepared: Path, lock: Path, tau_v: float, m3hl_checkpoint: Path | None = None) -> dict:
     from self_audit.candidate_pg.config import validate_config
     from self_audit.candidate_pg.w2s_config import make_config
 
-    base_arm = {"S1kd": "S0", "S2main": "S2", "A4SA": "W"}.get(arm, arm)
+    base_arm = {"S1kd": "S0", "S2main": "S2", "A4SA": "W", "S1kdM3": "S0", "S2arbM3": "S2arb", "S2M3": "S2"}.get(arm, arm)
     cfg = make_config(base_arm, tau_v=tau_v)
     if arm == "A4SA":
         # A4-SA (PG fusion target + CBKD-SA) exactly as scripts/cbkd_sa_make_config.py: only the split / selection fields below
         # differ from the old A4-SA config; the teacher threshold is the fixed 0.95 of the W2S teacher (clip [0.95, 0.95]).
         cfg["pg"]["enabled"] = True
         cfg["cbkd"].update({"enabled": True, "variant": "cbkd_sa", "warmup_updates_labeled_only": 1200, "ramp_updates": 400})
-    if arm == "S1kd":
+    if arm in ("S1kd", "S1kdM3"):
         cfg["pg"]["target_mode"] = "teacher"
+    if arm.endswith("M3"):
+        # M3HL teacher: identical to the MedNeXt-teacher arm except pg.teacher_source/pg.m3hl and (S2M3) cbkd.variant
+        if m3hl_checkpoint is None:
+            raise SystemExit("M3HL arms need --m3hl-checkpoint")
+        cfg["pg"]["teacher_source"] = "m3hl"
+        cfg["pg"]["m3hl"] = {"checkpoint": {"path": str(m3hl_checkpoint), "sha256": sha(m3hl_checkpoint)}, "source_root": "external/M3HL", "source_commit": "19151b3"}
+        if arm == "S2M3":
+            cfg["cbkd"]["variant"] = "cbkd_sa_out"
     receipt_path = prepared / "PREPARATION_RECEIPT.json"
     receipt = json.loads(receipt_path.read_text())
     for role in ("train", "val", "test"):
@@ -64,12 +73,13 @@ def main() -> None:
     ap.add_argument("--lock", type=Path, default=ROOT / "configs/candidate_pg/ssl4mis_split_lock.json")
     ap.add_argument("--out-dir", type=Path, required=True)
     ap.add_argument("--tau-v", type=float, default=0.99, help="0.99, or 0.999 only if the saturation check says so")
+    ap.add_argument("--m3hl-checkpoint", type=Path, help="unet_best_model.pth of T-M3HL (needed for the M3 arms)")
     ap.add_argument("--only", nargs="*", help="write only these arms (default: the five standard arms)")
     a = ap.parse_args()
     a.out_dir.mkdir(parents=True, exist_ok=True)
     for arm in (a.only or ARMS):
         path = a.out_dir / f"ssl4mis_{arm}.json"
-        path.write_text(json.dumps(build(arm, a.prepared.resolve(), a.lock.resolve(), a.tau_v), indent=2, sort_keys=True) + "\n")
+        path.write_text(json.dumps(build(arm, a.prepared.resolve(), a.lock.resolve(), a.tau_v, a.m3hl_checkpoint), indent=2, sort_keys=True) + "\n")
         print(f"wrote {path} sha256 {sha(path)[:16]}")
 
 

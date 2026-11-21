@@ -131,14 +131,52 @@ def code_usage(idx: Tensor, valid: Tensor | None, k: int) -> dict[str, float]:
     return {"perplexity": float(entropy.exp()), "dead": int((counts == 0).sum()), "count": int(total)}
 
 
+class OutputCellEncoder(nn.Module):
+    """``E_T`` of ``cbkd_sa_out``: teacher output map ``[B,7,D,H,W]`` (4 class probabilities + 3 SDF) -> one ``dim``-d vector
+    per student stage-3 cell.  Kernel = stride = cell size, then 1x1x1 layers; the high side is zero-padded to whole cells."""
+
+    def __init__(self, dim: int = EMBED_DIM, patch: tuple[int, int, int] = (1, 8, 8), in_channels: int = N_OUT, hidden: int = 128) -> None:
+        super().__init__()
+        self.patch = tuple(int(v) for v in patch)
+        self.net = nn.Sequential(
+            nn.Conv3d(in_channels, hidden, kernel_size=self.patch, stride=self.patch), nn.ReLU(inplace=False),
+            nn.Conv3d(hidden, hidden, 1), nn.ReLU(inplace=False), nn.Conv3d(hidden, dim, 1),
+        )
+
+    def forward(self, x: Tensor) -> Tensor:
+        d, h, w = x.shape[-3:]
+        pd, ph, pw = self.patch
+        return self.net(F.pad(x, (0, -w % pw, 0, -h % ph, 0, -d % pd)))
+
+
+def teacher_out_map(probs: Tensor, geometry: Mapping[str, Any]) -> Tensor:
+    """Output-space teacher target map: class probabilities + foreground SDF of the teacher argmax (same SDF as the GT target), no grad."""
+
+    from .teacher_training import _sdf_targets4
+
+    probs = probs.detach().float()
+    sdf = _sdf_targets4(probs.argmax(1), geometry)[:, 1:].to(device=probs.device, dtype=torch.float32)
+    return torch.cat((probs, sdf), dim=1).detach()
+
+
 class ShapeAtomCodebook(nn.Module):
-    """``P_T`` + ``C`` + ``D_A`` (+ ``tau*``): the teacher-side artifact fitted by arm CB."""
+    """``P_T`` + ``C`` + ``D_A`` (+ ``tau*``): the teacher-side artifact fitted by arm CB.
+
+    ``encoder="feature"`` (default, MedNeXt): ``P_T`` is a 1x1x1 conv on the teacher level-3 feature.
+    ``encoder="out"`` (``cbkd_sa_out``, M3HL): ``P_T`` is :class:`OutputCellEncoder` on the teacher output map.
+    """
 
     def __init__(self, size: int = CODEBOOK_SIZE, dim: int = EMBED_DIM, patch: tuple[int, int, int] = (1, 8, 8),
-                 teacher_channels: int = TEACHER_CHANNELS) -> None:
+                 teacher_channels: int = TEACHER_CHANNELS, encoder: str = "feature") -> None:
         super().__init__()
         self.size, self.dim, self.patch = int(size), int(dim), tuple(int(v) for v in patch)
-        self.P_T = nn.Conv3d(teacher_channels, dim, 1)
+        self.encoder = encoder
+        if encoder == "out":
+            self.P_T = OutputCellEncoder(dim, self.patch, in_channels=teacher_channels)
+        elif encoder == "feature":
+            self.P_T = nn.Conv3d(teacher_channels, dim, 1)
+        else:
+            raise ValueError(f"unknown codebook encoder {encoder!r}")
         self.C = nn.Parameter(l2n(torch.randn(size, dim), dim=1))
         self.D_A = AtomDecoder(dim, self.patch)
         self.register_buffer("tau_star", torch.tensor(1.0))
@@ -366,6 +404,10 @@ def _teacher_features(teacher: nn.Module, student: nn.Module, image: Tensor, geo
 
     from . import codebook as legacy
 
+    if getattr(teacher, "output_space", False):  # M3HL: no feature levels; the map is built from output probabilities (+ SDF)
+        probs = teacher.probabilities(image)
+        feature = teacher_out_map(probs, geometry)
+        return feature, {"region_logits": probs.clamp_min(1e-8).log(), "sdf": feature[:, N_CLASS:], "probabilities": probs}
     packet = legacy._teacher_packet(teacher, image, geometry)
     feature, _, _ = legacy._aligned_level3(packet["features"][3], geometry, teacher=teacher, student=student)
     return feature.detach(), packet
@@ -435,7 +477,8 @@ def run_shape_atoms(config: Mapping[str, Any], out: Any, train_data: Any, val_da
     beta = float(cb_cfg.get("commit_beta", 0.25))
     patch = (int(student.phases[3][0][0]), int(student.phases[3][0][1]), int(student.phases[3][0][2]))
     torch.manual_seed(int(config.get("seed", 42)))
-    model = ShapeAtomCodebook(size, dim, patch).to(dev)
+    out_space = bool(getattr(teacher, "output_space", False))
+    model = (ShapeAtomCodebook(size, dim, patch, teacher_channels=N_OUT, encoder="out") if out_space else ShapeAtomCodebook(size, dim, patch)).to(dev)
     optimizer = torch.optim.AdamW(model.parameters(), lr=float(opt_cfg["lr"]), weight_decay=float(opt_cfg["weight_decay"]))
     root = Path(out); root.mkdir(parents=True, exist_ok=True)
     ckpt_path = root / "checkpoint.pt"
@@ -530,6 +573,7 @@ def run_shape_atoms(config: Mapping[str, Any], out: Any, train_data: Any, val_da
     model.freeze()
     artifact = root / "codebook.pt"
     torch.save({"codebook": model.state_dict(), "tau_star": tau, "patch": list(patch), "size": size, "dim": dim,
+                "encoder": model.encoder, "teacher_channels": N_OUT if out_space else TEACHER_CHANNELS,
                 "schema": "self_audit.candidate_pg.shape_atoms.v1"}, artifact)
     import hashlib
     receipt = {"status": "COMPLETED", "artifact": str(artifact), "artifact_sha256": hashlib.sha256(artifact.read_bytes()).hexdigest(),
@@ -541,14 +585,15 @@ def run_shape_atoms(config: Mapping[str, Any], out: Any, train_data: Any, val_da
 
 def load_shape_atoms(path: Any, device: str | torch.device = "cpu") -> ShapeAtomCodebook:
     payload = torch.load(path, map_location=device, weights_only=False)
-    model = ShapeAtomCodebook(int(payload["size"]), int(payload["dim"]), tuple(payload["patch"])).to(device)
+    model = ShapeAtomCodebook(int(payload["size"]), int(payload["dim"]), tuple(payload["patch"]),
+                              teacher_channels=int(payload.get("teacher_channels", TEACHER_CHANNELS)), encoder=payload.get("encoder", "feature")).to(device)
     model.load_state_dict(payload["codebook"], strict=True)
     return model.freeze()
 
 
 __all__ = [
     "assemble_full_res", "load_shape_atoms", "patch_split", "reconstruction_report", "run_shape_atoms",
-    "AtomDecoder", "ShapeAtomCodebook", "StudentAtomBranch", "atom_loss", "calibrate_tau_star", "class_dice",
+    "AtomDecoder", "OutputCellEncoder", "ShapeAtomCodebook", "teacher_out_map", "StudentAtomBranch", "atom_loss", "calibrate_tau_star", "class_dice",
     "code_usage", "commitment", "crop_to_native", "fg_dice", "fit_loss", "l2n", "lambda_cb", "margin",
     "nearest_two", "pm_loss", "restart_dead_codes", "split_patches", "teacher_atoms", "upsample_cells",
 ]
