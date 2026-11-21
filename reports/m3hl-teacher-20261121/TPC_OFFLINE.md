@@ -96,3 +96,20 @@ E3: override **NO-GO (drop-only)** (kill override if the student is right < 55% 
 | E1 | NO-GO | NO-GO |
 | E2 | GO | GO |
 | E3 | NO-GO | GO |
+
+## Reading of the result (interpretation, separate from the measurements above)
+
+- **Overall: NO-GO for TPC-Gate as a replacement for confidence.** E1 is the pre-registered decisive test and it is killed on both sets: the best through-plane signal
+  (`s_flip`, AUROC 0.69) is far below plain confidence/margin/entropy (0.87-0.88), and the TPC rank score is lower still (0.63-0.66). Inside the c_T >= 0.99 subset the best
+  TPC-family AUROC is 0.66 (val10) and 0.67 (U63), at or just above the 0.65 line, but the baselines are at 0.80-0.82 there too, so the "errors confidence cannot see" argument
+  does not hold for this teacher. Only 11.6% (val10) / 16.8% (U63) of the errors have c_T >= 0.99 (E0), so there is little high-confidence error for TPC to find in the first place.
+  The TTA vote (`s_tta`, 0.81-0.82) is the best non-confidence signal but is still below confidence.
+- **E0 is GO because errors concentrate at the apex tercile** (error rate 0.131 / 0.168 against 0.085 / 0.092 in the mid tercile), not because of high-confidence errors.
+- **E2 is not informative as run.** The oracle replaces GT at 22-31% of the ROI (ties in the rank score make the flagged set larger than 1 - q), so a gain of about +4-5 Dice points
+  mostly measures how much of the volume the oracle is allowed to fix. It was pre-registered and passes its kill rule, but without a same-size flag set chosen by confidence it
+  does not show that TPC localises errors better. That comparison was not pre-registered and was not run here.
+- **E3: override is NO-GO on val10** (S0 46.3% right, S2-m3hl-arb 51.0%, both below 55%); on U63 the S2-m3hl-arb student is right on 63.5% of flagged disagreements (S0 51.3%).
+  The U63 student has been trained on pseudo-labels of the same images, so the U63 number is not an independent estimate of a student that has not seen those images.
+- Method notes: signals, errors and flagged sets are in the aligned frame; ROI = 5 px around the predicted foreground; MYO ring holes are not counted as holes in the generic topology
+  signal (they are anatomical), which amends the prompt's "holes in a class"; the cardiac MYO-closure threshold (90%) and the rank method (lowest rank for ties) were fixed before the run.
+  U63 ground truth was read from the raw ACDC files only for this diagnostic. test20 was not opened.
