@@ -99,7 +99,8 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit(f"unknown steps {unknown}")
     run.mkdir(parents=True, exist_ok=True)
     for step in [s for s in ALL if s in wanted]:
-        if step in ("S2MAIN", "S2MAINFINAL", "A4SA", "A4SAFINAL") and fallback["value"]:
+        # the CB fallback rule gates only the W2S gated arm; A4-SA (feature-based CBKD-SA, required by the Ada prompt) still runs and the gap is reported
+        if step in ("S2MAIN", "S2MAINFINAL") and fallback["value"]:
             print(f"[pipeline] {step}: skipped (codebook fallback rule fired; S2-arb is the main arm)", flush=True)
             continue
         if step in pre:
