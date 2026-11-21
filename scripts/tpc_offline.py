@@ -138,7 +138,7 @@ def main() -> int:
                 tta_dis = torch.stack(votes).mean(0)[0].cpu().numpy()
                 preds = {n: engine._extract_logits(s(image, geom)).argmax(1)[0].cpu().numpy() for n, s in students.items()}
             prob_np, pred = prob[0].cpu().numpy(), refp[0].cpu().numpy()
-            gt = frame.target[0].numpy() if labeled else load_gt_raw(args.raw, key[0], source_frames[key[0]]["ED" if key[1] == 0 else "ES"])
+            gt = frame.target[0].numpy() if labeled else load_gt_raw(args.raw, key[0], source_frames[key[0]]["ED" if key[1] == 0 else "ES"] + 1)  # source_frames are 0-based cine indices; raw file names are 1-based
             assert gt.shape == pred.shape, (key, gt.shape, pred.shape)
             rec = {"patient": key[0], "spacing": [float(v) for v in geom["spacing_zyx"]], "variants": {}}
             for variant in ("generic", "cardiac"):
