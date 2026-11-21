@@ -1,0 +1,107 @@
+{
+  "splits": {
+    "test20": {
+      "compat_dice": {
+        "ci95": [
+          0.002102861694559695,
+          0.032270872882275044
+        ],
+        "ci_excludes_0": true,
+        "mean_diff": 0.016735229894910504,
+        "n": 20,
+        "wilcoxon_p": 0.06372261047363281
+      },
+      "compat_hd95_vox": {
+        "ci95": [
+          -5.456980445931427,
+          -0.4251795011574661
+        ],
+        "ci_excludes_0": true,
+        "mean_diff": -2.6535786139456303,
+        "n": 20,
+        "wilcoxon_p": 0.0074734219053585686
+      },
+      "means": {
+        "student_compat_dice": 0.8876889755312911,
+        "student_native_fg_dice": 0.8876889755312911,
+        "teacher_compat_dice": 0.8709537456363806,
+        "teacher_native_fg_dice": 0.8709537456363806
+      },
+      "native_fg_dice": {
+        "ci95": [
+          0.0021028616945596725,
+          0.03227087288227503
+        ],
+        "ci_excludes_0": true,
+        "mean_diff": 0.01673522989491049,
+        "n": 20,
+        "wilcoxon_p": 0.06372261047363281
+      },
+      "native_fg_hd95_mm": {
+        "ci95": [
+          -10.131159571526162,
+          -1.0259320852574856
+        ],
+        "ci_excludes_0": true,
+        "mean_diff": -4.9919726732836285,
+        "n": 20,
+        "wilcoxon_p": 0.015755486091547432
+      }
+    },
+    "val10": {
+      "compat_dice": {
+        "ci95": [
+          -0.01572407362675641,
+          0.03451053747899733
+        ],
+        "ci_excludes_0": false,
+        "mean_diff": 0.00612720578387409,
+        "n": 10,
+        "wilcoxon_p": 0.76953125
+      },
+      "compat_hd95_vox": {
+        "ci95": [
+          -0.6305756887746135,
+          0.18731716822743252
+        ],
+        "ci_excludes_0": false,
+        "mean_diff": -0.20263947552296174,
+        "n": 10,
+        "wilcoxon_p": 0.322265625
+      },
+      "means": {
+        "student_compat_dice": 0.8854975939248142,
+        "student_native_fg_dice": 0.8854975939248142,
+        "teacher_compat_dice": 0.8793703881409399,
+        "teacher_native_fg_dice": 0.8793703881409402
+      },
+      "native_fg_dice": {
+        "ci95": [
+          -0.015724073626756405,
+          0.03451053747899728
+        ],
+        "ci_excludes_0": false,
+        "mean_diff": 0.006127205783874124,
+        "n": 10,
+        "wilcoxon_p": 0.76953125
+      },
+      "native_fg_hd95_mm": {
+        "ci95": [
+          -1.6769149478844665,
+          0.3993172422428648
+        ],
+        "ci_excludes_0": false,
+        "mean_diff": -0.42087560808946095,
+        "n": 10,
+        "wilcoxon_p": 0.76953125
+      }
+    }
+  },
+  "student_epoch": 79,
+  "verdict": {
+    "compat_dice": "supported",
+    "compat_hd95_vox": "supported",
+    "native_fg_dice": "supported",
+    "native_fg_hd95_mm": "supported"
+  }
+}
