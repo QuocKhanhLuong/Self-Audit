@@ -20,6 +20,7 @@ def main() -> int:
     ap.add_argument("--arm", choices=("A2", "A4"), required=True, help="engine arm: A2 = S0 / S1kd / S2arb, A4 = S2main (codebook)")
     ap.add_argument("--name", required=True)
     ap.add_argument("--device", default="cuda")
+    ap.add_argument("--early-stop-ok", action="store_true", help="evaluate a run that the user stopped before its planned update count (recorded in FINAL_RESULT)")
     args = ap.parse_args()
     final = args.run / "FINAL_RESULT.json"
     if final.is_file():
@@ -31,8 +32,10 @@ def main() -> int:
 
     cfg, device = load_config(args.config), torch.device(args.device)
     ckpt = torch.load(args.run / f"resume_{args.arm}.pt", map_location="cpu", weights_only=False)
-    if ckpt.get("best_student") is None or int(ckpt["update"]) != int(cfg["training"]["updates"]):
-        raise RuntimeError("arm has not finished (resume update != training.updates); not evaluating")
+    planned = int(cfg["training"]["updates"])
+    early = int(ckpt["update"]) != planned
+    if ckpt.get("best_student") is None or (early and not args.early_stop_ok):
+        raise RuntimeError("arm has not finished (resume update != training.updates); not evaluating (pass --early-stop-ok for a deliberately stopped run)")
     student = PGStudent(cfg)
     if args.arm == "A4":
         receipt = engine._read_receipt(args.run / "S3_RECEIPT.json")
@@ -67,7 +70,8 @@ def main() -> int:
     cold = verify_cold_load(student, export["path"], volumes)
     cx = complexity(deployed.to(device).eval(), val[0], device)
     write_once(final, {"schema": "self_audit.w2s_ssl4mis.final.v1", "arm": args.name, "selected_epoch": int(ckpt["best_epoch"]),
-                       "best_val_fg": float(ckpt["best_val"]), "metrics": metrics, "final_epoch_metrics": final_metrics, "epochs": cfg["training"].get("epochs", int(cfg["training"]["updates"]) // int(cfg["training"]["updates_per_epoch"])), "export": export, "cold_load": cold, "complexity": cx})
+                       "best_val_fg": float(ckpt["best_val"]), "metrics": metrics, "final_epoch_metrics": final_metrics,
+                       "stopped_early": {"update": int(ckpt["update"]), "planned_updates": planned, "epochs_done": int(ckpt["update"]) / int(cfg["training"]["updates_per_epoch"])} if early else None, "epochs": cfg["training"].get("epochs", int(cfg["training"]["updates"]) // int(cfg["training"]["updates_per_epoch"])), "export": export, "cold_load": cold, "complexity": cx})
     print(f"[final] {args.name} val10 FG {metrics['val10']['native']['fg_dice']:.4f} | test20 FG {metrics['test20']['native']['fg_dice']:.4f} "
           f"| test20 SSL4MIS-compat Dice {metrics['test20']['ssl4mis_compat']['mean']['dice']:.4f} HD95(vox) {metrics['test20']['ssl4mis_compat']['mean']['hd95']:.2f}", flush=True)
     return 0
