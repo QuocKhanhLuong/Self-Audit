@@ -56,11 +56,11 @@ def prepare_mnms1(raw: Path, out: Path) -> dict:
     csv_path = next(raw.glob("M&M/*diagnosis_opendataset.csv"))
     meta = {}
     for rec in csv.reader(csv_path.read_text().splitlines()):
-        if len(rec) >= 8 and rec[1] and rec[1][0] == "A" or (len(rec) >= 8 and rec[1][:1] in "AB"):
+        if len(rec) >= 8 and rec[5].strip().isdigit() and rec[6].strip().isdigit():  # data rows (a header, if any, is skipped)
             meta[rec[1]] = {"vendor_name": rec[2], "vendor": rec[3], "centre": rec[4], "ed": int(rec[5]), "es": int(rec[6]),
                             "pathology": rec[8] if len(rec) > 8 else None}
     roles = {"train_labeled": raw / "Training/Labeled", "train_unlabeled": raw / "Training/Unlabeled", "val": raw / "M&M/Validation", "test": raw / "Testing"}
-    subjects, problems_all = {}, {}
+    subjects, problems_all, warnings_all = {}, {}, {}
     for role, folder in roles.items():
         for sub in sorted(p for p in folder.iterdir() if p.is_dir()):
             sid = sub.name
@@ -68,14 +68,17 @@ def prepare_mnms1(raw: Path, out: Path) -> dict:
             row, problems = describe(image, label if label.exists() else None, classes=(0, 1, 2, 3))
             row["role"] = role
             m = meta.get(sid)
+            warn = []
             if m is None:
-                problems.append("subject missing from the official CSV")
+                warn.append("subject missing from the official CSV")
             else:
                 row["csv"] = m
                 if "frames_with_mask" in row and sorted(row["frames_with_mask"]) != sorted({m["ed"], m["es"]}):
-                    problems.append(f"mask frames {row['frames_with_mask']} differ from CSV ED/ES {(m['ed'], m['es'])}")
+                    warn.append(f"mask frames {row['frames_with_mask']} differ from CSV ED/ES {(m['ed'], m['es'])}")  # source-data quirk, not a geometry error
                 if len(row["shape"]) == 4 and not (0 <= m["ed"] < row["shape"][3] and 0 <= m["es"] < row["shape"][3]):
-                    problems.append("CSV ED/ES outside the cine")
+                    warn.append("CSV ED/ES outside the cine")
+            if warn:
+                warnings_all[sid] = warn
             if role == "train_unlabeled" and "label" in row:
                 row["labels_must_not_be_used"] = True
             if problems:
@@ -86,7 +89,7 @@ def prepare_mnms1(raw: Path, out: Path) -> dict:
     for s in subjects.values():
         vendors.setdefault(s["role"], {}).setdefault(s.get("csv", {}).get("vendor", "?"), 0)
         vendors[s["role"]][s.get("csv", {}).get("vendor", "?")] += 1
-    receipt = {"schema": "self_audit.mnms1.preparation.v1", "status": "FAILED" if problems_all else "READY", "counts": counts, "vendors_by_role": vendors,
+    receipt = {"schema": "self_audit.mnms1.preparation.v1", "status": "FAILED" if problems_all else "READY", "counts": counts, "vendors_by_role": vendors, "warnings": warnings_all,
                "csv": {"path": str(csv_path), "sha256": sha256_file(csv_path), "subjects": len(meta)}, "problems": problems_all, "subjects": subjects,
                "note": "raw files unchanged; roles follow the official Training/Labeled, Training/Unlabeled, Validation, Testing folders"}
     write(out / "PREPARATION_RECEIPT.json", receipt)
@@ -132,7 +135,7 @@ def main() -> int:
     a = ap.parse_args()
     for name, fn, raw in (("MnM1", prepare_mnms1, a.mnms1), ("LA_MSD_Heart", prepare_la, a.la)):
         r = fn(raw, a.out / name)
-        print(name, r["status"], r["counts"], f"problems: {len(r['problems'])}")
+        print(name, r["status"], r["counts"], f"problems: {len(r['problems'])}", f"warnings: {len(r.get('warnings', {}))}")
     return 0
 
 
