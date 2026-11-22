@@ -255,6 +255,16 @@ def w2s_student_training_step(
 
     cb_term = loss_pm + loss_atom
     total_loss = loss_sup + lam_u * loss_u + (lam_cb if cb_now else 0.0) * cb_term
+    # SliceSSMStudent only (student.slicessm.shift_aux): free supervision of the stage-3 slice-offset head by injected
+    # per-slice shifts.  Absent from every other config, so other arms are unchanged.
+    from .slicessm_student import shift_aux_config, slice_shift_aux
+    shift_cfg = shift_aux_config(config)
+    if shift_cfg is not None and update >= shift_cfg["start_update"]:
+        pairs = [(lv["strong"], lv["geometry"])] + ([(ua["weak"], ua["geometry"])] if u_active else [])
+        loss_shift = slice_shift_aux(student, pairs, seed=int(config.get("seed", 42)), update=update, max_px=shift_cfg["max_px"])
+        if loss_shift is not None:
+            total_loss = total_loss + shift_cfg["weight"] * loss_shift
+            diagnostics["loss_shift"] = loss_shift.detach()
     if not bool(torch.isfinite(total_loss)):
         raise FloatingPointError("W2S student loss is nonfinite")
     terms.update({"sup": loss_sup, "u": loss_u, "cbkd": cb_term})

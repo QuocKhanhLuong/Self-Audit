@@ -200,10 +200,15 @@ def build_student(
 ) -> PGStudent:
     """Engine-facing constructor with the same resolved config contract (``student.arch = "aniso"`` selects :class:`AnisoStudent`)."""
 
-    if str(config.get("student", {}).get("arch", "unetrpp_lite")) == "aniso":
+    arch = str(config.get("student", {}).get("arch", "unetrpp_lite"))
+    if arch == "aniso":
         from .aniso_student import AnisoStudent
 
         return AnisoStudent(config)
+    if arch == "slicessm":
+        from .slicessm_student import build_slicessm_student
+
+        return build_slicessm_student(config)
     return PGStudent(config, teacher_channels=teacher_channels, teacher_phases=teacher_phases)
 
 

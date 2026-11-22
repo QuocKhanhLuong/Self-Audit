@@ -38,7 +38,8 @@ def main() -> int:
     if ckpt.get("best_student") is None or (early and not args.early_stop_ok):
         raise RuntimeError("arm has not finished (resume update != training.updates); not evaluating (pass --early-stop-ok for a deliberately stopped run)")
     student = build_student(cfg)
-    aniso = type(student).__name__ == "AnisoStudent"
+    aniso = type(student).__name__ in ("AnisoStudent", "SliceSSMStudent")
+    slicessm = type(student).__name__ == "SliceSSMStudent"
     if args.arm == "A4":
         receipt = engine._read_receipt(args.run / "S3_RECEIPT.json")
         student.attach_code_branch(shape_atoms.StudentAtomBranch(shape_atoms.load_shape_atoms(receipt["artifact"])))
@@ -68,6 +69,9 @@ def main() -> int:
     volumes = [(f.image if f.image.ndim == 5 else f.image.unsqueeze(0), dict(f.geometry)) for f in val[:3]]
     if aniso:
         from self_audit.candidate_pg.aniso_student import export_aniso_student, load_aniso_export
+        if slicessm:
+            from self_audit.candidate_pg.slicessm_student import export_slicessm_student as export_aniso_student  # noqa: F811
+            from self_audit.candidate_pg.slicessm_student import load_slicessm_export as load_aniso_export  # noqa: F811
 
         (args.run / "exports").mkdir(parents=True, exist_ok=True)
         export = export_aniso_student(student, args.run / "exports" / f"{args.name}.pt", epoch=int(ckpt["best_epoch"]))

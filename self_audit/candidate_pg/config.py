@@ -141,7 +141,7 @@ _W2S_ALTERNATIVES: dict[str, Any] = {
     "cbkd.warmup_updates_labeled_only": None,
     "training.selection": None,
     "training.eval_splits": None,
-    "student.arch": ("unetrpp_lite_fuse", "aniso"),  # AnisoStudent screening arms
+    "student.arch": ("unetrpp_lite_fuse", "aniso", "slicessm"),  # AnisoStudent / SliceSSMStudent screening arms
     "training.updates": None,  # student epoch budget (training.epochs x updates_per_epoch); checked below
 }
 W2S_TARGET_MODES = ("fusion", "self", "w2s_arbiter", "teacher")
