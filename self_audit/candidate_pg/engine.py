@@ -1268,6 +1268,8 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
                     "boundary_band_coverage_b": _diag_json(diagnostics.get("boundary_band_coverage_b")),
                     "teacher_fusion_disagreement_a": _diag_json(diagnostics.get("teacher_fusion_disagreement_a")),
                     "teacher_fusion_disagreement_b": _diag_json(diagnostics.get("teacher_fusion_disagreement_b")),
+                    # SliceSSM shift-recovery auxiliary; the key is absent for every other arm
+                    **({"loss_shift": _diag_json(diagnostics["loss_shift"])} if "loss_shift" in diagnostics else {}),
                     "code_perplexity": _diag_json(diagnostics.get("code_perplexity", code_perplexity)),
                     "code_dead": _diag_json(diagnostics.get("code_dead", code_dead)),
                     "code_valid_count": _diag_json(diagnostics.get("code_valid_count")),
