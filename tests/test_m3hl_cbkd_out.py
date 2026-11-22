@@ -143,3 +143,22 @@ def test_official_eval_metrics_zero_for_empty_prediction_and_match_medpy():
     assert ev.official_case_metrics(np.zeros_like(gt), gt, 1) == (0.0, 0.0, 0.0, 0.0)
     dice, jc, hd, asd = ev.official_case_metrics(gt.copy(), gt, 1)
     assert dice == 1.0 and jc == 1.0 and hd == 0.0 and asd == 0.0
+
+
+def test_s2arb_150_arm_is_a_separate_config_that_differs_only_in_epochs(tmp_path):
+    out, lock_path = ssl._synthetic_prepared(tmp_path)
+    ckpt = tmp_path / "unet_best_model.pth"
+    ckpt.write_bytes(b"toy")
+
+    def flat(x, p=""):
+        if isinstance(x, dict):
+            r = {}
+            for k, v in x.items():
+                r.update(flat(v, f"{p}/{k}"))
+            return r
+        return {p: json.dumps(x)}
+
+    a = flat(mk.build("S2arbM3", out, lock_path, 0.99, ckpt))
+    b = flat(mk.build("S2arbM3E150", out, lock_path, 0.99, ckpt, epochs=150))
+    assert sorted(k for k in set(a) | set(b) if a.get(k) != b.get(k)) == ["/training/epochs", "/training/updates"]
+    assert mk.ENGINE_ARM["S2arbM3E150"] == "A2"

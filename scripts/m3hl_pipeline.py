@@ -22,8 +22,8 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from cbkd_sa_pipeline import run_stage, sha_file, write_json  # noqa: E402
 
 PY = sys.executable
-ALL = ["M3WAIT", "M3OFFICIAL", "M3CONFIG", "M3LINK", "M3EVAL", "M3SAT", "M3CONFIG2", "S2ARBM3", "S2ARBM3FINAL", "S1KDM3", "S1KDM3FINAL", "M3CB", "S2M3", "S2M3FINAL"]
-ARMS = {"S2ARBM3": ("S2arbM3", "S2-m3hl-arb", "A2"), "S1KDM3": ("S1kdM3", "S1-kd-m3hl", "A2"), "S2M3": ("S2M3", "S2-m3hl", "A4")}
+ALL = ["M3WAIT", "M3OFFICIAL", "M3CONFIG", "M3LINK", "M3EVAL", "M3SAT", "M3CONFIG2", "S2ARBM3", "S2ARBM3FINAL", "S1KDM3", "S1KDM3FINAL", "M3CB", "S2M3", "S2M3FINAL", "S2ARBM3E150", "S2ARBM3E150FINAL"]
+ARMS = {"S2ARBM3": ("S2arbM3", "S2-m3hl-arb", "A2"), "S1KDM3": ("S1kdM3", "S1-kd-m3hl", "A2"), "S2M3": ("S2M3", "S2-m3hl", "A4"), "S2ARBM3E150": ("S2arbM3E150", "S2-m3hl-arb-e150", "A2")}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -44,7 +44,7 @@ def main(argv: list[str] | None = None) -> int:
     m3src = ROOT / "external/M3HL"
     cfgdir = run / "configs"
     cfg = lambda arm: cfgdir / f"ssl4mis_{arm}.json"
-    dirs = {a: run / a for a in ("S2arbM3", "S1kdM3", "S2M3")}
+    dirs = {a: run / a for a in ("S2arbM3", "S1kdM3", "S2M3", "S2arbM3E150")}
     scripts, dev = ROOT / "scripts", args.device
     max_hours = float(os.environ["MAX_HOURS"]) if os.environ.get("MAX_HOURS") else None
     deadline = time.time() + max_hours * 3600 if max_hours else None
@@ -90,6 +90,17 @@ def main(argv: list[str] | None = None) -> int:
                       cfg(arm), [dirs[arm] / f"resume_{eng}.pt"])
         spec[step + "FINAL"] = ((lambda arm=arm, name=name, eng=eng: [PY, str(scripts / "w2s_finalize_ssl4mis.py"), "--config", str(cfg(arm)), "--run", str(dirs[arm]),
                                                                        "--arm", eng, "--name", name, "--device", dev]), cfg(arm), [dirs[arm] / "FINAL_RESULT.json"])
+    def prepare_e150() -> None:
+        """S2-m3hl-arb at 150 epochs: own config and run dir; S1 receipts are copied from the 100-epoch arm (same S1 artifact)."""
+        import shutil
+
+        subprocess.run([PY, str(scripts / "w2s_make_configs_ssl4mis.py"), "--prepared", str(prep), "--out-dir", str(cfgdir), "--tau-v", tau_v(),
+                        "--m3hl-checkpoint", str(ckpt), "--only", "S2arbM3E150", "--epochs", "150"], check=True)
+        dirs["S2arbM3E150"].mkdir(parents=True, exist_ok=True)
+        for name in ("S1_RECEIPT.json", "S1_LINK.json"):
+            shutil.copyfile(dirs["S2arbM3"] / name, dirs["S2arbM3E150"] / name)
+
+    pre = {"S2ARBM3E150": prepare_e150}
     wanted = [s for s in args.steps.replace(",", " ").split() if s]
     unknown = [s for s in wanted if s not in spec]
     if unknown:
@@ -99,6 +110,8 @@ def main(argv: list[str] | None = None) -> int:
         if step in ("S2M3", "S2M3FINAL") and fallback["value"]:
             print(f"[m3hl] {step}: skipped (CB-out fallback rule fired: q_T FG Dice > 0.05 below raw M3HL, or perplexity < 10)", flush=True)
             continue
+        if step in pre:
+            pre[step]()
         thunk, cfg_path, arts = spec[step]
         marker = run / "markers" / f"{step}.DONE.json"
         cfg_sha = sha_file(cfg_path) if cfg_path and cfg_path.is_file() else None
