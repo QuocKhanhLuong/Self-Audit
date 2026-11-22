@@ -82,3 +82,51 @@ def test_default_arch_is_unchanged_and_aniso_is_selected_by_config():
     cfg2 = dict(cfg)
     cfg2["student"] = dict(cfg["student"], arch="aniso")
     assert isinstance(build_student(cfg2), AnisoStudent)
+
+
+def test_screening_arm_configs_differ_only_in_architecture_cinema_revision_and_epochs(tmp_path):
+    import json
+    import sys
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    sys.path.insert(0, str(root / "scripts"))
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import test_w2s_ssl4mis as ssl
+    import w2s_make_configs_ssl4mis as mk
+
+    out, lock_path = ssl._synthetic_prepared(tmp_path)
+
+    def flat(x, p=""):
+        if isinstance(x, dict):
+            r = {}
+            for k, v in x.items():
+                r.update(flat(v, f"{p}/{k}"))
+            return r
+        return {p: json.dumps(x)}
+
+    s0 = flat(mk.build("S0", out, lock_path, 0.99, epochs=150))
+    unet = flat(mk.build("S0unet150", out, lock_path, 0.99, epochs=150))
+    aniso = flat(mk.build("S0aniso", out, lock_path, 0.99, epochs=150))
+    assert unet == s0  # the UNETR++-lite arm is exactly S0 at 150 epochs
+    diff = sorted(k for k in set(aniso) | set(s0) if aniso.get(k) != s0.get(k))
+    assert diff == ["/cinema_init/hf_revision", "/student/arch"], diff
+
+
+def test_inter_slice_consistency_is_one_for_a_stack_of_identical_slices_and_lower_when_a_slice_flips():
+    import sys
+    from pathlib import Path
+
+    import numpy as np
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+    from w2s_ssl4mis_eval import inter_slice_consistency
+
+    lab = np.zeros((6, 32, 32), dtype=np.int64)
+    lab[:, 10:20, 10:20] = 3
+    rec = lambda p: [{"prediction": torch.from_numpy(p), "target": torch.from_numpy(lab)}]
+    same = inter_slice_consistency(rec(lab.copy()))
+    assert same["prediction"] == pytest.approx(1.0) and same["ratio"] == pytest.approx(1.0)
+    bad = lab.copy()
+    bad[3] = 0
+    assert inter_slice_consistency(rec(bad))["ratio"] < 0.9

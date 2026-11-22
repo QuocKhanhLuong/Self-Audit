@@ -32,6 +32,30 @@ def predict_records(model: Any, frames: list[Any], device: Any, *, kind: str) ->
     return records
 
 
+def inter_slice_consistency(records: list[dict[str, Any]]) -> dict[str, float]:
+    """Mean Dice between adjacent (centroid-aligned) slices, per class present in either slice, for predictions and for the ground truth itself.
+
+    The ground truth's own value is the reference: a prediction that is much more (or less) coherent through-plane than the GT is suspicious."""
+    import numpy as np
+
+    from self_audit.candidate_pg import tpc_signals as t
+
+    def volume_value(label: np.ndarray) -> float:
+        aligned, valid, _ = t.align(label, cardiac=False)
+        vals = []
+        for z in range(aligned.shape[0] - 1):
+            ok = valid[z] & valid[z + 1]
+            for c in (1, 2, 3):
+                a, b = (aligned[z] == c) & ok, (aligned[z + 1] == c) & ok
+                if a.any() or b.any():
+                    vals.append(2.0 * (a & b).sum() / (a.sum() + b.sum()))
+        return float(np.mean(vals)) if vals else float("nan")
+
+    pred = [volume_value(r["prediction"].numpy()) for r in records]
+    gt = [volume_value(r["target"].numpy()) for r in records]
+    return {"prediction": float(np.nanmean(pred)), "ground_truth": float(np.nanmean(gt)), "ratio": float(np.nanmean(pred) / np.nanmean(gt))}
+
+
 def native_metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
     """The repo's own metrics (Dice, HD95 in mm with true spacing, ASSD), patient macro, as logged during training."""
     from self_audit.candidate_pg import evaluation
