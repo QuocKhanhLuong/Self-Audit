@@ -72,7 +72,21 @@ def prepare(source_receipt: Path, h5_receipt: Path, out: Path) -> dict:
         nii = nib.load(str(img_path), mmap=False)
         raw = np.asarray(nii.dataobj)
         shape = list(reversed(tuple(int(v) for v in nii.header.get_data_shape()[:3])))
-        geom, audit = _geometry_audit(pid, img_path, {"shape_zyx": shape}, {pid: {"unit": "mm", "provenance": UNIT_PROVENANCE}})
+        try:
+            geom, audit = _geometry_audit(pid, img_path, {"shape_zyx": shape}, {pid: {"unit": "mm", "provenance": UNIT_PROVENANCE}})
+        except ValueError as exc:
+            if "sheared" not in str(exc):
+                raise
+            # A few M&Ms-1 headers carry a sheared affine, which the strict audit rejects.  Training and every metric use only the
+            # voxel grid and its spacing, so the geometry falls back to the header zooms with an axis-aligned affine (recorded).
+            zooms = [float(v) for v in nii.header.get_zooms()[:3]]
+            spacing = [zooms[2], zooms[1], zooms[0]]
+            if not all(np.isfinite(spacing)) or min(spacing) <= 0:
+                raise SystemExit(f"{pid}: invalid zooms {zooms}")
+            affine = [[spacing[0], 0.0, 0.0, 0.0], [0.0, spacing[1], 0.0, 0.0], [0.0, 0.0, spacing[2], 0.0], [0.0, 0.0, 0.0, 1.0]]
+            geom = {"shape_zyx": shape, "spacing_zyx_mm": spacing, "affine_zyx": affine}
+            audit = {"fallback": "sheared NIfTI affine; axis-aligned affine from header zooms (declared mm)", "error": str(exc),
+                     "header_affine_xyz": np.asarray(nii.affine, dtype=float).tolist()}
         full = normalize_cine(raw, "XYZT")  # [T, Z, Y, X]
         ed, es = int(meta["csv"]["ed"]), int(meta["csv"]["es"])
         stack = np.ascontiguousarray(np.stack([full[ed], full[es]]).astype(np.float32))
