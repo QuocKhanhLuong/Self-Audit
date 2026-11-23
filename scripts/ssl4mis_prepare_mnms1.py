@@ -88,7 +88,10 @@ def prepare(source_receipt: Path, h5_receipt: Path, out: Path) -> dict:
             lab4 = np.asarray(nib.load(str(lab_path), mmap=False).dataobj)
             masks = {}
             for idx, frame in ((0, ed), (1, es)):
-                lab = lab4[..., frame]
+                raw_lab = np.asarray(lab4[..., frame], dtype=np.float64)
+                lab = np.rint(raw_lab)  # some M&Ms masks are float64 with values like 1.0000000196; integer labels within 1e-3
+                if float(np.abs(raw_lab - lab).max()) > 1e-3:
+                    raise SystemExit(f"{pid}: non-integer mask values at CSV frame {frame}")
                 if not lab.any() or not np.isin(lab, (0, 1, 2, 3)).all():
                     raise SystemExit(f"{pid}: empty or invalid mask at CSV frame {frame}")
                 arr = MNMS_TO_ACDC[lab.transpose(2, 1, 0).astype(np.int64)]
