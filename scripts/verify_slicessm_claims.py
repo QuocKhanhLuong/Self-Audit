@@ -138,8 +138,7 @@ def main() -> int:
             for f in val:
                 student(f.image.to(device), f.geometry)
         hook.remove()
-        allflow = torch.cat([x.flatten(1) for x in flows], dim=1)
-        mag = torch.sqrt(torch.stack([x[:, 0] ** 2 + x[:, 1] ** 2 for x in flows], 0).flatten()) if flows else torch.zeros(1)
+        mag = torch.cat([torch.sqrt(x[:, 0] ** 2 + x[:, 1] ** 2).flatten() for x in flows]) if flows else torch.zeros(1)  # volumes differ in size: flatten each, then concatenate
         L += [f"Predicted offsets between adjacent slices on val10 (stage-3 cells, 1 cell = 8 native px; cap 4 cells): mean |offset| {mag.mean():.4f} cells ({mag.mean() * 8:.3f} px), "
               f"p95 {np.percentile(mag.numpy(), 95):.4f} cells, max {mag.max():.4f} cells; fraction of positions above 0.05 cell: {(mag > 0.05).float().mean():.3f}.", ""]
         saved = (align.fuse.weight.detach().clone(), align.fuse.bias.detach().clone())
