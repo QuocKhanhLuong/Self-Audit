@@ -39,7 +39,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--poll-seconds", type=float, default=5.0)
     args = ap.parse_args(argv)
     root = Path(os.environ["SELF_AUDIT_ROOT"])
-    run = root / "runs" / "slicessm-screen-20261122"
+    # SS_RUN / SS_DATASET / SS_LOCK reuse the pipeline for M&Ms-1 (dataset mnms1, lock = <prepared>/SPLIT_LOCK.json)
+    run = root / "runs" / os.environ.get("SS_RUN", "slicessm-screen-20261122")
+    dataset = os.environ.get("SS_DATASET", "acdc")
     prep = Path(os.environ.get("PREP", root / "prepared/ACDC/ssl4mis-20261120"))
     cfgdir = run / "configs"
     cfg = lambda arm: cfgdir / f"ssl4mis_{arm}.json"
@@ -49,7 +51,7 @@ def main(argv: list[str] | None = None) -> int:
     deadline = time.time() + max_hours * 3600 if max_hours else None
 
     def link_s1() -> list[str]:
-        for arm in ("S0slicessm", "S1kdM3ss"):
+        for arm in os.environ.get("SS_ARMS", "S0slicessm S1kdM3ss").split():
             dirs[arm].mkdir(parents=True, exist_ok=True)
             shutil.copyfile(dirs["S1"] / "S1_RECEIPT.json", dirs[arm] / "S1_RECEIPT.json")
         return [PY, "-c", "print('S1-SS receipt linked into both SliceSSM arms')"]
@@ -58,15 +60,17 @@ def main(argv: list[str] | None = None) -> int:
         ckpt = os.environ.get("M3HL_CHECKPOINT")
         if not ckpt:
             raise SystemExit("M3HL_CHECKPOINT is required (the S1kd-M3HL-slicessm arm uses the frozen M3HL teacher)")
+        arms = os.environ.get("SS_ARMS", "S0slicessm S1kdM3ss").split()
+        extra = ["--dataset", dataset] + (["--lock", os.environ["SS_LOCK"]] if os.environ.get("SS_LOCK") else [])
         return [PY, str(scripts / "w2s_make_configs_ssl4mis.py"), "--prepared", str(prep), "--out-dir", str(cfgdir), "--tau-v", "0.99",
-                "--only", "S0slicessm", "S1kdM3ss", "--epochs", "150", "--m3hl-checkpoint", ckpt]
+                "--only", *arms, "--epochs", "150", "--m3hl-checkpoint", ckpt, *extra]
 
     spec: dict[str, tuple] = {
-        "SSCONFIG": (make_configs, None, [cfg("S0slicessm"), cfg("S1kdM3ss")]),
+        "SSCONFIG": (make_configs, None, [cfg(a) for a in os.environ.get("SS_ARMS", "S0slicessm S1kdM3ss").split()]),
         # S1 (CineMA distillation) is shared: the student architecture is identical in both arms
         "S1SS": (lambda: [PY, str(scripts / "pg_campaign.py"), "--device", dev, "--config", str(cfg("S0slicessm")), "--out", str(dirs["S1"]), "--stage", "S1", "--resume"],
                  cfg("S0slicessm"), [dirs["S1"] / "S1_RECEIPT.json"]),
-        "SSLINK": (link_s1, None, [dirs["S0slicessm"] / "S1_RECEIPT.json", dirs["S1kdM3ss"] / "S1_RECEIPT.json"]),
+        "SSLINK": (link_s1, None, [dirs[a] / "S1_RECEIPT.json" for a in os.environ.get("SS_ARMS", "S0slicessm S1kdM3ss").split()]),
     }
     for step, (arm, name) in ARMS.items():
         spec[step] = ((lambda arm=arm: [PY, str(scripts / "pg_campaign.py"), "--device", dev, "--config", str(cfg(arm)), "--out", str(dirs[arm]), "--stage", "arms", "--arm", "A2"]),
