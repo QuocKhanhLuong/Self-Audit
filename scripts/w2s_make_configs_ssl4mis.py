@@ -31,7 +31,8 @@ def sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def build(arm: str, prepared: Path, lock: Path, tau_v: float, m3hl_checkpoint: Path | None = None, epochs: int | None = None) -> dict:
+def build(arm: str, prepared: Path, lock: Path, tau_v: float, m3hl_checkpoint: Path | None = None, epochs: int | None = None,
+          dataset: str = "acdc") -> dict:
     from self_audit.candidate_pg.config import validate_config
     from self_audit.candidate_pg.w2s_config import make_config
 
@@ -76,13 +77,16 @@ def build(arm: str, prepared: Path, lock: Path, tau_v: float, m3hl_checkpoint: P
         cfg["data"]["manifests"][role] = dict(pinned)
     assert receipt["lock"]["sha256"] == sha(lock)
     cfg["data"]["ssl4mis"] = {"lock": {"path": str(lock), "sha256": sha(lock)}, "receipt": {"path": str(receipt_path), "sha256": sha(receipt_path)}}
-    cfg["data"]["k_labeled"] = 7
+    # acdc: L7 / U63 / val10 / test20; mnms1 (M&Ms-1, scripts/ssl4mis_prepare_mnms1.py): L15 / U135 / val34 / test136
+    k, val_name, test_name = {"acdc": (7, "VAL10", "TEST20"), "mnms1": (15, "VAL34", "TEST136")}[dataset]
+    cfg["data"]["dataset"] = dataset
+    cfg["data"]["k_labeled"] = k
     cfg["data"]["unlabeled"] = "ed_es_frames_of_remaining_train_patients"
-    cfg["data"]["forbid_splits_in_training"] = ["VAL10", "TEST20"]
-    cfg["training"]["selection"] = {"split": "VAL10", "path": "student_only", "metric": "fg_dice_patient_macro"}
-    cfg["training"]["eval_splits"] = ["train_labeled", "VAL10"]
+    cfg["data"]["forbid_splits_in_training"] = [val_name, test_name]
+    cfg["training"]["selection"] = {"split": val_name, "path": "student_only", "metric": "fg_dice_patient_macro"}
+    cfg["training"]["eval_splits"] = ["train_labeled", val_name]
     cfg["training"]["eval_paths"] = ["student_only"]
-    cfg["teacher"]["select"] = "VAL10 FG of teacher region head"
+    cfg["teacher"]["select"] = f"{val_name} FG of teacher region head"
     return validate_config(cfg)
 
 
@@ -95,11 +99,12 @@ def main() -> None:
     ap.add_argument("--m3hl-checkpoint", type=Path, help="unet_best_model.pth of T-M3HL (needed for the M3 arms)")
     ap.add_argument("--epochs", type=int, help="student epoch budget (default: the config default of 100 epochs = 8000 updates)")
     ap.add_argument("--only", nargs="*", help="write only these arms (default: the five standard arms)")
+    ap.add_argument("--dataset", choices=("acdc", "mnms1"), default="acdc", help="mnms1 needs --lock <prepared>/SPLIT_LOCK.json")
     a = ap.parse_args()
     a.out_dir.mkdir(parents=True, exist_ok=True)
     for arm in (a.only or ARMS):
         path = a.out_dir / f"ssl4mis_{arm}.json"
-        path.write_text(json.dumps(build(arm, a.prepared.resolve(), a.lock.resolve(), a.tau_v, a.m3hl_checkpoint, a.epochs), indent=2, sort_keys=True) + "\n")
+        path.write_text(json.dumps(build(arm, a.prepared.resolve(), a.lock.resolve(), a.tau_v, a.m3hl_checkpoint, a.epochs, a.dataset), indent=2, sort_keys=True) + "\n")
         print(f"wrote {path} sha256 {sha(path)[:16]}")
 
 

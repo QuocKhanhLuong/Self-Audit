@@ -132,11 +132,13 @@ def _require(condition: bool, message: str) -> None:
 # ``None`` means any value (type-checked by the consumer).
 _W2S_ALTERNATIVES: dict[str, Any] = {
     "teacher.semi.threshold.clip": ([0.5, 0.95], [0.95, 0.95]),
-    "teacher.select": ("VAL18 FG of teacher region head", "VAL20 FG of teacher region head", "VAL10 FG of teacher region head"),
+    "teacher.select": ("VAL18 FG of teacher region head", "VAL20 FG of teacher region head", "VAL10 FG of teacher region head",
+                       "VAL34 FG of teacher region head"),
+    "data.dataset": ("acdc", "mnms1"),  # mnms1: M&Ms-1 in the SSL4MIS manifest schema (scripts/ssl4mis_prepare_mnms1.py)
     # SSL4MIS split campaign (70/10/20, 7 labeled patients, ED/ES-only U)
-    "data.k_labeled": (8, 7),
+    "data.k_labeled": (8, 7, 15),  # 15: M&Ms-1 10% labels
     "data.unlabeled": ("all_train_cine_frames_minus_labeled_masks", "ed_es_frames_of_remaining_train_patients"),
-    "data.forbid_splits_in_training": (["VAL18", "TEST50"], ["VAL10", "TEST20"]),
+    "data.forbid_splits_in_training": (["VAL18", "TEST50"], ["VAL10", "TEST20"], ["VAL34", "TEST136"]),
     "cbkd.variant": ("aux_code_branch", "cbkd_sa_gated", "cbkd_sa", "cbkd_sa_out"),
     "cbkd.warmup_updates_labeled_only": None,
     "training.selection": None,
@@ -237,7 +239,7 @@ def validate_config(config: Mapping[str, Any]) -> dict[str, Any]:
         _require(w2s.get("tau") == 0.95, "W2S student threshold is the fixed 0.95")
         _require(0.0 < float(w2s.get("tau_v", 0.99)) <= 1.0 and 0.0 <= float(w2s.get("alpha_max", 0.5)) <= 1.0, "invalid W2S tau_v/alpha_max")
     selection = value["training"]["selection"]
-    _require(isinstance(selection, Mapping) and selection.get("split") in ("VAL18", "VAL20", "VAL10") and selection.get("path") == "student_only"
+    _require(isinstance(selection, Mapping) and selection.get("split") in ("VAL18", "VAL20", "VAL10", "VAL34") and selection.get("path") == "student_only"
              and selection.get("metric") == "fg_dice_patient_macro", "PG selection must be student_only fg_dice_patient_macro on VAL18/VAL20")
     return value
 

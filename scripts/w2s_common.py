@@ -67,6 +67,12 @@ def clean(value: Any) -> Any:
     return value
 
 
+def split_names(cfg: dict[str, Any]) -> tuple[str, str]:
+    """Lower-case (val, test) result keys from the config: ("val10", "test20") for ACDC, ("val34", "test136") for M&Ms-1."""
+    forbid = cfg.get("data", {}).get("forbid_splits_in_training") or ["VAL10", "TEST20"]
+    return str(forbid[0]).lower(), str(forbid[1]).lower()
+
+
 def write_once(path: Path, payload: dict[str, Any]) -> None:
     tmp = path.with_name(f".{path.name}.tmp")
     tmp.write_text(json.dumps(clean(payload), indent=2, sort_keys=True, default=str) + "\n")

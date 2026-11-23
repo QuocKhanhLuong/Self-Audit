@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from w2s_common import load_config, write_once  # noqa: E402
+from w2s_common import load_config, split_names, write_once  # noqa: E402
 from w2s_ssl4mis_eval import compat_metrics, complexity, inter_slice_consistency, native_metrics, predict_records  # noqa: E402
 
 
@@ -32,6 +32,7 @@ def main() -> int:
     from self_audit.candidate_pg.student_pg import build_student
 
     cfg, device = load_config(args.config), torch.device(args.device)
+    VN, TN = split_names(cfg)  # ("val10", "test20") for ACDC, ("val34", "test136") for M&Ms-1
     ckpt = torch.load(args.run / f"resume_{args.arm}.pt", map_location="cpu", weights_only=False)
     planned = int(cfg["training"]["updates"])
     early = int(ckpt["update"]) != planned
@@ -49,12 +50,12 @@ def main() -> int:
     val = [bundle.val.load(k, labeled=True) for k in bundle.val.labeled_keys()]
     test = [] if args.val_only else [bundle.test.load(k, labeled=True) for k in bundle.test.labeled_keys()]  # --val-only never reads test20
     metrics = {}
-    splits = (("val10", val),) if args.val_only else (("val10", val), ("test20", test))
+    splits = ((VN, val),) if args.val_only else ((VN, val), (TN, test))
     inter_slice = None
     for name, frames in splits:
         records = predict_records(student, frames, device, kind="student")
         metrics[name] = {"native": native_metrics(records), "ssl4mis_compat": compat_metrics(records)}
-        if name == "val10":
+        if name == VN:
             inter_slice = inter_slice_consistency(records)
     # also the final (last-update) checkpoint, reported next to the val10-selected one (selection is never made on test20)
     final_metrics = None
@@ -96,13 +97,13 @@ def main() -> int:
     write_once(final, {"schema": "self_audit.w2s_ssl4mis.final.v1", "arm": args.name, "selected_epoch": int(ckpt["best_epoch"]),
                        "best_val_fg": float(ckpt["best_val"]), "metrics": metrics, "final_epoch_metrics": final_metrics,
                        "stopped_early": {"update": int(ckpt["update"]), "planned_updates": planned, "epochs_done": int(ckpt["update"]) / int(cfg["training"]["updates_per_epoch"])} if early else None, "epochs": cfg["training"].get("epochs", int(cfg["training"]["updates"]) // int(cfg["training"]["updates_per_epoch"])), "export": export, "cold_load": cold, "complexity": cx,
-                       "inter_slice_consistency_val10": inter_slice, "test20_opened": not args.val_only})
+                       "inter_slice_consistency_val10": inter_slice, "test20_opened": not args.val_only, "split_names": [VN, TN]})
     if args.val_only:
-        print(f"[final] {args.name} val10 FG {metrics['val10']['native']['fg_dice']:.4f} HD95 {metrics['val10']['native']['fg_hd95_mm']:.2f} mm "
+        print(f"[final] {args.name} val10 FG {metrics[VN]['native']['fg_dice']:.4f} HD95 {metrics[VN]['native']['fg_hd95_mm']:.2f} mm "
               f"| inter-slice consistency pred/GT {inter_slice['ratio']:.3f} (test20 not opened)", flush=True)
     else:
-        print(f"[final] {args.name} val10 FG {metrics['val10']['native']['fg_dice']:.4f} | test20 FG {metrics['test20']['native']['fg_dice']:.4f} "
-              f"| test20 SSL4MIS-compat Dice {metrics['test20']['ssl4mis_compat']['mean']['dice']:.4f} HD95(vox) {metrics['test20']['ssl4mis_compat']['mean']['hd95']:.2f}", flush=True)
+        print(f"[final] {args.name} val10 FG {metrics[VN]['native']['fg_dice']:.4f} | {TN} FG {metrics[TN]['native']['fg_dice']:.4f} "
+              f"| test20 SSL4MIS-compat Dice {metrics[TN]['ssl4mis_compat']['mean']['dice']:.4f} HD95(vox) {metrics[TN]['ssl4mis_compat']['mean']['hd95']:.2f}", flush=True)
     return 0
 
 

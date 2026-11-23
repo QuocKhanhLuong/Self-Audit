@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from w2s_common import load_config, write_once  # noqa: E402
+from w2s_common import load_config, split_names, write_once  # noqa: E402
 from w2s_ssl4mis_eval import compat_metrics, native_metrics, predict_records  # noqa: E402
 
 
@@ -41,6 +41,7 @@ def main() -> int:
     from self_audit.candidate_pg.student_pg import build_student
 
     cfg, device = load_config(args.config), torch.device(args.device)
+    VN, TN = split_names(cfg)
     ckpt = torch.load(args.run / f"resume_{args.arm}.pt", map_location="cpu", weights_only=False)
     if int(ckpt["best_epoch"]) != int(final["selected_epoch"]):
         raise SystemExit("checkpoint best_epoch differs from FINAL_RESULT selected_epoch")
@@ -52,21 +53,21 @@ def main() -> int:
     test = [bundle.test.load(k, labeled=True) for k in bundle.test.labeled_keys()]
 
     val_native = native_metrics(predict_records(student, val, device, kind="student"))
-    ref = float(final["metrics"]["val10"]["native"]["fg_dice"])
+    ref = float(final["metrics"][VN]["native"]["fg_dice"])
     if abs(float(val_native["fg_dice"]) - ref) > 1e-4:
         raise SystemExit(f"val10 recomputation {val_native['fg_dice']:.6f} differs from FINAL_RESULT {ref:.6f}")
     records = predict_records(student, test, device, kind="student")
-    metrics = {"test20": {"native": native_metrics(records), "ssl4mis_compat": compat_metrics(records)}}
+    metrics = {TN: {"native": native_metrics(records), "ssl4mis_compat": compat_metrics(records)}}
     final_metrics = None
     if ckpt.get("student") is not None:
         student.load_state_dict(ckpt["student"], strict=True)
         rec_last = predict_records(student, test, device, kind="student")
-        final_metrics = {"test20": {"native": native_metrics(rec_last), "ssl4mis_compat": compat_metrics(rec_last)}}
+        final_metrics = {TN: {"native": native_metrics(rec_last), "ssl4mis_compat": compat_metrics(rec_last)}}
     write_once(out, {"schema": "self_audit.w2s_ssl4mis.test20_open.v1", "arm": args.name, "selected_epoch": int(ckpt["best_epoch"]),
                      "selection": "val10 student-only FG Dice (made before this script)", "val10_recomputed_fg": float(val_native["fg_dice"]),
-                     "metrics": metrics, "final_epoch_metrics": final_metrics, "test20_opened": True})
-    t = metrics["test20"]
-    print(f"[test20] {args.name} test20 FG {t['native']['fg_dice']:.4f} HD95 {t['native']['fg_hd95_mm']:.2f} mm | SSL4MIS-compat Dice "
+                     "metrics": metrics, "final_epoch_metrics": final_metrics, "test20_opened": True, "split_names": [VN, TN]})
+    t = metrics[TN]
+    print(f"[test20] {args.name} {TN} FG {t['native']['fg_dice']:.4f} HD95 {t['native']['fg_hd95_mm']:.2f} mm | SSL4MIS-compat Dice "
           f"{t['ssl4mis_compat']['mean']['dice']:.4f} HD95(vox) {t['ssl4mis_compat']['mean']['hd95']:.2f}", flush=True)
     return 0
 

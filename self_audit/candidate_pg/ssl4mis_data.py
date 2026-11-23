@@ -48,6 +48,14 @@ class Ssl4misData(FuseData):
             raise ValueError("SSL4MIS manifest schema, role, synthetic flag or class mapping mismatch")
         self.role, self.synthetic = role, False
         self._schema = SCHEMA
+        # ACDC manifests carry no counts (L7/U63/val10/test20); other datasets (M&Ms-1: L15/U135/val34/test136) declare theirs
+        expected = dict(EXPECTED)
+        if "expected_counts" in m:
+            declared = m["expected_counts"]
+            if set(declared) != set(EXPECTED) or not all(isinstance(v, int) and v > 0 for v in declared.values()):
+                raise ValueError("expected_counts must declare positive labeled/unlabeled/val/test counts")
+            expected = dict(declared)
+        self.expected_counts = expected
         self._images: dict[str, np.ndarray] = {}
         self._geometry: dict[str, dict[str, Any]] = {}
         self._records: dict[str, dict[str, Any]] = {}
@@ -56,10 +64,10 @@ class Ssl4misData(FuseData):
             labeled, unlabeled = list(m["labeled"]), list(m["unlabeled"])
             self._labeled_ids = {r["id"] for r in labeled}
             u_ids = [r["id"] for r in unlabeled]
-            if len(self._labeled_ids) != EXPECTED["labeled"] or len(u_ids) != EXPECTED["unlabeled"] or len(set(u_ids)) != len(u_ids):
-                raise ValueError("SSL4MIS TRAIN must hold exactly L7 and U63")
+            if len(self._labeled_ids) != expected["labeled"] or len(u_ids) != expected["unlabeled"] or len(set(u_ids)) != len(u_ids):
+                raise ValueError(f"SSL4MIS TRAIN must hold exactly L{expected['labeled']} and U{expected['unlabeled']}")
             if self._labeled_ids & set(u_ids) or set(m["patients"]) != set(u_ids):
-                raise ValueError("SSL4MIS TRAIN L and U must be disjoint and patients must equal U63")
+                raise ValueError("SSL4MIS TRAIN L and U must be disjoint and patients must equal U")
             self._patients = tuple(sorted(u_ids))
             for rec in labeled:
                 if set(rec) != {"id", "image", "image_sha256", "phases", "masks"}:
@@ -73,8 +81,8 @@ class Ssl4misData(FuseData):
                 self._records[rec["id"]] = rec
         else:
             records = list(m["patients"])
-            if len(records) != EXPECTED[role] or len({r["id"] for r in records}) != len(records):
-                raise ValueError(f"SSL4MIS {role} must hold exactly {EXPECTED[role]} unique patients")
+            if len(records) != expected[role] or len({r["id"] for r in records}) != len(records):
+                raise ValueError(f"SSL4MIS {role} must hold exactly {expected[role]} unique patients")
             self._patients = tuple(sorted(r["id"] for r in records))
             self._labeled_ids = set()
             for rec in records:
@@ -127,11 +135,11 @@ class Ssl4misData(FuseData):
         if self.role == "train":
             if labeled:
                 if pid not in self._labeled_by_id:
-                    raise ValueError("labeled load is restricted to L7")
+                    raise ValueError("labeled load is restricted to the labeled TRAIN patients")
                 record = self._labeled_by_id[pid]
             else:
                 if pid not in self._records:
-                    raise ValueError("U load is restricted to U63")
+                    raise ValueError("U load is restricted to the unlabeled TRAIN patients")
                 record = self._records[pid]
         else:
             if not labeled or pid not in self._records:
