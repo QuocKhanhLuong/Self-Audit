@@ -56,6 +56,10 @@ class Ssl4misData(FuseData):
                 raise ValueError("expected_counts must declare positive labeled/unlabeled/val/test counts")
             expected = dict(declared)
         self.expected_counts = expected
+        # frames stored per case: ED/ES (0, 1) for cine datasets; a single frame (0,) for one-volume datasets such as LA 2018
+        self._stages = tuple(int(v) for v in m.get("stages", _STAGES))
+        if self._stages not in ((0, 1), (0,)):
+            raise ValueError("stages must be [0, 1] (ED/ES) or [0] (single volume)")
         self._images: dict[str, np.ndarray] = {}
         self._geometry: dict[str, dict[str, Any]] = {}
         self._records: dict[str, dict[str, Any]] = {}
@@ -98,14 +102,14 @@ class Ssl4misData(FuseData):
             raise ValueError(f"image SHA256 mismatch for {pid}")
         cine = np.load(image_path, mmap_mode="r", allow_pickle=False)
         geometry = _geometry(self.manifest["geometry"]["by_patient"][pid])
-        if cine.ndim != 4 or cine.shape[0] != 2 or tuple(cine.shape[1:]) != tuple(geometry["shape"]):
-            raise ValueError(f"{pid}: expected [2,D,H,W] ED/ES stack matching the native geometry")
+        if cine.ndim != 4 or cine.shape[0] != len(self._stages) or tuple(cine.shape[1:]) != tuple(geometry["shape"]):
+            raise ValueError(f"{pid}: expected [{len(self._stages)},D,H,W] frame stack matching the native geometry")
         if not np.isfinite(cine).all() or cine.min() < 0 or cine.max() > 1:
             raise ValueError(f"{pid}: image must be finite and normalized to [0,1]")
         self._images[pid], self._geometry[pid] = cine, geometry
         if labeled:
-            if rec["phases"] != {"ED": 0, "ES": 1} or set(rec["masks"]) != {"0", "1"}:
-                raise ValueError(f"{pid}: labeled record must declare exactly the ED/ES targets")
+            if sorted(rec["phases"].values()) != list(self._stages) or set(rec["masks"]) != {str(t) for t in self._stages}:
+                raise ValueError(f"{pid}: labeled record must declare exactly one target per stored frame")
             for frame, mask in rec["masks"].items():
                 mask_path = Path(mask["path"])
                 if _sha(mask_path) != mask["sha256"]:
@@ -120,16 +124,16 @@ class Ssl4misData(FuseData):
 
     def labeled_keys(self) -> list[FrameKey]:
         if self.role == "train":
-            return [(pid, t) for pid in sorted(self._labeled_by_id) for t in _STAGES]
-        return [(pid, t) for pid in self._patients for t in _STAGES]
+            return [(pid, t) for pid in sorted(self._labeled_by_id) for t in self._stages]
+        return [(pid, t) for pid in self._patients for t in self._stages]
 
     def unlabeled_keys(self) -> list[FrameKey]:
         if self.role != "train":
             raise ValueError("unlabeled_keys are available only for TRAIN")
-        return [(pid, t) for pid in self._patients for t in _STAGES]
+        return [(pid, t) for pid in self._patients for t in self._stages]
 
     def load(self, key: FrameKey, *, labeled: bool) -> Frame:
-        if not isinstance(key, tuple) or len(key) != 2 or key[1] not in _STAGES:
+        if not isinstance(key, tuple) or len(key) != 2 or key[1] not in self._stages:
             raise ValueError("invalid SSL4MIS frame key")
         pid, t = key
         if self.role == "train":

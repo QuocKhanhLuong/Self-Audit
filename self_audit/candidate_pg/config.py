@@ -134,7 +134,7 @@ _W2S_ALTERNATIVES: dict[str, Any] = {
     "teacher.semi.threshold.clip": ([0.5, 0.95], [0.95, 0.95]),
     "teacher.select": ("VAL18 FG of teacher region head", "VAL20 FG of teacher region head", "VAL10 FG of teacher region head",
                        "VAL34 FG of teacher region head"),
-    "data.dataset": ("acdc", "mnms1"),  # mnms1: M&Ms-1 in the SSL4MIS manifest schema (scripts/ssl4mis_prepare_mnms1.py)
+    "data.dataset": ("acdc", "mnms1", "la2018"),  # la2018: LA single volumes, LA stored in class slot 3  # mnms1: M&Ms-1 in the SSL4MIS manifest schema (scripts/ssl4mis_prepare_mnms1.py)
     # SSL4MIS split campaign (70/10/20, 7 labeled patients, ED/ES-only U)
     "data.k_labeled": (8, 7, 15),  # 15: M&Ms-1 10% labels
     "data.unlabeled": ("all_train_cine_frames_minus_labeled_masks", "ed_es_frames_of_remaining_train_patients"),

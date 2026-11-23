@@ -57,7 +57,8 @@ def main() -> int:
     if abs(float(val_native["fg_dice"]) - ref) > 1e-4:
         raise SystemExit(f"val10 recomputation {val_native['fg_dice']:.6f} differs from FINAL_RESULT {ref:.6f}")
     records = predict_records(student, test, device, kind="student")
-    metrics = {TN: {"native": native_metrics(records), "ssl4mis_compat": compat_metrics(records)}}
+    metrics = {TN: {"native": native_metrics(records), "ssl4mis_compat": compat_metrics(records),
+                   "ssl4mis_compat_mm": compat_metrics(records, voxelspacing_key="spacing_zyx")}}
     final_metrics = None
     if ckpt.get("student") is not None:
         student.load_state_dict(ckpt["student"], strict=True)

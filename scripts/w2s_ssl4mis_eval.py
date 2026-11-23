@@ -67,11 +67,13 @@ def native_metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
             "RV": per.get("RV"), "MYO": per.get("MYO"), "LV": per.get("LV"), "per_patient": result.get("per_patient", {})}
 
 
-def compat_metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
+def compat_metrics(records: list[dict[str, Any]], *, voxelspacing_key: str | None = None) -> dict[str, Any]:
+    """SSL4MIS metrics (Dice, Jaccard, HD95, ASD); in voxels by default, in mm with ``voxelspacing_key="spacing_zyx"``."""
     from self_audit.candidate_pg.evaluation_ssl4mis_compat import evaluate_volumes
 
-    rows = [{"patient": r["patient"], "frame": r["frame"], "target": r["target"].numpy(), "prediction": r["prediction"].numpy()} for r in records]
-    return evaluate_volumes(rows)
+    rows = [{"patient": r["patient"], "frame": r["frame"], "target": r["target"].numpy(), "prediction": r["prediction"].numpy(),
+             "geometry": r["geometry"]} for r in records]
+    return evaluate_volumes(rows, voxelspacing_key=voxelspacing_key)
 
 
 def complexity(model: Any, frame: Any, device: Any) -> dict[str, Any]:
