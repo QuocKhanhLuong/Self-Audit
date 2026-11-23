@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""SliceSSM width ablation (S/M/L), resumable.  S = the finished S0-slicessm (widths 24,48,96,160,192); M and L widen every stage (x1.5, x2).
+"""SliceSSM width ablation (S/M/L), resumable.  M = the finished S0-slicessm (widths 24,48,96,160,192, 2.53 M); S narrows every stage (x2/3), L widens it (x1.5).
 
-One size per invocation (``--size M`` or ``--size L``; run both in parallel).  Steps: SMCONFIG -> S1SM -> SMLINK -> S0SM -> S0SMFINAL -> T20SM.
+One size per invocation (``--size S`` or ``--size L``; run both in parallel).  Steps: SMCONFIG -> S1SM -> SMLINK -> S0SM -> S0SMFINAL -> T20SM.
 Everything but the widths (and the lifted 3 M parameter cap) is the S0-slicessm recipe: UniMatch without teacher, 150 epochs, seed 42, val10 selection, the same
 shift-recovery auxiliary.  A wider student cannot load the S1-SS artifact, so S1 (CineMA distillation, 10,000 updates, same ED/ES data of the TRAIN patients) is
 re-run per size.  FINAL is val10 only; test20 is opened once afterwards (``w2s_open_test20.py``) for the report, not for any decision.
@@ -27,7 +27,7 @@ ALL = ["SMCONFIG", "S1SM", "SMLINK", "S0SM", "S0SMFINAL", "T20SM"]
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--size", choices=("M", "L"), required=True)
+    ap.add_argument("--size", choices=("S", "L"), required=True)
     ap.add_argument("--steps", default=" ".join(ALL))
     ap.add_argument("--device", default="cuda")
     ap.add_argument("--poll-seconds", type=float, default=5.0)

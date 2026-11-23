@@ -15,7 +15,7 @@ import json
 import time
 from pathlib import Path
 
-WIDTHS = {"S": (24, 48, 96, 160, 192), "M": (40, 72, 144, 240, 288), "L": (48, 96, 192, 320, 384)}
+WIDTHS = {"S": (16, 32, 64, 112, 128), "M": (24, 48, 96, 160, 192), "L": (40, 72, 144, 240, 288)}
 
 
 def read_jsonl(path: Path) -> list[dict]:
@@ -105,7 +105,7 @@ def main() -> int:
             for k in runs:
                 w.writerow([e, k, *[data[k].get(e, {}).get(c, "") for c in cols]])
     L = ["# SliceSSM width ablation S / M / L: per-epoch report", "",
-         "Same recipe for all sizes (UniMatch, no teacher, 150 epochs, seed 42); only the widths differ (S 24-48-96-160-192, M x1.5, L x2). Metrics are val10 (10 patients, one seed), "
+         "Same recipe for all sizes (UniMatch, no teacher, 150 epochs, seed 42); only the widths differ (S 16-32-64-112-128, M = the existing 24-48-96-160-192 model, L 40-72-144-240-288). Metrics are val10 (10 patients, one seed), "
          "native units (HD95/ASD in mm) unless marked `vox` (SSL4MIS protocol, voxels). `*` marks the val10-selected epoch. Empty cells: epoch not yet reached.", "",
          "## Model size and inference time (deployed model, batch 1, 1x1x10x256x232, fp32)", "",
          "| | S | M | L |", "|---|---|---|---|",

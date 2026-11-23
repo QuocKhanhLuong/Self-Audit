@@ -27,12 +27,12 @@ def _flat(x, p=""):
     return {p: json.dumps(x)}
 
 
-def test_m_and_l_configs_differ_from_s_only_in_widths_and_cap(tmp_path):
+def test_s_and_l_configs_differ_from_m_only_in_widths_and_cap(tmp_path):
     out, lock = ssl._synthetic_prepared(tmp_path)
-    s = _flat(mk.build("S0slicessm", out, lock, 0.99, epochs=150))
+    base = _flat(mk.build("S0slicessm", out, lock, 0.99, epochs=150))
     for arm, widths in mk.SLICESSM_WIDTHS.items():
         cfg = _flat(mk.build(arm, out, lock, 0.99, epochs=150))
-        diff = sorted(k for k in set(cfg) | set(s) if cfg.get(k) != s.get(k))
+        diff = sorted(k for k in set(cfg) | set(base) if cfg.get(k) != base.get(k))
         assert diff == ["/student/slicessm/channels", "/student/slicessm/parameter_cap"], (arm, diff)
         assert json.loads(cfg["/student/slicessm/channels"]) == list(widths) and cfg["/student/slicessm/parameter_cap"] == "null"
 
@@ -40,12 +40,11 @@ def test_m_and_l_configs_differ_from_s_only_in_widths_and_cap(tmp_path):
 def test_widths_scale_parameters_and_the_default_keeps_the_cap(tmp_path):
     out, lock = ssl._synthetic_prepared(tmp_path)
     counts = {}
-    for arm in ("S0slicessm", "S0slicessmM", "S0slicessmL"):
+    for arm in ("S0slicessmS", "S0slicessm", "S0slicessmL"):
         model = build_slicessm_student(mk.build(arm, out, lock, 0.99, epochs=150))
         counts[arm] = sum(p.numel() for p in model.parameters())
-    assert counts["S0slicessm"] == 2_553_001 or counts["S0slicessm"] < 3_000_000
-    assert counts["S0slicessm"] < counts["S0slicessmM"] < counts["S0slicessmL"]
-    assert counts["S0slicessmM"] > 3_000_000 and counts["S0slicessmL"] > counts["S0slicessmM"]
+    assert counts["S0slicessm"] == 2_553_001
+    assert counts["S0slicessmS"] < counts["S0slicessm"] < counts["S0slicessmL"] and counts["S0slicessmL"] > 3_000_000
     cfg = mk.build("S0slicessmL", out, lock, 0.99, epochs=150)
     cfg["student"]["slicessm"]["parameter_cap"] = 3_000_000
     with pytest.raises(ValueError, match="cap"):
@@ -55,7 +54,7 @@ def test_widths_scale_parameters_and_the_default_keeps_the_cap(tmp_path):
         build_slicessm_student(cfg)
 
 
-@pytest.mark.parametrize("arm", ["S0slicessmM", "S0slicessmL"])
+@pytest.mark.parametrize("arm", ["S0slicessmS", "S0slicessmL"])
 def test_larger_widths_forward_export_and_cold_load(arm, tmp_path):
     out, lock = ssl._synthetic_prepared(tmp_path)
     cfg = mk.build(arm, out, lock, 0.99, epochs=150)

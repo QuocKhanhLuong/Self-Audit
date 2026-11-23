@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SLICESSM_SML.md: S/M/L width ablation table from the three finished arms (S = the existing S0-slicessm run)."""
+"""SLICESSM_SML.md: S/M/L width ablation table from the three finished arms (M = the existing S0-slicessm run)."""
 from __future__ import annotations
 
 import argparse
@@ -28,8 +28,8 @@ def main() -> int:
                      "tfd": t["final_epoch_metrics"]["test20"]["native"]["fg_dice"], "cos_tr": r.get("cosine_train"), "cos_ho": r.get("cosine_holdout"),
                      "isc": f["inter_slice_consistency_val10"]["ratio"]})
     L = ["# SliceSSM width ablation S / M / L (UniMatch, no teacher, 150 epochs, seed 42; one run per size)", "",
-         "S = the finished S0-slicessm (widths 24,48,96,160,192). M = x1.5 (40,72,144,240,288), L = x2 (48,96,192,320,384); depth, blocks and every other option are identical;",
-         "the 3 M parameter cap is lifted for M and L. Each size has its own S1 (CineMA distillation) because a wider student cannot load the S1-SS artifact. val10 selects the epoch;",
+         "M = the finished S0-slicessm (widths 24,48,96,160,192). S = x2/3 (16,32,64,112,128), L = x1.5 (40,72,144,240,288); depth, blocks and every other option are identical;",
+         "the 3 M parameter cap is lifted for L. Each size has its own S1 (CineMA distillation) because a wider student cannot load the S1-SS artifact. val10 selects the epoch;",
          "test20 was opened once per arm after selection and decides nothing. n = 10 val and 20 test patients, one seed: differences of a few tenths of a Dice point are within noise.", "",
          "| | S | M | L |", "|---|---|---|---|",
          "| parameters (deployed) | " + " | ".join(f"{r['params'] / 1e6:.2f} M" for r in rows) + " |",
