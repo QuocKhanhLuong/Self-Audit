@@ -418,10 +418,18 @@ def load_slicessm_export(path: Any) -> SliceSSMStudent:
 
 
 def build_slicessm_student(config: Mapping[str, Any] | None = None) -> SliceSSMStudent:
-    model = SliceSSMStudent(config)
+    """``student.slicessm.channels`` (five widths, default :data:`ANISO_CHANNELS`) and ``student.slicessm.parameter_cap`` (default 3 M, ``null`` = none)
+    are the only knobs of the S/M/L width ablation; every other option and module is unchanged."""
+    model_cfg = (config or {}).get("model", config or {})
+    opts = (model_cfg.get("student", {}) if isinstance(model_cfg, Mapping) else {}).get("slicessm", {}) or {}
+    channels = tuple(int(v) for v in opts.get("channels", ANISO_CHANNELS))
+    if len(channels) != 5 or any(c < 8 or c % 8 for c in channels):
+        raise ValueError("student.slicessm.channels must be five widths that are multiples of 8")
+    cap = opts.get("parameter_cap", PARAMETER_CAP)
+    model = SliceSSMStudent(config, channels=channels)
     total = sum(p.numel() for p in model.parameters())
-    if total > PARAMETER_CAP:
-        raise ValueError(f"SliceSSMStudent has {total} parameters, above the {PARAMETER_CAP} cap")
+    if cap is not None and total > int(cap):
+        raise ValueError(f"SliceSSMStudent has {total} parameters, above the {int(cap)} cap")
     return model
 
 

@@ -20,11 +20,15 @@ sys.path.insert(0, str(ROOT))
 
 ARMS = ("W", "S0", "S1kd", "S2arb", "S2main")
 # written only on request (--only), so the configs of the running arms stay byte-identical; M3*: M3HL teacher (campaign m3hl-teacher-20261121)
-EXTRA_ARMS = ("A4SA", "S1kdM3", "S2arbM3", "S2M3", "S2arbM3E150", "S0unet150", "S0aniso", "S0slicessm", "S1kdM3ss")  # S0slicessm/S1kdM3ss: SliceSSMStudent arms (no teacher / M3HL KD); S0unet150/S0aniso: architecture screening arms (UniMatch, no teacher); S2arbM3E150: S2-m3hl-arb rerun at 150 epochs (its own run dir; the 100-epoch S2arbM3 is untouched)
-ENGINE_ARM = {"S0": "A2", "S1kd": "A2", "S2arb": "A2", "S2main": "A4", "A4SA": "A4", "S1kdM3": "A2", "S2arbM3": "A2", "S2M3": "A4", "S2arbM3E150": "A2", "S0unet150": "A2", "S0aniso": "A2", "S0slicessm": "A2", "S1kdM3ss": "A2"}
+EXTRA_ARMS = ("A4SA", "S1kdM3", "S2arbM3", "S2M3", "S2arbM3E150", "S0unet150", "S0aniso", "S0slicessm", "S1kdM3ss", "S0slicessmM", "S0slicessmL")  # S0slicessmM/L: width ablation (S = S0slicessm); S0slicessm/S1kdM3ss: SliceSSMStudent arms (no teacher / M3HL KD); S0unet150/S0aniso: architecture screening arms (UniMatch, no teacher); S2arbM3E150: S2-m3hl-arb rerun at 150 epochs (its own run dir; the 100-epoch S2arbM3 is untouched)
+ENGINE_ARM = {"S0": "A2", "S1kd": "A2", "S2arb": "A2", "S2main": "A4", "A4SA": "A4", "S1kdM3": "A2", "S2arbM3": "A2", "S2M3": "A4", "S2arbM3E150": "A2", "S0unet150": "A2", "S0aniso": "A2", "S0slicessm": "A2", "S1kdM3ss": "A2", "S0slicessmM": "A2", "S0slicessmL": "A2"}
 
 
 ANISO_CINEMA_REVISION = "b1251ee50423bceeca84c080782fc3bc7756dea6"  # the revision the existing S1 was distilled from
+
+
+# S = the existing S0slicessm widths (24, 48, 96, 160, 192; 2.53 M); M = x1.5 and L = x2, rounded to multiples of 8
+SLICESSM_WIDTHS = {"S0slicessmM": (40, 72, 144, 240, 288), "S0slicessmL": (48, 96, 192, 320, 384)}
 
 
 def sha(path: Path) -> str:
@@ -35,7 +39,7 @@ def build(arm: str, prepared: Path, lock: Path, tau_v: float, m3hl_checkpoint: P
     from self_audit.candidate_pg.config import validate_config
     from self_audit.candidate_pg.w2s_config import make_config
 
-    base_arm = {"S1kd": "S0", "S2main": "S2", "A4SA": "W", "S1kdM3": "S0", "S2arbM3": "S2arb", "S2M3": "S2", "S2arbM3E150": "S2arb", "S0unet150": "S0", "S0aniso": "S0", "S0slicessm": "S0", "S1kdM3ss": "S0"}.get(arm, arm)
+    base_arm = {"S1kd": "S0", "S2main": "S2", "A4SA": "W", "S1kdM3": "S0", "S2arbM3": "S2arb", "S2M3": "S2", "S2arbM3E150": "S2arb", "S0unet150": "S0", "S0aniso": "S0", "S0slicessm": "S0", "S1kdM3ss": "S0", "S0slicessmM": "S0", "S0slicessmL": "S0"}.get(arm, arm)
     cfg = make_config(base_arm, tau_v=tau_v)
     if arm == "A4SA":
         # A4-SA (PG fusion target + CBKD-SA) exactly as scripts/cbkd_sa_make_config.py: only the split / selection fields below
@@ -46,13 +50,16 @@ def build(arm: str, prepared: Path, lock: Path, tau_v: float, m3hl_checkpoint: P
         # AnisoStudent: same recipe as S0, only the architecture differs; the CineMA revision is pinned (the S1-ANISO stage downloads it)
         cfg["student"]["arch"] = "aniso"
         cfg["cinema_init"]["hf_revision"] = ANISO_CINEMA_REVISION
-    if arm in ("S0slicessm", "S1kdM3ss"):
+    if arm in ("S0slicessm", "S1kdM3ss", "S0slicessmM", "S0slicessmL"):
         # SliceSSMStudent (B1 physical-step z-SSM + B2 aligned slice fusion, <= 3 M parameters): same recipe as S0 / S1kdM3,
         # only the architecture and the shift-recovery auxiliary differ; CineMA revision pinned as for the aniso arm
         cfg["student"]["arch"] = "slicessm"
         cfg["student"]["slicessm"] = {"spacing_mode": "physical", "spacing_ref_mm": 10.0, "align": True, "ssm_blocks": [1, 2], "state": 8,
                                       "shift_aux": {"weight": 0.1, "max_px": 8, "start_update": 0}}
         cfg["cinema_init"]["hf_revision"] = ANISO_CINEMA_REVISION
+        if arm in SLICESSM_WIDTHS:  # width ablation: only the encoder/decoder widths change (and the 3 M parameter cap is lifted)
+            cfg["student"]["slicessm"]["channels"] = list(SLICESSM_WIDTHS[arm])
+            cfg["student"]["slicessm"]["parameter_cap"] = None
     if arm in ("S1kd", "S1kdM3", "S1kdM3ss"):
         cfg["pg"]["target_mode"] = "teacher"
     if arm.endswith("M3") or arm in ("S2arbM3E150", "S1kdM3ss"):
