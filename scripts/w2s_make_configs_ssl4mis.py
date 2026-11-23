@@ -32,7 +32,7 @@ def sha(path: Path) -> str:
 
 
 def build(arm: str, prepared: Path, lock: Path, tau_v: float, m3hl_checkpoint: Path | None = None, epochs: int | None = None,
-          dataset: str = "acdc") -> dict:
+          dataset: str = "acdc", k_labeled: int | None = None) -> dict:
     from self_audit.candidate_pg.config import validate_config
     from self_audit.candidate_pg.w2s_config import make_config
 
@@ -93,7 +93,7 @@ def build(arm: str, prepared: Path, lock: Path, tau_v: float, m3hl_checkpoint: P
     # acdc: L7 / U63 / val10 / test20; mnms1 (M&Ms-1, scripts/ssl4mis_prepare_mnms1.py): L15 / U135 / val34 / test136
     k, val_name, test_name = {"acdc": (7, "VAL10", "TEST20"), "mnms1": (15, "VAL34", "TEST136"), "la2018": (8, "VAL10", "TEST20")}[dataset]
     cfg["data"]["dataset"] = dataset
-    cfg["data"]["k_labeled"] = k
+    cfg["data"]["k_labeled"] = int(k_labeled) if k_labeled is not None else k  # override for the 5% settings
     cfg["data"]["unlabeled"] = "ed_es_frames_of_remaining_train_patients"
     cfg["data"]["forbid_splits_in_training"] = [val_name, test_name]
     cfg["training"]["selection"] = {"split": val_name, "path": "student_only", "metric": "fg_dice_patient_macro"}
@@ -112,12 +112,13 @@ def main() -> None:
     ap.add_argument("--m3hl-checkpoint", type=Path, help="unet_best_model.pth of T-M3HL (needed for the M3 arms)")
     ap.add_argument("--epochs", type=int, help="student epoch budget (default: the config default of 100 epochs = 8000 updates)")
     ap.add_argument("--only", nargs="*", help="write only these arms (default: the five standard arms)")
+    ap.add_argument("--k-labeled", type=int, help="labeled patients when it differs from the dataset default (5%%: ACDC 3, M&Ms-1 7, LA 4)")
     ap.add_argument("--dataset", choices=("acdc", "mnms1", "la2018"), default="acdc", help="mnms1 / la2018 need --lock <prepared>/SPLIT_LOCK.json")
     a = ap.parse_args()
     a.out_dir.mkdir(parents=True, exist_ok=True)
     for arm in (a.only or ARMS):
         path = a.out_dir / f"ssl4mis_{arm}.json"
-        path.write_text(json.dumps(build(arm, a.prepared.resolve(), a.lock.resolve(), a.tau_v, a.m3hl_checkpoint, a.epochs, a.dataset), indent=2, sort_keys=True) + "\n")
+        path.write_text(json.dumps(build(arm, a.prepared.resolve(), a.lock.resolve(), a.tau_v, a.m3hl_checkpoint, a.epochs, a.dataset, a.k_labeled), indent=2, sort_keys=True) + "\n")
         print(f"wrote {path} sha256 {sha(path)[:16]}")
 
 

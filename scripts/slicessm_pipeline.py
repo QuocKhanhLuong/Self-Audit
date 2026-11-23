@@ -62,6 +62,7 @@ def main(argv: list[str] | None = None) -> int:
             raise SystemExit("M3HL_CHECKPOINT is required (the S1kd-M3HL-slicessm arm uses the frozen M3HL teacher)")
         arms = os.environ.get("SS_ARMS", "S0slicessm S1kdM3ss").split()
         extra = ["--dataset", dataset] + (["--lock", os.environ["SS_LOCK"]] if os.environ.get("SS_LOCK") else [])
+        extra += ["--k-labeled", os.environ["SS_K"]] if os.environ.get("SS_K") else []
         return [PY, str(scripts / "w2s_make_configs_ssl4mis.py"), "--prepared", str(prep), "--out-dir", str(cfgdir), "--tau-v", "0.99",
                 "--only", *arms, "--epochs", "150", "--m3hl-checkpoint", ckpt, *extra]
 

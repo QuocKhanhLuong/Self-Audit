@@ -136,7 +136,7 @@ _W2S_ALTERNATIVES: dict[str, Any] = {
                        "VAL34 FG of teacher region head"),
     "data.dataset": ("acdc", "mnms1", "la2018"),  # la2018: LA single volumes, LA stored in class slot 3  # mnms1: M&Ms-1 in the SSL4MIS manifest schema (scripts/ssl4mis_prepare_mnms1.py)
     # SSL4MIS split campaign (70/10/20, 7 labeled patients, ED/ES-only U)
-    "data.k_labeled": (8, 7, 15),  # 15: M&Ms-1 10% labels
+    "data.k_labeled": (8, 7, 15, 3, 4),  # 15: M&Ms-1 10%; 5% settings: ACDC 3, M&Ms-1 7, LA 4
     "data.unlabeled": ("all_train_cine_frames_minus_labeled_masks", "ed_es_frames_of_remaining_train_patients"),
     "data.forbid_splits_in_training": (["VAL18", "TEST50"], ["VAL10", "TEST20"], ["VAL34", "TEST136"]),
     "cbkd.variant": ("aux_code_branch", "cbkd_sa_gated", "cbkd_sa", "cbkd_sa_out"),

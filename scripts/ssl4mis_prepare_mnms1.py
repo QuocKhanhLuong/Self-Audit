@@ -46,13 +46,14 @@ def prepare(source_receipt: Path, h5_receipt: Path, out: Path) -> dict:
         raise SystemExit("M&Ms-1 receipts are not READY")
     subjects = src["subjects"]
     roles = {r: sorted(s for s, v in subjects.items() if v["role"] == r) for r in ("train_labeled", "val", "test")}
-    l15 = sorted(h5["labeled_patients"])
-    if len(l15) != EXPECTED["labeled"] or not set(l15) <= set(roles["train_labeled"]):
-        raise SystemExit("L15 of the h5 receipt must be 15 Training/Labeled patients")
+    l15 = sorted(h5["labeled_patients"] if "labeled_patients" in h5 else h5["l7"])  # L15 (10%) or L7 (5%) of the h5 receipt
+    expected = dict(EXPECTED, labeled=len(l15), unlabeled=len(roles["train_labeled"]) - len(l15))
+    if len(l15) not in (7, 15) or not set(l15) <= set(roles["train_labeled"]):
+        raise SystemExit("the h5 receipt must name 7 or 15 Training/Labeled patients")
     split = {"train_l": l15, "train_u": sorted(set(roles["train_labeled"]) - set(l15)), "val": roles["val"], "test": roles["test"]}
     for key, name in (("train_u", "unlabeled"), ("val", "val"), ("test", "test")):
-        if len(split[key]) != EXPECTED[name]:
-            raise SystemExit(f"{key} has {len(split[key])} patients, expected {EXPECTED[name]}")
+        if len(split[key]) != expected[name]:
+            raise SystemExit(f"{key} has {len(split[key])} patients, expected {expected[name]}")
     out.mkdir(parents=True)
     arrays = out / "arrays"
     arrays.mkdir()
@@ -125,7 +126,7 @@ def prepare(source_receipt: Path, h5_receipt: Path, out: Path) -> dict:
 
     def base(role: str, ids: list[str]) -> dict:
         return {"schema": SCHEMA, "role": role, "dataset": "mnms1", "synthetic": False, "class_mapping": _CLASSES,
-                "expected_counts": EXPECTED, "lock": {"path": str(lock_path), "sha256": sha256_file(lock_path)},
+                "expected_counts": expected, "lock": {"path": str(lock_path), "sha256": sha256_file(lock_path)},
                 "normalization": "global cine percentiles 0.5/99.5 over the full cine, clip [0,1]; only ED/ES frames stored",
                 "geometry": {"by_patient": {p: geometry[p] for p in ids}}, "source_frames": {p: frames_of[p] for p in ids}}
 
