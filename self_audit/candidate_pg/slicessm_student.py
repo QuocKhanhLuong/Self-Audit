@@ -227,6 +227,8 @@ class SliceSSMStudent(AnisoStudent):
         mk = lambda dim: PhysZSSM(dim, state=state, spacing_mode=self.spacing_mode, spacing_ref_mm=self.spacing_ref_mm)  # noqa: E731
         self.zssm3 = nn.ModuleList(mk(c3) for _ in range(n3))
         self.zssm4 = nn.ModuleList(mk(c4) for _ in range(n4))
+        # modules removed by an ablation: their keys in a full-model S1 artifact may be dropped at import
+        self.s1_ignorable_prefixes = tuple(p for p, removed in (("align3.", self.align3 is None), ("zssm3.", n3 < 1), ("zssm4.", n4 < 2)) if removed)
 
     def _encode_to_e3(self, image: Tensor, geometry: Any, slice_valid: Tensor | None):
         if image.ndim != 5 or image.shape[1] != 1 or not image.is_floating_point() or not torch.isfinite(image).all():

@@ -297,6 +297,13 @@ def _load_official_encoder(source: CinemaSource, device: torch.device) -> nn.Mod
     with safe_open(source.weights_path, framework="pt", device="cpu") as handle:
         for key in handle.keys():
             state[key] = handle.get_tensor(key)
+    # An ablated student (e.g. SliceSSMStudent without SliceAlign or z-SSM blocks) declares the prefixes of the modules it
+    # removed; artifact keys under exactly those prefixes are dropped (recorded), every other unexpected key is still an error.
+    ignorable = tuple(getattr(model, "s1_ignorable_prefixes", ()) or ())
+    model_keys = set(model.state_dict())
+    dropped = sorted(k for k in state if k not in model_keys and ignorable and k.startswith(ignorable))
+    if dropped:
+        state = {k: v for k, v in state.items() if k not in dropped}
     missing, unexpected = model.load_state_dict(state, strict=False)
     if missing or unexpected:
         raise ValueError(f"strict CineMA pretrained load failed: missing={missing}, unexpected={unexpected}")
@@ -1058,13 +1065,21 @@ def load_encoder_artifact(path: str | Path, model: nn.Module, *, device: torch.d
     state = payload.get("model")
     if not isinstance(state, Mapping):
         raise ValueError("CineMA S1 artifact has no encoder model state")
+    # An ablated student (e.g. SliceSSMStudent without SliceAlign or z-SSM blocks) declares the prefixes of the modules it
+    # removed; artifact keys under exactly those prefixes are dropped (recorded), every other unexpected key is still an error.
+    ignorable = tuple(getattr(model, "s1_ignorable_prefixes", ()) or ())
+    model_keys = set(model.state_dict())
+    dropped = sorted(k for k in state if k not in model_keys and ignorable and k.startswith(ignorable))
+    if dropped:
+        state = {k: v for k, v in state.items() if k not in dropped}
     missing, unexpected = model.load_state_dict(state, strict=False)
     allowed_missing = tuple(str(name).lower() for name in ("decoder", "logits_head", "head", "fusion", "mimic"))
     disallowed_missing = [name for name in missing if not any(token in name.lower() for token in allowed_missing)]
     if unexpected or disallowed_missing:
         raise ValueError(f"S1 encoder artifact incompatibility: missing={disallowed_missing}, unexpected={unexpected}")
     model.to(device)
-    return {"path": str(checkpoint_path.resolve()), "epoch": payload.get("epoch"), "update": payload.get("update"), "source": payload.get("source")}
+    return {"path": str(checkpoint_path.resolve()), "epoch": payload.get("epoch"), "update": payload.get("update"), "source": payload.get("source"),
+            "dropped_ablated_keys": len(dropped)}
 
 
 __all__ = [

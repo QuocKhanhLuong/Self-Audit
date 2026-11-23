@@ -162,3 +162,19 @@ def test_shift_aux_config_and_deterministic_loss():
     a.backward()
     assert m.align3.offset[-1].weight.grad.abs().sum() > 0 and m.zssm4[0].out_proj.weight.grad is None
     assert slice_shift_aux(PGStudent({}), pairs, seed=42, update=7, max_px=8) is None
+
+
+def test_ablated_student_imports_full_s1_artifact_dropping_only_removed_modules(tmp_path):
+    from self_audit.candidate_pg.cinema_init import load_encoder_artifact
+    full = SliceSSMStudent()
+    enc = dict(full.state_dict())  # the real S1 artifact stores the whole student state
+    path = tmp_path / "student_init.pt"
+    torch.save({"schema": "self_audit.candidate_pg.cinema_init.v1", "model": enc}, path)
+    ablated = SliceSSMStudent({"student": {"slicessm": {"align": False, "ssm_blocks": [0, 0]}}})
+    info = load_encoder_artifact(path, ablated)
+    assert info["dropped_ablated_keys"] == sum(1 for k in enc if k.startswith(("align3", "zssm")))
+    assert torch.equal(ablated.e3[0].conv.weight, full.e3[0].conv.weight)
+    enc["bogus.weight"] = torch.zeros(1)
+    torch.save({"schema": "self_audit.candidate_pg.cinema_init.v1", "model": enc}, path)
+    with pytest.raises(ValueError, match="unexpected"):
+        load_encoder_artifact(path, ablated)
