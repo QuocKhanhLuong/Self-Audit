@@ -20,8 +20,8 @@ sys.path.insert(0, str(ROOT))
 
 ARMS = ("W", "S0", "S1kd", "S2arb", "S2main")
 # written only on request (--only), so the configs of the running arms stay byte-identical; M3*: M3HL teacher (campaign m3hl-teacher-20261121)
-EXTRA_ARMS = ("A4SA", "S1kdM3", "S2arbM3", "S2M3", "S2arbM3E150", "S0unet150", "S0aniso", "S0slicessm", "S1kdM3ss", "S0ssA1", "S0ssA2", "S0ssA3", "S0ssA4", "S0ssA5")  # S0ssA1-5: SliceSSM ablations (S0 recipe); S0slicessm/S1kdM3ss: SliceSSMStudent arms (no teacher / M3HL KD); S0unet150/S0aniso: architecture screening arms (UniMatch, no teacher); S2arbM3E150: S2-m3hl-arb rerun at 150 epochs (its own run dir; the 100-epoch S2arbM3 is untouched)
-ENGINE_ARM = {"S0": "A2", "S1kd": "A2", "S2arb": "A2", "S2main": "A4", "A4SA": "A4", "S1kdM3": "A2", "S2arbM3": "A2", "S2M3": "A4", "S2arbM3E150": "A2", "S0unet150": "A2", "S0aniso": "A2", "S0slicessm": "A2", "S1kdM3ss": "A2", **{f"S0ssA{i}": "A2" for i in range(1, 6)}}
+EXTRA_ARMS = ("A4SA", "S1kdM3", "S2arbM3", "S2M3", "S2arbM3E150", "S0unet150", "S0aniso", "S0slicessm", "S1kdM3ss", "S0ssA1", "S0ssA2", "S0ssA3", "S0ssA4", "S0ssA5", "S0ssG")  # S0ssG: SliceSSM with the token-gated z-SSM; S0ssA1-5: SliceSSM ablations (S0 recipe); S0slicessm/S1kdM3ss: SliceSSMStudent arms (no teacher / M3HL KD); S0unet150/S0aniso: architecture screening arms (UniMatch, no teacher); S2arbM3E150: S2-m3hl-arb rerun at 150 epochs (its own run dir; the 100-epoch S2arbM3 is untouched)
+ENGINE_ARM = {"S0": "A2", "S1kd": "A2", "S2arb": "A2", "S2main": "A4", "A4SA": "A4", "S1kdM3": "A2", "S2arbM3": "A2", "S2M3": "A4", "S2arbM3E150": "A2", "S0unet150": "A2", "S0aniso": "A2", "S0slicessm": "A2", "S1kdM3ss": "A2", **{f"S0ssA{i}": "A2" for i in range(1, 6)}, "S0ssG": "A2"}
 
 
 ANISO_CINEMA_REVISION = "b1251ee50423bceeca84c080782fc3bc7756dea6"  # the revision the existing S1 was distilled from
@@ -36,7 +36,7 @@ def build(arm: str, prepared: Path, lock: Path, tau_v: float, m3hl_checkpoint: P
     from self_audit.candidate_pg.config import validate_config
     from self_audit.candidate_pg.w2s_config import make_config
 
-    base_arm = {"S1kd": "S0", "S2main": "S2", "A4SA": "W", "S1kdM3": "S0", "S2arbM3": "S2arb", "S2M3": "S2", "S2arbM3E150": "S2arb", "S0unet150": "S0", "S0aniso": "S0", "S0slicessm": "S0", "S1kdM3ss": "S0", **{f"S0ssA{i}": "S0" for i in range(1, 6)}}.get(arm, arm)
+    base_arm = {"S1kd": "S0", "S2main": "S2", "A4SA": "W", "S1kdM3": "S0", "S2arbM3": "S2arb", "S2M3": "S2", "S2arbM3E150": "S2arb", "S0unet150": "S0", "S0aniso": "S0", "S0slicessm": "S0", "S1kdM3ss": "S0", **{f"S0ssA{i}": "S0" for i in range(1, 6)}, "S0ssG": "S0"}.get(arm, arm)
     cfg = make_config(base_arm, tau_v=tau_v)
     if arm == "A4SA":
         # A4-SA (PG fusion target + CBKD-SA) exactly as scripts/cbkd_sa_make_config.py: only the split / selection fields below
@@ -47,7 +47,7 @@ def build(arm: str, prepared: Path, lock: Path, tau_v: float, m3hl_checkpoint: P
         # AnisoStudent: same recipe as S0, only the architecture differs; the CineMA revision is pinned (the S1-ANISO stage downloads it)
         cfg["student"]["arch"] = "aniso"
         cfg["cinema_init"]["hf_revision"] = ANISO_CINEMA_REVISION
-    if arm in ("S0slicessm", "S1kdM3ss") or arm.startswith("S0ssA"):
+    if arm in ("S0slicessm", "S1kdM3ss", "S0ssG") or arm.startswith("S0ssA"):
         # SliceSSMStudent (B1 physical-step z-SSM + B2 aligned slice fusion, <= 3 M parameters): same recipe as S0 / S1kdM3,
         # only the architecture and the shift-recovery auxiliary differ; CineMA revision pinned as for the aniso arm
         cfg["student"]["arch"] = "slicessm"
@@ -67,6 +67,10 @@ def build(arm: str, prepared: Path, lock: Path, tau_v: float, m3hl_checkpoint: P
             ss["ssm_blocks"] = [0, 0]
         elif arm == "S0ssA5":
             ss["ssm_blocks"] = [0, 0]; ss["align"] = False; ss["shift_aux"]["weight"] = 0.0
+        elif arm == "S0ssG":
+            # full model + token-conditioned gate on every z-SSM residual (W = 0, b = 2: sigmoid 0.88 at start); the S1
+            # artifact of the full model is reused, only the gate parameters are new
+            ss["zgate"] = {"mode": "token", "bias": 2.0}
     if arm in ("S1kd", "S1kdM3", "S1kdM3ss"):
         cfg["pg"]["target_mode"] = "teacher"
     if arm.endswith("M3") or arm in ("S2arbM3E150", "S1kdM3ss"):

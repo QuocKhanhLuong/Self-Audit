@@ -195,3 +195,60 @@ def test_replicate_seeds_validate_and_others_are_rejected(tmp_path):
         validate_config(cfg)
     with pytest.raises(ValueError, match="seed"):
         engine.run_training(cfg, tmp_path, stage="arms")
+
+
+_GATED = {"student": {"slicessm": {"zgate": {"mode": "token", "bias": 2.0}}}}
+
+
+def test_token_gate_init_budget_and_large_bias_reproduces_ungated_block():
+    torch.manual_seed(0)
+    plain = PhysZSSM(16).eval()
+    gated = PhysZSSM(16, zgate="token", zgate_bias=30.0).eval()
+    missing, unexpected = gated.load_state_dict(plain.state_dict(), strict=False)
+    assert not unexpected and set(missing) == {"zgate.weight", "zgate.bias"}
+    x = torch.randn(1, 16, 7, 3, 3)
+    assert torch.allclose(gated(x, torch.tensor([8.0])), plain(x, torch.tensor([8.0])), atol=1e-6)
+    half = PhysZSSM(16, zgate="token", zgate_bias=0.0).eval()
+    half.load_state_dict(gated.state_dict() | {"zgate.bias": torch.zeros(16)})
+    ref = plain(x, torch.tensor([8.0]))
+    assert torch.allclose(half(x, torch.tensor([8.0])) - x, 0.5 * (ref - x), atol=1e-6)  # constant gate 0.5 at W = 0
+    with pytest.raises(ValueError, match="zgate"):
+        PhysZSSM(16, zgate="slice")
+    full, g = build_slicessm_student({}), build_slicessm_student(_GATED)
+    extra = sum(p.numel() for p in g.parameters()) - sum(p.numel() for p in full.parameters())
+    c3, c4 = g.zssm3[0].dim, g.zssm4[0].dim
+    assert extra == (c3 * c3 + c3) * len(g.zssm3) + (c4 * c4 + c4) * len(g.zssm4)
+    assert sum(p.numel() for p in g.parameters()) <= PARAMETER_CAP
+
+
+def test_gate_receives_gradients_and_gated_student_imports_full_s1_artifact(tmp_path):
+    from self_audit.candidate_pg.cinema_init import load_encoder_artifact
+    m = SliceSSMStudent(_GATED).train()
+    out = m(torch.rand(1, 1, 5, 32, 32), _geo(5, 32, 32))
+    out["logits"].sum().backward()
+    assert m.zssm4[0].zgate.weight.grad is not None and m.zssm4[0].zgate.weight.grad.abs().sum() > 0
+    full = SliceSSMStudent()
+    enc = dict(full.state_dict())
+    path = tmp_path / "student_init.pt"
+    torch.save({"schema": "self_audit.candidate_pg.cinema_init.v1", "model": enc}, path)
+    gated = SliceSSMStudent(_GATED)
+    load_encoder_artifact(path, gated)  # only the gate parameters are missing
+    assert torch.equal(gated.zssm3[0].in_proj.weight, full.zssm3[0].in_proj.weight)
+    assert torch.all(gated.zssm3[0].zgate.weight == 0) and torch.all(gated.zssm3[0].zgate.bias == 2.0)
+    del enc["zssm3.0.in_proj.weight"]  # any other missing encoder key is still an error
+    torch.save({"schema": "self_audit.candidate_pg.cinema_init.v1", "model": enc}, path)
+    with pytest.raises(ValueError, match="missing"):
+        load_encoder_artifact(path, SliceSSMStudent(_GATED))
+
+
+def test_gated_export_cold_load_matches(tmp_path):
+    torch.manual_seed(0)
+    m = SliceSSMStudent(_GATED).eval()
+    with torch.no_grad():
+        for blk in list(m.zssm3) + list(m.zssm4):
+            blk.zgate.weight.normal_(0, 0.1)
+    export_slicessm_student(m, tmp_path / "g.pt")
+    cold = load_slicessm_export(tmp_path / "g.pt").eval()
+    assert cold.zgate_mode == "token"
+    x, g = torch.rand(1, 1, 4, 32, 32), _geo(4, 32, 32)
+    assert torch.allclose(cold(x, g)["logits"], m(x, g)["logits"], atol=1e-5)

@@ -105,11 +105,18 @@ class PhysZSSM(nn.Module):
 
     ``step = softplus(dt(x)) * (s_z / s_ref)`` with ``spacing_mode="physical"``; ``"none"`` uses ``step = softplus(dt(x))``.
     Invalid (padded) slices get ``step = 0``: they leave the state unchanged and their outputs are zeroed.
+
+    ``zgate="token"`` adds a context gate on the residual update: ``out = x + sigmoid(W norm(x) + b) * delta`` per token and
+    channel, so each location chooses how much through-plane context it takes.  ``W`` starts at zero and ``b`` at
+    ``zgate_bias`` (a constant gate ``sigmoid(b)`` at initialisation; a large bias reproduces the ungated block).
     """
 
     def __init__(self, dim: int, *, state: int = 8, expand: float = 1.0, spacing_mode: str = "physical",
-                 spacing_ref_mm: float = DEFAULT_SPACING_REF_MM, dt_min: float = 0.01, dt_max: float = 0.5) -> None:
+                 spacing_ref_mm: float = DEFAULT_SPACING_REF_MM, dt_min: float = 0.01, dt_max: float = 0.5,
+                 zgate: str = "none", zgate_bias: float = 2.0) -> None:
         super().__init__()
+        if zgate not in ("none", "token"):
+            raise ValueError("zgate must be 'none' or 'token'")
         if spacing_mode not in ("physical", "none"):
             raise ValueError("spacing_mode must be 'physical' or 'none'")
         if spacing_ref_mm <= 0:
@@ -122,6 +129,11 @@ class PhysZSSM(nn.Module):
         self.forward_dir = _Direction(inner, state, rank, dt_min, dt_max)
         self.backward_dir = _Direction(inner, state, rank, dt_min, dt_max)
         self.out_proj = nn.Linear(inner, dim, bias=False)
+        self.zgate = None
+        if zgate == "token":
+            self.zgate = nn.Linear(dim, dim)
+            nn.init.zeros_(self.zgate.weight)
+            nn.init.constant_(self.zgate.bias, float(zgate_bias))
 
     def forward(self, x: Tensor, spacing_mm: Tensor, slice_valid: Tensor | None = None) -> Tensor:
         """``x`` ``[B, C, D, H, W]``; ``spacing_mm`` ``[B]``; ``slice_valid`` ``[B, D]`` bool or ``None``."""
@@ -133,11 +145,15 @@ class PhysZSSM(nn.Module):
         scale = scale * valid.to(x.dtype)
         scale = scale[:, None, None, :].expand(bsz, height, width, depth).reshape(-1, depth, 1)
         vmask = valid[:, None, None, :].expand(bsz, height, width, depth).reshape(-1, depth, 1).to(x.dtype)
-        u, gate = self.in_proj(self.norm(tokens)).chunk(2, dim=-1)
+        normed = self.norm(tokens)
+        u, gate = self.in_proj(normed).chunk(2, dim=-1)
         u = F.silu(u) * vmask
         y_f = self.forward_dir(u, scale)
         y_b = self.backward_dir(u.flip(1), scale.flip(1)).flip(1)
-        out = tokens + self.out_proj((y_f + y_b) * F.silu(gate)) * vmask
+        delta = self.out_proj((y_f + y_b) * F.silu(gate)) * vmask
+        if self.zgate is not None:
+            delta = delta * torch.sigmoid(self.zgate(normed))
+        out = tokens + delta
         return out.reshape(bsz, height, width, depth, ch).permute(0, 4, 3, 1, 2).contiguous()
 
 
@@ -224,11 +240,17 @@ class SliceSSMStudent(AnisoStudent):
         n3, n4 = (int(v) for v in opts.get("ssm_blocks", ssm_blocks))
         c3, c4 = channels[3], channels[4]
         self.align3 = SliceAlign(c3) if self.align_enabled else None
-        mk = lambda dim: PhysZSSM(dim, state=state, spacing_mode=self.spacing_mode, spacing_ref_mm=self.spacing_ref_mm)  # noqa: E731
+        zg = opts.get("zgate", {}) or {}
+        self.zgate_mode = str(zg.get("mode", "none"))
+        zgate_bias = float(zg.get("bias", 2.0))
+        mk = lambda dim: PhysZSSM(dim, state=state, spacing_mode=self.spacing_mode, spacing_ref_mm=self.spacing_ref_mm,  # noqa: E731
+                                  zgate=self.zgate_mode, zgate_bias=zgate_bias)
         self.zssm3 = nn.ModuleList(mk(c3) for _ in range(n3))
         self.zssm4 = nn.ModuleList(mk(c4) for _ in range(n4))
         # modules removed by an ablation: their keys in a full-model S1 artifact may be dropped at import
         self.s1_ignorable_prefixes = tuple(p for p, removed in (("align3.", self.align3 is None), ("zssm3.", n3 < 1), ("zssm4.", n4 < 2)) if removed)
+        # parameters added on top of the S1 architecture (absent from an S1 artifact; they keep their own initialisation)
+        self.s1_new_param_markers = (".zgate.",) if self.zgate_mode != "none" else ()
 
     def _encode_to_e3(self, image: Tensor, geometry: Any, slice_valid: Tensor | None):
         if image.ndim != 5 or image.shape[1] != 1 or not image.is_floating_point() or not torch.isfinite(image).all():
@@ -399,7 +421,8 @@ TRAIN_ONLY_PREFIXES = ("sdf_head.", "aux_heads.", "stage3_tap.", "code_branch.")
 
 def _options(model: SliceSSMStudent) -> dict[str, Any]:
     return {"spacing_mode": model.spacing_mode, "align": model.align_enabled, "spacing_ref_mm": model.spacing_ref_mm,
-            "ssm_blocks": [len(model.zssm3), len(model.zssm4)], "state": model.zssm4[0].forward_dir.state if len(model.zssm4) else 8}
+            "ssm_blocks": [len(model.zssm3), len(model.zssm4)], "state": model.zssm4[0].forward_dir.state if len(model.zssm4) else 8,
+            **({"zgate": {"mode": model.zgate_mode}} if model.zgate_mode != "none" else {})}
 
 
 def export_slicessm_student(model: SliceSSMStudent, path: Any, *, epoch: int | None = None) -> dict[str, Any]:

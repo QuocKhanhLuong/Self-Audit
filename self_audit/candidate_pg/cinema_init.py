@@ -1074,7 +1074,9 @@ def load_encoder_artifact(path: str | Path, model: nn.Module, *, device: torch.d
         state = {k: v for k, v in state.items() if k not in dropped}
     missing, unexpected = model.load_state_dict(state, strict=False)
     allowed_missing = tuple(str(name).lower() for name in ("decoder", "logits_head", "head", "fusion", "mimic"))
-    disallowed_missing = [name for name in missing if not any(token in name.lower() for token in allowed_missing)]
+    new_markers = tuple(getattr(model, "s1_new_param_markers", ()) or ())  # e.g. ".zgate." of a gated SliceSSM: not in S1
+    disallowed_missing = [name for name in missing if not any(token in name.lower() for token in allowed_missing)
+                          and not (new_markers and any(m in name for m in new_markers))]
     if unexpected or disallowed_missing:
         raise ValueError(f"S1 encoder artifact incompatibility: missing={disallowed_missing}, unexpected={unexpected}")
     model.to(device)
