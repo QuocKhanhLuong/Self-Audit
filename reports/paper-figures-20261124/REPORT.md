@@ -70,3 +70,7 @@ stage-3 skip taken after PhysZSSM, aux heads on the H/4 and H/2 decoders, SDF he
 - Injected shifts (dy, dx px, seed 0): (-1,-5), (4,8), (-6,-8), (8,2), (-2,-3).
 - 15 PNGs plus META.json are in `slices/`; `sas_unet_figures.drawio` now embeds them (Fig1 and Fig4: 10 images each); checker 0 violations.
 - draw.io PDF/PNG export was not run (no render requested).
+
+## Legend fix (2026-11-25)
+
+`SliceSSMStudent` inherits `self.e3` from `AnisoStudent` (`aniso_student.py:90`): stage-3 encoder = conv 1x3x3 stride (1,2,2), conv 3x1x1, conv 1x3x3. Legend of Fig 1 now reads "Encoder block / Decoder block, 1x3x3 convs" and the note states the extra 3x1x1 conv at stage 3. No block was added or removed; checker 0 violations.

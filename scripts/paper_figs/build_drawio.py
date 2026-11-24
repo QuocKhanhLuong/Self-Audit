@@ -142,9 +142,9 @@ def fig1(sl: Path) -> Page:
         p.icon("lg_" + n, 30, y, lab, col)
         p.text("lgt_" + n, 60, y, 230, 20, txt, 12, align="left")
     p.cube("lg_enc", 30, 720, 30, 30, BLUE_CUBE, front=ENC, depth=10)
-    p.text("lgt_enc", 70, 720, 220, 20, "In-plane encoder block", 12, align="left")
+    p.text("lgt_enc", 70, 720, 220, 20, "Encoder block, \\(1{\\times}3{\\times}3\\) convs", 12, align="left")
     p.cube("lg_dec", 30, 770, 30, 30, BLUE_CUBE, front=DEC, depth=10)
-    p.text("lgt_dec", 70, 770, 220, 20, "In-plane decoder block", 12, align="left")
+    p.text("lgt_dec", 70, 770, 220, 20, "Decoder block, \\(1{\\times}3{\\times}3\\) convs", 12, align="left")
     lines = (("data", "Latent feature stream"), ("skip", "Skip connection"), ("spacing", "Spacing / offset stream"), ("train", "Training only"))
     for k, (kind, txt) in enumerate(lines):
         y = 610 + 40 * k
@@ -153,7 +153,7 @@ def fig1(sl: Path) -> Page:
     p.cube("lg_m1", 310, 770, 30, 30, ORANGE, depth=10)
     p.cube("lg_m2", 360, 770, 30, 30, AMBER, depth=10)
     p.text("lgt_mod", 400, 770, 120, 20, "Slice-axis modules", 12, align="left")
-    p.text("lgt_note", 20, 810, 500, 30, r"Face size = in-plane resolution; cube depth = \(D\) slices (constant: no down-sampling along \(z\))", 11, "#424242", align="left")
+    p.text("lgt_note", 20, 810, 500, 40, r"Stage-3 encoder block has one extra \(3{\times}1{\times}1\) conv. Face size = in-plane resolution; cube depth = \(D\) slices (constant: no down-sampling along \(z\))", 11, "#424242", align="left")
     return p
 
 
