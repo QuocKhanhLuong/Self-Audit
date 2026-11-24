@@ -1,0 +1,2574 @@
+{
+  "arm": "S2-m3hl-arb",
+  "best_val_fg": 0.8854943116412745,
+  "cold_load": {
+    "argmax_equal": true,
+    "bitwise_equal": true,
+    "max_abs_logit_delta": 0.0,
+    "mode": "student_only",
+    "per_volume": [
+      {
+        "argmax_equal": true,
+        "bitwise_equal": true,
+        "max_abs_logit_delta": 0.0,
+        "volume": 0
+      },
+      {
+        "argmax_equal": true,
+        "bitwise_equal": true,
+        "max_abs_logit_delta": 0.0,
+        "volume": 1
+      },
+      {
+        "argmax_equal": true,
+        "bitwise_equal": true,
+        "max_abs_logit_delta": 0.0,
+        "volume": 2
+      }
+    ],
+    "runtime": {
+      "child": {
+        "cublas_workspace_config": null,
+        "cuda_matmul_allow_tf32": false,
+        "cudnn_allow_tf32": true,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": false,
+        "deterministic_algorithms": false,
+        "deterministic_warn_only": false,
+        "float32_matmul_precision": "highest",
+        "num_threads": 16
+      },
+      "parent": {
+        "cublas_workspace_config": null,
+        "cuda_matmul_allow_tf32": false,
+        "cudnn_allow_tf32": true,
+        "cudnn_benchmark": false,
+        "cudnn_deterministic": false,
+        "deterministic_algorithms": false,
+        "deterministic_warn_only": false,
+        "float32_matmul_precision": "highest",
+        "num_threads": 16
+      }
+    },
+    "sha256": "96cce54738d60708c22fa01975a3845e3700560cd2a8f599083cca7ed40f2959",
+    "status": "PASS",
+    "tolerance": 0.0001,
+    "volumes": 3,
+    "within_tolerance": true
+  },
+  "complexity": {
+    "flop_counter": "torch.utils.flop_counter (multiply-add counted as 2 FLOPs)",
+    "flops": 137920348160,
+    "gpu": "NVIDIA RTX 5000 Ada Generation",
+    "input_shape": [
+      1,
+      1,
+      10,
+      256,
+      232
+    ],
+    "latency_cpu_s": 0.9727913809474558,
+    "latency_gpu_s": 0.013016708195209503,
+    "parameters": 3074852
+  },
+  "export": {
+    "epoch": 79,
+    "manifest_path": "/root/mount_data/runs/m3hl-teacher-20261121/S2arbM3/exports/S2-m3hl-arb.pt.manifest.json",
+    "metadata": {
+      "arm": "S2-m3hl-arb",
+      "assert_no_teacher_keys": true,
+      "deployment_factory": "self_audit.candidate_fuse.student:FuseStudent",
+      "model_factory": "self_audit.candidate_fuse.student:FuseStudent",
+      "parameters_total": 3074852,
+      "parameters_trainable": 3074852,
+      "selected_epoch": 79,
+      "selection": "val10 student-only FG Dice",
+      "student_only": true,
+      "teacher_channels": [
+        32,
+        64,
+        128,
+        256,
+        512
+      ],
+      "teacher_phases": [
+        [
+          [
+            1,
+            1,
+            1
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            1,
+            2,
+            2
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            1,
+            4,
+            4
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            2,
+            8,
+            8
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        [
+          [
+            2,
+            16,
+            16
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ]
+        ]
+      ],
+      "test_policy": "test20 once after selection",
+      "training_parameters_total": 3425028
+    },
+    "mode": "student_only",
+    "path": "/root/mount_data/runs/m3hl-teacher-20261121/S2arbM3/exports/S2-m3hl-arb.pt",
+    "schema": "self_audit.candidate_pg.student_export.v2",
+    "sha256": "96cce54738d60708c22fa01975a3845e3700560cd2a8f599083cca7ed40f2959"
+  },
+  "metrics": {
+    "test20": {
+      "native": {
+        "LV": {
+          "assd_mm": 0.8378085110598603,
+          "dice": 0.9290097148774603,
+          "hd95_mm": 3.5176647797552847,
+          "patient_count": 20
+        },
+        "MYO": {
+          "assd_mm": 0.7016675902100115,
+          "dice": 0.8652556531313573,
+          "hd95_mm": 3.2057419882206033,
+          "patient_count": 20
+        },
+        "RV": {
+          "assd_mm": 1.8237737265665341,
+          "dice": 0.8688015585850554,
+          "hd95_mm": 8.593792006785096,
+          "patient_count": 20
+        },
+        "fg_assd_mm": 1.1210832759454685,
+        "fg_dice": 0.8876889755312911,
+        "fg_hd95_mm": 5.1057329249203285,
+        "patient_count": 20,
+        "per_patient": {
+          "patient001": {
+            "fg_assd": 2.1147888818918794,
+            "fg_dice": 0.8591595284064407,
+            "fg_hd95": 8.894611404312842,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 2.160885312722722,
+                "dice": 0.9297157131475322,
+                "frames_with_reference": 2,
+                "hd95_mm": 10.0
+              },
+              "MYO": {
+                "assd_mm": 1.1480404658686754,
+                "dice": 0.8465862042221914,
+                "frames_with_reference": 2,
+                "hd95_mm": 6.623167106469265
+              },
+              "RV": {
+                "assd_mm": 3.035440867084241,
+                "dice": 0.8011766678495981,
+                "frames_with_reference": 2,
+                "hd95_mm": 10.060667106469264
+              }
+            }
+          },
+          "patient007": {
+            "fg_assd": 1.1305052346021385,
+            "fg_dice": 0.9075127775841728,
+            "fg_hd95": 5.28415854805811,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 0.43854631402427174,
+                "dice": 0.9630322934920901,
+                "frames_with_reference": 2,
+                "hd95_mm": 1.875
+              },
+              "MYO": {
+                "assd_mm": 0.7232244840533277,
+                "dice": 0.8634512155801934,
+                "frames_with_reference": 2,
+                "hd95_mm": 2.6516504294495533
+              },
+              "RV": {
+                "assd_mm": 2.229744905728816,
+                "dice": 0.896054823680235,
+                "frames_with_reference": 2,
+                "hd95_mm": 11.325825214724777
+              }
+            }
+          },
+          "patient008": {
+            "fg_assd": 0.9142948943903022,
+            "fg_dice": 0.902229277648348,
+            "fg_hd95": 3.2047085992257416,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 0.333829608244622,
+                "dice": 0.9652751617066814,
+                "frames_with_reference": 2,
+                "hd95_mm": 1.5625
+              },
+              "MYO": {
+                "assd_mm": 0.5674750223673186,
+                "dice": 0.8663311558490192,
+                "frames_with_reference": 2,
+                "hd95_mm": 2.209708691207961
+              },
+              "RV": {
+                "assd_mm": 1.841580052558966,
+                "dice": 0.8750815153893435,
+                "frames_with_reference": 2,
+                "hd95_mm": 5.841917106469265
+              }
+            }
+          },
+          "patient011": {
+            "fg_assd": 1.2868510878779142,
+            "fg_dice": 0.875999499005284,
+            "fg_hd95": 4.546131603482343,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 0.26453822761150536,
+                "dice": 0.964632696884621,
+                "frames_with_reference": 2,
+                "hd95_mm": 1.4843800067901611
+              },
+              "MYO": {
+                "assd_mm": 0.4952218806526123,
+                "dice": 0.8561752139216877,
+                "frames_with_reference": 2,
+                "hd95_mm": 2.099230337318113
+              },
+              "RV": {
+                "assd_mm": 3.100793155369625,
+                "dice": 0.8071905862095431,
+                "frames_with_reference": 2,
+                "hd95_mm": 10.054784466338756
+              }
+            }
+          },
+          "patient013": {
+            "fg_assd": 0.47922742719241374,
+            "fg_dice": 0.91582777653633,
+            "fg_hd95": 2.424385897009561,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 0.2888507611047396,
+                "dice": 0.961351694308181,
+                "frames_with_reference": 2,
+                "hd95_mm": 1.4453099966049194
+              },
+              "MYO": {
+                "assd_mm": 0.4397914502133268,
+                "dice": 0.8922257374150926,
+                "frames_with_reference": 2,
+                "hd95_mm": 2.043976999032089
+              },
+              "RV": {
+                "assd_mm": 0.7090400702591748,
+                "dice": 0.8939058978857162,
+                "frames_with_reference": 2,
+                "hd95_mm": 3.7838706953916743
+              }
+            }
+          },
+          "patient022": {
+            "fg_assd": 0.7681264000852553,
+            "fg_dice": 0.8805668879277112,
+            "fg_hd95": 4.825171071376844,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 0.595167687930704,
+                "dice": 0.9053040868948907,
+                "frames_with_reference": 2,
+                "hd95_mm": 2.8125
+              },
+              "MYO": {
+                "assd_mm": 0.518713397200449,
+                "dice": 0.8778422678622358,
+                "frames_with_reference": 2,
+                "hd95_mm": 2.4006189110435825
+              },
+              "RV": {
+                "assd_mm": 1.1904981151246132,
+                "dice": 0.858554309026007,
+                "frames_with_reference": 2,
+                "hd95_mm": 9.262394303086952
+              }
+            }
+          },
+          "patient024": {
+            "fg_assd": 0.6052194818843047,
+            "fg_dice": 0.8990165793838877,
+            "fg_hd95": 2.9312064623273115,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 0.7884070202891637,
+                "dice": 0.8868237231518481,
+                "frames_with_reference": 2,
+                "hd95_mm": 3.5980869339562416
+              },
+              "MYO": {
+                "assd_mm": 0.6334315104688201,
+                "dice": 0.8981099837565262,
+                "frames_with_reference": 2,
+                "hd95_mm": 2.851782453025691
+              },
+              "RV": {
+                "assd_mm": 0.39381991489493035,
+                "dice": 0.9121160312432885,
+                "frames_with_reference": 2,
+                "hd95_mm": 2.34375
+              }
+            }
+          },
+          "patient033": {
+            "fg_assd": 1.9564852474480798,
+            "fg_dice": 0.8529684504088052,
+            "fg_hd95": 8.070267081449106,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 3.642538537281756,
+                "dice": 0.8257062601869657,
+                "frames_with_reference": 2,
+                "hd95_mm": 10.896238207535378
+              },
+              "MYO": {
+                "assd_mm": 1.659072095182929,
+                "dice": 0.8441008773910024,
+                "frames_with_reference": 2,
+                "hd95_mm": 10.0
+              },
+              "RV": {
+                "assd_mm": 0.5678451098795543,
+                "dice": 0.8890982136484478,
+                "frames_with_reference": 2,
+                "hd95_mm": 3.3145630368119416
+              }
+            }
+          },
+          "patient052": {
+            "fg_assd": 0.8237922092188025,
+            "fg_dice": 0.8828386740678352,
+            "fg_hd95": 4.209708589899758,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 0.7742725516467535,
+                "dice": 0.930780350818067,
+                "frames_with_reference": 2,
+                "hd95_mm": 4.198460674636226
+              },
+              "MYO": {
+                "assd_mm": 0.9601475658755145,
+                "dice": 0.814618232193664,
+                "frames_with_reference": 2,
+                "hd95_mm": 3.886157309997442
+              },
+              "RV": {
+                "assd_mm": 0.7369565101341394,
+                "dice": 0.9031174391917747,
+                "frames_with_reference": 2,
+                "hd95_mm": 4.544507785065608
+              }
+            }
+          },
+          "patient059": {
+            "fg_assd": 0.3179223649329195,
+            "fg_dice": 0.937950786833151,
+            "fg_hd95": 1.7838245512099808,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 0.31006027824640586,
+                "dice": 0.9620906111330232,
+                "frames_with_reference": 2,
+                "hd95_mm": 1.6503443242686608
+              },
+              "MYO": {
+                "assd_mm": 0.3326067237984899,
+                "dice": 0.9267228833753345,
+                "frames_with_reference": 2,
+                "hd95_mm": 1.6503443242686608
+              },
+              "RV": {
+                "assd_mm": 0.3111000927538627,
+                "dice": 0.9250388659910956,
+                "frames_with_reference": 2,
+                "hd95_mm": 2.050785005092621
+              }
+            }
+          },
+          "patient064": {
+            "fg_assd": 0.47966584290128655,
+            "fg_dice": 0.9290153618442932,
+            "fg_hd95": 1.8857539297891215,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 0.5298605532030095,
+                "dice": 0.9441237738974206,
+                "frames_with_reference": 2,
+                "hd95_mm": 1.744646519683682
+              },
+              "MYO": {
+                "assd_mm": 0.49804439475674567,
+                "dice": 0.918652062123388,
+                "frames_with_reference": 2,
+                "hd95_mm": 1.744646519683682
+              },
+              "RV": {
+                "assd_mm": 0.4110925807441045,
+                "dice": 0.9242702495120707,
+                "frames_with_reference": 2,
+                "hd95_mm": 2.16796875
+              }
+            }
+          },
+          "patient065": {
+            "fg_assd": 2.610824272054593,
+            "fg_dice": 0.8572333084105924,
+            "fg_hd95": 20.386799811285655,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 1.0952871881350679,
+                "dice": 0.9097296167311573,
+                "frames_with_reference": 2,
+                "hd95_mm": 5.9375
+              },
+              "MYO": {
+                "assd_mm": 1.138718716969262,
+                "dice": 0.8176851546358297,
+                "frames_with_reference": 2,
+                "hd95_mm": 6.325825214724777
+              },
+              "RV": {
+                "assd_mm": 5.59846691105945,
+                "dice": 0.8442851538647904,
+                "frames_with_reference": 2,
+                "hd95_mm": 48.89707421913219
+              }
+            }
+          },
+          "patient066": {
+            "fg_assd": 0.8236415078112973,
+            "fg_dice": 0.9130444987971057,
+            "fg_hd95": 3.18203029879916,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 0.2693923252187031,
+                "dice": 0.9542984121070733,
+                "frames_with_reference": 2,
+                "hd95_mm": 1.3671875
+              },
+              "MYO": {
+                "assd_mm": 0.39292835703506945,
+                "dice": 0.9053309481423502,
+                "frames_with_reference": 2,
+                "hd95_mm": 1.650341302403483
+              },
+              "RV": {
+                "assd_mm": 1.8086038411801195,
+                "dice": 0.8795041361418936,
+                "frames_with_reference": 2,
+                "hd95_mm": 6.528562093993997
+              }
+            }
+          },
+          "patient068": {
+            "fg_assd": 0.7294365915835183,
+            "fg_dice": 0.8949129964455366,
+            "fg_hd95": 3.076618115201327,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 0.2953196658952192,
+                "dice": 0.9548154960751933,
+                "frames_with_reference": 2,
+                "hd95_mm": 1.5625
+              },
+              "MYO": {
+                "assd_mm": 0.5008235272715845,
+                "dice": 0.8563706243915434,
+                "frames_with_reference": 2,
+                "hd95_mm": 1.8861043456039805
+              },
+              "RV": {
+                "assd_mm": 1.392166581583751,
+                "dice": 0.873552868869873,
+                "frames_with_reference": 2,
+                "hd95_mm": 5.78125
+              }
+            }
+          },
+          "patient075": {
+            "fg_assd": 0.8443706626041411,
+            "fg_dice": 0.9137752819786673,
+            "fg_hd95": 2.5024178765122973,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 0.4369750582724926,
+                "dice": 0.9575775066667143,
+                "frames_with_reference": 2,
+                "hd95_mm": 1.7857099771499634
+              },
+              "MYO": {
+                "assd_mm": 0.6566096227954874,
+                "dice": 0.8967232763716039,
+                "frames_with_reference": 2,
+                "hd95_mm": 2.1740342549249383
+              },
+              "RV": {
+                "assd_mm": 1.4395273067444436,
+                "dice": 0.8870250628976841,
+                "frames_with_reference": 2,
+                "hd95_mm": 3.54750939746199
+              }
+            }
+          },
+          "patient080": {
+            "fg_assd": 0.7496636828218989,
+            "fg_dice": 0.9115302660475431,
+            "fg_hd95": 3.1315083305040994,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 0.19481968570914543,
+                "dice": 0.9609335762678611,
+                "frames_with_reference": 2,
+                "hd95_mm": 1.7578099966049194
+              },
+              "MYO": {
+                "assd_mm": 0.4075262060657289,
+                "dice": 0.8930214660682123,
+                "frames_with_reference": 2,
+                "hd95_mm": 1.7578099966049194
+              },
+              "RV": {
+                "assd_mm": 1.6466451566908222,
+                "dice": 0.8806357558065556,
+                "frames_with_reference": 2,
+                "hd95_mm": 5.87890499830246
+              }
+            }
+          },
+          "patient081": {
+            "fg_assd": 1.564664584057903,
+            "fg_dice": 0.8557791502380893,
+            "fg_hd95": 6.210107330081783,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 1.5855803646277782,
+                "dice": 0.8946358646833914,
+                "frames_with_reference": 2,
+                "hd95_mm": 6.167991926253543
+              },
+              "MYO": {
+                "assd_mm": 0.8493788590645377,
+                "dice": 0.823909005618455,
+                "frames_with_reference": 2,
+                "hd95_mm": 3.0147493140778496
+              },
+              "RV": {
+                "assd_mm": 2.2590345284813935,
+                "dice": 0.8487925804124217,
+                "frames_with_reference": 2,
+                "hd95_mm": 9.447580749913957
+              }
+            }
+          },
+          "patient083": {
+            "fg_assd": 0.5147099134509573,
+            "fg_dice": 0.9032312673293194,
+            "fg_hd95": 2.476668656272306,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 0.5717955809087791,
+                "dice": 0.9026887621516795,
+                "frames_with_reference": 2,
+                "hd95_mm": 2.6673543456039805
+              },
+              "MYO": {
+                "assd_mm": 0.5027359449799164,
+                "dice": 0.8679998220451324,
+                "frames_with_reference": 2,
+                "hd95_mm": 2.5529429320049757
+              },
+              "RV": {
+                "assd_mm": 0.4695982144641765,
+                "dice": 0.9390052177911461,
+                "frames_with_reference": 2,
+                "hd95_mm": 2.209708691207961
+              }
+            }
+          },
+          "patient084": {
+            "fg_assd": 1.7555629712825362,
+            "fg_dice": 0.8274664188014235,
+            "fg_hd95": 5.953163674942541,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 1.3272666086776077,
+                "dice": 0.8832623032993396,
+                "frames_with_reference": 2,
+                "hd95_mm": 3.558525186018008
+              },
+              "MYO": {
+                "assd_mm": 0.8632192862449413,
+                "dice": 0.8246522189471717,
+                "frames_with_reference": 2,
+                "hd95_mm": 3.4667493225711206
+              },
+              "RV": {
+                "assd_mm": 3.0762030189250598,
+                "dice": 0.7744847341577588,
+                "frames_with_reference": 2,
+                "hd95_mm": 10.834216516238495
+              }
+            }
+          },
+          "patient093": {
+            "fg_assd": 1.9519122608172312,
+            "fg_dice": 0.8337207229312856,
+            "fg_hd95": 7.135416666666667,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 0.8527768914467576,
+                "dice": 0.9234163939454725,
+                "frames_with_reference": 2,
+                "hd95_mm": 4.28125
+              },
+              "MYO": {
+                "assd_mm": 0.7456422933354929,
+                "dice": 0.8146047127165176,
+                "frames_with_reference": 2,
+                "hd95_mm": 3.125
+              },
+              "RV": {
+                "assd_mm": 4.257317597669443,
+                "dice": 0.7631410621318668,
+                "frames_with_reference": 2,
+                "hd95_mm": 14.0
+              }
+            }
+          }
+        }
+      },
+      "ssl4mis_compat": {
+        "empty_cases": 0,
+        "empty_policy": "zero (Dice per medpy, HD95=0, ASD=0; counted in empty_cases)",
+        "hd95_unit": "voxels (SSL4MIS protocol: medpy hd95, no voxelspacing)",
+        "mean": {
+          "asd": 0.40830007036708116,
+          "dice": 0.887688975531291,
+          "hd95": 1.599711778163685,
+          "jaccard": 0.8034072979236191
+        },
+        "per_class": {
+          "LV": {
+            "asd": 0.27294418878288207,
+            "dice": 0.9290097148774601,
+            "hd95": 1.1187953911351491,
+            "jaccard": 0.871310592362571
+          },
+          "MYO": {
+            "asd": 0.33507820986258274,
+            "dice": 0.8652556531313575,
+            "hd95": 1.1090899137937356,
+            "jaccard": 0.7645455454622552
+          },
+          "RV": {
+            "asd": 0.6168778124557786,
+            "dice": 0.8688015585850554,
+            "hd95": 2.57125002956217,
+            "jaccard": 0.7743657559460313
+          }
+        },
+        "per_volume": [
+          {
+            "LV": {
+              "asd": 0.3849199111523954,
+              "dice": 0.9354720514595123,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8787670185100199
+            },
+            "MYO": {
+              "asd": 0.6630249452108694,
+              "dice": 0.8226572153215842,
+              "empty": false,
+              "hd95": 1.4142135623730951,
+              "jaccard": 0.6987406098099868
+            },
+            "RV": {
+              "asd": 0.4148475389712463,
+              "dice": 0.8713842131067168,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.77208224732117
+            },
+            "frame": 0,
+            "patient": "patient001"
+          },
+          {
+            "LV": {
+              "asd": 0.43387179904952433,
+              "dice": 0.9239593748355522,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8586658841940532
+            },
+            "MYO": {
+              "asd": 0.35803892184330843,
+              "dice": 0.8705151931227987,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7707188160676532
+            },
+            "RV": {
+              "asd": 0.9651510827723428,
+              "dice": 0.7309691225924794,
+              "empty": false,
+              "hd95": 2.23606797749979,
+              "jaccard": 0.5760057817393399
+            },
+            "frame": 1,
+            "patient": "patient001"
+          },
+          {
+            "LV": {
+              "asd": 0.18055817090523787,
+              "dice": 0.9668438077634011,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9358157217935815
+            },
+            "MYO": {
+              "asd": 0.3662357097892865,
+              "dice": 0.8670221916394288,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7652596416641361
+            },
+            "RV": {
+              "asd": 0.19649773848817642,
+              "dice": 0.948682552067703,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.90237497145467
+            },
+            "frame": 0,
+            "patient": "patient007"
+          },
+          {
+            "LV": {
+              "asd": 0.1987311061152036,
+              "dice": 0.9592207792207792,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.921637135013726
+            },
+            "MYO": {
+              "asd": 0.383684867924752,
+              "dice": 0.859880239520958,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7542016806722689
+            },
+            "RV": {
+              "asd": 0.7043662870645985,
+              "dice": 0.8434270952927669,
+              "empty": false,
+              "hd95": 2.0,
+              "jaccard": 0.7292468048144931
+            },
+            "frame": 1,
+            "patient": "patient007"
+          },
+          {
+            "LV": {
+              "asd": 0.14361127155645295,
+              "dice": 0.9691591630779938,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9401637268967845
+            },
+            "MYO": {
+              "asd": 0.33444519174308046,
+              "dice": 0.8653500897666068,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7626582278481012
+            },
+            "RV": {
+              "asd": 0.11666167252409358,
+              "dice": 0.951237922705314,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9070102202389521
+            },
+            "frame": 0,
+            "patient": "patient008"
+          },
+          {
+            "LV": {
+              "asd": 0.1803067630155509,
+              "dice": 0.961391160335369,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9256527805461431
+            },
+            "MYO": {
+              "asd": 0.3132992660242429,
+              "dice": 0.8673122219314315,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7657116451016636
+            },
+            "RV": {
+              "asd": 0.8208691007643116,
+              "dice": 0.798925108073373,
+              "empty": false,
+              "hd95": 1.4142135623730951,
+              "jaccard": 0.6651750972762646
+            },
+            "frame": 1,
+            "patient": "patient008"
+          },
+          {
+            "LV": {
+              "asd": 0.1283702769130561,
+              "dice": 0.966073546856465,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9343735658558971
+            },
+            "MYO": {
+              "asd": 0.29504224775150184,
+              "dice": 0.847657461991933,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7355950457727517
+            },
+            "RV": {
+              "asd": 0.5970434265726586,
+              "dice": 0.8117946376149782,
+              "empty": false,
+              "hd95": 2.0,
+              "jaccard": 0.6832107170308553
+            },
+            "frame": 0,
+            "patient": "patient011"
+          },
+          {
+            "LV": {
+              "asd": 0.1351542115295927,
+              "dice": 0.9631918469127771,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.928997176618216
+            },
+            "MYO": {
+              "asd": 0.28919999314795025,
+              "dice": 0.8646929658514424,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7616379885287449
+            },
+            "RV": {
+              "asd": 0.5314980952784213,
+              "dice": 0.802586534804108,
+              "empty": false,
+              "hd95": 1.4142135623730951,
+              "jaccard": 0.670266836086404
+            },
+            "frame": 1,
+            "patient": "patient011"
+          },
+          {
+            "LV": {
+              "asd": 0.12194696294658544,
+              "dice": 0.960790589741538,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9245399245399245
+            },
+            "MYO": {
+              "asd": 0.21435152483695638,
+              "dice": 0.8787878787878788,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7837837837837838
+            },
+            "RV": {
+              "asd": 0.3535632178431766,
+              "dice": 0.8994507506407909,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8172744210806494
+            },
+            "frame": 0,
+            "patient": "patient013"
+          },
+          {
+            "LV": {
+              "asd": 0.1319914234753241,
+              "dice": 0.9619127988748242,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9266204205506178
+            },
+            "MYO": {
+              "asd": 0.20255513158093258,
+              "dice": 0.9056635960423064,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8275915822291504
+            },
+            "RV": {
+              "asd": 0.2999081268747534,
+              "dice": 0.8883610451306413,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7991452991452992
+            },
+            "frame": 1,
+            "patient": "patient013"
+          },
+          {
+            "LV": {
+              "asd": 0.11427557980407599,
+              "dice": 0.9503088152723189,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9053222786841402
+            },
+            "MYO": {
+              "asd": 0.17418668367636642,
+              "dice": 0.8726302485605955,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7740408570004983
+            },
+            "RV": {
+              "asd": 0.43786511191990707,
+              "dice": 0.8915094339622641,
+              "empty": false,
+              "hd95": 1.4142135623730951,
+              "jaccard": 0.8042553191489362
+            },
+            "frame": 0,
+            "patient": "patient022"
+          },
+          {
+            "LV": {
+              "asd": 0.34817317437720563,
+              "dice": 0.8602993585174625,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7548467792370231
+            },
+            "MYO": {
+              "asd": 0.20872886916681135,
+              "dice": 0.8830542871638762,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7905973200090847
+            },
+            "RV": {
+              "asd": 0.44956800234353733,
+              "dice": 0.8255991840897501,
+              "empty": false,
+              "hd95": 1.4142135623730951,
+              "jaccard": 0.7029960920538428
+            },
+            "frame": 1,
+            "patient": "patient022"
+          },
+          {
+            "LV": {
+              "asd": 0.21428550368468502,
+              "dice": 0.9463036963036963,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8980801137710358
+            },
+            "MYO": {
+              "asd": 0.2555989012680938,
+              "dice": 0.8865042536736272,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.796145164090988
+            },
+            "RV": {
+              "asd": 0.13218250194392436,
+              "dice": 0.913370197079257,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.840553235908142
+            },
+            "frame": 0,
+            "patient": "patient024"
+          },
+          {
+            "LV": {
+              "asd": 0.5400429307173492,
+              "dice": 0.82734375,
+              "empty": false,
+              "hd95": 1.7320508075688772,
+              "jaccard": 0.7055296469020653
+            },
+            "MYO": {
+              "asd": 0.3174306508236811,
+              "dice": 0.9097157138394252,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8343839541547278
+            },
+            "RV": {
+              "asd": 0.12793899806359776,
+              "dice": 0.91086186540732,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8363143631436314
+            },
+            "frame": 1,
+            "patient": "patient024"
+          },
+          {
+            "LV": {
+              "asd": 0.5135516530702949,
+              "dice": 0.8974750042365701,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8140178296956655
+            },
+            "MYO": {
+              "asd": 0.5158124812592564,
+              "dice": 0.8318013983816482,
+              "empty": false,
+              "hd95": 1.4142135623730951,
+              "jaccard": 0.7120376597175522
+            },
+            "RV": {
+              "asd": 0.17550432650491807,
+              "dice": 0.9240367775831874,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8587995930824008
+            },
+            "frame": 0,
+            "patient": "patient033"
+          },
+          {
+            "LV": {
+              "asd": 1.2833746104716528,
+              "dice": 0.7539375161373613,
+              "empty": false,
+              "hd95": 3.605551275463989,
+              "jaccard": 0.6050559469539992
+            },
+            "MYO": {
+              "asd": 0.4710520833521878,
+              "dice": 0.8564003564003564,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7488637839241656
+            },
+            "RV": {
+              "asd": 0.21674396888802486,
+              "dice": 0.8541596497137083,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7454438565549677
+            },
+            "frame": 1,
+            "patient": "patient033"
+          },
+          {
+            "LV": {
+              "asd": 0.23771898408712386,
+              "dice": 0.9366741973026631,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8808910636106103
+            },
+            "MYO": {
+              "asd": 0.4504661773183454,
+              "dice": 0.790966884903691,
+              "empty": false,
+              "hd95": 1.7320508075688772,
+              "jaccard": 0.6542144090409668
+            },
+            "RV": {
+              "asd": 0.13550624364706854,
+              "dice": 0.925805284111473,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8618598382749326
+            },
+            "frame": 0,
+            "patient": "patient052"
+          },
+          {
+            "LV": {
+              "asd": 0.23541239724521992,
+              "dice": 0.9248865043334709,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8602687140115163
+            },
+            "MYO": {
+              "asd": 0.41920103170161443,
+              "dice": 0.838269579483637,
+              "empty": false,
+              "hd95": 1.7320508075688772,
+              "jaccard": 0.7215697933700015
+            },
+            "RV": {
+              "asd": 0.32626877401131105,
+              "dice": 0.8804295942720763,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7863994883820081
+            },
+            "frame": 1,
+            "patient": "patient052"
+          },
+          {
+            "LV": {
+              "asd": 0.08273121387283237,
+              "dice": 0.9782908113071423,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9575041725510335
+            },
+            "MYO": {
+              "asd": 0.14117742222710974,
+              "dice": 0.9351701782820098,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.878234398782344
+            },
+            "RV": {
+              "asd": 0.12016245991211347,
+              "dice": 0.9566939890710382,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9169831085504779
+            },
+            "frame": 0,
+            "patient": "patient059"
+          },
+          {
+            "LV": {
+              "asd": 0.17449277540832092,
+              "dice": 0.9458904109589041,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8973359324236517
+            },
+            "MYO": {
+              "asd": 0.20607649805937145,
+              "dice": 0.9182755884686591,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8488997555012225
+            },
+            "RV": {
+              "asd": 0.23960295292322079,
+              "dice": 0.8933837429111531,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8073112401776563
+            },
+            "frame": 1,
+            "patient": "patient059"
+          },
+          {
+            "LV": {
+              "asd": 0.1717494899663582,
+              "dice": 0.9602720667800279,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9235801367826345
+            },
+            "MYO": {
+              "asd": 0.3014448207721172,
+              "dice": 0.9111872857588034,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8368631940469377
+            },
+            "RV": {
+              "asd": 0.1206158318849068,
+              "dice": 0.9474440320842811,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9001364877161055
+            },
+            "frame": 0,
+            "patient": "patient064"
+          },
+          {
+            "LV": {
+              "asd": 0.22332983681350604,
+              "dice": 0.9279754810148135,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8656289707750953
+            },
+            "MYO": {
+              "asd": 0.2059117933200849,
+              "dice": 0.9261168384879725,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8624
+            },
+            "RV": {
+              "asd": 0.16958174904942966,
+              "dice": 0.9010964669398605,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8199959685547269
+            },
+            "frame": 1,
+            "patient": "patient064"
+          },
+          {
+            "LV": {
+              "asd": 0.1643957059431256,
+              "dice": 0.9621185132407077,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9270022883295195
+            },
+            "MYO": {
+              "asd": 0.43777345022508707,
+              "dice": 0.8051188299817185,
+              "empty": false,
+              "hd95": 1.4142135623730951,
+              "jaccard": 0.6738066095471236
+            },
+            "RV": {
+              "asd": 7.902379447509891,
+              "dice": 0.889205084424208,
+              "empty": false,
+              "hd95": 46.155172790900664,
+              "jaccard": 0.8005123825789923
+            },
+            "frame": 0,
+            "patient": "patient065"
+          },
+          {
+            "LV": {
+              "asd": 0.44340935950469107,
+              "dice": 0.8573407202216067,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7503030303030302
+            },
+            "MYO": {
+              "asd": 0.44916983740363897,
+              "dice": 0.8302514792899408,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7097692064495732
+            },
+            "RV": {
+              "asd": 0.4866301627027062,
+              "dice": 0.799365223305373,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.665785498489426
+            },
+            "frame": 1,
+            "patient": "patient065"
+          },
+          {
+            "LV": {
+              "asd": 0.12458268388129234,
+              "dice": 0.9712217409363318,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.944053524051217
+            },
+            "MYO": {
+              "asd": 0.2309273876440754,
+              "dice": 0.8995952677459527,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8175130853020229
+            },
+            "RV": {
+              "asd": 0.5174378789377629,
+              "dice": 0.8583655581335395,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7518742661006232
+            },
+            "frame": 0,
+            "patient": "patient066"
+          },
+          {
+            "LV": {
+              "asd": 0.19432806367040856,
+              "dice": 0.9373750832778148,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8821316614420063
+            },
+            "MYO": {
+              "asd": 0.24548951768380042,
+              "dice": 0.9110666285387475,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8366596638655462
+            },
+            "RV": {
+              "asd": 0.21219207870660986,
+              "dice": 0.9006427141502475,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8192447766915852
+            },
+            "frame": 1,
+            "patient": "patient066"
+          },
+          {
+            "LV": {
+              "asd": 0.11311340935479298,
+              "dice": 0.9708757231198883,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9433998836983911
+            },
+            "MYO": {
+              "asd": 0.3180009009961265,
+              "dice": 0.8389944348493571,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7226446280991735
+            },
+            "RV": {
+              "asd": 0.084375,
+              "dice": 0.9452816830181046,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.896240889911776
+            },
+            "frame": 0,
+            "patient": "patient068"
+          },
+          {
+            "LV": {
+              "asd": 0.1791326303147181,
+              "dice": 0.9387552690304984,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8845794392523364
+            },
+            "MYO": {
+              "asd": 0.2906826633241403,
+              "dice": 0.8737468139337298,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.775799637899819
+            },
+            "RV": {
+              "asd": 0.44310968317806954,
+              "dice": 0.8018240547216416,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.6692039327624485
+            },
+            "frame": 1,
+            "patient": "patient068"
+          },
+          {
+            "LV": {
+              "asd": 0.18963639906514856,
+              "dice": 0.9633280185534135,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9292505592841164
+            },
+            "MYO": {
+              "asd": 0.3827907564901323,
+              "dice": 0.8766716196136701,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7804232804232805
+            },
+            "RV": {
+              "asd": 0.193576948680148,
+              "dice": 0.9470881409162286,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.899494229023473
+            },
+            "frame": 0,
+            "patient": "patient075"
+          },
+          {
+            "LV": {
+              "asd": 0.21190997638187004,
+              "dice": 0.9518269947800149,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9080819578827547
+            },
+            "MYO": {
+              "asd": 0.3351671860215443,
+              "dice": 0.9167749331295376,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8463383660222944
+            },
+            "RV": {
+              "asd": 0.7431886618965186,
+              "dice": 0.8269619848791396,
+              "empty": false,
+              "hd95": 1.4142135623730951,
+              "jaccard": 0.7049745824255628
+            },
+            "frame": 1,
+            "patient": "patient075"
+          },
+          {
+            "LV": {
+              "asd": 0.10479113912877848,
+              "dice": 0.9674898405751797,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9370269452013321
+            },
+            "MYO": {
+              "asd": 0.2639284954952259,
+              "dice": 0.8721023181454837,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7732104890148831
+            },
+            "RV": {
+              "asd": 0.08914882005582715,
+              "dice": 0.9580854890026284,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9195432819968136
+            },
+            "frame": 0,
+            "patient": "patient080"
+          },
+          {
+            "LV": {
+              "asd": 0.11611308605553383,
+              "dice": 0.9543773119605425,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9127358490566038
+            },
+            "MYO": {
+              "asd": 0.223310010401965,
+              "dice": 0.9139406139909411,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8415199258572753
+            },
+            "RV": {
+              "asd": 0.5223542103321847,
+              "dice": 0.803186022610483,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.6711034778875054
+            },
+            "frame": 1,
+            "patient": "patient080"
+          },
+          {
+            "LV": {
+              "asd": 0.20983283462843902,
+              "dice": 0.9587587498328057,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9207844480602895
+            },
+            "MYO": {
+              "asd": 0.3926024701608977,
+              "dice": 0.8062338528210684,
+              "empty": false,
+              "hd95": 1.4142135623730951,
+              "jaccard": 0.6753700083775481
+            },
+            "RV": {
+              "asd": 0.3981761750037781,
+              "dice": 0.8828503867580457,
+              "empty": false,
+              "hd95": 4.242640687119285,
+              "jaccard": 0.7902705029776853
+            },
+            "frame": 0,
+            "patient": "patient081"
+          },
+          {
+            "LV": {
+              "asd": 0.8156838969762339,
+              "dice": 0.8305129795339772,
+              "empty": false,
+              "hd95": 2.0,
+              "jaccard": 0.7101515151515152
+            },
+            "MYO": {
+              "asd": 0.4492333948885739,
+              "dice": 0.8415841584158416,
+              "empty": false,
+              "hd95": 1.4142135623730951,
+              "jaccard": 0.7264957264957265
+            },
+            "RV": {
+              "asd": 0.8664472863086198,
+              "dice": 0.8147347740667976,
+              "empty": false,
+              "hd95": 2.0,
+              "jaccard": 0.6873860434278137
+            },
+            "frame": 1,
+            "patient": "patient081"
+          },
+          {
+            "LV": {
+              "asd": 0.22144386367248478,
+              "dice": 0.9036562583400053,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8242453748782863
+            },
+            "MYO": {
+              "asd": 0.32135176999469983,
+              "dice": 0.8371482176360225,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7199096482736367
+            },
+            "RV": {
+              "asd": 0.18779293011231052,
+              "dice": 0.942300983743808,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8908970976253299
+            },
+            "frame": 0,
+            "patient": "patient083"
+          },
+          {
+            "LV": {
+              "asd": 0.24088734277995633,
+              "dice": 0.9017212659633537,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8210313447927199
+            },
+            "MYO": {
+              "asd": 0.22369980677052392,
+              "dice": 0.8988514264542423,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8162853297442799
+            },
+            "RV": {
+              "asd": 0.3463085404832807,
+              "dice": 0.9357094518384841,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8791860958033065
+            },
+            "frame": 1,
+            "patient": "patient083"
+          },
+          {
+            "LV": {
+              "asd": 0.251749020190956,
+              "dice": 0.9468599033816425,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8990825688073395
+            },
+            "MYO": {
+              "asd": 0.42614547849242423,
+              "dice": 0.8009522549927258,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.6679902934039268
+            },
+            "RV": {
+              "asd": 0.9785663091161744,
+              "dice": 0.7694822888283379,
+              "empty": false,
+              "hd95": 5.0,
+              "jaccard": 0.62533215234721
+            },
+            "frame": 0,
+            "patient": "patient084"
+          },
+          {
+            "LV": {
+              "asd": 0.6516465030646057,
+              "dice": 0.8196647032170367,
+              "empty": false,
+              "hd95": 1.4142135623730951,
+              "jaccard": 0.6944337811900192
+            },
+            "MYO": {
+              "asd": 0.4380388420417349,
+              "dice": 0.8483521829016174,
+              "empty": false,
+              "hd95": 1.4142135623730951,
+              "jaccard": 0.7366420274551214
+            },
+            "RV": {
+              "asd": 0.8746458573474134,
+              "dice": 0.7794871794871795,
+              "empty": false,
+              "hd95": 2.8284271247461903,
+              "jaccard": 0.6386554621848739
+            },
+            "frame": 1,
+            "patient": "patient084"
+          },
+          {
+            "LV": {
+              "asd": 0.10137839039573143,
+              "dice": 0.9643447895607425,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9311446317657498
+            },
+            "MYO": {
+              "asd": 0.437865725680174,
+              "dice": 0.7799121844127332,
+              "empty": false,
+              "hd95": 1.4142135623730951,
+              "jaccard": 0.6392262708052182
+            },
+            "RV": {
+              "asd": 0.5734414029766899,
+              "dice": 0.877908265012187,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7823854660347551
+            },
+            "frame": 0,
+            "patient": "patient093"
+          },
+          {
+            "LV": {
+              "asd": 0.40513320012896675,
+              "dice": 0.8824879983302024,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7896899514381771
+            },
+            "MYO": {
+              "asd": 0.4499854879906258,
+              "dice": 0.8492972410203019,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7380683103370278
+            },
+            "RV": {
+              "asd": 1.603393896637417,
+              "dice": 0.6483738592515466,
+              "empty": false,
+              "hd95": 3.3166247903554,
+              "jaccard": 0.47969911183614283
+            },
+            "frame": 1,
+            "patient": "patient093"
+          }
+        ],
+        "protocol": "SSL4MIS test_2D_fully.py metric computation",
+        "volumes": 40
+      }
+    },
+    "val10": {
+      "native": {
+        "LV": {
+          "assd_mm": 0.6219431024247435,
+          "dice": 0.9241181498078046,
+          "hd95_mm": 3.3822748934990763,
+          "patient_count": 10
+        },
+        "MYO": {
+          "assd_mm": 0.6745819285403083,
+          "dice": 0.871849282276125,
+          "hd95_mm": 2.971908024730486,
+          "patient_count": 10
+        },
+        "RV": {
+          "assd_mm": 1.4733152719831468,
+          "dice": 0.860525349690513,
+          "hd95_mm": 6.333505870175545,
+          "patient_count": 10
+        },
+        "fg_assd_mm": 0.9232801009827328,
+        "fg_dice": 0.8854975939248142,
+        "fg_hd95_mm": 4.229229596135036,
+        "patient_count": 10,
+        "per_patient": {
+          "patient002": {
+            "fg_assd": 1.0456867193202841,
+            "fg_dice": 0.8713968455786354,
+            "fg_hd95": 3.7363682215319245,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 0.37539821039811905,
+                "dice": 0.9553035141973529,
+                "frames_with_reference": 2,
+                "hd95_mm": 1.933495104806966
+              },
+              "MYO": {
+                "assd_mm": 0.5632197888921833,
+                "dice": 0.8704868494735614,
+                "frames_with_reference": 2,
+                "hd95_mm": 2.734375
+              },
+              "RV": {
+                "assd_mm": 2.19844215867055,
+                "dice": 0.7884001730649917,
+                "frames_with_reference": 2,
+                "hd95_mm": 6.541234559788809
+              }
+            }
+          },
+          "patient019": {
+            "fg_assd": 0.38232083064540406,
+            "fg_dice": 0.9270690222211275,
+            "fg_hd95": 1.7859728297769344,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 0.21805576193596304,
+                "dice": 0.9752503494307245,
+                "frames_with_reference": 2,
+                "hd95_mm": 1.4453099966049194
+              },
+              "MYO": {
+                "assd_mm": 0.41434625595158375,
+                "dice": 0.8907484074833887,
+                "frames_with_reference": 2,
+                "hd95_mm": 1.7446434978185041
+              },
+              "RV": {
+                "assd_mm": 0.5145604740486653,
+                "dice": 0.9152083097492696,
+                "frames_with_reference": 2,
+                "hd95_mm": 2.167964994907379
+              }
+            }
+          },
+          "patient028": {
+            "fg_assd": 0.9634556076320854,
+            "fg_dice": 0.8807640403609152,
+            "fg_hd95": 4.679323282719445,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 1.1625477118108352,
+                "dice": 0.8758965957662788,
+                "frames_with_reference": 2,
+                "hd95_mm": 5.901865502554356
+              },
+              "MYO": {
+                "assd_mm": 0.815022572403354,
+                "dice": 0.893754356880867,
+                "frames_with_reference": 2,
+                "hd95_mm": 3.4486043456039805
+              },
+              "RV": {
+                "assd_mm": 0.9127965386820671,
+                "dice": 0.8726411684355997,
+                "frames_with_reference": 2,
+                "hd95_mm": 4.6875
+              }
+            }
+          },
+          "patient030": {
+            "fg_assd": 1.0178044947938831,
+            "fg_dice": 0.8651278960413947,
+            "fg_hd95": 6.173565395289302,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 1.3435928340469647,
+                "dice": 0.8424521495749526,
+                "frames_with_reference": 2,
+                "hd95_mm": 9.570479430712112
+              },
+              "MYO": {
+                "assd_mm": 1.0912036983333544,
+                "dice": 0.8925849773055333,
+                "frames_with_reference": 2,
+                "hd95_mm": 5.336935505155794
+              },
+              "RV": {
+                "assd_mm": 0.61861695200133,
+                "dice": 0.8603465612436982,
+                "frames_with_reference": 2,
+                "hd95_mm": 3.61328125
+              }
+            }
+          },
+          "patient039": {
+            "fg_assd": 0.7231483952999941,
+            "fg_dice": 0.8993451514134662,
+            "fg_hd95": 4.080682341575776,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 0.6267110549160193,
+                "dice": 0.9114032423176498,
+                "frames_with_reference": 2,
+                "hd95_mm": 2.8007135157587433
+              },
+              "MYO": {
+                "assd_mm": 0.5363397425126138,
+                "dice": 0.9069682742968741,
+                "frames_with_reference": 2,
+                "hd95_mm": 2.8007135157587433
+              },
+              "RV": {
+                "assd_mm": 1.0063943884713487,
+                "dice": 0.8796639376258746,
+                "frames_with_reference": 2,
+                "hd95_mm": 6.640619993209839
+              }
+            }
+          },
+          "patient045": {
+            "fg_assd": 1.3395426018909886,
+            "fg_dice": 0.8408186281492686,
+            "fg_hd95": 5.456468979532029,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 0.4623887399320745,
+                "dice": 0.9351269635189993,
+                "frames_with_reference": 2,
+                "hd95_mm": 2.6673543456039805
+              },
+              "MYO": {
+                "assd_mm": 0.6824101700866108,
+                "dice": 0.7987359706243622,
+                "frames_with_reference": 2,
+                "hd95_mm": 3.125
+              },
+              "RV": {
+                "assd_mm": 2.873828895654281,
+                "dice": 0.788592950304444,
+                "frames_with_reference": 2,
+                "hd95_mm": 10.577052592992107
+              }
+            }
+          },
+          "patient078": {
+            "fg_assd": 0.8661234165463713,
+            "fg_dice": 0.8973681318419567,
+            "fg_hd95": 3.597169930846576,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 0.3899698475865121,
+                "dice": 0.9462480080426909,
+                "frames_with_reference": 2,
+                "hd95_mm": 2.2121598945723244
+              },
+              "MYO": {
+                "assd_mm": 0.4381944395969265,
+                "dice": 0.8999984721392522,
+                "frames_with_reference": 2,
+                "hd95_mm": 2.2121598945723244
+              },
+              "RV": {
+                "assd_mm": 1.7702059624556752,
+                "dice": 0.845857915343927,
+                "frames_with_reference": 2,
+                "hd95_mm": 6.367190003395081
+              }
+            }
+          },
+          "patient082": {
+            "fg_assd": 1.0501963897250295,
+            "fg_dice": 0.9117194518830507,
+            "fg_hd95": 3.6989317408167843,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 0.49508011482101566,
+                "dice": 0.9530059333179728,
+                "frames_with_reference": 2,
+                "hd95_mm": 2.155542622650196
+              },
+              "MYO": {
+                "assd_mm": 0.7502596062616781,
+                "dice": 0.8945312451564971,
+                "frames_with_reference": 2,
+                "hd95_mm": 2.155542622650196
+              },
+              "RV": {
+                "assd_mm": 1.9052494480923945,
+                "dice": 0.887621177174682,
+                "frames_with_reference": 2,
+                "hd95_mm": 6.785709977149963
+              }
+            }
+          },
+          "patient085": {
+            "fg_assd": 0.8243126947455676,
+            "fg_dice": 0.8951562088045136,
+            "fg_hd95": 3.661634645199616,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 0.5664134113765336,
+                "dice": 0.9335602887525545,
+                "frames_with_reference": 2,
+                "hd95_mm": 2.0746128246379505
+              },
+              "MYO": {
+                "assd_mm": 0.6253391473350534,
+                "dice": 0.854830555571327,
+                "frames_with_reference": 2,
+                "hd95_mm": 2.4305601119995117
+              },
+              "RV": {
+                "assd_mm": 1.2811855255251157,
+                "dice": 0.8970777820896589,
+                "frames_with_reference": 2,
+                "hd95_mm": 6.479730998961385
+              }
+            }
+          },
+          "patient087": {
+            "fg_assd": 1.0202098592277216,
+            "fg_dice": 0.8662105629538134,
+            "fg_hd95": 5.422178594061969,
+            "frames": 2,
+            "per_class": {
+              "LV": {
+                "assd_mm": 0.579273337423398,
+                "dice": 0.9129344531588703,
+                "frames_with_reference": 2,
+                "hd95_mm": 3.0612156970892146
+              },
+              "MYO": {
+                "assd_mm": 0.829483864029726,
+                "dice": 0.8158537138295865,
+                "frames_with_reference": 2,
+                "hd95_mm": 3.730545753745806
+              },
+              "RV": {
+                "assd_mm": 1.6518723762300411,
+                "dice": 0.8698435218729832,
+                "frames_with_reference": 2,
+                "hd95_mm": 9.474774331350888
+              }
+            }
+          }
+        }
+      },
+      "ssl4mis_compat": {
+        "empty_cases": 0,
+        "empty_policy": "zero (Dice per medpy, HD95=0, ASD=0; counted in empty_cases)",
+        "hd95_unit": "voxels (SSL4MIS protocol: medpy hd95, no voxelspacing)",
+        "mean": {
+          "asd": 0.35215185550005185,
+          "dice": 0.8854975939248142,
+          "hd95": 1.4182676380689492,
+          "jaccard": 0.8001804076394814
+        },
+        "per_class": {
+          "LV": {
+            "asd": 0.27631096032484975,
+            "dice": 0.9241181498078047,
+            "hd95": 1.3156854249492382,
+            "jaccard": 0.8635184005183495
+          },
+          "MYO": {
+            "asd": 0.34835233622077777,
+            "dice": 0.8718492822761249,
+            "hd95": 1.2073132184970987,
+            "jaccard": 0.7751267637076618
+          },
+          "RV": {
+            "asd": 0.43179226995452813,
+            "dice": 0.8605253496905128,
+            "hd95": 1.7318042707605108,
+            "jaccard": 0.761896058692433
+          }
+        },
+        "per_volume": [
+          {
+            "LV": {
+              "asd": 0.19738127917398327,
+              "dice": 0.9570796780975858,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9176920403197776
+            },
+            "MYO": {
+              "asd": 0.34963939126703336,
+              "dice": 0.8528124666453196,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7433941198362486
+            },
+            "RV": {
+              "asd": 0.2088060456099846,
+              "dice": 0.9287002753251685,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8668911733427862
+            },
+            "frame": 0,
+            "patient": "patient002"
+          },
+          {
+            "LV": {
+              "asd": 0.169840774274118,
+              "dice": 0.9535273502971202,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9111822947000583
+            },
+            "MYO": {
+              "asd": 0.29266312587220833,
+              "dice": 0.8881612323018032,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7988219678115148
+            },
+            "RV": {
+              "asd": 1.1356895137594858,
+              "dice": 0.6481000708048147,
+              "empty": false,
+              "hd95": 3.7416573867739413,
+              "jaccard": 0.4793994413407821
+            },
+            "frame": 1,
+            "patient": "patient002"
+          },
+          {
+            "LV": {
+              "asd": 0.12068296456016368,
+              "dice": 0.9776407593704365,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9562595226003047
+            },
+            "MYO": {
+              "asd": 0.1997351059429335,
+              "dice": 0.8846938180970693,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7932295475916832
+            },
+            "RV": {
+              "asd": 0.14983249130784498,
+              "dice": 0.9442442748091603,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8943776029615919
+            },
+            "frame": 0,
+            "patient": "patient019"
+          },
+          {
+            "LV": {
+              "asd": 0.15314982445187475,
+              "dice": 0.9728599394910127,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9471541193797106
+            },
+            "MYO": {
+              "asd": 0.21475294824862115,
+              "dice": 0.896802996869708,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8129128291003814
+            },
+            "RV": {
+              "asd": 0.1859268206712675,
+              "dice": 0.8861723446893788,
+              "empty": false,
+              "hd95": 1.4142135623730951,
+              "jaccard": 0.7956099316300828
+            },
+            "frame": 1,
+            "patient": "patient019"
+          },
+          {
+            "LV": {
+              "asd": 0.22445535209809564,
+              "dice": 0.9527265594350726,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.909720921520884
+            },
+            "MYO": {
+              "asd": 0.2675176094166214,
+              "dice": 0.9076363636363637,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8308921438082557
+            },
+            "RV": {
+              "asd": 0.35512556482275526,
+              "dice": 0.8986375205869143,
+              "empty": false,
+              "hd95": 1.4142135623730951,
+              "jaccard": 0.8159325720500272
+            },
+            "frame": 0,
+            "patient": "patient028"
+          },
+          {
+            "LV": {
+              "asd": 0.8402784737156282,
+              "dice": 0.7990666320974851,
+              "empty": false,
+              "hd95": 2.8284271247461903,
+              "jaccard": 0.6653713298791019
+            },
+            "MYO": {
+              "asd": 0.49933506129937,
+              "dice": 0.8798723501253705,
+              "empty": false,
+              "hd95": 1.7320508075688772,
+              "jaccard": 0.7855107855107855
+            },
+            "RV": {
+              "asd": 0.32681802791680015,
+              "dice": 0.846644816284285,
+              "empty": false,
+              "hd95": 1.0414213562372718,
+              "jaccard": 0.7340711935387376
+            },
+            "frame": 1,
+            "patient": "patient028"
+          },
+          {
+            "LV": {
+              "asd": 0.3308456057868584,
+              "dice": 0.9308059384941676,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.870567815521944
+            },
+            "MYO": {
+              "asd": 0.36991741009155743,
+              "dice": 0.9037544696066746,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8244088067409622
+            },
+            "RV": {
+              "asd": 0.295959433878149,
+              "dice": 0.9064204783885859,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8288564850345357
+            },
+            "frame": 0,
+            "patient": "patient030"
+          },
+          {
+            "LV": {
+              "asd": 0.8032409610723966,
+              "dice": 0.7540983606557377,
+              "empty": false,
+              "hd95": 2.8284271247461903,
+              "jaccard": 0.6052631578947368
+            },
+            "MYO": {
+              "asd": 1.0394018515338135,
+              "dice": 0.881415485004392,
+              "empty": false,
+              "hd95": 3.0,
+              "jaccard": 0.7879739735247925
+            },
+            "RV": {
+              "asd": 0.3324061423701527,
+              "dice": 0.8142726440988106,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.6867283950617284
+            },
+            "frame": 1,
+            "patient": "patient030"
+          },
+          {
+            "LV": {
+              "asd": 0.17481045766647102,
+              "dice": 0.9396212263266455,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8861184792219275
+            },
+            "MYO": {
+              "asd": 0.2836021007464232,
+              "dice": 0.8820504579784669,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7889895069713957
+            },
+            "RV": {
+              "asd": 0.512324572267943,
+              "dice": 0.9134534590607787,
+              "empty": false,
+              "hd95": 1.4142135623730951,
+              "jaccard": 0.8406942773672452
+            },
+            "frame": 0,
+            "patient": "patient039"
+          },
+          {
+            "LV": {
+              "asd": 0.24529518928085503,
+              "dice": 0.8831852583086541,
+              "empty": false,
+              "hd95": 1.4142135623730951,
+              "jaccard": 0.7908073070123748
+            },
+            "MYO": {
+              "asd": 0.2200739341118928,
+              "dice": 0.9318860906152814,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8724594656314227
+            },
+            "RV": {
+              "asd": 0.34517314559840667,
+              "dice": 0.8458744161909704,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7329136690647482
+            },
+            "frame": 1,
+            "patient": "patient039"
+          },
+          {
+            "LV": {
+              "asd": 0.13569082613136443,
+              "dice": 0.9490388913723737,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9030199914929817
+            },
+            "MYO": {
+              "asd": 0.3704725815251112,
+              "dice": 0.7873475609756098,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.6492771841609051
+            },
+            "RV": {
+              "asd": 0.465440575818095,
+              "dice": 0.8288471305231082,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7077189939288812
+            },
+            "frame": 0,
+            "patient": "patient045"
+          },
+          {
+            "LV": {
+              "asd": 0.18006747803158302,
+              "dice": 0.9212150356656248,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8539375928677563
+            },
+            "MYO": {
+              "asd": 0.3071080778559573,
+              "dice": 0.8101243802731147,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.6808479532163743
+            },
+            "RV": {
+              "asd": 0.8342064410877905,
+              "dice": 0.7483387700857799,
+              "empty": false,
+              "hd95": 3.0,
+              "jaccard": 0.5978764478764479
+            },
+            "frame": 1,
+            "patient": "patient045"
+          },
+          {
+            "LV": {
+              "asd": 0.0702557200538358,
+              "dice": 0.9794216100532295,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.959673083127218
+            },
+            "MYO": {
+              "asd": 0.1711323234071066,
+              "dice": 0.9177318466140876,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.847970850609373
+            },
+            "RV": {
+              "asd": 0.12632014909919237,
+              "dice": 0.9303889698464298,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8698386082582268
+            },
+            "frame": 0,
+            "patient": "patient078"
+          },
+          {
+            "LV": {
+              "asd": 0.3021036082847351,
+              "dice": 0.9130744060321525,
+              "empty": false,
+              "hd95": 1.4142135623730951,
+              "jaccard": 0.8400523560209424
+            },
+            "MYO": {
+              "asd": 0.21737521559935272,
+              "dice": 0.8822650976644167,
+              "empty": false,
+              "hd95": 1.4142135623730951,
+              "jaccard": 0.7893330483112441
+            },
+            "RV": {
+              "asd": 0.7399373146847624,
+              "dice": 0.761326860841424,
+              "empty": false,
+              "hd95": 2.0,
+              "jaccard": 0.6146309601567603
+            },
+            "frame": 1,
+            "patient": "patient078"
+          },
+          {
+            "LV": {
+              "asd": 0.16823266219239374,
+              "dice": 0.9738336488141632,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9490017361111112
+            },
+            "MYO": {
+              "asd": 0.32325969556395506,
+              "dice": 0.8900326205146792,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8018547544409613
+            },
+            "RV": {
+              "asd": 0.29799686335199604,
+              "dice": 0.944802102777037,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8953790613718412
+            },
+            "frame": 0,
+            "patient": "patient082"
+          },
+          {
+            "LV": {
+              "asd": 0.3169701119103919,
+              "dice": 0.9321782178217822,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8729717199814557
+            },
+            "MYO": {
+              "asd": 0.40778416719213717,
+              "dice": 0.899029869798315,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.8165797101449276
+            },
+            "RV": {
+              "asd": 0.9348563432296889,
+              "dice": 0.830440251572327,
+              "empty": false,
+              "hd95": 2.0,
+              "jaccard": 0.7100451710045171
+            },
+            "frame": 1,
+            "patient": "patient082"
+          },
+          {
+            "LV": {
+              "asd": 0.5359693842576789,
+              "dice": 0.9512249542594493,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.9069866394349417
+            },
+            "MYO": {
+              "asd": 0.5781136483241353,
+              "dice": 0.8324623424531202,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7130068457082676
+            },
+            "RV": {
+              "asd": 0.49358264287840375,
+              "dice": 0.9088146488750365,
+              "empty": false,
+              "hd95": 2.0,
+              "jaccard": 0.8328691802342187
+            },
+            "frame": 0,
+            "patient": "patient085"
+          },
+          {
+            "LV": {
+              "asd": 0.2743274540488179,
+              "dice": 0.9158956232456597,
+              "empty": false,
+              "hd95": 1.4142135623730951,
+              "jaccard": 0.8448408131952436
+            },
+            "MYO": {
+              "asd": 0.32724063860107455,
+              "dice": 0.8771987686895338,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.781259179477137
+            },
+            "RV": {
+              "asd": 0.4345618431666522,
+              "dice": 0.8853409153042813,
+              "empty": false,
+              "hd95": 2.0,
+              "jaccard": 0.7942705778475424
+            },
+            "frame": 1,
+            "patient": "patient085"
+          },
+          {
+            "LV": {
+              "asd": 0.1261875093487004,
+              "dice": 0.9190423380520581,
+              "empty": false,
+              "hd95": 2.0,
+              "jaccard": 0.8502112251056125
+            },
+            "MYO": {
+              "asd": 0.3565489807763215,
+              "dice": 0.7666113682004715,
+              "empty": false,
+              "hd95": 2.0,
+              "jaccard": 0.6215489168908396
+            },
+            "RV": {
+              "asd": 0.21463134159565025,
+              "dice": 0.8566210900917774,
+              "empty": false,
+              "hd95": 5.196152422706632,
+              "jaccard": 0.7492014087967892
+            },
+            "frame": 0,
+            "patient": "patient087"
+          },
+          {
+            "LV": {
+              "asd": 0.15643357015704837,
+              "dice": 0.9068265682656826,
+              "empty": false,
+              "hd95": 1.4142135623730951,
+              "jaccard": 0.829535864978903
+            },
+            "MYO": {
+              "asd": 0.17137285703992844,
+              "dice": 0.8650960594587015,
+              "empty": false,
+              "hd95": 1.0,
+              "jaccard": 0.7622636846657606
+            },
+            "RV": {
+              "asd": 0.24625012597554263,
+              "dice": 0.8830659536541889,
+              "empty": false,
+              "hd95": 1.4142135623730951,
+              "jaccard": 0.7906160229811682
+            },
+            "frame": 1,
+            "patient": "patient087"
+          }
+        ],
+        "protocol": "SSL4MIS test_2D_fully.py metric computation",
+        "volumes": 20
+      }
+    }
+  },
+  "schema": "self_audit.w2s_ssl4mis.final.v1",
+  "selected_epoch": 79
+}

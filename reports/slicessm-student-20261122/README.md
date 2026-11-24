@@ -1,8 +1,8 @@
-# SliceSSMStudent: implementation, software checks and server queue (2026-11-22)
+# SliceSSMStudent: implementation and software checks (2026-11-22)
 
 Branch `claude/slicessm-student-20261122`, based on `claude/w2s-ssl4mis-20261120` at `516bd0c`.
-This report covers software evidence and one CPU probe on real ACDC images. No Dice result exists yet for this
-architecture; the screening runs are queued on the server (see the last section).
+This report covers the implementation, software evidence and one CPU probe on real ACDC images.
+**All segmentation results (ACDC, M&Ms-1, ablations, seeds, widths) are in [`RESULTS.md`](RESULTS.md).**
 
 ## What was built
 
@@ -64,20 +64,3 @@ Encoder up to stage 3 + SliceAlign trained only with the shift-recovery loss, 40
 
 The offset head learns injected shifts from images alone and was still improving at 400 steps.
 This shows the auxiliary is learnable. It says nothing about segmentation accuracy.
-
-## Server queue (vast RTX 5000 Ada)
-
-- Code: bundle `/root/slicessm.bundle`, worktree `/root/Self-Audit-slicessm` (the running jobs' checkout
-  `/root/Self-Audit` is untouched; `external/M3HL` and `external/MedNeXt` are symlinked from it).
-- tmux session `slicessm`, script `/root/slicessmF.sh`, log
-  `/root/mount_data/runs/slicessm-screen-20261122/pipeline_vast_slicessm.log`.
-- Configs written (SSCONFIG done): `ssl4mis_S0slicessm.json` (sha256 `1acee870…`), `ssl4mis_S1kdM3ss.json` (`3f3aeb8f…`).
-- Each group takes `/root/gpu_heavy.lock`, so it starts when S2-arb-150 releases the lock and runs next to the aniso chain:
-  `S1SS SSLINK` (CineMA S1, 10,000 updates), then `S0SS S0SSFINAL`, then `S1KDSS S1KDSSFINAL`. All FINAL steps are
-  `--val-only`; test20 is not opened.
-
-Comparisons once finished (val10, one seed, n = 10, screening only):
-- S0-slicessm vs S0-aniso vs S0-unetrpp-150 (architecture, no teacher, same 150-epoch recipe);
-- S1kd-M3HL-slicessm vs S1-kd M3HL (val10 0.8913).
-
-Ablations not yet queued: `spacing_mode = "none"`, `align = false`, `shift_aux.weight = 0`.
