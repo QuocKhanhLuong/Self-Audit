@@ -17,6 +17,7 @@ from typing import Any, Mapping
 SCHEMA = "self_audit.candidate_pg.v2"
 METHOD = "candidate_pg"
 SEED = 42
+REPLICATE_SEEDS = (42, 43, 44)  # arms-stage replicate seeds; shared S1/S2/S3 artifacts stay at SEED
 ARM_KEYS = ("pg", "cbkd")
 
 # The bytes of configs/candidate_fuse/semi_k8.json are distinct from the
@@ -143,6 +144,7 @@ _W2S_ALTERNATIVES: dict[str, Any] = {
     "cbkd.warmup_updates_labeled_only": None,
     "training.selection": None,
     "training.eval_splits": None,
+    "seed": (42, 43, 44),  # arms-stage replicate seeds (shared S1 artifacts stay at 42)
     "student.arch": ("unetrpp_lite_fuse", "aniso", "slicessm"),  # AnisoStudent / SliceSSMStudent screening arms
     "training.updates": None,  # student epoch budget (training.epochs x updates_per_epoch); checked below
 }
@@ -178,7 +180,7 @@ def validate_config(config: Mapping[str, Any]) -> dict[str, Any]:
     value = copy.deepcopy(dict(config))
     reference = _reference()
     _require(set(value) == set(default_config(synthetic=bool(value.get("runtime", {}).get("synthetic"))).keys()), "PG base config has unexpected or missing top-level keys")
-    _require(value.get("schema") == SCHEMA and type(value.get("seed")) is int and value["seed"] == SEED, "unsupported PG schema or seed")
+    _require(value.get("schema") == SCHEMA and type(value.get("seed")) is int and value["seed"] in REPLICATE_SEEDS, "unsupported PG schema or seed")
     _assert_reference_values(value, reference)
     data = value["data"]
     allowed_data = set(default_config()["data"])

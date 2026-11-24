@@ -65,6 +65,9 @@ def config_sha256(config: Mapping[str, Any]) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
+TRAIN_SEEDS = (42, 43, 44)  # 43/44: replicate seeds of the arms stage (student training); 42 is the locked default
+
+
 def _seed(seed: int = 42) -> None:
     random.seed(seed)
     np.random.seed(seed)
@@ -367,7 +370,7 @@ def _load_data(config: Mapping[str, Any], *, synthetic: bool) -> dict[str, Any]:
             "unlabeled": [], "unlabeled_keys": list(train.unlabeled_keys()),
             "val": [val.load(k, labeled=True) for k in val.labeled_keys()],
             "test": [test.load(k, labeled=True) for k in test.labeled_keys()],
-            "objects": bundle, "sampler": PGSampler(bundle, seed=42)}
+            "objects": bundle, "sampler": PGSampler(bundle, seed=int(config.get("seed", 42)))}
 
 
 def _grouped_backward(student: nn.Module, step_result: Mapping[str, Any], clip_norm: float, *, per_term: bool) -> dict[str, Any]:
@@ -590,8 +593,9 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
     cfg = copy.deepcopy(dict(config))
     if cfg.get("schema", _SCHEMA) != _SCHEMA:
         raise ValueError("PG config schema must be self_audit.candidate_pg.v2")
-    if cfg.get("seed", 42) != 42:
-        raise ValueError("PG seed is locked to 42")
+    if cfg.get("seed", 42) not in TRAIN_SEEDS:
+        raise ValueError(f"PG seed must be one of {TRAIN_SEEDS}")
+    train_seed = int(cfg.get("seed", 42))  # arms stage only; S1/S2/S3 stay at 42 (shared artifacts are reused)
     synthetic = bool(cfg.get("runtime", {}).get("synthetic", False))
     if stage not in {"all", "S1", "S2", "S3", "arms"}:
         raise ValueError("PG stage must be all, S1, S2, S3 or arms")
@@ -871,13 +875,13 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
         s3_codebook_model.freeze()
     sampler_template = copy.deepcopy(data.get("sampler"))
     view_mod = _module("self_audit.candidate_pg.views")
-    view_template = view_mod.StatefulViewGenerator(seed=42) if view_mod is not None else None
+    view_template = view_mod.StatefulViewGenerator(seed=train_seed) if view_mod is not None else None
     selected_models: dict[str, nn.Module] = {}
     selected_epochs: dict[str, int] = {}
     epoch_logs: dict[str, list[dict[str, Any]]] = {}
     # Resolve one shared student initialization and copy it byte-for-byte to
     # every arm; switches are the sole arm difference.
-    _seed(42)
+    _seed(train_seed)
     shared_student = _build_student(cfg, synthetic=synthetic)
     shared_student_state = copy.deepcopy(shared_student.state_dict())
     s1_checkpoint = result.get("stages", {}).get("S1", {}).get("checkpoint_path")
@@ -909,7 +913,7 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
     shared_student_state = copy.deepcopy(shared_student.state_dict())
     for arm_name in selected_arms:
         print(f"[{arm_name}] start", flush=True)
-        _seed(42)
+        _seed(train_seed)
         switches = _SWITCHES[arm_name]
         student = _build_student(cfg, synthetic=synthetic)
         student.load_state_dict(shared_student_state, strict=True)
@@ -960,8 +964,8 @@ def run_training(config: Mapping[str, Any], out: str | Path, *, device: str = "c
         # locked 2x2 comparison rather than chaining arm-specific cursors.
         sampler = copy.deepcopy(sampler_template)
         view_gen = copy.deepcopy(view_template)
-        keep_generator = torch.Generator(device=target_device).manual_seed(42 + 1009)
-        fp_generator = torch.Generator(device=target_device).manual_seed(42 + 2003)
+        keep_generator = torch.Generator(device=target_device).manual_seed(train_seed + 1009)
+        fp_generator = torch.Generator(device=target_device).manual_seed(train_seed + 2003)
         train_data = data.get("objects").train if sampler is not None else None
         cp = out_path / f"resume_{arm_name}.pt"
         resume_arm = bool(resume or (stage == "arms" and cp.is_file()))

@@ -178,3 +178,20 @@ def test_ablated_student_imports_full_s1_artifact_dropping_only_removed_modules(
     torch.save({"schema": "self_audit.candidate_pg.cinema_init.v1", "model": enc}, path)
     with pytest.raises(ValueError, match="unexpected"):
         load_encoder_artifact(path, ablated)
+
+
+def test_replicate_seeds_validate_and_others_are_rejected(tmp_path):
+    from self_audit.candidate_pg import engine
+    from self_audit.candidate_pg.config import REPLICATE_SEEDS, default_config, validate_config
+
+    assert REPLICATE_SEEDS == engine.TRAIN_SEEDS == (42, 43, 44)
+    for seed in (42, 43, 44):
+        cfg = default_config()
+        cfg["seed"] = seed
+        assert validate_config(cfg)["seed"] == seed
+    cfg = default_config()
+    cfg["seed"] = 45
+    with pytest.raises(ValueError):
+        validate_config(cfg)
+    with pytest.raises(ValueError, match="seed"):
+        engine.run_training(cfg, tmp_path, stage="arms")
