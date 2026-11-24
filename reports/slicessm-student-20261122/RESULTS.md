@@ -1,11 +1,11 @@
-# SliceSSM: results for the paper (status 2026-11-24 17:15 UTC)
+# SliceSSM: results for the paper (status 2026-11-24 19:30 UTC)
 
 This file is the hand-off for writing the paper. Every number below comes from a JSON file in `results/`. The files are
 copied verbatim from the server at `/root/mount_data/runs/<run>/<arm>/{FINAL,TEST20}_RESULT.json`. The paired statistics
 are in `stats_paired.json`, which was recomputed from the per-patient records in those files. Implementation details,
 size and cost are in `README.md`.
 
-Two jobs had not finished at the time of writing: LA 2018 at 5%, and the gated z-SSM variant. They are listed in
+One job had not finished at the time of writing: LA 2018 at 5%. It is listed in
 the last section. Do not report numbers for them until their `TEST20_RESULT.json` exists.
 
 ## 1. Method in one paragraph
@@ -146,6 +146,29 @@ Seed 42 only (20 pairs): Full − A1, the physical step, gives ΔDice +0.44 [−
    pixel, so they under-weight exactly the through-plane errors this architecture targets. Report mm as primary and
    voxels for comparability.
 
+### 4b. Follow-up: token-gated PhysZSSM (negative result)
+
+Motivated by item 2 above, a gate was added to every z-SSM residual:
+`x + sigmoid(W·norm(x) + b) ⊙ Δ`, per token and channel, with W = 0 and b = 2 at initialisation. This adds 99.9 K
+parameters (2.65 M in total) and reuses the full model's S1 artifact. Everything else in the recipe is identical.
+This arm was designed and evaluated **after** test20 results of the ablation had been seen. The decision rule was fixed
+before its own test was opened: keep it only if its 2-seed mean test Dice beats the full model and its mean HD95 is at
+most 0.5 mm worse.
+
+| | val10 s42 / s43 | Dice s42 / s43 | Dice mean | HD95 mm s42 / s43 | HD95 mean | ASD mm mean | Dice @ep150 s42 / s43 |
+|---|---|---|---:|---|---:|---:|---|
+| Full | 90.70 / 90.90 | 90.56 / 90.56 | **90.56** | 3.37 / 3.93 | **3.65** | 0.83 | 90.66 / 90.26 |
+| Gated (G) | 90.87 / 91.05 | 89.81 / 90.46 | 90.14 | 4.16 / 3.77 | 3.97 | 0.91 | 90.06 / 90.29 |
+
+**Outcome: rejected. The full model is kept.**
+- The gated variant has the highest validation Dice of all arms in both seeds, but a lower test Dice.
+- On validation it plateaus from about epoch 90, while the full model is still improving. Mean val Dice over epochs
+  121–150: G 89.87 / 90.22 versus Full 90.47 / 90.66.
+- Its selected epochs (82 and 72) are early validation spikes.
+- This is a second instance of val10 (n = 10) failing to rank close variants. Validation does not decrease late in
+  training for any arm, so this is not classical overfitting.
+- Raw results: `results/slicessm-gated-20261124/`.
+
 ## 5. Width ablation (S / M / L): ACDC 10%, seed 42
 
 Same recipe. Each width has its own CineMA S1 distillation.
@@ -197,13 +220,8 @@ run yet. Most of the error is on RV, especially basal slices.
 
 ## 8. Not finished at the time of writing (fill in later; do not estimate)
 
-- **LA 2018, 5% (L3 / U67).** Queued after the gated runs, about 7 h. (LA 10% is done; see section 6.)
-- **Gated PhysZSSM (`S0ssG`), seeds 42 and 43.** Queued.
-  - Design: residual update `x + sigmoid(W·norm(x) + b) ⊙ Δ`, per token and channel; W = 0 and b = 2 at
-    initialisation; +99.9 K parameters, 2.65 M in total.
-  - Goal: keep A4's Dice while keeping the full model's robustness.
-  - It reuses the full model's S1 artifact; only the gate parameters are new.
-  - Results land in `slicessm-gated-20261124/{S0ssG,S0ssGs43}/`.
+- **LA 2018, 5% (L3 / U67).** Running from about 19:25 UTC on 2026-11-24, about 7 h. (LA 10% is done; see section 6.
+  The gated variant is done; see section 4b.)
 - **Single seed only:** A1 and the S / L widths.
 - **Baselines on M&Ms and LA with the same splits:** not run.
 
