@@ -1,11 +1,11 @@
-# SliceSSM: results for the paper (status 2026-11-24 13:40 UTC)
+# SliceSSM: results for the paper (status 2026-11-24 17:15 UTC)
 
 This file is the hand-off for writing the paper. Every number below comes from a JSON file in `results/`. The files are
 copied verbatim from the server at `/root/mount_data/runs/<run>/<arm>/{FINAL,TEST20}_RESULT.json`. The paired statistics
 are in `stats_paired.json`, which was recomputed from the per-patient records in those files. Implementation details,
 size and cost are in `README.md`.
 
-Two jobs had not finished at the time of writing: LA 2018 at 10% and 5%, and the gated z-SSM variant. They are listed in
+Two jobs had not finished at the time of writing: LA 2018 at 5%, and the gated z-SSM variant. They are listed in
 the last section. Do not report numbers for them until their `TEST20_RESULT.json` exists.
 
 ## 1. Method in one paragraph
@@ -167,6 +167,13 @@ Scaling up to 5.7 M parameters does not help, so the 3 M budget is not limiting.
 | ACDC | 5% | test20 | 87.00 | 87.65 | 78.76 | 5.74 | 1.35 | 1.88 | 0.55 |
 | M&Ms-1 | 10% | test136 | 83.90 | 82.96 | 72.32 | 11.98 | 2.69 | 7.71 | 2.37 |
 | M&Ms-1 | 5% | test136 | 80.06 | 77.63 | 65.70 | 16.20 | 3.93 | 7.40 | 2.23 |
+| LA 2018 | 10% (L7) | test20 | 90.93 | 90.91 | 83.68 | 4.59 | 1.23 | 7.34 | 2.34 |
+
+LA has a single foreground class, stored in slot 3; the row reports the slot-3 metrics. Do not use the
+three-class `ssl4mis_compat.mean` in the LA JSON: it averages in two empty classes and reads 30.3. LA voxels are
+0.625 mm isotropic (declared), so a voxel-unit HD95 is the mm value divided by 0.625. LA uses one labelled case and ten
+unlabelled cases fewer than the BCP/UA-MT 8-labelled setting, because our val10 is held out. Published LA 10% numbers
+from those papers are therefore not directly comparable. Look them up and state this difference.
 
 Per class (Dice / HD95 mm):
 - ACDC 5%: RV 86.11 / 8.88, MYO 85.17 / 4.28, LV 91.67 / 4.05.
@@ -190,10 +197,7 @@ run yet. Most of the error is on RV, especially basal slices.
 
 ## 8. Not finished at the time of writing (fill in later; do not estimate)
 
-- **LA 2018, 10% (L7 / U63).** Training, about 7 h. val10 best 0.908 at epoch 62 of 150 so far. Test20 is expected
-  around 17:10 UTC on 2026-11-24. The result lands in `slicessm-la2018-20261123/S0slicessm/TEST20_RESULT.json`. LA is
-  stored in class slot 3 ("LV"); report the slot-3 metrics. Spacing is declared 0.625 mm isotropic.
-- **LA 2018, 5% (L3 / U67).** Queued after the gated runs.
+- **LA 2018, 5% (L3 / U67).** Queued after the gated runs, about 7 h. (LA 10% is done; see section 6.)
 - **Gated PhysZSSM (`S0ssG`), seeds 42 and 43.** Queued.
   - Design: residual update `x + sigmoid(W·norm(x) + b) ⊙ Δ`, per token and channel; W = 0 and b = 2 at
     initialisation; +99.9 K parameters, 2.65 M in total.
@@ -211,7 +215,7 @@ run yet. Most of the error is on RV, especially basal slices.
 | Ablations, seed 42 / 43 | `slicessm-ablation-20261123/S0ssA{1..5}`, `slicessm-ablation-s43-20261124/S0ssA{2..5}s43` |
 | SliceSSM + KD from M3HL | `slicessm-screen-20261122/S1kdM3ss` |
 | Width S / L | `slicessm-sml-20261123/S0slicessm{S,L}` |
-| ACDC 5%, M&Ms 10% / 5% | `slicessm-acdc-5pct-20261123`, `slicessm-mnms1-20261123`, `slicessm-mnms1-5pct-20261123` |
+| ACDC 5%, M&Ms 10% / 5%, LA 10% | `slicessm-acdc-5pct-20261123`, `slicessm-mnms1-20261123`, `slicessm-mnms1-5pct-20261123`, `slicessm-la2018-20261123` |
 | AnisoStudent, UNETR++-lite | `aniso-screen-20261122/S0aniso`, `aniso-screen-20261122/S0unet150` |
 | Earlier W2S arms (M3HL teacher) | `m3hl-teacher-20261121/*`, `w2s-ssl4mis-20261120/*` (FINAL_RESULT only) |
 | Paired tests | `stats_paired.json` |
