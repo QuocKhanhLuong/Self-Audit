@@ -1,0 +1,90 @@
+{
+  "patient": "patient011",
+  "frame_index_ed": 0,
+  "frames_of_patient": [
+    0,
+    1
+  ],
+  "ed_rule": "smaller frame_index of the patient's two labelled frames",
+  "split": "test",
+  "selection_rule": "patient whose ED 3D mean Dice (RV/MYO/LV) is closest to the split median; ties: lowest id",
+  "patient_dice": 0.9255276982139788,
+  "split_median_dice": 0.9256163946522771,
+  "abs_diff_to_median": 8.869643829823026e-05,
+  "n_patients": 20,
+  "per_patient_dice": {
+    "patient001": 0.9261551173123515,
+    "patient007": 0.9389180855682668,
+    "patient008": 0.931249394862788,
+    "patient011": 0.9255276982139788,
+    "patient013": 0.9257050910905754,
+    "patient022": 0.9249881946754249,
+    "patient024": 0.9395608330314399,
+    "patient033": 0.8970332230245087,
+    "patient052": 0.8868228414820657,
+    "patient059": 0.9587137918998608,
+    "patient064": 0.9424498998887274,
+    "patient065": 0.9130323448178786,
+    "patient066": 0.9314344778272098,
+    "patient068": 0.9233257960045647,
+    "patient075": 0.9289394265337986,
+    "patient080": 0.9502160599050865,
+    "patient081": 0.8836361170465521,
+    "patient083": 0.8595823697970696,
+    "patient084": 0.8208857333295159,
+    "patient093": 0.8872783197074107
+  },
+  "slice_indices": [
+    0,
+    2,
+    4,
+    6,
+    8
+  ],
+  "slice_order": "k=0 base (lowest z index with GT foreground) .. k=4 apex",
+  "crop_box_yx_side": [
+    64,
+    24,
+    104
+  ],
+  "crop_rule": "GT foreground box of the whole stack + 15 % margin, square",
+  "intensity": "1st/99th percentile of the cropped 5-slice stack (shift_k uses the same window)",
+  "overlay": {
+    "alpha": 0.55,
+    "RV": "#E53935",
+    "MYO": "#43A047",
+    "LV": "#1E88E5"
+  },
+  "shifts_px_dy_dx": [
+    [
+      -1.0,
+      -5.0
+    ],
+    [
+      4.0,
+      8.0
+    ],
+    [
+      -6.0,
+      -8.0
+    ],
+    [
+      8.0,
+      2.0
+    ],
+    [
+      -2.0,
+      -3.0
+    ]
+  ],
+  "shift_seed": 0,
+  "shift_max_px": 8,
+  "image_px": 400,
+  "checkpoint": "/root/mount_data/runs/slicessm-screen-20261122/S0slicessm/resume_A2.pt",
+  "checkpoint_sha256": "b1da2a9a8723d7ecf041f44e73176e639a5c7d6908096e32157cc24376107ff6",
+  "checkpoint_best_epoch": 94,
+  "checkpoint_best_val_fg": 0.9070386389267198,
+  "config": "reports/slicessm-student-20261122/configs/S0slicessm_acdc10.json",
+  "git_hash": "28e150205570d92a16cd0a615e91272af5efa50a",
+  "note": "the test split is read only to run the model once for this figure; test masks are used for patient selection and cropping only"
+}

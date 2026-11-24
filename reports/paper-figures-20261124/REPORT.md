@@ -59,3 +59,14 @@ The paper draft (`3_Methodology.tex`) now states the exception.
 
 Verified against the code: channels 24/48/96/160/192 (2,531,734 deployed parameters), strides (1,2,2), PhysZSSM x1 at stage 3 and x2 at stage 4, SliceAlign before PhysZSSM at stage 3,
 stage-3 skip taken after PhysZSSM, aux heads on the H/4 and H/2 decoders, SDF head on the full-resolution decoder, Delta scaled by s_z/10 mm with padded slices at zero.
+
+## Phase 1 result (run on vast-gpu, 2026-11-24)
+
+- Run: `slicessm-screen-20261122/S0slicessm` (seed 42), `resume_A2.pt` best_student, epoch 94, val10 fg Dice 0.9070.
+- Checkpoint sha256: `b1da2a9a8723d7ecf041f44e73176e639a5c7d6908096e32157cc24376107ff6`.
+- Split test20, ED frame = smaller frame_index (0; patient frames [0, 1]).
+- Selected patient: **patient011**, ED 3D mean Dice 0.9255 vs test20 median 0.9256 (|diff| 0.0001, n = 20).
+- Slice indices (base to apex): 0, 2, 4, 6, 8; crop box (y0, x0, side) = (64, 24, 104).
+- Injected shifts (dy, dx px, seed 0): (-1,-5), (4,8), (-6,-8), (8,2), (-2,-3).
+- 15 PNGs plus META.json are in `slices/`; `sas_unet_figures.drawio` now embeds them (Fig1 and Fig4: 10 images each); checker 0 violations.
+- draw.io PDF/PNG export was not run (no render requested).
