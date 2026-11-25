@@ -186,3 +186,7 @@ stage-3 skip taken after PhysZSSM, aux heads on the H/4 and H/2 decoders, SDF he
 ## Legend fix (2026-11-25)
 
 `SliceSSMStudent` inherits `self.e3` from `AnisoStudent` (`aniso_student.py:90`): stage-3 encoder = conv 1x3x3 stride (1,2,2), conv 3x1x1, conv 1x3x3. Legend of Fig 1 now reads "Encoder block / Decoder block, 1x3x3 convs" and the note states the extra 3x1x1 conv at stage 3. No block was added or removed; checker 0 violations.
+
+## Final format (2026-11-25)
+
+Model name in all figures and the paper is **SASNet**. In-figure titles removed (captions in LaTeX); canvas auto-cropped to content (viewBox top offset, build receipt records `crop_top`). Fig 2 re-routed: residual starts on the input cube's left face, SiLU(u) entered from the top, SiLU(g) gap enlarged. Fig 1 label "SASNet predictions". Files: `final/fig{1..4}_*.{pdf,svg,png}` (7 in wide, vector text outlines, minimum 7 pt, PNG 2x), also copied to the paper project `figs/`. Real slices: patient011 (test20 ED, seed 42; used for illustration only).

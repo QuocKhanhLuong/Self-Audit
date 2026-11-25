@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Generate the four SAS-UNet model figures as a clean, grid-aligned draw.io file and check them.
+"""Generate the four SASNet model figures as a clean, grid-aligned draw.io file and check them.
 
     python scripts/paper_figs/build_drawio.py --slices reports/paper-figures-20261124/slices \
-        --out reports/paper-figures-20261124/sas_unet_figures.drawio --preview reports/paper-figures-20261124/preview
+        --out reports/paper-figures-20261124/sasnet_figures.drawio --preview reports/paper-figures-20261124/preview
 
 Pages: Fig1 Overview, Fig2 PhysZSSM, Fig3 SliceAlign, Fig4 ShiftRecovery.  When ``--slices`` has no PNG files the image
 cells hold a neutral grey placeholder (never a fake slice); run ``export_fig_slices.py`` first for the real ones.
@@ -317,7 +317,7 @@ def fig4(sl: Path) -> Page:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--slices", type=Path, default=Path("reports/paper-figures-20261124/slices"))
-    ap.add_argument("--out", type=Path, default=Path("reports/paper-figures-20261124/sas_unet_figures.drawio"))
+    ap.add_argument("--out", type=Path, default=Path("reports/paper-figures-20261124/sasnet_figures.drawio"))
     ap.add_argument("--preview", type=Path, default=None, help="directory for matplotlib layout previews (not the draw.io render)")
     args = ap.parse_args()
     from drawio_kit import write_drawio

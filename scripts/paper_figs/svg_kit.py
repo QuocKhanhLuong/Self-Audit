@@ -120,9 +120,17 @@ class Figure:
             self.text(x, y + (i - (len(lines) - 1) / 2) * leading, line, size, color=color, weight=weight, anchor=anchor)
 
     def heading(self, title, subtitle=None):
-        self.text(24, 28, title, 24, weight="bold", anchor="start")
-        if subtitle:
-            self.text(24, 58, subtitle, 15, color=MUTED, anchor="start")
+        """Titles belong in the LaTeX caption; the figure carries none."""
+        return None
+
+    @property
+    def crop_top(self):
+        tops = [n.y - getattr(n, "dy", 0) for n in self.nodes.values()] + [l["box"][1] for l in self.labels]
+        return max(0, int((min(tops) - 12) // 2 * 2))
+
+    @property
+    def eff_h(self):
+        return self.h - self.crop_top
 
     def rect(self, sid, x, y, w, h, *, fill=WHITE, stroke=INK, radius=4, dashed=False, layer="nodes", width=1.6):
         node = Node(sid, x, y, w, h)
@@ -201,6 +209,8 @@ class Figure:
         return node
 
     def rule(self, y):
+        if y < 100:
+            return
         self.add(f'<path d="M24 {y} H984" stroke="{RULE}" stroke-width="1"/>', "bg")
 
     def svg(self):
@@ -208,11 +218,11 @@ class Figure:
         defs = "".join(f'<marker id="{self.slug}-arrow-{c[1:]}" markerWidth="7" markerHeight="7" '
                        f'refX="7" refY="3.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L7 3.5 L0 7 Z" fill="{c}"/></marker>' for c in colors)
         return (f'<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" '
-                f'width="7in" height="{self.h / 144:.8f}in" viewBox="0 0 1008 {self.h}" role="img" '
+                f'width="7in" height="{self.eff_h / 144:.8f}in" viewBox="0 {self.crop_top} 1008 {self.eff_h}" role="img" '
                 f'aria-labelledby="{self.slug}-title {self.slug}-desc">'
                 f'<title id="{self.slug}-title">{html.escape(self.title)}</title>'
                 f'<desc id="{self.slug}-desc">{html.escape(self.description)}</desc><defs>{defs}</defs>'
-                f'<rect width="1008" height="{self.h}" fill="white"/>'
+                f'<rect y="{self.crop_top}" width="1008" height="{self.eff_h}" fill="white"/>'
                 + "".join("".join(self.layers[k]) for k in self.layers) + '</svg>\n')
 
     def export(self, directory, renderer="rsvg-convert"):
@@ -222,8 +232,8 @@ class Figure:
         svg.write_text(self.svg())
         env = dict(os.environ, SOURCE_DATE_EPOCH="1795564800")
         subprocess.run([renderer, "--format=pdf", "--output", str(svg.with_suffix(".pdf")), str(svg)], check=True, env=env)
-        subprocess.run([renderer, "--format=png", "--width=2016", f"--height={self.h*2}",
+        subprocess.run([renderer, "--format=png", "--width=2016", f"--height={self.eff_h*2}",
                         "--output", str(svg.with_suffix(".png")), str(svg)], check=True)
-        return {"figure": self.slug, "canvas": [1008, self.h], "png": [2016, self.h*2],
+        return {"figure": self.slug, "canvas": [1008, self.eff_h], "crop_top": self.crop_top, "png": [2016, self.eff_h*2],
                 "width_inches":7, "minimum_font_pt":self.min_font/2, "labels":len(self.labels),
                 "cubes":sum(r[0] == "cube" for r in self.records), "embedded_images":len(self.images)}

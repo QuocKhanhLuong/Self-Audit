@@ -1,4 +1,4 @@
-"""SAS-UNet overview: the canonical SliceSSMStudent architecture."""
+"""SASNet overview: the canonical SliceSSMStudent architecture."""
 from pathlib import Path
 
 from svg_kit import (Figure, BLUE, ENC, DEC, TEAL, ORANGE, ALIGN, GOLD,
@@ -6,12 +6,12 @@ from svg_kit import (Figure, BLUE, ENC, DEC, TEAL, ORANGE, ALIGN, GOLD,
 
 
 def build(slices: Path) -> Figure:
-    f = Figure("fig1_overview", 992, "SAS-UNet architecture",
+    f = Figure("fig1_overview", 992, "SASNet architecture",
                "Five native-depth encoder stages, SliceAlign, physically stepped z scans, skip-connected decoder and training-only auxiliary heads.")
-    f.heading("1  SAS-UNet: slice-aware segmentation", "SliceSSMStudent  ·  In-plane hierarchy with constant slice depth D")
+    f.heading("1  SASNet: slice-aware segmentation", "SliceSSMStudent  ·  In-plane hierarchy with constant slice depth D")
 
     f.text(204, 84, "Input cine slices · patient011", 16, weight="bold")
-    f.text(804, 84, "Student predictions · same slices", 16, weight="bold")
+    f.text(804, 84, "SASNet predictions · same slices", 16, weight="bold")
     f.rect("input", 24, 92, 360, 80, fill=WHITE, stroke=RULE)
     f.rect("output", 624, 92, 360, 80, fill=WHITE, stroke=RULE)
     for k in range(5):

@@ -97,17 +97,17 @@ def check_exports(f, directory):
     path = Path(directory) / f.slug
     root = ET.parse(path.with_suffix(".svg")).getroot()
     assert root.get("width") == "7in"
-    assert root.get("viewBox") == f"0 0 1008 {f.h}"
+    assert root.get("viewBox") == f"0 {f.crop_top} 1008 {f.eff_h}"
     assert root.get("role") == "img"
     assert len(root.findall("{http://www.w3.org/2000/svg}title")) == 1
     assert len(list(root.iter("{http://www.w3.org/2000/svg}image"))) == len(f.images)
     with Image.open(path.with_suffix(".png")) as png:
-        assert png.size == (2016,f.h*2), png.size
+        assert png.size == (2016,f.eff_h*2), png.size
     import pymupdf as fitz
     with fitz.open(path.with_suffix(".pdf")) as pdf:
         assert len(pdf) == 1
         page=pdf[0]
         assert abs(page.rect.width-504) < .01
-        assert abs(page.rect.height-f.h/2) < .01
+        assert abs(page.rect.height-f.eff_h/2) < .01
         assert len(page.get_drawings()) > 10, "PDF diagram must remain vector"
     return {"svg_valid":True, "png_2x":True, "pdf_vector":True, "pdf_width_pt":504}

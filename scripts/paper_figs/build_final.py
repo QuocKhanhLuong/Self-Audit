@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Build and check the four SVG-native SAS-UNet paper figures.
+"""Build and check the four SVG-native SASNet paper figures.
 
 Requirements: Python with matplotlib, Pillow and PyMuPDF; rsvg-convert on PATH.
 No model import, patient-volume access, checkpoint loading or inference occurs.
 
     python scripts/paper_figs/build_final.py
-    python scripts/paper_figs/build_final.py --review-dir /tmp/sas-unet-review
+    python scripts/paper_figs/build_final.py --review-dir /tmp/sasnet-review
 
 The optional review directory receives independent PDF rasterizations at
 144 dpi and 96 dpi (seven-inch display width), for manual visual inspection.
@@ -68,7 +68,7 @@ def main():
         result["exports"] = check_exports(f,args.out)
         result["sha256"] = {suffix:sha256(args.out / f"{f.slug}.{suffix}") for suffix in ("svg", "pdf", "png")}
         results.append(result)
-        print(f"{f.slug}: geometry clean; vector PDF; 2x PNG {f.w*2}×{f.h*2}; minimum {f.min_font/2:g} pt")
+        print(f"{f.slug}: geometry clean; vector PDF; 2x PNG {f.w*2}×{f.eff_h*2}; minimum {f.min_font/2:g} pt")
         if args.review_dir:
             import pymupdf as fitz
             args.review_dir.mkdir(parents=True,exist_ok=True)
@@ -76,13 +76,13 @@ def main():
                 for dpi in (144,96):
                     pdf[0].get_pixmap(dpi=dpi,alpha=False).save(args.review_dir / f"{f.slug}_pdf_{dpi}dpi.png")
     from editable_drawio import write_editable
-    companion = args.out / "sas_unet_figures.drawio"
+    companion = args.out / "sasnet_figures.drawio"
     drawio_result = write_editable(figures,companion)
     # Verify that generation preserved the source raster assets byte for byte.
     assert assets == {p.name:sha256(p) for p in sorted(args.slices.iterdir()) if p.suffix in (".json", ".png")}
     scripts = sorted(Path(__file__).parent.glob("*.py"))
     source_files = [ROOT / "self_audit/candidate_pg/slicessm_student.py", ROOT / "self_audit/candidate_pg/aniso_student.py"]
-    receipt = {"schema":"sas_unet.publication_figures.v1", "renderer":"librsvg rsvg-convert",
+    receipt = {"schema":"sasnet.publication_figures.v1", "renderer":"librsvg rsvg-convert",
                "print_width_inches":7, "png_scale_from_viewbox":2,
                "projection_depth_vector":[16,-12], "patient":"patient011",
                "source_assets_sha256":assets,

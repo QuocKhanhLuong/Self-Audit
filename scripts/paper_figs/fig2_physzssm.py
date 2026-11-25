@@ -54,23 +54,22 @@ def build() -> Figure:
     # transformed separately and gates their summed output.
     f.rect("context_panel", 24, 294, 960, 278, fill="#FDF9F8", stroke="#E4C7C8", radius=8, width=1.4, layer="bg")
     f.text(48, 314, "Bidirectional z context", 18, anchor="start", weight="bold")
-    f.text(48, 338, "Each (h,w) cell is scanned independently; forward and backward parameters are not shared.", 15, anchor="start", color=MUTED)
 
-    ubox = f.box("u_silu", 145, 400, 125, 64, ["SiLU($u_t$)", "$\\times m_t$"], fill=SSM, stroke=GOLD, size=14, weight="bold")
+    ubox = f.box("u_silu", 190, 400, 125, 64, ["SiLU($u_t$)", "$\\times m_t$"], fill=SSM, stroke=GOLD, size=14, weight="bold")
     fw = f.box("forward", 340, 355, 150, 64, ["forward scan", "$A_{\\to},B_{\\to},C_{\\to},\\Delta_{\\to}$"], fill=PINK, stroke=RED, size=14, weight="bold")
     bw = f.box("backward", 340, 455, 150, 64, ["backward scan", "$A_{\\leftarrow},B_{\\leftarrow},C_{\\leftarrow},\\Delta_{\\leftarrow}$"], fill=PINK, stroke=RED, size=14, weight="bold")
-    f.edge([(490, 237), (490, 280), (36, 280), (36, 380), (145, 380), (145, 432)], color=BLUE, source="proj", target="u_silu")
-    f.edge([(555, 237), (555, 280), (760, 280), (760, 350), (657.5, 350), (657.5, 360)], color=GOLD, source="proj", target="gate")
-    f.edge([(270, 418), (300, 418), (300, 387), (340, 387)], color=BLUE, source="u_silu", target="forward")
-    f.edge([(270, 446), (300, 446), (300, 487), (340, 487)], color=BLUE, source="u_silu", target="backward")
+    f.edge([(490, 237), (490, 280), (290, 280), (290, 400)], color=BLUE, source="proj", target="u_silu")
+    f.edge([(555, 237), (555, 280), (760, 280), (760, 328), (660, 328), (660, 350)], color=GOLD, source="proj", target="gate")
+    f.edge([(315, 418), (327, 418), (327, 387), (340, 387)], color=BLUE, source="u_silu", target="forward")
+    f.edge([(315, 446), (327, 446), (327, 487), (340, 487)], color=BLUE, source="u_silu", target="backward")
 
-    gate = f.box("gate", 590, 360, 135, 46, ["SiLU($g_t$)"], fill=SSM, stroke=GOLD, size=15, weight="bold")
+    gate = f.box("gate", 592, 350, 136, 46, ["SiLU($g_t$)"], fill=SSM, stroke=GOLD, size=15, weight="bold")
     add = f.circle("add", 560, 432, r=18, label="+", fill=WHITE, stroke=RED, size=20)
     f.edge([(490, 387), (520, 387), (560, 387), (560, 414)], color=BLUE, source="forward", target="add")
     f.edge([(490, 487), (520, 487), (560, 487), (560, 450)], color=BLUE, source="backward", target="add")
     mult = f.circle("mult", 660, 432, r=18, label="×", fill=WHITE, stroke=GOLD, size=20)
     f.connect(add.right, mult.left, color=BLUE, source="add", target="mult")
-    f.edge([(657.5, 406), (657.5, 410), (660, 410), (660, 414)], color=GOLD, source="gate", target="mult")
+    f.edge([(660, 396), (660, 414)], color=GOLD, source="gate", target="mult")
     outproj = f.box("outproj", 740, 393, 92, 78, ["out Linear", "$\\times m_t$"], fill=LIGHT, stroke=BLUE, size=14)
     f.connect(mult.right, outproj.left, color=BLUE, source="mult", target="outproj")
     plus = f.circle("residual_add", 876, 432, r=18, label="+", fill=WHITE, stroke=TEAL, size=20)
@@ -81,7 +80,7 @@ def build() -> Figure:
     f.connect(plus.right, output.left, color=TEAL, source="residual_add", target="output")
 
     # Residual x is carried around the block and added after out projection.
-    f.edge([(92, 237), (30, 237), (30, 540), (876, 540), (876, 450)], color=TEAL, source="input", target="residual_add")
+    f.edge([(50, 200), (36, 200), (36, 540), (876, 540), (876, 450)], color=TEAL, source="input", target="residual_add")
     f.text(540, 558, "residual $x$", 15, color=TEAL, weight="bold")
 
     # Formula panel is a background layer so arrows and labels remain visible.
