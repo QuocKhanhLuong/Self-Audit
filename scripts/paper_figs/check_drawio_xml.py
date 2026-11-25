@@ -12,6 +12,10 @@ for d in root.iter("diagram"):
     model = d.find("mxGraphModel")
     cells = list(d.iter("mxCell"))
     bad, nv, ne, imgs = [], 0, 0, 0
+    ids = [x.get("id") for x in cells]
+    bad += [f"duplicate cell id {i}" for i in sorted({i for i in ids if ids.count(i) > 1})]
+    idset = set(ids)
+    bad += [f"edge {x.get('id')} {k} -> missing cell {x.get(k)}" for x in cells if x.get("edge") == "1" for k in ("source", "target") if x.get(k) and x.get(k) not in idset]
     for c in cells:
         g = c.find("mxGeometry")
         if c.get("vertex") == "1":

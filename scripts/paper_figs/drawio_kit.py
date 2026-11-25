@@ -115,7 +115,9 @@ class Page:
         return self.shape(Shape(sid, kind, x, y, w, h, st, ""))
 
     def edge(self, src, tgt, pts, kind="data", eid=None, owner_of=None, both=False):
-        e = Edge(eid or self._id("e"), src, tgt, [tuple(map(int, p)) for p in pts], kind, owner_of, both)
+        e = Edge(eid or self._id("edge_"), src, tgt, [tuple(map(int, p)) for p in pts], kind, owner_of, both)
+        if any(x.id == e.id for x in self.edges) or any(x.id == e.id for x in self.shapes):
+            raise ValueError(f"duplicate id {e.id} (edge id collides with another cell)")
         self.edges.append(e)
         return e
 
