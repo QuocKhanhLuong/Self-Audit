@@ -1,12 +1,11 @@
-# SliceSSM: results for the paper (status 2026-11-24 19:30 UTC)
+# SliceSSM: results for the paper (status 2026-11-25 02:30 UTC)
 
 This file is the hand-off for writing the paper. Every number below comes from a JSON file in `results/`. The files are
 copied verbatim from the server at `/root/mount_data/runs/<run>/<arm>/{FINAL,TEST20}_RESULT.json`. The paired statistics
 are in `stats_paired.json`, which was recomputed from the per-patient records in those files. Implementation details,
 size and cost are in `README.md`.
 
-One job had not finished at the time of writing: LA 2018 at 5%. It is listed in
-the last section. Do not report numbers for them until their `TEST20_RESULT.json` exists.
+All planned SliceSSM runs have finished. Section 8 lists what was never run.
 
 ## 1. Method in one paragraph
 
@@ -191,12 +190,19 @@ Scaling up to 5.7 M parameters does not help, so the 3 M budget is not limiting.
 | M&Ms-1 | 10% | test136 | 83.90 | 82.96 | 72.32 | 11.98 | 2.69 | 7.71 | 2.37 |
 | M&Ms-1 | 5% | test136 | 80.06 | 77.63 | 65.70 | 16.20 | 3.93 | 7.40 | 2.23 |
 | LA 2018 | 10% (L7) | test20 | 90.93 | 90.91 | 83.68 | 4.59 | 1.23 | 7.34 | 2.34 |
+| LA 2018 | 5% (L3) | test20 | 88.80 | 89.08 | 80.85 | 5.20 | 1.43 | 8.33 | 2.63 |
 
 LA has a single foreground class, stored in slot 3; the row reports the slot-3 metrics. Do not use the
-three-class `ssl4mis_compat.mean` in the LA JSON: it averages in two empty classes and reads 30.3. LA voxels are
+three-class `ssl4mis_compat.mean` in the LA JSON: it averages in two empty classes and reads 30.3 (10%) and 29.7 (5%). LA voxels are
 0.625 mm isotropic (declared), so a voxel-unit HD95 is the mm value divided by 0.625. LA uses one labelled case and ten
-unlabelled cases fewer than the BCP/UA-MT 8-labelled setting, because our val10 is held out. Published LA 10% numbers
+unlabelled cases fewer than the BCP/UA-MT 8-labelled setting (at 5%: 3 labelled versus 4), because our val10 is held out. Published LA 10% numbers
 from those papers are therefore not directly comparable. Look them up and state this difference.
+
+LA 5% (L3 / U67): the checkpoint was selected at epoch 27 of 150 (val10 FG 88.80). After that epoch val10 stayed at
+87.8–88.2 while train FG rose to 0.99. With three labelled volumes the model fits the labelled set early, but val10 does
+not fall, so this is not classic overfitting. The last epoch would have given 89.85 Dice / 4.44 mm on test20. That number
+was seen only because the test script also logs the final epoch, and it must not be reported, because the protocol
+selects on val10.
 
 Per class (Dice / HD95 mm):
 - ACDC 5%: RV 86.11 / 8.88, MYO 85.17 / 4.28, LV 91.67 / 4.05.
@@ -218,10 +224,8 @@ run yet. Most of the error is on RV, especially basal slices.
 | Semi-supervised stage (S0), M&Ms 10% | about 9.4 h |
 | Shared CineMA S1 distillation | about 3 h per dataset |
 
-## 8. Not finished at the time of writing (fill in later; do not estimate)
+## 8. Not run
 
-- **LA 2018, 5% (L3 / U67).** Running from about 19:25 UTC on 2026-11-24, about 7 h. (LA 10% is done; see section 6.
-  The gated variant is done; see section 4b.)
 - **Single seed only:** A1 and the S / L widths.
 - **Baselines on M&Ms and LA with the same splits:** not run.
 
@@ -233,7 +237,7 @@ run yet. Most of the error is on RV, especially basal slices.
 | Ablations, seed 42 / 43 | `slicessm-ablation-20261123/S0ssA{1..5}`, `slicessm-ablation-s43-20261124/S0ssA{2..5}s43` |
 | SliceSSM + KD from M3HL | `slicessm-screen-20261122/S1kdM3ss` |
 | Width S / L | `slicessm-sml-20261123/S0slicessm{S,L}` |
-| ACDC 5%, M&Ms 10% / 5%, LA 10% | `slicessm-acdc-5pct-20261123`, `slicessm-mnms1-20261123`, `slicessm-mnms1-5pct-20261123`, `slicessm-la2018-20261123` |
+| ACDC 5%, M&Ms 10% / 5%, LA 10% / 5% | `slicessm-acdc-5pct-20261123`, `slicessm-mnms1-20261123`, `slicessm-mnms1-5pct-20261123`, `slicessm-la2018-20261123`, `slicessm-la2018-5pct-20261123` (all arm `S0slicessm`) |
 | AnisoStudent, UNETR++-lite | `aniso-screen-20261122/S0aniso`, `aniso-screen-20261122/S0unet150` |
 | Earlier W2S arms (M3HL teacher) | `m3hl-teacher-20261121/*`, `w2s-ssl4mis-20261120/*` (FINAL_RESULT only) |
 | Paired tests | `stats_paired.json` |
