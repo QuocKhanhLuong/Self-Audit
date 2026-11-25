@@ -1,0 +1,34 @@
+{
+  "name": "ACDC",
+  "split": "test",
+  "patient": "patient011",
+  "frame_index_ed": 0,
+  "n_patients": 20,
+  "reference": "SASNet",
+  "reference_dice": 0.9255276982139788,
+  "split_median_dice": 0.9256163946522771,
+  "models": [
+    {
+      "label": "SASNet",
+      "run": "/root/mount_data/runs/slicessm-screen-20261122/S0slicessm",
+      "ckpt_sha256": "b1da2a9a8723d7ecf041f44e73176e639a5c7d6908096e32157cc24376107ff6",
+      "patient_dice_3d": 0.9255276982139788
+    }
+  ],
+  "slice_index": 4,
+  "crop_box_yx_side": [
+    64,
+    24,
+    104
+  ],
+  "overlay": {
+    "alpha": 0.55,
+    "classes": {
+      "1": "#E53935",
+      "2": "#43A047",
+      "3": "#1E88E5"
+    }
+  },
+  "selection_rule": "reference-model ED 3D Dice closest to split median; ties lowest id; middle GT-foreground slice",
+  "note": "test masks are used for patient selection, cropping and the GT column only; no metric is reported from this script"
+}

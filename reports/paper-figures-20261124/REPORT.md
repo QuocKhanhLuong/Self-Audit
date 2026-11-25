@@ -190,3 +190,9 @@ stage-3 skip taken after PhysZSSM, aux heads on the H/4 and H/2 decoders, SDF he
 ## Final format (2026-11-25)
 
 Model name in all figures and the paper is **SASNet**. In-figure titles removed (captions in LaTeX); canvas auto-cropped to content (viewBox top offset, build receipt records `crop_top`). Fig 2 re-routed: residual starts on the input cube's left face, SiLU(u) entered from the top, SiLU(g) gap enlarged. Fig 1 label "SASNet predictions". Files: `final/fig{1..4}_*.{pdf,svg,png}` (7 in wide, vector text outlines, minimum 7 pt, PNG 2x), also copied to the paper project `figs/`. Real slices: patient011 (test20 ED, seed 42; used for illustration only).
+
+## Qualitative figure (pipeline ready, baselines pending)
+
+`scripts/paper_figs/export_qualitative.py --spec <spec.json>` (GPU) writes, per dataset, `in.png`, `gt.png`, `pred_k.png` and `META.json` into `qualitative/<slug>/`; `fig5_qualitative.py` builds the figure (rows = ACDC / M&Ms-1 / LA 2018, columns = input, ground truth, one per model; 3D Dice of the shown patient under each prediction). Selection rule (fixed): reference model (first in the spec) ED 3D Dice closest to the split median, ties lowest id; middle GT-foreground slice; GT-box + 15 % square crop. Template: `qualitative_spec_template.json`.
+
+Dry run with SASNet only (vast-gpu, test split, forward passes only): ACDC patient011 slice 4 (Dice 0.9255, median 0.9256, n=20); M&Ms-1 A2L1N6 slice 7 (0.8738 vs 0.8735, n=136); LA 2018 UPT6DX9IQY9JAZ7HJKA7 slice 52 (0.9190 vs 0.9192, n=20). When baseline checkpoints exist, add them to the spec and re-run: the reference patient does not change as long as SASNet stays first.

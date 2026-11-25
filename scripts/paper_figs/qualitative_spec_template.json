@@ -1,0 +1,77 @@
+{
+  "out": "reports/paper-figures-20261124/qualitative",
+  "datasets": [
+    {
+      "name": "ACDC",
+      "slug": "acdc",
+      "config": "reports/slicessm-student-20261122/configs/S0slicessm_acdc10.json",
+      "colors": "cardiac",
+      "models": [
+        {
+          "label": "SASNet",
+          "run": "/root/mount_data/runs/slicessm-screen-20261122/S0slicessm"
+        },
+        {
+          "label": "<model name 1>",
+          "run": "<run dir of model 1 on ACDC>",
+          "ckpt": "resume_A2.pt",
+          "config": "<config of model 1 on ACDC>"
+        },
+        {
+          "label": "<model name 2>",
+          "run": "<run dir of model 2 on ACDC>",
+          "ckpt": "resume_A2.pt",
+          "config": "<config of model 2 on ACDC>"
+        }
+      ]
+    },
+    {
+      "name": "M&Ms-1",
+      "slug": "mnms",
+      "config": "reports/slicessm-student-20261122/configs/S0slicessm_mnms10.json",
+      "colors": "cardiac",
+      "models": [
+        {
+          "label": "SASNet",
+          "run": "/root/mount_data/runs/slicessm-mnms1-20261123/S0slicessm"
+        },
+        {
+          "label": "<model name 1>",
+          "run": "<run dir of model 1 on M&Ms-1>",
+          "ckpt": "resume_A2.pt",
+          "config": "<config of model 1 on M&Ms-1>"
+        },
+        {
+          "label": "<model name 2>",
+          "run": "<run dir of model 2 on M&Ms-1>",
+          "ckpt": "resume_A2.pt",
+          "config": "<config of model 2 on M&Ms-1>"
+        }
+      ]
+    },
+    {
+      "name": "LA 2018",
+      "slug": "la",
+      "config": "reports/slicessm-student-20261122/configs/S0slicessm_la10.json",
+      "colors": "la",
+      "models": [
+        {
+          "label": "SASNet",
+          "run": "/root/mount_data/runs/slicessm-la2018-20261123/S0slicessm"
+        },
+        {
+          "label": "<model name 1>",
+          "run": "<run dir of model 1 on LA 2018>",
+          "ckpt": "resume_A2.pt",
+          "config": "<config of model 1 on LA 2018>"
+        },
+        {
+          "label": "<model name 2>",
+          "run": "<run dir of model 2 on LA 2018>",
+          "ckpt": "resume_A2.pt",
+          "config": "<config of model 2 on LA 2018>"
+        }
+      ]
+    }
+  ]
+}

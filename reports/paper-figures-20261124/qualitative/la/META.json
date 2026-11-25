@@ -1,0 +1,32 @@
+{
+  "name": "LA 2018",
+  "split": "test",
+  "patient": "UPT6DX9IQY9JAZ7HJKA7",
+  "frame_index_ed": 0,
+  "n_patients": 20,
+  "reference": "SASNet",
+  "reference_dice": 0.918971008191038,
+  "split_median_dice": 0.9191785359713048,
+  "models": [
+    {
+      "label": "SASNet",
+      "run": "/root/mount_data/runs/slicessm-la2018-20261123/S0slicessm",
+      "ckpt_sha256": "20f8aa7a47793ea403d7861c37df0d5152eb888e6f7c6737bf462bfb27572b77",
+      "patient_dice_3d": 0.918971008191038
+    }
+  ],
+  "slice_index": 52,
+  "crop_box_yx_side": [
+    0,
+    17,
+    141
+  ],
+  "overlay": {
+    "alpha": 0.55,
+    "classes": {
+      "3": "#8E24AA"
+    }
+  },
+  "selection_rule": "reference-model ED 3D Dice closest to split median; ties lowest id; middle GT-foreground slice",
+  "note": "test masks are used for patient selection, cropping and the GT column only; no metric is reported from this script"
+}

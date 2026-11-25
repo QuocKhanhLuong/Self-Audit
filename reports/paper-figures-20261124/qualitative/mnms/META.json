@@ -1,0 +1,34 @@
+{
+  "name": "M&Ms-1",
+  "split": "test",
+  "patient": "A2L1N6",
+  "frame_index_ed": 0,
+  "n_patients": 136,
+  "reference": "SASNet",
+  "reference_dice": 0.873810205325405,
+  "split_median_dice": 0.8735129894498426,
+  "models": [
+    {
+      "label": "SASNet",
+      "run": "/root/mount_data/runs/slicessm-mnms1-20261123/S0slicessm",
+      "ckpt_sha256": "564816530b46dea473ec95d82d7712d697090293639329a1f3900e2ca5c6f0d0",
+      "patient_dice_3d": 0.873810205325405
+    }
+  ],
+  "slice_index": 7,
+  "crop_box_yx_side": [
+    62,
+    26,
+    105
+  ],
+  "overlay": {
+    "alpha": 0.55,
+    "classes": {
+      "1": "#E53935",
+      "2": "#43A047",
+      "3": "#1E88E5"
+    }
+  },
+  "selection_rule": "reference-model ED 3D Dice closest to split median; ties lowest id; middle GT-foreground slice",
+  "note": "test masks are used for patient selection, cropping and the GT column only; no metric is reported from this script"
+}
