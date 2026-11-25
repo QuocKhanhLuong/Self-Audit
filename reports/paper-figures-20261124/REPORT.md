@@ -1,4 +1,116 @@
-# SAS-UNet model figures: status (2026-11-24)
+# SAS-UNet paper figures: SVG-native redraw (2026-11-25)
+
+The current deliverables are in [`final/`](final/). The original draw.io file,
+preview PNGs, slice assets, and earlier report entries are preserved below.
+The publication exports are generated directly from SVG with librsvg; draw.io
+is not part of their rendering pipeline.
+
+## Deliverables and rebuild
+
+| Figure | Vector PDF | SVG source | 2× PNG |
+|---|---|---|---|
+| 1 · Overview | [PDF](final/fig1_overview.pdf) | [SVG](final/fig1_overview.svg) | [PNG](final/fig1_overview.png) |
+| 2 · PhysZSSM | [PDF](final/fig2_physzssm.pdf) | [SVG](final/fig2_physzssm.svg) | [PNG](final/fig2_physzssm.png) |
+| 3 · SliceAlign | [PDF](final/fig3_slicealign.pdf) | [SVG](final/fig3_slicealign.svg) | [PNG](final/fig3_slicealign.png) |
+| 4 · Shift recovery | [PDF](final/fig4_shiftrecovery.pdf) | [SVG](final/fig4_shiftrecovery.svg) | [PNG](final/fig4_shiftrecovery.png) |
+
+```bash
+python scripts/paper_figs/build_final.py --review-dir /tmp/sas-unet-figure-review
+```
+
+Requirements: Python with `matplotlib`, `Pillow`, and `PyMuPDF`, plus
+`rsvg-convert` from librsvg on PATH. No dependency installation was needed.
+The build script accesses only source text and the existing figure PNGs;
+it does not import a model, load a checkpoint, run inference, or read a patient volume.
+
+Each SVG uses a 1008-unit-wide canvas and an explicit width of **7 inches**;
+PDF width is **504 pt**. PNGs are **2016 pixels wide**, exactly 2× the SVG
+viewBox (288 dpi at 7 inches). The smallest label is **7 pt** after print
+scaling. DejaVu Sans and mathtext glyphs are vector outlines, so PDF/SVG
+appearance does not depend on locally installed fonts or remote MathJax.
+Only the real MRI thumbnails are raster images. Accessible SVG titles,
+descriptions, and label text accompany the outlines.
+
+[`final/sas_unet_figures.drawio`](final/sas_unet_figures.drawio) is an editable
+four-page companion generated with the existing `drawio_kit` through a new
+adapter. Labels, math, boxes, edges, and images remain separate native cells.
+The companion uses a 1-unit grid; the historical 10-pixel-grid checker applies
+to the preserved legacy file. Draw.io itself is unavailable here, so its native
+cube projection and MathJax rendering have not been visually certified.
+**The SVG/PDF/PNG exports are the visual source of truth.**
+
+## Design and fidelity
+
+The diagram-design skill informed the architecture layout, connector routing,
+and render-and-look review. The requested scientific figure style, exact
+architecture, four-figure scope, and 7-inch print format take precedence over
+the skill's generic HTML, font, and node-count defaults. All original modules
+are retained; compound operations are expanded only to show their existing
+implementation.
+
+- **Fig. 1:** one oblique projection, with depth vector `(16, -12)` for every
+  tensor, three separately shaded faces, and connectors attached to the visible
+  silhouette. The input and output piles became aligned filmstrips that show
+  all five existing patient011 slices. Encoder channels remain
+  `24/48/96/160/192`; the stage-3 skip leaves PhysZSSM, not the earlier encoder.
+  Strides, the extra stage-3 `3×1×1` convolution, decoder concatenation, auxiliary
+  heads, full-resolution SDF head, and training-only shift loss are explicit.
+- **Fig. 2:** tokenization, pre-normalization, projected input/gate branches,
+  both scan directions, masked update, residual, and physical-step equations
+  are separated into readable regions. The forward and backward scans have
+  independent parameters. The canonical model has no optional token z-gate.
+- **Fig. 3:** adjacent-pair offset estimation and per-slice fusion occupy two
+  panels. Proper mathematical subscripts replace raw text syntax. The diagram
+  shows the shared reduction, `64→32→2` offset-head channels, zero initialization,
+  `4 tanh`, signed neighbour warps, `[NEXT, PREV]` concatenation, and one clear
+  residual path. The tiny red ellipse icons are removed.
+- **Fig. 4:** the existing clean/shifted patient011 thumbnails remain unchanged.
+  Shared parameters, clean-flow detachment, two-component integer shifts in
+  `[-8,8]`, target `(s[i+1]-s[i])/8`, Smooth-L1, and weight `0.1` are explicit.
+
+The requested `~/Downloads/sas_unet_figures (1).drawio` was not present.
+The available `sas_unet_figures_clean.drawio` was inspected for labels and
+palette alongside the worktree source. Its duplicate cell IDs prevent the
+skill's strict extractor from accepting it; the original file was not changed.
+
+## Architecture consistency and scope
+
+An independent read of `slicessm_student.py` and `aniso_student.py` found **no
+contradiction between CODEX_TASK.md's hard architecture constraints and the
+implementation**. The previously reported extra stage-3 convolution is
+included explicitly. All model/config/training/evaluation sources are unchanged;
+no reported evaluation was rerun, no real-data training occurred, and no raw
+patient volume or checkpoint is added. Existing slice provenance in `META.json`
+is retained; patient scores are not recomputed or used as new evidence.
+
+## Verification
+
+The build checks measured glyph bounds, label collisions, visible-face ports,
+orthogonal routes, node intersections, shared strokes, crossings, SVG structure,
+PNG dimensions, and vector PDF content. It also hashes all existing slice assets
+before and after generation. `final/BUILD_RECEIPT.json` records those checks,
+the inputs, architecture-source hashes, drawing-script hashes, and output hashes.
+Manual raster review and its final results are recorded in the completion note
+below; automated geometry checks alone do not establish visual quality.
+
+Repository-wide commands from AGENTS.md were also attempted:
+
+- `python scripts/check_repo.py`: exits 1 with `NON_Q3D_TESTS_REMAIN` for seven
+  existing PG/SliceSSM tests. Those files are unchanged by this figure delivery.
+- `python -m pytest -q`: stops during collection because `medpy` is unavailable
+  in the active Python environment; no test pass is claimed.
+- `python scripts/smoke_q3d.py --out /tmp/self-audit-q3d-smoke`: completed with
+  `COMPLETED_WITH_SYNTHETIC_GATE_OVERRIDE`. The measured tokenizer gate remained
+  `NOT_READY`/failed (missing dead-code fraction and 200-update usage history).
+  This synthetic check performed a CPU teacher update, which goes beyond the
+  task's strict “no training” wording; it was invoked from the earlier repository
+  verification instructions. Its artifacts are confined to `/tmp`, are not
+  committed, and provide neither patient nor GPU evidence. No further training
+  or evaluation commands were run.
+
+---
+
+# Historical status (2026-11-24; preserved)
 
 Branch `claude/slicessm-student-20261122`. Figures only: no training, no change of model or training code, no evaluation re-run.
 
